@@ -43,9 +43,9 @@ TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN_4) ./$$i 5 $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN_4) ./$$i 10 $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN_4) ./$$i 5 $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_4) ./$$i 10 $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 	@echo "-----------------------------------------------------"
 

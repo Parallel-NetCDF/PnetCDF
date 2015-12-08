@@ -346,39 +346,41 @@ int main(int argc, char** argv) {
     MPI_Reduce(&r_size, &sum_r_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
 #endif
     if (rank == 0) {
-        double bw = sum_w_size/1048576;
+        double bw = sum_w_size;
+        bw /= 1048576.0;
         print_info(&w_info_used);
 
         printf("-----------------------------------------------------------\n");
         printf("Write %d variables using blocking APIs\n", NVARS);
         printf("In each process, the local variable size is %lld x %lld\n", len,len);
         printf("Total write amount        = %13lld    B\n", sum_w_size);
-        printf("            amount        = %16.2f MiB\n", bw);
-        printf("            amount        = %16.2f GiB\n", bw/1024);
-        printf("Max file open/create time = %16.2f sec\n", max_t[1]);
-        printf("Max PnetCDF define   time = %16.2f sec\n", max_t[2]);
-        printf("Max PnetCDF put      time = %16.2f sec\n", max_t[3]);
-        printf("Max file close       time = %16.2f sec\n", max_t[4]);
-        printf("Max open-to-close    time = %16.2f sec\n", max_t[0]);
-        printf("Write bandwidth           = %16.2f MiB/s\n", bw/max_t[0]);
+        printf("            amount        = %16.4f MiB\n", bw);
+        printf("            amount        = %16.4f GiB\n", bw/1024);
+        printf("Max file open/create time = %16.4f sec\n", max_t[1]);
+        printf("Max PnetCDF define   time = %16.4f sec\n", max_t[2]);
+        printf("Max PnetCDF put      time = %16.4f sec\n", max_t[3]);
+        printf("Max file close       time = %16.4f sec\n", max_t[4]);
+        printf("Max open-to-close    time = %16.4f sec\n", max_t[0]);
+        printf("Write bandwidth           = %16.4f MiB/s\n", bw/max_t[0]);
         bw /= 1024.0;
-        printf("Write bandwidth           = %16.2f GiB/s\n", bw/max_t[0]);
+        printf("Write bandwidth           = %16.4f GiB/s\n", bw/max_t[0]);
 
-        bw = sum_r_size/1048576;
+        bw = sum_r_size;
+        bw /= 1048576.0;
         printf("-----------------------------------------------------------\n");
         printf("Read  %d variables using blocking APIs\n", NVARS);
         printf("In each process, the local variable size is %lld x %lld\n", len,len);
         printf("Total read  amount        = %13lld    B\n", sum_r_size);
-        printf("            amount        = %16.2f MiB\n", bw);
-        printf("            amount        = %16.2f GiB\n", bw/1024);
-        printf("Max file open/create time = %16.2f sec\n", max_t[6]);
-        printf("Max PnetCDF inquire  time = %16.2f sec\n", max_t[7]);
-        printf("Max PnetCDF get      time = %16.2f sec\n", max_t[8]);
-        printf("Max file close       time = %16.2f sec\n", max_t[9]);
-        printf("Max open-to-close    time = %16.2f sec\n", max_t[5]);
-        printf("Read  bandwidth           = %16.2f MiB/s\n", bw/max_t[5]);
+        printf("            amount        = %16.4f MiB\n", bw);
+        printf("            amount        = %16.4f GiB\n", bw/1024);
+        printf("Max file open/create time = %16.4f sec\n", max_t[6]);
+        printf("Max PnetCDF inquire  time = %16.4f sec\n", max_t[7]);
+        printf("Max PnetCDF get      time = %16.4f sec\n", max_t[8]);
+        printf("Max file close       time = %16.4f sec\n", max_t[9]);
+        printf("Max open-to-close    time = %16.4f sec\n", max_t[5]);
+        printf("Read  bandwidth           = %16.4f MiB/s\n", bw/max_t[5]);
         bw /= 1024.0;
-        printf("Read  bandwidth           = %16.2f GiB/s\n", bw/max_t[5]);
+        printf("Read  bandwidth           = %16.4f GiB/s\n", bw/max_t[5]);
     }
     MPI_Info_free(&w_info_used);
     MPI_Info_free(&r_info_used);
