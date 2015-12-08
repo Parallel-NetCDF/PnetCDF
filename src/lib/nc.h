@@ -16,6 +16,13 @@
 #include "ncio.h"       /* ncio */
 #include "fbits.h"
 
+/* for put request less than 4KB, copy it to a buffer and do byte swap there,
+ * so if the user buffer is immutable (assuming smaller than 4KB), it will not
+ * cause seg fault. Not a perfect solution, but should be sufficient for most
+ * of the cases.
+ */
+#define NC_BYTE_SWAP_BUFFER_SIZE 4096
+
 /* define MPI_OFFSET if not defined */
 #ifndef HAVE_MPI_OFFSET_DATATYPE
     #ifdef HAVE_MPI_LONG_LONG_INT

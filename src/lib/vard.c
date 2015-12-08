@@ -182,11 +182,13 @@ ncmpii_getput_vard(NC               *ncp,
         if (rw_flag == WRITE_REQ) {
 #ifdef DISABLE_IN_PLACE_SWAP
             if (cbuf == buf) {
+#else
+            if (cbuf == buf && filetype_size <= NC_BYTE_SWAP_BUFFER_SIZE) {
+#endif
                 /* allocate cbuf and copy buf to cbuf, cbuf is to be freed */
                 cbuf = NCI_Malloc((size_t)filetype_size);
                 memcpy(cbuf, buf, filetype_size);
             }
-#endif
             /* perform array in-place byte swap on cbuf */
             ncmpii_in_swapn(cbuf, bnelems, ncmpix_len_nctype(varp->type));
             is_buf_swapped = (cbuf == buf) ? 1 : 0;
