@@ -3,7 +3,11 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * none
+    * Nonblocking requests now can be posted while the program is in the define
+      mode. This feature enables applications to add new variables and post the
+      nonblocking write requests without separating the codes by
+      ncmpi_enddef(). Note ncmpi_wait_all and ncmpi_wait must still be called
+      in the data mode.
 
   o New APIs
     * none
@@ -38,6 +42,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/nonblocking/i_varn_indef.c tests posting nonblocking requests in
+      define mode.
     * test/nonblocking/req_all.c tests the use of NC_REQ_ALL for flushing
       all pending nonblocking requests without providing the requests IDs.
     * test/last_large_var.c tests the special case when there is no record

@@ -672,7 +672,7 @@ ncmpi_$1_var$2(int                ncid,
     MPI_Offset *start, *count;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
-                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_FULL_DIMENSIONS(start, count)
@@ -709,7 +709,7 @@ ncmpi_$1_var_$3$2(int              ncid,
     MPI_Offset *start, *count;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
-                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_FULL_DIMENSIONS(start, count)
@@ -794,7 +794,7 @@ ncmpi_$1_var1$2(int                ncid,
     MPI_Offset *count;
 
     status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
-                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
@@ -830,7 +830,7 @@ ncmpi_$1_var1_$3$2(int               ncid,
     MPI_Offset *count;
 
     status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
-                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
@@ -915,7 +915,7 @@ ncmpi_$1_vara$2(int                ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
-                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     /* $1_vara is a special case of $1_varm */
@@ -948,7 +948,7 @@ ncmpi_$1_vara_$3$2(int               ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
-                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     /* $1_vara is a special case of $1_varm */
@@ -1030,7 +1030,7 @@ ncmpi_$1_vars$2(int                ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
-                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)buf,
@@ -1063,7 +1063,7 @@ ncmpi_$1_vars_$3$2(int               ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
-                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)op,
@@ -1145,7 +1145,7 @@ ncmpi_$1_varm$2(int                ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
-                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
@@ -1180,7 +1180,7 @@ ncmpi_$1_varm_$3$2(int               ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
-                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, (void*)op,

@@ -54,7 +54,7 @@ ncmpi_i$1_var(int                ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
-                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_FULL_DIMENSIONS(start, count)
@@ -90,7 +90,7 @@ ncmpi_i$1_var_$2(int              ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
-                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_FULL_DIMENSIONS(start, count)
@@ -153,7 +153,7 @@ ncmpi_i$1_var1(int                ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
-                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
@@ -189,7 +189,7 @@ ncmpi_i$1_var1_$2(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
-                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
@@ -251,7 +251,7 @@ ncmpi_i$1_vara(int                ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
-                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -283,7 +283,7 @@ ncmpi_i$1_vara_$2(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
-                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -341,7 +341,7 @@ ncmpi_i$1_vars(int                ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
-                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
@@ -374,7 +374,7 @@ ncmpi_i$1_vars_$2(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
-                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
@@ -445,7 +445,7 @@ ncmpi_i$1_varm(int                ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
-                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
@@ -479,7 +479,7 @@ ncmpi_i$1_varm_$2(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
-                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
@@ -846,6 +846,13 @@ pack_request(NC               *ncp,
         if (stride != NULL)
             req->stride[i] = stride[i];
     }
+
+#ifdef _DISALLOW_POST_NONBLOCKING_API_IN_DEFINE_MODE
+    /* move the offset calculation to wait time (ncmpii_wait_getput),
+     * such that posting a nonblocking request can be done in define
+     * mode
+     */
+
     /* get the starting file offset for this request */
     ncmpii_get_offset(ncp, varp, start, NULL, NULL, req->rw_flag,
                       &req->offset_start);
@@ -854,6 +861,7 @@ pack_request(NC               *ncp,
     ncmpii_get_offset(ncp, varp, start, count, stride, req->rw_flag,
                       &req->offset_end);
     req->offset_end += varp->xsz - 1;
+#endif
 
     /* check if this is a record variable. if yes, split the request into
      * subrequests, one subrequest for a record access. Hereinafter,
@@ -898,13 +906,19 @@ pack_request(NC               *ncp,
                 if (stride != NULL)
                     subreqs[i].stride[j] = req->stride[j];
             }
+
+#ifdef _DISALLOW_POST_NONBLOCKING_API_IN_DEFINE_MODE
+            /* move the offset calculation to wait time (ncmpii_wait_getput),
+             * such that posting a nonblocking request can be done in define
+             * mode
+             */
             ncmpii_get_offset(ncp, varp, subreqs[i].start, NULL, NULL,
                               subreqs[i].rw_flag, &subreqs[i].offset_start);
             ncmpii_get_offset(ncp, varp, subreqs[i].start,
                               subreqs[i].count, subreqs[i].stride,
                               subreqs[i].rw_flag, &subreqs[i].offset_end);
             subreqs[i].offset_end += varp->xsz - 1;
-
+#endif
             span                = i*rec_bufcount*varp->xsz;
             subreqs[i].buf      = (char*)(req->buf)  + span;
             /* xbuf cannot be NULL    assert(req->xbuf != NULL); */

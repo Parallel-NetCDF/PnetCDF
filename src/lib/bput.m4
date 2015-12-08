@@ -44,7 +44,7 @@ ncmpi_bput_var(int           ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
-                                 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -79,7 +79,7 @@ ncmpi_bput_var_$1(int       ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
-                                 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -125,7 +125,7 @@ ncmpi_bput_var1(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
-                                 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -159,7 +159,7 @@ ncmpi_bput_var1_$1(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
-                                 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -204,7 +204,7 @@ ncmpi_bput_vara(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
-                                 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -234,7 +234,7 @@ ncmpi_bput_vara_$1(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
-                                 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -276,7 +276,7 @@ ncmpi_bput_vars(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
-                                 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -307,7 +307,7 @@ ncmpi_bput_vars_$1(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
-                                 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -349,7 +349,7 @@ ncmpi_bput_varm(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
-                                 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -381,7 +381,7 @@ ncmpi_bput_varm_$1(int               ncid,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
-                                 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
