@@ -731,11 +731,13 @@ ncmpii_igetput_varm(NC               *ncp,
             if (need_swap) {
 #ifdef DISABLE_IN_PLACE_SWAP
                 if (xbuf == buf) {
+#else
+                if (xbuf == buf && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE) {
+#endif
                     /* allocate xbuf and copy buf to xbuf, before byte-swap */
                     xbuf = NCI_Malloc((size_t)nbytes);
                     memcpy(xbuf, buf, (size_t)nbytes);
                 }
-#endif
                 /* perform array in-place byte swap on xbuf */
                 ncmpii_in_swapn(xbuf, bnelems, ncmpix_len_nctype(varp->type));
 

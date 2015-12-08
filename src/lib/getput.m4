@@ -428,11 +428,14 @@ err_check:
         else if (need_swap) { /* no need to convert, just byte swap */
 #ifdef DISABLE_IN_PLACE_SWAP
             if (cbuf == buf) {
+#else
+            if (cbuf == buf && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE) {
+#endif
                 /* allocate cbuf and copy buf to xbuf, before byte-swap */
                 xbuf = NCI_Malloc((size_t)nbytes);
                 memcpy(xbuf, buf, nbytes);
             }
-#endif
+
             /* perform array in-place byte-swap on xbuf */
             ncmpii_in_swapn(xbuf, bnelems, ncmpix_len_nctype(varp->type));
 

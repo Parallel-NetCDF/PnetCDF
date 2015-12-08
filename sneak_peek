@@ -8,6 +8,19 @@ This is essentially a placeholder for the next release note ...
       nonblocking write requests without separating the codes by
       ncmpi_enddef(). Note ncmpi_wait_all and ncmpi_wait must still be called
       in the data mode.
+    * When using immutable write buffer in put APIs on a Little Endian machine,
+      the in-place byte swap operation performed internally in PnetCDF can
+      cause a fatal error (by trying to change the contents of an immutable
+      memory space). The solution of copying user's write request to a
+      temporary buffer and perform byte swap there conflicts with PnetCDF's
+      design principle of avoiding internal memory allocation as much as
+      possible. Since the size of immutable buffer in most cases is small,
+      PnetCDF now compromise the two by making a copy of write requests that is
+      less than 4KB. Users are warned that using immutable write buffer larger
+      than 4KB will still cause the fatal error in the PnetCDF default
+      configuration. The way to completely disable in-place byte swap is to
+      build PnetCDF with --disable-in-place-swap option at the configure time.
+      In this case, the internal memory allocation in PnetCDF will increase.
 
   o New APIs
     * none

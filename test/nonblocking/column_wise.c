@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 
     /* check status of all requests */
     for (i=0; i<num_reqs; i++) {
-        if (reqs[i] != NC_REQ_NULL) { /* add in PnetCDF v1.6.2 */
+        if (reqs[i] != NC_REQ_NULL) { /* add in PnetCDF v1.7.0 */
             printf("Error: request ID %d fails to be set to NC_REQ_NULL\n",i);
             nerrs++;
         }
