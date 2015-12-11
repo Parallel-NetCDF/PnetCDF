@@ -31,4 +31,5 @@ attrf.o: attrf.f
 add_var.o: add_var.c
 buftype_free.o: buftype_free.c
 buftype_freef.o: buftype_freef.f
+put_parameter.o: put_parameter.f
 last_large_var.o: last_large_var.c

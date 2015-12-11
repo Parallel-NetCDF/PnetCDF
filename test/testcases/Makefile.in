@@ -50,7 +50,8 @@ C_SRCS   = ncmpi_vars_null_stride.c \
 F77_SRCS = test_vardf.f \
            varn_intf.f \
            attrf.f \
-           buftype_freef.f
+           buftype_freef.f \
+           put_parameter.f
 
 F90_SRCS = inq_num_varsf.f90 \
            inq_recsizef.f90 \
@@ -178,6 +179,9 @@ attrf: attrf.o $(LIBRARY)
 	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 buftype_freef: buftype_freef.o $(LIBRARY)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
+
+put_parameter: put_parameter.o $(LIBRARY)
 	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 test_vardf90: test_vardf90.o $(LIBRARY)
