@@ -33,14 +33,21 @@ $(SUBDIRS):
 	$(MAKE) $(MFLAGS) -C $@
 
 ptest: all
+ifeq (@enable_coverage@, yes)
+	echo "Parallel test is disabled because coverage analysis was enabled"
+else
 	(echo "=============================================")  && \
 	(echo "    Parallel testing on 4 MPI processes")  && \
 	(echo "=============================================")  && \
 	( for d in $(SUBDIRS) ; do \
 		$(MAKE) $(MFLAGS) -C $$d ptest4 ; \
 	done ) ;
+endif
 
 ptests: all
+ifeq (@enable_coverage@, yes)
+	echo "Parallel test is disabled because coverage analysis was enabled"
+else
 	for i in 3 4 8 ; do \
 	(echo "=============================================")  && \
 	(echo "    Parallel testing on $$i MPI processes")  && \
@@ -49,6 +56,7 @@ ptests: all
 	$(MAKE) $(MFLAGS) -C $$d ptest$$i ; \
 	done ) ; \
 	done ;
+endif
 
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)

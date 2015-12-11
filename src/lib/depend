@@ -18,7 +18,7 @@ m_getput_varx.o: m_getput_varx.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h 
 varn.o: varn.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 i_varn.o: i_varn.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 nonblocking.o: nonblocking.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
-malloc.o: malloc.c ncconfig.h
+malloc.o: malloc.c ncconfig.h nc.h
 utf8proc.o: utf8proc.c ncconfig.h utf8proc.h utf8proc_data.h
 ncx.o: ncx.c ncconfig.h nc.h pnetcdf.h ncx.h
 swap.o: swap.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h

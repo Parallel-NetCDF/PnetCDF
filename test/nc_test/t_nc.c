@@ -325,6 +325,7 @@ static double zed = 0.0;
 
 
 /*ARGSUSED*/
+static
 int t_nc(char *filename, int cmode)
 {
 	int id, err;

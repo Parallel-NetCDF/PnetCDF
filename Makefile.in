@@ -78,7 +78,11 @@ PTEST_SUBDIRS = test examples benchmarks
 PTEST_DIRS = $(PTEST_SUBDIRS:%=ptest-%)
 ptest: tests $(PTEST_DIRS)
 $(PTEST_DIRS): 
+ifeq (@enable_coverage@, yes)
+	echo "Parallel test is disabled because coverage analysis was enabled"
+else
 	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+endif
 # make sure ptest runs one directory after another
 ptest-examples: ptest-test
 ptest-benchmarks: ptest-examples
@@ -86,7 +90,11 @@ ptest-benchmarks: ptest-examples
 PTESTS_DIRS = $(PTEST_SUBDIRS:%=ptests-%)
 ptests: tests $(PTESTS_DIRS)
 $(PTESTS_DIRS): 
+ifeq (@enable_coverage@, yes)
+	echo "Parallel test is disabled because coverage analysis was enabled"
+else
 	$(MAKE) $(MFLAGS) -C $(@:ptests-%=%) ptests
+endif
 # make sure ptests runs one directory after another
 ptests-examples: ptests-test
 ptests-benchmarks: ptests-examples

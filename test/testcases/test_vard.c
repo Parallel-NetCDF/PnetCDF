@@ -78,6 +78,7 @@
     } \
 }
 
+static
 int get_var_and_verify(int ncid,
                        int varid,
                        MPI_Offset *start,

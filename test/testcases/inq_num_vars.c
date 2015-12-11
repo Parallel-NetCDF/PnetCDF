@@ -31,6 +31,7 @@
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
+static
 void check_num_vars(int  ncid,
                     int  expected_nvars,
                     int  expected_num_rec_vars,

@@ -106,7 +106,7 @@ dnl
 # define X_FLOAT_MIN (-X_FLOAT_MAX)
 #endif
 
-#if _SX /* NEC SUPER UX */
+#if defined(_SX) && _SX != 0 /* NEC SUPER UX */
 #define LOOPCNT 256    /* must be no longer than hardware vector length */
 #if _INT64
 #undef  INT_MAX /* workaround cpp bug */
@@ -962,7 +962,7 @@ put_ix_float(void *xp, const float *ip)
 #endif
 }
 
-#elif vax
+#elif defined(vax) && vax != 0
 
 /* What IEEE single precision floating point looks like on a Vax */
 struct	ieee_single {
@@ -1420,7 +1420,7 @@ put_ix_double(void *xp, const double *ip)
 #endif
 }
 
-#elif vax
+#elif defined(vax) && vax != 0
 
 /* What IEEE double precision floating point looks like on a Vax */
 struct	ieee_double {
@@ -2269,7 +2269,7 @@ define(`NCX_GETN',dnl
 int
 ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 {
-`#'if _SX && Xsizeof($1) == Isizeof($1)
+`#'if defined(_SX) && _SX != 0 && Xsizeof($1) == Isizeof($1)
 
  /* basic algorithm is:
   *   - ensure sane alignment of input data
@@ -2485,7 +2485,7 @@ define(`NCX_PUTN',dnl
 int
 ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 {
-`#'if _SX && Xsizeof($1) == Isizeof($1)
+`#'if defined(_SX) && _SX != 0 && Xsizeof($1) == Isizeof($1)
 
  /* basic algorithm is:
   *   - ensure sane alignment of output data
@@ -3074,7 +3074,7 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
 	*xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_FLOAT);
 	return NC_NOERR;
 }
-#elif vax
+#elif defined(vax) && vax != 0
 int
 ncmpix_getn_float_float(const void **xpp, MPI_Offset nfloats, float *ip)
 {
@@ -3132,7 +3132,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
 	*xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_FLOAT);
 	return NC_NOERR;
 }
-#elif vax
+#elif defined(vax) && vax != 0
 int
 ncmpix_putn_float_float(void **xpp, MPI_Offset nfloats, const float *ip)
 {
@@ -3191,7 +3191,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
 	*xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_DOUBLE);
 	return NC_NOERR;
 }
-#elif vax
+#elif defined(vax) && vax != 0
 int
 ncmpix_getn_double_double(const void **xpp, MPI_Offset ndoubles, double *ip)
 {
@@ -3248,7 +3248,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
 	*xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_DOUBLE);
 	return NC_NOERR;
 }
-#elif vax
+#elif defined(vax) && vax != 0
 int
 ncmpix_putn_double_double(void **xpp, MPI_Offset ndoubles, const double *ip)
 {

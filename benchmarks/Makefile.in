@@ -30,7 +30,11 @@ $(SUBDIRS):
 PTEST_DIRS = $(SUBDIRS:%=ptest-%)
 ptest: all $(PTEST_DIRS)
 $(PTEST_DIRS):
+ifeq (@enable_coverage@, yes)
+	echo "Parallel test is disabled because coverage analysis was enabled"
+else
 	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+endif
 # make sure ptest runs one directory after another
 ptest-FLASH-IO: ptest-C
 

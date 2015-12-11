@@ -55,6 +55,7 @@
 
 #define ERR {if(err!=NC_NOERR){printf("Error at %s line=%d: %s\n", __FILE__,__LINE__, ncmpi_strerror(err)); nerrs++;}}
 
+static
 int check_contents_for_fail(int *buffer)
 {
     int i, nprocs;
@@ -77,6 +78,7 @@ int check_contents_for_fail(int *buffer)
     return 0;
 }
 
+static
 void permute(MPI_Offset a[NDIMS], MPI_Offset b[NDIMS])
 {
     int i;

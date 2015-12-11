@@ -27,6 +27,7 @@
 
 #define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
+static
 int tst_norm(char *filename, int cmode)
 {
    int ncid, dimid, varid;

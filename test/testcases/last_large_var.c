@@ -50,6 +50,7 @@
 
 #define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
 
+static
 int check_last_var(char *filename)
 {
     int err, nerrs=0, ncid, cmode, varid, dimid[4];
@@ -74,6 +75,7 @@ int check_last_var(char *filename)
     return nerrs;
 }
 
+static
 int check_rec_var(char *filename)
 {
     int err, nerrs=0, ncid, cmode, varid, dimid[4];
@@ -106,6 +108,7 @@ int check_rec_var(char *filename)
     return nerrs;
 }
 
+static
 int check_not_last_var(char *filename)
 {
     int err, nerrs=0, ncid, cmode, varid, dimid[4];
@@ -138,6 +141,7 @@ int check_not_last_var(char *filename)
     return nerrs;
 }
 
+static
 int check_add_var(char *filename)
 {
     int err, nerrs=0, ncid, cmode, varid, dimid[4];
@@ -175,6 +179,7 @@ int check_add_var(char *filename)
     return nerrs;
 }
 
+static
 int check_var_offset(char *filename)
 {
     int err, nerrs=0, ncid, cmode, varid, dimid[4];

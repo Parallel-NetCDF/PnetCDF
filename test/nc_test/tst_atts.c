@@ -29,7 +29,8 @@ static int verbose;
 #define ERRV {printf("Unexpected result at %s line %d\n",__func__,__LINE__); return 1;}
 
 
-void
+#if 0
+static void
 check_err(const int stat, const int line, const char *file) {
    if (stat != NC_NOERR) {
       (void)fprintf(stderr,"line %d of %s: %s\n", line, file, ncmpi_strerror(stat));
@@ -37,8 +38,9 @@ check_err(const int stat, const int line, const char *file) {
       exit(1);
    }
 }
+#endif
 
-int
+static int
 create_file(char *filename, int cmode)
 {
     int  err;  /* return status */
@@ -2066,7 +2068,7 @@ create_file(char *filename, int cmode)
 
 }
 
-int
+static int
 tst_atts(char *filename, int cmode)
 {
    int err;

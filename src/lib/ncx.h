@@ -98,7 +98,7 @@
 #define X_FLOAT_MAX	3.402823466e+38f
 #define X_FLOAT_MIN	(-X_FLOAT_MAX)
 #define X_FLT_MAX	X_FLOAT_MAX	/* alias compatible with limits.h */
-#if CRAYFLOAT
+#if defined(CRAYFLOAT) && CRAYFLOAT != 0
 /* ldexp(1. - ldexp(.5 , -46), 1024) */
 #define X_DOUBLE_MAX    1.79769313486230e+308
 #else
@@ -156,7 +156,7 @@
 
 /* End ncmpix_len */
 
-#if __CHAR_UNSIGNED__
+#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
 	/* 'char' is unsigned, declare ncbyte as 'signed char' */
 typedef signed char schar;
 
