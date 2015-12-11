@@ -34,6 +34,7 @@
 
 #define ERR {if(err!=NC_NOERR) {nerrs++; printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
+static
 int test_only_record_var_1D(char *filename)
 {
     int ncid, cmode, varid, dimid, buf[20], err, nerrs=0;
@@ -89,6 +90,7 @@ int test_only_record_var_1D(char *filename)
     return nerrs;
 }
 
+static
 int test_only_record_var_3D(char *filename)
 {
     int i, ncid, cmode, varid, dimid[3], buf[20], err, nerrs=0;
@@ -148,6 +150,7 @@ int test_only_record_var_3D(char *filename)
     return nerrs;
 }
 
+static
 int test_two_record_var(char *filename)
 {
     int i, ncid, cmode, varid[2], dimid[3], buf[20], err, nerrs=0;

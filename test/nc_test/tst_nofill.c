@@ -23,7 +23,7 @@
 
 #define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
-void
+static void
 check_err(const int stat, const int line, const char *file) {
     if (stat != NC_NOERR) {
 	(void) fprintf(stderr, "line %d of %s: %s\n", line, file, ncmpi_strerror(stat));
@@ -37,7 +37,7 @@ check_err(const int stat, const int line, const char *file) {
 #define LVL_LEN 31
 #define TIME_LEN 1
 
-int
+static int
 create_file(char *file_name, int fill_mode)
 {
    int i;

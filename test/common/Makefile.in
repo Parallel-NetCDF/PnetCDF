@@ -24,7 +24,10 @@ F_SRCS   = testutilsf.F90
 
 HEADERS  = testutils.h
 
-OBJS     = $(C_SRCS:.c=.o) $(F_SRCS:.F90=.o)
+OBJS     = $(C_SRCS:.c=.o)
+ifeq (@has_fortran@, yes)
+OBJS    += $(F_SRCS:.F90=.o)
+endif
 
 UTIL_LIB = libtestutils.a
 

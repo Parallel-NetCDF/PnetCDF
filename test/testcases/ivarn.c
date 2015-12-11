@@ -66,6 +66,7 @@
 #define LEN 16
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
+static
 int check_int_buf(int *buffer)
 {
     int i, nprocs;
@@ -94,6 +95,7 @@ int check_int_buf(int *buffer)
     return 0;
 }
 
+static
 int check_flt_buf(float *buffer, float extra)
 {
     int i, nprocs;
@@ -122,6 +124,7 @@ int check_flt_buf(float *buffer, float extra)
     return 0;
 }
 
+static
 int check_dbl_buf(double *buffer, double extra)
 {
     int i, nprocs;

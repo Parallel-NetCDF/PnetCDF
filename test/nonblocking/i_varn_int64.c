@@ -86,6 +86,7 @@
     } \
 }
 
+static
 void clear_file_contents(int ncid, int *varid)
 {
     int i, err, rank;
@@ -101,6 +102,7 @@ void clear_file_contents(int ncid, int *varid)
     free(w_buffer);
 }
 
+static
 int check_contents_for_fail(int ncid, int *varid)
 {
     /* all processes read entire variables back and check contents */
@@ -163,6 +165,7 @@ check_num_pending_reqs(int ncid, int expected, int lineno)
 }
 
 /* swap two rows, a and b, of a 2D array */
+static
 void permute(MPI_Offset *a, MPI_Offset *b)
 {
     int i;

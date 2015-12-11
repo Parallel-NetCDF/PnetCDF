@@ -33,6 +33,7 @@
                __LINE__,nc_err_code_name(err_no),nc_err_code_name(err)); \
     }
 
+static
 int check_modes(char *filename)
 {
     int rank, err, nerrs=0, file_exist;

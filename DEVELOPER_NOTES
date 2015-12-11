@@ -163,6 +163,7 @@ src/lib:
     varnx.m4
     varnx_api_header.m4
     varn_api_header.m4
+    swap.c
 
 src/libf:
     varn_external.m4

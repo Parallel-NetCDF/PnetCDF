@@ -982,7 +982,8 @@ sub print_args {
     # Special case: if the only parm is "void", remove it from the list
     print STDERR "Nparms = $#parms, parms = " . join(',',@parms) . "\n" if $debug;
     if ($#parms == 0 && $parms[0] eq "void") {
-	$#parms = -1;
+        print $OUTFD "( void )";
+        return
     }
     # argsep is used to add a comma before every argument, except for the 
     # first

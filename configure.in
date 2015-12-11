@@ -1040,6 +1040,7 @@ if test "x${enable_coverage}" = xyes; then
           CXXFLAGS="${CXXFLAGS} ${LCOV_FLAGS}"
        fi
        if test "x${enable_fortran}" = xyes ; then
+           FCFLAGS="${FCFLAGS}  ${LCOV_FLAGS}"
           F77FLAGS="${F77FLAGS} ${LCOV_FLAGS}"
           F90FLAGS="${F90FLAGS} ${LCOV_FLAGS}"
        fi
@@ -1047,8 +1048,10 @@ if test "x${enable_coverage}" = xyes; then
        AC_SUBST(LCOV_LIB)
    else
       AC_MSG_WARN([--enable-coverage is for GNU compiler only])
+      enable_coverage=no
    fi
 fi
+AC_SUBST(enable_coverage)
 
 if test "x${has_mpicxx}" = xyes ; then
    UD_CXX_MACRO_FUNC
@@ -1070,7 +1073,7 @@ if test "x${debug}" = xyes; then
    CFLAGS=`echo $CFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
    CFLAGS="${CFLAGS} -O0"
 
-   if test "x${enable_cxx}" = xyes ; then
+   if test "x${has_mpicxx}" = xyes ; then
       if ! echo "${CXXFLAGS}" | ${EGREP} -q -- "-g" ; then
          CXXFLAGS="${CXXFLAGS} -g"
       fi
@@ -1079,6 +1082,9 @@ if test "x${debug}" = xyes; then
    fi
 
    if test "x${enable_fortran}" = xyes ; then
+      if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-g" ; then
+         FCFLAGS="${FCFLAGS} -g"
+      fi
       if ! echo "${F77FLAGS}" | ${EGREP} -q -- "-g" ; then
          F77FLAGS="${F77FLAGS} -g"
       fi
@@ -1086,8 +1092,10 @@ if test "x${debug}" = xyes; then
          F90FLAGS="${F90FLAGS} -g"
       fi
 
+       FCFLAGS=`echo $FCFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
       F77FLAGS=`echo $F77FLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
       F90FLAGS=`echo $F90FLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
+       FCFLAGS="${FCFLAGS}  -O0"
       F77FLAGS="${F77FLAGS} -O0"
       F90FLAGS="${F90FLAGS} -O0"
    fi

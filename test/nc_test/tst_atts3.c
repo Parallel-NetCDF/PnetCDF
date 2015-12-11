@@ -88,7 +88,7 @@ Cry 'God for Harry, England, and Saint George!'";
 /* Test the ordering of atts for a cmode. */
 #define NUM_ATTS 8
 #define ATT_MAX_NAME 25
-int
+static int
 tst_att_ordering(char *filename, int cmode)
 {
    int ncid, err, nerrs=0;
@@ -129,7 +129,7 @@ tst_att_ordering(char *filename, int cmode)
    return nerrs;
 }
 
-int
+static int
 tst_atts3(char *filename, int cmode)
 {
     char filename2[128];
