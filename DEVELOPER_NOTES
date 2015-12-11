@@ -8,7 +8,11 @@ Tasks immediately before a new release (must run in the following order)
  1. Make sure build is successful
     * build and test under the same directory as source
       - autoreconf
-      - configure (and many command-line options)
+      - configure (with command-line options: --enable-strict
+                                              --enable-coverage
+                                              --disable-cxx
+                                              --disable-fortran
+                   and their combinations)
       - make check
       - make ptests
       - make install (and check if all files are installed in the right places)
@@ -104,8 +108,9 @@ Note on autotools version
    However, 2.59 generates a buggy configure file and failed on processing
    libraries from linker command line when running on Carver @nersc
 
-   For official release of PnetCDF, use a newer autotools to generate file
-   configure.
+   For official release of PnetCDF, use autotools 2.69 with the patch for
+   Fujitsu compilers to generate file configure. See README.Fujitsu for the
+   bug in autoconf 2.69 and patch.
 
 =====================================================
 Working on configure.in
