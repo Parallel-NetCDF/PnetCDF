@@ -55,6 +55,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/put_parameter.f tests the use of immutable write buffer
+      (e.g. a buffer desclared as PARAMETER). Note the buffer size must be
+      smaller than 4KB.
     * test/nonblocking/i_varn_indef.c tests posting nonblocking requests in
       define mode.
     * test/nonblocking/req_all.c tests the use of NC_REQ_ALL for flushing
