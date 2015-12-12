@@ -562,7 +562,7 @@ INTERFACE
                    integer, parameter :: TwoByteInt = selected_int_kind(4)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION   nfmpi_put_var_int2
 
     INTEGER        FUNCTION nfmpi_get_var_int2(ncid, varid, i2vals)
@@ -582,7 +582,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_put_var_int(ncid, varid, ivals)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION   nfmpi_put_var_int
 
     INTEGER        FUNCTION nfmpi_get_var_int(ncid, varid, ivals)
@@ -600,7 +600,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_put_var_real(ncid, varid, rvals)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION   nfmpi_put_var_real
 
     INTEGER        FUNCTION nfmpi_get_var_real(ncid, varid, rvals)
@@ -618,7 +618,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_put_var_double(ncid, varid, dvals)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION   nfmpi_put_var_double
 
     INTEGER        FUNCTION nfmpi_get_var_double(ncid, varid, dvals)
@@ -637,7 +637,7 @@ INTERFACE
                    integer, parameter :: EightByteInt = selected_int_kind(18)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION   nfmpi_put_var_int8
 
     INTEGER        FUNCTION nfmpi_get_var_int8(ncid, varid, i8vals)
@@ -771,7 +771,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2val
     END FUNCTION   nfmpi_put_var1_int2
 
     INTEGER        FUNCTION nfmpi_put_var1_int2_all(ncid, varid, index, i2val)
@@ -780,7 +780,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2val
     END FUNCTION   nfmpi_put_var1_int2_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int2(ncid, varid, index, i2val)
@@ -806,7 +806,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ival
+                            INTEGER,                       INTENT(@INTENTV@) :: ival
     END FUNCTION   nfmpi_put_var1_int
 
     INTEGER        FUNCTION nfmpi_put_var1_int_all(ncid, varid, index, ival)
@@ -814,7 +814,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ival
+                            INTEGER,                       INTENT(@INTENTV@) :: ival
     END FUNCTION   nfmpi_put_var1_int_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int(ncid, varid, index, ival)
@@ -838,7 +838,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            REAL,                          INTENT(@INOUT@) :: rval
+                            REAL,                          INTENT(@INTENTV@) :: rval
     END FUNCTION   nfmpi_put_var1_real
 
     INTEGER        FUNCTION nfmpi_put_var1_real_all(ncid, varid, index, rval)
@@ -846,7 +846,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            REAL,                          INTENT(@INOUT@) :: rval
+                            REAL,                          INTENT(@INTENTV@) :: rval
     END FUNCTION   nfmpi_put_var1_real_all
 
     INTEGER        FUNCTION nfmpi_get_var1_real(ncid, varid, index, rval)
@@ -870,7 +870,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dval
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dval
     END FUNCTION   nfmpi_put_var1_double
 
     INTEGER        FUNCTION nfmpi_put_var1_double_all(ncid, varid, index, dval)
@@ -878,7 +878,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dval
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dval
     END FUNCTION   nfmpi_put_var1_double_all
 
     INTEGER        FUNCTION nfmpi_get_var1_double(ncid, varid, index, dval)
@@ -903,7 +903,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8val
     END FUNCTION   nfmpi_put_var1_int8
 
     INTEGER        FUNCTION nfmpi_put_var1_int8_all(ncid, varid, index, i8val)
@@ -912,7 +912,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8val
     END FUNCTION   nfmpi_put_var1_int8_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int8(ncid, varid, index, i8val)
@@ -1063,7 +1063,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vara_int2
 
     INTEGER        FUNCTION nfmpi_put_vara_int2_all(ncid, varid, start, count, i2vals)
@@ -1073,7 +1073,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vara_int2_all
 
     INTEGER        FUNCTION nfmpi_get_vara_int2(ncid, varid, start, count, i2vals)
@@ -1102,7 +1102,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION   nfmpi_put_vara_int
 
     INTEGER        FUNCTION nfmpi_put_vara_int_all(ncid, varid, start, count, ivals)
@@ -1111,7 +1111,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION   nfmpi_put_vara_int_all
 
     INTEGER        FUNCTION nfmpi_get_vara_int(ncid, varid, start, count, ivals)
@@ -1138,7 +1138,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION   nfmpi_put_vara_real
 
     INTEGER        FUNCTION nfmpi_put_vara_real_all(ncid, varid, start, count, rvals)
@@ -1147,7 +1147,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION   nfmpi_put_vara_real_all
 
     INTEGER        FUNCTION nfmpi_get_vara_real(ncid, varid, start, count, rvals)
@@ -1174,7 +1174,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION   nfmpi_put_vara_double
 
     INTEGER        FUNCTION nfmpi_put_vara_double_all(ncid, varid, start, count, dvals)
@@ -1183,7 +1183,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION   nfmpi_put_vara_double_all
 
     INTEGER        FUNCTION nfmpi_get_vara_double(ncid, varid, start, count, dvals)
@@ -1211,7 +1211,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vara_int8
 
     INTEGER        FUNCTION nfmpi_put_vara_int8_all(ncid, varid, start, count, i8vals)
@@ -1221,7 +1221,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vara_int8_all
 
     INTEGER        FUNCTION nfmpi_get_vara_int8(ncid, varid, start, count, i8vals)
@@ -1387,7 +1387,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vars_int2
 
     INTEGER        FUNCTION nfmpi_put_vars_int2_all(ncid, varid, start, count, stride, i2vals)
@@ -1398,7 +1398,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vars_int2_all
 
     INTEGER        FUNCTION nfmpi_get_vars_int2(ncid, varid, start, count, stride, i2vals)
@@ -1430,7 +1430,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION   nfmpi_put_vars_int
 
     INTEGER        FUNCTION nfmpi_put_vars_int_all(ncid, varid, start, count, stride, ivals)
@@ -1440,7 +1440,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION   nfmpi_put_vars_int_all
 
     INTEGER        FUNCTION nfmpi_get_vars_int(ncid, varid, start, count, stride, ivals)
@@ -1470,7 +1470,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION   nfmpi_put_vars_real
 
     INTEGER        FUNCTION nfmpi_put_vars_real_all(ncid, varid, start, count, stride, rvals)
@@ -1480,7 +1480,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION   nfmpi_put_vars_real_all
 
     INTEGER        FUNCTION nfmpi_get_vars_real(ncid, varid, start, count, stride, rvals)
@@ -1510,7 +1510,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION   nfmpi_put_vars_double
 
     INTEGER        FUNCTION nfmpi_put_vars_double_all(ncid, varid, start, count, stride, dvals)
@@ -1520,7 +1520,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION   nfmpi_put_vars_double_all
 
     INTEGER        FUNCTION nfmpi_get_vars_double(ncid, varid, start, count, stride, dvals)
@@ -1551,7 +1551,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vars_int8
 
     INTEGER        FUNCTION nfmpi_put_vars_int8_all(ncid, varid, start, count, stride, i8vals)
@@ -1562,7 +1562,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vars_int8_all
 
     INTEGER        FUNCTION nfmpi_get_vars_int8(ncid, varid, start, count, stride, i8vals)
@@ -1743,7 +1743,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION   nfmpi_put_varm_int2
 
     INTEGER        FUNCTION nfmpi_put_varm_int2_all(ncid, varid, start, count, stride, imap, i2vals)
@@ -1755,7 +1755,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION   nfmpi_put_varm_int2_all
 
     INTEGER        FUNCTION nfmpi_get_varm_int2(ncid, varid, start, count, stride, imap, i2vals)
@@ -1790,7 +1790,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION   nfmpi_put_varm_int
 
     INTEGER        FUNCTION nfmpi_put_varm_int_all(ncid, varid, start, count, stride, imap, ivals)
@@ -1801,7 +1801,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION   nfmpi_put_varm_int_all
 
     INTEGER        FUNCTION nfmpi_get_varm_int (ncid, varid, start, count, stride, imap, ivals)
@@ -1834,7 +1834,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION   nfmpi_put_varm_real
 
     INTEGER        FUNCTION nfmpi_put_varm_real_all(ncid, varid, start, count, stride, imap, rvals)
@@ -1845,7 +1845,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION   nfmpi_put_varm_real_all
 
     INTEGER        FUNCTION nfmpi_get_varm_real(ncid, varid, start, count, stride, imap, rvals)
@@ -1878,7 +1878,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION   nfmpi_put_varm_double
 
     INTEGER        FUNCTION nfmpi_put_varm_double_all(ncid, varid, start, count, stride, imap, dvals)
@@ -1889,7 +1889,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION   nfmpi_put_varm_double_all
 
     INTEGER        FUNCTION nfmpi_get_varm_double(ncid, varid, start, count, stride, imap, dvals)
@@ -1923,7 +1923,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION   nfmpi_put_varm_int8
 
     INTEGER        FUNCTION nfmpi_put_varm_int8_all(ncid, varid, start, count, stride, imap, i8vals)
@@ -1935,7 +1935,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION   nfmpi_put_varm_int8_all
 
     INTEGER        FUNCTION nfmpi_get_varm_int8(ncid, varid, start, count, stride, imap, i8vals)
@@ -2026,7 +2026,7 @@ INTERFACE
                    integer, parameter :: TwoByteInt = selected_int_kind(4)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_int2
 
@@ -2041,7 +2041,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iput_var_int(ncid, varid, ivals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_int
 
@@ -2055,7 +2055,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iput_var_real(ncid, varid, rvals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_real
 
@@ -2069,7 +2069,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iput_var_double(ncid, varid, dvals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_double
 
@@ -2084,7 +2084,7 @@ INTERFACE
                    integer, parameter :: EightByteInt = selected_int_kind(18)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_int8
 
@@ -2167,7 +2167,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_int2
 
@@ -2186,7 +2186,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ival
+                            INTEGER,                       INTENT(@INTENTV@) :: ival
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_int
 
@@ -2204,7 +2204,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            REAL,                          INTENT(@INOUT@) :: rval
+                            REAL,                          INTENT(@INTENTV@) :: rval
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_real
 
@@ -2222,7 +2222,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dval
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dval
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_double
 
@@ -2241,7 +2241,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_int8
 
@@ -2333,7 +2333,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_int2
 
@@ -2354,7 +2354,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_int
 
@@ -2374,7 +2374,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_real
 
@@ -2394,7 +2394,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_double
 
@@ -2415,7 +2415,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_int8
 
@@ -2515,7 +2515,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_int2
 
@@ -2538,7 +2538,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_int
 
@@ -2560,7 +2560,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_real
 
@@ -2582,7 +2582,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_double
 
@@ -2605,7 +2605,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_int8
 
@@ -2713,7 +2713,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_int2
 
@@ -2738,7 +2738,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_int
 
@@ -2762,7 +2762,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(@INTENTV@) :: rvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_real
 
@@ -2786,7 +2786,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_double
 
@@ -2811,7 +2811,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_int8
 
@@ -3650,7 +3650,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION nfmpi_put_varn_int2
 
     INTEGER FUNCTION nfmpi_put_varn_int(ncid, varid, num, starts, counts, ivals)
@@ -3660,7 +3660,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION nfmpi_put_varn_int
 
     INTEGER FUNCTION nfmpi_put_varn_real(ncid, varid, num, starts, counts, rvals)
@@ -3670,7 +3670,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     REAL,                          INTENT(@INOUT@) :: rvals(*)
+                     REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION nfmpi_put_varn_real
 
     INTEGER FUNCTION nfmpi_put_varn_double(ncid, varid, num, starts, counts, dvals)
@@ -3680,7 +3680,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                     DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION nfmpi_put_varn_double
 
     INTEGER FUNCTION nfmpi_put_varn_int8(ncid, varid, num, starts, counts, i8vals)
@@ -3691,7 +3691,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION nfmpi_put_varn_int8
 
     INTEGER FUNCTION nfmpi_put_varn_text_all(ncid, varid, num, starts, counts, text)
@@ -3723,7 +3723,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
     END FUNCTION nfmpi_put_varn_int2_all
 
     INTEGER FUNCTION nfmpi_put_varn_int_all(ncid, varid, num, starts, counts, ivals)
@@ -3733,7 +3733,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION nfmpi_put_varn_int_all
 
     INTEGER FUNCTION nfmpi_put_varn_real_all(ncid, varid, num, starts, counts, rvals)
@@ -3743,7 +3743,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     REAL,                          INTENT(@INOUT@) :: rvals(*)
+                     REAL,                          INTENT(@INTENTV@) :: rvals(*)
     END FUNCTION nfmpi_put_varn_real_all
 
     INTEGER FUNCTION nfmpi_put_varn_double_all(ncid, varid, num, starts, counts, dvals)
@@ -3753,7 +3753,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                     DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
     END FUNCTION nfmpi_put_varn_double_all
 
     INTEGER FUNCTION nfmpi_put_varn_int8_all(ncid, varid, num, starts, counts, i8vals)
@@ -3764,7 +3764,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
     END FUNCTION nfmpi_put_varn_int8_all
 
 !
@@ -3905,7 +3905,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_int2
 
@@ -3916,7 +3916,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_int
 
@@ -3927,7 +3927,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     REAL,                          INTENT(@INOUT@) :: rvals(*)
+                     REAL,                          INTENT(@INTENTV@) :: rvals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_real
 
@@ -3938,7 +3938,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                     DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_double
 
@@ -3950,7 +3950,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_int8
 
@@ -3997,7 +3997,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INTENTV@) :: i2vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_int2
 
@@ -4008,7 +4008,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_int
 
@@ -4019,7 +4019,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     REAL,                          INTENT(@INOUT@) :: rvals(*)
+                     REAL,                          INTENT(@INTENTV@) :: rvals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_real
 
@@ -4030,7 +4030,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                     DOUBLE PRECISION,              INTENT(@INTENTV@) :: dvals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_double
 
@@ -4042,7 +4042,7 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INTENTV@) :: i8vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_int8
 
