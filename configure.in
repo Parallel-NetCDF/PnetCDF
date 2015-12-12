@@ -887,7 +887,7 @@ AC_SUBST(is_bigendian)
 
 dnl For big endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little endian, put buffer may be used for byte swap in
-dnl place and hence must be declared as INTENT(INTENTV).
+dnl place and hence must be declared as INTENT(INOUT).
 dnl This will configure/produce the file src/libf90/api.f90
 if test "x${ac_cv_c_bigendian}" = xyes  || (test "x${in_place_swap}" = xno) ; then
    INTENTV="IN"
