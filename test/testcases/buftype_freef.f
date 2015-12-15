@@ -14,17 +14,26 @@
 !    % mpiexec -n 4 ./buftype_freef /pvfs2/wkliao/testfile.nc
 !
 
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          integer err
+          integer err, XTRIM
           character(len=*) message
           character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
+              write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 buftype_freef.f for flexible API '
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
@@ -36,7 +45,7 @@
           include "mpif.h"
           include "pnetcdf.inc"
 
-          integer NREQS
+          integer NREQS, XTRIM
           integer(kind=MPI_OFFSET_KIND) NX, NY
           PARAMETER(NREQS=4, NX=4, NY=4)
 
@@ -79,9 +88,10 @@
           ! define 2D variables of integer type
           do i=1, NREQS
              write(str,'(I1)') i
-             varname = 'var'//trim(str)
+             varname = 'var'//str(1:XTRIM(str))
              err = nfmpi_def_var(ncid,varname,NF_INT,2,dimid,varid(i))
-             call check(err, 'In nfmpi_def_var '//trim(varname)//' : ')
+             call check(err, 'In nfmpi_def_var '//
+     |                  varname(1:XTRIM(varname))//' : ')
           enddo
 
           ! do not forget to exit define mode
@@ -129,7 +139,8 @@
           ! check the status of each nonblocking request
           do i=1, NREQS
              write(str,'(I2)') i
-             call check(st(i), 'In nfmpi_wait_all req '//trim(str))
+             call check(st(i), 'In nfmpi_wait_all req '//
+     +                         str(1:XTRIM(str)))
           enddo
 
           ! close the file
@@ -148,7 +159,8 @@
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F77 '//trim(cmd)//' for flexible API '
+          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
+     +          ' for flexible API '
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)

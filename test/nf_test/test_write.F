@@ -1094,6 +1094,7 @@ C    try in data mode, check error
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer MY_LEN_TRIM
         character*2 ATT_NAME
         integer VARID, ATT_TYPE, NATTS, ATT_LEN
         double precision hash
@@ -1147,7 +1148,7 @@ C    try in data mode, check error
      +                  'newName')
                 if (err .ne. NF_ENOTATT)
      +              call errore('bad attname: ', err)
-                newname = 'new_' // trim(atnam)
+                newname = 'new_' // TRIM(atnam)
                 err = nfmpi_rename_att(ncid, vid, atnam, newname)
                 if (err .ne. NF_NOERR)
      +              call errore('nfmpi_rename_att: ', err)
@@ -1173,7 +1174,7 @@ C           /* Close. Reopen & check */
                 atnam = ATT_NAME(j,i)
                 attyp = ATT_TYPE(j,i)
                 attlength = ATT_LEN(j,i)
-                newname = 'new_' // trim(atnam)
+                newname = 'new_' // TRIM(atnam)
                 err = nfmpi_inq_attname(ncid, vid, j, name)
                 if (err .ne. NF_NOERR)
      +              call errore('nfmpi_inq_attname: ', err)
@@ -1231,8 +1232,8 @@ C           /* Try making names even longer. Then restore original names */
             vid = VARID(i)
             do 8, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
-                oldname = 'new_' // trim(atnam)
-                newname = 'even_longer_' // trim(atnam)
+                oldname = 'new_' // TRIM(atnam)
+                newname = 'even_longer_' // TRIM(atnam)
                 err = nfmpi_rename_att(ncid, vid, oldname, newname)
                 if (err .ne. NF_ENOTINDEFINE)
      +              call errore('longer name in data mode: ', err)
@@ -1414,6 +1415,7 @@ C    close file & create again for test using attribute _FillValue
         ! character*2 ATT_NAME
         ! integer VARID, ATT_TYPE, NATTS
 
+        integer MY_LEN_TRIM
         integer ncid
         integer vid
         integer err, flags
@@ -1551,7 +1553,8 @@ C           /* get all variables & check all values equal default fill */
                 end if
                 if (value .ne. fill .and. 
      +              abs((fill - value)/fill) .gt. 1.0e-9) then
-                    print *, 'var_name : ', trim(var_name(i))
+                    print *, 'var_name : ',
+     +              TRIM(var_name(i))
                     print *, 'var_type : ', var_type(i)
                     print *, 'fill : ', fill
                     call errord('Unexpected fill value: ', value)

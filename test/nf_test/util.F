@@ -960,6 +960,7 @@
         include "pnetcdf.inc"
 #include "tests.inc"
 
+        integer MY_LEN_TRIM
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
         integer flags
@@ -967,7 +968,8 @@
         flags = IOR(NF_CLOBBER, extra_flags)
         err = nfmpi_create(comm, filename, flags, info, ncid)
         if (err .ne. NF_NOERR) then
-            call errore('nfmpi_create: '//trim(filename), err)
+            call errore('nfmpi_create: '//
+     +           TRIM(filename), err)
         end if
 
         call def_dims(ncid)
@@ -1538,4 +1540,12 @@
      +                      value .le. internal_max(itype)
         end
 
+! Returns length of string ignoring trailing blanks 
+       INTEGER FUNCTION MY_LEN_TRIM(STRING)
+           CHARACTER*(*) STRING
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           MY_LEN_TRIM = I
+       END FUNCTION MY_LEN_TRIM
 

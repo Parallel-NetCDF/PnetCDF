@@ -45,17 +45,26 @@
 !
 !    Note the above dump is in C order
 !
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          integer err
+          integer err, XTRIM
           character(len=*) message
           character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
+              write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 varn_intf.f for varn API '
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
@@ -67,7 +76,7 @@
           include "mpif.h"
           include "pnetcdf.inc"
 
-          integer NDIMS
+          integer NDIMS, XTRIM
           integer(kind=MPI_OFFSET_KIND) NX, NY
           PARAMETER(NDIMS=2, NX=4, NY=10)
 
@@ -99,8 +108,8 @@
           nerrs = 0
 
           if (.FALSE. .AND. nprocs .NE. 4 .AND. rank .EQ. 0)
-     +        print*,'Warning: ',trim(cmd),' is intended to run on ',
-     +               '4 processes'
+     +        print*,'Warning: ',cmd(1:XTRIM(cmd)),
+     +               ' is intended to run on 4 processes'
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
@@ -265,7 +274,7 @@
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F77 '//trim(cmd)//' for varn API '
+          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for varn API '
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)

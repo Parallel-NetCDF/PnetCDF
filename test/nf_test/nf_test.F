@@ -31,7 +31,8 @@
         include "pnetcdf.inc"
 #include "tests.inc"
 
-        call error('Usage: '//trim(progname)//
+        integer MY_LEN_TRIM
+        call error('Usage: '//TRIM(progname)//
      +             ' [-c | -hrv -n <MAX_NMPT>]')
         call error('       nf_test [-c]')
         call error('   [-h] Print help' )
@@ -53,10 +54,13 @@
         character*128   msg
 #include "tests.inc"
 
-        write(msg,"(A,I1)") '*** TESTING F77 '//trim(PROGNAME)//
+        integer MY_LEN_TRIM
+        write(msg,"(A,I1)") '*** TESTING F77 '//
+     +                      TRIM(PROGNAME)//
      +                      ' for CDF-', cdf_format
         if (nfailsTotal .ne. 0) then
-          write(*,*) trim(PROGNAME)//' expects to see 0 failure ... '//
+          write(*,*) TRIM(PROGNAME)//
+     +               ' expects to see 0 failure ... '//
      +               'Total number of failures: ', nfailsTotal
         endif
         call pass_fail(nfailsTotal, msg)
@@ -71,7 +75,8 @@
         include "pnetcdf.inc"
 #include "tests.inc"
 
-        name_len = LEN_TRIM(name)
+        integer MY_LEN_TRIM
+        name_len = MY_LEN_TRIM(name)
         name_str(1:name_len) = name(:)
         name_str(name_len+1:25) = ' '
         if (verbose) write(*, 1, advance="no") name_str
@@ -130,6 +135,7 @@
         integer         lastopt
         logical         skiparg
         integer         err                       
+        integer MY_LEN_TRIM
 
         external        test_nfmpi_strerror
         external        test_nfmpi_open
@@ -481,8 +487,10 @@
                             extra_flags = NF_64BIT_DATA
                         else if (opt .eq. 'd') then
                             call getarg(iarg+1, arg)
-                            testfile = trim(arg) // "/test.nc"
-                            scratch = trim(arg) // "/scratch.nc"
+                            testfile = TRIM(arg)//
+     +                                 "/test.nc"
+                            scratch = TRIM(arg) //
+     +                                 "/scratch.nc"
                             skiparg = .true.
                             go to 1
                         else

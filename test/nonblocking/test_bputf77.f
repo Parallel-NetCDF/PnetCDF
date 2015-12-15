@@ -4,6 +4,16 @@
 !
 !   $Id$
 !
+
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       program main
 
       implicit none
@@ -12,7 +22,7 @@
 
       logical verbose
       integer i, j, ncid, varid, err, ierr, rank, nprocs, info
-      integer no_err, cmode, get_args
+      integer no_err, cmode, get_args, XTRIM
       integer dimid(2), req(2), status(2)
       integer(kind=MPI_OFFSET_KIND) start(2)
       integer(kind=MPI_OFFSET_KIND) count(2)
@@ -38,7 +48,7 @@
 
       verbose = .FALSE.
       if (nprocs > 1 .AND. rank .EQ. 0 .AND. verbose) then
-          print*,'Warning: ',trim(cmd),
+          print*,'Warning: ',cmd(1:XTRIM(cmd)),
      +           ' is designed to run on 1 process'
       endif
 
@@ -166,7 +176,8 @@
      +                           nfmpi_strerror(err)
 
       if (rank .EQ. 0) then
-         msg = '*** TESTING F77 '//trim(cmd)//' for bput_varm_real API'
+         msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
+     +         ' for bput_varm_real API'
          call pass_fail(no_err, msg)
       endif
 
