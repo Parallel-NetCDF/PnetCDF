@@ -59,9 +59,10 @@ C
         include "pnetcdf.inc"
 #include "tests.inc"
 
+        integer MY_LEN_TRIM
         nfails = nfails + 1
         if (nfails .le. max_nmpt) print *, msg, 
-     +      string(1:len_trim(string))
+     +      TRIM(string) ! string(1:len_trim(string))
         end
 
 

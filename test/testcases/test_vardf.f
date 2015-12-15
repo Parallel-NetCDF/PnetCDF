@@ -42,17 +42,26 @@
 !      0, 1, 2, 3, 4 ;
 ! }
 !
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          integer err
+          integer err, XTRIM
           character(len=*) message
           character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
+              write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 test_vardf.f for vard API '
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
@@ -184,7 +193,7 @@
           character(LEN=256) filename, cmd, msg
           integer err, ierr, nprocs, rank, i, j, get_args
           integer cmode, ncid, varid0, varid1, varid2, dimid(2), nerrs
-          integer NX, NY
+          integer NX, NY, XTRIM
           PARAMETER(NX=5, NY=2)
           integer buf(NX, NY)
           integer buftype, ghost_buftype, rec_filetype, fix_filetype
@@ -366,7 +375,7 @@
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F77 '//trim(cmd)//' for vard API '
+          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for vard API '
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)

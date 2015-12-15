@@ -27,7 +27,7 @@
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
+              write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
@@ -105,18 +105,18 @@
 
           ! define dimensions
           do i=1, NDIMS
-             write(str,'(I2)') i
-             err = nfmpi_def_dim(ncid, "x"//trim(ADJUSTL(str)),
+             write(str,'(I1)') i-1
+             err = nfmpi_def_dim(ncid, "x"//str,
      +                           gsizes(i), dimids(i))
-             call check(err, 'In nfmpi_def_dim x'//trim(str))
+             call check(err, 'In nfmpi_def_dim x'//str)
           enddo
 
           !define variables
           do i=1, NUM_VARS
-             write(str,'(I2)') i
-             err = nfmpi_def_var(ncid, "var"//trim(ADJUSTL(str)),
+             write(str,'(I1)') i-1
+             err = nfmpi_def_var(ncid, "var"//str,
      +                           NF_INT, NDIMS, dimids, varids(i))
-             call check(err, 'In nfmpi_def_var var'//trim(str))
+             call check(err, 'In nfmpi_def_var var'//str)
           enddo
 
           ! do not forget to exit define mode
@@ -125,10 +125,10 @@
 
           ! write one variable at a time using iput
           do i=1, NUM_VARS
-             write(str,'(I2)') i
+             write(str,'(I1)') i-1
              err = nfmpi_iput_vara_int(ncid, varids(i), starts,
      +                                 counts, buf(:,i), req(i))
-             call check(err, 'In nfmpi_iput_vara_int '//trim(str))
+             call check(err, 'In nfmpi_iput_vara_int '//str)
           enddo
 
           ! wait for the nonblocking I/O to complete
@@ -137,8 +137,8 @@
 
           ! check the status of each nonblocking request
           do i=1, NUM_VARS
-             write(str,'(I2)') i
-             call check(st(i), 'In nfmpi_wait_all req '//trim(str))
+             write(str,'(I1)') i-1
+             call check(st(i), 'In nfmpi_wait_all req '//str)
           enddo
 
           ! write one variable at a time using bput
@@ -149,10 +149,10 @@
           call check(err, 'In nfmpi_buffer_attach')
 
            do i=1, NUM_VARS
-             write(str,'(I2)') i
+             write(str,'(I1)') i-1
              err = nfmpi_bput_vara_int(ncid, varids(i), starts,
      +                                 counts, buf(:,i), req(i))
-             call check(err, 'In nfmpi_bput_vara_int '//trim(str))
+             call check(err, 'In nfmpi_bput_vara_int '//str)
 
              ! can safely change the contents of buf(:,i) now
            enddo
@@ -163,8 +163,8 @@
 
           ! check the status of each nonblocking request
           do i=1, NUM_VARS
-             write(str,'(I2)') i
-             call check(st(i), 'In nfmpi_wait_all req '//trim(str))
+             write(str,'(I1)') i-1
+             call check(st(i), 'In nfmpi_wait_all req '//str)
           enddo
 
           ! detach the temporary buffer

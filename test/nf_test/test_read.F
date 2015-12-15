@@ -13,6 +13,7 @@ C
         include "pnetcdf.inc"
 #include "tests.inc"
 
+        integer         MY_LEN_TRIM
         integer         number_of_messages
         parameter       (number_of_messages = 27)
 

@@ -13,17 +13,26 @@
 !    % mpiexec -n 1 ./attrf /pvfs2/wkliao/testfile.nc
 !
 
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       subroutine check(err, message, nerrs)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          integer err, nerrs
+          integer err, nerrs, XTRIM
           character(len=*) message
           character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
+              write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 attrf.f for attribute overflow '
               call pass_fail(1, msg)
               nerrs = nerrs + 1
@@ -39,7 +48,7 @@
           integer, parameter :: INT2_KIND = selected_int_kind(4)
           real                    buf_flt
           double precision        buf_dbl
-          integer                 buf_int
+          integer                 buf_int, XTRIM
           integer(kind=INT2_KIND) buf_int2
           integer(kind=INT8_KIND) buf_int8
 
@@ -77,7 +86,7 @@
      +                             1_MPI_OFFSET_KIND, buf_flt)
           if (err .NE. NF_ERANGE) then
               print*, "Error: expect NF_ERANGE but got ", err
-              if (err .NE. NF_NOERR) print*, trim(nfmpi_strerror(err))
+              if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
           endif
 
@@ -85,7 +94,7 @@
      +                               1_MPI_OFFSET_KIND, buf_dbl)
           if (err .NE. NF_ERANGE) then
               print*, "Error: expect NF_ERANGE but got ", err
-              if (err .NE. NF_NOERR) print*, trim(nfmpi_strerror(err))
+              if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
           endif
 
@@ -93,7 +102,7 @@
      +                             1_MPI_OFFSET_KIND, buf_int8)
           if (err .NE. NF_ERANGE) then
               print*, "Error: expect NF_ERANGE but got ", err
-              if (err .NE. NF_NOERR) print*, trim(nfmpi_strerror(err))
+              if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
           endif
 
@@ -113,7 +122,7 @@
           err = nfmpi_get_att_int2(ncid, NF_GLOBAL, "attr4", buf_int2)
           if (err .NE. NF_ERANGE) then
               print*, "Error: expect NF_ERANGE but got ", err
-              if (err .NE. NF_NOERR) print*, trim(nfmpi_strerror(err))
+              if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
           endif
 
@@ -132,7 +141,8 @@
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg ='*** TESTING F77 '//trim(cmd)//' for attribute overflow '
+          msg ='*** TESTING F77 '//cmd(1:XTRIM(cmd))//
+     +         ' for attribute overflow '
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)

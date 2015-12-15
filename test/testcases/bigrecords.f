@@ -14,6 +14,15 @@
 ! read the smaller time variable OK, but on systems with a 32 bit MPI_AINT, the
 ! time variable will be garbled.
 
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       program main
       implicit none
       include "mpif.h"
@@ -28,6 +37,7 @@
       integer  time_dim
       integer  cells_dim
       integer  interfaces_dim
+      integer  XTRIM
 
 ! dimension lengths
       integer*8  cells_len
@@ -246,7 +256,7 @@
 !           write(6,*) "Error: time array was ", time
 !      endif
 
-      msg = '*** TESTING F77 '//trim(cmd)//' for NF_64BIT_DATA'
+      msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for NF_64BIT_DATA'
       if (myid .eq. 0) call pass_fail(0, msg)
 
  999  call MPI_FINALIZE(ierr)
@@ -319,7 +329,8 @@
 
       if (iret .ne. NF_NOERR) then
           print *, msg, nfmpi_strerror(iret)
-          msg = '*** TESTING F77 '//trim(cmd)//' for NF_64BIT_DATA'
+          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
+     +          ' for NF_64BIT_DATA'
           call pass_fail(1, msg)
           stop
       endif

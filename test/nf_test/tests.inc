@@ -144,7 +144,7 @@
 !/*
 ! * Define a macro for trimming trailing blanks from character variables.
 ! */
-#define TRIM(string) string(1:len_trim(string))
+#define TRIM(string) string(1:MY_LEN_TRIM(string))
 
 
 !

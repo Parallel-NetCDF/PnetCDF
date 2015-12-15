@@ -39,17 +39,26 @@
 !
 !    Note the above dump is in C order
 !
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          integer err
+          integer err, XTRIM
           character(len=*) message
           character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
+              write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 put_parameter.f for immutable put '
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
@@ -65,7 +74,7 @@
           PARAMETER(NX=4, buffer=(/5,6,7,8/))
 
           character(LEN=256) filename, cmd, msg
-          integer err, ierr, nprocs, rank, nerrs, get_args
+          integer err, ierr, nprocs, rank, nerrs, get_args, XTRIM
           integer cmode, ncid, varid(2), dimid(2)
           integer(kind=MPI_OFFSET_KIND) len_ll, start(2), count(2)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
@@ -143,7 +152,7 @@
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F77 '//trim(cmd)//
+          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
      +          ' for using immutable write buf '
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 

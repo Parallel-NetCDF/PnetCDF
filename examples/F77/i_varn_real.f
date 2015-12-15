@@ -89,7 +89,7 @@
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
+              write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
@@ -134,7 +134,7 @@
      +                   MPI_COMM_WORLD, err)
 
           if (nprocs .NE. 4 .AND. rank .EQ. 0 .AND. verbose)
-     +        print*,'Warning: ',trim(cmd),' is intended to run on ',
+     +        print*,'Warning: ',cmd,' is intended to run on ',
      +               '4 processes'
 
           ! create file, truncate it if exists

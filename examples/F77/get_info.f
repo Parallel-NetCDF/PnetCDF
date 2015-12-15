@@ -64,7 +64,7 @@
      +                 MPI_COMM_WORLD, err)
 
         omode = NF_NOWRITE + NF_64BIT_OFFSET
-        err = nfmpi_open(MPI_COMM_WORLD, trim(filename), omode,
+        err = nfmpi_open(MPI_COMM_WORLD, filename, omode,
      +                    MPI_INFO_NULL, ncid)
         if (err .ne. NF_NOERR) call handle_err('nfmpi_open',err)
 
@@ -116,7 +116,7 @@
      +                            value, flag, err)
  123            format('MPI File Info: [',I2,'] key = ',A25,
      +                 ', value =',A)
-                print 123, i, trim(key), trim(value)
+                print 123, i, key, value
             enddo
             print *
 
@@ -134,7 +134,7 @@
             ! local variables
             integer err 
 
-            print *, 'Error: ',trim(err_msg),' ',nfmpi_strerror(errcode)
+            print *, 'Error: ',err_msg//' '//nfmpi_strerror(errcode)
             call MPI_Abort(MPI_COMM_WORLD, -1, err)
             return
         end subroutine handle_err

@@ -17,6 +17,15 @@
 !
 !=============================================================================
 
+       INTEGER FUNCTION XTRIM(STRING)
+           CHARACTER*(*) STRING
+           INTEGER I
+           DO I = LEN(STRING), 1, -1
+               IF (STRING(I:I) .NE. ' ') EXIT
+           ENDDO
+           XTRIM = I
+       END FUNCTION XTRIM
+
       program Mcoll_Testf
 
       implicit none
@@ -27,6 +36,7 @@
 !     Parameter declarations.
 !     -----------------------
 
+      integer XTRIM
       integer NWRITES 
       parameter (NWRITES = 5 )
       ! number of read samples
@@ -162,7 +172,7 @@
      +                istart, jstart, kstart, locsiz, locsiz_3d,
      +                TOTSIZ_3D, wrt_l)
       if (ierr .NE. NF_NOERR) then
-          write(6,*) trim(nfmpi_strerror(ierr))
+          write(6,*) nfmpi_strerror(ierr)
           goto 999
       endif
 !!!   Write (6,*) wrt_l(1), wrt_l(2)
@@ -193,7 +203,7 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
-      msg = '*** TESTING F77 '//trim(cmd)//' for iput API'
+      msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for iput API'
       if (rank .EQ. 0) call pass_fail(0, msg)
 
  999  call MPI_Finalize  (ierr)
