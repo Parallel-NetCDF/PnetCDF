@@ -10,7 +10,7 @@ dnl ncconfig.h.in will be created by autoreconf (autoheader)
 AC_CONFIG_HEADERS([src/lib/ncconfig.h])
 AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 
-AC_CONFIG_AUX_DIR(./scripts)
+AC_CONFIG_AUX_DIR([./scripts])
 
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
@@ -423,7 +423,22 @@ if test "x${MPIF90}" != x ; then
    AC_PROG_FC
    dnl FCFLAGS is set in AC_PROG_FC
 
+   FCLIBS_save="$FCLIBS"
+   FCLIBS=""
    AC_FC_LIBRARY_LDFLAGS
+   UD_MSG_DEBUG([before FCLIBS=$FCLIBS])
+   dnl The autoconf macro for finding FCLIBS sometimes makes mistakes
+   dnl (particularly with the Fujitsu frt compiler).  This next step
+   dnl first sees if the FCLIBS is valid with the Fortran compiler
+   dnl This also happens to Solaris Studio Fortran compilers
+   dnl AC_PROG_FC_FCLIBS_VALID
+   dnl Now see if FCLIBS works with the C compiler (remove invalid ones)
+   PAC_PROG_FC_CHECK_FCLIBS
+
+   dnl replace FLIBS and F90LIBS with FCLIBS
+   UD_MSG_DEBUG([after FCLIBS=$FCLIBS])
+   FLIBS="$FCLIBS"
+   F90LIBS="$FCLIBS"
 
    dnl We use F90FLAGS for debugging and optimization options for Fortran 90 programs
    F90FLAGS=${FCFLAGS}

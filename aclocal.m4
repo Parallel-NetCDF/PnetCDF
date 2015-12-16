@@ -1581,3 +1581,52 @@ AC_DEFUN([UD_CXX_MACRO_FUNC],[
     AC_LANG_POP([C++])
    ])
 ])
+
+dnl
+dnl Borrowed macros from MPICH: aclocal_f77.m4
+dnl
+
+dnl
+dnl Check to see if a C program can be linked when using the libraries
+dnl needed by C programs
+dnl
+AC_DEFUN([PAC_PROG_FC_CHECK_FCLIBS],[
+AC_REQUIRE([AC_FC_LIBRARY_LDFLAGS])
+AC_MSG_CHECKING([whether $CC links with FCLIBS found by autoconf])
+AC_LANG_PUSH([C])
+# Create a simple C program for the tests.
+AC_LANG_CONFTEST([
+    AC_LANG_PROGRAM([],[int a;])
+])
+# Try to link a C program with all of these libraries
+saved_LIBS="$LIBS"
+LIBS="$FCLIBS $saved_LIBS"
+AC_LINK_IFELSE([],[
+    AC_MSG_RESULT([yes])
+],[
+    AC_MSG_RESULT([no])
+    AC_MSG_CHECKING([for which libraries can be used])
+    pac_ldirs=""
+    pac_libs=""
+    pac_other=""
+    for name in $FCLIBS ; do
+        case $name in 
+        -l*) pac_libs="$pac_libs $name"   ;;
+        -L*) pac_ldirs="$pac_ldirs $name" ;;
+          *) pac_other="$pac_other $name" ;;
+        esac
+    done
+    keep_libs=""
+    for name in $pac_libs ; do
+        LIBS="$saved_LIBS $pac_ldirs $pac_other $name"
+        AC_LINK_IFELSE([],[
+            keep_libs="$keep_libs $name"
+        ])
+    done
+    AC_MSG_RESULT($keep_libs)
+    FCLIBS="$pac_ldirs $pac_other $keep_libs"
+])
+LIBS="$saved_LIBS"
+rm -f conftest.$ac_ext
+AC_LANG_PUSH([C])
+])
