@@ -20,6 +20,11 @@ Tasks immediately before a new release (must run in the following order)
       - make clean (and make sure all object files are deleted)
       - make distclean (and make sure all non-source files are deleted)
     * build and test under a different directory
+    * build and test on different platforms with different compilers:
+      - login.mcs.anl.gov : Linux, NAG Fortran, PGI, Solaris Studio compilers
+      - edison.nersc.gov : Cray, Intel compilers
+      - cetus.alcf.anl.gov : IBM BGQ, XL compilers, cross-compiling, Big Endian
+      - k.aics.riken.jp : Fujitsu compilers, cross-compiling, Big Endian
 
  2. Set the release version.
     In file "configure.in", variable $PNETCDF_VERSION indicates the version.
