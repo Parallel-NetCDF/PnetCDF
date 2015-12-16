@@ -310,7 +310,7 @@ C On exit, any open netCDF files are closed.
         integer recdim0
         integer did
         integer vid
-        integer(kind=MPI_OFFSET_KIND) length
+        integer*8 length
         integer VDIMS(1)
         integer nok
 
@@ -389,7 +389,7 @@ C               /* Add dim, var, global att */
                 err = nfmpi_def_dim(ncid2, 'inqd', length, did)
                 if (err .ne. NF_NOERR)
      +              call errore('nfmpi_def_dim: ', err)
-                VDIMS = 0
+                VDIMS(1) = 0
                 err = nfmpi_def_var(ncid2, 'inqv', NF_FLOAT, 
      +                0, VDIMS, vid)
                 if (err .ne. NF_NOERR)
@@ -658,7 +658,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer err
         character*(NF_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND) length
+        integer*8 length
         integer intlen
         integer nok
 
@@ -708,7 +708,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        integer(kind=MPI_OFFSET_KIND) length
+        integer*8 length
         integer intlen
         integer nok
 
@@ -1136,7 +1136,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer j
         integer err
         integer t
-        integer(kind=MPI_OFFSET_KIND) n
+        integer*8 n
         integer nok
 
         nok = 0
@@ -1197,7 +1197,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer j
         integer err
-        integer(kind=MPI_OFFSET_KIND) len
+        integer*8 len
         integer nok
 
         nok = 0

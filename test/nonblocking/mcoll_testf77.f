@@ -19,12 +19,13 @@
 
        INTEGER FUNCTION XTRIM(STRING)
            CHARACTER*(*) STRING
-           INTEGER I
-           DO I = LEN(STRING), 1, -1
-               IF (STRING(I:I) .NE. ' ') EXIT
+           INTEGER I, N
+           N = LEN(STRING)
+           DO I = N, 1, -1
+              IF (STRING(I:I) .NE. ' ') GOTO 10
            ENDDO
-           XTRIM = I
-       END FUNCTION XTRIM
+ 10        XTRIM = I
+       END ! FUNCTION XTRIM
 
       program Mcoll_Testf
 
@@ -42,7 +43,7 @@
       ! number of read samples
       ! number of write samples
 
-      INTEGER(KIND=MPI_OFFSET_KIND) TOTSIZ_3D(3) ! global sizes of 3D field
+      integer*8 TOTSIZ_3D(3) ! global sizes of 3D field
 
 
 !     ----------------------
@@ -55,12 +56,12 @@
               
       integer comm_cart                   ! Cartesian communicator
       integer err, ierr, get_args
-      INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart      ! offsets of 3D field
-      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
+      integer*8 istart, jstart, kstart      ! offsets of 3D field
+      integer*8 locsiz
       integer mype                        ! rank in comm_cart
       integer totpes                      ! total number of PEs
               
-      INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)                ! local sizes of 3D fields
+      integer*8 locsiz_3d(3)                ! local sizes of 3D fields
       integer pe_coords(3)                ! Cartesian PE coords
               
       integer numpes(3)                   ! number of PEs along axes;
@@ -68,7 +69,7 @@
                                           !   zero is specified
 
       integer rank, Write_File
-      character(len=256) :: filename, cmd, msg
+      character*256 filename, cmd, msg
 
       real*4  filsiz
               
@@ -208,7 +209,7 @@
 
  999  call MPI_Finalize  (ierr)
 
-      end program Mcoll_Testf
+      end ! program Mcoll_Testf
 
 
 !     ------------
@@ -226,13 +227,13 @@
 !     Argument declarations.
 !     ----------------------
 
-      character (len=*) filename
+      character*(*) filename
       integer nwrites
       integer comm_cart
-      INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart
-      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
-      INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)
-      INTEGER(KIND=MPI_OFFSET_KIND) totsiz_3d(3)
+      integer*8 istart, jstart, kstart
+      integer*8 locsiz
+      integer*8 locsiz_3d(3)
+      integer*8 totsiz_3d(3)
       real*4  wrt_l(2)
 
 !     ----------------------------
@@ -248,8 +249,8 @@
       integer req(nwrites)
       integer stat(nwrites)
         
-      INTEGER(KIND=MPI_OFFSET_KIND) count_3d(3)
-      INTEGER(KIND=MPI_OFFSET_KIND) start_3d(3)
+      integer*8 count_3d(3)
+      integer*8 start_3d(3)
               
       integer dim_id(3)
               
@@ -347,8 +348,8 @@
       t3 = MPI_Wtime ( )
 
 
-      if (t2 - t1 < wrt_l(1)) wrt_l(1) = real(t2 - t1)
-      if (t3 - t2 < wrt_l(2)) wrt_l(2) = real(t3 - t2)
+      if (t2 - t1 .LT. wrt_l(1)) wrt_l(1) = real(t2 - t1)
+      if (t3 - t2 .LT. wrt_l(2)) wrt_l(2) = real(t3 - t2)
 
       Return
 
@@ -366,17 +367,17 @@
 !     Argument declarations.
 !     ----------------------
 
-      INTEGER(KIND=MPI_OFFSET_KIND) nx
+      integer*8 nx
       integer mype
       integer totpes
-      INTEGER(KIND=MPI_OFFSET_KIND) locnx
-      INTEGER(KIND=MPI_OFFSET_KIND) ibegin
+      integer*8 locnx
+      integer*8 ibegin
 
 !     ----------------------------
 !     Local variable declarations.
 !     ----------------------------
 
-      INTEGER(KIND=MPI_OFFSET_KIND) iremain
+      integer*8 iremain
 
 !     ----------------
 !     Begin execution.
@@ -386,11 +387,11 @@
 
       iremain = nx - (totpes * locnx)
 
-      if (mype < iremain) locnx = locnx + 1
+      if (mype .LT. iremain) locnx = locnx + 1
 
       ibegin = mype * (nx / totpes) + iremain + 1
 
-      if (mype < iremain) ibegin = ibegin + (mype - iremain)
+      if (mype .LT. iremain) ibegin = ibegin + (mype - iremain)
 
       Return
 
@@ -410,10 +411,10 @@
 !     Argument declarations.
 !     ----------------------
 
-      INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart
-      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
-      INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)
-      INTEGER(KIND=MPI_OFFSET_KIND) totsiz_3d(3)
+      integer*8 istart, jstart, kstart
+      integer*8 locsiz
+      integer*8 locsiz_3d(3)
+      integer*8 totsiz_3d(3)
       real*4  tt(locsiz)
 
 !     ----------------------------
@@ -463,7 +464,7 @@
 !     ----------------------
 
       integer comm_cart
-      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
+      integer*8 locsiz
       real*4  tt (locsiz)
       real*4  buf(locsiz)
 
@@ -497,8 +498,8 @@
         delta = (tt(ii) - buf(ii)) * (tt(ii) - buf(ii))
         ws(1) = ws(1) + delta
         ws(2) = ws(2) + tt(ii) * tt(ii)
-        if (delta > ws(4)) ws(4) = delta
-        if (delta < ws(5)) ws(5) = delta
+        if (delta .GT. ws(4)) ws(4) = delta
+        if (delta .LT. ws(5)) ws(5) = delta
       end do
 
 

@@ -32,14 +32,14 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       subroutine print_hints(ncid, varid0, varid1)
           implicit none
@@ -52,9 +52,9 @@
           character*(MPI_MAX_INFO_VAL) value
           integer err, len, info_used
           logical flag
-          integer(kind=MPI_OFFSET_KIND) header_size, header_extent
-          integer(kind=MPI_OFFSET_KIND) var_zy_start, var_yx_start
-          integer(kind=MPI_OFFSET_KIND) h_align, v_align, h_chunk
+          integer*8 header_size, header_extent
+          integer*8 var_zy_start, var_yx_start
+          integer*8 h_align, v_align, h_chunk
 
           h_align=-1
           v_align=-1
@@ -116,7 +116,7 @@
           print*,"header extent                    = ", header_extent
           print*,"var_zy start file offset         = ", var_zy_start
           print*,"var_yx start file offset         = ", var_yx_start
-      end subroutine print_hints
+      end ! subroutine print_hints
 
       subroutine put_vara(ncid, varid, ny, nx, start, count)
           implicit none
@@ -124,7 +124,7 @@
           include "pnetcdf.inc"
 
           integer ncid, varid, ny, nx
-          integer(KIND=MPI_OFFSET_KIND) start(2), count(2)
+          integer*8 start(2), count(2)
 
           integer i, j, rank, err
           integer buf(nx, ny)
@@ -140,19 +140,19 @@
           err = nfmpi_put_vara_int_all(ncid, varid, start, count, buf)
           call check(err, 'In nfmpi_put_vara_int_all : ')
 
-      end subroutine put_vara
+      end ! subroutine put_vara
 
       program main
       implicit none
       include "mpif.h"
       include "pnetcdf.inc"
 
-      character(len = 256) :: filename, cmd
+      character*256 filename, cmd
       integer NZ, NY, NX
       integer ncid, rank, nprocs, info, cmode, err, ierr, get_args
       integer varid0, varid1, dimid(3), dimid2(2)
-      integer(KIND=MPI_OFFSET_KIND) start(2), count(2), llen
-      integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+      integer*8 start(2), count(2), llen
+      integer*8 malloc_size, sum_size
       logical verbose
       integer dummy
 
@@ -236,10 +236,10 @@
       ! check if there is any PnetCDF internal malloc residue
  998  format(A,I13,A)
       err = nfmpi_inq_malloc_size(malloc_size)
-      if (err == NF_NOERR) then
+      if (err .EQ. NF_NOERR) then
           call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, 
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-      if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+      if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +        print 998,
      +        'heap memory allocated by PnetCDF internally has ',
      +        sum_size/1048576, ' MiB yet to be freed'
@@ -247,5 +247,5 @@
 
  999  call MPI_Finalize(err)
       ! call EXIT(0) ! EXIT() is a GNU extension
-      end program
+      end ! program
 

@@ -114,8 +114,8 @@ C    check file: vars & atts
         character*(title_len)   title
         doubleprecision         var
         character*(NF_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND)                 start(1)
-        integer(kind=MPI_OFFSET_KIND)                 length
+        integer*8               start(1)
+        integer*8               length
         integer                 intlen
         integer                 dimids(1)
         integer                 nok, flags
@@ -171,7 +171,7 @@ c       should not enter indep mode in define mode
         err = nfmpi_begin_indep_data(ncid)       
         if (err .ne. NF_EINDEFINE)
      +    call errore('nfmpi_begin_indep_data... in define mode: ', err)
-        start = 0
+        start(1) = 0
         err = nfmpi_put_var1_double(ncid, vid, start, var)
         if (err .ne. NF_EINDEFINE)
      +      call errore('nfmpi_put_var... in define mode: ', err)
@@ -498,7 +498,7 @@ C    try to define a second unlimited dimension, check error
         integer err             !/* status */
         integer i
         integer dimid         !/* dimension id */
-        integer(kind=MPI_OFFSET_KIND) length
+        integer*8 length
         integer nok, flags
 
         nok = 0
@@ -786,7 +786,7 @@ C           /* general tests using global vars */
         call def_dims(ncid)
         do 1, i = 1, numVars
             err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
-     +                       var_rank(i), var_dimid(:,i), vid)
+     +                       var_rank(i), var_dimid(1,i), vid)
             if (err .ne. NF_NOERR)  then
                 call errore('nfmpi_def_var: ', err)
             else
@@ -943,7 +943,7 @@ C    try with same ncid for source and target, same variable
         integer j
         character*(NF_MAX_NAME) name    !/* of att */
         integer datatype                !/* of att */
-        integer(kind=MPI_OFFSET_KIND) length  !/* of att */
+        integer*8 length  !/* of att */
         character*1     value
         integer nok, flags
 
@@ -1114,9 +1114,9 @@ C    try in data mode, check error
         integer nok             !/* count of valid comparisons */
         integer datatype
         integer attyp
-        integer(kind=MPI_OFFSET_KIND) length
-        integer(kind=MPI_OFFSET_KIND) attlength
-        integer(kind=MPI_OFFSET_KIND) ndx(1)
+        integer*8 length
+        integer*8 attlength
+        integer*8 ndx(1)
         character*(MAX_NELS)    text
         doubleprecision value(MAX_NELS)
         doubleprecision expect
@@ -1425,8 +1425,8 @@ C    close file & create again for test using attribute _FillValue
         character*1 text
         doubleprecision value
         doubleprecision fill
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) length
+        integer*8 index(MAX_RANK)
+        integer*8 length
         integer index2indexes
         integer nok             !/* count of valid comparisons */
 
@@ -1502,7 +1502,7 @@ C       /* Assumes variable cr is char vector with UNLIMITED dimension */
 
 C           /* get all variables & check all values equal default fill */
         do 1, i = 1, numVars
-            if (var_dimid(var_rank(i),i) .eq. RECDIM) cycle ! skip record variables
+            if (var_dimid(var_rank(i),i) .eq. RECDIM) go to 1 ! skip record variables
 
             if (var_type(i) .eq. NF_CHAR) then
                 fill = NF_FILL_CHAR
@@ -1606,7 +1606,7 @@ C           /* data mode. write records */
 
 C           /* get all variables & check all values equal 42 */
         do 4, i = 1, numVars
-            if (var_dimid(var_rank(i),i) .eq. RECDIM) cycle ! skip record variables
+            if (var_dimid(var_rank(i),i) .eq. RECDIM) go to 4 ! skip record variables
             do 5, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)

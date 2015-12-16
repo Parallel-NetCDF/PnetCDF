@@ -33,7 +33,7 @@ define([ARITH_VAR1], [ifelse($1, text, ichar($2), $2)])
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character(len=MAX_NELS) $2,
+ifelse($1, text, character*MAX_NELS $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,
@@ -88,29 +88,18 @@ dnl  MAKE_TYPE(funf_suffix, var)
 dnl
 define([MAKE_TYPE], [dnl
 ifelse($1, text, char(int($2)),
-       ifelse($1, int, INT($2),
-       ifelse($1, int1, INT($2,KIND=INT1_KIND),
-       ifelse($1, int2, INT($2,KIND=INT2_KIND),
-       ifelse($1, int8, INT($2,KIND=INT8_KIND),
        ifelse($1, real, REAL($2),
-       $2))))))[]dnl
+       ifelse($1, double, DBLE($2),
+       $2)))[]dnl
 ])
 
 dnl  MAKE_TYPE2(funf_suffix, var_dest, var_src)
 dnl
 define([MAKE_TYPE2], [dnl
 ifelse($1, text, $2 = char(int($3)),
-       ifelse($1, int, $2 = INT($3),
-       ifelse($1, int1, $2 = INT($3,KIND=INT1_KIND),
-       ifelse($1, int2, $2 = INT($3,KIND=INT2_KIND),
-       ifelse($1, int8,
-                if ($3 .EQ. X_INT8_MAX) then
-                    $2 = X_INT8_MAX
-                else
-                    $2 = INT($3,KIND=INT8_KIND)
-                endif,
        ifelse($1, real, $2 = REAL($3),
-       $2 = $3))))))[]dnl
+       ifelse($1, double, $2 = DBLE($3),
+       $2 = $3)))[]dnl
 ])
 
 dnl TEST_NFMPI_IPUT_VAR1(TYPE)
@@ -129,7 +118,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         integer i
         integer j
         integer err, flags
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer*8 index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
         doubleprecision val
@@ -239,7 +228,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         integer j
         integer err, flags
         integer nels
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer*8 index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1, value, (MAX_NELS))
@@ -401,10 +390,10 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer err, flags
         integer nslabs
         integer nels
-        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer*8 start(MAX_RANK)
+        integer*8 edge(MAX_RANK)
+        integer*8 mid(MAX_RANK)
+        integer*8 index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1, value, (MAX_NELS))
@@ -614,14 +603,14 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
-        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
+        integer*8 start(MAX_RANK)
+        integer*8 edge(MAX_RANK)
+        integer*8 index(MAX_RANK)
+        integer*8 index2(MAX_RANK)
+        integer*8 mid(MAX_RANK)
+        integer*8 count(MAX_RANK)
+        integer*8 sstride(MAX_RANK)
+        integer*8 stride(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1, value, (MAX_NELS))
@@ -834,15 +823,15 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
-        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
+        integer*8 start(MAX_RANK)
+        integer*8 edge(MAX_RANK)
+        integer*8 index(MAX_RANK)
+        integer*8 index2(MAX_RANK)
+        integer*8 mid(MAX_RANK)
+        integer*8 count(MAX_RANK)
+        integer*8 sstride(MAX_RANK)
+        integer*8 stride(MAX_RANK)
+        integer*8 imap(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1, value, (MAX_NELS))

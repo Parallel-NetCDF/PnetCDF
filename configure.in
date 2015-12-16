@@ -446,6 +446,7 @@ if test "x${MPIF90}" != x ; then
 fi
 
 dnl Check if MPIF77 is a valid MPI compiler
+F77_SUPPORT_FREEFORM=no
 if test "x${MPIF77}" != x ; then
    F77=${MPIF77}
    AC_PROG_F77
@@ -461,7 +462,10 @@ if test "x${MPIF77}" != x ; then
    FC_saved=${FC}
    FC=${F77}
    UD_FC_FREEFORM
-   FFREEFORMFLAG=${ac_cv_fc_freeform}
+   if test "x${ac_cv_fc_freeform}" != xunknown ; then
+      F77_SUPPORT_FREEFORM=yes
+      FFREEFORMFLAG=${ac_cv_fc_freeform}
+   fi
    UD_MSG_DEBUG([FC=$FC F90FLAGS=$F90FLAGS FFREEFORMFLAG=$FFREEFORMFLAG])
    AC_SUBST(FFREEFORMFLAG)
    FC=${FC_saved}
@@ -481,6 +485,7 @@ if test "x${MPIF77}" != x ; then
          ------------------------------------------------------------])
    fi
 fi
+AC_SUBST(F77_SUPPORT_FREEFORM)
 
 if test "x${enable_fortran}" = xauto ; then
    if test "x${valid_mpif77}" = xyes && test "x${valid_mpif90}" = xyes ; then
@@ -605,6 +610,10 @@ if test "x${enable_fortran}" = xyes ; then
       PNF_FILL_UINT=4294967295
       PNF_FILL_INT64=-9223372036854775806
       PNF_FILL_UINT64=18446744073709551614
+      PNF_X_UINT_MAX=4294967295
+      PNF_X_INT8_MIN=-9223372036854775807
+      PNF_X_INT8_MAX=9223372036854775807
+      PNF_X_UINT8_MAX=18446744073709551615
    else
       if test "x${ac_cv_fc_constant_modifier}" = xEightByteInt ; then
          PNF_INT8_MODIFIER="      integer, parameter :: EightByteInt = selected_int_kind(18)"
@@ -612,11 +621,19 @@ if test "x${enable_fortran}" = xyes ; then
       PNF_FILL_UINT=4294967295_${ac_cv_fc_constant_modifier}
       PNF_FILL_INT64=-9223372036854775806_${ac_cv_fc_constant_modifier}
       PNF_FILL_UINT64=18446744073709551614_${ac_cv_fc_constant_modifier}
+      PNF_X_UINT_MAX=4294967295_${ac_cv_fc_constant_modifier}
+      PNF_X_INT8_MIN=-9223372036854775807_${ac_cv_fc_constant_modifier}
+      PNF_X_INT8_MAX=9223372036854775807_${ac_cv_fc_constant_modifier}
+      PNF_X_UINT8_MAX=18446744073709551615_${ac_cv_fc_constant_modifier}
    fi
    AC_SUBST(PNF_INT8_MODIFIER)
    AC_SUBST(PNF_FILL_UINT)
    AC_SUBST(PNF_FILL_INT64)
    AC_SUBST(PNF_FILL_UINT64)
+   AC_SUBST(PNF_X_UINT_MAX)
+   AC_SUBST(PNF_X_INT8_MIN)
+   AC_SUBST(PNF_X_INT8_MAX)
+   AC_SUBST(PNF_X_UINT8_MAX)
 
    AC_SUBST(MPIF77)
    AC_SUBST(MPIF90)
@@ -1202,6 +1219,7 @@ AC_CONFIG_FILES(macros.make \
                 benchmarks/Makefile \
                 benchmarks/C/Makefile \
                 test/nf_test/Makefile \
+                test/nf_test/tests.inc \
                 test/nf90_test/Makefile \
                 test/F90/Makefile \
                 examples/F77/Makefile \
@@ -1256,6 +1274,10 @@ fi
 if test "x${debug}" = xyes; then
    echo "\
               PnetCDF internal debug mode      - enabled"
+fi
+if test "x${enable_fortran}" = xyes && (test "x${F77_SUPPORT_FREEFORM}" = xno) ; then
+   echo "\
+              Support free form in Fortran 77  - no"
 fi
 
 echo "\

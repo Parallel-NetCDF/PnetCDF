@@ -83,7 +83,7 @@ i_varn_indef: i_varn_indef.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 mcoll_testf77: mcoll_testf77.o $(LIBRARY)
-	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 mcoll_testf: mcoll_testf.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
@@ -92,7 +92,7 @@ test_bputf: test_bputf.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 test_bputf77: test_bputf77.o $(LIBRARY)
-	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 check testing verbose_check verbose_testing: $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc*

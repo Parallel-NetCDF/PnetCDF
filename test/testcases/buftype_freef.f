@@ -16,20 +16,21 @@
 
        INTEGER FUNCTION XTRIM(STRING)
            CHARACTER*(*) STRING
-           INTEGER I
-           DO I = LEN(STRING), 1, -1
-               IF (STRING(I:I) .NE. ' ') EXIT
+           INTEGER I, N
+           N = LEN(STRING)
+           DO I = N, 1, -1
+              IF (STRING(I:I) .NE. ' ') GOTO 10
            ENDDO
-           XTRIM = I
-       END FUNCTION XTRIM
+ 10        XTRIM = I
+       END ! FUNCTION XTRIM
 
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
           integer err, XTRIM
-          character(len=*) message
-          character(len=128) msg
+          character*(*) message
+          character*128 msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
@@ -38,7 +39,7 @@
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       program main
           implicit none
@@ -46,16 +47,16 @@
           include "pnetcdf.inc"
 
           integer NREQS, XTRIM
-          integer(kind=MPI_OFFSET_KIND) NX, NY
+          integer*8 NX, NY
           PARAMETER(NREQS=4, NX=4, NY=4)
 
-          character(LEN=256) filename, cmd, msg, varname, str
+          character*256 filename, cmd, msg, varname, str
           integer i, err, ierr, nprocs, rank, nerrs, get_args
           integer ncid, ghost
           integer var(64,4), varid(4), dimid(2), req(4), st(4)
           integer buftype(4), gsize(2), subsize(2), a_start(2)
-          integer(kind=MPI_OFFSET_KIND) start(2), count(2)
-          integer(kind=MPI_OFFSET_KIND) one, malloc_size, sum_size
+          integer*8 start(2), count(2)
+          integer*8 one, malloc_size, sum_size
 
           call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
@@ -106,12 +107,12 @@
 
           do i=1, NREQS
              err = nfmpi_put_vara_int_all(ncid, varid(i), start, count,
-     +                                    var(:,i))
+     +                                    var(1,i))
              call check(err, 'In nfmpi_put_vara_int_all: ')
           enddo
 
           ! define an MPI datatype using MPI_Type_create_subarray()
-          one        = 1_MPI_OFFSET_KIND
+          one        = 1
           ghost      = 2
           gsize(1)   = INT(NX) + 2 * ghost
           gsize(2)   = INT(NY) + 2 * ghost
@@ -126,7 +127,7 @@
               call MPI_Type_commit(buftype(i), err)
 
               err = nfmpi_iget_vara(ncid, varid(i), start, count,
-     +                              var(:,i), one, buftype(i), req(i))
+     +                              var(1,i), one, buftype(i), req(i))
               call check(err, 'In nfmpi_iget_vara ')
               ! immediately free the data type
               call MPI_Type_free(buftype(i), err)
@@ -144,16 +145,16 @@
           enddo
 
           ! close the file
-          err = nfmpi_close(ncid);
+          err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close')
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -164,5 +165,5 @@
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)
-      end program main
+      end ! program main
 

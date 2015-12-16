@@ -44,20 +44,21 @@
 !
        INTEGER FUNCTION XTRIM(STRING)
            CHARACTER*(*) STRING
-           INTEGER I
-           DO I = LEN(STRING), 1, -1
-               IF (STRING(I:I) .NE. ' ') EXIT
+           INTEGER I, N
+           N = LEN(STRING)
+           DO I = N, 1, -1
+              IF (STRING(I:I) .NE. ' ') GOTO 10
            ENDDO
-           XTRIM = I
-       END FUNCTION XTRIM
+ 10        XTRIM = I
+       END ! FUNCTION XTRIM
 
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
           integer err, XTRIM
-          character(len=*) message
-          character(len=128) msg
+          character*(*) message
+          character*128 msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
@@ -66,7 +67,7 @@
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       subroutine check_value(rank, nx, ny, buf, nerrs)
           implicit none
@@ -84,7 +85,7 @@
                 endif
              enddo
           enddo
-      end subroutine check_value
+      end ! subroutine check_value
 
       subroutine check_value_permuted(rank, nx, ny, buf, nerrs)
           implicit none
@@ -105,7 +106,7 @@
                 endif
              enddo
           enddo
-      end subroutine check_value_permuted
+      end ! subroutine check_value_permuted
 
       subroutine clear_buf(nx, ny, buf)
           implicit none
@@ -118,7 +119,7 @@
                 buf(i,j) = -1
              enddo
           enddo
-      end subroutine clear_buf
+      end ! subroutine clear_buf
 
       subroutine get_var_and_verify(ncid,varid,NX,NY,start,count,buf,
      +                       buftype, ghost_buftype, filetype, nerrs)
@@ -126,11 +127,13 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer NX, NY
-          integer(kind=MPI_OFFSET_KIND) start(2), count(2)
+          integer*8 start(2), count(2), one, zero
           integer i, j, rank, err, ncid, varid, nerrs, buf(NX, NY)
           integer buftype, ghost_buftype, filetype
           integer ncbuf(NX+4, NY+4)
 
+          one = 1
+          zero = 0
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
           ! clear the contents of the read buffer
           call clear_buf(NX, NY, buf)
@@ -144,8 +147,8 @@
           call clear_buf(NX, NY, buf)
 
           ! read back using flexible vara API
-          err = nfmpi_get_vara_all(ncid, varid, start, count, buf(:,2),
-     +                             1_MPI_OFFSET_KIND, buftype)
+          err = nfmpi_get_vara_all(ncid, varid, start, count, buf(1,2),
+     +                             one, buftype)
           call check(err, 'In nfmpi_get_vara_all: ')
 
           ! check if the contents of buf are expected
@@ -153,8 +156,8 @@
           call clear_buf(NX, NY, buf)
 
           ! read back using vard API and permuted buftype
-          err = nfmpi_get_vard_all(ncid, varid, filetype, buf(:,2),
-     +                             1_MPI_OFFSET_KIND, buftype)
+          err = nfmpi_get_vard_all(ncid, varid, filetype, buf(1,2),
+     +                             one, buftype)
           call check(err, 'In nfmpi_get_vard_all: ')
 
           ! check if the contents of buf are expected
@@ -163,7 +166,7 @@
 
           ! read back using vard API and no buftype
           err = nfmpi_get_vard_all(ncid, varid, filetype, buf,
-     +                             0_MPI_OFFSET_KIND, MPI_DATATYPE_NULL)
+     +                             zero, MPI_DATATYPE_NULL)
           call check(err, 'In nfmpi_get_vard_all: ')
 
           ! check if the contents of buf are expected
@@ -171,7 +174,7 @@
 
           ! read back using ghost buftype
           err = nfmpi_get_vard_all(ncid, varid, filetype, ncbuf,
-     +                             1_MPI_OFFSET_KIND, ghost_buftype)
+     +                             one, ghost_buftype)
           call check(err, 'In nfmpi_get_vard_all: ')
 
  543      format(A,I2,A,I2,A,I3,A,I3)
@@ -184,13 +187,13 @@
                 endif
              enddo
           enddo
-      end subroutine get_var_and_verify
+      end ! subroutine get_var_and_verify
 
       program main
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          character(LEN=256) filename, cmd, msg
+          character*256 filename, cmd, msg
           integer err, ierr, nprocs, rank, i, j, get_args
           integer cmode, ncid, varid0, varid1, varid2, dimid(2), nerrs
           integer NX, NY, XTRIM
@@ -199,14 +202,16 @@
           integer buftype, ghost_buftype, rec_filetype, fix_filetype
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2), blocklengths(2)
-          integer(kind=MPI_OFFSET_KIND) start(2), count(2), len
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size, recsize
-          integer(kind=MPI_ADDRESS_KIND) a0, a1, disps(2)
+          integer*8 start(2), count(2), len, one, two
+          integer*8 malloc_size, sum_size, recsize
+          integer*8 a0, a1, disps(2)
 
           call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
+          one = 1
+          two = 2
           ! take filename from command-line argument if there is any
           if (rank .EQ. 0) then
               filename = "testfile.nc"
@@ -226,8 +231,8 @@
           count(2) = 2
 
           ! construct various MPI derived data types
-          blocklengths(1) = NX;
-          blocklengths(2) = NX;
+          blocklengths(1) = NX
+          blocklengths(2) = NX
           call MPI_Get_address(buf(1,2), a0, ierr)
           call MPI_Get_address(buf(1,1), a1, ierr)
           disps(1) = 0
@@ -287,8 +292,7 @@
           call check(err, 'In nfmpi_def_var: dummy_rec ')
 
           ! define 2D fixed-size variable of integer type
-          err = nfmpi_def_dim(ncid, "FIX_DIM", 2_MPI_OFFSET_KIND,
-     +                        dimid(2))
+          err = nfmpi_def_dim(ncid, "FIX_DIM", two, dimid(2))
           call check(err, 'In nfmpi_def_dim RECV_DIM: ')
           err = nfmpi_def_var(ncid, "fix_var", NF_INT, 2, dimid, varid1)
           call check(err, 'In nfmpi_def_var: fix_var ')
@@ -311,8 +315,8 @@
           call MPI_Type_commit(rec_filetype, ierr)
 
           ! write the record variable */
-          err = nfmpi_put_vard_all(ncid, varid0, rec_filetype, buf(:,2),
-     +                             1_MPI_OFFSET_KIND, buftype)
+          err = nfmpi_put_vard_all(ncid, varid0, rec_filetype, buf(1,2),
+     +                             one, buftype)
           call check(err, 'In nfmpi_put_vard_all: ')
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
@@ -322,8 +326,8 @@
           call check(err, 'In nfmpi_rename_var: ')
 
           ! write the fixed-size variable
-          err = nfmpi_put_vard_all(ncid, varid1, fix_filetype, buf(:,2),
-     +                             1_MPI_OFFSET_KIND, buftype)
+          err = nfmpi_put_vard_all(ncid, varid1, fix_filetype, buf(1,2),
+     +                             one, buftype)
           call check(err, 'In nfmpi_put_vard_all: ')
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
@@ -347,7 +351,8 @@
           call check(err, 'In nfmpi_inq_varid fix_var: ')
 
           ! PnetCDF start() argument starts with 1
-          start = start + 1
+          start(1) = start(1) + 1
+          start(2) = start(2) + 1
           call get_var_and_verify(ncid, varid0, NX,NY,start, count, buf,
      +                 buftype, ghost_buftype, rec_filetype, nerrs)
 
@@ -366,10 +371,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -379,5 +384,5 @@
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)
-      end program main
+      end ! program main
 

@@ -16,12 +16,13 @@
 
        INTEGER FUNCTION XTRIM(STRING)
            CHARACTER*(*) STRING
-           INTEGER I
-           DO I = LEN(STRING), 1, -1
-               IF (STRING(I:I) .NE. ' ') EXIT
+           INTEGER I, N
+           N = LEN(STRING)
+           DO I = N, 1, -1
+              IF (STRING(I:I) .NE. ' ') GOTO 10
            ENDDO
-           XTRIM = I
-       END FUNCTION XTRIM
+ 10        XTRIM = I
+       END ! FUNCTION XTRIM
 
       program main
       implicit none
@@ -78,7 +79,7 @@
 
       integer*8 i8_size
 
-      integer(kind=MPI_OFFSET_KIND) :: time_start(1), time_count(1)
+      integer*8 time_start(1), time_count(1)
 
       double precision  time(4)
 !      data time /0., 20., 40., 60./
@@ -87,7 +88,7 @@
      + 377.5, 367.59, 360.06, 353.85999, 348.66, 342.5, 336, 328.5, 320,
      + 310, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 199.10001/
 
-      character(len = 256) :: filename, cmd, msg
+      character*256 filename, cmd, msg
 
 ! attribute vectors
 ! enter define mode
@@ -260,7 +261,7 @@
       if (myid .eq. 0) call pass_fail(0, msg)
 
  999  call MPI_FINALIZE(ierr)
-      end program main
+      end ! program main
        
       subroutine writerecs(ncid,time_id)
 
@@ -289,7 +290,7 @@
       parameter (time_rank = 1)
       parameter (pressure_rank = 3)
 ! starts and counts for array sections of record variables
-      integer(kind=MPI_OFFSET_KIND) :: time_start(1), time_count(1)
+      integer*8 time_start(1), time_count(1)
 
 ! data variables
        
@@ -318,13 +319,13 @@
         call check_err("nfmpi_put_vara_double_all(): ", iret)
       enddo
        
-      end subroutine writerecs
+      end ! subroutine writerecs
        
       subroutine check_err(msg, iret)
 
       include "pnetcdf.inc"
 
-      character(len=*) msg
+      character*(*) msg
       integer iret
 
       if (iret .ne. NF_NOERR) then
@@ -334,4 +335,4 @@
           call pass_fail(1, msg)
           stop
       endif
-      end subroutine check_err
+      end ! subroutine check_err

@@ -11,7 +11,7 @@
       include "mpif.h"
       include "pnetcdf.inc"
 
-      INTEGER(KIND=MPI_OFFSET_KIND) TOTSIZ_3D(3)
+      integer*8 TOTSIZ_3D(3)
 
       logical reorder
 
@@ -26,7 +26,7 @@
 
       integer dim_id(3)
 
-      integer numpes(3)                   
+      integer numpes(3)
 !    number of PEs along axes;
 !    determined by MPI where a zero is specified
 
@@ -71,4 +71,4 @@
 
       Stop
 
-      end program Pnf_Test
+      end ! program Pnf_Test

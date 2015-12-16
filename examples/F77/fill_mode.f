@@ -55,29 +55,29 @@
           include 'mpif.h'
           include 'pnetcdf.inc'
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       program main
           implicit none
           include 'mpif.h'
           include 'pnetcdf.inc'
 
-          character(LEN=128) filename, cmd
-          integer err, ierr, nprocs, rank, get_args
+          character*128 filename, cmd
+          integer i, j, err, ierr, nprocs, rank, get_args
           integer cmode, ncid, rec_varid, fix_varid, dimid(2)
           integer no_fill, fill_value, old_mode
-          integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
-          integer(kind=MPI_OFFSET_KIND) starts(2), counts(2)
+          integer*8 nx, ny, global_nx, global_ny, one
+          integer*8 starts(2), counts(2)
           PARAMETER(nx=5, ny=3)
           integer buf(nx,ny)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          integer*8 malloc_size, sum_size
           logical verbose
           integer dummy
 
@@ -85,6 +85,7 @@
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
+          one = 1
           ! take filename from command-line argument if there is any
           if (rank .EQ. 0) then
               verbose = .TRUE.
@@ -103,7 +104,11 @@
           global_nx = nx * nprocs
           global_ny = ny
 
-          buf = rank;
+          do i=1, ny
+          do j=1, nx
+             buf(j,i) = rank
+          enddo
+          enddo
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
@@ -152,7 +157,7 @@
           ! set a customized fill value -1
           fill_value = -1
           err = nfmpi_put_att_int(ncid, rec_varid, "_FillValue", NF_INT,
-     +                            1_MPI_OFFSET_KIND, fill_value)
+     +                            one, fill_value)
           call check(err, 'In nfmpi_put_att_int: ')
 
           ! do not forget to exit define mode
@@ -186,7 +191,7 @@
           call check(err, 'In nfmpi_fill_var_rec: ')
 
           ! write to the 1st record
-          counts(2) = 1;
+          counts(2) = 1
           err = nfmpi_put_vara_int_all(ncid, rec_varid, starts, counts,
      +                                 buf)
           call check(err, 'In nfmpi_put_vara_int_all: ')
@@ -207,10 +212,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, 
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -218,5 +223,5 @@
 
  999      call MPI_Finalize(err)
           ! call EXIT(0) ! EXIT() is a GNU extension
-      end program main
+      end ! program main
 
