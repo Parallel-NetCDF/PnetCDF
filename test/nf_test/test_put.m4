@@ -89,11 +89,9 @@ dnl
 define([MAKE_TYPE], [dnl
 ifelse($1, text, char(int($2)),
        ifelse($1, int, INT($2),
-       ifelse($1, int2, INT2($2),
-       ifelse($1, int8, INT8($2),
        ifelse($1, real, REAL($2),
        ifelse($1, double, DBLE($2),
-       $2))))))[]dnl
+       $2))))[]dnl
 ])
 
 dnl  MAKE_TYPE2(funf_suffix, var_dest, var_src)
@@ -101,11 +99,9 @@ dnl
 define([MAKE_TYPE2], [dnl
 ifelse($1, text, $2 = char(int($3)),
        ifelse($1, int, $2 = INT($3),
-       ifelse($1, int2, $2 = INT2($3),
-       ifelse($1, int8, $2 = INT8($3),
        ifelse($1, real, $2 = REAL($3),
        ifelse($1, double, $2 = DBLE($3),
-       $2 = $3))))))[]dnl
+       $2 = $3))))[]dnl
 ])
 
 dnl HASH(TYPE)
