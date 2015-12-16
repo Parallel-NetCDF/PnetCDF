@@ -56,7 +56,7 @@ This is essentially a placeholder for the next release note ...
 
   o New test program
     * test/testcases/put_parameter.f tests the use of immutable write buffer
-      (e.g. a buffer desclared as PARAMETER). Note the buffer size must be
+      (e.g. a buffer declared as PARAMETER). Note the buffer size must be
       smaller than 4KB.
     * test/nonblocking/i_varn_indef.c tests posting nonblocking requests in
       define mode.
@@ -112,6 +112,9 @@ This is essentially a placeholder for the next release note ...
       NC_EINVALCOORDS, NC_EEDGE, and NC_ESTRIDE.
     * Return error code NC_EGLOBAL instead of NC_ENOTVAR for APIs where using
       NC_GLOBAL as the variable ID argument is prohibited.
+    * All Fortran 77 test and example programs (files with .f and .F
+      extensions) have been revised to conform with 77 standard, and was tested
+      using pgf77.
 
   o Bug fixes
     * Fix the bus error of invalid address alignment when build with Fujitsu
