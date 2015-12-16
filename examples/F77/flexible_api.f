@@ -56,31 +56,31 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       program main
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
 
-          character(LEN=128) filename, cmd
+          character*128 filename, cmd
           integer err, ierr, nprocs, rank, i, j, ghost_len, get_args
           integer cmode, ncid, varid, dimid(2)
-          integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
-          integer(kind=MPI_OFFSET_KIND) starts(2), counts(2), nTypes
+          integer*8 nx, ny, global_nx, global_ny
+          integer*8 starts(2), counts(2), nTypes
           PARAMETER(nx=5, ny=4, ghost_len=3)
           integer buf(nx+2*ghost_len, ny+2*ghost_len)
           integer subarray
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          integer*8 malloc_size, sum_size
           logical verbose
           integer dummy
 
@@ -107,7 +107,11 @@
           global_ny = ny * nprocs
 
           ! first initialize the entire buffer to -1
-          buf = -1;
+          do i=1, nx+2*ghost_len 
+          do j=1, ny+2*ghost_len
+             buf(j,i) = -1
+          enddo
+          enddo
           ! assign values for non-ghost cells
           do j=ghost_len+1, ny+ghost_len
              do i=ghost_len+1, nx+ghost_len
@@ -175,10 +179,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, 
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -186,5 +190,5 @@
 
  999      call MPI_Finalize(err)
           ! call EXIT(0) ! EXIT() is a GNU extension
-      end program main
+      end ! program main
 

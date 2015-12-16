@@ -5,10 +5,6 @@
 !  $Id$
 !
 
-      integer, parameter :: INT1_KIND = selected_int_kind(2)
-      integer, parameter :: INT2_KIND = selected_int_kind(4)
-      integer, parameter :: INT8_KIND = selected_int_kind(18) 
-
 !!!!
 ! Do not tabify this unless you like hitting the 72 char limit !!!
 !!!
@@ -89,9 +85,9 @@
 #define X_DOUBLE_MAX 1.7976931348623157D+200
 #endif
 #define X_DOUBLE_MIN (-X_DOUBLE_MAX)
-#define X_INT8_MIN (-9223372036854775807_INT8_KIND)
-#define X_INT8_MAX 9223372036854775807_INT8_KIND
-#define X_UINT8_MIN (-18446744073709551615.0)
+#define X_INT8_MIN @PNF_X_INT8_MIN@
+#define X_INT8_MAX @PNF_X_INT8_MAX@
+#define X_UINT8_MIN 0
 #define X_UINT8_MAX 18446744073709551615.0
 
 #define X_BYTE_MIN X_INT1_MIN
@@ -107,7 +103,7 @@
 #define X_UBYTE_MIN     X_UCHAR_MIN
 #define X_USHORT_MAX    65535
 #define X_USHORT_MIN    0
-#define X_UINT_MAX      4294967295_INT8_KIND
+#define X_UINT_MAX      @PNF_X_UINT_MAX@
 #define X_UINT_MIN      0
 
 !/*
@@ -176,12 +172,12 @@
 !    /* Global variables - test data */
 
       CHARACTER*2               DIM_NAME(NDIMS)
-      integer(kind=MPI_OFFSET_KIND) DIM_LEN(NDIMS)
+      INTEGER*8                 DIM_LEN(NDIMS)
       CHARACTER*(2+MAX_RANK)    VAR_NAME(NVARS)
       INTEGER                   VAR_TYPE(NVARS)
       INTEGER                   VAR_RANK(NVARS)
       INTEGER                   VAR_DIMID(MAX_RANK,NVARS)
-      integer(kind=MPI_OFFSET_KIND) VAR_SHAPE(MAX_RANK,NVARS)
+      INTEGER*8                 VAR_SHAPE(MAX_RANK,NVARS)
       INTEGER                   VAR_NELS(NVARS)
       INTEGER                   VAR_NATTS(NVARS)
       CHARACTER*2               ATTNAME(MAX_NATTS,NVARS)
@@ -189,7 +185,7 @@
       INTEGER                   ATTTYPE(NGATTS,NVARS)
       INTEGER                   GATT_TYPE(NGATTS)
       INTEGER                   ATTLEN(MAX_NATTS,NVARS)
-      integer(kind=MPI_OFFSET_KIND) GATT_LEN(NGATTS)
+      INTEGER*8                 GATT_LEN(NGATTS)
 
 !    /* Miscellaneous global variables: */
       CHARACTER*128              PROGNAME   !/* name of the program */

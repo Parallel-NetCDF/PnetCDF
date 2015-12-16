@@ -358,10 +358,10 @@ AC_DEFUN(UD_PROG_F90,
 		    cat <<EOF >conftest.f90
 			program foo
 			call bar(1)
-			end program foo
+			end
 			subroutine bar(bof)
 			integer, intent(in) :: bof
-			end subroutine bar
+			end
 EOF
 		    AC_MSG_CHECKING(\"$F90\" as Fortran-90 compiler)
 		    doit='$F90 -o conftest ${F90FLAGS} conftest.f90 ${F90LIBS}'
@@ -385,10 +385,10 @@ EOF
 		    cat <<EOF >conftest.f90
 			program foo
 			call bar(1)
-			end program foo
+			end
 			subroutine bar(bof)
 			integer, intent(in) :: bof
-			end subroutine bar
+			end
 EOF
 		    for f90 in xlf90 pgf90 f90; do
 			AC_CHECK_PROG(F90, $f90, $f90)
@@ -1200,7 +1200,7 @@ AC_COMPILE_IFELSE([[
       program main
       use conftest_module
       call conftest_routine
-      end program]],
+      end]],
        [ac_cv_fc_module_flag="$ac_flag"])
      if test "$ac_cv_fc_module_flag" != unknown; then
        break
@@ -1262,7 +1262,7 @@ for ac_flag in -J '-J ' -fmod= -moddir= +moddir= -qmoddir= '-mod ' \
       program main
       use conftest_module
       call conftest_routine
-      end program]],
+      end]],
        [ac_cv_fc_module_output_flag="$ac_flag"])
      cd ..
      if test "$ac_cv_fc_module_output_flag" != unknown; then
@@ -1338,8 +1338,7 @@ FCFLAGS=$ac_fc_freeform_FCFLAGS_save
 ])
 if test "x$ac_cv_fc_freeform" = xunknown; then
   m4_default([$2],
-	     [AC_MSG_WARN([Fortran does not accept free-form source], 77)])
-  ac_cv_fc_freeform=
+	     [AC_MSG_WARN([Fortran $FC does not accept free-form source], 77)])
 else
   dnl Do not append to FCFLAGS
   dnl if test "x$ac_cv_fc_freeform" != xnone; then
@@ -1510,7 +1509,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295_8)
          parameter (nf_fill_int64 = -9223372036854775806_8) 
-         end program]],
+         end]],
         [ac_cv_fc_constant_modifier=8],
         [AC_COMPILE_IFELSE([[
          program main
@@ -1518,7 +1517,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295)
          parameter (nf_fill_int64 = -9223372036854775806) 
-         end program]],
+         end]],
         [ac_cv_fc_constant_modifier=none],
         [AC_COMPILE_IFELSE([[
          program main
@@ -1527,7 +1526,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295_EightByteInt)
          parameter (nf_fill_int64 = -9223372036854775806_EightByteInt) 
-         end program]],
+         end]],
         [ac_cv_fc_constant_modifier=EightByteInt],
         [AC_MSG_ERROR([no appropriate modifier found])])
         ])

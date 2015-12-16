@@ -69,8 +69,8 @@
         subroutine test(name, func)
         implicit        none
         character*(*)   name
-        character(len=25) name_str
-        integer           name_len
+        character*25    name_str
+        integer         name_len
         external        func
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -79,7 +79,7 @@
         name_len = MY_LEN_TRIM(name)
         name_str(1:name_len) = name(:)
         name_str(name_len+1:25) = ' '
-        if (verbose) write(*, 1, advance="no") name_str
+        if (verbose) write(*, 1) name_str
 1       format('*** Testing ', a, ' ... ')
 
         nfails = 0

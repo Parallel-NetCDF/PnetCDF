@@ -257,7 +257,7 @@
       implicit  none
       include "pnetcdf.inc"
 #include "tests.inc"
-      integer(kind=MPI_OFFSET_KIND)   n
+      integer*8   n
 
       doubleprecision   ud_rand
       external          ud_rand
@@ -280,8 +280,8 @@
         integer         rank            !/* number of dimensions */
         include "pnetcdf.inc"
 #include "tests.inc"
-        integer(kind=MPI_OFFSET_KIND) base(rank)      !/* base(rank) ignored */
-        integer(kind=MPI_OFFSET_KIND) indexes(rank)   !/* returned FORTRAN indexes */
+        integer*8 base(rank)      !/* base(rank) ignored */
+        integer*8 indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
@@ -316,8 +316,8 @@
         integer         rank            !/* number of dimensions */
         include "pnetcdf.inc"
 #include "tests.inc"
-        integer(kind=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
-        integer(kind=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
+        integer*8  base(rank)      !/* base(rank) ignored */
+        integer*8  indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
@@ -372,7 +372,7 @@
       integer   rank
       include "pnetcdf.inc"
 #include "tests.inc"
-      integer(kind=MPI_OFFSET_KIND)   index(*)
+      integer*8 index(*)
 
       doubleprecision   base
       doubleprecision   result
@@ -545,7 +545,7 @@
 #include "tests.inc"
       double precision hash
 
-      integer(kind=MPI_OFFSET_KIND)   index(*)
+      integer*8 index(*)
       integer   itype
 
       hash4 = hash( type, rank, index )
@@ -628,7 +628,7 @@
       integer   nn
       include "pnetcdf.inc"
 #include "tests.inc"
-      integer(kind=MPI_OFFSET_KIND)   sp(MAX_RANK)
+      integer*8 sp(MAX_RANK)
 
       integer   i
 
@@ -652,7 +652,7 @@
 #include "tests.inc"
         integer index2ncindexes
 
-        integer(kind=MPI_OFFSET_KIND)         max_dim_len(MAX_RANK)
+        integer*8       max_dim_len(MAX_RANK)
         character*1     type_letter(NTYPES)
         character*1     digit(10)
 
@@ -664,7 +664,7 @@
         integer jj
         integer n_types
         integer tc
-        integer(kind=MPI_OFFSET_KIND) tmp(MAX_RANK)
+        integer*8 tmp(MAX_RANK)
         integer ac              !/* attribute index */
         integer dn              !/* dimension number */
         integer prod            !/* function */
@@ -792,7 +792,7 @@
 
         do 1, i = 1, numVars
             err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
-     +                       var_rank(i), var_dimid(1:,i), var_id)
+     +                       var_rank(i), var_dimid(1,i), var_id)
             if (err .ne. NF_NOERR) then
                 call errore('nfmpi_def_var: ', err)
             end if
@@ -807,7 +807,7 @@
         include "pnetcdf.inc"
 #include "tests.inc"
         integer VARID, NATTS, ATT_TYPE, ATT_LEN
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
+        integer*8   ATT_LEN_LL
         CHARACTER*2 ATT_NAME
         double precision hash
         logical inrange
@@ -817,7 +817,7 @@
                                                 ! * attribute */
         integer                 k               !/* attribute index */
         integer                 j               !/* index of attribute */
-        integer(kind=MPI_OFFSET_KIND)                 ndx(1)
+        integer*8               ndx(1)
         logical                 allInRange
         doubleprecision         att(MAX_NELS)
         character*(MAX_NELS+2)  catt
@@ -888,8 +888,8 @@
         double precision hash
         logical inrange
 
-        integer(kind=MPI_OFFSET_KIND)                 start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
+        integer*8               start(MAX_RANK)
+        integer*8               index(MAX_RANK)
         integer                 err             !/* netCDF status */
         integer                 i
         integer                 j
@@ -930,20 +930,20 @@
                 text(var_nels(i)+1:var_nels(i)+1) = char(1)
                 text(var_nels(i)+2:var_nels(i)+2) = char(0)
                 err = nfmpi_put_vara_text_all(ncid, i, start,
-     +                                    var_shape(:,i), text)
+     +                                    var_shape(1,i), text)
                 if (err .ne. NF_NOERR) then
                     call errore('nfmpi_put_vara_text_all: ', err)
                 end if
             else
                 err = nfmpi_put_vara_double_all(ncid, i, start,
-     +                                      var_shape(:,i), value)
+     +                                      var_shape(1,i), value)
                 if (allInRange) then
                     if (err .ne. NF_NOERR) then
                         call errore('nfmpi_put_vara_double_all: ', err)
                     end if
                 else
                     if (err .ne. NF_ERANGE) then
-                        call errore(
+                        call errore('put_vars '//
      +                      'type-conversion range error: status = ', 
      +                      err)
                     end if
@@ -998,7 +998,7 @@
 #include "tests.inc"
 
         character*(NF_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND)                 length
+        integer*8               length
         integer                 i
         integer                 err           !/* netCDF status */
 
@@ -1029,7 +1029,7 @@
         double precision hash
         logical inrange, equal
 
-        integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
+        integer*8               index(MAX_RANK)
         integer                 err             !/* netCDF status */
         integer                 i
         integer                 j
@@ -1042,7 +1042,7 @@
         logical                 isChar
         doubleprecision         expect
         character*(NF_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND)                 length
+        integer*8               length
         integer                 nok             !/* count of valid comparisons */
 
         nok = 0
@@ -1137,9 +1137,9 @@
         integer                 k
         integer                 vid             !/* "variable" ID */
         integer                 datatype
-        integer(kind=MPI_OFFSET_KIND)                 ndx(1)
+        integer*8               ndx(1)
         character*(NF_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND)                 length
+        integer*8               length
         character*(MAX_NELS)    text
         doubleprecision         value(MAX_NELS)
         doubleprecision         expect
@@ -1544,8 +1544,8 @@
        INTEGER FUNCTION MY_LEN_TRIM(STRING)
            CHARACTER*(*) STRING
            DO I = LEN(STRING), 1, -1
-               IF (STRING(I:I) .NE. ' ') EXIT
+               IF (STRING(I:I) .NE. ' ') go to 10
            ENDDO
-           MY_LEN_TRIM = I
-       END FUNCTION MY_LEN_TRIM
+ 10        MY_LEN_TRIM = I
+       END ! FUNCTION MY_LEN_TRIM
 

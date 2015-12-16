@@ -10,7 +10,7 @@
 ! a sequence of selected file locations through the following 2 APIs.
 !
 !   H5Sselect_elements(fid, H5S_SELECT_SET, NUMP, (const hssize_t **)coord);
-!   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val); 
+!   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val);
 !
 ! Note that in nfmpi_put_varn_int_all(), users can write more than one element
 ! starting at each selected location.
@@ -50,14 +50,14 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       program main
           implicit none
@@ -65,18 +65,18 @@
           include "pnetcdf.inc"
 
           integer NDIMS
-          integer(kind=MPI_OFFSET_KIND) NX, NY
+          integer*8 NX, NY
           PARAMETER(NDIMS=2, NX=4, NY=10)
 
-          character(LEN=128) filename, cmd
+          character*128 filename, cmd
           integer i, j, err, ierr, nprocs, rank, get_args, dummy
           integer cmode, ncid, varid, dimid(NDIMS), num_reqs
 
-          integer(kind=MPI_OFFSET_KIND) w_len, w_req_len
-          integer(kind=MPI_OFFSET_KIND), allocatable :: starts(:,:)
-          integer(kind=MPI_OFFSET_KIND), allocatable :: counts(:,:)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
-          integer, allocatable :: buffer(:)
+          integer*8 w_len, w_req_len
+          integer*8 starts(NDIMS,5)
+          integer*8 counts(NDIMS,5)
+          integer*8 malloc_size, sum_size
+          integer buffer(1024)
           logical verbose
 
           call MPI_Init(err)
@@ -128,16 +128,14 @@
           if (rank .EQ. 0) then
               num_reqs = 3
           elseif (rank .EQ. 1) then
-              num_reqs = 3;
+              num_reqs = 3
           elseif (rank .EQ. 2) then
-              num_reqs = 3;
+              num_reqs = 3
           elseif (rank .EQ. 3) then
-              num_reqs = 3;
+              num_reqs = 3
           endif
 
           ! Note that in Fortran, array indices start with 1
-          ALLOCATE(starts(NDIMS, num_reqs))
-          ALLOCATE(counts(NDIMS, num_reqs))
 
           ! assign arbitrary starts and counts
           if (rank .EQ. 0) then
@@ -225,12 +223,13 @@
              do j=1, NDIMS
                 w_req_len = w_req_len * counts(j, i)
              enddo
-             w_len = w_len + w_req_len;
+             w_len = w_len + w_req_len
           enddo
-          ALLOCATE(buffer(w_len))
 
           ! initialize buffer contents
-          buffer = rank;
+          do i=1, 1024
+             buffer(i) = rank
+          enddo
 
           err = nfmpi_put_varn_int_all(ncid, varid, num_reqs, starts,
      +                                 counts, buffer)
@@ -240,17 +239,13 @@
           err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close: ')
 
-          DEALLOCATE(buffer);
-          DEALLOCATE(starts);
-          DEALLOCATE(counts);
-
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, 
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -258,5 +253,5 @@
 
  999      call MPI_Finalize(err)
           ! call EXIT(0) ! EXIT() is a GNU extension
-      end program main
+      end ! program main
 

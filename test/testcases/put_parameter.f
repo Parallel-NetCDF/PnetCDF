@@ -39,22 +39,24 @@
 !
 !    Note the above dump is in C order
 !
+
        INTEGER FUNCTION XTRIM(STRING)
            CHARACTER*(*) STRING
-           INTEGER I
-           DO I = LEN(STRING), 1, -1
-               IF (STRING(I:I) .NE. ' ') EXIT
+           INTEGER I, N
+           N = LEN(STRING)
+           DO I = N, 1, -1
+              IF (STRING(I:I) .NE. ' ') GOTO 10
            ENDDO
-           XTRIM = I
-       END FUNCTION XTRIM
+ 10        XTRIM = I
+       END ! FUNCTION XTRIM
 
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
           integer err, XTRIM
-          character(len=*) message
-          character(len=128) msg
+          character*(*) message
+          character*128 msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
@@ -63,7 +65,7 @@
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       program main
           implicit none
@@ -71,13 +73,14 @@
           include "pnetcdf.inc"
 
           integer NX, buffer(4)
-          PARAMETER(NX=4, buffer=(/5,6,7,8/))
+          PARAMETER(NX=4)
+          data buffer /5,6,7,8/
 
-          character(LEN=256) filename, cmd, msg
+          character*256 filename, cmd, msg
           integer err, ierr, nprocs, rank, nerrs, get_args, XTRIM
           integer cmode, ncid, varid(2), dimid(2)
-          integer(kind=MPI_OFFSET_KIND) len_ll, start(2), count(2)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          integer*8 len_ll, start(2), count(2)
+          integer*8 malloc_size, sum_size
 
           call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
@@ -128,10 +131,12 @@
           start(2) = rank + 1
           count(1) = NX
           count(2) = 1
-          err = nfmpi_put_vara_int_all(ncid, varid(1), start, count,
-     +                                 (/1,2,3,4/))
-          call check(err, 'In nfmpi_put_var_int_all: ')
-
+!
+! pgf77 does not like using (/1,2,3,4/) as a function argument
+!          err = nfmpi_put_vara_int_all(ncid, varid(1), start, count,
+!     +                                 (/1,2,3,4/))
+!          call check(err, 'In nfmpi_put_var_int_all: ')
+!
           err = nfmpi_put_vara_int_all(ncid, varid(2), start, count,
      +                                 buffer)
           call check(err, 'In nfmpi_put_var_int_all: ')
@@ -143,10 +148,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -157,5 +162,5 @@
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)
-      end program main
+      end ! program main
 

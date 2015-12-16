@@ -49,14 +49,14 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
-          end if
-      end subroutine check
+          endif
+      end ! subroutine check
 
       program main
           implicit none
@@ -66,15 +66,15 @@
           integer NY, NX
           PARAMETER(NX=10, NY=4)
 
-          character(LEN=128) filename, cmd
+          character*128 filename, cmd
           integer i, j, rank, nprocs, err, ierr, num_reqs, get_args
           integer ncid, cmode, varid, dimid(2), stride, block_len
           integer buf(NX, NY)
           integer reqs(NY), sts(NY)
-          integer(kind=MPI_OFFSET_KIND) G_NY, myOff, block_start,
+          integer*8 G_NY, myOff, block_start,
      +                                  global_nx, global_ny
-          integer(kind=MPI_OFFSET_KIND) start(2), count(2)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          integer*8 start(2), count(2)
+          integer*8 malloc_size, sum_size
           logical verbose
           integer dummy
 
@@ -123,7 +123,11 @@
 
           ! First, fill the entire array with zeros, using a blocking I/O.
           ! Every process writes a subarray of size NX * NY
-          buf = 0
+          do i=1, NY 
+          do j=1, NX
+             buf(j,i) = 0
+          enddo
+          enddo
           start(1) = myOff+1
           start(2) = 1
           count(1) = NY
@@ -132,13 +136,17 @@
           call check(err, 'In nfmpi_put_vara_int_all: ')
 
           ! initialize the buffer with rank ID
-          buf = rank+10
+          do i=1, NY 
+          do j=1, NX
+             buf(j,i) = rank+10
+          enddo
+          enddo
 
           ! each proc writes NY columns of the 2D array, block_len controls the
           ! the number of contiguous columns at a time
           block_start = 0
           block_len   = 2  ! can be 1, 2, 3, ..., NY
-          if (block_len > NY) block_len = NY
+          if (block_len .GT. NY) block_len = NY
 
           start(1) = rank * block_len + 1
           start(2) = 1
@@ -149,14 +157,14 @@
           do i=1, NY
              num_reqs = num_reqs + 1
              err = nfmpi_iput_vara_int(ncid, varid, start, count,
-     +                                 buf(:,i), reqs(num_reqs))
+     +                                 buf(1,i), reqs(num_reqs))
              call check(err, 'In nfmpi_iput_vara_int: ')
 
              if (MOD(i, block_len) .EQ. 0) then
                  stride = NY-i
                  if (stride .GT. block_len) stride = block_len
                  block_start = block_start + block_len * nprocs
-                 start(1) = block_start + stride * rank + 1;
+                 start(1) = block_start + stride * rank + 1
              else
                  start(1) = start(1) + 1
              endif
@@ -199,7 +207,11 @@
           call check(err, 'In nfmpi_inq_varid: ')
 
           ! initialize the buffer with -1, so a read error can be pingpointed
-          buf = -1
+          do i=1, NY 
+          do j=1, NX
+             buf(j,i) = -1
+          enddo
+          enddo
 
           ! each proc reads NY columns of the 2D array, block_len controls the
           ! the number of contiguous columns at a time */
@@ -216,14 +228,14 @@
           do i=1, NY
              num_reqs = num_reqs + 1
              err = nfmpi_iget_vara_int(ncid, varid, start, count,
-     +                                 buf(:,i), reqs(num_reqs))
+     +                                 buf(1,i), reqs(num_reqs))
              call check(err, 'In nfmpi_iget_vara_int: ')
 
              if (MOD(i, block_len) .EQ. 0) then
                  stride = NY-i
                  if (stride .GT. block_len) stride = block_len
                  block_start = block_start + block_len * nprocs
-                 start(1) = block_start + stride * rank + 1;
+                 start(1) = block_start + stride * rank + 1
              else
                  start(1) = start(1) + 1
              endif
@@ -257,10 +269,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, 
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -269,4 +281,4 @@
  999      call MPI_Finalize(err)
           ! call EXIT(0) ! EXIT() is a GNU extension
 
-      end program main
+      end ! program main

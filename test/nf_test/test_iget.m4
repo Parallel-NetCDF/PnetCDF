@@ -29,7 +29,7 @@ define([ARITH3], [ifelse($1, text, ichar($2($3:$3)), $2($3))])
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character(len=MAX_NELS) $2,
+ifelse($1, text, character*MAX_NELS $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,
@@ -78,7 +78,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
         integer j
         integer err
         integer nok      
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer*8 index(MAX_RANK)
         doubleprecision expect
         logical canConvert     
         DATATYPE_VAR1($1, value)
@@ -187,7 +187,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
         logical allInIntRange   
         integer nels
         integer nok      
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer*8 index(MAX_RANK)
         doubleprecision expect(MAX_NELS)
         logical canConvert     
         DATATYPE($1, value, (MAX_NELS))
@@ -294,10 +294,10 @@ define([TEST_NFMPI_IGET_VARA],[dnl
         integer nels
         integer nslabs
         integer nok      
-        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
+        integer*8 start(MAX_RANK)
+        integer*8 edge(MAX_RANK)
+        integer*8 index(MAX_RANK)
+        integer*8 mid(MAX_RANK)
         logical canConvert     
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
@@ -333,7 +333,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
      +                               edge, value,reqid(1))
                 if (canConvert .and. err .ne. NF_EINVALCOORDS)
      +              call errore('bad index: ', err)
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
@@ -341,7 +341,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
      +                               edge, value,reqid(1))
                 if (canConvert .and. err .ne. NF_EEDGE)
      +              call errore('bad edge: ', err)
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 edge(j) = 1
 3           continue
@@ -367,14 +367,14 @@ C           /* there is nothing to get (edge(j).eq.0) */
      +                          start, edge, value,reqid(1))
                         if (canConvert .and. err .ne. NF_EINVALCOORDS)
      +                      call errore('bad start: ', err)
-                        if (err == NF_NOERR)
+                        if (err .EQ. NF_NOERR)
      +                      err_w = nfmpi_wait_all(ncid,1,reqid,st)
                         start(j) = 1
                     endif
 11              continue
                 err = nfmpi_iget_vara_$1(ncid, i, start,
      +                          edge, value,reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (canConvert) then
                     if (err .ne. NF_NOERR) then
@@ -431,7 +431,7 @@ C           bits of k determine whether to get lower or upper part of dim
 7               continue
                 err = nfmpi_iget_vara_$1(ncid, i, start,
      +                          edge, value,reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (canConvert) then
                     if (allInExtRange) then
@@ -512,14 +512,14 @@ define([TEST_NFMPI_IGET_VARS],dnl
         integer nslabs
         integer nstarts         
         integer nok             
-        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
+        integer*8 start(MAX_RANK)
+        integer*8 edge(MAX_RANK)
+        integer*8 index(MAX_RANK)
+        integer*8 index2(MAX_RANK)
+        integer*8 mid(MAX_RANK)
+        integer*8 count(MAX_RANK)
+        integer*8 sstride(MAX_RANK)
+        integer*8 stride(MAX_RANK)
         logical canConvert     
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
@@ -554,7 +554,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
                 start(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_vars_$1(ncid, i, start, edge,
      +                                    stride,value,reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -567,7 +567,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
                 edge(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_vars_$1(ncid, i, start, edge,
      +                               stride,value,reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -580,7 +580,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
                 stride(j) = 0
                 err = nfmpi_iget_vars_$1(ncid, i, start, edge,
      +                                stride,value,reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -663,7 +663,7 @@ C    */
 9                   continue
                     err = nfmpi_iget_vars_$1(ncid, i, index,
      +                                    count,stride,value,reqid(1))
-                    if (err == NF_NOERR)
+                    if (err .EQ. NF_NOERR)
      +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
                     if (canConvert) then
                         if (allInExtRange) then
@@ -745,15 +745,15 @@ define([TEST_NFMPI_IGET_VARM],dnl
         integer nslabs
         integer nstarts         
         integer nok             
-        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
+        integer*8 start(MAX_RANK)
+        integer*8 edge(MAX_RANK)
+        integer*8 index(MAX_RANK)
+        integer*8 index2(MAX_RANK)
+        integer*8 mid(MAX_RANK)
+        integer*8 count(MAX_RANK)
+        integer*8 sstride(MAX_RANK)
+        integer*8 stride(MAX_RANK)
+        integer*8 imap(MAX_RANK)
         logical canConvert     
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
@@ -789,7 +789,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
                 start(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_varm_$1(ncid, i, start, edge,
      +                                stride, imap, value,reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -802,7 +802,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
                 edge(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_varm_$1(ncid, i, start, edge,
      +                                stride, imap, value,reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -815,7 +815,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
                 stride(j) = 0
                 err = nfmpi_iget_varm_$1(ncid, i, start, edge,
      +                                stride, imap, value, reqid(1))
-                if (err == NF_NOERR)
+                if (err .EQ. NF_NOERR)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -905,7 +905,7 @@ C     */
 10                  continue
                     err = nfmpi_iget_varm_$1(ncid,i,index,count,
      +                                   stride,imap, value, reqid(1))
-                    if (err == NF_NOERR)
+                    if (err .EQ. NF_NOERR)
      +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
                     if (canConvert) then
                         if (allInExtRange) then

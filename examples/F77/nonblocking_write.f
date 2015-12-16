@@ -23,14 +23,14 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end
 
       program main
           implicit none
@@ -40,16 +40,16 @@
           integer NDIMS, NUM_VARS, BUFSIZE
           PARAMETER(NDIMS=3, NUM_VARS=10, BUFSIZE=1000)
 
-          character(LEN=128) filename, cmd, str
-          integer i, cmode, err, ierr, get_args
+          character*128 filename, cmd, str
+          integer i, j, cmode, err, ierr, get_args
           integer rank, nprocs, ncid, len
-          integer buf(BUFSIZE, NUM_VARS)
+          integer buf(BUFSIZE, NUM_VARS), buf1d(BUFSIZE)
           integer psizes(NDIMS), dimids(NDIMS), varids(NUM_VARS)
           integer req(NUM_VARS), st(NUM_VARS)
-          integer(kind=MPI_OFFSET_KIND) gsizes(NDIMS)
-          integer(kind=MPI_OFFSET_KIND) starts(NDIMS), counts(NDIMS)
-          integer(kind=MPI_OFFSET_KIND) bbufsize
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          integer*8 gsizes(NDIMS)
+          integer*8 starts(NDIMS), counts(NDIMS)
+          integer*8 bbufsize
+          integer*8 malloc_size, sum_size
           logical verbose
 
           call MPI_Init(err)
@@ -82,7 +82,7 @@
           enddo
 
           ! create a block-block-block data partitioning
-          call MPI_Dims_create(nprocs, NDIMS, psizes, err);
+          call MPI_Dims_create(nprocs, NDIMS, psizes, err)
           starts(1) = mod(rank, psizes(1))
           starts(2) = mod((rank / psizes(2)), psizes(2))
           starts(3) = mod((rank / (psizes(1) * psizes(2))), psizes(3))
@@ -95,7 +95,11 @@
               bbufsize  = bbufsize * len
           enddo
 
-          buf = rank
+          do i=1,NUM_VARS
+             do j=1,BUFSIZE
+                buf(j,i) = rank
+             enddo
+          enddo
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
@@ -125,9 +129,12 @@
 
           ! write one variable at a time using iput
           do i=1, NUM_VARS
+             do j=1,BUFSIZE
+                buf1d(j) = buf(j,i)
+             enddo
              write(str,'(I1)') i-1
              err = nfmpi_iput_vara_int(ncid, varids(i), starts,
-     +                                 counts, buf(:,i), req(i))
+     +                                 counts, buf1d, req(i))
              call check(err, 'In nfmpi_iput_vara_int '//str)
           enddo
 
@@ -149,9 +156,12 @@
           call check(err, 'In nfmpi_buffer_attach')
 
            do i=1, NUM_VARS
+             do j=1,BUFSIZE
+                buf1d(j) = buf(j,i)
+             enddo
              write(str,'(I1)') i-1
              err = nfmpi_bput_vara_int(ncid, varids(i), starts,
-     +                                 counts, buf(:,i), req(i))
+     +                                 counts, buf1d, req(i))
              call check(err, 'In nfmpi_bput_vara_int '//str)
 
              ! can safely change the contents of buf(:,i) now
@@ -172,16 +182,16 @@
           call check(err, 'In nfmpi_buffer_detach')
 
           ! close the file
-          err = nfmpi_close(ncid);
+          err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close')
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ', 
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -190,5 +200,5 @@
  999      call MPI_Finalize(err)
           ! call EXIT(0) ! EXIT() is a GNU extension
 
-      end program main
+      end
 

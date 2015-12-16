@@ -85,14 +85,14 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
-          end if
-      end subroutine check
+          endif
+      end
 
       program main
           implicit none
@@ -100,20 +100,18 @@
           include "pnetcdf.inc"
 
           integer NDIMS
-          integer(kind=MPI_OFFSET_KIND) NX, NY
+          integer*8 NX, NY
           PARAMETER(NDIMS=2, NX=4, NY=10)
 
-          character(LEN=128) filename, cmd
+          character*128 filename, cmd
           integer i, j, k, n, err, ierr, nprocs, rank, get_args
           integer cmode, ncid, varid(4), dimid(NDIMS), nreqs
           integer reqs(4), sts(4), num_segs(4)
 
-          integer(kind=MPI_OFFSET_KIND) start(NDIMS, 6, 4)
-          integer(kind=MPI_OFFSET_KIND) count(NDIMS, 6, 4)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
-          integer(kind=MPI_OFFSET_KIND) req_len, bbufsize
-          integer, parameter :: INT8_KIND = selected_int_kind(18)
-          integer(kind=INT8_KIND) buffer(NX*NY,4)
+          integer*8 start(NDIMS, 6, 4), count(NDIMS, 6, 4)
+          integer*8 malloc_size, sum_size, two
+          integer*8 req_len, bbufsize
+          integer*8 buffer(NX*NY,4)
           logical verbose
           integer dummy
 
@@ -121,6 +119,7 @@
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
+          two = 2
           ! take filename from command-line argument if there is any
           if (rank .EQ. 0) then
               verbose = .TRUE.
@@ -152,16 +151,16 @@
           call check(err, 'In nfmpi_def_dim X: ')
 
           ! define 4 2D variables of int64 type
-          err = nfmpi_def_var(ncid, "var0", NF_INT64,2_MPI_OFFSET_KIND,
+          err = nfmpi_def_var(ncid, "var0", NF_INT64, two,
      +                        dimid,varid(1))
           call check(err, 'In nfmpi_def_var var0: ')
-          err = nfmpi_def_var(ncid, "var1", NF_INT64,2_MPI_OFFSET_KIND,
+          err = nfmpi_def_var(ncid, "var1", NF_INT64, two,
      +                        dimid,varid(2))
           call check(err, 'In nfmpi_def_var var1: ')
-          err = nfmpi_def_var(ncid, "var2", NF_INT64,2_MPI_OFFSET_KIND,
+          err = nfmpi_def_var(ncid, "var2", NF_INT64, two,
      +                        dimid,varid(3))
           call check(err, 'In nfmpi_def_var var2: ')
-          err = nfmpi_def_var(ncid, "var3", NF_INT64,2_MPI_OFFSET_KIND,
+          err = nfmpi_def_var(ncid, "var3", NF_INT64, two,
      +                        dimid,varid(4))
           call check(err, 'In nfmpi_def_var var3: ')
 
@@ -172,10 +171,22 @@
           ! now we are in data mode
           n = mod(rank, 4) + 1
           num_segs(n) = 4 ! number of segments for this request
-          start(1,1,n)=1; start(2,1,n)=6; count(1,1,n)=1; count(2,1,n)=2
-          start(1,2,n)=2; start(2,2,n)=1; count(1,2,n)=1; count(2,2,n)=1
-          start(1,3,n)=3; start(2,3,n)=7; count(1,3,n)=1; count(2,3,n)=2
-          start(1,4,n)=4; start(2,4,n)=1; count(1,4,n)=1; count(2,4,n)=3
+          start(1,1,n)=1
+          start(2,1,n)=6
+          count(1,1,n)=1
+          count(2,1,n)=2
+          start(1,2,n)=2
+          start(2,2,n)=1
+          count(1,2,n)=1
+          count(2,2,n)=1
+          start(1,3,n)=3
+          start(2,3,n)=7
+          count(1,3,n)=1
+          count(2,3,n)=2
+          start(1,4,n)=4
+          start(2,4,n)=1
+          count(1,4,n)=1
+          count(2,4,n)=3
           ! start(:,:,n) n_count(:,:,n) indicate the following:
           ! ("-" means skip)
           !   -  -  -  -  -  X  X  -  -  -
@@ -185,12 +196,30 @@
 
           n = mod(rank+1, 4) + 1
           num_segs(n) = 6 ! number of segments for this request
-          start(1,1,n)=1; start(2,1,n)=4; count(1,1,n)=1; count(2,1,n)=2
-          start(1,2,n)=1; start(2,2,n)=9; count(1,2,n)=1; count(2,2,n)=2
-          start(1,3,n)=2; start(2,3,n)=6; count(1,3,n)=1; count(2,3,n)=2
-          start(1,4,n)=3; start(2,4,n)=1; count(1,4,n)=1; count(2,4,n)=2
-          start(1,5,n)=3; start(2,5,n)=9; count(1,5,n)=1; count(2,5,n)=2
-          start(1,6,n)=4; start(2,6,n)=5; count(1,6,n)=1; count(2,6,n)=3
+          start(1,1,n)=1
+          start(2,1,n)=4
+          count(1,1,n)=1
+          count(2,1,n)=2
+          start(1,2,n)=1
+          start(2,2,n)=9
+          count(1,2,n)=1
+          count(2,2,n)=2
+          start(1,3,n)=2
+          start(2,3,n)=6
+          count(1,3,n)=1
+          count(2,3,n)=2
+          start(1,4,n)=3
+          start(2,4,n)=1
+          count(1,4,n)=1
+          count(2,4,n)=2
+          start(1,5,n)=3
+          start(2,5,n)=9
+          count(1,5,n)=1
+          count(2,5,n)=2
+          start(1,6,n)=4
+          start(2,6,n)=5
+          count(1,6,n)=1
+          count(2,6,n)=3
           ! start(:,:,n) n_count(:,:,n) indicate the following:
           !   -  -  -  X  X  -  -  -  X  X
           !   -  -  -  -  -  X  X  -  -  -
@@ -199,11 +228,26 @@
 
           n = mod(rank+2, 4) + 1
           num_segs(n) = 5 ! number of segments for this request
-          start(1,1,n)=1; start(2,1,n)=8; count(1,1,n)=1; count(2,1,n)=1
-          start(1,2,n)=2; start(2,2,n)=2; count(1,2,n)=1; count(2,2,n)=3
-          start(1,3,n)=2; start(2,3,n)=8; count(1,3,n)=1; count(2,3,n)=3
-          start(1,4,n)=3; start(2,4,n)=3; count(1,4,n)=1; count(2,4,n)=1
-          start(1,5,n)=4; start(2,5,n)=4; count(1,5,n)=1; count(2,5,n)=1
+          start(1,1,n)=1
+          start(2,1,n)=8
+          count(1,1,n)=1
+          count(2,1,n)=1
+          start(1,2,n)=2
+          start(2,2,n)=2
+          count(1,2,n)=1
+          count(2,2,n)=3
+          start(1,3,n)=2
+          start(2,3,n)=8
+          count(1,3,n)=1
+          count(2,3,n)=3
+          start(1,4,n)=3
+          start(2,4,n)=3
+          count(1,4,n)=1
+          count(2,4,n)=1
+          start(1,5,n)=4
+          start(2,5,n)=4
+          count(1,5,n)=1
+          count(2,5,n)=1
           ! start(:,:,n) n_count(:,:,n) indicate the following:
           !   -  -  -  -  -  -  -  X  -  -
           !   -  X  X  X  -  -  -  X  X  X
@@ -212,10 +256,22 @@
 
           n = mod(rank+3, 4) + 1
           num_segs(n) = 4 ! number of segments for this request
-          start(1,1,n)=1; start(2,1,n)=1; count(1,1,n)=1; count(2,1,n)=3
-          start(1,2,n)=2; start(2,2,n)=5; count(1,2,n)=1; count(2,2,n)=1
-          start(1,3,n)=3; start(2,3,n)=4; count(1,3,n)=1; count(2,3,n)=3
-          start(1,4,n)=4; start(2,4,n)=8; count(1,4,n)=1; count(2,4,n)=3
+          start(1,1,n)=1
+          start(2,1,n)=1
+          count(1,1,n)=1
+          count(2,1,n)=3
+          start(1,2,n)=2
+          start(2,2,n)=5
+          count(1,2,n)=1
+          count(2,2,n)=1
+          start(1,3,n)=3
+          start(2,3,n)=4
+          count(1,3,n)=1
+          count(2,3,n)=3
+          start(1,4,n)=4
+          start(2,4,n)=8
+          count(1,4,n)=1
+          count(2,4,n)=3
           ! start(:,:,n) n_count(:,:,n) indicate the following:
           !   X  X  X  -  -  -  -  -  -  -
           !   -  -  -  -  X  -  -  -  -  -
@@ -228,7 +284,11 @@
           if (rank .GE. 4) nreqs = 0
 
           ! initialize buffer contents
-          buffer = rank;
+          do i=1, 4
+          do j=1, NX*NY
+             buffer(j,i) = rank
+          enddo
+          enddo
 
           ! bbufsize must be max of data type converted before and after
           bbufsize = 0
@@ -249,8 +309,8 @@
 
           do i=1, nreqs
              err = nfmpi_bput_varn_int8(ncid, varid(i), num_segs(i),
-     +                                  start(:,:,i), count(:,:,i),
-     +                                  buffer(:,i), reqs(i))
+     +                                  start(1,1,i), count(1,1,i),
+     +                                  buffer(1,i), reqs(i))
              call check(err, 'In nfmpi_bput_varn_int8: ')
           enddo
           err = nfmpi_wait_all(ncid, nreqs, reqs, sts)
@@ -269,10 +329,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size, ' B yet to be freed'
@@ -280,5 +340,5 @@
 
  999      call MPI_Finalize(err)
           ! call EXIT(0) ! EXIT() is a GNU extension
-      end program main
+      end
 

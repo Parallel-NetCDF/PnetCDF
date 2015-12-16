@@ -45,22 +45,24 @@
 !
 !    Note the above dump is in C order
 !
+
        INTEGER FUNCTION XTRIM(STRING)
            CHARACTER*(*) STRING
-           INTEGER I
-           DO I = LEN(STRING), 1, -1
-               IF (STRING(I:I) .NE. ' ') EXIT
+           INTEGER I, N
+           N = LEN(STRING)
+           DO I = N, 1, -1
+              IF (STRING(I:I) .NE. ' ') GOTO 10
            ENDDO
-           XTRIM = I
-       END FUNCTION XTRIM
+ 10        XTRIM = I
+       END ! FUNCTION XTRIM
 
       subroutine check(err, message)
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
           integer err, XTRIM
-          character(len=*) message
-          character(len=128) msg
+          character*(*) message
+          character*128 msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
@@ -69,7 +71,7 @@
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       program main
           implicit none
@@ -77,17 +79,17 @@
           include "pnetcdf.inc"
 
           integer NDIMS, XTRIM
-          integer(kind=MPI_OFFSET_KIND) NX, NY
+          integer*8 NX, NY
           PARAMETER(NDIMS=2, NX=4, NY=10)
 
-          character(LEN=256) filename, cmd, msg
+          character*256 filename, cmd, msg
           integer i, j, err, ierr, nprocs, rank, nerrs, get_args
           integer cmode, ncid, varid, dimid(NDIMS), num_reqs
 
-          integer(kind=MPI_OFFSET_KIND) w_len, w_req_len
-          integer(kind=MPI_OFFSET_KIND) starts(NDIMS, 13)
-          integer(kind=MPI_OFFSET_KIND) counts(NDIMS, 13)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          integer*8 w_len, w_req_len
+          integer*8 starts(NDIMS, 13)
+          integer*8 counts(NDIMS, 13)
+          integer*8 malloc_size, sum_size
           integer buffer(13)
 
           call MPI_Init(ierr)
@@ -231,11 +233,13 @@
              do j=1, NDIMS
                 w_req_len = w_req_len * counts(j, i)
              enddo
-             w_len = w_len + w_req_len;
+             w_len = w_len + w_req_len
           enddo
 
           ! initialize buffer contents
-          buffer = rank;
+          do i=1, 13
+             buffer(i) = rank
+          enddo
 
           err = nfmpi_put_varn_int_all(ncid, varid, num_reqs, starts,
      +                                 counts, buffer)
@@ -244,7 +248,9 @@
           if (nprocs .GT. 4) call MPI_Barrier(MPI_COMM_WORLD, err)
 
           ! read back and check the contents
-          buffer = -1;
+          do i=1, 13
+             buffer(i) = -1
+          enddo
           err = nfmpi_get_varn_int_all(ncid, varid, num_reqs, starts,
      +                                 counts, buffer)
           call check(err, 'In nfmpi_get_varn_int_all: ')
@@ -265,10 +271,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -278,5 +284,5 @@
           if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)
-      end program main
+      end ! program main
 

@@ -31,7 +31,7 @@ F_SRCS    = nf_error.F \
 
 C_SRCS    = fortlib.c
 
-HEADERS   = tests.inc
+HEADERS   = tests.inc.in
 
 C_OBJS  = $(C_SRCS:.c=.o)
 F_OBJS  = $(F_SRCS:.F=.o) $(M4SRCS_F:.F=.o)
@@ -42,6 +42,8 @@ PROGS  = nf_test
 GARBAGE = $(PROGS) $(M4SRCS_F) \
           scratch.nc test.nc
 
+DIST_GARBAGE = tests.inc
+
 PACKING_LIST = $(C_SRCS) $(F_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in README
 
 all: $(PROGS)
@@ -51,7 +53,7 @@ $(C_OBJS): $(srcdir)/../common/testutils.h
 $(PROGS): ../common/libtestutils.a
 
 nf_test: $(OBJS) $(LIBRARY)
-	$(LINK.F77) $(OBJS) $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $(OBJS) $(LDFLAGS) $(LIBS)
 
 tags: $(F_SRCS) $(C_SRCS) FORCE
 	ctags -t $(F_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c

@@ -45,37 +45,38 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err
-          character(len=*) message
+          character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
-      end subroutine check
+      end ! subroutine check
 
       program main
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          character(LEN=128) filename, cmd
+          character*128 filename, cmd
           integer err, ierr, nprocs, rank, i, j, get_args, dummy
           integer cmode, ncid, varid0, varid1, dimid(2)
-          integer(kind=MPI_OFFSET_KIND) NX, NY, len, bufcount
-          integer(kind=MPI_OFFSET_KIND) start(2), count(2)
+          integer*8 NX, NY, len, bufcount
+          integer*8 start(2), count(2)
           PARAMETER(NX=3, NY=2)
           integer buf(NX, NY)
           integer buftype, rec_filetype, fix_filetype
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2), blocklengths(2)
-          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size, recsize
-          integer(kind=MPI_ADDRESS_KIND) disps(2)
+          integer*8 malloc_size, sum_size, recsize, two
+          integer*8 disps(2)
           logical verbose
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
+          two = 2
           ! take filename from command-line argument if there is any
           if (rank .EQ. 0) then
               verbose = .TRUE.
@@ -120,8 +121,7 @@
           call check(err, 'In nfmpi_def_var: rec_var ')
 
           ! define 2D fixed-size variable of integer type
-          err = nfmpi_def_dim(ncid, "FIX_DIM", 2_MPI_OFFSET_KIND,
-     +                        dimid(2))
+          err = nfmpi_def_dim(ncid, "FIX_DIM", two, dimid(2))
           call check(err, 'In nfmpi_def_dim RECV_DIM: ')
           err = nfmpi_def_var(ncid, "fix_var", NF_INT, 2, dimid, varid1)
           call check(err, 'In nfmpi_def_var: fix_var ')
@@ -181,7 +181,8 @@
           call check(err, 'In nfmpi_inq_varid fix_var: ')
 
           ! PnetCDF start() argument starts with 1
-          start = start + 1
+          start(1) = start(1) + 1
+          start(2) = start(2) + 1
 
           ! read back record variable
           err = nfmpi_get_vard_all(ncid, varid0, rec_filetype, buf,
@@ -203,10 +204,10 @@
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          if (err .EQ. NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -214,5 +215,5 @@
 
  999      call MPI_Finalize(err)
           ! call EXIT(0) ! EXIT() is a GNU extension
-      end program main
+      end ! program main
 
