@@ -125,7 +125,7 @@
 
           start(1) = 1
           count(1) = 3
-          err = nfmpi_bput_vara_int(ncid, varid, start, count, ibuf(1), req(1))
+          err = nfmpi_bput_vara_int(ncid, varid, start, count, ibuf, req(1))
           call check(err, 'In nfmpi_bput_vara_int: ')
 
           err = nfmpi_wait_all(ncid, 1, req, status)
