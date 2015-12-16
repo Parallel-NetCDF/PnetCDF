@@ -99,9 +99,15 @@ dnl
 define([MAKE_TYPE2], [dnl
 ifelse($1, text, $2 = char(int($3)),
        ifelse($1, int, $2 = INT($3),
+       ifelse($1, int8,
+                  if ($3 .EQ. X_INT8_MAX) then
+                      $2 = X_INT8_MAX
+                  else
+                      $2 = $3
+                  endif,
        ifelse($1, real, $2 = REAL($3),
        ifelse($1, double, $2 = DBLE($3),
-       $2 = $3))))[]dnl
+       $2 = $3)))))[]dnl
 ])
 
 dnl TEST_NFMPI_IPUT_VAR1(TYPE)
