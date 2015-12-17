@@ -12,7 +12,7 @@ dnl Check for an m4(1) preprocessor utility.
 dnl
 AC_DEFUN(UD_PROG_M4,
 [
-    dnl AC_CHECKING(for m4 preprocessor)
+    dnl AS_MESSAGE([checking for m4 preprocessor...])
     case "${M4-unset}" in
 	unset) AC_CHECK_PROGS(M4, m4 gm4, m4) ;;
 	*) AC_CHECK_PROGS(M4, $M4 m4 gm4, m4) ;;
@@ -37,7 +37,7 @@ dnl Check for an ar(1) utility.
 dnl
 AC_DEFUN(UD_PROG_AR,
 [
-    dnl AC_CHECKING(for ar utility)
+    dnl AS_MESSAGE([checking for ar utility...])
     case "${AR-unset}" in
 	unset) AC_CHECK_PROGS(AR, ar, ar) ;;
 	*) AC_CHECK_PROGS(AR, $AR ar, ar) ;;
@@ -55,7 +55,7 @@ dnl Check for an nm(1) utility.
 dnl
 AC_DEFUN(UD_PROG_NM,
 [
-    dnl AC_CHECKING(for nm utility)
+    dnl AS_MESSAGE([checking for nm utility...])
     case "${NM-unset}" in
 	unset) AC_CHECK_PROGS(NM, nm, nm) ;;
 	*) AC_CHECK_PROGS(NM, $NM nm, nm) ;;
@@ -122,10 +122,10 @@ AC_DEFUN(UD_PROG_CC,
     # work (due to licensing, for example); thus, we check the
     # compiler with a test program.
     # 
-    AC_MSG_CHECKING(C compiler \"$CC\")
-    AC_TRY_COMPILE(, ,
-	AC_MSG_RESULT(works),
-	AC_MSG_RESULT(failed to compile test program))
+    AC_MSG_CHECKING([C compiler "$CC"])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],
+                      [AC_MSG_RESULT(works)],
+                      [AC_MSG_RESULT(failed to compile test program)])
     AC_SUBST(CC)
     case "$CC" in
 	*gcc*)
@@ -164,8 +164,7 @@ AC_DEFUN(UD_PROG_CXX,
     case "${possible_cxxs}" in
 	'') CXX=
 	    ;;
-	*)  AC_LANG_SAVE()
-	    AC_LANG_CPLUSPLUS()
+	*)  AC_LANG_PUSH([C++])
 	    for cxx in $possible_cxxs; do
 		AC_CHECK_PROG(CXX, $cxx, $cxx)
 		case "$CXX" in
@@ -178,27 +177,24 @@ AC_DEFUN(UD_PROG_CXX,
 			# because we need these to work.
 			# 
 			AC_MSG_CHECKING(C++ compiler \"$CXX\")
-			AC_TRY_RUN(
- 			    [
+			AC_RUN_IFELSE([AC_LANG_SOURCE([[
 				#include <iostream.h>
 				int main() {
 				    cout << "";
 				    return 0;
 				}
-			    ],
-			    [
+			    ]])],[
 				AC_MSG_RESULT(works)
 				break
-			    ],
-			    [
+			    ],[
 				AC_MSG_WARN($CXX failed on test program)
 				CXX=
 				unset ac_cv_prog_CXX
-			    ])
+			    ],[])
 			;;
 		esac
 	    done
-	    AC_LANG_RESTORE()
+	    AC_LANG_POP([C++])
 	    case "${CXX}" in
 		'') AC_MSG_WARN("Could not find working C++ compiler")
 		    AC_MSG_WARN(Setting CXX to the empty string)
@@ -220,7 +216,7 @@ AC_DEFUN(UD_PROG_CXX,
 
 
 dnl
-dnl like AC_LONG_DOUBLE, except checks for 'long long'
+dnl like AC_TYPE_LONG_DOUBLE, except checks for 'long long'
 dnl
 AC_DEFUN(UD_C_LONG_LONG,
 [AC_MSG_CHECKING(for long long)
@@ -228,10 +224,11 @@ AC_CACHE_VAL(ac_cv_c_long_long,
 [if test "$GCC" = yes; then
   ac_cv_c_long_long=yes
 else
-AC_TRY_RUN([int main() {
+AC_RUN_IFELSE([AC_LANG_SOURCE([[int main() {
 long long foo = 0;
-return(sizeof(long long) < sizeof(long)); }],
-ac_cv_c_long_long=yes, ac_cv_c_long_long=no, :)
+return(sizeof(long long) < sizeof(long)); }]])],
+[ac_cv_c_long_long=yes],
+[ac_cv_c_long_long=no],[:])
 fi])dnl
 AC_MSG_RESULT($ac_cv_c_long_long)
 if test $ac_cv_c_long_long = yes; then
@@ -248,7 +245,7 @@ dnl
 AC_DEFUN(UD_CHECK_IEEE,
 [
 AC_MSG_CHECKING(for IEEE floating point format)
-AC_TRY_RUN([#ifndef NO_FLOAT_H
+AC_RUN_IFELSE([AC_LANG_SOURCE([[#ifndef NO_FLOAT_H
 #include <float.h>
 #endif
 
@@ -277,7 +274,7 @@ main()
 
 	return EXIT_MAYBEIEEE;
 #endif
-}],ac_cv_c_ieeefloat=yes, ac_cv_c_ieeefloat=no, :)
+}]])],[ac_cv_c_ieeefloat=yes],[ac_cv_c_ieeefloat=no],[:])
 AC_MSG_RESULT($ac_cv_c_ieeefloat)
 if test x$ac_cv_c_ieeefloat = xno; then
   AC_DEFINE(NO_IEEE_FLOAT)
@@ -657,7 +654,7 @@ dnl UD_CHECK_FORTRAN_NCTYPE(forttype, possibs, nctype)
 dnl
 AC_DEFUN(UD_CHECK_FORTRAN_NCTYPE,
 [
-    AC_MSG_CHECKING(for Fortran-equivalent to netCDF \"$3\")
+    AC_MSG_CHECKING([for Fortran-equivalent to netCDF "$3"])
 dnl     for type in $2; do
 dnl         cat >conftest.f <<EOF
 dnl                $type foo
@@ -693,7 +690,7 @@ dnl UD_CHECK_FORTRAN_CTYPE(v3forttype, v2forttype, ctype, min, max)
 dnl
 AC_DEFUN(UD_CHECK_FORTRAN_CTYPE,
 [
-    AC_MSG_CHECKING(for Fortran-equivalent to C \"$3\")
+    AC_MSG_CHECKING([for Fortran-equivalent to C "$3"])
     AC_LANG_PUSH([Fortran])
     AC_COMPILE_IFELSE(
        [AC_LANG_SOURCE([
@@ -769,7 +766,7 @@ AC_DEFUN(UD_CHECK_FORTRAN_TYPE,
 [
     AC_LANG_PUSH([Fortran])
     for ftype in $2; do
-	AC_MSG_CHECKING(for Fortran \"$ftype\")
+	AC_MSG_CHECKING([for Fortran "$ftype"])
         AC_COMPILE_IFELSE(
            [AC_LANG_SOURCE([
                subroutine sub(value)
@@ -778,7 +775,7 @@ AC_DEFUN(UD_CHECK_FORTRAN_TYPE,
            ])],
            [AC_MSG_RESULT(yes)
 	    $1=$ftype
-	    AC_DEFINE_UNQUOTED($1, $ftype)
+	    AC_DEFINE_UNQUOTED([$1], [$ftype])
             break],
            [AC_MSG_RESULT(no)]
         )
@@ -799,9 +796,9 @@ AC_DEFUN([UD_CHECK_FCALLSCSUB],
 	    AC_REQUIRE([UD_PROG_NM])
 	    AC_BEFORE([UD_CHECK_FORTRAN_CTYPE])
 	    AC_BEFORE([UD_CHECK_CTYPE_FORTRAN])
-	    AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB\")
-            AC_FC_FUNC(sub, [FCALLSCSUB])
-            AC_MSG_RESULT($FCALLSCSUB)
+	    AC_MSG_CHECKING([for C-equivalent to Fortran routine "SUB"])
+            AC_FC_FUNC([sub], [FCALLSCSUB])
+            AC_MSG_RESULT([$FCALLSCSUB])
 	    ;;
     esac
 ])
@@ -821,7 +818,7 @@ AC_DEFUN(UD_CHECK_CTYPE_FORTRAN,
            end
 EOF
     ac_cv_ctype_fortran=no
-    AC_MSG_CHECKING(if Fortran \"$1\" is )
+    AC_MSG_CHECKING([if Fortran "$1" is ])
     for ctype in $2; do
 	dnl AC_MSG_CHECKING(if Fortran \"$1\" is C \"$ctype\")
 	cat >conftest.c <<EOF
@@ -839,7 +836,7 @@ EOF
 		    doit=./conftest
 		    if AC_TRY_EVAL(doit); then
 		        dnl AC_MSG_RESULT(yes)
-		        AC_MSG_RESULT(\"$ctype\" in C)
+		        AC_MSG_RESULT(["$ctype" in C])
 		        cname=`echo $ctype | tr ' abcdefghijklmnopqrstuvwxyz' \
 			    _ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 		        AC_DEFINE_UNQUOTED(NF_$3[]_IS_C_$cname)
@@ -847,13 +844,13 @@ EOF
 		        break
 		    fi
 	        else
-		    AC_MSG_ERROR(Could not link conftestf.o and conftest.o)
+		    AC_MSG_ERROR([Could not link conftestf.o and conftest.o])
 	        fi
 	    else
-		AC_MSG_ERROR(Could not compile conftestf.f)
+		AC_MSG_ERROR([Could not compile conftestf.f])
 	    fi
 	else
-	    AC_MSG_ERROR(Could not compile conftest.c)
+	    AC_MSG_ERROR([Could not compile conftest.c])
 	fi
     done
     ${RM} -f conftest*
@@ -875,9 +872,9 @@ AC_DEFUN([UD_FORTRAN_TYPES],
 	;;
     *)
 	AC_REQUIRE([UD_CHECK_FCALLSCSUB])
-	UD_CHECK_FORTRAN_TYPE(NF_INT1_T, integer*1 byte "integer(kind=1)")
-	UD_CHECK_FORTRAN_TYPE(NF_INT2_T, integer*2 "integer(kind=2)")
-	UD_CHECK_FORTRAN_TYPE(NF_INT8_T, integer*8 "integer(kind=8)")
+	UD_CHECK_FORTRAN_TYPE([NF_INT1_T], [integer*1 byte "integer(kind=1)"])
+	UD_CHECK_FORTRAN_TYPE([NF_INT2_T], [integer*2 "integer(kind=2)"])
+	UD_CHECK_FORTRAN_TYPE([NF_INT8_T], [integer*8 "integer(kind=8)"])
 
 	case "${NF_INT1_T}" in
 	    '') ;;
@@ -976,7 +973,7 @@ dnl Check for the math library.
 dnl
 AC_DEFUN(UD_CHECK_LIB_MATH,
 [
-    dnl AC_CHECKING(for math library)
+    dnl AS_MESSAGE([checking for math library...])
     case "${MATHLIB}" in
 	'')
 	    AC_CHECK_LIB(c, floor, MATHLIB=,
@@ -1572,12 +1569,12 @@ AC_DEFUN([UD_CXX_MACRO_FUNC],[
    [ac_cv_cxx_macro_func=no
     ac_cv_cxx_macro_function=no
     AC_LANG_PUSH([C++])
-    AC_TRY_COMPILE([#include <iostream>],
-                   [std::cout << __func__;],
-                   [ac_cv_cxx_macro_func=yes])
-    AC_TRY_COMPILE([#include <iostream>],
-                   [std::cout << __FUNCTION__;],
-                   [ac_cv_cxx_macro_function=yes])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <iostream>]],
+                                       [[std::cout << __func__;]])],
+                                       [ac_cv_cxx_macro_func=yes],[])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <iostream>]],
+                                       [[std::cout << __FUNCTION__;]])],
+                                       [ac_cv_cxx_macro_function=yes],[])
     AC_LANG_POP([C++])
    ])
 ])
