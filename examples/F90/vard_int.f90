@@ -159,6 +159,16 @@
                                      bufcount, buftype)
           call check(err, 'In nf90mpi_put_vard_all: ')
 
+          ! check if the number of records changed to 2
+          err = nf90mpi_inquire(ncid, unlimitedDimId=dimid(2))
+          call check(err, 'In nf90mpi_inquire: ')
+          err = nf90mpi_inquire_dimension(ncid, dimid(2), len=len)
+          call check(err, 'In nf90mpi_inquire_dimension: ')
+          if (len .NE. 2) then
+              print*, 'Error: number of records should be 2 but got ', &
+                       len
+          endif
+
           ! write the fixed-size variable
           err = nf90mpi_put_vard_all(ncid, varid1, fix_filetype, buf, &
                                      bufcount, buftype)

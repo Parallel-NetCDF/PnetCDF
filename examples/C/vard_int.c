@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     int          i, j, err, ncid, verbose=1, varid0, varid1, dimids[2];
     int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
-    MPI_Offset   start[2], count[2], recsize, bufcount;
+    MPI_Offset   start[2], count[2], recsize, bufcount, len;
     MPI_Aint     array_of_displacements[2];
     MPI_Datatype buftype, rec_filetype, fix_filetype;
 
@@ -145,6 +145,12 @@ int main(int argc, char **argv) {
     /* write the record variable */
     err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, buf, bufcount,buftype);
     ERR
+
+    /* check if the number of records changed to 2 */
+    err = ncmpi_inq_unlimdim(ncid, &dimids[0]); ERR
+    err = ncmpi_inq_dimlen(ncid, dimids[0], &len); ERR
+    if (len != 2)
+        printf("Error: number of records should be 2 but got %lld\n", len);
 
     /* write the fixed-size variable */
     err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, buf, bufcount,buftype);
