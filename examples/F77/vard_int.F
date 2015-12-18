@@ -165,6 +165,16 @@
      +                             bufcount, buftype)
           call check(err, 'In nfmpi_put_vard_all: ')
 
+          ! check if the number of records changed to 2
+          err = nfmpi_inq_unlimdim(ncid, dimid(2))
+          call check(err, 'In nfmpi_inq_unlimdim: ')
+          err = nfmpi_inq_dimlen(ncid, dimid(2), len)
+          call check(err, 'In nfmpi_inq_dimlen: ')
+          if (len .NE. 2) then
+              print*, 'Error: number of records should be 2 but got ',
+     +                 len
+          endif
+
           ! write the fixed-size variable
           err = nfmpi_put_vard_all(ncid, varid1, fix_filetype, buf,
      +                             bufcount, buftype)
