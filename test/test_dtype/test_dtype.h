@@ -41,7 +41,12 @@
 #define TEST_NATIVE_ETYPE_STR "double"
 #endif
 
+#include <limits.h>
+#ifdef INT_MAX
+#define TEST_MAX_INT INT_MAX
+#else
 #define TEST_MAX_INT ( ~((int)(1) << (8*sizeof(int)-1)) )
+#endif
 
 #define TEST_SET_NCMPI_ETYPE(nc_etype, mpi_etype) 		\
 { 								\
