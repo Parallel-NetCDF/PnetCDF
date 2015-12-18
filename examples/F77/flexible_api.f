@@ -107,8 +107,8 @@
           global_ny = ny * nprocs
 
           ! first initialize the entire buffer to -1
-          do i=1, nx+2*ghost_len 
-          do j=1, ny+2*ghost_len
+          do i=1, ny+2*ghost_len 
+          do j=1, nx+2*ghost_len
              buf(j,i) = -1
           enddo
           enddo
