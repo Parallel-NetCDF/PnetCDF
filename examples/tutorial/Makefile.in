@@ -98,9 +98,9 @@ ptest4: $(PROGS)
 	@for i in $(PROGS); do ( \
         $(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
-           echo "PASS: parallel run on 4 processes ------------------- $$i"; \
+           echo "PASS:     parallel run on 4 processes --------------- $$i"; \
         else \
-           echo "FAILED: parallel run on 4 processes ----------------- $$i"; \
+           echo "FAILED:     parallel run on 4 processes ------------- $$i"; \
         fi ; ) ; done
 
 ptest: ptest4
