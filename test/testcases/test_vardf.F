@@ -204,7 +204,11 @@
           integer array_of_starts(2), blocklengths(2)
           integer*8 start(2), count(2), len, one, two
           integer*8 malloc_size, sum_size, recsize
+#ifdef SIZEOF_MPI_AINT_IS_4
+          integer a0, a1, disps(2)
+#else
           integer*8 a0, a1, disps(2)
+#endif
 
           call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)

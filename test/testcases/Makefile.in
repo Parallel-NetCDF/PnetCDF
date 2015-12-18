@@ -13,6 +13,9 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
+ifeq (@SIZEOF_MPI_AINT_IS_4@, yes)
+FPPFLAGS += -DSIZEOF_MPI_AINT_IS_4
+endif
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 ifeq (@PNC_DEBUG@, yes)
@@ -47,11 +50,12 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            last_large_var.c \
            redef1.c
 
-F77_SRCS = test_vardf.f \
-           varn_intf.f \
+F77_SRCS = varn_intf.f \
            attrf.f \
            buftype_freef.f \
            put_parameter.f
+
+F77F_SRCS = test_vardf.F
 
 F90_SRCS = inq_num_varsf.f90 \
            inq_recsizef.f90 \
@@ -62,8 +66,8 @@ PROGS    = $(C_SRCS:.c=)
 OBJS     = $(C_SRCS:.c=.o)
 
 ifeq (@has_fortran@, yes)
-PROGS   += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
-OBJS    += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
+PROGS   += $(F77_SRCS:.f=)   $(F77F_SRCS:.F=)   $(F90_SRCS:.f90=)
+OBJS    += $(F77_SRCS:.f=.o) $(F77F_SRCS:.F=.o) $(F90_SRCS:.f90=.o)
 ifeq (@large_file_test@, yes)
 PROGS   += bigrecords
 OBJS    += bigrecords.o
@@ -71,7 +75,7 @@ endif
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
+PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F77F_SRCS) $(F90_SRCS) \
                bigrecords.f \
                Makefile.in depend \
                geopotential.ncdump \

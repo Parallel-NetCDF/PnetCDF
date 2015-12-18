@@ -69,7 +69,11 @@
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2), blocklengths(2)
           integer*8 malloc_size, sum_size, recsize, two
+#ifdef SIZEOF_MPI_AINT_IS_4
+          integer disps(2)
+#else
           integer*8 disps(2)
+#endif
           logical verbose
 
           call MPI_Init(err)
