@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 #include <ctype.h>
 #include <pnetcdf.h>
@@ -19,6 +20,9 @@ extern int fortran_flag;
 
 #define fpr    (void) fprintf
 
+#ifndef INT_MAX
+#define INT_MAX 2147483647
+#endif
 
 /*
  * Remove trailing zeros (after decimal point) but not trailing decimal
@@ -676,7 +680,7 @@ load_netcdf(void *rec_start)
      * Here the subarray is from 1, 2, ... ndims, except 0.
      * This is not a perfect solution. To be improved.
      */
-    if (total_size > 2147483648) {
+    if (total_size > INT_MAX) {
         MPI_Offset nchunks=count[0];
         MPI_Offset subarray_nelems=1;
         for (idim=1; idim<vars[varnum].ndims; idim++)
