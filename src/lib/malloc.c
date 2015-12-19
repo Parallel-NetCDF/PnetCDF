@@ -19,18 +19,15 @@
 #include <stdio.h>
 #include <string.h> /* strcpy(), strlen() */
 
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
+#include <mpi.h>
+#include "nc.h"
+
+#ifdef PNC_MALLOC_TRACE
 
 #ifdef HAVE_SEARCH_H
 #include <search.h> /* tfind(), tsearch() and tdelete() */
 #endif
 
-#include <mpi.h>
-#include "nc.h"
-
-#ifdef PNC_MALLOC_TRACE
 /* global variables for malloc tracing */
 static void       *ncmpii_mem_root;
 static MPI_Offset  ncmpii_mem_alloc;
