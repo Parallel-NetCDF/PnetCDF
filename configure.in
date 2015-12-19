@@ -251,8 +251,8 @@ AC_SYS_LARGEFILE
 
 UD_PROG_CC_MAKEDEPEND
 
-AC_HEADER_STDC
-AC_CHECK_HEADERS([malloc.h])
+dnl AC_HEADER_STDC
+dnl AC_CHECK_HEADERS([malloc.h])
 
 # check if MPICC works for basic MPI call: MPI_Comm_rank()
 AC_CHECK_FUNC([MPI_Comm_rank], [],
@@ -692,7 +692,7 @@ dnl    have_yacc_lex=no
 dnl fi
 AC_SUBST(have_yacc_lex)
 
-AC_PROG_AWK
+dnl AC_PROG_AWK
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_SUBST(SET_MAKE)
@@ -730,7 +730,7 @@ dnl this is also for using bool type in utf8proc.h/utf8proc.c to support
 dnl special characters in CDF-2 and CDF-5
 AC_HEADER_STDBOOL
 
-AC_C_CONST
+dnl AC_C_CONST
 AC_C_INLINE
 
 dnl we do not use struct stat yet
@@ -753,10 +753,6 @@ dnl AC_CHECK_LIB([m], [tanh])
 dnl UD_CHECK_LIB_MATH
 AC_CHECK_FUNCS([strerror access unlink])
 
-dnl malloc memory allocation tracing relies on tdelete and tsearch
-AC_CHECK_HEADERS([search.h])
-AC_CHECK_FUNCS([tsearch tdelete])
-
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
                     [Enable PnetCDF internal debug mode. This also enables safe mode.
@@ -766,6 +762,10 @@ AC_ARG_ENABLE([debug],
 AC_MSG_CHECKING(PnetCDF debug mode)
 if test "x${debug}" = xyes; then
    AC_DEFINE(PNC_DEBUG)
+
+   dnl malloc memory allocation tracing relies on tdelete and tsearch
+   AC_CHECK_HEADERS([search.h])
+   AC_CHECK_FUNCS([tsearch tdelete])
 
    dnl check required functions for enabling malloc tracing
    if (test "x${ac_cv_func_tsearch}" = xyes) &&
