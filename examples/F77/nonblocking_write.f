@@ -6,7 +6,7 @@
 
 !    This example is the Fortran 77 version of nonblocking_write.c
 !    It creates a netcdf file in CD-5 format and writes a number of
-!    3D integer non-record vaiables.
+!    3D integer non-record variables.
 !    Usage: (for example)
 !    To compile:
 !        mpif77 -O2 nonblocking_write.f -o nonblocking_write -lpnetcdf

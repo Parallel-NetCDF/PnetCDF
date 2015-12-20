@@ -18,6 +18,7 @@ LIBS     := -lpnetcdf $(LIBS)
 
 C_SRCS  = collective_write.c \
           nonblocking_write.c \
+          nonblocking_write_in_def.c \
           column_wise.c \
           block_cyclic.c \
           flexible_api.c \
@@ -57,6 +58,9 @@ collective_write: collective_write.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 nonblocking_write: nonblocking_write.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+nonblocking_write_in_def: nonblocking_write_in_def.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 get_info: get_info.o $(LIBRARY)

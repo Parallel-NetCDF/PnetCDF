@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
      * routines: ncmpi_inq tells us how many of each kind of "thing"
      * (dimension, variable, attribute) we will find in the file  */
 
-    /* no commnunication needed after ncmpi_open: all processors have a cached
-     * veiw of the metadata once ncmpi_open returns */
+    /* no communication needed after ncmpi_open: all processors have a cached
+     * view of the metadata once ncmpi_open returns */
 
     ret = ncmpi_inq(ncfile, &ndims, &nvars, &ngatts, &unlimited);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
@@ -84,8 +84,8 @@ int main(int argc, char **argv) {
         count = (MPI_Offset*) calloc(var_ndims, sizeof(MPI_Offset));
 
         /* we will simply decompose along one dimension.  Generally the
-         * application has some algorithim for domain decomposistion.  Note
-         * that data decomposistion can have an impact on i/o performance.
+         * application has some algorithm for domain decomposition.  Note
+         * that data decomposition can have an impact on i/o performance.
          * Often it's best just to do what is natural for the application,
          * but something to consider if performance is not what was
          * expected/desired */
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
         if (statuses[i] != NC_NOERR) handle_error(statuses[i], __LINE__);
 
     /* now that the ncmpi_wait_all has returned, the caller can do stuff with
-     * the buffers passed in to the non-blocking operations.  The buffer resue
+     * the buffers passed in to the non-blocking operations.  The buffer reuse
      * rules are similar to MPI non-blocking messages */
 
     for (i=0; i<nvars; i++) {

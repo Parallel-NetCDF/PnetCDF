@@ -11,7 +11,7 @@
  * use ncmpi_get_vara_int_all() to read a 2D 4-byte integer array in parallel.
  * It also reads a global attribute and two attribute of variable named "var".
  * The data partitioning pattern is a column-wise partitioning across all
- * proceses. Each process reads a subarray of size local_ny * local_nx.
+ * processes. Each process reads a subarray of size local_ny * local_nx.
  *
  *    To compile:
  *        mpicc -O2 get_vara.c -o get_vara -lpnetcdf

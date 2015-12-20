@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
         data = (int*)calloc(nprocs, sizeof(int));
     }
 
-    /* second reason this approch is not scalable: sending to rank 0
+    /* second reason this approach is not scalable: sending to rank 0
      * introduces a serialization point, even if using an optimized
      * collective routine */
     MPI_Gather(&rank, 1, MPI_INT, data, 1, MPI_INT, 0, MPI_COMM_WORLD);

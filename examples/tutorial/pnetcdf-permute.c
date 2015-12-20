@@ -9,10 +9,10 @@
 /* simple demonstration of pnetcdf 
  * knowing nothing about the file, read in the variables. 
  *
- * This example demonstrates the flexible interface, using the MPI derrived
+ * This example demonstrates the flexible interface, using the MPI derived
  * datatype to transpose the matrix.
  *
- * Note this program demonstrates trasposistion for one process only
+ * Note this program demonstrates transposition for one process only
  */
 
 #include <stdlib.h>
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     /* permute ijk (4x5x6) into jki (5x6x4)*/
     /* new innermost dimension is I items, strided across the old JK face*/
     MPI_Type_vector(dim_sizes[0], 1, dim_sizes[1]*dim_sizes[2], MPI_DOUBLE, &one_d);
-    /* new middle dimenson is K items, strided over the K row, which isn't
+    /* new middle dimension is K items, strided over the K row, which isn't
      * actually a stride in this case.  We use hvector here because we 
      * operate directly in terms of array items */
     MPI_Type_create_hvector(dim_sizes[2], 1, sizeof(double), one_d, &two_d);

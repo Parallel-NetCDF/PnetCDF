@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
      * approach is the challenge in reading back on a different number of
      * processors.  For example, 4k processors output data during a simulation.
      * Later on, 100 processors do analysis or visualization of the data.
-     * Stiching together the many smaller files into a form usable by other
+     * Stitching together the many smaller files into a form usable by other
      * programs poses a challenge */
 
     ret = snprintf(filename, DSET_NAME_LEN, "%s.%d-%d.nc", argv[1], rank, nprocs);

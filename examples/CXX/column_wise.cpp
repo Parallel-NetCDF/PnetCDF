@@ -15,7 +15,7 @@
  * If simply concatenating fileviews of all the nonblocking calls will result
  * in a fileview that violates the MPI-IO requirement on the fileview of which
  * flattened file offsets must be monotonically non-decreasing. PnetCDF handles
- * this case by breaking down each nonblocking call into a lsit of offset-length
+ * this case by breaking down each nonblocking call into a list of offset-length
  * pairs, merging the pairs across multiple nonblocking calls, and sorting
  * them into an increasing order. The sorted pairs are used to construct a
  * fileview that meets the monotonically non-decreasing offset requirement,
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
         free(buf[0]);
 
         /* initialize the buffer with rank ID. Also make the case interesting,
-           by allocatsing buffersd separately */
+           by allocating buffers separately */
         for (i=0; i<myNX; i++) {
             buf[i] = (int*) malloc(NY * sizeof(int));
             for (j=0; j<NY; j++) buf[i][j] = rank;

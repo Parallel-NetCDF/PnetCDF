@@ -156,7 +156,7 @@ int main(int argc, char** argv)
         free(buf[0]);
 
         /* initialize the buffer with rank ID. Also make the case interesting,
-           by allocatsing buffersd separately */
+           by allocating buffers separately */
         for (i=0; i<myNX; i++) {
             buf[i] = (int*) malloc(NY * sizeof(int));
             for (j=0; j<NY; j++) buf[i][j] = rank+10;
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 
         NcmpiVar var = nc.getVar("var");
 
-        /* initialize the buffer with -1, so a read error can be pingpointed */
+        /* initialize the buffer with -1, so a read error can be pinpointed */
         buf    = (int**) malloc(myNX * sizeof(int*));
         buf[0] = (int*)  malloc(NY * myNX * sizeof(int));
         for (i=0; i<myNX; i++) {

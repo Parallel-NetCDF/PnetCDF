@@ -11,7 +11,7 @@
 !    global_nx == 5 and
 !    global_ny == (4 * number of MPI processes).
 ! The data partitioning pattern is a column-wise partitioning across all
-! proceses. Each process writes a subarray of size nx * ny.
+! processes. Each process writes a subarray of size nx * ny.
 ! Note the description above follows the Fortran array index order.
 !
 ! Example commands for MPI run and outputs from running ncmpidump on the

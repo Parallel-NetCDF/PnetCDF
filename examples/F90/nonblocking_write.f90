@@ -6,7 +6,7 @@
 
 !    This example is the Fortran 90 version of nonblocking_write.c
 !    It creates a netcdf file in CD-5 format and writes a number of
-!    3D integer non-record vaiables.
+!    3D integer non-record variables.
 !    Usage: (for example)
 !    To compile:
 !        mpif90 -O2 nonblocking_write.f90 -o nonblocking_write -lpnetcdf
