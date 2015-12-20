@@ -18,12 +18,11 @@ void parse_read_args(int argc, char **argv, int rank, params *p)
 	int inlen, outlen;
 	if ( rank == 0 ) {
 		if (argc == 3 ) {
-			strncpy(p->infname, argv[1], PATH_MAX);
-			strncpy(p->outfname, argv[2], PATH_MAX);
-		} else if (argc == 0) {
-			strncpy(p->infname, "../data/test_double.nc", 
-					PATH_MAX);
-			strncpy(p->outfname, "testread.nc", PATH_MAX);
+			strcpy(p->infname, argv[1]);
+			strcpy(p->outfname, argv[2]);
+		} else if (argc == 1) {
+			strcpy(p->infname, "../data/test_double.nc");
+			strcpy(p->outfname, "testread.nc");
 		} else {
 			fprintf(stderr, "Usage: %s: <source> <destination>\n", 
 					argv[0]);
@@ -43,9 +42,9 @@ void parse_write_args(int argc, char **argv, int rank, params *p)
 	int outlen;
 	if ( rank == 0 ) {
 		if (argc == 2 ) {
-			strncpy(p->outfname, argv[1], PATH_MAX);
-		} else if (argc == 0) {
-			strncpy(p->outfname, "testwrite.nc", PATH_MAX);
+			strcpy(p->outfname, argv[1]);
+		} else if (argc == 1) {
+			strcpy(p->outfname, "testwrite.nc");
 		} else {
 			fprintf(stderr, "Usage: %s: <destination>\n", argv[0]);
 			MPI_Abort(MPI_COMM_WORLD, 1);
