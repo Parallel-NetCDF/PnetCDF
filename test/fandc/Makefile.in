@@ -48,6 +48,9 @@ $(C_SRCS:.c=.o): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 
+../common/libtestutils.a:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
 pnctest: pnctest.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

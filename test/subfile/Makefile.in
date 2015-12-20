@@ -47,6 +47,9 @@ $(C_SRCS:.c=.o) $(CXX_SRCS:.cpp=.o): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 
+../common/libtestutils.a:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
 test_subfile: test_subfile.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
