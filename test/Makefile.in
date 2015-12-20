@@ -13,18 +13,12 @@ include ../macros.make
 
 SUBDIRS = common \
           nc_test \
-          test_int \
-          test_float \
-          test_double \
-          test_double_int \
-          test_dtype \
           C \
           fandc \
           nonblocking \
           cdf_format \
           header \
-          testcases \
-          data
+          testcases
 
 # Packing subdirs must include all directories
 PACKING_SUBDIRS := $(SUBDIRS) largefile nf_test nf90_test F90 subfile CXX
