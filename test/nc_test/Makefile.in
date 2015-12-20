@@ -60,6 +60,9 @@ $(PROG_SRCS:.c=.o): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 
+../common/libtestutils.a:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
 nc_test: nc_test.o $(OBJS) $(LIBRARY)
 	$(LINK.c) $< $(OBJS) $(LDFLAGS) $(LIBS)
 

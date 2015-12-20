@@ -52,6 +52,9 @@ $(C_OBJS): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 
+../common/libtestutils.a:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
 nf_test: $(OBJS) $(LIBRARY)
 	$(LINK.F90) $(OBJS) $(LDFLAGS) $(LIBS)
 

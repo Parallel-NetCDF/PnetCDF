@@ -33,6 +33,9 @@ $(OBJS): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 
+../common/libtestutils.a:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
 pres_temp_4D_wr.o: pres_temp_4D_wr.c 
 
 pres_temp_4D_wr: pres_temp_4D_wr.o $(LIBRARY)

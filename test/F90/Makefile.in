@@ -43,6 +43,9 @@ all: $(PROGS)
 
 $(PROGS): ../common/libtestutils.a
 
+../common/libtestutils.a:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
 tst_f90: tst_f90.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 

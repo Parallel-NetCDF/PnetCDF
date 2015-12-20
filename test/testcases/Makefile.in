@@ -89,6 +89,9 @@ $(C_SRCS:.c=.o): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 
+../common/libtestutils.a:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
 ncmpi_vars_null_stride: ncmpi_vars_null_stride.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
