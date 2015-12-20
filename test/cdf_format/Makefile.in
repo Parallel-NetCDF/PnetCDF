@@ -24,9 +24,11 @@ OBJS    = $(SRCS:.c=.o)
 PROGS   = $(SRCS:.c=)
 
 GARBAGE      = $(PROGS) testfile.nc
-PACKING_LIST = $(SRCS) Makefile.in
+PACKING_LIST = $(SRCS) Makefile.in test_cdf1.nc test_cdf2.nc test_cdf5.nc
 
 all: $(PROGS)
+
+unzip: $(PROGS)
 	set -e ; cd ../data && $(MAKE) $(MFLAGS) all
 
 $(OBJS): $(srcdir)/../common/testutils.h
