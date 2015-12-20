@@ -55,18 +55,11 @@
 #include <string.h>
 #include "testutils.h"
 
-/* Prototype for functions used only in this file */
-static void handle_error(int status);
-
-static void handle_error(int status) {
-  fprintf(stderr, "%s\n", ncmpi_strerror(status));
-}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
 
 int main(int argc, char **argv) {
 
-  int i, j, k;
-  int status;
-  int ncid;
+  int i, j, k, err, ncid, nerrs=0;
   int dimid1, dimid2, dimid3, udimid;
   int square_dim[2], cube_dim[3], xytime_dim[3], time_dim[1];
   MPI_Offset square_start[2], cube_start[3] = {0, 0, 0};
@@ -80,8 +73,7 @@ int main(int argc, char **argv) {
   static char description[] = "2-D integer array";
   double data[100][50][50], buffer[100];
   double stride_2d_data[50][50];
-  int rank;
-  int nprocs;
+  int rank, nprocs;
   MPI_Comm comm = MPI_COMM_WORLD;
   params opts;
 
@@ -89,81 +81,58 @@ int main(int argc, char **argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (rank == 0) 
-	  fprintf(stderr, "Testing write ... ");
+  if (rank == 0) fprintf(stderr, "Testing write ... ");
   parse_write_args(argc, argv, rank, &opts);
-
-  /**********  START OF NETCDF ACCESS **************/
 
   /**
    * Create the dataset
    *   File name: "testwrite.nc"
    *   Dataset API: Collective
    */
-
-  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid); ERR
 
 
   /**
    * Create a global attribute:
    *    :title = "example netCDF dataset";
    */
-
-  status = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
-                          strlen(title), title);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_put_att_text (ncid, NC_GLOBAL, "title", strlen(title), title); ERR
 
   /**
    * Add 4 pre-defined dimensions:
    *   x = 100, y = 100, z = 100, time = NC_UNLIMITED
    */
-
-  status = ncmpi_def_dim(ncid, "x", 100L, &dimid1);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "y", 100L, &dimid2);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "z", 100L, &dimid3);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_def_dim(ncid, "x",    100,          &dimid1); ERR
+  err = ncmpi_def_dim(ncid, "y",    100,          &dimid2); ERR
+  err = ncmpi_def_dim(ncid, "z",    100,          &dimid3); ERR
+  err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid); ERR
 
   /**
    * Define the dimensionality and then add 4 variables:
    *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)  
    */
-
   square_dim[0] = cube_dim[0] = xytime_dim[1] = dimid1;
   square_dim[1] = cube_dim[1] = xytime_dim[2] = dimid2;
   cube_dim[2] = dimid3;
   xytime_dim[0] = udimid;
   time_dim[0] = udimid;
-  status = ncmpi_def_var (ncid, "square", NC_DOUBLE, 2, square_dim, &square_id);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_var (ncid, "cube", NC_DOUBLE, 3, cube_dim, &cube_id);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_var (ncid, "time", NC_DOUBLE, 1, time_dim, &time_id);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_var (ncid, "xytime", NC_DOUBLE, 3, xytime_dim, &xytime_id);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_def_var(ncid, "square", NC_DOUBLE, 2, square_dim, &square_id); ERR
+  err = ncmpi_def_var(ncid, "cube",   NC_DOUBLE, 3, cube_dim,   &cube_id);   ERR
+  err = ncmpi_def_var(ncid, "time",   NC_DOUBLE, 1, time_dim,   &time_id);   ERR
+  err = ncmpi_def_var(ncid, "xytime", NC_DOUBLE, 3, xytime_dim, &xytime_id); ERR
 
   /**
    * Add an attribute for variable: 
    *    square: decsription = "2-D integer array"
    */
-
-  status = ncmpi_put_att_text (ncid, square_id, "description",
-                          strlen(description), description);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_put_att_text(ncid, square_id, "description", strlen(description), description); ERR
 
 
   /**
    * End Define Mode (switch to data mode)
    *   Dataset API: Collective
    */
-
-  status = ncmpi_enddef(ncid);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_enddef(ncid); ERR
 
   /**
    * Data Partition (Assume 4 processors):
@@ -180,7 +149,6 @@ int main(int argc, char **argv) {
   time_start[0] = (rank%4) * 25;
   square_start[0] = rank/2;
   square_start[1] = rank%2;
-
 
   /**
    * Packing data in the buffer 
@@ -201,36 +169,45 @@ int main(int argc, char **argv) {
     for ( j = 0; j < 50; j++ )
       stride_2d_data[i][j] = (2*i + rank/2)*100 + (2*j + rank%2);
 
+  /* this program is designed for running less than 4 processes */
+  if (rank >= 4) {
+    square_start[0] = square_start[1] = 0;
+    square_count[0] = square_count[1] = 0;
+    square_stride[0] = square_stride[1] = 1;
+    cube_start[0] = cube_start[1] = cube_start[2] = 0;
+    cube_count[0] = cube_count[1] = cube_count[2] = 0;
+    xytime_start[0] = xytime_start[1] = xytime_start[2] = 0;
+    xytime_count[0] = xytime_count[1] = xytime_count[2] = 0;
+    time_start[0] = 0;
+    time_count[0] = 0;
+  }
   /**
    * Write data into variables: square, cube, time and xytime  
    *   Access Method: subarray
    *   Data Mode API: collective
    */ 
-  
-  status = ncmpi_put_vars_double_all(ncid, square_id,
+  err = ncmpi_put_vars_double_all(ncid, square_id,
                     square_start, square_count, square_stride,
                     &stride_2d_data[0][0]);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_put_vara_double_all(ncid, cube_id,
+  ERR
+  err = ncmpi_put_vara_double_all(ncid, cube_id,
                     cube_start, cube_count,
                     &data[0][0][0]);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_put_vara_double_all(ncid, time_id,
+  ERR
+  err = ncmpi_put_vara_double_all(ncid, time_id,
                     time_start, time_count,
                     (double *)buffer);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_put_vara_double_all(ncid, xytime_id,
+  ERR
+  err = ncmpi_put_vara_double_all(ncid, xytime_id,
                     xytime_start, xytime_count,
                     &data[0][0][0]);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
 
   /**
    * Close the dataset
    *   Dataset API:  collective
    */
-
-  status = ncmpi_close(ncid);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_close(ncid); ERR
 
   /*******************  END OF NETCDF ACCESS  ****************/
 
