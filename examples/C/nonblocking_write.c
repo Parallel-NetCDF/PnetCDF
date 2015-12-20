@@ -9,7 +9,7 @@
 /* wkliao:
  *    This example is similar to collective_write.c but using nonblocking APIs.
  *    It creates a netcdf file in CD-5 format and writes a number of
- *    3D integer non-record vaiables. The measured write bandwith is reported
+ *    3D integer non-record variables. The measured write bandwidth is reported
  *    at the end. Usage: (for example)
  *    To compile:
  *        mpicc -O2 nonblocking_write.c -o nonblocking_write -lpnetcdf

@@ -11,7 +11,7 @@
  * use NcmpiVar::getVar_all() to read a 2D 4-byte integer array in parallel.
  * It also reads a global attribute and two attribute of variable named "var".
  * The data partitioning pattern is a column-wise partitioning across all
- * proceses. Each process reads a subarray of size local_ny * local_nx.
+ * processes. Each process reads a subarray of size local_ny * local_nx.
  *
  *    To compile:
  *        mpicxx -O2 get_vara.cpp -o get_vara -lpnetcdf
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
     else           strcpy(filename, "testfile.nc");
 
     try {
-        /* open an exising file for reading ---------------------------------*/
+        /* open an existing file for reading --------------------------------*/
         NcmpiFile ncFile(MPI_COMM_WORLD, filename, NcmpiFile::read);
 
         // Check the format.

@@ -286,7 +286,7 @@ int main(int argc, char** argv)
         err = ncmpi_buffer_attach(ncid, bufsize); ERR
     }
 
-    /* write usning varn API */
+    /* write using varn API */
     for (i=0; i<nreqs; i++) {
         err = ncmpi_bput_varn_uint(ncid, varid[i], num_segs[i], starts[i],
                                        counts[i], buffer[i], &reqs[i]);

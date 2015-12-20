@@ -20,7 +20,7 @@
  *    global_ny == NY and
  *    global_nx == (NX * number of MPI processes).
  * The data partitioning pattern for both variables are a column-wise
- * partitioning across all proceses. Each process writes a subarray of size
+ * partitioning across all processes. Each process writes a subarray of size
  * ny * nx.
  *
  *    To compile:

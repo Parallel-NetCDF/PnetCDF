@@ -9,7 +9,7 @@
 /*
  *    This example mimics the coll_perf.c from ROMIO.
  *    It creates a netcdf file in CD-5 format and writes a number of
- *    3D integer non-record vaiables. The measured write bandwith is reported
+ *    3D integer non-record variables. The measured write bandwidth is reported
  *    at the end. Usage:
  *    To compile:
  *        mpiccxx -O2 collective_write.cpp -o collective_write -lpnetcdf

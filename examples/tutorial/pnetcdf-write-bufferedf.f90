@@ -136,7 +136,7 @@
       err = nf90mpi_inq_put_size(ncid, put_size)
       if (err < NF90_NOERR) print*,'Error at nf90mpi_inq_put_size ', &
                                    nf90mpi_strerror(err)
-      ! print*,'pnetcdf respots total put size by this proc =', put_size
+      ! print*,'pnetcdf reports total put size by this proc =', put_size
 
       err = nf90mpi_close(ncid)
       if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &

@@ -201,7 +201,7 @@
           err = nf90mpi_inq_varid(ncid, "var", varid)
           call check(err, 'In nf90mpi_inq_varid: ')
 
-          ! initialize the buffer with -1, so a read error can be pingpointed
+          ! initialize the buffer with -1, so a read error can be pinpointed
           buf = -1
 
           ! each proc reads NY columns of the 2D array, block_len controls the

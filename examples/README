@@ -313,3 +313,10 @@ with C, C++, F77, and F90 versions.
   ./C/req_all.c
   This example show how to use NC_REQ_ALL to flush all pending nonblocking
   requests without providing the request IDs and status array.
+
+  ./C/nonblocking_write_in_def.c
+  This example is the same as nonblocking_write.c except all nonblocking
+  write requests (calls to iput and bput) are posted in define mode. After
+  entering to data mode, a single call to ncmpi_wait_all() to flush all pending
+  nonblocking requests.
+

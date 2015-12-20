@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     }
 
     /* Many applications find "one file per process" easy, but there are
-     * several deficincies with that approach:
+     * several deficiencies with that approach:
      * - here we need to construct a unique file name for each processor */
     ret = snprintf(filename, DSET_NAME_LEN, "%s.%d-%d.nc", argv[1], rank, nprocs);
     if (ret >= DSET_NAME_LEN) {
@@ -94,10 +94,10 @@ int main(int argc, char **argv) {
      * i/o.  */        
     ret = ncmpi_enddef(ncfile); if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-    /* the one advantage to this approach: data decomposistion is easy the
-     * application does not need to worry aobut the shape and location of
-     * the data (the 'start' and 'count' parmeters in the 'vara' family of
-     * functions) and can instead just write the enitre (small) variable */
+    /* the one advantage to this approach: data decomposition is easy the
+     * application does not need to worry about the shape and location of
+     * the data (the 'start' and 'count' parameters in the 'vara' family of
+     * functions) and can instead just write the entire (small) variable */
 
     data=rank;
 

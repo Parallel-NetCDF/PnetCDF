@@ -206,7 +206,7 @@
           err = nfmpi_inq_varid(ncid, "var", varid)
           call check(err, 'In nfmpi_inq_varid: ')
 
-          ! initialize the buffer with -1, so a read error can be pingpointed
+          ! initialize the buffer with -1, so a read error can be pinpointed
           do i=1, NY 
           do j=1, NX
              buf(j,i) = -1

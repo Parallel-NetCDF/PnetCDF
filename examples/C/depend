@@ -5,6 +5,7 @@ flexible_api.o: flexible_api.c
 get_info.o: get_info.c
 hints.o: hints.c
 nonblocking_write.o: nonblocking_write.c
+nonblocking_write_in_def.o: nonblocking_write_in_def.c
 put_vara.o: put_vara.c
 put_varn_float.o: put_varn_float.c
 put_varn_int.o: put_varn_int.c

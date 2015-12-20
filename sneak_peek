@@ -48,6 +48,8 @@ This is essentially a placeholder for the next release note ...
       in a lot of debugging messages printed in stderr.
 
   o New example programs
+    * examples/C/nonblocking_write_in_def.c shows an example of posting
+      nonblocking write requests in the define mode.
     * examples/C/req_all.c shows an example of using NC_REQ_ALL to flush all
       pending nonblocking requests without providing the requests IDs.
 

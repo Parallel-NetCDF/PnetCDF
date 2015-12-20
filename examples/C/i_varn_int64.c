@@ -275,7 +275,7 @@ int main(int argc, char** argv)
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank;
     }
 
-    /* write usning varn API */
+    /* write using varn API */
     for (i=0; i<nreqs; i++) {
         err = ncmpi_iput_varn_longlong(ncid, varid[i], num_segs[i], starts[i],
                                        counts[i], buffer[i], &reqs[i]);

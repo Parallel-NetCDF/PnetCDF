@@ -19,7 +19,7 @@
 !    global_nx == (nx * number of MPI processes) and
 !    global_ny == ny
 ! The data partitioning pattern for both variables are a column-wise
-! partitioning across all proceses. Each process writes a subarray of
+! partitioning across all processes. Each process writes a subarray of
 ! size
 ! nx * ny. Note the description above follows the Fortran array index
 ! order.
