@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 #include <testutils.h>
@@ -15,10 +16,19 @@
 #define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerrs++; }}
 
 int main(int argc, char **argv) {
+    char dir_name[256], filename[256];
     int err, rank, nerrs=0, format, ncid;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc != 2) {
+        if (!rank) printf("Usage: %s dir_name\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+    }
+    strcpy(dir_name, argv[1]);
+    MPI_Bcast(dir_name, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char cmd_str[256];
@@ -27,47 +37,56 @@ int main(int argc, char **argv) {
     }
 
     /* test CDF-1 -----------------------------------------------------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, "test_cdf1.nc", 0, MPI_INFO_NULL, &ncid); ERR
+    sprintf(filename,"%s/test_cdf1.nc",dir_name);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid); ERR
     err = ncmpi_inq_format(ncid, &format); ERR
     if (format != NC_FORMAT_CLASSIC) {
-        printf("Error (line=%d): expecting CDF-1 format for file test_cdf1.nc but got %d\n",__LINE__,format);
+        printf("Error (line=%d): expecting CDF-1 format for file %s but got %d\n",
+               __LINE__,filename,format);
         nerrs++;
     }
     err = ncmpi_close(ncid); ERR
   
-    err = ncmpi_inq_file_format("test_cdf1.nc", &format); ERR
+    err = ncmpi_inq_file_format(filename, &format); ERR
     if (format != NC_FORMAT_CLASSIC) {
-        printf("Error (line=%d): expecting CDF-1 format for file test_cdf1.nc but got %d\n",__LINE__,format);
+        printf("Error (line=%d): expecting CDF-1 format for file %s but got %d\n",
+               __LINE__,filename,format);
         nerrs++;
     }
 
     /* test CDF-2 -----------------------------------------------------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, "test_cdf2.nc", 0, MPI_INFO_NULL, &ncid); ERR
+    sprintf(filename,"%s/test_cdf2.nc",dir_name);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid); ERR
     err = ncmpi_inq_format(ncid, &format); ERR
     if (format != NC_FORMAT_CDF2) {
-        printf("Error (line=%d): expecting CDF-2 format for file test_cdf2.nc but got %d\n",__LINE__,format);
+        printf("Error (line=%d): expecting CDF-2 format for file %s but got %d\n",
+               __LINE__,filename,format);
         nerrs++;
     }
     err = ncmpi_close(ncid); ERR
   
-    err = ncmpi_inq_file_format("test_cdf2.nc", &format); ERR
+    err = ncmpi_inq_file_format(filename, &format); ERR
     if (format != NC_FORMAT_CDF2) {
-        printf("Error (line=%d): expecting CDF-2 format for file test_cdf2.nc but got %d\n",__LINE__,format);
+        printf("Error (line=%d): expecting CDF-2 format for file %s but got %d\n",
+               __LINE__,filename,format);
         nerrs++;
     }
 
     /* test CDF-5 -----------------------------------------------------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, "test_cdf5.nc", 0, MPI_INFO_NULL, &ncid); ERR
+    sprintf(filename,"%s/test_cdf5.nc",dir_name);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid); ERR
     err = ncmpi_inq_format(ncid, &format); ERR
     if (format != NC_FORMAT_CDF5) {
-        printf("Error (line=%d): expecting CDF-5 format for file test_cdf5.nc but got %d\n",__LINE__,format);
+        printf("Error (line=%d): expecting CDF-5 format for file %s but got %d\n",
+               __LINE__,filename,format);
         nerrs++;
     }
     err = ncmpi_close(ncid); ERR
   
-    err = ncmpi_inq_file_format("test_cdf5.nc", &format); ERR
+    err = ncmpi_inq_file_format(filename, &format); ERR
     if (format != NC_FORMAT_CDF5) {
-        printf("Error (line=%d): expecting CDF-5 format for file test_cdf5.nc but got %d\n",__LINE__,format);
+        printf("Error (line=%d): expecting CDF-5 format for file %s but got %d\n",
+               __LINE__,filename,format);
         nerrs++;
     }
 
