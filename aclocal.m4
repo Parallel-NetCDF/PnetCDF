@@ -1627,3 +1627,101 @@ LIBS="$saved_LIBS"
 rm -f conftest.$ac_ext
 AC_LANG_PUSH([C])
 ])
+
+
+AC_DEFUN([UD_CHECK_MPI_COMPILER], [
+   if test "x$MPI_INSTALL" != x ; then
+      UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
+      if test "x$$1" = x ; then
+         if test "x$$1" = x && (test -d "${MPI_INSTALL}/bin") ; then
+            UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL/bin)
+            AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL/bin])
+         fi
+         if test "x$$1" = x ; then
+             UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL)
+             AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL])
+         fi
+      else
+         UD_MSG_DEBUG(check if file $$1 exists)
+         if ! test -f "$$1" ; then
+            dnl file does not exist, check under MPI_INSTALL
+            UD_MSG_DEBUG(File $1= $$1 cannot be found ... check under $MPI_INSTALL)
+            if test -f "$MPI_INSTALL/$$1" ; then
+               UD_MSG_DEBUG(File $1= $$1 is found under $MPI_INSTALL)
+               $1="$MPI_INSTALL/$$1"
+            elif test -f "$MPI_INSTALL/bin/$$1" ; then
+               UD_MSG_DEBUG(File $1= $$1 is found under $MPI_INSTALL/bin)
+               $1="$MPI_INSTALL/bin/$$1"
+            else
+               UD_MSG_DEBUG(File $1= $$1 cannot be found under $MPI_INSTALL)
+               $1=
+            fi
+         fi
+      fi
+   else
+       UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is NOT used)
+       UD_MSG_DEBUG([check if $1 is defined. If yes, check if file exists])
+       if test "x$$1" != x && (! test -f "$$1") ; then
+          UD_MSG_DEBUG(check if file $$1 exists under user's PATH)
+          AC_PATH_PROGS([$1], [$$1])
+       fi
+   fi
+   dnl if $$1 is not empty, then compiler file does exist
+   dnl if $$1 is empty, search under user's PATH
+   if test "x$$1" = x ; then
+      UD_MSG_DEBUG(find possible $1 under user's PATH)
+      AC_PATH_PROGS([$1], [$2])
+   fi
+])
+
+dnl Check for presence of an MPI constant.
+dnl These could be enums, so we have to do compile checks.
+AC_DEFUN([UD_HAS_MPI_CONST], [
+   AC_MSG_CHECKING(if MPI constant $1 is defined )
+   AC_COMPILE_IFELSE(
+      [AC_LANG_SOURCE([
+          #include <mpi.h>
+          int dummy = $1;
+      ])],
+      [AC_MSG_RESULT(yes)
+       AC_DEFINE(HAVE_$1, 1, available)
+      ],
+      [AC_MSG_RESULT(no)]
+   )]
+)
+
+dnl Check for presence of an MPI datatype.
+dnl These could be enums, so we have to do compile checks.
+AC_DEFUN([UD_HAS_MPI_DATATYPE], [
+   AC_MSG_CHECKING(if MPI datatype $1 is defined )
+   AC_COMPILE_IFELSE(
+      [AC_LANG_SOURCE([
+          #include <mpi.h>
+          MPI_Datatype dummy = $1;
+      ])],
+      [AC_MSG_RESULT(yes)
+       AC_DEFINE(HAVE_$1$2, 1, available)
+      ],
+      [AC_MSG_RESULT(no)]
+   )]
+)
+
+dnl Check if older Intel MPI C compiler (4.x) for issue of redefined SEEK_SET
+dnl See https://software.intel.com/en-us/articles/intel-cluster-toolkit-for-linux-error-when-compiling-c-aps-using-intel-mpi-library-compilation-driver-mpiicpc
+AC_DEFUN([UD_CHECK_MPI_CPP_SEEK_SET], [
+   AC_MSG_CHECKING(if MPI C++ compiler redefines SEEK_SET )
+   CXX=${MPICXX}
+   AC_LANG_PUSH(C++)
+   AC_COMPILE_IFELSE(
+      [AC_LANG_SOURCE([
+          #include <stdio.h>
+          #include <mpi.h>
+          int main() { return 0; }
+      ])],
+      [ac_cv_CHECK_MPI_CPP_SEEK_SET=no],
+      [ac_cv_CHECK_MPI_CPP_SEEK_SET=yes]
+   )
+   AC_MSG_RESULT([$ac_cv_CHECK_MPI_CPP_SEEK_SET])
+   AC_LANG_POP(C++)]
+)
+
