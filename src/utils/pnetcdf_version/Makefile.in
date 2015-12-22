@@ -11,19 +11,21 @@ VPATH = @srcdir@
 
 include ../../../macros.make
 
-DEFS           += -DMPICC="\"$(CC)\""   -DCFLAGS="\"$(CFLAGS)\""
-DEFS           += -DMPICXX="\"$(CXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
-DEFS           += -DMPIF77="\"$(F77)\"" -DFCFLAGS="\"$(FCFLAGS)\""
-DEFS           += -DMPIF90="\"$(F90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
+DEFS  = -DMPICC="\"$(CC)\""   -DCFLAGS="\"$(CFLAGS)\""
+DEFS += -DCONFIGURE_ARGS_CLEAN="\"@CONFIGURE_ARGS_CLEAN@\""
+DEFS += -DPNETCDF_VERSION="\"@PNETCDF_VERSION@\""
+DEFS += -DPNETCDF_RELEASE_DATE="\"@PNETCDF_RELEASE_DATE@\""
 
-# For VPATH build:
-# Add ../../lib into search path because ../../lib/pnetcdf.h is created in
-# the build directory at configure time and is included by pnetcdf_version.c
-INCLUDES	= -I../../lib
+ifeq (@has_mpicxx@, yes)
+DEFS += -DMPICXX="\"$(CXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
+endif
+
+ifeq (@has_fortran@, yes)
+DEFS += -DMPIF77="\"$(F77)\"" -DFCFLAGS="\"$(FCFLAGS)\""
+DEFS += -DMPIF90="\"$(F90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
+endif
 
 C_SOURCES	= pnetcdf_version.c
-
-OBJS            = $(C_SOURCES:.c=.o)
 
 PROGRAM		= pnetcdf_version
 MANUAL		= pnetcdf_version.1
@@ -35,13 +37,12 @@ GARBAGE		= $(PROGRAM)
 
 all: $(PROGRAM)
 
-$(PROGRAM): $(OBJS) $(LIBRARY)
-	$(LINK.c) $(OBJS)
+pnetcdf_version: pnetcdf_version.c
+	$(SEQ_CC) $(DEFS) -o $@ $<
 
 install: $(PROGRAM) $(MANUAL)
 	$(INSTALL) -d -m 755 $(MANDIR)/man1
 	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
-
 	$(INSTALL) -d $(BINDIR)
 	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
