@@ -1799,7 +1799,8 @@ int main(int argc, char *argv[])
 
         if (IS_RECVAR(varp)) continue;
 
-        size = type_size(varp->type) * varp->dsizes[0];
+        size = type_size(varp->type);
+        if (varp->ndims) size *= varp->dsizes[0];
 
         line[0]='\0';
         sprintf(type_str,"%-6s", type_name(varp->type));
@@ -1837,7 +1838,10 @@ int main(int argc, char *argv[])
             else {
                 /* not the first fixed-size variable */
                 long long prev_end = prev->begin;
-                prev_end += type_size(prev->type) * prev->dsizes[0];
+                if (prev->ndims == 0)
+                    prev_end += type_size(prev->type);
+                else
+                    prev_end += type_size(prev->type) * prev->dsizes[0];
                 printf("\t       gap from prev var =%12lld\n",
                        varp->begin - prev_end);
             }
@@ -1854,8 +1858,8 @@ int main(int argc, char *argv[])
 
         if (!IS_RECVAR(varp)) continue;
 
-        size  = type_size(varp->type);
-        size *= varp->dsizes[0];
+        size = type_size(varp->type);
+        if (varp->ndims) size *= varp->dsizes[0];
 
         line[0]='\0';
         sprintf(type_str,"%-6s", type_name(varp->type));
@@ -1895,14 +1899,20 @@ int main(int argc, char *argv[])
                 /* first record variable and there are fixed-size variables */
                 prev = ncp->vars.value[last_fix_varid];
                 prev_end = prev->begin;
-                prev_end += type_size(prev->type) * prev->dsizes[0];
+                if (prev->ndims == 0)
+                    prev_end += type_size(prev->type);
+                else
+                    prev_end += type_size(prev->type) * prev->dsizes[0];
                 printf("\t       gap from prev var =%12lld\n",
                        varp->begin - prev_end);
             }
             else {
                 /* not the first record variable */
                 prev_end = prev->begin;
-                prev_end += type_size(prev->type) * prev->dsizes[0];
+                if (prev->ndims == 0)
+                    prev_end += type_size(prev->type);
+                else
+                    prev_end += type_size(prev->type) * prev->dsizes[0];
                 printf("\t       gap from prev var =%12lld\n",
                        varp->begin - prev_end);
             }
