@@ -4,14 +4,6 @@
  */
 /* $Id$ */
 
-#if HAVE_CONFIG_H
-/* PNETCDF_VERSION, PNETCDF_RELEASE_DATE, CONFIGURE_ARGS_CLEAN are defined
- * in ncconfig.h */
-# include <ncconfig.h>
-#else
-#error "ncconfig.h is required to build this program"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,18 +82,24 @@ int main( int argc, char *argv[] )
             printf( "MPICC:  %s %s\n", MPICC, CFLAGS);
         else
             printf( "MPICC:  %s\n", MPICC);
+#ifdef MPICXX
         if (strcmp(CXXFLAGS, ""))
             printf( "MPICXX: %s %s\n", MPICXX, CXXFLAGS);
         else
             printf( "MPICXX: %s\n", MPICXX);
+#endif
+#ifdef MPIF77
         if (strcmp(FCFLAGS, ""))
             printf( "MPIF77: %s %s\n", MPIF77, FCFLAGS);
         else
             printf( "MPIF77: %s\n", MPIF77);
+#endif
+#ifdef MPIF90
         if (strcmp(F90FLAGS, ""))
             printf( "MPIF90: %s %s\n", MPIF90, F90FLAGS);
         else
             printf( "MPIF90: %s\n", MPIF90);
+#endif
     }
 
     return 0;
