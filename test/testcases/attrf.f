@@ -89,6 +89,7 @@
               print*, "Error: expect NF_ERANGE but got ", err
               if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
+              ! Note: even with an error, the attribute is still being created
           endif
 
           err = nfmpi_put_att_double(ncid, NF_GLOBAL, "attr2", NF_INT,
@@ -97,6 +98,7 @@
               print*, "Error: expect NF_ERANGE but got ", err
               if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
+              ! Note: even with an error, the attribute is still being created
           endif
 
           err = nfmpi_put_att_int8(ncid, NF_GLOBAL, "attr3", NF_INT,
@@ -105,6 +107,7 @@
               print*, "Error: expect NF_ERANGE but got ", err
               if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
+              ! Note: even with an error, the attribute is still being created
           endif
 
           buf_int = 2147483647
@@ -115,6 +118,8 @@
           ! because of the NF_ERANGE error, the attributes may become
           ! inconsistent among processes, So NC_EMULTIDEFINE_ATTR_VAL
           ! or NF_EMULTIDEFINE may be returned from nfmpi_enddef.
+          ! While in safe mode, the warning message of inconsistent metadata
+          ! may appear on the screen. This is expected.
           err = nfmpi_enddef(ncid)
           if (err .NE. NF_NOERR .AND. err .NE. NF_EMULTIDEFINE .AND.
      +        err .NE. NF_EMULTIDEFINE_ATTR_VAL)
