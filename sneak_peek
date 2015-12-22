@@ -85,7 +85,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New utility program
-    * none
+    * ncoffsets reports the file offset information, including the starting and
+      ending file offsets of variables defined in a netCDF file. ncoffsets is
+      compiled with gcc if gcc is presented in the build machine. Additional
+      command-line options enable printing the size of variables (-b) and the
+      file offset gap from the end of previous variable (-g). See man page for
+      more description and examples.
 
   o Semantics updates
     * All nonblocking APIs now take a NULL pointer for the request ID argument.

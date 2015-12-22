@@ -1116,6 +1116,10 @@ AC_SUBST(TEST_SEQRUN)
 AC_SUBST(TEST_MPIRUN)
 AC_SUBST(TEST_OUTDIR)
 
+dnl find if gcc is available for compiling ncoffsets to run in sequential
+AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+AC_SUBST(SEQ_CC)
+
 AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
 AC_CONFIG_FILES(macros.make \
                 Makefile \
@@ -1128,6 +1132,7 @@ AC_CONFIG_FILES(macros.make \
                 src/utils/ncmpigen/Makefile \
                 src/utils/ncmpivalid/Makefile \
                 src/utils/pnetcdf_version/Makefile \
+                src/utils/ncoffsets/Makefile \
                 test/Makefile \
                 test/common/Makefile \
                 test/nc_test/Makefile \
