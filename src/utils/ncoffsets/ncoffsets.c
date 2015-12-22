@@ -1627,7 +1627,10 @@ make_lvars(char *optarg, struct fspec* fspecp)
             nvars++;
 
     fspecp->lvars = (char **) malloc(nvars * sizeof(char*));
-    if (!fspecp->lvars) error("out of memory");
+    if (!fspecp->lvars) {
+        fprintf(stderr, "Error at line %d: out of memory",__LINE__);
+        exit(1);
+    }
 
     cpp = fspecp->lvars;
     /* copy variable names into list */
@@ -1636,7 +1639,10 @@ make_lvars(char *optarg, struct fspec* fspecp)
          cp = strtok((char *) NULL, ",")) {
 
         *cpp = (char *) malloc(strlen(cp) + 1);
-        if (!*cpp) error("out of memory");
+        if (!*cpp) {
+            fprintf(stderr, "Error at line %d: out of memory",__LINE__);
+            exit(1);
+        }
 
         strcpy(*cpp, cp);
         cpp++;
