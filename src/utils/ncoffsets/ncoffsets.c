@@ -1646,28 +1646,29 @@ make_lvars(char *optarg, struct fspec* fspecp)
 }
 
 static void
-usage(char *argv0)
+usage(char *cmd)
 {
     char *help =
-    "Usage: %s [-h] | [-v] [-b] [-g] [file_name]\n"
-    "       [-h] Print help\n"
-    "       [-b] print variable size\n"
-    "       [-g] print gap from the previous variable\n"
-    "       [filename] input netCDF file name\n";
-    fprintf(stderr, help, argv0);
+    "Usage: %s [-h] | [-v var1[,...]] [-b] [-g] file\n"
+    "       [-h]            Print help\n"
+    "       [-v var1[,...]] Output for variable(s) <var1>,... only\n"
+    "       [-b]            Output variable size\n"
+    "       [-g]            Output gap from the previous variable\n"
+    "       file            Input netCDF file name\n";
+    fprintf(stderr, help, cmd);
 }
 
 /*----< main() >-------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
     extern int optind;
-    char *filename;
+    char *filename, cmd[256];
     int i, j, err, opt, nvars, print_var_size=0, print_gap=0;
     NC *ncp;
     struct fspec *fspecp=NULL;
 
-    fspecp = (struct fspec*) malloc(sizeof(struct fspec));
-    fspecp->nlvars = 0;
+    fspecp = (struct fspec*) calloc(1, sizeof(struct fspec));
+    strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
     while ((opt = getopt(argc, argv, "v:bghq")) != EOF) {
@@ -1679,7 +1680,7 @@ int main(int argc, char *argv[])
             case 'g': print_gap = 1;
                       break;
             case 'h':
-            default:  usage(argv[0]);
+            default:  usage(cmd);
                       free(fspecp);
                       return 0;
         }
@@ -1687,11 +1688,12 @@ int main(int argc, char *argv[])
     argc -= optind;
     argv += optind;
     if (argc != 1) {
-        usage(argv[0]);
-        free(fspecp->varp);
+        fprintf(stderr, "%s: missing file name\n", cmd);
+        usage(cmd);
+        if (fspecp->varp != NULL) free(fspecp->varp);
         for (i=0; i<fspecp->nlvars; i++)
             free(fspecp->lvars[i]);
-        free(fspecp->lvars);
+        if (fspecp->lvars != NULL) free(fspecp->lvars);
         free(fspecp);
         return 1;
     }
