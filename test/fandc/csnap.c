@@ -23,16 +23,19 @@
 
 #include <stdio.h>
 #include <stdlib.h> /* srand(), rand() */
+#include <string.h> /* strcpy() */
 #include <unistd.h>
 #include <math.h>  /* sqrt() */
 #include <limits.h>
 #include <float.h>
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 /*** Field parameters ***/
+static int verbose, nerrs;
 
 const MPI_Offset totsiz_3d[3] = { 256, 256, 256 }; /* global sizes of 3D field */
 MPI_Offset totsiz_2d[2];                           /* global sizes of 2D field */
@@ -76,10 +79,30 @@ int main(int argc, char *argv[]) {
   double t[20], t_g[20];
   double file_size;
   double rates_l[4], rates_g[4];
-  int i;
+  int i, rank;
+  char filename[256];
 
   MPI_Init(&argc,&argv);
   MPI_Comm_size(MPI_COMM_WORLD,&totpes);
+  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+    }
+    strcpy(filename, "testfile.nc");
+    if (argc == 2) strcpy(filename, argv[1]);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for 3D array write/read ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
+
+  verbose = 0;
+  nerrs = 0;
 
   MPI_Dims_create(totpes,3,numpes);
   MPI_Cart_create(MPI_COMM_WORLD,3,numpes,isperiodic,reorder,&comm_cart);
@@ -115,12 +138,13 @@ int main(int argc, char *argv[]) {
 
 /* Print data decomposition information */
 
-  if (mype == 0)
+  if (mype == 0 && verbose)
     printf("mype  pe_coords    totsiz_3d         locsiz_3d       "
            "kstart,jstart,istart\n");
 
   MPI_Barrier(comm_cart);
 
+  if (verbose)
   printf("%3d   %2d %2d %2d  %4lld %4lld %4lld    %4lld %4lld %4lld   %6lld %6lld %6lld\n",
          mype, pe_coords[0], pe_coords[1], pe_coords[2],
          totsiz_3d[0], totsiz_3d[1], totsiz_3d[2],
@@ -131,8 +155,8 @@ int main(int argc, char *argv[]) {
 
   for (i=0; i < 20; t[i++] = DBL_MAX);   /* ready for timing */
 
-  write_file("csnap.nc", &t[ 0]);
-  read_file ("csnap.nc", &t[10]);
+  write_file(filename, &t[ 0]);
+  read_file (filename, &t[10]);
 
 /* Compute I/O rates */
 
@@ -144,7 +168,7 @@ int main(int argc, char *argv[]) {
   MPI_Allreduce(rates_l, rates_g, 4, MPI_DOUBLE, MPI_MIN, comm_cart);
   MPI_Allreduce(t, t_g, 20, MPI_DOUBLE, MPI_MAX, comm_cart);
 
-  if (mype == 0) {
+  if (mype == 0 && verbose) {
      printf("File size: %10.3e MB\n", file_size);
      printf("    Write: %9.3f MB/s  (eff., %9.3f MB/s)\n",
             rates_g[0], rates_g[1]);
@@ -155,6 +179,8 @@ int main(int argc, char *argv[]) {
             t_g[0], t_g[1], rates_g[1], t_g[10], t_g[11], rates_g[3]);
   }
 
+  MPI_Comm_free(&comm_cart);
+
     MPI_Offset malloc_size, sum_size;
     int err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
@@ -164,7 +190,12 @@ int main(int argc, char *argv[]) {
                    sum_size);
     }
 
-  MPI_Comm_free(&comm_cart);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
+    }
+
   MPI_Finalize();
   return 0;
 }
@@ -252,7 +283,7 @@ void write_file(char *filename, double *t) {
 
     if (t2 - t1 < t[0]) t[0] = t2 - t1;
     if (t3 - t2 < t[1]) t[1] = t3 - t2;
-    if (mype == 0) printf("write %d: %9.3e %9.3e\n", ii, t2-t1, t3-t2);
+    if (mype == 0 && verbose) printf("write %d: %9.3e %9.3e\n", ii, t2-t1, t3-t2);
   }
 
   free(tt);
@@ -310,7 +341,7 @@ void read_file(char *filename, double *t) {
 
     err = ncmpi_open(comm_cart, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 
-    err = ncmpi_inq_varid(ncid,"t",&vid_t);
+    err = ncmpi_inq_varid(ncid,"t",&vid_t); ERR
     if (! only_3d) {
         err = ncmpi_inq_varid(ncid,"smf",&vid_smf); ERR
     }
@@ -344,8 +375,8 @@ void read_file(char *filename, double *t) {
 
     if (t2 - t1 < t[0]) t[0] = t2 - t1;
     if ((t3 - t2) - (dt1 + dt2) < t[1]) t[1] = (t3 - t2) - (dt1 + dt2);
-    if (mype == 0) printf(" read %d: %9.3e %9.3e\n", ii, t2-t1,
-                          (t3-t2)-(dt1+dt2));
+    if (mype == 0 && verbose)
+        printf(" read %d: %9.3e %9.3e\n", ii, t2-t1, (t3-t2)-(dt1+dt2));
   }
 
   free(tt);
@@ -439,6 +470,6 @@ void compare_vec(double *a, double *b, int ndims, MPI_Offset *sizes, int corr_da
   delmax = sqrt(wr[2]*delmax/wr[1]);    /*  Normalized max difference */
   delmin = sqrt(wr[2]*delmin/wr[1]);    /*  Normalized min difference */
 
-  if (mype == 0)
-  printf("diff, delmax, delmin = %9.3e %9.3e %9.3e\n", diff, delmax, delmin);
+  if (mype == 0 && verbose)
+      printf("diff, delmax, delmin = %9.3e %9.3e %9.3e\n", diff, delmax, delmin);
 }
