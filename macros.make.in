@@ -48,6 +48,8 @@ CXX		= @MPICXX@
 F77		= @MPIF77@
 F90		= @MPIF90@
 
+SEQ_CC          = @SEQ_CC@
+
 # debugging and optimization options for compiling and linking
 CFLAGS		= @CFLAGS@
 CXXFLAGS	= @CXXFLAGS@

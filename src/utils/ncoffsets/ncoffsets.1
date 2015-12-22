@@ -1,0 +1,93 @@
+.\" $Header$
+.nr yr \n(yr+1900
+.af mo 01
+.af dy 01
+.TH PNETCDF_VERSION 1 2014-04-15 "Printed: \n(yr-\n(mo-\n(dy" "UTILITIES"
+.SH NAME
+ncoffsets \- print the starting/ending file offsets for netCDF variables
+.SH SYNOPSIS
+.ft B
+.HP
+ncoffsets
+.nh
+\%[-v \fIvar1,...\fP]
+\%[-b]
+\%[-g]
+\%[-h]
+\%\fIfile\fP
+.hy
+.ft
+.SH DESCRIPTION
+\fBncoffsets\fP prints the file offsets information of variables defined in
+a given netCDF file
+
+If no argument is given, command usage information is printed.
+.SH OPTIONS
+.IP "\fB-v\fP \fIvar1,...,varn\fP"
+The output will include data values for the specified variables One or more
+variables must be specified by name in the comma-delimited list following this
+option.  The list must be a single argument to the command, hence cannot
+contain blanks or other white space characters.  The named variables must be
+valid netCDF variables in the input-file.  The default, without this option is
+to include data values for \fIall\fP variables in the output.
+.IP "\fB-b\fP"
+Print the variable size in bytes
+.IP "\fB-g\fP"
+Print the gap in bytes from the previous variable. For the first defined
+variable, print the gap from the end of file header. For record variables,
+there is no gap between records.
+.IP "\fB-h\fP"
+Print the available command-line options
+
+.SH EXAMPLES
+.LP
+Print the file offset information for all variables in a netCDF file.
+
+% ncoffsets -b -g testfile.nc
+.sp
+.nf
+netcdf testfile.nc {
+//file format: CDF-1
+
+file header:
+        size   = 340 bytes
+        extent = 340 bytes
+
+dimensions:
+        x = 100
+        y = 100
+        z = 100
+        time = UNLIMITED // (100 currently)
+
+fixed-size variables:
+        double square(x, y):
+               size in bytes     =       80000
+               start file offset =         340
+               end   file offset =       80340
+               gap from prev var =           0
+        double cube(x, y, z):
+               size in bytes     =     8000000
+               start file offset =       80340
+               end   file offset =     8080340
+               gap from prev var =           0
+
+record variables:
+        double time(time):
+               size in bytes     =         800
+               start file offset =     8080340
+               end   file offset =     8081140
+               gap from prev var =           0
+        double xytime(time, x, y):
+               size in bytes     =     8000000
+               start file offset =     8080348
+               end   file offset =    16080348
+               gap from prev var =           0
+}
+.fi
+
+.SH "SEE ALSO"
+.LP
+.BR pnetcdf (3)
+.SH DATE
+$Date$
+.LP
