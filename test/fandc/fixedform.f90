@@ -5,7 +5,8 @@
 ! $Id$
 
 !
-! This program tests whether header file pnetcdf.inc conforms Fortran fixed form
+! This program tests whether header file pnetcdf.inc conforms Fortran fixed
+! form. Hence this test is for compilation only.
 !
 
       program main
@@ -13,16 +14,12 @@
         include "mpif.h"
         include "pnetcdf.inc"
 
-        character(LEN=128) filename
-        integer ncid, err
+        character(LEN=80) pnetcdf_version
+        integer err
 
         call MPI_Init(err)
 
-        err = nfmpi_create(MPI_COMM_WORLD, filename, IOR(NF_CLOBBER,    &
-     &                     NF_64BIT_DATA), MPI_INFO_NULL, ncid)
-
-        err = nfmpi_enddef(ncid)
-        err = nfmpi_close(ncid)
+        pnetcdf_version = nfmpi_inq_libvers()
 
         call MPI_Finalize(err)
 
