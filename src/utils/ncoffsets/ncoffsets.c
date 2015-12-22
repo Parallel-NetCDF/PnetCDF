@@ -94,13 +94,13 @@ typedef enum {
 typedef int nc_type;
 
 typedef struct {
-    size_t  nchars;
-    char   *cp;     /* [nchars+1] one additional char for '\0' */
+    long long  nchars;
+    char      *cp;     /* [nchars+1] one additional char for '\0' */
 } NC_string;
 
 typedef struct {
     NC_string *name;
-    size_t     size;
+    long long  size;
 } NC_dim;
 
 typedef struct NC_dimarray {
@@ -110,10 +110,10 @@ typedef struct NC_dimarray {
 } NC_dimarray;
 
 typedef struct {
-    size_t     xsz;      /* amount of space at xvalue (4-byte aligned) */
+    long long  xsz;      /* amount of space at xvalue (4-byte aligned) */
     NC_string *name;     /* name of the attributes */
     nc_type    type;     /* the discriminant */
-    size_t     nelems;   /* number of attribute elements */
+    long long  nelems;   /* number of attribute elements */
     void      *xvalue;   /* the actual data, in external representation */
 } NC_attr;
 
@@ -125,17 +125,17 @@ typedef struct NC_attrarray {
 
 typedef struct {
     int           xsz;    /* byte size of 1 array element */
-    size_t       *shape;  /* dim->size of each dim */
-    size_t       *dsizes; /* the right to left product of shape */
+    long long    *shape;  /* dim->size of each dim */
+    long long    *dsizes; /* the right to left product of shape */
     NC_string    *name;   /* name of the variable */
     int           ndims;  /* number of dimensions */
     int          *dimids; /* array of dimension IDs */
     NC_attrarray  attrs;  /* attribute array */
     nc_type       type;   /* variable's data type */
-    size_t        len;    /* this is the "vsize" defined in header format, the
+    long long     len;    /* this is the "vsize" defined in header format, the
                              total size in bytes of the array variable.
                              For record variable, this is the record size */
-    size_t        begin;  /* starting file offset of this variable */
+    long long     begin;  /* starting file offset of this variable */
 } NC_var;
 
 typedef struct NC_vararray {
@@ -148,25 +148,25 @@ typedef struct NC_vararray {
 typedef struct NC {
     int           flags;
     char          path[1024];
-    size_t        xsz;      /* external size of this header, <= var[0].begin */
-    size_t        begin_var;/* file offset of the first (non-record) var */
-    size_t        begin_rec;/* file offset of the first 'record' */
+    long long     xsz;      /* external size of this header, <= var[0].begin */
+    long long     begin_var;/* file offset of the first (non-record) var */
+    long long     begin_rec;/* file offset of the first 'record' */
 
-    size_t        recsize;  /* length of 'record': sum of single record sizes
+    long long     recsize;  /* length of 'record': sum of single record sizes
                                of all the record variables */
-    size_t        numrecs;  /* number of 'records' allocated */
+    long long     numrecs;  /* number of 'records' allocated */
     NC_dimarray   dims;     /* dimensions defined */
     NC_attrarray  attrs;    /* global attributes defined */
     NC_vararray   vars;     /* variables defined */
 } NC;
 
 typedef struct bufferinfo {
-    int     fd;
-    off_t   offset;   /* current read/write offset in the file */
-    int     version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
-    void   *base;     /* beginning of read/write buffer */
-    void   *pos;      /* current position in buffer */
-    size_t  size;     /* size of the buffer */
+    int        fd;
+    off_t      offset;   /* current read/write offset in the file */
+    int        version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
+    void      *base;     /* beginning of read/write buffer */
+    void      *pos;      /* current position in buffer */
+    long long  size;     /* size of the buffer */
 } bufferinfo;
 
 /*
@@ -265,7 +265,7 @@ type_name(nc_type type) {
 }
 
 static NC_string *
-ncmpii_new_NC_string(size_t      slen,
+ncmpii_new_NC_string(long long   slen,
                      const char *str)
 {
     /* str may not be NULL terminated */
@@ -331,7 +331,7 @@ ncmpii_NC_var_shape64(NC                *ncp,
                       const NC_dimarray *dims)
 {
     int i;
-    size_t product = 1;
+    long long product = 1;
 
     /* set the size of 1 element */
     varp->xsz = ncmpix_len_nctype(varp->type);
@@ -484,7 +484,7 @@ ncmpii_NC_computeshapes(NC *ncp)
 #define X_SIZEOF_NCTYPE X_SIZEOF_INT
 
 /*----< hdr_len_NC_name() >--------------------------------------------------*/
-static size_t
+static long long
 hdr_len_NC_name(const NC_string *ncstrp,
                 int              sizeof_t)     /* NON_NEG */
 {
@@ -498,7 +498,7 @@ hdr_len_NC_name(const NC_string *ncstrp,
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    size_t sz = sizeof_t; /* nelems */
+    long long sz = sizeof_t; /* nelems */
 
     assert(ncstrp != NULL);
 
@@ -509,7 +509,7 @@ hdr_len_NC_name(const NC_string *ncstrp,
 }
 
 /*----< hdr_len_NC_dim() >---------------------------------------------------*/
-static size_t
+static long long
 hdr_len_NC_dim(const NC_dim *dimp,
                int           sizeof_t)     /* NON_NEG */
 {
@@ -520,7 +520,7 @@ hdr_len_NC_dim(const NC_dim *dimp,
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    size_t sz;
+    long long sz;
 
     assert(dimp != NULL);
 
@@ -531,7 +531,7 @@ hdr_len_NC_dim(const NC_dim *dimp,
 }
 
 /*----< hdr_len_NC_dimarray() >----------------------------------------------*/
-static size_t
+static long long
 hdr_len_NC_dimarray(const NC_dimarray *ncap,
                     int                sizeof_t)     /* NON_NEG */
 {
@@ -548,7 +548,7 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap,
      *                <non-negative INT64>        // CDF-5
      */
     int i;
-    size_t xlen;
+    long long xlen;
 
     xlen = X_SIZEOF_NCTYPE;           /* NC_DIMENSION */
     xlen += sizeof_t;                 /* nelems */
@@ -564,7 +564,7 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap,
 }
 
 /*----< hdr_len_NC_attr() >--------------------------------------------------*/
-static size_t
+static long long
 hdr_len_NC_attr(const NC_attr *attrp,
                 int            sizeof_t)     /* NON_NEG */
 {
@@ -584,7 +584,7 @@ hdr_len_NC_attr(const NC_attr *attrp,
      * NON_NEG = <non-negative INT> |  // CDF-1 and CDF-2
      *           <non-negative INT64>  // CDF-5
      */
-    size_t sz;
+    long long sz;
 
     assert(attrp != NULL);
 
@@ -597,7 +597,7 @@ hdr_len_NC_attr(const NC_attr *attrp,
 }
 
 /*----< hdr_len_NC_attrarray() >---------------------------------------------*/
-static size_t
+static long long
 hdr_len_NC_attrarray(const NC_attrarray *ncap,
                      int                 sizeof_t)     /* NON_NEG */
 {
@@ -614,7 +614,7 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap,
      *                <non-negative INT64>        // CDF-5
      */
     int i;
-    size_t xlen;
+    long long xlen;
 
     xlen = X_SIZEOF_NCTYPE;        /* NC_ATTRIBUTE */
     xlen += sizeof_t;              /* nelems */
@@ -629,7 +629,7 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap,
 }
 
 /*----< hdr_len_NC_var() >---------------------------------------------------*/
-static size_t
+static long long
 hdr_len_NC_var(const NC_var *varp,
                int           sizeof_off_t, /* OFFSET */
                int           sizeof_t)     /* NON_NEG */
@@ -650,7 +650,7 @@ hdr_len_NC_var(const NC_var *varp,
      * NON_NEG     = <non-negative INT> |  // CDF-1 and CDF-2
      *               <non-negative INT64>  // CDF-5
      */
-    size_t sz;
+    long long sz;
 
     assert(varp != NULL);
 
@@ -670,7 +670,7 @@ hdr_len_NC_var(const NC_var *varp,
 }
 
 /*----< hdr_len_NC_vararray() >----------------------------------------------*/
-static size_t
+static long long
 hdr_len_NC_vararray(const NC_vararray *ncap,
                     int                sizeof_t,     /* NON_NEG */
                     int                sizeof_off_t) /* OFFSET */
@@ -690,7 +690,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
      *               <non-negative INT64>        // CDF-5
      */
     int i;
-    size_t xlen;
+    long long xlen;
 
     xlen = X_SIZEOF_NCTYPE;           /* NC_VARIABLE */
     xlen += sizeof_t;                 /* nelems */
@@ -709,7 +709,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 }
 
 /*----< ncmpii_hdr_len_NC() >------------------------------------------------*/
-static size_t
+static long long
 ncmpii_hdr_len_NC(const NC *ncp)
 {
     /* netCDF file format:
@@ -722,7 +722,7 @@ ncmpii_hdr_len_NC(const NC *ncp)
      */
 
     int sizeof_t, sizeof_off_t;
-    size_t xlen;
+    long long xlen;
 
     assert(ncp != NULL);
 
@@ -781,7 +781,7 @@ hdr_fetch(bufferinfo *gbp) {
 /* Ensure that 'nextread' bytes are available.  */
 static int
 hdr_check_buffer(bufferinfo *gbp,
-                 size_t  nextread)
+                 size_t      nextread)
 {
     if (gbp->pos + nextread <= gbp->base + gbp->size)
         return NC_NOERR;
@@ -864,7 +864,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
         nchars = get_int4(gbp);
 
     /* Allocate a NC_string structure large enough to hold nchars characters */
-    ncstrp = ncmpii_new_NC_string((size_t)nchars, NULL);
+    ncstrp = ncmpii_new_NC_string(nchars, NULL);
 
     nbytes = nchars;
     padding = _RNDUP(ncstrp->nchars, X_ALIGN) - ncstrp->nchars;
@@ -875,7 +875,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     while (nbytes > 0) {
         if (bufremain > 0) {
             strcount = MIN(bufremain, nbytes);
-            memcpy(cpos, gbp->pos, (size_t)strcount);
+            memcpy(cpos, gbp->pos, strcount);
             nbytes -= strcount;
             gbp->pos = (void *)((char *)gbp->pos + strcount);
             cpos += strcount;
@@ -893,7 +893,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     /* handle the padding */
     if (padding > 0) {
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
+        if (memcmp(gbp->pos, pad, padding) != 0) {
             free(ncstrp);
             return NC_EINVAL;
         }
@@ -1016,7 +1016,7 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     } else {
         if (type != NC_DIMENSION) return NC_EINVAL;
 
-        ncap->value = (NC_dim **) malloc((size_t)ndefined * sizeof(NC_dim*));
+        ncap->value = (NC_dim **) malloc(ndefined * sizeof(NC_dim*));
         ncap->nalloc = (int)ndefined;
 
         for (i=0; i<ndefined; i++) {
@@ -1085,9 +1085,9 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     return NC_NOERR;
 }
 
-static size_t
+static long long
 ncmpix_len_NC_attrV(nc_type    type,
-                    size_t nelems)
+                    long long  nelems)
 {
     switch(type) {
         case NC_BYTE:
@@ -1109,10 +1109,10 @@ ncmpix_len_NC_attrV(nc_type    type,
 static NC_attr *
 ncmpii_new_x_NC_attr(NC_string  *strp,
                      nc_type     type,
-                     size_t  nelems)
+                     size_t      nelems)
 {
     NC_attr *attrp;
-    const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
+    const long long xsz = ncmpix_len_NC_attrV(type, nelems);
     size_t sz = M_RNDUP(sizeof(NC_attr));
 
     assert(!(xsz == 0 && nelems != 0));
@@ -1289,9 +1289,9 @@ ncmpii_new_x_NC_var(NC_string *strp,
     varp->ndims = ndims;
 
     if (ndims != 0) {
-        varp->shape  = (size_t *)((char *)varp + sizeof_NC_var);
-        varp->dsizes = (size_t *)((char *)varp->shape  + shape_space);
-        varp->dimids = (int *)   ((char *)varp->dsizes + dsizes_space);
+        varp->shape  = (long long *)((char *)varp + sizeof_NC_var);
+        varp->dsizes = (long long *)((char *)varp->shape  + shape_space);
+        varp->dimids = (int *)      ((char *)varp->dsizes + dsizes_space);
     }
 
     varp->xsz = 0;
@@ -1722,19 +1722,19 @@ int main(int argc, char *argv[])
 
     /* print file header size and extent */
     printf("file header:\n");
-    printf("\tsize   = %zd bytes\n",ncp->xsz);
-    printf("\textent = %zd bytes\n",ncp->begin_var);
+    printf("\tsize   = %lld bytes\n",ncp->xsz);
+    printf("\textent = %lld bytes\n",ncp->begin_var);
     
     /* print dimensions */
     if (ncp->dims.ndefined > 0) printf("\ndimensions:\n");
     for (i=0; i<ncp->dims.ndefined; i++) {
-        size_t size;
+        long long size;
         size = ncp->dims.value[i]->size;
         printf("\t%s = ",ncp->dims.value[i]->name->cp);
         if (size == NC_UNLIMITED)
-            printf("UNLIMITED // (%zd currently)\n",ncp->numrecs);
+            printf("UNLIMITED // (%lld currently)\n",ncp->numrecs);
         else
-            printf("%zd\n",size);
+            printf("%lld\n",size);
     }
 
     if (fspecp->nlvars == 0) { /* print all variables */
@@ -1792,7 +1792,7 @@ int main(int argc, char *argv[])
     for (i=0; i<fspecp->nlvars; i++) {
         int j, ndims;
         char type_str[16], str[1024], line[1024];
-        size_t size;
+        long long size;
         NC_var *varp = fspecp->varp[i];
 
         if (IS_RECVAR(varp)) continue;
@@ -1814,9 +1814,9 @@ int main(int argc, char *argv[])
 
         printf("\t%6s %s:\n", type_str, line);
         if (print_var_size)
-            printf("\t       size in bytes     =%12zd\n", size);
-        printf("\t       start file offset =%12zd\n", varp->begin);
-        printf("\t       end   file offset =%12zd\n", varp->begin+size);
+            printf("\t       size in bytes     =%12lld\n", size);
+        printf("\t       start file offset =%12lld\n", varp->begin);
+        printf("\t       end   file offset =%12lld\n", varp->begin+size);
 
         if (print_gap) {
             NC_var *prev=NULL;
@@ -1829,14 +1829,14 @@ int main(int argc, char *argv[])
             }
             if (fspecp->varids[i] == 0 || prev == NULL) {
                 /* first defined fixed-size variable */
-                printf("\t       gap from prev var =%12zd\n",
+                printf("\t       gap from prev var =%12lld\n",
                        varp->begin - ncp->xsz);
             }
             else {
                 /* not the first fixed-size variable */
-                size_t prev_end = prev->begin;
+                long long prev_end = prev->begin;
                 prev_end += type_size(prev->type) * prev->dsizes[0];
-                printf("\t       gap from prev var =%12zd\n",
+                printf("\t       gap from prev var =%12lld\n",
                        varp->begin - prev_end);
             }
         }
@@ -1847,12 +1847,13 @@ int main(int argc, char *argv[])
     for (i=0; i<fspecp->nlvars; i++) {
         int j, ndims;
         char type_str[16], str[1024], line[1024];
-        size_t size;
+        long long size;
         NC_var *varp = fspecp->varp[i];
 
         if (!IS_RECVAR(varp)) continue;
 
-        size = type_size(varp->type) * varp->dsizes[0];
+        size  = type_size(varp->type);
+        size *= varp->dsizes[0];
 
         line[0]='\0';
         sprintf(type_str,"%-6s", type_name(varp->type));
@@ -1869,13 +1870,13 @@ int main(int argc, char *argv[])
 
         printf("\t%6s %s:\n", type_str, line);
         if (print_var_size)
-            printf("\t       size in bytes     =%12zd\n", size);
-        printf("\t       start file offset =%12zd\n", varp->begin);
-        printf("\t       end   file offset =%12zd\n", varp->begin+size);
+            printf("\t       size in bytes     =%12lld\n", size);
+        printf("\t       start file offset =%12lld\n", varp->begin);
+        printf("\t       end   file offset =%12lld\n", varp->begin+size);
 
         if (print_gap) {
             NC_var *prev=NULL;
-            size_t prev_end;
+            long long prev_end;
             for (j=fspecp->varids[i]-1; j>=0; j--) {
                 /* search for the previous record variable */
                 if (IS_RECVAR(ncp->vars.value[j])) {
@@ -1885,7 +1886,7 @@ int main(int argc, char *argv[])
             }
             if (fspecp->varids[i] == 0 && last_fix_varid == -1) {
                 /* first record variable and no fixed-size variable */
-                printf("\t       gap from prev var =%12zd\n",
+                printf("\t       gap from prev var =%12lld\n",
                        varp->begin - ncp->xsz);
             }
             else if (fspecp->varids[i] == first_rec_varid) {
@@ -1893,14 +1894,14 @@ int main(int argc, char *argv[])
                 prev = ncp->vars.value[last_fix_varid];
                 prev_end = prev->begin;
                 prev_end += type_size(prev->type) * prev->dsizes[0];
-                printf("\t       gap from prev var =%12zd\n",
+                printf("\t       gap from prev var =%12lld\n",
                        varp->begin - prev_end);
             }
             else {
                 /* not the first record variable */
                 prev_end = prev->begin;
                 prev_end += type_size(prev->type) * prev->dsizes[0];
-                printf("\t       gap from prev var =%12zd\n",
+                printf("\t       gap from prev var =%12lld\n",
                        varp->begin - prev_end);
             }
         }
