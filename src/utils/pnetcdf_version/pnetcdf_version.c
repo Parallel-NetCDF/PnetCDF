@@ -89,8 +89,8 @@ int main( int argc, char *argv[] )
             printf( "MPICXX: %s\n", MPICXX);
 #endif
 #ifdef MPIF77
-        if (strcmp(FCFLAGS, ""))
-            printf( "MPIF77: %s %s\n", MPIF77, FCFLAGS);
+        if (strcmp(F77FLAGS, ""))
+            printf( "MPIF77: %s %s\n", MPIF77, F77FLAGS);
         else
             printf( "MPIF77: %s\n", MPIF77);
 #endif

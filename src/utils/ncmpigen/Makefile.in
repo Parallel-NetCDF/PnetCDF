@@ -114,7 +114,8 @@ b-test:		$(PROGRAM) c1.cdl
 #
 c-test:	$(PROGRAM) c1.cdl
 	./$(PROGRAM) -c -o ctest0.nc $(srcdir)/c0.cdl > ctest.c && \
-	$(CC) -o ctest $(CFLAGS) $(CPPFLAGS) ctest.c $(LDFLAGS) $(LIBS) && \
+	$(COMPILE.c) ctest.c && \
+	$(LINK.c) ctest.o -o ctest $(LDFLAGS) $(LIBS) && \
 	./ctest	&& \
 	$(NCMPIDUMP) -n c1 `pwd`/ctest0.nc > ctest1.cdl
 	@if diff c1.cdl ctest1.cdl; then \
@@ -132,7 +133,7 @@ c1.cdl:	$(PROGRAM) c0.cdl
 # test "-f" option of ncmpigen
 #
 f-test:	$(PROGRAM) c0.cdl c1.cdl
-	@if [ -n "$(FC)" ]; then \
+	@if [ -n "$(MPIF77)" ]; then \
 	    $(MAKE) $(MFLAGS) ftest1.cdl && \
 	    if diff c1.cdl ftest1.cdl; then \
 		echo "*** $(PROGRAM) -f test successful ***"; \
@@ -147,12 +148,12 @@ f-test:	$(PROGRAM) c0.cdl c1.cdl
 ftest1.cdl: $(PROGRAM) c0.cdl pnetcdf.inc
 	./$(PROGRAM) -f -o ftest0.nc $(srcdir)/c0.cdl > ftest.f
 	$(COMPILE.f) ftest.f
-	$(FC) $(FFLAGS) -o ftest ftest.o $(LDFLAGS) $(LIBS)
+	$(LINK.f) -o ftest ftest.o $(LDFLAGS) $(LIBS)
 	./ftest
 	$(NCMPIDUMP) -n c1 ftest0.nc > ftest1.cdl
 
 pnetcdf.inc:
-	@if [ -n "$(FC)" ]; then \
+	@if [ -n "$(MPIF77)" ]; then \
 	    cp $(srcdir)/../../libf/$@ .; \
 	else \
 	    echo 1>&2 "\`$@' not made because no FORTRAN compiler"; \

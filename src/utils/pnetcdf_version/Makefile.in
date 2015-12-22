@@ -11,18 +11,18 @@ VPATH = @srcdir@
 
 include ../../../macros.make
 
-DEFS  = -DMPICC="\"$(CC)\""   -DCFLAGS="\"$(CFLAGS)\""
+DEFS  = -DMPICC="\"$(MPICC)\""   -DCFLAGS="\"$(CFLAGS)\""
 DEFS += -DCONFIGURE_ARGS_CLEAN="\"@CONFIGURE_ARGS_CLEAN@\""
 DEFS += -DPNETCDF_VERSION="\"@PNETCDF_VERSION@\""
 DEFS += -DPNETCDF_RELEASE_DATE="\"@PNETCDF_RELEASE_DATE@\""
 
 ifeq (@has_mpicxx@, yes)
-DEFS += -DMPICXX="\"$(CXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
+DEFS += -DMPICXX="\"$(MPICXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
 endif
 
 ifeq (@has_fortran@, yes)
-DEFS += -DMPIF77="\"$(F77)\"" -DFCFLAGS="\"$(FCFLAGS)\""
-DEFS += -DMPIF90="\"$(F90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
+DEFS += -DMPIF77="\"$(MPIF77)\"" -DF77FLAGS="\"$(F77FLAGS)\""
+DEFS += -DMPIF90="\"$(MPIF90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
 endif
 
 C_SOURCES	= pnetcdf_version.c
