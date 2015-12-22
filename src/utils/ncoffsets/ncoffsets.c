@@ -1599,7 +1599,7 @@ ncmpi_strerror(int err)
       case NC_EVARSIZE:
 	 return "NetCDF: One or more variable sizes violate format constraints";
       default:
-         printf("Unknown error code %s\n",err);
+         printf("Unknown error code %d\n",err);
          return "Unknown error code";
    }
 }
@@ -1722,8 +1722,8 @@ int main(int argc, char *argv[])
 
     /* print file header size and extent */
     printf("file header:\n");
-    printf("\tsize   = %lld bytes\n",ncp->xsz);
-    printf("\textent = %lld bytes\n",ncp->begin_var);
+    printf("\tsize   = %zd bytes\n",ncp->xsz);
+    printf("\textent = %zd bytes\n",ncp->begin_var);
     
     /* print dimensions */
     if (ncp->dims.ndefined > 0) printf("\ndimensions:\n");
@@ -1732,9 +1732,9 @@ int main(int argc, char *argv[])
         size = ncp->dims.value[i]->size;
         printf("\t%s = ",ncp->dims.value[i]->name->cp);
         if (size == NC_UNLIMITED)
-            printf("UNLIMITED // (%lld currently)\n",ncp->numrecs);
+            printf("UNLIMITED // (%zd currently)\n",ncp->numrecs);
         else
-            printf("%lld\n",size);
+            printf("%zd\n",size);
     }
 
     if (fspecp->nlvars == 0) { /* print all variables */
@@ -1814,9 +1814,9 @@ int main(int argc, char *argv[])
 
         printf("\t%6s %s:\n", type_str, line);
         if (print_var_size)
-            printf("\t       size in bytes     =%12lld\n", size);
-        printf("\t       start file offset =%12lld\n", varp->begin);
-        printf("\t       end   file offset =%12lld\n", varp->begin+size);
+            printf("\t       size in bytes     =%12zd\n", size);
+        printf("\t       start file offset =%12zd\n", varp->begin);
+        printf("\t       end   file offset =%12zd\n", varp->begin+size);
 
         if (print_gap) {
             NC_var *prev=NULL;
@@ -1829,14 +1829,14 @@ int main(int argc, char *argv[])
             }
             if (fspecp->varids[i] == 0 || prev == NULL) {
                 /* first defined fixed-size variable */
-                printf("\t       gap from prev var =%12lld\n",
+                printf("\t       gap from prev var =%12zd\n",
                        varp->begin - ncp->xsz);
             }
             else {
                 /* not the first fixed-size variable */
                 size_t prev_end = prev->begin;
                 prev_end += type_size(prev->type) * prev->dsizes[0];
-                printf("\t       gap from prev var =%12lld\n",
+                printf("\t       gap from prev var =%12zd\n",
                        varp->begin - prev_end);
             }
         }
@@ -1869,9 +1869,9 @@ int main(int argc, char *argv[])
 
         printf("\t%6s %s:\n", type_str, line);
         if (print_var_size)
-            printf("\t       size in bytes     =%12lld\n", size);
-        printf("\t       start file offset =%12lld\n", varp->begin);
-        printf("\t       end   file offset =%12lld\n", varp->begin+size);
+            printf("\t       size in bytes     =%12zd\n", size);
+        printf("\t       start file offset =%12zd\n", varp->begin);
+        printf("\t       end   file offset =%12zd\n", varp->begin+size);
 
         if (print_gap) {
             NC_var *prev=NULL;
@@ -1885,7 +1885,7 @@ int main(int argc, char *argv[])
             }
             if (fspecp->varids[i] == 0 && last_fix_varid == -1) {
                 /* first record variable and no fixed-size variable */
-                printf("\t       gap from prev var =%12lld\n",
+                printf("\t       gap from prev var =%12zd\n",
                        varp->begin - ncp->xsz);
             }
             else if (fspecp->varids[i] == first_rec_varid) {
@@ -1893,14 +1893,14 @@ int main(int argc, char *argv[])
                 prev = ncp->vars.value[last_fix_varid];
                 prev_end = prev->begin;
                 prev_end += type_size(prev->type) * prev->dsizes[0];
-                printf("\t       gap from prev var =%12lld\n",
+                printf("\t       gap from prev var =%12zd\n",
                        varp->begin - prev_end);
             }
             else {
                 /* not the first record variable */
                 prev_end = prev->begin;
                 prev_end += type_size(prev->type) * prev->dsizes[0];
-                printf("\t       gap from prev var =%12lld\n",
+                printf("\t       gap from prev var =%12zd\n",
                        varp->begin - prev_end);
             }
         }
