@@ -1592,6 +1592,16 @@ fn_exit:
     return status;
 }
 
+/*----< ncmpii_free_NC() >----------------------------------------------------*/
+static void
+ncmpii_free_NC(NC *ncp)
+{
+    if (ncp == NULL) return;
+    ncmpii_free_NC_dimarray(&ncp->dims);
+    ncmpii_free_NC_attrarray(&ncp->attrs);
+    ncmpii_free_NC_vararray(&ncp->vars);
+}
+
 const char *
 ncmpi_strerror(int err)
 {
@@ -1960,6 +1970,7 @@ int main(int argc, char *argv[])
     }
     free(fspecp->varids);
     free(fspecp);
+    ncmpii_free_NC(ncp);
     free(ncp);
     close(fd);
 
