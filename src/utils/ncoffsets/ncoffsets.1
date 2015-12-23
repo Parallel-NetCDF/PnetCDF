@@ -11,7 +11,7 @@ ncoffsets \- print the starting/ending file offsets for netCDF variables
 ncoffsets
 .nh
 \%[-v \fIvar1[,...]\fP]
-\%[-b]
+\%[-s]
 \%[-g]
 \%[-h]
 \%\fIfile\fP
@@ -30,7 +30,7 @@ option.  The list must be a single argument to the command, hence cannot
 contain blanks or other white space characters.  The named variables must be
 valid netCDF variables in the input-file.  The default, without this option is
 to include data values for \fIall\fP variables in the output.
-.IP "\fB-b\fP"
+.IP "\fB-s\fP"
 Print the variable size in bytes
 .IP "\fB-g\fP"
 Print the gap in bytes from the previous variable. For the first defined
@@ -43,7 +43,7 @@ Print the available command-line options
 .LP
 Print the file offset information for all variables in a netCDF file.
 
-% ncoffsets -b -g testfile.nc
+% ncoffsets -s -g testfile.nc
 .sp
 .nf
 netcdf testfile.nc {

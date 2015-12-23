@@ -1674,7 +1674,7 @@ usage(char *cmd)
     "Usage: %s [-h] | [-v var1[,...]] [-b] [-g] file\n"
     "       [-h]            Print help\n"
     "       [-v var1[,...]] Output for variable(s) <var1>,... only\n"
-    "       [-b]            Output variable size\n"
+    "       [-s]            Output variable size\n"
     "       [-g]            Output gap from the previous variable\n"
     "       file            Input netCDF file name\n";
     fprintf(stderr, help, cmd);
@@ -1693,11 +1693,11 @@ int main(int argc, char *argv[])
     strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
-    while ((opt = getopt(argc, argv, "v:bghq")) != EOF) {
+    while ((opt = getopt(argc, argv, "v:sghq")) != EOF) {
         switch(opt) {
             case 'v': make_lvars (optarg, fspecp);
                       break;
-            case 'b': print_var_size = 1;
+            case 's': print_var_size = 1;
                       break;
             case 'g': print_gap = 1;
                       break;
@@ -1976,5 +1976,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
 
