@@ -1064,7 +1064,7 @@ create_file(char *filename, int cmode)
 
     /* assign global attributes */
     { /* Gc */
-    err=ncmpi_put_att_text(ncid, NC_GLOBAL, "Gc", 1, "€"); ERR
+    err=ncmpi_put_att_text(ncid, NC_GLOBAL, "Gc", 1, "\177"); ERR
     }
     { /* Gb */
     static const signed char Gb_att[2] = {-128, 127} ;
@@ -1153,7 +1153,7 @@ create_file(char *filename, int cmode)
     err=ncmpi_put_var1(ncid, d_id, &zero, d_data, 0,MPI_DATATYPE_NULL);    ERR
     }
     {
-    char cr_data[2] = "€\177" ;
+    char cr_data[2] = "\177\177" ;
     MPI_Offset cr_startset[1] = {0} ;
     MPI_Offset cr_countset[1] = {2} ;
     err=ncmpi_put_vara(ncid, cr_id, cr_startset, cr_countset, cr_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1195,7 +1195,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    char c1_data[1] = "€" ;
+    char c1_data[1] = "\177" ;
     MPI_Offset c1_startset[1] = {0} ;
     MPI_Offset c1_countset[1] = {1} ;
     err=ncmpi_put_vara(ncid, c1_id, c1_startset, c1_countset, c1_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1237,7 +1237,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    char c2_data[2] = "€\177" ;
+    char c2_data[2] = "\177\177" ;
     MPI_Offset c2_startset[1] = {0} ;
     MPI_Offset c2_countset[1] = {2} ;
     err=ncmpi_put_vara(ncid, c2_id, c2_startset, c2_countset, c2_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1279,7 +1279,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    char c3_data[3] = "€\177A" ;
+    char c3_data[3] = "\177\177A" ;
     MPI_Offset c3_startset[1] = {0} ;
     MPI_Offset c3_countset[1] = {3} ;
     err=ncmpi_put_vara(ncid, c3_id, c3_startset, c3_countset, c3_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1321,7 +1321,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    char c4_data[4] = "€\177AZ" ;
+    char c4_data[4] = "\177\177AZ" ;
     MPI_Offset c4_startset[1] = {0} ;
     MPI_Offset c4_countset[1] = {4} ;
     err=ncmpi_put_vara(ncid, c4_id, c4_startset, c4_countset, c4_data, 0,MPI_DATATYPE_NULL); ERR
