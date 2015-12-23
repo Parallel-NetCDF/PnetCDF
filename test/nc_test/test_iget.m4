@@ -11,6 +11,8 @@ dnl
 /* $Id$ */
 
 
+define(`CheckText',`ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dnl
+
 undefine(`index')dnl
 dnl dnl dnl
 dnl
@@ -55,7 +57,7 @@ test_ncmpi_iget_var1_$1(void)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
 
@@ -171,7 +173,7 @@ test_ncmpi_iget_var_$1(void)
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
 
@@ -301,7 +303,7 @@ test_ncmpi_iget_vara_$1(void)
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -512,7 +514,7 @@ test_ncmpi_iget_vars_$1(void)
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -722,7 +724,7 @@ test_ncmpi_iget_varm_$1(void)
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
