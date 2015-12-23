@@ -11,6 +11,8 @@ dnl
 /* $Id$ */
 
 
+define(`CheckText',`ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dnl
+
 undefine(`index')dnl
 dnl dnl dnl
 dnl
@@ -103,7 +105,7 @@ check_vars_$1(const char *filename)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         if (canConvert) {
             err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
             IF (err != NC_NOERR)
@@ -201,7 +203,7 @@ check_atts_$1(int  ncid)
 
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
-            canConvert = (ATT_TYPE(i,j) == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+            canConvert = (ATT_TYPE(i,j) == NC_CHAR) CheckText($1);
             if (!canConvert) continue;
 
             err = ncmpi_inq_att(ncid, i, ATT_NAME(i,j), &datatype, &length);
@@ -296,7 +298,7 @@ test_ncmpi_put_var1_$1(void)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
         err = ncmpi_put_var1_$1_all(BAD_ID, i, index, &value);
@@ -405,7 +407,7 @@ test_ncmpi_put_var_$1(void)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         err = ncmpi_put_var_$1_all(BAD_ID, i, value);
@@ -462,7 +464,7 @@ test_ncmpi_put_var_$1(void)
 
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] == RECDIM) {  /* only test record variables here */
-            canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+            canConvert = (var_type[i] == NC_CHAR) CheckText($1);
             assert(var_rank[i] <= MAX_RANK);
             assert(var_nels[i] <= MAX_NELS);
             err = ncmpi_put_var_$1_all(BAD_ID, i, value);
@@ -565,7 +567,7 @@ test_ncmpi_put_vara_$1(void)
 
     value[0] = 0;
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -759,7 +761,7 @@ test_ncmpi_put_vars_$1(void)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -948,7 +950,7 @@ test_ncmpi_put_varm_$1(void)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
