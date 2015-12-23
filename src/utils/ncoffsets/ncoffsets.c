@@ -24,6 +24,13 @@ static int endianness;
 #define IS_RECVAR(vp) \
         ((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
+#define MALLOC_CHECK(ptr) { \
+    if ((ptr) == NULL) { \
+        fprintf(stderr, "Error at line %d: malloc out of memory",__LINE__); \
+        exit(1); \
+    } \
+}
+
 #define NC_NOERR 0
 #define	NC_EINVAL	(-36)	/**< Invalid Argument */
 #define NC_EBADDIM	(-46)	/**< Invalid dimension id or name */
@@ -911,7 +918,7 @@ ncmpii_new_x_NC_dim(NC_string *name)
     NC_dim *dimp;
 
     dimp = (NC_dim *) malloc(sizeof(NC_dim));
-    if (dimp == NULL) return NULL;
+    MALLOC_CHECK(dimp)
 
     dimp->name = name;
     dimp->size = 0;
@@ -1017,6 +1024,7 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
         if (type != NC_DIMENSION) return NC_EINVAL;
 
         ncap->value = (NC_dim **) malloc(ndefined * sizeof(NC_dim*));
+        MALLOC_CHECK(ncap->value)
         ncap->nalloc = (int)ndefined;
 
         for (i=0; i<ndefined; i++) {
@@ -1120,7 +1128,7 @@ ncmpii_new_x_NC_attr(NC_string  *strp,
     sz += (size_t)xsz;
 
     attrp = (NC_attr *) malloc(sz);
-    if (attrp == NULL ) return NULL;
+    MALLOC_CHECK(attrp)
 
     attrp->xsz    = xsz;
     attrp->name   = strp;
@@ -1253,6 +1261,7 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
         if (type != NC_ATTRIBUTE) return NC_EINVAL;
 
         ncap->value = (NC_attr **)malloc((size_t)ndefined * sizeof(NC_attr*));
+        MALLOC_CHECK(ncap->value)
         ncap->nalloc = (int)ndefined;
 
         /* get [attr ...] */
@@ -1281,7 +1290,7 @@ ncmpii_new_x_NC_var(NC_string *strp,
     size_t sz = sizeof_NC_var + (size_t)(shape_space + dsizes_space + dimids_space);
 
     varp = (NC_var *) malloc(sz);
-    if (varp == NULL ) return NULL;
+    MALLOC_CHECK(varp)
 
     memset(varp, 0, sz);
 
@@ -1463,6 +1472,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         if (type != NC_VARIABLE) return NC_EINVAL;
 
         ncap->value = (NC_var **) malloc((size_t)ndefined * sizeof(NC_var*));
+        MALLOC_CHECK(ncap->value)
         ncap->nalloc = (int)ndefined;
 
         /* get [var ...] */
@@ -1505,6 +1515,7 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
     getbuf.offset = 0;   /* read from start of the file */
     getbuf.size   = NC_DEFAULT_CHUNKSIZE;
     getbuf.base   = (void *)malloc((size_t)getbuf.size);
+    MALLOC_CHECK(getbuf.base)
     getbuf.pos    = getbuf.base;
 
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
@@ -1627,10 +1638,7 @@ make_lvars(char *optarg, struct fspec* fspecp)
             nvars++;
 
     fspecp->lvars = (char **) malloc(nvars * sizeof(char*));
-    if (!fspecp->lvars) {
-        fprintf(stderr, "Error at line %d: out of memory",__LINE__);
-        exit(1);
-    }
+    MALLOC_CHECK(fspecp->lvars)
 
     cpp = fspecp->lvars;
     /* copy variable names into list */
@@ -1639,16 +1647,14 @@ make_lvars(char *optarg, struct fspec* fspecp)
          cp = strtok((char *) NULL, ",")) {
 
         *cpp = (char *) malloc(strlen(cp) + 1);
-        if (!*cpp) {
-            fprintf(stderr, "Error at line %d: out of memory",__LINE__);
-            exit(1);
-        }
+        MALLOC_CHECK(*cpp)
 
         strcpy(*cpp, cp);
         cpp++;
     }
     fspecp->nlvars = nvars;
     fspecp->varp = (NC_var**) malloc(nvars * sizeof(NC_var*));
+    MALLOC_CHECK(fspecp->varp)
 }
 
 static void
@@ -1705,7 +1711,7 @@ int main(int argc, char *argv[])
     }
     filename = argv[0]; /* required argument */
 
-    /* find endianness of the running machine */
+    /* find Endianness of the running machine */
     endianness = is_little_endian();
 
     /* open file */
@@ -1723,7 +1729,7 @@ int main(int argc, char *argv[])
     if (err != NC_NOERR)
         fprintf(stderr,"Error: code=%s\n", ncmpi_strerror(err));
 
-    /* priint file name and format */
+    /* print file name and format */
     printf("netcdf %s {\n",filename);
     printf("//file format: CDF-%d\n",ncp->flags);
     printf("\n");
@@ -1747,8 +1753,11 @@ int main(int argc, char *argv[])
 
     if (fspecp->nlvars == 0) { /* print all variables */
         fspecp = (struct fspec*) malloc(sizeof(struct fspec));
+        MALLOC_CHECK(fspecp)
         fspecp->varp = (NC_var**) malloc(ncp->vars.ndefined * sizeof(NC_var*));
+        MALLOC_CHECK(fspecp->varp)
         fspecp->varids = (int*) malloc(ncp->vars.ndefined * sizeof(int));
+        MALLOC_CHECK(fspecp->varids)
         fspecp->nlvars = ncp->vars.ndefined;
         fspecp->lvars = NULL;
         for (i=0; i<ncp->vars.ndefined; i++) {
@@ -1758,6 +1767,7 @@ int main(int argc, char *argv[])
     }
     else {
         fspecp->varids = (int*) malloc(fspecp->nlvars * sizeof(int));
+        MALLOC_CHECK(fspecp->varids)
         for (i=0; i<fspecp->nlvars; i++) {
             for (j=0; j<ncp->vars.ndefined; j++) {
                 if (!strcmp(fspecp->lvars[i], ncp->vars.value[j]->name->cp)) {
@@ -1767,7 +1777,7 @@ int main(int argc, char *argv[])
                 }
             }
             if (j == ncp->vars.ndefined) {
-                printf("Error: undefine variable %s\n",fspecp->lvars[i]);
+                printf("Error: undefined variable %s\n",fspecp->lvars[i]);
                 return 1;
             }
         }
@@ -1805,6 +1815,7 @@ int main(int argc, char *argv[])
 
         if (IS_RECVAR(varp)) continue;
 
+        /* calculate the size in bytes of this variable */
         size = type_size(varp->type);
         if (varp->ndims) size *= varp->dsizes[0];
 
@@ -1821,12 +1832,19 @@ int main(int argc, char *argv[])
             strcat(line, str);
         }
 
+        /* print the data type, variable name, and its dimensions */
         printf("\t%6s %s:\n", type_str, line);
+
+        /* print variable size in bytes */
         if (print_var_size)
             printf("\t       size in bytes     =%12lld\n", size);
+
+        /* print the starting and ending file offset of this variable */
         printf("\t       start file offset =%12lld\n", varp->begin);
         printf("\t       end   file offset =%12lld\n", varp->begin+size);
 
+        /* print the gap between the begin of this variable from the end of
+         * variable immediately before it */
         if (print_gap) {
             NC_var *prev=NULL;
             for (j=fspecp->varids[i]-1; j>=0; j--) {
@@ -1864,6 +1882,7 @@ int main(int argc, char *argv[])
 
         if (!IS_RECVAR(varp)) continue;
 
+        /* calculate the size in bytes of this variable */
         size = type_size(varp->type);
         if (varp->ndims) size *= varp->dsizes[0];
 
@@ -1880,12 +1899,19 @@ int main(int argc, char *argv[])
             strcat(line, str);
         }
 
+        /* print the data type, variable name, and its dimensions */
         printf("\t%6s %s:\n", type_str, line);
+
+        /* print variable size in bytes */
         if (print_var_size)
             printf("\t       size in bytes     =%12lld\n", size);
+
+        /* print the starting and ending file offset of this variable */
         printf("\t       start file offset =%12lld\n", varp->begin);
         printf("\t       end   file offset =%12lld\n", varp->begin+size);
 
+        /* print the gap between the begin of this variable from the end of
+         * variable immediately before it */
         if (print_gap) {
             NC_var *prev=NULL;
             long long prev_end;
