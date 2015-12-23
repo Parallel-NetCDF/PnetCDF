@@ -99,11 +99,6 @@ the offset of a member "mem4" in structure struct1 is: offsetof(struct1,mem4).
     */
     std::vector<int> getMemberShape(int memberIndex) const;
       
-      
-  private:
-      
-    int myOffset;
-      
   };
   
 }
