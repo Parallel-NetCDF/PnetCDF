@@ -13,6 +13,7 @@ ncoffsets
 \%[-v \fIvar1[,...]\fP]
 \%[-s]
 \%[-g]
+\%[-x]
 \%[-h]
 \%\fIfile\fP
 .hy
@@ -36,6 +37,10 @@ Print the variable size in bytes
 Print the gap in bytes from the previous variable. For the first defined
 variable, print the gap from the end of file header. For record variables,
 there is no gap between records.
+.IP "\fB-x\fP"
+Check all fixed-size variable for file space gaps in between any two
+immediately adjacent variables. It prints "1" on stdout if gaps are found,
+"0" for otherwise. This option disables all other options.
 .IP "\fB-h\fP"
 Print the available command-line options
 
@@ -44,7 +49,6 @@ Print the available command-line options
 Print the file offset information for all variables in a netCDF file.
 
 % ncoffsets -s -g testfile.nc
-.sp
 .nf
 netcdf testfile.nc {
 //file format: CDF-1
@@ -83,6 +87,11 @@ record variables:
                end   file offset =    16080348
                gap from prev var =           0
 }
+
+Check if there are gaps in between two adjacent fixed-size variables.
+
+% ncoffsets -x testfile.nc
+0
 .fi
 
 .SH "SEE ALSO"

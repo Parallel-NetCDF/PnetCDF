@@ -1667,6 +1667,48 @@ make_lvars(char *optarg, struct fspec* fspecp)
     MALLOC_CHECK(fspecp->varp)
 }
 
+static int
+check_gap_in_fixed_vars(NC *ncp)
+{
+    int i, j;
+    long long size, prev_end;
+    NC_var *varp, *prev;
+
+    /* check only fixed-size variables */
+    for (i=1; i<ncp->vars.ndefined; i++) {
+        varp = ncp->vars.value[i];
+
+        if (IS_RECVAR(varp)) continue;
+
+        /* calculate the size in bytes of this variable */
+        size = type_size(varp->type);
+        if (varp->ndims) size *= varp->dsizes[0];
+
+        /* search for the previous fixed-size variable */
+        prev = NULL;
+        for (j=i-1; j>=0; j--) {
+            if (!IS_RECVAR(ncp->vars.value[j])) {
+                prev = ncp->vars.value[j];
+                break;
+            }
+        }
+        if (prev == NULL) /* first defined fixed-size variable */
+            continue;
+
+        /* not the first fixed-size variable */
+        prev_end = prev->begin;
+        if (prev->ndims == 0)
+            prev_end += type_size(prev->type);
+        else
+            prev_end += type_size(prev->type) * prev->dsizes[0];
+
+        /* check the gap between the begin of this variable from the end of
+         * variable immediately before it */
+        if (varp->begin - prev_end) return 1;
+    }
+    return 0;
+}
+
 static void
 usage(char *cmd)
 {
@@ -1676,16 +1718,18 @@ usage(char *cmd)
     "       [-v var1[,...]] Output for variable(s) <var1>,... only\n"
     "       [-s]            Output variable size\n"
     "       [-g]            Output gap from the previous variable\n"
+    "       [-x]            Check gaps in fixed-size variables,\n"
+    "                       ouput 1 if gaps are found, 0 for otherwise.\n"
     "       file            Input netCDF file name\n";
     fprintf(stderr, help, cmd);
 }
 
-/*----< main() >-------------------------------------------------------*/
+/*----< main() >-------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
     extern int optind;
     char *filename, cmd[256];
-    int i, j, err, opt, nvars, print_var_size=0, print_gap=0;
+    int i, j, err, opt, nvars, print_var_size=0, print_gap=0, check_gap=0;
     NC *ncp;
     struct fspec *fspecp=NULL;
 
@@ -1693,13 +1737,15 @@ int main(int argc, char *argv[])
     strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
-    while ((opt = getopt(argc, argv, "v:sghq")) != EOF) {
+    while ((opt = getopt(argc, argv, "v:sghqx")) != EOF) {
         switch(opt) {
             case 'v': make_lvars (optarg, fspecp);
                       break;
             case 's': print_var_size = 1;
                       break;
             case 'g': print_gap = 1;
+                      break;
+            case 'x': check_gap = 1;
                       break;
             case 'h':
             default:  usage(cmd);
@@ -1738,6 +1784,15 @@ int main(int argc, char *argv[])
     err = ncmpii_hdr_get_NC(fd, ncp);
     if (err != NC_NOERR)
         fprintf(stderr,"Error: code=%s\n", ncmpi_strerror(err));
+
+    if (check_gap) {
+        int ret = check_gap_in_fixed_vars(ncp);
+        ncmpii_free_NC(ncp);
+        free(ncp);
+        close(fd);
+        printf("%d\n",ret);
+        return 0;
+    }
 
     /* print file name and format */
     printf("netcdf %s {\n",filename);
