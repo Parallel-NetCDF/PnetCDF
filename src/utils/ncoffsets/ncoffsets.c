@@ -1713,7 +1713,7 @@ static void
 usage(char *cmd)
 {
     char *help =
-"Usage: %s [-h] | [-v var1[,...]] [-b] [-g] file\n"
+"Usage: %s [-h] | [-x] | [-sgr] [-v var1[,...]] file\n"
 "       [-h]            Print help\n"
 "       [-v var1[,...]] Output for variable(s) <var1>,... only\n"
 "       [-s]            Output variable size. For record variables, output\n"
