@@ -10,21 +10,21 @@ ncoffsets \- print the starting/ending file offsets for netCDF variables
 .HP
 ncoffsets
 .nh
-\%[-v \fIvar1[,...]\fP]
-\%[-s]
-\%[-g]
-\%[-x]
-\%[-h]
+\%[\fB-h\fP] |
+\%[\fB-x\fP] |
+\%[\fB-sgr\fP]
+\%[\fB-v\fP var1[,...]]
 \%\fIfile\fP
 .hy
 .ft
 .SH DESCRIPTION
 \fBncoffsets\fP prints the file offsets information of variables defined in
-a given netCDF file
+a given netCDF file. For record variables, only the offsets of first record
+are printed. Add option \fB-r\fP to print the offsets of all records.
 
 If no argument is given, command usage information is printed.
 .SH OPTIONS
-.IP "\fB-v\fP \fIvar1[,...]\fP"
+.IP "\fB-v\fP var1[,...]"
 The output will include data values for the specified variables. One or more
 variables must be specified by name in the comma-delimited list following this
 option.  The list must be a single argument to the command, hence cannot
@@ -32,11 +32,15 @@ contain blanks or other white space characters.  The named variables must be
 valid netCDF variables in the input-file.  The default, without this option is
 to include data values for \fIall\fP variables in the output.
 .IP "\fB-s\fP"
-Print the variable size in bytes
+Print the variable size in bytes. For record variables, only the size of one
+record is printed.
 .IP "\fB-g\fP"
 Print the gap in bytes from the previous variable. For the first defined
 variable, print the gap from the end of file header. For record variables,
 there is no gap between records.
+.IP "\fB-r\fP"
+Output the offset information for all records of the selected record variables.
+Without this option, only the offsets of first record are printed.
 .IP "\fB-x\fP"
 Check all fixed-size variable for file space gaps in between any two
 immediately adjacent variables. It prints "1" on stdout if gaps are found,
@@ -48,46 +52,46 @@ Print the available command-line options
 .LP
 Print the file offset information for all variables in a netCDF file.
 
-% ncoffsets -s -g testfile.nc
+% ncoffsets -sg testfile.nc
 .nf
-netcdf testfile.nc {
+netcdf test_double.nc {
 //file format: CDF-1
 
 file header:
-        size   = 340 bytes
-        extent = 340 bytes
+	size   = 340 bytes
+	extent = 340 bytes
 
 dimensions:
-        x = 100
-        y = 100
-        z = 100
-        time = UNLIMITED // (100 currently)
+	x = 100
+	y = 100
+	z = 100
+	time = UNLIMITED // (100 currently)
 
 fixed-size variables:
-        double square(x, y):
-               size in bytes     =       80000
-               start file offset =         340
-               end   file offset =       80340
-               gap from prev var =           0
-        double cube(x, y, z):
-               size in bytes     =     8000000
-               start file offset =       80340
-               end   file offset =     8080340
-               gap from prev var =           0
+	double square(x, y):
+	       start file offset =         340
+	       end   file offset =       80340
+	       size in bytes     =       80000
+	       gap from prev var =           0
+	double cube(x, y, z):
+	       start file offset =       80340
+	       end   file offset =     8080340
+	       size in bytes     =     8000000
+	       gap from prev var =           0
 
 record variables:
-        double time(time):
-               size in bytes     =         800
-               start file offset =     8080340
-               end   file offset =     8081140
-               gap from prev var =           0
-        double xytime(time, x, y):
-               size in bytes     =     8000000
-               start file offset =     8080348
-               end   file offset =    16080348
-               gap from prev var =           0
+	double time(time):
+	       start file offset =     8080340    (record 0)
+	       end   file offset =     8081140    (record 0)
+	       size in bytes     =           8    (of one record)
+	       gap from prev var =           0
+	double xytime(time, x, y):
+	       start file offset =     8080348    (record 0)
+	       end   file offset =    16080348    (record 0)
+	       size in bytes     =       80000    (of one record)
+	       gap from prev var =           0
 }
-
+.LP
 Check if there are gaps in between two adjacent fixed-size variables.
 
 % ncoffsets -x testfile.nc

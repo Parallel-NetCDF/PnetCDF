@@ -1713,14 +1713,17 @@ static void
 usage(char *cmd)
 {
     char *help =
-    "Usage: %s [-h] | [-v var1[,...]] [-b] [-g] file\n"
-    "       [-h]            Print help\n"
-    "       [-v var1[,...]] Output for variable(s) <var1>,... only\n"
-    "       [-s]            Output variable size\n"
-    "       [-g]            Output gap from the previous variable\n"
-    "       [-x]            Check gaps in fixed-size variables,\n"
-    "                       ouput 1 if gaps are found, 0 for otherwise.\n"
-    "       file            Input netCDF file name\n";
+"Usage: %s [-h] | [-v var1[,...]] [-b] [-g] file\n"
+"       [-h]            Print help\n"
+"       [-v var1[,...]] Output for variable(s) <var1>,... only\n"
+"       [-s]            Output variable size. For record variables, output\n"
+"                       the size of one record only\n"
+"       [-g]            Output gap from the previous variable\n"
+"       [-r]            Output offsets for all records\n"
+"       [-x]            Check gaps in fixed-size variables, ouput 1 if gaps\n"
+"                       are found, 0 for otherwise.\n"
+"       file            Input netCDF file name\n"
+"*Parallel netCDF library version 1.7.0\n";
     fprintf(stderr, help, cmd);
 }
 
@@ -1729,7 +1732,8 @@ int main(int argc, char *argv[])
 {
     extern int optind;
     char *filename, cmd[256];
-    int i, j, err, opt, nvars, print_var_size=0, print_gap=0, check_gap=0;
+    int i, j, err, opt, nvars;
+    int print_var_size=0, print_gap=0, check_gap=0, print_all_rec=0;
     NC *ncp;
     struct fspec *fspecp=NULL;
 
@@ -1737,13 +1741,15 @@ int main(int argc, char *argv[])
     strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
-    while ((opt = getopt(argc, argv, "v:sghqx")) != EOF) {
+    while ((opt = getopt(argc, argv, "v:sghqxr")) != EOF) {
         switch(opt) {
             case 'v': make_lvars (optarg, fspecp);
                       break;
             case 's': print_var_size = 1;
                       break;
             case 'g': print_gap = 1;
+                      break;
+            case 'r': print_all_rec = 1;
                       break;
             case 'x': check_gap = 1;
                       break;
@@ -1900,13 +1906,13 @@ int main(int argc, char *argv[])
         /* print the data type, variable name, and its dimensions */
         printf("\t%6s %s:\n", type_str, line);
 
-        /* print variable size in bytes */
-        if (print_var_size)
-            printf("\t       size in bytes     =%12lld\n", size);
-
         /* print the starting and ending file offset of this variable */
         printf("\t       start file offset =%12lld\n", varp->begin);
         printf("\t       end   file offset =%12lld\n", varp->begin+size);
+
+        /* print variable size in bytes */
+        if (print_var_size)
+            printf("\t       size in bytes     =%12lld\n", size);
 
         /* print the gap between the begin of this variable from the end of
          * variable immediately before it */
@@ -1942,7 +1948,7 @@ int main(int argc, char *argv[])
     for (i=0; i<fspecp->nlvars; i++) {
         int j, ndims;
         char type_str[16], str[1024], line[1024];
-        long long size;
+        long long var_begin, var_end, size, numrecs;
         NC_var *varp = fspecp->varp[i];
 
         if (!IS_RECVAR(varp)) continue;
@@ -1958,8 +1964,6 @@ int main(int argc, char *argv[])
         if (ndims > 0) strcat(line,"(");
         for (j=0; j<ndims; j++) {
             NC_dim *dimp = ncp->dims.value[varp->dimids[j]];
-            if (dimp->size == NC_UNLIMITED)
-                size *= ncp->numrecs;
             sprintf(str, "%s%s", dimp->name->cp, j < ndims-1 ? ", " : ")");
             strcat(line, str);
         }
@@ -1967,13 +1971,23 @@ int main(int argc, char *argv[])
         /* print the data type, variable name, and its dimensions */
         printf("\t%6s %s:\n", type_str, line);
 
-        /* print variable size in bytes */
-        if (print_var_size)
-            printf("\t       size in bytes     =%12lld\n", size);
-
         /* print the starting and ending file offset of this variable */
-        printf("\t       start file offset =%12lld\n", varp->begin);
-        printf("\t       end   file offset =%12lld\n", varp->begin+size);
+        numrecs = ncp->numrecs;
+        var_begin = varp->begin;
+        var_end   = varp->begin + size;
+        if (print_all_rec == 0) numrecs = 1;
+        for (j=0; j<numrecs; j++) {
+            printf("\t       start file offset =%12lld    (record %d)\n", var_begin,j);
+            printf("\t       end   file offset =%12lld    (record %d)\n", var_end,j);
+            var_begin += ncp->recsize;
+            var_end   += ncp->recsize;
+        }
+
+        /* print variable size in bytes (one record only)
+         *   size *= ncp->numrecs;   (if for all records)
+         */
+        if (print_var_size)
+            printf("\t       size in bytes     =%12lld    (of one record)\n", size);
 
         /* print the gap between the begin of this variable from the end of
          * variable immediately before it */
