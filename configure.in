@@ -510,7 +510,7 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(FFIXEDFORMFLAG)
 
    # Checking for Fortran types also determines the Fortran name mangling
-   # and places the value into FCALLSCSUB as a the C name corresponding
+   # and places the value into FCALLSCSUB as the C name corresponding
    # to the Fortran name SUB 
    AC_FC_FUNC(sub, [FCALLSCSUB])
 
@@ -605,7 +605,7 @@ AC_PROG_INSTALL
 have_yacc_lex=no
 dnl Starting from PnetCDF 1.5.0, yacc and lex is no longer needed
 dnl see comments in src/utils/ncmpigen/Makefile.in for build rules for
-dnl ncmpigenyy.c and ncmpigentab.c. If rebuild is desired, un-comment
+dnl ncmpigenyy.c and ncmpigentab.c. If rebuild is desired, uncomment
 dnl below checking to check availability of yacc/lex/bison
 dnl AC_PROG_YACC
 dnl dnl if neither bison nor byacc is found, YACC will be set to yacc
@@ -967,13 +967,13 @@ dnl GNU coverage
 dnl
 dnl This is for internal testing only. It should not be enabled for building a
 dnl production PnetCDF. This is because when run an executable compiled with
-dnl converage will produce an output file named "gmon.out". Since coverage is
+dnl coverage will produce an output file named "gmon.out". Since coverage is
 dnl not parallelized, running a program compiled with coverage may cause
 dnl problems on concurrently writing to gmon.out in conflicts, possible
 dnl corrupting the file or program hanging. Thus, make target "ptest" should
 dnl also be disabled when coverage is enabled.
 dnl
-dnl After all other tests, optionally enable coverage.  we do this last
+dnl After all other tests, optionally enable coverage,  we do this last
 dnl because legend has it that sometimes on some compilers the coverage flags
 dnl mess up other checks
 dnl

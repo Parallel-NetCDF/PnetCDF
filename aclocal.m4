@@ -170,7 +170,7 @@ AC_DEFUN(UD_PROG_CXX,
 		case "$CXX" in
 		    '') ;;
 		    *)  # On some systems, a discovered compiler nevertheless
-			# won't work (because it's a script to a non-existant
+			# won't work (because it's a script to a non-existent
 			# executable, for example); thus, we check the
 			# compiler with a test program.  We also test
 			# for <iostream.h> and the standard C++ library
