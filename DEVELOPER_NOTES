@@ -25,6 +25,8 @@ Tasks immediately before a new release (must run in the following order)
       - edison.nersc.gov : Cray, Intel compilers
       - cetus.alcf.anl.gov : IBM BGQ, XL compilers, cross-compiling, Big Endian
       - k.aics.riken.jp : Fujitsu compilers, cross-compiling, Big Endian
+    * build benchmarks/FLASH-IO separately from PnetCDF (it has its own build
+      script, i.e. configure.in.)
 
  2. Set the release version.
     In file "configure.in", variable $PNETCDF_VERSION indicates the version.
@@ -149,6 +151,7 @@ Conform with netCDF
    2. Error strings (error.c v.s. netcdf-c/libdispatch/derror.c)
    3. trunk/src/lib/utf8proc.h v.s. netcdf-c/include/utf8proc.h
    4. trunk/src/lib/utf8proc.c v.s. netcdf-c/libdispatch/dutf8proc.c
+   5. trunk/src/lib/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h
 
 ===============================================================
 config.guess, config.sub, install-sh in directory scripts

@@ -101,7 +101,7 @@ ncmpi_strerror(int err)
     switch (err) {
         /* PnetCDF errors */
         case NC_ESMALL:
-            return "Size of MPI_Offset or MPI_Aint too small for requested format ";
+            return "Size of MPI_Offset or MPI_Aint too small for requested format";
             /* this usually happens on 32-bit machines where MPI_Offset and
              * MPI_Aint may be 4-byte integers and when the I/O request amount
              * or accessing file offset is > 2GB.
@@ -239,7 +239,7 @@ ncmpi_strerror(int err)
         case NC_ETYPESIZE_MISMATCH:
             return "filetype's size mismatches buftype's size * bufcount";
         case NC_ESTRICTCDF2:
-            return "Attempting CDF-5 operation on CDF-2 file";
+            return "Attempting CDF-5 operation on strict CDF or CDF-2 file";
         case NC_ENOTRECVAR:
             return "Attempting operation only for record variables";
         case NC_ENOTFILL:
