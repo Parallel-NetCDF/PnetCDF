@@ -3,7 +3,7 @@ dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.69)
 AC_INIT([PnetCDF-FLASH-IO], [1.0.0], [parallel-netcdf@mcs.anl.gov])
 
 dnl user defined macro for printing messages for debugging
@@ -76,6 +76,22 @@ dnl Check if MPIF90 is a valid MPI compiler
 FC=${MPIF90}
 AC_PROG_FC
 
+dnl Check if Fortran compiler is NAG
+dnl According to nagfor manual the command-line option to should version is -V
+dnl
+AC_DEFUN([UD_CHECK_FC_NAG],[
+    AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
+    [ac_cv_fc_compiler_nag=no
+     eval $MPIF90 -V </dev/null >& conftest.ver
+     _FC_VENDOR=`head -c 3 conftest.ver`
+     if test "x${_FC_VENDOR}" = xNAG ; then
+        ac_cv_fc_compiler_nag=yes
+     fi
+     ${RM} -f conftest.ver
+     unset _FC_VENDOR
+    ])
+])
+
 dnl Check if the Fortran compiler is an NAG
 UD_CHECK_FC_NAG
 if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
@@ -86,15 +102,15 @@ if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
 fi
 
 dnl find compile flags for handling files with .F .F90 .f90 extensions
-dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make UD_FC_PP_SRCEXT
-UD_FC_PP_SRCEXT([F90])
+dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make AC_FC_PP_SRCEXT
+AC_FC_PP_SRCEXT([F90])
 AC_SUBST(FCFLAGS_F90)
 
 FPPFLAGS=${FPPFLAGS-}
 AC_SUBST(FPPFLAGS)
 
 dnl compiler command-line define preprocess flag, result in FC_DEFINE
-UD_FC_PP_DEFINE
+AC_FC_PP_DEFINE
 
 AC_LANG_PUSH([Fortran])
 AC_FC_SRCEXT([f90])
@@ -116,8 +132,8 @@ fi
 AC_SUBST(MPIF90)
 FC=$MPIF90
 
-UD_FC_MODULE_FLAG
-dnl UD_FC_MODULE_FLAG defines FC_MODINC
+AC_FC_MODULE_FLAG
+dnl AC_FC_MODULE_FLAG defines FC_MODINC
 UD_MSG_DEBUG([FC_MODINC=$FC_MODINC])
 
 PNETCDF_INSTALL=""
