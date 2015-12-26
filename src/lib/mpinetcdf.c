@@ -553,6 +553,8 @@ ncmpi_inq_format(int  ncid,
     } else if (fIsSet(ncp->flags, NC_32BIT)){
         *formatp = NC_FORMAT_CLASSIC;
     } else {
+        /* this should not happen, because if ncid is valid, checking for
+         * valid CDF format should have already been done already */
         *formatp = NC_FORMAT_UNKNOWN;
     }
     return status;
@@ -585,6 +587,8 @@ ncmpi_inq_file_format(char *filename,
     } else if (fIsSet(ncp->flags, NC_32BIT)){
         *formatp = NC_FORMAT_CLASSIC;
     } else {
+        /* this should not happen, because if ncid is valid, checking for
+         * valid CDF format should have already been done already */
         *formatp = NC_FORMAT_UNKNOWN;
     }
     status = ncmpi_close(ncid);
