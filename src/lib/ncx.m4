@@ -278,7 +278,7 @@ swap8b(void *dst, const void *src)
 	op[5] = ip[6];
 	op[6] = ip[5];
 	op[7] = ip[4];
-#  endif
+#endif
 }
 # endif /* !vax */
 
@@ -354,7 +354,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
 		op += 8;
 		ip += 8;
 	}
-#  endif
+#endif
 }
 # endif /* !vax */
 
@@ -400,6 +400,10 @@ define(`GETI_CheckNegAssign',
        `ifelse(index(`$1',`u'), 0, ,
                index(`$2',`u'), 0,
                `if ($3 < 0) DEBUG_ASSIGN_ERROR(status, NC_ERANGE) /* because $4 is unsigned */')')dnl
+
+define(`Cast_Signed2Unsigned',
+       `ifelse(index(`$1',`u'), 0,
+               `ifelse(index(`$2',`u'), 0, , `(signed)')')')dnl
 
 dnl
 dnl For PUT APIs:
@@ -2202,7 +2206,10 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	while (nelems-- != 0)
 	{
 		GETI_CheckNegAssign($1, $2, *xp, tp)
-		*tp++ = ($2) (*xp++);  /* type cast from $1 to $2 */
+		*tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
+		/* TODO: skip the assignment if NC_ERANGE occurs?
+		 * However, if doing so, many nc_test/nf_test will fail
+		 */
 	}
 
 	*xpp = (const void *)xp;
@@ -2228,7 +2235,10 @@ ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	while (nelems-- != 0)
 	{
 		GETI_CheckNegAssign($1, $2, *xp, tp)
-		*tp++ = ($2)(*xp++);  /* type cast from $1 to $2 */
+		*tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
+		/* TODO: skip the assignment if NC_ERANGE occurs?
+		 * However, if doing so, many nc_test/nf_test will fail
+		 */
 	}
 
 	*xpp = (void *)(xp + rndup);
@@ -2252,7 +2262,7 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	{
 		const int lstatus = ncmpix_get_$1_$1(xp, &xx);
 		*tp = ($2)xx;
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
@@ -2322,13 +2332,13 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		const int lstatus = ncmpix_get_$1_$2(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
 	*xpp = (const void *)xp;
 	return status;
-#  endif
+#endif
 }
 ')dnl
 dnl dnl dnl
@@ -2348,7 +2358,7 @@ ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		const int lstatus = ncmpix_get_$1_$2(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
@@ -2408,7 +2418,10 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	{
 		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
 			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
+		*xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
+		/* TODO: skip the assignment if NC_ERANGE occurs?
+		 * However, if doing so, many nc_test/nf_test will fail
+		 */
 	}
 
 	*xpp = (void *)xp;
@@ -2435,7 +2448,10 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	{
 		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
 			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
+		*xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
+		/* TODO: skip the assignment if NC_ERANGE occurs?
+		 * However, if doing so, many nc_test/nf_test will fail
+		 */
 	}
 
 
@@ -2467,7 +2483,7 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 		xx = ($1) *tp;
 		{
 		int lstatus = ncmpix_put_$1_$1(xp, &xx);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 		}
 	}
@@ -2556,7 +2572,7 @@ ifelse( $1$2, intfloat,dnl
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		int lstatus = ncmpix_put_$1_$2(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
@@ -2582,7 +2598,7 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		int lstatus = ncmpix_put_$1_$2(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
@@ -2700,7 +2716,22 @@ dnl NCX_GETN_CHAR(uchar, schar)
 int
 ncmpix_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
-	NCX_GETN_Byte_Body
+	int status = NC_NOERR;
+	uchar *xp = (uchar *)(*xpp);
+
+	while (nelems-- != 0)
+	{
+		if (*xp > X_SCHAR_MAX)
+			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+		*tp++ = (schar) *xp++; /* type cast from uchar to schar */
+		/* TODO: skip the assignment if NC_ERANGE occurs?
+		 * However, if doing so, many nc_test/nf_test will fail
+		 */
+	}
+
+	*xpp = (const void *)xp;
+	return status;
+
 }
 dnl NCX_GETN_CHAR(uchar, uchar)
 int
@@ -2744,7 +2775,21 @@ dnl NCX_PUTN_CHAR(uchar, schar)
 int
 ncmpix_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
-	NCX_PUTN_Byte_Body
+	int status = NC_NOERR;
+	uchar *xp = (uchar *) *xpp;
+
+	while (nelems-- != 0)
+	{
+		if (*tp < 0)
+			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+		*xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
+		/* TODO: skip the assignment if NC_ERANGE occurs?
+		 * However, if doing so, many nc_test/nf_test will fail
+		 */
+	}
+
+	*xpp = (void *)xp;
+	return status;
 }
 dnl NCX_PUTN_CHAR(uchar, uchar)
 int
@@ -2766,7 +2811,32 @@ dnl NCX_PAD_PUTN_UCHAR(uchar, schar)
 int
 ncmpix_pad_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
-	NCX_PAD_PUTN_Byte_Body
+	int status = NC_NOERR;
+	MPI_Offset rndup = nelems % X_ALIGN;
+	uchar *xp = (uchar *) *xpp;
+
+	if (rndup)
+		rndup = X_ALIGN - rndup;
+
+	while (nelems-- != 0)
+	{
+		if (*tp < 0)
+			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+		*xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
+		/* TODO: skip the assignment if NC_ERANGE occurs?
+		 * However, if doing so, many nc_test/nf_test will fail
+		 */
+	}
+
+
+	if (rndup)
+	{
+		(void) memcpy(xp, nada, (size_t)rndup);
+		xp += rndup;
+	}
+
+	*xpp = (void *)xp;
+	return status;
 }
 dnl NCX_PAD_PUTN_UCHAR(uchar, uchar)
 int
@@ -3099,7 +3169,7 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_float(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
@@ -3157,7 +3227,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_float(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
@@ -3216,7 +3286,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_double(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
@@ -3273,7 +3343,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_double(xp, tp);
-		if (lstatus != NC_NOERR)
+		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
 
