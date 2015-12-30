@@ -12,6 +12,7 @@ Tasks immediately before a new release (must run in the following order)
                                               --enable-coverage
                                               --disable-cxx
                                               --disable-fortran
+                                              CPPFLAGS=-funsigned-char
                    and their combinations)
       - make check
       - make ptests

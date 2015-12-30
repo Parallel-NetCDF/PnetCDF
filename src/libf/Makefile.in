@@ -373,8 +373,6 @@ DIST_GARBAGE	= nfconfig_inc pnetcdf.inc
 
 all: $(LIB_CSRCS) nfconfig.inc $(LIBRARY)
 
-objs: $(LIB_CSRCS) nfconfig.inc $(LIB_OBJS)
-
 library $(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
 	$(RANLIB) $(LIBRARY)

@@ -84,7 +84,7 @@ GARBAGE    = $(LIBRARY) $(M4_SRCS:.m4=.c)
 
 DIST_GARBAGE = ncconfig.h pnetcdf.h
 
-all objs: $(LIBRARY)
+all: $(LIBRARY)
 
 $(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
