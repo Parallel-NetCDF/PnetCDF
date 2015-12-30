@@ -17,7 +17,7 @@ PACKING_LIST = Makefile.in
 
 PACKING_SUBDIRS = $(SUBDIRS)
 
-all objs: $(SUBDIRS)
+all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) $(MFLAGS) -C $@
 

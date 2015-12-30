@@ -27,7 +27,7 @@ PACKING_SUBDIRS = lib libcxx libf libf90 utils
 
 all: $(SUBDIRS) library
 $(SUBDIRS):
-	$(MAKE) $(MFLAGS) -C $@ objs
+	$(MAKE) $(MFLAGS) -C $@
 
 library: $(SUBDIRS)
 	@set -e; for i in $(OPT_DIRS); do ( $(MAKE) $(MFLAGS) -C $$i library; ) ; done

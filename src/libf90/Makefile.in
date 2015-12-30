@@ -65,8 +65,6 @@ DIST_GARBAGE	= api.f90 nfmpi_constants.f90
 
 all: $(LIBRARY)
 
-objs: $(LIB_OBJS)
-
 library $(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
 	$(RANLIB) $(LIBRARY)
