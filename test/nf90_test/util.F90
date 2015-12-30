@@ -90,22 +90,6 @@
       END IF
       END
 
-      logical FUNCTION INRANGE_SCHAR(VALUE, DATATYPE)
-      USE PNETCDF
-      IMPLICIT  NONE
-      DOUBLEPRECISION   VALUE
-      INTEGER           DATATYPE
-#include "tests.inc"
-      LOGICAL INRANGE
-
-      IF (DATATYPE .EQ. NF90_UBYTE) THEN
-          INRANGE_SCHAR = (VALUE .GE. X_BYTE_MIN) .AND. &
-                          (VALUE .LE. X_BYTE_MAX)
-      ELSE
-          INRANGE_SCHAR = INRANGE(VALUE, DATATYPE)
-      END IF
-      END
-
 
       logical FUNCTION INRANGE_FLOAT(VALUE, DATATYPE)
       USE PNETCDF
@@ -186,11 +170,9 @@
       integer           datatype
       integer           itype
 #include "tests.inc"
-      logical inrange_schar, inrange_float, inrange
+      logical inrange_float, inrange
 
-      if (itype .eq. NFT_INT1) then
-          inrange3 = inrange_schar(value, datatype)
-      else if (itype .eq. NFT_REAL) then
+      if (itype .eq. NFT_REAL) then
           inrange3 = inrange_float(value, datatype)
       else
           inrange3 = inrange(value, datatype)
