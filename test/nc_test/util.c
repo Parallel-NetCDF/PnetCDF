@@ -52,22 +52,7 @@ inRange_uchar(const double value, const nc_type datatype)
          * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
          */
         return(value >= 0 && value <= 255);
-    }
-    /* else */
-    return inRange(value, datatype);
-}
-
-static int
-inRange_schar(const double value, const nc_type datatype)
-{
-    /* check value of type datatype if within schar range */
-
-    if (datatype == NC_UBYTE) {
-        /* netCDF specification make a special case for type conversion between
-         * uchar and scahr: do not check for range error. See
-         * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
-         */
-        return(value >= X_CHAR_MIN && value <= X_CHAR_MAX);
+        /* this is to ensure value is within the range of uchar */
     }
     /* else */
     return inRange(value, datatype);
@@ -134,8 +119,8 @@ inRange_float(const double value, const nc_type datatype)
 }
 
 /* wrapper for inRange to handle special NC_BYTE/uchar adjustment */
-/* this function checks whether "value" of type "itype" is within the range
- * of "datatype".
+/* this function checks whether "value" to be casted to type "itype" is
+ * within the range of external "datatype".
  */
 int
 inRange3(const double    value, 
@@ -156,9 +141,6 @@ inRange3(const double    value,
      * and unsigned char.
      */
     switch (itype) {
-        case NCT_SCHAR:
-        case NCT_CHAR:
-            return inRange_schar(value, datatype);
         case NCT_UCHAR:
             return inRange_uchar(value, datatype);
         case NCT_FLOAT:
