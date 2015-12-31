@@ -209,7 +209,7 @@ test_ncmpi_get_var_$1(void)
             if (allInExtRange) {
                 if (allInIntRange) {
                     IF (err != NC_NOERR)
-                        error("%s", ncmpi_strerror(err));
+                        error("(%s) %s", ncmpii_err_code_name(err),ncmpi_strerror(err));
                 } else {
                     IF (err != NC_ERANGE)
                         error("Range error: err = %d", err);
@@ -884,6 +884,12 @@ test_ncmpi_get_att_$1(void)
             for (k = 0; k < ATT_LEN(i,j); k++) {
                 expect[k] = hash4(ATT_TYPE(i,j), -1, &k, NCT_ITYPE($1));
                 if (inRange3(expect[k],ATT_TYPE(i,j),NCT_ITYPE($1))) {
+		    /* netCDF specification make a special case for type
+		     * conversion between uchar and scahr: do not check for
+		     * range error. See
+		     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+                     */
+		    ifelse(`$1',`uchar', `if (ATT_TYPE(i,j) != NC_BYTE)')
                     allInIntRange = allInIntRange && expect[k] >= $1_min
                                 && expect[k] <= $1_max;
                 } else {
@@ -914,6 +920,7 @@ test_ncmpi_get_att_$1(void)
                                 error("varid: %d, ", i);
                                 error("att_name: %s, ", ATT_NAME(i,j));
                                 error("var_type: %s, ", s_nc_type(var_type[i]));
+                                error("att_type: %s, ", s_nc_type(ATT_TYPE(i,j)));
                                 error("element number: %d, ", k);
                                 error("expect: %g, ", expect[k]);
                                 error("got: %g", (double) value[k]);
