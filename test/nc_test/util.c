@@ -273,7 +273,7 @@ int nc2dbl ( const nc_type datatype, const void *p, double *result)
     if ( ! p ) return 2;
     if ( ! result ) return 3;
     switch (datatype) {
-        case NC_CHAR:   *result = *((char *)           p); break;
+        case NC_CHAR:   *result = *((signed char *)    p); break;
         case NC_BYTE:   *result = *((signed char *)    p); break;
         case NC_UBYTE:  *result = *((unsigned char *)  p); break;
         case NC_SHORT:  *result = *((short *)          p); break;
@@ -310,7 +310,11 @@ int dbl2nc ( const double d, const nc_type datatype, void *p)
         case NC_CHAR:
             r = floor(0.5+d);
             if ( r < text_min  ||  r > text_max )  return 2;
+#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
+            *((signed char*) p) = r;
+#else
             *((char   *) p) = r;
+#endif
             break;
         case NC_BYTE:
             r = floor(0.5+d);
@@ -390,7 +394,11 @@ hash( const nc_type type, const int rank, const MPI_Offset *index )
         switch (index[0]) {
             case 0:
                 switch (type) {  /* test if can get/put MIN value */
+#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
+                    case NC_CHAR:   return 0;
+#else
                     case NC_CHAR:   return X_CHAR_MIN;
+#endif
                     case NC_BYTE:   return X_BYTE_MIN;
                     case NC_SHORT:  return X_SHORT_MIN;
                     case NC_INT:    return X_INT_MIN;
@@ -698,6 +706,9 @@ put_atts(int ncid)
                     IF (err != NC_NOERR)
                         error("ncmpi_put_att_double: %s", ncmpi_strerror(err));
                 } else {
+                    /* when ATT_LEN(i,j) >= 3, some values returned for 3rd,
+                     * 4th, ... will be specially made to cause NC_ERANG
+                     */
                     IF (err != NC_ERANGE)
                         error("type-conversion range error: status = %d", err);
                 }
@@ -721,7 +732,7 @@ put_vars(int ncid)
         for (allInRange = 1, j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR) error("toMixedBase");
-            if (var_name[i][0] == 'c') {
+            if (var_name[i][0] == 'c') { /* var_type[i] is NC_CHAR */
                 text[j] = hash(var_type[i], var_rank[i], index);
             } else {
                 value[j]  = hash(var_type[i], var_rank[i], index);
