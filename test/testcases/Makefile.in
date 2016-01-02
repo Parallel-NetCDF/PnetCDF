@@ -48,6 +48,8 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            add_var.c \
            buftype_free.c \
            last_large_var.c \
+           check_type.c \
+           test_erange.c \
            redef1.c
 
 F77_SRCS = varn_intf.f \
@@ -168,6 +170,12 @@ buftype_free: buftype_free.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 last_large_var: last_large_var.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+check_type: check_type.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+test_erange: test_erange.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)

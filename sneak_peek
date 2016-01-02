@@ -57,6 +57,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/test_erange.c tests if the error code NC_ERANGE can be
+      correctly returned for two cases 1) get a NC_UBYTE value of 255 from a
+      netCDF file to a memory buffer of type signed char and 2) put a value
+      of -1 of signed char to a NC_UBYTE variable in a netCDF file
+    * test/testcases/check_type.c tests if the error codes can be correctly
+      returned when conflicted in-memory and extenal data types are used.
     * test/testcases/put_parameter.f tests the use of immutable write buffer
       (e.g. a buffer declared as PARAMETER). Note the buffer size must be
       smaller than 4KB.
