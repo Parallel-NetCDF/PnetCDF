@@ -1684,7 +1684,7 @@ test_ncmpi_rename_att(void)
                     error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
                 for (k = 0; k < attlength; k++) {
                     expect = hash(datatype, -1, &k);
-                    IF (text[k] != expect)
+                    IF (text[k] != (char)expect)
                         error("ncmpi_get_att_text: unexpected value");
                 }
             } else {

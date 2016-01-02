@@ -28,9 +28,14 @@
 #endif
 
 /* Limits of external types (based on those in ncx.h) */
-/* external NC_CHAR is always signed */
-#define X_CHAR_MIN	(-128)
-#define X_CHAR_MAX	127
+
+/* Note: In CDF format specification, NC_CHAR is for text characters, which
+ * is considered an 8-bit unsigned integer. Since it is for printable text
+ * characters, its values should range from 0 (X_CHAR_MIN) to 255 (X_CHAR_MAX).
+ */
+#define X_CHAR_MIN	0
+#define X_CHAR_MAX	255
+
 #define X_SCHAR_MIN     (-128)
 #define X_SCHAR_MAX     127
 #define X_UCHAR_MAX     255
@@ -712,7 +717,7 @@ extern int
 inRange3(const double value, const nc_type datatype, const nct_itype itype);
 
 extern int
-equal(const double x, const double y, nc_type extType, nct_itype itype);
+equal(double x, double y, nc_type extType, nct_itype itype);
 
 extern int
 int_vec_eq(const int *v1, const int *v2, const int n);

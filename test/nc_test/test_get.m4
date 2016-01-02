@@ -13,6 +13,9 @@ dnl
 
 define(`CheckText',`ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dnl
 
+define(`CheckTextChar',`ifelse(`$1',`text', `($2 == NC_CHAR) ||')')dnl
+define(`IfCheckTextChar',`ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
+
 undefine(`index')dnl
 dnl dnl dnl
 dnl
@@ -101,7 +104,8 @@ test_ncmpi_get_var1_$1(void)
 
             if (canConvert) {
                 if (inRange3(expect,var_type[i], NCT_ITYPE($1))) {
-                    if (expect >= $1_min && expect <= $1_max) {
+                    if (CheckTextChar($1, var_type[i])
+                        (expect >= $1_min && expect <= $1_max)) {
                         IF (err != NC_NOERR) {
                             error("%s", ncmpi_strerror(err));
                         } else {
@@ -198,8 +202,9 @@ test_ncmpi_get_var_$1(void)
                 error("error in toMixedBase 1");
             expect[j] = hash4(var_type[i], var_rank[i], index, NCT_ITYPE($1));
             if (inRange3(expect[j],var_type[i], NCT_ITYPE($1))) {
-                allInIntRange = allInIntRange && expect[j] >= $1_min
-                            && expect[j] <= $1_max;
+                IfCheckTextChar($1, var_type[i])
+                    allInIntRange = allInIntRange && expect[j] >= $1_min
+                                && expect[j] <= $1_max;
             } else {
                 allInExtRange = 0;
             }
@@ -219,8 +224,9 @@ test_ncmpi_get_var_$1(void)
                     error("OK or Range error: err = %d", err);
             }
             for (j = 0; j < nels; j++) {
-                if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))
-                        && expect[j] >= $1_min && expect[j] <= $1_max) {
+                if (CheckTextChar($1, var_type[i])
+                    (inRange3(expect[j],var_type[i],NCT_ITYPE($1)) &&
+                     expect[j] >= $1_min && expect[j] <= $1_max)) {
                     IF (!equal(value[j],expect[j],var_type[i],NCT_ITYPE($1))){
                         error("value read not that expected");
                         if (verbose) {
@@ -380,8 +386,9 @@ test_ncmpi_get_vara_$1(void)
                     index[d] += start[d];
                 expect[j] = hash4(var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 if (inRange3(expect[j],var_type[i], NCT_ITYPE($1))) {
-                    allInIntRange = allInIntRange && expect[j] >= $1_min
-                                && expect[j] <= $1_max;
+		    IfCheckTextChar($1, var_type[i])
+                        allInIntRange = allInIntRange && expect[j] >= $1_min
+                                    && expect[j] <= $1_max;
                 } else {
                     allInExtRange = 0;
                 }
@@ -404,8 +411,9 @@ test_ncmpi_get_vara_$1(void)
                         error("OK or Range error: err = %d", err);
                 }
                 for (j = 0; j < nels; j++) {
-                    if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))
-                            && expect[j] >= $1_min && expect[j] <= $1_max) {
+                    if (CheckTextChar($1, var_type[i])
+                        (inRange3(expect[j],var_type[i],NCT_ITYPE($1)) &&
+                         expect[j] >= $1_min && expect[j] <= $1_max)) {
                         IF (!equal(value[j],expect[j],var_type[i],NCT_ITYPE($1))){
                             error("value read not that expected");
                             if (verbose) {
@@ -572,8 +580,9 @@ test_ncmpi_get_vars_$1(void)
                     expect[j] = hash4(var_type[i], var_rank[i], index2, 
                         NCT_ITYPE($1));
                     if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))) {
-                        allInIntRange = allInIntRange && expect[j] >= $1_min
-                            && expect[j] <= $1_max;
+		        IfCheckTextChar($1, var_type[i])
+                            allInIntRange = allInIntRange && expect[j] >= $1_min
+                                && expect[j] <= $1_max;
                     } else {
                         allInExtRange = 0;
                     }
@@ -596,8 +605,9 @@ test_ncmpi_get_vars_$1(void)
                             error("OK or Range error: err = %d", err);
                     }
                     for (j = 0; j < nels; j++) {
-                        if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))
-                                && expect[j] >= $1_min && expect[j] <= $1_max) {
+                        if (CheckTextChar($1, var_type[i])
+                            (inRange3(expect[j],var_type[i],NCT_ITYPE($1)) &&
+                             expect[j] >= $1_min && expect[j] <= $1_max)) {
                             IF (!equal(value[j],expect[j],var_type[i], NCT_ITYPE($1))){
                                 error("value read not that expected");
                                 if (verbose) {
@@ -774,8 +784,9 @@ test_ncmpi_get_varm_$1(void)
                     expect[j] = hash4(var_type[i], var_rank[i], index2,
                         NCT_ITYPE($1));
                     if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))) {
-                        allInIntRange = allInIntRange && expect[j] >= $1_min
-                            && expect[j] <= $1_max;
+		        IfCheckTextChar($1, var_type[i])
+                            allInIntRange = allInIntRange && expect[j] >= $1_min
+                                && expect[j] <= $1_max;
                     } else {
                         allInExtRange = 0;
                     }
@@ -798,9 +809,9 @@ test_ncmpi_get_varm_$1(void)
                             error("OK or Range error: err = %d", err);
                     }
                     for (j = 0; j < nels; j++) {
-                        if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))
-                                && expect[j] >= $1_min 
-                                && expect[j] <= $1_max) {
+                        if (CheckTextChar($1, var_type[i])
+                            (inRange3(expect[j],var_type[i],NCT_ITYPE($1)) &&
+                             expect[j] >= $1_min && expect[j] <= $1_max)) {
                             IF (!equal(value[j],expect[j],var_type[i], NCT_ITYPE($1))){
                                 error("value read not that expected");
                                 if (verbose) {
@@ -889,9 +900,10 @@ test_ncmpi_get_att_$1(void)
 		     * range error. See
 		     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
                      */
+		    IfCheckTextChar($1, ATT_TYPE(i,j))
 		    ifelse(`$1',`uchar', `if (ATT_TYPE(i,j) != NC_BYTE)')
-                    allInIntRange = allInIntRange && expect[k] >= $1_min
-                                && expect[k] <= $1_max;
+                        allInIntRange = allInIntRange && expect[k] >= $1_min
+                                    && expect[k] <= $1_max;
                 } else {
                     allInExtRange = 0;
                 }
@@ -911,8 +923,9 @@ test_ncmpi_get_att_$1(void)
                         error("OK or Range error: err = %d", err);
                 }
                 for (k = 0; k < ATT_LEN(i,j); k++) {
-                    if (inRange3(expect[k],ATT_TYPE(i,j),NCT_ITYPE($1))
-                            && expect[k] >= $1_min && expect[k] <= $1_max) {
+                    if (CheckTextChar($1, ATT_TYPE(i,j))
+                        (inRange3(expect[k],ATT_TYPE(i,j),NCT_ITYPE($1)) &&
+                         expect[k] >= $1_min && expect[k] <= $1_max)) {
                         IF (!equal(value[k],expect[k],ATT_TYPE(i,j), NCT_ITYPE($1))){
                             error("value read not that expected");
                             if (verbose) {
