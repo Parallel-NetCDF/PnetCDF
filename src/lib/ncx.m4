@@ -2721,7 +2721,7 @@ ncmpix_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 
 	while (nelems-- != 0)
 	{
-		if (*xp > X_SCHAR_MAX)
+		if (*xp > SCHAR_MAX)
 			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
 		*tp++ = (schar) *xp++; /* type cast from uchar to schar */
 		/* TODO: skip the assignment if NC_ERANGE occurs?
@@ -2731,7 +2731,6 @@ ncmpix_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 
 	*xpp = (const void *)xp;
 	return status;
-
 }
 dnl NCX_GETN_CHAR(uchar, uchar)
 int
@@ -2753,7 +2752,25 @@ dnl NCX_PAD_GETN_CHAR(uchar, schar)
 int
 ncmpix_pad_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
-	NCX_PAD_GETN_Byte_Body
+        int status = NC_NOERR;
+        MPI_Offset rndup = nelems % X_ALIGN;
+        uchar *xp = (uchar *) *xpp;
+        
+        if (rndup)
+                rndup = X_ALIGN - rndup;
+        
+        while (nelems-- != 0)
+        {       
+                if (*xp > SCHAR_MAX)
+                        DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+                *tp++ = (schar) *xp++; /* type cast from uchar to schar */
+                /* TODO: skip the assignment if NC_ERANGE occurs?
+                 * However, if doing so, many nc_test/nf_test will fail
+                 */
+        }
+        
+        *xpp = (void *)(xp + rndup);
+        return status;
 }
 dnl NCX_PAD_GETN_CHAR(uchar, uchar)
 int
