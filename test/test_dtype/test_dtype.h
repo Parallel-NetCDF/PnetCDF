@@ -6,7 +6,7 @@
 #define TEST_NCTYPE NC_DOUBLE
 /* available memory types	VS	cooresponding MPI types 
 	0 - unsigned char		MPI_UNSIGNED_CHAR
-	1 - signed char			MPI_BYTE
+	1 - signed char			MPI_SIGNED_CHAR
 	2 - char			MPI_CHAR
 	3 - short			MPI_SHORT
 	4 - int				MPI_INT
@@ -57,7 +57,7 @@
     break;							\
   case 1:							\
     nc_etype = NC_BYTE; 					\
-    mpi_etype = MPI_BYTE; 					\
+    mpi_etype = MPI_SIGNED_CHAR; 				\
     break;							\
   case 2:							\
     nc_etype = NC_CHAR; 					\

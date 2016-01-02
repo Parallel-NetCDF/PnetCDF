@@ -1012,7 +1012,7 @@ MPI_Datatype
 nc_mpi_type(nc_type type)
 {
     switch(type){
-        case NC_BYTE :   return MPI_BYTE;
+        case NC_BYTE :   return MPI_SIGNED_CHAR;
         case NC_CHAR :   return MPI_CHAR;
         case NC_SHORT :  return MPI_SHORT;
         case NC_INT :    return MPI_INT;
