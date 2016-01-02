@@ -157,8 +157,8 @@ inRange3(const double    value,
  *  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
  */
 int
-equal(const double x, 
-      const double y, 
+equal(double x, 
+      double y, 
       nc_type      extType,     /* external data type */
       nct_itype    itype)
 {
@@ -168,6 +168,16 @@ equal(const double x,
 
     epsilon = extType == NC_FLOAT ||
               itype == NCT_FLOAT ? flt_epsilon : dbl_epsilon;
+
+    if (extType == NC_CHAR && itype == NCT_TEXT) {
+        /* because in-memory data type char can be signed or unsigned,
+         * type cast the value from external NC_CHAR before the comparison
+         */
+        char x2 = (char) x;
+        char y2 = (char) y;
+        x = x2;
+        y = y2;
+    }
     return ABS(x-y) <= epsilon * MAX( ABS(x), ABS(y));
 }
 
@@ -309,7 +319,14 @@ int dbl2nc ( const double d, const nc_type datatype, void *p)
     switch (datatype) {
         case NC_CHAR:
             r = floor(0.5+d);
+            /* d is obtained from hash() which may be set to X_CHAR_MIN (0)
+             * or X_CHAR_MAX (255). When in-memory data type char is signed
+             * (i.e. ranged from -128 to 127), we should allow type cast a
+             * a value > 127 to signed char without reporting it as a range
+             * error.
             if ( r < text_min  ||  r > text_max )  return 2;
+             */
+            if ( r < X_CHAR_MIN || r > X_CHAR_MAX ) return 2;
 #if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
             *((signed char*) p) = r;
 #else
@@ -394,11 +411,7 @@ hash( const nc_type type, const int rank, const MPI_Offset *index )
         switch (index[0]) {
             case 0:
                 switch (type) {  /* test if can get/put MIN value */
-#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
-                    case NC_CHAR:   return 0;
-#else
                     case NC_CHAR:   return X_CHAR_MIN;
-#endif
                     case NC_BYTE:   return X_BYTE_MIN;
                     case NC_SHORT:  return X_SHORT_MIN;
                     case NC_INT:    return X_INT_MIN;
@@ -846,7 +859,7 @@ check_vars(int  ncid)
                 err = ncmpi_get_var1_text(ncid, i, index, &text);
                 IF (err != NC_NOERR)
                     error("ncmpi_get_var1_text: %s", ncmpi_strerror(err));
-                IF (text != expect) {
+                IF (text != (char)expect) {
                     error("Var %s value read 0x%02x not that expected 0x%02x ",
                           var_name[i], text, (char)expect);
                     print_n_size_t(var_rank[i], index);
@@ -910,7 +923,7 @@ check_atts(int  ncid)
                 IF (err != NC_NOERR)
                     error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
                 for (k = 0; k < ATT_LEN(i,j); k++) {
-                    IF (text[k] != hash(datatype, -1, &k)) {
+                    if (text[k] != (char)(hash(datatype, -1, &k))) {
                         error("ncmpi_get_att_text: unexpected value");
                     } else {
                         nok++;
