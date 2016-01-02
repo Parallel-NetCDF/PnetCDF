@@ -139,7 +139,7 @@ ncmpi_$1_varn_$2(int                ncid,
 ')dnl
 
 VARN(iput, text,      char,               MPI_CHAR)
-VARN(iput, schar,     schar,              MPI_BYTE)
+VARN(iput, schar,     schar,              MPI_SIGNED_CHAR)
 VARN(iput, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARN(iput, short,     short,              MPI_SHORT)
 VARN(iput, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -152,7 +152,7 @@ VARN(iput, longlong,  long long,          MPI_LONG_LONG_INT)
 VARN(iput, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 VARN(iget, text,      char,               MPI_CHAR)
-VARN(iget, schar,     schar,              MPI_BYTE)
+VARN(iget, schar,     schar,              MPI_SIGNED_CHAR)
 VARN(iget, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARN(iget, short,     short,              MPI_SHORT)
 VARN(iget, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -165,7 +165,7 @@ VARN(iget, longlong,  long long,          MPI_LONG_LONG_INT)
 VARN(iget, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 VARN(bput, text,      char,               MPI_CHAR)
-VARN(bput, schar,     schar,              MPI_BYTE)
+VARN(bput, schar,     schar,              MPI_SIGNED_CHAR)
 VARN(bput, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARN(bput, short,     short,              MPI_SHORT)
 VARN(bput, ushort,    ushort,             MPI_UNSIGNED_SHORT)

@@ -105,7 +105,7 @@ ncmpi_i$1_var_$2(int              ncid,
 ')dnl
 
 VAR(put, text,      char,               MPI_CHAR)
-VAR(put, schar,     schar,              MPI_BYTE)
+VAR(put, schar,     schar,              MPI_SIGNED_CHAR)
 VAR(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VAR(put, short,     short,              MPI_SHORT)
 VAR(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -118,7 +118,7 @@ VAR(put, longlong,  long long,          MPI_LONG_LONG_INT)
 VAR(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 VAR(get, text,      char,               MPI_CHAR)
-VAR(get, schar,     schar,              MPI_BYTE)
+VAR(get, schar,     schar,              MPI_SIGNED_CHAR)
 VAR(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VAR(get, short,     short,              MPI_SHORT)
 VAR(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -203,7 +203,7 @@ ncmpi_i$1_var1_$2(int               ncid,
 ')dnl
 
 VAR1(put, text,      char,               MPI_CHAR)
-VAR1(put, schar,     schar,              MPI_BYTE)
+VAR1(put, schar,     schar,              MPI_SIGNED_CHAR)
 VAR1(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VAR1(put, short,     short,              MPI_SHORT)
 VAR1(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -216,7 +216,7 @@ VAR1(put, longlong,  long long,          MPI_LONG_LONG_INT)
 VAR1(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 VAR1(get, text,      char,               MPI_CHAR)
-VAR1(get, schar,     schar,              MPI_BYTE)
+VAR1(get, schar,     schar,              MPI_SIGNED_CHAR)
 VAR1(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VAR1(get, short,     short,              MPI_SHORT)
 VAR1(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -292,7 +292,7 @@ ncmpi_i$1_vara_$2(int               ncid,
 ')dnl
 
 VARA(put, text,      char,               MPI_CHAR)
-VARA(put, schar,     schar,              MPI_BYTE)
+VARA(put, schar,     schar,              MPI_SIGNED_CHAR)
 VARA(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARA(put, short,     short,              MPI_SHORT)
 VARA(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -305,7 +305,7 @@ VARA(put, longlong,  long long,          MPI_LONG_LONG_INT)
 VARA(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 VARA(get, text,      char,               MPI_CHAR)
-VARA(get, schar,     schar,              MPI_BYTE)
+VARA(get, schar,     schar,              MPI_SIGNED_CHAR)
 VARA(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARA(get, short,     short,              MPI_SHORT)
 VARA(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -383,7 +383,7 @@ ncmpi_i$1_vars_$2(int               ncid,
 ')dnl
 
 VARS(put, text,      char,               MPI_CHAR)
-VARS(put, schar,     schar,              MPI_BYTE)
+VARS(put, schar,     schar,              MPI_SIGNED_CHAR)
 VARS(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARS(put, short,     short,              MPI_SHORT)
 VARS(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -396,7 +396,7 @@ VARS(put, longlong,  long long,          MPI_LONG_LONG_INT)
 VARS(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 VARS(get, text,      char,               MPI_CHAR)
-VARS(get, schar,     schar,              MPI_BYTE)
+VARS(get, schar,     schar,              MPI_SIGNED_CHAR)
 VARS(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARS(get, short,     short,              MPI_SHORT)
 VARS(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -488,7 +488,7 @@ ncmpi_i$1_varm_$2(int               ncid,
 ')dnl
 
 VARM(put, text,      char,               MPI_CHAR)
-VARM(put, schar,     schar,              MPI_BYTE)
+VARM(put, schar,     schar,              MPI_SIGNED_CHAR)
 VARM(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARM(put, short,     short,              MPI_SHORT)
 VARM(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -501,7 +501,7 @@ VARM(put, longlong,  long long,          MPI_LONG_LONG_INT)
 VARM(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 VARM(get, text,      char,               MPI_CHAR)
-VARM(get, schar,     schar,              MPI_BYTE)
+VARM(get, schar,     schar,              MPI_SIGNED_CHAR)
 VARM(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
 VARM(get, short,     short,              MPI_SHORT)
 VARM(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)

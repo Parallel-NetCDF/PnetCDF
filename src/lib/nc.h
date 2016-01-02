@@ -591,7 +591,7 @@ struct NC {
                                    buftype == MPI_DOUBLE         || \
                                    buftype == MPI_INT            || \
                                    buftype == MPI_CHAR           || \
-                                   buftype == MPI_BYTE           || \
+                                   buftype == MPI_SIGNED_CHAR    || \
                                    buftype == MPI_UNSIGNED_CHAR  || \
                                    buftype == MPI_SHORT          || \
                                    buftype == MPI_UNSIGNED_SHORT || \

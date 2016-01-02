@@ -95,7 +95,7 @@ ncmpi_put_varn_$1$5(int       ncid,
 ')dnl
 
 PUT_VARN(text,      char,               MPI_CHAR,               INDEP_IO)
-PUT_VARN(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+PUT_VARN(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 PUT_VARN(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 PUT_VARN(short,     short,              MPI_SHORT,              INDEP_IO)
 PUT_VARN(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -108,7 +108,7 @@ PUT_VARN(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 PUT_VARN(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 PUT_VARN(text,      char,               MPI_CHAR,               COLL_IO, _all)
-PUT_VARN(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+PUT_VARN(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 PUT_VARN(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 PUT_VARN(short,     short,              MPI_SHORT,              COLL_IO, _all)
 PUT_VARN(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -169,7 +169,7 @@ ncmpi_put_varn1_$1$5(int                ncid,
 ')dnl
 
 PUT_VARN1(text,      char,               MPI_CHAR,               INDEP_IO)
-PUT_VARN1(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+PUT_VARN1(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 PUT_VARN1(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 PUT_VARN1(short,     short,              MPI_SHORT,              INDEP_IO)
 PUT_VARN1(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -182,7 +182,7 @@ PUT_VARN1(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 PUT_VARN1(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 PUT_VARN1(text,      char,               MPI_CHAR,               COLL_IO, _all)
-PUT_VARN1(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+PUT_VARN1(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 PUT_VARN1(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 PUT_VARN1(short,     short,              MPI_SHORT,              COLL_IO, _all)
 PUT_VARN1(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -246,7 +246,7 @@ ncmpi_put_varna_$1$5(int                ncid,
 ')dnl
 
 PUT_VARNA(text,      char,               MPI_CHAR,               INDEP_IO)
-PUT_VARNA(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+PUT_VARNA(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 PUT_VARNA(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 PUT_VARNA(short,     short,              MPI_SHORT,              INDEP_IO)
 PUT_VARNA(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -259,7 +259,7 @@ PUT_VARNA(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 PUT_VARNA(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 PUT_VARNA(text,      char,               MPI_CHAR,               COLL_IO, _all)
-PUT_VARNA(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+PUT_VARNA(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 PUT_VARNA(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 PUT_VARNA(short,     short,              MPI_SHORT,              COLL_IO, _all)
 PUT_VARNA(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -326,7 +326,7 @@ ncmpi_put_varns_$1$5(int                ncid,
 ')dnl
 
 PUT_VARNS(text,      char,               MPI_CHAR,               INDEP_IO)
-PUT_VARNS(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+PUT_VARNS(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 PUT_VARNS(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 PUT_VARNS(short,     short,              MPI_SHORT,              INDEP_IO)
 PUT_VARNS(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -339,7 +339,7 @@ PUT_VARNS(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 PUT_VARNS(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 PUT_VARNS(text,      char,               MPI_CHAR,               COLL_IO, _all)
-PUT_VARNS(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+PUT_VARNS(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 PUT_VARNS(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 PUT_VARNS(short,     short,              MPI_SHORT,              COLL_IO, _all)
 PUT_VARNS(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -409,7 +409,7 @@ ncmpi_put_varnm_$1$5(int                ncid,
 ')dnl
 
 PUT_VARNM(text,      char,               MPI_CHAR,               INDEP_IO)
-PUT_VARNM(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+PUT_VARNM(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 PUT_VARNM(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 PUT_VARNM(short,     short,              MPI_SHORT,              INDEP_IO)
 PUT_VARNM(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -422,7 +422,7 @@ PUT_VARNM(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 PUT_VARNM(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 PUT_VARNM(text,      char,               MPI_CHAR,               COLL_IO, _all)
-PUT_VARNM(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+PUT_VARNM(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 PUT_VARNM(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 PUT_VARNM(short,     short,              MPI_SHORT,              COLL_IO, _all)
 PUT_VARNM(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -480,7 +480,7 @@ ncmpi_get_varn_$1$5(int       ncid,
 ')dnl
 
 GET_VARN(text,      char,               MPI_CHAR,               INDEP_IO)
-GET_VARN(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+GET_VARN(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 GET_VARN(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 GET_VARN(short,     short,              MPI_SHORT,              INDEP_IO)
 GET_VARN(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -493,7 +493,7 @@ GET_VARN(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 GET_VARN(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 GET_VARN(text,      char,               MPI_CHAR,               COLL_IO, _all)
-GET_VARN(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+GET_VARN(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 GET_VARN(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 GET_VARN(short,     short,              MPI_SHORT,              COLL_IO, _all)
 GET_VARN(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -554,7 +554,7 @@ ncmpi_get_varn1_$1$5(int                ncid,
 ')dnl
 
 GET_VARN1(text,      char,               MPI_CHAR,               INDEP_IO)
-GET_VARN1(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+GET_VARN1(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 GET_VARN1(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 GET_VARN1(short,     short,              MPI_SHORT,              INDEP_IO)
 GET_VARN1(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -567,7 +567,7 @@ GET_VARN1(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 GET_VARN1(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 GET_VARN1(text,      char,               MPI_CHAR,               COLL_IO, _all)
-GET_VARN1(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+GET_VARN1(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 GET_VARN1(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 GET_VARN1(short,     short,              MPI_SHORT,              COLL_IO, _all)
 GET_VARN1(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -631,7 +631,7 @@ ncmpi_get_varna_$1$5(int                ncid,
 ')dnl
 
 GET_VARNA(text,      char,               MPI_CHAR,               INDEP_IO)
-GET_VARNA(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+GET_VARNA(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 GET_VARNA(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 GET_VARNA(short,     short,              MPI_SHORT,              INDEP_IO)
 GET_VARNA(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -644,7 +644,7 @@ GET_VARNA(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 GET_VARNA(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 GET_VARNA(text,      char,               MPI_CHAR,               COLL_IO, _all)
-GET_VARNA(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+GET_VARNA(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 GET_VARNA(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 GET_VARNA(short,     short,              MPI_SHORT,              COLL_IO, _all)
 GET_VARNA(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -711,7 +711,7 @@ ncmpi_get_varns_$1$5(int                ncid,
 ')dnl
 
 GET_VARNS(text,      char,               MPI_CHAR,               INDEP_IO)
-GET_VARNS(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+GET_VARNS(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 GET_VARNS(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 GET_VARNS(short,     short,              MPI_SHORT,              INDEP_IO)
 GET_VARNS(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -724,7 +724,7 @@ GET_VARNS(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 GET_VARNS(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 GET_VARNS(text,      char,               MPI_CHAR,               COLL_IO, _all)
-GET_VARNS(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+GET_VARNS(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 GET_VARNS(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 GET_VARNS(short,     short,              MPI_SHORT,              COLL_IO, _all)
 GET_VARNS(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)
@@ -794,7 +794,7 @@ ncmpi_get_varnm_$1$5(int                ncid,
 ')dnl
 
 GET_VARNM(text,      char,               MPI_CHAR,               INDEP_IO)
-GET_VARNM(schar,     signed char,        MPI_BYTE,               INDEP_IO)
+GET_VARNM(schar,     signed char,        MPI_SIGNED_CHAR,        INDEP_IO)
 GET_VARNM(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      INDEP_IO)
 GET_VARNM(short,     short,              MPI_SHORT,              INDEP_IO)
 GET_VARNM(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     INDEP_IO)
@@ -807,7 +807,7 @@ GET_VARNM(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
 GET_VARNM(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
 
 GET_VARNM(text,      char,               MPI_CHAR,               COLL_IO, _all)
-GET_VARNM(schar,     signed char,        MPI_BYTE,               COLL_IO, _all)
+GET_VARNM(schar,     signed char,        MPI_SIGNED_CHAR,        COLL_IO, _all)
 GET_VARNM(uchar,     unsigned char,      MPI_UNSIGNED_CHAR,      COLL_IO, _all)
 GET_VARNM(short,     short,              MPI_SHORT,              COLL_IO, _all)
 GET_VARNM(ushort,    unsigned short,     MPI_UNSIGNED_SHORT,     COLL_IO, _all)

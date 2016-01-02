@@ -21,7 +21,7 @@ int ncmpi_$1_varn_$6$4(int ncid, int varid, int num,
 ')dnl
 
 VARN(put, const, WRITE_REQ,     , INDEP_IO, text,      char,               MPI_CHAR)
-VARN(put, const, WRITE_REQ,     , INDEP_IO, schar,     signed char,        MPI_BYTE)
+VARN(put, const, WRITE_REQ,     , INDEP_IO, schar,     signed char,        MPI_SIGNED_CHAR)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, short,     short,              MPI_SHORT)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, int,       int,                MPI_INT)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, float,     float,              MPI_FLOAT)
@@ -39,7 +39,7 @@ VARN(put, const, WRITE_REQ,     , INDEP_IO, ulonglong, unsigned long long, MPI_U
 /* End Skip Prototypes for Fortran binding */
 
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, text,      char,               MPI_CHAR)
-VARN(put, const, WRITE_REQ, _all,  COLL_IO, schar,     signed char,        MPI_BYTE)
+VARN(put, const, WRITE_REQ, _all,  COLL_IO, schar,     signed char,        MPI_SIGNED_CHAR)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, short,     short,              MPI_SHORT)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, int,       int,                MPI_INT)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, float,     float,              MPI_FLOAT)
@@ -57,7 +57,7 @@ VARN(put, const, WRITE_REQ, _all,  COLL_IO, ulonglong, unsigned long long, MPI_U
 /* End Skip Prototypes for Fortran binding */
 
 VARN(get,      ,  READ_REQ,     , INDEP_IO, text,      char,               MPI_CHAR)
-VARN(get,      ,  READ_REQ,     , INDEP_IO, schar,     signed char,        MPI_BYTE)
+VARN(get,      ,  READ_REQ,     , INDEP_IO, schar,     signed char,        MPI_SIGNED_CHAR)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, short,     short,              MPI_SHORT)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, int,       int,                MPI_INT)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, float,     float,              MPI_FLOAT)
@@ -75,7 +75,7 @@ VARN(get,      ,  READ_REQ,     , INDEP_IO, ulonglong, unsigned long long, MPI_U
 /* End Skip Prototypes for Fortran binding */
 
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, text,      char,               MPI_CHAR)
-VARN(get,      ,  READ_REQ, _all,  COLL_IO, schar,     signed char,        MPI_BYTE)
+VARN(get,      ,  READ_REQ, _all,  COLL_IO, schar,     signed char,        MPI_SIGNED_CHAR)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, short,     short,              MPI_SHORT)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, int,       int,                MPI_INT)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, float,     float,              MPI_FLOAT)

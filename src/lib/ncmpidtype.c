@@ -26,8 +26,8 @@
   We unfortunately need to wrap all these types in case they aren't defined.
 
   Return:
-  On success, one of MPI_CHAR, MPI_UNSIGNED_CHAR, MPI_BYTE, MPI_SHORT,
-  MPI_INT, MPI_LONG, MPI_FLOAT, and MPI_DOUBLE.
+  On success, one of MPI_CHAR, MPI_SIGNED_CHAR, MPI_UNSIGNED_CHAR, MPI_BYTE,
+  MPI_SHORT, MPI_INT, MPI_LONG, MPI_FLOAT, and MPI_DOUBLE.
   On failure, MPI_DATATYPE_NULL.
 @*/
 static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
@@ -44,9 +44,13 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
     if (type == MPI_UNSIGNED_CHAR)
         return  MPI_UNSIGNED_CHAR;
 
+    /* signed char types */
+    if (type == MPI_SIGNED_CHAR)
+        return  MPI_SIGNED_CHAR;
+
 #ifdef HAVE_MPI_INTEGER1
     if (type == MPI_INTEGER1)
-        return  MPI_BYTE;
+        return  MPI_SIGNED_CHAR;
 #endif
     if (type == MPI_BYTE)
         return  MPI_BYTE;

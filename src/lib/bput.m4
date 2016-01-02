@@ -95,7 +95,7 @@ ncmpi_bput_var_$1(int       ncid,
 ')dnl
 
 BPUT_VAR_TYPE(text,      char,               MPI_CHAR)
-BPUT_VAR_TYPE(schar,     schar,              MPI_BYTE)
+BPUT_VAR_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
 BPUT_VAR_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
 BPUT_VAR_TYPE(short,     short,              MPI_SHORT)
 BPUT_VAR_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -174,7 +174,7 @@ ncmpi_bput_var1_$1(int               ncid,
 ')dnl
 
 BPUT_VAR1_TYPE(text,      char,               MPI_CHAR)
-BPUT_VAR1_TYPE(schar,     schar,              MPI_BYTE)
+BPUT_VAR1_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
 BPUT_VAR1_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
 BPUT_VAR1_TYPE(short,     short,              MPI_SHORT)
 BPUT_VAR1_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -245,7 +245,7 @@ ncmpi_bput_vara_$1(int               ncid,
 ')dnl
 
 BPUT_VARA_TYPE(text,      char,               MPI_CHAR)
-BPUT_VARA_TYPE(schar,     schar,              MPI_BYTE)
+BPUT_VARA_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
 BPUT_VARA_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
 BPUT_VARA_TYPE(short,     short,              MPI_SHORT)
 BPUT_VARA_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -318,7 +318,7 @@ ncmpi_bput_vars_$1(int               ncid,
 ')dnl
 
 BPUT_VARS_TYPE(text,      char,               MPI_CHAR)
-BPUT_VARS_TYPE(schar,     schar,              MPI_BYTE)
+BPUT_VARS_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
 BPUT_VARS_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
 BPUT_VARS_TYPE(short,     short,              MPI_SHORT)
 BPUT_VARS_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
@@ -392,7 +392,7 @@ ncmpi_bput_varm_$1(int               ncid,
 ')dnl
 
 BPUT_VARM_TYPE(text,      char,               MPI_CHAR)
-BPUT_VARM_TYPE(schar,     schar,              MPI_BYTE)
+BPUT_VARM_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
 BPUT_VARM_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
 BPUT_VARM_TYPE(short,     short,              MPI_SHORT)
 BPUT_VARM_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)

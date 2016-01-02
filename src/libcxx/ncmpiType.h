@@ -24,14 +24,14 @@ namespace PnetCDF
     enum ncmpiType
     {
       ncmpi_BYTE     = NC_BYTE, 	//!< signed 1 byte integer
-      ncmpi_CHAR     = NC_CHAR,	//!< ISO/ASCII character
+      ncmpi_CHAR     = NC_CHAR,		//!< ISO/ASCII character
       ncmpi_SHORT    = NC_SHORT, 	//!< signed 2 byte integer
-      ncmpi_INT      = NC_INT,	//!< signed 4 byte integer
+      ncmpi_INT      = NC_INT,		//!< signed 4 byte integer
       ncmpi_FLOAT    = NC_FLOAT, 	//!< single precision floating point number
       ncmpi_DOUBLE   = NC_DOUBLE, 	//!< double precision floating point number
       ncmpi_UBYTE    = NC_UBYTE,	//!< unsigned 1 byte int
       ncmpi_USHORT   = NC_USHORT,	//!< unsigned 2-byte int
-      ncmpi_UINT     = NC_UINT,	//!< unsigned 4-byte int
+      ncmpi_UINT     = NC_UINT,		//!< unsigned 4-byte int
       ncmpi_INT64    = NC_INT64,	//!< signed 8-byte int
       ncmpi_UINT64   = NC_UINT64,	//!< unsigned 8-byte int
 
@@ -40,7 +40,7 @@ namespace PnetCDF
       ncmpi_VLEN     = NC_VLEN,   	//!< "NcVlen type"
       ncmpi_OPAQUE   = NC_OPAQUE, 	//!< "NcOpaque type"
       ncmpi_ENUM     = NC_ENUM, 	//!< "NcEnum type"
-      ncmpi_COMPOUND = NC_COMPOUND //!< "NcCompound type"
+      ncmpi_COMPOUND = NC_COMPOUND	//!< "NcCompound type"
     };
     
     /*! Constructor generates a \ref isNull "null object". */

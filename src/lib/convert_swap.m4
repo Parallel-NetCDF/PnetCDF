@@ -36,8 +36,8 @@ static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
  *  Datatype Mapping:
  *
  *  NETCDF    <--> MPI                    Description
- *   NC_BYTE       MPI_BYTE               signed 1-byte integer
- *   NC_CHAR       MPI_CHAR               char, text
+ *   NC_BYTE       MPI_SIGNED_CHAR        signed 1-byte integer
+ *   NC_CHAR       MPI_CHAR               char, text (cannot convert to other types)
  *   NC_SHORT      MPI_SHORT              signed 2-byte integer
  *   NC_INT        MPI_INT                signed 4-byte integer
  *   NC_FLOAT      MPI_FLOAT              single precision floating point
@@ -59,7 +59,7 @@ inline MPI_Datatype
 ncmpii_nc2mpitype(nc_type type)
 {
     switch(type){
-        case NC_BYTE :   return MPI_BYTE;
+        case NC_BYTE :   return MPI_SIGNED_CHAR;
         case NC_CHAR :   return MPI_CHAR;
         case NC_SHORT :  return MPI_SHORT;
         case NC_INT :    return MPI_INT;
@@ -82,7 +82,7 @@ ncmpii_nc2mpitype(nc_type type)
 inline int
 ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype) {
     return !( (nctype == NC_CHAR   && mpitype == MPI_CHAR)           ||
-              (nctype == NC_BYTE   && mpitype == MPI_BYTE)           ||
+              (nctype == NC_BYTE   && mpitype == MPI_SIGNED_CHAR)    ||
               (nctype == NC_BYTE   && mpitype == MPI_UNSIGNED_CHAR)  ||
 #if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
               (nctype == NC_BYTE   && mpitype == MPI_CHAR)           ||
@@ -110,7 +110,7 @@ ncmpii_need_swap(nc_type      nctype,
     return 0;
 #else
     if ((nctype == NC_CHAR   && mpitype == MPI_CHAR)           ||
-        (nctype == NC_BYTE   && mpitype == MPI_BYTE)           ||
+        (nctype == NC_BYTE   && mpitype == MPI_SIGNED_CHAR)    ||
         (nctype == NC_UBYTE  && mpitype == MPI_UNSIGNED_CHAR))
         return 0;
 
@@ -222,7 +222,7 @@ ncmpii_x_putn_$1(void         *xp,      /* file buffer of type schar */
                  MPI_Datatype  puttype)
 {
     if (puttype == MPI_CHAR || /* assume ECHAR has been checked before */
-        puttype == MPI_BYTE)
+        puttype == MPI_SIGNED_CHAR)
         return ncmpix_putn_$1_schar    (&xp, nelems, (const schar*)     putbuf);
     else if (puttype == MPI_UNSIGNED_CHAR)
         return ncmpix_putn_$1_uchar    (&xp, nelems, (const uchar*)     putbuf);
@@ -272,7 +272,7 @@ ncmpii_x_getn_$1(const void   *xp,      /* file buffer of type schar */
                  MPI_Datatype  gettype)
 {
     if (gettype == MPI_CHAR || /* assume ECHAR has been checked before */
-        gettype == MPI_BYTE)
+        gettype == MPI_SIGNED_CHAR)
         return ncmpix_getn_$1_schar    (&xp, nelems, (schar*)     getbuf);
     else if (gettype == MPI_UNSIGNED_CHAR)
         return ncmpix_getn_$1_uchar    (&xp, nelems, (uchar*)     getbuf);

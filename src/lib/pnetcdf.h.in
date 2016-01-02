@@ -19,10 +19,10 @@
 extern "C" {
 #endif
 
-/* NetCDF data types and their corresponding external types and type names
- * used in PnetCDF APIs:
+/* NetCDF data types and their corresponding external types in C convention
+ * and type names used in PnetCDF APIs:
     NC_BYTE   :   signed char       (for _schar     APIs)
-    NC_CHAR   :   signed char       (for _text      APIs)
+    NC_CHAR   : unsigned char       (for _text      APIs)
     NC_SHORT  :   signed short int  (for _short     APIs)
     NC_INT    :   signed int        (for _int       APIs)
     NC_FLOAT  :          float      (for _float     APIs)
