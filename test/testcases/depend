@@ -33,3 +33,5 @@ buftype_free.o: buftype_free.c
 buftype_freef.o: buftype_freef.f
 put_parameter.o: put_parameter.f
 last_large_var.o: last_large_var.c
+check_type.o: check_type.c
+test_erange.o: test_erange.c
