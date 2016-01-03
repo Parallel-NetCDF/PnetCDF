@@ -198,7 +198,7 @@ int check_var_offset(char *filename)
     err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); ERR
 
     /* make the file header size larger than 2 GiB */
-    err = ncmpi__enddef(ncid, 2147483648, 1, 1, 1);
+    err = ncmpi__enddef(ncid, 2147483648LL, 1, 1, 1);
     if (err != NC_EVARSIZE) {
         printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
         nerrs++;
