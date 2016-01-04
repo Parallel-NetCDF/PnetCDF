@@ -11,11 +11,6 @@ dnl
 /* $Id$ */
 
 
-define(`CheckText',`ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dnl
-
-define(`CheckTextChar',`ifelse(`$1',`text', `($2 == NC_CHAR) ||')')dnl
-define(`IfCheckTextChar',`ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
-
 undefine(`index')dnl
 dnl dnl dnl
 dnl
@@ -34,6 +29,13 @@ dnl NCT_ITYPE(type)
 dnl
 define(`NCT_ITYPE', ``NCT_'Upcase($1)')dnl
 dnl
+
+define(`CheckText', `ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dnl
+define(`IfCheckTextChar', `ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
+define(`CheckNumRange',
+       `ifelse(`$1',`text', `1',
+               `inRange3($2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
+
 
 #include "tests.h"
 
@@ -61,6 +63,7 @@ hash_$1(
 
 dnl HASH(text)
 #define hash_text hash4
+
 HASH(uchar)
 HASH(schar)
 HASH(short)
@@ -130,9 +133,7 @@ check_vars_$1(const char *filename)
                     error("error in toMixedBase 2");
                 expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 err = ncmpi_get_var1_$1_all(ncid, i, index, &value);
-                if (CheckTextChar($1, var_type[i])
-                    (inRange3(expect,datatype,NCT_ITYPE($1)) &&
-                     expect >= $1_min && expect <= $1_max)) {
+                if (CheckNumRange($1, expect, datatype)) {
                     IF (err != NC_NOERR) {
                         error("error in ncmpi_get_var1_$1_all $s",__func__);
                     } else IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
@@ -240,8 +241,7 @@ test_ncmpi_iput_var1_$1(void)
                 /* NC_ERANGE is not fatal, must continue */
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
             if (canConvert) {
-                if (CheckTextChar($1, var_type[i])
-                    inRange3(value, var_type[i],NCT_ITYPE($1))) {
+                if (CheckNumRange($1, value, var_type[i])) {
                     IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
                     ELSE_NOK
@@ -347,8 +347,7 @@ test_ncmpi_iput_var_$1(void)
                 error("error in toMixedBase 1");
             value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
-                allInExtRange = allInExtRange 
-                    && inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
         }
         err = ncmpi_iput_var_$1(ncid, i, value, &reqid);
         if (err == NC_NOERR || err == NC_ERANGE)
@@ -413,8 +412,7 @@ test_ncmpi_iput_var_$1(void)
                 ELSE_NOK
                 value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
-                    allInExtRange = allInExtRange 
-                        && inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                    allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
             }
             err = ncmpi_iput_var_$1(ncid, i, value, &reqid);
             if (err == NC_NOERR || err == NC_ERANGE)
@@ -598,8 +596,7 @@ test_ncmpi_iput_vara_$1(void)
                     index[d] += start[d];
                 value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
-                    allInExtRange = allInExtRange 
-                        && inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                    allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
             }
             if (var_rank[i] == 0 && i%2 == 0)
                 err = ncmpi_iput_vara_$1(ncid, i, NULL, NULL, value, &reqid);
@@ -794,8 +791,7 @@ test_ncmpi_iput_vars_$1(void)
                         index2[d] = index[d] + index2[d] * stride[d];
                     value[j] = hash_$1(var_type[i], var_rank[i], index2, NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
-                        allInExtRange = allInExtRange 
-                            && inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                        allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
                 }
                 if (var_rank[i] == 0 && i%2 == 0)
                     err = ncmpi_iput_vars_$1(ncid, i, NULL, NULL, stride, value, &reqid);
@@ -999,8 +995,7 @@ test_ncmpi_iput_varm_$1(void)
                         index2[d] = index[d] + index2[d] * stride[d];
                     value[j] = hash_$1(var_type[i], var_rank[i], index2, NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
-                        allInExtRange = allInExtRange
-                            && inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                        allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
                 }
                 if (var_rank[i] == 0 && i%2 == 0)
                     err = ncmpi_iput_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value, &reqid);

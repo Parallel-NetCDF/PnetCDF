@@ -155,6 +155,47 @@ Conform with netCDF
    5. trunk/src/lib/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h
 
 ===============================================================
+Note on netCDF text APIs and external data type NC_CHAR
+===============================================================
+All netCDF external data types are considered numerical data types, except for
+NC_CHAR. Only numerical data types can be converted to different numerical data
+types. However, no numerical datatype is allowed to converted to NC_CHAR and
+vice versa. Given these limitations, note the followings.
+
+For attribute APIs, only text API, ncmpi_put_att_text(), can create/write
+attributes in NC_CHAR data type. Note that ncmpi_put_att_text() does not take
+an argument of external data type like other attribute APIs, because the
+attribute to be created/written will be of NC_CHAR type. For reading, only text
+API, ncmpi_get_att_text(), can read attributes of NC_CHAR type from file,
+otherwise NC_ECHAR error code will return.  Non-text APIs are not allowed to
+put/get attributes of NC_CHAR type.
+
+For variable get/put APIs, only text APIs, for example nc_put_vara_text(), can
+read/write a variable defined as NC_CHAR type. Trying to use non-text APIs to
+read/write a NC_CHAR variable will result in NC_ECHAR error code returned.
+
+There is no NC_ERANGE error code possibly returned from text APIs.
+
+In netCDF, NC_CHAR is designed purely for storing text data.  NC_CHAR is
+considered by netCDF as unisgned 8-bit integer.  Others external numerical data
+types and their numerical meanings:
+
+NC_BYTE   is considered as a   signed 1-byte integer
+NC_UBYTE  is considered as a unsigned 1-byte integer
+NC_SHORT  is considered as a   signed 2-byte integer
+NC_USHORT is considered as a unsigned 2-byte integer
+NC_INT    is considered as a   signed 4-byte integer
+NC_UINT   is considered as a unsigned 4-byte integer
+NC_INT64  is considered as a   signed 8-byte integer
+NC_UINT64 is considered as a unsigned 8-byte integer
+NC_FLOAT  is considered as a   signed 4-byte floating point
+NC_DOUBLE is considered as a   signed 8-byte double precision floating point
+
+All external data types, their byte sizes, sign-ness, and numerical ranges are
+independent from the systems running PnetCDF/netCDF.
+
+
+===============================================================
 config.guess, config.sub, install-sh in directory scripts
 ===============================================================
 Copy config.guess, config.sub, and install-sh from GNU libtool.
