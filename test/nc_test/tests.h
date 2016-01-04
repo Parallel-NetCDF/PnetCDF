@@ -177,27 +177,20 @@ nv=1*11+5*11+5*4+5*4*4=11+55+20+80 = 166 (if NTYPES==11)
 
 /* Limits of internal types */
 
-/* In netCDF text APIs, the in-memory datatype text is equivalent to char.
- * Data type char can be either signed or unsigned (also changeable through
- * a compiler command-line option.)
- *
- * Some compilers fail to set CHAR_MIN and CHAR_MAX correctly.
- * For instance, compiled with
- *     o PGI           pgcc -Muchar
- *     o SolarisStudio cc   -xchar=unsigned
- * does not change CHAR_MIN to 0 and CHAR_MAX to 225
- *
- * GNU and Intel C compilers do this correctly.
- *     o GNU   gcc -funsigned-char
- *     o Intel icc -funsigned-char
- */
-#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
-#define text_min 0
-#define text_max UCHAR_MAX
-#else
-#define text_min SCHAR_MIN
-#define text_max SCHAR_MAX
-#endif
+/* Remove the use of text_min and text_max, becuase in NetCDF, there is no
+ * situation that would cause to check the range of a text or NC_CHAR value.
+ * In netCDF, a NC_CHAR variable must be read/written/created by netCDF text
+ * APIs. Otherwise, NC_ECHAR error will return. In the text APIs, the user
+ * buffers will be treated as a text array. For put APIs, a local signed char
+ * value (if the local char is signed) will be type-casted to an unsigned char
+ * value before writing to the file. For get APIs, an external unsigned char
+ * (NC_CHAR) value will be type-casted to a local signed char value. If the
+ * local char is unsigned, then no type casting will even happen. Also note
+ * that netCDF text APIs never returns NC_ERANGE error code.
+
+#define text_min CHAR_MIN
+#define text_max CHAR_MAX
+*/
 
 #define uchar_min     0
 #define schar_min     SCHAR_MIN

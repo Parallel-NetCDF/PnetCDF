@@ -321,10 +321,9 @@ int dbl2nc ( const double d, const nc_type datatype, void *p)
             r = floor(0.5+d);
             /* d is obtained from hash() which may be set to X_CHAR_MIN (0)
              * or X_CHAR_MAX (255). When in-memory data type char is signed
-             * (i.e. ranged from -128 to 127), we should allow type cast a
-             * a value > 127 to signed char without reporting it as a range
-             * error.
-            if ( r < text_min  ||  r > text_max )  return 2;
+             * (i.e. ranged from -128 to 127), we should still allow a type
+             * cast a unsigned value > 127 to a signed char without reporting
+             * it as a range error.
              */
             if ( r < X_CHAR_MIN || r > X_CHAR_MAX ) return 2;
 #if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
