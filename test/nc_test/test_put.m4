@@ -40,6 +40,9 @@ define(`CheckNumRange',
                `inRange3($2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
 define(`CheckRange',
        `ifelse(`$1',`text', `0', `($2 >= $1_min && $2 <= $1_max)')')dnl
+define(`CheckRange3',
+       `ifelse(`$1',`text', `1',
+               `inRange3($2,$3,NCT_ITYPE($1))')')dnl
 
 #include "tests.h"
 
@@ -334,7 +337,7 @@ test_ncmpi_put_var1_$1(void)
             else
                 err = ncmpi_put_var1_$1_all(ncid, i, index, &value);
             if (canConvert) {
-                if (inRange3(value, var_type[i], NCT_ITYPE($1))) {
+                if (CheckRange3($1, value, var_type[i])) {
                     IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
                     ELSE_NOK
