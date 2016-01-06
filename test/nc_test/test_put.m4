@@ -334,7 +334,7 @@ test_ncmpi_put_var1_$1(void)
             else
                 err = ncmpi_put_var1_$1_all(ncid, i, index, &value);
             if (canConvert) {
-                if (CheckNumRange($1, value, var_type[i])) {
+                if (inRange3(value, var_type[i], NCT_ITYPE($1))) {
                     IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
                     ELSE_NOK
