@@ -136,12 +136,17 @@
 !       /* Try to open a nonexistent file */
         err = nf90mpi_open(comm, 'tooth-fairy.nc', NF90_NOWRITE, &
                          info, ncid)!/* should fail */
+
+!       On some systems, opening an nonexisting file will actually create the
+!       file. In this case, we print the error messages on screen and move on
+!       to the next test, instead of aborting the entire test.
+
         if (err .eq. NF90_NOERR) then
-            call error &
-            ('nf90mpi_open of nonexistent file should have failed')
+            print*, &
+        'opening a nonexistent file expects to fail, but got NF90_NOERR'
         elseif (err .ne. NF90_ENOENT) then
-            call error('nf90mpi_open of nonexistent file should '// &
-                       'have returned NF90_ENOENT')
+            print*, &
+        'opening a nonexistent file expects NF90_ENOENT, but got ',err
         else
 !           print*, "Expected error message complaining: "// &
 !                   "File tooth-fairy.nc does not exist"
