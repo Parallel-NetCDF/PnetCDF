@@ -181,6 +181,32 @@ equal(double x,
     return ABS(x-y) <= epsilon * MAX( ABS(x), ABS(y));
 }
 
+/* this function is for the APIs without itype, i.e. extType == itype */
+int
+equal2(
+    double x,
+    double y,
+    nc_type extType)    /* external data type */
+{
+    const double flt_epsilon = 1.19209290E-07;
+    const double dbl_epsilon = 2.2204460492503131E-16;
+    double epsilon;
+
+    epsilon = extType == NC_FLOAT ? flt_epsilon : dbl_epsilon;
+
+    if (extType == NC_CHAR) {
+        /* because in-memory data type char can be signed or unsigned,
+         * type cast the value from external NC_CHAR before the comparison
+         */
+        char x2 = (char) x;
+        char y2 = (char) y;
+        x = x2;
+        y = y2;
+    }
+
+    return ABS(x-y) <= epsilon * MAX( ABS(x), ABS(y));
+}
+
 /* Test whether two int vectors are equal. If so return 1, else 0  */
 int
 int_vec_eq(const int *v1, const int *v2, const int n)
@@ -233,8 +259,8 @@ int roll( int n )
 int
 toMixedBase(size_t           number,   /* to be converted to mixed base */
             size_t           length,
-            const MPI_Offset base[],   /* [length], base[0] ignored */
-            MPI_Offset       result[]) /* [length] */
+            const MPI_Offset base[],   /* in:  [length], base[0] ignored */
+            MPI_Offset       result[]) /* out: [length] */
 {
     size_t i;
 
@@ -859,8 +885,8 @@ check_vars(int  ncid)
                 IF (err != NC_NOERR)
                     error("ncmpi_get_var1_text: %s", ncmpi_strerror(err));
                 IF (text != (char)expect) {
-                    error("Var %s value read 0x%02x not that expected 0x%02x ",
-                          var_name[i], text, (char)expect);
+                    error("Var %s (varid=%d) value read 0x%02x not that expected 0x%02x ",
+                          var_name[i], i, text, (char)expect);
                     print_n_size_t(var_rank[i], index);
                 } else {
                     nok++;
@@ -874,8 +900,8 @@ check_vars(int  ncid)
                         error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
                     } else {
                         IF (!equal(value,expect,var_type[i], NCT_DOUBLE)) {
-                            error("Var %s value read % 12.5e not that expected % 12.7e ",
-                                  var_name[i], value, expect);
+                            error("Var %s (varid=%d) value read % 12.5e not that expected % 12.7e ",
+                                  var_name[i], i, value, expect);
                             print_n_size_t(var_rank[i], index);
                         } else {
                             nok++;
@@ -922,7 +948,8 @@ check_atts(int  ncid)
                 IF (err != NC_NOERR)
                     error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
                 for (k = 0; k < ATT_LEN(i,j); k++) {
-                    if (text[k] != (char)(hash(datatype, -1, &k))) {
+                    expect = hash(datatype, -1, &k);
+                    if (text[k] != (char)expect) {
                         error("ncmpi_get_att_text: unexpected value");
                     } else {
                         nok++;
