@@ -110,9 +110,9 @@ test_ncmpi_open(void)
      * to the next test, instead of aborting the entire test.
      */
     if (err == NC_NOERR)
- 	fprintf(stderr, "opening a nonexistent file expects to fail, but got NC_NOERR");
+ 	fprintf(stderr, "opening a nonexistent file expects to fail, but got NC_NOERR\n");
     else if (err != NC_ENOENT)
-	fprintf(stderr, "opening a nonexistent file expects NC_ENOENT, but got %d",err);
+	fprintf(stderr, "opening a nonexistent file expects NC_ENOENT, but got %s\n",nc_err_code_name(err));
     else {
         /* printf("Expected error message complaining: \"File tooth-fairy.nc does not exist\"\n"); */
         nok++;
