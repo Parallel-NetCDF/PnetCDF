@@ -713,6 +713,9 @@ extern int
 equal(double x, double y, nc_type extType, nct_itype itype);
 
 extern int
+equal2(double x, double y, nc_type extType);
+
+extern int
 int_vec_eq(const int *v1, const int *v2, const int n);
 
 extern int

@@ -246,9 +246,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_var1_uint);
     NC_TEST(ncmpi_get_var1_longlong);
     NC_TEST(ncmpi_get_var1_ulonglong);
-#ifdef TEST_VOIDSTAR
     NC_TEST(ncmpi_get_var1);
-#endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_vara_text);
     NC_TEST(ncmpi_get_vara_schar);
     NC_TEST(ncmpi_get_vara_short);
@@ -261,9 +259,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_vara_uint);
     NC_TEST(ncmpi_get_vara_longlong);
     NC_TEST(ncmpi_get_vara_ulonglong);
-#ifdef TEST_VOIDSTAR
     NC_TEST(ncmpi_get_vara);
-#endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_vars_text);
     NC_TEST(ncmpi_get_vars_schar);
     NC_TEST(ncmpi_get_vars_short);
@@ -276,9 +272,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_vars_uint);
     NC_TEST(ncmpi_get_vars_longlong);
     NC_TEST(ncmpi_get_vars_ulonglong);
-#ifdef TEST_VOIDSTAR
     NC_TEST(ncmpi_get_vars);
-#endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_varm_text);
     NC_TEST(ncmpi_get_varm_schar);
     NC_TEST(ncmpi_get_varm_short);
@@ -291,9 +285,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_varm_uint);
     NC_TEST(ncmpi_get_varm_longlong);
     NC_TEST(ncmpi_get_varm_ulonglong);
-#ifdef TEST_VOIDSTAR
     NC_TEST(ncmpi_get_varm);
-#endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_att_text);
     NC_TEST(ncmpi_get_att_schar);
     NC_TEST(ncmpi_get_att_short);
@@ -306,9 +298,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_att_uint);
     NC_TEST(ncmpi_get_att_longlong);
     NC_TEST(ncmpi_get_att_ulonglong);
-#ifdef TEST_VOIDSTAR
     NC_TEST(ncmpi_get_att);
-#endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_inq_att);
     NC_TEST(ncmpi_inq_attname);
     NC_TEST(ncmpi_inq_attid);
@@ -328,6 +318,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_iget_var_uint);
     NC_TEST(ncmpi_iget_var_longlong);
     NC_TEST(ncmpi_iget_var_ulonglong);
+    NC_TEST(ncmpi_iget_var);
     NC_TEST(ncmpi_iget_var1_text);
     NC_TEST(ncmpi_iget_var1_schar);
     NC_TEST(ncmpi_iget_var1_short);
@@ -340,9 +331,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_iget_var1_uint);
     NC_TEST(ncmpi_iget_var1_longlong);
     NC_TEST(ncmpi_iget_var1_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
     NC_TEST(ncmpi_iget_var1);
-#endif /* NOT_IMPLEMENTED_YET */
     NC_TEST(ncmpi_iget_vara_text);
     NC_TEST(ncmpi_iget_vara_schar);
     NC_TEST(ncmpi_iget_vara_short);
@@ -355,9 +344,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_iget_vara_uint);
     NC_TEST(ncmpi_iget_vara_longlong);
     NC_TEST(ncmpi_iget_vara_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
     NC_TEST(ncmpi_iget_vara);
-#endif /* NOT_IMPLEMENTED_YET */
     NC_TEST(ncmpi_iget_vars_text);
     NC_TEST(ncmpi_iget_vars_schar);
     NC_TEST(ncmpi_iget_vars_short);
@@ -370,9 +357,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_iget_vars_uint);
     NC_TEST(ncmpi_iget_vars_longlong);
     NC_TEST(ncmpi_iget_vars_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
     NC_TEST(ncmpi_iget_vars);
-#endif /* NOT_IMPLEMENTED_YET */
     NC_TEST(ncmpi_iget_varm_text);
     NC_TEST(ncmpi_iget_varm_schar);
     NC_TEST(ncmpi_iget_varm_short);
@@ -385,9 +370,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_iget_varm_uint);
     NC_TEST(ncmpi_iget_varm_longlong);
     NC_TEST(ncmpi_iget_varm_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
     NC_TEST(ncmpi_iget_varm);
-#endif /* NOT_IMPLEMENTED_YET */
 
 	/* Test write functions */
     if (! read_only) {
@@ -496,6 +479,7 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_iput_var_uint);
 	NC_TEST(ncmpi_iput_var_longlong);
 	NC_TEST(ncmpi_iput_var_ulonglong);
+	NC_TEST(ncmpi_iput_var);
 	NC_TEST(ncmpi_iput_var1_text);
 	NC_TEST(ncmpi_iput_var1_schar);
 	NC_TEST(ncmpi_iput_var1_short);
@@ -508,9 +492,7 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_iput_var1_uint);
 	NC_TEST(ncmpi_iput_var1_longlong);
 	NC_TEST(ncmpi_iput_var1_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
 	NC_TEST(ncmpi_iput_var1);
-#endif /* NOT_IMPLEMENTED_YET */
 	NC_TEST(ncmpi_iput_vara_text);
 	NC_TEST(ncmpi_iput_vara_schar); 
 	NC_TEST(ncmpi_iput_vara_short);
@@ -523,9 +505,7 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_iput_vara_uint);
 	NC_TEST(ncmpi_iput_vara_longlong);
 	NC_TEST(ncmpi_iput_vara_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
 	NC_TEST(ncmpi_iput_vara);
-#endif /* NOT_IMPLEMENTED_YET */
 	NC_TEST(ncmpi_iput_vars_text);
 	NC_TEST(ncmpi_iput_vars_schar);
 	NC_TEST(ncmpi_iput_vars_short);
@@ -538,9 +518,7 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_iput_vars_uint);
 	NC_TEST(ncmpi_iput_vars_longlong);
 	NC_TEST(ncmpi_iput_vars_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
 	NC_TEST(ncmpi_iput_vars);
-#endif /* NOT_IMPLEMENTED_YET */
 	NC_TEST(ncmpi_iput_varm_text);
 	NC_TEST(ncmpi_iput_varm_schar);
 	NC_TEST(ncmpi_iput_varm_short);
@@ -553,9 +531,7 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_iput_varm_uint);
 	NC_TEST(ncmpi_iput_varm_longlong);
 	NC_TEST(ncmpi_iput_varm_ulonglong);
-#ifdef NOT_IMPLEMENTED_YET
 	NC_TEST(ncmpi_iput_varm);
-#endif /* NOT_IMPLEMENTED_YET */
     }
 
 fn_exit:

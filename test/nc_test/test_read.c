@@ -945,7 +945,6 @@ test_ncmpi_inq_vartype(void)
 }
 
 
-#ifdef TEST_VOIDSTAR
 /*
  * Test ncmpi_put_var1
  */
@@ -956,29 +955,32 @@ test_ncmpi_get_var1(void)
     int i;
     int j;
     int err;
-    MPI_Offset index[MAX_RANK];
     double expect;
     int nok = 0;		/* count of valid comparisons */
     double buf[1];		/* (void *) buffer */
     double value;
+    MPI_Offset index[MAX_RANK];
+    MPI_Datatype datatype;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
+        datatype = nc_mpi_type(var_type[i]);
 	for (j = 0; j < var_rank[i]; j++)
 	    index[j] = 0;
-        err = ncmpi_get_var1(BAD_ID, i, index, buf);
+        err = ncmpi_get_var1(BAD_ID, i, index, buf, 1, datatype);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
         ELSE_NOK
-        err = ncmpi_get_var1(ncid, BAD_VARID, index, buf);
+        err = ncmpi_get_var1(ncid, BAD_VARID, index, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
         ELSE_NOK
 	for (j = 0; j < var_rank[i]; j++) {
 	    index[j] = var_shape[i][j];
-	    err = ncmpi_get_var1(ncid, i, index, buf);
+	    err = ncmpi_get_var1(ncid, i, index, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
             ELSE_NOK
@@ -990,9 +992,9 @@ test_ncmpi_get_var1(void)
 		error("error in toMixedBase 2");
 	    expect = hash( var_type[i], var_rank[i], index );
             if (var_rank[i] == 0 && i%2 )
-		err = ncmpi_get_var1(ncid, i, NULL, buf);
+		err = ncmpi_get_var1(ncid, i, NULL, buf, 1, datatype);
 	    else
-		err = ncmpi_get_var1(ncid, i, index, buf);
+		err = ncmpi_get_var1(ncid, i, index, buf, 1, datatype);
 	    IF (err != NC_NOERR)
 		error("%s", ncmpi_strerror(err));
             ELSE_NOK
@@ -1000,7 +1002,7 @@ test_ncmpi_get_var1(void)
 	    IF (err != NC_NOERR)
 		error("error in nc2dbl");
 	    if (inRange(expect,var_type[i])) {
-		IF (!equal(value,expect,var_type[i],NCT_DOUBLE))
+		IF (!equal2(value,expect,var_type[i]))
 		    error("expected: %G, got: %G", expect, value);
                 ELSE_NOK
 	    }
@@ -1022,51 +1024,45 @@ test_ncmpi_get_var1(void)
 int
 test_ncmpi_get_vara(void)
 {
-    int ncid;
-    int d;
-    int i;
-    int j;
-    int k;
-    int err;
-    int nels;
-    int nslabs;
+    int ncid, d, i, j, k, err, nels, nslabs;
     int nok = 0;      /* count of valid comparisons */
     MPI_Offset start[MAX_RANK];
     MPI_Offset edge[MAX_RANK];
     MPI_Offset index[MAX_RANK];
     MPI_Offset mid[MAX_RANK];
+    MPI_Datatype datatype;
     double buf[MAX_NELS];	/* (void *) buffer */
-    char *p;			/* (void *) pointer */
     double expect;
-    double got;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
+        datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = 0;
             edge[j] = 1;
         }
-        err = ncmpi_get_vara(BAD_ID, i, start, edge, buf);
+        err = ncmpi_get_vara(BAD_ID, i, start, edge, buf, 1, datatype);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
         ELSE_NOK
-        err = ncmpi_get_vara(ncid, BAD_VARID, start, edge, buf);
+        err = ncmpi_get_vara(ncid, BAD_VARID, start, edge, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
         ELSE_NOK
 	for (j = 0; j < var_rank[i]; j++) {
 	    start[j] = var_shape[i][j];
-	    err = ncmpi_get_vara(ncid, i, start, edge, buf);
+	    err = ncmpi_get_vara(ncid, i, start, edge, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
             ELSE_NOK
 	    start[j] = 0;
 	    edge[j] = var_shape[i][j] + 1;
-	    err = ncmpi_get_vara(ncid, i, start, edge, buf);
+	    err = ncmpi_get_vara(ncid, i, start, edge, buf, 1, datatype);
             IF (err != NC_EEDGE)
 		error("bad edge: status = %d", err);
             ELSE_NOK
@@ -1093,15 +1089,16 @@ test_ncmpi_get_vara(void)
                 nels *= edge[j];
             }
             if (var_rank[i] == 0 && i%2 )
-		err = ncmpi_get_vara(ncid, i, NULL, NULL, buf);
+		err = ncmpi_get_vara(ncid, i, NULL, NULL, buf, nels, datatype);
 	    else
-		err = ncmpi_get_vara(ncid, i, start, edge, buf);
+		err = ncmpi_get_vara(ncid, i, start, edge, buf, nels, datatype);
 	    IF (err != NC_NOERR) {
 		error("%s", ncmpi_strerror(err));
 	    } else {
 	        nok++;
 		for (j = 0; j < nels; j++) {
-                    p = (char *) buf;
+                    double got;
+                    char *p = (char *) buf;
                     p += j * nctypelen(var_type[i]);
 		    err = nc2dbl( var_type[i], p, & got );
 		    IF (err != NC_NOERR)
@@ -1113,7 +1110,7 @@ test_ncmpi_get_vara(void)
 			index[d] += start[d];
 		    expect = hash(var_type[i], var_rank[i], index);
 		    if (inRange(expect,var_type[i])) {
-			IF (!equal(got,expect,var_type[i],NCT_DOUBLE)) {
+			IF (!equal2(got,expect,var_type[i])) {
 			    error("value read not that expected");
 			    if (verbose) {
 				error("\n");
@@ -1165,6 +1162,7 @@ test_ncmpi_get_vars(void)
     MPI_Offset count[MAX_RANK];
     MPI_Offset sstride[MAX_RANK];
     MPI_Offset stride[MAX_RANK];
+    MPI_Datatype datatype;
     double buf[MAX_NELS];     /* (void *) buffer */
     char *p;			/* (void *) pointer */
     double expect;
@@ -1173,7 +1171,9 @@ test_ncmpi_get_vars(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
+        datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -1181,29 +1181,29 @@ test_ncmpi_get_vars(void)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = ncmpi_get_vars(BAD_ID, i, start, edge, stride, buf);
+        err = ncmpi_get_vars(BAD_ID, i, start, edge, stride, buf, 1, datatype);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
         ELSE_NOK
-        err = ncmpi_get_vars(ncid, BAD_VARID, start, edge, stride, buf);
+        err = ncmpi_get_vars(ncid, BAD_VARID, start, edge, stride, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
         ELSE_NOK
 	for (j = 0; j < var_rank[i]; j++) {
 	    start[j] = var_shape[i][j];
-	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf);
+	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
             ELSE_NOK
 	    start[j] = 0;
 	    edge[j] = var_shape[i][j] + 1;
-	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf);
+	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf, 1, datatype);
             IF (err != NC_EEDGE)
 		error("bad edge: status = %d", err);
             ELSE_NOK
 	    edge[j] = 1;
 	    stride[j] = 0;
-	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf);
+	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf, 1, datatype);
             IF (err != NC_ESTRIDE)
 		error("bad stride: status = %d", err);
             ELSE_NOK
@@ -1252,9 +1252,9 @@ test_ncmpi_get_vars(void)
 		}
  */
 		if (var_rank[i] == 0 && i%2 )
-		    err = ncmpi_get_vars(ncid, i, NULL, NULL, NULL, buf);
+		    err = ncmpi_get_vars(ncid, i, NULL, NULL, NULL, buf, 1, datatype);
 		else
-		    err = ncmpi_get_vars(ncid, i, index, count, stride, buf);
+		    err = ncmpi_get_vars(ncid, i, index, count, stride, buf, nels, datatype);
 		IF (err != NC_NOERR) {
 		    error("%s", ncmpi_strerror(err));
 		} else {
@@ -1272,7 +1272,7 @@ test_ncmpi_get_vars(void)
 			    index2[d] = index[d] + index2[d] * stride[d];
 			expect = hash(var_type[i], var_rank[i], index2);
 			if (inRange(expect,var_type[i])) {
-			    IF (!equal(got,expect,var_type[i],NCT_DOUBLE)) {
+			    IF (!equal2(got,expect,var_type[i])) {
 				error("value read not that expected");
 				if (verbose) {
 				    error("\n");
@@ -1336,6 +1336,8 @@ test_ncmpi_get_varm(void)
     MPI_Offset stride[MAX_RANK];
     MPI_Offset imap[MAX_RANK];
     MPI_Offset imap2[MAX_RANK];
+    MPI_Offset nels;
+    MPI_Datatype datatype;
     double buf[MAX_NELS];	/* (void *) buffer */
     char *p;			/* (void *) pointer */
     double expect;
@@ -1344,7 +1346,9 @@ test_ncmpi_get_varm(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
+        datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -1354,33 +1358,34 @@ test_ncmpi_get_varm(void)
         }
         if (var_rank[i] > 0) {
             j = var_rank[i] - 1;
-            imap[j] = nctypelen(var_type[i]);
+            /* imap[j] = nctypelen(var_type[i]); */
+            imap[j] = 1; /* in numbers of elements */
             for (; j > 0; j--)
                 imap[j-1] = imap[j] * var_shape[i][j];
         }
-        err = ncmpi_get_varm(BAD_ID, i, start, edge, stride, imap, buf);
+        err = ncmpi_get_varm(BAD_ID, i, start, edge, stride, imap, buf, 1, datatype);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
         ELSE_NOK
-        err = ncmpi_get_varm(ncid, BAD_VARID, start, edge, stride, imap, buf);
+        err = ncmpi_get_varm(ncid, BAD_VARID, start, edge, stride, imap, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
         ELSE_NOK
 	for (j = 0; j < var_rank[i]; j++) {
 	    start[j] = var_shape[i][j];
-	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf);
+	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
             ELSE_NOK
 	    start[j] = 0;
 	    edge[j] = var_shape[i][j] + 1;
-	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf);
+	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype);
             IF (err != NC_EEDGE)
 		error("bad edge: status = %d", err);
             ELSE_NOK
 	    edge[j] = 1;
 	    stride[j] = 0;
-	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf);
+	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype);
             IF (err != NC_ESTRIDE)
 		error("bad stride: status = %d", err);
             ELSE_NOK
@@ -1411,14 +1416,16 @@ test_ncmpi_get_varm(void)
             }
 	    for (m = 0; m < nstarts; m++) {
 		if (var_rank[i] == 0 && i%2 ) {
-		    err = ncmpi_get_varm(ncid, i, NULL, NULL, NULL, NULL, buf);
+		    err = ncmpi_get_varm(ncid, i, NULL, NULL, NULL, NULL, buf, var_nels[i], datatype);
 		} else {
 		    err = toMixedBase(m, var_rank[i], sstride, index);
 		    IF (err != NC_NOERR)
 			error("error in toMixedBase");
+                    nels = 1;
 		    for (j = 0; j < var_rank[i]; j++) {
 			count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
 			index[j] += start[j];
+                        nels *= count[j];
 		    }
 			    /* Random choice of forward or backward */
 /* TODO
@@ -1431,7 +1438,7 @@ test_ncmpi_get_varm(void)
  */
 		    j = fromMixedBase(var_rank[i], index, var_shape[i]);
 		    p = (char *) buf + j * nctypelen(var_type[i]);
-		    err = ncmpi_get_varm(ncid, i, index, count, stride, imap2, p);
+		    err = ncmpi_get_varm(ncid, i, index, count, stride, imap2, p, nels, datatype);
 		}
 		IF (err != NC_NOERR)
 		    error("%s", ncmpi_strerror(err));
@@ -1448,7 +1455,7 @@ test_ncmpi_get_varm(void)
 	    IF (err != NC_NOERR)
 		error("error in nc2dbl");
 	    if (inRange(expect,var_type[i])) {
-		IF (!equal(got,expect,var_type[i],NCT_DOUBLE)) {
+		IF (!equal2(got,expect,var_type[i])) {
 		    error("value read not that expected");
 		    if (verbose) {
 			error("\n");
@@ -1484,6 +1491,7 @@ test_ncmpi_get_att(void)
     double expect;
     double got;
     int nok = 0;      /* count of valid comparisons */
+    MPI_Datatype datatype;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR) 
@@ -1491,6 +1499,7 @@ test_ncmpi_get_att(void)
 
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
+            datatype = nc_mpi_type(ATT_TYPE(i,j));
 	    err = ncmpi_get_att(BAD_ID, i, ATT_NAME(i,j), buf);
 	    IF (err != NC_EBADID) 
 		error("bad ncid: status = %d", err);
@@ -1516,7 +1525,7 @@ test_ncmpi_get_att(void)
 		    IF (err != NC_NOERR)
 			error("error in nc2dbl");
 		    if (inRange(expect,ATT_TYPE(i,j))) {
-			IF (!equal(got,expect,ATT_TYPE(i,j),NCT_DOUBLE)) {
+			IF (!equal2(got,expect,ATT_TYPE(i,j))) {
 			    error("value read not that expected");
 			    if (verbose) {
 				error("\n");
@@ -1540,7 +1549,6 @@ test_ncmpi_get_att(void)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
     return nok;
 }
-#endif /* TEST_VOIDSTAR */
 
 
 int
