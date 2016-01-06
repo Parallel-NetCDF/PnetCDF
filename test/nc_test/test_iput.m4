@@ -373,7 +373,7 @@ test_ncmpi_iput_var1_$1(void)
                 /* NC_ERANGE is not fatal, must continue */
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
             if (canConvert) {
-                if (CheckNumRange($1, value, var_type[i])) {
+                if (inRange3(value, var_type[i], NCT_ITYPE($1))) {
                     IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
                     ELSE_NOK

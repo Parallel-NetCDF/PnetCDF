@@ -105,9 +105,9 @@ test_ncmpi_open(void)
     /* Try to open a nonexistent file */
     err = ncmpi_open(comm, "tooth-fairy.nc", NC_NOWRITE, info, &ncid);/* should fail */
     IF (err == NC_NOERR)
-	error("ncmpi_open of nonexistent file should have failed");
+ 	error("opening a nonexistent file expects to fail, but got NC_NOERR");
     IF (err != NC_ENOENT)
-	error("ncmpi_open of nonexistent file should have returned NC_ENOENT");
+	error("opening a nonexistent file expects NC_ENOENT, but got %d",err);
     else {
         /* printf("Expected error message complaining: \"File tooth-fairy.nc does not exist\"\n"); */
         nok++;
@@ -1491,7 +1491,6 @@ test_ncmpi_get_att(void)
     double expect;
     double got;
     int nok = 0;      /* count of valid comparisons */
-    MPI_Datatype datatype;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR) 
@@ -1499,7 +1498,6 @@ test_ncmpi_get_att(void)
 
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
-            datatype = nc_mpi_type(ATT_TYPE(i,j));
 	    err = ncmpi_get_att(BAD_ID, i, ATT_NAME(i,j), buf);
 	    IF (err != NC_EBADID) 
 		error("bad ncid: status = %d", err);

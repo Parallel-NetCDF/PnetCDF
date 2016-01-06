@@ -92,7 +92,9 @@ tst_nofill: tst_nofill.o $(LIBRARY)
 
 # This simple testing target ensures that the test files are present
 check testing: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/testfile.nc
+	$(RM) -f $(TEST_OUTDIR)/scratch.nc
+	$(RM) -f $(TEST_OUTDIR)/testfile.nc
+	$(RM) -f $(TEST_OUTDIR)/tooth-fairy.nc
 	$(TEST_SEQRUN) ./nc_test -c    -d $(TEST_OUTDIR)
 	$(TEST_SEQRUN) ./nc_test -d       $(TEST_OUTDIR)
 	$(TEST_SEQRUN) ./nc_test -c -2 -d $(TEST_OUTDIR)
@@ -109,7 +111,9 @@ check testing: all
 	$(TEST_SEQRUN) ./tst_nofill       $(TEST_OUTDIR)/testfile.nc
 
 verbose_testing: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/testfile.nc
+	$(RM) -f $(TEST_OUTDIR)/scratch.nc
+	$(RM) -f $(TEST_OUTDIR)/testfile.nc
+	$(RM) -f $(TEST_OUTDIR)/tooth-fairy.nc
 	$(TEST_SEQRUN) ./nc_test -c -v    -d $(TEST_OUTDIR)
 	$(TEST_SEQRUN) ./nc_test -v -d       $(TEST_OUTDIR)
 	$(TEST_SEQRUN) ./nc_test -c -v -2 -d $(TEST_OUTDIR)
