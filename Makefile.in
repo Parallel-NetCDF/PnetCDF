@@ -101,6 +101,32 @@ ptests-benchmarks: ptests-examples
 
 INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
 install: $(INSTALLDIRS)
+	@echo '+----------------------------------------------------------------------------+'
+	@echo '|'
+	@echo '|  PnetCDF has been successfully installed under $(prefix)'
+	@echo '|'
+	@echo '|  * PnetCDF header files are installed in $(prefix)/include'
+	@echo '|  * PnetCDF library file is installed in $(prefix)/lib'
+	@echo '|  * PnetCDF utility programs are installed in $(prefix)/bin'
+	@echo '|  * PnetCDF man pages are installed in $(prefix)/man/man1 and'
+	@echo '|    $(prefix)/man/man3'
+	@echo '|'
+	@echo '|  To compile your PnetCDF programs, please add the following to the command'
+	@echo '|  line, so the compiler can find the PnetCDF header files:'
+	@echo '|      -I$(prefix)/include'
+	@echo '|'
+	@echo '|  Add the following line to link your program to PnetCDF library:'
+	@echo '|      -L$(prefix)/lib -lpnetcdf'
+	@echo '|'
+	@echo '|  PnetCDF is jointly developed by a team at Northwestern University and'
+	@echo '|  Argonne National Laboratory.'
+	@echo '|'
+	@echo '|  Vist PnetCDF web sites for more information'
+	@echo '|      http://cucis.ece.northwestern.edu/projects/PnetCDF'
+	@echo '|      http://trac.mcs.anl.gov/projects/parallel-netcdf'
+	@echo '|'
+	@echo '+----------------------------------------------------------------------------+'
+
 $(INSTALLDIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
 
