@@ -33,17 +33,19 @@
 
 #define FOUR_G 4294967296
 #define TWO_G  2147483648
+#define ONE_G  1073741824
 
 #define NZ 4
 #define NY 10
 #define NX FOUR_G
 
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
+#define ERR if (err!=NC_NOERR) {printf("Error at line %d: err=%s (%s)\n", __LINE__,nc_err_code_name(err),ncmpi_strerror(err)); exit(-1);}
 
 #ifndef WORDS_BIGENDIAN
 /* Endianness byte swap: done in-place */
 #define SWAP(x,y) {tmp = (x); (x) = (y); (y) = tmp;}
-void swapn(void       *buf,
+static void
+swapn(void       *buf,
            MPI_Offset  nelems)
 {
     int  i;

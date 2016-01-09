@@ -57,6 +57,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/cdf_format/dim_cdf12.c tests defining maximal dimension size for
+      CDF-1 and CDF-2 file formats
     * test/testcases/test_erange.c tests if the error code NC_ERANGE can be
       correctly returned for two cases 1) get a NC_UBYTE value of 255 from a
       netCDF file to a memory buffer of type signed char and 2) put a value
