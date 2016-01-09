@@ -430,10 +430,10 @@ hdr_put_NC_name(bufferinfo      *pbp,
 
     /* copy nelems */
     if (pbp->version == 5)
-        status = ncmpix_put_int64((void**)(&pbp->pos), ncstrp->nchars);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), ncstrp->nchars);
     else {
-        if (ncstrp->nchars != (int)ncstrp->nchars) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        status = ncmpix_put_int32((void**)(&pbp->pos), (int)ncstrp->nchars);
+        if (ncstrp->nchars != (uint)ncstrp->nchars) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)ncstrp->nchars);
     }
     if (status != NC_NOERR) return status;
 
@@ -505,10 +505,11 @@ hdr_put_NC_dim(bufferinfo   *pbp,
 
     /* copy dim_length */
     if (pbp->version == 5)
-        status = ncmpix_put_int64((void**)(&pbp->pos), dimp->size);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), dimp->size);
     else {
-        if (dimp->size != (int)dimp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        status = ncmpix_put_int32((void**)(&pbp->pos), (int)dimp->size);
+        /* TODO: Isn't checking dimension size already done in def_dim()? */
+        if (dimp->size != (uint)dimp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)dimp->size);
     }
     if (status != NC_NOERR) return status;
 
@@ -537,26 +538,26 @@ hdr_put_NC_dimarray(bufferinfo        *pbp,
     assert(pbp != NULL);
 
     if (ncap == NULL || ncap->ndefined == 0) { /* ABSENT */
-        status = ncmpix_put_int32((void**)(&pbp->pos), NC_UNSPECIFIED);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), NC_UNSPECIFIED);
         if (status != NC_NOERR) return status;
 
         /* put a ZERO or ZERO64 depending on which CDF format */
         if (pbp->version == 5)
-            status = ncmpix_put_int64((void**)(&pbp->pos), 0);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), 0);
         else
-            status = ncmpix_put_int32((void**)(&pbp->pos), 0);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), 0);
         if (status != NC_NOERR) return status;
     }
     else {
         /* copy NC_DIMENSION */
-        status = ncmpix_put_int32((void**)(&pbp->pos), NC_DIMENSION);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), NC_DIMENSION);
         if (status != NC_NOERR) return status;
 
         /* copy nelems */
         if (pbp->version == 5)
-            status = ncmpix_put_int64((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), ncap->ndefined);
         else
-            status = ncmpix_put_int32((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), ncap->ndefined);
         if (status != NC_NOERR) return status;
 
         /* copy [dim ...] */
@@ -589,15 +590,15 @@ hdr_put_NC_attr(bufferinfo    *pbp,
     if (status != NC_NOERR) return status;
 
     /* copy nc_type */
-    status = ncmpix_put_int32((void**)(&pbp->pos), attrp->type);
+    status = ncmpix_put_uint32((void**)(&pbp->pos), attrp->type);
     if (status != NC_NOERR) return status;
 
     /* copy nelems */
     if (pbp->version == 5)
-        status = ncmpix_put_int64((void**)(&pbp->pos), attrp->nelems);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), attrp->nelems);
     else {
-        if (attrp->nelems != (int)attrp->nelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        status = ncmpix_put_int32((void**)(&pbp->pos), (int)attrp->nelems);
+        if (attrp->nelems != (uint)attrp->nelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)attrp->nelems);
     }
     if (status != NC_NOERR) return status;
 
@@ -630,26 +631,26 @@ hdr_put_NC_attrarray(bufferinfo         *pbp,
     assert(pbp != NULL);
 
     if (ncap == NULL || ncap->ndefined == 0) { /* ABSENT */
-        status = ncmpix_put_int32((void**)(&pbp->pos), NC_UNSPECIFIED);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), NC_UNSPECIFIED);
         if (status != NC_NOERR) return status;
 
         /* put a ZERO or ZERO64 depending on which CDF format */
         if (pbp->version == 5)
-            status = ncmpix_put_int64((void**)(&pbp->pos), 0);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), 0);
         else
-            status = ncmpix_put_int32((void**)(&pbp->pos), 0);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), 0);
         if (status != NC_NOERR) return status;
     }
     else {
         /* copy NC_ATTRIBUTE */
-        status = ncmpix_put_int32((void**)(&pbp->pos), NC_ATTRIBUTE);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), NC_ATTRIBUTE);
         if (status != NC_NOERR) return status;
 
         /* copy nelems */
         if (pbp->version == 5)
-            status = ncmpix_put_int64((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), ncap->ndefined);
         else
-            status = ncmpix_put_int32((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), ncap->ndefined);
         if (status != NC_NOERR) return status;
 
         /* copy [attr ...] */
@@ -691,17 +692,17 @@ hdr_put_NC_var(bufferinfo   *pbp,
 
     /* copy nelems */
     if (pbp->version == 5)
-        status = ncmpix_put_int64((void**)(&pbp->pos), varp->ndims);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), varp->ndims);
     else
-        status = ncmpix_put_int32((void**)(&pbp->pos), varp->ndims);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), varp->ndims);
     if (status != NC_NOERR) return status;
 
     /* copy [dimid ...] */
     for (i=0; i<varp->ndims; i++) {
         if (pbp->version == 5)
-            status = ncmpix_put_int64((void**)(&pbp->pos), varp->dimids[i]);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), varp->dimids[i]);
         else
-            status = ncmpix_put_int32((void**)(&pbp->pos), varp->dimids[i]);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), varp->dimids[i]);
         if (status != NC_NOERR) return status;
     }
 
@@ -710,7 +711,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
     if (status != NC_NOERR) return status;
 
     /* copy nc_type */
-    status = ncmpix_put_int32((void**)(&pbp->pos), varp->type);
+    status = ncmpix_put_uint32((void**)(&pbp->pos), varp->type);
     if (status != NC_NOERR) return status;
 
     /* copy vsize */
@@ -718,7 +719,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
      * in CDF-5, it is a 64-bit integer
      */
     if (pbp->version == 5)
-        status = ncmpix_put_int64((void**)(&pbp->pos), varp->len);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), varp->len);
     else {
         /* Special case, when there is no record variable, the last fixed-size
          * variable can be larger than 2 GiB if its file starting offset is
@@ -727,7 +728,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
          *
          * if (varp->len != (int)varp->len) DEBUG_RETURN_ERROR(NC_EVARSIZE)
          */
-        status = ncmpix_put_int32((void**)(&pbp->pos), (int)varp->len);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->len);
     }
     if (status != NC_NOERR) return status;
 
@@ -736,11 +737,11 @@ hdr_put_NC_var(bufferinfo   *pbp,
      * in CDF-2 and CDF-5, it is a 64-bit integer
      */
     if (pbp->version == 1) {
-        if (varp->begin != (int)varp->begin) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        status = ncmpix_put_int32((void**)(&pbp->pos), (int)varp->begin);
+        if (varp->begin != (uint)varp->begin) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->begin);
     }
     else
-        status = ncmpix_put_int64((void**)(&pbp->pos), varp->begin);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), varp->begin);
     if (status != NC_NOERR) return status;
 
     return NC_NOERR;
@@ -770,26 +771,26 @@ hdr_put_NC_vararray(bufferinfo        *pbp,
     assert(pbp != NULL);
 
     if (ncap == NULL || ncap->ndefined == 0) { /* ABSENT */
-        status = ncmpix_put_int32((void**)(&pbp->pos), NC_UNSPECIFIED);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), NC_UNSPECIFIED);
         if (status != NC_NOERR) return status;
 
         /* put a ZERO or ZERO64 depending on which CDF format */
         if (pbp->version == 5)
-            status = ncmpix_put_int64((void**)(&pbp->pos), 0);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), 0);
         else
-            status = ncmpix_put_int32((void**)(&pbp->pos), 0);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), 0);
         if (status != NC_NOERR) return status;
     }
     else {
         /* copy NC_VARIABLE */
-        status = ncmpix_put_int32((void**)(&pbp->pos), NC_VARIABLE);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), NC_VARIABLE);
         if (status != NC_NOERR) return status;
 
         /* copy nelems */
         if (pbp->version == 5)
-            status = ncmpix_put_int64((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), ncap->ndefined);
         else
-            status = ncmpix_put_int32((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), ncap->ndefined);
         if (status != NC_NOERR) return status;
 
         /* copy [var ...] */
@@ -844,10 +845,10 @@ ncmpii_hdr_put_NC(NC   *ncp,
     /* copy numrecs, number of records */
     nrecs = ncp->numrecs;
     if (ncp->flags & NC_64BIT_DATA)
-        status = ncmpix_put_int64((void**)(&putbuf.pos), nrecs);
+        status = ncmpix_put_uint64((void**)(&putbuf.pos), nrecs);
     else {
-        if (nrecs != (int)nrecs) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        status = ncmpix_put_int32((void**)(&putbuf.pos), (int)nrecs);
+        if (nrecs != (uint)nrecs) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        status = ncmpix_put_uint32((void**)(&putbuf.pos), (uint)nrecs);
     }
     if (status != NC_NOERR) return status;
 
@@ -971,12 +972,12 @@ hdr_get_NCtype(bufferinfo *gbp,
                NCtype     *typep)
 {
     /* NCtype is 4-byte integer */
-    int type = 0;
+    uint type = 0;
     int status = hdr_check_buffer(gbp, 4);
     if (status != NC_NOERR) return status;
 
-    /* get a 4-byte integer */
-    status = ncmpix_get_int32((const void**)(&gbp->pos), &type);
+    /* get an external unsigned 4-byte integer from the file */
+    status = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
     gbp->index += X_SIZEOF_INT;
     if (status != NC_NOERR) return status;
 
@@ -984,10 +985,10 @@ hdr_get_NCtype(bufferinfo *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_int32() >----------------------------------------------------*/
+/*----< hdr_get_uint32() >---------------------------------------------------*/
 inline static int
-hdr_get_int32(bufferinfo *gbp,
-              int        *xp)
+hdr_get_uint32(bufferinfo *gbp,
+               uint        *xp)
 {
     /* in CDF-1 format, all integers are 32-bit
      * in CDF-2 format, only variable begin (starting file offset) is 64-bit
@@ -997,14 +998,14 @@ hdr_get_int32(bufferinfo *gbp,
     if (status != NC_NOERR) return status;
     gbp->index += 4;
 
-    status = ncmpix_get_int32((const void **)(&gbp->pos), xp);
+    status = ncmpix_get_uint32((const void **)(&gbp->pos), xp);
     return status;
 }
 
-/*----< hdr_get_int64() >----------------------------------------------------*/
+/*----< hdr_get_uint64() >---------------------------------------------------*/
 inline static int
-hdr_get_int64(bufferinfo *gbp,
-              MPI_Offset *xp)
+hdr_get_uint64(bufferinfo *gbp,
+               uint64     *xp)
 {
     /* in CDF-1 format, all integers are 32-bit
      * in CDF-2 format, only variable begin (starting file offset) is 64-bit
@@ -1014,7 +1015,7 @@ hdr_get_int64(bufferinfo *gbp,
     if (status != NC_NOERR) return status;
     gbp->index += 8;
 
-    status = ncmpix_get_int64((const void **)(&gbp->pos), xp);
+    status = ncmpix_get_uint64((const void **)(&gbp->pos), xp);
     return status;
 }
 
@@ -1024,12 +1025,13 @@ hdr_get_nc_type(bufferinfo *gbp,
                 nc_type    *typep)
 {
     /* nc_type is 4-byte integer, X_SIZEOF_INT */
-    int type, status;
+    int status;
+    uint type;
 
     status = hdr_check_buffer(gbp, X_SIZEOF_INT);
     if (status != NC_NOERR) return status;
 
-    status = ncmpix_get_int32((const void**)(&gbp->pos), &type);
+    status = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
     gbp->index += X_SIZEOF_INT;
     if (status != NC_NOERR) return status;
 
@@ -1094,11 +1096,14 @@ hdr_get_NC_name(bufferinfo  *gbp,
     MPI_Aint pos_addr, base_addr;
 
     /* get nelems */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &nchars);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        nchars = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         nchars = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
@@ -1181,11 +1186,14 @@ hdr_get_NC_dim(bufferinfo  *gbp,
     if (dimp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* get dim_length */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &dimp->size);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        dimp->size = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         dimp->size = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) {
@@ -1227,11 +1235,14 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &ndefined);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        ndefined = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
@@ -1360,11 +1371,14 @@ hdr_get_NC_attr(bufferinfo  *gbp,
     }
 
     /* get nelems */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &nelems);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        nelems = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         nelems = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) {
@@ -1420,11 +1434,14 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &ndefined);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        ndefined = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
@@ -1487,11 +1504,14 @@ hdr_get_NC_var(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* nelems */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &ndims);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        ndims = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         ndims = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) {
@@ -1514,11 +1534,14 @@ hdr_get_NC_var(bufferinfo  *gbp,
             ncmpii_free_NC_var(varp);
             return status;
         }
-        if (gbp->version == 5)
-            status = hdr_get_int64(gbp, &tmp_dimids);
+        if (gbp->version == 5) {
+            uint64 tmp;
+            status = hdr_get_uint64(gbp, &tmp);
+            tmp_dimids = (MPI_Offset)tmp;
+        }
         else {
-            int tmp;
-            status = hdr_get_int32(gbp, &tmp);
+            uint tmp;
+            status = hdr_get_uint32(gbp, &tmp);
             tmp_dimids = (MPI_Offset)tmp;
         }
         /* TODO: consider change the data type of dimids from int to
@@ -1544,11 +1567,14 @@ hdr_get_NC_var(bufferinfo  *gbp,
     }
 
     /* get vsize */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &varp->len);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        varp->len = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         varp->len = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) {
@@ -1580,12 +1606,15 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get begin */
     if (gbp->version == 1) {
-        int tmp=0;
-        status = ncmpix_get_int32((const void **)(&gbp->pos), &tmp);
+        uint tmp=0;
+        status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
         varp->begin = (MPI_Offset)tmp;
     }
-    else
-        status = ncmpix_get_int64((const void **)(&gbp->pos), &varp->begin);
+    else {
+        uint64 tmp=0;
+        status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
+        varp->begin = (MPI_Offset)tmp;
+    }
     if (status != NC_NOERR) {
         ncmpii_free_NC_var(varp);
         return status;
@@ -1627,11 +1656,14 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems (number of variables) from gbp buffer */
-    if (gbp->version == 5)
-        status = hdr_get_int64(gbp, &ndefined);
+    if (gbp->version == 5) {
+        uint64 tmp;
+        status = hdr_get_uint64(gbp, &tmp);
+        ndefined = (MPI_Offset)tmp;
+    }
     else {
-        int tmp;
-        status = hdr_get_int32(gbp, &tmp);
+        uint tmp;
+        status = hdr_get_uint32(gbp, &tmp);
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
@@ -1759,11 +1791,14 @@ ncmpii_hdr_get_NC(NC *ncp)
     }
 
     /* get numrecs from getbuf into ncp */
-    if (getbuf.version == 5)
-        status = ncmpix_get_int64((const void **)(&getbuf.pos), &nrecs);
+    if (getbuf.version == 5) {
+        uint64 tmp=0;
+        status = ncmpix_get_uint64((const void **)(&getbuf.pos), &tmp);
+        nrecs = (MPI_Offset)tmp;
+    }
     else {
-        int tmp=0;
-        status = ncmpix_get_int32((const void **)(&getbuf.pos), &tmp);
+        uint tmp=0;
+        status = ncmpix_get_uint32((const void **)(&getbuf.pos), &tmp);
         nrecs = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) {
@@ -2333,11 +2368,14 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
      }
      */
 
-    if (getbuf->version == 5)
-        err = ncmpix_get_int64((const void **)(&getbuf->pos), &nrecs);
+    if (getbuf->version == 5) {
+        uint64 tmp=0;
+        err = ncmpix_get_uint64((const void **)(&getbuf->pos), &tmp);
+        nrecs = (MPI_Offset)tmp;
+    }
     else {
-        int tmp=0;
-        err = ncmpix_get_int32((const void **)(&getbuf->pos), &tmp);
+        uint tmp=0;
+        err = ncmpix_get_uint32((const void **)(&getbuf->pos), &tmp);
         nrecs = (MPI_Offset)tmp;
     }
     if (err != NC_NOERR) {

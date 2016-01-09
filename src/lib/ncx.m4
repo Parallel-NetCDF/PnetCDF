@@ -2053,9 +2053,9 @@ ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
 	return NC_NOERR;
 }
 
-/*----< ncmpix_get_int32() >--------------------------------------------------*/
+/*----< ncmpix_get_uint32() >-------------------------------------------------*/
 int
-ncmpix_get_int32(const void **xpp, int *ip)
+ncmpix_get_uint32(const void **xpp, uint *ip)
 {
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
@@ -2075,9 +2075,9 @@ ncmpix_get_int32(const void **xpp, int *ip)
     return NC_NOERR;
 }
 
-/*----< ncmpix_get_int64() >--------------------------------------------------*/
+/*----< ncmpix_get_uint64() >-------------------------------------------------*/
 int
-ncmpix_get_int64(const void **xpp, long long *llp)
+ncmpix_get_uint64(const void **xpp, unsigned long long *llp)
 {
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
@@ -2102,12 +2102,12 @@ ncmpix_get_int64(const void **xpp, long long *llp)
     return NC_NOERR;
 }
 
-/*---< ncmpix_put_int32() >---------------------------------------------------*/
-/* copy the contents of ip (a signed 32-bit integer) to xpp in Big Endian
+/*---< ncmpix_put_uint32() >--------------------------------------------------*/
+/* copy the contents of ip (an unsigned 32-bit integer) to xpp in Big Endian
  * form and advance *xpp 4 bytes
  */
 int
-ncmpix_put_int32(void **xpp, const int ip)
+ncmpix_put_uint32(void **xpp, const unsigned int ip)
 {
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
@@ -2127,12 +2127,12 @@ ncmpix_put_int32(void **xpp, const int ip)
     return NC_NOERR;
 }
 
-/*---< ncmpix_put_int64() >---------------------------------------------------*/
-/* copy the contents of ip (a signed 64-bit integer) to xpp in Big Endian
+/*---< ncmpix_put_uint64() >--------------------------------------------------*/
+/* copy the contents of ip (an unsigned 64-bit integer) to xpp in Big Endian
  * form and advance *xpp 8 bytes
  */
 int
-ncmpix_put_int64(void **xpp, const long long ip)
+ncmpix_put_uint64(void **xpp, const unsigned long long ip)
 {
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
