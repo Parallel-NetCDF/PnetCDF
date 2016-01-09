@@ -35,9 +35,20 @@
 #include <errno.h>
 #include <sys/types.h> /* off_t */
 
+
+
+#ifndef longlong
 #define longlong long long
-#define longlong long long
+#endif
+#ifndef iint64
+#define int64 long long
+#endif
+#ifndef ulonglong
 #define ulonglong unsigned long long
+#endif
+#ifndef uint64
+#define uint64 unsigned long long
+#endif
 
 #if defined(_CRAY) && !defined(_CRAYIEEE) && !defined(__crayx1)
 #define CRAYFLOAT 1 /* CRAY Floating point */
@@ -235,13 +246,13 @@ extern int
 ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t);
 
 extern int
-ncmpix_get_int32(const void **xpp, int *ip);
+ncmpix_get_uint32(const void **xpp, unsigned int *ip);
 extern int
-ncmpix_get_int64(const void **xpp, long long *ip);
+ncmpix_get_uint64(const void **xpp, unsigned long long *ip);
 extern int
-ncmpix_put_int32(void **xpp, const int ip);
+ncmpix_put_uint32(void **xpp, const unsigned int ip);
 extern int
-ncmpix_put_int64(void **xpp, const long long ip);
+ncmpix_put_uint64(void **xpp, const unsigned long long ip);
 
 
 /*

@@ -21,6 +21,21 @@ static int endianness;
 #define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
 #endif
 
+static int verbose_debug;
+
+#define DEBUG_RETURN_ERROR(err) {                             \
+    if (verbose_debug)                                        \
+        fprintf(stderr, "Error code %s at line %d of %s\n",   \
+        ncmpii_err_code_name(err),__LINE__,__FILE__);         \
+    return err;                                               \
+}
+#define DEBUG_ASSIGN_ERROR(status, err) {                     \
+    if (verbose_debug)                                        \
+        fprintf(stderr, "Error code %s at line %d of %s\n",   \
+        ncmpii_err_code_name(err),__LINE__,__FILE__);         \
+    status = err;                                             \
+}
+
 #define IS_RECVAR(vp) \
         ((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
@@ -183,6 +198,8 @@ static const char ncmagic1[] = {'C', 'D', 'F', 0x01};
 static const char ncmagic2[] = {'C', 'D', 'F', 0x02};
 static const char ncmagic5[] = {'C', 'D', 'F', 0x05};
 
+const char * ncmpii_err_code_name(int err);
+
 static int is_little_endian(void) {
     volatile uint32_t i=0x01234567;
     // return 0 for big endian, 1 for little endian.
@@ -192,7 +209,7 @@ static int is_little_endian(void) {
 static void
 swap4b(int *val)
 {
-    int tmp = *val;
+    unsigned int tmp = *val;
     char *ip = (char*) &tmp;
     char *op = (char*) val;
     op[0] = ip[3];
@@ -204,7 +221,7 @@ swap4b(int *val)
 static void
 swap8b(long long *val)
 {
-    long long tmp = *val;
+    unsigned long long tmp = *val;
     char *ip = (char*) &tmp;
     char *op = (char*) val;
     op[0] = ip[7];
@@ -217,18 +234,18 @@ swap8b(long long *val)
     op[7] = ip[0];
 }
 
-static long long
-get_int8(bufferinfo *gbp) {
-    long long tmp;
+static unsigned long long
+get_uint8(bufferinfo *gbp) {
+    unsigned long long tmp;
     memcpy(&tmp, gbp->pos, 8);
     if (endianness) swap8b(&tmp);
     gbp->pos += 8;
     return tmp;
 }
 
-static int
-get_int4(bufferinfo *gbp) {
-    int tmp;
+static unsigned int
+get_uint4(bufferinfo *gbp) {
+    unsigned int tmp;
     memcpy(&tmp, gbp->pos, 4);
     if (endianness) swap4b(&tmp);
     gbp->pos += 4;
@@ -352,10 +369,10 @@ ncmpii_NC_var_shape64(NC                *ncp,
         const NC_dim *dimp;
 
         if (varp->dimids[i] < 0)
-            return NC_EBADDIM;
+            DEBUG_RETURN_ERROR(NC_EBADDIM);
 
         if (varp->dimids[i] >= ((dims != NULL) ? dims->ndefined : 1))
-            return NC_EBADDIM;
+            DEBUG_RETURN_ERROR(NC_EBADDIM);
 
         /* get the pointer to the dim object */
         dimp = ncmpii_elem_NC_dimarray(dims, varp->dimids[i]);
@@ -364,7 +381,7 @@ ncmpii_NC_var_shape64(NC                *ncp,
         /* check for record variable, only the highest dimension can
          * be unlimited */
         if (varp->shape[i] == NC_UNLIMITED && i != 0)
-            return NC_EUNLIMPOS;
+            DEBUG_RETURN_ERROR(NC_EUNLIMPOS);
     }
 
     /*
@@ -398,7 +415,7 @@ out :
      * We will check this in ncmpi_enddef() which calls ncmpii_NC_enddef() 
      * which calls ncmpii_NC_check_vlens() 
     if (ncp->flags != 5 && product >= X_UINT_MAX)
-        return NC_EVARSIZE;
+        DEBUG_RETURN_ERROR(NC_EVARSIZE);
      */
 
     /*
@@ -459,7 +476,7 @@ ncmpii_NC_computeshapes(NC *ncp)
 
     if (first_rec != NULL) {
         if (ncp->begin_rec > first_rec->begin)
-            return NC_ENOTNC; /* not a netCDF file or corrupted */
+            DEBUG_RETURN_ERROR(NC_ENOTNC); /* not a netCDF file or corrupted */
 
         ncp->begin_rec = first_rec->begin;
         /*
@@ -478,7 +495,7 @@ ncmpii_NC_computeshapes(NC *ncp)
         ncp->xsz > ncp->begin_var ||
         ncp->begin_rec <= 0 ||
         ncp->begin_var > ncp->begin_rec)
-        return NC_ENOTNC; /* not a netCDF file or corrupted */
+        DEBUG_RETURN_ERROR(NC_ENOTNC); /* not a netCDF file or corrupted */
 
     return NC_NOERR;
 }
@@ -807,7 +824,7 @@ hdr_get_NCtype(bufferinfo *gbp,
     if (status != NC_NOERR) return status;
 
     /* get a 4-byte integer */
-    *typep = get_int4(gbp);
+    *typep = get_uint4(gbp);
 
     return NC_NOERR;
 }
@@ -823,7 +840,7 @@ hdr_get_nc_type(bufferinfo *gbp,
     status = hdr_check_buffer(gbp, X_SIZEOF_INT);
     if (status != NC_NOERR) return status;
 
-    type = get_int4(gbp);
+    type = get_uint4(gbp);
 
     if (type != NC_BYTE    &&
         type != NC_CHAR    &&
@@ -837,7 +854,7 @@ hdr_get_nc_type(bufferinfo *gbp,
         type != NC_INT64   &&
         type != NC_UINT64
        )
-        return NC_EINVAL;
+        DEBUG_RETURN_ERROR(NC_EINVAL);
 
     *typep = (nc_type) type;
     return NC_NOERR;
@@ -866,9 +883,9 @@ hdr_get_NC_name(bufferinfo  *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        nchars = get_int8(gbp);
+        nchars = get_uint8(gbp);
     else
-        nchars = get_int4(gbp);
+        nchars = get_uint4(gbp);
 
     /* Allocate a NC_string structure large enough to hold nchars characters */
     ncstrp = ncmpii_new_NC_string(nchars, NULL);
@@ -902,7 +919,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             free(ncstrp);
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL);
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
@@ -950,9 +967,9 @@ hdr_get_NC_dim(bufferinfo  *gbp,
 
     /* get dim_length */
     if (gbp->version == 5) 
-        dimp->size = get_int8(gbp);
+        dimp->size = get_uint8(gbp);
     else
-        dimp->size = get_int4(gbp);
+        dimp->size = get_uint4(gbp);
 
     *dimpp = dimp;
     return NC_NOERR;
@@ -1012,16 +1029,16 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        ndefined = get_int8(gbp);
+        ndefined = get_uint8(gbp);
     else
-        ndefined = get_int4(gbp);
+        ndefined = get_uint4(gbp);
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
         if (type != NC_DIMENSION && type != NC_UNSPECIFIED)
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL);
     } else {
-        if (type != NC_DIMENSION) return NC_EINVAL;
+        if (type != NC_DIMENSION) DEBUG_RETURN_ERROR(NC_EINVAL);
 
         ncap->value = (NC_dim **) malloc(ndefined * sizeof(NC_dim*));
         MALLOC_CHECK(ncap->value)
@@ -1086,7 +1103,8 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     /* handle the padding */
     if (padding > 0) {
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) return NC_EINVAL;
+        if (memcmp(gbp->pos, pad, (size_t)padding) != 0)
+            DEBUG_RETURN_ERROR(NC_EINVAL);
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
 
@@ -1184,9 +1202,9 @@ hdr_get_NC_attr(bufferinfo  *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        nelems = get_int8(gbp);
+        nelems = get_uint8(gbp);
     else
-        nelems = get_int4(gbp);
+        nelems = get_uint4(gbp);
 
     /* allocate space for attribute object */
     attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
@@ -1249,16 +1267,17 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        ndefined = get_int8(gbp);
+        ndefined = get_uint8(gbp);
     else
-        ndefined = get_int4(gbp);
+        ndefined = get_uint4(gbp);
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
         if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED)
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL);
     } else {
-        if (type != NC_ATTRIBUTE) return NC_EINVAL;
+        if (type != NC_ATTRIBUTE)
+            DEBUG_RETURN_ERROR(NC_EINVAL);
 
         ncap->value = (NC_attr **)malloc((size_t)ndefined * sizeof(NC_attr*));
         MALLOC_CHECK(ncap->value)
@@ -1350,9 +1369,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* nelems */
     if (gbp->version == 5) 
-        ndims = get_int8(gbp);
+        ndims = get_uint8(gbp);
     else
-        ndims = get_int4(gbp);
+        ndims = get_uint4(gbp);
 
     /* allocate space for var object */
     varp = ncmpii_new_x_NC_var(strp, (int)ndims);
@@ -1365,9 +1384,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
             return status;
         }
         if (gbp->version == 5) 
-            varp->dimids[dim] = get_int8(gbp);
+            varp->dimids[dim] = get_uint8(gbp);
         else
-            varp->dimids[dim] = get_int4(gbp);
+            varp->dimids[dim] = get_uint4(gbp);
     }
 
     /* get vatt_list */
@@ -1386,9 +1405,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get vsize */
     if (gbp->version == 5) 
-        varp->len = get_int8(gbp);
+        varp->len = get_uint8(gbp);
     else
-        varp->len = get_int4(gbp);
+        varp->len = get_uint4(gbp);
 
     /* next element is 'begin' */
     status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
@@ -1399,9 +1418,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get begin */
     if (gbp->version == 1)
-        varp->begin = get_int4(gbp);
+        varp->begin = get_uint4(gbp);
     else
-        varp->begin = get_int8(gbp);
+        varp->begin = get_uint8(gbp);
 
     *varpp = varp;
     return NC_NOERR;
@@ -1460,16 +1479,17 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
 
     /* get nelems (number of variables) from gbp buffer */
     if (gbp->version == 5) 
-        ndefined = get_int8(gbp);
+        ndefined = get_uint8(gbp);
     else
-        ndefined = get_int4(gbp);
+        ndefined = get_uint4(gbp);
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) { /* no variable defined */
         if (type != NC_VARIABLE && type != NC_UNSPECIFIED)
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL);
     } else {
-        if (type != NC_VARIABLE) return NC_EINVAL;
+        if (type != NC_VARIABLE)
+            DEBUG_RETURN_ERROR(NC_EINVAL);
 
         ncap->value = (NC_var **) malloc((size_t)ndefined * sizeof(NC_var*));
         MALLOC_CHECK(ncap->value)
@@ -1532,7 +1552,7 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
      * if the first bits are not 'CDF'
      */
     if (memcmp(magic, ncmagic1, sizeof(ncmagic1)-1) != 0) {
-        status = NC_ENOTNC;
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         goto fn_exit;
     }
 
@@ -1547,7 +1567,7 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
         getbuf.version = 5;
         ncp->flags = 5;
     } else {
-        status = NC_ENOTNC; /* not an netCDF file */
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTNC); /* not an netCDF file */
         goto fn_exit;
     }
 
@@ -1557,9 +1577,9 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
 
     /* get numrecs from getbuf into ncp */
     if (getbuf.version == 5) 
-        ncp->numrecs = get_int8(&getbuf);
+        ncp->numrecs = get_uint8(&getbuf);
     else
-        ncp->numrecs = get_int4(&getbuf);
+        ncp->numrecs = get_uint4(&getbuf);
 
     /* get dim_list from getbuf into ncp */
     status = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
@@ -1619,6 +1639,23 @@ ncmpi_strerror(int err)
 	 return "NetCDF: Unknown file format";
       case NC_EVARSIZE:
 	 return "NetCDF: One or more variable sizes violate format constraints";
+      default:
+         printf("Unknown error code %d\n",err);
+         return "Unknown error code";
+   }
+}
+
+const char *
+ncmpii_err_code_name(int err)
+{
+   switch(err)
+   {
+      case NC_NOERR:     return "NC_NOERR";
+      case NC_EINVAL:    return "NC_EINVAL";
+      case NC_EBADDIM:   return "NC_EBADDIM";
+      case NC_EUNLIMPOS: return "NC_EUNLIMPOS";
+      case NC_ENOTNC:    return "NC_ENOTNC";
+      case NC_EVARSIZE : return "NC_EVARSIZE";
       default:
          printf("Unknown error code %d\n",err);
          return "Unknown error code";
@@ -1731,7 +1768,7 @@ usage(char *cmd)
 int main(int argc, char *argv[])
 {
     extern int optind;
-    char *filename, cmd[256];
+    char *filename, cmd[256], *env_str;
     int i, j, err, opt, nvars;
     int print_var_size=0, print_gap=0, check_gap=0, print_all_rec=0;
     NC *ncp;
@@ -1773,6 +1810,10 @@ int main(int argc, char *argv[])
     }
     filename = argv[0]; /* required argument */
 
+    verbose_debug = 0;
+    env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");
+    if (env_str != NULL && *env_str != '0') verbose_debug = 1;
+
     /* find Endianness of the running machine */
     endianness = is_little_endian();
 
@@ -1788,8 +1829,10 @@ int main(int argc, char *argv[])
 
     /* read the header from file */
     err = ncmpii_hdr_get_NC(fd, ncp);
-    if (err != NC_NOERR)
-        fprintf(stderr,"Error: code=%s\n", ncmpi_strerror(err));
+    if (err != NC_NOERR) {
+        fprintf(stderr,"Error at line %d: code = %s\n", __LINE__,ncmpii_err_code_name(err));
+        exit(1);
+    }
 
     if (check_gap) {
         int ret = check_gap_in_fixed_vars(ncp);
@@ -1802,7 +1845,7 @@ int main(int argc, char *argv[])
 
     /* print file name and format */
     printf("netcdf %s {\n",filename);
-    printf("//file format: CDF-%d\n",ncp->flags);
+    printf("// file format: CDF-%d\n",ncp->flags);
     printf("\n");
 
     /* print file header size and extent */

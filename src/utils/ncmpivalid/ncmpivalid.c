@@ -115,14 +115,14 @@ val_check_buffer(bufferinfo *gbp,
 
 static int
 val_get_NCtype(bufferinfo *gbp, NCtype *typep) {
-  int type = 0;
+  unsigned int type = 0;
   int status = val_check_buffer(gbp, X_SIZEOF_INT);
   if (status != NC_NOERR) {
     printf("NC component type is expected for ");
     return status;
   }
 
-  status = ncmpix_get_int32((const void**)(&gbp->pos), &type);
+  status = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
   if (status != NC_NOERR)
     return status;
   *typep = (NCtype) type;
@@ -137,11 +137,14 @@ val_get_size_t(bufferinfo *gbp, MPI_Offset *sp) {
     printf("size is expected for ");
     return status; 
   }
-  if (gbp->version == 5)
-      status = ncmpix_get_int64((const void **)(&gbp->pos), sp);
+  if (gbp->version == 5) {
+      unsigned long long tmp=0;
+      status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
+      *sp = (MPI_Offset)tmp;
+  }
   else {
-      int tmp=0;
-      status = ncmpix_get_int32((const void **)(&gbp->pos), &tmp);
+      unsigned int tmp=0;
+      status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
       *sp = (MPI_Offset)tmp;
   }
   return status;
@@ -306,12 +309,12 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
 static int
 val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
     /* NCtype is 4-byte integer */
-    int type = 0;
+    unsigned int type = 0;
     int status = val_check_buffer(gbp, 4);
     if (status != NC_NOERR) return status;
 
     /* get a 4-byte integer */
-    status = ncmpix_get_int32((const void**)(&gbp->pos), &type);
+    status = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
     gbp->index += X_SIZEOF_INT;
     if (status != NC_NOERR) return status;
 
@@ -525,11 +528,14 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
       return status;
     }
     tmp_dim = (MPI_Offset*) (varp->dimids + dim);
-    if (gbp->version == 5)
-        status = ncmpix_get_int64((const void **)(&gbp->pos), tmp_dim);
+    if (gbp->version == 5) {
+        unsigned long long tmp=0;
+        status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
+        *tmp_dim = (MPI_Offset)tmp;
+    }
     else {
-        int tmp=0;
-        status = ncmpix_get_int32((const void **)(&gbp->pos), &tmp);
+        unsigned int tmp=0;
+        status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
         *tmp_dim = (MPI_Offset)tmp;
     }
     if(status != NC_NOERR) {
@@ -565,11 +571,14 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     ncmpii_free_NC_var(varp);
     return status;
   }
-  if (gbp->version == 5)
-      status = ncmpix_get_int64((const void **)(&gbp->pos), &varp->begin);
+  if (gbp->version == 1) {
+      unsigned int tmp=0;
+      status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
+      varp->begin = (MPI_Offset)tmp;
+  }
   else {
-      int tmp=0;
-      status = ncmpix_get_int32((const void **)(&gbp->pos), &tmp);
+      unsigned long long tmp=0;
+      status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
       varp->begin = (MPI_Offset)tmp;
   }
   if(status != NC_NOERR) {
@@ -719,11 +728,14 @@ val_get_NC(NC *ncp) {
     }
 
     /* get numrecs from getbuf into ncp */
-    if (getbuf.version == 5)
-        status = ncmpix_get_int64((const void **)(&getbuf.pos), &nrecs);
+    if (getbuf.version == 5) {
+        unsigned long long tmp=0;
+        status = ncmpix_get_uint64((const void **)(&getbuf.pos), &tmp);
+        nrecs = (MPI_Offset)tmp;
+    }
     else {
-        int tmp=0;
-        status = ncmpix_get_int32((const void **)(&getbuf.pos), &tmp);
+        unsigned int tmp=0;
+        status = ncmpix_get_uint32((const void **)(&getbuf.pos), &tmp);
         nrecs = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) {
@@ -819,6 +831,7 @@ int main(int argc, char **argv) {
     /* read to validate the header */
     status = val_get_NC(ncp);
     if (status !=  NC_NOERR) {
+        printf("Error at line %d (%s)\n",__LINE__,ncmpi_strerror(status));
         close(ncp->nciop->fd);
         ncmpiio_free(ncp->nciop);
         ncmpii_free_NC(ncp);
@@ -833,7 +846,8 @@ int main(int argc, char **argv) {
         ncmpiio_free(ncp->nciop);
         ncmpii_free_NC(ncp);
         return 0;  
-    } else if ( ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) > ncfilestat.st_size ) {
+    } else if ( ncp->numrecs > 0 &&
+                ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) > ncfilestat.st_size ) {
         printf("Error: \n\tData size is less than expected!\n");
         printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
         close(ncp->nciop->fd);

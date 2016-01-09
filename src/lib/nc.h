@@ -224,6 +224,10 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 
 /*
  * NC attribute
+ *
+ * Number of attributes is limited by 2^31-1 because the argument attnump in
+ *  int nc_inq_attid(int ncid, int varid, const char *name, int *attnump);
+ * is a signed 4-byte integer.
  */
 typedef struct {
     MPI_Offset xsz;      /* amount of space at xvalue (4-byte aligned) */

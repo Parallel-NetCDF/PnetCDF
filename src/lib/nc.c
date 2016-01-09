@@ -683,12 +683,12 @@ ncmpii_sync_numrecs(NC         *ncp,
 
         if (ncp->flags & NC_64BIT_DATA) {
             len = X_SIZEOF_INT64;
-            status = ncmpix_put_int64((void**)&buf, max_numrecs);
+            status = ncmpix_put_uint64((void**)&buf, max_numrecs);
         }
         else {
             if (max_numrecs != (int)max_numrecs) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             len = X_SIZEOF_SIZE_T;
-            status = ncmpix_put_int32((void**)&buf, (int)max_numrecs);
+            status = ncmpix_put_uint32((void**)&buf, (uint)max_numrecs);
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
