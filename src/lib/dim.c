@@ -318,7 +318,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
      * In 1999 ISO C standard, size_t is a unsigned integer type of at least
      * 16 bit. */
     if ((ncp->flags & NC_64BIT_OFFSET) && SIZEOF_OFF_T > 4) {
-        /* CDF2 format and LFS */
+        /* CDF2 format and LFS, max is 2^32-4 */
         if (size > X_UINT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
             DEBUG_RETURN_ERROR(NC_EDIMSIZE)
@@ -327,7 +327,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
         if (size < 0)
             DEBUG_RETURN_ERROR(NC_EDIMSIZE)
     } else {
-        /* CDF1 format */
+        /* CDF1 format, max is 2^31-4 */
         if (size > X_INT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
             DEBUG_RETURN_ERROR(NC_EDIMSIZE)

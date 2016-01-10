@@ -376,7 +376,7 @@ main(int argc, char *argv[])
     if (! read_only) {
 	NC_TEST(ncmpi_create);
 	NC_TEST(ncmpi_redef);
-	/* NC_TEST(ncmpi_enddef);  redundant */
+	/* NC_TEST(ncmpi_enddef);  redundant, as it calls test_ncmpi_redef() */
 	NC_TEST(ncmpi_sync);
 	NC_TEST(ncmpi_abort);
 	NC_TEST(ncmpi_def_dim);

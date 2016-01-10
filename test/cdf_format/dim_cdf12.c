@@ -164,6 +164,14 @@ int main(int argc, char** argv)
     ERR_EXPECT(NC_EVARSIZE)
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", INT_MAX/2+1, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 2,           &dimid[1]); ERR
+    err = ncmpi_def_var(ncid, "var0", NC_INT, 1, &dimid[0], &varid); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, &dimid[1], &varid); ERR
+    err = ncmpi_close(ncid);
+    ERR_EXPECT(NC_EVARSIZE)
+
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); ERR
     err = ncmpi_def_dim(ncid, "Y", INT_MAX/2, &dimid[0]); ERR
     err = ncmpi_def_dim(ncid, "X", 2,         &dimid[1]); ERR
     err = ncmpi_def_var(ncid, "var0", NC_INT, 1, &dimid[0], &varid); ERR
@@ -171,14 +179,6 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); ERR
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
     err = ncmpi_close(ncid); ERR
-
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); ERR
-    err = ncmpi_def_dim(ncid, "Y", INT_MAX/2+1, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", 2,           &dimid[1]); ERR
-    err = ncmpi_def_var(ncid, "var0", NC_INT, 1, &dimid[0], &varid); ERR
-    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, &dimid[1], &varid); ERR
-    err = ncmpi_close(ncid);
-    ERR_EXPECT(NC_EVARSIZE)
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

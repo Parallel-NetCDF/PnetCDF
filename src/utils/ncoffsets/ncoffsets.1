@@ -19,8 +19,11 @@ ncoffsets
 .ft
 .SH DESCRIPTION
 \fBncoffsets\fP prints the file offsets information of variables defined in
-a given netCDF file. For record variables, only the offsets of first record
-are printed. Add option \fB-r\fP to print the offsets of all records.
+a given netCDF file. The ending offsets reported is an exclusive offset, i.e.
+1 byte more than the last byte occupied by the variable. In other words, the
+ending offset is equal to the sum of starting offset and the variable size.
+For record variables, only the offsets of first record are printed. Add
+option \fB-r\fP to print the offsets of all records.
 
 If no argument is given, command usage information is printed.
 .SH OPTIONS

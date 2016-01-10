@@ -94,7 +94,7 @@ This is essentially a placeholder for the next release note ...
 
   o New utility program
     * ncoffsets reports the file offset information, including the starting and
-      ending file offsets, of variables defined in a netCDF file. ncoffsets is
+      ending file offsets, of variables stored in a netCDF file. ncoffsets is
       compiled with gcc if gcc is presented on the build system. Additional
       command-line options are: (-v) reports only for a selected list of
       variables in interest, (-s) prints the variable sizes, (-g) outputs the
@@ -116,6 +116,10 @@ This is essentially a placeholder for the next release note ...
       nonblocking requests.
 
   o Other updates:
+    * Conform with netCDF on the maximal dimension size for CDF-2 file format
+      to be (2^32 - 4)
+    * NC_ERANGE checks have been removed from nc_test for text APIs and
+      variables that are defined as NC_CHAR type
     * Add README.K-Computer build recipe for using Fujitsu MPI compilers on the
       K computer at RIKEN in Japan
     * Add README.INTEL build recipe for using Intel MPI compilers 4.x
