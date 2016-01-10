@@ -35,4 +35,12 @@ typedef long long longlong;
 typedef unsigned long long ulonglong;
 #endif
 
+#ifndef HAVE_INT64
+typedef long long int64;
+#endif
+
+#ifndef HAVE_UINT64
+typedef unsigned long long uint64;
+#endif
+
 #endif

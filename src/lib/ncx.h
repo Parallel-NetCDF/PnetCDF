@@ -36,20 +36,6 @@
 #include <sys/types.h> /* off_t */
 
 
-
-#ifndef longlong
-#define longlong long long
-#endif
-#ifndef iint64
-#define int64 long long
-#endif
-#ifndef ulonglong
-#define ulonglong unsigned long long
-#endif
-#ifndef uint64
-#define uint64 unsigned long long
-#endif
-
 #if defined(_CRAY) && !defined(_CRAYIEEE) && !defined(__crayx1)
 #define CRAYFLOAT 1 /* CRAY Floating point */
 #elif defined(_SX) && defined(_FLOAT2)	/* NEC SUPER-UX in CRAY mode */
