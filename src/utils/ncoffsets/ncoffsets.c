@@ -1830,7 +1830,7 @@ int main(int argc, char *argv[])
     /* read the header from file */
     err = ncmpii_hdr_get_NC(fd, ncp);
     if (err != NC_NOERR) {
-        fprintf(stderr,"Error at line %d: code = %s\n", __LINE__,ncmpii_err_code_name(err));
+        fprintf(stderr,"Error: %s\n", ncmpii_err_code_name(err));
         exit(1);
     }
 
@@ -1841,6 +1841,26 @@ int main(int argc, char *argv[])
         close(fd);
         printf("%d\n",ret);
         return 0;
+    }
+
+    /* First check if all selected variables can be found in input file. */
+    if (fspecp->nlvars > 0) {
+        /* print a selected list of variables */
+        fspecp->varids = (int*) malloc(fspecp->nlvars * sizeof(int));
+        MALLOC_CHECK(fspecp->varids)
+        for (i=0; i<fspecp->nlvars; i++) {
+            for (j=0; j<ncp->vars.ndefined; j++) {
+                if (!strcmp(fspecp->lvars[i], ncp->vars.value[j]->name->cp)) {
+                    fspecp->varp[i] = ncp->vars.value[j];
+                    fspecp->varids[i] = j;
+                    break;
+                }
+            }
+            if (j == ncp->vars.ndefined) {
+                printf("Error: variable %s not found\n",fspecp->lvars[i]);
+                return 1;
+            }
+        }
     }
 
     /* print file name and format */
@@ -1877,23 +1897,6 @@ int main(int argc, char *argv[])
         for (i=0; i<ncp->vars.ndefined; i++) {
             fspecp->varp[i] = ncp->vars.value[i];
             fspecp->varids[i] = i;
-        }
-    }
-    else {
-        fspecp->varids = (int*) malloc(fspecp->nlvars * sizeof(int));
-        MALLOC_CHECK(fspecp->varids)
-        for (i=0; i<fspecp->nlvars; i++) {
-            for (j=0; j<ncp->vars.ndefined; j++) {
-                if (!strcmp(fspecp->lvars[i], ncp->vars.value[j]->name->cp)) {
-                    fspecp->varp[i] = ncp->vars.value[j];
-                    fspecp->varids[i] = j;
-                    break;
-                }
-            }
-            if (j == ncp->vars.ndefined) {
-                printf("Error: undefined variable %s\n",fspecp->lvars[i]);
-                return 1;
-            }
         }
     }
 
@@ -2020,8 +2023,13 @@ int main(int argc, char *argv[])
         var_end   = varp->begin + size;
         if (print_all_rec == 0) numrecs = 1;
         for (j=0; j<numrecs; j++) {
-            printf("\t       start file offset =%12lld    (record %d)\n", var_begin,j);
-            printf("\t       end   file offset =%12lld    (record %d)\n", var_end,j);
+            char rec_num[32];
+                 if (j % 10 == 1) sprintf(rec_num, "%dst", j);
+            else if (j % 10 == 2) sprintf(rec_num, "%dnd", j);
+            else if (j % 10 == 3) sprintf(rec_num, "%drd", j);
+            else                  sprintf(rec_num, "%dth", j);
+            printf("\t       start file offset =%12lld    (%s record)\n", var_begin,rec_num);
+            printf("\t       end   file offset =%12lld    (%s record)\n", var_end,rec_num);
             var_begin += ncp->recsize;
             var_end   += ncp->recsize;
         }
