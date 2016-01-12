@@ -26,7 +26,8 @@ OBJS    = $(SRCS:.c=.o)
 PROGS   = $(SRCS:.c=)
 
 GARBAGE      = $(PROGS) testfile.nc
-PACKING_LIST = $(SRCS) Makefile.in test_cdf1.nc test_cdf2.nc test_cdf5.nc
+PACKING_LIST = $(SRCS) Makefile.in depend \
+               test_cdf1.nc test_cdf2.nc test_cdf5.nc
 
 all: $(PROGS)
 
