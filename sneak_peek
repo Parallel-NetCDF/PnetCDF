@@ -103,16 +103,17 @@ This is essentially a placeholder for the next release note ...
       the man page for descriptions of all command-line options and examples.
 
   o Semantics updates
-    * All nonblocking APIs now take a NULL pointer for the request ID argument.
-      If NULL request IDs are used, users should use NC_REQ_ALL when calling
-      ncmpi_wait_all/ncmpi_wait to commit all pending nonblocking requests.
-      This feature can relinquish users the responsibility of tracking the IDs
-      of all pending requests.
-    * When using NC_REQ_ALL as the 2nd argument "num" in ncmpi_wait_all/
-      ncmpi_wait will flush all the pending nonblocking. In this case, the
-      arguments "array_of_requests" and "array_of_statuses" will be ignored.
-      Thus, NULLs can be used for these two arguments.
-    * When using NC_REQ_ALL in ncmpi_cancel will cancel all the pending
+    * All nonblocking APIs now take a NULL pointer for the request ID argument,
+      meaning users do not wish to keep track of the request ID. If NULL
+      request IDs are used, NC_REQ_ALL should be used when calling
+      ncmpi_wait_all/ncmpi_wait to commit all the pending nonblocking requests.
+      This feature relinquishes users from the responsibility of tracking the
+      IDs of pending requests.
+    * Using NC_REQ_ALL as the 2nd argument "num" in ncmpi_wait_all/ncmpi_wait
+      APIs will flush all the pending nonblocking requests. In this case, the
+      3rd and 4th arguments "array_of_requests" and "array_of_statuses" will be
+      ignored and thus these two arguments can be NULLs.
+    * Using NC_REQ_ALL in ncmpi_cancel() will cancel all the pending
       nonblocking requests.
 
   o Other updates:
