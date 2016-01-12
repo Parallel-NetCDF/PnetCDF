@@ -20,9 +20,9 @@ Tasks immediately before a new release (must run in the following order)
       - make uninstall (and make sure all installed files are deleted)
       - make clean (and make sure all object files are deleted)
       - make distclean (and make sure all non-source files are deleted)
-    * build and test under a different directory
-    * build and test on different platforms with different compilers:
-      - login.mcs.anl.gov : Linux, NAG Fortran, PGI, Solaris Studio compilers
+    * build and test under a different directory (VPATH build)
+    * build and test on different platforms with various compilers:
+      - login.mcs.anl.gov : Intel, NAG Fortran, PGI, Solaris Studio compilers
       - edison.nersc.gov : Cray, Intel compilers
       - cetus.alcf.anl.gov : IBM BGQ, XL compilers, cross-compiling, Big Endian
       - k.aics.riken.jp : Fujitsu compilers, cross-compiling, Big Endian
@@ -39,7 +39,7 @@ Tasks immediately before a new release (must run in the following order)
 
  3. Update file "RELEASE_NOTES".
     Copy the contents of file "sneak_peek" into file "RELEASE_NOTES"
-    Add release version and date at the top of file "RELEASE_NOTES".
+    Add the release version and date at the top of file "RELEASE_NOTES".
     Clear up file "sneak_peek" (reset all items to none)
 
  4. Update the release date.
@@ -56,11 +56,11 @@ Tasks immediately before a new release (must run in the following order)
              https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-6-1 \
              -m "Tagging release version 1.6.1"
 
- 6. Generate a new file "configure" with a new release date.
+ 6. Generate a new "configure" file with the release date.
     Run command "autoreconf" to generate file "configure"  which will be
     included in the release (but not to be saved in the SVN repo).
-    Preferably, use autotools version 2.69 or higher to run "autoreconf".
-    See README.Fujitsu for the bug in autoconf 2.69 and patch.
+    Must use the bug-fixed autotools of version 2.69 or higher to run
+    "autoreconf". See README.Fujitsu for the bug in autoconf 2.69 and patch.
 
  7. Create all Makefiles.
     Run command "./configure" to create all Makefiles, so we can run command
@@ -113,11 +113,12 @@ Note on autotools version
    I, Wei-keng, tend to test it using v2.59, in case PnetCDF users have
    autotools as old as 2.59.
 
-   However, 2.59 generates a buggy configure file and failed on processing
-   libraries from linker command line when running on Carver @nersc
+   However, 2.59 could generate a buggy configure file and failed on processing
+   libraries from linker command line, for example when running on Carver
+   @nersc
 
    For official release of PnetCDF, use autotools 2.69 with the patch for
-   Fujitsu compilers to generate file configure. See README.Fujitsu for the
+   Fujitsu compilers to generate file "configure". See README.Fujitsu for the
    bug in autoconf 2.69 and patch.
 
 =====================================================
@@ -155,10 +156,10 @@ Conform with netCDF
    5. trunk/src/lib/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h
 
 ===============================================================
-Note on netCDF text APIs and external data type NC_CHAR
+Note on netCDF text APIs and variables in external data type NC_CHAR
 ===============================================================
 All netCDF external data types are considered numerical data types, except for
-NC_CHAR. Only numerical data types can be converted to different numerical data
+NC_CHAR. Numerical data types can be converted to different numerical data
 types. However, no numerical datatype is allowed to converted to NC_CHAR and
 vice versa. Given these limitations, note the followings.
 
@@ -177,8 +178,9 @@ read/write a NC_CHAR variable will result in NC_ECHAR error code returned.
 There is no NC_ERANGE error code possibly returned from text APIs.
 
 In netCDF, NC_CHAR is designed purely for storing text data.  NC_CHAR is
-considered by netCDF as unisgned 8-bit integer.  Others external numerical data
-types and their numerical meanings:
+considered by netCDF as unisgned 8-bit integer, but not for used to store a
+numerical value.  Others netCDF external numerical data types and their
+numerical meanings:
 
 NC_BYTE   is considered as a   signed 1-byte integer
 NC_UBYTE  is considered as a unsigned 1-byte integer
@@ -230,9 +232,9 @@ src/libf90:
     varnx_interface.m4
 
 =====================================================
-Note on adding new PnetCDF APIs
+Note on creating new PnetCDF APIs
 =====================================================
-If a new PnetCDF API is created, please make sure we do the followings.
+If a new PnetCDF API is created, please check and do the followings.
 1. In src/lib
    * add the declaration of new APIs in "pnetcdf.h.in"
      For example,
