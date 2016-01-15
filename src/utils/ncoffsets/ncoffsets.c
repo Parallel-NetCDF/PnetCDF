@@ -1757,7 +1757,7 @@ usage(char *cmd)
 "                       the size of one record only\n"
 "       [-g]            Output gap from the previous variable\n"
 "       [-r]            Output offsets for all records\n"
-"       [-x]            Check gaps in fixed-size variables, ouput 1 if gaps\n"
+"       [-x]            Check gaps in fixed-size variables, output 1 if gaps\n"
 "                       are found, 0 for otherwise.\n"
 "       file            Input netCDF file name\n"
 "*Parallel netCDF library version 1.7.0\n";
