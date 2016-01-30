@@ -918,7 +918,10 @@ test_ncmpi_get_att_$1(void)
                                 error("\n");
                                 error("varid: %d, ", i);
                                 error("att_name: %s, ", ATT_NAME(i,j));
-                                error("var_type: %s, ", s_nc_type(var_type[i]));
+                                if (i == -1)
+                                    error("var_type: GLOBAL, ");
+                                else
+                                    error("var_type: %s, ", s_nc_type(var_type[i]));
                                 error("att_type: %s, ", s_nc_type(ATT_TYPE(i,j)));
                                 error("element number: %d, ", k);
                                 error("expect: %g, ", expect[k]);

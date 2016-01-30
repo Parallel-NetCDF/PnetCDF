@@ -90,7 +90,9 @@ This is essentially a placeholder for the next release note ...
       non-decreasing in file offsets.
 
   o New optimization
-    * none
+    * Filling variables at ncmpi_enddef() is now done by aggregating all write
+      requests into one MPI collective write call. In v 1.6.1, this is done by
+      filling one variable at a time.
 
   o New utility program
     * ncoffsets reports the file offset information, including the starting and
