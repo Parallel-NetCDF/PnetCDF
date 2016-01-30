@@ -132,9 +132,9 @@ ncmpii_fill_var_buf(const NC_var *varp,
 }
 
 /*----< ncmpii_fill_var() >--------------------------------------------------*/
-/* If the variable is fixed-size, then write the entire variable with fill
- * values and recno is ignored. If it is a record variable, then write one
- * record of that variable with fill values.
+/* For fixed-size variables, write the entire variable with fill values and
+ * ignore argument recno. For record variables, write one record of that
+ * variable with pre-defined/supplied fill value.
  */
 static int
 ncmpii_fill_var_rec(NC         *ncp,
@@ -173,10 +173,11 @@ ncmpii_fill_var_rec(NC         *ncp,
     /* allocate buffer space */
     buf = NCI_Malloc((size_t)(count * varp->xsz));
 
-    /* fill buffer with file values */
+    /* fill buffer with fill values */
     err = ncmpii_fill_var_buf(varp, count, buf);
     if (err != NC_NOERR) return err;
 
+    /* calculate the starting file offset for each process */
     offset = varp->begin;
     if (IS_RECVAR(varp))
         offset += ncp->recsize * recno;
@@ -190,6 +191,10 @@ ncmpii_fill_var_rec(NC         *ncp,
 
     count *= varp->xsz;
     if (count != (int)count) DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+    if (err != NC_NOERR)
+        count = 0; /* participate collective write with 0-length request */
+
+    /* write to variable collectively */
     TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, (int)count,
                                     MPI_BYTE, &mpistatus);
     NCI_Free(buf);
@@ -419,8 +424,9 @@ ncmpi_inq_var_fill(int   ncid,
     return NC_NOERR;
 }
 
+#ifdef FILL_ONE_VAR_AT_A_TIME
 /*----< fillerup() >---------------------------------------------------------*/
-/* fill the newly created variables */
+/* fill the newly created fixed-size variables */
 static int
 fillerup(NC *ncp)
 {
@@ -429,13 +435,16 @@ fillerup(NC *ncp)
     /* loop thru all variables */
     for (i=0; i<ncp->vars.ndefined; i++) {
         if (IS_RECVAR(ncp->vars.value[i]))
-            /* skip record variables */
+            /* skip record variables. In PnetCDF record variables mus be
+             * explicitly filled by calling ncmpi_fill_var_rec() */
             continue;
 
         /* check if _FillValue attribute is defined */
         indx = ncmpii_NC_findattr(&ncp->vars.value[i]->attrs, _FillValue);
 
-        /* only if filling this variable is requested */
+        /* only if filling this variable is requested. Fill mode can be
+         * enabled by 2 ways: explictly call to ncmpi_def_var_fill() or put
+         * the attribute named _FillValue */
         if (ncp->vars.value[i]->no_fill && indx == -1) continue;
 
         /* collectively fill the entire variable */
@@ -501,23 +510,268 @@ fill_added_recs(NC *ncp, NC *old_ncp)
     }
     return NC_NOERR;
 }
+#endif
+
+/*----< fillerup_aggregate() >-----------------------------------------------*/
+/* fill the newly created/added variables
+ * This version aggregates all writes into a single one
+ */
+static int
+fillerup_aggregate(NC *ncp, NC *old_ncp)
+{
+    int i, j, k, rank, nprocs, start_vid, nsegs, recno, indx;
+    int *isFill, *blocklengths;
+    int mpireturn, err, status=NC_NOERR;
+    char *buf_ptr;
+    void *buf;
+    size_t buf_len;
+    MPI_Offset var_len, nrecs, start, *count;
+    MPI_Aint *offset;
+    MPI_Datatype filetype;
+    MPI_File fh;
+    MPI_Status mpistatus;
+    NC_var *varp;
+
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
+    MPI_Comm_size(ncp->nciop->comm, &nprocs);
+
+    /* find the starting vid for newly added variables */
+    start_vid = 0;
+    nrecs = 0;  /* the current number of records */
+    if (old_ncp != NULL) {
+        start_vid = old_ncp->vars.ndefined;
+        nrecs = NC_get_numrecs(old_ncp);
+    }
+
+    /* check whether variables are to be filled */
+    isFill = (int*) NCI_Malloc(ncp->vars.ndefined * sizeof(int));
+
+    /* find the number of write segments (upper bound) */
+    nsegs = ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs;
+    count  = (MPI_Offset*) NCI_Malloc(nsegs * sizeof(MPI_Offset));
+    offset = (MPI_Aint*)   NCI_Malloc(nsegs * sizeof(MPI_Aint));
+
+    /* calculate each segment's offset and count */
+    buf_len = 0; /* total write amount, used to allocate buffer */
+    j = 0;
+    for (i=start_vid; i<ncp->vars.ndefined; i++) {
+        varp = ncp->vars.value[i];
+        isFill[i] = 0;
+
+        /* check if _FillValue attribute is defined */
+        indx = ncmpii_NC_findattr(&varp->attrs, _FillValue);
+        if (varp->no_fill && indx == -1) continue;
+
+        isFill[i] = 1;
+        if (IS_RECVAR(varp)) continue; /* first, fixed-size variables only */
+
+        if (varp->ndims == 0) var_len = 1; /* scalar */
+        else                  var_len = varp->dsizes[0];
+
+        /* divide evenly total number of variable's elements among processes */
+        count[j] = var_len / nprocs;
+        start = count[j] * rank;
+        if (rank < var_len % nprocs) {
+            start += rank;
+            count[j]++;
+        }
+        else
+            start += var_len % nprocs;
+
+        /* calculate the starting file offset */
+        start *= varp->xsz;
+        start += varp->begin;
+        offset[j] = (MPI_Aint)start;
+        if (start != offset[j]) {
+            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+            if (status == NC_NOERR) status = err;
+            isFill[i] = 0; /* skip this variable */
+            continue;
+        }
+        /* add up the buffer size */
+        buf_len += count[j] * varp->xsz;
+
+        j++;
+    }
+
+    /* loop thru all record variables to find the aggregated write amount */
+    for (recno=0; recno<nrecs; recno++) {
+        for (i=start_vid; i<ncp->vars.ndefined; i++) {
+            if (!isFill[i]) continue;
+
+            varp = ncp->vars.value[i];
+            if (!IS_RECVAR(varp)) continue; /* record variables only */
+
+            if (varp->ndims <= 1) var_len = 1;
+            else                  var_len = varp->dsizes[1];
+
+            /* divide total number of variable's elements among all processes */
+            count[j] = var_len / nprocs;
+            start = count[j] * rank;
+            if (rank < var_len % nprocs) {
+                start += rank;
+                count[j]++;
+            }
+            else
+                start += var_len % nprocs;
+
+            /* calculate the starting file offset */
+            start *= varp->xsz;
+            start += varp->begin + ncp->recsize * recno;
+            offset[j] = (MPI_Aint)start;
+            if (start != offset[j]) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+                if (status == NC_NOERR) status = err;
+                isFill[i] = 0; /* skip this variable */
+                continue;
+            }
+            /* add up the buffer size */
+            buf_len += count[j] * varp->xsz;
+
+            j++;
+        }
+    }
+    /* j is now the number of valid write segments */
+
+    /* allocate one contiguous buffer space for all writes */
+    blocklengths = (int*) NCI_Malloc(j * sizeof(int));
+    buf = NCI_Malloc(buf_len);
+    buf_ptr = (char*)buf;
+
+    /* fill write buffers for fixed-size variables first */
+    j = k = 0;
+    for (i=start_vid; i<ncp->vars.ndefined; i++) {
+        if (!isFill[i]) continue;
+
+        varp = ncp->vars.value[i];
+        if (IS_RECVAR(varp)) continue;
+
+        if (k < j) {  /* coalesce count[] and offset[] */
+            count[k]  = count[j];
+            offset[k] = offset[j];
+        }
+        j++;
+        err = ncmpii_fill_var_buf(varp, count[k], buf_ptr);
+        if (err != NC_NOERR) {
+            if (status == NC_NOERR) status = err;
+            continue; /* skip this request */
+        }
+
+        count[k] *= varp->xsz;
+        if (count[k] != (int)count[k]) {
+            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+            if (status == NC_NOERR) status = err;
+            continue; /* skip this request */
+        }
+        buf_ptr += count[k];
+        blocklengths[k] = (int)count[k];
+        k++;
+    }
+    /* k is the number of valid write requests thus far */
+
+    /* loop thru all record variables to fill write buffers */
+    for (recno=0; recno<nrecs; recno++) {
+        for (i=start_vid; i<ncp->vars.ndefined; i++) {
+            if (!isFill[i]) continue;
+
+            varp = ncp->vars.value[i];
+            if (!IS_RECVAR(varp)) continue;
+
+            if (k < j) {  /* coalesce count[] and offset[] */
+                count[k]  = count[j];
+                offset[k] = offset[j];
+            }
+            j++;
+            err = ncmpii_fill_var_buf(varp, count[k], buf_ptr);
+            if (err != NC_NOERR) {
+                if (status == NC_NOERR) status = err;
+                continue; /* skip this request */
+            }
+
+            count[k] *= varp->xsz;
+            if (count[k] != (int)count[k]) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+                if (status == NC_NOERR) status = err;
+                continue; /* skip this request */
+            }
+            buf_ptr += count[k];
+            blocklengths[k] = (int)count[k];
+            k++;
+        }
+    }
+    /* k is the number of valid write requests */
+    NCI_Free(isFill);
+
+    /* create the fileview: a list of contiguous segment for each variable */
+#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
+    mpireturn = MPI_Type_create_hindexed(k, blocklengths, offset, MPI_BYTE,
+                                         &filetype);
+#else
+    mpireturn = MPI_Type_hindexed(k, blocklengths, offset, MPI_BYTE, &filetype);
+#endif
+    if (mpireturn != MPI_SUCCESS) {
+        int err = ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
+        /* return the first encountered error if there is any */
+        if (status == NC_NOERR) status = err;
+    }
+    else
+        MPI_Type_commit(&filetype);
+
+    NCI_Free(blocklengths);
+    NCI_Free(count);
+    NCI_Free(offset);
+
+    fh = ncp->nciop->collective_fh;
+
+    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, filetype, "native",
+                                MPI_INFO_NULL);
+    MPI_Type_free(&filetype);
+
+    /* write to variable collectively */
+    TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, buf_len, MPI_BYTE, &mpistatus);
+
+    NCI_Free(buf);
+
+    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                MPI_INFO_NULL);
+
+    if (status != NC_NOERR) return status;
+
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
+
+    return NC_NOERR;
+}
 
 /*----< ncmpii_fill_vars() >-------------------------------------------------*/
 int
 ncmpii_fill_vars(NC *ncp)
 {
-    int status=NC_NOERR, err;
+    int status=NC_NOERR;
+
+#ifdef FILL_ONE_VAR_AT_A_TIME
+    int err;
 
     /* fill variables according to their fill mode settings */
-    if (NC_IsNew(ncp)) {
+    if (NC_IsNew(ncp))
+        /* file is just created */
         status = fillerup(ncp);
-    }
     else if (ncp->vars.ndefined > ncp->old->vars.ndefined) {
+        /* old file, but new variables have been added */
         status = fill_added(ncp, ncp->old);
 
         err = fill_added_recs(ncp, ncp->old);
         if (status == NC_NOERR) status = err;
     }
+#else
+    /* fill variables according to their fill mode settings */
+    if (NC_IsNew(ncp))
+        /* file is just created and never exits define mode */
+        status = fillerup_aggregate(ncp, NULL);
+    else
+        /* old file, but new variables have been added */
+        status = fillerup_aggregate(ncp, ncp->old);
+#endif
     return status;
 }
 
