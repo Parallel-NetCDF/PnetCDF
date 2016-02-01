@@ -520,7 +520,7 @@ static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
     int i, j, k, rank, nprocs, start_vid, nsegs, recno, indx;
-    int *isFill, *blocklengths;
+    int nVarsFill, *isFill, *blocklengths;
     int mpireturn, err, status=NC_NOERR;
     char *buf_ptr;
     void *buf;
@@ -553,6 +553,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     /* calculate each segment's offset and count */
     buf_len = 0; /* total write amount, used to allocate buffer */
+    nVarsFill = 0;
     j = 0;
     for (i=start_vid; i<ncp->vars.ndefined; i++) {
         varp = ncp->vars.value[i];
@@ -561,6 +562,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         /* check if _FillValue attribute is defined */
         indx = ncmpii_NC_findattr(&varp->attrs, _FillValue);
         if (varp->no_fill && indx == -1) continue;
+        nVarsFill++;
 
         isFill[i] = 1;
         if (IS_RECVAR(varp)) continue; /* first, fixed-size variables only */
@@ -592,6 +594,12 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         buf_len += count[j] * varp->xsz;
 
         j++;
+    }
+    if (nVarsFill == 0) { /* no variables in fill mode */
+        NCI_Free(isFill);
+        NCI_Free(count);
+        NCI_Free(offset);
+        return NC_NOERR;
     }
 
     /* loop thru all record variables to find the aggregated write amount */
