@@ -519,8 +519,8 @@ fill_added_recs(NC *ncp, NC *old_ncp)
 static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
-    int i, j, k, rank, nprocs, start_vid, nsegs, recno, indx;
-    int nVarsFill, *isFill, *blocklengths;
+    int i, j, k, rank, nprocs, start_vid, nsegs, recno;
+    int nVarsFill, *noFill, *blocklengths;
     int mpireturn, err, status=NC_NOERR;
     char *buf_ptr;
     void *buf;
@@ -543,8 +543,25 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         nrecs = NC_get_numrecs(old_ncp);
     }
 
-    /* check whether variables are to be filled */
-    isFill = (int*) NCI_Malloc(ncp->vars.ndefined * sizeof(int));
+    /* Because fill mode is not part of file header, we must broadcast root's
+     * variables' fill modes and overwrite local's if an inconsistency is found
+     * Note ncp->vars.ndefined is already made consistent by this point.
+     */
+    noFill = (int*) NCI_Malloc((ncp->vars.ndefined - start_vid) * sizeof(int));
+    for (i=start_vid; i<ncp->vars.ndefined; i++)
+        noFill[i-start_vid] = ncp->vars.value[i]->no_fill;
+
+    TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid), MPI_INT, 0,
+                          ncp->nciop->comm);
+    nVarsFill = 0;
+    for (i=start_vid; i<ncp->vars.ndefined; i++) { /* overwrite local's mode */
+        ncp->vars.value[i]->no_fill = noFill[i-start_vid];
+        if (!noFill[i-start_vid]) nVarsFill++;
+    }
+    if (nVarsFill == 0) { /* no variables in fill mode */
+        NCI_Free(noFill);
+        return NC_NOERR;
+    }
 
     /* find the number of write segments (upper bound) */
     nsegs = ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs;
@@ -553,18 +570,12 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     /* calculate each segment's offset and count */
     buf_len = 0; /* total write amount, used to allocate buffer */
-    nVarsFill = 0;
     j = 0;
     for (i=start_vid; i<ncp->vars.ndefined; i++) {
+        if (noFill[i-start_vid]) continue;
+
         varp = ncp->vars.value[i];
-        isFill[i] = 0;
 
-        /* check if _FillValue attribute is defined */
-        indx = ncmpii_NC_findattr(&varp->attrs, _FillValue);
-        if (varp->no_fill && indx == -1) continue;
-        nVarsFill++;
-
-        isFill[i] = 1;
         if (IS_RECVAR(varp)) continue; /* first, fixed-size variables only */
 
         if (varp->ndims == 0) var_len = 1; /* scalar */
@@ -587,7 +598,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         if (start != offset[j]) {
             DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
             if (status == NC_NOERR) status = err;
-            isFill[i] = 0; /* skip this variable */
+            noFill[i-start_vid] = 1; /* skip this variable */
             continue;
         }
         /* add up the buffer size */
@@ -595,17 +606,11 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
         j++;
     }
-    if (nVarsFill == 0) { /* no variables in fill mode */
-        NCI_Free(isFill);
-        NCI_Free(count);
-        NCI_Free(offset);
-        return NC_NOERR;
-    }
 
     /* loop thru all record variables to find the aggregated write amount */
     for (recno=0; recno<nrecs; recno++) {
         for (i=start_vid; i<ncp->vars.ndefined; i++) {
-            if (!isFill[i]) continue;
+            if (noFill[i-start_vid]) continue;
 
             varp = ncp->vars.value[i];
             if (!IS_RECVAR(varp)) continue; /* record variables only */
@@ -630,7 +635,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             if (start != offset[j]) {
                 DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
                 if (status == NC_NOERR) status = err;
-                isFill[i] = 0; /* skip this variable */
+                noFill[i-start_vid] = 1; /* skip this variable */
                 continue;
             }
             /* add up the buffer size */
@@ -649,7 +654,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     /* fill write buffers for fixed-size variables first */
     j = k = 0;
     for (i=start_vid; i<ncp->vars.ndefined; i++) {
-        if (!isFill[i]) continue;
+        if (noFill[i-start_vid]) continue;
 
         varp = ncp->vars.value[i];
         if (IS_RECVAR(varp)) continue;
@@ -680,7 +685,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     /* loop thru all record variables to fill write buffers */
     for (recno=0; recno<nrecs; recno++) {
         for (i=start_vid; i<ncp->vars.ndefined; i++) {
-            if (!isFill[i]) continue;
+            if (noFill[i-start_vid]) continue;
 
             varp = ncp->vars.value[i];
             if (!IS_RECVAR(varp)) continue;
@@ -708,7 +713,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         }
     }
     /* k is the number of valid write requests */
-    NCI_Free(isFill);
+    NCI_Free(noFill);
 
     /* create the fileview: a list of contiguous segment for each variable */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED

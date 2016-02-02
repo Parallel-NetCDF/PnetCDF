@@ -1074,6 +1074,9 @@ ncmpii_put_att(int         ncid,
 
         if (nelems != 1)
             DEBUG_RETURN_ERROR(NC_EINVAL)
+
+        /* enable the fill mode for this variable */
+        varp->no_fill = 0;
     }
 
     /* get the file format version */
