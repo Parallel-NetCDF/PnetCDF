@@ -520,9 +520,9 @@ static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
     int i, j, k, rank, nprocs, start_vid, nsegs, recno;
-    int nVarsFill, *noFill, *blocklengths;
+    int nVarsFill, *blocklengths;
     int mpireturn, err, status=NC_NOERR;
-    char *buf_ptr;
+    char *buf_ptr, *noFill;
     void *buf;
     size_t buf_len;
     MPI_Offset var_len, nrecs, start, *count;
@@ -547,11 +547,11 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
      * variables' fill modes and overwrite local's if an inconsistency is found
      * Note ncp->vars.ndefined is already made consistent by this point.
      */
-    noFill = (int*) NCI_Malloc((ncp->vars.ndefined - start_vid) * sizeof(int));
+    noFill = (char*) NCI_Malloc(ncp->vars.ndefined - start_vid);
     for (i=start_vid; i<ncp->vars.ndefined; i++)
         noFill[i-start_vid] = ncp->vars.value[i]->no_fill;
 
-    TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid), MPI_INT, 0,
+    TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid), MPI_BYTE, 0,
                           ncp->nciop->comm);
     nVarsFill = 0;
     for (i=start_vid; i<ncp->vars.ndefined; i++) { /* overwrite local's mode */

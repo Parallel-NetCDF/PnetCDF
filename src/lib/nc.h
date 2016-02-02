@@ -367,7 +367,7 @@ typedef struct {
                              total size in bytes of the array variable.
                              For record variable, this is the record size */
     MPI_Offset    begin;  /* starting file offset of this variable */
-    int           no_fill;
+    char          no_fill;
 #ifdef ENABLE_SUBFILING
     int           ndims_org;  /* ndims before subfiling */
     int          *dimids_org; /* dimids before subfiling */
