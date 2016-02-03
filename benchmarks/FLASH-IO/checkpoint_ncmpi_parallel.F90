@@ -332,17 +332,18 @@
       filename = trim(basenm) // 'ncmpi_chk_'//fnum_string//'.nc'
 
       ! set up MPI I/O hints for performance enhancement
-      call MPI_Info_create(file_info, err)
+      file_info = MPI_INFO_NULL
+      ! call MPI_Info_create(file_info, err)
 
       ! use some ROMIO hints
-      call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true', err)
+      ! call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true', err)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, trim(filename), cmode, &
                           file_info, ncid)
       if (err .NE. NF_NOERR) call check(err, "nfmpi_create")
 
-      call MPI_Info_free(file_info, err)
+      ! call MPI_Info_free(file_info, err)
 
       err = nfmpi_get_file_info(ncid, info_used)
 
@@ -540,7 +541,7 @@
 #endif
 
       if (use_nonblocking_io) then
-         ! create a derive data type for buffer unk
+         ! create an MPI derived data type for buffer unk
          gsizes(1) = nvar
          gsizes(2) = iu_bnd - il_bnd + 1
          gsizes(3) = ju_bnd - jl_bnd + 1
