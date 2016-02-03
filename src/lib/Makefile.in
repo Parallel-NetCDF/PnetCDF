@@ -22,6 +22,7 @@ INCLUDES = -I. -I$(srcdir)
 
 LIBRARY  = libpnetcdf.a
 HEADER   = pnetcdf.h
+PKGCONFIG = pnetcdf.pc
 
 M4_SRCS   = getput.m4 \
             i_getput.m4 \
@@ -72,6 +73,7 @@ PACKING_LIST = $(LIB_CSRCS) \
                pnetcdf.h.in \
                depend \
                Makefile.in \
+               pnetcdf.pc.in \
                ncconfig.h.in
 
 ifeq (@enable_subfiling@, no)
@@ -95,8 +97,11 @@ install: $(LIBRARY)
 	$(INSTALL_DATA) $(LIBRARY) $(LIBDIR)/$(LIBRARY)
 	$(INSTALL) -d -m 755 $(INCDIR)
 	$(INSTALL_DATA) $(HEADER) $(INCDIR)/$(HEADER)
+	$(INSTALL) -d -m 755 $(LIBDIR)/pkgconfig
+	$(INSTALL_DATA) $(PKGCONFIG) $(LIBDIR)/pkgconfig/$(PKGCONFIG)
 
 uninstall:
+	$(RM) -f $(LIBDIR)/$(LIBRARY)/$(PKGCONFIG)
 	$(RM) -f $(LIBDIR)/$(LIBRARY)
 	$(RM) -f $(INCDIR)/$(HEADER)
 

@@ -1127,6 +1127,7 @@ AC_CONFIG_FILES(macros.make \
                 src/Makefile \
                 src/lib/Makefile \
                 src/lib/pnetcdf.h \
+                src/lib/pnetcdf.pc \
                 src/utils/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpidiff/Makefile \

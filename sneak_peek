@@ -139,6 +139,9 @@ This is essentially a placeholder for the next release note ...
     * All Fortran 77 test and example programs (files with .f and .F
       extensions) have been revised to conform with 77 standard, and was tested
       using pgf77.
+    * Now provides a pkg-config file
+      (http://www.freedesktop.org/wiki/Software/pkg-config/), making it
+      slightly easier to set the correct pnetcdf include and library paths.
 
   o Bug fixes
     * Fix the bus error of invalid address alignment when build with Fujitsu
