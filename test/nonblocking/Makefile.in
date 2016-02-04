@@ -39,8 +39,12 @@ F90_SRCS = mcoll_testf.f90 \
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS     += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
-OBJS      += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
+PROGS     += $(F77_SRCS:.f=)
+OBJS      += $(F77_SRCS:.f=.o)
+ifeq (@mpi_mod@, yes)
+PROGS     += $(F90_SRCS:.f90=)
+OBJS      += $(F90_SRCS:.f90=.o)
+endif
 endif
 
 GARBAGE      = $(PROGS) *.nc

@@ -2,15 +2,14 @@
 !  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
 !  See COPYRIGHT notice in top-level directory.
 !
-! $Id$
+! $Id: pnetcdf.f90 1816 2014-10-11 04:19:56Z wkliao $
 !
 ! This file is taken from netcdf.f90 with changes for PnetCDF use
 !
 !
  module pnetcdf
-  use mpi, only: MPI_OFFSET_KIND
+  @USE_MPIF_HEADER@
 
-  implicit none
   private
 
   integer, parameter ::   OneByteInt = selected_int_kind(2), &

@@ -14,7 +14,9 @@ include ../macros.make
 SUBDIRS = C
 
 ifeq (@has_fortran@, yes)
+ifeq (@mpi_mod@, yes)
 SUBDIRS += FLASH-IO
+endif
 endif
 
 PACKING_LIST = Makefile.in README
