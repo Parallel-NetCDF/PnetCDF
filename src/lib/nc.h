@@ -535,6 +535,8 @@ struct NC {
     MPI_Offset    recsize;  /* length of 'record': sum of single record sizes
                                of all the record variables */
     MPI_Offset    numrecs;  /* number of 'records' allocated */
+    int           numGetReqs;  /* number of pending nonblocking get requests */
+    int           numPutReqs;  /* number of pending nonblocking put requests */
     NC_dimarray   dims;     /* dimensions defined */
     NC_attrarray  attrs;    /* global attributes defined */
     NC_vararray   vars;     /* variables defined */

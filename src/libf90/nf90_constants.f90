@@ -90,6 +90,8 @@
 
   ! indicate to flush all pending non-blocking requests
   integer, parameter, public :: nf90_req_all = -1
+  integer, parameter, public :: nf90_get_req_all = -2
+  integer, parameter, public :: nf90_put_req_all = -3
 
   !
   ! global attribute id:

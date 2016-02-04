@@ -594,7 +594,9 @@ by the desired type. */
 #define NC_REQ_NULL -1
 
 /* indicate to flush all pending non-blocking requests */
-#define NC_REQ_ALL -1
+#define NC_REQ_ALL     -1
+#define NC_GET_REQ_ALL -2
+#define NC_PUT_REQ_ALL -3
 
 
 /*
