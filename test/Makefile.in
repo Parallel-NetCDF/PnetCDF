@@ -33,8 +33,10 @@ endif
 
 ifeq (@has_fortran@, yes)
 SUBDIRS += nf_test
+ifeq (@mpi_mod@, yes)
 SUBDIRS += nf90_test
 SUBDIRS += F90
+endif
 endif
 
 ifeq (@enable_subfiling@, yes)

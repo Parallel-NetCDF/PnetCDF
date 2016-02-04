@@ -43,22 +43,22 @@ F90_SRCS = nf90_constants.f90 \
            file.f90 \
            dims.f90 \
            attributes.f90 \
-           variables.f90 \
-           pnetcdf.f90
+           variables.f90
 
 SRCS     = $(F90_SRCS) $(M4_SRCS:.m4=.f90) \
-           api.f90 nfmpi_constants.f90
+           pnetcdf.f90 api.f90 nfmpi_constants.f90
 
 LIB_OBJS = pnetcdf.o
 
 PACKING_LIST = $(F90_SRCS) \
                $(M4_SRCS) \
                Makefile.in \
+               pnetcdf.f90.in \
                api.f90.in \
                nfmpi_constants.f90.in
 
 GARBAGE		= $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90)
-DIST_GARBAGE	= api.f90 nfmpi_constants.f90
+DIST_GARBAGE	= pnetcdf.f90 api.f90 nfmpi_constants.f90
 
 %.mod: %.f90 $(SRCS)
 	$(COMPILE.f90) $<

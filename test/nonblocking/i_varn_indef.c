@@ -339,6 +339,7 @@ int main(int argc, char** argv)
 
     /* try with buffer being a single contiguous space ----------------------*/
     for (i=0; i<nreqs; i++) bufsize += req_lens[i];
+    cbuffer[0] = NULL;
     if (bufsize>0) cbuffer[0] = (long long*) malloc(bufsize * sizeof(long long));
     for (i=1; i<nreqs; i++) cbuffer[i] = cbuffer[i-1] + req_lens[i-1];
     for (i=0; i<bufsize; i++) cbuffer[0][i] = rank;

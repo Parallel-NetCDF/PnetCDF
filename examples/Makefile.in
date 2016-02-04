@@ -21,7 +21,9 @@ endif
 
 ifeq (@has_fortran@, yes)
 SUBDIRS += F77
+ifeq (@mpi_mod@, yes)
 SUBDIRS += F90
+endif
 endif
 
 PACKING_LIST = Makefile.in README
