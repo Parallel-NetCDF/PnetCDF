@@ -127,9 +127,11 @@ ncmpii_abuf_coalesce(NC *ncp)
 }
 
 /*----< ncmpi_cancel() >------------------------------------------------------*/
+/* argument num_req can be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL, or
+ * non-negative value */
 int
 ncmpi_cancel(int  ncid,
-             int  num_req,  /* NC_REQ_ALL or non-negative value */
+             int  num_req,
              int *req_ids,  /* [num_req] */
              int *statuses) /* [num_req] */
 {
@@ -145,20 +147,22 @@ ncmpi_cancel(int  ncid,
 }
 
 /*----< ncmpii_cancel() >-----------------------------------------------------*/
+/* argument num_req can be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL, or
+ * non-negative value */
 int
 ncmpii_cancel(NC  *ncp,
-              int  num_req,  /* NC_REQ_all means all pending requests */
+              int  num_req,
               int *req_ids,  /* [num_req]: IN/OUT */
               int *statuses) /* [num_req] can be NULL (ignore status) */
 {
     int i, j, status=NC_NOERR;
-    NC_req *pre_req, *cur_req;
+    NC_req *pre_req, *cur_req, *next_req;
 
     if (num_req == 0)
         return NC_NOERR;
 
-    /* cancel all pending requests, ignore req_ids and statuses */
     if (num_req == NC_REQ_ALL) {
+        /* cancel all pending requests, ignore req_ids and statuses */
         cur_req = ncp->head;
         while (cur_req != NULL) {
             FREE_REQUEST(cur_req)
@@ -167,6 +171,48 @@ ncmpii_cancel(NC  *ncp,
         }
         ncp->head = NULL;
         ncp->tail = NULL;
+        return NC_NOERR;
+    }
+    else if (num_req == NC_GET_REQ_ALL) {
+        /* cancel all pending get requests, ignore req_ids and statuses */
+        cur_req = ncp->head;
+        while (cur_req != NULL) {
+            next_req = cur_req->next;
+            if (cur_req->rw_flag == READ_REQ) {
+                if (cur_req == ncp->head)
+                    ncp->tail = ncp->head = next_req;
+                else
+                    ncp->tail->next = next_req;
+
+                FREE_REQUEST(cur_req)
+                NCI_Free(cur_req);
+            }
+            else { /* a put request */
+                ncp->tail = cur_req;
+            }
+            cur_req = next_req;
+        }
+        return NC_NOERR;
+    }
+    else if (num_req == NC_PUT_REQ_ALL) {
+        /* cancel all pending put requests, ignore req_ids and statuses */
+        cur_req = ncp->head;
+        while (cur_req != NULL) {
+            next_req = cur_req->next;
+            if (cur_req->rw_flag == WRITE_REQ) {
+                if (cur_req == ncp->head)
+                    ncp->tail = ncp->head = next_req;
+                else
+                    ncp->tail->next = next_req;
+
+                FREE_REQUEST(cur_req)
+                NCI_Free(cur_req);
+            }
+            else { /* a get request */
+                ncp->tail = cur_req;
+            }
+            cur_req = next_req;
+        }
         return NC_NOERR;
     }
 
@@ -228,11 +274,11 @@ ncmpii_cancel(NC  *ncp,
 }
 
 /*----< ncmpi_inq_nreqs() >---------------------------------------------------*/
-/* TODO: add member num_reqs into NC_req to track this info */
 int
 ncmpi_inq_nreqs(int  ncid,
                 int *nreqs) /* OUT: number of pending requests */
 {
+#ifdef OLD_METHOD
     int     status, prev_id;
     NC     *ncp;
     NC_req *req_ptr;
@@ -240,6 +286,7 @@ ncmpi_inq_nreqs(int  ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
+/* TODO: add member num_reqs into NC_req to track this info */
     req_ptr = ncp->head;
     *nreqs = 0;
     prev_id = NC_REQ_NULL;
@@ -253,16 +300,91 @@ ncmpi_inq_nreqs(int  ncid,
         }
         req_ptr = req_ptr->next;
     }
+#else
+    int  status;
+    NC  *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    *nreqs = ncp->numGetReqs + ncp->numPutReqs;
+#endif
 
     return NC_NOERR;
 }
+
+#ifndef ENABLE_NONBLOCKING
+/*----< extract_reqs() >-----------------------------------------------------*/
+static
+void extract_reqs(NC   *ncp,
+                  int   req_type, /* NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL */
+                  int  *num_reqs,
+                  int **req_ids)
+{
+    int *reqids, prev_id = NC_REQ_NULL;
+    NC_req *req_ptr = ncp->head;
+    *num_reqs = 0;
+    while (req_ptr != NULL) {
+        /* some requests in the linked list may share the same ID, they were
+         * corresponding to the subrequests made from iput/iget/bput varn APIs.
+         */
+        if (req_type == NC_REQ_ALL) {
+            if (req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                (*num_reqs)++;
+            }
+        }
+        else if (req_type == NC_GET_REQ_ALL) {
+            if (req_ptr->rw_flag == READ_REQ && req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                (*num_reqs)++;
+            }
+        }
+        else if (req_type == NC_PUT_REQ_ALL) {
+            if (req_ptr->rw_flag == WRITE_REQ && req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                (*num_reqs)++;
+            }
+        }
+        req_ptr = req_ptr->next;
+    }
+    /* allocate ID array */
+    reqids = (int*) NCI_Malloc(*num_reqs * sizeof(int));
+    req_ptr = ncp->head;
+    *num_reqs = 0;
+    prev_id = NC_REQ_NULL;
+    while (req_ptr != NULL) {
+        if (req_type == NC_REQ_ALL) {
+            if (req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                reqids[*num_reqs++] = prev_id;
+            }
+        }
+        else if (req_type == NC_GET_REQ_ALL) {
+            if (req_ptr->rw_flag == READ_REQ && req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                reqids[*num_reqs++] = prev_id;
+            }
+        }
+        else if (req_type == NC_PUT_REQ_ALL) {
+            if (req_ptr->rw_flag == WRITE_REQ && req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                reqids[*num_reqs++] = prev_id;
+            }
+        }
+        req_ptr = req_ptr->next;
+    }
+    *req_ids = reqids;
+}
+#endif
 
 /*----< ncmpi_wait() >--------------------------------------------------------*/
 /* ncmpi_wait() is an independent call
  * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
  * nonblocking requests. In this case, arguments req_ids and statuses will be
  * ignored.
- * Argument num_reqs must either be NC_REQ_ALL or a non-negative value.
+ * Argument num_reqs must either be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL,
+ * or a non-negative value.
  * Argument statuses can be NULL, meaning the caller only cares about the
  * error code returned by this call, but not the statuses of individual
  * nonblocking requests.
@@ -285,35 +407,9 @@ ncmpi_wait(int ncid,
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
     int i, err, *reqids=NULL;
-    if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
-        /* in this case, arguments req_ids and statuses are ignored */
-        int prev_id = NC_REQ_NULL;
-        NC_req *req_ptr = ncp->head;
-        num_reqs = 0;
-        while (req_ptr != NULL) {
-            /* some requests in the linked list may share the same ID, they were
-             * corresponding to the subrequests made from iput/iget/bput varn APIs.
-             */
-            if (req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
-                num_reqs++;
-            }
-            req_ptr = req_ptr->next;
-        }
-        /* allocate ID array */
-        reqids = (int*) NCI_Malloc(num_reqs * sizeof(int));
-        req_ptr = ncp->head;
-        num_reqs = 0;
-        prev_id = NC_REQ_NULL;
-        while (req_ptr != NULL) {
-            if (req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
-                reqids[num_reqs++] = prev_id;
-            }
-            req_ptr = req_ptr->next;
-        }
-        req_ids = reqids;
-    }
+    if (num_reqs < 0) /* construct request ID arrays */
+        extract_reqs(ncp, num_reqs, &num_reqs, &req_ids);
+
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
         if (statuses == NULL)
             err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
@@ -332,7 +428,8 @@ ncmpi_wait(int ncid,
  * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
  * nonblocking requests. In this case, arguments req_ids and statuses will be
  * ignored.
- * Argument num_reqs must either be NC_REQ_ALL or a non-negative value.
+ * Argument num_reqs must either be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL,
+ * or a non-negative value.
  * Argument statuses can be NULL, meaning the caller only cares about the
  * error code returned by this call, but not the statuses of individual
  * nonblocking requests.
@@ -370,34 +467,9 @@ ncmpi_wait_all(int  ncid,
     err = ncmpi_begin_indep_data(ncid);
     if (status == NC_NOERR) status = err;
 
-    if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
-        int prev_id = NC_REQ_NULL;
-        NC_req *req_ptr = ncp->head;
-        num_reqs = 0;
-        while (req_ptr != NULL) {
-            /* some requests in the linked list may share the same ID, they were
-             * corresponding to the subrequests made from iput/iget/bput varn APIs.
-             */
-            if (req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
-                num_reqs++;
-            }
-            req_ptr = req_ptr->next;
-        }
-        /* allocate ID array */
-        reqids = (int*) NCI_Malloc(num_reqs * sizeof(int));
-        req_ptr = ncp->head;
-        num_reqs = 0;
-        prev_id = NC_REQ_NULL;
-        while (req_ptr != NULL) {
-            if (req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
-                reqids[num_reqs++] = prev_id;
-            }
-            req_ptr = req_ptr->next;
-        }
-        req_ids = reqids;
-    }
+    if (num_reqs < 0) /* construct request ID arrays */
+        extract_reqs(ncp, num_reqs, &num_reqs, &req_ids);
+
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
         if (statuses == NULL)
             err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
@@ -711,8 +783,80 @@ ncmpii_wait(NC  *ncp,
             }
             cur_req = next_req;
         }
-        ncp->head = NULL;
-        ncp->tail = NULL;
+        ncp->head       = NULL;
+        ncp->tail       = NULL;
+        ncp->numGetReqs = 0;
+        ncp->numPutReqs = 0;
+        num_reqs        = 0; /* to skip the loop below */
+    }
+    else if (num_reqs == NC_GET_REQ_ALL) { /* flush all pending get requests */
+        /* in this case, arguments req_ids[] and statuses[] are ignored */
+        cur_req = ncp->head;
+        while (cur_req != NULL) {
+            next_req = cur_req->next;
+            if (cur_req->rw_flag == READ_REQ) {
+                cur_req->status = NULL; /* ignore status */
+                if (cur_req == ncp->head)
+                    ncp->tail = ncp->head = next_req;
+                else
+                    ncp->tail->next = next_req;
+
+                /* add cur_req to r_req_tail */
+                if (r_req_head == NULL) {
+                    r_req_head = cur_req;
+                    r_req_tail = cur_req;
+                }
+                else {
+                    r_req_tail->next = cur_req;
+                    r_req_tail = r_req_tail->next;
+                }
+                r_req_tail->next = NULL;
+                num_r_reqs += (cur_req->num_subreqs == 0) ?
+                              1 : cur_req->num_subreqs;
+                /* if this request is to a record variable, then count all
+                 * its subrequests (one for each individual record) */
+            }
+            else { /* a put request */
+                ncp->tail = cur_req;
+            }
+            cur_req = next_req;
+        }
+        ncp->numGetReqs = 0;
+        num_reqs = 0; /* to skip the loop below */
+    }
+    else if (num_reqs == NC_PUT_REQ_ALL) { /* flush all pending put requests */
+        /* in this case, arguments req_ids[] and statuses[] are ignored */
+        cur_req = ncp->head;
+        while (cur_req != NULL) {
+            next_req = cur_req->next;
+            if (cur_req->rw_flag == WRITE_REQ) {
+                cur_req->status = NULL; /* ignore status */
+                if (cur_req == ncp->head)
+                    ncp->tail = ncp->head = next_req;
+                else
+                    ncp->tail->next = next_req;
+
+                /* add cur_req to w_req_tail */
+                if (w_req_head == NULL) {
+                    w_req_head = cur_req;
+                    w_req_tail = cur_req;
+                }
+                else {
+                    w_req_tail->next = cur_req;
+                    w_req_tail = w_req_tail->next;
+                }
+                w_req_tail->next = NULL;
+                num_w_reqs += (cur_req->num_subreqs == 0) ?
+                              1 : cur_req->num_subreqs;
+                /* if this request is to a record variable, then count all
+                 * its subrequests (one for each individual record) */
+            }
+            else { /* a put request */
+                ncp->tail = cur_req;
+            }
+            cur_req = next_req;
+        }
+        ncp->numPutReqs = 0;
         num_reqs = 0; /* to skip the loop below */
     }
     /* extract the matched requests from the pending queue (a linked list
@@ -765,6 +909,8 @@ ncmpii_wait(NC  *ncp,
                 next_req = cur_req->next;
 
                 if (cur_req->rw_flag == READ_REQ) {
+                    if (found_id == -1) ncp->numGetReqs--;
+
                     /* add cur_req to r_req_tail */
                     if (r_req_head == NULL) {
                         r_req_head = cur_req;
@@ -781,6 +927,8 @@ ncmpii_wait(NC  *ncp,
                      * its subrequests (one for each individual record) */
                 }
                 else { /* add cur_req to w_req_tail */
+                    if (found_id == -1) ncp->numPutReqs--;
+
                     if (w_req_head == NULL) {
                         w_req_head = cur_req;
                         w_req_tail = cur_req;
@@ -821,10 +969,12 @@ ncmpii_wait(NC  *ncp,
         }
         else req_ids[i] = NC_REQ_NULL;
     }
-    /* make sure ncp->tail pointing to the tail of the pending request queue */
-    ncp->tail = ncp->head;
-    while (ncp->tail != NULL && ncp->tail->next != NULL)
-        ncp->tail = ncp->tail->next;
+    if (num_reqs > 0) {
+        /* make sure ncp->tail pointing to the tail of the pending request queue */
+        ncp->tail = ncp->head;
+        while (ncp->tail != NULL && ncp->tail->next != NULL)
+            ncp->tail = ncp->tail->next;
+    }
 
 err_check:
     if (io_method == COLL_IO) {

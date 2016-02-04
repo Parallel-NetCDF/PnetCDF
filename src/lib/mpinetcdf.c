@@ -353,6 +353,8 @@ ncmpi_create(MPI_Comm    comm,
     /* the linked list storing the outstanding non-blocking requests */
     ncp->head = NULL;
     ncp->tail = NULL;
+    ncp->numGetReqs = 0;
+    ncp->numPutReqs = 0;
 
     /* add to the linked list of opened files */
     ncmpii_add_to_NCList(ncp);
@@ -482,6 +484,8 @@ ncmpi_open(MPI_Comm    comm,
     }
     ncp->head = NULL;
     ncp->tail = NULL;
+    ncp->numGetReqs = 0;
+    ncp->numPutReqs = 0;
 
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;

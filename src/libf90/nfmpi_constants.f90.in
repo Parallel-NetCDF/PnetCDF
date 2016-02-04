@@ -295,7 +295,10 @@
 
 ! indicate to flush all pending non-blocking requests
       integer, parameter, public :: &
-      NF_REQ_ALL = -1
+      NF_REQ_ALL = -1, &
+      NF_GET_REQ_ALL = -2, &
+      NF_PUT_REQ_ALL = -3
+
 
 !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ! begin netcdf 2.4 backward compatibility:

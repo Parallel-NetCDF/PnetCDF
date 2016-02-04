@@ -695,6 +695,10 @@
 ! indicate to flush all pending non-blocking requests
       integer NF_REQ_ALL
       PARAMETER (NF_REQ_ALL = -1)
+      integer NF_GET_REQ_ALL
+      PARAMETER (NF_GET_REQ_ALL = -2)
+      integer NF_PUT_REQ_ALL
+      PARAMETER (NF_PUT_REQ_ALL = -3)
 
 !
 ! PnetCDF APIs

@@ -117,6 +117,9 @@ This is essentially a placeholder for the next release note ...
       ignored and thus these two arguments can be NULLs.
     * Using NC_REQ_ALL in ncmpi_cancel() will cancel all the pending
       nonblocking requests.
+    * Using NC_GET_REQ_ALL or NC_PUT_REQ_ALL in ncmpi_wait_all(), ncmpi_wait(),
+      and ncmpi_cancel() for all the pending get-only or put-only requests,
+      respectively.
 
   o Other updates:
     * Conform with netCDF on the maximal dimension size for CDF-2 file format

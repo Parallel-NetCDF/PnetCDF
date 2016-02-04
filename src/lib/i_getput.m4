@@ -730,10 +730,11 @@ ncmpii_igetput_varm(NC               *ncp,
 
             if (need_swap) {
 #ifdef DISABLE_IN_PLACE_SWAP
-                if (xbuf == buf) {
+                if (xbuf == buf)
 #else
-                if (xbuf == buf && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE) {
+                if (xbuf == buf && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE)
 #endif
+                {
                     /* allocate xbuf and copy buf to xbuf, before byte-swap */
                     xbuf = NCI_Malloc((size_t)nbytes);
                     memcpy(xbuf, buf, (size_t)nbytes);
@@ -747,6 +748,7 @@ ncmpii_igetput_varm(NC               *ncp,
         }
         /* cbuf is no longer needed */
         if (cbuf != buf && cbuf != xbuf) NCI_Free(cbuf);
+        if (!isSameGroup) ncp->numPutReqs++;
     }
     else { /* rw_flag == READ_REQ */
         /* Type conversion and byte swap for read are done at wait call, we
@@ -756,6 +758,7 @@ ncmpii_igetput_varm(NC               *ncp,
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
         else
             xbuf = NCI_Malloc((size_t)nbytes);
+        if (!isSameGroup) ncp->numGetReqs++;
     }
 
     /* allocate a new request object to store the write info */
