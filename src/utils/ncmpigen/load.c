@@ -81,6 +81,7 @@ gen_load_c(
     if (!vars[varnum].has_data)
 	return;
 
+    s2[0] = '\0';
     cline("");
     sprintf(stmnt, "   {\t\t\t/* store %s */", vars[varnum].name);
     cline(stmnt);

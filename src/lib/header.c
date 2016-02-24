@@ -2184,9 +2184,7 @@ ncmpii_comp_vars(int          safe_mode,
 
         NC_var *v1 = root_var->value[i];
         NC_var *v2 = local_var->value[i];
-        char name[128];
-        /* in PnetCDF, name->cp is always NULL character terminated */
-        strcpy(name, v1->name->cp);
+        char *name = v1->name->cp;
 
 #define VAR_WARN(msg, var, root, local) \
     if (safe_mode) printf(msg, WARN_STR, var, root, local);
@@ -2392,7 +2390,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                    WARN_STR, ncp->numrecs, root_ncp->numrecs);
         /* overwrite the local header's numrecs */
         ncp->numrecs = root_ncp->numrecs;
-        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_NUMRECS)
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_NUMRECS)
     }
 
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -2487,7 +2485,10 @@ int ncmpii_write_header(NC *ncp)
         /* copy header object to write buffer */
         status = ncmpii_hdr_put_NC(ncp, buf);
 
-        if (ncp->xsz != (int)ncp->xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (ncp->xsz != (int)ncp->xsz) {
+            NCI_Free(buf);
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        }
         TRACE_IO(MPI_File_write_at)(fh, 0, buf, (int)ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
@@ -2510,6 +2511,10 @@ int ncmpii_write_header(NC *ncp)
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
         /* root's write has failed, which is serious */
         if (root_status == NC_EWRITE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Bcast");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
     }
 
     /* update file header size */
@@ -2517,7 +2522,15 @@ int ncmpii_write_header(NC *ncp)
 
     if (NC_doFsync(ncp)) { /* NC_SHARE is set */
         TRACE_IO(MPI_File_sync)(fh);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_File_sync");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
         TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Barrier");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
     }
 
     return status;

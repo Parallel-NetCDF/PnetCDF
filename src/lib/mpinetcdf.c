@@ -272,7 +272,7 @@ ncmpi_create(MPI_Comm    comm,
 
         hint_str = strtok(env_str, ";");
         while (hint_str != NULL && env_info != MPI_INFO_NULL) {
-            char key[128], *val;
+            char key[MPI_MAX_INFO_KEY], *val;
             strcpy(key, hint_str);
             val = strchr(key, '=');
             *val = '\0';
@@ -431,7 +431,7 @@ ncmpi_open(MPI_Comm    comm,
 
         hint_str = strtok(env_str, ";");
         while (hint_str != NULL && env_info != MPI_INFO_NULL) {
-            char key[128], *val;
+            char key[MPI_MAX_INFO_KEY], *val;
             strcpy(key, hint_str);
             val = strchr(key, '=');
             *val = '\0';

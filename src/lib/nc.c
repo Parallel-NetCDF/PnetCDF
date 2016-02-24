@@ -141,8 +141,10 @@ NC_check_header(NC         *ncp,
     if (ncp->safe_mode) {
         TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,
                                   ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (rank > 0) NCI_Free(cmpbuf);
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce"); 
+        }
 
         if (g_status != NC_NOERR) { /* some headers are inconsistent */
             if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE)
@@ -688,7 +690,8 @@ ncmpii_sync_numrecs(NC         *ncp,
         else {
             if (max_numrecs != (int)max_numrecs) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             len = X_SIZEOF_SIZE_T;
-            status = ncmpix_put_uint32((void**)&buf, (uint)max_numrecs);
+            err = ncmpix_put_uint32((void**)&buf, (uint)max_numrecs);
+            if (status == NC_NOERR) status = err;
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
@@ -795,9 +798,14 @@ write_NC(NC *ncp)
     err =  (status != NC_NOERR && !ErrIsHeaderDiff(status)) ? 1 : 0;
     max_err = err;
 
-    if (ncp->safe_mode == 1)
+    if (ncp->safe_mode == 1) {
         TRACE_COMM(MPI_Allreduce)(&err, &max_err, 1, MPI_INT, MPI_MAX,
                                   ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Allreduce");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
+    }
 
     if (max_err == 1) { /* some processes encounter a fatal error */
         NCI_Free(buf);
@@ -1216,7 +1224,7 @@ ncmpii_inq_env_align_hints(MPI_Offset *h_align,
     if (env_str != NULL) {
         hint_str = strtok(env_str, ";");
         while (hint_str != NULL) {
-            char key[128], *val;
+            char key[MPI_MAX_INFO_KEY], *val;
             strcpy(key, hint_str);
             val = strchr(key, '=');
             *val = '\0';

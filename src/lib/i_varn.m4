@@ -276,6 +276,7 @@ ncmpii_igetput_varn(NC               *ncp,
         _counts = (MPI_Offset**) counts;
 
     /* break buf into num pieces */
+    reqid = NC_REQ_NULL;
     isSameGroup=0;
     bufp = (char*)cbuf;
     for (i=0; i<num; i++) {

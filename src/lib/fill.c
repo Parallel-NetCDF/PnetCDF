@@ -175,7 +175,10 @@ ncmpii_fill_var_rec(NC         *ncp,
 
     /* fill buffer with fill values */
     err = ncmpii_fill_var_buf(varp, count, buf);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        NCI_Free(buf);
+        return err;
+    }
 
     /* calculate the starting file offset for each process */
     offset = varp->begin;
@@ -350,7 +353,11 @@ ncmpi_def_var_fill(int   ncid,
             /* user intends to use default fill value */
             fill_value = NCI_Malloc((size_t)varp->xsz);
             err = inq_default_fill_value(varp->type, fill_value);
-            if (err != NC_NOERR) return err;
+            if (err != NC_NOERR) {
+                NCI_Free(fill_value);
+                NCI_Free(root_fill_value);
+                return err;
+            }
             free_fill_value=1;
         }
         memcpy(root_fill_value, fill_value, (size_t)varp->xsz);

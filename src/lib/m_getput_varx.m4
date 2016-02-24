@@ -1007,7 +1007,7 @@ err_check:
                                       bufs[i], buflen, datatypes[i],
                                       &req_ids[i], rw_flag, 0, 0);
             if (status == NC_NOERR) status = err;
-            if (varp->ndims > 0) NCI_Free(start);
+            NCI_Free(start);
         } else if (counts == NULL) {  /* var1 */
             /* check whether starts[i] is valid */
             err = NC_start_count_stride_ck(ncp, varp, starts[i], NULL, NULL, rw_flag);
@@ -1021,7 +1021,7 @@ err_check:
                                       bufs[i], buflen, datatypes[i],
                                       &req_ids[i], rw_flag, 0, 0);
             if (status == NC_NOERR) status = err;
-            if (varp->ndims > 0) NCI_Free(count);
+            NCI_Free(count);
         } else if (strides == NULL) { /* vara */
             /* check whether starts[i] and counts[i] are valid */
             err = NC_start_count_stride_ck(ncp, varp, starts[i], counts[i], NULL, rw_flag);
