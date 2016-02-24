@@ -185,6 +185,7 @@ ncmpii_get_offset(NC               *ncp,
 #ifdef CDEBUG
         printf("%s(): NC_start_count_stride_ck() fails\n",__func__);
 #endif
+        if (end_off != NULL && end_off != starts) NCI_Free(end_off);
         return status;
     }
 
@@ -818,8 +819,11 @@ ncmpii_vars_create_filetype(NC               *ncp,
     blockcounts[ndims-1] = (int)count[ndims-1];
     /* check 4-byte integer overflow (blockcounts in MPI_Type_hvector
        is of type int while count[] is of type MPI_Offset */
-    if (count[ndims-1] != blockcounts[ndims-1])
+    if (count[ndims-1] != blockcounts[ndims-1]) {
+        NCI_Free(blockstride);
+        NCI_Free(blockcounts);
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    }
     /* blocklens[] is unlikely a big value */
     blocklens[ndims-1] = varp->xsz;
 
@@ -838,21 +842,30 @@ ncmpii_vars_create_filetype(NC               *ncp,
     }
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
     /* check 4-byte integer overflow */
-    if (stride_off != blockstride[ndims-1])
+    if (stride_off != blockstride[ndims-1]) {
+        NCI_Free(blockstride);
+        NCI_Free(blockcounts);
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    }
 #endif
 
     for (dim=ndims-1; dim>=0; dim--) {
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
         err = MPI_Type_create_hvector(blockcounts[dim], blocklens[dim],
                                       blockstride[dim], tmptype, &filetype);
-        if (err != MPI_SUCCESS)
+        if (err != MPI_SUCCESS) {
+            NCI_Free(blockstride);
+            NCI_Free(blockcounts);
             return ncmpii_handle_error(err, "MPI_Type_create_hvector");
+        }
 #else
         err = MPI_Type_hvector(blockcounts[dim], blocklens[dim],
                                blockstride[dim], tmptype, &filetype);
-        if (err != MPI_SUCCESS)
+        if (err != MPI_SUCCESS) {
+            NCI_Free(blockstride);
+            NCI_Free(blockcounts);
             return ncmpii_handle_error(err, "MPI_Type_hvector");
+        }
 #endif
         MPI_Type_commit(&filetype);
         if (tmptype != MPI_BYTE)
@@ -863,8 +876,11 @@ ncmpii_vars_create_filetype(NC               *ncp,
             blocklens[dim-1]  = 1;
             blockcounts[dim-1] = (int)count[dim - 1];
             /* check 4-byte integer overflow */
-            if (count[dim-1] != blockcounts[dim-1])
+            if (count[dim-1] != blockcounts[dim-1]) {
+                NCI_Free(blockstride);
+                NCI_Free(blockcounts);
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            }
 
             if (dim-1 == 0 && IS_RECVAR(varp)) {
                 stride_off = stride[dim-1] * ncp->recsize;
@@ -877,8 +893,11 @@ ncmpii_vars_create_filetype(NC               *ncp,
             }
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
             /* check 4-byte integer overflow */
-            if (stride_off != blockstride[dim-1])
+            if (stride_off != blockstride[dim-1]) {
+                NCI_Free(blockstride);
+                NCI_Free(blockcounts);
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            }
 #endif
         }
     }

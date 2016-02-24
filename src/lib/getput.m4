@@ -684,7 +684,7 @@ ncmpi_$1_var$2(int                ncid,
     status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
                                 bufcount, buftype, ReadWrite($1),
                                 CollIndep($2));
-    if (varp->ndims > 0) NCI_Free(start);
+    NCI_Free(start);
     return status;
 }
 ')dnl
@@ -720,7 +720,7 @@ ncmpi_$1_var_$3$2(int              ncid,
     /* $1_var is a special case of $1_varm */
     status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
                                 -1, $5, ReadWrite($1), CollIndep($2));
-    if (varp->ndims > 0) NCI_Free(start);
+    NCI_Free(start);
     return status;
 }
 ')dnl
@@ -805,7 +805,7 @@ ncmpi_$1_var1$2(int                ncid,
     status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
                                 bufcount, buftype, ReadWrite($1),
                                 CollIndep($2));
-    if (varp->ndims > 0) NCI_Free(count);
+    NCI_Free(count);
     return status;
 }
 ')dnl
@@ -841,7 +841,7 @@ ncmpi_$1_var1_$3$2(int               ncid,
     /* $1_var1 is a special case of $1_varm */
     status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
                                 -1, $5, ReadWrite($1), CollIndep($2));
-    if (varp->ndims > 0) NCI_Free(count);
+    NCI_Free(count);
     return status;
 }
 ')dnl

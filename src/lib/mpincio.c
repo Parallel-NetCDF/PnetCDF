@@ -181,6 +181,10 @@ ncmpiio_create(MPI_Comm     comm,
         if (path == NULL || *path == 0) isPathValid = 0;
         TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
         if (err == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Allreduce");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
     }
 
     MPI_Comm_rank(comm, &rank);
@@ -327,6 +331,10 @@ ncmpiio_open(MPI_Comm     comm,
         if (path == NULL || *path == 0) isPathValid = 0;
         TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
         if (err == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Allreduce");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
     }
 
     /* When open an non-existing file for read, we can either call access() to

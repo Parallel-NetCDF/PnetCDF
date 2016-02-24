@@ -63,7 +63,7 @@ ncmpi_i$1_var(int                ncid,
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, buftype, reqid,
                                  ReadWrite($1), 0, 0);
-    if (varp->ndims > 0) NCI_Free(start);
+    NCI_Free(start);
     return status;
 }
 ')dnl
@@ -99,7 +99,7 @@ ncmpi_i$1_var_$2(int              ncid,
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, -1, $4, reqid,
                                  ReadWrite($1), 0, 0);
-    if (varp->ndims > 0) NCI_Free(start);
+    NCI_Free(start);
     return status;
 }
 ')dnl
@@ -161,7 +161,7 @@ ncmpi_i$1_var1(int                ncid,
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, buftype, reqid,
                                  ReadWrite($1), 0, 0);
-    if (varp->ndims > 0) NCI_Free(count);
+    NCI_Free(count);
     return status;
 }
 ')dnl
@@ -197,7 +197,7 @@ ncmpi_i$1_var1_$2(int               ncid,
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, -1, $4, reqid, ReadWrite($1), 0,
                                  0);
-    if (varp->ndims > 0) NCI_Free(count);
+    NCI_Free(count);
     return status;
 }
 ')dnl
@@ -643,6 +643,8 @@ ncmpii_igetput_varm(NC               *ncp,
          * not contiguous
          */
         if (!buftype_is_contig) { /* buftype is not contiguous */
+            if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
             /* allocate lbuf */
             if (use_abuf && imaptype == MPI_DATATYPE_NULL && !need_convert) {
                 status = ncmpii_abuf_malloc(ncp, nbytes, &lbuf, &abuf_index);
@@ -650,8 +652,6 @@ ncmpii_igetput_varm(NC               *ncp,
                 abuf_allocated = 1;
             }
             else lbuf = NCI_Malloc((size_t)outsize);
-
-            if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             /* pack buf into lbuf using buftype */
             position = 0;

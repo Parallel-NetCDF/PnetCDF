@@ -235,7 +235,7 @@ ncmpii_getput_varn(NC               *ncp,
     if (bufcount > 0) { /* flexible API is used */
         /* pack buf into cbuf, a contiguous buffer */
         int isderived, iscontig_of_ptypes;
-        MPI_Offset bnelems;
+        MPI_Offset bnelems=0;
 
         /* ptype (primitive MPI data type) from buftype
          * el_size is the element size of ptype

@@ -165,9 +165,10 @@ ncmpii_cancel(NC  *ncp,
         /* cancel all pending requests, ignore req_ids and statuses */
         cur_req = ncp->head;
         while (cur_req != NULL) {
+            next_req = cur_req->next;
             FREE_REQUEST(cur_req)
             NCI_Free(cur_req);
-            cur_req = cur_req->next;
+            cur_req = next_req;
         }
         ncp->head = NULL;
         ncp->tail = NULL;
@@ -1524,11 +1525,17 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
     displacements = (MPI_Aint*) NCI_Malloc((size_t)(j+1) * SIZEOF_MPI_AINT);
 
     /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
-    if (segs[0].len != (int)segs[0].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (segs[0].len != (int)segs[0].len) {
+        NCI_Free(displacements);
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    }
     displacements[0] =      segs[0].buf_addr;
     blocklengths[0]  = (int)segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
-        if (segs[i].len != (int)segs[i].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (segs[i].len != (int)segs[i].len) {
+            NCI_Free(displacements);
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        }
         if (displacements[j] + blocklengths[j] == segs[i].buf_addr)
             /* j and i are contiguous */
             blocklengths[j] += (int)segs[i].len;
@@ -2184,8 +2191,14 @@ ncmpii_mgetput(NC           *ncp,
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) status = err;
             }
-            else
+            else {
                 mpireturn = MPI_Type_commit(&buf_type);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_handle_error(mpireturn,"MPI_Type_commit");
+                    /* return the first encountered error if there is any */
+                    if (status == NC_NOERR) status = err;
+                }
+            }
 
             len = 1;
         }

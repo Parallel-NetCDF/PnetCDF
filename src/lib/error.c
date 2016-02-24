@@ -604,6 +604,8 @@ nc_strerror(int ncerr1)
 	    "when netCDF was built.";
       case NC_EDISKLESS:
 	 return "NetCDF: Error in using diskless access";
+      case NC_EMPI:
+         return "MPI operation failed";
       default:
          return nc_unknown_err_msg;
    }
