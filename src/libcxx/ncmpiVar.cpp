@@ -62,8 +62,12 @@ bool NcmpiVar::operator!=(const NcmpiVar & rhs) const
 /////////////////
   
 // Constructor generates a null object.
-NcmpiVar::NcmpiVar() : nullObject(true) {}
-  
+NcmpiVar::NcmpiVar() :
+  nullObject(true),
+  myId(-1),
+  groupId(-1)
+{}
+
 // Constructor for a variable (must already exist in the netCDF file.)
 NcmpiVar::NcmpiVar (const NcmpiGroup& grp, const int& varId) :
   nullObject (false),

@@ -164,16 +164,17 @@ ncmpii_get_offset(NC               *ncp,
     offset = varp->begin; /* beginning file offset of this variable */
     ndims  = varp->ndims; /* number of dimensions of this variable */
 
-    if (counts != NULL)
+    if (counts != NULL) {
         end_off = (MPI_Offset*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_OFFSET);
 
-    if (counts != NULL && strides != NULL) {
-        for (i=0; i<ndims; i++)
-            end_off[i] = starts[i] + (counts[i] - 1) * strides[i];
-    }
-    else if (counts != NULL) { /* strides == NULL */
-        for (i=0; i<ndims; i++)
-            end_off[i] = starts[i] + counts[i] - 1;
+        if (strides != NULL) {
+            for (i=0; i<ndims; i++)
+                end_off[i] = starts[i] + (counts[i] - 1) * strides[i];
+        }
+        else { /* strides == NULL */
+            for (i=0; i<ndims; i++)
+                end_off[i] = starts[i] + counts[i] - 1;
+        }
     }
     else { /* when counts == NULL strides is of no use */
         end_off = (MPI_Offset*) starts;
@@ -820,8 +821,8 @@ ncmpii_vars_create_filetype(NC               *ncp,
     /* check 4-byte integer overflow (blockcounts in MPI_Type_hvector
        is of type int while count[] is of type MPI_Offset */
     if (count[ndims-1] != blockcounts[ndims-1]) {
-        NCI_Free(blockstride);
-        NCI_Free(blockcounts);
+        if (blockstride) NCI_Free(blockstride);
+        if (blockcounts) NCI_Free(blockcounts);
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     }
     /* blocklens[] is unlikely a big value */
@@ -843,8 +844,8 @@ ncmpii_vars_create_filetype(NC               *ncp,
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
     /* check 4-byte integer overflow */
     if (stride_off != blockstride[ndims-1]) {
-        NCI_Free(blockstride);
-        NCI_Free(blockcounts);
+        if (blockstride) NCI_Free(blockstride);
+        if (blockcounts) NCI_Free(blockcounts);
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     }
 #endif

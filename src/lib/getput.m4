@@ -479,8 +479,8 @@ mpi_io:
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }
@@ -491,8 +491,8 @@ mpi_io:
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }
@@ -508,8 +508,8 @@ mpi_io:
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }
@@ -520,8 +520,8 @@ mpi_io:
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }

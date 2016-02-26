@@ -23,12 +23,16 @@ NcmpiAtt& NcmpiAtt::operator=(const NcmpiAtt& rhs)
 
 // Constructor generates a null object.
 NcmpiAtt::NcmpiAtt() : 
-  nullObject(true) 
+  nullObject(true),
+  groupId(-1),
+  varId(-1)
 {}
 
 // Constructor for non-null instances.
 NcmpiAtt::NcmpiAtt(bool nullObject): 
-  nullObject(nullObject)
+  nullObject(nullObject),
+  groupId(-1),
+  varId(-1)
 {}
 
 // The copy constructor.

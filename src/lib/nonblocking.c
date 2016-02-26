@@ -62,15 +62,15 @@ ncmpii_getput_zero_req(NC  *ncp,
         TRACE_IO(MPI_File_read_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_read_all");
-            status = (err == NC_EFILE) ? NC_EREAD : err;
-            DEBUG_ASSIGN_ERROR(status, status)
+            err = (err == NC_EFILE) ? NC_EREAD : err;
+            DEBUG_ASSIGN_ERROR(status, err)
         }
     } else { /* WRITE_REQ */
         TRACE_IO(MPI_File_write_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_all");
-            status = (err == NC_EFILE) ? NC_EWRITE : err;
-            DEBUG_ASSIGN_ERROR(status, status)
+            err = (err == NC_EFILE) ? NC_EWRITE : err;
+            DEBUG_ASSIGN_ERROR(status, err)
         }
     }
 
@@ -1527,6 +1527,7 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
     /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
     if (segs[0].len != (int)segs[0].len) {
         NCI_Free(displacements);
+        NCI_Free(blocklengths);
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     }
     displacements[0] =      segs[0].buf_addr;
@@ -1868,8 +1869,8 @@ ncmpii_req_aggregation(NC     *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         } else {
@@ -1879,8 +1880,8 @@ ncmpii_req_aggregation(NC     *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }
@@ -1897,8 +1898,8 @@ ncmpii_req_aggregation(NC     *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         } else {
@@ -1908,8 +1909,8 @@ ncmpii_req_aggregation(NC     *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }
@@ -2215,8 +2216,8 @@ ncmpii_mgetput(NC           *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         } else {
@@ -2226,8 +2227,8 @@ ncmpii_mgetput(NC           *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }
@@ -2244,8 +2245,8 @@ ncmpii_mgetput(NC           *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         } else {
@@ -2255,8 +2256,8 @@ ncmpii_mgetput(NC           *ncp,
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, status)
+                    err = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
         }

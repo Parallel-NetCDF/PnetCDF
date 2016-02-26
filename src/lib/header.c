@@ -1068,7 +1068,8 @@ ncmpix_len_nctype(nc_type type) {
         case NC_DOUBLE: return X_SIZEOF_DOUBLE;
         case NC_INT64:
         case NC_UINT64: return X_SIZEOF_INT64;
-        default: assert("ncmpix_len_nctype bad type" == 0);
+        default: fprintf(stderr,"ncmpix_len_nctype bad type %d\n",type);
+                 assert(0);
     }
     return 0;
 }
@@ -1765,22 +1766,22 @@ ncmpii_hdr_get_NC(NC *ncp)
     } else if (magic[sizeof(ncmagic1)-1] == 0x2) {
         getbuf.version = 2;
         fSet(ncp->flags, NC_64BIT_OFFSET);
-        if (SIZEOF_MPI_OFFSET != 8) {
+#if SIZEOF_MPI_OFFSET < 8
             /* take the easy way out: if we can't support all CDF-2
              * files, return immediately */
             NCI_Free(getbuf.base);
             DEBUG_RETURN_ERROR(NC_ESMALL)
-        }
+#endif
     } else if (magic[sizeof(ncmagic1)-1] == 0x5) {
         getbuf.version = 5;
         fSet(ncp->flags, NC_64BIT_DATA);
-        if (SIZEOF_MPI_OFFSET != 8) {
+#if SIZEOF_MPI_OFFSET < 8
             NCI_Free(getbuf.base);
             DEBUG_RETURN_ERROR(NC_ESMALL)
-        }
+#endif
     } else {
         NCI_Free(getbuf.base);
-        DEBUG_RETURN_ERROR(NC_ENOTNC) /* not an netCDF file */
+        DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file */
     }
 
     /** Ensure that 'nextread' bytes (numrecs) are available. */
@@ -2493,8 +2494,8 @@ int ncmpii_write_header(NC *ncp)
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             if (status == NC_NOERR) {
-                status = (err == NC_EFILE) ? NC_EWRITE : err;
-                DEBUG_ASSIGN_ERROR(status, status)
+                err = (err == NC_EFILE) ? NC_EWRITE : err;
+                DEBUG_ASSIGN_ERROR(status, err)
             }
         }
         else {

@@ -112,7 +112,11 @@ NC_check_header(NC         *ncp,
      * due to the 2nd argument, count, of MPI_Bcast being of type int.
      * Possible solution is to broadcast in chunks of 2^31 bytes.
      */
-    if (ncp->xsz != (int)ncp->xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (ncp->xsz != (int)ncp->xsz) {
+        if (rank > 0) NCI_Free(cmpbuf);
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    }
+
     TRACE_COMM(MPI_Bcast)(cmpbuf, (int)ncp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
 
     if (rank > 0 && (ncp->xsz != local_xsz || memcmp(buf, cmpbuf, (size_t)ncp->xsz))) {
@@ -685,7 +689,8 @@ ncmpii_sync_numrecs(NC         *ncp,
 
         if (ncp->flags & NC_64BIT_DATA) {
             len = X_SIZEOF_INT64;
-            status = ncmpix_put_uint64((void**)&buf, max_numrecs);
+            err = ncmpix_put_uint64((void**)&buf, max_numrecs);
+            if (status == NC_NOERR) status = err;
         }
         else {
             if (max_numrecs != (int)max_numrecs) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
@@ -1213,20 +1218,17 @@ ncmpii_inq_env_align_hints(MPI_Offset *h_align,
                            MPI_Offset *h_chunk,
                            MPI_Offset *r_align)
 {
-    char *env_str=NULL, *hint_str;
+    char *env_str;
 
     *h_align = 0;
     *v_align = 0;
     *h_chunk = 0;
     *r_align = 0;
 
-    env_str = getenv("PNETCDF_HINTS");
-    if (env_str != NULL) {
-        hint_str = strtok(env_str, ";");
-        while (hint_str != NULL) {
-            char key[MPI_MAX_INFO_KEY], *val;
-            strcpy(key, hint_str);
-            val = strchr(key, '=');
+    if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
+        char *key = strtok(env_str, ";");
+        while (key != NULL) {
+            char *val = strchr(key, '=');
             *val = '\0';
             val++;
             if (strcasecmp(key, "nc_header_align_size") == 0)
@@ -1237,7 +1239,7 @@ ncmpii_inq_env_align_hints(MPI_Offset *h_align,
                 *h_chunk = atoll(val);
             else if (strcasecmp(key, "nc_record_align_size") == 0)
                 *r_align = atoll(val);
-            hint_str = strtok(NULL, ";");
+            key = strtok(NULL, ";");
         }
     }
     return 1;

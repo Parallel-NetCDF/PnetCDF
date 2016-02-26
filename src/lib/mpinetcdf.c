@@ -197,7 +197,7 @@ ncmpi_create(MPI_Comm    comm,
              int        *ncidp)
 {
     int flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
-    char *env_str=NULL, *hint_str, value[MPI_MAX_INFO_VAL];
+    char *env_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
@@ -210,8 +210,7 @@ ncmpi_create(MPI_Comm    comm,
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
      */
-    env_str = getenv("PNETCDF_SAFE_MODE");
-    if (env_str != NULL) {
+    if ((env_str = getenv("PNETCDF_SAFE_MODE")) != NULL) {
         if (*env_str == '0') safe_mode = 0;
         else                 safe_mode = 1;
         /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
@@ -264,27 +263,26 @@ ncmpi_create(MPI_Comm    comm,
      * If this environment variable is set, it  overrides any values that
      * were set by using calls to MPI_Info_set in the application code.
      */
-    env_str = getenv("PNETCDF_HINTS");
     env_info = info;
-    if (env_str != NULL) {
-        if (info == MPI_INFO_NULL)
+    if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
+        if (env_info == MPI_INFO_NULL)
             MPI_Info_create(&env_info); /* ignore error */
 
-        hint_str = strtok(env_str, ";");
-        while (hint_str != NULL && env_info != MPI_INFO_NULL) {
-            char key[MPI_MAX_INFO_KEY], *val;
-            strcpy(key, hint_str);
+        char *key = strtok(env_str, ";");
+        while (key != NULL) {
+            char *val;
             val = strchr(key, '=');
             *val = '\0';
             val++;
             /* printf("env hint: key=%s val=%s\n",key,val); */
-            MPI_Info_set(env_info, key, val); /* override */
-            hint_str = strtok(NULL, ";");
+            MPI_Info_set(env_info, key, val); /* override or add */
+            key = strtok(NULL, ";");
         }
     }
 
     /* get header chunk size from user info */
     if (env_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) chunksize = atoll(value);
@@ -300,6 +298,7 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode = 1;
     if (env_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "disable") == 0)
@@ -312,7 +311,9 @@ ncmpi_create(MPI_Comm    comm,
 
     /* set the file format version based on the create mode, cmode */
     if (fIsSet(cmode, NC_64BIT_DATA)) {
-        if (SIZEOF_MPI_OFFSET <  8) DEBUG_RETURN_ERROR(NC_ESMALL)
+#if SIZEOF_MPI_OFFSET <  8
+        DEBUG_RETURN_ERROR(NC_ESMALL)
+#endif
         fSet(ncp->flags, NC_64BIT_DATA);
     } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
         /* unlike serial netcdf, we will not bother to support
@@ -326,7 +327,9 @@ ncmpi_create(MPI_Comm    comm,
         int default_format;
         ncmpi_inq_default_format(&default_format);
         if (default_format == NC_FORMAT_CDF5) {
-            if (SIZEOF_MPI_OFFSET <  8) DEBUG_RETURN_ERROR(NC_ESMALL)
+#if SIZEOF_MPI_OFFSET <  8
+            DEBUG_RETURN_ERROR(NC_ESMALL)
+#endif
             fSet(ncp->flags, NC_64BIT_DATA);
         }
         else if (default_format == NC_FORMAT_CDF2) {
@@ -374,7 +377,7 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)
 {
     int i, flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
-    char *env_str=NULL, *hint_str, value[MPI_MAX_INFO_VAL];
+    char *env_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
@@ -387,8 +390,7 @@ ncmpi_open(MPI_Comm    comm,
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
      */
-    env_str = getenv("PNETCDF_SAFE_MODE");
-    if (env_str != NULL) {
+    if ((env_str = getenv("PNETCDF_SAFE_MODE")) != NULL) {
         if (*env_str == '0') safe_mode = 0;
         else                 safe_mode = 1;
         /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
@@ -423,27 +425,26 @@ ncmpi_open(MPI_Comm    comm,
      * If this environment variable is set, it  overrides any values that
      * were set by using calls to MPI_Info_set in the application code.
      */
-    env_str = getenv("PNETCDF_HINTS");
     env_info = info;
-    if (env_str != NULL) {
-        if (info == MPI_INFO_NULL)
+    if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
+        if (env_info == MPI_INFO_NULL)
             MPI_Info_create(&env_info); /* ignore error */
 
-        hint_str = strtok(env_str, ";");
-        while (hint_str != NULL && env_info != MPI_INFO_NULL) {
-            char key[MPI_MAX_INFO_KEY], *val;
-            strcpy(key, hint_str);
+        char *key = strtok(env_str, ";");
+        while (key != NULL) {
+            char *val;
             val = strchr(key, '=');
             *val = '\0';
             val++;
             /* printf("env hint: key=%s val=%s\n",key,val); */
-            MPI_Info_set(env_info, key, val); /* override */
-            hint_str = strtok(NULL, ";");
+            MPI_Info_set(env_info, key, val); /* override or add */
+            key = strtok(NULL, ";");
         }
     }
 
     /* get header chunk size from user info, if provided */
     if (env_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) chunksize = atoll(value);
@@ -458,6 +459,7 @@ ncmpi_open(MPI_Comm    comm,
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode = 1;
     if (env_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "disable") == 0)
