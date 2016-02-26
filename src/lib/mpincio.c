@@ -175,8 +175,8 @@ ncmpiio_create(MPI_Comm     comm,
     int i, rank, mpireturn, err;
     int mpiomode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
-    assert(path == NULL);
-    assert(*path == 0);
+    assert(path != NULL);
+    assert(*path != '\0');
     /* checking path consistency is expected done in MPI-IO */
 
     MPI_Comm_rank(comm, &rank);
@@ -317,8 +317,8 @@ ncmpiio_open(MPI_Comm     comm,
     int i, mpireturn;
     int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
-    assert(path == NULL);
-    assert(*path == 0);
+    assert(path != NULL);
+    assert(*path != '\0');
     /* checking path consistency is expected done in MPI-IO */
 
     /* When open an non-existing file for read, we can either call access() to
