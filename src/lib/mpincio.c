@@ -175,17 +175,9 @@ ncmpiio_create(MPI_Comm     comm,
     int i, rank, mpireturn, err;
     int mpiomode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
-    /* TODO: check whether path are the same across all processes */
-    if (ncp->safe_mode) {
-        int isPathValid=1;
-        if (path == NULL || *path == 0) isPathValid = 0;
-        TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
-        if (err == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn,"MPI_Allreduce");
-            DEBUG_RETURN_ERROR(NC_EMPI)
-        }
-    }
+    assert(path == NULL);
+    assert(*path == 0);
+    /* checking path consistency is expected done in MPI-IO */
 
     MPI_Comm_rank(comm, &rank);
 
@@ -325,17 +317,9 @@ ncmpiio_open(MPI_Comm     comm,
     int i, mpireturn;
     int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
-    /* TODO: check whether path are the same across all processes */
-    if (ncp->safe_mode) {
-        int isPathValid=1, err;
-        if (path == NULL || *path == 0) isPathValid = 0;
-        TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
-        if (err == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn,"MPI_Allreduce");
-            DEBUG_RETURN_ERROR(NC_EMPI)
-        }
-    }
+    assert(path == NULL);
+    assert(*path == 0);
+    /* checking path consistency is expected done in MPI-IO */
 
     /* When open an non-existing file for read, we can either call access() to
      * check and return error code NC_ENOENT, or call MPI_File_open and expect
@@ -478,7 +462,7 @@ ncmpiio_move(ncio *const nciop,
     while (nbytes > 0) {
         /* calculate how much to move at each time */
         bufcount = chunk_size;
-        if (nbytes < nprocs * chunk_size) {
+        if (nbytes < (MPI_Offset)nprocs * chunk_size) {
             /* handle the last group of chunks */
             MPI_Offset rem_chunks = nbytes / chunk_size;
             if (rank > rem_chunks) /* these processes do not read/write */

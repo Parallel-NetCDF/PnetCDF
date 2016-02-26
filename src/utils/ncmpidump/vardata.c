@@ -730,7 +730,7 @@ vardata(
 
         /* to avoid residue contents from previous read, especially
            when read beyond the end of file (i.e. read size returned 0) */
-        memset(vals, 0, VALBUFSIZ);
+        if (vals) memset(vals, 0, VALBUFSIZ);
     }
     free(vals);
 

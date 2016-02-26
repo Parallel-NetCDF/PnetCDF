@@ -41,7 +41,9 @@ NcmpiType::NcmpiType(const NcmpiType& rhs):
 
 // Constructor generates a null object.
 NcmpiType::NcmpiType() : 
-  nullObject(true) 
+  nullObject(true),
+  myId(-1),
+  groupId(-1)
 {}
 
 // constructor

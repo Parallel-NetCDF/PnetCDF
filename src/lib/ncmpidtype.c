@@ -462,7 +462,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     case MPI_COMBINER_INDEXED_BLOCK:
 #endif
         *iscontig_of_ptypes = 0;
-        total_blocks = array_of_ints[0]*array_of_ints[1];
+        total_blocks = (MPI_Offset)array_of_ints[0]*array_of_ints[1];
         break;
 
     case MPI_COMBINER_HINDEXED:

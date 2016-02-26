@@ -67,7 +67,7 @@ ncmpix_len_NC_attrV(nc_type    type,
         case NC_DOUBLE: return ncmpix_len_double(nelems);
         case NC_INT64:  return ncmpix_len_int64(nelems);
         case NC_UINT64: return ncmpix_len_uint64(nelems);
-        default: assert("ncmpix_len_NC_attr bad type" == 0);
+        default: assert(0 && "ncmpix_len_NC_attr bad type");
     }
     return 0;
 }
@@ -721,8 +721,7 @@ ncmpix_pad_getn_$1(const void **xpp,
         case NC_UINT64:
             return ncmpix_pad_getn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
-            assert("ncmpix_pad_getn_$1 invalid buffer type" == 0);
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+            assert(0 && "ncmpix_pad_getn_$1 invalid buffer type");
     }
 }
 ')dnl
@@ -767,8 +766,7 @@ ncmpix_getn_$1(const void **xpp,
         case NC_UINT64:
             return ncmpix_getn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
-            assert("ncmpix_pad_getn_$1 invalid buffer type" == 0);
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+            assert(0 && "ncmpix_pad_getn_$1 invalid buffer type");
     }
 }
 ')dnl
@@ -815,8 +813,7 @@ ncmpix_pad_getn(const void **xpp,
         case NC_UINT64:
             return ncmpix_getn_uint64    (xpp, nelems, tp, buftype);
         default:
-            assert("ncmpix_pad_getn invalid filetype" == 0);
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+            assert(0 && "ncmpix_pad_getn invalid filetype");
     }
 }
 
@@ -923,8 +920,7 @@ ncmpix_pad_putn_$1(void       **xpp,
         case NC_UINT64:
             return ncmpix_pad_putn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
-            assert("ncmpix_pad_putn_$1 invalid type" == 0);
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+            assert(0 && "ncmpix_pad_putn_$1 invalid type");
     }
 }
 ')dnl
@@ -969,8 +965,7 @@ ncmpix_putn_$1(void       **xpp,
         case NC_UINT64:
             return ncmpix_putn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
-            assert("ncmpix_putn_$1 invalid type" == 0);
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+            assert(0 && "ncmpix_putn_$1 invalid type");
     }
 }
 ')dnl
@@ -1017,8 +1012,7 @@ ncmpix_pad_putn(void       **xpp,
         case NC_UINT64:
             return ncmpix_putn_uint64    (xpp, nelems, tp, buftype);
         default:
-            assert("ncmpix_pad_putn invalid filetype" == 0);
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+            assert(0 && "ncmpix_pad_putn invalid filetype");
     }
 }
 

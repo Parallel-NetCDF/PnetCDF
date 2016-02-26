@@ -609,13 +609,14 @@ set_sigdigs(const char *optarg)
         error("unreasonable value for float significant digits: %d",
               flt_digits);
 
-    if (*ptr1 == ',')
+    if (ptr1 && *ptr1 == ',') {
         dbl_digits = (int)strtol(ptr1+1, &ptr2, 10);
 
-    if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20)
-        error("unreasonable value for double significant digits: %d",
-              dbl_digits);
-
+        if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20) {
+            error("unreasonable value for double significant digits: %d",
+                  dbl_digits);
+        }
+    }
     set_formats(flt_digits, dbl_digits);
 }
 
@@ -642,14 +643,14 @@ set_precision(const char *optarg)
         error("unreasonable value for float significant digits: %d",
               flt_digits);
 
-    if (*ptr1 == ',') {
+    if (ptr1 && *ptr1 == ',') {
         dbl_digits = (int) strtol(ptr1+1, &ptr2, 10);
         double_precision_specified = 1;
+        if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20) {
+            error("unreasonable value for double significant digits: %d",
+                  dbl_digits);
+        }
     }
-
-    if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20)
-        error("unreasonable value for double significant digits: %d",
-              dbl_digits);
 
     set_formats(flt_digits, dbl_digits);
 }

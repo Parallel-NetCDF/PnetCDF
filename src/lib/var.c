@@ -351,7 +351,8 @@ ncx_szof(nc_type type)
         case NC_INT64:  return X_SIZEOF_INT64;
         case NC_UINT64: return X_SIZEOF_UINT64;
         default:
-             assert("ncx_szof invalid type" == 0);
+             fprintf(stderr,"ncx_szof invalid type %d\n", type);
+             assert(0);
     }
     /* default */
     return 0;
@@ -523,8 +524,10 @@ ncmpi_def_var(int         ncid,
     status = ncmpii_cktype(file_ver, type);
     if (status != NC_NOERR) return status;
 
-    /* TODO: can ndims > 2^31-1 in CDF-5 ? */
+    /* TODO: make ndims of type MPI_Offset so ndims can be > 2^31-1 in CDF-5
     if ((ndims < 0) || ndims > X_INT_MAX) DEBUG_RETURN_ERROR(NC_EINVAL)
+    */
+    if (ndims < 0) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     /* there is an upperbound for the number of variables defined in a file */
     if (ncp->vars.ndefined >= NC_MAX_VARS) DEBUG_RETURN_ERROR(NC_EMAXVARS)

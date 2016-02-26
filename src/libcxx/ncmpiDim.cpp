@@ -62,7 +62,9 @@ NcmpiGroup  NcmpiDim::getParentGroup() const {
 
 // Constructor generates a null object.
 NcmpiDim::NcmpiDim() : 
-  nullObject(true) 
+  nullObject(true),
+  myId(-1),
+  groupId(-1)
 {}
 
 // Constructor for a dimension (must already exist in the netCDF file.)
