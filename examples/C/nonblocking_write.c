@@ -6,8 +6,7 @@
  *********************************************************************/
 /* $Id$ */
 
-/* wkliao:
- *    This example is similar to collective_write.c but using nonblocking APIs.
+/*    This example is similar to collective_write.c but using nonblocking APIs.
  *    It creates a netcdf file in CD-5 format and writes a number of
  *    3D integer non-record variables. The measured write bandwidth is reported
  *    at the end. Usage: (for example)
@@ -97,7 +96,7 @@ int main(int argc, char **argv)
     int ncid, dimids[NDIMS], varids[NUM_VARS], req[NUM_VARS], st[NUM_VARS];
     MPI_Offset starts[NDIMS], counts[NDIMS], write_size, sum_write_size;
     MPI_Offset bbufsize;
-    MPI_Info info_used;
+    MPI_Info info, info_used;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -144,14 +143,21 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
     write_timing = MPI_Wtime();
 
+    /* set an MPI-IO hint to disable file offset alignment for fix-sized
+     * variables */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_var_align_size", "1");
+
     /* create the file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
-                       MPI_INFO_NULL, &ncid);
+                       info, &ncid);
     if (err != NC_NOERR) {
         printf("Error: ncmpi_create() file %s (%s)\n",filename,ncmpi_strerror(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
     }
+
+    MPI_Info_free(&info);
 
     /* define dimensions */
     for (i=0; i<NDIMS; i++) {

@@ -75,6 +75,7 @@ int main(int argc, char** argv)
     int ncid, cmode, varid, dimid[2], num_reqs, *buffer, **bufs, *nvarids;
     MPI_Offset w_len, **starts, **counts, *bufcounts;
     MPI_Datatype *datatypes;
+    MPI_Info info;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -97,10 +98,17 @@ int main(int argc, char** argv)
     if (nprocs != 4 && rank == 0 && verbose)
         printf("Warning: this program is intended to run on 4 processes\n");
 
+    /* set an MPI-IO hint to disable file offset alignment for fix-sized
+     * variables */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_var_align_size", "1");
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     ERR
+
+    MPI_Info_free(&info);
 
     /* create a global array of size NY * NX */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]);

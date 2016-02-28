@@ -152,11 +152,11 @@ int benchmark_write(char       *filename,
 
     /* set PnetCDF I/O hints */
     MPI_Info_create(&info);
-    /* To disable the header and fixed-size variable alignments, set the
-       following hints.
+    /* disable the header extent alignments
     MPI_Info_set(info, "nc_header_align_size", "1");    size in bytes
-    MPI_Info_set(info, "nc_var_align_size",    "1");    size in bytes
     */
+    /* disable the fixed-size variable alignments */
+    MPI_Info_set(info, "nc_var_align_size", "1");
 
     /* initialize I/O buffer with random numbers */
     srand(rank);

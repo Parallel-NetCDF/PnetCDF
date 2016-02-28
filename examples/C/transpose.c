@@ -67,6 +67,7 @@ int main(int argc, char **argv)
     int XYZ_id, XZY_id, YZX_id, YXZ_id, ZYX_id, ZXY_id;
     MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS], imap[NDIMS];
     MPI_Offset startsT[NDIMS], countsT[NDIMS];
+    MPI_Info info;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -130,14 +131,21 @@ int main(int argc, char **argv)
                                        + (starts[1]+j)*gsizes[2]
                                        + (starts[2]+i);
 
+    /* set an MPI-IO hint to disable file offset alignment for fix-sized
+     * variables */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_var_align_size", "1");
+
     /* create the file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
-                       MPI_INFO_NULL, &ncid);
+                       info, &ncid);
     if (err != NC_NOERR) {
         printf("Error: ncmpi_create() file %s (%s)\n",filename,ncmpi_strerror(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
     }
+
+    MPI_Info_free(&info);
 
     /* define dimensions */
     for (i=0; i<NDIMS; i++) {
