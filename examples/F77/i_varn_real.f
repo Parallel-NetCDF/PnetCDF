@@ -113,7 +113,7 @@
           integer*8 malloc_size, sum_size, two
           real buffer(NX*NY,4)
           logical verbose
-          integer dummy
+          integer dummy, info
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -138,11 +138,18 @@
      +        print*,'Warning: ',cmd,' is intended to run on ',
      +               '4 processes'
 
+          ! set an MPI-IO hint to disable file offset alignment for
+          ! fix-sized variables
+          call MPI_Info_create(info, err)
+          call MPI_Info_set(info, "nc_var_align_size", "1", err)
+
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
           err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
-     +                        MPI_INFO_NULL, ncid)
+     +                       info, ncid)
           call check(err, 'In nfmpi_create: ')
+
+          call MPI_Info_free(info, err)
 
           ! define dimensions x and y
           err = nfmpi_def_dim(ncid, "Y", NY, dimid(2))

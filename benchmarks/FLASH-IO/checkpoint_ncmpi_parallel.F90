@@ -333,17 +333,20 @@
 
       ! set up MPI I/O hints for performance enhancement
       file_info = MPI_INFO_NULL
-      ! call MPI_Info_create(file_info, err)
+      call MPI_Info_create(file_info, err)
 
-      ! use some ROMIO hints
+      ! set some ROMIO hints
       ! call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true', err)
+
+      ! disable file offset alignment for fix-sized variables
+      call MPI_Info_set(file_info, "nc_var_align_size", "1", err)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, trim(filename), cmode, &
-                          file_info, ncid)
+                         file_info, ncid)
       if (err .NE. NF_NOERR) call check(err, "nfmpi_create")
 
-      ! call MPI_Info_free(file_info, err)
+      call MPI_Info_free(file_info, err)
 
       err = nfmpi_get_file_info(ncid, info_used)
 

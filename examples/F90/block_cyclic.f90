@@ -76,6 +76,7 @@
           integer(kind=MPI_OFFSET_KIND) start(2), count(2)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
           logical verbose
+          integer info
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -93,11 +94,18 @@
           call MPI_Bcast(verbose, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, err)
           call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, err)
 
+          ! set an MPI-IO hint to disable file offset alignment for
+          ! fix-sized variables
+          call MPI_Info_create(info, err)
+          call MPI_Info_set(info, "nc_var_align_size", "1", err)
+
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
           err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
-                               MPI_INFO_NULL, ncid)
+                               info, ncid)
           call check(err, 'In nf90mpi_create: ')
+
+          call MPI_Info_free(info, err)
 
           ! the global array is NX * (NY * nprocs) */
           G_NY  = NY * nprocs

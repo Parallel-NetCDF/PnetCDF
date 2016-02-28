@@ -41,7 +41,7 @@
           PARAMETER(NDIMS=3, NUM_VARS=10, BUFSIZE=1000)
 
           character*128 filename, cmd, str
-          integer i, j, cmode, err, ierr, get_args
+          integer i, j, cmode, err, ierr, get_args, info
           integer rank, nprocs, ncid, len
           integer buf(BUFSIZE, NUM_VARS), buf1d(BUFSIZE)
           integer psizes(NDIMS), dimids(NDIMS), varids(NUM_VARS)
@@ -101,11 +101,18 @@
              enddo
           enddo
 
+          ! set an MPI-IO hint to disable file offset alignment for
+          ! fix-sized variables
+          call MPI_Info_create(info, err)
+          call MPI_Info_set(info, "nc_var_align_size", "1", err)
+
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
           err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
-     +                       MPI_INFO_NULL, ncid)
+     +                       info, ncid)
           call check(err, 'In nfmpi_create: ')
+
+          call MPI_Info_free(info, err)
 
           ! define dimensions
           do i=1, NDIMS

@@ -88,6 +88,7 @@ int main(int argc, char** argv)
     int i, j, verbose=1, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset start[2], count[2];
+    MPI_Info info;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -107,9 +108,16 @@ int main(int argc, char** argv)
     argv += optind;
     if (argc == 1) filename = argv[0]; /* optional argument */
 
+    /* set an MPI-IO hint to disable file offset alignment for fix-sized
+     * variables */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_var_align_size", "1");
+
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     ERR
+
+    MPI_Info_free(&info);
 
     /* the global array is NY * (NX * nprocs) */
     G_NX  = NX * nprocs;

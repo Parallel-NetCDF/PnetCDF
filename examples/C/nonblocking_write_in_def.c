@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     int ncid, dimids[NDIMS], varids[NUM_VARS];
     MPI_Offset start[NDIMS], count[NDIMS], write_size, sum_write_size;
     MPI_Offset bbufsize;
-    MPI_Info info_used;
+    MPI_Info info, info_used;
     MPI_Comm comm=MPI_COMM_WORLD;
 
     MPI_Init(&argc,&argv);
@@ -145,14 +145,20 @@ int main(int argc, char **argv)
     MPI_Barrier(comm);
     write_timing = MPI_Wtime();
 
+    /* set an MPI-IO hint to disable file offset alignment for fix-sized
+     * variables */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_var_align_size", "1");
+
     /* create the file */
-    err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL,
-                       &ncid);
+    err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_DATA, info, &ncid);
     if (err != NC_NOERR) {
         printf("Error: ncmpi_create() file %s (%s)\n",filename,ncmpi_strerror(err));
         MPI_Abort(comm, -1);
         exit(1);
     }
+
+    MPI_Info_free(&info);
 
     /* define dimensions */
     for (i=0; i<NDIMS; i++) {
