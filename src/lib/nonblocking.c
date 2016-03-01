@@ -316,14 +316,21 @@ ncmpi_inq_nreqs(int  ncid,
 
 #ifndef ENABLE_NONBLOCKING
 /*----< extract_reqs() >-----------------------------------------------------*/
+/* based on the request type, construct the request ID arrays.
+ * Input value of *num_reqs is NC_REQ_ALL, NC_GET_REQ_ALL, or NC_PUT_REQ_ALL
+ * The output of *num_reqs is the number of requests.
+ */
 static
 void extract_reqs(NC   *ncp,
-                  int   req_type, /* NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL */
-                  int  *num_reqs,
+                  int  *num_reqs, /* IN/OUT */
                   int **req_ids)
 {
-    int *reqids, prev_id = NC_REQ_NULL;
+    int req_type, prev_id = NC_REQ_NULL;
     NC_req *req_ptr = ncp->head;
+
+    req_type = *num_reqs;
+
+    /* first while loop finds the number of requests to flush */
     *num_reqs = 0;
     while (req_ptr != NULL) {
         /* some requests in the linked list may share the same ID, they were
@@ -349,8 +356,11 @@ void extract_reqs(NC   *ncp,
         }
         req_ptr = req_ptr->next;
     }
+
     /* allocate ID array */
-    reqids = (int*) NCI_Malloc(*num_reqs * sizeof(int));
+    (*req_ids) = (int*) NCI_Malloc(*num_reqs * sizeof(int));
+
+    /* second while loop fills the request IDs */
     req_ptr = ncp->head;
     *num_reqs = 0;
     prev_id = NC_REQ_NULL;
@@ -358,24 +368,23 @@ void extract_reqs(NC   *ncp,
         if (req_type == NC_REQ_ALL) {
             if (req_ptr->id != prev_id) {
                 prev_id = req_ptr->id;
-                reqids[*num_reqs++] = prev_id;
+                (*req_ids)[(*num_reqs)++] = prev_id;
             }
         }
         else if (req_type == NC_GET_REQ_ALL) {
             if (req_ptr->rw_flag == READ_REQ && req_ptr->id != prev_id) {
                 prev_id = req_ptr->id;
-                reqids[*num_reqs++] = prev_id;
+                (*req_ids)[(*num_reqs)++] = prev_id;
             }
         }
         else if (req_type == NC_PUT_REQ_ALL) {
             if (req_ptr->rw_flag == WRITE_REQ && req_ptr->id != prev_id) {
                 prev_id = req_ptr->id;
-                reqids[*num_reqs++] = prev_id;
+                (*req_ids)[(*num_reqs)++] = prev_id;
             }
         }
         req_ptr = req_ptr->next;
     }
-    *req_ids = reqids;
 }
 #endif
 
@@ -408,14 +417,17 @@ ncmpi_wait(int ncid,
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
     int i, err, *reqids=NULL;
-    if (num_reqs < 0) /* construct request ID arrays */
-        extract_reqs(ncp, num_reqs, &num_reqs, &req_ids);
+    if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
+        /* in this case, arguments req_ids[] and statuses[] are ignored */
+        /* construct request ID arrays */
+        extract_reqs(ncp, &num_reqs, &reqids);
+    }
 
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        if (statuses == NULL)
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
-        else
+        if (reqids == NULL)
             err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        else
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
         if (status == NC_NOERR) status = err;
     }
     if (reqids != NULL) NCI_Free(reqids);
@@ -468,14 +480,17 @@ ncmpi_wait_all(int  ncid,
     err = ncmpi_begin_indep_data(ncid);
     if (status == NC_NOERR) status = err;
 
-    if (num_reqs < 0) /* construct request ID arrays */
-        extract_reqs(ncp, num_reqs, &num_reqs, &req_ids);
+    if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
+        /* in this case, arguments req_ids[] and statuses[] are ignored */
+        /* construct request ID arrays */
+        extract_reqs(ncp, &num_reqs, &reqids);
+    }
 
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        if (statuses == NULL)
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
-        else
+        if (reqids == NULL)
             err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        else
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
         if (status == NC_NOERR) status = err;
     }
     if (reqids != NULL) NCI_Free(reqids);
@@ -1002,6 +1017,7 @@ err_check:
         do_read  = num_r_reqs;
         do_write = num_w_reqs;
     }
+
     /* carry out writes and reads separately (writes first) */
     if (do_write > 0)
         err = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head, WRITE_REQ,
