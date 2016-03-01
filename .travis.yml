@@ -1,0 +1,20 @@
+language: c
+
+before_install:
+  - test -n $CC && unset CC
+  - sudo apt-get update -qq
+  - sudo apt-get install -y gfortran
+  - sudo apt-get install -y mpich2
+  - autoreconf
+  - sed -i -- 's/LastChangedDate/LastChangedDate:\ 2016-02-03\ 18:18:26\ -0600\ (Wed,\ 03\ Feb\ 2016)\ /g' configure
+
+script:
+  - ./configure
+  - make
+  - make tests
+  
+after_failure:
+  - cat ./config.log
+
+notifications:
+  email: false
