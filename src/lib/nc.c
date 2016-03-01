@@ -1405,8 +1405,7 @@ ncmpii__enddef(NC         *ncp,
 int
 ncmpii_close(NC *ncp)
 {
-    int num_reqs, err, status=NC_NOERR, *req_ids=NULL, *statuses=NULL;
-    NC_req *cur_req;
+    int err, status=NC_NOERR;
 
     if (NC_indef(ncp)) { /* currently in define mode */
         status = ncmpii_enddef(ncp); /* TODO: defaults */
@@ -1437,28 +1436,14 @@ ncmpii_close(NC *ncp)
         ncmpii_subfile_close(ncp);
 #endif
 
-    /* cancel or complete all outstanding nonblocking I/O */
-    num_reqs = 0;
-    cur_req = ncp->head;
-    while (cur_req != NULL) {
-        num_reqs++;
-        cur_req = cur_req->next;
-    }
-    if (num_reqs > 0) { /* fill in req_ids[] */
-        req_ids = (int*) NCI_Malloc((size_t)num_reqs * 2 * SIZEOF_INT);
-        statuses = req_ids + num_reqs;
-        num_reqs = 0;
-        cur_req = ncp->head;
-        while (cur_req != NULL) {
-            req_ids[num_reqs++] = cur_req->id;
-            cur_req = cur_req->next;
-        }
+    /* We can cancel or complete all outstanding nonblocking I/O.
+     * For now, cancelling makes more sense. */
+    if (ncp->head != NULL) {
 #ifdef COMPLETE_NONBLOCKING_IO
-        ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
+        ncmpii_wait(ncp, INDEP_IO, NC_REQ_ALL, NULL, NULL);
 #else
-        ncmpii_cancel(ncp, num_reqs, req_ids, statuses);
+        ncmpii_cancel(ncp, NC_REQ_ALL, NULL, NULL);
 #endif
-        NCI_Free(req_ids);
     }
 
     /* If the user wants a stronger data consistency by setting NC_SHARE */
