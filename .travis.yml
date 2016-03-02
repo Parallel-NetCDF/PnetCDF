@@ -26,7 +26,7 @@ before_install:
   # Below is for Redhat
   # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.in` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
   # Below is for Ubuntu
-  - DateStr=`date -r configure.in +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i configure
+  - DateStr=`date -r configure.in +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
 
 script:
   - ./configure
