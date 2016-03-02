@@ -771,7 +771,7 @@ dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
 dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
 dnl get mangled. 
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
-   AC_MSG_WARN(MPI_Offset and MPI_Aint have different sizes: non-blocking APIs now behave like blocking ones)
+   AC_MSG_WARN(MPI_Offset and MPI_Aint are detected of different sizes: the request aggregation in non-blocking APIs is thus disabled)
    enable_nonblocking=no
 else
    AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
