@@ -22,7 +22,11 @@ before_install:
   - sudo apt-get install -y gfortran
   - sudo apt-get install -y mpich2
   - autoreconf
-  - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.in` ; sed -i -- "s/LastChangedDate/LastChangedDate: $DateStr /g" configure
+  # string substritute for SVN keyword LastChangedDate
+  # Below is for Redhat
+  # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.in` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
+  # Below is for Ubuntu
+  - DateStr=`date -r configure.in +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i configure
 
 script:
   - ./configure
