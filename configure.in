@@ -772,10 +772,10 @@ dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
 dnl get mangled. 
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
    AC_MSG_WARN(MPI_Offset and MPI_Aint are detected of different sizes: the request aggregation in non-blocking APIs is thus disabled)
-   enable_nonblocking=no
+   enable_aggregation=no
 else
-   AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
-   enable_nonblocking=yes
+   AC_DEFINE(ENABLE_REQ_AGGREGATION,,[Define if able to support request aggregation in nonblocking routines])
+   enable_aggregation=yes
 fi
 
 # check for MPI-2 only functions
@@ -1209,7 +1209,7 @@ AC_CONFIG_FILES(macros.make \
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 
 AC_OUTPUT
-echo "--------------------------------------------------------------------"
+echo "------------------------------------------------------------------------------"
 
 if test "x${enable_mpi_io_test}" = xno ; then
     AC_MSG_WARN([
@@ -1226,27 +1226,27 @@ echo \
 "
    ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
-   Features:  Support for large files (> 4 GB) - ${msg_large_files}
-              Build C++ APIs                   - ${has_mpicxx}
-              Build Fortran APIs               - ${enable_fortran}
-              Build nonblocking APIs           - ${enable_nonblocking}
-              Build CDF-5 support              - ${enable_cdf5}
-              Build subfiling support          - ${enable_subfiling}"
+   Features:  Support for large files (> 4 GB)                  - ${msg_large_files}
+              Build C++ APIs                                    - ${has_mpicxx}
+              Build Fortran APIs                                - ${enable_fortran}
+              Enable request aggregation in nonblocking APIs    - ${enable_aggregation}
+              Build CDF-5 support                               - ${enable_cdf5}
+              Build subfiling support                           - ${enable_subfiling}"
 if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
    echo "\
-              Memory in-place byte swap        - disabled"
+              Memory in-place byte swap                         - disabled"
 fi
 if test "x${large_file_test}" = xyes; then
    echo "\
-              Testing large file/variable I/O  - enabled"
+              Testing large file/variable I/O                   - enabled"
 fi
 if test "x${debug}" = xyes; then
    echo "\
-              PnetCDF internal debug mode      - enabled"
+              PnetCDF internal debug mode                       - enabled"
 fi
 if test "x${enable_fortran}" = xyes && (test "x${F77_SUPPORT_FREEFORM}" = xno) ; then
    echo "\
-              Support free form in Fortran 77  - no"
+              Support free form in Fortran 77                   - no"
 fi
 
 echo "\
@@ -1300,5 +1300,5 @@ echo "\
            testing          - test PnetCDF build for sequential run
            ptest            - test PnetCDF build for parallel run
            install          - install PnetCDF
----------------------------------------------------------------------"
+------------------------------------------------------------------------------"
 

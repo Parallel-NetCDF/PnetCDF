@@ -314,7 +314,7 @@ ncmpi_inq_nreqs(int  ncid,
     return NC_NOERR;
 }
 
-#ifndef ENABLE_NONBLOCKING
+#ifndef ENABLE_REQ_AGGREGATION
 /*----< extract_reqs() >-----------------------------------------------------*/
 /* based on the request type, construct the request ID arrays.
  * Input value of *num_reqs is NC_REQ_ALL, NC_GET_REQ_ALL, or NC_PUT_REQ_ALL
@@ -323,7 +323,7 @@ ncmpi_inq_nreqs(int  ncid,
 static
 void extract_reqs(NC   *ncp,
                   int  *num_reqs, /* IN/OUT */
-                  int **req_ids)
+                  int **req_ids)  /* OUT */
 {
     int req_type, prev_id = NC_REQ_NULL;
     NC_req *req_ptr = ncp->head;
@@ -413,13 +413,13 @@ ncmpi_wait(int ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-#ifdef ENABLE_NONBLOCKING
+#ifdef ENABLE_REQ_AGGREGATION
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
     int i, err, *reqids=NULL;
     if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
         /* in this case, arguments req_ids[] and statuses[] are ignored */
-        /* construct request ID arrays */
+        /* construct request ID array, reqids */
         extract_reqs(ncp, &num_reqs, &reqids);
     }
 
@@ -466,7 +466,7 @@ ncmpi_wait_all(int  ncid,
         /* must return the error now, parallel program might hang */
         return status;
 
-#ifdef ENABLE_NONBLOCKING
+#ifdef ENABLE_REQ_AGGREGATION
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
     int i, err, *reqids=NULL;
@@ -482,7 +482,7 @@ ncmpi_wait_all(int  ncid,
 
     if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
         /* in this case, arguments req_ids[] and statuses[] are ignored */
-        /* construct request ID arrays */
+        /* construct request ID array, reqids */
         extract_reqs(ncp, &num_reqs, &reqids);
     }
 
