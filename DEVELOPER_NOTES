@@ -395,3 +395,46 @@ TRACE-MPI-IO:   FILE nonblocking.c FUNC ncmpii_mgetput() LINE 1875 calling MPI_F
 0: ---- before ncmpi_close() ----
 TRACE-MPI-IO:   FILE mpincio.c FUNC ncmpiio_close() LINE 410 calling MPI_File_close()
 
+==============================================================================
+Mirror SVN repo to Github
+==============================================================================
+PnetCDF svn repo is currently mirrored to Wei-keng's Github account:
+https://github.com/wkliao/parallel-netcdf
+This will be changed in the future, once PnetCDF's own Gitlab server is
+built. The sync operation is done nightly.
+
+Commands for mirror setting are:
+  cd /path/to/your/git/clone/of/parallel-netcdf
+  git svn init -s https://svn.mcs.anl.gov/repos/parallel-netcdf parallel-netcdf
+  cd parallel-netcdf
+  git svn fetch >& fetch.log &     # this will take long to get all commits
+
+Login to your github account and create a new repo, named "parallel-netcdf"
+Set the remote repo URL @ Github
+  git remote add origin https://github.com/wkliao/parallel-netcdf.git
+  git push -u origin master
+
+Create a cron job to sync svn repo to Github using a script file named, say
+cron_sync.sh. Its contents are:
+  #!/bin/bash
+  cd /path/to/your/git/clone/of/parallel-netcdf
+  git svn rebase
+  git push origin master
+
+==============================================================================
+Setting up Travis CI for PnetCDF @ Github
+==============================================================================
+Instructions are based on https://docs.travis-ci.com/user/getting-started/
+
+Sign in to Travis CI with your GitHub account
+Click (Your Name) -> Accounts -> Sync account
+(This should show a new repo just created.)
+Click the repo to enable Travis CI and configure "settings" tab
+
+(Travis only runs a build on the commits you push after adding the repository to Travis. Note: If your project already has a .travis.yml file, you need to push another commit to trigger a build.)
+
+==============================================================================
+Coverity Scan + Travis CI Integration
+==============================================================================
+Following the instructions in https://scan.coverity.com/travis_ci
+
