@@ -1,12 +1,28 @@
 language: c
 
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "mJGeYdnFGvRn9xfpQTc0Z1A21SUf0qCUfsERMUM32Lmm7rc+KDty+O4Jrq87ZK8Qn+3CiW0w/IJluyQOksib84d1jHDKII7IZHzlKKFOvCeHgkiG7cbir62apK9XZah3q4vY55RhA7Ogr/lSmOdYcIZUwuQ9yVbnBc4e+ZUnHteQg8UUv2wSTQgfcQF+0aDqugEfJfu/0zjNhf93ljyOUhzda2yvqRxEI494fGeXPndApaZDKwuK9w0+VA5BY8IrKUafzQ8eBw3iEmR2DPNi3kS2wbnmo6Y1Wh3xzKysIxx6lbegAOMVeVO7Oz6Ry8pMzTd+t9yekxe6iZpHHSzET6h874YrwyIRblLuS9PXcy1NvGqFwQD13jEqcnjKgvROopff+BSMzKblhoc0yOUUwgguasQsx9itYas74N3qRha5iRH6LtBlaCVb805fieNzk01kSeh+5egcpljEjsUotSJL+mLiuMhgkQM2XPbZB0SRUmM7WHMG2DTtyf3J50er+M9chh2h6U9CCC5QhCkF+9zna3LuesZtqolwbWfqDBqJ28TzW/XeqmxuQfLr9pLpg8Q8LiHyjqADNeJKYM/rhYZvkYwDkIzezol9pBOKNjNBh8mEOS2Ne2aZh25hZo5noQGY4tE8HScezX7GrsHfi2Z4pHEo7T8R0pt6e9czMUw="
+
+addons:
+  coverity_scan:
+    project:
+      name: "wkliao/parallel-netcdf"
+      description: "Build submitted via Travis CI"
+    notification_email: wkliao@eecs.northwestern.edu
+    build_command_prepend: "./configure; make clean"
+    build_command:   "make -j 4"
+    branch_pattern: master
+
 before_install:
   - test -n $CC && unset CC
   - sudo apt-get update -qq
   - sudo apt-get install -y gfortran
   - sudo apt-get install -y mpich2
   - autoreconf
-  - sed -i -- 's/LastChangedDate/LastChangedDate:\ 2016-02-03\ 18:18:26\ -0600\ (Wed,\ 03\ Feb\ 2016)\ /g' configure
+  - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.in` ; sed -i -- "s/LastChangedDate/LastChangedDate: $DateStr /g" configure
 
 script:
   - ./configure
