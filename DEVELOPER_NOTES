@@ -438,3 +438,5 @@ Coverity Scan + Travis CI Integration
 ==============================================================================
 Following the instructions in https://scan.coverity.com/travis_ci
 
+The modeling file ./coverity_model.c is for Coverity Scan used in the Analysis
+Setting.
