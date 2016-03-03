@@ -101,7 +101,7 @@ install: $(LIBRARY)
 	$(INSTALL_DATA) $(PKGCONFIG) $(LIBDIR)/pkgconfig/$(PKGCONFIG)
 
 uninstall:
-	$(RM) -f $(LIBDIR)/$(LIBRARY)/$(PKGCONFIG)
+	$(RM) -f $(LIBDIR)/pkgconfig/$(PKGCONFIG)
 	$(RM) -f $(LIBDIR)/$(LIBRARY)
 	$(RM) -f $(INCDIR)/$(HEADER)
 
