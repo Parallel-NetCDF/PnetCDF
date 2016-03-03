@@ -53,6 +53,7 @@ ncmpii_getput_vard(NC               *ncp,
     MPI_Status mpistatus;
     MPI_Datatype ptype, orig_buftype=buftype;
     MPI_File fh=MPI_FILE_NULL;
+    MPI_Aint lb, extent=0, true_lb, true_extent;
 
     if (filetype == MPI_DATATYPE_NULL) { /* this process does zero-length I/O */
         if (io_method == INDEP_IO) return NC_NOERR;
@@ -88,9 +89,7 @@ ncmpii_getput_vard(NC               *ncp,
         goto err_check;
     }
 
-    MPI_Aint true_lb, true_extent;
     MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
-    MPI_Aint lb, extent=0;
     MPI_Type_get_extent(filetype, &lb, &extent);
 
     if (!IS_RECVAR(varp)) {
