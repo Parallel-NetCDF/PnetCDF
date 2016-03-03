@@ -18,6 +18,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <errno.h>
 
 #include <mpi.h>
 
@@ -80,7 +81,10 @@ val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
   gbp->pos = gbp->base;
   gbp->index = 0;
 
-  lseek(gbp->nciop->fd, gbp->offset-slack, SEEK_SET);
+  if (-1 == lseek(gbp->nciop->fd, gbp->offset-slack, SEEK_SET)) {
+      printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
+      return -1;
+  }
   nn = read(gbp->nciop->fd, gbp->base, gbp->size);
   if (nn < gbp->size) {
       printf("Error: Unexpected EOF ");
