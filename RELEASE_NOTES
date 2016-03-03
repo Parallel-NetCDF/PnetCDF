@@ -2,6 +2,160 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
+version  1.7.0 (March 3, 2016)
+-------------------------------------
+
+  o New features
+    * Nonblocking requests now can be posted while the program is in the define
+      mode. This feature enables applications to add new variables and post the
+      nonblocking write requests without separating the codes by
+      ncmpi_enddef(). Note ncmpi_wait_all and ncmpi_wait must still be called
+      in the data mode.
+    * When using immutable write buffer in put APIs on a Little Endian machine,
+      the in-place byte swap operation performed internally in PnetCDF can
+      cause a fatal error (by trying to change the contents of an immutable
+      memory space). The solution of copying user's write request to a
+      temporary buffer and perform byte swap there conflicts with PnetCDF's
+      design principle of avoiding internal memory allocation as much as
+      possible. Since the size of immutable buffer in most cases is small,
+      PnetCDF now compromise the two by making a copy of write requests that is
+      less than 4KB. Users are warned that using immutable write buffer larger
+      than 4KB will still cause the fatal error in the PnetCDF default
+      configuration. The way to completely disable in-place byte swap is to
+      build PnetCDF with --disable-in-place-swap option at the configure time.
+      In this case, the internal memory allocation in PnetCDF will increase.
+
+  o Syntax changes
+    * In ncmpi_wait_all(), ncmpi_wait(), and ncmpi_cancel(), the API's third
+      argument, array of requests IDs, is changed to INOUT. Upon successful
+      completion or cancellation of individual nonblocking requests, the
+      corresponding request IDs are set to NC_REQ_NULL.
+
+  o New run-time environment variables
+    * PNETCDF_VERBOSE_DEBUG_MODE environment variable can be used to print the
+      location in the source code where the error code is originated, no matter
+      the error is intended or not. This run-time environment variable only
+      takes effect when PnetCDF is configure with debug mode, i.e.
+      --enable-debug is used at the configure command line.  Set this variable
+      to 1 to enable. Set it to 0 or keep it unset disables this mode. Default
+      is 0, i.e. disabled.  Users are warned that enabling this mode may result
+      in a lot of debugging messages printed in stderr.
+
+  o New example programs
+    * examples/C/nonblocking_write_in_def.c shows an example of posting
+      nonblocking write requests in the define mode.
+    * examples/C/req_all.c shows an example of using NC_REQ_ALL to flush all
+      pending nonblocking requests without providing the requests IDs.
+
+  o New test program
+    * test/cdf_format/dim_cdf12.c tests defining maximal dimension size for
+      CDF-1 and CDF-2 file formats
+    * test/testcases/test_erange.c tests if the error code NC_ERANGE can be
+      correctly returned for two cases 1) get a NC_UBYTE value of 255 from a
+      netCDF file to a memory buffer of type signed char and 2) put a value
+      of -1 of signed char to a NC_UBYTE variable in a netCDF file
+    * test/testcases/check_type.c tests if the error codes can be correctly
+      returned when conflicted in-memory and extenal data types are used.
+    * test/testcases/put_parameter.f tests the use of immutable write buffer
+      (e.g. a buffer declared as PARAMETER). Note the buffer size must be
+      smaller than 4KB.
+    * test/nonblocking/i_varn_indef.c tests posting nonblocking requests in
+      define mode.
+    * test/nonblocking/req_all.c tests the use of NC_REQ_ALL for flushing
+      all pending nonblocking requests without providing the requests IDs.
+    * test/last_large_var.c tests the special case when there is no record
+      variable, the last fixed-size variable can be larger than 2GiB in size
+      if its starting file offset is less than 2GiB.
+    * test/testcases/buftype_free.c and test/testcases/buftype_freef.f test
+      the bug in r2160.
+    * testcases/add_var.c checks the starting file offsets of newly added
+      variables from re-entering the define mode.
+    * testcases/attrf.f checks NF_ERANGE is returned instead of coredump. This
+      is particularly for NAG Fortran compiler that may report "Arithmetics
+       exception".
+    * testcases/check_striping.c checks if the file striping unit and factor
+      returned from MPI-IO hints are consistent among processes.
+    * test/nonblocking/column_wise.c checks if PnetCDF detects interleaved
+      fileviews from multiple nonblocking requests and correctly breaks and
+      reconstructs the fileviews so the combined fileview is monotonic
+      non-decreasing in file offsets.
+
+  o New optimization
+    * Filling variables at ncmpi_enddef() is now done by aggregating all write
+      requests into one MPI collective write call. In v 1.6.1, this is done by
+      filling one variable at a time.
+
+  o New utility program
+    * ncoffsets reports the file offset information, including the starting and
+      ending file offsets, of variables stored in a netCDF file. ncoffsets is
+      compiled with gcc if gcc is presented on the build system. Additional
+      command-line options are: (-v) reports only for a selected list of
+      variables in interest, (-s) prints the variable sizes, (-g) outputs the
+      file space gap size from the end of previous variable, (-x) reports
+      whether there is a gap between any two adjacent fixed-size variables. See
+      the man page for descriptions of all command-line options and examples.
+
+  o Semantics updates
+    * All nonblocking APIs now take a NULL pointer for the request ID argument,
+      meaning users do not wish to keep track of the request ID. If NULL
+      request IDs are used, NC_REQ_ALL should be used when calling
+      ncmpi_wait_all/ncmpi_wait to commit all the pending nonblocking requests.
+      This feature relinquishes users from the responsibility of tracking the
+      IDs of pending requests.
+    * Using NC_REQ_ALL as the 2nd argument "num" in ncmpi_wait_all/ncmpi_wait
+      APIs will flush all the pending nonblocking requests. In this case, the
+      3rd and 4th arguments "array_of_requests" and "array_of_statuses" will be
+      ignored and thus these two arguments can be NULLs.
+    * Using NC_REQ_ALL in ncmpi_cancel() will cancel all the pending
+      nonblocking requests.
+    * Using NC_GET_REQ_ALL or NC_PUT_REQ_ALL in ncmpi_wait_all(), ncmpi_wait(),
+      and ncmpi_cancel() for all the pending get-only or put-only requests,
+      respectively.
+
+  o Other updates:
+    * Conform with netCDF on the maximal dimension size for CDF-2 file format
+      to be (2^32 - 4)
+    * NC_ERANGE checks have been removed from nc_test for text APIs and
+      variables that are defined as NC_CHAR type
+    * Add README.K-Computer build recipe for using Fujitsu MPI compilers on the
+      K computer at RIKEN in Japan
+    * Add README.INTEL build recipe for using Intel MPI compilers 4.x
+    * Build dependency rule is added for files configure and configure.in
+    * PnetCDF checks MPICC/MPICXX/MPIF77/MPIF90 instead of CC/CXX/F77/F90/FC.
+      If MPICC/MPICXX/MPIF77/MPIF90 are set, PnetCDF will ignore
+      CC/CXX/F77/F90/FC. If CC/CXX/F77/F90/FC is set instead of
+      MPICC/MPICXX/MPIF77/MPIF90, PnetCDF will now copy them to
+      MPICC/MPICXX/MPIF77/MPIF90.
+    * Enforce netCDF convention on error code priority: NC_ECHAR trumps
+      NC_EINVALCOORDS, NC_EEDGE, and NC_ESTRIDE.
+    * Return error code NC_EGLOBAL instead of NC_ENOTVAR for APIs where using
+      NC_GLOBAL as the variable ID argument is prohibited.
+    * All Fortran 77 test and example programs (files with .f and .F
+      extensions) have been revised to conform with 77 standard, and was tested
+      using pgf77.
+    * Now provides a pkg-config file
+      (http://www.freedesktop.org/wiki/Software/pkg-config/), making it
+      slightly easier to set the correct pnetcdf include and library paths.
+
+  o Bug fixes
+    * Fix the bus error of invalid address alignment when build with Fujitsu
+      compiler. See r2171 and r2180.
+    * Fix the bug for the special case when there is no record variable, the
+      last fixed-size variable can be larger than 2GiB in size if its starting
+      file offset is less than 2GiB. See r2166.
+    * Fix the nonblocking flexible APIs that fail to save (duplicate) the user
+      MPI derived data type that later is needed to unpack read data to the
+      user buffer (a call to MPI_Unpack). See r2160.
+    * Fix Fortran 77 constants nf_fill_uint and nf_fill_int64 (thanks Jim
+      Edwards) that pgf77-based MPI compiler does not like "_8" modifier.
+      See r2045 and r2051. The same issue for NAG Fortran compiler is also
+      resolved. See r2089 and r2093.
+    * In the example program examples/tutorial/pnetcdf-write-nb.c, the write
+      buffers used in two iput API calls should be different. See r2095.
+    * Fix the error reporting mechanism for NC_ERANGE, for when an arithmetic
+      overflow happens. Overflow checking is now performed before I/O.
+
+-------------------------------------
 version  1.6.1 (June 1, 2015)
 -------------------------------------
 
