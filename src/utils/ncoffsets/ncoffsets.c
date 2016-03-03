@@ -169,7 +169,7 @@ typedef struct NC_vararray {
 
 typedef struct NC {
     int           flags;
-    char          path[1024];
+    char         *path;
     long long     xsz;      /* external size of this header, <= var[0].begin */
     long long     begin_var;/* file offset of the first (non-record) var */
     long long     begin_rec;/* file offset of the first 'record' */
@@ -1620,6 +1620,7 @@ ncmpii_free_NC(NC *ncp)
     ncmpii_free_NC_dimarray(&ncp->dims);
     ncmpii_free_NC_attrarray(&ncp->attrs);
     ncmpii_free_NC_vararray(&ncp->vars);
+    free(ncp->path);
 }
 
 const char *
@@ -1768,13 +1769,14 @@ usage(char *cmd)
 int main(int argc, char *argv[])
 {
     extern int optind;
-    char *filename, cmd[256], *env_str;
+    char *filename, *cmd, *env_str;
     int i, j, err, opt, nvars;
     int print_var_size=0, print_gap=0, check_gap=0, print_all_rec=0;
     NC *ncp;
     struct fspec *fspecp=NULL;
 
     fspecp = (struct fspec*) calloc(1, sizeof(struct fspec));
+    cmd = (char*) malloc(strlen(argv[0])+1);
     strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
@@ -1808,6 +1810,7 @@ int main(int argc, char *argv[])
         free(fspecp);
         return 1;
     }
+    free(cmd);
     filename = argv[0]; /* required argument */
 
     verbose_debug = 0;
@@ -1825,6 +1828,7 @@ int main(int argc, char *argv[])
     }
 
     ncp = (NC*) calloc(1, sizeof(NC));
+    ncp->path = (char*) malloc(strlen(filename)+1);
     strcpy(ncp->path, filename);
 
     /* read the header from file */

@@ -47,7 +47,7 @@ ncmpii_getput_vard(NC               *ncp,
 {
     void *cbuf=NULL;
     int i, isderived, el_size, mpireturn, status=NC_NOERR, err=NC_NOERR;
-    int buftype_is_contig, filetype_is_contig=1, need_swap=0, is_buf_swapped=0;
+    int buftype_is_contig=0, filetype_is_contig=1, need_swap=0, is_buf_swapped=0;
     int filetype_size=0, buftype_size;
     MPI_Offset btnelems=0, bnelems=0, offset=0, orig_bufcount=bufcount;
     MPI_Status mpistatus;

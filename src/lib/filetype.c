@@ -821,8 +821,8 @@ ncmpii_vars_create_filetype(NC               *ncp,
     /* check 4-byte integer overflow (blockcounts in MPI_Type_hvector
        is of type int while count[] is of type MPI_Offset */
     if (count[ndims-1] != blockcounts[ndims-1]) {
-        if (blockstride) NCI_Free(blockstride);
-        if (blockcounts) NCI_Free(blockcounts);
+        NCI_Free(blockstride);
+        NCI_Free(blockcounts);
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     }
     /* blocklens[] is unlikely a big value */
