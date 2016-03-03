@@ -67,7 +67,7 @@ ncmpix_len_NC_attrV(nc_type    type,
         case NC_DOUBLE: return ncmpix_len_double(nelems);
         case NC_INT64:  return ncmpix_len_int64(nelems);
         case NC_UINT64: return ncmpix_len_uint64(nelems);
-        default: fprintf(stderr, "Error: bad type in %s\n",__func__);
+        default: fprintf(stderr, "Error: bad type(%d) in %s\n",type,__func__);
     }
     return 0;
 }
@@ -720,7 +720,7 @@ ncmpix_pad_getn_$1(const void **xpp,
             return ncmpix_pad_getn_$1_longlong (xpp, nelems, (longlong*)tp);
         case NC_UINT64:
             return ncmpix_pad_getn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
-        default: fprintf(stderr, "Error: invalid buffer type in %s\n",__func__);
+        default: fprintf(stderr, "Error: bad buftype(%d) in %s\n",buftype,__func__);
     }
     return NC_EBADTYPE;
 }
@@ -765,7 +765,7 @@ ncmpix_getn_$1(const void **xpp,
             return ncmpix_getn_$1_longlong (xpp, nelems, (longlong*)tp);
         case NC_UINT64:
             return ncmpix_getn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
-        default: fprintf(stderr, "Error: invalid buffer type in %s\n",__func__);
+        default: fprintf(stderr, "Error: bad buftype(%d) in %s\n",buftype,__func__);
     }
     return NC_EBADTYPE;
 }
@@ -812,7 +812,7 @@ ncmpix_pad_getn(const void **xpp,
             return ncmpix_getn_int64     (xpp, nelems, tp, buftype);
         case NC_UINT64:
             return ncmpix_getn_uint64    (xpp, nelems, tp, buftype);
-        default: fprintf(stderr, "Error: invalid filetype in %s\n",__func__);
+        default: fprintf(stderr, "Error: bad filetype(%d) in %s\n",filetype,__func__);
     }
     return NC_EBADTYPE;
 }
@@ -919,7 +919,7 @@ ncmpix_pad_putn_$1(void       **xpp,
             return ncmpix_pad_putn_$1_longlong (xpp, nelems, (longlong*)tp);
         case NC_UINT64:
             return ncmpix_pad_putn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
-        default: fprintf(stderr, "Error: invalid btype in %s\n",__func__);
+        default: fprintf(stderr, "Error: bad btype(%d) in %s\n",btype,__func__);
     }
     return NC_EBADTYPE;
 }
@@ -964,7 +964,7 @@ ncmpix_putn_$1(void       **xpp,
             return ncmpix_putn_$1_longlong (xpp, nelems, (longlong*)tp);
         case NC_UINT64:
             return ncmpix_putn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
-        default: fprintf(stderr, "Error: invalid btype in %s\n",__func__);
+        default: fprintf(stderr, "Error: bad btype(%d) in %s\n",btype,__func__);
     }
     return NC_EBADTYPE;
 }
@@ -1011,7 +1011,7 @@ ncmpix_pad_putn(void       **xpp,
             return ncmpix_putn_int64     (xpp, nelems, tp, buftype);
         case NC_UINT64:
             return ncmpix_putn_uint64    (xpp, nelems, tp, buftype);
-        default: fprintf(stderr, "Error: invalid filetype in %s\n",__func__);
+        default: fprintf(stderr, "Error: bad filetype(%d) in %s\n",filetype,__func__);
     }
     return NC_EBADTYPE;
 }
