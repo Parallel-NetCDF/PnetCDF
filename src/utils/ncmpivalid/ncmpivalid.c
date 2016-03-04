@@ -843,7 +843,13 @@ int main(int argc, char **argv) {
     }
 
     /* check data size */
-    fstat(ncp->nciop->fd, &ncfilestat);
+    if (-1 == fstat(ncp->nciop->fd, &ncfilestat)) {
+        printf("Error at line %d fstat (%s)\n",__LINE__,strerror(errno));
+        close(ncp->nciop->fd);
+        ncmpiio_free(ncp->nciop);
+        ncmpii_free_NC(ncp);
+        return 0;
+    }
     if ( ncp->begin_rec + ncp->recsize * ncp->numrecs < ncfilestat.st_size ) {
         printf("Error: \n\tData size is larger than defined!\n");
         close(ncp->nciop->fd);

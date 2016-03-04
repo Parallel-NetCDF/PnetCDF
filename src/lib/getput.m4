@@ -149,7 +149,7 @@ ncmpii_create_imaptype(NC_var           *varp,
                        MPI_Datatype      ptype,   /* element type in buftype */
                        MPI_Datatype     *imaptype)/* out */
 {
-    int dim;
+    int dim, mpireturn;
     MPI_Offset imap_contig_blocklen;
 
     /* check if this is a vars call or a true varm call */
@@ -188,23 +188,47 @@ ncmpii_create_imaptype(NC_var           *varp,
     if (count[dim] != (int)count[dim] || imap[dim] != (int)imap[dim])
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
-    MPI_Type_vector((int)count[dim], (int)imap_contig_blocklen, (int)imap[dim],
-                    ptype, imaptype);
-    MPI_Type_commit(imaptype);
+    mpireturn = MPI_Type_vector((int)count[dim], (int)imap_contig_blocklen,
+                                (int)imap[dim], ptype, imaptype);
+    if (mpireturn != MPI_SUCCESS) {
+        ncmpii_handle_error(mpireturn,"MPI_Type_vector");
+        DEBUG_RETURN_ERROR(NC_EMPI)
+    }
+    mpireturn = MPI_Type_commit(imaptype);
+    if (mpireturn != MPI_SUCCESS) {
+        ncmpii_handle_error(mpireturn,"MPI_Type_commit");
+        DEBUG_RETURN_ERROR(NC_EMPI)
+    }
 
     for (dim--; dim>=0; dim--) {
         MPI_Datatype tmptype;
         if (count[dim] != (int)count[dim])
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-        MPI_Type_create_hvector((int)count[dim], 1, imap[dim]*el_size,
-                                *imaptype, &tmptype);
+        mpireturn = MPI_Type_create_hvector((int)count[dim], 1,
+                    imap[dim]*el_size, *imaptype, &tmptype);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Type_create_hvector");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
 #else
-        MPI_Type_hvector((int)count[dim], 1, imap[dim]*el_size, *imaptype,
-                         &tmptype);
+        mpireturn = MPI_Type_hvector((int)count[dim], 1, imap[dim]*el_size,
+                    *imaptype, &tmptype);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Type_hvector");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
 #endif
-        MPI_Type_free(imaptype);
-        MPI_Type_commit(&tmptype);
+        mpireturn = MPI_Type_free(imaptype);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Type_free");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
+        mpireturn = MPI_Type_commit(&tmptype);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Type_commit");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
         *imaptype = tmptype;
     }
     return NC_NOERR;

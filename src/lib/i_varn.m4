@@ -272,8 +272,10 @@ ncmpii_igetput_varn(NC               *ncp,
             for (j=0; j<varp->ndims; j++)
                 _counts[i][j] = 1;
     }
-    else
+    else {
         _counts = (MPI_Offset**) counts;
+    }
+    /* from this point forward, _counts != NULL */
 
     /* break buf into num pieces */
     reqid = NC_REQ_NULL;
@@ -321,7 +323,7 @@ ncmpii_igetput_varn(NC               *ncp,
     }
 
 err_check:
-    if (_counts != NULL && _counts != counts) {
+    if (_counts != counts) {
         NCI_Free(_counts[0]);
         NCI_Free(_counts);
     }
