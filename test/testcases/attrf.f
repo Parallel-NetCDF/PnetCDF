@@ -47,7 +47,7 @@
 
           real                    buf_flt
           double precision        buf_dbl
-          integer                 buf_int, XTRIM
+          integer                 buf_int, XTRIM, cmode
           integer*2 buf_int2
           integer*8 buf_int8, one
 
@@ -73,7 +73,8 @@
 
           nerrs = 0
 
-          err = nfmpi_create(MPI_COMM_WORLD, filename, NF_CLOBBER,
+          cmode = IOR(NF_CLOBBER,NF_64BIT_DATA)
+          err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
      +                       MPI_INFO_NULL, ncid)
           call check(err, 'In nfmpi_create: ', nerrs)
 
@@ -131,6 +132,21 @@
               if (err .NE. NF_NOERR) print*, nfmpi_strerror(err)
               nerrs = nerrs + 1
           endif
+
+          ! check if can overwrite an attribute in data mode
+          err = nfmpi_put_att_int(ncid, NF_GLOBAL, "attr4", NF_INT,
+     +                            one, buf_int)
+          call check(err, 'In nfmpi_put_att_int: ', nerrs)
+
+          err = nfmpi_put_att_int(ncid, NF_GLOBAL, "attr4", NF_INT2,
+     +                            one, buf_int2)
+          call check(err, 'In nfmpi_put_att_int: ', nerrs)
+
+          err = nfmpi_put_att_int(ncid, NF_GLOBAL, "attr4", NF_INT64,
+     +                            one, buf_int8)
+          if (err .NE. NF_ENOTINDEFINE)
+     +       print*,'Error: expect error code NF_ENOTINDEFINE but got ',
+     +       err
 
           err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close: ', nerrs)

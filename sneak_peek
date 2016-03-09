@@ -27,7 +27,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * none
+    * test/testcases/scalar.c to test if arguments start, count, stride, and
+      imap are properly ignored when getting/putting a scalar variable
 
   o New optimization
     * none
