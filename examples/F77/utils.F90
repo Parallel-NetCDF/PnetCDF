@@ -24,7 +24,7 @@
         integer argc
         character(len=16) quiet_mode, str
 
-
+        get_args = 1
         call getarg(0, cmd)
         argc = IARGC()
         if (argc .GT. max_argc) then
