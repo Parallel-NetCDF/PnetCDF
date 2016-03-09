@@ -50,6 +50,7 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            last_large_var.c \
            check_type.c \
            test_erange.c \
+           scalar.c \
            redef1.c
 
 F77_SRCS = varn_intf.f \
@@ -180,6 +181,9 @@ check_type: check_type.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 test_erange: test_erange.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+scalar: scalar.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)
