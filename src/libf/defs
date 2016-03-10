@@ -2003,7 +2003,7 @@ $declarg{'bput_varm_int8-7'}		= 'const long long *';
 #
 sub reorderOffsetArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset *l$count = NULL;\n";
+    print $OUTFD "    MPI_Offset *l$count;\n";
 }
 sub reorderOffsetArr_ftoc {
     my $count = $_[0];
@@ -2011,24 +2011,20 @@ sub reorderOffsetArr_ftoc {
     # call a function of some of the other arguments to get the array size
     if ($Array_size) {
         print $OUTFD "
-    int ndims;
+    int ndims, li;
     ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
     if (ierr != NC_NOERR) return ierr;
 
-    if (ndims > 0) {
-        int li;
-        l$count = (MPI_Offset*) $malloc((size_t)ndims * sizeof(MPI_Offset));
-        for (li=0; li<ndims; li++) /* convert Fortran order to C order */
-            l$count\[li\] = v$count\[ndims-1-li\] - 1; /* convert 1-based to 0-based */
-    }\n";
+    l$count = (MPI_Offset*) $malloc((size_t)ndims * sizeof(MPI_Offset));
+    for (li=0; li<ndims; li++) /* convert Fortran order to C order */
+        l$count\[li\] = v$count\[ndims-1-li\] - 1; /* convert 1-based to 0-based */
+    \n";
     } else {
         print $OUTFD "
-    if (ndims > 0) {
-        int li;
-        l$count = (MPI_Offset*) $malloc((size_t)ndims * sizeof(MPI_Offset));
-        for (li=0; li<ndims; li++) /* convert Fortran order to C order */
-            l$count\[li\] = v$count\[ndims-1-li\];
-    }\n";
+    l$count = (MPI_Offset*) $malloc((size_t)ndims * sizeof(MPI_Offset));
+    for (li=0; li<ndims; li++) /* convert Fortran order to C order */
+        l$count\[li\] = v$count\[ndims-1-li\];
+    \n";
     }
 }
 sub reorderOffsetArr_in_arg {
@@ -2039,8 +2035,7 @@ sub reorderOffsetArr_in_arg {
 sub reorderOffsetArr_in_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
-    print $OUTFD "
-    if ($lname) { $free($lname); }
+    print $OUTFD "    $free($lname);
 ";
 }
 
@@ -2055,34 +2050,31 @@ sub reorderOffsetArr_in_ctof {
 #
 sub reorderOffsetArr1DTo2D_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset **l$count = NULL;\n";
+    print $OUTFD "    MPI_Offset **l$count;\n";
 }
 sub reorderOffsetArr1DTo2D_ftoc {
     my $count = $_[0];
     if ($Array_size) {
         print $OUTFD "
-    int ndims;
+    int ndims, li, lj;
     ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
     if (ierr != NC_NOERR) return ierr;\n"
     }
     print $OUTFD "
-    if (ndims > 0) {
-        int li, lj;
-        size_t len = (size_t)*v3;
-        l$count    = (MPI_Offset**) $malloc(len * sizeof(MPI_Offset*));
-        l$count\[0\] = (MPI_Offset*)  $malloc(len * (size_t)ndims * sizeof(MPI_Offset));
-        for (lj=1; lj<*v3; lj++)
-            l$count\[lj\] = l$count\[lj-1\] + ndims;
-        for (lj=0; lj<*v3; lj++)
-            for (li=0; li<ndims; li++) /* convert Fortran order to C order */";
+    l$count    = (MPI_Offset**) $malloc((size_t)*v3 * sizeof(MPI_Offset*));
+    l$count\[0\] = (MPI_Offset*)  $malloc((size_t)*v3 * (size_t)ndims * sizeof(MPI_Offset));
+    for (lj=1; lj<*v3; lj++)
+        l$count\[lj\] = l$count\[lj-1\] + ndims;
+    for (lj=0; lj<*v3; lj++)
+        for (li=0; li<ndims; li++) /* convert Fortran order to C order */";
     if ($Array_size) {
         print $OUTFD "
-                l$count\[lj\]\[li\] = v$count\[lj*ndims + ndims-1-li\] - 1; /* convert 1-based to 0-based */
-    }\n";
+            l$count\[lj\]\[li\] = v$count\[lj*ndims + ndims-1-li\] - 1; /* convert 1-based to 0-based */
+    \n";
     } else {
         print $OUTFD "
-                l$count\[lj\]\[li\] = v$count\[lj*ndims + ndims-1-li\];
-    }\n";
+            l$count\[lj\]\[li\] = v$count\[lj*ndims + ndims-1-li\];
+    \n";
     }
 }
 sub reorderOffsetArr1DTo2D_in_arg {
@@ -2094,7 +2086,7 @@ sub reorderOffsetArr1DTo2D_in_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
-    if ($lname) { $free($lname\[0\]); $free($lname); }
+    $free($lname\[0\]); $free($lname);
 ";
 }
 
@@ -2109,7 +2101,7 @@ sub reorderOffsetArr1DTo2D_in_ctof {
 #
 sub reorderIntArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    int *l$count=NULL;\n";
+    print $OUTFD "    int *l$count;\n";
 }
 sub reorderIntArr_ftoc {
     my $count = $_[0];
@@ -2118,17 +2110,15 @@ sub reorderIntArr_ftoc {
     # Always copy and invert order
     if ($Array_size) {
         print $OUTFD "
-    int ndims;
+    int ndims, li;
     ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
     if (ierr != NC_NOERR) return ierr;\n"
     }
     print $OUTFD "
-    if (ndims > 0) {
-        int li;
-        l$count = (int*) $malloc((size_t)ndims * sizeof(int));
-        for (li=0; li<ndims; li++) /* convert Fortran order to C order */
-            l$count\[li\] = v$count\[ndims-1-li\];
-    }\n";
+    l$count = (int*) $malloc((size_t)ndims * sizeof(int));
+    for (li=0; li<ndims; li++) /* convert Fortran order to C order */
+        l$count\[li\] = v$count\[ndims-1-li\];
+    \n";
     $clean_up .= "    $free(l$count);\n";
 }
 sub reorderIntArr_in_arg {
@@ -2153,7 +2143,7 @@ sub reorderIntArr_in_ctof {
 #
 sub reorderIntArrOut_out_decl {
     my $count = $_[0];
-    print $OUTFD "    int *l$count=NULL;\n";
+    print $OUTFD "    int *l$count;\n";
 }
 sub reorderIntArrOut_out_ftoc {
     my $count = $_[0];
@@ -2161,13 +2151,12 @@ sub reorderIntArrOut_out_ftoc {
     # call a function of some of the other arguments to get the array size
     # Always copy and invert order
     print $OUTFD "
-    int ndims;
+    int ndims, li;
     ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
     if (ierr != NC_NOERR) return ierr;
 
-    if (ndims > 0) {
-        l$count = (int*) $malloc((size_t)ndims * sizeof(int));
-    }\n";
+    l$count = (int*) $malloc((size_t)ndims * sizeof(int));
+    \n";
 }
 sub reorderIntArrOut_out_arg {
     my $count = $_[0];
@@ -2178,12 +2167,15 @@ sub reorderIntArrOut_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
-    if (ndims > 0) {
-        int li;
-        for (li=0; li<ndims; li++) /* convert C order to Fortran order */
-            v$count\[li\] = l$count\[ndims-1-li\] + 1; /* convert from 0-based to 1-based */
+    if (ierr != NC_NOERR) {
         $free($lname);
-    }\n";
+        return ierr;
+    }
+
+    for (li=0; li<ndims; li++) /* convert C order to Fortran order */
+        v$count\[li\] = l$count\[ndims-1-li\] + 1; /* convert from 0-based to 1-based */
+    $free($lname);
+    \n";
 }
 
 # -------------------------------------------------------------------------
