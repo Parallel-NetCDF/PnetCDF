@@ -1742,7 +1742,7 @@ sub blankpad_ctof {
     my $cvar = $outvar; 
     $cvar =~ s/^v/p/;
     print $OUTFD "
-    {
+    if (ierr == NC_NOERR) {
         char *p = $outvar, *pc=$cvar;
         while (*pc) {*p++ = *pc++;}
         while ((p-$outvar) < $strlen) { *p++ = ' '; }
