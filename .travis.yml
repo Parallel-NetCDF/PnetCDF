@@ -30,8 +30,10 @@ before_install:
 
 script:
   - ./configure
+  - make clean
   - make
   - make tests
+  - make check
   
 after_failure:
   - cat ./config.log

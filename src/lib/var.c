@@ -314,6 +314,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     nchars = strlen(name);
 
+    /* TODO: instead of linear search, we can use hashing */
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
         if ((*loc)->name->nchars == nchars &&
             strncmp((*loc)->name->cp, name, nchars) == 0) {
