@@ -2167,15 +2167,11 @@ sub reorderIntArrOut_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
-    if (ierr != NC_NOERR) {
-        $free($lname);
-        return ierr;
+    if (ierr == NC_NOERR) {
+        for (li=0; li<ndims; li++) /* convert C order to Fortran order */
+            v$count\[li\] = l$count\[ndims-1-li\] + 1; /* convert from 0-based to 1-based */
     }
-
-    for (li=0; li<ndims; li++) /* convert C order to Fortran order */
-        v$count\[li\] = l$count\[ndims-1-li\] + 1; /* convert from 0-based to 1-based */
-    $free($lname);
-    \n";
+    $free($lname);\n";
 }
 
 # -------------------------------------------------------------------------
