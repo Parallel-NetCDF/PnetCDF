@@ -46,7 +46,8 @@ NcmpiGroup::~NcmpiGroup()
 
 // Constructor generates a null object.
 NcmpiGroup::NcmpiGroup() :
-  nullObject(true)
+  nullObject(true),
+  myId(-1)
 {}
 
    
