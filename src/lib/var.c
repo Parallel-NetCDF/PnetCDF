@@ -94,7 +94,7 @@ ncmpii_new_x_NC_var(NC_string *strp,
     return varp;
 }
 
-#ifdef OLD_IMPLEMENT
+#ifdef SEARCH_NAME_LINEARLY
 static NC_var *
 ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
                   nc_type     type,
@@ -252,7 +252,7 @@ dup_NC_var(const NC_var *rvarp)
     NC_var *varp;
 
     /* note that name in rvarp->name->cp is already normalized */
-#ifdef OLD_IMPLEMENT
+#ifdef SEARCH_NAME_LINEARLY
     varp = ncmpii_new_NC_var(rvarp->name->cp, rvarp->type, rvarp->ndims,
                              rvarp->dimids);
     if (varp == NULL) return NULL;
@@ -410,7 +410,7 @@ elem_NC_vararray(const NC_vararray *ncap,
 /* End vararray per se */
 
 
-#ifdef OLD_IMPLEMENT
+#ifdef SEARCH_NAME_LINEARLY
 /*
  * Step thru NC_VARIABLE array, seeking match on name.
  * Return varid or -1 on not found.
@@ -693,7 +693,7 @@ ncmpi_def_var(int         ncid,
     /* there is an upperbound for the number of variables defined in a file */
     if (ncp->vars.ndefined >= NC_MAX_VARS) DEBUG_RETURN_ERROR(NC_EMAXVARS)
 
-#ifdef OLD_IMPLEMENT
+#ifdef SEARCH_NAME_LINEARLY
     /* check whether the variable name has been used */
     if (ncmpii_NC_findvar(&ncp->vars, name) != NC_ENOTVAR)
         DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
@@ -987,9 +987,11 @@ ncmpi_rename_var(int         ncid,
     other = ncmpii_NC_findvar(&ncp->vars, newname);
     if (other != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
+#ifndef SEARCH_NAME_LINEARLY
     /* update var name lookup table */
     status = ncmpii_update_name_lookup_table(&ncp->vars, varid, newname);
     if (status != NC_NOERR) return status;
+#endif
     
     /* if called in define mode, just update to the NC object */
     if (NC_indef(ncp)) {
