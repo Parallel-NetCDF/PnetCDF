@@ -259,10 +259,18 @@ ncmpii_inq_files_opened(int *num, int *ncids)
 inline void
 ncmpii_free_NC(NC *ncp)
 {
+    int i;
+
     if (ncp == NULL) return;
     ncmpii_free_NC_dimarray(&ncp->dims);
     ncmpii_free_NC_attrarray(&ncp->attrs);
     ncmpii_free_NC_vararray(&ncp->vars);
+
+    /* free space allocated for var name lookup table */
+    for (i=0; i<256; i++)
+        if (ncp->vars.nameT[i].num)
+            NCI_Free(ncp->vars.nameT[i].list);
+
     NCI_Free(ncp);
 }
 

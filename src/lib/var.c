@@ -94,11 +94,7 @@ ncmpii_new_x_NC_var(NC_string *strp,
     return varp;
 }
 
-
-/*----< ncmpii_new_NC_var() >------------------------------------------------*/
-/*
- * Formerly, NC_new_var()
- */
+#ifdef OLD_IMPLEMENT
 static NC_var *
 ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
                   nc_type     type,
@@ -128,6 +124,126 @@ ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
 
     return(varp);
 }
+#else
+/*----< ncmpii_new_NC_var() >------------------------------------------------*/
+/*
+ * Formerly, NC_new_var()
+ */
+static int
+ncmpii_new_NC_var(NC_vararray  *vcap,
+                  const char   *uname,  /* variable name (NULL terminated) */
+                  nc_type       type,
+                  int           ndims,
+                  const int    *dimids,
+                  NC_var      **varp)
+{
+    int i, key=0;
+    char *name = (char*)uname;
+    NC_string *strp;
+
+    if (vcap != NULL) { /* for define a new variable */
+        NC_nametable *nameT = vcap->nameT; /* var name lookup table */
+
+        if (strlen(uname) == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+
+        /* normalized version of uname */
+        name = (char *)utf8proc_NFC((const unsigned char *)uname);
+        if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+        /* We use the first char as key for name lookup */
+        key = (unsigned char)(name[0]);
+
+        /* allocate or expand the space for nameT[key].list */
+        if (nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
+            nameT[key].list = (int*) NCI_Realloc(nameT[key].list,
+                              (nameT[key].num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+
+        for (i=0; i<nameT[key].num; i++) {
+            /* linear search for checking whether name is already in use */
+            if (strcmp(name, vcap->value[nameT[key].list[i]]->name->cp) == 0) {
+                /* the name already exists */
+                free(name);
+                DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
+            }
+        }
+    }
+    /* else case is for variable duplication called from dup_NC_var()
+     * For duplication case, the name is already normalized.
+     */
+
+    strp = ncmpii_new_NC_string(strlen(name), name);
+    if (vcap != NULL) free(name);
+    if (strp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+    *varp = ncmpii_new_x_NC_var(strp, ndims);
+    if (*varp == NULL ) {
+        ncmpii_free_NC_string(strp);
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    }
+
+    if (vcap != NULL) {
+        /* add the new variable ID to the name lookup table
+         * the new varid will be vcap->ndefined
+         */
+        vcap->nameT[key].list[vcap->nameT[key].num] = vcap->ndefined;
+        vcap->nameT[key].num++;
+    }
+
+    (*varp)->type = type;
+
+    if (ndims != 0 && dimids != NULL)
+        memcpy((*varp)->dimids, dimids, (size_t)ndims * SIZEOF_INT);
+
+    return NC_NOERR;
+}
+#endif
+
+/*----< ncmpii_update_name_lookup_table() >----------------------------------*/
+static int
+ncmpii_update_name_lookup_table(NC_vararray  *vcap,
+                                const int     varid,
+                                const char   *newname)
+{
+    int i, key;
+    char *name; /* normalized name string */
+
+    /* remove the old name from the lookup table
+     * We use the first character as key for name lookup
+     */
+    key = (unsigned char) vcap->value[varid]->name->cp[0];
+    for (i=0; i<vcap->nameT[key].num; i++) {
+        if (vcap->nameT[key].list[i] == varid) break;
+    }
+    /* coalesce the varid array */
+    for (; i<vcap->nameT[key].num-1; i++)
+        vcap->nameT[key].list[i] = vcap->nameT[key].list[i+1]; 
+
+    /* decrease the number of varids and free space if necessary */
+    vcap->nameT[key].num--;
+    if (vcap->nameT[key].num == 0) {
+        NCI_Free(vcap->nameT[key].list);
+        vcap->nameT[key].list = NULL;
+    }
+
+    /* normalized version of uname */
+    name = (char *)utf8proc_NFC((const unsigned char *)newname);
+    if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+    /* We use the first character as key for name lookup */
+    key = (unsigned char)(name[0]);
+    free(name);
+
+    /* add the new name to the lookup table
+     * Note newname must have already been checked for existence
+     */
+    if (vcap->nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
+        vcap->nameT[key].list = (int*) NCI_Realloc(vcap->nameT[key].list,
+                      (vcap->nameT[key].num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+    vcap->nameT[key].list[vcap->nameT[key].num] = varid;
+    vcap->nameT[key].num++;
+
+    return NC_NOERR;
+}
 
 /*----< dup_NC_var() >--------------------------------------------------------*/
 NC_var *
@@ -135,9 +251,17 @@ dup_NC_var(const NC_var *rvarp)
 {
     NC_var *varp;
 
+    /* note that name in rvarp->name->cp is already normalized */
+#ifdef OLD_IMPLEMENT
     varp = ncmpii_new_NC_var(rvarp->name->cp, rvarp->type, rvarp->ndims,
                              rvarp->dimids);
     if (varp == NULL) return NULL;
+#else
+    int err;
+    err = ncmpii_new_NC_var(NULL, rvarp->name->cp, rvarp->type, rvarp->ndims,
+                            rvarp->dimids, &varp);
+    if (err != NC_NOERR) return NULL;
+#endif
 
     if (ncmpii_dup_NC_attrarray(&varp->attrs, &rvarp->attrs) != NC_NOERR) {
         ncmpii_free_NC_var(varp);
@@ -286,6 +410,7 @@ elem_NC_vararray(const NC_vararray *ncap,
 /* End vararray per se */
 
 
+#ifdef OLD_IMPLEMENT
 /*
  * Step thru NC_VARIABLE array, seeking match on name.
  * Return varid or -1 on not found.
@@ -295,8 +420,7 @@ NC_hvarid
  */
 static int
 ncmpii_NC_findvar(const NC_vararray  *ncap,
-                  const char         *uname,
-                  NC_var            **varpp)
+                  const char         *uname)
 {
     int varid;
     size_t nchars;
@@ -305,7 +429,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 
     assert (ncap != NULL);
 
-    if (ncap->ndefined == 0) return -1;
+    if (ncap->ndefined == 0) return NC_ENOTVAR;
 
     loc = (NC_var **) ncap->value;
 
@@ -318,15 +442,51 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
         if ((*loc)->name->nchars == nchars &&
             strncmp((*loc)->name->cp, name, nchars) == 0) {
-            if (varpp != NULL)
-                *varpp = *loc;
             free(name);
             return (varid); /* Normal return */
         }
     }
     free(name);
-    return (-1); /* not found */
+    return NC_ENOTVAR; /* not found */
 }
+#else
+/*----< ncmpii_NC_findvar() >------------------------------------------------*/
+/* Check if the name has been used.
+ * If yes, return varid, otherwise NC_ENOTVAR
+ */
+static int
+ncmpii_NC_findvar(const NC_vararray  *ncap,
+                  const char         *uname)
+{
+    int i, key;
+    char *name;
+
+    assert (ncap != NULL);
+
+    if (ncap->ndefined == 0) return NC_ENOTVAR;
+
+    if (strlen(uname) == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+
+    /* normalized version of uname */
+    name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+    /* use the first char as key for name lookup */
+    key = (unsigned char)(name[0]);
+
+    /* check the list using linear search */
+    for (i=0; i<ncap->nameT[key].num; i++) {
+        int varid = ncap->nameT[key].list[i];
+        if (strcmp(name, ncap->value[varid]->name->cp) == 0) {
+            free(name);
+            return varid; /* the name already exists */
+        }
+    }
+
+    free(name);
+    return NC_ENOTVAR; /* the name has never been used */
+}
+#endif
 
 /*
  * For a netcdf type
@@ -501,7 +661,7 @@ ncmpi_def_var(int         ncid,
               const int  *dimids,
               int        *varidp)
 {
-    int varid, file_ver, status;
+    int file_ver, status;
     NC *ncp;
     NC_var *varp;
 
@@ -533,13 +693,19 @@ ncmpi_def_var(int         ncid,
     /* there is an upperbound for the number of variables defined in a file */
     if (ncp->vars.ndefined >= NC_MAX_VARS) DEBUG_RETURN_ERROR(NC_EMAXVARS)
 
+#ifdef OLD_IMPLEMENT
     /* check whether the variable name has been used */
-    varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
-    if (varid != -1) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
+    if (ncmpii_NC_findvar(&ncp->vars, name) != NC_ENOTVAR)
+        DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     /* create a new variable */
     varp = ncmpii_new_NC_var(name, type, ndims, dimids);
     if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+#else
+    /* create a new variable (also check if name is already used) */
+    status = ncmpii_new_NC_var(&ncp->vars, name, type, ndims, dimids, &varp);
+    if (status != NC_NOERR) return status;
+#endif
 
     /* set up array dimensional structures */
     status = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
@@ -577,14 +743,13 @@ ncmpi_inq_varid(int         ncid,
 {
     int status;
     NC *ncp;
-    NC_var *varp;
     int varid;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
-    if (varid == -1) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+    varid = ncmpii_NC_findvar(&ncp->vars, name);
+    if (varid < 0) DEBUG_RETURN_ERROR(varid)
 
     *varid_ptr = varid;
     return NC_NOERR;
@@ -819,10 +984,13 @@ ncmpi_rename_var(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* check for name in use */
-    other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
-    if (other != -1)
-        DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
+    other = ncmpii_NC_findvar(&ncp->vars, newname);
+    if (other != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
+    /* update var name lookup table */
+    status = ncmpii_update_name_lookup_table(&ncp->vars, varid, newname);
+    if (status != NC_NOERR) return status;
+    
     /* if called in define mode, just update to the NC object */
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);

@@ -375,12 +375,22 @@ typedef struct {
 #endif
 } NC_var;
 
+#define NC_NAME_TABLE_CHUNK 16
+
+typedef struct NC_nametable {
+    int  num;
+    int *list; /* variable IDs */
+} NC_nametable;
+
 /* note: we only allow less than 2^31-1 variables defined in a file */
 typedef struct NC_vararray {
-    int      nalloc;      /* number allocated >= ndefined */
-    int      ndefined;    /* number of defined variables */
-    int      num_rec_vars;/* number of defined record variables */
-    NC_var **value;
+    int            nalloc;      /* number allocated >= ndefined */
+    int            ndefined;    /* number of defined variables */
+    int            num_rec_vars;/* number of defined record variables */
+    NC_var       **value;
+    NC_nametable   nameT[256];  /* table for quick name lookup 256 is the
+                                   number of possible keys can be stored by
+                                   an unsigned char */
 } NC_vararray;
 
 /* Begin defined in var.c */
