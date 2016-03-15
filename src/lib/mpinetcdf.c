@@ -196,7 +196,7 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
+    int i, flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
     char *env_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
@@ -365,6 +365,12 @@ ncmpi_create(MPI_Comm    comm,
 
     if (env_info != info) MPI_Info_free(&env_info);
 
+    /* initialize var name lookup table */
+    for (i=0; i<256; i++) {
+        ncp->vars.nameT[i].num = 0;
+        ncp->vars.nameT[i].list = NULL;
+    }
+
     return status;
 }
 
@@ -381,6 +387,7 @@ ncmpi_open(MPI_Comm    comm,
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
+    NC_nametable *nameT;
 
 #ifdef PNC_DEBUG
     safe_mode = 1;
@@ -536,6 +543,24 @@ ncmpi_open(MPI_Comm    comm,
     ncp->vars.num_rec_vars = 0;
     for (i=0; i<ncp->vars.ndefined; i++)
         ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
+
+    /* initialize var name lookup table */
+    nameT = ncp->vars.nameT;
+    for (i=0; i<256; i++) {
+        nameT[i].num = 0;
+        nameT[i].list = NULL;
+    }
+
+    /* populate var name lookup table */
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        int key = (unsigned char) ncp->vars.value[i]->name->cp[0];
+        nameT = &ncp->vars.nameT[key];
+        if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
+            nameT->list = (int*) NCI_Realloc(nameT->list,
+                          (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+        nameT->list[nameT->num] = i;
+        nameT->num++;
+    }
 
     return status;
 }
