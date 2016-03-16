@@ -196,7 +196,6 @@ ncmpii_new_NC_var(NC_vararray  *vcap,
 
     return NC_NOERR;
 }
-#endif
 
 /*----< ncmpii_update_name_lookup_table() >----------------------------------*/
 static int
@@ -244,6 +243,7 @@ ncmpii_update_name_lookup_table(NC_vararray  *vcap,
 
     return NC_NOERR;
 }
+#endif
 
 /*----< dup_NC_var() >--------------------------------------------------------*/
 NC_var *
@@ -420,7 +420,8 @@ NC_hvarid
  */
 static int
 ncmpii_NC_findvar(const NC_vararray  *ncap,
-                  const char         *uname)
+                  const char         *uname,
+                  int                *varidp)
 {
     int varid;
     size_t nchars;
@@ -442,8 +443,10 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
         if ((*loc)->name->nchars == nchars &&
             strncmp((*loc)->name->cp, name, nchars) == 0) {
+            if (varidp != NULL) *varidp = varid;
             free(name);
-            return (varid); /* Normal return */
+            *varidp = varid;
+            return NC_NOERR; /* Normal return */
         }
     }
     free(name);
@@ -456,9 +459,10 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
  */
 static int
 ncmpii_NC_findvar(const NC_vararray  *ncap,
-                  const char         *uname)
+                  const char         *uname,
+                  int                *varidp)
 {
-    int i, key;
+    int i, key, varid;
     char *name;
 
     assert (ncap != NULL);
@@ -476,10 +480,11 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 
     /* check the list using linear search */
     for (i=0; i<ncap->nameT[key].num; i++) {
-        int varid = ncap->nameT[key].list[i];
+        varid = ncap->nameT[key].list[i];
         if (strcmp(name, ncap->value[varid]->name->cp) == 0) {
+            if (varidp != NULL) *varidp = varid;
             free(name);
-            return varid; /* the name already exists */
+            return NC_NOERR; /* the name already exists */
         }
     }
 
@@ -695,7 +700,8 @@ ncmpi_def_var(int         ncid,
 
 #ifdef SEARCH_NAME_LINEARLY
     /* check whether the variable name has been used */
-    if (ncmpii_NC_findvar(&ncp->vars, name) != NC_ENOTVAR)
+    status = ncmpii_NC_findvar(&ncp->vars, name, NULL);
+    if (status != NC_ENOTVAR)
         DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     /* create a new variable */
@@ -739,19 +745,17 @@ ncmpi_def_var(int         ncid,
 int
 ncmpi_inq_varid(int         ncid,
                 const char *name,
-                int        *varid_ptr)
+                int        *varid)
 {
     int status;
     NC *ncp;
-    int varid;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
-    varid = ncmpii_NC_findvar(&ncp->vars, name);
-    if (varid < 0) DEBUG_RETURN_ERROR(varid)
+    status = ncmpii_NC_findvar(&ncp->vars, name, varid);
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
-    *varid_ptr = varid;
     return NC_NOERR;
 }
 
@@ -961,7 +965,7 @@ ncmpi_rename_var(int         ncid,
                  int         varid,
                  const char *newname)
 {
-    int file_ver, status=NC_NOERR, other, err, mpireturn;
+    int file_ver, status=NC_NOERR, err, mpireturn;
     NC *ncp;
     NC_var *varp;
 
@@ -984,8 +988,8 @@ ncmpi_rename_var(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* check for name in use */
-    other = ncmpii_NC_findvar(&ncp->vars, newname);
-    if (other != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
+    status = ncmpii_NC_findvar(&ncp->vars, newname, NULL);
+    if (status != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
 #ifndef SEARCH_NAME_LINEARLY
     /* update var name lookup table */
