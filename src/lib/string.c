@@ -244,7 +244,7 @@ ncmpii_NC_check_name_CDF2(const char *name)
 		DEBUG_RETURN_ERROR(NC_EBADNAME)
 
 	/* check validity of any UTF-8 */
-	utf8_stat = utf8proc_check((const unsigned char *)name);
+	utf8_stat = ncmpii_utf8proc_check((const unsigned char *)name);
 	if (utf8_stat < 0)
 	    DEBUG_RETURN_ERROR(NC_EBADNAME)
 

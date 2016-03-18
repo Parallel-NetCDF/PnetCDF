@@ -104,7 +104,7 @@ ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
     NC_string *strp;
     NC_var *varp;
 
-    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    char *name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     if (name == NULL) return NULL;
 
     strp = ncmpii_new_NC_string(strlen(name), name);
@@ -164,7 +164,7 @@ ncmpii_new_NC_var(NC_vararray  *vcap,
         if (strlen(uname) == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
 
         /* normalized version of uname */
-        name = (char *)utf8proc_NFC((const unsigned char *)uname);
+        name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
         if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         /* We use the first char as key for name lookup */
@@ -243,7 +243,7 @@ assert(i!=vcap->nameT[key].num);
     }
 
     /* normalized version of uname */
-    name = (char *)utf8proc_NFC((const unsigned char *)newname);
+    name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)newname);
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* We use the first character as key for name lookup */
@@ -431,8 +431,7 @@ elem_NC_vararray(const NC_vararray *ncap,
 #ifdef SEARCH_NAME_LINEARLY
 /*
  * Step thru NC_VARIABLE array, seeking match on name.
- * Return varid or -1 on not found.
- * *varpp is set to the appropriate NC_var.
+ * If found, set the variable ID pointed by vardip, otherwise return NC_ENOTVAR
  * Formerly (sort of)
 NC_hvarid
  */
@@ -453,7 +452,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     loc = (NC_var **) ncap->value;
 
     /* normalized version of uname */
-    name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     nchars = strlen(name);
 
@@ -473,7 +472,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 #else
 /*----< ncmpii_NC_findvar() >------------------------------------------------*/
 /* Check if the name has been used.
- * If yes, return varid, otherwise NC_ENOTVAR
+ * If yes, set the variable ID pointed by vardip, otherwise return NC_ENOTVAR
  */
 static int
 ncmpii_NC_findvar(const NC_vararray  *ncap,
@@ -490,7 +489,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     if (strlen(uname) == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
 
     /* normalized version of uname */
-    name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* use the first char as key for name lookup */

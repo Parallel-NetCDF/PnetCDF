@@ -54,6 +54,7 @@
 #include "utf8proc.h"
 #include "utf8proc_data.h"
 
+static
 const int8_t utf8proc_utf8class[256] = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -106,6 +107,8 @@ const int8_t utf8proc_utf8class[256] = {
 #define UTF8PROC_BOUNDCLASS_LVT     10
 
 
+#ifdef UNUSED_APIS
+static
 const char *utf8proc_errmsg(ssize_t errcode) {
   switch (errcode) {
     case UTF8PROC_ERROR_NOMEM:
@@ -122,7 +125,9 @@ const char *utf8proc_errmsg(ssize_t errcode) {
     return "An unknown error occurred while processing UTF-8 data.";
   }
 }
+#endif
 
+static
 ssize_t utf8proc_iterate(
   const uint8_t *str, ssize_t slen, int32_t *dst
 ) {
@@ -163,13 +168,17 @@ ssize_t utf8proc_iterate(
   return length;
 }
 
+#ifdef UNUSED_APIS
+static
 bool utf8proc_codepoint_valid(int32_t uc) {
   if (uc < 0 || uc >= 0x110000 ||
     ((uc & 0xFFFF) >= 0xFFFE) || (uc >= 0xD800 && uc < 0xE000) ||
     (uc >= 0xFDD0 && uc < 0xFDF0)) return false;
   else return true;
 }
+#endif
 
+static
 ssize_t utf8proc_encode_char(int32_t uc, uint8_t *dst) {
   if (uc < 0x00) {
     return 0;
@@ -200,6 +209,7 @@ ssize_t utf8proc_encode_char(int32_t uc, uint8_t *dst) {
   } else return 0;
 }
 
+static
 const utf8proc_property_t *utf8proc_get_property(int32_t uc) {
   /*  // ASSERT: uc >= 0 && uc < 0x110000*/
   return utf8proc_properties + (
@@ -213,6 +223,7 @@ const utf8proc_property_t *utf8proc_get_property(int32_t uc) {
   return utf8proc_decompose_char((replacement_uc), dst, bufsize, \
   options & ~UTF8PROC_LUMP, last_boundclass)
 
+static
 ssize_t utf8proc_decompose_char(int32_t uc, int32_t *dst, ssize_t bufsize,
     int options, int *last_boundclass) {
   /*// ASSERT: uc >= 0 && uc < 0x110000*/
@@ -358,6 +369,7 @@ ssize_t utf8proc_decompose_char(int32_t uc, int32_t *dst, ssize_t bufsize,
   return 1;
 }
 
+static
 ssize_t utf8proc_decompose(
   const uint8_t *str, ssize_t slen,
   int32_t *buffer, ssize_t bufsize, int options
@@ -420,6 +432,7 @@ ssize_t utf8proc_decompose(
   return wpos;
 }
 
+static
 ssize_t utf8proc_reencode(int32_t *buffer, ssize_t length, int options) {
   /* UTF8PROC_NULLTERM option will be ignored, 'length' is never ignored
      ASSERT: 'buffer' has one spare byte of free space at the end! */
@@ -535,6 +548,7 @@ ssize_t utf8proc_reencode(int32_t *buffer, ssize_t length, int options) {
   }
 }
 
+static
 ssize_t utf8proc_map(
   const uint8_t *str, ssize_t slen, uint8_t **dstptr, int options
 ) {
@@ -564,20 +578,25 @@ ssize_t utf8proc_map(
   return result;
 }
 
+#ifdef UNUSED_APIS
+static
 uint8_t *utf8proc_NFD(const uint8_t *str) {
   uint8_t *retval;
   utf8proc_map(str, 0, &retval, UTF8PROC_NULLTERM | UTF8PROC_STABLE |
     UTF8PROC_DECOMPOSE);
   return retval;
 }
+#endif
 
-uint8_t *utf8proc_NFC(const uint8_t *str) {
+uint8_t* ncmpii_utf8proc_NFC(const uint8_t *str) {
   uint8_t *retval;
   utf8proc_map(str, 0, &retval, UTF8PROC_NULLTERM | UTF8PROC_STABLE |
     UTF8PROC_COMPOSE);
   return retval;
 }
 
+#ifdef UNUSED_APIS
+static
 uint8_t *utf8proc_NFKD(const uint8_t *str) {
   uint8_t *retval;
   utf8proc_map(str, 0, &retval, UTF8PROC_NULLTERM | UTF8PROC_STABLE |
@@ -585,14 +604,16 @@ uint8_t *utf8proc_NFKD(const uint8_t *str) {
   return retval;
 }
 
+static
 uint8_t *utf8proc_NFKC(const uint8_t *str) {
   uint8_t *retval;
   utf8proc_map(str, 0, &retval, UTF8PROC_NULLTERM | UTF8PROC_STABLE |
     UTF8PROC_COMPOSE | UTF8PROC_COMPAT);
   return retval;
 }
+#endif
 
-ssize_t utf8proc_check(const uint8_t *str) {
+ssize_t  ncmpii_utf8proc_check(const uint8_t *str) {
   ssize_t result;
   result = utf8proc_decompose(str, 0, NULL, 0,
 			      UTF8PROC_NULLTERM | UTF8PROC_STABLE);
