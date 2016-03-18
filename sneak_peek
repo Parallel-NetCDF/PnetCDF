@@ -31,7 +31,8 @@ This is essentially a placeholder for the next release note ...
       imap are properly ignored when getting/putting a scalar variable
 
   o New optimization
-    * All a table lookup for checking whether a variable name is already used.
+    * Add a table lookup based on Jenkins hash function for checking whether a
+      variable name is already used.
 
   o New utility program
     * none

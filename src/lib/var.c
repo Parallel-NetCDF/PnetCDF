@@ -125,6 +125,23 @@ ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
     return(varp);
 }
 #else
+int ncmpii_jenkins_one_at_a_time_hash(char *str_name)
+{
+    unsigned int hash=0;
+    int i, ret;
+    for (i=0; i<strlen(str_name); ++i) {
+        hash += str_name[i];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    ret = (int)hash; /* the return value will be used as an array index */
+    return ((ret < 0) ? -ret : ret); /* make the value positive */
+}
+
 /*----< ncmpii_new_NC_var() >------------------------------------------------*/
 /*
  * Formerly, NC_new_var()
@@ -151,7 +168,7 @@ ncmpii_new_NC_var(NC_vararray  *vcap,
         if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         /* We use the first char as key for name lookup */
-        key = (unsigned char)(name[0]);
+        key = HASH_FUNC(name);
 
         /* allocate or expand the space for nameT[key].list */
         if (nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
@@ -209,10 +226,11 @@ ncmpii_update_name_lookup_table(NC_vararray  *vcap,
     /* remove the old name from the lookup table
      * We use the first character as key for name lookup
      */
-    key = (unsigned char) vcap->value[varid]->name->cp[0];
+    key = HASH_FUNC(vcap->value[varid]->name->cp);
     for (i=0; i<vcap->nameT[key].num; i++) {
         if (vcap->nameT[key].list[i] == varid) break;
     }
+assert(i!=vcap->nameT[key].num);
     /* coalesce the varid array */
     for (; i<vcap->nameT[key].num-1; i++)
         vcap->nameT[key].list[i] = vcap->nameT[key].list[i+1]; 
@@ -229,7 +247,7 @@ ncmpii_update_name_lookup_table(NC_vararray  *vcap,
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* We use the first character as key for name lookup */
-    key = (unsigned char)(name[0]);
+    key = HASH_FUNC(name);
     free(name);
 
     /* add the new name to the lookup table
@@ -476,7 +494,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* use the first char as key for name lookup */
-    key = (unsigned char)(name[0]);
+    key = HASH_FUNC(name);
 
     /* check the list using linear search */
     for (i=0; i<ncap->nameT[key].num; i++) {
@@ -991,23 +1009,31 @@ ncmpi_rename_var(int         ncid,
     status = ncmpii_NC_findvar(&ncp->vars, newname, NULL);
     if (status != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
-#ifndef SEARCH_NAME_LINEARLY
-    /* update var name lookup table */
-    status = ncmpii_update_name_lookup_table(&ncp->vars, varid, newname);
-    if (status != NC_NOERR) return status;
-#endif
-    
     /* if called in define mode, just update to the NC object */
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
         if (newStr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
+#ifndef SEARCH_NAME_LINEARLY
+        /* update var name lookup table */
+        status = ncmpii_update_name_lookup_table(&ncp->vars, varid, newname);
+        if (status != NC_NOERR) return status;
+#endif
         ncmpii_free_NC_string(varp->name);
         varp->name = newStr;
         return NC_NOERR;
     }
-    /* else, not in define mode.
-     * if called in data mode (collective or independent), this function must
+    else { /* not in define mode */
+        if (varp->name->nchars < (MPI_Offset)strlen(newname))
+            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+#ifndef SEARCH_NAME_LINEARLY
+        /* update var name lookup table */
+        status = ncmpii_update_name_lookup_table(&ncp->vars, varid, newname);
+        if (status != NC_NOERR) return status;
+#endif
+    }
+
+    /* if called in data mode (collective or independent), this function must
      * be called collectively, i.e. all processes must participate.
      */
 

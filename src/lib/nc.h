@@ -376,6 +376,13 @@ typedef struct {
 } NC_var;
 
 #define NC_NAME_TABLE_CHUNK 16
+#define HASH_TABLE_SIZE 256
+#define HASH_FUNC(x) (ncmpii_jenkins_one_at_a_time_hash(x) % HASH_TABLE_SIZE)
+/*
+ * #define HASH_FUNC(x) (unsigned char)x[0]
+ * if used this simple hash function, HASH_TABLE_SIZE must be 256 which is the
+ * number of possible keys can be stored in an unsigned char
+ */
 
 typedef struct NC_nametable {
     int  num;
@@ -388,9 +395,7 @@ typedef struct NC_vararray {
     int            ndefined;    /* number of defined variables */
     int            num_rec_vars;/* number of defined record variables */
     NC_var       **value;
-    NC_nametable   nameT[256];  /* table for quick name lookup 256 is the
-                                   number of possible keys can be stored by
-                                   an unsigned char */
+    NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup */
 } NC_vararray;
 
 /* Begin defined in var.c */
@@ -947,5 +952,8 @@ ncmpii_sanity_check(int ncid, int varid, const MPI_Offset *start,
 
 extern char*
 ncmpii_err_code_name(int err);
+
+extern int
+ncmpii_jenkins_one_at_a_time_hash(char *str_name);
 
 #endif /* _NC_H_ */

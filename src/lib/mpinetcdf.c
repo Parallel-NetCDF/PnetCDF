@@ -366,7 +366,7 @@ ncmpi_create(MPI_Comm    comm,
     if (env_info != info) MPI_Info_free(&env_info);
 
     /* initialize var name lookup table */
-    for (i=0; i<256; i++) {
+    for (i=0; i<HASH_TABLE_SIZE; i++) {
         ncp->vars.nameT[i].num = 0;
         ncp->vars.nameT[i].list = NULL;
     }
@@ -546,14 +546,14 @@ ncmpi_open(MPI_Comm    comm,
 
     /* initialize var name lookup table */
     nameT = ncp->vars.nameT;
-    for (i=0; i<256; i++) {
+    for (i=0; i<HASH_TABLE_SIZE; i++) {
         nameT[i].num = 0;
         nameT[i].list = NULL;
     }
 
     /* populate var name lookup table */
     for (i=0; i<ncp->vars.ndefined; i++) {
-        int key = (unsigned char) ncp->vars.value[i]->name->cp[0];
+        int key = HASH_FUNC(ncp->vars.value[i]->name->cp);
         nameT = &ncp->vars.nameT[key];
         if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
             nameT->list = (int*) NCI_Realloc(nameT->list,
