@@ -138,12 +138,13 @@
      +                            one, buf_int)
           call check(err, 'In nfmpi_put_att_int: ', nerrs)
 
-          err = nfmpi_put_att_int(ncid, NF_GLOBAL, "attr4", NF_INT2,
-     +                            one, buf_int2)
-          call check(err, 'In nfmpi_put_att_int: ', nerrs)
+          buf_int2 = 32767
+          err = nfmpi_put_att_int2(ncid, NF_GLOBAL, "attr4", NF_INT2,
+     +                             one, buf_int2)
+          call check(err, 'In nfmpi_put_att_int: xxxxxxx', nerrs)
 
-          err = nfmpi_put_att_int(ncid, NF_GLOBAL, "attr4", NF_INT64,
-     +                            one, buf_int8)
+          err = nfmpi_put_att_int8(ncid, NF_GLOBAL, "attr4", NF_INT64,
+     +                             one, buf_int8)
           if (err .NE. NF_ENOTINDEFINE)
      +       print*,'Error: expect error code NF_ENOTINDEFINE but got ',
      +       err
