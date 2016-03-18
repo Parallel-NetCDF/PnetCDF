@@ -116,7 +116,7 @@ ncmpii_new_NC_attr(const char *uname,  /* attribute name (NULL terminated) */
     NC_string *strp;
     NC_attr *attrp;
 
-    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    char *name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     if (name == NULL) return NULL;
 
     assert(name != NULL && *name != 0);
@@ -307,7 +307,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
 
     if (ncap->ndefined == 0) return -1; /* none created yet */
 
-    name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     nchars = strlen(name);
 
     for (i=0; i<ncap->ndefined; i++) {

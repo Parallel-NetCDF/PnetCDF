@@ -63,7 +63,7 @@ ncmpii_new_NC_dim(const char *uname,  /* dimension name */
     NC_string *strp;
     NC_dim *dimp;
 
-    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    char *name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     if (name == NULL) return NULL;
 
     strp = ncmpii_new_NC_string(strlen(name), name);
@@ -104,6 +104,8 @@ ncmpii_find_NC_Udim(const NC_dimarray  *ncap,
 
     if (ncap->ndefined == 0) return -1;
 
+    /* TODO: avoid linear search, use a flag (per file) instead */
+
     /* note that the number of dimensions allowed is < 2^32 */
     for (dimid=0; dimid<ncap->ndefined; dimid++)
         if (ncap->value[dimid]->size == NC_UNLIMITED) {
@@ -135,8 +137,10 @@ NC_finddim(const NC_dimarray  *ncap,
 
     if (ncap->ndefined == 0) return -1;
 
-    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    char *name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     nchars = strlen(name);
+
+    /* TODO: instead of doing a linear search, use a table lookup */
 
     /* note that the number of dimensions allowed is < 2^32 */
     for (dimid=0; dimid<ncap->ndefined; dimid++) {

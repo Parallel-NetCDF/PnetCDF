@@ -255,6 +255,7 @@ typedef struct utf8proc_property_struct {
 #define UTF8PROC_DECOMP_TYPE_FRACTION 15
 #define UTF8PROC_DECOMP_TYPE_COMPAT   16
 
+#if 0
 extern const int8_t utf8proc_utf8class[256];
 
 const char *utf8proc_errmsg(ssize_t errcode);
@@ -394,8 +395,10 @@ uint8_t *utf8proc_NFKC(const uint8_t *str);
  *  Returns a pointer to newly allocated memory of a NFD, NFC, NFKD or NFKC
  *  normalized version of the null-terminated string 'str'.
  */
+#endif
+uint8_t* ncmpii_utf8proc_NFC(const uint8_t *str);
 
-ssize_t utf8proc_check(const uint8_t *str);
+ssize_t  ncmpii_utf8proc_check(const uint8_t *str);
 /*
  * Just checks UTF-8 string for validity, returns 0 if valid or one of
  * the negative UTF8PROC_ERROR_* codes if invalid or memory exhausted
