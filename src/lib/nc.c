@@ -266,16 +266,6 @@ ncmpii_free_NC(NC *ncp)
     ncmpii_free_NC_attrarray(&ncp->attrs);
     ncmpii_free_NC_vararray(&ncp->vars);
 
-int nmax=0,nmin=1024,nsum=0,nempty=0, ones=0;
-for (i=0; i<HASH_TABLE_SIZE; i++) {
-  nmax=MAX(nmax,ncp->vars.nameT[i].num);
-  if (ncp->vars.nameT[i].num==1)ones++;
-  if (ncp->vars.nameT[i].num>0)nmin=MIN(nmin,ncp->vars.nameT[i].num);
-  else nempty++;
-  nsum += ncp->vars.nameT[i].num;
-}
-printf("has size=%d nmax=%d nmin=%d non_empty=%d ones=%d nsum=%d navg=%.2f\n",HASH_TABLE_SIZE,nmax,nmin,HASH_TABLE_SIZE-nempty,ones,nsum,(float)nsum/(HASH_TABLE_SIZE-nempty));
-
     /* free space allocated for var name lookup table */
     for (i=0; i<HASH_TABLE_SIZE; i++)
         if (ncp->vars.nameT[i].num)
