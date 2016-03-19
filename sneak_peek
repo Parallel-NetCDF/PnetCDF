@@ -32,7 +32,7 @@ This is essentially a placeholder for the next release note ...
 
   o New optimization
     * Add a table lookup based on Jenkins hash function for checking whether a
-      variable name is already used.
+      variable/dimension name is already used.
 
   o New utility program
     * none

@@ -365,8 +365,11 @@ ncmpi_create(MPI_Comm    comm,
 
     if (env_info != info) MPI_Info_free(&env_info);
 
-    /* initialize var name lookup table */
     for (i=0; i<HASH_TABLE_SIZE; i++) {
+        /* initialize dim name lookup table */
+        ncp->dims.nameT[i].num = 0;
+        ncp->dims.nameT[i].list = NULL;
+        /* initialize var name lookup table */
         ncp->vars.nameT[i].num = 0;
         ncp->vars.nameT[i].list = NULL;
     }
@@ -544,6 +547,25 @@ ncmpi_open(MPI_Comm    comm,
     for (i=0; i<ncp->vars.ndefined; i++)
         ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
+    /* initialize dim name lookup table */
+    nameT = ncp->dims.nameT;
+    for (i=0; i<HASH_TABLE_SIZE; i++) {
+        nameT[i].num = 0;
+        nameT[i].list = NULL;
+    }
+
+    /* populate dim name lookup table */
+    for (i=0; i<ncp->dims.ndefined; i++) {
+        /* hash the dim name into a key for name lookup */
+        int key = HASH_FUNC(ncp->dims.value[i]->name->cp);
+        nameT = &ncp->dims.nameT[key];
+        if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
+            nameT->list = (int*) NCI_Realloc(nameT->list,
+                          (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+        nameT->list[nameT->num] = i;
+        nameT->num++;
+    }
+
     /* initialize var name lookup table */
     nameT = ncp->vars.nameT;
     for (i=0; i<HASH_TABLE_SIZE; i++) {
@@ -553,6 +575,7 @@ ncmpi_open(MPI_Comm    comm,
 
     /* populate var name lookup table */
     for (i=0; i<ncp->vars.ndefined; i++) {
+        /* hash the var name into a key for name lookup */
         int key = HASH_FUNC(ncp->vars.value[i]->name->cp);
         nameT = &ncp->vars.nameT[key];
         if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
@@ -708,7 +731,7 @@ ncmpi_redef(int ncid) {
         if (status != NC_NOERR) return status;
     }
 
-    /* duplicate a header to be uses in enddef() for checking if header grows */
+    /* duplicate a header to be used in enddef() for checking if header grows */
     ncp->old = ncmpii_dup_NC(ncp);
     if (ncp->old == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 

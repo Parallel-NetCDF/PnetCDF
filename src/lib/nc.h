@@ -165,14 +165,29 @@ typedef struct {
 #endif
 } NC_dim;
 
+#define NC_NAME_TABLE_CHUNK 16
+#define HASH_TABLE_SIZE 256
+#define HASH_FUNC(x) (ncmpii_jenkins_one_at_a_time_hash(x) % HASH_TABLE_SIZE)
+/*
+ * #define HASH_FUNC(x) (unsigned char)x[0]
+ * if used this simple hash function, HASH_TABLE_SIZE must be 256 which is the
+ * number of possible keys can be stored in an unsigned char
+ */
+
+typedef struct NC_nametable {
+    int  num;
+    int *list; /* variable IDs */
+} NC_nametable;
+
 /* the dimension ID returned from ncmpi_def_dim() is an integer pointer
  * which means the total number of defined dimension allowed in a file
  * is up to 2^31-1. Thus, the member ndefined below should be of type int.
  */
 typedef struct NC_dimarray {
-    int      nalloc;    /* number allocated >= ndefined */
-    int      ndefined;  /* number of defined dimensions */
-    NC_dim **value;
+    int            nalloc;    /* number allocated >= ndefined */
+    int            ndefined;  /* number of defined dimensions */
+    NC_dim       **value;
+    NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup */
 } NC_dimarray;
 
 /* Begin defined in dim.c */
@@ -374,20 +389,6 @@ typedef struct {
     int           num_subfiles;
 #endif
 } NC_var;
-
-#define NC_NAME_TABLE_CHUNK 16
-#define HASH_TABLE_SIZE 256
-#define HASH_FUNC(x) (ncmpii_jenkins_one_at_a_time_hash(x) % HASH_TABLE_SIZE)
-/*
- * #define HASH_FUNC(x) (unsigned char)x[0]
- * if used this simple hash function, HASH_TABLE_SIZE must be 256 which is the
- * number of possible keys can be stored in an unsigned char
- */
-
-typedef struct NC_nametable {
-    int  num;
-    int *list; /* variable IDs */
-} NC_nametable;
 
 /* note: we only allow less than 2^31-1 variables defined in a file */
 typedef struct NC_vararray {
@@ -954,6 +955,10 @@ extern char*
 ncmpii_err_code_name(int err);
 
 extern int
-ncmpii_jenkins_one_at_a_time_hash(char *str_name);
+ncmpii_jenkins_one_at_a_time_hash(const char *str_name);
+
+extern int
+ncmpii_update_name_lookup_table(NC_nametable *nameT, const int id,
+                                const char *oldname, const char *newname);
 
 #endif /* _NC_H_ */
