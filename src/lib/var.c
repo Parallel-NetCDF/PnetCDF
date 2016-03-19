@@ -125,7 +125,10 @@ ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
     return(varp);
 }
 #else
-int ncmpii_jenkins_one_at_a_time_hash(char *str_name)
+/* borrow Jenkins hash function:
+ * https://en.wikipedia.org/wiki/Jenkins_hash_function
+ */
+int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
 {
     unsigned int hash=0;
     int i, ret;
@@ -167,7 +170,7 @@ ncmpii_new_NC_var(NC_vararray  *vcap,
         name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
         if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-        /* We use the first char as key for name lookup */
+        /* hash the var name into a key for name lookup */
         key = HASH_FUNC(name);
 
         /* allocate or expand the space for nameT[key].list */
@@ -215,49 +218,51 @@ ncmpii_new_NC_var(NC_vararray  *vcap,
 }
 
 /*----< ncmpii_update_name_lookup_table() >----------------------------------*/
-static int
-ncmpii_update_name_lookup_table(NC_vararray  *vcap,
-                                const int     varid,
+int
+ncmpii_update_name_lookup_table(NC_nametable *nameT,
+                                const int     id,
+                                const char   *oldname,
                                 const char   *newname)
 {
     int i, key;
     char *name; /* normalized name string */
 
     /* remove the old name from the lookup table
-     * We use the first character as key for name lookup
+     * hash the var name into a key for name lookup
      */
-    key = HASH_FUNC(vcap->value[varid]->name->cp);
-    for (i=0; i<vcap->nameT[key].num; i++) {
-        if (vcap->nameT[key].list[i] == varid) break;
+    key = HASH_FUNC(oldname);
+    for (i=0; i<nameT[key].num; i++) {
+        if (nameT[key].list[i] == id) break;
     }
-assert(i!=vcap->nameT[key].num);
-    /* coalesce the varid array */
-    for (; i<vcap->nameT[key].num-1; i++)
-        vcap->nameT[key].list[i] = vcap->nameT[key].list[i+1]; 
+    assert(i!=nameT[key].num);
 
-    /* decrease the number of varids and free space if necessary */
-    vcap->nameT[key].num--;
-    if (vcap->nameT[key].num == 0) {
-        NCI_Free(vcap->nameT[key].list);
-        vcap->nameT[key].list = NULL;
+    /* coalesce the id array */
+    for (; i<nameT[key].num-1; i++)
+        nameT[key].list[i] = nameT[key].list[i+1]; 
+
+    /* decrease the number of IDs and free space if necessary */
+    nameT[key].num--;
+    if (nameT[key].num == 0) {
+        NCI_Free(nameT[key].list);
+        nameT[key].list = NULL;
     }
 
     /* normalized version of uname */
     name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)newname);
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    /* We use the first character as key for name lookup */
+    /* hash the var name into a key for name lookup */
     key = HASH_FUNC(name);
     free(name);
 
     /* add the new name to the lookup table
      * Note newname must have already been checked for existence
      */
-    if (vcap->nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
-        vcap->nameT[key].list = (int*) NCI_Realloc(vcap->nameT[key].list,
-                      (vcap->nameT[key].num+NC_NAME_TABLE_CHUNK) * sizeof(int));
-    vcap->nameT[key].list[vcap->nameT[key].num] = varid;
-    vcap->nameT[key].num++;
+    if (nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
+        nameT[key].list = (int*) NCI_Realloc(nameT[key].list,
+                      (nameT[key].num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+    nameT[key].list[nameT[key].num] = id;
+    nameT[key].num++;
 
     return NC_NOERR;
 }
@@ -324,6 +329,13 @@ ncmpii_free_NC_vararray(NC_vararray *ncap)
     ncap->value    = NULL;
     ncap->nalloc   = 0;
     ncap->ndefined = 0;
+
+    /* free space allocated for var name lookup table */
+    for (i=0; i<HASH_TABLE_SIZE; i++) {
+        if (ncap->nameT[i].num > 0)
+            NCI_Free(ncap->nameT[i].list);
+        ncap->nameT[i].num = 0;
+    }
 }
 
 
@@ -365,6 +377,17 @@ ncmpii_dup_NC_vararray(NC_vararray       *ncap,
     }
 
     ncap->ndefined = ref->ndefined;
+
+    /* duplicate var name lookup table */
+    for (i=0; i<HASH_TABLE_SIZE; i++) {
+        ncap->nameT[i].num = ref->nameT[i].num;
+        ncap->nameT[i].list = NULL;
+        if (ncap->nameT[i].num > 0) {
+            ncap->nameT[i].list = NCI_Malloc(ncap->nameT[i].num * sizeof(int));
+            memcpy(ncap->nameT[i].list, ref->nameT[i].list,
+                   ncap->nameT[i].num * sizeof(int));
+        }
+    }
 
     return NC_NOERR;
 }
@@ -436,9 +459,9 @@ elem_NC_vararray(const NC_vararray *ncap,
 NC_hvarid
  */
 static int
-ncmpii_NC_findvar(const NC_vararray  *ncap,
-                  const char         *uname,
-                  int                *varidp)
+ncmpii_NC_findvar(const NC_vararray *ncap,
+                  const char        *uname,
+                  int               *varidp)
 {
     int varid;
     size_t nchars;
@@ -456,13 +479,11 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     nchars = strlen(name);
 
-    /* TODO: instead of linear search, we can use hashing */
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
         if ((*loc)->name->nchars == nchars &&
             strncmp((*loc)->name->cp, name, nchars) == 0) {
             if (varidp != NULL) *varidp = varid;
             free(name);
-            *varidp = varid;
             return NC_NOERR; /* Normal return */
         }
     }
@@ -492,7 +513,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    /* use the first char as key for name lookup */
+    /* hash the var name into a key for name lookup */
     key = HASH_FUNC(name);
 
     /* check the list using linear search */
@@ -718,8 +739,7 @@ ncmpi_def_var(int         ncid,
 #ifdef SEARCH_NAME_LINEARLY
     /* check whether the variable name has been used */
     status = ncmpii_NC_findvar(&ncp->vars, name, NULL);
-    if (status != NC_ENOTVAR)
-        DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
+    if (status != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     /* create a new variable */
     varp = ncmpii_new_NC_var(name, type, ndims, dimids);
@@ -1015,7 +1035,8 @@ ncmpi_rename_var(int         ncid,
 
 #ifndef SEARCH_NAME_LINEARLY
         /* update var name lookup table */
-        status = ncmpii_update_name_lookup_table(&ncp->vars, varid, newname);
+        status = ncmpii_update_name_lookup_table(ncp->vars.nameT, varid,
+                 ncp->vars.value[varid]->name->cp, newname);
         if (status != NC_NOERR) return status;
 #endif
         ncmpii_free_NC_string(varp->name);
@@ -1027,7 +1048,8 @@ ncmpi_rename_var(int         ncid,
             DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 #ifndef SEARCH_NAME_LINEARLY
         /* update var name lookup table */
-        status = ncmpii_update_name_lookup_table(&ncp->vars, varid, newname);
+        status = ncmpii_update_name_lookup_table(ncp->vars.nameT, varid,
+                 ncp->vars.value[varid]->name->cp, newname);
         if (status != NC_NOERR) return status;
 #endif
     }
@@ -1046,7 +1068,8 @@ ncmpi_rename_var(int         ncid,
             /* newname's length is inconsistent with root's */
             printf("Warning: variable name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_NAME)
+            if (status == NC_NOERR)
+                DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_NAME)
         }
     }
 

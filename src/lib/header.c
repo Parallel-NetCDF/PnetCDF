@@ -1935,6 +1935,28 @@ ncmpii_comp_dims(int          safe_mode,
 
     local_dim->ndefined = root_dim->ndefined;
 
+    if (status != NC_NOERR) {
+        /* dims are not consistent, must rebuild dim name lookup table */
+        for (i=0; i<HASH_TABLE_SIZE; i++) {
+            if (local_dim->nameT[i].num > 0)
+                NCI_Free(local_dim->nameT[i].list);
+            local_dim->nameT[i].num = 0;
+            local_dim->nameT[i].list = NULL;
+        }
+
+        /* populate dim name lookup table */
+        for (i=0; i<local_dim->ndefined; i++) {
+            /* hash the dim name into a key for name lookup */
+            int key = HASH_FUNC(local_dim->value[i]->name->cp);
+            NC_nametable *nameT = &local_dim->nameT[key];
+            if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
+                nameT->list = (int*) NCI_Realloc(nameT->list,
+                              (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+            nameT->list[nameT->num] = i;
+            nameT->num++;
+        }
+    }
+
     return status;
 }
 
@@ -2253,6 +2275,28 @@ ncmpii_comp_vars(int          safe_mode,
         ncmpii_free_NC_var(local_var->value[i]);
 
     local_var->ndefined = root_var->ndefined;
+
+    if (status != NC_NOERR) {
+        /* vars are not consistent, must rebuild var name lookup table */
+        for (i=0; i<HASH_TABLE_SIZE; i++) {
+            if (local_var->nameT[i].num > 0)
+                NCI_Free(local_var->nameT[i].list);
+            local_var->nameT[i].num = 0;
+            local_var->nameT[i].list = NULL;
+        }
+
+        /* populate var name lookup table */
+        for (i=0; i<local_var->ndefined; i++) {
+            /* hash the var name into a key for name lookup */
+            int key = HASH_FUNC(local_var->value[i]->name->cp);
+            NC_nametable *nameT = &local_var->nameT[key];
+            if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
+                nameT->list = (int*) NCI_Realloc(nameT->list,
+                              (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+            nameT->list[nameT->num] = i;
+            nameT->num++;
+        }
+    }
 
     return status;
 }
