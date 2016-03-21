@@ -78,6 +78,9 @@ int main(int argc, char *argv[])
     else
         count[0] = 0;
 
+    buf[0] = 1.0;
+    buf[1] = 2.0;
+
     err = ncmpi_put_vara_all(ncid, varid, start, count,
 			     buf, count[0], MPI_DOUBLE);
     CHECK_ERROR("ncmpi_put_vara_all")
