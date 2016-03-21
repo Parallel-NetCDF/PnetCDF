@@ -152,6 +152,7 @@ int main(int argc, char** argv)
     float_att = (float*) malloc(len * sizeof(float));
     err = ncmpi_get_att_float(ncid, varid, "float_att_name", float_att);
     CHECK_ERR
+    free(float_att);
 
     /* the local array size */
     local_ny = global_ny;
@@ -167,6 +168,7 @@ int main(int argc, char** argv)
     /* read a subarray in collective mode */
     err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf);
     CHECK_ERR
+    free(buf);
 
     err = ncmpi_close(ncid);
     CHECK_ERR
