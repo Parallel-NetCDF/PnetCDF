@@ -672,7 +672,7 @@ ncmpi_del_att(int         ncid,
     ncmpii_free_NC_attr(ncap->value[attrid]);
 
     /* shuffle down */
-    for (; attrid < ncap->ndefined; attrid++)
+    for (; attrid < ncap->ndefined-1; attrid++)
         ncap->value[attrid] = ncap->value[attrid+1];
 
     /* decrement count */
