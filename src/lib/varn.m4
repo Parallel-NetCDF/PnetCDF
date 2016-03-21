@@ -205,6 +205,14 @@ ncmpii_getput_varn(NC               *ncp,
         DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART)
         goto err_check;
     }
+    else { /* it is illegal for any starts[i] to be NULL */
+        for (i=0; i<num; i++) {
+            if (starts[i] == NULL) {
+                DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART)
+                goto err_check;
+            }
+        }
+    }
 
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and will be recalculated to match
@@ -217,9 +225,13 @@ ncmpii_getput_varn(NC               *ncp,
             bufcount = 0;
             for (j=0; j<num; j++) {
                 MPI_Offset bufcount_j = 1;
+                if (counts[i] == NULL) {
+                    DEBUG_ASSIGN_ERROR(status, NC_ENULLCOUNT)
+                    goto err_check;
+                }
                 for (i=0; i<varp->ndims; i++) {
                     if (counts[j][i] < 0) { /* no negative counts[][] */
-                        DEBUG_ASSIGN_ERROR(err, NC_ENEGATIVECNT)
+                        DEBUG_ASSIGN_ERROR(status, NC_ENEGATIVECNT)
                         goto err_check;
                     }
                     bufcount_j *= counts[j][i];

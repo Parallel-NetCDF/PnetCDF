@@ -201,10 +201,19 @@ ncmpii_igetput_varn(NC               *ncp,
     if (use_abuf && ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* it is illegal for starts to be NULL */
-    if (starts == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
+    if (starts == NULL)
+        DEBUG_RETURN_ERROR(NC_ENULLSTART)
+    else { /* it is illegal for any starts[i] to be NULL */
+        for (i=0; i<num; i++) {
+            if (starts[i] == NULL)
+                DEBUG_RETURN_ERROR(NC_ENULLSTART)
+        }
+    }
 
     if (counts != NULL) {
         for (j=0; j<num; j++) {
+            if (counts[j] == NULL)
+                DEBUG_RETURN_ERROR(NC_ENULLCOUNT)
             for (i=0; i<varp->ndims; i++) {
                 if (counts[j][i] < 0) /* no negative counts[][] */
                     DEBUG_RETURN_ERROR(NC_ENEGATIVECNT)
