@@ -1889,6 +1889,11 @@ ncmpii_req_aggregation(NC     *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                int get_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+                ncp->nciop->get_size += get_size;
+            }
         } else {
             TRACE_IO(MPI_File_read_at)(fh, offset, buf, buf_len, buf_type,
                                        &mpistatus);
@@ -1900,11 +1905,11 @@ ncmpii_req_aggregation(NC     *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
-        }
-        if (mpireturn == MPI_SUCCESS) {
-            int get_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-            ncp->nciop->get_size += get_size;
+            else {
+                int get_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+                ncp->nciop->get_size += get_size;
+            }
         }
     } else { /* WRITE_REQ */
         if (io_method == COLL_IO) {
@@ -1918,6 +1923,11 @@ ncmpii_req_aggregation(NC     *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                int put_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                ncp->nciop->put_size += put_size;
+            }
         } else {
             TRACE_IO(MPI_File_write_at)(fh, offset, buf, buf_len, buf_type,
                                         &mpistatus);
@@ -1929,11 +1939,11 @@ ncmpii_req_aggregation(NC     *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
-        }
-        if (mpireturn == MPI_SUCCESS) {
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            ncp->nciop->put_size += put_size;
+            else {
+                int put_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                ncp->nciop->put_size += put_size;
+            }
         }
     }
 
@@ -2236,6 +2246,12 @@ ncmpii_mgetput(NC           *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                /* update the number of bytes read since file open */
+                int get_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+                ncp->nciop->get_size += get_size;
+            }
         } else {
             TRACE_IO(MPI_File_read_at)(fh, offset, buf, len, buf_type,
                                        &mpistatus);
@@ -2247,12 +2263,13 @@ ncmpii_mgetput(NC           *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                /* update the number of bytes read since file open */
+                int get_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+                ncp->nciop->get_size += get_size;
+            }
         }
-        /* update the number of bytes read since file open */
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        ncp->nciop->get_size += get_size;
-
     } else { /* WRITE_REQ */
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, len, buf_type,
@@ -2265,6 +2282,12 @@ ncmpii_mgetput(NC           *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                /* update the number of bytes written since file open */
+                int put_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                ncp->nciop->put_size += put_size;
+            }
         } else {
             TRACE_IO(MPI_File_write_at)(fh, offset, buf, len, buf_type,
                                         &mpistatus);
@@ -2276,11 +2299,13 @@ ncmpii_mgetput(NC           *ncp,
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                /* update the number of bytes written since file open */
+                int put_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                ncp->nciop->put_size += put_size;
+            }
         }
-        /* update the number of bytes written since file open */
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->nciop->put_size += put_size;
     }
 
     if (buf_type != MPI_BYTE) /* free user buffer type */

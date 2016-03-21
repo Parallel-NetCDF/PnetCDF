@@ -507,6 +507,11 @@ mpi_io:
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                int put_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                ncp->nciop->put_size += put_size;
+            }
         }
         else { /* io_method == INDEP_IO */
             TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, (int)nbytes,
@@ -519,10 +524,12 @@ mpi_io:
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                int put_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                ncp->nciop->put_size += put_size;
+            }
         }
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->nciop->put_size += put_size;
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
@@ -536,6 +543,11 @@ mpi_io:
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                int get_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+                ncp->nciop->get_size += get_size;
+            }
         }
         else { /* io_method == INDEP_IO */
             TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, (int)nbytes,
@@ -548,10 +560,12 @@ mpi_io:
                     DEBUG_ASSIGN_ERROR(status, err)
                 }
             }
+            else {
+                int get_size;
+                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+                ncp->nciop->get_size += get_size;
+            }
         }
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        ncp->nciop->get_size += get_size;
     }
 
     /* No longer need to reset the file view, as the root's fileview includes
