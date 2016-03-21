@@ -548,6 +548,7 @@ int main(int argc, char** argv)
 
     if (bufsize>0) free(cbuffer[0]);
     for (i=0; i<nreqs; i++) free(buffer[i]);
+    for (i=0; i<nreqs; i++) free(rbuffer[i]);
     free(starts[0][0]);
     free(counts[0][0]);
     free(starts[0]);

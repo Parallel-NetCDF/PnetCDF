@@ -183,6 +183,7 @@ main(int argc, char *argv[])
 					  "64-bit-variables") == 0) {
 			  giantvar_flag = 1;
 		  }
+                  free(version_name);
 	  }
 	  break;
 	case '?':
