@@ -60,7 +60,8 @@ LIB_CSRCS = mpinetcdf.c \
             utf8proc.c \
             vard.c \
             fill.c \
-            util.c
+            util.c \
+            hash_func.c
 
 ifeq (@enable_subfiling@, yes)
 LIB_CSRCS   += subfile.c
