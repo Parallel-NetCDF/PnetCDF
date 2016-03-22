@@ -125,26 +125,6 @@ ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
     return(varp);
 }
 #else
-/* borrow Jenkins hash function:
- * https://en.wikipedia.org/wiki/Jenkins_hash_function
- */
-int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
-{
-    unsigned int hash=0;
-    int i, ret;
-    for (i=0; i<strlen(str_name); ++i) {
-        hash += str_name[i];
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-    }
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-
-    ret = (int)hash; /* the return value will be used as an array index */
-    return ((ret < 0) ? -ret : ret); /* make the value positive */
-}
-
 /*----< ncmpii_new_NC_var() >------------------------------------------------*/
 /*
  * Formerly, NC_new_var()

@@ -29,3 +29,4 @@ subfile.o: subfile.c ncconfig.h subfile.h pnetcdf.h nc.h ncio.h fbits.h macro.h 
 vard.o: vard.c ncconfig.h pnetcdf.h nc.h ncio.h fbits.h rnd.h ncx.h nctypes.h macro.h ncmpidtype.h
 fill.o: fill.c nc.h ncio.h pnetcdf.h fbits.h macro.h
 util.o: util.c nc.h ncio.h pnetcdf.h fbits.h macro.h
+hash_func.o: hash_func.c nc.h ncio.h pnetcdf.h fbits.h

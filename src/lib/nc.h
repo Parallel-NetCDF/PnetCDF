@@ -167,8 +167,16 @@ typedef struct {
 
 #define NC_NAME_TABLE_CHUNK 16
 #define HASH_TABLE_SIZE 256
-#define HASH_FUNC(x) (ncmpii_jenkins_one_at_a_time_hash(x) % HASH_TABLE_SIZE)
 /*
+#define HASH_FUNC(x) ncmpii_jenkins_one_at_a_time_hash(x)
+#define HASH_FUNC(x) ncmpii_aditive_hash(x)
+#define HASH_FUNC(x) ncmpii_rotating_hash(x)
+#define HASH_FUNC(x) ncmpii_Pearson_hash(x)
+*/
+#define HASH_FUNC(x) ncmpii_Bernstein_hash(x)
+/* Look like Bernstein's hashing function performs the best */
+
+/* For the initial naive implementation of hashing:
  * #define HASH_FUNC(x) (unsigned char)x[0]
  * if used this simple hash function, HASH_TABLE_SIZE must be 256 which is the
  * number of possible keys can be stored in an unsigned char
@@ -956,6 +964,18 @@ ncmpii_err_code_name(int err);
 
 extern int
 ncmpii_jenkins_one_at_a_time_hash(const char *str_name);
+
+extern int
+ncmpii_aditive_hash(const char *str_name);
+
+extern int
+ncmpii_rotating_hash(const char *str_name);
+
+extern int
+ncmpii_Bernstein_hash(const char *str_name);
+
+extern int
+ncmpii_Pearson_hash(const char *str_name);
 
 extern int
 ncmpii_update_name_lookup_table(NC_nametable *nameT, const int id,
