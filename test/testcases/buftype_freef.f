@@ -51,9 +51,9 @@
           PARAMETER(NREQS=4, NX=4, NY=4)
 
           character*256 filename, cmd, msg, varname, str
-          integer i, err, ierr, nprocs, rank, nerrs, get_args
+          integer i, j, err, ierr, nprocs, rank, nerrs, get_args
           integer ncid, ghost
-          integer var(64,4), varid(4), dimid(2), req(4), st(4)
+          integer buf(64,4), varid(4), dimid(2), req(4), st(4)
           integer buftype(4), gsize(2), subsize(2), a_start(2)
           integer*8 start(2), count(2)
           integer*8 one, malloc_size, sum_size
@@ -74,6 +74,13 @@
      +                   MPI_COMM_WORLD, ierr)
 
           nerrs = 0
+
+          ! initialize I/O buffer
+          do j=1,4
+             do i=1,64
+                buf(i,j) = rank
+             enddo
+          enddo
 
           ! create file, truncate it if exists
           err = nfmpi_create(MPI_COMM_WORLD, filename, NF_CLOBBER,
@@ -107,7 +114,7 @@
 
           do i=1, NREQS
              err = nfmpi_put_vara_int_all(ncid, varid(i), start, count,
-     +                                    var(1,i))
+     +                                    buf(1,i))
              call check(err, 'In nfmpi_put_vara_int_all: ')
           enddo
 
@@ -127,7 +134,7 @@
               call MPI_Type_commit(buftype(i), err)
 
               err = nfmpi_iget_vara(ncid, varid(i), start, count,
-     +                              var(1,i), one, buftype(i), req(i))
+     +                              buf(1,i), one, buftype(i), req(i))
               call check(err, 'In nfmpi_iget_vara ')
               ! immediately free the data type
               call MPI_Type_free(buftype(i), err)

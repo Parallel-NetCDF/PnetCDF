@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     err = ncmpi_def_dim(ncid, "new_dim_1", 5, &dimid[0]); ERR
     err = ncmpi_def_dim(ncid, "new_dim_2", 4, &dimid[1]); ERR
 
-    /* add 2 new dimensions */
+    /* add 2 new variables */
     err = ncmpi_def_var(ncid, "new_var1", NC_INT,   2, dimid, &varid); ERR
     err = ncmpi_def_var(ncid, "new_var2", NC_FLOAT, 2, dimid, &varid); ERR
     err = ncmpi_enddef(ncid); ERR
