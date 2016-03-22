@@ -697,7 +697,8 @@ ncmpii_sync_numrecs(NC         *ncp,
             if (status == NC_NOERR) status = err;
         }
         else {
-            if (max_numrecs != (int)max_numrecs) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+            if (max_numrecs != (int)max_numrecs)
+                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             len = X_SIZEOF_SIZE_T;
             err = ncmpix_put_uint32((void**)&buf, (uint)max_numrecs);
             if (status == NC_NOERR) status = err;
@@ -710,7 +711,8 @@ ncmpii_sync_numrecs(NC         *ncp,
                                     MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (status == NC_NOERR && err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
+            if (status == NC_NOERR && err == NC_EFILE)
+                DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
             int put_size;
@@ -780,6 +782,10 @@ write_NC(NC *ncp)
     /* ncp->xsz is root's header size, we need to calculate local's */
     local_xsz = ncmpii_hdr_len_NC(ncp);
 
+    /* Note valgrind will complain about uninitialized buf below, but buf will
+     * be first filled with header of size ncp->xsz and later write to file.
+     * So, no need to change to NCI_Calloc for the sake of valgrind.
+     */
     buf = NCI_Malloc((size_t)local_xsz); /* buffer for local header object */
 
     /* copy the entire local header object to buffer */
@@ -828,7 +834,9 @@ write_NC(NC *ncp)
     if (rank == 0) {
         /* rank 0's fileview already includes the file header */
         MPI_Status mpistatus;
-        if (ncp->xsz != (int)ncp->xsz) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+        if (ncp->xsz != (int)ncp->xsz)
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+
         TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
                                     (int)ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {

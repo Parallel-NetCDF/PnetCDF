@@ -451,6 +451,10 @@ ncmpiio_move(ncio *const nciop,
      * we use that instead of 1 MB */
     if (nciop->striping_unit > 0) chunk_size = nciop->striping_unit;
 
+    /* Note valgrind will complain about uninitialized buf below, but buf will
+     * be used to read and later write. So, no need to change to NCI_Calloc
+     * for the sake of valgrind.
+     */
     buf = NCI_Malloc((size_t)chunk_size);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
