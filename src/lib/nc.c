@@ -93,69 +93,71 @@ NC_check_header(NC         *ncp,
                 void       *buf,
                 MPI_Offset  local_xsz) /* size of buf */
 {
-    void *cmpbuf;
-    int rank, g_status, status=NC_NOERR, mpireturn;
-    bufferinfo gbp;
-
-    MPI_Comm_rank(ncp->nciop->comm, &rank);
+    int h_size, rank, g_status, status=NC_NOERR, mpireturn;
 
     /* root's header size has been broadcasted in NC_begin() and saved in
      * ncp->xsz.
      */
-    if (rank == 0)
-        cmpbuf = buf;
-    else
-        cmpbuf = (void*) NCI_Malloc((size_t)ncp->xsz);
 
-    /* process 0 broadcasts its header
-     * TODO: currently the header size cannot be larger than 2^31 bytes,
+    /* TODO: When root process 0 broadcasts its header,
+     * currently the header size cannot be larger than 2^31 bytes,
      * due to the 2nd argument, count, of MPI_Bcast being of type int.
      * Possible solution is to broadcast in chunks of 2^31 bytes.
      */
-    if (ncp->xsz != (int)ncp->xsz) {
-        if (rank > 0) NCI_Free(cmpbuf);
+    h_size = (int)ncp->xsz;
+    if (ncp->xsz != h_size)
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
+
+    if (rank == 0) {
+        TRACE_COMM(MPI_Bcast)(buf, h_size, MPI_BYTE, 0, ncp->nciop->comm);
     }
+    else {
+        bufferinfo gbp;
+        void *cmpbuf = (void*) NCI_Malloc((size_t)h_size);
 
-    TRACE_COMM(MPI_Bcast)(cmpbuf, (int)ncp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
+        TRACE_COMM(MPI_Bcast)(cmpbuf, h_size, MPI_BYTE, 0, ncp->nciop->comm);
 
-    if (rank > 0 && (ncp->xsz != local_xsz || memcmp(buf, cmpbuf, (size_t)ncp->xsz))) {
-        /* now part of this process's header is not consistent with root's
-         * check and report the inconsistent part
-         */
+        if (h_size != local_xsz || memcmp(buf, cmpbuf, h_size)) {
+            /* now part of this process's header is not consistent with root's
+             * check and report the inconsistent part
+             */
 
-        gbp.nciop  = ncp->nciop; /* will not be used in ncmpii_hdr_check_NC() */
-        gbp.offset = 0;          /* will not be used in ncmpii_hdr_check_NC() */
-        gbp.size   = ncp->xsz;   /* entire header is in the buffer, cmpbuf */
-        gbp.index  = 0;
-        gbp.pos    = gbp.base = cmpbuf;
+            /* Note that gbp.nciop and gbp.offset below will not be used in
+             * ncmpii_hdr_check_NC() */
+            gbp.nciop  = ncp->nciop;
+            gbp.offset = 0;
+            gbp.size   = h_size;   /* entire header is in the buffer, cmpbuf */
+            gbp.index  = 0;
+            gbp.pos    = gbp.base = cmpbuf;
 
-        /* find the inconsistent part of the header, report the difference, and
-         * overwrite the local header object with root's. ncmpii_hdr_check_NC()
-         * should not have any MPI communication calls.
-         */
-        status = ncmpii_hdr_check_NC(&gbp, ncp);
+            /* find the inconsistent part of the header, report the difference,
+             * and overwrite the local header object with root's.
+             * ncmpii_hdr_check_NC() should not have any MPI communication
+             * calls.
+             */
+            status = ncmpii_hdr_check_NC(&gbp, ncp);
 
-        /* header consistency is only checked on non-root processes. The
-         * returned status can be a fatal error or header inconsistency error,
-         * (fatal errors are due to object allocation), but never NC_NOERR.
-         */
+            /* header consistency is only checked on non-root processes. The
+             * returned status can be a fatal error or header inconsistency
+             * error, (fatal errors are due to object allocation), but never
+             * NC_NOERR.
+             */
+        }
+        NCI_Free(cmpbuf);
     }
 
     if (ncp->safe_mode) {
         TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,
                                   ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
-            if (rank > 0) NCI_Free(cmpbuf);
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce"); 
         }
-
         if (g_status != NC_NOERR) { /* some headers are inconsistent */
             if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE)
         }
     }
-
-    if (rank > 0) NCI_Free(cmpbuf);
 
     return status;
 }
