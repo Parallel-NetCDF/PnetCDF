@@ -112,10 +112,12 @@ int main(int argc, char** argv)
         else if (rank == 2) num_reqs = 9;
         else if (rank == 3) num_reqs = 10;
 
-        starts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
-        starts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
-        for (i=1; i<num_reqs; i++)
-            starts[i] = starts[i-1] + NDIMS;
+        if (num_reqs > 0) {
+            starts    = (MPI_Offset**)malloc(num_reqs*       sizeof(MPI_Offset*));
+            starts[0] = (MPI_Offset*) calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
+            for (i=1; i<num_reqs; i++)
+                starts[i] = starts[i-1] + NDIMS;
+        }
 
         /* assign arbitrary starts */
         const int y=0, x=1;
@@ -197,8 +199,10 @@ int main(int argc, char** argv)
         var.putVarn_all(num_reqs, starts, NULL, buffer);
 
         free(buffer);
-        free(starts[0]);
-        free(starts);
+        if (num_reqs > 0) {
+            free(starts[0]);
+            free(starts);
+        }
 
         /* file is close implicitly */
     }
