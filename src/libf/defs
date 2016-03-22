@@ -2061,8 +2061,10 @@ sub reorderOffsetArr1DTo2D_ftoc {
     if (ierr != NC_NOERR) return ierr;\n"
     }
     print $OUTFD "
-    l$count    = (MPI_Offset**) $malloc((size_t)*v3 * sizeof(MPI_Offset*));
-    l$count\[0\] = (MPI_Offset*)  $malloc((size_t)*v3 * (size_t)ndims * sizeof(MPI_Offset));
+    if (*v3 > 0) {
+        l$count    = (MPI_Offset**) $malloc((size_t)*v3 * sizeof(MPI_Offset*));
+        l$count\[0\] = (MPI_Offset*)  $malloc((size_t)*v3 * (size_t)ndims * sizeof(MPI_Offset));
+    }
     for (lj=1; lj<*v3; lj++)
         l$count\[lj\] = l$count\[lj-1\] + ndims;
     for (lj=0; lj<*v3; lj++)
@@ -2086,7 +2088,10 @@ sub reorderOffsetArr1DTo2D_in_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
-    $free($lname\[0\]); $free($lname);
+    if (*v3 > 0) {
+       $free($lname\[0\]);
+       $free($lname);
+    }
 ";
 }
 
