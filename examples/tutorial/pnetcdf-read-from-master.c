@@ -149,6 +149,7 @@ int main(int argc, char **argv) {
     if (rank == 0) {
         ret = ncmpi_close(ncfile);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        free(dim_sizes);
     }
 
     MPI_Finalize();
