@@ -21,8 +21,6 @@
  */
 int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
 {
-int ncmpii_Pearson_hash(const char *);
-return ncmpii_Pearson_hash(str_name);
     unsigned int i, hash=0;
     for (i=0; i<strlen(str_name); ++i) {
         hash += str_name[i];
