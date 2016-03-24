@@ -377,7 +377,7 @@
       ! use some ROMIO hints
       ! call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true', err)
 
-      ! disable file offset alignment for fix-sized variables
+      ! disable file offset alignment for fixed-size variables
       call MPI_Info_set(file_info, "nc_var_align_size", "1", err)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)

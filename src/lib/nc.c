@@ -1580,6 +1580,7 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp)
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
+    /* TODO: it makes no sense xtendimp being NULL */
     if (xtendimp != NULL)
         /* *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL); */
         *xtendimp = ncp->dims.unlimited_id;

@@ -139,7 +139,7 @@
      +               '4 processes'
 
           ! set an MPI-IO hint to disable file offset alignment for
-          ! fix-sized variables
+          ! fixed-size variables
           call MPI_Info_create(info, err)
           call MPI_Info_set(info, "nc_var_align_size", "1", err)
 
