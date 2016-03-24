@@ -184,7 +184,7 @@ int main(int argc, char** argv)
     if (nprocs != 4 && rank == 0 && verbose)
         printf("Warning: %s is intended to run on 4 processes\n",exec);
 
-    /* set an MPI-IO hint to disable file offset alignment for fix-sized
+    /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "1");
