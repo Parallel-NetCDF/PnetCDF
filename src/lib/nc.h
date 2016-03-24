@@ -194,6 +194,7 @@ typedef struct NC_nametable {
 typedef struct NC_dimarray {
     int            nalloc;    /* number allocated >= ndefined */
     int            ndefined;  /* number of defined dimensions */
+    int            unlimited_id;  /* -1 for not defined, otherwise >= 0 */
     NC_dim       **value;
     NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup */
 } NC_dimarray;

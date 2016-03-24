@@ -1498,7 +1498,8 @@ ncmpi_inq(int  ncid,
     if (nattsp != NULL)
         *nattsp = (int) ncp->attrs.ndefined;
     if (xtendimp != NULL)
-        *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
+        /* *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL); */
+        *xtendimp = ncp->dims.unlimited_id;
 
     return NC_NOERR;
 }
@@ -1580,7 +1581,8 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp)
     if (status != NC_NOERR) return status;
 
     if (xtendimp != NULL)
-        *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
+        /* *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL); */
+        *xtendimp = ncp->dims.unlimited_id;
 
     return NC_NOERR;
 }

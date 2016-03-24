@@ -365,6 +365,10 @@ ncmpi_create(MPI_Comm    comm,
 
     if (env_info != info) MPI_Info_free(&env_info);
 
+    /* initialize unlimited_id as no unlimited dimension yet defined */
+    ncp->dims.unlimited_id = -1;
+
+#ifndef SEARCH_NAME_LINEARLY
     for (i=0; i<HASH_TABLE_SIZE; i++) {
         /* initialize dim name lookup table */
         ncp->dims.nameT[i].num = 0;
@@ -373,6 +377,7 @@ ncmpi_create(MPI_Comm    comm,
         ncp->vars.nameT[i].num = 0;
         ncp->vars.nameT[i].list = NULL;
     }
+#endif
 
     return status;
 }
@@ -390,7 +395,9 @@ ncmpi_open(MPI_Comm    comm,
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
+#ifndef SEARCH_NAME_LINEARLY
     NC_nametable *nameT;
+#endif
 
 #ifdef PNC_DEBUG
     safe_mode = 1;
@@ -547,6 +554,7 @@ ncmpi_open(MPI_Comm    comm,
     for (i=0; i<ncp->vars.ndefined; i++)
         ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
+#ifndef SEARCH_NAME_LINEARLY
     /* initialize dim name lookup table */
     nameT = ncp->dims.nameT;
     for (i=0; i<HASH_TABLE_SIZE; i++) {
@@ -584,6 +592,7 @@ ncmpi_open(MPI_Comm    comm,
         nameT->list[nameT->num] = i;
         nameT->num++;
     }
+#endif
 
     return status;
 }
