@@ -177,8 +177,6 @@ ncmpii_find_NC_Udim(const NC_dimarray  *ncap,
 
     if (ncap->ndefined == 0) return -1;
 
-    /* TODO: avoid linear search, use a flag (per file) instead */
-
     /* note that the number of dimensions allowed is < 2^32 */
     for (dimid=0; dimid<ncap->ndefined; dimid++)
         if (ncap->value[dimid]->size == NC_UNLIMITED) {
@@ -464,11 +462,16 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     }
 
     if (size == NC_UNLIMITED) {
+#if 0
         /* check for any existing unlimited dimension, netcdf allows
          * one per file
          */
         dimid = ncmpii_find_NC_Udim(&ncp->dims, &dimp);
-        if (dimid != -1) DEBUG_RETURN_ERROR(NC_EUNLIMIT) /* found an existing one */
+        if (dimid != -1)
+            DEBUG_RETURN_ERROR(NC_EUNLIMIT) /* found an existing one */
+#endif
+        if (ncp->dims.unlimited_id != -1)
+            DEBUG_RETURN_ERROR(NC_EUNLIMIT) /* already defined */
     }
 
     /* check if exceeds the upperbound has reached */
@@ -495,9 +498,12 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
         return status;
     }
 
-    if (dimidp != NULL)
-        *dimidp = (int)ncp->dims.ndefined -1;
-        /* ncp->dims.ndefined has been increased in incr_NC_dimarray() */
+    /* ncp->dims.ndefined has been increased in incr_NC_dimarray() */
+    dimid = (int)ncp->dims.ndefined -1;
+
+    if (size == NC_UNLIMITED) ncp->dims.unlimited_id = dimid;
+
+    if (dimidp != NULL) *dimidp = dimid;
 
     return NC_NOERR;
 }

@@ -1252,6 +1252,8 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     /* TODO: we should allow ndefined > 2^32, considering change the data type
      * of ndefined from int to MPI_Offset */
 
+    ncap->unlimited_id = -1;
+
     if (ndefined == 0) {
         if (type != NC_DIMENSION && type != NC_UNSPECIFIED)
             DEBUG_RETURN_ERROR(NC_EINVAL)
@@ -1271,6 +1273,8 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
                 ncmpii_free_NC_dimarray(ncap);
                 return status;
             }
+            if (ncap->value[i]->size == NC_UNLIMITED)
+                ncap->unlimited_id = i; /* ID of unlimited dimension */
         }
     }
 
@@ -1935,6 +1939,7 @@ ncmpii_comp_dims(int          safe_mode,
 
     local_dim->ndefined = root_dim->ndefined;
 
+#ifndef SEARCH_NAME_LINEARLY
     if (status != NC_NOERR) {
         /* dims are not consistent, must rebuild dim name lookup table */
         for (i=0; i<HASH_TABLE_SIZE; i++) {
@@ -1956,6 +1961,7 @@ ncmpii_comp_dims(int          safe_mode,
             nameT->num++;
         }
     }
+#endif
 
     return status;
 }
@@ -2276,6 +2282,7 @@ ncmpii_comp_vars(int          safe_mode,
 
     local_var->ndefined = root_var->ndefined;
 
+#ifndef SEARCH_NAME_LINEARLY
     if (status != NC_NOERR) {
         /* vars are not consistent, must rebuild var name lookup table */
         for (i=0; i<HASH_TABLE_SIZE; i++) {
@@ -2297,6 +2304,7 @@ ncmpii_comp_vars(int          safe_mode,
             nameT->num++;
         }
     }
+#endif
 
     return status;
 }
