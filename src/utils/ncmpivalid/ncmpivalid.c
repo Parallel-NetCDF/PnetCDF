@@ -668,8 +668,6 @@ val_get_NC(NC *ncp) {
     /* Initialize the get buffer that stores the header read from the file */
     getbuf.nciop = ncp->nciop;
     getbuf.offset = 0;     /* read from start of the file */
-    getbuf.put_size = 0;   /* amount of writes so far in bytes */
-    getbuf.get_size = 0;   /* amount of reads  so far in bytes */
 
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
     getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
