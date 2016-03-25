@@ -440,3 +440,25 @@ Following the instructions in https://scan.coverity.com/travis_ci
 
 The modeling file ./coverity_model.c is for Coverity Scan used in the Analysis
 Setting.
+
+==============================================================================
+Testing with valgrind
+==============================================================================
+Valgrind checks memory leak (e.g. command: valgrind --leak-check=full -q),
+including uninitialized I/O buffer used in MPI_File_write. This warning message
+can appear when PnetCDF detects out-of-range data type conversion, error code
+NC_ERANGE. Note that PnetCDF continues writing the data out even if only
+partial of the user buffer causes NC_ERANGE. In the internal buffer allocated
+for type conversion, the buffer locations corresponding to those out-of-range
+data elements will not be initialized. Therefore, you should expect to see many
+warning messages of this kind when running "make check", as our test programs
+intentionally test whether NC_ERANGE can be returned properly.
+
+Another memory leak reported by valgrind is when file header expands causing
+data section to be moved to later file offsets. PnetCDF calls MPI read and
+write to move a variable at a time. The ideal case is to use the actual read
+size reported by MPI_Get_count in the MPI write call. However, MPI_Get_count is
+not reliable, i.e. may not be implemented correctly in some MPIs. We use the
+same I/O amount in both MPI read and write in which valgrid complains the
+moving buffer is not initialized.
+
