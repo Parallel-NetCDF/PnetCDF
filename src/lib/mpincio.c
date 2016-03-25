@@ -441,7 +441,7 @@ ncmpiio_move(ncio *const nciop,
 {
     int rank, nprocs, bufcount, mpireturn, err, status=NC_NOERR, min_st;
     void *buf;
-    int chunk_size = 1048576; /* move 1 MB per process at a time */
+    int get_size=0, chunk_size=1048576; /* move 1 MB per process at a time */
     MPI_Status mpistatus;
 
     MPI_Comm_size(nciop->comm, &nprocs);
@@ -488,7 +488,6 @@ ncmpiio_move(ncio *const nciop,
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EREAD)
         }
         else {
-            int get_size;
             MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
             nciop->get_size += get_size;
         }
@@ -499,10 +498,13 @@ ncmpiio_move(ncio *const nciop,
         status = min_st;
         if (status != NC_NOERR) break;
 
-        /* write to new location @ to+nbytes+rank*chunk_size */
+        /* write to new location @ to+nbytes+rank*chunk_size
+         * instead of using buf_count, use get_size to reflect the true amount
+         * read from the above MPI_File_read_at_all call */
         TRACE_IO(MPI_File_write_at_all)(nciop->collective_fh,
                                         to+nbytes+rank*chunk_size,
-                                        buf, bufcount, MPI_BYTE, &mpistatus);
+                                        buf, get_size /*bufcount*/,
+                                        MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
