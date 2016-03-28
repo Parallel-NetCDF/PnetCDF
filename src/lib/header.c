@@ -921,9 +921,7 @@ hdr_fetch(bufferinfo *gbp) {
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
         }
         else {
-            int get_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-            gbp->nciop->get_size += get_size;
+            gbp->nciop->get_size += gbp->size;
         }
     }
     /* we might have had to backtrack */
@@ -2541,9 +2539,7 @@ int ncmpii_write_header(NC *ncp)
             }
         }
         else {
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            ncp->nciop->put_size += put_size;
+            ncp->nciop->put_size += ncp->xsz;
         }
         NCI_Free(buf);
     }

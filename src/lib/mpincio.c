@@ -451,10 +451,8 @@ ncmpiio_move(ncio *const nciop,
      * we use that instead of 1 MB */
     if (nciop->striping_unit > 0) chunk_size = nciop->striping_unit;
 
-    /* Note valgrind will complain about uninitialized buf below, but buf will
-     * be used to read and later write. So, no need to change to NCI_Calloc
-     * for the sake of valgrind.
-     */
+    /* buf will be used as a temporal buffer to move data in chunks, i.e.
+     * read a chunk and later write to the new location */
     buf = NCI_Malloc((size_t)chunk_size);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -464,6 +462,8 @@ ncmpiio_move(ncio *const nciop,
 
     /* move the variable starting from its tail toward its beginning */
     while (nbytes > 0) {
+        int get_size=0;
+
         /* calculate how much to move at each time */
         bufcount = chunk_size;
         if (nbytes < (MPI_Offset)nprocs * chunk_size) {
@@ -479,6 +479,9 @@ ncmpiio_move(ncio *const nciop,
             nbytes -= chunk_size*nprocs;
         }
 
+        /* explicitly initialize mpistatus object to 0, see comments below */
+        memset(&mpistatus, 0, sizeof(MPI_Status));
+
         /* read the original data @ from+nbytes+rank*chunk_size */
         TRACE_IO(MPI_File_read_at_all)(nciop->collective_fh,
                                        from+nbytes+rank*chunk_size,
@@ -488,7 +491,12 @@ ncmpiio_move(ncio *const nciop,
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EREAD)
         }
         else {
-            int get_size;
+            /* for zero-length read, MPI_Get_count may report incorrect result
+             * for some MPICH version, due to the uninitialized MPI_Status
+             * object passed to MPI-IO calls. Thus we initialize it above to
+             * work around. Otherwise we can just use:
+            nciop->get_size += bufcount;
+             */
             MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
             nciop->get_size += get_size;
         }
@@ -500,19 +508,36 @@ ncmpiio_move(ncio *const nciop,
         if (status != NC_NOERR) break;
 
         /* write to new location @ to+nbytes+rank*chunk_size
-         * Cannot use get_size above in place of buf_count below in the MPI
-         * write call. Ideally, one should use get_size to reflect the true
-         * amount read from the above MPI read call. However, implementation of
-         * MPI_Get_count in various MPIs is not reliable of reporting correct
-         * result. */
+         *
+         * Ideally, we should write the amount of get_size returned from a call
+         * to MPI_Get_count in the below MPI write. This is in case some
+         * variables are defined but never been written. The value returned by
+         * MPI_Get_count is supposed to be the actual amount read by the MPI
+         * read call. If partial data (or none) is available for read, then we
+         * should just write that amount. Note this MPI write is collective,
+         * and thus all processes must participate the call even if get_size
+         * is 0. However, in some MPICH versions MPI_Get_count fails to report
+         * the correct value due to an internal error that fails to initialize
+         * the MPI_Status object. Therefore, the solution can be either to
+         * explicitly initialize the status object to zeros, or to just use
+         * bufcount for write. Note that the latter will write the variables
+         * that have not been written before. Below uses the former option.
+         */
         TRACE_IO(MPI_File_write_at_all)(nciop->collective_fh,
                                         to+nbytes+rank*chunk_size,
-                                        buf, bufcount, MPI_BYTE, &mpistatus);
+                                        buf, get_size /* bufcount */,
+                                        MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
+            /* for zero-length read, MPI_Get_count may report incorrect result
+             * for some MPICH version, due to the uninitialized MPI_Status
+             * object passed to MPI-IO calls. Thus we initialize it above to
+             * work around. Otherwise we can just use:
+            nciop->put_size += bufcount;
+             */
             int put_size;
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             nciop->put_size += put_size;
