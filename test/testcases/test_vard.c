@@ -154,7 +154,8 @@ int main(int argc, char **argv) {
     int          i, j, err, ncid, varid0, varid1, varid2, dimids[2], nerrs=0;
     int          rank, nprocs, debug=0, blocklengths[2], **buf, *bufptr;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
-    MPI_Offset   start[2], count[2];
+    int          buftype_size, expected_put_size, format;
+    MPI_Offset   start[2], count[2], header_size, put_size, new_put_size;
     MPI_Aint     a0, a1, disps[2];
     MPI_Datatype buftype, ghost_buftype, rec_filetype, fix_filetype;
 
@@ -253,8 +254,27 @@ int main(int argc, char **argv) {
     /* initialize the contents of the array */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = rank*100 + j*10 + i;
 
+    /* get header size and put size by far */
+    err = ncmpi_inq_header_size(ncid, &header_size); ERR
+    err = ncmpi_inq_put_size(ncid, &put_size); ERR
+
     /* write the record variable */
     err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, bufptr, 1, buftype); ERR
+
+    /* check if put_size is correctly reported */
+    err = ncmpi_inq_put_size(ncid, &new_put_size); ERR
+    MPI_Type_size(buftype, &buftype_size);
+    err = ncmpi_inq_format(ncid, &format); ERR
+    expected_put_size = buftype_size;
+
+    /* for writing a record variable, root process will update numrec to the
+     * file header */
+    if (rank == 0) expected_put_size += (format == NC_FORMAT_CDF5) ? 8 : 4;
+    if (expected_put_size != new_put_size - put_size) {
+        printf("Error: unexpected put size (%lld) reported, expecting %d\n",
+               new_put_size-put_size, expected_put_size);
+        nerrs++;
+    }
 
     /* check if the contents of buf are altered */
     CHECK_VALUE
@@ -262,8 +282,19 @@ int main(int argc, char **argv) {
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid0, "rec_VAR"); ERR
 
+    err = ncmpi_inq_put_size(ncid, &put_size); ERR
+
     /* write the fixed-size variable */
     err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, bufptr, 1, buftype); ERR
+
+    /* check if put_size is correctly reported */
+    err = ncmpi_inq_put_size(ncid, &new_put_size); ERR
+    expected_put_size = buftype_size;
+    if (expected_put_size != new_put_size - put_size) {
+        printf("Error: unexpected put size (%lld) reported, expecting %d\n",
+               new_put_size-put_size, expected_put_size);
+        nerrs++;
+    }
 
     /* check if the contents of buf are altered */
     CHECK_VALUE
