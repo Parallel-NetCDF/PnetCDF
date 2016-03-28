@@ -508,9 +508,7 @@ mpi_io:
                 }
             }
             else {
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
+                ncp->nciop->put_size += nbytes;
             }
         }
         else { /* io_method == INDEP_IO */
@@ -525,9 +523,7 @@ mpi_io:
                 }
             }
             else {
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
+                ncp->nciop->put_size += nbytes;
             }
         }
     }
@@ -544,9 +540,7 @@ mpi_io:
                 }
             }
             else {
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
+                ncp->nciop->get_size += nbytes;
             }
         }
         else { /* io_method == INDEP_IO */
@@ -561,9 +555,7 @@ mpi_io:
                 }
             }
             else {
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
+                ncp->nciop->get_size += nbytes;
             }
         }
     }

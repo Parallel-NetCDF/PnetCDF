@@ -1606,8 +1606,14 @@ ncmpii_req_aggregation(NC     *ncp,
                        int     io_method,   /* COLL_IO or INDEP_IO */
                        int     interleaved) /* interleaved in reqs[] */
 {
-    int i, type, err, status=NC_NOERR, ngroups;
-    int *group_index, *group_type;
+    int i, type, err, status=NC_NOERR, ngroups, mpireturn, buf_len;
+    int *group_index, *group_type, buf_type_size=0;
+    int *f_blocklengths, *b_blocklengths;
+    void *buf; /* point to starting buffer, used by MPI-IO call */
+    MPI_Aint      b_begin, b_addr, *f_disps, *b_disps;
+    MPI_Datatype  filetype, buf_type, *ftypes, *btypes;
+    MPI_File fh;
+    MPI_Status mpistatus;
 
     if (num_reqs == 0) { /* only COLL_IO can reach here for 0 request */
         assert(io_method == COLL_IO);
@@ -1689,11 +1695,6 @@ ncmpii_req_aggregation(NC     *ncp,
      * a single filetype. Similar for constructing buffer types.
      * Then use one collective I/O to commit.
      */
-
-    void         *buf; /* point to starting buffer, used by MPI-IO call */
-    int          *f_blocklengths, *b_blocklengths;
-    MPI_Aint      b_begin, b_addr, *f_disps, *b_disps;
-    MPI_Datatype  filetype, buf_type, *ftypes, *btypes;
 
     ftypes = (MPI_Datatype*) NCI_Malloc((size_t)ngroups*2*sizeof(MPI_Datatype));
     btypes = ftypes + ngroups;
@@ -1806,7 +1807,7 @@ ncmpii_req_aggregation(NC     *ncp,
     NCI_Free(group_index);
     NCI_Free(group_type);
 
-    int mpireturn, buf_len=1;
+    buf_len=1;
 
     if (ngroups == 1) {
         /* use ftypes[0] and btypes[0] directly */
@@ -1861,8 +1862,7 @@ ncmpii_req_aggregation(NC     *ncp,
         }
     }
 
-    MPI_File fh;
-    MPI_Status mpistatus;
+    MPI_Type_size(buf_type, &buf_type_size);
 
     if (io_method == COLL_IO)
         fh = ncp->nciop->collective_fh;
@@ -1890,9 +1890,7 @@ ncmpii_req_aggregation(NC     *ncp,
                 }
             }
             else {
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
+                ncp->nciop->get_size += buf_len * buf_type_size;
             }
         } else {
             TRACE_IO(MPI_File_read_at)(fh, offset, buf, buf_len, buf_type,
@@ -1906,9 +1904,7 @@ ncmpii_req_aggregation(NC     *ncp,
                 }
             }
             else {
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
+                ncp->nciop->get_size += buf_len * buf_type_size;
             }
         }
     } else { /* WRITE_REQ */
@@ -1924,9 +1920,7 @@ ncmpii_req_aggregation(NC     *ncp,
                 }
             }
             else {
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
+                ncp->nciop->put_size += buf_len * buf_type_size;
             }
         } else {
             TRACE_IO(MPI_File_write_at)(fh, offset, buf, buf_len, buf_type,
@@ -1940,9 +1934,7 @@ ncmpii_req_aggregation(NC     *ncp,
                 }
             }
             else {
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
+                ncp->nciop->put_size += buf_len * buf_type_size;
             }
         }
     }
@@ -2105,11 +2097,12 @@ ncmpii_mgetput(NC           *ncp,
                int           rw_flag,     /* WRITE_REQ or READ_REQ */
                int           io_method)   /* COLL_IO or INDEP_IO */
 {
-    int i, j, len=0, status=NC_NOERR, mpireturn, err;
+    int i, j, len=0, status=NC_NOERR, mpireturn, err, buf_type_size=0;
     void *buf=NULL;
     MPI_Status mpistatus;
     MPI_Datatype filetype, buf_type=MPI_BYTE;
     MPI_File fh;
+    MPI_Offset offset=0;
 
     if (io_method == COLL_IO)
         fh = ncp->nciop->collective_fh;
@@ -2128,7 +2121,7 @@ ncmpii_mgetput(NC           *ncp,
     }
 
     /* set the MPI-IO fileview */
-    MPI_Offset offset=0;
+    offset=0;
     err = ncmpii_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         num_reqs = 0; /* skip this request */
@@ -2234,6 +2227,8 @@ ncmpii_mgetput(NC           *ncp,
     }
     /* if (buf_type == MPI_BYTE) then the whole buf is contiguous */
 
+    MPI_Type_size(buf_type, &buf_type_size);
+
     if (rw_flag == READ_REQ) {
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_read_at_all)(fh, offset, buf, len, buf_type,
@@ -2248,9 +2243,7 @@ ncmpii_mgetput(NC           *ncp,
             }
             else {
                 /* update the number of bytes read since file open */
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
+                ncp->nciop->get_size += len * buf_type_size;
             }
         } else {
             TRACE_IO(MPI_File_read_at)(fh, offset, buf, len, buf_type,
@@ -2265,9 +2258,7 @@ ncmpii_mgetput(NC           *ncp,
             }
             else {
                 /* update the number of bytes read since file open */
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
+                ncp->nciop->get_size += len * buf_type_size;
             }
         }
     } else { /* WRITE_REQ */
@@ -2284,9 +2275,7 @@ ncmpii_mgetput(NC           *ncp,
             }
             else {
                 /* update the number of bytes written since file open */
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
+                ncp->nciop->put_size += len * buf_type_size;
             }
         } else {
             TRACE_IO(MPI_File_write_at)(fh, offset, buf, len, buf_type,
@@ -2301,9 +2290,7 @@ ncmpii_mgetput(NC           *ncp,
             }
             else {
                 /* update the number of bytes written since file open */
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
+                ncp->nciop->put_size += len * buf_type_size;
             }
         }
     }

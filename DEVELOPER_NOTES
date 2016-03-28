@@ -456,9 +456,13 @@ intentionally test whether NC_ERANGE can be returned properly.
 
 Another memory leak reported by valgrind is when file header expands causing
 data section to be moved to later file offsets. PnetCDF calls MPI read and
-write to move a variable at a time. The ideal case is to use the actual read
-size reported by MPI_Get_count in the MPI write call. However, MPI_Get_count is
-not reliable, i.e. may not be implemented correctly in some MPIs. We use the
-same I/O amount in both MPI read and write in which valgrid complains the
-moving buffer is not initialized.
+write to move a variable at a time. The ideal case is to write the actual read
+size reported by MPI_Get_count in the MPI write call. This is in case some
+variables are defined but never been written. However, in some MPICH versions
+MPI_Get_count fails to report the correct value due to an internal error that
+fails to initialize the MPI_Status object. Therefore, the solution can be
+either to explicitly initialize the status object to zeros, or to just use the
+same read request amount for write. Note that the latter will write the
+variables that have not been written before. For now we adopt the former
+option. See comments in function ncmpiio_move() of src/lib/mpincio.c
 

@@ -48,7 +48,7 @@ ncmpii_getput_vard(NC               *ncp,
     void *cbuf=NULL;
     int i, isderived, el_size, mpireturn, status=NC_NOERR, err=NC_NOERR;
     int buftype_is_contig=0, filetype_is_contig=1, need_swap=0, is_buf_swapped=0;
-    int filetype_size=0, buftype_size;
+    int filetype_size=0, buftype_size=0;
     MPI_Offset btnelems=0, bnelems=0, offset=0, orig_bufcount=bufcount;
     MPI_Status mpistatus;
     MPI_Datatype ptype, orig_buftype=buftype;
@@ -172,6 +172,7 @@ ncmpii_getput_vard(NC               *ncp,
             }
             buftype = ptype;
             bufcount *= bnelems;
+            buftype_size = el_size;
         }
     }
 
@@ -233,21 +234,15 @@ err_check:
             TRACE_IO(MPI_File_write_at_all)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
-            else {
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
-            }
+            else
+                ncp->nciop->put_size += bufcount * buftype_size;
         }
         else { /* io_method == INDEP_IO */
             TRACE_IO(MPI_File_write_at)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            else {
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                ncp->nciop->put_size += put_size;
-            }
+            else
+                ncp->nciop->put_size += bufcount * buftype_size;
         }
     }
     else {  /* rw_flag == READ_REQ */
@@ -255,21 +250,15 @@ err_check:
             TRACE_IO(MPI_File_read_at_all)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
-            else {
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
-            }
+            else
+                ncp->nciop->get_size += bufcount * buftype_size;
         }
         else { /* io_method == INDEP_IO */
             TRACE_IO(MPI_File_read_at)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_read_at");
-            else {
-                int get_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-                ncp->nciop->get_size += get_size;
-            }
+            else
+                ncp->nciop->get_size += bufcount * buftype_size;
         }
     }
 

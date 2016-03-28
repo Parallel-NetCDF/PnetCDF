@@ -715,9 +715,7 @@ ncmpii_sync_numrecs(NC         *ncp,
                 DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            ncp->nciop->put_size += put_size;
+            ncp->nciop->put_size += len;
         }
     }
     /* update numrecs in all processes's memory only if the new one is larger.
@@ -845,9 +843,7 @@ write_NC(NC *ncp)
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            ncp->nciop->put_size += put_size;
+            ncp->nciop->put_size += ncp->xsz;
         }
     }
 

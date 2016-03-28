@@ -919,7 +919,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
 int
 ncmpii_file_set_view(NC           *ncp,
                      MPI_File      fh,
-                     MPI_Offset   *offset,
+                     MPI_Offset   *offset,  /* IN/OUT */
                      MPI_Datatype  filetype)
 {
     int rank, err, mpireturn, status=NC_NOERR;
