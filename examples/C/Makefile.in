@@ -35,6 +35,7 @@ C_SRCS  = collective_write.c \
           vard_int.c \
           i_varn_int64.c \
           bput_varn_uint.c \
+          bput_varn_int64.c \
           fill_mode.c \
           ghost_cell.c \
           req_all.c
@@ -109,6 +110,9 @@ i_varn_int64: i_varn_int64.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 bput_varn_uint: bput_varn_uint.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+bput_varn_int64: bput_varn_int64.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 fill_mode: fill_mode.o $(LIBRARY)
