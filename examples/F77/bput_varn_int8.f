@@ -30,52 +30,28 @@
 !     data:
 !
 !     var0 =
-!      1, 0, 3, 0,
-!      1, 2, 3, 0,
-!      1, 2, 2, 0,
-!      3, 2, 1, 2,
-!      3, 1, 1, 3,
-!      0, 3, 1, 3,
-!      0, 3, 0, 3,
-!      2, 2, 0, 1,
-!      3, 2, 3, 1,
-!      3, 2, 3, 1 ;
+!      1, 1, 1, 3, 3, 0, 0, 2, 3, 3,
+!      0, 2, 2, 2, 1, 3, 3, 2, 2, 2,
+!      3, 3, 2, 1, 1, 1, 0, 0, 3, 3,
+!      0, 0, 0, 2, 3, 3, 3, 1, 1, 1 ;
 !
 !     var1 =
-!      2, 1, 0, 1,
-!      2, 3, 0, 1,
-!      2, 3, 3, 1,
-!      0, 3, 2, 3,
-!      0, 2, 2, 0,
-!      1, 0, 2, 0,
-!      1, 0, 1, 0,
-!      3, 3, 1, 2,
-!      0, 3, 0, 2,
-!      0, 3, 0, 2 ;
+!      2, 2, 2, 0, 0, 1, 1, 3, 0, 0,
+!      1, 3, 3, 3, 2, 0, 0, 3, 3, 3,
+!      0, 0, 3, 2, 2, 2, 1, 1, 0, 0,
+!      1, 1, 1, 3, 0, 0, 0, 2, 2, 2 ;
 !
 !     var2 =
-!      3, 2, 1, 2,
-!      3, 0, 1, 2,
-!      3, 0, 0, 2,
-!      1, 0, 3, 0,
-!      1, 3, 3, 1,
-!      2, 1, 3, 1,
-!      2, 1, 2, 1,
-!      0, 0, 2, 3,
-!      1, 0, 1, 3,
-!      1, 0, 1, 3 ;
+!      3, 3, 3, 1, 1, 2, 2, 0, 1, 1,
+!      2, 0, 0, 0, 3, 1, 1, 0, 0, 0,
+!      1, 1, 0, 3, 3, 3, 2, 2, 1, 1,
+!      2, 2, 2, 0, 1, 1, 1, 3, 3, 3 ;
 !
 !     var3 =
-!      0, 3, 2, 3,
-!      0, 1, 2, 3,
-!      0, 1, 1, 3,
-!      2, 1, 0, 1,
-!      2, 0, 0, 2,
-!      3, 2, 0, 2,
-!      3, 2, 3, 2,
-!      1, 1, 3, 0,
-!      2, 1, 2, 0,
-!      2, 1, 2, 0 ;
+!      0, 0, 0, 2, 2, 3, 3, 1, 2, 2,
+!      3, 1, 1, 1, 0, 2, 2, 1, 1, 1,
+!      2, 2, 1, 0, 0, 0, 3, 3, 2, 2,
+!      3, 3, 3, 1, 2, 2, 2, 0, 0, 0 ;
 !     }
 !
 !    Note the above dump is in C order
@@ -101,7 +77,7 @@
 
           integer NDIMS
           integer*8 NX, NY
-          PARAMETER(NDIMS=2, NX=4, NY=10)
+          PARAMETER(NDIMS=2, NX=10, NY=4)
 
           character*128 filename, cmd
           integer i, j, k, n, err, ierr, nprocs, rank, get_args
@@ -178,75 +154,88 @@
           ! now we are in data mode
           n = mod(rank, 4) + 1
           num_segs(n) = 4 ! number of segments for this request
-          start(1,1,n)=1
-          start(2,1,n)=6
-          count(1,1,n)=1
-          count(2,1,n)=2
-          start(1,2,n)=2
-          start(2,2,n)=1
+          start(1,1,n)=6
+          start(2,1,n)=1
+          count(1,1,n)=2
+          count(2,1,n)=1
+          start(1,2,n)=1
+          start(2,2,n)=2
           count(1,2,n)=1
           count(2,2,n)=1
-          start(1,3,n)=3
-          start(2,3,n)=7
-          count(1,3,n)=1
-          count(2,3,n)=2
-          start(1,4,n)=4
-          start(2,4,n)=1
-          count(1,4,n)=1
-          count(2,4,n)=3
+          start(1,3,n)=7
+          start(2,3,n)=3
+          count(1,3,n)=2
+          count(2,3,n)=1
+          start(1,4,n)=1
+          start(2,4,n)=4
+          count(1,4,n)=3
+          count(2,4,n)=1
           ! start(:,:,n) n_count(:,:,n) indicate the following:
           ! ("-" means skip)
-          !   -  -  -  -  -  X  X  -  -  -
-          !   X  -  -  -  -  -  -  -  -  -
-          !   -  -  -  -  -  -  X  X  -  -
-          !   X  X  X  -  -  -  -  -  -  -
+          !   _  X  _  X
+          !   _  _  _  X
+          !   _  _  _  X
+          !   _  _  _  _
+          !   _  _  _  _
+          !   X  _  _  _
+          !   X  _  X  _
+          !   _  _  X  _
+          !   _  _  _  _
+          !   _  _  _  _
+
 
           n = mod(rank+1, 4) + 1
           num_segs(n) = 6 ! number of segments for this request
-          start(1,1,n)=1
-          start(2,1,n)=4
-          count(1,1,n)=1
-          count(2,1,n)=2
-          start(1,2,n)=1
-          start(2,2,n)=9
-          count(1,2,n)=1
-          count(2,2,n)=2
-          start(1,3,n)=2
-          start(2,3,n)=6
-          count(1,3,n)=1
-          count(2,3,n)=2
-          start(1,4,n)=3
-          start(2,4,n)=1
-          count(1,4,n)=1
-          count(2,4,n)=2
-          start(1,5,n)=3
-          start(2,5,n)=9
-          count(1,5,n)=1
-          count(2,5,n)=2
-          start(1,6,n)=4
-          start(2,6,n)=5
-          count(1,6,n)=1
-          count(2,6,n)=3
+          start(1,1,n)=4
+          start(2,1,n)=1
+          count(1,1,n)=2
+          count(2,1,n)=1
+          start(1,2,n)=9
+          start(2,2,n)=1
+          count(1,2,n)=2
+          count(2,2,n)=1
+          start(1,3,n)=6
+          start(2,3,n)=2
+          count(1,3,n)=2
+          count(2,3,n)=1
+          start(1,4,n)=1
+          start(2,4,n)=3
+          count(1,4,n)=2
+          count(2,4,n)=1
+          start(1,5,n)=9
+          start(2,5,n)=3
+          count(1,5,n)=2
+          count(2,5,n)=1
+          start(1,6,n)=5
+          start(2,6,n)=4
+          count(1,6,n)=3
+          count(2,6,n)=1
           ! start(:,:,n) n_count(:,:,n) indicate the following:
-          !   -  -  -  X  X  -  -  -  X  X
-          !   -  -  -  -  -  X  X  -  -  -
-          !   X  X  -  -  -  -  -  -  X  X
-          !   -  -  -  -  X  X  X  -  -  -
+          !   _  _  X  _
+          !   _  _  X  _
+          !   _  _  _  _
+          !   X  _  _  _
+          !   X  _  _  X
+          !   _  X  _  X
+          !   _  X  _  X
+          !   _  _  _  _
+          !   X  _  X  _
+          !   X  _  X  _
 
           n = mod(rank+2, 4) + 1
           num_segs(n) = 5 ! number of segments for this request
-          start(1,1,n)=1
-          start(2,1,n)=8
+          start(1,1,n)=8
+          start(2,1,n)=1
           count(1,1,n)=1
           count(2,1,n)=1
           start(1,2,n)=2
           start(2,2,n)=2
-          count(1,2,n)=1
-          count(2,2,n)=3
-          start(1,3,n)=2
-          start(2,3,n)=8
-          count(1,3,n)=1
-          count(2,3,n)=3
+          count(1,2,n)=3
+          count(2,2,n)=1
+          start(1,3,n)=8
+          start(2,3,n)=2
+          count(1,3,n)=3
+          count(2,3,n)=1
           start(1,4,n)=3
           start(2,4,n)=3
           count(1,4,n)=1
@@ -256,34 +245,46 @@
           count(1,5,n)=1
           count(2,5,n)=1
           ! start(:,:,n) n_count(:,:,n) indicate the following:
-          !   -  -  -  -  -  -  -  X  -  -
-          !   -  X  X  X  -  -  -  X  X  X
-          !   -  -  X  -  -  -  -  -  -  -
-          !   -  -  -  X  -  -  -  -  -  -
+          !   _  _  _  _
+          !   _  X  _  _
+          !   _  X  X  _
+          !   _  X  _  X
+          !   _  _  _  _
+          !   _  _  _  _
+          !   _  _  _  _
+          !   X  X  _  _
+          !   _  X  _  _
+          !   _  X  _  _
 
           n = mod(rank+3, 4) + 1
           num_segs(n) = 4 ! number of segments for this request
           start(1,1,n)=1
           start(2,1,n)=1
-          count(1,1,n)=1
-          count(2,1,n)=3
-          start(1,2,n)=2
-          start(2,2,n)=5
+          count(1,1,n)=3
+          count(2,1,n)=1
+          start(1,2,n)=5
+          start(2,2,n)=2
           count(1,2,n)=1
           count(2,2,n)=1
-          start(1,3,n)=3
-          start(2,3,n)=4
-          count(1,3,n)=1
-          count(2,3,n)=3
-          start(1,4,n)=4
-          start(2,4,n)=8
-          count(1,4,n)=1
-          count(2,4,n)=3
+          start(1,3,n)=4
+          start(2,3,n)=3
+          count(1,3,n)=3
+          count(2,3,n)=1
+          start(1,4,n)=8
+          start(2,4,n)=4
+          count(1,4,n)=3
+          count(2,4,n)=1
           ! start(:,:,n) n_count(:,:,n) indicate the following:
-          !   X  X  X  -  -  -  -  -  -  -
-          !   -  -  -  -  X  -  -  -  -  -
-          !   -  -  -  X  X  X  -  -  -  -
-          !   -  -  -  -  -  -  -  X  X  X
+          !   X  _  _  _
+          !   X  _  _  _
+          !   X  _  _  _
+          !   _  _  X  _
+          !   _  X  X  _
+          !   _  _  X  _
+          !   _  _  _  _
+          !   _  _  _  X
+          !   _  _  _  X
+          !   _  _  _  X
 
           ! only rank 0, 1, 2, and 3 do I/O:
           ! each of ranks 0 to 3 write 4 nonblocking requests
