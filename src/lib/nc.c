@@ -1226,6 +1226,9 @@ ncmpii_inq_env_align_hints(MPI_Offset *h_align,
                            MPI_Offset *h_chunk,
                            MPI_Offset *r_align)
 {
+    /* TODO: env variables have been checked in ncmpi_create and ncmpi_open
+     * Maybe this can be part of that
+     */
     char *env_str;
 
     *h_align = 0;
@@ -1234,9 +1237,13 @@ ncmpii_inq_env_align_hints(MPI_Offset *h_align,
     *r_align = 0;
 
     if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
-        char *key = strtok(env_str, ";");
+        char *env_str_cpy, *key;
+        env_str_cpy = (char*) NCI_Malloc(strlen(env_str)+1);
+        strcpy(env_str_cpy, env_str);
+        key = strtok(env_str_cpy, ";");
         while (key != NULL) {
             char *val = strchr(key, '=');
+            if (val == NULL) continue; /* ill-formed hint */
             *val = '\0';
             val++;
             if (strcasecmp(key, "nc_header_align_size") == 0)
@@ -1249,6 +1256,7 @@ ncmpii_inq_env_align_hints(MPI_Offset *h_align,
                 *r_align = atoll(val);
             key = strtok(NULL, ";");
         }
+        NCI_Free(env_str_cpy);
     }
     return 1;
 }

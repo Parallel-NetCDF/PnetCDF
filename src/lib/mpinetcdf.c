@@ -268,16 +268,21 @@ ncmpi_create(MPI_Comm    comm,
         if (env_info == MPI_INFO_NULL)
             MPI_Info_create(&env_info); /* ignore error */
 
-        char *key = strtok(env_str, ";");
+        char *env_str_cpy, *key;
+        env_str_cpy = (char*) NCI_Malloc(strlen(env_str)+1);
+        strcpy(env_str_cpy, env_str);
+        key = strtok(env_str_cpy, ";");
         while (key != NULL) {
             char *val;
             val = strchr(key, '=');
+            if (val == NULL) continue; /* ill-formed hint */
             *val = '\0';
             val++;
             /* printf("env hint: key=%s val=%s\n",key,val); */
             MPI_Info_set(env_info, key, val); /* override or add */
             key = strtok(NULL, ";");
         }
+        NCI_Free(env_str_cpy);
     }
 
     /* get header chunk size from user info */
@@ -447,16 +452,21 @@ ncmpi_open(MPI_Comm    comm,
         if (env_info == MPI_INFO_NULL)
             MPI_Info_create(&env_info); /* ignore error */
 
-        char *key = strtok(env_str, ";");
+        char *env_str_cpy, *key;
+        env_str_cpy = (char*) NCI_Malloc(strlen(env_str)+1);
+        strcpy(env_str_cpy, env_str);
+        key = strtok(env_str_cpy, ";");
         while (key != NULL) {
             char *val;
             val = strchr(key, '=');
+            if (val == NULL) continue; /* ill-formed hint */
             *val = '\0';
             val++;
             /* printf("env hint: key=%s val=%s\n",key,val); */
             MPI_Info_set(env_info, key, val); /* override or add */
             key = strtok(NULL, ";");
         }
+        NCI_Free(env_str_cpy);
     }
 
     /* get header chunk size from user info, if provided */
