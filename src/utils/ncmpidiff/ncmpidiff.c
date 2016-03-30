@@ -51,13 +51,13 @@
     exit(1); \
 }
 
-#define HANDLE_ERROR {                                         \
-    if (err != NC_NOERR) {                                     \
-        fprintf(stderr, "Error at line %d (%s)\n", __LINE__,   \
-               ncmpi_strerror(err));                           \
-        MPI_Abort(MPI_COMM_WORLD, -1);                         \
-        exit(-1);                                              \
-    }                                                          \
+#define HANDLE_ERROR {                                                    \
+    if (err != NC_NOERR) {                                                \
+        fprintf(stderr, "Error at line %d of file %s (%s)\n", __LINE__,   \
+               __FILE__, ncmpi_strerror(err));                            \
+        MPI_Abort(MPI_COMM_WORLD, -1);                                    \
+        exit(-1);                                                         \
+    }                                                                     \
 }
 
 #define CHECK_GLOBAL_ATT_DIFF(type, func, nctype) {                    \
@@ -712,16 +712,16 @@ int main(int argc, char **argv)
  
         /* compare the variable contents */
         switch (type1) {
-            case NC_CHAR:   CHECK_VAR_DIFF(char,   ncmpi_get_vara_text_all,   NC_CHAR)
-            case NC_SHORT:  CHECK_VAR_DIFF(short,  ncmpi_get_vara_short_all,  NC_SHORT)
-            case NC_INT:    CHECK_VAR_DIFF(int,    ncmpi_get_vara_int_all,    NC_INT)
-            case NC_FLOAT:  CHECK_VAR_DIFF(float,  ncmpi_get_vara_float_all,  NC_FLOAT)
-            case NC_DOUBLE: CHECK_VAR_DIFF(double, ncmpi_get_vara_double_all, NC_DOUBLE)
-            case NC_UBYTE:  CHECK_VAR_DIFF(ubyte,  ncmpi_get_vara_uchar,      NC_UBYTE)
-            case NC_USHORT: CHECK_VAR_DIFF(ushort, ncmpi_get_vara_ushort,     NC_USHORT)
-            case NC_UINT:   CHECK_VAR_DIFF(uint,   ncmpi_get_vara_uint,       NC_UINT)
-            case NC_INT64:  CHECK_VAR_DIFF(int64,  ncmpi_get_vara_longlong,   NC_INT64)
-            case NC_UINT64: CHECK_VAR_DIFF(uint64, ncmpi_get_vara_ulonglong,  NC_UINT64)
+            case NC_CHAR:   CHECK_VAR_DIFF(char,   ncmpi_get_vara_text_all,      NC_CHAR)
+            case NC_SHORT:  CHECK_VAR_DIFF(short,  ncmpi_get_vara_short_all,     NC_SHORT)
+            case NC_INT:    CHECK_VAR_DIFF(int,    ncmpi_get_vara_int_all,       NC_INT)
+            case NC_FLOAT:  CHECK_VAR_DIFF(float,  ncmpi_get_vara_float_all,     NC_FLOAT)
+            case NC_DOUBLE: CHECK_VAR_DIFF(double, ncmpi_get_vara_double_all,    NC_DOUBLE)
+            case NC_UBYTE:  CHECK_VAR_DIFF(ubyte,  ncmpi_get_vara_uchar_all,     NC_UBYTE)
+            case NC_USHORT: CHECK_VAR_DIFF(ushort, ncmpi_get_vara_ushort_all,    NC_USHORT)
+            case NC_UINT:   CHECK_VAR_DIFF(uint,   ncmpi_get_vara_uint_all,      NC_UINT)
+            case NC_INT64:  CHECK_VAR_DIFF(int64,  ncmpi_get_vara_longlong_all,  NC_INT64)
+            case NC_UINT64: CHECK_VAR_DIFF(uint64, ncmpi_get_vara_ulonglong_all, NC_UINT64)
             default: ; /* TODO: handle unexpected types */
         }
     }
