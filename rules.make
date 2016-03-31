@@ -176,7 +176,7 @@ clean:		FORCE
 		(cd $$subdir && $(MAKE) $(MFLAGS) clean) ; \
 	    done; \
 	fi
-	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
+	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* vgcore.* $(GARBAGE) \
 		  *.gcda *.gcno gmon.out
 
 distclean:	FORCE
@@ -193,7 +193,7 @@ distclean:	FORCE
 	    done; \
 	fi
 	@$(RM) -rf SunWS_cache
-	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
+	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* vgcore.* $(GARBAGE) \
 		  *.gcda *.gcno gmon.out \
 	          MANIFEST *.log $(DIST_GARBAGE) cscope.out cscope.files
 	@$(RM) -f Makefile

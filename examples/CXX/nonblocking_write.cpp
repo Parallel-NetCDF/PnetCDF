@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     MPI_Offset write_size, sum_write_size;
     vector<MPI_Offset> starts(NDIMS), counts(NDIMS);
     MPI_Offset bbufsize, put_size;
-    MPI_Info info_used;
+    MPI_Info info, info_used;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -146,9 +146,13 @@ int main(int argc, char **argv)
     write_timing = MPI_Wtime();
 
     try {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "nc_var_align_size", "1");
+
         /* create the file */
         NcmpiFile nc(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                     NcmpiFile::classic5);
+                     NcmpiFile::classic5, info);
+        MPI_Info_free(&info);
 
         /* define dimensions */
         vector<NcmpiDim> dimids(NDIMS);

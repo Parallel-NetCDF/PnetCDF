@@ -50,10 +50,10 @@ static void handle_error(int status, int lineno)
 int main(int argc, char **argv) {
 
     int ret, ncfile, nprocs, rank, dimid, varid1, varid2, ndims=1;
-    MPI_Offset start, count=1;
     char buf[13] = "Hello World\n";
-    int data1, data2;
-    int requests[2], statuses[2];
+    int data1, data2, requests[2], statuses[2];
+    MPI_Offset start, count=1;
+    MPI_Info info;
 
     MPI_Init(&argc, &argv);
 
@@ -66,9 +66,14 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_var_align_size", "1");
+
     ret = ncmpi_create(MPI_COMM_WORLD, argv[1],
-                       NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
+                       NC_CLOBBER|NC_64BIT_OFFSET, info, &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
+
+    MPI_Info_free(&info);
 
     ret = ncmpi_def_dim(ncfile, "d1", nprocs, &dimid);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
