@@ -466,3 +466,11 @@ same read request amount for write. Note that the latter will write the
 variables that have not been written before. For now we adopt the former
 option. See comments in function ncmpiio_move() of src/lib/mpincio.c
 
+When data sieving is enabled in MPI-IO (default in ROMIO), its
+read-modify-write operation can also cause valgrind to complain uninitialized
+I/O buffer. In particular, when a new file is created and PnetCDF fixed-sized
+variable alignment is enabled, the read in read-modify-write may read no data
+at all, resulting data sieving buffer containing uninitialized data. To
+eliminate this possibility, set the hint environment variable to disable
+alognment, e.g. PNETCDF_HINTS="nc_var_align_size=1".
+
