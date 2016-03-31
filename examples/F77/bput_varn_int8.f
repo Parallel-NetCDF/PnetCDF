@@ -119,13 +119,13 @@
           call MPI_Info_create(info, err)
           call MPI_Info_set(info, "nc_var_align_size", "1", err)
 
-          call MPI_Info_free(info, err)
-
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
           err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
      +                       info, ncid)
           call check(err, 'In nfmpi_create: ')
+
+          call MPI_Info_free(info, err)
 
           ! define dimensions x and y
           err = nfmpi_def_dim(ncid, "Y", NY, dimid(2))
@@ -321,6 +321,7 @@
      +                                  buffer(1,i), reqs(i))
              call check(err, 'In nfmpi_bput_varn_int8: ')
           enddo
+
           err = nfmpi_wait_all(ncid, nreqs, reqs, sts)
           call check(err, 'In nfmpi_wait_all: ')
 
