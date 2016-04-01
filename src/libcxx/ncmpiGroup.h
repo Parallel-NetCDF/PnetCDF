@@ -566,8 +566,8 @@ namespace PnetCDF
       
       \param location Enumeration type controlling the groups to search.
       \return         The NcmpiVar dimension variable. If no valid object is found , a \ref NcmpiVar::isNull "null node" is returned.
-    */
     std::map<std::string,NcmpiGroup> getCoordVars(NcmpiGroup::Location location=Current) const;
+    */
 
     /*! 
       Gets the NcmpiDim and NcmpiVar object pair for a named coordinate variable.
@@ -577,8 +577,8 @@ namespace PnetCDF
       group and optionally in the parent and child group and returns the first instance found.
       \param location Enumeration type controlling the groups to search.
       \return         The set of names of dimension variables. 
-    */
     void getCoordVar(std::string& coordVarName, NcmpiDim& ncmpiDim, NcmpiVar& ncmpiVar, NcmpiGroup::Location location=Current) const;
+    */
 
 
   protected:
