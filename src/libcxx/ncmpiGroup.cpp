@@ -1371,6 +1371,7 @@ NcmpiCompoundType NcmpiGroup::addCompoundType(const string& name, MPI_Offset siz
 }
   
   
+#if 0
 // Get the collection of coordinate variables.
 map<string,NcmpiGroup> NcmpiGroup::getCoordVars(NcmpiGroup::Location location) const {
   map<string,NcmpiGroup> coordVars;
@@ -1455,3 +1456,4 @@ void NcmpiGroup::getCoordVar(string& coordVarName, NcmpiDim& ncmpiDim, NcmpiVar&
   }
 
 }
+#endif
