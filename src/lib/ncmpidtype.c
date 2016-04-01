@@ -85,8 +85,6 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 #ifdef HAVE_MPI_INTEGER
     if (type == MPI_INTEGER)
         return int_4byte;
-    if (type == MPI_UNSIGNED)
-        return uint_4byte;
 #endif
 #ifdef HAVE_MPI_INTEGER4
     if (type == MPI_INTEGER4)
