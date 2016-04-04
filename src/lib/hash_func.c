@@ -35,8 +35,10 @@ int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
     ret = (int)hash; /* the return value will be used as an array index */
     return ((ret < 0) ? -ret : ret); /* make the value positive */
 #endif
-    /* this is to avoid expensive % operation, i.e. % HASH_TABLE_SIZE */
+    /* this is to avoid expensive % operation, i.e. % HASH_TABLE_SIZE
     return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));
+    */
+    return (int)(hash & (HASH_TABLE_SIZE-1));
     /* return value will be used as an array index */
 }
 
