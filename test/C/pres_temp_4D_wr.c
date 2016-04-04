@@ -235,8 +235,8 @@ main(int argc, char ** argv)
        pres_out[0] = (float*) malloc(count[1]*2 * NLAT*NLON * sizeof(float));
        temp_out[0] = pres_out[0] + count[1] * NLAT*NLON;
        for (i=1; i<count[1]; i++) {
-           pres_out[1] = pres_out[i-1] + NLAT*NLON;
-           temp_out[1] = temp_out[i-1] + NLAT*NLON;
+           pres_out[i] = pres_out[i-1] + NLAT*NLON;
+           temp_out[i] = temp_out[i-1] + NLAT*NLON;
        }
    }
 

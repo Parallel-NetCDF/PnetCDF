@@ -173,8 +173,8 @@ main(int argc, char **argv)
        pres_in[0] = (float*) malloc(count[1]*2 * NLAT*NLON * sizeof(float));
        temp_in[0] = pres_in[0] + count[1] * NLAT*NLON;
        for (i=1; i<count[1]; i++) {
-           pres_in[1] = pres_in[i-1] + NLAT*NLON;
-           temp_in[1] = temp_in[i-1] + NLAT*NLON;
+           pres_in[i] = pres_in[i-1] + NLAT*NLON;
+           temp_in[i] = temp_in[i-1] + NLAT*NLON;
        }
    }
 
