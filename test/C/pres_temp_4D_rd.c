@@ -20,6 +20,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pnetcdf.h>
 #include <mpi.h>
@@ -81,8 +82,8 @@ main(int argc, char **argv)
 
    /* Program variables to hold the data we will read. We will only
       need enough space to hold one timestep of data; one record. */
-   float pres_in[NLVL][NLAT][NLON];
-   float temp_in[NLVL][NLAT][NLON];
+   float **pres_in; /* [NLVL/nprocs][NLAT][NLON] */
+   float **temp_in; /* [NLVL/nprocs][NLAT][NLON] */
 
    /* These program variables hold the latitudes and longitudes. */
    float lats[NLAT], lons[NLON];
@@ -148,34 +149,54 @@ main(int argc, char **argv)
     * that the data arrays in this program are the correct size to
     * hold one timestep. */
    count[0] = 1;
-   count[1] = NLVL/nprocs;
    count[2] = NLAT;
    count[3] = NLON;
-   start[1] = 0;
    start[2] = 0;
    start[3] = 0;
+ 
+   /* divide NLVL dimension among processes */
+   count[1] = NLVL / nprocs;
+   start[1] = count[1] * rank;
+   if (rank < NLVL % nprocs) {
+       start[1] += rank;
+       count[1]++;
+   }
+   else {
+       start[1] += NLVL % nprocs;
+   }
+   if (count[1] == 0) start[1] = 0;
+
+   /* allocate read buffers */
+   pres_in = (float**) malloc(count[1]*2 * sizeof(float*));
+   temp_in = pres_in + count[1];
+   if (count[1] > 0) {
+       pres_in[0] = (float*) malloc(count[1]*2 * NLAT*NLON * sizeof(float));
+       temp_in[0] = pres_in[0] + count[1] * NLAT*NLON;
+       for (i=1; i<count[1]; i++) {
+           pres_in[1] = pres_in[i-1] + NLAT*NLON;
+           temp_in[1] = temp_in[i-1] + NLAT*NLON;
+       }
+   }
 
    /* Read and check one record at a time. */
    for (rec = 0; rec < NREC; rec++)
    {
       start[0] = rec;
-      err = ncmpi_get_vara_float_all(ncid, pres_varid, start, 
-				      count, &pres_in[0][0][0]);
+      err = ncmpi_get_vara_float_all(ncid, pres_varid, start, count, &pres_in[0][0]);
       CHECK_ERR
-      err = ncmpi_get_vara_float_all(ncid, temp_varid, start,
-				      count, &temp_in[0][0][0]);
+      err = ncmpi_get_vara_float_all(ncid, temp_varid, start, count, &temp_in[0][0]);
       CHECK_ERR
 
       /* Check the data. */
-      i = 0;
-      for (lvl = 0; lvl < NLVL/nprocs; lvl++)
+      i = (int)start[1] * NLAT * NLON;
+      for (lvl=0; lvl<count[1]; lvl++)
 	 for (lat = 0; lat < NLAT; lat++)
 	    for (lon = 0; lon < NLON; lon++)
 	    {
-	       if (pres_in[lvl][lat][lon] != SAMPLE_PRESSURE + i) 
-		  return 2;
-	       if (temp_in[lvl][lat][lon] != SAMPLE_TEMP + i) 
-		  return 2;
+	       if (pres_in[lvl][lat*NLON+lon] != SAMPLE_PRESSURE + i) 
+		  nerrs++;
+	       if (temp_in[lvl][lat*NLON+lon] != SAMPLE_TEMP + i) 
+		  nerrs++;
 	       i++;
 	    }
 
@@ -184,6 +205,9 @@ main(int argc, char **argv)
    /* Close the file. */
    err = ncmpi_close(ncid);
    CHECK_ERR
+
+   if (count[1] > 0) free(pres_in[0]);
+   free(pres_in);
 
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
@@ -195,6 +219,7 @@ main(int argc, char **argv)
                    sum_size);
     }
 
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
