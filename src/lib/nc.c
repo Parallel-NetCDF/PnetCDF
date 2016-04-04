@@ -1458,6 +1458,15 @@ ncmpii_close(NC *ncp)
 #ifdef COMPLETE_NONBLOCKING_IO
         ncmpii_wait(ncp, INDEP_IO, NC_REQ_ALL, NULL, NULL);
 #else
+        int rank, num=0;
+        NC_req *cur_req=ncp->head;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
+
+        while (cur_req != NULL) {
+            num++;
+            cur_req = cur_req->next;
+        }
+        printf("PnetCDF warning: %d nonblocking requests still pending on process %d. Cancelling ...\n",num,rank);
         ncmpii_cancel(ncp, NC_REQ_ALL, NULL, NULL);
 #endif
     }
