@@ -31,8 +31,8 @@ This is essentially a placeholder for the next release note ...
       imap are properly ignored when getting/putting a scalar variable
 
   o New optimization
-    * Add a table lookup based on Jenkins hash function for checking whether a
-      variable/dimension name is already used.
+    * Add a table lookup based on Bernstein hash function for checking whether
+      a variable/dimension name has already been used.
 
   o New utility program
     * none
@@ -44,5 +44,6 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Bug fixes
-    * none
+    * Fix string processing the environment variables set for PnetCDF I/O hints
+    * Fix utility ncmpidiff to use collective read APIs in collective data mode
 
