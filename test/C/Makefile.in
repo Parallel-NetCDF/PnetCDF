@@ -53,6 +53,7 @@ check testing verbose_testing: $(PROGS)
 
 TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
 
 ptest2: $(PROGS)
 	@for i in $(PROGS); do ( \
@@ -64,11 +65,16 @@ ptest4: $(PROGS)
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
+ptest6: $(PROGS)
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+
 ptest: ptest4
 
-ptests: ptest2 ptest4
+ptests: ptest2 ptest4 ptest6
 
-ptest6 ptest8 ptest10:
+ptest8 ptest10:
 
 include $(srcdir)/../../rules.make
 

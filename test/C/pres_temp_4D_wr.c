@@ -21,6 +21,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pnetcdf.h>
 #include <mpi.h>
@@ -90,8 +91,8 @@ main(int argc, char ** argv)
 
    /* Program variables to hold the data we will write out. We will only
       need enough space to hold one timestep of data; one record. */
-   float pres_out[NLVL][NLAT][NLON];
-   float temp_out[NLVL][NLAT][NLON];
+   float **pres_out; /* [NLVL/nprocs][NLAT][NLON] */
+   float **temp_out; /* [NLVL/nprocs][NLAT][NLON] */
 
    /* These program variables hold the latitudes and longitudes. */
    float lats[NLAT], lons[NLON];
@@ -128,14 +129,6 @@ main(int argc, char ** argv)
       lats[lat] = START_LAT + 5.*lat;
    for (lon = 0; lon < NLON; lon++)
       lons[lon] = START_LON + 5.*lon;
-   
-   for (lvl = 0; lvl < NLVL; lvl++)
-      for (lat = 0; lat < NLAT; lat++)
-	 for (lon = 0; lon < NLON; lon++)
-	 {
-	    pres_out[lvl][lat][lon] = SAMPLE_PRESSURE + i;
-	    temp_out[lvl][lat][lon] = SAMPLE_TEMP + i++;
-	 }
 
    /* Create the file. */
    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
@@ -204,10 +197,12 @@ main(int argc, char ** argv)
    err = ncmpi_begin_indep_data(ncid);
    /* Write the coordinate variable data. This will put the latitudes
       and longitudes of our data grid into the netCDF file. */
-   err = ncmpi_put_var_float(ncid, lat_varid, &lats[0]);
-   CHECK_ERR
-   err = ncmpi_put_var_float(ncid, lon_varid, &lons[0]);
-   CHECK_ERR
+   if (rank == 0) {
+       err = ncmpi_put_var_float(ncid, lat_varid, &lats[0]);
+       CHECK_ERR
+       err = ncmpi_put_var_float(ncid, lon_varid, &lons[0]);
+       CHECK_ERR
+   }
    err = ncmpi_end_indep_data(ncid);
    CHECK_ERR
 
@@ -216,12 +211,43 @@ main(int argc, char ** argv)
                     &data[0][0][0]);
      timestep to write.) */
    count[0] = 1;
-   count[1] = NLVL/nprocs;
    count[2] = NLAT;
    count[3] = NLON;
-   start[1] = 0;
    start[2] = 0;
    start[3] = 0;
+
+   /* divide NLVL dimension among processes */
+   count[1] = NLVL / nprocs;
+   start[1] = count[1] * rank;
+   if (rank < NLVL % nprocs) {
+       start[1] += rank;
+       count[1]++;
+   }
+   else {
+       start[1] += NLVL % nprocs;
+   }
+   if (count[1] == 0) start[1] = 0;
+
+   /* allocate write buffers */
+   pres_out = (float**) malloc(count[1]*2 * sizeof(float*));
+   temp_out = pres_out + count[1];
+   if (count[1] > 0) {
+       pres_out[0] = (float*) malloc(count[1]*2 * NLAT*NLON * sizeof(float));
+       temp_out[0] = pres_out[0] + count[1] * NLAT*NLON;
+       for (i=1; i<count[1]; i++) {
+           pres_out[1] = pres_out[i-1] + NLAT*NLON;
+           temp_out[1] = temp_out[i-1] + NLAT*NLON;
+       }
+   }
+
+   /* initialize write buffers */
+   i = (int)start[1] * NLAT * NLON;
+   for (lvl=0; lvl<count[1]; lvl++)
+      for (lat = 0; lat < NLAT; lat++)
+	 for (lon = 0; lon < NLON; lon++) {
+	    pres_out[lvl][lat*NLON + lon] = SAMPLE_PRESSURE + i;
+	    temp_out[lvl][lat*NLON + lon] = SAMPLE_TEMP + i++;
+	 }
 
    /* Write the pretend data. This will write our surface pressure and
       surface temperature data. The arrays only hold one timestep worth
@@ -231,9 +257,9 @@ main(int argc, char ** argv)
    for (rec = 0; rec < NREC; rec++)
    {
       start[0] = rec;
-      err = ncmpi_put_vara_float_all(ncid, pres_varid, start, count, &pres_out[0][0][0]);
+      err = ncmpi_put_vara_float_all(ncid, pres_varid, start, count, &pres_out[0][0]);
       CHECK_ERR
-      err = ncmpi_put_vara_float_all(ncid, temp_varid, start, count, &temp_out[0][0][0]);
+      err = ncmpi_put_vara_float_all(ncid, temp_varid, start, count, &temp_out[0][0]);
       CHECK_ERR
    }
 
@@ -241,6 +267,9 @@ main(int argc, char ** argv)
    err = ncmpi_close(ncid);
    CHECK_ERR
    
+   if (count[1] > 0) free(pres_out[0]);
+   free(pres_out);
+
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -251,6 +280,7 @@ main(int argc, char ** argv)
                    sum_size);
     }
 
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
