@@ -44,6 +44,11 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Bug fixes
+    * Fix the return unlimited dimension ID of value -1, not 0, by Fortran API
+      nfmpi_inq_unlimdim when no unlimited dimension is defined. This conforms
+      with netCDF convention. See r3296 and r1372
     * Fix string processing the environment variables set for PnetCDF I/O hints
+      See r2385
     * Fix utility ncmpidiff to use collective read APIs in collective data mode
+      See r2382
 

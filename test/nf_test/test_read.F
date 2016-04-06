@@ -575,10 +575,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         include "pnetcdf.inc"
 #include "tests.inc"
 
-        integer ncid
-        integer unlimdim
-        integer err
-        integer nok
+        integer ncid, unlimdim, flags, err, nok
 
         nok = 0
 
@@ -588,6 +585,36 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         else
             nok = nok + 1
         endif
+
+        if (.not. readonly) then        !/* tests using netCDF scratch file */
+            flags = IOR(NF_CLOBBER, extra_flags)
+            err = nfmpi_create(comm, scratch, flags, info, ncid)
+            if (err .ne. NF_NOERR) then
+                call errore('nfmpi_create: ', err)
+            else
+                err = nfmpi_inq_unlimdim(ncid, unlimdim)
+                if (err .ne. NF_NOERR) then
+                    call errore('nfmpi_inq_unlimdim: ', err)
+                else
+                    if (unlimdim .NE. -1) then
+                        call errori
+     +                  ('nfmpi_inq_unlimdim: wrong number returned, ',
+     +                  unlimdim)
+                        print *, 'expected -1'
+                    else
+                        nok = nok + 1
+                    endif
+                endif
+                err = nfmpi_close(ncid)
+                if (err .ne. NF_NOERR)
+     +              call errore('nfmpi_close: ', err)
+                err = nfmpi_delete(scratch, info)
+                if (err .ne. NF_NOERR) 
+     +              call errorc('delete of scratch file failed: ',
+     +                          scratch)
+            endif
+        endif
+
         err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
