@@ -13,6 +13,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h> /* memcpy(), memset() */
 #include <pnetcdf.h>
 
 /* Support Windows extension to specify calling convention */
