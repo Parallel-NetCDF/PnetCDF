@@ -567,10 +567,7 @@ ncmpi_open(MPI_Comm    comm,
 #ifndef SEARCH_NAME_LINEARLY
     /* initialize dim name lookup table */
     nameT = ncp->dims.nameT;
-    for (i=0; i<HASH_TABLE_SIZE; i++) {
-        nameT[i].num = 0;
-        nameT[i].list = NULL;
-    }
+    memset(nameT, 0, sizeof(NC_nametable) * HASH_TABLE_SIZE);
 
     /* populate dim name lookup table */
     for (i=0; i<ncp->dims.ndefined; i++) {
@@ -586,10 +583,7 @@ ncmpi_open(MPI_Comm    comm,
 
     /* initialize var name lookup table */
     nameT = ncp->vars.nameT;
-    for (i=0; i<HASH_TABLE_SIZE; i++) {
-        nameT[i].num = 0;
-        nameT[i].list = NULL;
-    }
+    memset(nameT, 0, sizeof(NC_nametable) * HASH_TABLE_SIZE);
 
     /* populate var name lookup table */
     for (i=0; i<ncp->vars.ndefined; i++) {

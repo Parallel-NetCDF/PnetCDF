@@ -1812,13 +1812,13 @@ sub addnull_ftoc {
     $strlen = "v$count";
     $strlen =~ s/^v/d/;
     print $OUTFD "\
-    {char *p = v$count + $strlen - 1;
-     int  li;
-        while (*p == ' ' && p > v$count) p--;
+    {
+        char *p = v$count + $strlen - 1; /* point to the end of string v$count */
+        while (*p == ' ' && p > v$count) p--; /* find the last non-blank */
         p++;
-        p$count = (char *)$malloc( (size_t)(p-v$count) + 1 );
-        for (li=0; li<(p-v$count); li++) { p$count\[li\] = v$count\[li\]; }
-        p$count\[li\] = 0; 
+        p$count = (char *) $malloc((size_t)(p-v$count) + 1);
+        memcpy(p$count, v$count, p-v$count);
+        p$count\[p-v$count\] = 0; 
     }
 ";
     $clean_up .= "    $free( p$count );\n";
