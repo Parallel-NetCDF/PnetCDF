@@ -85,14 +85,50 @@ int main(int argc, char *argv[])
 			     buf, count[0], MPI_DOUBLE);
     CHECK_ERROR("ncmpi_put_vara_all")
 
+    /* check if user put buffer contents altered */
+    if (buf[0] != 1.0) {
+        printf("Error: user put buffer[%d] altered from %f to %f\n",
+               0, 1.0, buf[0]);
+        nerrs++;
+    }
+    if (buf[1] != 2.0) {
+        printf("Error: user put buffer[%d] altered from %f to %f\n",
+               1, 2.0, buf[1]);
+        nerrs++;
+    }
+
     err = ncmpi_put_vara_double_all(ncid, varid, start, count, buf);
     CHECK_ERROR("ncmpi_put_vara_double_all")
+
+    /* check if user put buffer contents altered */
+    if (buf[0] != 1.0) {
+        printf("Error: user put buffer[%d] altered from %f to %f\n",
+               0, 1.0, buf[0]);
+        nerrs++;
+    }
+    if (buf[1] != 2.0) {
+        printf("Error: user put buffer[%d] altered from %f to %f\n",
+               1, 2.0, buf[1]);
+        nerrs++;
+    }
 
     err = ncmpi_iput_vara_double(ncid, varid, start, count, buf, &req);
     CHECK_ERROR("ncmpi_iput_vara_double")
 
     err = ncmpi_wait_all(ncid, 1, &req, &status);
     ERR
+
+    /* check if user put buffer contents altered */
+    if (buf[0] != 1.0) {
+        printf("Error: user put buffer[%d] altered from %f to %f\n",
+               0, 1.0, buf[0]);
+        nerrs++;
+    }
+    if (buf[1] != 2.0) {
+        printf("Error: user put buffer[%d] altered from %f to %f\n",
+               1, 2.0, buf[1]);
+        nerrs++;
+    }
 
     err = ncmpi_get_vara_all(ncid, varid, start, count,
 			     buf, count[0], MPI_DOUBLE);

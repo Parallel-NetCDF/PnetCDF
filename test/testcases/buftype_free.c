@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     err = ncmpi_enddef(ncid); ERR
 
     /* initialize the contents of the array */
-    for (i=0; i<4; i++) for (j=0; j<(NY+4)*(NX+4); j++) buf[i][j] = rank;
+    for (i=0; i<4; i++) for (j=0; j<(NY+4)*(NX+4); j++) buf[i][j] = rank+10;
 
     start[0] = NY*rank; start[1] = 0;
     count[0] = NY;      count[1] = NX;
@@ -74,6 +74,16 @@ int main(int argc, char **argv) {
     err = ncmpi_put_vara_int_all(ncid, varid[2], start, count, buf[2]); ERR
     err = ncmpi_put_vara_int_all(ncid, varid[3], start, count, buf[3]); ERR
 
+    /* check if user write buffer contents altered */
+    for (i=0; i<4; i++) {
+        for (j=0; j<(NY+4)*(NX+4); j++) {
+            if (buf[i][j] != rank+10) {
+                printf("Error: user put buffer[%d][%d] altered from %d to %d\n",
+                       i,j, rank+10, buf[i][j]);
+                nerrs++;
+            }
+        }
+    }
 
     /* define an MPI datatype using MPI_Type_create_subarray() */
     ghost      = 2;

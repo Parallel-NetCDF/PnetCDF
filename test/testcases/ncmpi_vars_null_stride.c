@@ -59,9 +59,18 @@ int main(int argc, char **argv)
 
     start[0] = rank;
     count[0] = 1;
-    for (i=0; i<512; i++) buf[i] = rank;
+    for (i=0; i<512; i++) buf[i] = rank+10;
     err = ncmpi_put_vars_int_all(ncfile, varid, start, count, NULL, buf);
     if (err != NC_NOERR) HANDLE_ERROR(err)
+
+    /* check if user put buffer contents altered */
+    for (i=0; i<512; i++) {
+        if (buf[i] != rank+10) {
+            printf("Error: user put buffer[%d] altered from %d to %d\n",
+                   i, rank+10, buf[i]);
+            nerrs++;
+        }
+    }
 
     err = ncmpi_close(ncfile);
     if (err != NC_NOERR) HANDLE_ERROR(err)

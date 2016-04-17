@@ -97,6 +97,14 @@ int main(int argc, char** argv) {
             start[0] = NX*rank;
             count[0] = NX;
             err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            /* check if user put buffer contents altered */
+            for (j=0; j<NX; j++) {
+                if (buf[j] != rank*1000 + i*10 + j) {
+                    printf("Error: user put buffer[%d] altered from %d to %d\n",
+                           j, rank*1000 + i*10 + j, buf[j]);
+                    nerrs++;
+                }
+            }
         }
 #endif
 #ifdef TEST_RECORD_VAR
@@ -107,6 +115,14 @@ int main(int argc, char** argv) {
             for (j=0; j<NX; j++) buf[j] = rank*1000 + 100 + i*10 + j;
             start[0] = 1; /* write 2nd record */
             err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            /* check if user put buffer contents altered */
+            for (j=0; j<NX; j++) {
+                if (buf[j] != rank*1000 + 100 + i*10 + j) {
+                    printf("Error: user put buffer[%d] altered from %d to %d\n",
+                           j, rank*1000 + 100 + i*10 + j, buf[j]);
+                    nerrs++;
+                }
+            }
         }
 #endif
     }
@@ -221,6 +237,14 @@ int main(int argc, char** argv) {
             start[0] = NX*rank;
             count[0] = NX;
             err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
+            /* check if user put buffer contents altered */
+            for (j=0; j<NX; j++) {
+                if (buf[j] != -1 * (i*10 + j)) {
+                    printf("Error: user put buffer[%d] altered from %d to %d\n",
+                           j, -1 * (i*10 + j), buf[j]);
+                    nerrs++;
+                }
+            }
         }
 #endif
 #ifdef TEST_RECORD_VAR
@@ -231,6 +255,14 @@ int main(int argc, char** argv) {
             for (j=0; j<NX; j++) buf[j] = -1 * (100 + i*10 + j);
             start[0] = 1; /* write 2nd record */
             err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
+            /* check if user put buffer contents altered */
+            for (j=0; j<NX; j++) {
+                if (buf[j] != -1 * (100 + i*10 + j)) {
+                    printf("Error: user put buffer[%d] altered from %d to %d\n",
+                           j, -1 * (100 + i*10 + j), buf[j]);
+                    nerrs++;
+                }
+            }
         }
 #endif
     }

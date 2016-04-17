@@ -28,16 +28,16 @@
  *    data:
  *
  *     var =
- *       3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
- *       0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
- *       1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
- *       0, 0, 0, 2, 1, 1, 1, 3, 3, 3 ;
+ *       13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+ *       10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+ *       11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+ *       10, 10, 10, 12, 11, 11, 11, 13, 13, 13 ;
  *
  *     rec_var =
- *       3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
- *       0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
- *       1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
- *       0, 0, 0, 2, 1, 1, 1, 3, 3, 3 ;
+ *       13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+ *       10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+ *       11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+ *       10, 10, 10, 12, 11, 11, 11, 13, 13, 13 ;
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -59,10 +59,10 @@ static
 int check_contents_for_fail(int *buffer)
 {
     int i, nprocs;
-    int expected[NY*NX] = {3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
-                           0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
-                           1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
-                           0, 0, 0, 2, 1, 1, 1, 3, 3, 3};
+    int expected[NY*NX] = {13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+                           10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+                           11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+                           10, 10, 10, 12, 11, 11, 11, 13, 13, 13};
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -214,7 +214,7 @@ int main(int argc, char** argv)
     /* allocate I/O buffer and initialize its contents */
     r_buffer = (int*) malloc(NY*NX * sizeof(int));
     buffer   = (int*) malloc(w_len * sizeof(int));
-    for (i=0; i<w_len; i++) buffer[i] = rank;
+    for (i=0; i<w_len; i++) buffer[i] = rank+10;
 
     /* check error code: NC_ENULLSTART */
     err = ncmpi_put_varn_int_all(ncid, varid[0], 1, NULL, NULL, NULL);
@@ -227,6 +227,14 @@ int main(int argc, char** argv)
     err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
     ERR
 
+    /* check if user put buffer contents altered */
+    for (i=0; i<w_len; i++) {
+        if (buffer[i] != rank+10) {
+            printf("Error: user put buffer[%d] altered from %d to %d\n",
+                   i, rank+10, buffer[i]);
+            nerrs++;
+        }
+    }
     if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
 
     /* read back and check contents */
@@ -245,6 +253,15 @@ int main(int argc, char** argv)
     err = ncmpi_put_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
     ERR
 
+    /* check if user put buffer contents altered */
+    for (i=0; i<w_len; i++) {
+        if (buffer[i] != rank+10) {
+            printf("Error: user put buffer[%d] altered from %d to %d\n",
+                   i, rank+10, buffer[i]);
+            nerrs++;
+        }
+    }
+
     /* read back using get_var API and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
@@ -257,9 +274,9 @@ int main(int argc, char** argv)
     ERR
 
     for (i=0; i<w_len; i++) {
-        if (buffer[i] != rank) {
+        if (buffer[i] != rank+10) {
             printf("Error at line %d: expecting buffer[%d]=%d but got %d\n",
-                   __LINE__,i,rank,buffer[i]);
+                   __LINE__,i,rank+10,buffer[i]);
             nerrs++;
         }
     }
@@ -281,9 +298,9 @@ int main(int argc, char** argv)
                    __LINE__,i,buffer[i]);
             nerrs++;
         }
-        if (i%2 == 0 && buffer[i] != rank) {
+        if (i%2 == 0 && buffer[i] != rank+10) {
             printf("Error at line %d: expecting buffer[%d]=%d but got %d\n",
-                   __LINE__,i,rank,buffer[i]);
+                   __LINE__,i,rank+10,buffer[i]);
             nerrs++;
         }
     }
