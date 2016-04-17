@@ -74,11 +74,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define HANDLE_ERROR {                                         \
-    if (err != NC_NOERR)                                       \
-        printf("Error at %s line %d (%s)\n",__FILE__,__LINE__, \
-               ncmpi_strerror(err));                           \
-}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -98,7 +94,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char *filename="testfile.nc";
-    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err;
+    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
     int psizes[2], local_rank[2], dimids[2], varid, nghosts;
     int *buf, *buf_ptr;
     MPI_Offset gsizes[2], starts[2], counts[2], imap[2];
@@ -170,18 +166,14 @@ int main(int argc, char **argv)
     }
 
     /* define dimensions */
-    err = ncmpi_def_dim(ncid, "Y", gsizes[0], &dimids[0]);
-    HANDLE_ERROR
-    err = ncmpi_def_dim(ncid, "X", gsizes[1], &dimids[1]);
-    HANDLE_ERROR
+    err = ncmpi_def_dim(ncid, "Y", gsizes[0], &dimids[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", gsizes[1], &dimids[1]); ERR
 
     /* define variable */
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid);
-    HANDLE_ERROR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); ERR
 
     /* exit the define mode */
-    err = ncmpi_enddef(ncid);
-    HANDLE_ERROR
+    err = ncmpi_enddef(ncid); ERR
 
     /* set up imap[] for excluding ghost cells */
     imap[1] = 1;
@@ -191,16 +183,14 @@ int main(int argc, char **argv)
     buf_ptr = buf + nghosts * (counts[1]+2*nghosts + 1);
 
     /* write the whole variable in file */
-    err = ncmpi_put_varm_int_all(ncid, varid, starts, counts, NULL, imap, buf_ptr);
-    HANDLE_ERROR
+    err = ncmpi_put_varm_int_all(ncid, varid, starts, counts, NULL, imap, buf_ptr); ERR
 
     /* close the file */
-    err = ncmpi_close(ncid);
-    HANDLE_ERROR
+    err = ncmpi_close(ncid); ERR
 
     free(buf);
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

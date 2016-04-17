@@ -40,7 +40,7 @@
 #define NY 5
 #define NX 5
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -54,12 +54,12 @@ usage(char *argv0)
 }
 
 static
-void print_hints(int ncid,
-                 int varid0,
-                 int varid1)
+int print_hints(int ncid,
+                int varid0,
+                int varid1)
 {
     char value[MPI_MAX_INFO_VAL];
-    int err, len, flag;
+    int err, len, flag, nerrs=0;
     MPI_Offset header_size, header_extent, var_zy_start, var_yx_start;
     MPI_Offset h_align=-1, v_align=-1, h_chunk=-1;
     MPI_Info info_used;
@@ -105,13 +105,14 @@ void print_hints(int ncid,
     printf("header extent                    = %lld\n", header_extent);
     printf("var_zy start file offset         = %lld\n", var_zy_start);
     printf("var_yx start file offset         = %lld\n", var_yx_start);
+    return nerrs;
 }
 
 int main(int argc, char** argv)
 {
     extern int optind;
     char *filename="testfile.nc";
-    int i, rank, nprocs, verbose=1, err;
+    int i, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
     float *buf_yx;
     MPI_Offset start[2], count[2];
@@ -173,7 +174,7 @@ int main(int argc, char** argv)
     count[0] = NY * nprocs; count[1] = NX;
     err = ncmpi_put_vara_float_all(ncid, varid1, start, count, buf_yx); ERR
 
-    if (rank == 0 && verbose) print_hints(ncid, varid0, varid1);
+    if (rank == 0 && verbose) nerrs += print_hints(ncid, varid0, varid1);
 
     err = ncmpi_close(ncid); ERR
 
@@ -191,6 +192,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

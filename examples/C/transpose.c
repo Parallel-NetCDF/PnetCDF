@@ -38,11 +38,7 @@
 
 #define NDIMS 3
 
-#define HANDLE_ERROR {                                \
-    if (err != NC_NOERR)                              \
-        printf("Error at line %d (%s)\n", __LINE__,   \
-               ncmpi_strerror(err));                  \
-}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -62,7 +58,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char *filename="testfile.nc", str[512];
-    int i, j, k, rank, nprocs, len, ncid, bufsize, verbose=1, err;
+    int i, j, k, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
     int *buf, psizes[NDIMS], dimids[NDIMS], dimidsT[NDIMS];
     int XYZ_id, XZY_id, YZX_id, YXZ_id, ZYX_id, ZXY_id;
     MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS], imap[NDIMS];
@@ -151,45 +147,45 @@ int main(int argc, char **argv)
     for (i=0; i<NDIMS; i++) {
         sprintf(str, "%c", 'Z'-i);
         err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i]);
-        HANDLE_ERROR
+        ERR
     }
 
     /* define variable with no transposed file layout: ZYX */
     err = ncmpi_def_var(ncid, "ZYX_var", NC_INT, NDIMS, dimids, &ZYX_id);
-    HANDLE_ERROR
+    ERR
 
     /* define variable with transposed file layout: ZYX -> ZXY */
     dimidsT[0] = dimids[0]; dimidsT[1] = dimids[2]; dimidsT[2] = dimids[1];
     err = ncmpi_def_var(ncid, "ZXY_var", NC_INT, NDIMS, dimidsT, &ZXY_id);
-    HANDLE_ERROR
+    ERR
 
     /* define variable with transposed file layout: ZYX -> YZX */
     dimidsT[0] = dimids[1]; dimidsT[1] = dimids[0]; dimidsT[2] = dimids[2];
     err = ncmpi_def_var(ncid, "YZX_var", NC_INT, NDIMS, dimidsT, &YZX_id);
-    HANDLE_ERROR
+    ERR
 
     /* define variable with transposed file layout: ZYX -> YXZ */
     dimidsT[0] = dimids[1]; dimidsT[1] = dimids[2]; dimidsT[2] = dimids[0];
     err = ncmpi_def_var(ncid, "YXZ_var", NC_INT, NDIMS, dimidsT, &YXZ_id);
-    HANDLE_ERROR
+    ERR
 
     /* define variable with transposed file layout: ZYX -> XZY */
     dimidsT[0] = dimids[2]; dimidsT[1] = dimids[0]; dimidsT[2] = dimids[1];
     err = ncmpi_def_var(ncid, "XZY_var", NC_INT, NDIMS, dimidsT, &XZY_id);
-    HANDLE_ERROR
+    ERR
 
     /* define variable with transposed file layout: ZYX -> XYZ */
     dimidsT[0] = dimids[2]; dimidsT[1] = dimids[1]; dimidsT[2] = dimids[0];
     err = ncmpi_def_var(ncid, "XYZ_var", NC_INT, NDIMS, dimidsT, &XYZ_id);
-    HANDLE_ERROR
+    ERR
 
     /* exit the define mode */
     err = ncmpi_enddef(ncid);
-    HANDLE_ERROR
+    ERR
 
     /* write the whole variable in file: ZYX */
     err = ncmpi_put_vara_int_all(ncid, ZYX_id, starts, counts, buf);
-    HANDLE_ERROR
+    ERR
 
     /* ZYX -> ZXY: */
     imap[1] = 1; imap[2] = counts[2]; imap[0] = counts[1]*counts[2];
@@ -197,7 +193,7 @@ int main(int argc, char **argv)
     countsT[0] = counts[0]; countsT[1] = counts[2]; countsT[2] = counts[1];
     /* write the transposed variable */
     err = ncmpi_put_varm_int_all(ncid, ZXY_id, startsT, countsT, NULL, imap, buf);
-    HANDLE_ERROR
+    ERR
 
     /* ZYX -> YZX: */
     imap[2] = 1; imap[0] = counts[2]; imap[1] = counts[1]*counts[2];
@@ -205,7 +201,7 @@ int main(int argc, char **argv)
     countsT[0] = counts[1]; countsT[1] = counts[0]; countsT[2] = counts[2];
     /* write the transposed variable */
     err = ncmpi_put_varm_int_all(ncid, YZX_id, startsT, countsT, NULL, imap, buf);
-    HANDLE_ERROR
+    ERR
 
     /* ZYX -> YXZ: */
     imap[1] = 1; imap[0] = counts[2]; imap[2] = counts[1]*counts[2];
@@ -213,7 +209,7 @@ int main(int argc, char **argv)
     countsT[0] = counts[1]; countsT[1] = counts[2]; countsT[2] = counts[0];
     /* write the transposed variable */
     err = ncmpi_put_varm_int_all(ncid, YXZ_id, startsT, countsT, NULL, imap, buf);
-    HANDLE_ERROR
+    ERR
 
     /* ZYX -> XZY: */
     imap[0] = 1; imap[2] = counts[2]; imap[1] = counts[1]*counts[2];
@@ -221,7 +217,7 @@ int main(int argc, char **argv)
     countsT[0] = counts[2]; countsT[1] = counts[0]; countsT[2] = counts[1];
     /* write the transposed variable */
     err = ncmpi_put_varm_int_all(ncid, XZY_id, startsT, countsT, NULL, imap, buf);
-    HANDLE_ERROR
+    ERR
 
     /* ZYX -> XYZ: */
     imap[0] = 1; imap[1] = counts[2]; imap[2] = counts[1]*counts[2];
@@ -229,15 +225,15 @@ int main(int argc, char **argv)
     countsT[0] = counts[2]; countsT[1] = counts[1]; countsT[2] = counts[0];
     /* write the transposed variable */
     err = ncmpi_put_varm_int_all(ncid, XYZ_id, startsT, countsT, NULL, imap, buf);
-    HANDLE_ERROR
+    ERR
 
     /* close the file */
     err = ncmpi_close(ncid);
-    HANDLE_ERROR
+    ERR
 
     free(buf);
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

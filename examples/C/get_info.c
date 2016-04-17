@@ -45,9 +45,11 @@
 
 
 #define HANDLE_ERROR {                                \
-    if (err != NC_NOERR)                              \
+    if (err != NC_NOERR) {                            \
         printf("Error at line %d (%s)\n", __LINE__,   \
                ncmpi_strerror(err));                  \
+        nerrs++;                                      \
+    }                                                 \
 }
 
 static void
@@ -85,7 +87,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char *filename="testfile.nc";
-    int i, rank, ncid, verbose=1, err;
+    int i, rank, ncid, verbose=1, err, nerrs=0;
     MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
@@ -140,6 +142,6 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

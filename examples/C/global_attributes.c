@@ -42,6 +42,7 @@
 #define ERR { \
     if(err!=NC_NOERR) { \
         printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
+        nerrs++; \
         goto fn_exit; \
     } \
 }
@@ -62,7 +63,7 @@ int main(int argc, char** argv)
     extern int optind;
     char *filename="testfile.nc";
     char str_att[128], att_name[NC_MAX_NAME];
-    int i, rank, err, verbose=0, ncid, cmode, omode, ngatts;
+    int i, rank, err, nerrs=0, verbose=0, ncid, cmode, omode, ngatts;
     short short_att[10], digit[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     time_t ltime;
 
@@ -129,7 +130,7 @@ int main(int argc, char** argv)
         err = -1;
     }
     MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    if (err < 0) goto fn_exit;
+    if (err < 0) { nerrs++; goto fn_exit; }
 
     /* find the name of first global attribute */
     err = ncmpi_inq_attname(ncid, NC_GLOBAL, 0, att_name);
@@ -142,7 +143,7 @@ int main(int argc, char** argv)
         err = -1;
     }
     MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    if (err < 0) goto fn_exit;
+    if (err < 0) { nerrs++; goto fn_exit; }
 
     /* read attribute value */
     err = ncmpi_get_att_text(ncid, NC_GLOBAL, att_name, &str_att[0]);
@@ -159,7 +160,7 @@ int main(int argc, char** argv)
         err = -1;
     }
     MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    if (err < 0) goto fn_exit;
+    if (err < 0) { nerrs++; goto fn_exit; }
 
     /* read attribute value */
     err = ncmpi_get_att_short(ncid, NC_GLOBAL, att_name, &short_att[0]);
@@ -181,6 +182,6 @@ int main(int argc, char** argv)
 
 fn_exit:
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

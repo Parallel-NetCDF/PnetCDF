@@ -67,7 +67,7 @@
 #define NX 4
 
 
-#define ERR {if(err!=NC_NOERR)printf("Error at %s line=%d: %s\n",__FILE__,__LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char filename[256];
-    int i, j, rank, nprocs, verbose=1, err, rec_varid, fix_varid;
+    int i, j, rank, nprocs, verbose=1, err, nerrs=0, rec_varid, fix_varid;
     int ncid, cmode, dimid[2], buf[NY][NX], no_fill, fill_value, old_mode;
     MPI_Offset  global_ny, global_nx;
     MPI_Offset start[2], count[2];
@@ -201,6 +201,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

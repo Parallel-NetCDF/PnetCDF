@@ -63,6 +63,7 @@
 #define CHECK_ERR { \
     if (err!=NC_NOERR) { \
         printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
+        nerrs++; \
         goto fn_exit; \
     } \
 }
@@ -82,7 +83,7 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char *filename="testfile.nc", str_att[NC_MAX_NAME];
-    int i, rank, nprocs, err, verbose=1, ncid, varid, dimid[2], *buf;
+    int i, rank, nprocs, err, nerrs=0, verbose=1, ncid, varid, dimid[2], *buf;
     float *float_att;
     MPI_Offset len, global_ny, global_nx, local_ny, local_nx;
     MPI_Offset start[2], count[2];
@@ -185,6 +186,6 @@ int main(int argc, char** argv)
 
 fn_exit:
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 
