@@ -27,8 +27,8 @@
  *    data:
  * 
  *    var =
- *      1, 1, 1, 1, 1,
- *      0, 0, 0, 0, 0 ;
+ *      11, 11, 11, 11, 11,
+ *      10, 10, 10, 10, 10 ;
  *    }
  */
 
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     err = ncmpi_enddef(ncid); ERR
 
     /* initialize the contents of the array */
-    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j;
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j+10;
 
     /* construct an MPI derived data type for swapping 1st row with 2nd row */
     blocklengths[0] = blocklengths[1] = NX;
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++)
         for (i=0; i<NX; i++)
-            if (buf[j][i] != j)
+            if (buf[j][i] != j+10)
                 printf("buf[%d][%d] != %d\n",j,i,buf[j][i]);
  
     /* check if root process can write to file header in data mode */
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
     for (j=0; j<2; j++) {
         int val = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
-            if (buf[j][i] != val) {
+            if (buf[j][i] != val+10) {
                 printf("Unexpected buf[%d][%d]=%d != %d\n",j,i,buf[j][i],val);
                 nerrs++;
             }

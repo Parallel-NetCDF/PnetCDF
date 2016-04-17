@@ -41,33 +41,33 @@
  *    data:
  *
  *     var_zy =
- *      0, 0, 0, 0, 0,
- *      0, 0, 0, 0, 0,
- *      0, 0, 0, 0, 0,
- *      0, 0, 0, 0, 0,
- *      0, 0, 0, 0, 0,
- *      1, 1, 1, 1, 1,
- *      1, 1, 1, 1, 1,
- *      1, 1, 1, 1, 1,
- *      1, 1, 1, 1, 1,
- *      1, 1, 1, 1, 1,
- *      2, 2, 2, 2, 2,
- *      2, 2, 2, 2, 2,
- *      2, 2, 2, 2, 2,
- *      2, 2, 2, 2, 2,
- *      2, 2, 2, 2, 2,
- *      3, 3, 3, 3, 3,
- *      3, 3, 3, 3, 3,
- *      3, 3, 3, 3, 3,
- *      3, 3, 3, 3, 3,
- *      3, 3, 3, 3, 3 ;
+ *      10, 10, 10, 10, 10,
+ *      10, 10, 10, 10, 10,
+ *      10, 10, 10, 10, 10,
+ *      10, 10, 10, 10, 10,
+ *      10, 10, 10, 10, 10,
+ *      11, 11, 11, 11, 11,
+ *      11, 11, 11, 11, 11,
+ *      11, 11, 11, 11, 11,
+ *      11, 11, 11, 11, 11,
+ *      11, 11, 11, 11, 11,
+ *      12, 12, 12, 12, 12,
+ *      12, 12, 12, 12, 12,
+ *      12, 12, 12, 12, 12,
+ *      12, 12, 12, 12, 12,
+ *      12, 12, 12, 12, 12,
+ *      13, 13, 13, 13, 13,
+ *      13, 13, 13, 13, 13,
+ *      13, 13, 13, 13, 13,
+ *      13, 13, 13, 13, 13,
+ *      13, 13, 13, 13, 13 ;
  *
  *     var_yx =
- *      0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
- *      0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
- *      0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
- *      0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
- *      0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3 ;
+ *      10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13,
+ *      10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13,
+ *      10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13,
+ *      10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13,
+ *      10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13 ;
  *    }
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
 
     int buffer_len = (NZ+2*ghost_len) * (NY+2*ghost_len);
     buf_zy = (int*) malloc(buffer_len * sizeof(int));
-    for (i=0; i<buffer_len; i++) buf_zy[i] = rank;
+    for (i=0; i<buffer_len; i++) buf_zy[i] = rank+10;
 
     start[0] = NZ * rank; start[1] = 0;
     count[0] = NZ;        count[1] = NY;
@@ -155,7 +155,7 @@ int main(int argc, char** argv)
 
     /* check the contents of put buffer */
     for (i=0; i<buffer_len; i++) {
-        if (buf_zy[i] != rank) {
+        if (buf_zy[i] != rank+10) {
             printf("Error put buffer[%d] is altered\n",i);
             nerrs++;
         }
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
                 }
             }
             else {
-                if (buf_zy[index] != rank) {
+                if (buf_zy[index] != rank+10) {
                     printf("Unexpected get buffer[%d][%d]=%d\n",
                            i,j,buf_zy[index]);
                     nerrs++;
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
 
     buffer_len = (NY+2*ghost_len) * (NX+2*ghost_len);
     buf_yx = (double*) malloc(buffer_len * sizeof(double));
-    for (i=0; i<buffer_len; i++) buf_yx[i] = rank;
+    for (i=0; i<buffer_len; i++) buf_yx[i] = rank+10;
 
     start[0] = 0;  start[1] = NX * rank;
     count[0] = NY; count[1] = NX;
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
 
     /* check the contents of put buffer */
     for (i=0; i<buffer_len; i++) {
-        if (buf_yx[i] != rank) {
+        if (buf_yx[i] != rank+10) {
             printf("Error iput buffer[%d]=%f is altered\n",i,buf_yx[i]);
             nerrs++;
         }
@@ -244,7 +244,7 @@ int main(int argc, char** argv)
                 }
             }
             else {
-                if (buf_yx[index] != rank) {
+                if (buf_yx[index] != rank+10) {
                     printf("Unexpected get buffer[%d][%d]=%f\n",
                            i,j,buf_yx[index]);
                     nerrs++;
