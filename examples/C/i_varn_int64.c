@@ -68,10 +68,7 @@
 #define NX 10
 #define NDIMS 2
 
-#define ERR \
-    if (err != NC_NOERR) { \
-        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
-    }
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 #define ERRS(n,a) { \
     int _i; \
@@ -79,6 +76,7 @@
         if ((a)[_i] != NC_NOERR) { \
             printf("Error at line=%d: err[%d] %s\n", __LINE__, _i, \
                    ncmpi_strerror((a)[_i])); \
+            nerrs++; \
         } \
     } \
 }
@@ -115,9 +113,9 @@ usage(char *argv0)
     fprintf(stderr, help, argv0);
 }
 
-static void check_contents(int ncid, int *varid)
+static int check_contents(int ncid, int *varid)
 {
-    int i, j, err;
+    int i, j, err, nerrs=0;
     long long expected[4][NY*NX] = {{1, 1, 1, 3, 3, 0, 0, 2, 3, 3,
                                      0, 2, 2, 2, 1, 3, 3, 2, 2, 2,
                                      3, 3, 2, 1, 1, 1, 0, 0, 3, 3,
@@ -144,18 +142,21 @@ static void check_contents(int ncid, int *varid)
 
         /* check if the contents of buf are expected */
         for (j=0; j<NY*NX; j++)
-            if (r_buffer[j] != expected[i][j])
+            if (r_buffer[j] != expected[i][j]) {
                 printf("Expected file contents [%d][%d]=%lld, but got %lld\n",
                        i,j,expected[i][j],r_buffer[j]);
+                nerrs++;
+            }
     }
     free(r_buffer);
+    return nerrs;
 }
 
 int main(int argc, char** argv)
 {
     extern int optind;
     char *filename="testfile.nc", exec[128];
-    int i, j, k, n, rank, nprocs, verbose=1, err;
+    int i, j, k, n, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     long long *buffer[4];
     int num_segs[4], req_lens[4];
@@ -293,7 +294,7 @@ int main(int argc, char** argv)
     ERRS(nreqs, sts)
 
     /* check file contents */
-    if (nprocs >= 4) check_contents(ncid, varid);
+    if (nprocs >= 4) nerrs += check_contents(ncid, varid);
 
     /* read using get_varn API and check contents */
     for (i=0; i<nreqs; i++) {
@@ -332,7 +333,7 @@ int main(int argc, char** argv)
     ERRS(nreqs, sts)
 
     /* check file contents */
-    if (nprocs >= 4) check_contents(ncid, varid);
+    if (nprocs >= 4) nerrs += check_contents(ncid, varid);
 
     /* test flexible get API, using a noncontiguous buftype */
     for (i=0; i<nreqs; i++) {
@@ -374,6 +375,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

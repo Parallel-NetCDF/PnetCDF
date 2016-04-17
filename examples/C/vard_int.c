@@ -51,7 +51,7 @@
 
 #define NY 2
 #define NX 3
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
     extern int optind;
     char         filename[256];
-    int          i, j, err, ncid, verbose=1, varid0, varid1, dimids[2];
+    int          i, j, err, nerrs=0, ncid, verbose=1, varid0, varid1, dimids[2];
     int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     MPI_Offset   start[2], count[2], recsize, bufcount, len;
@@ -188,5 +188,5 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }

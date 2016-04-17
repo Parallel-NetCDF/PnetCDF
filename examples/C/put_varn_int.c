@@ -53,7 +53,7 @@
 #define NX 10
 #define NDIMS 2
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char *filename="testfile.nc";
-    int i, j, rank, nprocs, verbose=1, err;
+    int i, j, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid, dimid[2], num_reqs, *buffer;
     MPI_Offset w_len, **starts, **counts;
 
@@ -218,6 +218,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

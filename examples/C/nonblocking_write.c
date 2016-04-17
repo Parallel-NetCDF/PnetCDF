@@ -42,11 +42,7 @@
 #define NDIMS    3
 #define NUM_VARS 10
 
-#define HANDLE_ERROR {                                \
-    if (err != NC_NOERR)                              \
-        printf("Error at line %d (%s)\n", __LINE__,   \
-               ncmpi_strerror(err));                  \
-}
+#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -88,7 +84,7 @@ void print_info(MPI_Info *info_used)
 int main(int argc, char **argv)
 {
     extern int optind;
-    int i, j, verbose=1, err;
+    int i, j, verbose=1, err, nerrs=0;
     int nprocs, len, *buf[NUM_VARS], bufsize, rank;
     int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
@@ -163,33 +159,33 @@ int main(int argc, char **argv)
     for (i=0; i<NDIMS; i++) {
         sprintf(str, "%c", 'x'+i);
         err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i]);
-        HANDLE_ERROR
+        ERR
     }
 
     /* define variables */
     for (i=0; i<NUM_VARS; i++) {
         sprintf(str, "var%d", i);
         err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids, &varids[i]);
-        HANDLE_ERROR
+        ERR
     }
 
     /* exit the define mode */
     err = ncmpi_enddef(ncid);
-    HANDLE_ERROR
+    ERR
 
     /* get all the hints used */
     err = ncmpi_inq_file_info(ncid, &info_used);
-    HANDLE_ERROR
+    ERR
 
     /* write one variable at a time using iput */
     for (i=0; i<NUM_VARS; i++) {
         err = ncmpi_iput_vara_int(ncid, varids[i], starts, counts, buf[i], &req[i]);
-        HANDLE_ERROR
+        ERR
     }
 
     /* wait for the nonblocking I/O to complete */
     err = ncmpi_wait_all(ncid, NUM_VARS, req, st);
-    HANDLE_ERROR
+    ERR
     for (i=0; i<NUM_VARS; i++) {
         if (st[i] != NC_NOERR)
             printf("Error: nonblocking write fails on request %d (%s)\n",
@@ -201,17 +197,17 @@ int main(int argc, char **argv)
     /* bbufsize must be max of data type converted before and after */
     bbufsize = bufsize * NUM_VARS * sizeof(int);
     err = ncmpi_buffer_attach(ncid, bbufsize);
-    HANDLE_ERROR
+    ERR
 
     for (i=0; i<NUM_VARS; i++) {
         err = ncmpi_bput_vara_int(ncid, varids[i], starts, counts, buf[i], &req[i]);
-        HANDLE_ERROR
+        ERR
         /* can safely change contents or free up the buf[i] here */
     }
 
     /* wait for the nonblocking I/O to complete */
     err = ncmpi_wait_all(ncid, NUM_VARS, req, st);
-    HANDLE_ERROR
+    ERR
     for (i=0; i<NUM_VARS; i++) {
         if (st[i] != NC_NOERR)
             printf("Error: nonblocking write fails on request %d (%s)\n",
@@ -220,7 +216,7 @@ int main(int argc, char **argv)
 
     /* detach the temporary buffer */
     err = ncmpi_buffer_detach(ncid);
-    HANDLE_ERROR
+    ERR
 
     MPI_Offset put_size;
     ncmpi_inq_put_size(ncid, &put_size);
@@ -232,7 +228,7 @@ int main(int argc, char **argv)
 
     /* close the file */
     err = ncmpi_close(ncid);
-    HANDLE_ERROR
+    ERR
 
     write_timing = MPI_Wtime() - write_timing;
 
@@ -277,6 +273,6 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 

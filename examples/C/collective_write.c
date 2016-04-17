@@ -44,9 +44,11 @@
 #define NUM_VARS 10
 
 #define HANDLE_ERROR {                                \
-    if (err != NC_NOERR)                              \
+    if (err != NC_NOERR) {                            \
         printf("Error at line %d (%s)\n", __LINE__,   \
                ncmpi_strerror(err));                  \
+        nerrs++;                                      \
+    }                                                 \
 }
 
 static void
@@ -90,7 +92,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char *filename="testfile.nc", str[512];
-    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err;
+    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
     int *buf[NUM_VARS], psizes[NDIMS], dimids[NDIMS], varids[NUM_VARS];
     double write_timing, max_write_timing, write_bw;
     MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS];
@@ -226,6 +228,6 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return nerrs;
 }
 
