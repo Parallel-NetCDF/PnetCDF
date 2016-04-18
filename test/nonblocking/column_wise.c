@@ -45,16 +45,16 @@
  *    data:
  *
  *     var =
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
- *      0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3 ;
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13,
+ *      10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13 ;
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
        by allocatsing buffersd separately */
     for (i=0; i<myNX; i++) {
         buf[i] = (int*) malloc(NY * sizeof(int));
-        for (j=0; j<NY; j++) buf[i][j] = rank;
+        for (j=0; j<NY; j++) buf[i][j] = rank+10;
     }
 
     reqs = (int*) malloc(myNX * sizeof(int));
@@ -147,8 +147,47 @@ int main(int argc, char** argv)
         ERR
         start[1] += nprocs;
     }
+
+    /* test cancelling requests and see if the user write buffer is properly
+     * byte-swapped back to it original form. To do this test, NY must be
+     * changed to use a number > NC_BYTE_SWAP_BUFFER_SIZE/sizeof(int), say
+     * 1025
+     */
+    err = ncmpi_cancel(ncid, num_reqs, reqs, sts);
+    ERR
+
+    /* check if write buffer contents have been altered after cancelling */
+    for (i=0; i<myNX; i++) {
+        for (j=0; j<NY; j++) {
+            if (buf[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%d\n", i,j,buf[i][j]);
+                nerrs++;
+            }
+        }
+    }
+
+    /* post iput requests again */
+    start[1] = rank;
+    num_reqs = 0;
+    for (i=0; i<myNX; i++) {
+        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i],
+                                  &reqs[num_reqs++]);
+        ERR
+        start[1] += nprocs;
+    }
+
     err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
     ERR
+
+    /* check if write buffer contents have been altered after wait */
+    for (i=0; i<myNX; i++) {
+        for (j=0; j<NY; j++) {
+            if (buf[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%d\n", i,j,buf[i][j]);
+                nerrs++;
+            }
+        }
+    }
 
     /* check status of all requests */
     for (i=0; i<num_reqs; i++) {
@@ -178,6 +217,19 @@ int main(int argc, char** argv)
         ERR
         start[1] += nprocs;
     }
+    /* this test is to see if cancelling free up all the internal malloc */
+    err = ncmpi_cancel(ncid, num_reqs, reqs, sts);
+    ERR
+
+    /* post iget requests again */
+    start[1] = rank;
+    num_reqs = 0;
+    for (i=0; i<myNX; i++) {
+        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[i],
+                                  &reqs[num_reqs++]);
+        ERR
+        start[1] += nprocs;
+    }
     err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
     ERR
 
@@ -191,8 +243,8 @@ int main(int argc, char** argv)
 
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++)
-            if (buf[i][j] != rank) {
-                printf("Error: expect buf[%d][%d]=%d but got %d\n",i,j,rank,buf[i][j]);
+            if (buf[i][j] != rank+10) {
+                printf("Error: expect buf[%d][%d]=%d but got %d\n",i,j,rank+10,buf[i][j]);
                 nerrs++;
             }
     }

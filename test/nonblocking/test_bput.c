@@ -1,9 +1,10 @@
-/*
- *  Copyright (C) 2012, Northwestern University
+/*********************************************************************
+ *
+ *  Copyright (C) 2012, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  *
- *  $Id$
- */
+ *********************************************************************/
+/*  $Id$ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
           62, 63, 64, 65, 66, 67,
           68, 69, 70, 71, 72, 73
      */
-    for (j=0; j<4; j++) for (i=0; i<6; i++) var[j][i] = j*6+i + 50;
+    for (j=0; j<4; j++) for (i=0; i<6; i++) var[j][i] = 50.5 + j*6+i;
 
     /* bufsize must be max of data type converted before and after */
     bufsize = 4*6*sizeof(long long);
@@ -82,9 +83,29 @@ int main(int argc, char **argv) {
     start[0]  = 0; start[1]  = 0;
     err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[0][0], &req[0]); ERR
 
+    /* check if write buffer contents have been altered */
+    for (j=0; j<4; j++)
+        for (i=0; i<6; i++) {
+            if (var[j][i] != 50.5 + j*6+i) {
+                printf("Error: put buffer[%d][%d]=%f altered, should be %f\n",
+                       j,i,var[j][i],50.5+j*6+i);
+                nerrs++;
+            }
+        }
+
     /* write the second two columns of the NC variable in the matrix transposed way */
     start[0]  = 0; start[1]  = 2;
     err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[2][0], &req[1]); ERR
+
+    /* check if write buffer contents have been altered */
+    for (j=0; j<4; j++)
+        for (i=0; i<6; i++) {
+            if (var[j][i] != 50.5 + j*6+i) {
+                printf("Error: put buffer[%d][%d]=%f altered, should be %f\n",
+                       j,i,var[j][i],50.5+j*6+i);
+                nerrs++;
+            }
+        }
 
     err = ncmpi_wait_all(ncid, 2, req, status); ERR
 
@@ -110,11 +131,10 @@ int main(int argc, char **argv) {
     /* check if the contents of write buffer have been altered (should not be) */
     for (j=0; j<4; j++) {
         for (i=0; i<6; i++) {
-            if (var[j][i] != j*6+i + 50) {
-#ifdef PRINT_ERR_ON_SCREEN
+            if (var[j][i] != 50.5+j*6+i) {
                 /* this error is a pntecdf internal error, if occurs */
-                printf("Error: bput_varm write buffer has been altered at j=%d i=%d\n",j,i);
-#endif
+                printf("Error: put buffer[%d][%d]=%f altered, should be %f\n",
+                       j,i,var[j][i],50.5+j*6+i);
                 nerrs++;
                 break;
             }

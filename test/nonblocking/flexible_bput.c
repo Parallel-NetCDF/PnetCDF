@@ -187,10 +187,13 @@ int main(int argc, char** argv)
     err = ncmpi_bput_varm(ncid, varid, start, count, stride, imap, buf_int,
                           1, subarray, &req);
     ERR
+    /* check if the contents of put buffer are altered */
+    CHECK_PUT_BUF(buf_int)
+
     err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
     err = status; ERR
 
-    /* check the contents of put buffer */
+    /* check the contents of put buffer are altered */
     CHECK_PUT_BUF(buf_int)
 
     err = ncmpi_buffer_detach(ncid); ERR
@@ -224,10 +227,14 @@ int main(int argc, char** argv)
     err = ncmpi_bput_varm(ncid, varid, start, count, stride, imap, buf_dbl,
                           1, subarray, &req);
     ERR
+
+    /* check the contents of put buffer are altered */
+    CHECK_PUT_BUF(buf_dbl)
+
     err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
     err = status; ERR
 
-    /* check the contents of put buffer */
+    /* check the contents of put buffer are altered */
     CHECK_PUT_BUF(buf_dbl)
 
     err = ncmpi_buffer_detach(ncid); ERR

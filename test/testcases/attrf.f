@@ -120,11 +120,14 @@
      +                            one, buf_int)
           call check(err, 'In nfmpi_put_att_int: ', nerrs)
 
-          ! because of the NF_ERANGE error, the attributes may become
+          ! Because of the NF_ERANGE error, the attributes may become
           ! inconsistent among processes, So NC_EMULTIDEFINE_ATTR_VAL
           ! or NF_EMULTIDEFINE may be returned from nfmpi_enddef.
           ! While in safe mode, the warning message of inconsistent metadata
           ! may appear on the screen. This is expected.
+          ! In addition, when running under valgrind, NF_ERANGE can
+          ! cause skipping requests and a valgrind warning message of
+          ! "uninitialised byte", which is also expected.
           err = nfmpi_enddef(ncid)
           if (err .NE. NF_NOERR .AND. err .NE. NF_EMULTIDEFINE .AND.
      +        err .NE. NF_EMULTIDEFINE_ATTR_VAL)

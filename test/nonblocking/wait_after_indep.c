@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     err = ncmpi_def_var(ncid, "var", NC_UBYTE, NDIMS, dimid, &varid); ERR
     err = ncmpi_enddef(ncid); ERR
 
-    for (i=0; i<NY; i++) for (j=0; j<NX; j++) buffer[i][j] = rank;
+    for (i=0; i<NY; i++) for (j=0; j<NX; j++) buffer[i][j] = rank+10;
 
      start[0] = 0;     start[1] = NX*rank;
      count[0] = NY/2;  count[1] = NX/2;
@@ -68,10 +68,31 @@ int main(int argc, char** argv)
     err = ncmpi_bput_vars_uchar(ncid, varid, start, count, stride,
                                 &buffer[0][0], &req);
     ERR
+
+    /* check if write buffer contents have been altered */
+    for (i=0; i<NY; i++)
+        for (j=0; j<NX; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer[%d][%d]=%hhu altered, should be %d\n",
+                       i,j,buffer[i][j],rank+10);
+                nerrs++;
+            }
+        }
+
     err = ncmpi_end_indep_data(ncid); ERR
 
     /* calling wait API after exiting independent data mode on purpose */
     err = ncmpi_wait_all(ncid, 1, &req, &st); ERR
+
+    /* check if write buffer contents have been altered */
+    for (i=0; i<NY; i++)
+        for (j=0; j<NX; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer[%d][%d]=%hhu altered, should be %d\n",
+                       i,j,buffer[i][j],rank+10);
+                nerrs++;
+            }
+        }
 
     err = ncmpi_buffer_detach(ncid); ERR
     err = ncmpi_close(ncid); ERR
