@@ -31,7 +31,7 @@
 */
 
 /* Prototypes for functions used only in this file */
-static int ncmpii_wait_getput(NC *ncp, int num_reqs, NC_req *req_head,
+static int ncmpii_wait_getput(NC *ncp, int num_reqs, NC_req *reqs,
                               int rw_flag, int io_method);
 
 static int ncmpii_mgetput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
@@ -112,18 +112,14 @@ ncmpii_abuf_coalesce(NC *ncp)
 }
 
 #define FREE_REQUEST(req) {                                                   \
-    if (req->abuf_index >= 0)                                                 \
-        ncp->abuf->occupy_table[req->abuf_index].is_used = 0; /* mark free */ \
-    else if (req->xbuf != NULL && req->xbuf != req->buf)                      \
-        NCI_Free(req->xbuf);                                                  \
-    req->xbuf = NULL;                                                         \
-                                                                              \
-    for (j=0; j<req->num_subreqs; j++)                                        \
-        NCI_Free(req->subreqs[j].start);                                      \
-                                                                              \
-    if (req->num_subreqs > 0)                                                 \
-        NCI_Free(req->subreqs);                                               \
-    NCI_Free(req->start);                                                     \
+    if (req.num_recs > 0) {                                                   \
+        if (req.abuf_index >= 0)                                              \
+            ncp->abuf->occupy_table[req.abuf_index].is_used = 0; /* free */   \
+        else if (req.xbuf != NULL && req.xbuf != req.buf)                     \
+            NCI_Free(req.xbuf);                                               \
+    }                                                                         \
+    req.xbuf = NULL;                                                          \
+    NCI_Free(req.start);                                                      \
 }
 
 /*----< ncmpi_cancel() >------------------------------------------------------*/
@@ -156,120 +152,154 @@ ncmpii_cancel(NC  *ncp,
               int *statuses) /* [num_req] can be NULL (ignore status) */
 {
     int i, j, status=NC_NOERR;
-    NC_req *pre_req, *cur_req, *next_req;
 
-    if (num_req == 0)
-        return NC_NOERR;
+    if (num_req == 0) return NC_NOERR;
 
-    if (num_req == NC_REQ_ALL) {
-        /* cancel all pending requests, ignore req_ids and statuses */
-        cur_req = ncp->head;
-        while (cur_req != NULL) {
-            next_req = cur_req->next;
-            FREE_REQUEST(cur_req)
-            NCI_Free(cur_req);
-            cur_req = next_req;
+    if (num_req == NC_GET_REQ_ALL || num_req == NC_REQ_ALL) {
+        /* cancel all pending read requests, ignore req_ids and statuses */
+        for (i=0; i<ncp->numGetReqs; i++) {
+            if (ncp->get_list[i].num_recs > 0) {
+                if (ncp->get_list[i].imaptype != MPI_DATATYPE_NULL)
+                    MPI_Type_free(&ncp->get_list[i].imaptype);
+                if (!ncp->get_list[i].buftype_is_contig)
+                    MPI_Type_free(&ncp->get_list[i].buftype);
+                if (ncp->get_list[i].tmpBuf != NULL)
+                    MPI_Type_free(&ncp->get_list[i].buftype);
+            }
+            FREE_REQUEST(ncp->get_list[i])
         }
-        ncp->head = NULL;
-        ncp->tail = NULL;
-        return NC_NOERR;
-    }
-    else if (num_req == NC_GET_REQ_ALL) {
-        /* cancel all pending get requests, ignore req_ids and statuses */
-        cur_req = ncp->head;
-        while (cur_req != NULL) {
-            next_req = cur_req->next;
-            if (cur_req->rw_flag == READ_REQ) {
-                if (cur_req == ncp->head)
-                    ncp->tail = ncp->head = next_req;
-                else
-                    ncp->tail->next = next_req;
-
-                FREE_REQUEST(cur_req)
-                NCI_Free(cur_req);
-            }
-            else { /* a put request */
-                ncp->tail = cur_req;
-            }
-            cur_req = next_req;
-        }
-        return NC_NOERR;
-    }
-    else if (num_req == NC_PUT_REQ_ALL) {
-        /* cancel all pending put requests, ignore req_ids and statuses */
-        cur_req = ncp->head;
-        while (cur_req != NULL) {
-            next_req = cur_req->next;
-            if (cur_req->rw_flag == WRITE_REQ) {
-                if (cur_req == ncp->head)
-                    ncp->tail = ncp->head = next_req;
-                else
-                    ncp->tail->next = next_req;
-
-                FREE_REQUEST(cur_req)
-                NCI_Free(cur_req);
-            }
-            else { /* a get request */
-                ncp->tail = cur_req;
-            }
-            cur_req = next_req;
-        }
-        return NC_NOERR;
+        NCI_Free(ncp->get_list);
+        ncp->get_list = NULL;
+        ncp->numGetReqs = 0;
     }
 
-    /* collect the requests from the linked list */
+    if (num_req == NC_PUT_REQ_ALL || num_req == NC_REQ_ALL) {
+        /* cancel all pending write requests, ignore req_ids and statuses */
+        NC_req *put_list = ncp->put_list;
+        for (i=0; i<ncp->numPutReqs; i++) {
+            if (put_list[i].num_recs != 0 && put_list[i].need_swap_back_buf)
+                ncmpii_in_swapn(put_list[i].buf,
+                                put_list[i].bnelems * put_list[i].num_recs,
+                                ncmpix_len_nctype(put_list[i].varp->type));
+
+            if (put_list[i].tmpBuf != NULL && put_list[i].abuf_index == -1)
+                NCI_Free(put_list[i].tmpBuf);
+
+            FREE_REQUEST(put_list[i])
+        }
+        NCI_Free(put_list);
+        ncp->put_list = NULL;
+        ncp->numPutReqs = 0;
+        if (ncp->abuf != NULL) { /* clear out the attached buffer usage */
+            ncp->abuf->tail = 0;
+            ncp->abuf->size_used = 0;
+        }
+    }
+    if (num_req < 0) return NC_NOERR;
+
+    /* check each request ID from the read/write request list */
     for (i=0; i<num_req; i++) {
-        int found_id=-1;
         if (statuses != NULL) statuses[i] = NC_NOERR;
 
-        if (req_ids[i] == NC_REQ_NULL)
-            continue;
+        if (req_ids[i] == NC_REQ_NULL) continue;
 
-        if (ncp->head == NULL) {
-            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
-            continue;
-        }
-
-        pre_req = cur_req = ncp->head;
-        while (cur_req != NULL) {
-            /* there may be more than one node with the same ID */
-            if (cur_req->id == req_ids[i]) {
-                if (cur_req == ncp->head) { /* move ncp->head ahead */
-                    ncp->head = cur_req->next;
-                    pre_req = ncp->head;
+        if (req_ids[i] & 1) {
+            /* check if this is a read request (id is an odd number) */
+            NC_req *get_list = ncp->get_list;
+            int last_index=-1;
+            for (j=0; j<ncp->numGetReqs; j++) {
+                if (get_list[j].id == NC_REQ_NULL) continue;
+                /* there may be more than one node with the same ID */
+                if (get_list[j].id == req_ids[i]) { /* found it */
+                    if (last_index < 0) last_index = j; /* keep first index */
+                    if (get_list[j].num_recs > 0) {
+                        if (get_list[j].imaptype != MPI_DATATYPE_NULL)
+                            MPI_Type_free(&get_list[j].imaptype);
+                        if (!get_list[j].buftype_is_contig)
+                            MPI_Type_free(&get_list[j].buftype);
+                        if (get_list[j].tmpBuf != NULL) {
+                            NCI_Free(get_list[j].tmpBuf);
+                            MPI_Type_free(&get_list[j].buftype);
+                        }
+                    }
+                    FREE_REQUEST(get_list[j])
+                    get_list[j].id = NC_REQ_NULL; /* marked as freed */
                 }
-                else /* move pre_req ahead */
-                    pre_req->next = cur_req->next;
-
-                FREE_REQUEST(cur_req)
-                NCI_Free(cur_req);
-                found_id = req_ids[i];
-                /* move cur_req ahead */
-                cur_req = (pre_req == ncp->head) ? pre_req : pre_req->next;
+                else if (last_index >= 0)
+                    break; /* done with all requests of this ID */
             }
-            else if (found_id >= 0) break;
-            else {
-                if (cur_req == pre_req) cur_req = pre_req->next;
-                else {
-                    pre_req = cur_req;
-                    cur_req = pre_req->next;
-                }
+            if (last_index >= 0) { /* found in read list */
+                req_ids[i] = NC_REQ_NULL;
+                continue; /* loop i, go to next request ID */
             }
         }
+        else {
+            /* check if this is a write request (id is an even number) */
+            NC_req *put_list = ncp->put_list;
+            int last_index=-1;
+            for (j=0; j<ncp->numPutReqs; j++) {
+                if (put_list[j].id == NC_REQ_NULL) continue;
+                /* there may be more than one node with the same ID */
+                if (put_list[j].id == req_ids[i]) {
+                    if (last_index < 0) {
+                        last_index = j;
+                        /* put_list[j].num_recs should be >= 1 */
+                        if (put_list[j].need_swap_back_buf)
+                            ncmpii_in_swapn(put_list[j].buf,
+                                   put_list[j].bnelems * put_list[j].num_recs,
+                                   ncmpix_len_nctype(put_list[j].varp->type));
 
-        if (found_id == -1) { /* no such request ID */
-            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
-            /* retain the first error status */
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
+                        if (put_list[j].tmpBuf != NULL &&
+                            put_list[j].abuf_index == -1)
+                            NCI_Free(put_list[j].tmpBuf);
+                    }
+                    FREE_REQUEST(put_list[j])
+                    put_list[j].id = NC_REQ_NULL; /* marked as freed */
+                }
+                else if (last_index >= 0)
+                    break; /* done with all requests of this ID */
+            }
+            if (last_index >= 0) { /* found in write list */
+                req_ids[i] = NC_REQ_NULL;
+                continue; /* loop i, go to next request ID */
+            }
         }
-        else req_ids[i] = NC_REQ_NULL;
+        /* no such request ID, if the program reached here */
+        if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
+        /* retain the first error status */
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
+    }
+    if (ncp->abuf != NULL) ncmpii_abuf_coalesce(ncp);
+
+    /* coalesce get_list */
+    for (i=0; i<ncp->numGetReqs; i++) /* find the first freed */
+        if (ncp->get_list[i].id == -1)
+            break;
+
+    for (j=i+1; j<ncp->numGetReqs; j++) {
+        if (ncp->get_list[j].id >= 0)
+            ncp->get_list[i++] = ncp->get_list[j];
+    }
+    ncp->numGetReqs = i;
+    if (ncp->numGetReqs == 0) {
+        NCI_Free(ncp->get_list);
+        ncp->get_list = NULL;
     }
 
-    /* make sure ncp->tail pointing to the tail */
-    ncp->tail = ncp->head;
-    while (ncp->tail != NULL && ncp->tail->next != NULL)
-        ncp->tail = ncp->tail->next;
+    /* coalesce put_list */
+    for (i=0; i<ncp->numPutReqs; i++) /* find the first freed */
+        if (ncp->put_list[i].id == -1)
+            break;
+
+    for (j=i+1; j<ncp->numPutReqs; j++) {
+        if (ncp->put_list[j].id >= 0)
+            ncp->put_list[i++] = ncp->put_list[j];
+    }
+    ncp->numPutReqs = i;
+    if (ncp->numPutReqs == 0) {
+        NCI_Free(ncp->put_list);
+        ncp->put_list = NULL;
+    }
 
     return status;
 }
@@ -279,44 +309,34 @@ int
 ncmpi_inq_nreqs(int  ncid,
                 int *nreqs) /* OUT: number of pending requests */
 {
-#ifdef OLD_METHOD
-    int     status, prev_id;
-    NC     *ncp;
-    NC_req *req_ptr;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
-
-/* TODO: add member num_reqs into NC_req to track this info */
-    req_ptr = ncp->head;
-    *nreqs = 0;
-    prev_id = NC_REQ_NULL;
-    while (req_ptr != NULL) {
-        /* some requests in the linked list may share the same ID, they were
-         * corresponding to the subrequests made from iput/iget/bput varn APIs.
-         */
-        if (req_ptr->id != prev_id) {
-            prev_id = req_ptr->id;
-            (*nreqs)++;
-        }
-        req_ptr = req_ptr->next;
-    }
-#else
-    int  status;
+    int  i, status;
     NC  *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    *nreqs = ncp->numGetReqs + ncp->numPutReqs;
-#endif
+    /* cannot just use *nreqs = ncp->numGetReqs + ncp->numPutReqs;
+     * because some request IDs are repeated, such as record variables and
+     * varn requests
+     */
+    *nreqs = 0;
+    for (i=0; i<ncp->numGetReqs; i++) {
+        if (i > 0 && ncp->get_list[i].id == ncp->get_list[i-1].id)
+            continue;
+        (*nreqs)++;
+    }
+    for (i=0; i<ncp->numPutReqs; i++) {
+        if (i > 0 && ncp->put_list[i].id == ncp->put_list[i-1].id)
+            continue;
+        (*nreqs)++;
+    }
 
     return NC_NOERR;
 }
 
 #ifndef ENABLE_REQ_AGGREGATION
 /*----< extract_reqs() >-----------------------------------------------------*/
-/* based on the request type, construct the request ID arrays.
+/* based on the request type, construct an array of unique request IDs.
  * Input value of *num_reqs is NC_REQ_ALL, NC_GET_REQ_ALL, or NC_PUT_REQ_ALL
  * The output of *num_reqs is the number of requests.
  */
@@ -325,65 +345,52 @@ void extract_reqs(NC   *ncp,
                   int  *num_reqs, /* IN/OUT */
                   int **req_ids)  /* OUT */
 {
-    int req_type, prev_id = NC_REQ_NULL;
-    NC_req *req_ptr = ncp->head;
+    int req_type, prev_id;
 
     req_type = *num_reqs;
 
-    /* first while loop finds the number of requests to flush */
+    /* first loop finds the number of unique request IDs
+     * some requests may share the same ID, they were requests to record
+     * variables or called from iput/iget/bput varn APIs.
+     */
     *num_reqs = 0;
-    while (req_ptr != NULL) {
-        /* some requests in the linked list may share the same ID, they were
-         * corresponding to the subrequests made from iput/iget/bput varn APIs.
-         */
-        if (req_type == NC_REQ_ALL) {
-            if (req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
+    prev_id = -1;
+    if (req_type == NC_GET_REQ_ALL || req_type == NC_REQ_ALL) {
+        for (i=0; i<ncp->numGetReqs; i++) {
+            if (ncp->get_list[i].id != prev_id) {
+                prev_id = ncp->get_list[i].id;
                 (*num_reqs)++;
-            }
         }
-        else if (req_type == NC_GET_REQ_ALL) {
-            if (req_ptr->rw_flag == READ_REQ && req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
+    }
+    prev_id = -1;
+    if (req_type == NC_PUT_REQ_ALL || req_type == NC_REQ_ALL) {
+        for (i=0; i<ncp->numPutReqs; i++) {
+            if (ncp->put_list[i].id != prev_id) {
+                prev_id = ncp->put_list[i].id;
                 (*num_reqs)++;
-            }
         }
-        else if (req_type == NC_PUT_REQ_ALL) {
-            if (req_ptr->rw_flag == WRITE_REQ && req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
-                (*num_reqs)++;
-            }
-        }
-        req_ptr = req_ptr->next;
     }
 
     /* allocate ID array */
     (*req_ids) = (int*) NCI_Malloc(*num_reqs * sizeof(int));
 
-    /* second while loop fills the request IDs */
-    req_ptr = ncp->head;
+    /* second loop fills the request IDs */
     *num_reqs = 0;
-    prev_id = NC_REQ_NULL;
-    while (req_ptr != NULL) {
-        if (req_type == NC_REQ_ALL) {
-            if (req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
+    prev_id = -1;
+    if (req_type == NC_GET_REQ_ALL || req_type == NC_REQ_ALL) {
+        for (i=0; i<ncp->numGetReqs; i++) {
+            if (ncp->get_list[i].id != prev_id) {
+                prev_id = ncp->get_list[i].id;
                 (*req_ids)[(*num_reqs)++] = prev_id;
-            }
         }
-        else if (req_type == NC_GET_REQ_ALL) {
-            if (req_ptr->rw_flag == READ_REQ && req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
+    }
+    prev_id = -1;
+    if (req_type == NC_PUT_REQ_ALL || req_type == NC_REQ_ALL) {
+        for (i=0; i<ncp->numPutReqs; i++) {
+            if (ncp->put_list[i].id != prev_id) {
+                prev_id = ncp->put_list[i].id;
                 (*req_ids)[(*num_reqs)++] = prev_id;
-            }
         }
-        else if (req_type == NC_PUT_REQ_ALL) {
-            if (req_ptr->rw_flag == WRITE_REQ && req_ptr->id != prev_id) {
-                prev_id = req_ptr->id;
-                (*req_ids)[(*num_reqs)++] = prev_id;
-            }
-        }
-        req_ptr = req_ptr->next;
     }
 }
 #endif
@@ -400,8 +407,8 @@ void extract_reqs(NC   *ncp,
  * nonblocking requests.
  */
 int
-ncmpi_wait(int ncid,
-           int num_reqs,
+ncmpi_wait(int  ncid,
+           int  num_reqs,
            int *req_ids,  /* [num_reqs]: IN/OUT */
            int *statuses) /* [num_reqs] */
 {
@@ -744,11 +751,9 @@ ncmpii_wait(NC  *ncp,
 {
     int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
-    NC_req *pre_req, *cur_req, *next_req;
-    NC_req *w_req_head=NULL, *w_req_tail=NULL;
-    NC_req *r_req_head=NULL, *r_req_tail=NULL;
+    NC_req *put_list=NULL, *get_list=NULL;
 
-    if (NC_indef(ncp)) { /* This API can only be called in data mode */
+    if (NC_indef(ncp)) { /* wait must be called in data mode */
         DEBUG_ASSIGN_ERROR(err, NC_EINDEFINE)
         goto err_check;
     }
@@ -756,240 +761,126 @@ ncmpii_wait(NC  *ncp,
     /* check the MPI file handles for collective or independent mode */
     if (io_method == INDEP_IO)
         err = ncmpii_check_mpifh(ncp, 0);
-    else if (io_method == COLL_IO)
+    else /* if (io_method == COLL_IO) */
         err = ncmpii_check_mpifh(ncp, 1);
     if (err != NC_NOERR) goto err_check;
 
-    if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
+    num_r_reqs = 0;
+    num_w_reqs = 0;
+    if (num_reqs == NC_GET_REQ_ALL || num_reqs == NC_REQ_ALL) {
         /* in this case, arguments req_ids[] and statuses[] are ignored */
-        cur_req = ncp->head;
-        while (cur_req != NULL) {
-            cur_req->status = NULL;
-            next_req = cur_req->next;
-            if (cur_req->rw_flag == READ_REQ) {
-                /* add cur_req to r_req_tail */
-                if (r_req_head == NULL) {
-                    r_req_head = cur_req;
-                    r_req_tail = cur_req;
-                }
-                else {
-                    r_req_tail->next = cur_req;
-                    r_req_tail = r_req_tail->next;
-                }
-                r_req_tail->next = NULL;
-                num_r_reqs += (cur_req->num_subreqs == 0) ?
-                              1 : cur_req->num_subreqs;
-                /* if this request is to a record variable, then count all
-                 * its subrequests (one for each individual record) */
-            }
-            else { /* add cur_req to w_req_tail */
-                if (w_req_head == NULL) {
-                    w_req_head = cur_req;
-                    w_req_tail = cur_req;
-                }
-                else {
-                    w_req_tail->next = cur_req;
-                    w_req_tail = w_req_tail->next;
-                }
-                w_req_tail->next = NULL;
-                num_w_reqs += (cur_req->num_subreqs == 0) ?
-                              1 : cur_req->num_subreqs;
-                /* if this request is to a record variable, then count all
-                 * its subrequests (one for each individual record) */
-            }
-            cur_req = next_req;
-        }
-        ncp->head       = NULL;
-        ncp->tail       = NULL;
+        num_r_reqs      = ncp->numGetReqs;
+        get_list        = ncp->get_list;
         ncp->numGetReqs = 0;
-        ncp->numPutReqs = 0;
-        num_reqs        = 0; /* to skip the loop below */
+        ncp->get_list   = NULL;
     }
-    else if (num_reqs == NC_GET_REQ_ALL) { /* flush all pending get requests */
+    if (num_reqs == NC_PUT_REQ_ALL || num_reqs == NC_REQ_ALL) {
         /* in this case, arguments req_ids[] and statuses[] are ignored */
-        cur_req = ncp->head;
-        while (cur_req != NULL) {
-            next_req = cur_req->next;
-            if (cur_req->rw_flag == READ_REQ) {
-                cur_req->status = NULL; /* ignore status */
-                if (cur_req == ncp->head)
-                    ncp->tail = ncp->head = next_req;
-                else
-                    ncp->tail->next = next_req;
-
-                /* add cur_req to r_req_tail */
-                if (r_req_head == NULL) {
-                    r_req_head = cur_req;
-                    r_req_tail = cur_req;
-                }
-                else {
-                    r_req_tail->next = cur_req;
-                    r_req_tail = r_req_tail->next;
-                }
-                r_req_tail->next = NULL;
-                num_r_reqs += (cur_req->num_subreqs == 0) ?
-                              1 : cur_req->num_subreqs;
-                /* if this request is to a record variable, then count all
-                 * its subrequests (one for each individual record) */
-            }
-            else { /* a put request */
-                ncp->tail = cur_req;
-            }
-            cur_req = next_req;
-        }
-        ncp->numGetReqs = 0;
-        num_reqs = 0; /* to skip the loop below */
-    }
-    else if (num_reqs == NC_PUT_REQ_ALL) { /* flush all pending put requests */
-        /* in this case, arguments req_ids[] and statuses[] are ignored */
-        cur_req = ncp->head;
-        while (cur_req != NULL) {
-            next_req = cur_req->next;
-            if (cur_req->rw_flag == WRITE_REQ) {
-                cur_req->status = NULL; /* ignore status */
-                if (cur_req == ncp->head)
-                    ncp->tail = ncp->head = next_req;
-                else
-                    ncp->tail->next = next_req;
-
-                /* add cur_req to w_req_tail */
-                if (w_req_head == NULL) {
-                    w_req_head = cur_req;
-                    w_req_tail = cur_req;
-                }
-                else {
-                    w_req_tail->next = cur_req;
-                    w_req_tail = w_req_tail->next;
-                }
-                w_req_tail->next = NULL;
-                num_w_reqs += (cur_req->num_subreqs == 0) ?
-                              1 : cur_req->num_subreqs;
-                /* if this request is to a record variable, then count all
-                 * its subrequests (one for each individual record) */
-            }
-            else { /* a put request */
-                ncp->tail = cur_req;
-            }
-            cur_req = next_req;
-        }
+        num_w_reqs      = ncp->numPutReqs;
+        put_list        = ncp->put_list;
         ncp->numPutReqs = 0;
-        num_reqs = 0; /* to skip the loop below */
+        ncp->put_list   = NULL;
     }
-    /* extract the matched requests from the pending queue (a linked list
-     * containing all nonblocking requests posted by far) into two separate
-     * linked lists for read and write. In the meantime coalesce the pending
-     * request queue.
+
+    /* extract the matched requests from the pending queues (get_list and
+     * put_list containing all nonblocking requests posted by far) into two
+     * separate arrays to be used for read and write separately. In the
+     * meantime, coalesce the pending request lists.
      */
-    for (i=0; i<num_reqs; i++) {
-        int found_id=-1;
+    if (num_reqs > 0) { /* assume the max number of requests */
+        put_list = (NC_req*) NCI_Malloc((size_t)ncp->numPutReqs*sizeof(NC_req));
+        get_list = (NC_req*) NCI_Malloc((size_t)ncp->numGetReqs*sizeof(NC_req));
+    }
 
-        if (statuses != NULL)
-            statuses[i] = NC_NOERR; /* initialize the request's status */
+    /* check each request ID from the read/write request list */
+    for (i=0; i<num_reqs; i++) {
+        /* initialize the request's status */
+        if (statuses != NULL) statuses[i] = NC_NOERR;
 
         if (req_ids[i] == NC_REQ_NULL) continue; /* skip NULL request */
 
-        if (ncp->head == NULL) {
-            /* no more pending requests in the queue, this request is invalid */
-            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
-            /* retain the first error status */
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
-            continue;
-            /* don't break loop i, continue to set the error status */
+        if (req_ids[i] & 1) {
+            /* check if this is a read request (id is an odd number)*/
+            int last_index=-1;
+            for (j=0; j<ncp->numGetReqs; j++) {
+                if (ncp->get_list[j].id == NC_REQ_NULL) continue;
+                /* there may be more than one node with the same ID */
+                if (ncp->get_list[j].id == req_ids[i]) { /* found it */
+                    if (last_index < 0) last_index = j; /* keep first index */
+                    get_list[num_r_reqs] = ncp->get_list[j];
+                    get_list[num_r_reqs].status = (statuses == NULL) ? NULL :
+                                                  statuses + i;
+                    num_r_reqs++;
+                    ncp->get_list[j].id = NC_REQ_NULL; /* marked as freed */
+                }
+                else if (last_index >= 0)
+                    break; /* done with all requests of this ID */
+            }
+            if (last_index >= 0) { /* found in read list */
+                req_ids[i] = NC_REQ_NULL;
+                continue; /* loop i, go to next request ID */
+            }
         }
-
-        /* find req_ids[i] from the pending queue */
-        pre_req = cur_req = ncp->head;
-        while (cur_req != NULL) {
-            /* there may be more than one pending request with the same ID.
-             * In this case, these requests are from a single nonblocking
-             * varn API.
-             */
-            if (cur_req->id == req_ids[i]) { /* found it */
-                /* point status of this request to user's statuses[i] */
-                if (statuses != NULL)
-                    cur_req->status = statuses + i;
-                else
-                    cur_req->status = NULL;
-                /* point all subrequests' statuses to status */
-                for (j=0; j<cur_req->num_subreqs; j++)
-                    cur_req->subreqs[j].status = cur_req->status;
-
-                /* remove cur_req from the ncp->head linked list */
-                if (cur_req == ncp->head) { /* move cur_req to next */
-                    ncp->head = cur_req->next;
-                    pre_req = ncp->head;
+        else { /* check if this is a write request (id is an even number) */
+            int last_index=-1;
+            for (j=0; j<ncp->numPutReqs; j++) {
+                if (ncp->put_list[j].id == NC_REQ_NULL) continue;
+                /* there may be more than one node with the same ID */
+                if (ncp->put_list[j].id == req_ids[i]) {
+                    if (last_index < 0) last_index = j;
+                    put_list[num_w_reqs] = ncp->put_list[j];
+                    put_list[num_w_reqs].status = (statuses == NULL) ? NULL :
+                                                  statuses + i;
+                    num_w_reqs++;
+                    ncp->put_list[j].id = NC_REQ_NULL; /* marked as freed */
                 }
-                else /* move pre_req and cur_req to next */
-                    pre_req->next = cur_req->next;
-
-                next_req = cur_req->next;
-
-                if (cur_req->rw_flag == READ_REQ) {
-                    if (found_id == -1) ncp->numGetReqs--;
-
-                    /* add cur_req to r_req_tail */
-                    if (r_req_head == NULL) {
-                        r_req_head = cur_req;
-                        r_req_tail = cur_req;
-                    }
-                    else {
-                        r_req_tail->next = cur_req;
-                        r_req_tail = r_req_tail->next;
-                    }
-                    r_req_tail->next = NULL;
-                    num_r_reqs += (cur_req->num_subreqs == 0) ?
-                                  1 : cur_req->num_subreqs;
-                    /* if this request is to a record variable, then count all
-                     * its subrequests (one for each individual record) */
-                }
-                else { /* add cur_req to w_req_tail */
-                    if (found_id == -1) ncp->numPutReqs--;
-
-                    if (w_req_head == NULL) {
-                        w_req_head = cur_req;
-                        w_req_tail = cur_req;
-                    }
-                    else {
-                        w_req_tail->next = cur_req;
-                        w_req_tail = w_req_tail->next;
-                    }
-                    w_req_tail->next = NULL;
-                    num_w_reqs += (cur_req->num_subreqs == 0) ?
-                                  1 : cur_req->num_subreqs;
-                    /* if this request is to a record variable, then count all
-                     * its subrequests (one for each individual record) */
-                }
-                found_id = req_ids[i]; /* indicating previous found ID */
-                cur_req = next_req;
+                else if (last_index >= 0)
+                    break; /* done with all requests of this ID */
             }
-            else if (found_id >= 0) {
-                /* same request IDs (for varn APIs) are stored contiguously in
-                 * the linked list so if it is already found and this next
-                 * request has a different ID, no need to continue checking
-                 * the rest list */
-                break; /* while loop */
+            if (last_index >= 0) { /* found in write list */
+                req_ids[i] = NC_REQ_NULL;
+                continue; /* loop i, go to next request ID */
             }
-            else { /* not found: move on to next pending request in the queue */
-                if (cur_req == pre_req) cur_req = pre_req->next;
-                else {
-                    pre_req = cur_req;
-                    cur_req = pre_req->next;
-                }
-            }
-        } /* done with searching the entire linked list for this request ID */
-
-        if (found_id == -1) { /* no such request ID */
-            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
-            if (status == NC_NOERR) /* retain the first error status */
-                DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
         }
-        else req_ids[i] = NC_REQ_NULL;
+        /* no such request ID, if the program reached here */
+        if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
+        /* retain the first error status */
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
     }
-    if (num_reqs > 0) {
-        /* make sure ncp->tail pointing to the tail of the pending request queue */
-        ncp->tail = ncp->head;
-        while (ncp->tail != NULL && ncp->tail->next != NULL)
-            ncp->tail = ncp->tail->next;
+
+    if (num_reqs > 0) { /* not NC_REQ_ALL, NC_GET_REQ_ALL, or NC_PUT_REQ_ALL */
+        /* coalesce get_list */
+        for (i=0; i<ncp->numGetReqs; i++) /* find the first freed */
+            if (ncp->get_list[i].id == -1)
+                break;
+
+        for (j=i+1; j<ncp->numGetReqs; j++) { /* move request ahead */
+            if (ncp->get_list[j].id >= 0)
+                ncp->get_list[i++] = ncp->get_list[j];
+        }
+        ncp->numGetReqs = i;
+        if (ncp->numGetReqs == 0) { /* free get_list */
+            NCI_Free(ncp->get_list);
+            ncp->get_list = NULL;
+        }
+
+        /* coalesce put_list */
+        for (i=0; i<ncp->numPutReqs; i++) /* find the first freed */
+            if (ncp->put_list[i].id == -1)
+                break;
+
+        for (j=i+1; j<ncp->numPutReqs; j++) { /* move request ahead */
+            if (ncp->put_list[j].id >= 0)
+                ncp->put_list[i++] = ncp->put_list[j];
+        }
+        ncp->numPutReqs = i;
+        if (ncp->numPutReqs == 0) { /* free put_list */
+            NCI_Free(ncp->put_list);
+            ncp->put_list = NULL;
+        }
+
+        if (num_w_reqs == 0) NCI_Free(put_list);
+        if (num_r_reqs == 0) NCI_Free(get_list);
     }
 
 err_check:
@@ -1020,11 +911,11 @@ err_check:
 
     /* carry out writes and reads separately (writes first) */
     if (do_write > 0)
-        err = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head, WRITE_REQ,
+        err = ncmpii_wait_getput(ncp, num_w_reqs, put_list, WRITE_REQ,
                                  io_method);
 
     if (do_read > 0)
-        err = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head, READ_REQ,
+        err = ncmpii_wait_getput(ncp, num_r_reqs, get_list, READ_REQ,
                                  io_method);
 
     /* retain the first error status */
@@ -1036,158 +927,154 @@ err_check:
      * unpack/byte-swap/type-convert a temp buffer to the user read buf
      */
 
-    if (w_req_head != NULL) {
-        cur_req = w_req_head;
-        while (cur_req != NULL) {
-            /* must byte-swap the user buffer back to its original Endianness
-               only when the buffer itself has been byte-swapped before,
-               i.e. NOT buftype_is_contig && NOT ncmpii_need_convert() &&
-               ncmpii_need_swap()
-             */
-            if (cur_req->need_swap_back_buf)
-                ncmpii_in_swapn(cur_req->buf, cur_req->bnelems,
-                                ncmpix_len_nctype(cur_req->varp->type));
-            cur_req = cur_req->next;
-        }
-        cur_req = w_req_head;
-        while (cur_req != NULL) {
-            /* free temp space allocated for iput/bput varn requests. Note that
-             * tmpBuf is used only by nonblocking varn APIs. This while loop
-             * is not combined with the one above because the nonblocking varn
-             * APIs may be used. During the posting of a nonblocking varn
-             * request, the temporary buffer, if allocated, can be divided into
-             * several sub-buffers, each used in a separate requests. Only the
-             * first subrequest's tmpBuf will be set to non-NULL, indicating
-             * it should be freed.
-             */
-            if (cur_req->tmpBuf != NULL && cur_req->abuf_index == -1)
-                NCI_Free(cur_req->tmpBuf);
+    for (i=0; i<num_w_reqs; i++) {
+        /* must byte-swap the user buffer back to its original Endianness
+         * only when the buffer itself has been byte-swapped before,
+         * i.e. NOT buftype_is_contig && NOT ncmpii_need_convert() &&
+         * ncmpii_need_swap()
+         * Only the lead record (or the fix-size request) does this
+         */
+        if (put_list[i].num_recs > 0 && put_list[i].need_swap_back_buf)
+            ncmpii_in_swapn(put_list[i].buf,
+                            put_list[i].bnelems * put_list[i].num_recs,
+                            ncmpix_len_nctype(put_list[i].varp->type));
+    }
+    for (i=0; i<num_w_reqs; i++) {
+        /* free space allocated for the request objects
+         * tmpBuf is used only by nonblocking varn APIs. During the posting of
+         * a nonblocking varn request, the temporary buffer, if allocated, can
+         * be divided into several sub-buffers, each used in a separate
+         * requests. If a request's tmpBuf is set to non-NULL, indicating it
+         * should be freed. Because put_list[] may be sorted based on
+         * offset_start, non-NULL tmpBuf can be in any put_list[], this loop
+         * cannot be combined with the above one. We need to go through
+         * put_list[] to check each one for non-NULL tmpBuf.
+         */
+        if (put_list[i].tmpBuf != NULL && put_list[i].abuf_index == -1)
+            NCI_Free(put_list[i].tmpBuf);
 
-            FREE_REQUEST(cur_req)
-            pre_req = cur_req;
-            cur_req = cur_req->next;
-            NCI_Free(pre_req);
-        }
+        FREE_REQUEST(put_list[i])
+    }
+    if (num_w_reqs > 0) {
         /* once the bput requests are served, we reclaim the space and try
          * coalesce the freed space for the attached buffer */
         if (ncp->abuf != NULL) ncmpii_abuf_coalesce(ncp);
+        NCI_Free(put_list);
     }
 
-    if (r_req_head != NULL) {
-        cur_req = r_req_head;
-        while (cur_req != NULL) {
-            NC_var *varp = cur_req->varp;
+    for (i=0; i<num_r_reqs; i++) {
+        void *cbuf, *lbuf;
+        int el_size, position;
+        MPI_Offset insize, bnelems;
+        NC_var *varp;
 
-            /* now, xbuf contains the data read from the file.
-             * It needs to be type-converted + byte-swapped to cbuf
-             */
-            void *cbuf, *lbuf;
-            int el_size, position;
+        /* non-lead record requests skip type-conversion/byte-swap/unpack */
+        if (get_list[i].num_recs == 0) continue;
+
+        /* now, xbuf contains the data read from the file.
+         * It needs to be type-converted + byte-swapped to cbuf
+         */
+        varp = get_list[i].varp;
+        MPI_Type_size(get_list[i].ptype, &el_size);
+        bnelems = get_list[i].bnelems * get_list[i].num_recs;
+        insize = bnelems * el_size;
+        if (insize != (int)insize && status == NC_NOERR)
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+
+        if (ncmpii_need_convert(varp->type, get_list[i].ptype)) {
+            /* need type conversion from the external type to user buffer
+               type */
+            if (get_list[i].imaptype != MPI_DATATYPE_NULL ||
+                !get_list[i].buftype_is_contig)
+                cbuf = NCI_Malloc((size_t)insize);
+            else
+                cbuf = get_list[i].buf;
+
+            /* type convert + byte swap from xbuf to cbuf */
+            DATATYPE_GET_CONVERT(varp->type, get_list[i].xbuf, cbuf, bnelems,
+                                 get_list[i].ptype, err)
+            /* keep the first error */
+            if (get_list[i].status != NULL && *get_list[i].status == NC_NOERR)
+                *get_list[i].status = err;
+            if (status == NC_NOERR) status = err;
+        } else {
+            if (ncmpii_need_swap(varp->type, get_list[i].ptype))
+                ncmpii_in_swapn(get_list[i].xbuf, bnelems,
+                                ncmpix_len_nctype(varp->type));
+            cbuf = get_list[i].xbuf;
+        }
+
+        if (get_list[i].imaptype != MPI_DATATYPE_NULL) {
+            /* handle the case for a true get_varm */
+            if (get_list[i].buftype_is_contig)
+                lbuf = get_list[i].buf;
+            else
+                lbuf = NCI_Malloc((size_t)insize);
+
+            /* unpack cbuf to lbuf based on imaptype */
+            position = 0;
+            MPI_Unpack(cbuf, (int)insize, &position, lbuf, 1,
+                       get_list[i].imaptype, MPI_COMM_SELF);
+            MPI_Type_free(&get_list[i].imaptype);
+
+            /* cbuf is no longer needed
+             * for a true varm call, cbuf cannot be == get_list[i].buf */
+            if (cbuf != get_list[i].xbuf) NCI_Free(cbuf);
+            cbuf = NULL;
+        } else { /* get_vars */
+            lbuf = cbuf;
+        }
+
+        if (!get_list[i].buftype_is_contig) {
+            /* unpack lbuf to buf based on buftype */
+            position = 0;
+            if (get_list[i].bufcount != (int)get_list[i].bufcount &&
+                status == NC_NOERR)
+                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+            MPI_Unpack(lbuf, (int)insize, &position, get_list[i].buf,
+                       (int)get_list[i].bufcount, get_list[i].buftype,
+                       MPI_COMM_SELF);
+            MPI_Type_free(&get_list[i].buftype);
+        }
+        /* lbuf is no longer needed */
+        if (lbuf != get_list[i].buf && lbuf != get_list[i].xbuf)
+            NCI_Free(lbuf);
+    }
+
+    for (i=0; i<num_r_reqs; i++) {
+        /* free space allocated for the request objects
+         * tmpBuf is used only by nonblocking varn APIs. During the posting of
+         * a nonblocking varn request, the temporary buffer, if allocated, can
+         * be divided into several sub-buffers, each used in a separate
+         * requests. If a request's tmpBuf is set to non-NULL, indicating it
+         * should be freed. Because get_list[] may be sorted based on
+         * offset_start, non-NULL tmpBuf can be in any get_list[], this loop
+         * cannot be combined with the above one. We need to go through
+         * get_list[] to check each one for  non-NULL tmpBuf.
+         */
+        if (get_list[i].tmpBuf != NULL) {
+            int position=0, bufsize;
             MPI_Offset insize;
 
-            MPI_Type_size(cur_req->ptype, &el_size);
-            insize = cur_req->bnelems * el_size;
+            /* unpack tmpBuf to userBuf and free tmpBuf
+             * Note this unpack must wait for all above unpacks are done
+             * because get_list[i].buf may be part of get_list[i].userBuf
+             */
+            MPI_Type_size(get_list[i].buftype, &bufsize);
+            insize = get_list[i].bufcount * bufsize;
             if (insize != (int)insize && status == NC_NOERR)
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
-            if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
-                /* need type conversion from the external type to user buffer
-                   type */
-                if (cur_req->imaptype != MPI_DATATYPE_NULL ||
-                    !cur_req->buftype_is_contig)
-                    cbuf = NCI_Malloc((size_t)insize);
-                else
-                    cbuf = cur_req->buf;
-
-                /* type convert + byte swap from xbuf to cbuf */
-                DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf, cbuf,
-                                     cur_req->bnelems, cur_req->ptype, err)
-                /* keep the first error */
-                if (cur_req->status != NULL && *cur_req->status == NC_NOERR)
-                    *cur_req->status = err;
-                if (status == NC_NOERR) status = err;
-            } else {
-                if (ncmpii_need_swap(varp->type, cur_req->ptype))
-                    ncmpii_in_swapn(cur_req->xbuf, cur_req->bnelems,
-                                    ncmpix_len_nctype(varp->type));
-                cbuf = cur_req->xbuf;
-            }
-
-            if (cur_req->imaptype != MPI_DATATYPE_NULL) {
-                /* handle the case for a true get_varm */
-                if (cur_req->buftype_is_contig)
-                    lbuf = cur_req->buf;
-                else
-                    lbuf = NCI_Malloc((size_t)insize);
-
-                /* unpack cbuf to lbuf based on imaptype */
-                position = 0;
-                MPI_Unpack(cbuf, (int)insize, &position, lbuf, 1,
-                           cur_req->imaptype, MPI_COMM_SELF);
-                MPI_Type_free(&cur_req->imaptype);
-
-                /* cbuf is no longer needed
-                 * for a true varm call, cbuf cannot be == cur_req->buf */
-                if (cbuf != cur_req->xbuf) NCI_Free(cbuf);
-                cbuf = NULL;
-            } else { /* get_vars */
-                lbuf = cbuf;
-            }
-
-            if (!cur_req->buftype_is_contig) {
-                /* unpack lbuf to buf based on buftype */
-                position = 0;
-                if (cur_req->bufcount != (int)cur_req->bufcount &&
-                    status == NC_NOERR)
-                    DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-                MPI_Unpack(lbuf, (int)insize, &position, cur_req->buf,
-                           (int)cur_req->bufcount, cur_req->buftype,
-                           MPI_COMM_SELF);
-                MPI_Type_free(&cur_req->buftype);
-            }
-            /* lbuf is no longer needed */
-            if (lbuf != cur_req->buf && lbuf != cur_req->xbuf)
-                NCI_Free(lbuf);
-
-            cur_req = cur_req->next;
+            MPI_Unpack(get_list[i].tmpBuf, (int)insize, &position,
+                       get_list[i].userBuf, (int)get_list[i].bufcount,
+                       get_list[i].buftype, MPI_COMM_SELF);
+            NCI_Free(get_list[i].tmpBuf);
+            MPI_Type_free(&get_list[i].buftype);
         }
-
-        cur_req = r_req_head;
-        while (cur_req != NULL) {
-            /* free space allocated for the request objects
-             * tmpBuf is used only by nonblocking varn APIs. This while loop
-             * is not combined with the one above because the nonblocking varn
-             * APIs may be used. During the posting of a nonblocking varn
-             * request, the temporary buffer, if allocated, can be divided into
-             * several sub-buffers, each used in a separate requests. Only the
-             * first subrequest's tmpBuf will be set to non-NULL, indicating
-             * it should be freed.
-             */
-            if (cur_req->tmpBuf != NULL) {
-                int position=0, bufsize;
-                MPI_Offset insize;
-
-                /* unpack tmpBuf to userBuf and free tmpBuf
-                 * Note this unpack must wait for all above unpacks are done
-                 * because cur_req->buf may be part of cur_req->userBuf
-                 */
-                MPI_Type_size(cur_req->buftype, &bufsize);
-                insize = cur_req->bufcount * bufsize;
-                if (insize != (int)insize && status == NC_NOERR)
-                    DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-
-                MPI_Unpack(cur_req->tmpBuf, (int)insize, &position,
-                           cur_req->userBuf, (int)cur_req->bufcount,
-                           cur_req->buftype, MPI_COMM_SELF);
-                NCI_Free(cur_req->tmpBuf);
-                MPI_Type_free(&cur_req->buftype);
-            }
-            FREE_REQUEST(cur_req)
-            pre_req = cur_req;
-            cur_req = cur_req->next;
-            NCI_Free(pre_req);
-        }
+        FREE_REQUEST(get_list[i])
     }
+    if (num_r_reqs > 0) NCI_Free(get_list);
+
     return status;
 }
 
@@ -1634,7 +1521,7 @@ ncmpii_req_aggregation(NC     *ncp,
      * This approach is because MPI collective I/O requires each process's
      * fileview must contain only monotonic non-decreasing file offsets. Thus
      * if the nonblocking requests interleave with each other (although not
-     * overlapp), then we cannot simply concatenate the filetypes of individual
+     * overlap), then we cannot simply concatenate the filetypes of individual
      * requests. This approach flattens the requests of "interleaved" groups
      * into offset-length pairs, sorts, and merges them into an aggregated
      * filetype. Similar for building an aggregated I/O buffer type.
@@ -1958,42 +1845,26 @@ ncmpii_req_aggregation(NC     *ncp,
 /*----< ncmpii_wait_getput() >------------------------------------------------*/
 static int
 ncmpii_wait_getput(NC     *ncp,
-                   int     num_reqs,  /* # requests including subrequests */
-                   NC_req *req_head,  /* linked list not include subrequests */
+                   int     num_reqs,  /* # requests */
+                   NC_req *reqs,      /* array of requests */
                    int     rw_flag,   /* WRITE_REQ or READ_REQ */
                    int     io_method) /* COLL_IO or INDEP_IO */
 {
-    int i, j, err, status=NC_NOERR, access_interleaved=0;
-    NC_req *reqs, *cur_req;
-
-    /* pack the requests and sub-requests from the linked list into an array,
-     * so they can be sorted */
-    reqs = (NC_req*) NCI_Malloc((size_t)num_reqs * sizeof(NC_req));
-    i = 0;
-    cur_req = req_head;
-    while (cur_req != NULL) {
-        if (cur_req->num_subreqs == 0)
-            reqs[i++] = *cur_req;
-        else {
-            for (j=0; j<cur_req->num_subreqs; j++)
-                reqs[i++] = cur_req->subreqs[j];
-        }
-        cur_req = cur_req->next;
-    }
+    int i, err, status=NC_NOERR, access_interleaved=0;
 
 #ifndef _DISALLOW_POST_NONBLOCKING_API_IN_DEFINE_MODE
     /* move the offset calculation from posting API calls (pack_request) to
-     * wait call, such that posting a nonblocking request can be done in
+     * wait call, such that posting a nonblocking request can be made in
      * define mode  
      */  
     for (i=0; i<num_reqs; i++) {
         /* get the starting file offset for this request */
         ncmpii_get_offset(ncp, reqs[i].varp, reqs[i].start, NULL, NULL,
-                          reqs[i].rw_flag, &reqs[i].offset_start);
+                          rw_flag, &reqs[i].offset_start);
 
         /* get the ending file offset for this request */
         ncmpii_get_offset(ncp, reqs[i].varp, reqs[i].start, reqs[i].count,
-                          reqs[i].stride, reqs[i].rw_flag, &reqs[i].offset_end);
+                          reqs[i].stride, rw_flag, &reqs[i].offset_end);
         reqs[i].offset_end += reqs[i].varp->xsz - 1;
     }
 #endif
@@ -2077,8 +1948,6 @@ ncmpii_wait_getput(NC     *ncp,
             }
         }
     }
-
-    if (reqs != NULL) NCI_Free(reqs);
 
     return status;
 }
@@ -2305,89 +2174,4 @@ ncmpii_mgetput(NC           *ncp,
      */
 
     return status;
-}
-
-/*----< ncmpii_set_iget_callback() >-----------------------------------------*/
-/* this subroutine is only used by iget_varn API family and when its buftype
- * argument indicated a noncontiguous data type. In this case, tmpBuf is never
- * == userBuf
- *
- * iget_varn() divides userBuf into pieces, each is used in an iget_varm() and
- * stored in a cur_req->buf. We cannot unpack each req->buf individually, as
- * req->buf may need to type converted. So at the end of wait(), we unpack the
- * entire tmpBuf into userBuf.
- */
-int ncmpii_set_iget_callback(NC           *ncp,
-                             int           reqid,
-                             void         *tmpBuf,
-                             void         *userBuf,
-                             int           userBufCount,
-                             MPI_Datatype  userBufType)
-{
-    NC_req *cur_req;
-
-    if (reqid == NC_REQ_NULL) return NC_NOERR;
-
-    if (ncp->head == NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
-
-    cur_req = ncp->head;
-    while (cur_req != NULL) {
-        /* find the first linked-list node with reqid, there may be more than
-         * one node with the same request ID
-         */
-        if (cur_req->id == reqid) {
-            MPI_Datatype dup_buftype;
-            MPI_Type_dup(userBufType, &dup_buftype);
-
-            cur_req->tmpBuf = tmpBuf;
-                     /* When not NULL, tmpBuf is an internal buffer allocated
-                      * in iget_varn(). At the end of nonblocking wait call,
-                      * tmpBuf will be unpacked to userBuf and freed.
-                      */
-            cur_req->userBuf = userBuf;
-                     /* User's buffer. iget_varn() divides userBuf into pieces,
-                      * each is used in an iget_varm() and stored in a
-                      * cur_req->buf.
-                      */
-            cur_req->bufcount = userBufCount;
-            cur_req->buftype  = dup_buftype;
-            break;
-        }
-        cur_req = cur_req->next;
-    }
-    if (cur_req == NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
-
-    return NC_NOERR;
-}
-
-/*----< ncmpii_set_iput_callback() >-----------------------------------------*/
-/* this subroutine is only used by iput_varn API family, to tell wait() to
- * free the temporary buffer at the end.
- */
-int ncmpii_set_iput_callback(NC   *ncp,
-                             int   reqid,
-                             void *tmpPutBuf)
-{
-    int found_req_id=NC_REQ_NULL;
-    NC_req *cur_req;
-
-    if (reqid == NC_REQ_NULL) return NC_NOERR;
-
-    if (ncp->head == NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
-
-    cur_req = ncp->head;
-    while (cur_req != NULL) {
-        /* there may be more than one linked-list node with the same ID */
-        if (cur_req->id == reqid) {
-            /* set tmpBuf only on the first node, so it is freed just once */
-            if (found_req_id == NC_REQ_NULL) cur_req->tmpBuf = tmpPutBuf;
-            found_req_id = reqid;
-        }
-        if (found_req_id != NC_REQ_NULL && cur_req->id != found_req_id)
-            break; /* requests with same ID are in consecutive linked nodes */
-        cur_req = cur_req->next;
-    }
-    if (found_req_id == NC_REQ_NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
-
-    return NC_NOERR;
 }

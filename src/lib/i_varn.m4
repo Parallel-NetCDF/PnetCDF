@@ -313,21 +313,30 @@ ncmpii_igetput_varn(NC               *ncp,
         bufp += buflen * el_size;
     }
 
-    /* add callback if buftype is noncontiguous */
     if (free_cbuf) { /* cbuf != buf, cbuf is temp allocated */
         if (rw_flag == READ_REQ) {
-            /* tell wait() to unpack cbuf to buf and free cbuf */
-            status = ncmpii_set_iget_callback(ncp, reqid, cbuf, buf,
-                                              (int)bufcount, buftype);
+            /* Set the last lead request object to let wait() unpack cbuf to
+             * buf and free cbuf */
+            for (i=ncp->numGetReqs-1; i>=0; i--)
+                if (ncp->get_list[i].num_recs > 0)
+                    break;
+            ncp->get_list[i].tmpBuf   = cbuf;
+            ncp->get_list[i].userBuf  = buf;
+            ncp->get_list[i].bufcount = (int)bufcount;
+            MPI_Type_dup(buftype, &ncp->get_list[i].buftype);
         }
         else { /* WRITE_REQ */
             if (use_abuf)
                 /* cbuf has been copied to the attached buffer, so it is safe
                  * to free cbuf now */
                 NCI_Free(cbuf);
-            else
-                /* tell wait() to free cbuf once done */
-                status = ncmpii_set_iput_callback(ncp, reqid, cbuf);
+            else {
+                for (i=ncp->numPutReqs-1; i>=0; i--)
+                    if (ncp->put_list[i].num_recs > 0)
+                        break;
+                    /* Set the last request object to let wait() to free cbuf */
+                    ncp->put_list[i].tmpBuf = cbuf;
+            }
         }
     }
 

@@ -358,11 +358,11 @@ ncmpi_create(MPI_Comm    comm,
 
     fSet(ncp->flags, NC_CREAT);
 
-    /* the linked list storing the outstanding non-blocking requests */
-    ncp->head = NULL;
-    ncp->tail = NULL;
+    /* arrays of outstanding non-blocking requests */
     ncp->numGetReqs = 0;
     ncp->numPutReqs = 0;
+    ncp->get_list   = NULL;
+    ncp->put_list   = NULL;
 
     /* add to the linked list of opened files */
     ncmpii_add_to_NCList(ncp);
@@ -511,10 +511,12 @@ ncmpi_open(MPI_Comm    comm,
         ncmpii_free_NC(ncp);
         return err;
     }
-    ncp->head = NULL;
-    ncp->tail = NULL;
+
+    /* arrays of outstanding non-blocking requests */
     ncp->numGetReqs = 0;
     ncp->numPutReqs = 0;
+    ncp->get_list   = NULL;
+    ncp->put_list   = NULL;
 
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;

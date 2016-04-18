@@ -417,9 +417,9 @@ VARS(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 */
 
 static int
-pack_request(NC *ncp, NC_var *varp, NC_req *req,
-             const MPI_Offset start[], const MPI_Offset count[],
-             const MPI_Offset stride[]);
+add_record_requests(NC *ncp, NC_var *varp, NC_req *req,
+                    const MPI_Offset start[], const MPI_Offset count[],
+                    const MPI_Offset stride[]);
 
 dnl
 dnl VARM_FLEXIBLE
@@ -557,6 +557,7 @@ ncmpii_igetput_varm(NC               *ncp,
     int err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
     int i, abuf_index=-1, el_size, buftype_is_contig;
     int need_convert, need_swap, need_swap_back_buf=0;
+    size_t  dims_chunk;
     MPI_Offset bnelems=0, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
@@ -598,12 +599,14 @@ ncmpii_igetput_varm(NC               *ncp,
     need_convert = ncmpii_need_convert(varp->type, ptype);
     need_swap    = ncmpii_need_swap(varp->type, ptype);
 
-    /* check whether this is a true varm call, if yes, imaptype will be a
-     * newly created MPI derived data type, otherwise MPI_DATATYPE_NULL
-     */
-    err = ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
-                                 &imaptype);
-    if (err != NC_NOERR) return err;
+    if (imap != NULL) {
+        /* check whether this is a true varm call, if yes, imaptype will be a
+         * newly created MPI derived data type, otherwise MPI_DATATYPE_NULL
+         */
+        err = ncmpii_create_imaptype(varp, count, imap, bnelems, el_size,
+                                     ptype, &imaptype);
+        if (err != NC_NOERR) return err;
+    }
 
     if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
         int position, abuf_allocated=0;
@@ -748,7 +751,6 @@ ncmpii_igetput_varm(NC               *ncp,
         }
         /* cbuf is no longer needed */
         if (cbuf != buf && cbuf != xbuf) NCI_Free(cbuf);
-        if (!isSameGroup) ncp->numPutReqs++;
     }
     else { /* rw_flag == READ_REQ */
         /* Type conversion and byte swap for read are done at wait call, we
@@ -758,12 +760,42 @@ ncmpii_igetput_varm(NC               *ncp,
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
         else
             xbuf = NCI_Malloc((size_t)nbytes);
-        if (!isSameGroup) ncp->numGetReqs++;
     }
 
-    /* allocate a new request object to store the write info */
-    req = (NC_req*) NCI_Malloc(sizeof(NC_req));
+    if (rw_flag == WRITE_REQ) {
+        /* allocate write/read request array */
+        if (ncp->numPutReqs % NC_REQUEST_CHUNK == 0)
+            ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list,
+                            NC_REQUEST_CHUNK*sizeof(NC_req));
+        req = ncp->put_list + ncp->numPutReqs;
 
+        /* the new request ID will be an even number (max of write ID + 2) */
+        req->id = 0;
+        if (ncp->numPutReqs > 0)
+            req->id = ncp->put_list[ncp->numPutReqs-1].id + 2;
+
+        ncp->numPutReqs++;
+    }
+    else {  /* READ_REQ */
+        /* allocate write/read request array */
+        if (ncp->numGetReqs % NC_REQUEST_CHUNK == 0)
+            ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list,
+                            NC_REQUEST_CHUNK*sizeof(NC_req));
+        req = ncp->get_list + ncp->numGetReqs;
+
+        /* the new request ID will be an odd number (max of read ID + 2) */
+        req->id = 1;
+        if (ncp->numGetReqs > 0)
+            req->id = ncp->get_list[ncp->numGetReqs-1].id + 2;
+
+        ncp->numGetReqs++;
+    }
+
+    /* if isSameGroup, then this request is from i_varn API */
+    if (isSameGroup && reqid != NULL)
+        req->id = *reqid;
+
+    req->varp               = varp;
     req->buf                = buf;
     req->xbuf               = xbuf;
     req->bnelems            = bnelems;
@@ -772,10 +804,14 @@ ncmpii_igetput_varm(NC               *ncp,
     req->buftype_is_contig  = buftype_is_contig;
     req->need_swap_back_buf = need_swap_back_buf;
     req->imaptype           = imaptype;
-    req->rw_flag            = rw_flag;
     req->abuf_index         = abuf_index;
     req->tmpBuf             = NULL;
     req->userBuf            = NULL;
+    req->status             = NULL;
+    req->num_recs           = 1;   /* For record variable, this will be set to
+                                    * the number of records requested. For
+                                    * fixed-size variable, this will be 1.
+                                    */
 
     /* only when read and buftype is not contiguous, we duplicate buftype for
      * later in the wait call to unpack buffer based on buftype
@@ -785,54 +821,8 @@ ncmpii_igetput_varm(NC               *ncp,
     else
         req->buftype = MPI_DATATYPE_NULL;
 
-    pack_request(ncp, varp, req, start, count, stride);
-
-    /* add the new request to the internal request array (or linked list) */
-    if (ncp->head == NULL) {
-        req->id   = 0;
-        ncp->head = req;
-        ncp->tail = ncp->head;
-    }
-    else { /* add to the tail */
-        if (!isSameGroup)
-            req->id = ncp->tail->id + 1;
-        else if (reqid != NULL)
-            req->id = *reqid;
-        ncp->tail->next = req;
-        ncp->tail = req;
-    }
-    for (i=0; i<req->num_subreqs; i++)
-        req->subreqs[i].id = req->id;
-
-    /* return the request ID */
-    if (reqid != NULL) *reqid = req->id;
-
-    return ((warning != NC_NOERR) ? warning : status);
-}
-
-/*----< pack_request() >------------------------------------------------------*/
-/* if this request is for a record variable, then we break this request into
- * sub-requests, each for a record
- */
-static int
-pack_request(NC               *ncp,
-             NC_var           *varp,
-             NC_req           *req,
-             const MPI_Offset  start[],
-             const MPI_Offset  count[],
-             const MPI_Offset  stride[])
-{
-    int     i, j;
-    size_t  dims_chunk;
-    NC_req *subreqs;
-
-    dims_chunk       = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
-
-    req->varp        = varp;
-    req->next        = NULL;
-    req->subreqs     = NULL;
-    req->num_subreqs = 0;
-
+    /* allocate start/count/stride arrays */
+    dims_chunk = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
     if (stride != NULL)
         req->start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
     else
@@ -845,6 +835,7 @@ pack_request(NC               *ncp,
     else
         req->stride = NULL;
 
+    /* set the values for start/count/stride */
     for (i=0; i<varp->ndims; i++) {
         req->start[i] = start[i];
         req->count[i] = count[i];
@@ -852,90 +843,93 @@ pack_request(NC               *ncp,
             req->stride[i] = stride[i];
     }
 
-#ifdef _DISALLOW_POST_NONBLOCKING_API_IN_DEFINE_MODE
-    /* move the offset calculation to wait time (ncmpii_wait_getput),
-     * such that posting a nonblocking request can be done in define
-     * mode
+    /* if this is a record variable and number of requesting records is > 1,
+     * we split the request, one for each record
      */
-
-    /* get the starting file offset for this request */
-    ncmpii_get_offset(ncp, varp, start, NULL, NULL, req->rw_flag,
-                      &req->offset_start);
-
-    /* get the ending file offset for this request */
-    ncmpii_get_offset(ncp, varp, start, count, stride, req->rw_flag,
-                      &req->offset_end);
-    req->offset_end += varp->xsz - 1;
-#endif
-
-    /* check if this is a record variable. if yes, split the request into
-     * subrequests, one subrequest for a record access. Hereinafter,
-     * treat each request as a non-record variable request
-     */
-
-    /* check if this access is within one record, if yes, no need to create
-       subrequests */
     if (IS_RECVAR(varp) && req->count[0] > 1) {
-        MPI_Offset rec_bufcount = 1;
-        for (i=1; i<varp->ndims; i++)
-            rec_bufcount *= req->count[i];
+        req->num_recs = req->count[0];
 
-        subreqs = (NC_req*) NCI_Malloc((size_t)req->count[0]*sizeof(NC_req));
-        for (i=0; i<req->count[0]; i++) {
-            MPI_Offset span;
-            subreqs[i] = *req; /* inherit most attributes from req */
+        add_record_requests(ncp, varp, req, start, count, stride);
+        /* req->count[0] has been changed to 1 */
 
-            /* each sub-request contains <= one record size */
-            if (stride != NULL)
-                subreqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
-            else
-                subreqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*2);
-
-            subreqs[i].count = subreqs[i].start + varp->ndims;
-
-            if (stride != NULL) {
-                subreqs[i].stride = subreqs[i].count + varp->ndims;
-                subreqs[i].start[0] = req->start[0] + stride[0] * i;
-                subreqs[i].stride[0] = req->stride[0];
-            } else {
-                subreqs[i].stride = NULL;
-                subreqs[i].start[0] = req->start[0] + i;
-            }
-
-            subreqs[i].count[0] = 1;
-            subreqs[i].bnelems = 1;
-            for (j=1; j<varp->ndims; j++) {
-                subreqs[i].start[j]  = req->start[j];
-                subreqs[i].count[j]  = req->count[j];
-                subreqs[i].bnelems  *= subreqs[i].count[j];
-                if (stride != NULL)
-                    subreqs[i].stride[j] = req->stride[j];
-            }
-
-#ifdef _DISALLOW_POST_NONBLOCKING_API_IN_DEFINE_MODE
-            /* move the offset calculation to wait time (ncmpii_wait_getput),
-             * such that posting a nonblocking request can be done in define
-             * mode
-             */
-            ncmpii_get_offset(ncp, varp, subreqs[i].start, NULL, NULL,
-                              subreqs[i].rw_flag, &subreqs[i].offset_start);
-            ncmpii_get_offset(ncp, varp, subreqs[i].start,
-                              subreqs[i].count, subreqs[i].stride,
-                              subreqs[i].rw_flag, &subreqs[i].offset_end);
-            subreqs[i].offset_end += varp->xsz - 1;
-#endif
-            span                = i*rec_bufcount*varp->xsz;
-            subreqs[i].buf      = (char*)(req->buf)  + span;
-            /* xbuf cannot be NULL    assert(req->xbuf != NULL); */
-            subreqs[i].xbuf     = (char*)(req->xbuf) + span;
-            subreqs[i].bufcount = rec_bufcount;
-        }
-        req->num_subreqs = (int)req->count[0];
-        req->subreqs     = subreqs;
-
-        if (req->count[0] != (int)req->count[0])
-            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (rw_flag == WRITE_REQ) ncp->numPutReqs += req->num_recs - 1;
+        else                      ncp->numGetReqs += req->num_recs - 1;
     }
+
+    /* return the request ID */
+    if (reqid != NULL) *reqid = req->id;
+
+    return ((warning != NC_NOERR) ? warning : status);
+}
+
+/*----< add_record_requests() >----------------------------------------------*/
+/* check if this is a record variable. if yes, add new requests for each
+ * record into the list. Hereinafter, treat each request as a non-record
+ * variable request
+ */
+static int
+add_record_requests(NC               *ncp,
+                    NC_var           *varp,
+                    NC_req           *reqs,
+                    const MPI_Offset  start[],
+                    const MPI_Offset  count[],
+                    const MPI_Offset  stride[])
+{
+    int    i, j;
+    size_t dims_chunk = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
+    MPI_Offset record_bufcount, rec_bufsize;
+
+    record_bufcount = 1;
+    for (i=1; i<varp->ndims; i++)
+        record_bufcount *= reqs[0].count[i];
+    rec_bufsize = varp->xsz * record_bufcount;
+
+    /* append each record to the end of list */
+    for (i=1; i<reqs[0].count[0]; i++) {
+
+        reqs[i] = reqs[0]; /* inherit most attributes from reqs[0]
+                            * except below ones, including the ones need
+                            * malloc
+                            */
+
+        if (stride != NULL)
+            reqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
+        else
+            reqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*2);
+
+        reqs[i].count = reqs[i].start + varp->ndims;
+
+        if (stride != NULL) {
+            reqs[i].stride    = reqs[i].count + varp->ndims;
+            reqs[i].start[0]  = reqs[0].start[0] + stride[0] * i;
+            reqs[i].stride[0] = reqs[0].stride[0];
+        } else {
+            reqs[i].stride   = NULL;
+            reqs[i].start[0] = reqs[0].start[0] + i;
+        }
+
+        reqs[i].count[0] = 1;
+        for (j=1; j<varp->ndims; j++) {
+            reqs[i].start[j]  = reqs[0].start[j];
+            reqs[i].count[j]  = reqs[0].count[j];
+            if (stride != NULL)
+                reqs[i].stride[j] = reqs[0].stride[j];
+        }
+
+        /* xbuf cannot be NULL    assert(reqs[0].xbuf != NULL); */
+
+        reqs[i].bnelems  = record_bufcount;
+        reqs[i].buf      = (char*)(reqs[i-1].buf)  + rec_bufsize;
+        reqs[i].xbuf     = (char*)(reqs[i-1].xbuf) + rec_bufsize;
+        reqs[i].num_recs = 0;  /* not the lead request */
+
+        /* reqs[i].bufcount and reqs[i].buftype will not be used in
+         * wait call, only the lead request's matters */
+    }
+
+    /* reset the lead request to one record at a time */
+    reqs[0].bnelems  = record_bufcount;
+    reqs[0].count[0] = 1;
 
     return NC_NOERR;
 }

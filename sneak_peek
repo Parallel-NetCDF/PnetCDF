@@ -33,6 +33,8 @@ This is essentially a placeholder for the next release note ...
   o New optimization
     * Add a table lookup based on Bernstein hash function for checking whether
       a variable/dimension name has already been used.
+    * Replace the use of linked lists for storing nonblocking requests with
+      arrays. This should save time of linked list traversal.
 
   o New utility program
     * none
