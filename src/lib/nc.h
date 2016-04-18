@@ -479,11 +479,12 @@ ncmpi_rename_var(int ncid, int varid, const char *newname);
  *  The PnetCDF non-blocking I/O request type
  */
 typedef struct NC_req {
-    int            id;
-    int            rw_flag;
+    int            id;          /* even number for write, odd for read */
     void          *buf;         /* the original user buffer */
     void          *xbuf;        /* the buffer used to read/write, may point to
                                    the same address as buf */
+    int            num_recs;    /* number of records requested (1 for
+                                   fixed-size variable) */
     int            buftype_is_contig;
     int            need_swap_back_buf;
     int            abuf_index;  /* index in the abuf occupy_table
@@ -506,9 +507,6 @@ typedef struct NC_req {
     MPI_Datatype   ptype;        /* element data type in buftype */
     MPI_Datatype   imaptype;     /* derived data type constructed from imap */
     int           *status;       /* pointer to user's status */
-    int            num_subreqs;  /* each record is a subrequest */
-    struct NC_req *subreqs;      /* [num_subreq] */
-    struct NC_req *next;
 } NC_req;
 
 #define NC_ABUF_DEFAULT_TABLE_SIZE 128
@@ -527,6 +525,9 @@ typedef struct NC_buf {
     int            tail;         /* index of last free entry */
     void          *buf;
 } NC_buf;
+
+/* chunk size for allocating read/write nonblocking request lists */
+#define NC_REQUEST_CHUNK 1024
 
 struct NC {
     /* linked list of currently opened netcdf files */
@@ -560,14 +561,14 @@ struct NC {
     MPI_Offset    recsize;  /* length of 'record': sum of single record sizes
                                of all the record variables */
     MPI_Offset    numrecs;  /* number of 'records' allocated */
-    int           numGetReqs;  /* number of pending nonblocking get requests */
-    int           numPutReqs;  /* number of pending nonblocking put requests */
     NC_dimarray   dims;     /* dimensions defined */
     NC_attrarray  attrs;    /* global attributes defined */
     NC_vararray   vars;     /* variables defined */
-    NC_req       *head;     /* linked list head of nonblocking requests */
-    NC_req       *tail;     /* tail of the linked list */
-    NC_buf       *abuf;     /* attached buffer, used by bput APIs */
+    int           numGetReqs;  /* number of pending nonblocking get requests */
+    int           numPutReqs;  /* number of pending nonblocking put requests */
+    NC_req       *get_list;    /* list of nonblocking read requests */
+    NC_req       *put_list;    /* list of nonblocking write requests */
+    NC_buf       *abuf;        /* attached buffer, used by bput APIs */
 };
 
 #define NC_readonly(ncp) \
@@ -921,13 +922,6 @@ ncmpii_inq_files_opened(int *num, int *ncids);
 
 extern MPI_Datatype
 ncmpii_nc2mpitype(nc_type type);
-
-extern int
-ncmpii_set_iget_callback(NC *ncp, int reqid, void *tmpBuf, void *userBuf,
-                         int userBufCount, MPI_Datatype userBufType);
-
-extern int
-ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpPutBuf);
 
 extern int
 ncmpii_end_indep_data(NC *ncp); 

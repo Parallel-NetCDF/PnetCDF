@@ -262,6 +262,7 @@ inline void
 ncmpii_free_NC(NC *ncp)
 {
     if (ncp == NULL) return;
+// #include "nameT"
 
     ncmpii_free_NC_dimarray(&ncp->dims);
     ncmpii_free_NC_attrarray(&ncp->attrs);
@@ -1454,22 +1455,25 @@ ncmpii_close(NC *ncp)
 
     /* We can cancel or complete all outstanding nonblocking I/O.
      * For now, cancelling makes more sense. */
-    if (ncp->head != NULL) {
 #ifdef COMPLETE_NONBLOCKING_IO
-        ncmpii_wait(ncp, INDEP_IO, NC_REQ_ALL, NULL, NULL);
+    if (ncp->numGetReqs > 0)
+        ncmpii_wait(ncp, INDEP_IO, NC_GET_REQ_ALL, NULL, NULL);
+    if (ncp->numPutReqs > 0)
+        ncmpii_wait(ncp, INDEP_IO, NC_PUT_REQ_ALL, NULL, NULL);
 #else
-        int rank, num=0;
-        NC_req *cur_req=ncp->head;
+    if (ncp->numGetReqs > 0) {
+        int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-
-        while (cur_req != NULL) {
-            num++;
-            cur_req = cur_req->next;
-        }
-        printf("PnetCDF warning: %d nonblocking requests still pending on process %d. Cancelling ...\n",num,rank);
-        ncmpii_cancel(ncp, NC_REQ_ALL, NULL, NULL);
-#endif
+        printf("PnetCDF warning: %d nonblocking get requests still pending on process %d. Cancelling ...\n",ncp->numGetReqs,rank);
+        ncmpii_cancel(ncp, NC_GET_REQ_ALL, NULL, NULL);
     }
+    if (ncp->numPutReqs > 0) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
+        printf("PnetCDF warning: %d nonblocking put requests still pending on process %d. Cancelling ...\n",ncp->numPutReqs,rank);
+        ncmpii_cancel(ncp, NC_PUT_REQ_ALL, NULL, NULL);
+    }
+#endif
 
     /* If the user wants a stronger data consistency by setting NC_SHARE */
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE))

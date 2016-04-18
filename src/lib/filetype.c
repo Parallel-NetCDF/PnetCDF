@@ -148,7 +148,10 @@ NC_start_count_stride_ck(const NC         *ncp,
 }
 
 /*----< ncmpii_get_offset() >------------------------------------------------*/
-/* returns the file offset of the last byte accessed of this request */
+/* returns the file offset of the last byte accessed of this request
+ * If counts is NULL, this is equivalent to the starting offset of this
+ * request
+ */
 int
 ncmpii_get_offset(NC               *ncp,
                   NC_var           *varp,

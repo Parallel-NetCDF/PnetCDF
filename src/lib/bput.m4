@@ -440,9 +440,8 @@ ncmpi_buffer_attach(int        ncid,
 int
 ncmpi_buffer_detach(int ncid)
 {
-    int     status;
-    NC     *ncp;
-    NC_req *cur_req;
+    int  i, status;
+    NC  *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
@@ -451,12 +450,10 @@ ncmpi_buffer_detach(int ncid)
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* this API assumes users are responsible for no pending bput */
-    cur_req = ncp->head;
-    while (cur_req != NULL) { /* check if there is a pending bput */
-        if (cur_req->abuf_index >= 0)
+    for (i=0; i<ncp->numPutReqs; i++) {
+        if (ncp->put_list[i].abuf_index >= 0) /* check for a pending bput */
             DEBUG_RETURN_ERROR(NC_EPENDINGBPUT)
             /* return now, so users can call wait and try detach again */
-        cur_req = cur_req->next;
     }
 
     NCI_Free(ncp->abuf->buf);
@@ -478,9 +475,8 @@ ncmpi_buffer_detach(int         ncid,
                     void       *bufptr,
                     MPI_Offset *bufsize)
 {
-    int     status;
-    NC     *ncp;
-    NC_req *cur_req;
+    int  i, status;
+    NC  *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
@@ -493,11 +489,10 @@ ncmpi_buffer_detach(int         ncid,
     *bufsize         = ncp->abuf->size_allocated;
 
     /* this API assumes users are responsible for no pending bput when called */
-    cur_req = ncp->head;
-    while (cur_req != NULL) { /* check if there is a pending bput */
-        if (cur_req->abuf_index >= 0)
+    for (i=0; i<ncp->numPutReqs; i++) {
+        if (ncp->put_list[i].abuf_index >= 0) /* check for a pending bput */
             DEBUG_RETURN_ERROR(NC_EPENDINGBPUT)
-        cur_req = cur_req->next;
+            /* return now, so users can call wait and try detach again */
     }
 
     NCI_Free(ncp->abuf->occupy_table);
