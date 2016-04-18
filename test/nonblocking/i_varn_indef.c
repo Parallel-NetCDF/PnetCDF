@@ -32,28 +32,28 @@
  *    data:
  *
  *     var0 =
- *      3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
- *      0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
- *      1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
- *      0, 0, 0, 2, 1, 1, 1, 3, 3, 3 ;
+ *      13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+ *      10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+ *      11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+ *      10, 10, 10, 12, 11, 11, 11, 13, 13, 13 ;
  *
  *     var1 =
- *      2, 2, 2, 0, 0, 3, 3, 1, 0, 0,
- *      3, 1, 1, 1, 2, 0, 0, 1, 1, 1,
- *      0, 0, 1, 2, 2, 2, 3, 3, 0, 0,
- *      3, 3, 3, 1, 0, 0, 0, 2, 2, 2 ;
+ *      12, 12, 12, 10, 10, 13, 13, 11, 10, 10,
+ *      13, 11, 11, 11, 12, 10, 10, 11, 11, 11,
+ *      10, 10, 11, 12, 12, 12, 13, 13, 10, 10,
+ *      13, 13, 13, 11, 10, 10, 10, 12, 12, 12 ;
  *
  *     var2 =
- *      1, 1, 1, 3, 3, 2, 2, 0, 3, 3,
- *      2, 0, 0, 0, 1, 3, 3, 0, 0, 0,
- *      3, 3, 0, 1, 1, 1, 2, 2, 3, 3,
- *      2, 2, 2, 0, 3, 3, 3, 1, 1, 1 ;
+ *      11, 11, 11, 13, 13, 12, 12, 10, 13, 13,
+ *      12, 10, 10, 10, 11, 13, 13, 10, 10, 10,
+ *      13, 13, 10, 11, 11, 11, 12, 12, 13, 13,
+ *      12, 12, 12, 10, 13, 13, 13, 11, 11, 11 ;
  *
  *     var3 =
- *      0, 0, 0, 2, 2, 1, 1, 3, 2, 2,
- *      1, 3, 3, 3, 0, 2, 2, 3, 3, 3,
- *      2, 2, 3, 0, 0, 0, 1, 1, 2, 2,
- *      1, 1, 1, 3, 2, 2, 2, 0, 0, 0 ;
+ *      10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
+ *      11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
+ *      12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
+ *      11, 11, 11, 13, 12, 12, 12, 10, 10, 10 ;
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -107,22 +107,22 @@ int check_contents_for_fail(int ncid, int *varid, int lineno)
 {
     /* all processes read entire variables back and check contents */
     int i, j, err, nprocs;
-    long long expected[4][NY*NX] = {{3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
-                                     0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
-                                     1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
-                                     0, 0, 0, 2, 1, 1, 1, 3, 3, 3},
-                                    {2, 2, 2, 0, 0, 3, 3, 1, 0, 0,
-                                     3, 1, 1, 1, 2, 0, 0, 1, 1, 1,
-                                     0, 0, 1, 2, 2, 2, 3, 3, 0, 0,
-                                     3, 3, 3, 1, 0, 0, 0, 2, 2, 2},
-                                    {1, 1, 1, 3, 3, 2, 2, 0, 3, 3,
-                                     2, 0, 0, 0, 1, 3, 3, 0, 0, 0,
-                                     3, 3, 0, 1, 1, 1, 2, 2, 3, 3,
-                                     2, 2, 2, 0, 3, 3, 3, 1, 1, 1},
-                                    {0, 0, 0, 2, 2, 1, 1, 3, 2, 2,
-                                     1, 3, 3, 3, 0, 2, 2, 3, 3, 3,
-                                     2, 2, 3, 0, 0, 0, 1, 1, 2, 2,
-                                     1, 1, 1, 3, 2, 2, 2, 0, 0, 0}};
+    long long expected[4][NY*NX] = {{13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+                                     10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+                                     11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+                                     10, 10, 10, 12, 11, 11, 11, 13, 13, 13},
+                                    {12, 12, 12, 10, 10, 13, 13, 11, 10, 10,
+                                     13, 11, 11, 11, 12, 10, 10, 11, 11, 11,
+                                     10, 10, 11, 12, 12, 12, 13, 13, 10, 10,
+                                     13, 13, 13, 11, 10, 10, 10, 12, 12, 12},
+                                    {11, 11, 11, 13, 13, 12, 12, 10, 13, 13,
+                                     12, 10, 10, 10, 11, 13, 13, 10, 10, 10,
+                                     13, 13, 10, 11, 11, 11, 12, 12, 13, 13,
+                                     12, 12, 12, 10, 13, 13, 13, 11, 11, 11},
+                                    {10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
+                                     11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
+                                     12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
+                                     11, 11, 11, 13, 12, 12, 12, 10, 10, 10}};
 
     long long *r_buffer = (long long*) malloc(NY*NX * sizeof(long long));
 
@@ -267,6 +267,9 @@ int main(int argc, char** argv)
         }
     }
 
+    for (i=0; i<4; i++)
+        buftype[i] = MPI_DATATYPE_NULL;
+
     /* only rank 0, 1, 2, and 3 do I/O:
      * each of ranks 0 to 3 write 4 nonblocking requests */
     nreqs = 4;
@@ -288,7 +291,7 @@ int main(int argc, char** argv)
 
         /* allocate I/O buffer and initialize its contents */
         buffer[i] = (long long*) malloc(req_lens[i] * sizeof(long long));
-        for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank;
+        for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank+10;
     }
     varname[0] = "var0";
     varname[1] = "var1";
@@ -332,6 +335,16 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%lld\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
+
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail(ncid, varid, __LINE__);
 
@@ -342,7 +355,7 @@ int main(int argc, char** argv)
     cbuffer[0] = NULL;
     if (bufsize>0) cbuffer[0] = (long long*) malloc(bufsize * sizeof(long long));
     for (i=1; i<nreqs; i++) cbuffer[i] = cbuffer[i-1] + req_lens[i-1];
-    for (i=0; i<bufsize; i++) cbuffer[0][i] = rank;
+    for (i=0; i<bufsize; i++) cbuffer[0][i] = rank+10;
 
     /* create a new file for writing */
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -362,7 +375,6 @@ int main(int argc, char** argv)
                                        counts[i], cbuffer[i], &reqs[i]);
         ERR
     }
-
     err = ncmpi_enddef(ncid); ERR
 
     /* clear the file contents using a blocking API, before commit the
@@ -371,6 +383,16 @@ int main(int argc, char** argv)
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
+
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]; j++) {
+            if (cbuffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%lld\n", i,j,cbuffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail(ncid, varid, __LINE__);
@@ -421,9 +443,18 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%lld\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
+
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail(ncid, varid, __LINE__);
-
     /* commit read requests */
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs+4, sts);
@@ -433,9 +464,9 @@ int main(int argc, char** argv)
 
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
-            if (cbuffer[i][j] != rank) {
+            if (cbuffer[i][j] != rank+10) {
                 printf("Error at line %d: expecting cbuffer[%d][%d]=%d but got %lld\n",
-                       __LINE__,i,j,rank,cbuffer[i][j]);
+                       __LINE__,i,j,rank+10,cbuffer[i][j]);
                 nerrs++;
             }
         }
@@ -448,7 +479,7 @@ int main(int argc, char** argv)
         MPI_Type_vector(req_lens[i], 1, 2, MPI_LONG_LONG, &buftype[i]);
         MPI_Type_commit(&buftype[i]);
         buffer[i] = (long long*) malloc(req_lens[i] * 2 * sizeof(long long));
-        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank;
+        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank+10;
         rbuffer[i] = (long long*) malloc(req_lens[i] * 2 * sizeof(long long));
         for (j=0; j<req_lens[i]*2; j++) rbuffer[i][j] = -1;
     }
@@ -471,7 +502,6 @@ int main(int argc, char** argv)
                               buffer[i], 1, buftype[i], &reqs[i]); ERR
         ERR
     }
-
     /* test flexible get API, using a noncontiguous buftype */
     for (i=0; i<nreqs; i++) {
         err = ncmpi_iget_varn(ncid, varid[i], my_nsegs[i], starts[i], counts[i],
@@ -481,7 +511,7 @@ int main(int argc, char** argv)
 
     for (i=0; i<nreqs; i++) MPI_Type_free(&buftype[i]);
 
-    /* read using a contiguous buffer. First swap back the starts[] and counts[].
+    /* read using a contiguous buffer. First swap back the starts[] and counts[]
      * swap segment 0 with segment 2 and swap segment 1 with segment 3
      */
     for (i=0; i<nreqs; i++) {
@@ -520,9 +550,9 @@ int main(int argc, char** argv)
                        __LINE__,i,j,rbuffer[i][j]);
                 nerrs++;
             }
-            if (j%2 == 0 && rbuffer[i][j] != rank) {
+            if (j%2 == 0 && rbuffer[i][j] != rank+10) {
                 printf("Error at line %d: expecting rbuffer[%d][%d]=%d but got %lld\n",
-                       __LINE__,i,j,rank,rbuffer[i][j]);
+                       __LINE__,i,j,rank+10,rbuffer[i][j]);
                 nerrs++;
             }
         }
@@ -535,9 +565,9 @@ int main(int argc, char** argv)
 
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
-            if (cbuffer[i][j] != rank) {
+            if (cbuffer[i][j] != rank+10) {
                 printf("Error at line %d: expecting buffer[%d][%d]=%d but got %lld\n",
-                       __LINE__,i,j,rank,cbuffer[i][j]);
+                       __LINE__,i,j,rank+10,cbuffer[i][j]);
                 nerrs++;
             }
         }

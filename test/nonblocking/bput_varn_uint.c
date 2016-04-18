@@ -31,28 +31,28 @@
  *    data:
  *
  *     var0 =
- *      3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
- *      0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
- *      1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
- *      0, 0, 0, 2, 1, 1, 1, 3, 3, 3 ;
- *
+ *      13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+ *      10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+ *      11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+ *      10, 10, 10, 12, 11, 11, 11, 13, 13, 13 ;
  *     var1 =
- *      2, 2, 2, 0, 0, 3, 3, 1, 0, 0,
- *      3, 1, 1, 1, 2, 0, 0, 1, 1, 1,
- *      0, 0, 1, 2, 2, 2, 3, 3, 0, 0,
- *      3, 3, 3, 1, 0, 0, 0, 2, 2, 2 ;
+ *      12, 12, 12, 10, 10, 13, 13, 11, 10, 10,
+ *      13, 11, 11, 11, 12, 10, 10, 11, 11, 11,
+ *      10, 10, 11, 12, 12, 12, 13, 13, 10, 10,
+ *      13, 13, 13, 11, 10, 10, 10, 12, 12, 12 ;
+
  *
  *     var2 =
- *      1, 1, 1, 3, 3, 2, 2, 0, 3, 3,
- *      2, 0, 0, 0, 1, 3, 3, 0, 0, 0,
- *      3, 3, 0, 1, 1, 1, 2, 2, 3, 3,
- *      2, 2, 2, 0, 3, 3, 3, 1, 1, 1 ;
+ *      11, 11, 11, 13, 13, 12, 12, 10, 13, 13,
+ *      12, 10, 10, 10, 11, 13, 13, 10, 10, 10,
+ *      13, 13, 10, 11, 11, 11, 12, 12, 13, 13,
+ *      12, 12, 12, 10, 13, 13, 13, 11, 11, 11 ;
  *
  *     var3 =
- *      0, 0, 0, 2, 2, 1, 1, 3, 2, 2,
- *      1, 3, 3, 3, 0, 2, 2, 3, 3, 3,
- *      2, 2, 3, 0, 0, 0, 1, 1, 2, 2,
- *      1, 1, 1, 3, 2, 2, 2, 0, 0, 0 ;
+ *      10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
+ *      11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
+ *      12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
+ *      11, 11, 11, 13, 12, 12, 12, 10, 10, 10 ;
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -106,22 +106,22 @@ int check_contents_for_fail(int ncid, int *varid)
 {
     /* all processes read entire variables back and check contents */
     int i, j, err, nprocs;
-    unsigned int expected[4][NY*NX] = {{3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
-                                        0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
-                                        1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
-                                        0, 0, 0, 2, 1, 1, 1, 3, 3, 3},
-                                       {2, 2, 2, 0, 0, 3, 3, 1, 0, 0,
-                                        3, 1, 1, 1, 2, 0, 0, 1, 1, 1,
-                                        0, 0, 1, 2, 2, 2, 3, 3, 0, 0,
-                                        3, 3, 3, 1, 0, 0, 0, 2, 2, 2},
-                                       {1, 1, 1, 3, 3, 2, 2, 0, 3, 3,
-                                        2, 0, 0, 0, 1, 3, 3, 0, 0, 0,
-                                        3, 3, 0, 1, 1, 1, 2, 2, 3, 3,
-                                        2, 2, 2, 0, 3, 3, 3, 1, 1, 1},
-                                       {0, 0, 0, 2, 2, 1, 1, 3, 2, 2,
-                                        1, 3, 3, 3, 0, 2, 2, 3, 3, 3,
-                                        2, 2, 3, 0, 0, 0, 1, 1, 2, 2,
-                                        1, 1, 1, 3, 2, 2, 2, 0, 0, 0}};
+    unsigned int expected[4][NY*NX] = {{13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+                                        10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+                                        11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+                                        10, 10, 10, 12, 11, 11, 11, 13, 13, 13},
+                                       {12, 12, 12, 10, 10, 13, 13, 11, 10, 10,
+                                        13, 11, 11, 11, 12, 10, 10, 11, 11, 11,
+                                        10, 10, 11, 12, 12, 12, 13, 13, 10, 10,
+                                        13, 13, 13, 11, 10, 10, 10, 12, 12, 12},
+                                       {11, 11, 11, 13, 13, 12, 12, 10, 13, 13,
+                                        12, 10, 10, 10, 11, 13, 13, 10, 10, 10,
+                                        13, 13, 10, 11, 11, 11, 12, 12, 13, 13,
+                                        12, 12, 12, 10, 13, 13, 13, 11, 11, 11},
+                                       {10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
+                                        11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
+                                        12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
+                                        11, 11, 11, 13, 12, 12, 12, 10, 10, 10}};
 
     unsigned int *r_buffer = (unsigned int*) malloc(NY*NX * sizeof(unsigned int));
 
@@ -334,7 +334,7 @@ int main(int argc, char** argv)
 
         /* allocate I/O buffer and initialize its contents */
         buffer[i] = (unsigned int*) malloc(req_lens[i] * sizeof(unsigned int));
-        for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank;
+        for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank+10;
         bufsize += req_lens[i];
     }
     bufsize *= sizeof(unsigned int);
@@ -353,12 +353,21 @@ int main(int argc, char** argv)
         nerrs++;
     }
 
-    /* write usning varn API, one bput call per variable */
+    /* write using varn API, one bput call per variable */
     clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         err = ncmpi_bput_varn_uint(ncid, varid[i], my_nsegs[i], starts[i],
                                    counts[i], buffer[i], &reqs[i]);
         ERR
+    }
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%u\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
@@ -385,6 +394,15 @@ int main(int argc, char** argv)
                                    counts[i], buffer[i], &reqs[i]);
         ERR
     }
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%u\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
@@ -404,18 +422,36 @@ int main(int argc, char** argv)
         MPI_Type_vector(req_lens[i], 1, 2, MPI_UNSIGNED, &buftype);
         MPI_Type_commit(&buftype);
         buffer[i] = (unsigned int*)malloc(req_lens[i]*2*sizeof(unsigned int));
-        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank;
+        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank+10;
 
         err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[i],
                               counts[i], buffer[i], 1, buftype, &reqs[i]);
         ERR
         MPI_Type_free(&buftype);
     }
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]*2; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%u\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]*2; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%u\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
     check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
 
     /* all processes read entire variables back and check contents */
@@ -434,18 +470,36 @@ int main(int argc, char** argv)
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, MPI_UNSIGNED, &buftype);
         MPI_Type_commit(&buftype);
-        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank;
+        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank+10;
 
         err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[i],
                               counts[i], buffer[i], 1, buftype, &reqs[i]);
         ERR
         MPI_Type_free(&buftype);
     }
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]*2; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%u\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
+    /* check if write buffer contents have been altered */
+    for (i=0; i<nreqs; i++) {
+        for (j=0; j<req_lens[i]*2; j++) {
+            if (buffer[i][j] != rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=%u\n", i,j,buffer[i][j]);
+                nerrs++;
+            }
+        }
+    }
     check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
 
     /* all processes read entire variables back and check contents */

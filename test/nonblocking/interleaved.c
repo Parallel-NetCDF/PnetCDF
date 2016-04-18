@@ -55,6 +55,12 @@
 
 #define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
 
+#define CHECK_CONTENTS(exp) { \
+    if (buf[i] != (exp)) { \
+        printf("Error: put buffer[%d] altered to %d, expect %d\n",i,buf[i],(exp)); \
+        nerrs++; \
+    } \
+}
 int main(int argc, char** argv)
 {
     char filename[256];
@@ -143,6 +149,14 @@ int main(int argc, char** argv)
 
     err = ncmpi_wait_all(ncid, 3, req, st);
     ERR
+
+    /* check if write buffer contents have been altered */
+    for (i=0;  i<5;  i++) CHECK_CONTENTS(10 + i)
+    for (i=5;  i<10; i++) CHECK_CONTENTS(10 + i +  5)
+    for (i=10; i<15; i++) CHECK_CONTENTS(10 + i + 10)
+    for (i=15; i<20; i++) CHECK_CONTENTS(10 + i - 10)
+    for (i=20; i<25; i++) CHECK_CONTENTS(10 + i -  5)
+    for (i=25; i<30; i++) CHECK_CONTENTS(10 + i)
 
     err = ncmpi_close(ncid);
     ERR
