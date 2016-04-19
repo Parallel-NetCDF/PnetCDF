@@ -1852,10 +1852,9 @@ ncmpii_wait_getput(NC     *ncp,
 {
     int i, err, status=NC_NOERR, access_interleaved=0;
 
-#ifndef _DISALLOW_POST_NONBLOCKING_API_IN_DEFINE_MODE
     /* move the offset calculation from posting API calls (pack_request) to
      * wait call, such that posting a nonblocking request can be made in
-     * define mode  
+     * define mode
      */  
     for (i=0; i<num_reqs; i++) {
         /* get the starting file offset for this request */
@@ -1867,7 +1866,6 @@ ncmpii_wait_getput(NC     *ncp,
                           reqs[i].stride, rw_flag, &reqs[i].offset_end);
         reqs[i].offset_end += reqs[i].varp->xsz - 1;
     }
-#endif
 
     /* check if reqs[].offset_start are in an increasing order */
     for (i=1; i<num_reqs; i++) {
