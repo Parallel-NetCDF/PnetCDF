@@ -16,10 +16,6 @@ addons:
     build_command:   "make -j 4"
     branch_pattern: master
 
-os:
-  - linux
-  - osx
-
 before_install:
   - test -n $CC && unset CC
   - sudo apt-get update -qq
