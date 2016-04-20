@@ -148,6 +148,13 @@ int main(int argc, char** argv)
         start[1] += nprocs;
     }
 
+    /* try re-order the request list */
+    for (i=0; i<myNX/2; i++) {
+        int tmp = reqs[2*i];
+        reqs[2*i] = reqs[2*i+1];
+        reqs[2*i+1] = tmp;
+    }
+
     /* test cancelling requests and see if the user write buffer is properly
      * byte-swapped back to it original form. To do this test, NY must be
      * changed to use a number > NC_BYTE_SWAP_BUFFER_SIZE/sizeof(int), say
@@ -174,6 +181,13 @@ int main(int argc, char** argv)
                                   &reqs[num_reqs++]);
         ERR
         start[1] += nprocs;
+    }
+
+    /* try re-order the request list */
+    for (i=0; i<myNX/2; i++) {
+        int tmp = reqs[2*i];
+        reqs[2*i] = reqs[2*i+1];
+        reqs[2*i+1] = tmp;
     }
 
     err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
