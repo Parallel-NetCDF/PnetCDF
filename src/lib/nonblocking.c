@@ -231,6 +231,10 @@ ncmpii_cancel(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in read list */
+                /* using first_non_null_get only makes sense when the request
+                 * IDs in get_list[] are monotonically nondecreasing, which is
+                 * the case in PnetCDF
+                 */
                 if (last_index == first_non_null_get) first_non_null_get = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
@@ -264,6 +268,10 @@ ncmpii_cancel(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in write list */
+                /* using first_non_null_put only makes sense when the request
+                 * IDs in put_list[] are monotonically nondecreasing, which is
+                 * the case in PnetCDF
+                 */
                 if (last_index == first_non_null_put) first_non_null_put = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
@@ -278,13 +286,11 @@ ncmpii_cancel(NC  *ncp,
     if (ncp->abuf != NULL) ncmpii_abuf_coalesce(ncp);
 
     /* coalesce get_list */
-    for (i=0; i<ncp->numGetReqs; i++) /* find the first freed */
-        if (ncp->get_list[i].id == -1)
-            break;
-
-    for (j=i+1; j<ncp->numGetReqs; j++) {
-        if (ncp->get_list[j].id >= 0)
-            ncp->get_list[i++] = ncp->get_list[j];
+    for (i=0,j=first_non_null_get; j<ncp->numGetReqs; j++) {
+        for (; ncp->get_list[j].id==NC_REQ_NULL && j<ncp->numGetReqs; j++);
+        if (j == ncp->numGetReqs) break;
+        if (i < j) ncp->get_list[i] = ncp->get_list[j];
+        i++;
     }
     ncp->numGetReqs = i;
     if (ncp->numGetReqs == 0) {
@@ -293,13 +299,11 @@ ncmpii_cancel(NC  *ncp,
     }
 
     /* coalesce put_list */
-    for (i=0; i<ncp->numPutReqs; i++) /* find the first freed */
-        if (ncp->put_list[i].id == -1)
-            break;
-
-    for (j=i+1; j<ncp->numPutReqs; j++) {
-        if (ncp->put_list[j].id >= 0)
-            ncp->put_list[i++] = ncp->put_list[j];
+    for (i=0,j=first_non_null_put; j<ncp->numPutReqs; j++) {
+        for (; ncp->put_list[j].id==NC_REQ_NULL && j<ncp->numPutReqs; j++);
+        if (j == ncp->numPutReqs) break;
+        if (i < j) ncp->put_list[i] = ncp->put_list[j];
+        i++;
     }
     ncp->numPutReqs = i;
     if (ncp->numPutReqs == 0) {
@@ -826,6 +830,10 @@ ncmpii_wait(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in read list */
+                /* using first_non_null_get only makes sense when the request
+                 * IDs in get_list[] are monotonically nondecreasing, which is
+                 * the case in PnetCDF
+                 */
                 if (last_index == first_non_null_get) first_non_null_get = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
@@ -848,6 +856,10 @@ ncmpii_wait(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in write list */
+                /* using first_non_null_put only makes sense when the request
+                 * IDs in put_list[] are monotonically nondecreasing, which is
+                 * the case in PnetCDF
+                 */
                 if (last_index == first_non_null_put) first_non_null_put = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
@@ -861,28 +873,24 @@ ncmpii_wait(NC  *ncp,
 
     if (num_reqs > 0) { /* not NC_REQ_ALL, NC_GET_REQ_ALL, or NC_PUT_REQ_ALL */
         /* coalesce get_list */
-        for (i=0; i<ncp->numGetReqs; i++) /* find the first freed */
-            if (ncp->get_list[i].id == -1)
-                break;
-
-        for (j=i+1; j<ncp->numGetReqs; j++) { /* move request ahead */
-            if (ncp->get_list[j].id >= 0)
-                ncp->get_list[i++] = ncp->get_list[j];
+        for (i=0,j=first_non_null_get; j<ncp->numGetReqs; j++) {
+            for (; ncp->get_list[j].id==NC_REQ_NULL && j<ncp->numGetReqs; j++);
+            if (j == ncp->numGetReqs) break;
+            if (i < j) ncp->get_list[i] = ncp->get_list[j];
+            i++;
         }
         ncp->numGetReqs = i;
-        if (ncp->numGetReqs == 0) { /* free get_list */
+        if (ncp->numGetReqs == 0) {
             NCI_Free(ncp->get_list);
             ncp->get_list = NULL;
         }
 
         /* coalesce put_list */
-        for (i=0; i<ncp->numPutReqs; i++) /* find the first freed */
-            if (ncp->put_list[i].id == -1)
-                break;
-
-        for (j=i+1; j<ncp->numPutReqs; j++) { /* move request ahead */
-            if (ncp->put_list[j].id >= 0)
-                ncp->put_list[i++] = ncp->put_list[j];
+        for (i=0,j=first_non_null_put; j<ncp->numPutReqs; j++) {
+            for (; ncp->put_list[j].id==NC_REQ_NULL && j<ncp->numPutReqs; j++);
+            if (j == ncp->numPutReqs) break;
+            if (i < j) ncp->put_list[i] = ncp->put_list[j];
+            i++;
         }
         ncp->numPutReqs = i;
         if (ncp->numPutReqs == 0) { /* free put_list */
