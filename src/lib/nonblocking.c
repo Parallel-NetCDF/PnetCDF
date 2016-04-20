@@ -151,7 +151,7 @@ ncmpii_cancel(NC  *ncp,
               int *req_ids,  /* [num_req]: IN/OUT */
               int *statuses) /* [num_req] can be NULL (ignore status) */
 {
-    int i, j, status=NC_NOERR;
+    int i, j, first_non_null_get, first_non_null_put, status=NC_NOERR;
 
     if (num_req == 0) return NC_NOERR;
 
@@ -198,6 +198,8 @@ ncmpii_cancel(NC  *ncp,
     if (num_req < 0) return NC_NOERR;
 
     /* check each request ID from the read/write request list */
+    first_non_null_get = 0;
+    first_non_null_put = 0;
     for (i=0; i<num_req; i++) {
         if (statuses != NULL) statuses[i] = NC_NOERR;
 
@@ -207,7 +209,7 @@ ncmpii_cancel(NC  *ncp,
             /* check if this is a read request (id is an odd number) */
             NC_req *get_list = ncp->get_list;
             int last_index=-1;
-            for (j=0; j<ncp->numGetReqs; j++) {
+            for (j=first_non_null_get; j<ncp->numGetReqs; j++) {
                 if (get_list[j].id == NC_REQ_NULL) continue;
                 /* there may be more than one node with the same ID */
                 if (get_list[j].id == req_ids[i]) { /* found it */
@@ -229,15 +231,17 @@ ncmpii_cancel(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in read list */
+                if (last_index == first_non_null_get) first_non_null_get = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
             }
+            /* else means req_ids[i] is not found in get_list[] */
         }
         else {
             /* check if this is a write request (id is an even number) */
             NC_req *put_list = ncp->put_list;
             int last_index=-1;
-            for (j=0; j<ncp->numPutReqs; j++) {
+            for (j=first_non_null_put; j<ncp->numPutReqs; j++) {
                 if (put_list[j].id == NC_REQ_NULL) continue;
                 /* there may be more than one node with the same ID */
                 if (put_list[j].id == req_ids[i]) {
@@ -260,9 +264,11 @@ ncmpii_cancel(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in write list */
+                if (last_index == first_non_null_put) first_non_null_put = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
             }
+            /* else means req_ids[i] is not found in put_list[] */
         }
         /* no such request ID, if the program reached here */
         if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
@@ -751,6 +757,7 @@ ncmpii_wait(NC  *ncp,
 {
     int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
+    int first_non_null_get, first_non_null_put;
     NC_req *put_list=NULL, *get_list=NULL;
 
     if (NC_indef(ncp)) { /* wait must be called in data mode */
@@ -793,6 +800,8 @@ ncmpii_wait(NC  *ncp,
     }
 
     /* check each request ID from the read/write request list */
+    first_non_null_get = 0;
+    first_non_null_put = 0;
     for (i=0; i<num_reqs; i++) {
         /* initialize the request's status */
         if (statuses != NULL) statuses[i] = NC_NOERR;
@@ -802,7 +811,7 @@ ncmpii_wait(NC  *ncp,
         if (req_ids[i] & 1) {
             /* check if this is a read request (id is an odd number)*/
             int last_index=-1;
-            for (j=0; j<ncp->numGetReqs; j++) {
+            for (j=first_non_null_get; j<ncp->numGetReqs; j++) {
                 if (ncp->get_list[j].id == NC_REQ_NULL) continue;
                 /* there may be more than one node with the same ID */
                 if (ncp->get_list[j].id == req_ids[i]) { /* found it */
@@ -817,13 +826,14 @@ ncmpii_wait(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in read list */
+                if (last_index == first_non_null_get) first_non_null_get = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
             }
         }
         else { /* check if this is a write request (id is an even number) */
             int last_index=-1;
-            for (j=0; j<ncp->numPutReqs; j++) {
+            for (j=first_non_null_put; j<ncp->numPutReqs; j++) {
                 if (ncp->put_list[j].id == NC_REQ_NULL) continue;
                 /* there may be more than one node with the same ID */
                 if (ncp->put_list[j].id == req_ids[i]) {
@@ -838,6 +848,7 @@ ncmpii_wait(NC  *ncp,
                     break; /* done with all requests of this ID */
             }
             if (last_index >= 0) { /* found in write list */
+                if (last_index == first_non_null_put) first_non_null_put = j;
                 req_ids[i] = NC_REQ_NULL;
                 continue; /* loop i, go to next request ID */
             }

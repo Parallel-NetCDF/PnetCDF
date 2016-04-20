@@ -262,7 +262,6 @@ inline void
 ncmpii_free_NC(NC *ncp)
 {
     if (ncp == NULL) return;
-// #include "nameT"
 
     ncmpii_free_NC_dimarray(&ncp->dims);
     ncmpii_free_NC_attrarray(&ncp->attrs);
