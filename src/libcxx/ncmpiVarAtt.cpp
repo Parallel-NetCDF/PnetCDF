@@ -52,9 +52,8 @@ NcmpiVarAtt::NcmpiVarAtt(const NcmpiGroup& grp, const NcmpiVar& ncmpiVar, const 
   varId = ncmpiVar.getId();
   // get the name of this attribute
   char attName[NC_MAX_NAME+1];
-  ncmpiCheck(ncmpi_inq_attname(groupId,varId, index, attName),__FILE__,__LINE__);
   ncmpiCheck(ncmpi_inq_attname(groupId,varId,index,attName),__FILE__,__LINE__);
-  myName = attName;
+  myName = std::string(attName);
 }
 
 // Returns the NcmpiVar parent object.
