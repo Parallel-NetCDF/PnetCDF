@@ -653,6 +653,13 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     /* j is now the number of valid write segments */
 
+    if (j == 0) {
+        NCI_Free(noFill);
+        NCI_Free(count);
+        NCI_Free(offset);
+        return NC_NOERR;
+    }
+
     /* allocate one contiguous buffer space for all writes */
     blocklengths = (int*) NCI_Malloc(j * sizeof(int));
     buf = NCI_Malloc(buf_len);
