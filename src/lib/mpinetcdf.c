@@ -348,8 +348,10 @@ ncmpi_create(MPI_Comm    comm,
     /* find the true header size (not-yet aligned) */
     ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
+    /* PnetCDF's default mode is no fill */
     fSet(ncp->flags, NC_NOFILL);
 
+    /* open the file in parallel */
     err = ncmpiio_create(comm, path, cmode, env_info, ncp);
     if (err != NC_NOERR) { /* fatal error */
         ncmpii_free_NC(ncp);
@@ -358,7 +360,7 @@ ncmpi_create(MPI_Comm    comm,
 
     fSet(ncp->flags, NC_CREAT);
 
-    /* arrays of outstanding non-blocking requests */
+    /* initialize arrays storing pending non-blocking requests */
     ncp->numGetReqs = 0;
     ncp->numPutReqs = 0;
     ncp->get_list   = NULL;
@@ -477,9 +479,9 @@ ncmpi_open(MPI_Comm    comm,
         if (flag) chunksize = atoll(value);
     }
 
+    /* allocate NC file object */
     ncp = ncmpii_new_NC(&chunksize);
-    if (ncp == NULL)
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    if (ncp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
@@ -496,28 +498,32 @@ ncmpi_open(MPI_Comm    comm,
     ncp->nc_num_subfiles = 0;
 #endif
 
+    /* open the file in parallel */
     err = ncmpiio_open(comm, path, omode, env_info, ncp);
     if (err != NC_NOERR) { /* fatal error */
         ncmpii_free_NC(ncp);
         return err;
     }
 
+    /* PnetCDF's default mode is no fill */
     assert(ncp->flags == 0);
     fSet(ncp->flags, NC_NOFILL);
 
-    err = ncmpii_hdr_get_NC(ncp); /* read header from file */
+    /* read header from file into an NC object pointed by ncp */
+    err = ncmpii_hdr_get_NC(ncp);
     if (err != NC_NOERR) { /* fatal error */
         ncmpiio_close(ncp->nciop, 0);
         ncmpii_free_NC(ncp);
         return err;
     }
 
-    /* arrays of outstanding non-blocking requests */
+    /* initialize arrays storing pending non-blocking requests */
     ncp->numGetReqs = 0;
     ncp->numPutReqs = 0;
     ncp->get_list   = NULL;
     ncp->put_list   = NULL;
 
+    /* add NC object to the linked list of opened files */
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
 

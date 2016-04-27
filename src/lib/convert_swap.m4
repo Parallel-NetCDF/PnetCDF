@@ -76,7 +76,7 @@ ncmpii_nc2mpitype(nc_type type)
 
 /*----< ncmpii_need_convert() >----------------------------------------------*/
 /* netCDF specification make a special case for type conversion between
- * uchar and scahr: do not check for range error. See
+ * uchar and schar: do not check for range error. See
  * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
  */
 inline int

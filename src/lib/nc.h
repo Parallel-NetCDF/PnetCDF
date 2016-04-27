@@ -70,7 +70,7 @@ enum API_KIND {
 #endif
 
 /* ncmpi_create/ncmpi_open set up header to be 'chunksize' big and to grow
- * by 'chunksize' as new items adde. This used to be 4k. 256k lets us read
+ * by 'chunksize' as new items added. This used to be 4k. 256k lets us read
  * in an entire climate header in one go */
 #define NC_DEFAULT_CHUNKSIZE 262144
 
@@ -541,8 +541,8 @@ struct NC {
     struct NC *old;
     /* flags */
 #define NC_INDEP  0x10000   /* in independent data mode, cleared by endindep */
-#define NC_CREAT  0x20000   /* in create phase, cleared by ncenddef */
-#define NC_INDEF  0x80000   /* in define mode, cleared by ncenddef */
+#define NC_CREAT  0x20000   /* in create phase, cleared by enddef */
+#define NC_INDEF  0x80000   /* in define mode, cleared by enddef */
 #define NC_NSYNC  0x100000  /* synchronise numrecs on change */
 #define NC_HSYNC  0x200000  /* synchronise whole header on change */
 #define NC_NDIRTY 0x400000  /* numrecs has changed */
