@@ -611,7 +611,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         /* add up the buffer size */
         buf_len += count[j] * varp->xsz;
 
-        j++;
+        j++; /* increase j even when count[j] is zero */
     }
 
     /* loop thru all record variables to find the aggregated write amount */
@@ -648,12 +648,12 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             /* add up the buffer size */
             buf_len += count[j] * varp->xsz;
 
-            j++;
+            j++; /* increase j even when count[j] is zero */
         }
     }
     /* j is now the number of valid write segments */
 
-    if (j == 0) {
+    if (status == NC_NOERR && j == 0) {
         NCI_Free(noFill);
         NCI_Free(count);
         NCI_Free(offset);
@@ -729,20 +729,26 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     /* k is the number of valid write requests */
     NCI_Free(noFill);
 
-    /* create the fileview: a list of contiguous segment for each variable */
-#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-    mpireturn = MPI_Type_create_hindexed(k, blocklengths, offset, MPI_BYTE,
-                                         &filetype);
-#else
-    mpireturn = MPI_Type_hindexed(k, blocklengths, offset, MPI_BYTE, &filetype);
-#endif
-    if (mpireturn != MPI_SUCCESS) {
-        int err = ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
-        /* return the first encountered error if there is any */
-        if (status == NC_NOERR) status = err;
+    if (k == 0) {
+        filetype = MPI_BYTE;
     }
-    else
-        MPI_Type_commit(&filetype);
+    else {
+        /* create fileview: a list of contiguous segment for each variable */
+#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
+        mpireturn = MPI_Type_create_hindexed(k, blocklengths, offset, MPI_BYTE,
+                                             &filetype);
+#else
+        mpireturn = MPI_Type_hindexed(k, blocklengths, offset, MPI_BYTE,
+                                      &filetype);
+#endif
+        if (mpireturn != MPI_SUCCESS) {
+            int err = ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
+            /* return the first encountered error if there is any */
+            if (status == NC_NOERR) status = err;
+        }
+        else
+            MPI_Type_commit(&filetype);
+    }
 
     NCI_Free(blocklengths);
     NCI_Free(count);
@@ -752,7 +758,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, filetype, "native",
                                 MPI_INFO_NULL);
-    MPI_Type_free(&filetype);
+    if (k > 0) MPI_Type_free(&filetype);
 
     /* write to variable collectively */
     TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, buf_len, MPI_BYTE, &mpistatus);

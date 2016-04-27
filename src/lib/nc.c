@@ -1192,8 +1192,10 @@ ncmpii_NC_enddef(NC         *ncp,
         ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
     /* fill variables according to their fill mode settings */
-    err = ncmpii_fill_vars(ncp);
-    if (status == NC_NOERR) status = err;
+    if (ncp->vars.ndefined > 0) {
+        err = ncmpii_fill_vars(ncp);
+        if (status == NC_NOERR) status = err;
+    }
 
     if (ncp->old != NULL) {
         ncmpii_free_NC(ncp->old);
