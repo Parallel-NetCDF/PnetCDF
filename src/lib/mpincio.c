@@ -241,16 +241,17 @@ ncmpiio_create(MPI_Comm     comm,
     /* ignore if NC_NOWRITE set by user */
     fSet(ioflags, NC_WRITE);
 
-    nciop = ncmpiio_new(path, ioflags); /* allocate buffer */
-    if (nciop == NULL)
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    /* allocate ncio object */
+    nciop = ncmpiio_new(path, ioflags);
+    if (nciop == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
 
-    /* extract MPI-IO hints */
+    /* extract PnetCDF-level hints */
     ncmpiio_extract_hints(nciop, info);
 
+    /* open file in parallel */
     TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, info,
                             &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
@@ -338,23 +339,25 @@ ncmpiio_open(MPI_Comm     comm,
     }
 #endif
 
+    /* allocate ncio object */
     nciop = ncmpiio_new(path, ioflags);
-    if (nciop == NULL)
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    if (nciop == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
 
-    /* extract MPI-IO hints */
+    /* extract PnetCDF-level hints */
     ncmpiio_extract_hints(nciop, info);
 
-    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode,
-                            info, &nciop->collective_fh);
+    /* open file in parallel */
+    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, info,
+                            &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
         return ncmpii_handle_error(mpireturn, "MPI_File_open");
     }
 
+    /* check if max number of opened files is reached */
     for (i=0; i<MAX_NC_ID && IDalloc[i] != 0; i++);
     if (i == MAX_NC_ID) {
         ncmpiio_free(nciop);
@@ -363,9 +366,10 @@ ncmpiio_open(MPI_Comm     comm,
     *((int *)&nciop->fd) = i;
     IDalloc[i] = 1;
 
+    /* default mode is collective */
     set_NC_collectiveFh(nciop);
 
-    /* duplicate communicator as user may free it later */
+    /* duplicate MPI communicator as user may free it later */
     mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
