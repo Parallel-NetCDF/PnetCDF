@@ -901,7 +901,6 @@ hdr_fetch(bufferinfo *gbp) {
      * all data in the buffer has been consumed */
     if (slack == gbp->size) slack = 0;
 
-    if (gbp->size != (size_t)gbp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     if (gbp->size != (int)gbp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     memset(gbp->base, 0, (size_t)gbp->size);
@@ -921,7 +920,9 @@ hdr_fetch(bufferinfo *gbp) {
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
         }
         else {
-            gbp->nciop->get_size += gbp->size;
+            int get_size; /* actual read amount can be smaller */
+            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+            gbp->nciop->get_size += get_size;
         }
     }
     /* we might have had to backtrack */
@@ -932,7 +933,7 @@ hdr_fetch(bufferinfo *gbp) {
         if (err != NC_NOERR) return err;
     }
 
-    /* broadcast root's read to other processes */
+    /* broadcast root's read (full or partial header) to other processes */
     TRACE_COMM(MPI_Bcast)(gbp->base, (int)gbp->size, MPI_BYTE, 0, gbp->nciop->comm);
 
     return err;
@@ -1047,20 +1048,21 @@ hdr_get_nc_type(bufferinfo *gbp,
 }
 
 /*----< ncmpix_len_nctype() >------------------------------------------------*/
+/* return the length of external data type */
 int
 ncmpix_len_nctype(nc_type type) {
     switch(type) {
         case NC_BYTE:
         case NC_CHAR:
         case NC_UBYTE:  return X_SIZEOF_CHAR;
-        case NC_SHORT:
-        case NC_USHORT: return X_SIZEOF_SHORT;
-        case NC_INT:
-        case NC_UINT:   return X_SIZEOF_INT;
+        case NC_SHORT:  return X_SIZEOF_SHORT;
+        case NC_USHORT: return X_SIZEOF_USHORT;
+        case NC_INT:    return X_SIZEOF_INT;
+        case NC_UINT:   return X_SIZEOF_UINT;
         case NC_FLOAT:  return X_SIZEOF_FLOAT;
         case NC_DOUBLE: return X_SIZEOF_DOUBLE;
-        case NC_INT64:
-        case NC_UINT64: return X_SIZEOF_INT64;
+        case NC_INT64:  return X_SIZEOF_INT64;
+        case NC_UINT64: return X_SIZEOF_UINT64;
         default: fprintf(stderr,"ncmpix_len_nctype bad type %d\n",type);
                  assert(0);
     }
