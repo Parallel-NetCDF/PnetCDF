@@ -889,8 +889,9 @@ test_ncmpi_get_att_$1(void)
 		     * range error. See
 		     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
                      */
+                    extern int cdf_format;
 		    IfCheckTextChar($1, ATT_TYPE(i,j))
-		    ifelse(`$1',`uchar', `if (ATT_TYPE(i,j) != NC_BYTE)')
+		    ifelse(`$1',`uchar', `if (cdf_format > 2 || (cdf_format < 5 && ATT_TYPE(i,j) != NC_BYTE))')
                         allInIntRange &= CheckRange($1,expect[k]);
                 } else {
                     allInExtRange = 0;

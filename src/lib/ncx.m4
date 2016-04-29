@@ -2627,12 +2627,7 @@ ncmpix_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	NCX_GETN_Byte_Body
 }
-dnl NCX_GETN_CHAR(schar, uchar)
-int
-ncmpix_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
-{
-	NCX_GETN_Byte_Body
-}
+NCX_GETN_CHAR(schar, uchar)
 NCX_GETN_CHAR(schar, short)
 NCX_GETN_CHAR(schar, int)
 NCX_GETN_CHAR(schar, long)
@@ -2649,12 +2644,7 @@ ncmpix_pad_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	NCX_PAD_GETN_Byte_Body
 }
-dnl NCX_PAD_GETN_CHAR(schar, uchar)
-int
-ncmpix_pad_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
-{
-	NCX_PAD_GETN_Byte_Body
-}
+NCX_PAD_GETN_CHAR(schar, uchar)
 NCX_PAD_GETN_CHAR(schar, short)
 NCX_PAD_GETN_CHAR(schar, int)
 NCX_PAD_GETN_CHAR(schar, long)
@@ -2671,12 +2661,7 @@ ncmpix_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	NCX_PUTN_Byte_Body
 }
-dnl NCX_PUTN_CHAR(schar, uchar)
-int
-ncmpix_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
-{
-	NCX_PUTN_Byte_Body
-}
+NCX_PUTN_CHAR(schar, uchar)
 NCX_PUTN_CHAR(schar, short)
 NCX_PUTN_CHAR(schar, int)
 NCX_PUTN_CHAR(schar, long)
@@ -2693,12 +2678,7 @@ ncmpix_pad_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	NCX_PAD_PUTN_Byte_Body
 }
-dnl NCX_PAD_PUTN_CHAR(schar, uchar)
-int
-ncmpix_pad_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
-{
-	NCX_PAD_PUTN_Byte_Body
-}
+NCX_PAD_PUTN_CHAR(schar, uchar)
 NCX_PAD_PUTN_CHAR(schar, short)
 NCX_PAD_PUTN_CHAR(schar, int)
 NCX_PAD_PUTN_CHAR(schar, long)

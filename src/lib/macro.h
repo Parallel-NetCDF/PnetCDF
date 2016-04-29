@@ -105,12 +105,16 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 }
 #endif
 
-#define DATATYPE_GET_CONVERT(vartype, inbuf, outbuf, cnelems, memtype, err) { \
+#define DATATYPE_GET_CONVERT(cdf_format, vartype, inbuf, outbuf, cnelems, memtype, err) { \
     /* vartype is the variable's data type defined in the nc file             \
      * memtype is the I/O buffers data type (MPI_Datatype)  */                \
     switch(vartype) {                                                         \
         case NC_BYTE:                                                         \
-            err = ncmpii_x_getn_schar(inbuf, outbuf, cnelems, memtype);       \
+            if (cdf_format < 5) /* NC_BYTE is signed in signed APIs and       \
+                                   unsigned in unsigned APIs */               \
+                err = ncmpii_x_getn_byte(inbuf, outbuf, cnelems, memtype);    \
+            else                                                              \
+                err = ncmpii_x_getn_schar(inbuf, outbuf, cnelems, memtype);   \
             break;                                                            \
         case NC_UBYTE:                                                        \
             err = ncmpii_x_getn_uchar(inbuf, outbuf, cnelems, memtype);       \
@@ -145,12 +149,16 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     }                                                                         \
 }
 
-#define DATATYPE_PUT_CONVERT(vartype, outbuf, inbuf, cnelems, memtype, err) { \
+#define DATATYPE_PUT_CONVERT(cdf_format, vartype, outbuf, inbuf, cnelems, memtype, err) { \
     /* vartype is the variable's data type defined in the nc file             \
      * memtype is the I/O buffers data type (MPI_Datatype)  */                \
     switch(vartype) {                                                         \
         case NC_BYTE:                                                         \
-            err = ncmpii_x_putn_schar(outbuf, inbuf, cnelems, memtype);       \
+            if (cdf_format < 5) /* NC_BYTE is signed in signed APIs and       \
+                                   unsigned in unsigned APIs */               \
+                err = ncmpii_x_putn_byte(outbuf, inbuf, cnelems, memtype);    \
+            else                                                              \
+                err = ncmpii_x_putn_schar(outbuf, inbuf, cnelems, memtype);   \
             break;                                                            \
         case NC_UBYTE:                                                        \
             err = ncmpii_x_putn_uchar(outbuf, inbuf, cnelems, memtype);       \

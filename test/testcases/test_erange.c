@@ -36,12 +36,15 @@ int test_cdf2(char *filename)
     int err, nerrs=0, ncid, vid, dimid;
     unsigned char uc;
     signed char sc;
+    int si;
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); ERR
 
     /* for CDF-1 and CDF-2, a special case is made: there is no NC_ERANGE
      * error can occur converting between NC_BYTE and unsigned char.
      * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+     * In brief, NC_BYTE is signed in all signed CDF-2 APIs, and unsigned in
+     * all unsigned APIs. In CDF-2, there is only one unsigned API, _uchar.
      */
     uc = 255;
     err = ncmpi_put_att_uchar(ncid, NC_GLOBAL, "att1", NC_BYTE, 1, &uc); ERR
@@ -52,10 +55,11 @@ int test_cdf2(char *filename)
         nerrs++;
     }
 
-    err = ncmpi_def_dim(ncid, "x", 2, &dimid); ERR
+    err = ncmpi_def_dim(ncid, "x", 1, &dimid); ERR
     err = ncmpi_def_var(ncid, "var_byte", NC_BYTE, 1, &dimid, &vid); ERR
     err = ncmpi_enddef(ncid); ERR
 
+    /* No NC_ERANGE should be returned for CDF-1 and 2 */
     uc = 255;
     err = ncmpi_put_var_uchar_all(ncid, vid, &uc); ERR
     uc = 0;
@@ -65,12 +69,39 @@ int test_cdf2(char *filename)
         nerrs++;
     }
 
-    sc = -127;
+    /* No NC_ERANGE should be returned for CDF-1 and 2 */
+    sc = -128;
     err = ncmpi_put_var_schar_all(ncid, vid, &sc); ERR
     sc = 0;
     err = ncmpi_get_var_schar_all(ncid, vid, &sc); ERR
-    if (sc != -127) {
-        printf("Error at line %d: unexpected read value %d (expecting -127)\n",__LINE__,(int)sc);
+    if (sc != -128) {
+        printf("Error at line %d: unexpected read value %d (expecting -128)\n",__LINE__,(int)sc);
+        nerrs++;
+    }
+
+    /* expect NC_ERANGE */
+    si = -129;
+    err = ncmpi_put_var_int_all(ncid, vid, &si); EXPECT_ERR
+    if (si != -129) { /* check if put buffer content is altered */
+        printf("Error at line %d: put buffer content altered %d (expecting -128)\n",__LINE__,si);
+        nerrs++;
+    }
+
+    /* expect NC_ERANGE */
+    si = 256;
+    err = ncmpi_put_var_int_all(ncid, vid, &si); EXPECT_ERR
+    if (si != 256) { /* check if put buffer content is altered */
+        printf("Error at line %d: put buffer content altered %d (expecting 256)\n",__LINE__,si);
+        nerrs++;
+    }
+
+    /* expect no error */
+    si = -128;
+    err = ncmpi_put_var_int_all(ncid, vid, &si); ERR
+    si = 0;
+    err = ncmpi_get_var_int_all(ncid, vid, &si); ERR
+    if (si != -128) {
+        printf("Error at line %d: unexpected read value %d (expecting -128)\n",__LINE__,si);
         nerrs++;
     }
 
@@ -93,24 +124,36 @@ int test_cdf5(char *filename)
      * NC_ERANGE checking for converting between NC_BYTE and unsigned
      * char is no longer held.
      */
-    uc = 255; /* a value should cause NC_ERANGE at ncmpi_get_att_schar() */
+    uc = 255;
     err = ncmpi_put_att_uchar(ncid, NC_GLOBAL, "att1", NC_UBYTE, 1, &uc); ERR
+
+    /* in CDF-5, get 255 to an schar should result in NC_ERANGE */
     err = ncmpi_get_att_schar(ncid, NC_GLOBAL, "att1", &sc); EXPECT_ERR
 
     sc = -1; /* a value should cause NC_ERANGE */
     err = ncmpi_put_att_schar(ncid, NC_GLOBAL, "att2", NC_UBYTE, 1, &sc); EXPECT_ERR
 
-    err = ncmpi_def_dim(ncid, "x", 2, &dimid); ERR
+    err = ncmpi_def_dim(ncid, "x", 1, &dimid); ERR
     err = ncmpi_def_var(ncid, "var_ubyte", NC_UBYTE, 1, &dimid, &uc_vid); ERR
     err = ncmpi_def_var(ncid, "var_byte",  NC_BYTE,  1, &dimid, &sc_vid); ERR
     err = ncmpi_enddef(ncid); ERR
 
-    uc = 255; /* a value should cause NC_ERANGE at ncmpi_get_var_schar() */
+    uc = 255;
     err = ncmpi_put_var_uchar_all(ncid, uc_vid, &uc); ERR
+
+    /* in CDF-5, get 255 to an schar should result in NC_ERANGE */
     err = ncmpi_get_var_schar_all(ncid, uc_vid, &sc); EXPECT_ERR
 
-    sc = -1; /* a value should cause NC_ERANGE */
+    sc = -1; /* in CDF-5, put -1 to an uchar should result in NC_ERANGE */
     err = ncmpi_put_var_schar_all(ncid, uc_vid, &sc); EXPECT_ERR
+
+    uc = 255; /* in CDF-5, put 255 to a schar should result in NC_ERANGE */
+    err = ncmpi_put_var_uchar_all(ncid, sc_vid, &uc); EXPECT_ERR
+
+    sc = -1;
+    err = ncmpi_put_var_schar_all(ncid, sc_vid, &sc); ERR
+    uc = 0; /* in CDF-5, get -1 to an uchar should result in NC_ERANGE */
+    err = ncmpi_get_var_uchar_all(ncid, sc_vid, &uc); EXPECT_ERR
 
     err = ncmpi_close(ncid); ERR
 
