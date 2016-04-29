@@ -29,7 +29,7 @@
 static NC *NClist = NULL;
 
 /* This is the default create format for ncmpi_create and nc__create. */
-static int default_create_format = NC_FORMAT_CLASSIC;
+static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
 
 /* These have to do with version numbers. */
 #define MAGIC_NUM_LEN 4
@@ -297,7 +297,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
 
     /* Return existing format if desired. */
     if (old_formatp)
-        *old_formatp = default_create_format;
+        *old_formatp = ncmpi_default_create_format;
 
     env_str = getenv("PNETCDF_SAFE_MODE");
     if (env_str != NULL) {
@@ -330,7 +330,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
         format != NC_FORMAT_CDF5) {
         DEBUG_RETURN_ERROR(NC_EINVAL)
     }
-    default_create_format = format;
+    ncmpi_default_create_format = format;
 
     return status;
 }
@@ -343,7 +343,7 @@ ncmpi_inq_default_format(int *formatp)
 {
     if (formatp == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
-    *formatp = default_create_format;
+    *formatp = ncmpi_default_create_format;
     return NC_NOERR;
 }
 
