@@ -45,8 +45,9 @@ static int
 inRange_uchar(const double value, const nc_type datatype)
 {
     /* check value of type datatype if within uchar range */
+    extern int cdf_format;
 
-    if (datatype == NC_BYTE) {
+    if (cdf_format < 5 && datatype == NC_BYTE) {
         /* netCDF specification make a special case for type conversion between
          * uchar and scahr: do not check for range error. See
          * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion

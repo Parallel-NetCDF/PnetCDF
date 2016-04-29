@@ -41,7 +41,17 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Semantics updates
-    * none
+    * In netCDF-3, whether the contents of an NC_BYTE variable are signed or
+      unsigned is determined by the calling APIs. For signed APIs, NC_BYTE
+      variables are signed. For unsigned APIs (i.e. _uchar APIs) they are
+      unsigned. NetCDF-3 specifically makes an exception to skip NC_ERANGE
+      check when calling _uchar APIs on NC_BYTE variables. See
+      http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+      In netCDF-4 and CDF-5, because of the introduction of the new data type
+      NC_UBYTE, an unsigned 8-bit integer, which renders the exception less
+      sense. Thus, for CDF-5 files, regular NC_ERANGE check is performed in
+      PnetCDF for all APIs that access NC_BYTE variables. For CDF-1 and 2
+      files, PnetCDF still honor that exception.
 
   o Other updates:
     * none

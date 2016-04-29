@@ -804,6 +804,8 @@ int ncmpii_handle_error(int mpi_errorcode, char *msg);
  * ../nc_test/tests.h if you change these.
  */
 
+int ncmpii_x_putn_byte  (void *xbuf, const void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
 int ncmpii_x_putn_schar (void *xbuf, const void *buf, MPI_Offset nelems,
                         MPI_Datatype datatype);
 int ncmpii_x_putn_uchar (void *xbuf, const void *buf, MPI_Offset nelems,
@@ -823,6 +825,8 @@ int ncmpii_x_putn_double(void *xbuf, const void *buf, MPI_Offset nelems,
 int ncmpii_x_putn_int64 (void *xbuf, const void *buf, MPI_Offset nelems,
                         MPI_Datatype datatype);
 int ncmpii_x_putn_uint64(void *xbuf, const void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_getn_byte  (const void *xbuf, void *buf, MPI_Offset nelems,
                         MPI_Datatype datatype);
 int ncmpii_x_getn_schar (const void *xbuf, void *buf, MPI_Offset nelems,
                         MPI_Datatype datatype);
@@ -849,7 +853,7 @@ int NC_start_count_stride_ck(const NC *ncp, const NC_var *varp,
                 const MPI_Offset *start, const MPI_Offset *count,
                 const MPI_Offset *stride, const int rw_flag);
 
-int ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype);
+int ncmpii_need_convert(int format, nc_type nctype, MPI_Datatype mpitype);
 
 int ncmpii_need_swap(nc_type nctype,MPI_Datatype mpitype);
 

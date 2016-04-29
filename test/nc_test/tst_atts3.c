@@ -354,7 +354,7 @@ tst_atts3(char *filename, int cmode)
 	 if (schar_in[i] != (signed char) double_out[i]) ERRV
 
       /* Read all atts (except text) as uchar. */
-      err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, uchar_in); ERR
+      if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, uchar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++)
 	 if (uchar_in[i] != (unsigned char) schar_out[i]) ERRV
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SHORT_NAME, uchar_in)) != NC_ERANGE) ERR

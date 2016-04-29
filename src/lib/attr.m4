@@ -731,6 +731,46 @@ PAD_GETN_FILETYPE(uchar)
 PAD_GETN_FILETYPE(short)
 PAD_GETN_FILETYPE(ushort)
 
+/*----< ncmpix_pad_getn_byte() >---------------------------------------------*/
+inline static int
+ncmpix_pad_getn_byte(const void **xpp,
+                     MPI_Offset   nelems,
+                     void        *tp,
+                     nc_type      buftype)
+{
+    switch(buftype) {
+        case NC_CHAR:
+#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
+            return ncmpix_pad_getn_uchar_uchar (xpp, nelems, (uchar*)tp);
+#else
+            return ncmpix_pad_getn_schar_schar (xpp, nelems, (schar*)tp);
+#endif
+        case NC_BYTE:
+            return ncmpix_pad_getn_schar_schar (xpp, nelems, (schar*)tp);
+        case NC_UBYTE:
+            /* note this is not ncmpix_pad_getn_schar_uchar */
+            return ncmpix_pad_getn_uchar_uchar (xpp, nelems, (uchar*)tp);
+        case NC_SHORT:
+            return ncmpix_pad_getn_schar_short (xpp, nelems, (short*)tp);
+        case NC_USHORT:
+            return ncmpix_pad_getn_schar_ushort(xpp, nelems, (ushort*)tp);
+        case NC_INT:
+            return ncmpix_pad_getn_schar_int   (xpp, nelems, (int*)tp);
+        case NC_UINT:
+            return ncmpix_pad_getn_schar_uint  (xpp, nelems, (uint*)tp);
+        case NC_FLOAT:
+            return ncmpix_pad_getn_schar_float (xpp, nelems, (float*)tp);
+        case NC_DOUBLE:
+            return ncmpix_pad_getn_schar_double(xpp, nelems, (double*)tp);
+        case NC_INT64:
+            return ncmpix_pad_getn_schar_longlong (xpp, nelems, (longlong*)tp);
+        case NC_UINT64:
+            return ncmpix_pad_getn_schar_ulonglong(xpp, nelems, (ulonglong*)tp);
+        default: fprintf(stderr, "Error: bad buftype(%d) in %s\n",buftype,__func__);
+    }
+    return NC_EBADTYPE;
+}
+
 dnl
 dnl GETN_FILETYPE(filetype)
 dnl
@@ -781,7 +821,8 @@ GETN_FILETYPE(uint64)
 /*----< ncmpix_pad_getn() >--------------------------------------------------*/
 /* padding only applicable to file types of size smaller than 4 bytes */
 inline static int
-ncmpix_pad_getn(const void **xpp,
+ncmpix_pad_getn(int          cdf_format,
+                const void **xpp,
                 MPI_Offset   nelems,
                 void        *tp,
                 nc_type      filetype,
@@ -792,8 +833,12 @@ ncmpix_pad_getn(const void **xpp,
 
     switch(filetype) {
         case NC_CHAR:
-        case NC_BYTE:
             return ncmpix_pad_getn_schar (xpp, nelems, tp, buftype);
+        case NC_BYTE:
+            if (cdf_format < 5)
+                return ncmpix_pad_getn_byte (xpp, nelems, tp, buftype);
+            else
+                return ncmpix_pad_getn_schar(xpp, nelems, tp, buftype);
         case NC_UBYTE:
             return ncmpix_pad_getn_uchar (xpp, nelems, tp, buftype);
         case NC_SHORT:
@@ -825,8 +870,13 @@ ncmpii_get_att(int         ncid,
                void       *tp,       /* I/O buffer */
                nc_type     buftype)  /* I/O buffer data type */
 {
-    int status;
+    int      status, cdf_format;
+    NC      *ncp;
     NC_attr *attrp;
+
+    /* get the file ID */
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
     status = NC_lookupattr(ncid, varid, name, &attrp);
     if (status != NC_NOERR) return status;
@@ -838,8 +888,13 @@ ncmpii_get_att(int         ncid,
         (attrp->type == NC_CHAR || buftype == NC_CHAR))
         DEBUG_RETURN_ERROR(NC_ECHAR)
 
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_format = 5;  /* CDF-5 */
+    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_format = 2;  /* CDF-2 */
+    else                                          cdf_format = 1;  /* CDF-1 */
+
     const void *xp = attrp->xvalue;
-    return ncmpix_pad_getn(&xp, attrp->nelems, tp, attrp->type, buftype);
+    return ncmpix_pad_getn(cdf_format, &xp, attrp->nelems, tp, attrp->type,
+                           buftype);
 }
 
 /*----< ncmpi_get_att() >-----------------------------------------------------*/
@@ -930,6 +985,46 @@ PAD_PUTN_FILETYPE(uchar)
 PAD_PUTN_FILETYPE(short)
 PAD_PUTN_FILETYPE(ushort)
 
+/*----< ncmpix_pad_putn_byte() >---------------------------------------------*/
+inline static int
+ncmpix_pad_putn_byte(void       **xpp,
+                     MPI_Offset   nelems,
+                     const void  *tp,
+                     nc_type      btype)
+{
+    switch(btype) {
+        case NC_CHAR:
+#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
+            return ncmpix_pad_putn_schar_uchar (xpp, nelems, (uchar*)tp);
+#else
+            return ncmpix_pad_putn_schar_schar (xpp, nelems, (schar*)tp);
+#endif
+        case NC_BYTE:
+            return ncmpix_pad_putn_schar_schar (xpp, nelems, (schar*)tp);
+        case NC_UBYTE:
+            /* note this is not ncmpix_pad_putn_schar_uchar */
+            return ncmpix_pad_putn_uchar_uchar (xpp, nelems, (uchar*)tp);
+        case NC_SHORT:
+            return ncmpix_pad_putn_schar_short (xpp, nelems, (short*)tp);
+        case NC_USHORT:
+            return ncmpix_pad_putn_schar_ushort(xpp, nelems, (ushort*)tp);
+        case NC_INT:
+            return ncmpix_pad_putn_schar_int   (xpp, nelems, (int*)tp);
+        case NC_UINT:
+            return ncmpix_pad_putn_schar_uint  (xpp, nelems, (uint*)tp);
+        case NC_FLOAT:
+            return ncmpix_pad_putn_schar_float (xpp, nelems, (float*)tp);
+        case NC_DOUBLE:
+            return ncmpix_pad_putn_schar_double(xpp, nelems, (double*)tp);
+        case NC_INT64:
+            return ncmpix_pad_putn_schar_longlong (xpp, nelems, (longlong*)tp);
+        case NC_UINT64:
+            return ncmpix_pad_putn_schar_ulonglong(xpp, nelems, (ulonglong*)tp);
+        default: fprintf(stderr, "Error: bad btype(%d) in %s\n",btype,__func__);
+    }
+    return NC_EBADTYPE;
+}
+
 dnl
 dnl PUTN_FILETYPE(ftype)
 dnl
@@ -980,7 +1075,8 @@ PUTN_FILETYPE(uint64)
 /*----< ncmpix_pad_putn() >--------------------------------------------------*/
 /* padding only applicable to file types of size smaller than 4 bytes */
 inline static int
-ncmpix_pad_putn(void       **xpp,
+ncmpix_pad_putn(int          cdf_format,
+                void       **xpp,
                 MPI_Offset   nelems,
                 const void  *tp,
                 nc_type      filetype,
@@ -991,8 +1087,12 @@ ncmpix_pad_putn(void       **xpp,
 
     switch(filetype) {
         case NC_CHAR:
-        case NC_BYTE:
             return ncmpix_pad_putn_schar (xpp, nelems, tp, buftype);
+        case NC_BYTE:
+            if (cdf_format < 5)
+                return ncmpix_pad_putn_byte (xpp, nelems, tp, buftype);
+            else
+                return ncmpix_pad_putn_schar(xpp, nelems, tp, buftype);
         case NC_UBYTE:
             return ncmpix_pad_putn_uchar (xpp, nelems, tp, buftype);
         case NC_SHORT:
@@ -1032,7 +1132,7 @@ ncmpii_put_att(int         ncid,
                const void *buf,      /* I/O buffer */
                nc_type     buftype)  /* I/O buffer type */
 {
-    int indx, file_ver, err, status=NC_NOERR, mpireturn;
+    int indx, file_ver, err, status=NC_NOERR, mpireturn, cdf_format;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp, *old=NULL;
@@ -1043,7 +1143,7 @@ ncmpii_put_att(int         ncid,
     /* Should CDF-5 allow very large file header? */
     /* if (len > X_INT_MAX) DEBUG_RETURN_ERROR(NC_EINVAL) */
 
-    /* get the file ID */
+    /* get the pointer to NC object */
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
@@ -1102,6 +1202,10 @@ ncmpii_put_att(int         ncid,
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_format = 5;  /* CDF-5 */
+    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_format = 2;  /* CDF-2 */
+    else                                          cdf_format = 1;  /* CDF-1 */
+
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx >= 0) { /* name in use */
         if (!NC_indef(ncp)) {
@@ -1132,7 +1236,8 @@ ncmpii_put_att(int         ncid,
                  * as ncmpix_pad_putn() advances the first argument
                  * with nelems elements
                  */
-                status = ncmpix_pad_putn(&xp, nelems, buf, filetype, buftype);
+                status = ncmpix_pad_putn(cdf_format, &xp, nelems, buf,
+                                         filetype, buftype);
                 /* wkliao: why not return here if status != NC_NOERR? */
 
                 /* PnetCDF expects all processes use the same argument values.
@@ -1173,7 +1278,8 @@ ncmpii_put_att(int         ncid,
 
     if (nelems != 0) { /* non-zero length attribute */
         void *xp = attrp->xvalue;
-        status = ncmpix_pad_putn(&xp, nelems, buf, filetype, buftype);
+        status = ncmpix_pad_putn(cdf_format, &xp, nelems, buf, filetype,
+                                 buftype);
         /* wkliao: no immediately return error code here? Strange ... 
          *         Instead, we continue and call incr_NC_attrarray() to add
          *         this attribute (for create case) as it is legal. But if
