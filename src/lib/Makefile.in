@@ -24,6 +24,8 @@ LIBRARY  = libpnetcdf.a
 HEADER   = pnetcdf.h
 PKGCONFIG = pnetcdf.pc
 
+M4_HEADERS = ncx_h.m4
+
 M4_SRCS   = getput.m4 \
             i_getput.m4 \
             bput.m4 \
@@ -68,14 +70,14 @@ HEADER_SRCS += subfile.h
 endif
 
 PACKING_LIST = $(LIB_CSRCS) \
+               $(M4_HEADERS) \
                $(M4_SRCS) \
                $(HEADER_SRCS) \
                pnetcdf.h.in \
                depend \
                Makefile.in \
                pnetcdf.pc.in \
-               ncconfig.h.in \
-               ncx_h.m4
+               ncconfig.h.in
 
 ifeq (@enable_subfiling@, no)
 PACKING_LIST += subfile.c subfile.h
