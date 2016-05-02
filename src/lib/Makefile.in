@@ -38,7 +38,6 @@ HEADER_SRCS = fbits.h \
               nc.h \
               nctypes.h \
               ncio.h \
-              ncx.h \
               rnd.h \
               ncmpidtype.h \
               macro.h \
@@ -75,7 +74,8 @@ PACKING_LIST = $(LIB_CSRCS) \
                depend \
                Makefile.in \
                pnetcdf.pc.in \
-               ncconfig.h.in
+               ncconfig.h.in \
+               ncx_h.m4
 
 ifeq (@enable_subfiling@, no)
 PACKING_LIST += subfile.c subfile.h
@@ -83,7 +83,7 @@ endif
 
 LIB_OBJS   = $(LIB_CSRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
-GARBAGE    = $(LIBRARY) $(M4_SRCS:.m4=.c)
+GARBAGE    = $(LIBRARY) $(M4_SRCS:.m4=.c) ncx.h
 
 DIST_GARBAGE = ncconfig.h pnetcdf.h pnetcdf.pc
 
@@ -119,5 +119,8 @@ llib-lpnetcdf.ln: $(LIB_CSRCS)
 
 lint: llib-lpnetcdf.ln
 	$(LINT.c) t_nc.c llib-lpnetcdf.ln
+
+ncx.h: ncx_h.m4
+	$(M4) $(M4FLAGS) $< >$@
 
 include $(srcdir)/depend
