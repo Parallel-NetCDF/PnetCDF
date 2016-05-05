@@ -270,6 +270,33 @@ If a new PnetCDF API is created, please check and do the followings.
      getRecVarCount() is declared in ncmpiGroup.h and defined in ncmpiGroup.cpp.
 
 =====================================================
+Note on PnetCDF internal function and variable name convention
+
+* internal vs. external data type
+  Internal data types refer to the data types of user's I/O buffers in memory.
+  External data types refer to the NC data type, i.e. nc_type, netCDF
+  variable's data type stored in the netCDF files.
+* Internal data types used in PnetCDF are: char, signed char, unsigned char,
+  short, unsigned short, int, unsigned int, long (deprecated), float, double,
+  long long, and unsigned long long. Their corresponding function name
+  substrings are "text", "schar", "uchar", "short", "ushort", "int", "uint",
+  "long" (deprecated), "float", "double", "longlong", and "ulonglong".
+* External data types are of nc_type. For CDF-1 and 2, they are NC_CHAR,
+  NC_BYTE, NC_SHORT, NC_INT, NC_FLOAT, and NC_DOUBLE. For CDF-5, additional
+  types are NC_UBYTE, NC_USHORT, NC_UINT, NC_INT64, and NC_UINT64.
+* When creating an internal functions, after 1.7.0, we start to use names of
+  nc_type to represent the external data types and the above convention for
+  internal ones. For example, ncmpix_getn_NC_SHORT_longlong(). In this case,
+  we can clearly see that this function is to read n elements of a netCDF
+  variable of NC_SHORT external data type from a file to a user buffer of
+  internal long long type.
+* Function argument name convention: we use "xtype" for the argument of
+  external data type and "itype" for internal data types. Thus, xtype must be
+  of nc_type defined in pnetcdf.h and itype be either of an internal data type,
+  an MPI derived data type, or NC_itype defined in attr.m4
+
+=====================================================
+=====================================================
 Note on debugging
 =====================================================
 1. Enable debugging option (--enable-debug) at the configure time can trace the
