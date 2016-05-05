@@ -556,7 +556,7 @@ ncmpii_igetput_varm(NC               *ncp,
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
     int err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
     int i, abuf_index=-1, el_size, buftype_is_contig;
-    int need_convert, need_swap, need_swap_back_buf=0, cdf_format;
+    int need_convert, need_swap, need_swap_back_buf=0, cdf_ver;
     size_t  dims_chunk;
     MPI_Offset bnelems=0, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
@@ -595,12 +595,12 @@ ncmpii_igetput_varm(NC               *ncp,
         ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes)
         DEBUG_RETURN_ERROR(NC_EINSUFFBUF)
 
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_format = 5;  /* CDF-5 */
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_format = 2;  /* CDF-2 */
-    else                                          cdf_format = 1;  /* CDF-1 */
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_ver = 5;  /* CDF-5 */
+    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_ver = 2;  /* CDF-2 */
+    else                                          cdf_ver = 1;  /* CDF-1 */
 
     /* check if type conversion and Endianness byte swap is needed */
-    need_convert = ncmpii_need_convert(cdf_format, varp->type, ptype);
+    need_convert = ncmpii_need_convert(cdf_ver, varp->type, ptype);
     need_swap    = ncmpii_need_swap(varp->type, ptype);
 
     if (imap != NULL) {
@@ -712,7 +712,7 @@ ncmpii_igetput_varm(NC               *ncp,
             else xbuf = NCI_Malloc((size_t)nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
-            DATATYPE_PUT_CONVERT(cdf_format, varp->type, xbuf, cbuf, bnelems, ptype, status)
+            DATATYPE_PUT_CONVERT(cdf_ver, varp->type, xbuf, cbuf, bnelems, ptype, status)
             /* NC_ERANGE can be caused by a subset of buf that is out of range
              * of the external data type, it is not considered a fatal error.
              * The request must continue to finish.
