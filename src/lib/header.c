@@ -61,9 +61,9 @@ static int hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap);
 /*
  * "magic number" at beginning of file: 0x43444601 (big endian)
  */
-static const schar ncmagic1[] = {'C', 'D', 'F', 0x01};
-static const schar ncmagic2[] = {'C', 'D', 'F', 0x02};
-static const schar ncmagic5[] = {'C', 'D', 'F', 0x05};
+static const char ncmagic1[] = {'C', 'D', 'F', 0x01};
+static const char ncmagic2[] = {'C', 'D', 'F', 0x02};
+static const char ncmagic5[] = {'C', 'D', 'F', 0x05};
 
 /*
  * Recompute the shapes of all variables
@@ -828,15 +828,15 @@ ncmpii_hdr_put_NC(NC   *ncp,
     /* copy "magic", 4 characters */
     if (ncp->flags & NC_64BIT_DATA) {
         putbuf.version = 5;
-        status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic5), ncmagic5);
+        status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic5), ncmagic5);
     }
     else if (ncp->flags & NC_64BIT_OFFSET) {
         putbuf.version = 2;
-        status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic2), ncmagic2);
+        status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic2), ncmagic2);
     }
     else {
         putbuf.version = 1;
-        status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic1), ncmagic1);
+        status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic1), ncmagic1);
     }
     if (status != NC_NOERR) return status;
 
@@ -1715,7 +1715,7 @@ ncmpii_hdr_get_NC(NC *ncp)
 {
     int status;
     bufferinfo getbuf;
-    schar magic[sizeof(ncmagic1)];
+    char magic[sizeof(ncmagic1)];
     MPI_Offset nrecs = 0;
     MPI_Aint pos_addr, base_addr;
 
@@ -1743,8 +1743,8 @@ ncmpii_hdr_get_NC(NC *ncp)
 
     /* First get the file format information, magic */
     memset(magic, 0, sizeof(magic));
-    status = ncmpix_getn_schar_schar((const void **)(&getbuf.pos),
-                                     sizeof(magic), magic);
+    status = ncmpix_getn_text((const void **)(&getbuf.pos), sizeof(magic),
+                              magic);
     if (status != NC_NOERR) return status;
     getbuf.index += (MPI_Offset)sizeof(magic);
 
@@ -2311,7 +2311,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                     NC         *ncp)
 {
     int rank, err, status=NC_NOERR;
-    schar magic[sizeof(ncmagic1)];
+    char magic[sizeof(ncmagic1)];
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
     MPI_Aint pos_addr, base_addr;
     NC *root_ncp;
@@ -2323,8 +2323,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 
     /* check header's magic */
     memset(magic, 0, sizeof(magic));
-    err = ncmpix_getn_schar_schar((const void **)(&getbuf->pos),
-                                  sizeof(magic), magic);
+    err = ncmpix_getn_text((const void **)(&getbuf->pos), sizeof(magic), magic);
     if (err != NC_NOERR) {
         /* Fatal error, as root's header is significant */
         if (ncp->safe_mode) fprintf(stderr,"Error: CDF magic number from root's header\n");
