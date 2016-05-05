@@ -107,7 +107,7 @@ gen_netcdf(
 				    (double *) atts[iatt].val);
 	    break;
 	case NC_UBYTE:
-	    stat = ncmpi_put_att_ubyte(ncid, varid, atts[iatt].name,
+	    stat = ncmpi_put_att_uchar(ncid, varid, atts[iatt].name,
 				    atts[iatt].type, atts[iatt].len,
 				    (unsigned char *) atts[iatt].val);
 	    break;
