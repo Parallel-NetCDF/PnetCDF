@@ -303,8 +303,10 @@ ncmpi_create(MPI_Comm    comm,
     }
 
     /* allocate buffer for header object NC */
-    if ((ncp = ncmpii_new_NC(&chunksize)) == NULL)
+    if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) {
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
+    }
 
     ncp->safe_mode = safe_mode;
     ncp->abuf      = NULL;
@@ -326,6 +328,7 @@ ncmpi_create(MPI_Comm    comm,
     /* set the file format version based on the create mode, cmode */
     if (fIsSet(cmode, NC_64BIT_DATA)) {
 #if SIZEOF_MPI_OFFSET <  8
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         DEBUG_RETURN_ERROR(NC_ESMALL)
 #endif
         fSet(ncp->flags, NC_64BIT_DATA);
@@ -334,7 +337,10 @@ ncmpi_create(MPI_Comm    comm,
          * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
          * serial netcdf has proven it's possible if datasets are small, but
          * that's a hassle we don't want to worry about */
-        if (SIZEOF_OFF_T < 8) DEBUG_RETURN_ERROR(NC_ESMALL)
+        if (SIZEOF_OFF_T < 8) {
+            if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+            DEBUG_RETURN_ERROR(NC_ESMALL)
+        }
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
         /* check default format */
@@ -342,12 +348,16 @@ ncmpi_create(MPI_Comm    comm,
         ncmpi_inq_default_format(&default_format);
         if (default_format == NC_FORMAT_CDF5) {
 #if SIZEOF_MPI_OFFSET <  8
+            if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
             DEBUG_RETURN_ERROR(NC_ESMALL)
 #endif
             fSet(ncp->flags, NC_64BIT_DATA);
         }
         else if (default_format == NC_FORMAT_CDF2) {
-            if (SIZEOF_OFF_T < 8) DEBUG_RETURN_ERROR(NC_ESMALL)
+            if (SIZEOF_OFF_T < 8) {
+                if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+                DEBUG_RETURN_ERROR(NC_ESMALL)
+            }
             fSet(ncp->flags, NC_64BIT_OFFSET);
         }
         else
@@ -363,6 +373,7 @@ ncmpi_create(MPI_Comm    comm,
     /* open the file in parallel */
     err = ncmpiio_create(comm, path, cmode, env_info, ncp);
     if (err != NC_NOERR) { /* fatal error */
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
         return err;
     }
