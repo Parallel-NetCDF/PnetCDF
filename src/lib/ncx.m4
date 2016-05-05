@@ -383,8 +383,21 @@ define(`Fmin',  `ifelse(index(`$1',`u'), 0, `0', `(double)Imin($1)')')dnl
 define(`Dmin',  `ifelse(index(`$1',`u'), 0, `0', `(double)Imin($1)')')dnl
 define(`FXmin', `ifelse(index(`$1',`u'), 0, `0', `(double)Xmin($1)')')dnl
 define(`DXmin', `ifelse(index(`$1',`u'), 0, `0',         `Xmin($1)')')dnl
-
 dnl
+dnl dnl dnl
+dnl
+define(`NC_TYPE', `ifelse(`$1', `schar',  `NC_BYTE',
+                          `$1', `uchar',  `NC_UBYTE',
+                          `$1', `short',  `NC_SHORT',
+                          `$1', `ushort', `NC_USHORT',
+                          `$1', `int',    `NC_INT',
+                          `$1', `uint',   `NC_UINT',
+                          `$1', `float',  `NC_FLOAT',
+                          `$1', `double', `NC_DOUBLE',
+                          `$1', `int64',  `NC_INT64',
+                          `$1', `uint64', `NC_UINT64')')dnl
+dnl
+
 dnl For GET APIs:
 dnl       check for negative $3 if $1 is   signed && $2 is unsigned
 dnl Don't check for negative $3 if $1 is   signed && $2 is   signed
@@ -472,7 +485,7 @@ dnl
 define(`NCX_GET1F',dnl
 `dnl
 static int
-ncmpix_get_$1_$2(const void *xp, $2 *ip)
+`ncmpix_get_'NC_TYPE($1)_$2(const void *xp, $2 *ip)
 {
 	ix_$1 xx;
 	get_ix_$1(xp, &xx);
@@ -495,7 +508,7 @@ dnl
 define(`NCX_GET1I',dnl
 `dnl
 static int
-ncmpix_get_$1_$2(const void *xp, $2 *ip)
+`ncmpix_get_'NC_TYPE($1)_$2(const void *xp, $2 *ip)
 {
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
@@ -520,7 +533,7 @@ dnl
 define(`NCX_PUT1F',dnl
 `dnl
 static int
-ncmpix_put_$1_$2(void *xp, const $2 *ip)
+`ncmpix_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip)
 {
 	ix_$1 xx;
 	PUTF_CheckBND($1, $2)
@@ -537,7 +550,7 @@ dnl
 define(`NCX_PUT1I',dnl
 `dnl
 static int
-ncmpix_put_$1_$2(void *xp, const $2 *ip)
+`ncmpix_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip)
 {
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
@@ -561,7 +574,7 @@ ifelse(`$3', `1', ``#'endif
 /* We don't implement any x_schar and x_uchar primitives. */
 
 
-/* x_short -------------------------------------------------------------------*/
+/* external NC_SHORT --------------------------------------------------------*/
 
 #if SHORT_MAX == X_SHORT_MAX
 typedef short ix_short;
@@ -619,7 +632,7 @@ NCX_GET1F(short, float)
 NCX_GET1F(short, double)
 
 static int
-ncmpix_put_short_schar(void *xp, const schar *ip)
+ncmpix_put_NC_SHORT_schar(void *xp, const schar *ip)
 {
 	uchar *cp = (uchar *) xp;
 	if (*ip & 0x80)
@@ -631,7 +644,7 @@ ncmpix_put_short_schar(void *xp, const schar *ip)
 }
 
 static int
-ncmpix_put_short_uchar(void *xp, const uchar *ip)
+ncmpix_put_NC_SHORT_uchar(void *xp, const uchar *ip)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0;
@@ -649,7 +662,7 @@ NCX_PUT1I(short, ulonglong, 0)
 NCX_PUT1F(short, float)
 NCX_PUT1F(short, double)
 
-/* x_ushort ------------------------------------------------------------------*/
+/* external NC_USHORT -------------------------------------------------------*/
 
 #if USHORT_MAX == X_USHORT_MAX
 typedef unsigned short ix_ushort;
@@ -707,7 +720,7 @@ NCX_GET1F(ushort, float)
 NCX_GET1F(ushort, double)
 
 static int
-ncmpix_put_ushort_schar(void *xp, const schar *ip)
+ncmpix_put_NC_USHORT_schar(void *xp, const schar *ip)
 {
 	uchar *cp;
         if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE)
@@ -722,7 +735,7 @@ ncmpix_put_ushort_schar(void *xp, const schar *ip)
 }
 
 static int
-ncmpix_put_ushort_uchar(void *xp, const uchar *ip)
+ncmpix_put_NC_USHORT_uchar(void *xp, const uchar *ip)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0;
@@ -740,7 +753,7 @@ NCX_PUT1I(ushort, ulonglong, 1)
 NCX_PUT1F(ushort, float)
 NCX_PUT1F(ushort, double)
 
-/* x_int ---------------------------------------------------------------------*/
+/* external NC_INT ----------------------------------------------------------*/
 
 #if SHORT_MAX == X_INT_MAX
 typedef short ix_int;
@@ -803,7 +816,7 @@ NCX_GET1F(int, float)
 NCX_GET1F(int, double)
 
 static int
-ncmpix_put_int_schar(void *xp, const schar *ip)
+ncmpix_put_NC_INT_schar(void *xp, const schar *ip)
 {
 	uchar *cp = (uchar *) xp;
 	if (*ip & 0x80)
@@ -823,7 +836,7 @@ ncmpix_put_int_schar(void *xp, const schar *ip)
 }
 
 static int
-ncmpix_put_int_uchar(void *xp, const uchar *ip)
+ncmpix_put_NC_INT_uchar(void *xp, const uchar *ip)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0x00;
@@ -846,7 +859,7 @@ NCX_PUT1F(int, float)
 NCX_PUT1F(int, double)
 
 
-/* x_uint --------------------------------------------------------------------*/
+/* external NC_UINT ---------------------------------------------------------*/
 
 #if USHORT_MAX == X_UINT_MAX
 typedef ushort ix_uint;
@@ -903,7 +916,7 @@ NCX_GET1F(uint, float)
 NCX_GET1F(uint, double)
 
 static int
-ncmpix_put_uint_schar(void *xp, const schar *ip)
+ncmpix_put_NC_UINT_schar(void *xp, const schar *ip)
 {
 	uchar *cp;
 	if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE)
@@ -918,7 +931,7 @@ ncmpix_put_uint_schar(void *xp, const schar *ip)
 }
 
 static int
-ncmpix_put_uint_uchar(void *xp, const uchar *ip)
+ncmpix_put_NC_UINT_uchar(void *xp, const uchar *ip)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0x00;
@@ -942,7 +955,7 @@ NCX_PUT1F(uint, float)
 NCX_PUT1F(uint, double)
 
 
-/* x_float -------------------------------------------------------------------*/
+/* external NC_FLOAT --------------------------------------------------------*/
 
 #if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
 
@@ -1354,7 +1367,7 @@ put_ix_float(void *xp, const float *ip)
 
 #if X_SIZEOF_FLOAT != SIZEOF_FLOAT || defined(NO_IEEE_FLOAT)
 static int
-ncmpix_get_float_float(const void *xp, float *ip)
+ncmpix_get_NC_FLOAT_float(const void *xp, float *ip)
 {
 	/* TODO */
 	get_ix_float(xp, ip);
@@ -1377,7 +1390,7 @@ NCX_GET1F(float, ulonglong)
 
 #if X_SIZEOF_FLOAT != SIZEOF_FLOAT || defined(NO_IEEE_FLOAT)
 static int
-ncmpix_put_float_float(void *xp, const float *ip)
+ncmpix_put_NC_FLOAT_float(void *xp, const float *ip)
 {
 #ifdef NO_IEEE_FLOAT
 	if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
@@ -1400,7 +1413,7 @@ NCX_PUT1F(float, uint)
 NCX_PUT1F(float, ulonglong)
 
 
-/* x_double ------------------------------------------------------------------*/
+/* external NC_DOUBLE -------------------------------------------------------*/
 
 #if X_SIZEOF_DOUBLE == SIZEOF_DOUBLE  && !defined(NO_IEEE_FLOAT)
 
@@ -1690,7 +1703,7 @@ NCX_GET1F(double, uint)
 NCX_GET1F(double, ulonglong)
 
 static int
-ncmpix_get_double_float(const void *xp, float *ip)
+ncmpix_get_NC_DOUBLE_float(const void *xp, float *ip)
 {
 	double xx;
 	get_ix_double(xp, &xx);
@@ -1710,7 +1723,7 @@ ncmpix_get_double_float(const void *xp, float *ip)
 
 #if X_SIZEOF_DOUBLE != SIZEOF_DOUBLE  || defined(NO_IEEE_FLOAT)
 static int
-ncmpix_get_double_double(const void *xp, double *ip)
+ncmpix_get_NC_DOUBLE_double(const void *xp, double *ip)
 {
 	/* TODO */
 	get_ix_double(xp, ip);
@@ -1729,7 +1742,7 @@ NCX_PUT1F(double, longlong)
 NCX_PUT1F(double, ulonglong)
 
 static int
-ncmpix_put_double_float(void *xp, const float *ip)
+ncmpix_put_NC_DOUBLE_float(void *xp, const float *ip)
 {
 #if 0	/* TODO: figure this out (if condition below will never be true)*/
 	if ((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
@@ -1742,7 +1755,7 @@ ncmpix_put_double_float(void *xp, const float *ip)
 
 #if X_SIZEOF_DOUBLE != SIZEOF_DOUBLE  || defined(NO_IEEE_FLOAT)
 static int
-ncmpix_put_double_double(void *xp, const double *ip)
+ncmpix_put_NC_DOUBLE_double(void *xp, const double *ip)
 {
 #ifdef NO_IEEE_FLOAT
 	if (*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
@@ -1754,7 +1767,7 @@ ncmpix_put_double_double(void *xp, const double *ip)
 #endif
 
 
-/* x_int64 -------------------------------------------------------------------*/
+/* external NC_INT64 --------------------------------------------------------*/
 
 #if SHORT_MAX == X_INT64_MAX
 typedef short ix_int64;
@@ -1832,7 +1845,7 @@ NCX_PUT1F(int64, float)
 NCX_PUT1F(int64, double)
 
 
-/* x_uint64 -----------------------------------------------------------------*/
+/* external NC_UINT64 -------------------------------------------------------*/
 
 #if USHORT_MAX == X_UINT64_MAX
 typedef ushort ix_uint64;
@@ -2193,12 +2206,12 @@ define(`NCX_PAD_GETN_Byte_Body',dnl
 ')dnl
 dnl dnl dnl
 dnl
-dnl NCX_GETN_CHAR(Type)
+dnl NCX_GETN_BYTE(xtype, itype)
 dnl
-define(`NCX_GETN_CHAR',dnl
+define(`NCX_GETN_BYTE',dnl
 `dnl
 int
-ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
+`ncmpix_getn_'NC_TYPE($1)_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 {
 	int status = NC_NOERR;
 	$1 *xp = ($1 *)(*xpp);
@@ -2218,12 +2231,12 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 ')dnl
 dnl dnl dnl
 dnl
-dnl NCX_PAD_GETN_CHAR(Type)
+dnl NCX_PAD_GETN_BYTE(xtype, itype)
 dnl
-define(`NCX_PAD_GETN_CHAR',dnl
+define(`NCX_PAD_GETN_BYTE',dnl
 `dnl
 int
-ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
+`ncmpix_pad_getn_'NC_TYPE($1)_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 {
 	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
@@ -2247,37 +2260,12 @@ ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 ')dnl
 dnl dnl dnl
 dnl
-dnl NCX_GETNo(XType, Type) deprecated
-dnl
-define(`NCX_GETNo',dnl
-`dnl
-int
-ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
-{
-	const char *xp = (const char *) *xpp;
-	int status = NC_NOERR;
-	$1 xx;
-
-	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
-	{
-		const int lstatus = ncmpix_get_$1_$1(xp, &xx);
-		*tp = ($2)xx;
-		if (status == NC_NOERR) /* report the first encountered error */
-			status = lstatus;
-	}
-
-	*xpp = (const void *)xp;
-	return status;
-}
-')dnl
-dnl dnl dnl
-dnl
-dnl NCX_GETN(XType, Type, condition)
+dnl NCX_GETN(xtype, itype)
 dnl
 define(`NCX_GETN',dnl
 `dnl
 int
-ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
+`ncmpix_getn_'NC_TYPE($1)_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 {
 `#'if defined(_SX) && _SX != 0 && Xsizeof($1) == Isizeof($1)
 
@@ -2331,7 +2319,7 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
-		const int lstatus = ncmpix_get_$1_$2(xp, tp);
+		const int lstatus = `ncmpix_get_'NC_TYPE($1)_$2(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -2348,16 +2336,16 @@ dnl
 define(`NCX_PAD_GETN_SHORT',dnl
 `dnl
 int
-ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
+`ncmpix_pad_getn_'NC_TYPE($1)_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 {
-	const MPI_Offset rndup = nelems % 2;
+	const MPI_Offset rndup = nelems % X_SIZEOF_SHORT;
 
 	const char *xp = (const char *) *xpp;
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
-		const int lstatus = ncmpix_get_$1_$2(xp, tp);
+		const int lstatus = `ncmpix_get_'NC_TYPE($1)_$2(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -2404,12 +2392,12 @@ define(`NCX_PAD_PUTN_Byte_Body',dnl
 ')dnl
 dnl dnl dnl
 dnl
-dnl NCX_PUTN_CHAR(Type)
+dnl NCX_PUTN_BYTE(xtype, itype)
 dnl
-define(`NCX_PUTN_CHAR',dnl
+define(`NCX_PUTN_BYTE',dnl
 `dnl
 int
-ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
+`ncmpix_putn_'NC_TYPE($1)_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 {
 	int status = NC_NOERR;
 	$1 *xp = ($1 *) *xpp;
@@ -2430,12 +2418,12 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 ')dnl
 dnl dnl dnl
 dnl
-dnl NCX_PAD_PUTN_CHAR(xtype, ttype)
+dnl NCX_PAD_PUTN_BYTE(xtype, ttype)
 dnl
-define(`NCX_PAD_PUTN_CHAR',dnl
+define(`NCX_PAD_PUTN_BYTE',dnl
 `dnl
 int
-ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
+`ncmpix_pad_putn_'NC_TYPE($1)_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 {
 	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
@@ -2467,39 +2455,12 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 ')dnl
 dnl dnl dnl
 dnl
-dnl NCX_PUTNo(XType, Type) deprecated
-dnl
-define(`NCX_PUTNo',dnl
-`dnl
-int
-ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
-{
-	char *xp = (char *) *xpp;
-	int status = NC_NOERR;
-	$1 xx;
-
-	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
-	{
-		xx = ($1) *tp;
-		{
-		int lstatus = ncmpix_put_$1_$1(xp, &xx);
-		if (status == NC_NOERR) /* report the first encountered error */
-			status = lstatus;
-		}
-	}
-
-	*xpp = (void *)xp;
-	return status;
-}
-')dnl
-dnl dnl dnl
-dnl
-dnl NCX_PUTN(XType, Type, condition)
+dnl NCX_PUTN(xtype, itype)
 dnl
 define(`NCX_PUTN',dnl
 `dnl
 int
-ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
+`ncmpix_putn_'NC_TYPE($1)_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 {
 `#'if defined(_SX) && _SX != 0 && Xsizeof($1) == Isizeof($1)
 
@@ -2571,7 +2532,7 @@ ifelse( $1$2, intfloat,dnl
 
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
-		int lstatus = ncmpix_put_$1_$2(xp, tp);
+		int lstatus = `ncmpix_put_'NC_TYPE($1)_$2(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -2588,16 +2549,16 @@ dnl
 define(`NCX_PAD_PUTN_SHORT',dnl
 `dnl
 int
-ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
+`ncmpix_pad_putn_'NC_TYPE($1)_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 {
-	const MPI_Offset rndup = nelems % 2;
+	const MPI_Offset rndup = nelems % X_SIZEOF_SHORT;
 
 	char *xp = (char *) *xpp;
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
-		int lstatus = ncmpix_put_$1_$2(xp, tp);
+		int lstatus = `ncmpix_put_'NC_TYPE($1)_$2(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -2621,80 +2582,80 @@ dnl dnl dnl
 
 /* schar ---------------------------------------------------------------------*/
 
-dnl NCX_GETN_CHAR(schar, schar)
+dnl NCX_GETN_BYTE(schar, schar)
 int
-ncmpix_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
+ncmpix_getn_NC_BYTE_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	NCX_GETN_Byte_Body
 }
-NCX_GETN_CHAR(schar, uchar)
-NCX_GETN_CHAR(schar, short)
-NCX_GETN_CHAR(schar, int)
-NCX_GETN_CHAR(schar, long)
-NCX_GETN_CHAR(schar, float)
-NCX_GETN_CHAR(schar, double)
-NCX_GETN_CHAR(schar, longlong)
-NCX_GETN_CHAR(schar, ushort)
-NCX_GETN_CHAR(schar, uint)
-NCX_GETN_CHAR(schar, ulonglong)
+NCX_GETN_BYTE(schar, uchar)
+NCX_GETN_BYTE(schar, short)
+NCX_GETN_BYTE(schar, int)
+NCX_GETN_BYTE(schar, long)
+NCX_GETN_BYTE(schar, float)
+NCX_GETN_BYTE(schar, double)
+NCX_GETN_BYTE(schar, longlong)
+NCX_GETN_BYTE(schar, ushort)
+NCX_GETN_BYTE(schar, uint)
+NCX_GETN_BYTE(schar, ulonglong)
 
-dnl NCX_PAD_GETN_CHAR(schar, schar)
+dnl NCX_PAD_GETN_BYTE(schar, schar)
 int
-ncmpix_pad_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
+ncmpix_pad_getn_NC_BYTE_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	NCX_PAD_GETN_Byte_Body
 }
-NCX_PAD_GETN_CHAR(schar, uchar)
-NCX_PAD_GETN_CHAR(schar, short)
-NCX_PAD_GETN_CHAR(schar, int)
-NCX_PAD_GETN_CHAR(schar, long)
-NCX_PAD_GETN_CHAR(schar, float)
-NCX_PAD_GETN_CHAR(schar, double)
-NCX_PAD_GETN_CHAR(schar, longlong)
-NCX_PAD_GETN_CHAR(schar, ushort)
-NCX_PAD_GETN_CHAR(schar, uint)
-NCX_PAD_GETN_CHAR(schar, ulonglong)
+NCX_PAD_GETN_BYTE(schar, uchar)
+NCX_PAD_GETN_BYTE(schar, short)
+NCX_PAD_GETN_BYTE(schar, int)
+NCX_PAD_GETN_BYTE(schar, long)
+NCX_PAD_GETN_BYTE(schar, float)
+NCX_PAD_GETN_BYTE(schar, double)
+NCX_PAD_GETN_BYTE(schar, longlong)
+NCX_PAD_GETN_BYTE(schar, ushort)
+NCX_PAD_GETN_BYTE(schar, uint)
+NCX_PAD_GETN_BYTE(schar, ulonglong)
 
-dnl NCX_PUTN_CHAR(schar, schar)
+dnl NCX_PUTN_BYTE(schar, schar)
 int
-ncmpix_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
+ncmpix_putn_NC_BYTE_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	NCX_PUTN_Byte_Body
 }
-NCX_PUTN_CHAR(schar, uchar)
-NCX_PUTN_CHAR(schar, short)
-NCX_PUTN_CHAR(schar, int)
-NCX_PUTN_CHAR(schar, long)
-NCX_PUTN_CHAR(schar, float)
-NCX_PUTN_CHAR(schar, double)
-NCX_PUTN_CHAR(schar, longlong)
-NCX_PUTN_CHAR(schar, ushort)
-NCX_PUTN_CHAR(schar, uint)
-NCX_PUTN_CHAR(schar, ulonglong)
+NCX_PUTN_BYTE(schar, uchar)
+NCX_PUTN_BYTE(schar, short)
+NCX_PUTN_BYTE(schar, int)
+NCX_PUTN_BYTE(schar, long)
+NCX_PUTN_BYTE(schar, float)
+NCX_PUTN_BYTE(schar, double)
+NCX_PUTN_BYTE(schar, longlong)
+NCX_PUTN_BYTE(schar, ushort)
+NCX_PUTN_BYTE(schar, uint)
+NCX_PUTN_BYTE(schar, ulonglong)
 
-dnl NCX_PAD_PUTN_CHAR(schar, schar)
+dnl NCX_PAD_PUTN_BYTE(schar, schar)
 int
-ncmpix_pad_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
+ncmpix_pad_putn_NC_BYTE_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	NCX_PAD_PUTN_Byte_Body
 }
-NCX_PAD_PUTN_CHAR(schar, uchar)
-NCX_PAD_PUTN_CHAR(schar, short)
-NCX_PAD_PUTN_CHAR(schar, int)
-NCX_PAD_PUTN_CHAR(schar, long)
-NCX_PAD_PUTN_CHAR(schar, float)
-NCX_PAD_PUTN_CHAR(schar, double)
-NCX_PAD_PUTN_CHAR(schar, longlong)
-NCX_PAD_PUTN_CHAR(schar, ushort)
-NCX_PAD_PUTN_CHAR(schar, uint)
-NCX_PAD_PUTN_CHAR(schar, ulonglong)
+NCX_PAD_PUTN_BYTE(schar, uchar)
+NCX_PAD_PUTN_BYTE(schar, short)
+NCX_PAD_PUTN_BYTE(schar, int)
+NCX_PAD_PUTN_BYTE(schar, long)
+NCX_PAD_PUTN_BYTE(schar, float)
+NCX_PAD_PUTN_BYTE(schar, double)
+NCX_PAD_PUTN_BYTE(schar, longlong)
+NCX_PAD_PUTN_BYTE(schar, ushort)
+NCX_PAD_PUTN_BYTE(schar, uint)
+NCX_PAD_PUTN_BYTE(schar, ulonglong)
 
 
 /* uchar ---------------------------------------------------------------------*/
 dnl
-dnl NCX_GETN_CHAR(uchar, schar)
+dnl NCX_GETN_BYTE(uchar, schar)
 int
-ncmpix_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
+ncmpix_getn_NC_UBYTE_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	int status = NC_NOERR;
 	uchar *xp = (uchar *)(*xpp);
@@ -2712,25 +2673,25 @@ ncmpix_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 	*xpp = (const void *)xp;
 	return status;
 }
-dnl NCX_GETN_CHAR(uchar, uchar)
+dnl NCX_GETN_BYTE(uchar, uchar)
 int
-ncmpix_getn_uchar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
+ncmpix_getn_NC_UBYTE_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 {
 	NCX_GETN_Byte_Body
 }
-NCX_GETN_CHAR(uchar, short)
-NCX_GETN_CHAR(uchar, int)
-NCX_GETN_CHAR(uchar, long)
-NCX_GETN_CHAR(uchar, float)
-NCX_GETN_CHAR(uchar, double)
-NCX_GETN_CHAR(uchar, longlong)
-NCX_GETN_CHAR(uchar, ushort)
-NCX_GETN_CHAR(uchar, uint)
-NCX_GETN_CHAR(uchar, ulonglong)
+NCX_GETN_BYTE(uchar, short)
+NCX_GETN_BYTE(uchar, int)
+NCX_GETN_BYTE(uchar, long)
+NCX_GETN_BYTE(uchar, float)
+NCX_GETN_BYTE(uchar, double)
+NCX_GETN_BYTE(uchar, longlong)
+NCX_GETN_BYTE(uchar, ushort)
+NCX_GETN_BYTE(uchar, uint)
+NCX_GETN_BYTE(uchar, ulonglong)
 
-dnl NCX_PAD_GETN_CHAR(uchar, schar)
+dnl NCX_PAD_GETN_BYTE(uchar, schar)
 int
-ncmpix_pad_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
+ncmpix_pad_getn_NC_UBYTE_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
         int status = NC_NOERR;
         MPI_Offset rndup = nelems % X_ALIGN;
@@ -2752,25 +2713,25 @@ ncmpix_pad_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
         *xpp = (void *)(xp + rndup);
         return status;
 }
-dnl NCX_PAD_GETN_CHAR(uchar, uchar)
+dnl NCX_PAD_GETN_BYTE(uchar, uchar)
 int
-ncmpix_pad_getn_uchar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
+ncmpix_pad_getn_NC_UBYTE_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 {
 	NCX_PAD_GETN_Byte_Body
 }
-NCX_PAD_GETN_CHAR(uchar, short)
-NCX_PAD_GETN_CHAR(uchar, int)
-NCX_PAD_GETN_CHAR(uchar, long)
-NCX_PAD_GETN_CHAR(uchar, float)
-NCX_PAD_GETN_CHAR(uchar, double)
-NCX_PAD_GETN_CHAR(uchar, longlong)
-NCX_PAD_GETN_CHAR(uchar, ushort)
-NCX_PAD_GETN_CHAR(uchar, uint)
-NCX_PAD_GETN_CHAR(uchar, ulonglong)
+NCX_PAD_GETN_BYTE(uchar, short)
+NCX_PAD_GETN_BYTE(uchar, int)
+NCX_PAD_GETN_BYTE(uchar, long)
+NCX_PAD_GETN_BYTE(uchar, float)
+NCX_PAD_GETN_BYTE(uchar, double)
+NCX_PAD_GETN_BYTE(uchar, longlong)
+NCX_PAD_GETN_BYTE(uchar, ushort)
+NCX_PAD_GETN_BYTE(uchar, uint)
+NCX_PAD_GETN_BYTE(uchar, ulonglong)
 
-dnl NCX_PUTN_CHAR(uchar, schar)
+dnl NCX_PUTN_BYTE(uchar, schar)
 int
-ncmpix_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
+ncmpix_putn_NC_UBYTE_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	int status = NC_NOERR;
 	uchar *xp = (uchar *) *xpp;
@@ -2788,25 +2749,25 @@ ncmpix_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 	*xpp = (void *)xp;
 	return status;
 }
-dnl NCX_PUTN_CHAR(uchar, uchar)
+dnl NCX_PUTN_BYTE(uchar, uchar)
 int
-ncmpix_putn_uchar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
+ncmpix_putn_NC_UBYTE_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 {
 	NCX_PUTN_Byte_Body
 }
-NCX_PUTN_CHAR(uchar, short)
-NCX_PUTN_CHAR(uchar, int)
-NCX_PUTN_CHAR(uchar, long)
-NCX_PUTN_CHAR(uchar, float)
-NCX_PUTN_CHAR(uchar, double)
-NCX_PUTN_CHAR(uchar, longlong)
-NCX_PUTN_CHAR(uchar, ushort)
-NCX_PUTN_CHAR(uchar, uint)
-NCX_PUTN_CHAR(uchar, ulonglong)
+NCX_PUTN_BYTE(uchar, short)
+NCX_PUTN_BYTE(uchar, int)
+NCX_PUTN_BYTE(uchar, long)
+NCX_PUTN_BYTE(uchar, float)
+NCX_PUTN_BYTE(uchar, double)
+NCX_PUTN_BYTE(uchar, longlong)
+NCX_PUTN_BYTE(uchar, ushort)
+NCX_PUTN_BYTE(uchar, uint)
+NCX_PUTN_BYTE(uchar, ulonglong)
 
-dnl NCX_PAD_PUTN_UCHAR(uchar, schar)
+dnl NCX_PAD_PUTN_BYTE(uchar, schar)
 int
-ncmpix_pad_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
+ncmpix_pad_putn_NC_UBYTE_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
@@ -2837,26 +2798,26 @@ ncmpix_pad_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 }
 dnl NCX_PAD_PUTN_UCHAR(uchar, uchar)
 int
-ncmpix_pad_putn_uchar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
+ncmpix_pad_putn_NC_UBYTE_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 {
 	NCX_PAD_PUTN_Byte_Body
 }
-NCX_PAD_PUTN_CHAR(uchar, short)
-NCX_PAD_PUTN_CHAR(uchar, int)
-NCX_PAD_PUTN_CHAR(uchar, long)
-NCX_PAD_PUTN_CHAR(uchar, float)
-NCX_PAD_PUTN_CHAR(uchar, double)
-NCX_PAD_PUTN_CHAR(uchar, longlong)
-NCX_PAD_PUTN_CHAR(uchar, ushort)
-NCX_PAD_PUTN_CHAR(uchar, uint)
-NCX_PAD_PUTN_CHAR(uchar, ulonglong)
+NCX_PAD_PUTN_BYTE(uchar, short)
+NCX_PAD_PUTN_BYTE(uchar, int)
+NCX_PAD_PUTN_BYTE(uchar, long)
+NCX_PAD_PUTN_BYTE(uchar, float)
+NCX_PAD_PUTN_BYTE(uchar, double)
+NCX_PAD_PUTN_BYTE(uchar, longlong)
+NCX_PAD_PUTN_BYTE(uchar, ushort)
+NCX_PAD_PUTN_BYTE(uchar, uint)
+NCX_PAD_PUTN_BYTE(uchar, ulonglong)
 
 /* short ---------------------------------------------------------------------*/
 
 #if X_SIZEOF_SHORT == SIZEOF_SHORT
 /* optimized version */
 int
-ncmpix_getn_short_short(const void **xpp, MPI_Offset nelems, short *tp)
+ncmpix_getn_NC_SHORT_short(const void **xpp, MPI_Offset nelems, short *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_SHORT);
@@ -2895,7 +2856,7 @@ NCX_PAD_GETN_SHORT(short, ushort)
 #if X_SIZEOF_SHORT == SIZEOF_SHORT
 /* optimized version */
 int
-ncmpix_putn_short_short(void **xpp, MPI_Offset nelems, const short *tp)
+ncmpix_putn_NC_SHORT_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_SHORT);
@@ -2937,7 +2898,7 @@ NCX_PAD_PUTN_SHORT(short, ushort)
 #if X_SIZEOF_USHORT == SIZEOF_USHORT
 /* optimized version */
 int
-ncmpix_getn_ushort_ushort(const void **xpp, MPI_Offset nelems, unsigned short *tp)
+ncmpix_getn_NC_USHORT_ushort(const void **xpp, MPI_Offset nelems, unsigned short *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_UNSIGNED_SHORT);
@@ -2976,7 +2937,7 @@ NCX_PAD_GETN_SHORT(ushort, ulonglong)
 #if X_SIZEOF_USHORT == SIZEOF_USHORT
 /* optimized version */
 int
-ncmpix_putn_ushort_ushort(void **xpp, MPI_Offset nelems, const unsigned short *tp)
+ncmpix_putn_NC_USHORT_ushort(void **xpp, MPI_Offset nelems, const unsigned short *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_USHORT);
@@ -3018,7 +2979,7 @@ NCX_PAD_PUTN_SHORT(ushort, ushort)
 #if X_SIZEOF_INT == SIZEOF_INT
 /* optimized version */
 int
-ncmpix_getn_int_int(const void **xpp, MPI_Offset nelems, int *tp)
+ncmpix_getn_NC_INT_int(const void **xpp, MPI_Offset nelems, int *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_INT);
@@ -3045,7 +3006,7 @@ NCX_GETN(int, ulonglong)
 #if X_SIZEOF_INT == SIZEOF_INT
 /* optimized version */
 int
-ncmpix_putn_int_int(void **xpp, MPI_Offset nelems, const int *tp)
+ncmpix_putn_NC_INT_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_INT);
@@ -3074,7 +3035,7 @@ NCX_PUTN(int, ulonglong)
 #if X_SIZEOF_UINT == SIZEOF_UINT
 /* optimized version */
 int
-ncmpix_getn_uint_uint(const void **xpp, MPI_Offset nelems, unsigned int *tp)
+ncmpix_getn_NC_UINT_uint(const void **xpp, MPI_Offset nelems, unsigned int *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_UINT);
@@ -3101,7 +3062,7 @@ NCX_GETN(uint, ulonglong)
 #if X_SIZEOF_UINT == SIZEOF_UINT
 /* optimized version */
 int
-ncmpix_putn_uint_uint(void **xpp, MPI_Offset nelems, const unsigned int *tp)
+ncmpix_putn_NC_UINT_uint(void **xpp, MPI_Offset nelems, const unsigned int *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_UINT);
@@ -3131,7 +3092,7 @@ NCX_PUTN(uint, ulonglong)
 #if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
 /* optimized version */
 int
-ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
+ncmpix_getn_NC_FLOAT_float(const void **xpp, MPI_Offset nelems, float *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_FLOAT);
@@ -3143,7 +3104,7 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
 }
 #elif defined(vax) && vax != 0
 int
-ncmpix_getn_float_float(const void **xpp, MPI_Offset nfloats, float *ip)
+ncmpix_getn_NC_FLOAT_float(const void **xpp, MPI_Offset nfloats, float *ip)
 {
 	float *const end = ip + nfloats;
 
@@ -3158,14 +3119,14 @@ GET_VAX_DFLOAT_Body(`(*xpp)')
 }
 #else
 int
-ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
+ncmpix_getn_NC_FLOAT_float(const void **xpp, MPI_Offset nelems, float *tp)
 {
 	const char *xp = *xpp;
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
-		const int lstatus = ncmpix_get_float_float(xp, tp);
+		const int lstatus = ncmpix_get_NC_FLOAT_float(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3189,7 +3150,7 @@ NCX_GETN(float, ulonglong)
 #if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
 /* optimized version */
 int
-ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
+ncmpix_putn_NC_FLOAT_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_FLOAT);
@@ -3201,7 +3162,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
 }
 #elif defined(vax) && vax != 0
 int
-ncmpix_putn_float_float(void **xpp, MPI_Offset nfloats, const float *ip)
+ncmpix_putn_NC_FLOAT_float(void **xpp, MPI_Offset nfloats, const float *ip)
 {
 	const float *const end = ip + nfloats;
 
@@ -3216,14 +3177,14 @@ PUT_VAX_DFLOAT_Body(`(*xpp)')
 }
 #else
 int
-ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
+ncmpix_putn_NC_FLOAT_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
 	char *xp = *xpp;
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
-		int lstatus = ncmpix_put_float_float(xp, tp);
+		int lstatus = ncmpix_put_NC_FLOAT_float(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3248,7 +3209,7 @@ NCX_PUTN(float, ulonglong)
 #if X_SIZEOF_DOUBLE == SIZEOF_DOUBLE && !defined(NO_IEEE_FLOAT)
 /* optimized version */
 int
-ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
+ncmpix_getn_NC_DOUBLE_double(const void **xpp, MPI_Offset nelems, double *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_DOUBLE);
@@ -3260,7 +3221,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
 }
 #elif defined(vax) && vax != 0
 int
-ncmpix_getn_double_double(const void **xpp, MPI_Offset ndoubles, double *ip)
+ncmpix_getn_NC_DOUBLE_double(const void **xpp, MPI_Offset ndoubles, double *ip)
 {
 	double *const end = ip + ndoubles;
 
@@ -3275,14 +3236,14 @@ GET_VAX_DDOUBLE_Body(`(*xpp)')
 	/* vax */
 #else
 int
-ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
+ncmpix_getn_NC_DOUBLE_double(const void **xpp, MPI_Offset nelems, double *tp)
 {
 	const char *xp = *xpp;
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
-		const int lstatus = ncmpix_get_double_double(xp, tp);
+		const int lstatus = ncmpix_get_NC_DOUBLE_double(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3305,7 +3266,7 @@ NCX_GETN(double, ulonglong)
 #if X_SIZEOF_DOUBLE == SIZEOF_DOUBLE && !defined(NO_IEEE_FLOAT)
 /* optimized version */
 int
-ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
+ncmpix_putn_NC_DOUBLE_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_DOUBLE);
@@ -3317,7 +3278,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
 }
 #elif defined(vax) && vax != 0
 int
-ncmpix_putn_double_double(void **xpp, MPI_Offset ndoubles, const double *ip)
+ncmpix_putn_NC_DOUBLE_double(void **xpp, MPI_Offset ndoubles, const double *ip)
 {
 	const double *const end = ip + ndoubles;
 
@@ -3332,14 +3293,14 @@ PUT_VAX_DDOUBLE_Body(`(*xpp)')
 	/* vax */
 #else
 int
-ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
+ncmpix_putn_NC_DOUBLE_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
 	char *xp = *xpp;
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
-		int lstatus = ncmpix_put_double_double(xp, tp);
+		int lstatus = ncmpix_put_NC_DOUBLE_double(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3365,7 +3326,7 @@ NCX_PUTN(double, ulonglong)
 #if X_SIZEOF_INT64 == SIZEOF_LONGLONG
 /* optimized version */
 int
-ncmpix_getn_int64_longlong(const void **xpp, MPI_Offset nelems, long long *tp)
+ncmpix_getn_NC_INT64_longlong(const void **xpp, MPI_Offset nelems, long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_LONG_LONG);
@@ -3392,7 +3353,7 @@ NCX_GETN(int64, ulonglong)
 #if X_SIZEOF_INT64 == SIZEOF_LONGLONG
 /* optimized version */
 int
-ncmpix_putn_int64_longlong(void **xpp, MPI_Offset nelems, const long long *tp)
+ncmpix_putn_NC_INT64_longlong(void **xpp, MPI_Offset nelems, const long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_INT64);
@@ -3421,7 +3382,7 @@ NCX_PUTN(int64, ulonglong)
 #if X_SIZEOF_UINT64 == SIZEOF_ULONGLONG
 /* optimized version */
 int
-ncmpix_getn_uint64_ulonglong(const void **xpp, MPI_Offset nelems, unsigned long long *tp)
+ncmpix_getn_NC_UINT64_ulonglong(const void **xpp, MPI_Offset nelems, unsigned long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_UNSIGNED_LONG_LONG);
@@ -3448,7 +3409,7 @@ NCX_GETN(uint64, uint)
 #if X_SIZEOF_UINT64 == SIZEOF_ULONGLONG
 /* optimized version */
 int
-ncmpix_putn_uint64_ulonglong(void **xpp, MPI_Offset nelems, const unsigned long long *tp)
+ncmpix_putn_NC_UINT64_ulonglong(void **xpp, MPI_Offset nelems, const unsigned long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_UINT64);

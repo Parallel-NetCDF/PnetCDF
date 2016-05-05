@@ -804,50 +804,53 @@ int ncmpii_handle_error(int mpi_errorcode, char *msg);
  * ../nc_test/tests.h if you change these.
  */
 
-int ncmpii_x_putn_byte  (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_schar (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_uchar (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_short (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_ushort(void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_int   (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_uint  (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_float (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_double(void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_int64 (void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_putn_uint64(void *xbuf, const void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_byte  (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_schar (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_uchar (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_short (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_ushort(const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_int   (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_uint  (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_float (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_double(const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_int64 (const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
-int ncmpii_x_getn_uint64(const void *xbuf, void *buf, MPI_Offset nelems,
-                        MPI_Datatype datatype);
+int ncmpii_x_putn_NC_CHAR  (void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_BYTE  (int cdf_ver,
+                           void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_UBYTE (void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_SHORT (void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_USHORT(void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_INT   (void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_UINT  (void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_FLOAT (void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_DOUBLE(void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_INT64 (void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_putn_NC_UINT64(void *xbuf, const void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+
+int ncmpii_x_getn_NC_CHAR  (const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_BYTE  (int cdf_ver,
+                           const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_UBYTE (const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_SHORT (const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_USHORT(const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_INT   (const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_UINT  (const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_FLOAT (const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_DOUBLE(const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_INT64 (const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
+int ncmpii_x_getn_NC_UINT64(const void *xbuf, void *buf, MPI_Offset nelems,
+                           MPI_Datatype datatype);
 
 int NC_start_count_stride_ck(const NC *ncp, const NC_var *varp,
                 const MPI_Offset *start, const MPI_Offset *count,

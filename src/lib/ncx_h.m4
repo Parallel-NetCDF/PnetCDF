@@ -314,7 +314,7 @@ dnl
 define(`_concat3', $1$2$3)dnl
 dnl
 dnl for external types that need padding
-foreach(`xtype', (schar, uchar, short, ushort),
+foreach(`xtype', (NC_BYTE, NC_UBYTE, NC_SHORT, NC_USHORT),
 `/*---- xtype ----------------------------------------------------------------*/
 foreach(`op', (getn, pad_getn),
 `foreach(`itype', (schar, uchar, short, ushort, int, uint, long, float, double, longlong, ulonglong),
@@ -327,7 +327,7 @@ foreach(`op', (putn, pad_putn),
 )
 dnl
 dnl for external types that need no padding
-foreach(`xtype', (int, uint, float, double, int64, uint64),
+foreach(`xtype', (NC_INT, NC_UINT, NC_FLOAT, NC_DOUBLE, NC_INT64, NC_UINT64),
 `/*---- xtype ----------------------------------------------------------------*/
 foreach(`op', (getn),
 `foreach(`itype', (schar, uchar, short, ushort, int, uint, long, float, double, longlong, ulonglong),
