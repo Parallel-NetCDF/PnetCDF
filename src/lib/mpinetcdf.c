@@ -260,10 +260,19 @@ ncmpi_create(MPI_Comm    comm,
     /* take hints from the environment variable PNETCDF_HINTS
      * a string of hints separated by ";" and each hint is in the
      * form of hint=value. E.g. cb_nodes=16;cb_config_list=*:6
-     * If this environment variable is set, it  overrides any values that
+     * If this environment variable is set, it overrides any values that
      * were set by using calls to MPI_Info_set in the application code.
      */
-    env_info = info;
+    env_info = MPI_INFO_NULL;
+    if (info != MPI_INFO_NULL) {
+#ifdef HAVE_MPI_INFO_DUP
+        mpireturn = MPI_Info_dup(info, &env_info);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Info_dup");
+#else
+        printf("Warning: MPI info is ignored as MPI_Info_dup() is missing\n");
+#endif
+    }
     if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
         if (env_info == MPI_INFO_NULL)
             MPI_Info_create(&env_info); /* ignore error */
@@ -370,7 +379,7 @@ ncmpi_create(MPI_Comm    comm,
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
 
-    if (env_info != info) MPI_Info_free(&env_info);
+    if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
 
     /* initialize unlimited_id as no unlimited dimension yet defined */
     ncp->dims.unlimited_id = -1;
