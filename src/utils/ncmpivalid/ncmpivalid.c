@@ -659,7 +659,7 @@ static int
 val_get_NC(NC *ncp) {
     int status;
     bufferinfo getbuf;
-    schar magic[sizeof(ncmagic)];
+    char magic[sizeof(ncmagic)];
     MPI_Offset nrecs = 0;
     MPI_Aint pos_addr, base_addr;
 
@@ -686,8 +686,8 @@ val_get_NC(NC *ncp) {
   
     /* First get the file format information, magic */
     memset(magic, 0, sizeof(magic));
-    status = ncmpix_getn_schar_schar((const void **)(&getbuf.pos),
-                                     sizeof(magic), magic);
+    status = ncmpix_getn_text((const void **)(&getbuf.pos), sizeof(magic),
+                              magic);
     getbuf.index += sizeof(magic);
 
     if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
