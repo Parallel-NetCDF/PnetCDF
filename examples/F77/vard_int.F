@@ -58,7 +58,7 @@
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          character*128 filename, cmd
+          character*256 filename, cmd
           integer err, ierr, nprocs, rank, i, j, get_args, dummy
           integer cmode, ncid, varid0, varid1, dimid(2)
           integer*8 NX, NY, len, bufcount
