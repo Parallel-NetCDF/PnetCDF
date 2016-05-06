@@ -79,7 +79,7 @@
           integer*8 NX, NY
           PARAMETER(NDIMS=2, NX=10, NY=4)
 
-          character*128 filename, cmd
+          character*256 filename, cmd
           integer i, j, k, n, err, ierr, nprocs, rank, get_args
           integer cmode, ncid, varid(4), dimid(NDIMS), nreqs
           integer reqs(4), sts(4), num_segs(4)

@@ -40,7 +40,7 @@
           integer NDIMS, NUM_VARS, BUFSIZE
           PARAMETER(NDIMS=3, NUM_VARS=10, BUFSIZE=1000)
 
-          character*128 filename, cmd, str
+          character*256 filename, cmd, str
           integer i, j, cmode, err, ierr, get_args, info
           integer rank, nprocs, ncid, len
           integer buf(BUFSIZE, NUM_VARS), buf1d(BUFSIZE)

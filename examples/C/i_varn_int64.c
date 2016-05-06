@@ -155,7 +155,7 @@ static int check_contents(int ncid, int *varid)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc", exec[128];
+    char *filename="testfile.nc", exec[256];
     int i, j, k, n, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     long long *buffer[4];

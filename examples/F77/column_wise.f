@@ -69,7 +69,7 @@
           integer NY, NX
           PARAMETER(NX=10, NY=4)
 
-          character*128 filename, cmd
+          character*256 filename, cmd
           integer i, j, rank, nprocs, err, ierr, num_reqs, get_args
           integer ncid, cmode, varid, dimid(2)
           integer buf(NX, NY)
