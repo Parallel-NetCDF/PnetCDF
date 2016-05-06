@@ -66,7 +66,7 @@
           integer NY, NX
           PARAMETER(NX=10, NY=4)
 
-          character(LEN=128) filename, cmd
+          character(LEN=256) filename, cmd
           integer i, j, rank, nprocs, err, num_reqs, ierr, get_args, dummy
           integer ncid, cmode, varid, dimid(2), stride, block_len
           integer, dimension(:,:), allocatable :: buf

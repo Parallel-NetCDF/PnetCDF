@@ -69,7 +69,7 @@
           include 'mpif.h'
           include 'pnetcdf.inc'
 
-          character*128 filename, cmd
+          character*256 filename, cmd
           integer i, j, err, ierr, nprocs, rank, get_args
           integer cmode, ncid, rec_varid, fix_varid, dimid(2)
           integer no_fill, fill_value, old_mode

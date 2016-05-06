@@ -59,7 +59,7 @@
           use pnetcdf
           implicit none
 
-          character(LEN=128) filename, cmd
+          character(LEN=256) filename, cmd
           integer err, nprocs, rank, i, j, ierr, get_args, dummy
           integer cmode, ncid, varid0, varid1, dimid(2)
           integer(kind=MPI_OFFSET_KIND) NX, NY

@@ -73,7 +73,7 @@
           use pnetcdf
           implicit none
 
-          character(LEN=128) filename, cmd
+          character(LEN=256) filename, cmd
           integer err, nprocs, rank, ierr, get_args, dummy
           integer cmode, ncid, rec_varid, fix_varid, dimid(2)
           integer no_fill, fill_value, old_mode

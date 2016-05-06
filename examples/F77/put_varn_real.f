@@ -53,7 +53,7 @@
           integer NDIMS
           PARAMETER(NDIMS=2)
 
-          character*128 filename, cmd
+          character*256 filename, cmd
           integer rank, nprocs, err, num_reqs, ierr, get_args, dummy
           integer i, j, ncid, cmode, varid, dimid(2), y, x
           real buffer(13)

@@ -70,7 +70,7 @@
           include "mpif.h"
           include "pnetcdf.inc"
 
-          character*128 filename, cmd
+          character*256 filename, cmd
           integer err, ierr, nprocs, rank, i, j, ghost_len, get_args
           integer cmode, ncid, varid, dimid(2)
           integer*8 nx, ny, global_nx, global_ny

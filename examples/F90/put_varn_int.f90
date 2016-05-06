@@ -68,7 +68,7 @@
           integer(kind=MPI_OFFSET_KIND) NX, NY
           PARAMETER(NDIMS=2, NX=4, NY=10)
 
-          character(LEN=128) filename, cmd
+          character(LEN=256) filename, cmd
           integer i, j, err, nprocs, rank, ierr, get_args, dummy
           integer cmode, ncid, varid, dimid(NDIMS), num_reqs
 
