@@ -28,6 +28,8 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
+include(`foreach.m4')
+include(`utils.m4')
 
 define(`CollIndep',   `ifelse(`$1',`_all', `COLL_IO', `INDEP_IO')')dnl
 define(`ReadWrite',   `ifelse(`$1', `get', `READ_REQ', `WRITE_REQ')')dnl
@@ -103,34 +105,11 @@ ncmpi_i$1_var_$2(int              ncid,
     return status;
 }
 ')dnl
-
-VAR(put, text,      char,               MPI_CHAR)
-VAR(put, schar,     schar,              MPI_SIGNED_CHAR)
-VAR(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR(put, short,     short,              MPI_SHORT)
-VAR(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR(put, int,       int,                MPI_INT)
-VAR(put, uint,      uint,               MPI_UNSIGNED)
-VAR(put, long,      long,               MPI_LONG)
-VAR(put, float,     float,              MPI_FLOAT)
-VAR(put, double,    double,             MPI_DOUBLE)
-VAR(put, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR(get, text,      char,               MPI_CHAR)
-VAR(get, schar,     schar,              MPI_SIGNED_CHAR)
-VAR(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR(get, short,     short,              MPI_SHORT)
-VAR(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR(get, int,       int,                MPI_INT)
-VAR(get, uint,      uint,               MPI_UNSIGNED)
-VAR(get, long,      long,               MPI_LONG)
-VAR(get, float,     float,              MPI_FLOAT)
-VAR(get, double,    double,             MPI_DOUBLE)
-VAR(get, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-
+dnl
+foreach(`putget', (put, get),
+        `foreach(`itype', (ITYPE_LIST),
+                 `VAR(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')')
 dnl
 dnl VAR1_FLEXIBLE
 dnl
@@ -201,34 +180,11 @@ ncmpi_i$1_var1_$2(int               ncid,
     return status;
 }
 ')dnl
-
-VAR1(put, text,      char,               MPI_CHAR)
-VAR1(put, schar,     schar,              MPI_SIGNED_CHAR)
-VAR1(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(put, short,     short,              MPI_SHORT)
-VAR1(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(put, int,       int,                MPI_INT)
-VAR1(put, uint,      uint,               MPI_UNSIGNED)
-VAR1(put, long,      long,               MPI_LONG)
-VAR1(put, float,     float,              MPI_FLOAT)
-VAR1(put, double,    double,             MPI_DOUBLE)
-VAR1(put, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR1(get, text,      char,               MPI_CHAR)
-VAR1(get, schar,     schar,              MPI_SIGNED_CHAR)
-VAR1(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(get, short,     short,              MPI_SHORT)
-VAR1(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(get, int,       int,                MPI_INT)
-VAR1(get, uint,      uint,               MPI_UNSIGNED)
-VAR1(get, long,      long,               MPI_LONG)
-VAR1(get, float,     float,              MPI_FLOAT)
-VAR1(get, double,    double,             MPI_DOUBLE)
-VAR1(get, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-
+dnl
+foreach(`putget', (put, get),
+        `foreach(`itype', (ITYPE_LIST),
+                 `VAR1(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')')
 dnl
 dnl VARA_FLEXIBLE
 dnl
@@ -290,34 +246,11 @@ ncmpi_i$1_vara_$2(int               ncid,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
 }
 ')dnl
-
-VARA(put, text,      char,               MPI_CHAR)
-VARA(put, schar,     schar,              MPI_SIGNED_CHAR)
-VARA(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARA(put, short,     short,              MPI_SHORT)
-VARA(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARA(put, int,       int,                MPI_INT)
-VARA(put, uint,      uint,               MPI_UNSIGNED)
-VARA(put, long,      long,               MPI_LONG)
-VARA(put, float,     float,              MPI_FLOAT)
-VARA(put, double,    double,             MPI_DOUBLE)
-VARA(put, longlong,  long long,          MPI_LONG_LONG_INT)
-VARA(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARA(get, text,      char,               MPI_CHAR)
-VARA(get, schar,     schar,              MPI_SIGNED_CHAR)
-VARA(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARA(get, short,     short,              MPI_SHORT)
-VARA(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARA(get, int,       int,                MPI_INT)
-VARA(get, uint,      uint,               MPI_UNSIGNED)
-VARA(get, long,      long,               MPI_LONG)
-VARA(get, float,     float,              MPI_FLOAT)
-VARA(get, double,    double,             MPI_DOUBLE)
-VARA(get, longlong,  long long,          MPI_LONG_LONG_INT)
-VARA(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-
+dnl
+foreach(`putget', (put, get),
+        `foreach(`itype', (ITYPE_LIST),
+                 `VARA(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')')
 dnl
 dnl VARS_FLEXIBLE
 dnl
@@ -381,33 +314,11 @@ ncmpi_i$1_vars_$2(int               ncid,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
 }
 ')dnl
-
-VARS(put, text,      char,               MPI_CHAR)
-VARS(put, schar,     schar,              MPI_SIGNED_CHAR)
-VARS(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARS(put, short,     short,              MPI_SHORT)
-VARS(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARS(put, int,       int,                MPI_INT)
-VARS(put, uint,      uint,               MPI_UNSIGNED)
-VARS(put, long,      long,               MPI_LONG)
-VARS(put, float,     float,              MPI_FLOAT)
-VARS(put, double,    double,             MPI_DOUBLE)
-VARS(put, longlong,  long long,          MPI_LONG_LONG_INT)
-VARS(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARS(get, text,      char,               MPI_CHAR)
-VARS(get, schar,     schar,              MPI_SIGNED_CHAR)
-VARS(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARS(get, short,     short,              MPI_SHORT)
-VARS(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARS(get, int,       int,                MPI_INT)
-VARS(get, uint,      uint,               MPI_UNSIGNED)
-VARS(get, long,      long,               MPI_LONG)
-VARS(get, float,     float,              MPI_FLOAT)
-VARS(get, double,    double,             MPI_DOUBLE)
-VARS(get, longlong,  long long,          MPI_LONG_LONG_INT)
-VARS(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
+dnl
+foreach(`putget', (put, get),
+        `foreach(`itype', (ITYPE_LIST),
+                 `VARS(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')')
 
 /* buffer layers:
 
@@ -486,32 +397,11 @@ ncmpi_i$1_varm_$2(int               ncid,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
 }
 ')dnl
-
-VARM(put, text,      char,               MPI_CHAR)
-VARM(put, schar,     schar,              MPI_SIGNED_CHAR)
-VARM(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARM(put, short,     short,              MPI_SHORT)
-VARM(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARM(put, int,       int,                MPI_INT)
-VARM(put, uint,      uint,               MPI_UNSIGNED)
-VARM(put, long,      long,               MPI_LONG)
-VARM(put, float,     float,              MPI_FLOAT)
-VARM(put, double,    double,             MPI_DOUBLE)
-VARM(put, longlong,  long long,          MPI_LONG_LONG_INT)
-VARM(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARM(get, text,      char,               MPI_CHAR)
-VARM(get, schar,     schar,              MPI_SIGNED_CHAR)
-VARM(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARM(get, short,     short,              MPI_SHORT)
-VARM(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARM(get, int,       int,                MPI_INT)
-VARM(get, uint,      uint,               MPI_UNSIGNED)
-VARM(get, long,      long,               MPI_LONG)
-VARM(get, float,     float,              MPI_FLOAT)
-VARM(get, double,    double,             MPI_DOUBLE)
-VARM(get, longlong,  long long,          MPI_LONG_LONG_INT)
-VARM(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+dnl
+foreach(`putget', (put, get),
+        `foreach(`itype', (ITYPE_LIST),
+                 `VARM(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')')
 
 /*----< ncmpii_abuf_malloc() >------------------------------------------------*/
 /* allocate memory space from the attached buffer pool */

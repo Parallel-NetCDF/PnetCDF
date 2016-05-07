@@ -184,19 +184,32 @@ typedef signed char schar;
  *		const internal_type *ip
  *	);
  * where
- *	``external_type'' and ``internal_type'' chosen from
-		schar
-		uchar
-		short
-		ushort
-		int
-		uint
-		long
-		ulong
-		float
-		double
+ *	``external_type'' chosen from
+ *      	NC_CHAR
+ *      	NC_BYTE
+ *      	NC_SHORT
+ *      	NC_INT
+ *      	NC_FLOAT
+ *      	NC_DOUBLE
+ *      	NC_UBYTE
+ *      	NC_USHORT
+ *      	NC_UINT
+ *      	NC_INT64
+ *      	NC_UINT64
  *
- * Not all combinations make sense.
+ *	``internal_type'' chosen from
+ *      	schar
+ *      	uchar
+ *      	short
+ *      	int
+ *      	float
+ *      	double
+ *      	ushort
+ *      	uint
+ *      	longlong
+ *      	ulonglong
+ *
+ * Not all combinations make sense, i.e. those causing NC_ECHAR.
  * We may not implement all combinations that make sense.
  * The netcdf functions that use this ncmpix interface do not
  * use these primitive conversion functions. They use the
@@ -286,14 +299,8 @@ ncmpix_put_uint64(void **xpp, const unsigned long long ip);
  *
  */
 
-divert(`-1')
-# foreach(x, (item_1, item_2, ..., item_n), stmt)
-#   parenthesized list, simple version
-define(`foreach', `pushdef(`$1')_foreach($@)popdef(`$1')')
-define(`_arg1', `$1')
-define(`_foreach', `ifelse(`$2', `()', `',
-  `define(`$1', _arg1$2)$3`'$0(`$1', (shift$2), `$3')')')
-divert`'dnl
+include(`foreach.m4')
+
 dnl
 dnl CONV_GET_XTYPE_ITYPE(op, xtype, itype)
 dnl
