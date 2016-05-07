@@ -27,6 +27,9 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
+include(`foreach.m4')
+include(`utils.m4')
+
 /* ncmpi_iget/iput_varn_<type>_<mode> API:
  *    type:   data type of I/O buffer, buf
  *    mode:   indpendent (<nond>) or collective (_all)
@@ -137,46 +140,11 @@ ncmpi_$1_varn_$2(int                ncid,
                                -1, $4, reqid, ReadWrite($1), IsBput($1));
 }
 ')dnl
-
-VARN(iput, text,      char,               MPI_CHAR)
-VARN(iput, schar,     schar,              MPI_SIGNED_CHAR)
-VARN(iput, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARN(iput, short,     short,              MPI_SHORT)
-VARN(iput, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARN(iput, int,       int,                MPI_INT)
-VARN(iput, uint,      uint,               MPI_UNSIGNED)
-VARN(iput, long,      long,               MPI_LONG)
-VARN(iput, float,     float,              MPI_FLOAT)
-VARN(iput, double,    double,             MPI_DOUBLE)
-VARN(iput, longlong,  long long,          MPI_LONG_LONG_INT)
-VARN(iput, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARN(iget, text,      char,               MPI_CHAR)
-VARN(iget, schar,     schar,              MPI_SIGNED_CHAR)
-VARN(iget, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARN(iget, short,     short,              MPI_SHORT)
-VARN(iget, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARN(iget, int,       int,                MPI_INT)
-VARN(iget, uint,      uint,               MPI_UNSIGNED)
-VARN(iget, long,      long,               MPI_LONG)
-VARN(iget, float,     float,              MPI_FLOAT)
-VARN(iget, double,    double,             MPI_DOUBLE)
-VARN(iget, longlong,  long long,          MPI_LONG_LONG_INT)
-VARN(iget, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARN(bput, text,      char,               MPI_CHAR)
-VARN(bput, schar,     schar,              MPI_SIGNED_CHAR)
-VARN(bput, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARN(bput, short,     short,              MPI_SHORT)
-VARN(bput, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARN(bput, int,       int,                MPI_INT)
-VARN(bput, uint,      uint,               MPI_UNSIGNED)
-VARN(bput, long,      long,               MPI_LONG)
-VARN(bput, float,     float,              MPI_FLOAT)
-VARN(bput, double,    double,             MPI_DOUBLE)
-VARN(bput, longlong,  long long,          MPI_LONG_LONG_INT)
-VARN(bput, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
+dnl
+foreach(`putget', (iput, iget, bput),
+        `foreach(`itype', (ITYPE_LIST),
+                 `VARN(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')')
 
 /*----< ncmpii_igetput_varn() >-----------------------------------------------*/
 static int

@@ -27,6 +27,8 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
+include(`foreach.m4')
+include(`utils.m4')
 
 /*----< ncmpi_bput_var() >----------------------------------------------------*/
 int
@@ -94,19 +96,9 @@ ncmpi_bput_var_$1(int       ncid,
 }
 ')dnl
 
-BPUT_VAR_TYPE(text,      char,               MPI_CHAR)
-BPUT_VAR_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
-BPUT_VAR_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
-BPUT_VAR_TYPE(short,     short,              MPI_SHORT)
-BPUT_VAR_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
-BPUT_VAR_TYPE(int,       int,                MPI_INT)
-BPUT_VAR_TYPE(uint,      uint,               MPI_UNSIGNED)
-BPUT_VAR_TYPE(long,      long,               MPI_LONG)
-BPUT_VAR_TYPE(float,     float,              MPI_FLOAT)
-BPUT_VAR_TYPE(double,    double,             MPI_DOUBLE)
-BPUT_VAR_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
-BPUT_VAR_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
+foreach(`itype', (ITYPE_LIST),
+        `BPUT_VAR_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')dnl
 
 /*----< ncmpi_bput_var1() >---------------------------------------------------*/
 int
@@ -173,19 +165,9 @@ ncmpi_bput_var1_$1(int               ncid,
 }
 ')dnl
 
-BPUT_VAR1_TYPE(text,      char,               MPI_CHAR)
-BPUT_VAR1_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
-BPUT_VAR1_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
-BPUT_VAR1_TYPE(short,     short,              MPI_SHORT)
-BPUT_VAR1_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
-BPUT_VAR1_TYPE(int,       int,                MPI_INT)
-BPUT_VAR1_TYPE(uint,      uint,               MPI_UNSIGNED)
-BPUT_VAR1_TYPE(long,      long,               MPI_LONG)
-BPUT_VAR1_TYPE(float,     float,              MPI_FLOAT)
-BPUT_VAR1_TYPE(double,    double,             MPI_DOUBLE)
-BPUT_VAR1_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
-BPUT_VAR1_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
+foreach(`itype', (ITYPE_LIST),
+        `BPUT_VAR1_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')dnl
 
 /*----< ncmpi_bput_vara() >---------------------------------------------------*/
 int
@@ -244,19 +226,9 @@ ncmpi_bput_vara_$1(int               ncid,
 }
 ')dnl
 
-BPUT_VARA_TYPE(text,      char,               MPI_CHAR)
-BPUT_VARA_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
-BPUT_VARA_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
-BPUT_VARA_TYPE(short,     short,              MPI_SHORT)
-BPUT_VARA_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
-BPUT_VARA_TYPE(int,       int,                MPI_INT)
-BPUT_VARA_TYPE(uint,      uint,               MPI_UNSIGNED)
-BPUT_VARA_TYPE(long,      long,               MPI_LONG)
-BPUT_VARA_TYPE(float,     float,              MPI_FLOAT)
-BPUT_VARA_TYPE(double,    double,             MPI_DOUBLE)
-BPUT_VARA_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
-BPUT_VARA_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
+foreach(`itype', (ITYPE_LIST),
+        `BPUT_VARA_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')dnl
 
 /*----< ncmpi_bput_vars() >---------------------------------------------------*/
 int
@@ -317,18 +289,9 @@ ncmpi_bput_vars_$1(int               ncid,
 }
 ')dnl
 
-BPUT_VARS_TYPE(text,      char,               MPI_CHAR)
-BPUT_VARS_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
-BPUT_VARS_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
-BPUT_VARS_TYPE(short,     short,              MPI_SHORT)
-BPUT_VARS_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
-BPUT_VARS_TYPE(int,       int,                MPI_INT)
-BPUT_VARS_TYPE(uint,      uint,               MPI_UNSIGNED)
-BPUT_VARS_TYPE(long,      long,               MPI_LONG)
-BPUT_VARS_TYPE(float,     float,              MPI_FLOAT)
-BPUT_VARS_TYPE(double,    double,             MPI_DOUBLE)
-BPUT_VARS_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
-BPUT_VARS_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+foreach(`itype', (ITYPE_LIST),
+        `BPUT_VARS_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')dnl
 
 /*----< ncmpi_bput_varm() >---------------------------------------------------*/
 int
@@ -391,19 +354,9 @@ ncmpi_bput_varm_$1(int               ncid,
 }
 ')dnl
 
-BPUT_VARM_TYPE(text,      char,               MPI_CHAR)
-BPUT_VARM_TYPE(schar,     schar,              MPI_SIGNED_CHAR)
-BPUT_VARM_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
-BPUT_VARM_TYPE(short,     short,              MPI_SHORT)
-BPUT_VARM_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
-BPUT_VARM_TYPE(int,       int,                MPI_INT)
-BPUT_VARM_TYPE(uint,      uint,               MPI_UNSIGNED)
-BPUT_VARM_TYPE(long,      long,               MPI_LONG)
-BPUT_VARM_TYPE(float,     float,              MPI_FLOAT)
-BPUT_VARM_TYPE(double,    double,             MPI_DOUBLE)
-BPUT_VARM_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
-BPUT_VARM_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
+foreach(`itype', (ITYPE_LIST),
+        `BPUT_VARM_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
+')dnl
 
 /*----< ncmpi_buffer_attach() >-----------------------------------------------*/
 int
