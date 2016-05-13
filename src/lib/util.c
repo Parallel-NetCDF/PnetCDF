@@ -25,8 +25,8 @@ int ncmpii_sanity_check(int               ncid,
                         int               isFlexAPI,
                         int               rw_flag,
                         int               io_method,
-                        NC              **ncp,
-                        NC_var          **varp)
+                        NC              **ncp,   /* OUT */
+                        NC_var          **varp)  /* OUT */
 {
     /* all errors detected here are fatal, must return immediately */
     int status;

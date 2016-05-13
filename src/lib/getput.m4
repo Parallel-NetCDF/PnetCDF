@@ -687,362 +687,130 @@ mpi_io:
     return ((warning != NC_NOERR) ? warning : status);
 }
 
-include(`foreach.m4')
-include(`utils.m4')
-
+include(`foreach.m4')dnl
+include(`utils.m4')dnl
+dnl
 define(`CollIndep', `ifelse(`$1', `_all', `COLL_IO', `INDEP_IO')')dnl
 define(`ReadWrite', `ifelse(`$1', `get',  `READ_REQ', `WRITE_REQ')')dnl
-define(`BufConst',  `ifelse(`$1', `put',  `const')')dnl
-
+define(`BufConst',  `ifelse(`$1', `put',  `const $2', `$2')')dnl
 dnl
-dnl VAR_FLEXIBLE
+dnl index arguments for APIs of different kinds
 dnl
-define(`VAR_FLEXIBLE',dnl
+define(`ArgKind', `ifelse(
+       `$1', `1', `const MPI_Offset *start,',
+       `$1', `a', `const MPI_Offset *start,
+                   const MPI_Offset *count,',
+       `$1', `s', `const MPI_Offset *start,
+                   const MPI_Offset *count,
+                   const MPI_Offset *stride,',
+       `$1', `m', `const MPI_Offset *start,
+                   const MPI_Offset *count,
+                   const MPI_Offset *stride,
+                   const MPI_Offset *imap,')')dnl
+dnl
+dnl arguments passed to a function for APIs of different kinds
+dnl
+define(`ArgStartCount', `ifelse(
+       `$1', `',  `NULL,  NULL',
+       `$1', `1', `start, NULL',
+                  `start, count')')dnl
+dnl
+define(`ArgStrideMap', `ifelse(
+       `$1', `s', `stride, NULL',
+       `$1', `m', `stride, imap',
+                  `NULL, NULL')')dnl
+dnl
+define(`API_KIND', `ifelse(
+       `$1', `1', `API_VAR1',
+       `$1', `a', `API_VARA',
+       `$1', `s', `API_VARS',
+       `$1', `m', `API_VARM',
+       `$1', `d', `API_VARD',
+       `$1', `n', `API_VARN',
+       `$1', `',  `API_VAR')')dnl
+dnl
+dnl FLEXIBLE_API(get/put, kind, coll/indep)
+dnl
+define(`FLEXIBLE_API',dnl
 `dnl
-/*----< ncmpi_$1_var$2() >---------------------------------------------------*/
+/*----< ncmpi_$1_var$2$3() >--------------------------------------------------*/
 int
-ncmpi_$1_var$2(int                ncid,
-               int                varid,
-               BufConst($1) void *buf,
-               MPI_Offset         bufcount,
-               MPI_Datatype       buftype)
+ncmpi_$1_var$2$3(int                ncid,
+                 int                varid,
+                 ArgKind($2)
+                 BufConst($1,void) *buf,
+                 MPI_Offset         bufcount,
+                 MPI_Datatype       buftype)
 {
     int         status;
     NC         *ncp;
     NC_var     *varp=NULL;
-    MPI_Offset *start, *count;
+    ifelse(`$2', `',  `MPI_Offset *start, *count;',
+           `$2', `1', `MPI_Offset *count;')
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
-                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    status = ncmpii_sanity_check(ncid, varid, ArgStartCount($2),
+                                 bufcount, API_KIND($2), 1, 1, ReadWrite($1),
+                                 CollIndep($3), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    GET_FULL_DIMENSIONS(start, count)
+    ifelse(`$2', `',  `GET_FULL_DIMENSIONS(start, count)',
+           `$2', `1', `GET_ONE_COUNT(count)')
 
     /* $1_var is a special case of $1_varm */
-    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
-                                bufcount, buftype, ReadWrite($1),
-                                CollIndep($2));
-    NCI_Free(start);
-    return status;
-}
-')dnl
+    status = ncmpii_getput_varm(ncp, varp, start, count, ArgStrideMap($2),
+                                (void*)buf, bufcount, buftype, ReadWrite($1),
+                                CollIndep($3));
 
-dnl PnetCDF flexible APIs
-VAR_FLEXIBLE(put)
-VAR_FLEXIBLE(get)
-VAR_FLEXIBLE(put, _all)
-VAR_FLEXIBLE(get, _all)
-
-dnl
-dnl VAR(ncid, varid, op)
-dnl
-define(`VAR',dnl
-`dnl
-/*----< ncmpi_$1_var_$3$2() >------------------------------------------------*/
-int
-ncmpi_$1_var_$3$2(int              ncid,
-                  int              varid,
-                  BufConst($1) $4 *op)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *start, *count;
-
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
-                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    GET_FULL_DIMENSIONS(start, count)
-
-    /* $1_var is a special case of $1_varm */
-    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
-                                -1, $5, ReadWrite($1), CollIndep($2));
-    NCI_Free(start);
+    ifelse(`$2', `', `NCI_Free(start);', `$2', `1', `NCI_Free(count);')
     return status;
 }
 ')dnl
 dnl
-foreach(`putget', (put, get),
-        `foreach(`collindep', (, _all),
-                 `foreach(`itype', (ITYPE_LIST),
-                          `VAR(putget,collindep,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))'
+/*---- PnetCDF flexible APIs ------------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),
+        `foreach(`putget', (put, get),
+                 `foreach(`collindep', (, _all),
+                          `FLEXIBLE_API(putget,kind,collindep)'
 )')')
+
 dnl
-dnl VAR1_FLEXIBLE
+dnl HIGH_LEVEL_API(get/put, kind, itype, coll/indep)
 dnl
-define(`VAR1_FLEXIBLE',dnl
+define(`HIGH_LEVEL_API',dnl
 `dnl
-/*----< ncmpi_$1_var1$2() >--------------------------------------------------*/
+/*----< ncmpi_$1_var$2_$3$4() >----------------------------------------------*/
 int
-ncmpi_$1_var1$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
+ncmpi_$1_var$2_$3$4(int ncid, int varid,
+                    ArgKind($2)
+                    BufConst($1,FUNC2ITYPE($3)) *buf)
 {
     int         status;
     NC         *ncp;
     NC_var     *varp=NULL;
-    MPI_Offset *count;
+    ifelse(`$2', `',  `MPI_Offset *start, *count;',
+           `$2', `1', `MPI_Offset *count;')
 
-    status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
-                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    status = ncmpii_sanity_check(ncid, varid, ArgStartCount($2),
+                                 0, API_KIND($2), 1, 0, ReadWrite($1),
+                                 CollIndep($4), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    GET_ONE_COUNT(count)
+    ifelse(`$2', `',  `GET_FULL_DIMENSIONS(start, count)',
+           `$2', `1', `GET_ONE_COUNT(count)')
 
-    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
-                                bufcount, buftype, ReadWrite($1),
-                                CollIndep($2));
-    NCI_Free(count);
-    return status;
-}
-')dnl
-
-VAR1_FLEXIBLE(put)
-VAR1_FLEXIBLE(get)
-VAR1_FLEXIBLE(put, _all)
-VAR1_FLEXIBLE(get, _all)
-
-dnl
-dnl VAR1
-dnl
-define(`VAR1',dnl
-`dnl
-/*----< ncmpi_$1_var1_$3$2() >-----------------------------------------------*/
-int
-ncmpi_$1_var1_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   BufConst($1) $4  *op)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *count;
-
-    status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
-                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    GET_ONE_COUNT(count)
-
-    /* $1_var1 is a special case of $1_varm */
-    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
-                                -1, $5, ReadWrite($1), CollIndep($2));
-    NCI_Free(count);
+    /* $1_var$2_$3 is a special case of $1_varm_$3 */
+    status = ncmpii_getput_varm(ncp, varp, start, count, ArgStrideMap($2),
+                                (void*)buf, -1, ITYPE2MPI($3), ReadWrite($1),
+                                CollIndep($4));
+    ifelse(`$2', `', `NCI_Free(start);', `$2', `1', `NCI_Free(count);')
     return status;
 }
 ')dnl
 dnl
-foreach(`putget', (put, get),
-        `foreach(`collindep', (, _all),
-                `foreach(`itype', (ITYPE_LIST),
-                         `VAR1(putget,collindep,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')')
-dnl
-dnl VARA_FLEXIBLE
-dnl
-define(`VARA_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_vara$2() >--------------------------------------------------*/
-int
-ncmpi_$1_vara$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                const MPI_Offset   count[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
-                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    /* $1_vara is a special case of $1_varm */
-    return ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
-                              bufcount, buftype, ReadWrite($1), CollIndep($2));
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARA_FLEXIBLE(put)
-VARA_FLEXIBLE(get)
-VARA_FLEXIBLE(put, _all)
-VARA_FLEXIBLE(get, _all)
-
-dnl
-dnl VARA
-dnl
-define(`VARA',dnl
-`dnl
-/*----< ncmpi_$1_vara_$3$2() >-----------------------------------------------*/
-int
-ncmpi_$1_vara_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   BufConst($1) $4  *op)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
-                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    /* $1_vara is a special case of $1_varm */
-    return ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
-                              -1, $5, ReadWrite($1), CollIndep($2));
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`collindep', (, _all),
-                 `foreach(`itype', (ITYPE_LIST),
-                          `VARA(putget,collindep,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')')
-dnl
-dnl VARS_FLEXIBLE
-dnl
-define(`VARS_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_vars$2() >--------------------------------------------------*/
-int
-ncmpi_$1_vars$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                const MPI_Offset   count[],
-                const MPI_Offset   stride[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
-                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)buf,
-                              bufcount, buftype, ReadWrite($1), CollIndep($2));
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARS_FLEXIBLE(put)
-VARS_FLEXIBLE(get)
-VARS_FLEXIBLE(put, _all)
-VARS_FLEXIBLE(get, _all)
-
-dnl
-dnl VARS
-dnl
-define(`VARS',dnl
-`dnl
-/*----< ncmpi_$1_vars_$3$2() >-----------------------------------------------*/
-int
-ncmpi_$1_vars_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   BufConst($1) $4  *op)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
-                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)op,
-                              -1, $5, ReadWrite($1), CollIndep($2));
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`collindep', (, _all),
-                 `foreach(`itype', (ITYPE_LIST),
-                          `VARS(putget,collindep,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')')
-dnl
-dnl VARM_FLEXIBLE
-dnl
-define(`VARM_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_varm$2() >--------------------------------------------------*/
-int
-ncmpi_$1_varm$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                const MPI_Offset   count[],
-                const MPI_Offset   stride[],
-                const MPI_Offset   imap[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
-                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
-                              (void*)buf, bufcount, buftype, ReadWrite($1),
-                              CollIndep($2));
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARM_FLEXIBLE(put)
-VARM_FLEXIBLE(get)
-VARM_FLEXIBLE(put, _all)
-VARM_FLEXIBLE(get, _all)
-
-dnl
-dnl VARM
-dnl
-define(`VARM',dnl
-`dnl
-/*----< ncmpi_$1_varm_$3$2() >------------------------------------------------*/
-int
-ncmpi_$1_varm_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   const MPI_Offset  imap[],
-                   BufConst($1) $4  *op)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
-                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, (void*)op,
-                              -1, $5, ReadWrite($1), CollIndep($2));
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`collindep', (, _all),
-                 `foreach(`itype', (ITYPE_LIST),
-                          `VARM(putget,collindep,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')')
+/*---- PnetCDF high-level APIs ----------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),
+        `foreach(`putget', (put, get),
+                 `foreach(`collindep', (, _all),
+                          `foreach(`itype', (ITYPE_LIST),
+                                   `HIGH_LEVEL_API(putget,kind,itype,collindep)'
+)')')')
