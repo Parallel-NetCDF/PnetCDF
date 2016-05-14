@@ -224,7 +224,6 @@ ncmpii_in_swapn(void       *buf,
     }
 }
 
-
 dnl
 dnl PUTN_XTYPE(xtype)
 dnl
@@ -232,16 +231,21 @@ define(`PUTN_XTYPE',dnl
 `dnl
 /*----< ncmpii_x_putn_$1() >--------------------------------------------------*/
 inline int
-ncmpii_x_putn_$1(void         *xp,     /* buffer of external type $1 */
-                 const void   *buf,    /* user buffer of internal type, itype */
-                 MPI_Offset    nelems,
-                 MPI_Datatype  itype)
+ncmpii_x_putn_$1(ifelse(`$1',`NC_BYTE',`int cdf_ver,/* 1,2,or 5 CDF format */')
+              void         *xp,     /* buffer of external type $1 */
+              const void   *buf,    /* user buffer of internal type, itype */
+              MPI_Offset    nelems,
+              MPI_Datatype  itype)
 {
     if (itype == MPI_CHAR || /* assume ECHAR has been checked before */
         itype == MPI_SIGNED_CHAR)
-        return ncmpix_putn_$1_schar    (&xp, nelems, (const schar*)     buf);
+        return ncmpix_putn_$1_schar(&xp, nelems, (signed char*)buf);
     else if (itype == MPI_UNSIGNED_CHAR)
-        return ncmpix_putn_$1_uchar    (&xp, nelems, (const uchar*)     buf);
+        ifelse(`$1',`NC_BYTE',
+       `if (cdf_ver < 5)
+            return ncmpix_putn_NC_UBYTE_uchar(&xp, nelems, (const uchar*)buf);
+        else')
+            return ncmpix_putn_$1_uchar(&xp, nelems, (const uchar*)     buf);
     else if (itype == MPI_SHORT)
         return ncmpix_putn_$1_short    (&xp, nelems, (const short*)     buf);
     else if (itype == MPI_UNSIGNED_SHORT)
@@ -274,48 +278,13 @@ PUTN_XTYPE(NC_DOUBLE)
 PUTN_XTYPE(NC_INT64)
 PUTN_XTYPE(NC_UINT64)
 
-/*----< ncmpii_x_putn_NC_BYTE() >--------------------------------------------*/
 /* In CDF-2, NC_BYTE is considered a signed 1-byte integer in signed APIs, and
  * unsigned 1-byte integer in unsigned APIs. In CDF-5, NC_BYTE is always a
  * signed 1-byte integer. See
  * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
  */
-inline int
-ncmpii_x_putn_NC_BYTE(int           cdf_ver, /* 1, 2, or 5 CDF format */
-                      void         *xp,    /* buffer of external type NC_BYTE */
-                      const void   *buf,   /* user buffer of type itype */
-                      MPI_Offset    nelems,
-                      MPI_Datatype  itype) /* internal type in memory */
-{
-    if (itype == MPI_CHAR || /* assume ECHAR has been checked before */
-        itype == MPI_SIGNED_CHAR)
-        return ncmpix_pad_putn_text(&xp, nelems, buf);
-    else if (itype == MPI_UNSIGNED_CHAR) {
-        if (cdf_ver < 5)
-            return ncmpix_putn_NC_UBYTE_uchar(&xp, nelems, (const uchar*)buf);
-        else
-            return ncmpix_putn_NC_BYTE_uchar (&xp, nelems, (const uchar*)buf);
-    }
-    else if (itype == MPI_SHORT)
-        return ncmpix_putn_NC_BYTE_short    (&xp, nelems, (const short*)     buf);
-    else if (itype == MPI_UNSIGNED_SHORT)
-        return ncmpix_putn_NC_BYTE_ushort   (&xp, nelems, (const ushort*)    buf);
-    else if (itype == MPI_INT)
-        return ncmpix_putn_NC_BYTE_int      (&xp, nelems, (const int*)       buf);
-    else if (itype == MPI_UNSIGNED)
-        return ncmpix_putn_NC_BYTE_uint     (&xp, nelems, (const uint*)      buf);
-    else if (itype == MPI_LONG)
-        return ncmpix_putn_NC_BYTE_long     (&xp, nelems, (const long*)      buf);
-    else if (itype == MPI_FLOAT)
-        return ncmpix_putn_NC_BYTE_float    (&xp, nelems, (const float*)     buf);
-    else if (itype == MPI_DOUBLE)
-        return ncmpix_putn_NC_BYTE_double   (&xp, nelems, (const double*)    buf);
-    else if (itype == MPI_LONG_LONG_INT)
-        return ncmpix_putn_NC_BYTE_longlong (&xp, nelems, (const longlong*)  buf);
-    else if (itype == MPI_UNSIGNED_LONG_LONG)
-        return ncmpix_putn_NC_BYTE_ulonglong(&xp, nelems, (const ulonglong*) buf);
-    DEBUG_RETURN_ERROR(NC_EBADTYPE)
-}
+PUTN_XTYPE(NC_BYTE)
+
 
 dnl
 dnl GETN_XTYPE(xtype)
@@ -324,16 +293,21 @@ define(`GETN_XTYPE',dnl
 `dnl
 /*----< ncmpii_x_getn_$1() >-------------------------------------------------*/
 inline int
-ncmpii_x_getn_$1(const void   *xp,     /* buffer of external type $1 */
-                 void         *buf,    /* user buffer of internal type, itype */
-                 MPI_Offset    nelems,
-                 MPI_Datatype  itype)  /* internal data type (MPI_Datatype) */
+ncmpii_x_getn_$1(ifelse(`$1',`NC_BYTE',`int cdf_ver,/* 1,2,or 5 CDF format */')
+              const void   *xp,     /* buffer of external type $1 */
+              void         *buf,    /* user buffer of internal type, itype */
+              MPI_Offset    nelems,
+              MPI_Datatype  itype)  /* internal data type (MPI_Datatype) */
 {
     if (itype == MPI_CHAR || /* assume ECHAR has been checked before */
         itype == MPI_SIGNED_CHAR)
-        return ncmpix_getn_$1_schar    (&xp, nelems, (schar*)     buf);
+        return ncmpix_getn_$1_schar(&xp, nelems, (signed char*)buf);
     else if (itype == MPI_UNSIGNED_CHAR)
-        return ncmpix_getn_$1_uchar    (&xp, nelems, (uchar*)     buf);
+        ifelse(`$1',`NC_BYTE',
+       `if (cdf_ver < 5)
+            return ncmpix_getn_NC_UBYTE_uchar(&xp, nelems, (uchar*)buf);
+        else')
+            return ncmpix_getn_$1_uchar(&xp, nelems, (uchar*)     buf);
     else if (itype == MPI_SHORT)
         return ncmpix_getn_$1_short    (&xp, nelems, (short*)     buf);
     else if (itype == MPI_UNSIGNED_SHORT)
@@ -366,46 +340,10 @@ GETN_XTYPE(NC_DOUBLE)
 GETN_XTYPE(NC_INT64)
 GETN_XTYPE(NC_UINT64)
 
-/*----< ncmpii_x_getn_NC_BYTE() >--------------------------------------------*/
 /* In CDF-2, NC_BYTE is considered a signed 1-byte integer in signed APIs, and
  * unsigned 1-byte integer in unsigned APIs. In CDF-5, NC_BYTE is always a
  * signed 1-byte integer. See
  * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
  */
-inline int
-ncmpii_x_getn_NC_BYTE(int           cdf_ver, /* 1, 2, or 5 CDF format */
-                      const void   *xp,    /* buffer of external type NC_BYTE */
-                      void         *buf,   /* user buffer of itype */
-                      MPI_Offset    nelems,
-                      MPI_Datatype  itype) /* internal type in memory */
-{
-    if (itype == MPI_CHAR || /* assume ECHAR has been checked before */
-        itype == MPI_SIGNED_CHAR)
-        return ncmpix_pad_getn_text(&xp, nelems, buf);
-    else if (itype == MPI_UNSIGNED_CHAR) {
-        if (cdf_ver < 5)
-            return ncmpix_getn_NC_UBYTE_uchar(&xp, nelems, (uchar*)    buf);
-        else
-            return ncmpix_getn_NC_BYTE_uchar (&xp, nelems, (uchar*)    buf);
-    }
-    else if (itype == MPI_SHORT)
-        return ncmpix_getn_NC_BYTE_short    (&xp, nelems, (short*)     buf);
-    else if (itype == MPI_UNSIGNED_SHORT)
-        return ncmpix_getn_NC_BYTE_ushort   (&xp, nelems, (ushort*)    buf);
-    else if (itype == MPI_INT)
-        return ncmpix_getn_NC_BYTE_int      (&xp, nelems, (int*)       buf);
-    else if (itype == MPI_UNSIGNED)
-        return ncmpix_getn_NC_BYTE_uint     (&xp, nelems, (uint*)      buf);
-    else if (itype == MPI_LONG)
-        return ncmpix_getn_NC_BYTE_long     (&xp, nelems, (long*)      buf);
-    else if (itype == MPI_FLOAT)
-        return ncmpix_getn_NC_BYTE_float    (&xp, nelems, (float*)     buf);
-    else if (itype == MPI_DOUBLE)
-        return ncmpix_getn_NC_BYTE_double   (&xp, nelems, (double*)    buf);
-    else if (itype == MPI_LONG_LONG_INT)
-        return ncmpix_getn_NC_BYTE_longlong (&xp, nelems, (longlong*)  buf);
-    else if (itype == MPI_UNSIGNED_LONG_LONG)
-        return ncmpix_getn_NC_BYTE_ulonglong(&xp, nelems, (ulonglong*) buf);
-    DEBUG_RETURN_ERROR(NC_EBADTYPE)
-}
+GETN_XTYPE(NC_BYTE)
 
