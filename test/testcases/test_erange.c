@@ -7,11 +7,19 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program tests NC_ERANGE error code for the following 2 case.
- * 1. get a value of 255 from a NC_UBYTE variable in a netCDF to a memory
- *    buffer of signed char 
- * 2. put a value of -1 of signed char from a in-memory buffer to a NC_UBYTE
- *    variable in a netCDF file
+ * This program tests whether NC_ERANGE error code can be reported correctly.
+ * Note in CDF-1 and CDF-2, a special case is made to NOT report NC_ERANGE
+ * when the variable is of NC_BYTE type and the calling APIs are of uchar. See
+ * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+ *
+ * In CDF-5, NC_ERANGE is checked for when the external data type mismatches the
+ * internal one.
+ *
+ * The test uses the following 2 case.
+ * 1. get a value of 255 from a NC_UBYTE variable defined in a netCDF file to a
+ *    memory buffer of signed char through e.g. API ncmpi_get_var_schar_all
+ * 2. put a value of -1 of signed char from an in-memory buffer to a NC_UBYTE
+ *    variable defined in a netCDF file
  *
  * The compile and run commands are given below.
  *
@@ -48,9 +56,17 @@ int test_cdf2(char *filename)
      */
     uc = 255;
     err = ncmpi_put_att_uchar(ncid, NC_GLOBAL, "att1", NC_BYTE, 1, &uc); ERR
-    uc = 0;
+    uc = 0; /* initialize with a number that is not 0 */
     err = ncmpi_get_att_uchar(ncid, NC_GLOBAL, "att1", &uc); ERR
     if (uc != 255) {
+        printf("Error at line %d: unexpected read value %d (expecting 255)\n",__LINE__,(int)uc);
+        nerrs++;
+    }
+    sc = 3; /* initialize with a number that is not -1 or -0 */
+    /* No NC_ERANGE as the internal and external types are considered the same */
+    err = ncmpi_get_att_schar(ncid, NC_GLOBAL, "att1", &sc); ERR
+    if (   sc != -1     /* 2-complement bit representation */
+        && sc != -0) {  /* 1-complement bit representation */
         printf("Error at line %d: unexpected read value %d (expecting 255)\n",__LINE__,(int)uc);
         nerrs++;
     }
@@ -62,7 +78,7 @@ int test_cdf2(char *filename)
     /* No NC_ERANGE should be returned for CDF-1 and 2 */
     uc = 255;
     err = ncmpi_put_var_uchar_all(ncid, vid, &uc); ERR
-    uc = 0;
+    uc = 3; /* initialize with a number that is not -1 or -0 */
     err = ncmpi_get_var_uchar_all(ncid, vid, &uc); ERR
     if (uc != 255) {
         printf("Error at line %d: unexpected read value %d (expecting 255)\n",__LINE__,(int)uc);
@@ -127,7 +143,7 @@ int test_cdf5(char *filename)
     uc = 255;
     err = ncmpi_put_att_uchar(ncid, NC_GLOBAL, "att1", NC_UBYTE, 1, &uc); ERR
 
-    /* in CDF-5, get 255 to an schar should result in NC_ERANGE */
+    /* in CDF-5, get 255 to a schar buffer should result in NC_ERANGE */
     err = ncmpi_get_att_schar(ncid, NC_GLOBAL, "att1", &sc); EXPECT_ERR
 
     sc = -1; /* a value should cause NC_ERANGE */
