@@ -64,7 +64,6 @@ ncmpii_igetput_varn(NC               *ncp,
 
 dnl
 define(`IsBput',    `ifelse(`$1',`bput', `1', `0')')dnl
-define(`ReadWrite', `ifelse(`$1',`iget', `READ_REQ', `WRITE_REQ')')dnl
 define(`BufConst',  `ifelse(`$1',`iget', , `const')')dnl
 dnl
 dnl VARN_FLEXIBLE()
@@ -93,7 +92,7 @@ ncmpi_$1_varn(int                 ncid,
     if (num == 0 || bufcount == 0) return NC_NOERR;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARN,
-                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varn(ncp, varp, num, starts, counts, (void*)buf,
@@ -132,7 +131,7 @@ ncmpi_$1_varn_$2(int                ncid,
     if (num == 0) return NC_NOERR;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VARN,
-                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     /* set bufcount to -1 indicating non-flexible API */

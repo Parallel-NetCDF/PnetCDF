@@ -28,380 +28,6 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
-include(`foreach.m4')
-include(`utils.m4')
-
-define(`CollIndep',   `ifelse(`$1',`_all', `COLL_IO', `INDEP_IO')')dnl
-define(`ReadWrite',   `ifelse(`$1', `get', `READ_REQ', `WRITE_REQ')')dnl
-define(`BufConst',    `ifelse(`$1', `put', `const')')dnl
-
-dnl
-dnl VAR_FLEXIBLE
-dnl
-define(`VAR_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_i$1_var() >----------------------------------------------------*/
-int
-ncmpi_i$1_var(int                ncid,
-              int                varid,
-              BufConst($1) void *buf,
-              MPI_Offset         bufcount,
-              MPI_Datatype       buftype,
-              int               *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *start, *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
-                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    GET_FULL_DIMENSIONS(start, count)
-
-    /* i$1_var is a special case of i$1_varm */
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, bufcount, buftype, reqid,
-                                 ReadWrite($1), 0, 0);
-    NCI_Free(start);
-    return status;
-}
-')dnl
-
-VAR_FLEXIBLE(put)
-VAR_FLEXIBLE(get)
-
-dnl
-dnl VAR
-dnl
-define(`VAR',dnl
-`dnl
-/*----< ncmpi_i$1_var_$2() >-------------------------------------------------*/
-int
-ncmpi_i$1_var_$2(int              ncid,
-                 int              varid,
-                 BufConst($1) $3 *buf,
-                 int             *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *start, *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
-                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    GET_FULL_DIMENSIONS(start, count)
-
-    /* i$1_var is a special case of i$1_varm */
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, -1, $4, reqid,
-                                 ReadWrite($1), 0, 0);
-    NCI_Free(start);
-    return status;
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`itype', (ITYPE_LIST),
-                 `VAR(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')
-dnl
-dnl VAR1_FLEXIBLE
-dnl
-define(`VAR1_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_i$1_var1() >---------------------------------------------------*/
-int
-ncmpi_i$1_var1(int                ncid,
-               int                varid,
-               const MPI_Offset  *start,
-               BufConst($1) void *buf,
-               MPI_Offset         bufcount,
-               MPI_Datatype       buftype,
-               int               *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
-                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    GET_ONE_COUNT(count)
-
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, bufcount, buftype, reqid,
-                                 ReadWrite($1), 0, 0);
-    NCI_Free(count);
-    return status;
-}
-')dnl
-
-VAR1_FLEXIBLE(put)
-VAR1_FLEXIBLE(get)
-
-dnl
-dnl VAR1
-dnl
-define(`VAR1',dnl
-`dnl
-/*----< ncmpi_i$1_var1_$2() >------------------------------------------------*/
-int
-ncmpi_i$1_var1_$2(int               ncid,
-                  int               varid,
-                  const MPI_Offset  start[],
-                  BufConst($1) $3  *buf,
-                  int              *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
-                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    GET_ONE_COUNT(count)
-
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, -1, $4, reqid, ReadWrite($1), 0,
-                                 0);
-    NCI_Free(count);
-    return status;
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`itype', (ITYPE_LIST),
-                 `VAR1(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')
-dnl
-dnl VARA_FLEXIBLE
-dnl
-define(`VARA_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_i$1_vara() >---------------------------------------------------*/
-int
-ncmpi_i$1_vara(int                ncid,
-               int                varid,
-               const MPI_Offset  *start,
-               const MPI_Offset  *count,
-               BufConst($1) void *buf,
-               MPI_Offset         bufcount,
-               MPI_Datatype       buftype,
-               int               *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
-                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                               (void*)buf, bufcount, buftype, reqid,
-                               ReadWrite($1), 0, 0);
-}
-')dnl
-
-VARA_FLEXIBLE(put)
-VARA_FLEXIBLE(get)
-
-dnl
-dnl VARA
-dnl
-define(`VARA',dnl
-`dnl
-/*----< ncmpi_i$1_vara_$1() >------------------------------------------------*/
-int
-ncmpi_i$1_vara_$2(int               ncid,
-                  int               varid,
-                  const MPI_Offset  start[],
-                  const MPI_Offset  count[],
-                  BufConst($1) $3  *buf,
-                  int              *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
-                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                               (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`itype', (ITYPE_LIST),
-                 `VARA(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')
-dnl
-dnl VARS_FLEXIBLE
-dnl
-define(`VARS_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_i$1_vars() >---------------------------------------------------*/
-int
-ncmpi_i$1_vars(int                ncid,
-               int                varid,
-               const MPI_Offset   start[],
-               const MPI_Offset   count[],
-               const MPI_Offset   stride[],
-               BufConst($1) void *buf,
-               MPI_Offset         bufcount,
-               MPI_Datatype       buftype,
-               int               *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
-                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
-                               (void*)buf, bufcount, buftype, reqid,
-                               ReadWrite($1), 0, 0);
-}
-')dnl
-
-VARS_FLEXIBLE(put)
-VARS_FLEXIBLE(get)
-
-dnl
-dnl VARS
-dnl
-define(`VARS',dnl
-`dnl
-/*----< ncmpi_i$1_vars_$2() >------------------------------------------------*/
-int
-ncmpi_i$1_vars_$2(int               ncid,
-                  int               varid,
-                  const MPI_Offset  start[],
-                  const MPI_Offset  count[],
-                  const MPI_Offset  stride[],
-                  BufConst($1) $3  *buf,
-                  int              *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
-                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
-                               (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`itype', (ITYPE_LIST),
-                 `VARS(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')
-
-/* buffer layers:
-
-        User Level              buf     (user defined buffer of MPI_Datatype)
-        MPI Datatype Level      cbuf    (contiguous buffer of ptype)
-        NetCDF XDR Level        xbuf    (XDR I/O buffer)
-*/
-
-static int
-add_record_requests(NC *ncp, NC_var *varp, NC_req *req,
-                    const MPI_Offset start[], const MPI_Offset count[],
-                    const MPI_Offset stride[]);
-
-dnl
-dnl VARM_FLEXIBLE
-dnl
-define(`VARM_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_i$1_varm() >---------------------------------------------------*/
-int
-ncmpi_i$1_varm(int                ncid,
-               int                varid,
-               const MPI_Offset   start[],
-               const MPI_Offset   count[],
-               const MPI_Offset   stride[],
-               const MPI_Offset   imap[],
-               BufConst($1) void *buf,
-               MPI_Offset         bufcount,
-               MPI_Datatype       buftype,
-               int               *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
-                                 0, 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
-                               (void*)buf, bufcount, buftype, reqid,
-                               ReadWrite($1), 0, 0);
-}
-')dnl
-
-VARM_FLEXIBLE(put)
-VARM_FLEXIBLE(get)
-
-dnl
-dnl VARM
-dnl
-define(`VARM',dnl
-`dnl
-/*----< ncmpi_i$1_varm_$2() >------------------------------------------------*/
-int
-ncmpi_i$1_varm_$2(int               ncid,
-                  int               varid,
-                  const MPI_Offset  start[],
-                  const MPI_Offset  count[],
-                  const MPI_Offset  stride[],
-                  const MPI_Offset  imap[],
-                  BufConst($1) $3  *buf,
-                  int              *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
-                                 0, 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
-                               (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`itype', (ITYPE_LIST),
-                 `VARM(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')
 
 /*----< ncmpii_abuf_malloc() >------------------------------------------------*/
 /* allocate memory space from the attached buffer pool */
@@ -423,6 +49,78 @@ ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf, int *abuf_index)
     *buf = (char*)ncp->abuf->buf + ncp->abuf->size_used;
     ncp->abuf->size_used += nbytes;
     ncp->abuf->tail++;
+
+    return NC_NOERR;
+}
+
+/*----< add_record_requests() >----------------------------------------------*/
+/* check if this is a record variable. if yes, add new requests for each
+ * record into the list. Hereinafter, treat each request as a non-record
+ * variable request
+ */
+static int
+add_record_requests(NC               *ncp,
+                    NC_var           *varp,
+                    NC_req           *reqs,
+                    const MPI_Offset  start[],
+                    const MPI_Offset  count[],
+                    const MPI_Offset  stride[])
+{
+    int    i, j;
+    size_t dims_chunk = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
+    MPI_Offset record_bufcount, rec_bufsize;
+
+    record_bufcount = 1;
+    for (i=1; i<varp->ndims; i++)
+        record_bufcount *= reqs[0].count[i];
+    rec_bufsize = varp->xsz * record_bufcount;
+
+    /* append each record to the end of list */
+    for (i=1; i<reqs[0].count[0]; i++) {
+
+        reqs[i] = reqs[0]; /* inherit most attributes from reqs[0]
+                            * except below ones, including the ones need
+                            * malloc
+                            */
+
+        if (stride != NULL)
+            reqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
+        else
+            reqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*2);
+
+        reqs[i].count = reqs[i].start + varp->ndims;
+
+        if (stride != NULL) {
+            reqs[i].stride    = reqs[i].count + varp->ndims;
+            reqs[i].start[0]  = reqs[0].start[0] + stride[0] * i;
+            reqs[i].stride[0] = reqs[0].stride[0];
+        } else {
+            reqs[i].stride   = NULL;
+            reqs[i].start[0] = reqs[0].start[0] + i;
+        }
+
+        reqs[i].count[0] = 1;
+        for (j=1; j<varp->ndims; j++) {
+            reqs[i].start[j]  = reqs[0].start[j];
+            reqs[i].count[j]  = reqs[0].count[j];
+            if (stride != NULL)
+                reqs[i].stride[j] = reqs[0].stride[j];
+        }
+
+        /* xbuf cannot be NULL    assert(reqs[0].xbuf != NULL); */
+
+        reqs[i].bnelems  = record_bufcount;
+        reqs[i].buf      = (char*)(reqs[i-1].buf)  + rec_bufsize;
+        reqs[i].xbuf     = (char*)(reqs[i-1].xbuf) + rec_bufsize;
+        reqs[i].num_recs = 0;  /* not the lead request */
+
+        /* reqs[i].bufcount and reqs[i].buftype will not be used in
+         * wait call, only the lead request's matters */
+    }
+
+    /* reset the lead request to one record at a time */
+    reqs[0].bnelems  = record_bufcount;
+    reqs[0].count[0] = 1;
 
     return NC_NOERR;
 }
@@ -756,75 +454,55 @@ ncmpii_igetput_varm(NC               *ncp,
     return ((warning != NC_NOERR) ? warning : status);
 }
 
-/*----< add_record_requests() >----------------------------------------------*/
-/* check if this is a record variable. if yes, add new requests for each
- * record into the list. Hereinafter, treat each request as a non-record
- * variable request
- */
-static int
-add_record_requests(NC               *ncp,
-                    NC_var           *varp,
-                    NC_req           *reqs,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[])
+include(`foreach.m4')dnl
+include(`utils.m4')dnl
+dnl
+define(`APINAME',`ifelse(`$3',`',`ncmpi_i$1_var$2',`ncmpi_i$1_var$2_$3')')dnl
+dnl
+dnl IGETPUT_API(get/put, kind, itype)
+dnl
+define(`IGETPUT_API',dnl
+`dnl
+/*----< APINAME($1,$2,$3)() >------------------------------------------------*/
+int
+APINAME($1,$2,$3)(int ncid, int varid, ArgKind($2) BufArgs($1,$3), int *reqid)
 {
-    int    i, j;
-    size_t dims_chunk = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
-    MPI_Offset record_bufcount, rec_bufsize;
+    int         status;
+    NC         *ncp;
+    NC_var     *varp=NULL;
+    ifelse(`$2', `',  `MPI_Offset *start, *count;',
+           `$2', `1', `MPI_Offset *count;')
 
-    record_bufcount = 1;
-    for (i=1; i<varp->ndims; i++)
-        record_bufcount *= reqs[0].count[i];
-    rec_bufsize = varp->xsz * record_bufcount;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
+    status = ncmpii_sanity_check(ncid, varid, ArgStartCount($2),
+                                 ifelse(`$3', `', `bufcount', `0'),
+                                 API_KIND($2), 0, ReadWrite($1),
+                                 NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
-    /* append each record to the end of list */
-    for (i=1; i<reqs[0].count[0]; i++) {
+    ifelse(`$2', `',  `GET_FULL_DIMENSIONS(start, count)',
+           `$2', `1', `GET_ONE_COUNT(count)')
 
-        reqs[i] = reqs[0]; /* inherit most attributes from reqs[0]
-                            * except below ones, including the ones need
-                            * malloc
-                            */
-
-        if (stride != NULL)
-            reqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
-        else
-            reqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*2);
-
-        reqs[i].count = reqs[i].start + varp->ndims;
-
-        if (stride != NULL) {
-            reqs[i].stride    = reqs[i].count + varp->ndims;
-            reqs[i].start[0]  = reqs[0].start[0] + stride[0] * i;
-            reqs[i].stride[0] = reqs[0].stride[0];
-        } else {
-            reqs[i].stride   = NULL;
-            reqs[i].start[0] = reqs[0].start[0] + i;
-        }
-
-        reqs[i].count[0] = 1;
-        for (j=1; j<varp->ndims; j++) {
-            reqs[i].start[j]  = reqs[0].start[j];
-            reqs[i].count[j]  = reqs[0].count[j];
-            if (stride != NULL)
-                reqs[i].stride[j] = reqs[0].stride[j];
-        }
-
-        /* xbuf cannot be NULL    assert(reqs[0].xbuf != NULL); */
-
-        reqs[i].bnelems  = record_bufcount;
-        reqs[i].buf      = (char*)(reqs[i-1].buf)  + rec_bufsize;
-        reqs[i].xbuf     = (char*)(reqs[i-1].xbuf) + rec_bufsize;
-        reqs[i].num_recs = 0;  /* not the lead request */
-
-        /* reqs[i].bufcount and reqs[i].buftype will not be used in
-         * wait call, only the lead request's matters */
-    }
-
-    /* reset the lead request to one record at a time */
-    reqs[0].bnelems  = record_bufcount;
-    reqs[0].count[0] = 1;
-
-    return NC_NOERR;
+    /* APINAME($1,$2,$3) is a special case of APINAME($1,m,$3) */
+    status = ncmpii_igetput_varm(ncp, varp, start, count, ArgStrideMap($2),
+                                 (void*)buf,
+                                 ifelse(`$3', `', `bufcount, buftype',
+                                                  `-1, ITYPE2MPI($3)'),
+                                 reqid, ReadWrite($1), 0, 0);
+    ifelse(`$2', `', `NCI_Free(start);', `$2', `1', `NCI_Free(count);')
+    return status;
 }
+')dnl
+dnl
+/*---- PnetCDF flexible APIs ------------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),
+        `foreach(`putget', (put, get),
+                 `IGETPUT_API(putget,kind,)'
+)')
 
+/*---- PnetCDF high-level APIs ----------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),
+        `foreach(`putget', (put, get),
+                 `foreach(`itype', (ITYPE_LIST),
+                          `IGETPUT_API(putget,kind,itype)'
+)')')

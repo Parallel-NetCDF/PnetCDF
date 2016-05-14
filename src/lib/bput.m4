@@ -27,337 +27,6 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
-include(`foreach.m4')
-include(`utils.m4')
-
-/*----< ncmpi_bput_var() >----------------------------------------------------*/
-int
-ncmpi_bput_var(int           ncid,
-               int           varid,
-               const void   *buf,
-               MPI_Offset    bufcount,
-               MPI_Datatype  buftype,
-               int          *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *start, *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
-                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    GET_FULL_DIMENSIONS(start, count)
-
-    /* bput_var is a special case of bput_varm */
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, bufcount, buftype, reqid,
-                                 WRITE_REQ, 1, 0);
-    NCI_Free(start);
-    return status;
-}
-
-
-dnl
-dnl BPUT_VAR_TYPE(ncid, varid, op, reqid)
-dnl
-define(`BPUT_VAR_TYPE',dnl
-`dnl
-/*----< ncmpi_bput_var_$1() >-------------------------------------------------*/
-int
-ncmpi_bput_var_$1(int       ncid,
-                  int       varid,
-                  const $2 *op,
-                  int      *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset  *start, *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
-                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    GET_FULL_DIMENSIONS(start, count)
-
-    /* bput_var is a special case of bput_varm */
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
-    NCI_Free(start);
-    return status;
-}
-')dnl
-
-foreach(`itype', (ITYPE_LIST),
-        `BPUT_VAR_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')dnl
-
-/*----< ncmpi_bput_var1() >---------------------------------------------------*/
-int
-ncmpi_bput_var1(int               ncid,
-                int               varid,
-                const MPI_Offset *start,
-                const void       *buf,
-                MPI_Offset        bufcount,
-                MPI_Datatype      buftype,
-                int              *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
-                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    GET_ONE_COUNT(count)
-
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, bufcount, buftype, reqid,
-                                 WRITE_REQ, 1, 0);
-    NCI_Free(count);
-    return status;
-}
-
-dnl
-dnl BPUT_VAR1_TYPE(ncid, varid, start, op, reqid)
-dnl
-define(`BPUT_VAR1_TYPE',dnl
-`dnl
-/*----< ncmpi_bput_var1_$1() >------------------------------------------------*/
-int
-ncmpi_bput_var1_$1(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const $2         *op,
-                   int              *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *count;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
-                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    GET_ONE_COUNT(count)
-
-    status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
-    NCI_Free(count);
-    return status;
-}
-')dnl
-
-foreach(`itype', (ITYPE_LIST),
-        `BPUT_VAR1_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')dnl
-
-/*----< ncmpi_bput_vara() >---------------------------------------------------*/
-int
-ncmpi_bput_vara(int               ncid,
-                int               varid,
-                const MPI_Offset *start,
-                const MPI_Offset *count,
-                const void       *buf,
-                MPI_Offset        bufcount,
-                MPI_Datatype      buftype,
-                int              *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
-                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                               (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ, 1, 0);
-}
-
-dnl
-dnl BPUT_VARA_TYPE(ncid, varid, start, count, op, reqid)
-dnl
-define(`BPUT_VARA_TYPE',dnl
-`dnl
-/*----< ncmpi_bput_vara_$1() >------------------------------------------------*/
-int
-ncmpi_bput_vara_$1(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const $2         *op,
-                   int              *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
-                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                               (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
-}
-')dnl
-
-foreach(`itype', (ITYPE_LIST),
-        `BPUT_VARA_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')dnl
-
-/*----< ncmpi_bput_vars() >---------------------------------------------------*/
-int
-ncmpi_bput_vars(int               ncid,
-                int               varid,
-                const MPI_Offset  start[],
-                const MPI_Offset  count[],
-                const MPI_Offset  stride[],
-                const void       *buf,
-                MPI_Offset        bufcount,
-                MPI_Datatype      buftype,
-                int              *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
-                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
-                               (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ, 1, 0);
-}
-
-dnl
-dnl BPUT_VARS_TYPE(ncid, varid, start, count, stride, op, reqid)
-dnl
-define(`BPUT_VARS_TYPE',dnl
-`dnl
-/*----< ncmpi_bput_vars_$1() >------------------------------------------------*/
-int
-ncmpi_bput_vars_$1(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   const $2         *op,
-                   int              *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
-                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
-                               (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
-}
-')dnl
-
-foreach(`itype', (ITYPE_LIST),
-        `BPUT_VARS_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')dnl
-
-/*----< ncmpi_bput_varm() >---------------------------------------------------*/
-int
-ncmpi_bput_varm(int               ncid,
-                int               varid,
-                const MPI_Offset  start[],
-                const MPI_Offset  count[],
-                const MPI_Offset  stride[],
-                const MPI_Offset  imap[],
-                const void       *buf,
-                MPI_Offset        bufcount,
-                MPI_Datatype      buftype,
-                int              *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
-                                 0, 1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
-                               (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ, 1, 0);
-}
-
-dnl
-dnl BPUT_VARM_TYPE(ncid, varid, start, count, stride, imap, op, reqid)
-dnl
-define(`BPUT_VARM_TYPE',dnl
-`dnl
-/*----< ncmpi_bput_varm_$1() >------------------------------------------------*/
-int
-ncmpi_bput_varm_$1(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   const MPI_Offset  imap[],
-                   const $2         *op,
-                   int              *reqid)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
-                                 0, 0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
-                               (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
-}
-')dnl
-
-foreach(`itype', (ITYPE_LIST),
-        `BPUT_VARM_TYPE(itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')dnl
-
 /*----< ncmpi_buffer_attach() >-----------------------------------------------*/
 int
 ncmpi_buffer_attach(int        ncid,
@@ -497,3 +166,54 @@ ncmpi_inq_buffer_size(int         ncid,
     return NC_NOERR;
 }
 
+include(`foreach.m4')dnl
+include(`utils.m4')dnl
+dnl
+define(`APINAME',`ifelse(`$2',`',`ncmpi_bput_var$1',`ncmpi_bput_var$1_$2')')dnl
+dnl
+dnl BPUT_API(kind, itype)
+dnl
+define(`BPUT_API',dnl
+`dnl
+/*----< APINAME($1,$2)() >------------------------------------------------*/
+int
+APINAME($1,$2)(int ncid, int varid, ArgKind($1) BufArgs(`put',$2), int *reqid)
+{
+    int         status;
+    NC         *ncp;
+    NC_var     *varp=NULL;
+    ifelse(`$1', `',  `MPI_Offset *start, *count;',
+           `$1', `1', `MPI_Offset *count;')
+
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
+    status = ncmpii_sanity_check(ncid, varid, ArgStartCount($1),
+                                 ifelse(`$2', `', `bufcount', `0'),
+                                 API_KIND($1), 0, WRITE_REQ,
+                                 NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
+
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
+
+    ifelse(`$1', `',  `GET_FULL_DIMENSIONS(start, count)',
+           `$1', `1', `GET_ONE_COUNT(count)')
+
+    /* APINAME($1,$2) is a special case of APINAME(m,$2) */
+    status = ncmpii_igetput_varm(ncp, varp, start, count, ArgStrideMap($1),
+                                 (void*)buf,
+                                 ifelse(`$2', `', `bufcount, buftype',
+                                                  `-1, ITYPE2MPI($2)'),
+                                 reqid, WRITE_REQ, 1, 0);
+    ifelse(`$1', `', `NCI_Free(start);', `$1', `1', `NCI_Free(count);')
+    return status;
+}
+')dnl
+dnl
+/*---- PnetCDF flexible APIs ------------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),`BPUT_API(kind,)
+')
+
+/*---- PnetCDF high-level APIs ----------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),
+        `foreach(`itype', (ITYPE_LIST),
+                 `BPUT_API(kind,itype)'
+)')

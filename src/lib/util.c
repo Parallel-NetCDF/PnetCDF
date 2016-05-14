@@ -19,10 +19,9 @@ int ncmpii_sanity_check(int               ncid,
                         int               varid,
                         const MPI_Offset *start,
                         const MPI_Offset *count,
-                        MPI_Offset        bufcount,
+                        MPI_Offset        bufcount, /* 0 for high-level APIs */
                         enum API_KIND     api,
                         int               mustInDataMode,
-                        int               isFlexAPI,
                         int               rw_flag,
                         int               io_method,
                         NC              **ncp,   /* OUT */
@@ -76,7 +75,7 @@ int ncmpii_sanity_check(int               ncid,
     }
 
     /* for flexible APIs, bufcount cannot be negative */
-    if (isFlexAPI && bufcount < 0) {
+    if (bufcount < 0) {
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL)
         goto fn_exit;
     }
