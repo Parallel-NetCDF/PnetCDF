@@ -192,7 +192,8 @@ ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
     }
 
     if (ref->nalloc > 0) {
-        ncap->value = (NC_attr **) NCI_Calloc((size_t)ref->nalloc, sizeof(NC_attr*));
+        ncap->value = (NC_attr **) NCI_Calloc((size_t)ref->nalloc,
+                                              sizeof(NC_attr*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         ncap->nalloc = ref->nalloc;
     }
@@ -518,7 +519,8 @@ ncmpi_rename_att(int         ncid,
             /* newname's length is inconsistent with root's */
             printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_ATTR_NAME)
+            if (status == NC_NOERR)
+                DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_ATTR_NAME)
         }
     }
 
@@ -531,8 +533,8 @@ ncmpi_rename_att(int         ncid,
      * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    TRACE_COMM(MPI_Bcast)(attrp->name->cp, (int)attrp->name->nchars, MPI_CHAR, 0,
-                          ncp->nciop->comm);
+    TRACE_COMM(MPI_Bcast)(attrp->name->cp, (int)attrp->name->nchars, MPI_CHAR,
+                          0, ncp->nciop->comm);
 
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,
@@ -584,7 +586,8 @@ ncmpi_copy_att(int         ncid_in,
             if (iattrp->xsz > attrp->xsz) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
             /* else, we can reuse existing without redef */
 
-            if (iattrp->xsz != (int)iattrp->xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (iattrp->xsz != (int)iattrp->xsz)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             attrp->xsz = iattrp->xsz;
             attrp->type = iattrp->type;
@@ -701,131 +704,60 @@ static NC_itype longtype = (SIZEOF_LONG == SIZEOF_INT ? I_INT : I_LONGLONG);
  * than 4 bytes
  */
 dnl
-dnl PAD_GETN_XTYPE(nc_type)
-dnl
-define(`PAD_GETN_XTYPE',dnl
-`dnl
-/*----< ncmpix_pad_getn_$1() >-----------------------------------------------*/
-inline static int
-ncmpix_pad_getn_$1(const void **xpp,
-                   MPI_Offset   nelems,
-                   void        *buf,   /* user read buffer */
-                   NC_itype     itype) /* in-memory type of user read buffer */
-{
-    switch(itype) {
-        case I_SCHAR:
-            return ncmpix_pad_getn_$1_schar (xpp, nelems, (schar*)buf);
-        case I_UCHAR:
-            return ncmpix_pad_getn_$1_uchar (xpp, nelems, (uchar*)buf);
-        case I_SHORT:
-            return ncmpix_pad_getn_$1_short (xpp, nelems, (short*)buf);
-        case I_USHORT:
-            return ncmpix_pad_getn_$1_ushort(xpp, nelems, (ushort*)buf);
-        case I_INT:
-            return ncmpix_pad_getn_$1_int   (xpp, nelems, (int*)buf);
-        case I_UINT:
-            return ncmpix_pad_getn_$1_uint  (xpp, nelems, (uint*)buf);
-        case I_FLOAT:
-            return ncmpix_pad_getn_$1_float (xpp, nelems, (float*)buf);
-        case I_DOUBLE:
-            return ncmpix_pad_getn_$1_double(xpp, nelems, (double*)buf);
-        case I_LONGLONG:
-            return ncmpix_pad_getn_$1_longlong (xpp, nelems, (longlong*)buf);
-        case I_ULONGLONG:
-            return ncmpix_pad_getn_$1_ulonglong(xpp, nelems, (ulonglong*)buf);
-        default: fprintf(stderr, "Error: bad itype(%d) in %s\n",itype,__func__);
-    }
-    return NC_EBADTYPE;
-}
-')dnl
-
-PAD_GETN_XTYPE(NC_UBYTE)
-PAD_GETN_XTYPE(NC_SHORT)
-PAD_GETN_XTYPE(NC_USHORT)
-
-/*----< ncmpix_pad_getn_NC_BYTE() >------------------------------------------*/
-inline static int
-ncmpix_pad_getn_NC_BYTE(int          cdf_ver, /* 1, 2, or 5 CDF format */
-                        const void **xpp,
-                        MPI_Offset   nelems,
-                        void        *buf,   /* user read buffer */
-                        NC_itype     itype) /* in-memory type of user buffer */
-{
-    switch(itype) {
-        case I_SCHAR:
-            return ncmpix_pad_getn_NC_BYTE_schar (xpp, nelems, (schar*)buf);
-        case I_UCHAR:
-            if (cdf_ver < 5) /* no NC_ERANGE check */
-                /* note this is not ncmpix_pad_getn_NC_BYTE_uchar */
-                return ncmpix_pad_getn_NC_UBYTE_uchar(xpp, nelems, (uchar*)buf);
-            else
-                return ncmpix_pad_getn_NC_BYTE_uchar (xpp, nelems, (uchar*)buf);
-        case I_SHORT:
-            return ncmpix_pad_getn_NC_BYTE_short (xpp, nelems, (short*)buf);
-        case I_USHORT:
-            return ncmpix_pad_getn_NC_BYTE_ushort(xpp, nelems, (ushort*)buf);
-        case I_INT:
-            return ncmpix_pad_getn_NC_BYTE_int   (xpp, nelems, (int*)buf);
-        case I_UINT:
-            return ncmpix_pad_getn_NC_BYTE_uint  (xpp, nelems, (uint*)buf);
-        case I_FLOAT:
-            return ncmpix_pad_getn_NC_BYTE_float (xpp, nelems, (float*)buf);
-        case I_DOUBLE:
-            return ncmpix_pad_getn_NC_BYTE_double(xpp, nelems, (double*)buf);
-        case I_LONGLONG:
-            return ncmpix_pad_getn_NC_BYTE_longlong(xpp, nelems, (longlong*)buf);
-        case I_ULONGLONG:
-            return ncmpix_pad_getn_NC_BYTE_ulonglong(xpp, nelems, (ulonglong*)buf);
-        default: fprintf(stderr, "Error: bad itype(%d) in %s\n",itype,__func__);
-    }
-    return NC_EBADTYPE;
-}
-
-dnl
-dnl GETN_XTYPE(nc_type)
+dnl GETN_XTYPE(_pad, nc_type)
 dnl
 define(`GETN_XTYPE',dnl
 `dnl
-/*----< ncmpix_getn_$1() >---------------------------------------------------*/
+/*----< ncmpix$1_getn_$2() >-----------------------------------------------*/
 inline static int
-ncmpix_getn_$1(const void **xpp,
-               MPI_Offset   nelems,
-               void        *buf,   /* user read buffer */
-               NC_itype     itype) /* in-memory data type of user buffer */
+ncmpix$1_getn_$2(ifelse(`$2',`NC_BYTE',`int cdf_ver,')
+                const void **xpp,
+                MPI_Offset   nelems,
+                void        *buf,   /* user read buffer */
+                NC_itype     itype) /* in-memory type of user read buffer */
 {
     switch(itype) {
         case I_SCHAR:
-            return ncmpix_getn_$1_schar (xpp, nelems, (schar*)buf);
+            return ncmpix$1_getn_$2_schar (xpp, nelems, (schar*)buf);
         case I_UCHAR:
-            return ncmpix_getn_$1_uchar (xpp, nelems, (uchar*)buf);
+            ifelse(`$2',`NC_BYTE',
+           `if (cdf_ver < 5) /* no NC_ERANGE check */
+                /* note this is not ncmpix$1_getn_NC_BYTE_uchar */
+                return ncmpix$1_getn_NC_UBYTE_uchar(xpp, nelems, (uchar*)buf);
+            else')
+                return ncmpix$1_getn_$2_uchar (xpp, nelems, (uchar*)buf);
         case I_SHORT:
-            return ncmpix_getn_$1_short (xpp, nelems, (short*)buf);
+            return ncmpix$1_getn_$2_short (xpp, nelems, (short*)buf);
         case I_USHORT:
-            return ncmpix_getn_$1_ushort(xpp, nelems, (ushort*)buf);
+            return ncmpix$1_getn_$2_ushort(xpp, nelems, (ushort*)buf);
         case I_INT:
-            return ncmpix_getn_$1_int   (xpp, nelems, (int*)buf);
+            return ncmpix$1_getn_$2_int   (xpp, nelems, (int*)buf);
         case I_UINT:
-            return ncmpix_getn_$1_uint  (xpp, nelems, (uint*)buf);
+            return ncmpix$1_getn_$2_uint  (xpp, nelems, (uint*)buf);
         case I_FLOAT:
-            return ncmpix_getn_$1_float (xpp, nelems, (float*)buf);
+            return ncmpix$1_getn_$2_float (xpp, nelems, (float*)buf);
         case I_DOUBLE:
-            return ncmpix_getn_$1_double(xpp, nelems, (double*)buf);
+            return ncmpix$1_getn_$2_double(xpp, nelems, (double*)buf);
         case I_LONGLONG:
-            return ncmpix_getn_$1_longlong (xpp, nelems, (longlong*)buf);
+            return ncmpix$1_getn_$2_longlong (xpp, nelems, (longlong*)buf);
         case I_ULONGLONG:
-            return ncmpix_getn_$1_ulonglong(xpp, nelems, (ulonglong*)buf);
+            return ncmpix$1_getn_$2_ulonglong(xpp, nelems, (ulonglong*)buf);
         default: fprintf(stderr, "Error: bad itype(%d) in %s\n",itype,__func__);
     }
     return NC_EBADTYPE;
 }
 ')dnl
 
-GETN_XTYPE(NC_INT)
-GETN_XTYPE(NC_UINT)
-GETN_XTYPE(NC_FLOAT)
-GETN_XTYPE(NC_DOUBLE)
-GETN_XTYPE(NC_INT64)
-GETN_XTYPE(NC_UINT64)
+GETN_XTYPE(_pad, NC_BYTE)
+GETN_XTYPE(_pad, NC_UBYTE)
+GETN_XTYPE(_pad, NC_SHORT)
+GETN_XTYPE(_pad, NC_USHORT)
+GETN_XTYPE(    , NC_INT)
+GETN_XTYPE(    , NC_UINT)
+GETN_XTYPE(    , NC_FLOAT)
+GETN_XTYPE(    , NC_DOUBLE)
+GETN_XTYPE(    , NC_INT64)
+GETN_XTYPE(    , NC_UINT64)
 
 /*----< ncmpix_pad_getn() >--------------------------------------------------*/
 /* padding only applicable to file types of size smaller than 4 bytes */
@@ -966,130 +898,59 @@ GET_ATT_TYPE(longlong,  long long,          I_LONGLONG)
 GET_ATT_TYPE(ulonglong, unsigned long long, I_ULONGLONG)
 
 dnl
-dnl PAD_PUTN_XTYPE(nc_type)
-dnl
-define(`PAD_PUTN_XTYPE',dnl
-`dnl
-/*----< ncmpix_pad_putn_$1() >-----------------------------------------------*/
-inline static int
-ncmpix_pad_putn_$1(void       **xpp,    /* buffer to be written to file */
-                   MPI_Offset   nelems, /* no. elements in user buffer */
-                   const void  *buf,    /* user buffer */
-                   NC_itype     itype)  /* user buffer in-memory type */
-{
-    switch(itype) {
-        case I_SCHAR:
-            return ncmpix_pad_putn_$1_schar (xpp, nelems, (schar*)buf);
-        case I_UCHAR:
-            return ncmpix_pad_putn_$1_uchar (xpp, nelems, (uchar*)buf);
-        case I_SHORT:
-            return ncmpix_pad_putn_$1_short (xpp, nelems, (short*)buf);
-        case I_USHORT:
-            return ncmpix_pad_putn_$1_ushort(xpp, nelems, (ushort*)buf);
-        case I_INT:
-            return ncmpix_pad_putn_$1_int   (xpp, nelems, (int*)buf);
-        case I_UINT:
-            return ncmpix_pad_putn_$1_uint  (xpp, nelems, (uint*)buf);
-        case I_FLOAT:
-            return ncmpix_pad_putn_$1_float (xpp, nelems, (float*)buf);
-        case I_DOUBLE:
-            return ncmpix_pad_putn_$1_double(xpp, nelems, (double*)buf);
-        case I_LONGLONG:
-            return ncmpix_pad_putn_$1_longlong (xpp, nelems, (longlong*)buf);
-        case I_ULONGLONG:
-            return ncmpix_pad_putn_$1_ulonglong(xpp, nelems, (ulonglong*)buf);
-        default: fprintf(stderr, "Error: bad itype(%d) in %s\n",itype,__func__);
-    }
-    return NC_EBADTYPE;
-}
-')dnl
-
-PAD_PUTN_XTYPE(NC_UBYTE)
-PAD_PUTN_XTYPE(NC_SHORT)
-PAD_PUTN_XTYPE(NC_USHORT)
-
-/*----< ncmpix_pad_putn_NC_BYTE() >------------------------------------------*/
-inline static int
-ncmpix_pad_putn_NC_BYTE(int          cdf_ver, /* 1, 2, or 5 CDF format */
-                        void       **xpp,    /* buffer to be written to file */
-                        MPI_Offset   nelems, /* no. elements in user buffer */
-                        const void  *buf,    /* user buffer */
-                        NC_itype     itype)  /* user buffer in-memory type */
-{
-    switch(itype) {
-        case I_SCHAR:
-            return ncmpix_pad_putn_NC_BYTE_schar (xpp, nelems, (schar*)buf);
-        case I_UCHAR:
-            if (cdf_ver < 5) /* no NC_ERANGE check */
-                return ncmpix_pad_putn_NC_UBYTE_uchar(xpp, nelems, (uchar*)buf);
-            else
-                return ncmpix_pad_putn_NC_BYTE_uchar (xpp, nelems, (uchar*)buf);
-        case I_SHORT:
-            return ncmpix_pad_putn_NC_BYTE_short (xpp, nelems, (short*)buf);
-        case I_USHORT:
-            return ncmpix_pad_putn_NC_BYTE_ushort(xpp, nelems, (ushort*)buf);
-        case I_INT:
-            return ncmpix_pad_putn_NC_BYTE_int   (xpp, nelems, (int*)buf);
-        case I_UINT:
-            return ncmpix_pad_putn_NC_BYTE_uint  (xpp, nelems, (uint*)buf);
-        case I_FLOAT:
-            return ncmpix_pad_putn_NC_BYTE_float (xpp, nelems, (float*)buf);
-        case I_DOUBLE:
-            return ncmpix_pad_putn_NC_BYTE_double(xpp, nelems, (double*)buf);
-        case I_LONGLONG:
-            return ncmpix_pad_putn_NC_BYTE_longlong (xpp, nelems, (longlong*)buf);
-        case I_ULONGLONG:
-            return ncmpix_pad_putn_NC_BYTE_ulonglong(xpp, nelems, (ulonglong*)buf);
-        default: fprintf(stderr, "Error: bad itype(%d) in %s\n",itype,__func__);
-    }
-    return NC_EBADTYPE;
-}
-
-dnl
-dnl PUTN_XTYPE(nc_type)
+dnl PUTN_XTYPE(_pad, nc_type)
 dnl
 define(`PUTN_XTYPE',dnl
 `dnl
-/*----< ncmpix_putn_$1() >---------------------------------------------------*/
+/*----< ncmpix$1_putn_$2() >-----------------------------------------------*/
 inline static int
-ncmpix_putn_$1(void       **xpp,    /* buffer to be written to file */
-               MPI_Offset   nelems, /* no. elements in user buffer */
-               const void  *buf,    /* user buffer */
-               NC_itype     itype)  /* user buffer in-memory type */
+ncmpix$1_putn_$2(ifelse(`$2',`NC_BYTE',`int cdf_ver,')
+                void       **xpp,    /* buffer to be written to file */
+                MPI_Offset   nelems, /* no. elements in user buffer */
+                const void  *buf,    /* user buffer */
+                NC_itype     itype)  /* user buffer in-memory type */
 {
     switch(itype) {
         case I_SCHAR:
-            return ncmpix_putn_$1_schar (xpp, nelems, (schar*)buf);
+            return ncmpix$1_putn_$2_schar (xpp, nelems, (schar*)buf);
         case I_UCHAR:
-            return ncmpix_putn_$1_uchar (xpp, nelems, (uchar*)buf);
+            ifelse(`$2',`NC_BYTE',
+           `if (cdf_ver < 5) /* no NC_ERANGE check */
+                return ncmpix$1_putn_NC_UBYTE_uchar(xpp, nelems, (uchar*)buf);
+            else')
+                return ncmpix$1_putn_$2_uchar (xpp, nelems, (uchar*)buf);
         case I_SHORT:
-            return ncmpix_putn_$1_short (xpp, nelems, (short*)buf);
+            return ncmpix$1_putn_$2_short (xpp, nelems, (short*)buf);
         case I_USHORT:
-            return ncmpix_putn_$1_ushort(xpp, nelems, (ushort*)buf);
+            return ncmpix$1_putn_$2_ushort(xpp, nelems, (ushort*)buf);
         case I_INT:
-            return ncmpix_putn_$1_int   (xpp, nelems, (int*)buf);
+            return ncmpix$1_putn_$2_int   (xpp, nelems, (int*)buf);
         case I_UINT:
-            return ncmpix_putn_$1_uint  (xpp, nelems, (uint*)buf);
+            return ncmpix$1_putn_$2_uint  (xpp, nelems, (uint*)buf);
         case I_FLOAT:
-            return ncmpix_putn_$1_float (xpp, nelems, (float*)buf);
+            return ncmpix$1_putn_$2_float (xpp, nelems, (float*)buf);
         case I_DOUBLE:
-            return ncmpix_putn_$1_double(xpp, nelems, (double*)buf);
+            return ncmpix$1_putn_$2_double(xpp, nelems, (double*)buf);
         case I_LONGLONG:
-            return ncmpix_putn_$1_longlong (xpp, nelems, (longlong*)buf);
+            return ncmpix$1_putn_$2_longlong (xpp, nelems, (longlong*)buf);
         case I_ULONGLONG:
-            return ncmpix_putn_$1_ulonglong(xpp, nelems, (ulonglong*)buf);
+            return ncmpix$1_putn_$2_ulonglong(xpp, nelems, (ulonglong*)buf);
         default: fprintf(stderr, "Error: bad itype(%d) in %s\n",itype,__func__);
     }
     return NC_EBADTYPE;
 }
 ')dnl
 
-PUTN_XTYPE(NC_INT)
-PUTN_XTYPE(NC_UINT)
-PUTN_XTYPE(NC_FLOAT)
-PUTN_XTYPE(NC_DOUBLE)
-PUTN_XTYPE(NC_INT64)
-PUTN_XTYPE(NC_UINT64)
+PUTN_XTYPE(_pad, NC_BYTE)
+PUTN_XTYPE(_pad, NC_UBYTE)
+PUTN_XTYPE(_pad, NC_SHORT)
+PUTN_XTYPE(_pad, NC_USHORT)
+PUTN_XTYPE(    , NC_INT)
+PUTN_XTYPE(    , NC_UINT)
+PUTN_XTYPE(    , NC_FLOAT)
+PUTN_XTYPE(    , NC_DOUBLE)
+PUTN_XTYPE(    , NC_INT64)
+PUTN_XTYPE(    , NC_UINT64)
 
 /*----< ncmpix_pad_putn() >--------------------------------------------------*/
 /* padding only applicable to external types of size smaller than 4 bytes */
@@ -1363,14 +1224,6 @@ ncmpi_put_att(int         ncid,
     return ncmpii_put_att(ncid, varid, name, xtype, nelems, buf, itype);
 }
 
-/*----< ncmpi_put_att_text() >-----------------------------------------------*/
-int
-ncmpi_put_att_text(int ncid, int varid, const char *name,
-                   MPI_Offset nelems, const char *buf)
-{
-    return ncmpii_put_att(ncid, varid, name, NC_CHAR, nelems, buf, I_TEXT);
-}
-
 dnl
 dnl PUT_ATT_TYPE(fntype, buftype, NC_itype)
 dnl
@@ -1378,13 +1231,17 @@ define(`PUT_ATT_TYPE',dnl
 `dnl
 /*----< ncmpi_put_att_$1() >-------------------------------------------------*/
 int
-ncmpi_put_att_$1(int ncid, int varid, const char *name, nc_type xtype,
+ncmpi_put_att_$1(int ncid, int varid, const char *name,
+                 ifelse(`$1',`text',,`nc_type xtype,')
                  MPI_Offset nelems, const $2 *buf)
 {
-    return ncmpii_put_att(ncid, varid, name, xtype, nelems, buf, $3);
+    return ncmpii_put_att(ncid, varid, name,
+                          ifelse(`$1', `text', `NC_CHAR', `xtype'),
+                          nelems, buf, $3);
 }
 ')dnl
 
+PUT_ATT_TYPE(text,      char,               I_TEXT)
 PUT_ATT_TYPE(schar,     signed char,        I_SCHAR)
 PUT_ATT_TYPE(uchar,     unsigned char,      I_UCHAR)
 PUT_ATT_TYPE(short,     short,              I_SHORT)
