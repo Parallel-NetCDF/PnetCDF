@@ -956,7 +956,7 @@ ncmpii_fill_vars(NC *ncp);
 extern int
 ncmpii_sanity_check(int ncid, int varid, const MPI_Offset *start,
                     const MPI_Offset *count, MPI_Offset bufcount,
-                    enum API_KIND api, int mustInDataMode, int isFlexAPI,
+                    enum API_KIND api, int mustInDataMode,
                     int rw_flag, int io_method, NC **ncp, NC_var **varp);
 
 extern char*
