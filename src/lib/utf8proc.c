@@ -209,6 +209,8 @@ ssize_t utf8proc_encode_char(int32_t uc, uint8_t *dst) {
   } else return 0;
 }
 
+#define UTF8PROC_GET_PROPERTY(uc) (&utf8proc_properties[utf8proc_stage2table[utf8proc_stage1table[uc >> 8] + (uc & 0xFF)]])
+#if 0
 static
 const utf8proc_property_t *utf8proc_get_property(int32_t uc) {
   /*  // ASSERT: uc >= 0 && uc < 0x110000*/
@@ -218,6 +220,7 @@ const utf8proc_property_t *utf8proc_get_property(int32_t uc) {
     ]
   );
 }
+#endif
 
 #define utf8proc_decompose_lump(replacement_uc) \
   return utf8proc_decompose_char((replacement_uc), dst, bufsize, \
@@ -230,7 +233,7 @@ ssize_t utf8proc_decompose_char(int32_t uc, int32_t *dst, ssize_t bufsize,
   const utf8proc_property_t *property;
   utf8proc_propval_t category;
   int32_t hangul_sindex;
-  property = utf8proc_get_property(uc);
+  property = UTF8PROC_GET_PROPERTY(uc);
   category = property->category;
   hangul_sindex = uc - UTF8PROC_HANGUL_SBASE;
   if (options & (UTF8PROC_COMPOSE|UTF8PROC_DECOMPOSE)) {
@@ -417,8 +420,8 @@ ssize_t utf8proc_decompose(
       const utf8proc_property_t *property1, *property2;
       uc1 = buffer[pos];
       uc2 = buffer[pos+1];
-      property1 = utf8proc_get_property(uc1);
-      property2 = utf8proc_get_property(uc2);
+      property1 = UTF8PROC_GET_PROPERTY(uc1);
+      property2 = UTF8PROC_GET_PROPERTY(uc2);
       if (property1->combining_class > property2->combining_class &&
           property2->combining_class > 0) {
         buffer[pos] = uc2;
@@ -477,7 +480,7 @@ ssize_t utf8proc_reencode(int32_t *buffer, ssize_t length, int options) {
     int32_t composition;
     for (rpos = 0; rpos < length; rpos++) {
       current_char = buffer[rpos];
-      current_property = utf8proc_get_property(current_char);
+      current_property = UTF8PROC_GET_PROPERTY(current_char);
       if (starter && current_property->combining_class > max_combining_class) {
 	/*        // combination perhaps possible*/
         int32_t hangul_lindex;
@@ -506,7 +509,7 @@ ssize_t utf8proc_reencode(int32_t *buffer, ssize_t length, int options) {
           }
         }
         if (!starter_property) {
-          starter_property = utf8proc_get_property(*starter);
+          starter_property = UTF8PROC_GET_PROPERTY(*starter);
         }
         if (starter_property->comb1st_index >= 0 &&
             current_property->comb2nd_index >= 0) {
@@ -515,7 +518,7 @@ ssize_t utf8proc_reencode(int32_t *buffer, ssize_t length, int options) {
             current_property->comb2nd_index
           ];
           if (composition >= 0 && (!(options & UTF8PROC_STABLE) ||
-              !(utf8proc_get_property(composition)->comp_exclusion))) {
+              !(UTF8PROC_GET_PROPERTY(composition)->comp_exclusion))) {
             *starter = composition;
             starter_property = NULL;
             continue;
