@@ -293,7 +293,7 @@ Note on PnetCDF internal function and variable name convention
 * Function argument name convention: we use "xtype" for the argument of
   external data type and "itype" for internal data types. Thus, xtype must be
   of nc_type defined in pnetcdf.h and itype be either of an internal data type,
-  an MPI derived data type, or NC_itype defined in attr.m4
+  or an MPI derived data type.
 
 =====================================================
 =====================================================
