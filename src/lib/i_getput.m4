@@ -358,7 +358,8 @@ ncmpii_igetput_varm(NC               *ncp,
         /* allocate write/read request array */
         if (ncp->numPutReqs % NC_REQUEST_CHUNK == 0)
             ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list,
-                            NC_REQUEST_CHUNK*sizeof(NC_req));
+                                      (ncp->numPutReqs + NC_REQUEST_CHUNK) *
+                                      sizeof(NC_req));
         req = ncp->put_list + ncp->numPutReqs;
 
         /* the new request ID will be an even number (max of write ID + 2) */
@@ -372,7 +373,8 @@ ncmpii_igetput_varm(NC               *ncp,
         /* allocate write/read request array */
         if (ncp->numGetReqs % NC_REQUEST_CHUNK == 0)
             ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list,
-                            NC_REQUEST_CHUNK*sizeof(NC_req));
+                                      (ncp->numGetReqs + NC_REQUEST_CHUNK) *
+                                      sizeof(NC_req));
         req = ncp->get_list + ncp->numGetReqs;
 
         /* the new request ID will be an odd number (max of read ID + 2) */
