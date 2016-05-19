@@ -240,7 +240,7 @@ ncmpii_update_name_lookup_table(NC_nametable *nameT,
      */
     if (nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
         nameT[key].list = (int*) NCI_Realloc(nameT[key].list,
-                      (nameT[key].num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+                          (nameT[key].num+NC_NAME_TABLE_CHUNK) * sizeof(int));
     nameT[key].list[nameT[key].num] = id;
     nameT[key].num++;
 
