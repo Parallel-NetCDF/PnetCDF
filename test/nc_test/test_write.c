@@ -5,6 +5,11 @@
  *  $Id$
  */
 
+#include <sys/types.h>  /* open() */
+#include <sys/stat.h>   /* open() */
+#include <fcntl.h>      /* open() */
+#include <unistd.h>     /* read() */
+
 #include "tests.h"
 #include "math.h"
 
@@ -2065,7 +2070,8 @@ test_ncmpi_set_fill(void)
 static
 int ncmpi_get_file_version(char *path, int *version)
 {
-   FILE *fp;
+   int fd;
+   ssize_t read_len;
    char magic[MAGIC_NUM_LEN];
 
    /* Need two valid pointers - check for NULL. */
@@ -2073,10 +2079,16 @@ int ncmpi_get_file_version(char *path, int *version)
       return NC_EINVAL;
 
    /* Figure out if this is a netcdf or hdf5 file. */
-   if (!(fp = fopen(path, "r")) ||
-       fread(magic, MAGIC_NUM_LEN, 1, fp) != 1)
-      return errno;
-   fclose(fp);
+   fd = open(path, O_RDONLY, 0600);
+   if (fd == -1) return errno;
+
+   read_len = read(fd, magic, MAGIC_NUM_LEN);
+   if (read_len == -1) return errno;
+   if (read_len != MAGIC_NUM_LEN) {
+       printf("Error: reading NC magic string unexpected short read\n");
+       return 0;
+   }
+   
    if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0)
    {
       if (magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CLASSIC || 
