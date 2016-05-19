@@ -193,6 +193,24 @@ ncmpii_swapn(void       *dest_p,  /* destination array */
     }
 }
 
+/* Other options to in-place byte-swap
+
+#define SWAP4(a) ( ((a) << 24) | \
+                (((a) <<  8) & 0x00ff0000) | \
+                (((a) >>  8) & 0x0000ff00) | \
+                (((a) >> 24) & 0x000000ff) )
+
+        for (i=0; i<nelems; i++)
+            dest[i] = SWAP4(dest[i]);
+Or
+
+#include <byteswap.h>
+
+        for (i=0; i<nelems; i++)
+            dest[i] = __bswap_32(dest[i]);
+
+*/
+
 /*----< ncmpii_in_swap() >---------------------------------------------------*/
 void
 ncmpii_in_swapn(void       *buf,
@@ -200,7 +218,6 @@ ncmpii_in_swapn(void       *buf,
                 int         esize)   /* byte size of each element */
 {
     int  i;
-    uchar tmp, *op = (uchar*)buf;
 
     if (esize <= 1 || nelems <= 0) return;  /* no need */
 
@@ -215,6 +232,7 @@ ncmpii_in_swapn(void       *buf,
             dest[i] = htons(dest[i]);
     }
     else {
+        uchar tmp, *op = (uchar*)buf;
         /* for esize is not 1, 2, or 4 */
         while (nelems-- > 0) {
             for (i=0; i<esize/2; i++)
