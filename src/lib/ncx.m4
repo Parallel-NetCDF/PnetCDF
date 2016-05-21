@@ -141,17 +141,34 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
  */
 
 #define SWAP2(a) ( (((a) & 0xff) << 8) | \
-		(((a) >> 8) & 0xff) )
+                   (((a) >> 8) & 0xff) )
 
 #define SWAP4(a) ( ((a) << 24) | \
-		(((a) <<  8) & 0x00ff0000) | \
-		(((a) >>  8) & 0x0000ff00) | \
-		(((a) >> 24) & 0x000000ff) )
+                  (((a) <<  8) & 0x00ff0000) | \
+                  (((a) >>  8) & 0x0000ff00) | \
+                  (((a) >> 24) & 0x000000ff) )
+
+#define SWAP8(a) ( (((a) & 0x00000000000000FFULL) << 56) | \
+                   (((a) & 0x000000000000FF00ULL) << 40) | \
+                   (((a) & 0x0000000000FF0000ULL) << 24) | \
+                   (((a) & 0x00000000FF000000ULL) <<  8) | \
+                   (((a) & 0x000000FF00000000ULL) >>  8) | \
+                   (((a) & 0x0000FF0000000000ULL) >> 24) | \
+                   (((a) & 0x00FF000000000000ULL) >> 40) | \
+                   (((a) & 0xFF00000000000000ULL) >> 56) )
 
 
-static void
+inline static void
 swapn2b(void *dst, const void *src, IntType nn)
 {
+    int i;
+    uint16_t *op = (uint16_t*) dst;
+    uint16_t *ip = (uint16_t*) src;
+    for (i=0; i<nn; i++) {
+        op[i] = ip[i];
+        op[i] = SWAP2(op[i]);
+    }
+#if 0
 	char *op = dst;
 	const char *ip = src;
 
@@ -180,36 +197,62 @@ swapn2b(void *dst, const void *src, IntType nn)
 		*op++ = *(++ip);
 		*op++ = *(ip++ -1);
 	}
+#endif
 }
 
 # ifndef vax
-static void
+inline static void
 swap4b(void *dst, const void *src)
 {
-	char *op = dst;
-	const char *ip = src;
-	op[0] = ip[3];
-	op[1] = ip[2];
-	op[2] = ip[1];
-	op[3] = ip[0];
+    uint32_t *op = (uint32_t*)dst;
+    /* copy over, make the below swap in-place */
+    *op = *(uint32_t*)src;
+    *op = SWAP4(*op);
 
-/* We can use bitwise operations as below.
-   Here, unsigned int must be of size 4 bytes.
+    /* Below are copied from netCDF-4.
+     * See https://bugtracking.unidata.ucar.edu/browse/NCF-338
+     * Quote "One issue we are wrestling with is how compilers optimize this
+     * code.  For some reason, we are actually needing to add an artificial
+     * move to a 4 byte space to get it to work.  I think what is happening is
+     * that the optimizer is bit shifting within a double, which is incorrect.
+     * The following code actually does work correctly.
+     *  This is in Linux land, gcc.
+     *
+     * However, the above in-place byte-swap does not appear affected by this.
+     */
+#if 0
+    uint32_t *ip = (uint32_t*)src;
+    uint32_t tempOut;  /* cannot use pointer when gcc O2 optimizer is used */
+    tempOut = SWAP4(*ip);
 
-    unsigned int *cp = (unsigned int *) dst;
-    unsigned int *ip = (unsigned int *) src;
+    *(float *)dst = *(float *)(&tempOut);
+#endif
 
-    *cp =  ((*ip) << 24)
-        | (((*ip) & 0x0000ff00) << 8)
-        | (((*ip) & 0x00ff0000) >> 8)
-        | (((*ip) >> 24));
-*/
+    /* OLD implementation that results in four load and four store CPU
+       instructions
+    char *op = dst;
+    const char *ip = src;
+    op[0] = ip[3];
+    op[1] = ip[2];
+    op[2] = ip[1];
+    op[3] = ip[0];
+    */
 }
 # endif /* !vax */
 
-static void
+inline static void
 swapn4b(void *dst, const void *src, IntType nn)
 {
+    int i;
+    uint32_t *op = (uint32_t*) dst;
+    uint32_t *ip = (uint32_t*) src;
+    for (i=0; i<nn; i++) {
+        /* copy over, make the below swap in-place */
+        op[i] = ip[i];
+        op[i] = SWAP4(op[i]);
+    }
+
+#if 0
 	char *op = dst;
 	const char *ip = src;
 
@@ -255,12 +298,29 @@ swapn4b(void *dst, const void *src, IntType nn)
 		op += 4;
 		ip += 4;
 	}
+#endif
 }
 
 # ifndef vax
-static void
+inline static void
 swap8b(void *dst, const void *src)
 {
+#ifdef FLOAT_WORDS_BIGENDIAN
+    /* copy over, make the below swap in-place */
+    *(uint64_t*)dst = *(uint64_t*)src;
+
+    uint32_t *op = (uint32_t*)dst;
+    *op = SWAP4(*op);
+    op = (uint32_t*)((char*)dst+4);
+    *op = SWAP4(*op);
+#else
+    uint64_t *op = (uint64_t*)dst;
+    /* copy over, make the below swap in-place */
+    *op = *(uint64_t*)src;
+    *op = SWAP8(*op);
+#endif
+
+#if 0
 	char *op = dst;
 	const char *ip = src;
 #  ifndef FLOAT_WORDS_BIGENDIAN
@@ -282,13 +342,38 @@ swap8b(void *dst, const void *src)
 	op[6] = ip[5];
 	op[7] = ip[4];
 #endif
+#endif
 }
 # endif /* !vax */
 
 # ifndef vax
-static void
+inline static void
 swapn8b(void *dst, const void *src, IntType nn)
 {
+#ifdef FLOAT_WORDS_BIGENDIAN
+    int i;
+    uint64_t *dst_p = (uint64_t*) dst;
+    uint64_t *src_p = (uint64_t*) src;
+    for (i=0; i<nn; i++) {
+        /* copy over, make the below swap in-place */
+        dst_p[i] = src_p[i];
+        uint32_t *op = (uint32_t*)(&dst_p[i]);
+        *op = SWAP4(*op);
+        op = (uint32_t*)((char*)op+4);
+        *op = SWAP4(*op);
+    }
+#else
+    int i;
+    uint64_t *op = (uint64_t*) dst;
+    uint64_t *ip = (uint64_t*) src;
+    for (i=0; i<nn; i++) {
+        /* copy over, make the below swap in-place */
+        op[i] = ip[i];
+        op[i] = SWAP8(op[i]);
+    }
+#endif
+
+#if 0
 	char *op = dst;
 	const char *ip = src;
 
@@ -357,6 +442,7 @@ swapn8b(void *dst, const void *src, IntType nn)
 		op += 8;
 		ip += 8;
 	}
+#endif
 #endif
 }
 # endif /* !vax */
@@ -962,7 +1048,7 @@ NCX_PUT1F(uint, double)
 
 #if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
 
-static void
+inline static void
 get_ix_float(const void *xp, float *ip)
 {
 #ifdef WORDS_BIGENDIAN
@@ -972,7 +1058,7 @@ get_ix_float(const void *xp, float *ip)
 #endif
 }
 
-static void
+inline static void
 put_ix_float(void *xp, const float *ip)
 {
 #ifdef WORDS_BIGENDIAN
@@ -2518,7 +2604,7 @@ ifelse( $1$2, intfloat,dnl
     }
    /* copy workspace back if necessary */
     if (realign) {
-      memcpy(*xpp, tmp, (size_t)*ni*Xsizeof($1)));
+      memcpy(*xpp, tmp, (size_t)*ni*Xsizeof($1));
       xp = ($1 *) *xpp;
     }
    /* update xpp and tp */
@@ -3150,10 +3236,10 @@ NCX_GETN(float, uchar)
 NCX_GETN(float, uint)
 NCX_GETN(float, ulonglong)
 
-#if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
-/* optimized version */
 int
 APIPrefix`x_putn_NC_FLOAT_float'(void **xpp, IntType nelems, const float *tp)
+#if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
+/* optimized version */
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_FLOAT);
@@ -3164,29 +3250,22 @@ APIPrefix`x_putn_NC_FLOAT_float'(void **xpp, IntType nelems, const float *tp)
 	return NC_NOERR;
 }
 #elif defined(vax) && vax != 0
-int
-APIPrefix`x_putn_NC_FLOAT_float'(void **xpp, IntType nfloats, const float *ip)
 {
-	const float *const end = ip + nfloats;
+	const float *const end = tp + nelems;
 
-	while (ip < end)
-	{
-PUT_VAX_DFLOAT_Body(`(*xpp)')
-
-		ip++;
+	while (tp < end) {
+		PUT_VAX_DFLOAT_Body(`(*xpp)')
+		tp++;
 		*xpp = (char *)(*xpp) + X_SIZEOF_FLOAT;
 	}
 	return NC_NOERR;
 }
 #else
-int
-APIPrefix`x_putn_NC_FLOAT_float'(void **xpp, IntType nelems, const float *tp)
 {
 	char *xp = *xpp;
 	int status = NC_NOERR;
 
-	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
-	{
+	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++) {
 		int lstatus = APIPrefix`x_put_NC_FLOAT_float'(xp, tp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;

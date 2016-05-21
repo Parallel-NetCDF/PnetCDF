@@ -19,18 +19,12 @@ dnl
 #include <stdlib.h>
 #endif
 #include <assert.h>
-#include <arpa/inet.h>   /* htonl(), htons() */
 
 #include <mpi.h>
 
 #include "nc.h"
 #include "ncx.h"
 #include "macro.h"
-
-/* Prototypes for functions used only in this file */
-#if 0
-static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
-#endif
 
 /*
  *  Datatype Mapping:
@@ -134,30 +128,11 @@ ncmpii_need_swap(nc_type      xtype,  /* external NC type */
 #endif
 }
 
-#if 0
-/*----< swapn() >------------------------------------------------------------*/
-inline static void
-swapn(void       *dst,
-      const void *src,
-      MPI_Offset  nn,
-      int         xsize)
-{
-    int i;
-    uchar *op = dst;
-    const uchar *ip = src;
-    while (nn-- != 0) {
-        for (i=0; i<xsize; i++)
-            op[i] = ip[xsize-1-i];
-        op += xsize;
-        ip += xsize;
-    }
-}
-#endif
-
 /* Endianness byte swap: done in-place */
 #define SWAP(x,y) {tmp = (x); (x) = (y); (y) = tmp;}
 
 /*----< ncmpii_swap() >-------------------------------------------------------*/
+/* out-place byte swap, i.e. dest_p != src_p */
 void
 ncmpii_swapn(void       *dest_p,  /* destination array */
              const void *src_p,   /* source array */
@@ -171,14 +146,37 @@ ncmpii_swapn(void       *dest_p,  /* destination array */
     if (esize == 4) { /* this is the most common case */
               uint32_t *dest = (uint32_t*)       dest_p;
         const uint32_t *src  = (const uint32_t*) src_p;
-        for (i=0; i<nelems; i++)
-            dest[i] = htonl(src[i]);
+        for (i=0; i<nelems; i++) {
+            dest[i] = src[i];
+            dest[i] =  ((dest[i]) << 24)
+                    | (((dest[i]) & 0x0000ff00) << 8)
+                    | (((dest[i]) & 0x00ff0000) >> 8)
+                    | (((dest[i]) >> 24));
+        }
+    }
+    else if (esize == 8) {
+              uint64_t *dest = (uint64_t*)       dest_p;
+        const uint64_t *src  = (const uint64_t*) src_p;
+        for (i=0; i<nelems; i++) {
+            dest[i] = src[i];
+            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) | 
+                      ((dest[i] & 0x000000000000FF00ULL) << 40) | 
+                      ((dest[i] & 0x0000000000FF0000ULL) << 24) | 
+                      ((dest[i] & 0x00000000FF000000ULL) <<  8) | 
+                      ((dest[i] & 0x000000FF00000000ULL) >>  8) | 
+                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) | 
+                      ((dest[i] & 0x00FF000000000000ULL) >> 40) | 
+                      ((dest[i] & 0xFF00000000000000ULL) >> 56);
+        }
     }
     else if (esize == 2) {
               uint16_t *dest =       (uint16_t*) dest_p;
         const uint16_t *src  = (const uint16_t*) src_p;
-        for (i=0; i<nelems; i++)
-            dest[i] = htons(src[i]);
+        for (i=0; i<nelems; i++) {
+            dest[i] = src[i];
+            dest[i] = ((dest[i] & 0xff) << 8) |
+                      ((dest[i] >> 8) & 0xff);
+        }
     }
     else {
               uchar *op = (uchar*) dest_p;
@@ -194,14 +192,13 @@ ncmpii_swapn(void       *dest_p,  /* destination array */
 }
 
 /* Other options to in-place byte-swap
+htonl() is for 4-byte swap
+htons() is for 2-byte swap
 
-#define SWAP4(a) ( ((a) << 24) | \
-                (((a) <<  8) & 0x00ff0000) | \
-                (((a) >>  8) & 0x0000ff00) | \
-                (((a) >> 24) & 0x000000ff) )
+#include <arpa/inet.h>
+    dest[i] = htonl(dest[i]);
+    dest[i] = htons(dest[i]);
 
-        for (i=0; i<nelems; i++)
-            dest[i] = SWAP4(dest[i]);
 Or
 
 #include <byteswap.h>
@@ -212,24 +209,41 @@ Or
 */
 
 /*----< ncmpii_in_swap() >---------------------------------------------------*/
+/* in-place byte swap */
 void
 ncmpii_in_swapn(void       *buf,
                 MPI_Offset  nelems,  /* number of elements in buf[] */
                 int         esize)   /* byte size of each element */
 {
-    int  i;
+    int i;
 
     if (esize <= 1 || nelems <= 0) return;  /* no need */
 
     if (esize == 4) { /* this is the most common case */
         uint32_t *dest = (uint32_t*) buf;
         for (i=0; i<nelems; i++)
-            dest[i] = htonl(dest[i]);
+            dest[i] =  ((dest[i]) << 24)
+                    | (((dest[i]) & 0x0000ff00) << 8)
+                    | (((dest[i]) & 0x00ff0000) >> 8)
+                    | (((dest[i]) >> 24));
+    }
+    else if (esize == 8) {
+        uint64_t *dest = (uint64_t*) buf;
+        for (i=0; i<nelems; i++)
+            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) | 
+                      ((dest[i] & 0x000000000000FF00ULL) << 40) | 
+                      ((dest[i] & 0x0000000000FF0000ULL) << 24) | 
+                      ((dest[i] & 0x00000000FF000000ULL) <<  8) | 
+                      ((dest[i] & 0x000000FF00000000ULL) >>  8) | 
+                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) | 
+                      ((dest[i] & 0x00FF000000000000ULL) >> 40) | 
+                      ((dest[i] & 0xFF00000000000000ULL) >> 56);
     }
     else if (esize == 2) {
         uint16_t *dest = (uint16_t*) buf;
         for (i=0; i<nelems; i++)
-            dest[i] = htons(dest[i]);
+            dest[i] = ((dest[i] & 0xff) << 8) |
+                      ((dest[i] >> 8) & 0xff);
     }
     else {
         uchar tmp, *op = (uchar*)buf;
