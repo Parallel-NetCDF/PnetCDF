@@ -137,7 +137,9 @@ ncmpi_cancel(int  ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
+    /* 1.7.0 and after nonblocking APIs can be called in define mode.
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
+    */
 
     return ncmpii_cancel(ncp, num_req, req_ids, statuses);
 }
