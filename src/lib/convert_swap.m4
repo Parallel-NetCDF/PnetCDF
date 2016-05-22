@@ -18,6 +18,11 @@ dnl
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h> /* uint16_t, uint32_t, uint64_t */
+#elif defined(HAVE_STDINT_H)
+#include <stdint.h>   /* uint16_t, uint32_t, uint64_t */
+#endif
 #include <assert.h>
 
 #include <mpi.h>
