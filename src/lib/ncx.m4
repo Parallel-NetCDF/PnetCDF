@@ -15,6 +15,13 @@ dnl
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h> /* uint16_t, uint32_t, uint64_t */
+#elif defined(HAVE_STDINT_H)
+#include <stdint.h>   /* uint16_t, uint32_t, uint64_t */
+#endif
+
 #include <mpi.h>
 
 define(`IntType', `MPI_Offset')dnl
