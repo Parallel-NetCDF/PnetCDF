@@ -13,9 +13,9 @@
 #include <fcntl.h>     /* open() */
 #include <unistd.h>    /* read() */
 #include <assert.h>    /* assert() */
-#include <inttypes.h>  /* check for Endianness */
+#include <inttypes.h>  /* check for Endianness, uint32_t*/
 
-static int endianness;
+static int is_little_endian;
 
 #ifndef MIN
 #define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
@@ -200,54 +200,56 @@ static const char ncmagic5[] = {'C', 'D', 'F', 0x05};
 
 const char * ncmpii_err_code_name(int err);
 
-static int is_little_endian(void) {
+static int check_little_endian(void) {
     volatile uint32_t i=0x01234567;
     // return 0 for big endian, 1 for little endian.
     return (*((uint8_t*)(&i))) == 0x67;
 }
 
+#define SWAP4B(a) ( ((a) << 24) | \
+                   (((a) <<  8) & 0x00ff0000) | \
+                   (((a) >>  8) & 0x0000ff00) | \
+                   (((a) >> 24) & 0x000000ff) )
+
+#define SWAP8B(a) ( (((a) & 0x00000000000000FFULL) << 56) | \
+                    (((a) & 0x000000000000FF00ULL) << 40) | \
+                    (((a) & 0x0000000000FF0000ULL) << 24) | \
+                    (((a) & 0x00000000FF000000ULL) <<  8) | \
+                    (((a) & 0x000000FF00000000ULL) >>  8) | \
+                    (((a) & 0x0000FF0000000000ULL) >> 24) | \
+                    (((a) & 0x00FF000000000000ULL) >> 40) | \
+                    (((a) & 0xFF00000000000000ULL) >> 56) )
+
 static void
-swap4b(int *val)
+swap4b(void *val)
 {
-    unsigned int tmp = *val;
-    char *ip = (char*) &tmp;
-    char *op = (char*) val;
-    op[0] = ip[3];
-    op[1] = ip[2];
-    op[2] = ip[1];
-    op[3] = ip[0];
+    uint32_t *op = (uint32_t*)val;
+    *op = SWAP4B(*op);
 }
 
 static void
 swap8b(long long *val)
 {
-    unsigned long long tmp = *val;
-    char *ip = (char*) &tmp;
-    char *op = (char*) val;
-    op[0] = ip[7];
-    op[1] = ip[6];
-    op[2] = ip[5];
-    op[3] = ip[4];
-    op[4] = ip[3];
-    op[5] = ip[2];
-    op[6] = ip[1];
-    op[7] = ip[0];
+    uint64_t *op = (uint64_t*)val;
+    *op = SWAP8B(*op);
 }
 
 static unsigned long long
-get_uint8(bufferinfo *gbp) {
+get_uint64(bufferinfo *gbp) {
+    /* retrieve a 64bit unisgned integer and return it as unsigned long long */
     unsigned long long tmp;
     memcpy(&tmp, gbp->pos, 8);
-    if (endianness) swap8b(&tmp);
+    if (is_little_endian) swap8b(&tmp);
     gbp->pos += 8;
     return tmp;
 }
 
 static unsigned int
-get_uint4(bufferinfo *gbp) {
+get_uint32(bufferinfo *gbp) {
+    /* retrieve a 32bit unisgned integer and return it as unsigned int */
     unsigned int tmp;
     memcpy(&tmp, gbp->pos, 4);
-    if (endianness) swap4b(&tmp);
+    if (is_little_endian) swap4b(&tmp);
     gbp->pos += 4;
     return tmp;
 }
@@ -824,7 +826,7 @@ hdr_get_NCtype(bufferinfo *gbp,
     if (status != NC_NOERR) return status;
 
     /* get a 4-byte integer */
-    *typep = get_uint4(gbp);
+    *typep = get_uint32(gbp);
 
     return NC_NOERR;
 }
@@ -840,7 +842,7 @@ hdr_get_nc_type(bufferinfo *gbp,
     status = hdr_check_buffer(gbp, X_SIZEOF_INT);
     if (status != NC_NOERR) return status;
 
-    type = get_uint4(gbp);
+    type = get_uint32(gbp);
 
     if (type != NC_BYTE    &&
         type != NC_CHAR    &&
@@ -883,9 +885,9 @@ hdr_get_NC_name(bufferinfo  *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        nchars = get_uint8(gbp);
+        nchars = get_uint64(gbp);
     else
-        nchars = get_uint4(gbp);
+        nchars = get_uint32(gbp);
 
     /* Allocate a NC_string structure large enough to hold nchars characters */
     ncstrp = ncmpii_new_NC_string(nchars, NULL);
@@ -967,9 +969,9 @@ hdr_get_NC_dim(bufferinfo  *gbp,
 
     /* get dim_length */
     if (gbp->version == 5) 
-        dimp->size = get_uint8(gbp);
+        dimp->size = get_uint64(gbp);
     else
-        dimp->size = get_uint4(gbp);
+        dimp->size = get_uint32(gbp);
 
     *dimpp = dimp;
     return NC_NOERR;
@@ -1029,9 +1031,9 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        ndefined = get_uint8(gbp);
+        ndefined = get_uint64(gbp);
     else
-        ndefined = get_uint4(gbp);
+        ndefined = get_uint32(gbp);
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
@@ -1202,9 +1204,9 @@ hdr_get_NC_attr(bufferinfo  *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        nelems = get_uint8(gbp);
+        nelems = get_uint64(gbp);
     else
-        nelems = get_uint4(gbp);
+        nelems = get_uint32(gbp);
 
     /* allocate space for attribute object */
     attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
@@ -1267,9 +1269,9 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
 
     /* get nelems */
     if (gbp->version == 5) 
-        ndefined = get_uint8(gbp);
+        ndefined = get_uint64(gbp);
     else
-        ndefined = get_uint4(gbp);
+        ndefined = get_uint32(gbp);
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
@@ -1369,9 +1371,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* nelems */
     if (gbp->version == 5) 
-        ndims = get_uint8(gbp);
+        ndims = get_uint64(gbp);
     else
-        ndims = get_uint4(gbp);
+        ndims = get_uint32(gbp);
 
     /* allocate space for var object */
     varp = ncmpii_new_x_NC_var(strp, (int)ndims);
@@ -1384,9 +1386,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
             return status;
         }
         if (gbp->version == 5) 
-            varp->dimids[dim] = get_uint8(gbp);
+            varp->dimids[dim] = get_uint64(gbp);
         else
-            varp->dimids[dim] = get_uint4(gbp);
+            varp->dimids[dim] = get_uint32(gbp);
     }
 
     /* get vatt_list */
@@ -1405,9 +1407,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get vsize */
     if (gbp->version == 5) 
-        varp->len = get_uint8(gbp);
+        varp->len = get_uint64(gbp);
     else
-        varp->len = get_uint4(gbp);
+        varp->len = get_uint32(gbp);
 
     /* next element is 'begin' */
     status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
@@ -1418,9 +1420,9 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get begin */
     if (gbp->version == 1)
-        varp->begin = get_uint4(gbp);
+        varp->begin = get_uint32(gbp);
     else
-        varp->begin = get_uint8(gbp);
+        varp->begin = get_uint64(gbp);
 
     *varpp = varp;
     return NC_NOERR;
@@ -1479,9 +1481,9 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
 
     /* get nelems (number of variables) from gbp buffer */
     if (gbp->version == 5) 
-        ndefined = get_uint8(gbp);
+        ndefined = get_uint64(gbp);
     else
-        ndefined = get_uint4(gbp);
+        ndefined = get_uint32(gbp);
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) { /* no variable defined */
@@ -1577,9 +1579,9 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
 
     /* get numrecs from getbuf into ncp */
     if (getbuf.version == 5) 
-        ncp->numrecs = get_uint8(&getbuf);
+        ncp->numrecs = get_uint64(&getbuf);
     else
-        ncp->numrecs = get_uint4(&getbuf);
+        ncp->numrecs = get_uint32(&getbuf);
 
     /* get dim_list from getbuf into ncp */
     status = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
@@ -1818,7 +1820,7 @@ int main(int argc, char *argv[])
     if (env_str != NULL && *env_str != '0') verbose_debug = 1;
 
     /* find Endianness of the running machine */
-    endianness = is_little_endian();
+    is_little_endian = check_little_endian();
 
     /* open file */
     int fd = open(filename, O_RDONLY, 0666);
