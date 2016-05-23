@@ -501,3 +501,26 @@ at all, resulting data sieving buffer containing uninitialized data. To
 eliminate this possibility, set the hint environment variable to disable
 alognment, e.g. PNETCDF_HINTS="nc_var_align_size=1".
 
+==============================================================================
+Note on using clang and gprof together
+==============================================================================
+% clang --version
+clang version 3.4.2 (tags/RELEASE_34/dot2-final)
+Target: x86_64-redhat-linux-gnu
+Thread model: posix
+
+% gprof --version
+GNU gprof version 2.20.51.0.2-5.43.el6 20100205
+Based on BSD gprof, copyright 1983 Regents of the University of California.
+This program is free software.  This program has absolutely no warranty.
+
+The problem is reported in https://llvm.org/bugs/show_bug.cgi?id=14713
+
+When compiling PnetCDF using clang based MPI compiler with compile option
+"-g -O2 -pg", programs will receive signal SIGSEGV, Segmentation fault.
+However, when compiled with -g -O0 -pg, programs receive no error.
+
+Workaround: use "-pg -mno-omit-leaf-frame-pointer -fno-omit-frame-pointer"
+
+
+
