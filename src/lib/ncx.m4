@@ -211,10 +211,10 @@ swapn2b(void *dst, const void *src, IntType nn)
 inline static void
 swap4b(void *dst, const void *src)
 {
-    uint32_t *op = (uint32_t*)dst;
     /* copy over, make the below swap in-place */
-    *op = *(uint32_t*)src;
-    *op = SWAP4(*op);
+    uint32_t tmp = *(uint32_t*)src;
+    tmp = SWAP4(tmp);
+    memcpy(dst, &tmp, 4);
 
     /* Below are copied from netCDF-4.
      * See https://bugtracking.unidata.ucar.edu/browse/NCF-338
