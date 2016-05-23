@@ -2003,7 +2003,7 @@ $declarg{'bput_varm_int8-7'}		= 'const long long *';
 #
 sub reorderOffsetArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset *l$count;\n";
+    print $OUTFD "    MPI_Offset *l$count=NULL;\n";
 }
 sub reorderOffsetArr_ftoc {
     my $count = $_[0];
@@ -2050,7 +2050,7 @@ sub reorderOffsetArr_in_ctof {
 #
 sub reorderOffsetArr1DTo2D_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset **l$count;\n";
+    print $OUTFD "    MPI_Offset **l$count=NULL;\n";
 }
 sub reorderOffsetArr1DTo2D_ftoc {
     my $count = $_[0];
