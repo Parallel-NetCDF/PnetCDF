@@ -180,6 +180,7 @@ ncmpii_cancel(NC  *ncp,
         NC_req *put_list = ncp->put_list;
         for (i=0; i<ncp->numPutReqs; i++) {
             if (put_list[i].num_recs != 0 && put_list[i].need_swap_back_buf)
+                /* if user buffer is in-place byte-swapped, swap it back */
                 ncmpii_in_swapn(put_list[i].buf,
                                 put_list[i].bnelems * put_list[i].num_recs,
                                 ncmpix_len_nctype(put_list[i].varp->type));
@@ -255,6 +256,7 @@ ncmpii_cancel(NC  *ncp,
                         last_index = j;
                         /* put_list[j].num_recs should be >= 1 */
                         if (put_list[j].need_swap_back_buf)
+                            /* if user buffer is in-place byte-swapped, swap it back */
                             ncmpii_in_swapn(put_list[j].buf,
                                    put_list[j].bnelems * put_list[j].num_recs,
                                    ncmpix_len_nctype(put_list[j].varp->type));
