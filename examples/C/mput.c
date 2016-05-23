@@ -73,7 +73,7 @@ int main(int argc, char** argv)
     char *filename="testfile.nc";
     int i, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid, dimid[2], num_reqs, *buffer, **bufs, *nvarids;
-    MPI_Offset w_len, **starts, **counts, *bufcounts;
+    MPI_Offset w_len, **starts=NULL, **counts=NULL, *bufcounts;
     MPI_Datatype *datatypes;
     MPI_Info info;
 

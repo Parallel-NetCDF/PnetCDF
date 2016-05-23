@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     int i, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid, dimid[2], num_reqs;
     float *buffer;
-    MPI_Offset **starts;
+    MPI_Offset **starts=NULL;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
