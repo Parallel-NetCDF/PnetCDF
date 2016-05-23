@@ -321,6 +321,10 @@ ncmpii_getput_varm(NC               *ncp,
     }
 #endif
 
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_ver = 5;  /* CDF-5 */
+    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_ver = 2;  /* CDF-2 */
+    else                                          cdf_ver = 1;  /* CDF-1 */
+
     /* check NC_ECHAR error and calculate the followings:
      * ptype: element data type (MPI primitive type) in buftype
      * bufcount: If it is -1, then this is called from a high-level API and in
@@ -379,10 +383,6 @@ err_check:
         nbytes   = 0;
         goto mpi_io;
     }
-
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_ver = 5;  /* CDF-5 */
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_ver = 2;  /* CDF-2 */
-    else                                          cdf_ver = 1;  /* CDF-1 */
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(cdf_ver, varp->type, ptype);
