@@ -216,6 +216,12 @@ swap4b(void *dst, const void *src)
     tmp = SWAP4(tmp);
     memcpy(dst, &tmp, 4);
 
+    /* Codes below will cause "break strict-aliasing rules" in gcc
+    uint32_t *op = (uint32_t*)dst;
+    *op = *(uint32_t*)src; 
+    *op = SWAP4(*op); 
+    */
+
     /* Below are copied from netCDF-4.
      * See https://bugtracking.unidata.ucar.edu/browse/NCF-338
      * Quote "One issue we are wrestling with is how compilers optimize this

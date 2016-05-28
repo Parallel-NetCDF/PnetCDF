@@ -29,9 +29,19 @@
 /* The const string below is for the RCS ident(1) command to find a string like
  * "\044Id: \100(#) PnetCDF library version 1.4.0 of 16 Nov 2013 $"
  * in the library file (libpnetcdf.a).
+ *
+ * This string must be made a global variable. Otherwise, it won't work
+ * when compiled with optimization options, e.g. -O2
  */
-static char const pnetcdf_libvers[] =
+char const pnetcdf_libvers[] =
         "\044Id: \100(#) PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE" $";
+
+/* a cleaner version for running command "strings", e.g.
+ * % strings libpnetcdf.a | grep "PnetCDF library version"
+ * or
+ * % strings a.out | grep "PnetCDF library version"
+ */
+char pnetcdf_lib_vers[] = "PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE;
 
 /* pnetcdf_libvers is slightly different from the one returned from
  * ncmpi_inq_libvers(). The string pnetcdf_libvers is for command "ident" to
