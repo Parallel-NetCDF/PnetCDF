@@ -597,7 +597,7 @@ NC_begins(NC         *ncp,
         end_var += ncp->vars.value[i]->len;
         /* end_var is the end offset of record variable i */
 
-        /* check if record size must fit in 32-bits */
+        /* check if record size must fit in 32-bits (for CDF-1) */
 #if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
         if (ncp->recsize > X_UINT_MAX - ncp->vars.value[i]->len)
             DEBUG_RETURN_ERROR(NC_EVARSIZE)
@@ -948,7 +948,9 @@ move_vars_r(NC *ncp, NC *old) {
 #endif
 
 /*
- * Given a valid ncp, return NC_EVARSIZE if any variable has a bad len
+ * Given a valid ncp, check all variables for their sizes against the maximal
+ * allowable sizes. Different CDF formation versions have different maximal
+ * sizes. This function returns NC_EVARSIZE if any variable has a bad len
  * (product of non-rec dim sizes too large), else return NC_NOERR.
  */
 static int
@@ -958,76 +960,81 @@ ncmpii_NC_check_vlens(NC *ncp)
     /* maximum permitted variable size (or size of one record's worth
        of a record variable) in bytes.  This is different for format 1
        and format 2. */
-    MPI_Offset vlen_max;
-    MPI_Offset ii;
-    MPI_Offset large_vars_count;
-    MPI_Offset rec_vars_count;
+    MPI_Offset ii, vlen_max, rec_vars_count;
+    MPI_Offset large_fix_vars_count, large_rec_vars_count;
     int last = 0;
 
-    if(ncp->vars.ndefined == 0)
-       return NC_NOERR;
+    if (ncp->vars.ndefined == 0)
+        return NC_NOERR;
 
-    if ((ncp->flags & NC_64BIT_DATA) && SIZEOF_OFF_T > 4)
-       return NC_NOERR;
+    if (ncp->flags & NC_64BIT_DATA) /* CDF-5 */
+        return NC_NOERR;
 
-    if ((ncp->flags & NC_64BIT_OFFSET) && SIZEOF_OFF_T > 4) {
-       /* CDF2 format and LFS */
-       vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
-    } else {
-       /* CDF1 format */
-       vlen_max = X_INT_MAX - 3;
-    }
-    /* Loop through vars, first pass is for non-record variables.   */
-    large_vars_count = 0;
+    /* only CDF-1 and CDF-2 need to continue */
+
+    if (ncp->flags & NC_64BIT_OFFSET) /* CDF2 format */
+        vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
+    else
+        vlen_max = X_INT_MAX - 3; /* CDF1 format */
+
+    /* Loop through vars, first pass is for non-record variables */
+    large_fix_vars_count = 0;
     rec_vars_count = 0;
     vpp = ncp->vars.value;
     for (ii = 0; ii < ncp->vars.ndefined; ii++, vpp++) {
-       if( !IS_RECVAR(*vpp) ) {
-           last = 0;
-           if( ncmpii_NC_check_vlen(*vpp, vlen_max) == 0 ) {
-               large_vars_count++;
-               last = 1;
-           }
-       } else {
-         rec_vars_count++;
-       }
+        if (!IS_RECVAR(*vpp)) {
+            last = 0;
+            if (ncmpii_NC_check_vlen(*vpp, vlen_max) == 0) {
+                /* check this variable's shape product against vlen_max */
+                large_fix_vars_count++;
+                last = 1;
+            }
+        } else {
+            rec_vars_count++;
+        }
     }
     /* OK if last non-record variable size too large, since not used to
        compute an offset */
-    if( large_vars_count > 1) { /* only one "too-large" variable allowed */
-      DEBUG_RETURN_ERROR(NC_EVARSIZE)
+    if (large_fix_vars_count > 1)  /* only one "too-large" variable allowed */
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
+
+    /* The only "too-large" variable must be the last one defined */
+    if (large_fix_vars_count == 1 && last == 0)
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
+
+    if (rec_vars_count == 0) return NC_NOERR;
+
+    /* if there is a "too-large" fixed-size variable, no record variable is
+     * allowed */
+    if (large_fix_vars_count == 1)
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
+
+    /* Loop through vars, second pass is for record variables.   */
+    large_rec_vars_count = 0;
+    vpp = ncp->vars.value;
+    for (ii = 0; ii < ncp->vars.ndefined; ii++, vpp++) {
+        if (IS_RECVAR(*vpp)) {
+            last = 0;
+            if (ncmpii_NC_check_vlen(*vpp, vlen_max) == 0) {
+                /* check this variable's shape product against vlen_max */
+                large_rec_vars_count++;
+                last = 1;
+            }
+        }
     }
+
+    /* For CDF-2, no record variable can require more than 2^32 - 4 bytes of
+     * storage for each record's worth of data, unless it is the last record
+     * variable. See
+     * http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations
+     */
+    if (large_rec_vars_count > 1)  /* only one "too-large" variable allowed */
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
+
     /* and it has to be the last one */
-    if( large_vars_count == 1 && last == 0) {
-      DEBUG_RETURN_ERROR(NC_EVARSIZE)
-    }
-    if( rec_vars_count > 0 ) {
-       /* and if it's the last one, there can't be any record variables */
-       if( large_vars_count == 1 && last == 1) {
-           DEBUG_RETURN_ERROR(NC_EVARSIZE)
-       }
-       /* Loop through vars, second pass is for record variables.   */
-       large_vars_count = 0;
-       vpp = ncp->vars.value;
-       for (ii = 0; ii < ncp->vars.ndefined; ii++, vpp++) {
-           if( IS_RECVAR(*vpp) ) {
-               last = 0;
-               if( ncmpii_NC_check_vlen(*vpp, vlen_max) == 0 ) {
-                   large_vars_count++;
-                   last = 1;
-               }
-           }
-       }
-       /* OK if last record variable size too large, since not used to
-          compute an offset */
-       if( large_vars_count > 1) { /* only one "too-large" variable allowed */
-           DEBUG_RETURN_ERROR(NC_EVARSIZE)
-       }
-       /* and it has to be the last one */
-       if( large_vars_count == 1 && last == 0) {
-           DEBUG_RETURN_ERROR(NC_EVARSIZE)
-       }
-    }
+    if (large_rec_vars_count == 1 && last == 0)
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
+
     return NC_NOERR;
 }
 

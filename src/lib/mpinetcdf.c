@@ -343,14 +343,14 @@ ncmpi_create(MPI_Comm    comm,
 #endif
         fSet(ncp->flags, NC_64BIT_DATA);
     } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
+#if SIZEOF_MPI_OFFSET <  8
         /* unlike serial netcdf, we will not bother to support
          * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
          * serial netcdf has proven it's possible if datasets are small, but
          * that's a hassle we don't want to worry about */
-        if (SIZEOF_OFF_T < 8) {
-            if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-            DEBUG_RETURN_ERROR(NC_ESMALL)
-        }
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+        DEBUG_RETURN_ERROR(NC_ESMALL)
+#endif
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
         /* check default format */
@@ -364,10 +364,10 @@ ncmpi_create(MPI_Comm    comm,
             fSet(ncp->flags, NC_64BIT_DATA);
         }
         else if (default_format == NC_FORMAT_CDF2) {
-            if (SIZEOF_OFF_T < 8) {
-                if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-                DEBUG_RETURN_ERROR(NC_ESMALL)
-            }
+#if SIZEOF_MPI_OFFSET <  8
+            if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+            DEBUG_RETURN_ERROR(NC_ESMALL)
+#endif
             fSet(ncp->flags, NC_64BIT_OFFSET);
         }
         else
