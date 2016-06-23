@@ -140,6 +140,9 @@ int main(int argc, char **argv)
     CHECK_PUT_BUF
     free(buf);
 
+    err = ncmpi_buffer_detach(ncid);
+    if (err != NC_NOERR) HANDLE_ERROR(err)
+
     buf = (int*) malloc((size_t)NY * NX * nprocs * sizeof(int));
     memset(buf, 0, (size_t)NY * NX * nprocs * sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[0], buf);
