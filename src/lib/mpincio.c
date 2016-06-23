@@ -288,7 +288,7 @@ ncmpiio_create(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENFILE)
     }
 
-    *((int *)&nciop->fd) = i;
+    nciop->fd = i;
     IDalloc[i] = 1;
 
     /* collective I/O mode is the default mode */
@@ -363,7 +363,7 @@ ncmpiio_open(MPI_Comm     comm,
         ncmpiio_free(nciop);
         DEBUG_RETURN_ERROR(NC_ENFILE)
     }
-    *((int *)&nciop->fd) = i;
+    nciop->fd = i;
     IDalloc[i] = 1;
 
     /* default mode is collective */
@@ -424,7 +424,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_close");
     }
-    IDalloc[*((int *)&nciop->fd)] = 0;
+    IDalloc[nciop->fd] = 0;
 
     if (doUnlink) {
         TRACE_IO(MPI_File_delete)((char *)nciop->path, nciop->mpiinfo);

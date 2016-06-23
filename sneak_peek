@@ -51,10 +51,11 @@ This is essentially a placeholder for the next release note ...
       NC_UBYTE, an unsigned 8-bit integer, which renders the exception less
       sense. Thus, for CDF-5 files, regular NC_ERANGE check is performed in
       PnetCDF for all APIs that access NC_BYTE variables. For CDF-1 and 2
-      files, PnetCDF still honor that exception.
+      files, PnetCDF still honors that exception.
 
   o Other updates:
-    * none
+    * Clarify support for CDF-2 and CDF-5 formats. When the size of MPI_Offset
+      is less than 8 bytes, support for CDF-2 and CDF-5 is disabled.
 
   o Bug fixes
     * Fix the return unlimited dimension ID of value -1, not 0, by Fortran API
