@@ -377,7 +377,7 @@ ncmpi_create(MPI_Comm    comm,
     /* find the true header size (not-yet aligned) */
     ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
-    /* PnetCDF's default mode is no fill */
+    /* PnetCDF default fill mode is no fill */
     fSet(ncp->flags, NC_NOFILL);
 
     /* open the file in parallel */

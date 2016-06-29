@@ -235,7 +235,7 @@ ncmpii_igetput_varm(NC               *ncp,
          */
 
         /* Step 1: pack buf into a contiguous buffer, lbuf, if buftype is
-         * not contiguous
+         * not contiguous, i.e. a noncontiguous MPI derived datatype
          */
         if (!buftype_is_contig) { /* buftype is not contiguous */
             if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
@@ -248,7 +248,7 @@ ncmpii_igetput_varm(NC               *ncp,
             }
             else lbuf = NCI_Malloc((size_t)outsize);
 
-            /* pack buf into lbuf using buftype */
+            /* pack buf into lbuf based on buftype */
             position = 0;
             MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)outsize,
                      &position, MPI_COMM_SELF);
@@ -270,17 +270,17 @@ ncmpii_igetput_varm(NC               *ncp,
             }
             else cbuf = NCI_Malloc((size_t)outsize);
 
-            /* pack lbuf to cbuf using imaptype */
+            /* pack lbuf to cbuf based on imaptype */
             position = 0;
             MPI_Pack(lbuf, 1, imaptype, cbuf, (int)outsize, &position,
                      MPI_COMM_SELF);
             MPI_Type_free(&imaptype);
+
+            /* lbuf is no longer needed */
+            if (lbuf != buf) NCI_Free(lbuf);
         }
         else /* not a true varm call: reuse lbuf */
             cbuf = lbuf;
-
-        /* lbuf is no longer needed */
-        if (lbuf != buf && lbuf != cbuf) NCI_Free(lbuf);
 
         /* Step 3: type-convert and byte-swap cbuf to xbuf, and xbuf will be
          * used in MPI write function to write to file

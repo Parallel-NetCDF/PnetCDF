@@ -45,7 +45,7 @@ int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
 /* try different hash functions described in
  * http://www.burtleburtle.net/bob/hash/doobs.html
  */
-int ncmpii_aditive_hash(const char *str_name)
+int ncmpii_additive_hash(const char *str_name)
 {
     int i, hash=strlen(str_name);
     for (i=0; i<strlen(str_name); ++i)
