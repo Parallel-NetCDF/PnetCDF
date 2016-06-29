@@ -48,7 +48,7 @@
  *  - stripping of control characters
  *  - stripping of character marks (accents, etc.)
  *  - transformation of LF, CRLF, CR and NEL to line-feed (LF)
- *    or to the unicode chararacters for paragraph separation (PS)
+ *    or to the unicode characters for paragraph separation (PS)
  *    or line separation (LS).
  *  - unicode case folding (for case insensitive string comparisons)
  *  - rejection of illegal UTF-8 data
@@ -61,9 +61,14 @@
 #ifndef UTF8PROC_H
 #define UTF8PROC_H
 
+/* Note this header file requires some constants defined in ncconfig.h. Please
+ * make sure ncconfig.h is included in any C file before including this file.
+ * We cannot include ncconfig.h here due to the compiler warning complaining
+ * about constants being redefined (caused by including ncconfig.h twice.)
 #if HAVE_CONFIG_H
 # include "ncconfig.h"
 #endif
+ */
 
 #include <stdlib.h>
 #ifdef HAVE_STDBOOL_H
@@ -321,7 +326,7 @@ ssize_t utf8proc_decompose_char(
  *  In case of success the number of chars written is returned,
  *  in case of an error, a negative error code is returned.
  *  If the number of written chars would be bigger than 'bufsize',
- *  the buffer (up to 'bufsize') has inpredictable data, and the needed
+ *  the buffer (up to 'bufsize') has unpredictable data, and the needed
  *  buffer size is returned.
  *  WARNING: The parameter 'uc' has to be in the range of 0x0000 to
  *           0x10FFFF, otherwise the program might crash!
@@ -341,7 +346,7 @@ ssize_t utf8proc_decompose(
  *  In case of success the number of chars written is returned,
  *  in case of an error, a negative error code is returned.
  *  If the number of written chars would be bigger than 'bufsize',
- *  the buffer (up to 'bufsize') has inpredictable data, and the needed
+ *  the buffer (up to 'bufsize') has unpredictable data, and the needed
  *  buffer size is returned.
  */
 
@@ -384,7 +389,7 @@ ssize_t utf8proc_map(
  *  In case of success the length of the new string is returned,
  *  otherwise a negative error code is returned.
  *  NOTICE: The memory of the new UTF-8 string will have been allocated with
- *          'malloc', and has theirfore to be freed with 'free'.
+ *          'malloc', and has therefore to be freed with 'free'.
  */
 
 uint8_t *utf8proc_NFD(const uint8_t *str);
