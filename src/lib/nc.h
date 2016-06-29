@@ -169,7 +169,7 @@ typedef struct {
 #define HASH_TABLE_SIZE 256
 /*
 #define HASH_FUNC(x) ncmpii_jenkins_one_at_a_time_hash(x)
-#define HASH_FUNC(x) ncmpii_aditive_hash(x)
+#define HASH_FUNC(x) ncmpii_additive_hash(x)
 #define HASH_FUNC(x) ncmpii_rotating_hash(x)
 #define HASH_FUNC(x) ncmpii_Pearson_hash(x)
 */
@@ -966,7 +966,7 @@ extern int
 ncmpii_jenkins_one_at_a_time_hash(const char *str_name);
 
 extern int
-ncmpii_aditive_hash(const char *str_name);
+ncmpii_additive_hash(const char *str_name);
 
 extern int
 ncmpii_rotating_hash(const char *str_name);

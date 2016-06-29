@@ -456,9 +456,9 @@ NC_begins(NC         *ncp,
     else
         cdf_ver = 1;  /* CDF-1 */
 
-    /* get the true header size (un-aligned one) */
+    /* get the true header size (not header extent) */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
-    if (rank ==0) ncp->xsz = ncmpii_hdr_len_NC(ncp);
+    if (rank == 0) ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
     /* only root's header size matters */
     TRACE_COMM(MPI_Bcast)(&ncp->xsz, 1, MPI_OFFSET, 0, ncp->nciop->comm);
@@ -1114,7 +1114,7 @@ ncmpii_NC_enddef(NC         *ncp,
     }
 #endif
 
-    /* check on dimension lengths */
+    /* check whether sizes of all variables are legal */
     status = ncmpii_NC_check_vlens(ncp);
     CHECK_ERROR(status)
 
