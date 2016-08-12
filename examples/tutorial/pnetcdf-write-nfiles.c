@@ -15,8 +15,7 @@
 To run on 4 processes for example,
 % mpiexec -l -n 4 pnetcdf-write-nfiles output.nc
 
-There will be 4+1 files created.
-    output.nc
+There will be 4 files created.
     output.nc.0-4.nc
     output.nc.1-4.nc
     output.nc.2-4.nc 
@@ -121,24 +120,6 @@ int main(int argc, char **argv) {
 }
 
 /* The contents of files created by this program are:
-% ncmpidump  output.nc
-netcdf output {
-// file format: CDF-2 (large file)
-dimensions:
-        d1 = 4 ;
-variables:
-        int v1(d1) ;
-        int v2(d1) ;
-
-// global attributes:
-                :string = "Hello World\n",
-    "" ;
-data:
-
- v1 = 0, 1, 2, 3 ;
-
- v2 = 0, 1, 2, 3 ;
-}
 
 % ncmpidump output.nc.0-4.nc
 netcdf output.nc.0-4 {
