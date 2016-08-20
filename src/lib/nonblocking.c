@@ -359,7 +359,7 @@ void extract_reqs(NC   *ncp,
                   int  *num_reqs, /* IN/OUT */
                   int **req_ids)  /* OUT */
 {
-    int req_type, prev_id;
+    int i, req_type, prev_id;
 
     req_type = *num_reqs;
 
@@ -374,6 +374,7 @@ void extract_reqs(NC   *ncp,
             if (ncp->get_list[i].id != prev_id) {
                 prev_id = ncp->get_list[i].id;
                 (*num_reqs)++;
+            }
         }
     }
     prev_id = -1;
@@ -382,6 +383,7 @@ void extract_reqs(NC   *ncp,
             if (ncp->put_list[i].id != prev_id) {
                 prev_id = ncp->put_list[i].id;
                 (*num_reqs)++;
+            }
         }
     }
 
@@ -396,6 +398,7 @@ void extract_reqs(NC   *ncp,
             if (ncp->get_list[i].id != prev_id) {
                 prev_id = ncp->get_list[i].id;
                 (*req_ids)[(*num_reqs)++] = prev_id;
+            }
         }
     }
     prev_id = -1;
@@ -404,6 +407,7 @@ void extract_reqs(NC   *ncp,
             if (ncp->put_list[i].id != prev_id) {
                 prev_id = ncp->put_list[i].id;
                 (*req_ids)[(*num_reqs)++] = prev_id;
+            }
         }
     }
 }
