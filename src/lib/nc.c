@@ -777,7 +777,11 @@ write_NC(NC *ncp)
 
     assert(!NC_readonly(ncp));
 
-    /* ncp->xsz is root's header size, we need to calculate local's */
+    /* In NC_begins(), root's ncp->xsz, root's header size, has been
+     * broadcasted, so ncp->xsz is now root's header size. To check any
+     * inconsistency in file header, we need to calculate local's header
+     * size by calling ncmpii_hdr_len_NC()./
+     */
     local_xsz = ncmpii_hdr_len_NC(ncp);
 
     /* Note valgrind will complain about uninitialized buf below, but buf will
@@ -1123,6 +1127,9 @@ ncmpii_NC_enddef(NC         *ncp,
      * file offset as well as the offsets of record variables.
      * When ncp->old != NULL, this enddef is called after a redef. In this
      * case, we re-used all variable offsets as many as possible.
+     *
+     * Note in NC_begins, root broadcasts ncp->xsz, the file header size, to
+     * all processes.
      */
     status = NC_begins(ncp, h_align, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERROR(status)
@@ -1175,8 +1182,8 @@ ncmpii_NC_enddef(NC         *ncp,
     } /* ... ncp->old != NULL */
 
     /* first sync header objects in memory across all processes, and then root
-     * writes the header to file. Note safe_mode error check is already done
-     * in write_NC() */
+     * writes the header to file. Note safe_mode error check will be done in
+     * write_NC() */
     status = write_NC(ncp);
 
     /* we should continue to exit define mode, even if header is inconsistent
