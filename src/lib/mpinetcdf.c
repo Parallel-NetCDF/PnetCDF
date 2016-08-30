@@ -250,21 +250,25 @@ ncmpi_create(MPI_Comm    comm,
          * the time ncmpi_enddef() returns */
     }
 
+    /* NC_DISKLESS is not supported yet */
+    if (cmode & NC_DISKLESS)
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+
+    /* NC_MMAP is not supported yet */
+    if (cmode & NC_MMAP)
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+
+    /* In safe_mode, cmodes are sync-ed by overwriting local's cmode with
+     * root's and hence error code related to cmode, if there is any,
+     * should be the same across all processes.
+     */
+    if (safe_mode && status != NC_NOERR) return status;
+
     /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
     if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
                  (NC_64BIT_OFFSET|NC_64BIT_DATA))
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
-    /* In safe_mode, cmodes are sync-ed, so all processes can return the same
-     * error code. But, when not in safe mode, if cmode is not consistent
-     * among processes, then some processes might not violate this above rule
-     * which can cause the program to hang (because MPI_File_open is a
-     * collective call). We use MPI_Allreduce below to check the error
-     * code, but it is costly.
-     */
-    if (safe_mode) {
-        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
-        status = err;
-    }
+
     if (status != NC_NOERR) return status;
 
     /* take hints from the environment variable PNETCDF_HINTS
@@ -472,6 +476,20 @@ ncmpi_open(MPI_Comm    comm,
             DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
         }
     }
+
+    /* NC_DISKLESS is not supported yet */
+    if (omode & NC_DISKLESS)
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+
+    /* NC_MMAP is not supported yet */
+    if (omode & NC_MMAP)
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+
+    /* In safe_mode, omodes are sync-ed by overwriting local's omode with
+     * root's and hence error code related to omode, if there is any,
+     * should be the same across all processes.
+     */
+    if (safe_mode && status != NC_NOERR) return status;
 
     /* take hints from the environment variable PNETCDF_HINTS
      * a string of hints separated by ";" and each hint is in the
