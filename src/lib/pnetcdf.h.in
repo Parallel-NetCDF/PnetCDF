@@ -539,18 +539,19 @@ by the desired type. */
 #define NC_EQUOTA			(-225) /**< Quota exceeded */
 #define NC_ENULLSTART			(-226) /**< argument start is a NULL pointer */
 #define NC_ENULLCOUNT			(-227) /**< argument count is a NULL pointer */
-#define NC_EINVAL_CMODE			(-228) /**< Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA */
+#define NC_EINVAL_CMODE			(-228) /**< Invalid file create mode */
 #define NC_ETYPESIZE			(-229) /**< MPI derived data type size error (bigger than the variable size) */
 #define NC_ETYPE_MISMATCH		(-230) /**< element type of the MPI derived data type mismatches the variable type */
 #define NC_ETYPESIZE_MISMATCH		(-231) /**< file type size mismatches buffer type size */
 #define NC_ESTRICTCDF2			(-232) /**< Attempting CDF-5 operation on CDF-2 file */
 #define NC_ENOTRECVAR			(-233) /**< Attempting operation only for record variables */
 #define NC_ENOTFILL			(-234) /**< Attempting to fill a variable when its fill mode is off */
+#define NC_EINVAL_OMODE			(-235) /**< Invalid file open mode */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
 #define NC_EMULTIDEFINE			(-250) /**< NC definitions on multiprocesses conflict */
-#define NC_EMULTIDEFINE_OMODE		(-251) /**< create/open mode are inconsistent across processes */
+#define NC_EMULTIDEFINE_OMODE		(-251) /**< inconsistent file open modes among processes */
 #define NC_EMULTIDEFINE_DIM_NUM		(-252) /**< inconsistent number of dimensions */
 #define NC_EMULTIDEFINE_DIM_SIZE	(-253) /**< inconsistent size of dimension */
 #define NC_EMULTIDEFINE_DIM_NAME	(-254) /**< inconsistent dimension names */
@@ -572,6 +573,7 @@ by the desired type. */
 #define NC_EMULTIDEFINE_FILL_MODE	(-270) /**< inconsistent dataset fill mode */
 #define NC_EMULTIDEFINE_VAR_FILL_MODE	(-271) /**< inconsistent variable fill mode */
 #define NC_EMULTIDEFINE_VAR_FILL_VALUE	(-272) /**< inconsistent variable fill value */
+#define NC_EMULTIDEFINE_CMODE		(-273) /**< inconsistent file create modes among processes */
 
 #define NC_EMULTIDEFINE_FIRST		NC_EMULTIDEFINE
 #define NC_EMULTIDEFINE_LAST		NC_EMULTIDEFINE_FNC_ARGS

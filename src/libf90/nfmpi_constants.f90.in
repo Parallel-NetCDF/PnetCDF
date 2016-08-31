@@ -237,18 +237,19 @@
       NF_EQUOTA                   = -225, & ! Quota exceeded
       NF_ENULLSTART               = -226, & ! argument start is a NULL pointer
       NF_ENULLCOUNT               = -227, & ! argument count is a NULL pointer
-      NF_EINVAL_CMODE             = -228, & ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
+      NF_EINVAL_CMODE             = -228, & ! Invalid file create mode
       NF_ETYPESIZE                = -229, & ! MPI derived data type size error (bigger than the variable size)
       NF_ETYPE_MISMATCH           = -230, & ! element type of the MPI derived data type mismatches the variable type
       NF_ETYPESIZE_MISMATCH       = -231, & ! file type size mismatches buffer type size
       NF_ESTRICTCDF2              = -232, & ! Attempting CDF-5 operation on CDF-2 file
       NF_ENOTRECVAR               = -233, & ! Attempting operation only for record variables */
-      NF_ENOTFILL                 = -234    ! Attempting to fill a variable when its fill mode is off */
+      NF_ENOTFILL                 = -234, & ! Attempting to fill a variable when its fill mode is off */
+      NF_EINVAL_OMODE             = -235    ! Invalid file open mode
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &
       NF_EMULTIDEFINE             = -250, & ! NC definitions on multiprocesses conflict
-      NF_EMULTIDEFINE_OMODE       = -251, & ! file create/open modes are inconsistent among processes
+      NF_EMULTIDEFINE_OMODE       = -251, & ! inconsistent file open modes
       NF_EMULTIDEFINE_DIM_NUM     = -252, & ! inconsistent number of dimensions
       NF_EMULTIDEFINE_DIM_SIZE    = -253, & ! inconsistent size of dimension
       NF_EMULTIDEFINE_DIM_NAME    = -254, & ! inconsistent dimension names
@@ -270,6 +271,7 @@
       NF_EMULTIDEFINE_FILL_MODE      = -270, & !  inconsistent dataset fill mode
       NF_EMULTIDEFINE_VAR_FILL_MODE  = -271, & ! inconsistent variable fill mode
       NF_EMULTIDEFINE_VAR_FILL_VALUE = -272, & ! inconsistent variable fill value
+      NF_EMULTIDEFINE_CMODE       = -273, & ! inconsistent file create modes
       NF_ECMODE                   = NF_EMULTIDEFINE_OMODE,      &
       NF_EDIMS_NELEMS_MULTIDEFINE = NF_EMULTIDEFINE_DIM_NUM,    &
       NF_EDIMS_SIZE_MULTIDEFINE   = NF_EMULTIDEFINE_DIM_SIZE,   &

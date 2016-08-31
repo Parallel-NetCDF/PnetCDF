@@ -2342,48 +2342,53 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     /* allocate a header object and fill it with root's header */
     root_ncp = ncmpii_new_NC(&chunksize);
 
-    /* consistency of magic numbers should have already been checked during
+    /* in safe_mode, consistency of magic numbers have already been checked in
      * ncmpi_create()
      */
     if (magic[sizeof(ncmagic1)-1] == 0x5) {
         fSet(root_ncp->flags, NC_64BIT_DATA);
+        getbuf->version = 5;
     }
     else if (magic[sizeof(ncmagic1)-1] == 0x2) {
         fSet(root_ncp->flags, NC_64BIT_OFFSET);
+        getbuf->version = 2;
     }
     else if (magic[sizeof(ncmagic1)-1] != 0x1) {
+        getbuf->version = 1;
         /* Fatal error, as root's header is significant */
         if (ncp->safe_mode)
             fprintf(stderr,"Error: root's header indicates not CDF 1/2/5 format\n");
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* should not continue */
     }
 
-    /* check version number in last byte of magic */
-    int local_ver, root_ver;
-         if (ncp->flags & NC_64BIT_DATA)   local_ver = 0x5;
-    else if (ncp->flags & NC_64BIT_OFFSET) local_ver = 0x2;
-    else                                   local_ver = 0x1;
+    if (! ncp->safe_mode) {
+        /* check version number in last byte of magic */
+        int local_ver, root_ver;
+             if (ncp->flags & NC_64BIT_DATA)   local_ver = 0x5;
+        else if (ncp->flags & NC_64BIT_OFFSET) local_ver = 0x2;
+        else                                   local_ver = 0x1;
 
-    root_ver = magic[sizeof(ncmagic1)-1];
-    if (local_ver != root_ver) {
-        if (ncp->safe_mode)
-            printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
-                   WARN_STR, local_ver, root_ver);
+        root_ver = magic[sizeof(ncmagic1)-1];
+        if (local_ver != root_ver) {
+            if (ncp->safe_mode)
+                printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
+                       WARN_STR, local_ver, root_ver);
 
-        /* overwrite the local header object with root's */
+            /* overwrite the local header object with root's */
              if (local_ver == 0x5) fClr(ncp->flags, NC_64BIT_DATA);
-        else if (local_ver == 0x2) fClr(ncp->flags, NC_64BIT_OFFSET);
+            else if (local_ver == 0x2) fClr(ncp->flags, NC_64BIT_OFFSET);
 
-             if (root_ver  == 0x5) fSet(ncp->flags, NC_64BIT_DATA);
-        else if (root_ver  == 0x2) fSet(ncp->flags, NC_64BIT_OFFSET);
+                 if (root_ver  == 0x5) fSet(ncp->flags, NC_64BIT_DATA);
+            else if (root_ver  == 0x2) fSet(ncp->flags, NC_64BIT_OFFSET);
 
-        /* this inconsistency is not fatal */
-        DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
+            /* this inconsistency is not fatal */
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
+        }
+        getbuf->version = root_ver;
     }
-    getbuf->version = root_ver; /* getbuf's version has not been set before */
 
 #if SIZEOF_MPI_OFFSET < 8
-    if (root_ver > 1) {
+    if (getbuf->version > 1) {
         /* for NC_64BIT_DATA or NC_64BIT_OFFSET, MPI_Offset must be 8 bytes */
         if (ncp->safe_mode) fprintf(stderr,"Error: cannot support CDF-2 and CDF-5 on this machine\n");
         DEBUG_RETURN_ERROR(NC_ESMALL) /* should not continue */

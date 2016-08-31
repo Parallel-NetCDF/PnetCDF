@@ -50,21 +50,22 @@ int test_open_mode(char *filename, int safe_mode)
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
     if (rank == 0) cmode = NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid);
-    /* if safe_mode is on, then we expect all non-root ranks to print a warning
+    /* In safe_mode is on, then we expect all non-root ranks to print a warning
      * message "inconsistent file create mode, overwrite with root's" and error
-     * code NC_EMULTIDEFINE_OMODE from non-root processes.
-     * if safe_mode is off, then no error code should be returned.
+     * code NC_EMULTIDEFINE_CMODE from non-root processes.
+     * If safe_mode is off, then no error code should be returned from
+     * ncmpi_create. The error will return at ncmpi_enddef.
      */
-    if (safe_mode && rank > 0) ERR_EXP(err, NC_EMULTIDEFINE_OMODE)
+    if (safe_mode && rank > 0) ERR_EXP(err, NC_EMULTIDEFINE_CMODE)
     else                       ERR
 
     err = ncmpi_close(ncid);
     /* if safe_mode is on, then no error code should be returned.
-     * if safe_mode is off, then we expect error code NC_EMULTIDEFINE_OMODE
+     * if safe_mode is off, then we expect error code NC_EMULTIDEFINE_CMODE
      * from all non-root processes and NC_EMULTIDEFINE from root process.
      */
     if (safe_mode) ERR
-    else if (rank > 0) ERR_EXP(err, NC_EMULTIDEFINE_OMODE)
+    else if (rank > 0) ERR_EXP(err, NC_EMULTIDEFINE_CMODE)
 
     int format;
     err = ncmpi_inq_file_format(filename, &format); ERR

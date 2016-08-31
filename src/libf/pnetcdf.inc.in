@@ -369,6 +369,7 @@
       integer NF_ESTRICTCDF2
       integer NF_ENOTRECVAR
       integer NF_ENOTFILL
+      integer NF_EINVAL_OMODE
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -393,6 +394,7 @@
       integer NF_EMULTIDEFINE_FILL_MODE
       integer NF_EMULTIDEFINE_VAR_FILL_MODE
       integer NF_EMULTIDEFINE_VAR_FILL_VALUE
+      integer NF_EMULTIDEFINE_CMODE
 
 !
 ! PnetCDF error codes start from -201
@@ -424,19 +426,20 @@
       PARAMETER (NF_EQUOTA                  = -225)   ! Quota exceeded
       PARAMETER (NF_ENULLSTART              = -226)   ! argument start is a NULL pointer
       PARAMETER (NF_ENULLCOUNT              = -227)   ! argument count is a NULL pointer
-      PARAMETER (NF_EINVAL_CMODE            = -228)   ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
+      PARAMETER (NF_EINVAL_CMODE            = -228)   ! Invalid file create mode
       PARAMETER (NF_ETYPESIZE               = -229)   ! MPI derived data type size error (bigger than the variable size)
       PARAMETER (NF_ETYPE_MISMATCH          = -230)   ! element type of the MPI derived data type mismatches the variable type
       PARAMETER (NF_ETYPESIZE_MISMATCH      = -231)   ! file type size mismatches buffer type size
       PARAMETER (NF_ESTRICTCDF2             = -232)   ! Attempting CDF-5 operation on CDF-2 file
       PARAMETER (NF_ENOTRECVAR              = -233)   ! Attempting operation only for record variables
       PARAMETER (NF_ENOTFILL                = -234)   ! Attempting to fill a variable when its fill mode is off
+      PARAMETER (NF_EINVAL_OMODE            = -235)   ! Invalid file open mode
 
 !
 ! PnetCDF header inconsistency errors start from -250
 !
       PARAMETER (NF_EMULTIDEFINE            = -250)   ! NC definitions on multiprocesses conflict
-      PARAMETER (NF_EMULTIDEFINE_OMODE      = -251)   ! file create/open modes are inconsistent
+      PARAMETER (NF_EMULTIDEFINE_OMODE      = -251)   ! inconsistent file open modes
       PARAMETER (NF_EMULTIDEFINE_DIM_NUM    = -252)   ! inconsistent number of dimensions
       PARAMETER (NF_EMULTIDEFINE_DIM_SIZE   = -253)   ! inconsistent size of dimension
       PARAMETER (NF_EMULTIDEFINE_DIM_NAME   = -254)   ! inconsistent dimension names
@@ -458,6 +461,7 @@
       PARAMETER (NF_EMULTIDEFINE_FILL_MODE  = -270)   !  inconsistent dataset fill mode
       PARAMETER (NF_EMULTIDEFINE_VAR_FILL_MODE  = -271) ! inconsistent variable fill mode
       PARAMETER (NF_EMULTIDEFINE_VAR_FILL_VALUE = -272) ! inconsistent variable fill value
+      PARAMETER (NF_EMULTIDEFINE_CMODE      = -273)   ! inconsistent file create modes
 
       PARAMETER(NF_ECMODE                  =NF_EMULTIDEFINE_OMODE)
       PARAMETER(NF_EDIMS_NELEMS_MULTIDEFINE=NF_EMULTIDEFINE_DIM_NUM)
