@@ -241,22 +241,22 @@ ncmpi_create(MPI_Comm    comm,
             /* cmodes are inconsistent, overwrite local cmode with root's */
             printf("rank %d: Warning - inconsistent file create mode, overwrite with root's\n",rank);
             cmode = root_cmode;
-            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
         }
         TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
         if (err != NC_NOERR) return status;
 
-        /* when safe_mode is disabled, NC_EMULTIDEFINE_OMODE will be reported at
+        /* when safe_mode is disabled, NC_EMULTIDEFINE_CMODE will be reported at
          * the time ncmpi_enddef() returns */
     }
 
     /* NC_DISKLESS is not supported yet */
     if (cmode & NC_DISKLESS)
-        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
 
     /* NC_MMAP is not supported yet */
     if (cmode & NC_MMAP)
-        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
 
     /* In safe_mode, cmodes are sync-ed by overwriting local's cmode with
      * root's and hence error code related to cmode, if there is any,
@@ -387,6 +387,7 @@ ncmpi_create(MPI_Comm    comm,
     /* open the file in parallel */
     err = ncmpiio_create(comm, path, cmode, env_info, ncp);
     if (err != NC_NOERR) { /* fatal error */
+        if (err == NC_EMULTIDEFINE_OMODE) err = NC_EMULTIDEFINE_CMODE;
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
         return err;
@@ -479,11 +480,11 @@ ncmpi_open(MPI_Comm    comm,
 
     /* NC_DISKLESS is not supported yet */
     if (omode & NC_DISKLESS)
-        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL_OMODE)
 
     /* NC_MMAP is not supported yet */
     if (omode & NC_MMAP)
-        DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT)
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL_OMODE)
 
     /* In safe_mode, omodes are sync-ed by overwriting local's omode with
      * root's and hence error code related to omode, if there is any,
@@ -497,7 +498,16 @@ ncmpi_open(MPI_Comm    comm,
      * If this environment variable is set, it  overrides any values that
      * were set by using calls to MPI_Info_set in the application code.
      */
-    env_info = info;
+    env_info = MPI_INFO_NULL;
+    if (info != MPI_INFO_NULL) {
+#ifdef HAVE_MPI_INFO_DUP
+        mpireturn = MPI_Info_dup(info, &env_info);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Info_dup");
+#else
+        printf("Warning: MPI info is ignored as MPI_Info_dup() is missing\n");
+#endif
+    }
     if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
         if (env_info == MPI_INFO_NULL)
             MPI_Info_create(&env_info); /* ignore error */
@@ -529,7 +539,10 @@ ncmpi_open(MPI_Comm    comm,
 
     /* allocate NC file object */
     ncp = ncmpii_new_NC(&chunksize);
-    if (ncp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    if (ncp == NULL) {
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    }
 
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
@@ -549,6 +562,7 @@ ncmpi_open(MPI_Comm    comm,
     /* open the file in parallel */
     err = ncmpiio_open(comm, path, omode, env_info, ncp);
     if (err != NC_NOERR) { /* fatal error */
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
         return err;
     }
@@ -561,6 +575,7 @@ ncmpi_open(MPI_Comm    comm,
     err = ncmpii_hdr_get_NC(ncp);
     if (err != NC_NOERR) { /* fatal error */
         ncmpiio_close(ncp->nciop, 0);
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
         return err;
     }

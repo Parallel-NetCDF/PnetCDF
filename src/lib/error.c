@@ -231,7 +231,7 @@ ncmpi_strerror(int err)
             /* Some APIs require argument count cannot be a NULL pointer
              */
         case NC_EINVAL_CMODE:
-            return "Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA";
+            return "Invalid file create mode";
         case NC_ETYPESIZE:
             return "MPI derived data type size error (bigger than the variable size)";
         case NC_ETYPE_MISMATCH:
@@ -244,6 +244,8 @@ ncmpi_strerror(int err)
             return "Attempting operation only for record variables";
         case NC_ENOTFILL:
             return "Attempting to fill a variable when its fill mode is off";
+        case NC_EINVAL_OMODE:
+            return "Invalid file open mode";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
             /* this error means the metadata (dimension names, variable names,
@@ -251,7 +253,7 @@ ncmpi_strerror(int err)
              * in the file header) is inconsistent among all MPI processes.
              */
         case NC_EMULTIDEFINE_OMODE:
-            return "Bad file create/open mode or modes are inconsistent across processes.";
+            return "Bad file open mode or modes are inconsistent among processes.";
         case NC_EMULTIDEFINE_DIM_NUM:
             return "Number of dimensions is defined inconsistently among processes.";
         case NC_EMULTIDEFINE_DIM_SIZE:
@@ -292,6 +294,8 @@ ncmpi_strerror(int err)
             return "Variable's fill mode is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_FILL_VALUE:
             return "Variable's fill value is inconsistent among processes.";
+        case NC_EMULTIDEFINE_CMODE:
+            return "Bad file create mode or modes are inconsistent among processes.";
 
         default:
             /* check netCDF-3 and netCDF-4 errors */
@@ -726,6 +730,7 @@ char* ncmpii_err_code_name(int err)
         case (NC_ENULLSTART):			return "NC_ENULLSTART";
         case (NC_ENULLCOUNT):			return "NC_ENULLCOUNT";
         case (NC_EINVAL_CMODE):			return "NC_EINVAL_CMODE";
+        case (NC_EINVAL_OMODE):			return "NC_EINVAL_OMODE";
         case (NC_ETYPESIZE):			return "NC_ETYPESIZE";
         case (NC_ETYPE_MISMATCH):		return "NC_ETYPE_MISMATCH";
         case (NC_ETYPESIZE_MISMATCH):		return "NC_ETYPESIZE_MISMATCH";
@@ -755,6 +760,7 @@ char* ncmpii_err_code_name(int err)
         case (NC_EMULTIDEFINE_FILL_MODE):	return "NC_EMULTIDEFINE_FILL_MODE";
         case (NC_EMULTIDEFINE_VAR_FILL_MODE):	return "NC_EMULTIDEFINE_VAR_FILL_MODE";
         case (NC_EMULTIDEFINE_VAR_FILL_VALUE):	return "NC_EMULTIDEFINE_VAR_FILL_VALUE";
+        case (NC_EMULTIDEFINE_CMODE):		return "NC_EMULTIDEFINE_CMODE";
         default:
               sprintf(unknown_str,"Unknown code %d",err);
     }

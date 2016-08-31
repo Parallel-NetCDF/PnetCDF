@@ -257,8 +257,7 @@
       NF90_EQUOTA                   = NF_EQUOTA                   , & ! Quota exceeded
       NF90_ENULLSTART               = NF_ENULLSTART               , & ! argument start is a NULL pointer
       NF90_ENULLCOUNT               = NF_ENULLCOUNT               , & ! argument count is a NULL pointer
-      NF90_EINVAL_CMODE             = NF_EINVAL_CMODE             , & ! Invalid file create mode, cannot have both
-                                                                      ! NC_64BIT_OFFSET & NC_64BIT_DATA
+      NF90_EINVAL_CMODE             = NF_EINVAL_CMODE             , & ! Invalid file create mode
       NF90_ETYPESIZE                = NF_ETYPESIZE                , & ! MPI derived data type size error (bigger than the
                                                                       ! variable size)
       NF90_ETYPE_MISMATCH           = NF_ETYPE_MISMATCH           , & ! element type of the MPI derived data type mismatches
@@ -267,8 +266,9 @@
       NF90_ESTRICTCDF2              = NF_ESTRICTCDF2              , & ! Attempting CDF-5 operation on CDF-2 file
       NF90_ENOTRECVAR               = NF_ENOTRECVAR               , & ! Attempting operation only for record variables
       NF90_ENOTFILL                 = NF_ENOTFILL                 , & ! Attempting to fill a variable when its fill mode is off
+      NF90_EINVAL_OMODE             = NF_EINVAL_OMODE             , & ! Invalid file open mode
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
-      NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
+      NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! inconsistent file open modes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
       NF90_EMULTIDEFINE_DIM_SIZE    = NF_EMULTIDEFINE_DIM_SIZE    , & ! inconsistent size of dimension
       NF90_EMULTIDEFINE_DIM_NAME    = NF_EMULTIDEFINE_DIM_NAME    , & ! inconsistent dimension names
@@ -301,4 +301,5 @@
       NF90_EVARS_TYPE_MULTIDEFINE   = NF_EMULTIDEFINE_VAR_TYPE    , &
       NF90_EVARS_LEN_MULTIDEFINE    = NF_EMULTIDEFINE_VAR_LEN     , &
       NF90_ENUMRECS_MULTIDEFINE     = NF_EMULTIDEFINE_NUMRECS     , &
-      NF90_EVARS_BEGIN_MULTIDEFINE  = NF_EMULTIDEFINE_VAR_BEGIN
+      NF90_EVARS_BEGIN_MULTIDEFINE  = NF_EMULTIDEFINE_VAR_BEGIN   , &
+      NF90_EMULTIDEFINE_CMODE       = NF_EMULTIDEFINE_CMODE           ! inconsistent file create modes

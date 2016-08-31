@@ -15,7 +15,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New error code
-    * none
+    * NC_EINVAL_OMODE: invalid file open mode. This separates the case from
+      NC_EINVAL_CMODE. The error messages for both error codes are revised
+      to indicate specifically whether in file open or create mode.
+    * NC_EMULTIDEFINE_CMODE: inconsistent file create mode. This separates the
+      case from NC_EMULTIDEFINE_OMODE. The error messages for both error codes
+      are revised to indicate specifically whether in file open or create mode.
 
   o New run-time environment variables
     * none
@@ -55,8 +60,8 @@ This is essentially a placeholder for the next release note ...
 
   o Other updates:
     * Check file open/create mode for NC_DISKLESS and NC_MMAP and return error
-      code NC_ENOTSUPPORT, if either of these two modes is used. These modes
-      are currently not supported.
+      code NC_EINVAL_OMODE/NC_EINVAL_CMODE if either of these two modes is
+      used. These modes are currently not supported.
     * Clarify support for CDF-2 and CDF-5 formats. When the size of MPI_Offset
       is less than 8 bytes, support for CDF-2 and CDF-5 is disabled.
 

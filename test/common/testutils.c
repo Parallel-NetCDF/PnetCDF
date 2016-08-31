@@ -170,6 +170,7 @@ char* nc_err_code_name(int err)
         case (NC_ENULLSTART):			return "NC_ENULLSTART";
         case (NC_ENULLCOUNT):			return "NC_ENULLCOUNT";
         case (NC_EINVAL_CMODE):			return "NC_EINVAL_CMODE";
+        case (NC_EINVAL_OMODE):			return "NC_EINVAL_OMODE";
         case (NC_ETYPESIZE):			return "NC_ETYPESIZE";
         case (NC_ETYPE_MISMATCH):		return "NC_ETYPE_MISMATCH";
         case (NC_ETYPESIZE_MISMATCH):		return "NC_ETYPESIZE_MISMATCH";
@@ -178,6 +179,7 @@ char* nc_err_code_name(int err)
         case (NC_ENOTFILL):			return "NC_ENOTFILL";
         case (NC_EMULTIDEFINE):			return "NC_EMULTIDEFINE";
         case (NC_EMULTIDEFINE_OMODE):		return "NC_EMULTIDEFINE_OMODE";
+        case (NC_EMULTIDEFINE_CMODE):		return "NC_EMULTIDEFINE_CMODE";
         case (NC_EMULTIDEFINE_DIM_NUM):		return "NC_EMULTIDEFINE_DIM_NUM";
         case (NC_EMULTIDEFINE_DIM_SIZE):	return "NC_EMULTIDEFINE_DIM_SIZE";
         case (NC_EMULTIDEFINE_DIM_NAME):	return "NC_EMULTIDEFINE_DIM_NAME";
