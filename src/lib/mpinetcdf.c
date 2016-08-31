@@ -206,11 +206,11 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int i, flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
+    int i, status=NC_NOERR, safe_mode=0, mpireturn;
     char *env_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
-    NC *ncp;
+    NC *ncp=NULL;
 
 #ifdef PNC_DEBUG
     safe_mode = 1;
@@ -227,49 +227,32 @@ ncmpi_create(MPI_Comm    comm,
          * be '\0' (null character). In this case, safe_mode is enabled */
     }
 
-    if (safe_mode) {
-        /* check if cmode is consistent with root's */
-        int root_cmode=cmode;
-
-        TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-
-        if (root_cmode != cmode) {
-            int rank;
-            MPI_Comm_rank(comm, &rank);
-            /* cmodes are inconsistent, overwrite local cmode with root's */
-            printf("rank %d: Warning - inconsistent file create mode, overwrite with root's\n",rank);
-            cmode = root_cmode;
-            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
-        }
-        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
-        if (err != NC_NOERR) return status;
-
-        /* when safe_mode is disabled, NC_EMULTIDEFINE_CMODE will be reported at
-         * the time ncmpi_enddef() returns */
+    /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
+     * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
+     */
+    if (path == NULL || *path == '\0') {
+        DEBUG_ASSIGN_ERROR(status, NC_EBAD_FILE)
+        goto err_check;
     }
 
     /* NC_DISKLESS is not supported yet */
-    if (cmode & NC_DISKLESS)
+    if (cmode & NC_DISKLESS) {
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
+        goto err_check;
+    }
 
     /* NC_MMAP is not supported yet */
-    if (cmode & NC_MMAP)
+    if (cmode & NC_MMAP) {
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
-
-    /* In safe_mode, cmodes are sync-ed by overwriting local's cmode with
-     * root's and hence error code related to cmode, if there is any,
-     * should be the same across all processes.
-     */
-    if (safe_mode && status != NC_NOERR) return status;
+        goto err_check;
+    }
 
     /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
     if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
-                 (NC_64BIT_OFFSET|NC_64BIT_DATA))
+                 (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
-
-    if (status != NC_NOERR) return status;
+        goto err_check;
+    }
 
     /* take hints from the environment variable PNETCDF_HINTS
      * a string of hints separated by ";" and each hint is in the
@@ -281,8 +264,10 @@ ncmpi_create(MPI_Comm    comm,
     if (info != MPI_INFO_NULL) {
 #ifdef HAVE_MPI_INFO_DUP
         mpireturn = MPI_Info_dup(info, &env_info);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Info_dup");
+        if (mpireturn != MPI_SUCCESS) {
+            DEBUG_ASSIGN_ERROR(status, ncmpii_handle_error(mpireturn, "MPI_Info_dup"))
+            goto err_check;
+        }
 #else
         printf("Warning: MPI info is ignored as MPI_Info_dup() is missing\n");
 #endif
@@ -310,6 +295,7 @@ ncmpi_create(MPI_Comm    comm,
 
     /* get header chunk size from user info */
     if (env_info != MPI_INFO_NULL) {
+        int flag;
         char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
@@ -319,7 +305,8 @@ ncmpi_create(MPI_Comm    comm,
     /* allocate buffer for header object NC */
     if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) {
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
+        DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
+        goto err_check;
     }
 
     ncp->safe_mode = safe_mode;
@@ -343,7 +330,8 @@ ncmpi_create(MPI_Comm    comm,
     if (fIsSet(cmode, NC_64BIT_DATA)) {
 #if SIZEOF_MPI_OFFSET <  8
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        DEBUG_RETURN_ERROR(NC_ESMALL)
+        DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
+        goto err_check;
 #endif
         fSet(ncp->flags, NC_64BIT_DATA);
     } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
@@ -353,7 +341,8 @@ ncmpi_create(MPI_Comm    comm,
          * serial netcdf has proven it's possible if datasets are small, but
          * that's a hassle we don't want to worry about */
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        DEBUG_RETURN_ERROR(NC_ESMALL)
+        DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
+        goto err_check;
 #endif
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
@@ -363,19 +352,43 @@ ncmpi_create(MPI_Comm    comm,
         if (default_format == NC_FORMAT_CDF5) {
 #if SIZEOF_MPI_OFFSET <  8
             if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-            DEBUG_RETURN_ERROR(NC_ESMALL)
+            DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
+            goto err_check;
 #endif
             fSet(ncp->flags, NC_64BIT_DATA);
         }
         else if (default_format == NC_FORMAT_CDF2) {
 #if SIZEOF_MPI_OFFSET <  8
             if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-            DEBUG_RETURN_ERROR(NC_ESMALL)
+            DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
+            goto err_check;
 #endif
             fSet(ncp->flags, NC_64BIT_OFFSET);
         }
         else
             fSet(ncp->flags, NC_32BIT);
+    }
+
+err_check:
+    if (safe_mode) {
+        /* check if cmode is consistent with root's */
+        int err, root_cmode=cmode;
+
+        TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
+        if (status == NC_NOERR && mpireturn != MPI_SUCCESS)
+            DEBUG_ASSIGN_ERROR(status, ncmpii_handle_error(mpireturn, "MPI_Bcast"))
+
+        if (status == NC_NOERR && root_cmode != cmode)
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
+            /* when safe_mode is disabled, NC_EMULTIDEFINE_CMODE will be
+             * reported at the time ncmpi_enddef() returns */
+
+        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
+        status = err;
+    }
+    if (status != NC_NOERR) {
+        if (ncp != NULL) ncmpii_free_NC(ncp);
+        return status;
     }
 
     /* find the true header size (not-yet aligned) */
@@ -384,13 +397,13 @@ ncmpi_create(MPI_Comm    comm,
     /* PnetCDF default fill mode is no fill */
     fSet(ncp->flags, NC_NOFILL);
 
-    /* open the file in parallel */
-    err = ncmpiio_create(comm, path, cmode, env_info, ncp);
-    if (err != NC_NOERR) { /* fatal error */
-        if (err == NC_EMULTIDEFINE_OMODE) err = NC_EMULTIDEFINE_CMODE;
+    /* open the file collectively in parallel */
+    status = ncmpiio_create(comm, path, cmode, env_info, ncp);
+    if (status != NC_NOERR) { /* fatal error */
+        if (status == NC_EMULTIDEFINE_OMODE) status = NC_EMULTIDEFINE_CMODE;
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
-        return err;
+        return status;
     }
 
     fSet(ncp->flags, NC_CREAT);
@@ -432,11 +445,11 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)
 {
-    int i, flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
+    int i, err, status=NC_NOERR, safe_mode=0, mpireturn;
     char *env_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
-    NC *ncp;
+    NC *ncp=NULL;
 #ifndef SEARCH_NAME_LINEARLY
     NC_nametable *nameT;
 #endif
@@ -456,41 +469,25 @@ ncmpi_open(MPI_Comm    comm,
          * be '\0' (null character). In this case, safe_mode is enabled */
     }
 
-    if (safe_mode) {
-        /* check if omode is consistent with root's */
-        int root_omode=omode;
-
-        /* Note if omode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
-           In pnetcdf.h, they both are defined the same value, 0.
-         */
-
-        TRACE_COMM(MPI_Bcast)(&root_omode, 1, MPI_INT, 0, comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-
-        if (root_omode != omode) {
-            int rank;
-            MPI_Comm_rank(comm, &rank);
-            /* omodes are inconsistent, overwrite local omode with root's */
-            printf("rank %d: Warning - inconsistent file open mode, overwrite with root's\n",rank);
-            omode = root_omode;
-            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
-        }
+    /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
+     * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
+     */
+    if (path == NULL || *path == '\0') {
+        DEBUG_ASSIGN_ERROR(status, NC_EBAD_FILE)
+        goto err_check;
     }
 
     /* NC_DISKLESS is not supported yet */
-    if (omode & NC_DISKLESS)
+    if (omode & NC_DISKLESS) {
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL_OMODE)
+        goto err_check;
+    }
 
     /* NC_MMAP is not supported yet */
-    if (omode & NC_MMAP)
+    if (omode & NC_MMAP) {
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL_OMODE)
-
-    /* In safe_mode, omodes are sync-ed by overwriting local's omode with
-     * root's and hence error code related to omode, if there is any,
-     * should be the same across all processes.
-     */
-    if (safe_mode && status != NC_NOERR) return status;
+        goto err_check;
+    }
 
     /* take hints from the environment variable PNETCDF_HINTS
      * a string of hints separated by ";" and each hint is in the
@@ -502,8 +499,10 @@ ncmpi_open(MPI_Comm    comm,
     if (info != MPI_INFO_NULL) {
 #ifdef HAVE_MPI_INFO_DUP
         mpireturn = MPI_Info_dup(info, &env_info);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Info_dup");
+        if (mpireturn != MPI_SUCCESS) {
+            DEBUG_ASSIGN_ERROR(status, ncmpii_handle_error(mpireturn, "MPI_Info_dup"))
+            goto err_check;
+        }
 #else
         printf("Warning: MPI info is ignored as MPI_Info_dup() is missing\n");
 #endif
@@ -531,6 +530,7 @@ ncmpi_open(MPI_Comm    comm,
 
     /* get header chunk size from user info, if provided */
     if (env_info != MPI_INFO_NULL) {
+        int flag;
         char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
@@ -541,7 +541,8 @@ ncmpi_open(MPI_Comm    comm,
     ncp = ncmpii_new_NC(&chunksize);
     if (ncp == NULL) {
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
+        DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
+        goto err_check;
     }
 
     ncp->safe_mode = safe_mode;
@@ -559,12 +560,37 @@ ncmpi_open(MPI_Comm    comm,
     ncp->nc_num_subfiles = 0;
 #endif
 
+err_check:
+    if (safe_mode) {
+        /* check if omode is consistent with root's */
+        int root_omode=omode;
+
+        /* Note if omode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
+           In pnetcdf.h, they both are defined the same value, 0.
+         */
+
+        TRACE_COMM(MPI_Bcast)(&root_omode, 1, MPI_INT, 0, comm);
+        if (status == NC_NOERR && mpireturn != MPI_SUCCESS)
+            DEBUG_ASSIGN_ERROR(status, ncmpii_handle_error(mpireturn, "MPI_Bcast"))
+
+        if (status == NC_NOERR && root_omode != omode)
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
+
+        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
+        status = err;
+    }
+    if (status != NC_NOERR) {
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+        if (ncp != NULL) ncmpii_free_NC(ncp);
+        return status;
+    }
+
     /* open the file in parallel */
-    err = ncmpiio_open(comm, path, omode, env_info, ncp);
-    if (err != NC_NOERR) { /* fatal error */
+    status = ncmpiio_open(comm, path, omode, env_info, ncp);
+    if (status != NC_NOERR) { /* fatal error */
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
-        return err;
+        return status;
     }
 
     /* PnetCDF's default mode is no fill */
@@ -572,12 +598,12 @@ ncmpi_open(MPI_Comm    comm,
     fSet(ncp->flags, NC_NOFILL);
 
     /* read header from file into an NC object pointed by ncp */
-    err = ncmpii_hdr_get_NC(ncp);
-    if (err != NC_NOERR) { /* fatal error */
+    status = ncmpii_hdr_get_NC(ncp);
+    if (status != NC_NOERR) { /* fatal error */
         ncmpiio_close(ncp->nciop, 0);
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
-        return err;
+        return status;
     }
 
     /* initialize arrays storing pending non-blocking requests */
