@@ -141,6 +141,7 @@ int main(int argc, char** argv)
     PNCDF_Error(err, "close")
 
     err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    PNCDF_Error(err, "ncmpi_open")
 
     err = ncmpi_redef(ncid);
     PNCDF_Error(err, "redef")
