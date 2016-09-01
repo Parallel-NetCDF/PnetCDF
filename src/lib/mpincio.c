@@ -95,6 +95,9 @@ static
 void ncmpiio_extract_hints(ncio     *nciop,
                            MPI_Info  info)
 {
+    char value[MPI_MAX_INFO_VAL];
+    int  flag;
+
     /* value 0 indicates the hint is not set */
     nciop->hints.h_align                = 0;
     nciop->hints.v_align                = 0;
@@ -106,61 +109,58 @@ void ncmpiio_extract_hints(ncio     *nciop,
 #endif
 
     /* extract NC hints */
-    if (info != MPI_INFO_NULL) {
-        char value[MPI_MAX_INFO_VAL];
-        int  flag;
+    if (info == MPI_INFO_NULL) return;
 
-        MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
-        if (flag) nciop->hints.h_align = atoll(value);
+    MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
+                 &flag);
+    if (flag) nciop->hints.h_align = atoll(value);
 
-        MPI_Info_get(info, "nc_var_align_size",    MPI_MAX_INFO_VAL-1, value,
-                     &flag);
-        if (flag) nciop->hints.v_align = atoll(value);
+    MPI_Info_get(info, "nc_var_align_size",    MPI_MAX_INFO_VAL-1, value,
+                 &flag);
+    if (flag) nciop->hints.v_align = atoll(value);
 
-        MPI_Info_get(info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) nciop->hints.r_align = atoll(value);
+    MPI_Info_get(info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    if (flag) nciop->hints.r_align = atoll(value);
 
-        MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) nciop->hints.header_read_chunk_size = atoll(value);
+    MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    if (flag) nciop->hints.header_read_chunk_size = atoll(value);
 
 #ifdef ENABLE_SUBFILING
-        MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag && strcasecmp(value, "disable") == 0)
-            nciop->hints.subfile_mode = 0;
+    MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    if (flag && strcasecmp(value, "disable") == 0)
+        nciop->hints.subfile_mode = 0;
 
-        MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) nciop->hints.num_subfiles = atoi(value);
+    MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    if (flag) nciop->hints.num_subfiles = atoi(value);
 #endif
 
-        /* nc_header_align_size, nc_var_align_size, and nciop->hints.r_align
-         * take effect when a file is created or opened and later adding more
-         * header or variable data */
+    /* nc_header_align_size, nc_var_align_size, and nciop->hints.r_align
+     * take effect when a file is created or opened and later adding more
+     * header or variable data */
 
-        if (nciop->hints.h_align < 0)
-            nciop->hints.h_align = 0;
-        if (nciop->hints.v_align < 0)
-            nciop->hints.v_align = 0;
-        if (nciop->hints.r_align < 0)
-            nciop->hints.r_align = 0;
-        if (nciop->hints.header_read_chunk_size < 0)
-            nciop->hints.header_read_chunk_size = 0;
+    if (nciop->hints.h_align < 0)
+        nciop->hints.h_align = 0;
+    if (nciop->hints.v_align < 0)
+        nciop->hints.v_align = 0;
+    if (nciop->hints.r_align < 0)
+        nciop->hints.r_align = 0;
+    if (nciop->hints.header_read_chunk_size < 0)
+        nciop->hints.header_read_chunk_size = 0;
 #ifdef ENABLE_SUBFILING
-        if (nciop->hints.num_subfiles < 0)
-            nciop->hints.num_subfiles = 0;
-        /* override subfile hints if env var is set */
-        char *num_sf_env;
-        num_sf_env = getenv("NC_NUM_SUBFILES");
-        if (num_sf_env != NULL)
-            nciop->hints.num_subfiles = atoi(num_sf_env);
-        if (nciop->hints.subfile_mode == 0)
-            nciop->hints.num_subfiles = 0;
+    if (nciop->hints.num_subfiles < 0)
+        nciop->hints.num_subfiles = 0;
+    /* override subfile hints if env var is set */
+    char *num_sf_env;
+    num_sf_env = getenv("NC_NUM_SUBFILES");
+    if (num_sf_env != NULL)
+        nciop->hints.num_subfiles = atoi(num_sf_env);
+    if (nciop->hints.subfile_mode == 0)
+        nciop->hints.num_subfiles = 0;
 #endif
-    }
 }
 
 /*----< ncmpiio_create() >---------------------------------------------------*/
@@ -246,7 +246,7 @@ ncmpiio_create(MPI_Comm     comm,
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
 
-    /* extract PnetCDF-level hints */
+    /* intialize hints and extract PnetCDF-level hints */
     ncmpiio_extract_hints(nciop, info);
 
     /* open file in parallel */
@@ -316,6 +316,8 @@ ncmpiio_open(MPI_Comm     comm,
     int i, mpireturn;
     int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
+    assert(ncp != NULL);
+
     /* checking path consistency is expected done in MPI-IO */
 
     /* When open an non-existing file for read, we can either call access() to
@@ -342,7 +344,7 @@ ncmpiio_open(MPI_Comm     comm,
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
 
-    /* extract PnetCDF-level hints */
+    /* intialize hints and extract PnetCDF-level hints */
     ncmpiio_extract_hints(nciop, info);
 
     /* open file in parallel */

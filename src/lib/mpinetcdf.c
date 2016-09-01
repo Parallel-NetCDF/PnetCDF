@@ -206,9 +206,10 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int i, status=NC_NOERR, safe_mode=0, mpireturn;
+    int i, err=NC_NOERR, status=NC_NOERR, safe_mode=0, mpireturn;
+    int default_format;
     char *env_str;
-    MPI_Info   env_info;
+    MPI_Info   env_info=MPI_INFO_NULL;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp=NULL;
 
@@ -235,6 +236,24 @@ ncmpi_create(MPI_Comm    comm,
         goto err_check;
     }
 
+    /* check default format */
+    ncmpi_inq_default_format(&default_format);
+
+#if SIZEOF_MPI_OFFSET <  8
+    /* check cmode */
+    if (fIsSet(cmode, NC_64BIT_DATA)     ||
+        fIsSet(cmode, NC_64BIT_OFFSET)   ||
+        default_format == NC_FORMAT_CDF5 || 
+        default_format == NC_FORMAT_CDF2) {
+        /* unlike serial netcdf, we will not bother to support
+         * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
+         * serial netcdf has proven it's possible if datasets are small, but
+         * that's a hassle we don't want to worry about */
+        DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
+        goto err_check;
+    }
+#endif
+
     /* NC_DISKLESS is not supported yet */
     if (cmode & NC_DISKLESS) {
         DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
@@ -260,7 +279,6 @@ ncmpi_create(MPI_Comm    comm,
      * If this environment variable is set, it overrides any values that
      * were set by using calls to MPI_Info_set in the application code.
      */
-    env_info = MPI_INFO_NULL;
     if (info != MPI_INFO_NULL) {
 #ifdef HAVE_MPI_INFO_DUP
         mpireturn = MPI_Info_dup(info, &env_info);
@@ -303,8 +321,8 @@ ncmpi_create(MPI_Comm    comm,
     }
 
     /* allocate buffer for header object NC */
-    if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) {
-        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+    ncp = ncmpii_new_NC(&chunksize);
+    if (ncp == NULL) {
         DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
         goto err_check;
     }
@@ -324,47 +342,17 @@ ncmpi_create(MPI_Comm    comm,
     ncp->ncid_sf = -1; /* subfile ncid; init to -1 */
     ncp->nc_num_subfiles = 0; /* num_subfiles; init to 0 */
 #endif
-    assert(ncp->flags == 0);
 
     /* set the file format version based on the create mode, cmode */
     if (fIsSet(cmode, NC_64BIT_DATA)) {
-#if SIZEOF_MPI_OFFSET <  8
-        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
-        goto err_check;
-#endif
         fSet(ncp->flags, NC_64BIT_DATA);
     } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
-#if SIZEOF_MPI_OFFSET <  8
-        /* unlike serial netcdf, we will not bother to support
-         * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
-         * serial netcdf has proven it's possible if datasets are small, but
-         * that's a hassle we don't want to worry about */
-        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
-        goto err_check;
-#endif
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
-        /* check default format */
-        int default_format;
-        ncmpi_inq_default_format(&default_format);
-        if (default_format == NC_FORMAT_CDF5) {
-#if SIZEOF_MPI_OFFSET <  8
-            if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-            DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
-            goto err_check;
-#endif
+        if (default_format == NC_FORMAT_CDF5)
             fSet(ncp->flags, NC_64BIT_DATA);
-        }
-        else if (default_format == NC_FORMAT_CDF2) {
-#if SIZEOF_MPI_OFFSET <  8
-            if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-            DEBUG_ASSIGN_ERROR(status, NC_ESMALL)
-            goto err_check;
-#endif
+        else if (default_format == NC_FORMAT_CDF2)
             fSet(ncp->flags, NC_64BIT_OFFSET);
-        }
         else
             fSet(ncp->flags, NC_32BIT);
     }
@@ -372,11 +360,11 @@ ncmpi_create(MPI_Comm    comm,
 err_check:
     if (safe_mode) {
         /* check if cmode is consistent with root's */
-        int err, root_cmode=cmode;
+        int root_cmode=cmode;
 
         TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
-        if (status == NC_NOERR && mpireturn != MPI_SUCCESS)
-            DEBUG_ASSIGN_ERROR(status, ncmpii_handle_error(mpireturn, "MPI_Bcast"))
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
 
         if (status == NC_NOERR && root_cmode != cmode)
             DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
@@ -384,11 +372,16 @@ err_check:
              * reported at the time ncmpi_enddef() returns */
 
         TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
-        status = err;
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
     }
-    if (status != NC_NOERR) {
+    else
+        err = status;
+
+    if (err != NC_NOERR) {
         if (ncp != NULL) ncmpii_free_NC(ncp);
-        return status;
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+        return status;  /* return error from individual rank */
     }
 
     /* find the true header size (not-yet aligned) */
@@ -445,9 +438,9 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)
 {
-    int i, err, status=NC_NOERR, safe_mode=0, mpireturn;
+    int i, err=NC_NOERR, status=NC_NOERR, safe_mode=0, mpireturn;
     char *env_str;
-    MPI_Info   env_info;
+    MPI_Info   env_info=MPI_INFO_NULL;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp=NULL;
 #ifndef SEARCH_NAME_LINEARLY
@@ -495,7 +488,6 @@ ncmpi_open(MPI_Comm    comm,
      * If this environment variable is set, it  overrides any values that
      * were set by using calls to MPI_Info_set in the application code.
      */
-    env_info = MPI_INFO_NULL;
     if (info != MPI_INFO_NULL) {
 #ifdef HAVE_MPI_INFO_DUP
         mpireturn = MPI_Info_dup(info, &env_info);
@@ -540,7 +532,6 @@ ncmpi_open(MPI_Comm    comm,
     /* allocate NC file object */
     ncp = ncmpii_new_NC(&chunksize);
     if (ncp == NULL) {
-        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
         goto err_check;
     }
@@ -570,16 +561,20 @@ err_check:
          */
 
         TRACE_COMM(MPI_Bcast)(&root_omode, 1, MPI_INT, 0, comm);
-        if (status == NC_NOERR && mpireturn != MPI_SUCCESS)
-            DEBUG_ASSIGN_ERROR(status, ncmpii_handle_error(mpireturn, "MPI_Bcast"))
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
 
         if (status == NC_NOERR && root_omode != omode)
             DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
 
         TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
-        status = err;
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
     }
-    if (status != NC_NOERR) {
+    else
+        err = status;
+
+    if (err != NC_NOERR) {
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         if (ncp != NULL) ncmpii_free_NC(ncp);
         return status;
@@ -594,7 +589,6 @@ err_check:
     }
 
     /* PnetCDF's default mode is no fill */
-    assert(ncp->flags == 0);
     fSet(ncp->flags, NC_NOFILL);
 
     /* read header from file into an NC object pointed by ncp */
@@ -939,6 +933,8 @@ ncmpii_end_indep_data(NC *ncp)
                 if (status == NC_NOERR) status = err;
             }
             TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_handle_error(mpireturn, "MPI_Barrier");
         }
 #endif
     }
@@ -1026,6 +1022,8 @@ ncmpi_sync_numrecs(int ncid) {
             if (status == NC_NOERR) status = err;
         }
         TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Barrier");
     }
 #endif
     return status;
