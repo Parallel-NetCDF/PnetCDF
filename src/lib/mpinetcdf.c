@@ -327,6 +327,34 @@ ncmpi_create(MPI_Comm    comm,
         goto err_check;
     }
 
+err_check:
+    if (safe_mode) {
+        /* check if cmode is consistent with root's */
+        int root_cmode=cmode;
+
+        TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+
+        if (status == NC_NOERR && root_cmode != cmode)
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
+            /* when safe_mode is disabled, NC_EMULTIDEFINE_CMODE will be
+             * reported at the time ncmpi_enddef() returns */
+
+        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+    }
+    else
+        err = status;
+
+    if (err != NC_NOERR) {
+        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
+        return status;  /* return error from individual rank */
+    }
+
+    assert(ncp != NULL);
+
     ncp->safe_mode = safe_mode;
     ncp->abuf      = NULL;
     ncp->old       = NULL;
@@ -355,33 +383,6 @@ ncmpi_create(MPI_Comm    comm,
             fSet(ncp->flags, NC_64BIT_OFFSET);
         else
             fSet(ncp->flags, NC_32BIT);
-    }
-
-err_check:
-    if (safe_mode) {
-        /* check if cmode is consistent with root's */
-        int root_cmode=cmode;
-
-        TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-
-        if (status == NC_NOERR && root_cmode != cmode)
-            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
-            /* when safe_mode is disabled, NC_EMULTIDEFINE_CMODE will be
-             * reported at the time ncmpi_enddef() returns */
-
-        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
-    }
-    else
-        err = status;
-
-    if (err != NC_NOERR) {
-        if (ncp != NULL) ncmpii_free_NC(ncp);
-        if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        return status;  /* return error from individual rank */
     }
 
     /* find the true header size (not-yet aligned) */
@@ -536,21 +537,6 @@ ncmpi_open(MPI_Comm    comm,
         goto err_check;
     }
 
-    ncp->safe_mode = safe_mode;
-    ncp->old       = NULL;
-#ifdef ENABLE_SUBFILING
-    ncp->subfile_mode = 1;
-    if (env_info != MPI_INFO_NULL) {
-        char value[MPI_MAX_INFO_VAL];
-        MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag && strcasecmp(value, "disable") == 0)
-            ncp->subfile_mode = 0;
-    }
-    ncp->ncid_sf   = -1;
-    ncp->nc_num_subfiles = 0;
-#endif
-
 err_check:
     if (safe_mode) {
         /* check if omode is consistent with root's */
@@ -576,9 +562,25 @@ err_check:
 
     if (err != NC_NOERR) {
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
-        if (ncp != NULL) ncmpii_free_NC(ncp);
         return status;
     }
+
+    assert(ncp != NULL);
+
+    ncp->safe_mode = safe_mode;
+    ncp->old       = NULL;
+#ifdef ENABLE_SUBFILING
+    ncp->subfile_mode = 1;
+    if (env_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "disable") == 0)
+            ncp->subfile_mode = 0;
+    }
+    ncp->ncid_sf   = -1;
+    ncp->nc_num_subfiles = 0;
+#endif
 
     /* open the file in parallel */
     status = ncmpiio_open(comm, path, omode, env_info, ncp);
