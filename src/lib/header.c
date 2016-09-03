@@ -1748,12 +1748,21 @@ ncmpii_hdr_get_NC(NC *ncp)
     if (status != NC_NOERR) return status;
     getbuf.index += (MPI_Offset)sizeof(magic);
 
-    /* don't need to worry about CDF-1 or CDF-2
-     * if the first bits are not 'CDF'
-     */
+    /* check if the first three bytes are 'C','D','F' */
     if (memcmp(magic, ncmagic1, sizeof(ncmagic1)-1) != 0) {
+        /* check if is HDF5 file */
+        char signature[8], *hdf5_signature="\211HDF\r\n\032\n";
+        memcpy(signature, magic, 4);
+        ncmpix_getn_text((const void **)(&getbuf.pos), 4, signature+4);
+        if (memcmp(signature, hdf5_signature, 8) == 0) {
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC3)
+            if (ncp->safe_mode)
+                fprintf(stderr,"Error: file %s is HDF5 format\n",ncp->nciop->path);
+        }
+        else
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         NCI_Free(getbuf.base);
-        DEBUG_RETURN_ERROR(NC_ENOTNC)
+        return status;
     }
 
     /* check version number in last byte of magic */
@@ -2334,9 +2343,21 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     /* check if the first 3 letters are "CDF" */
     if (memcmp(magic, ncmagic1, sizeof(ncmagic1)-1) != 0) {
         /* Fatal error, as root's header is significant */
-        if (ncp->safe_mode)
-            fprintf(stderr,"Error: root's header indicates not a CDF file\n");
-        DEBUG_RETURN_ERROR(NC_ENOTNC) /* should not continue */
+        /* check if is HDF5 file */
+        char signature[8], *hdf5_signature="\211HDF\r\n\032\n";
+        memcpy(signature, magic, 4);
+        ncmpix_getn_text((const void **)(&getbuf->pos), 4, signature+4);
+        if (memcmp(signature, hdf5_signature, 8) == 0) {
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC3)
+            if (ncp->safe_mode)
+                fprintf(stderr,"Error: root's header indicates an HDF5 file\n");
+        }
+        else {
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
+            if (ncp->safe_mode)
+                fprintf(stderr,"Error: root's header indicates not a CDF file\n");
+        }
+        return status; /* should not continue */
     }
 
     /* allocate a header object and fill it with root's header */
