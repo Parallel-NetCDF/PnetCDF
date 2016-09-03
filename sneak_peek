@@ -59,6 +59,7 @@ This is essentially a placeholder for the next release note ...
       files, PnetCDF still honors that exception.
 
   o Other updates:
+    * Add a checking for HDF5 file signature and return NC_ENOTNC3 if detected.
     * Check file open/create mode for NC_DISKLESS and NC_MMAP and return error
       code NC_EINVAL_OMODE/NC_EINVAL_CMODE if either of these two modes is
       used. These modes are currently not supported.

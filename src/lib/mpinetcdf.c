@@ -731,10 +731,13 @@ ncmpi_inq_file_format(char *filename,
     /* open file for reading its header */
     status = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL,
                         &ncid);
-    if (status == NC_ENOTNC)
-        DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_UNKNOWN)
-    if (status != NC_NOERR)
+    if (status != NC_NOERR) {
+        if (status == NC_ENOTNC3)
+            DEBUG_ASSIGN_ERROR(*formatp, NC_FORMATX_NC_HDF5)
+        else if (status == NC_ENOTNC)
+            DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_UNKNOWN)
         return status;
+    }
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
