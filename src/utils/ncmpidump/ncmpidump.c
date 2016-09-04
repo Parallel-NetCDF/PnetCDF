@@ -679,7 +679,11 @@ enum FILE_KIND check_file_signature(char *path)
     /* get first 8 bytes of file */
     rlen = read(fd, signature, 8);
     if (rlen != 8) {
-        fprintf(stderr,"%s error: unknown file format\n",progname);
+        if (rlen < 0)
+            fprintf(stderr,"%s error at reading file %s (%s)\n",progname,path,strerror(errno));
+        else
+            fprintf(stderr,"%s error: unknown file format\n",progname);
+        close(fd); /* ignore error */
         return UNKNOWN;
     }
     if (close(fd) == -1) {
