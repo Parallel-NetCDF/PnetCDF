@@ -365,16 +365,8 @@ do_ncdump(const char *path, struct fspec* specp)
 
     ncmpi_status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE,
                               info, &ncid);
-    if (ncmpi_status != NC_NOERR) {
-        if (ncmpi_status == NC_ENOTNC3 && specp->kind) {
-            Printf ("netCDF-4\n");
-    NC_CHECK(ncmpi_close(ncid));
-    if (vlist) free(vlist);
-            return;
-        }
-        else
-            error("%s: %s", path, ncmpi_strerror(ncmpi_status));
-    }
+    if (ncmpi_status != NC_NOERR)
+        error("%s: %s", path, ncmpi_strerror(ncmpi_status));
     MPI_Info_free(&info);
 
     /*
