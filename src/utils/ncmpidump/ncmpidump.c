@@ -13,8 +13,9 @@
 #include <stdlib.h>  /* strtol() */
 #include <string.h>  /* strrchr() */
 #include <ctype.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <fcntl.h>   /* open() */
+#include <unistd.h>  /* read(), close() */
+#include <errno.h>   /* errno */
 
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -364,8 +365,16 @@ do_ncdump(const char *path, struct fspec* specp)
 
     ncmpi_status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE,
                               info, &ncid);
-    if (ncmpi_status != NC_NOERR)
-        error("%s: %s", path, ncmpi_strerror(ncmpi_status));
+    if (ncmpi_status != NC_NOERR) {
+        if (ncmpi_status == NC_ENOTNC3 && specp->kind) {
+            Printf ("netCDF-4\n");
+    NC_CHECK(ncmpi_close(ncid));
+    if (vlist) free(vlist);
+            return;
+        }
+        else
+            error("%s: %s", path, ncmpi_strerror(ncmpi_status));
+    }
     MPI_Info_free(&info);
 
     /*
@@ -655,6 +664,46 @@ set_precision(const char *optarg)
     set_formats(flt_digits, dbl_digits);
 }
 
+enum FILE_KIND {
+    CDF5,
+    CDF2,
+    CDF1,
+    HDF5,
+    UNKNOWN
+};
+
+static
+enum FILE_KIND check_file_signature(char *path)
+{
+    char *cdf_signature="CDF";
+    char *hdf5_signature="\211HDF\r\n\032\n";
+    char signature[8];
+    int fd, rlen;
+
+    if ((fd = open(path, O_RDONLY, 0700)) == -1) {
+        fprintf(stderr,"%s error at opening file %s (%s)\n",progname,path,strerror(errno));
+        return UNKNOWN;
+    }
+    /* get first 8 bytes of file */
+    rlen = read(fd, signature, 8);
+    if (rlen != 8) {
+        fprintf(stderr,"%s error: unknown file format\n",progname);
+        return UNKNOWN;
+    }
+    if (close(fd) == -1) {
+        fprintf(stderr,"%s error at closing file %s (%s)\n",progname,path,strerror(errno));
+        return UNKNOWN;
+    }
+    if (memcmp(signature, hdf5_signature, 8) == 0)
+        return HDF5;
+    else if (memcmp(signature, cdf_signature, 3) == 0) {
+             if (signature[3] == 5)  return CDF5;
+        else if (signature[3] == 2)  return CDF2;
+        else if (signature[3] == 1)  return CDF1;
+    }
+
+    return UNKNOWN; /* unknown format */
+}
 
 int
 main(int argc, char *argv[])
@@ -675,12 +724,14 @@ main(int argc, char *argv[])
       0,            /* if -v specified, number of variables */
       0             /* if -v specified, list of variable names */
     };
-    int c, rank, err=EXIT_SUCCESS;
+    int c, rank, nprocs, err=EXIT_SUCCESS;
     int max_len = 80;        /* default maximum line length */
     int nameopt = 0;
+    enum FILE_KIND file_kind;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* If the user called ncmpidump without arguments, print the usage
      * message and return peacefully. */
@@ -785,13 +836,35 @@ main(int argc, char *argv[])
     if (argc != 1) {
         if (rank == 0) {
             if (argc == 0)
-                fprintf(stderr,"Error: input filename is missing\n\n");
+                fprintf(stderr,"%s error: input filename is missing\n\n",progname);
             else
-                fprintf(stderr,"Error: only one input file is allowed\n\n");
+                fprintf(stderr,"%s error: only one input file is allowed\n\n",progname);
             usage();
         }
         err = EXIT_FAILURE;
         goto fn_exit;
+    }
+
+    if (rank == 0)
+        file_kind = check_file_signature(argv[0]);
+    MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    if (file_kind == UNKNOWN) {
+        err = EXIT_FAILURE;
+        goto fn_exit; /* file I/O error */
+    }
+
+    if (fspec.kind) { /* if -k option used in command line */
+             if (file_kind == CDF5) Printf ("64-bit data\n");
+        else if (file_kind == CDF2) Printf ("64-bit offset\n");
+        else if (file_kind == CDF1) Printf ("classic\n");
+        else if (file_kind == HDF5) Printf ("NetCDF-4\n");
+        goto fn_exit;
+    }
+    else if (file_kind == HDF5) {
+        if (rank == 0) fprintf(stderr,"%s error: file %s is an HDF5 file. Please use ncdump instead.\n",progname,argv[0]);
+        err = EXIT_FAILURE;
+        goto fn_exit; /* exit if is HDF5 */
     }
 
     if (!nameopt) fspec.name = (char *)0;
@@ -800,7 +873,7 @@ main(int argc, char *argv[])
     /* support multiple input files */
     if (argc < 1) {
         if (rank == 0) {
-            fprintf(stderr,"Error: input filename(s) is missing\n\n");
+            fprintf(stderr,"%s error: input filename(s) is missing\n\n",progname);
             usage();
         }
         err = EXIT_FAILURE;
@@ -808,6 +881,27 @@ main(int argc, char *argv[])
     }
     int i = 0;
     do {
+        if (rank == 0)
+            file_kind = check_hdf5_signature(argv[i]);
+        MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+        if (file_kind == UNKNOWN) {
+            err = EXIT_FAILURE;
+            goto fn_exit; /* file I/O error */
+        }
+        if (fspec.kind) { /* if -k option used in command line */
+                 if (file_kind == CDF5) Printf ("64-bit data\n");
+            else if (file_kind == CDF2) Printf ("64-bit offset\n");
+            else if (file_kind == CDF1) Printf ("classic\n");
+            else if (file_kind == HDF5) Printf ("NetCDF-4\n");
+            goto fn_exit;
+        }
+        else if (file_kind == HDF5) {
+            if (rank == 0) fprintf(stderr,"%s error: file %s is an HDF5 file. Please use ncdump instead.\n",progname,argv[i]);
+            err = EXIT_FAILURE;
+            goto fn_exit; /* exit if is HDF5 */
+        }
+
         if (!nameopt) fspec.name = (char *)0;
         if (argc > 0)
               do_ncdump(argv[i], &fspec);
