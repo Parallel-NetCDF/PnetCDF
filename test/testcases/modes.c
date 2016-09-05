@@ -33,6 +33,13 @@
                __LINE__,nc_err_code_name(err_no),nc_err_code_name(err)); \
     }
 
+#define EXPECT_ERR2(err_no1, err_no2) \
+    if (err != err_no1 && err != err_no2) { \
+        nerrs++; \
+        printf("Error at line %d: expect error code %s but got %s\n", \
+               __LINE__,nc_err_code_name(err_no1),nc_err_code_name(err)); \
+    }
+
 static
 int check_modes(char *filename)
 {
@@ -70,7 +77,8 @@ int check_modes(char *filename)
     /* Collectively opening a non-existing file for read, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    EXPECT_ERR(NC_ENOENT)
+    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
+    EXPECT_ERR2(NC_ENOENT, NC_EFILE)
 
     file_exist = 0;
     if (rank == 0 && access(filename, F_OK) == 0) file_exist = 1;
@@ -87,7 +95,8 @@ int check_modes(char *filename)
     /* Collectively opening a non-existing file for write, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
-    EXPECT_ERR(NC_ENOENT)
+    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
+    EXPECT_ERR2(NC_ENOENT, NC_EFILE)
 
     file_exist = 0;
     if (rank == 0 && access(filename, F_OK) == 0) file_exist = 1;

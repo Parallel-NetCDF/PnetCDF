@@ -111,7 +111,8 @@ test_ncmpi_open(void)
      */
     if (err == NC_NOERR)
  	fprintf(stderr, "opening a nonexistent file expects to fail, but got NC_NOERR\n");
-    else if (err != NC_ENOENT)
+    else if (err != NC_ENOENT && err != NC_EFILE)
+        /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
 	fprintf(stderr, "opening a nonexistent file expects NC_ENOENT, but got %s\n",nc_err_code_name(err));
     else {
         /* printf("Expected error message complaining: \"File tooth-fairy.nc does not exist\"\n"); */
