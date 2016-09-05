@@ -9,13 +9,15 @@
 #endif
 
 #include <stdio.h>
-#include <unistd.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <assert.h>
 #include <string.h>  /* strtok(), strcpy(), strchr() */
 #include <strings.h> /* strcasecmp() */
+#include <fcntl.h>   /* open() */
+#include <unistd.h>  /* read(), close() */
+#include <errno.h>   /* errno */
 
 #include <mpi.h>
 
@@ -710,11 +712,13 @@ ncmpi_inq_format(int  ncid,
         *formatp = NC_FORMAT_CDF5;
     } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
         *formatp = NC_FORMAT_CDF2;
-    } else if (fIsSet(ncp->flags, NC_32BIT)){
+    } else if (fIsSet(ncp->flags, NC_32BIT)) {
         *formatp = NC_FORMAT_CLASSIC;
     } else {
-        /* this should not happen, because if ncid is valid, checking for
-         * valid CDF format should have already been done already */
+        /* this should not happen, because if ncid is valid, checking whether
+         * the file is in a supported CDF format should have already been done
+         * at ncmpi_open or ncmpi_create
+         */
         *formatp = NC_FORMAT_UNKNOWN;
     }
     return status;
@@ -725,6 +729,7 @@ int
 ncmpi_inq_file_format(char *filename,
                       int  *formatp) /* out */
 {
+#ifdef _USE_NCMPI
     int ncid, status;
     NC *ncp;
 
@@ -733,7 +738,7 @@ ncmpi_inq_file_format(char *filename,
                         &ncid);
     if (status != NC_NOERR) {
         if (status == NC_ENOTNC3)
-            DEBUG_ASSIGN_ERROR(*formatp, NC_FORMATX_NC_HDF5)
+            DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_NETCDF4)
         else if (status == NC_ENOTNC)
             DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_UNKNOWN)
         return status;
@@ -747,16 +752,52 @@ ncmpi_inq_file_format(char *filename,
         *formatp = NC_FORMAT_CDF5;
     } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
         *formatp = NC_FORMAT_CDF2;
-    } else if (fIsSet(ncp->flags, NC_32BIT)){
+    } else {  /* if (fIsSet(ncp->flags, NC_32BIT)) */
         *formatp = NC_FORMAT_CLASSIC;
-    } else {
-        /* this should not happen, because if ncid is valid, checking for
-         * valid CDF format should have already been done already */
-        *formatp = NC_FORMAT_UNKNOWN;
     }
     status = ncmpi_close(ncid);
 
     return status;
+#else
+    char *cdf_signature="CDF";
+    char *hdf5_signature="\211HDF\r\n\032\n";
+    char signature[8];
+    int fd, rlen;
+
+    *formatp = NC_FORMAT_UNKNOWN;
+
+    if ((fd = open(filename, O_RDONLY, 0700)) == -1) {
+             if (errno == ENOENT)       return NC_ENOENT;
+        else if (errno == EACCES)       return NC_EACCESS;
+        else if (errno == ENAMETOOLONG) return NC_EBAD_FILE;
+        else                            return NC_EFILE;
+    }
+    /* get first 8 bytes of file */
+    rlen = read(fd, signature, 8);
+    if (rlen != 8) {
+        close(fd); /* ignore error */
+        return NC_EFILE;
+    }
+    if (close(fd) == -1) {
+        return NC_EFILE;
+    }
+
+    if (memcmp(signature, hdf5_signature, 8) == 0) {
+        /* whether the file is NC_FORMAT_NETCDF4_CLASSIC is determined by HDF5
+         * attribute "_nc3_strict" which requires a call to H5Aget_name(). Here
+         * we do not distinquish NC_CLASSIC_MODEL, but simply return NETCDF4
+         * format.
+         */
+        *formatp = NC_FORMAT_NETCDF4;
+    }
+    else if (memcmp(signature, cdf_signature, 3) == 0) {
+             if (signature[3] == 5)  *formatp = NC_FORMAT_CDF5;
+        else if (signature[3] == 2)  *formatp = NC_FORMAT_CDF2;
+        else if (signature[3] == 1)  *formatp = NC_FORMAT_CLASSIC;
+    }
+
+    return NC_NOERR;
+#endif
 }
 
 /*----< ncmpi_inq_file_info() >-----------------------------------------------*/
