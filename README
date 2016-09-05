@@ -18,10 +18,10 @@ PnetCDF can use MPI-IO to achieve high-performance parallel I/O.
 More extensive installation guides can be found in file INSTALL.  Additional
 information regarding the contents of the release can be found in
 the RELEASE_NOTES file in the top-level directory.  Finally, the PnetCDF web
-site,
+sites:
     http://trac.mcs.anl.gov/projects/parallel-netcdf
     http://cucis.ece.northwestern.edu/projects/PnetCDF
-contains information on bug fixes and new releases.
+contain information on bug fixes and new releases.
 
 
 Requirements:
@@ -36,9 +36,23 @@ Requirements:
       name.   
       
     - To build parallel-netcdf you will need some additional programs:
-        - either yacc or bison
-	- either lex or flex
+        - autotools (autoconfig, autoreconf, m4, etc.)
+        - Optional:
+             - either yacc or bison
+	     - either lex or flex
       These are usually part of your operating system's development tools.
+
+
+Build recipes:
+    Several machine- and platform-specific build recipes are available.
+    - README.IBM        (BlueGene systems)
+    - README.SX         (NEC SX systems)
+    - README.CRAY       (Cray systems)
+    - README.INTEL      (Intel Compilers)
+    - README.LINUX      (GNU compilers)
+    - README.Fujitsu    (Fujitsu systems)
+    - README.K-Computer (the K computer @RIKEN)
+    - README.SGI        (SGI systems, such as Endeavour @NASA)
 
 
 Note on supporting large files and large variables.
