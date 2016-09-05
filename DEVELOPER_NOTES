@@ -522,5 +522,17 @@ However, when compiled with -g -O0 -pg, programs receive no error.
 
 Workaround: use "-pg -mno-omit-leaf-frame-pointer -fno-omit-frame-pointer"
 
+==============================================================================
+Note on including ncconfig.h
+==============================================================================
 
+When doing VPATH build, remember to pass the C compiler a -I. option. Even if
+you use #include "ncconfig.h", the preprocessor searches only the source
+directory, not the build directory. Thus, we should use #include <ncconfig.h>
+instead of #include "ncconfig.h". In addition, use -I. -I$(srcdir) in
+Makefile.in.
+
+Autoconf manual suggests it is a good habit to use angle brackets, because in
+the rare case when the source directory contains another ncconfig.h, the build
+directory should be searched first.
 
