@@ -134,17 +134,19 @@ C On exit, any open netCDF files are closed.
 
         nok = 0
 
-!       Try to open a nonexistent file, this call should fail
+C       Try to open a nonexistent file, this call should fail
         err = nfmpi_open(comm, 'tooth-fairy.nc', NF_NOWRITE, info, ncid)
 
-!       On some systems, opening an nonexisting file will actually create the
-!       file. In this case, we print the error messages on screen and move on
-!       to the next test, instead of aborting the entire test.
+C       On some systems, opening an nonexisting file will actually create the
+C       file. In this case, we print the error messages on screen and move on
+C       to the next test, instead of aborting the entire test.
 
         if (err .eq. NF_NOERR) then
             print*,
      +    'opening a nonexistent file expects to fail, but got NF_NOERR'
-        elseif (err .ne. NF_ENOENT) then
+        elseif (err .ne. NF_ENOENT .AND. err .ne. NF_EFILE) then
+C           older version of OpenMPI and MPICH may return MPI_ERR_IO instead
+C           of MPI_ERR_NO_SUCH_FILE
             print*,
      +    'opening a nonexistent file expects NF_ENOENT, but got ',err
         else

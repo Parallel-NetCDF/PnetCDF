@@ -144,7 +144,10 @@
         if (err .eq. NF90_NOERR) then
             print*, &
         'opening a nonexistent file expects to fail, but got NF90_NOERR'
-        elseif (err .ne. NF90_ENOENT) then
+        elseif (err .ne. NF90_ENOENT .AND. err .ne. NF_EFILE) then
+!           older version of OpenMPI and MPICH may return MPI_ERR_IO instead
+!           of MPI_ERR_NO_SUCH_FILE */
+
             print*, &
         'opening a nonexistent file expects NF90_ENOENT, but got ',err
         else
