@@ -45,6 +45,10 @@ using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
+
 #define NDIMS    3
 #define NUM_VARS 10
 
@@ -147,7 +151,7 @@ int main(int argc, char **argv)
 
     try {
         MPI_Info_create(&info);
-        MPI_Info_set(info, "nc_var_align_size", "1");
+        MPI_Info_set(info, (char*)"nc_var_align_size", (char*)"1");
 
         /* create the file */
         NcmpiFile nc(MPI_COMM_WORLD, filename, NcmpiFile::replace,

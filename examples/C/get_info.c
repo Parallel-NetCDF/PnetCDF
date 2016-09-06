@@ -43,6 +43,9 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
 
 #define HANDLE_ERROR {                                \
     if (err != NC_NOERR) {                            \

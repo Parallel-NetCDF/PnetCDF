@@ -17,7 +17,7 @@
 #include <testutils.h>
 
 #define ERR_EXP(e, exp) {if (e != exp) { printf("Error (line %d): expecting error code %s but got %s\n", __LINE__, nc_err_code_name(exp), nc_err_code_name(e)); nerrs++; }}
-#define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2) { printf("Error (line %d): expecting error code %s or %s but got %s\n", __LINE__, nc_err_code_name(exp1), nc_err_code_name(exp2), nc_err_code_name(e)); nerrs++; }}
+#define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2 && e != NC_EFILE) { printf("Error (line %d): expecting error code %s or %s but got %s\n", __LINE__, nc_err_code_name(exp1), nc_err_code_name(exp2), nc_err_code_name(e)); nerrs++; }}
 
 #define CHECK_ERR(expect) { \
     if (safe_mode) { \

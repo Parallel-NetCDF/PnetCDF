@@ -5,6 +5,10 @@
 ! performance.
 ! 
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_INTEGER8
+#endif
+
 #ifdef NAGf90Fortran
       USE F90_UNIX_ENV, only : iargc, getarg
 #endif

@@ -107,6 +107,10 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
+
 #define NVARS 5
 
 #define ERR(e) {if((e)!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));}
