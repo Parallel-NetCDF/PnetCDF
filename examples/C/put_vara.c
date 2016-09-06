@@ -62,6 +62,10 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
+
 #define NY 10
 #define NX 4
 

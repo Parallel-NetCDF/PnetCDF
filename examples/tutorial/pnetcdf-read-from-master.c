@@ -41,6 +41,10 @@
 #include <pnetcdf.h>
 #include <stdio.h>
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
+
 static void handle_error(int status, int lineno)
 {
     fprintf(stderr, "Error at line %d: %s\n", lineno, ncmpi_strerror(status));

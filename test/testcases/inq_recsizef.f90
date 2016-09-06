@@ -127,7 +127,7 @@
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
           if (err == NF_NOERR) then
-              call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, &
+              call MPI_Reduce(malloc_size, sum_size, 1, MPI_INTEGER8, &
                               MPI_SUM, 0, MPI_COMM_WORLD, ierr)
               if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND) print 998, &
                   'heap memory allocated by PnetCDF internally has ',  &

@@ -40,6 +40,10 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
+
 #define NDIMS    3
 #define NUM_VARS 10
 
@@ -212,11 +216,7 @@ int main(int argc, char **argv)
 
     MPI_Offset put_size;
     ncmpi_inq_put_size(ncid, &put_size);
-#ifdef MPI_OFFSET
     MPI_Allreduce(MPI_IN_PLACE, &put_size, 1, MPI_OFFSET, MPI_SUM, comm);
-#else
-    MPI_Allreduce(MPI_IN_PLACE, &put_size, 1, MPI_LONG_LONG, MPI_SUM, comm);
-#endif
 
     /* close the file */
     err = ncmpi_close(ncid);
@@ -227,11 +227,7 @@ int main(int argc, char **argv)
     write_size = bufsize * NUM_VARS * sizeof(int);
     for (i=0; i<NUM_VARS; i++) free(buf[i]);
 
-#ifdef MPI_OFFSET
     MPI_Reduce(&write_size, &sum_write_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
-#else
-    MPI_Reduce(&write_size, &sum_write_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
-#endif
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
 
     if (rank == 0 && verbose) {

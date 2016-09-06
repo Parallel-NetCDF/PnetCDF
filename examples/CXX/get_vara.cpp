@@ -66,6 +66,10 @@ using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
+
 static void
 usage(char *argv0)
 {

@@ -46,6 +46,10 @@ using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
+#ifndef MPI_OFFSET
+#define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
+
 #define NY 4
 #define NX 10
 #define NDIMS 2
