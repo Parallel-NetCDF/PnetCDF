@@ -21,8 +21,8 @@ DEFS += -DMPICXX="\"$(MPICXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
 endif
 
 ifeq (@has_fortran@, yes)
-DEFS += -DMPIF77="\"$(MPIF77)\"" -DF77FLAGS="\"$(F77FLAGS)\""
-DEFS += -DMPIF90="\"$(MPIF90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
+DEFS += $(FC_DEFINE)MPIF77="\"$(MPIF77)\"" $(FC_DEFINE)F77FLAGS="\"$(F77FLAGS)\""
+DEFS += $(FC_DEFINE)MPIF90="\"$(MPIF90)\"" $(FC_DEFINE)F90FLAGS="\"$(F90FLAGS)\""
 endif
 
 C_SOURCES	= pnetcdf_version.c
