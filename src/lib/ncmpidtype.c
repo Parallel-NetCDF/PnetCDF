@@ -70,16 +70,25 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 
     /* 4-byte integer types */
   {
-    MPI_Datatype int_4byte, uint_4byte;
+    MPI_Datatype int_4byte;
+#if (SIZEOF_LONG == 4)
+    MPI_Datatype uint_4byte;
+#endif
 #if (SIZEOF_INT == 4)
      int_4byte = MPI_INT;
+#if (SIZEOF_LONG == 4)
     uint_4byte = MPI_UNSIGNED;
+#endif
 #elif (SIZEOF_SHORT == 4)
      int_4byte = MPI_SHORT;
+#if (SIZEOF_LONG == 4)
     uint_4byte = MPI_UNSIGNED_SHORT;
+#endif
 #else
      int_4byte = MPI_DATATYPE_NULL; /* no 4-byte type? */
+#if (SIZEOF_LONG == 4)
     uint_4byte = MPI_DATATYPE_NULL;
+#endif
 #endif
 
 #ifdef HAVE_MPI_INTEGER

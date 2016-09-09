@@ -753,7 +753,8 @@ define(`GET_ATT',dnl
 int
 ncmpi_get_att_$1(int ncid, int varid, const char *name, FUNC2ITYPE($1) *buf)
 {
-    int      status, cdf_ver;
+    int      status;
+ifelse(`$1',`uchar', `    int      cdf_ver;')
     NC      *ncp;
     NC_attr *attrp;
     const void *xp;
@@ -771,10 +772,11 @@ ncmpi_get_att_$1(int ncid, int varid, const char *name, FUNC2ITYPE($1) *buf)
     if (attrp->type == NC_CHAR)
         DEBUG_RETURN_ERROR(NC_ECHAR)
 
+ifelse(`$1',`uchar',`
     if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_ver = 5;  /* CDF-5 */
     else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_ver = 2;  /* CDF-2 */
     else                                          cdf_ver = 1;  /* CDF-1 */
-
+')
     xp = attrp->xvalue;
 
     switch(attrp->type) {
