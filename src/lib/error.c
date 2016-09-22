@@ -253,23 +253,25 @@ ncmpi_strerror(int err)
              * in the file header) is inconsistent among all MPI processes.
              */
         case NC_EMULTIDEFINE_OMODE:
-            return "Bad file open mode or modes are inconsistent among processes.";
+            return "File open mode is inconsistent among processes.";
         case NC_EMULTIDEFINE_DIM_NUM:
-            return "Number of dimensions is defined inconsistently among processes.";
+            return "Number of dimensions is inconsistent among processes.";
         case NC_EMULTIDEFINE_DIM_SIZE:
-            return "Dimension size is defined inconsistently among processes.";
+            return "Dimension size is inconsistent among processes.";
+        case NC_EMULTIDEFINE_DIM_NAME:
+            return "Dimension name is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_NUM:
-            return "Number of variables is defined inconsistently among processes.";
+            return "Number of variables is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_NAME:
-            return "Variable names are defined inconsistently among processes.";
+            return "Variable name is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_NDIMS:
-            return "Dimensionality of this variable is defined inconsistently among processes.";
+            return "Dimensionality of this variable is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_DIMIDS:
-            return "Dimension IDs used to define this variable is inconsistent among processes.";
+            return "Dimension IDs used to define this variable are inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_TYPE:
-            return "Data type of this variable is defined inconsistently among processes.";
+            return "Data type of this variable is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_LEN:
-            return "Number of elements of this variable is defined inconsistently among processes.";
+            return "Number of elements of this variable is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_BEGIN:
             return "Starting file offset of this variable is inconsistent among processes.";
         case NC_EMULTIDEFINE_NUMRECS:
@@ -295,7 +297,7 @@ ncmpi_strerror(int err)
         case NC_EMULTIDEFINE_VAR_FILL_VALUE:
             return "Variable's fill value is inconsistent among processes.";
         case NC_EMULTIDEFINE_CMODE:
-            return "Bad file create mode or modes are inconsistent among processes.";
+            return "File create mode is inconsistent among processes.";
 
         default:
             /* check netCDF-3 and netCDF-4 errors */
