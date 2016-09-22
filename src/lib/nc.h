@@ -548,6 +548,7 @@ struct NC {
 #define NC_NDIRTY 0x400000  /* numrecs has changed */
 #define NC_HDIRTY 0x800000  /* header info has changed */
 /* NC_NOFILL is defined in netcdf.h, historical interface */
+    int           format;   /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
     int           flags;
     int           safe_mode;    /* 0 or 1, for parameter consistency check */
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */

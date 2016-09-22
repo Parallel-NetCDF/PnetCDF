@@ -69,7 +69,7 @@ NC_start_count_stride_ck(const NC         *ncp,
     if (start[0] < 0) DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 
     if (IS_RECVAR(varp)) {
-        if (!fIsSet(ncp->flags, NC_64BIT_DATA) && /* not CDF-5 */
+        if (ncp->format < 5 && /* not CDF-5 */
             start[0] > X_UINT_MAX) /* sanity check */
             DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 

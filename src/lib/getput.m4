@@ -297,7 +297,7 @@ ncmpii_getput_varm(NC               *ncp,
 {
     void *lbuf=NULL, *cbuf=NULL, *xbuf=NULL;
     int mpireturn, err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
-    int el_size, buftype_is_contig, cdf_ver;
+    int el_size, buftype_is_contig;
     int need_swap=0, need_convert=0, need_swap_back_buf=0;
     MPI_Offset bnelems=0, nbytes=0, offset=0;
     MPI_Status mpistatus;
@@ -320,10 +320,6 @@ ncmpii_getput_varm(NC               *ncp,
                                           rw_flag, io_method);
     }
 #endif
-
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_ver = 5;  /* CDF-5 */
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_ver = 2;  /* CDF-2 */
-    else                                          cdf_ver = 1;  /* CDF-1 */
 
     /* check NC_ECHAR error and calculate the followings:
      * ptype: element data type (MPI primitive type) in buftype
@@ -385,7 +381,7 @@ err_check:
     }
 
     /* check if type conversion and Endianness byte swap is needed */
-    need_convert = ncmpii_need_convert(cdf_ver, varp->type, ptype);
+    need_convert = ncmpii_need_convert(ncp->format, varp->type, ptype);
     need_swap    = ncmpii_need_swap(varp->type, ptype);
 
     /* Check if this is a vars call or a true varm call.
@@ -436,7 +432,7 @@ err_check:
             xbuf = NCI_Malloc((size_t)nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
-            DATATYPE_PUT_CONVERT(cdf_ver, varp->type, xbuf, cbuf, bnelems,
+            DATATYPE_PUT_CONVERT(ncp->format, varp->type, xbuf, cbuf, bnelems,
                                  ptype, status)
             /* NC_ERANGE can be caused by a subset of buf that is out of range
              * of the external data type, it is not considered a fatal error.
@@ -589,7 +585,7 @@ mpi_io:
                 cbuf = NCI_Malloc((size_t)insize);
 
             /* type conversion + byte-swap from xbuf to cbuf */
-            DATATYPE_GET_CONVERT(cdf_ver, varp->type, xbuf, cbuf, bnelems,
+            DATATYPE_GET_CONVERT(ncp->format, varp->type, xbuf, cbuf, bnelems,
                                  ptype, err)
             /* retain the first error status */
             if (status == NC_NOERR) status = err;

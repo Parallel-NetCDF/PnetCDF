@@ -769,7 +769,7 @@ ncmpii_wait(NC  *ncp,
 {
     int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
-    int first_non_null_get, first_non_null_put, cdf_ver;
+    int first_non_null_get, first_non_null_put;
     NC_req *put_list=NULL, *get_list=NULL;
 
     if (NC_indef(ncp)) { /* wait must be called in data mode */
@@ -989,10 +989,6 @@ err_check:
         NCI_Free(put_list);
     }
 
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_ver = 5;  /* CDF-5 */
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_ver = 2;  /* CDF-2 */
-    else                                          cdf_ver = 1;  /* CDF-1 */
-
     for (i=0; i<num_r_reqs; i++) {
         void *cbuf, *lbuf;
         int el_size, position;
@@ -1012,7 +1008,7 @@ err_check:
         if (insize != (int)insize && status == NC_NOERR)
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
-        if (ncmpii_need_convert(cdf_ver, varp->type, get_list[i].ptype)) {
+        if (ncmpii_need_convert(ncp->format, varp->type, get_list[i].ptype)) {
             /* need type conversion from the external type to user buffer
                type */
             if (get_list[i].imaptype != MPI_DATATYPE_NULL ||
@@ -1022,7 +1018,7 @@ err_check:
                 cbuf = get_list[i].buf;
 
             /* type convert + byte swap from xbuf to cbuf */
-            DATATYPE_GET_CONVERT(cdf_ver, varp->type, get_list[i].xbuf,
+            DATATYPE_GET_CONVERT(ncp->format, varp->type, get_list[i].xbuf,
                                  cbuf, bnelems, get_list[i].ptype, err)
             /* keep the first error */
             if (get_list[i].status != NULL && *get_list[i].status == NC_NOERR)

@@ -198,6 +198,9 @@ ncmpii_new_NC_var(NC_vararray  *vcap,
 }
 
 /*----< ncmpii_update_name_lookup_table() >----------------------------------*/
+/* remove the entry in lookup table for oldname and add a new entry for
+ * newname
+ */
 int
 ncmpii_update_name_lookup_table(NC_nametable *nameT,
                                 const int     id,
@@ -612,7 +615,7 @@ out :
      * We will check this in ncmpi_enddef() which calls ncmpii_NC_enddef()
      * which calls ncmpii_NC_check_vlens()
      *
-    if (! fIsSet(ncp->flags, NC_64BIT_DATA) && product >= X_UINT_MAX)
+    if (ncp->format < 5 && product >= X_UINT_MAX)
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
      */
 
@@ -684,7 +687,7 @@ ncmpi_def_var(int         ncid,
               const int  *dimids,
               int        *varidp)
 {
-    int file_ver, status;
+    int status;
     NC *ncp;
     NC_var *varp;
 
@@ -696,16 +699,11 @@ ncmpi_def_var(int         ncid,
     if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     /* check if the name string is legal for netcdf format */
-    file_ver = 1;
-    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
-        file_ver = 2;
-    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        file_ver = 5;
-    status = ncmpii_NC_check_name(name, file_ver);
+    status = ncmpii_NC_check_name(name, ncp->format);
     if (status != NC_NOERR) return status;
 
     /* check if type is a valid netcdf type */
-    status = ncmpii_cktype(file_ver, type);
+    status = ncmpii_cktype(ncp->format, type);
     if (status != NC_NOERR) return status;
 
     /* TODO: make ndims of type MPI_Offset so ndims can be > 2^31-1 in CDF-5
@@ -976,13 +974,16 @@ ncmpi_inq_varnatts(int  ncid,
 }
 
 /*----< ncmpi_rename_var() >--------------------------------------------------*/
-/* This API is collective if called in data mode */
+/* This API is collective.
+ * If the new name is longer than the old name, the netCDF file must be in
+ * define mode. Otherwise, it can be called in either define or data mode.
+ */
 int
 ncmpi_rename_var(int         ncid,
                  int         varid,
                  const char *newname)
 {
-    int file_ver, status=NC_NOERR, err, mpireturn;
+    int status=NC_NOERR, err, mpireturn;
     NC *ncp;
     NC_var *varp;
 
@@ -995,13 +996,7 @@ ncmpi_rename_var(int         ncid,
     status = ncmpii_NC_lookupvar(ncp, varid, &varp);
     if (status != NC_NOERR) return status;
 
-    file_ver = 1;
-    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
-        file_ver = 2;
-    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        file_ver = 5;
-
-    status = ncmpii_NC_check_name(newname, file_ver);
+    status = ncmpii_NC_check_name(newname, ncp->format);
     if (status != NC_NOERR) return status;
 
     /* check for name in use */

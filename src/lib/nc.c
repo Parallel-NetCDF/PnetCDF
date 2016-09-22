@@ -443,18 +443,12 @@ NC_begins(NC         *ncp,
           MPI_Offset  v_minfree,/* free space for fixed variable section */
           MPI_Offset  r_align)  /* alignment for record variable section */
 {
-    int i, j, rank, cdf_ver, mpireturn;
+    int i, j, rank, mpireturn;
     MPI_Offset end_var=0;
     NC_var *last = NULL;
     NC_var *first_var = NULL;       /* first "non-record" var */
 
-    /* cdf_ver determines the size of variable's "begin" in the header */
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        cdf_ver = 5;  /* CDF-5 */
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
-        cdf_ver = 2;  /* CDF-2 */
-    else
-        cdf_ver = 1;  /* CDF-1 */
+    /* CDF file format determines the size of variable's "begin" in the header */
 
     /* get the true header size (not header extent) */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
@@ -499,7 +493,7 @@ NC_begins(NC         *ncp,
         if (first_var == NULL) first_var = ncp->vars.value[i];
 
         /* for CDF-1 check if over the file size limit 32-bit integer */
-        if (cdf_ver == 1 && end_var > X_OFF_MAX)
+        if (ncp->format == 1 && end_var > X_OFF_MAX)
             DEBUG_RETURN_ERROR(NC_EVARSIZE)
 
         /* this will pad out non-record variables with zero to the
@@ -573,7 +567,7 @@ NC_begins(NC         *ncp,
             continue;
 
         /* X_OFF_MAX is the max of 32-bit integer */
-        if (cdf_ver == 1 && end_var > X_OFF_MAX)
+        if (ncp->format == 1 && end_var > X_OFF_MAX)
             DEBUG_RETURN_ERROR(NC_EVARSIZE)
 
         /* A few attempts at aligning record variables have failed
@@ -691,16 +685,16 @@ ncmpii_sync_numrecs(NC         *ncp,
         char pos[8], *buf=pos;
         MPI_Status mpistatus;
 
-        if (ncp->flags & NC_64BIT_DATA) {
-            len = X_SIZEOF_INT64;
-            err = ncmpix_put_uint64((void**)&buf, max_numrecs);
-            if (status == NC_NOERR) status = err;
-        }
-        else {
+        if (ncp->format < 5) {
             if (max_numrecs != (int)max_numrecs)
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             len = X_SIZEOF_SIZE_T;
             err = ncmpix_put_uint32((void**)&buf, (uint)max_numrecs);
+            if (status == NC_NOERR) status = err;
+        }
+        else {
+            len = X_SIZEOF_INT64;
+            err = ncmpix_put_uint64((void**)&buf, max_numrecs);
             if (status == NC_NOERR) status = err;
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
@@ -971,7 +965,7 @@ ncmpii_NC_check_vlens(NC *ncp)
     if (ncp->vars.ndefined == 0)
         return NC_NOERR;
 
-    if (ncp->flags & NC_64BIT_DATA) /* CDF-5 */
+    if (ncp->format >= 5) /* CDF-5 */
         return NC_NOERR;
 
     /* only CDF-1 and CDF-2 need to continue */
@@ -1547,9 +1541,9 @@ ncmpi_inq_version(int ncid, int *nc_mode)
     if (status != NC_NOERR)
         return status;
 
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))
+    if (ncp->format == 5)
         *nc_mode = NC_64BIT_DATA;
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+    else if (ncp->format == 2)
         *nc_mode = NC_64BIT_OFFSET;
     else
         *nc_mode = NC_CLASSIC_MODEL;

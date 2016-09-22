@@ -386,11 +386,11 @@ ncmpii_hdr_len_NC(const NC *ncp)
 
     assert(ncp != NULL);
 
-    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {        /* CDF-5 */
+    if (ncp->format == 5) {        /* CDF-5 */
         sizeof_t     = X_SIZEOF_INT64; /* 8-byte integer for all integers */
         sizeof_off_t = X_SIZEOF_INT64; /* 8-byte integer for var begin */
     }
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) { /* CDF-2 */
+    else if (ncp->format == 2) { /* CDF-2 */
         sizeof_t     = X_SIZEOF_INT; /* 4-byte integer in CDF-1 */
         sizeof_off_t = X_SIZEOF_INT64; /* 8-byte integer for var begin */
     }
@@ -826,11 +826,11 @@ ncmpii_hdr_put_NC(NC   *ncp,
      */
 
     /* copy "magic", 4 characters */
-    if (ncp->flags & NC_64BIT_DATA) {
+    if (ncp->format == 5) {
         putbuf.version = 5;
         status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic5), ncmagic5);
     }
-    else if (ncp->flags & NC_64BIT_OFFSET) {
+    else if (ncp->format == 2) {
         putbuf.version = 2;
         status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic2), ncmagic2);
     }
@@ -842,7 +842,7 @@ ncmpii_hdr_put_NC(NC   *ncp,
 
     /* copy numrecs, number of records */
     nrecs = ncp->numrecs;
-    if (ncp->flags & NC_64BIT_DATA)
+    if (ncp->format == 5) {
         status = ncmpix_put_uint64((void**)(&putbuf.pos), nrecs);
     else {
         if (nrecs != (uint)nrecs) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
@@ -1769,21 +1769,24 @@ ncmpii_hdr_get_NC(NC *ncp)
     if (magic[sizeof(ncmagic1)-1] == 0x1) {
         getbuf.version = 1;
         fSet(ncp->flags, NC_32BIT);
+        ncp->format = 1;
     } else if (magic[sizeof(ncmagic1)-1] == 0x2) {
         getbuf.version = 2;
         fSet(ncp->flags, NC_64BIT_OFFSET);
+        ncp->format = 2;
 #if SIZEOF_MPI_OFFSET < 8
-            /* take the easy way out: if we can't support all CDF-2
-             * files, return immediately */
-            NCI_Free(getbuf.base);
-            DEBUG_RETURN_ERROR(NC_ESMALL)
+        /* take the easy way out: if we can't support all CDF-2
+         * files, return immediately */
+        NCI_Free(getbuf.base);
+        DEBUG_RETURN_ERROR(NC_ESMALL)
 #endif
     } else if (magic[sizeof(ncmagic1)-1] == 0x5) {
         getbuf.version = 5;
         fSet(ncp->flags, NC_64BIT_DATA);
+        ncp->format = 5;
 #if SIZEOF_MPI_OFFSET < 8
-            NCI_Free(getbuf.base);
-            DEBUG_RETURN_ERROR(NC_ESMALL)
+        NCI_Free(getbuf.base);
+        DEBUG_RETURN_ERROR(NC_ESMALL)
 #endif
     } else {
         NCI_Free(getbuf.base);
@@ -2320,7 +2323,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                     NC         *ncp)
 {
     int rank, err, status=NC_NOERR;
-    char magic[sizeof(ncmagic1)];
+    char magic[sizeof(ncmagic1)]; /* root's file format signature */
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
     MPI_Aint pos_addr, base_addr;
     NC *root_ncp;
@@ -2330,7 +2333,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    /* check header's magic */
+    /* check the file format signature in root's header */
     memset(magic, 0, sizeof(magic));
     err = ncmpix_getn_text((const void **)(&getbuf->pos), sizeof(magic), magic);
     if (err != NC_NOERR) {
@@ -2368,14 +2371,17 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
      */
     if (magic[sizeof(ncmagic1)-1] == 0x5) {
         fSet(root_ncp->flags, NC_64BIT_DATA);
+        root_ncp->format = 5;
         getbuf->version = 5;
     }
     else if (magic[sizeof(ncmagic1)-1] == 0x2) {
         fSet(root_ncp->flags, NC_64BIT_OFFSET);
+        root_ncp->format = 2;
         getbuf->version = 2;
     }
     else if (magic[sizeof(ncmagic1)-1] != 0x1) {
         getbuf->version = 1;
+        root_ncp->format = 1;
         /* Fatal error, as root's header is significant */
         if (ncp->safe_mode)
             fprintf(stderr,"Error: root's header indicates not CDF 1/2/5 format\n");
@@ -2383,35 +2389,34 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     }
 
     if (! ncp->safe_mode) {
-        /* check version number in last byte of magic */
-        int local_ver, root_ver;
-             if (ncp->flags & NC_64BIT_DATA)   local_ver = 0x5;
-        else if (ncp->flags & NC_64BIT_OFFSET) local_ver = 0x2;
-        else                                   local_ver = 0x1;
+        /* check local's version number in last byte of magic against root's */
+        int root_ver = magic[sizeof(ncmagic1)-1];
 
-        root_ver = magic[sizeof(ncmagic1)-1];
-        if (local_ver != root_ver) {
-            if (ncp->safe_mode)
-                printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
-                       WARN_STR, local_ver, root_ver);
+        if (ncp->format != root_ver) {
+#ifdef NC_DEBUG
+            printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
+                   WARN_STR, ncp->format, root_ver);
+#endif
 
             /* overwrite the local header object with root's */
-             if (local_ver == 0x5) fClr(ncp->flags, NC_64BIT_DATA);
-            else if (local_ver == 0x2) fClr(ncp->flags, NC_64BIT_OFFSET);
+                 if (ncp->format == 5) fClr(ncp->flags, NC_64BIT_DATA);
+            else if (ncp->format == 2) fClr(ncp->flags, NC_64BIT_OFFSET);
 
-                 if (root_ver  == 0x5) fSet(ncp->flags, NC_64BIT_DATA);
-            else if (root_ver  == 0x2) fSet(ncp->flags, NC_64BIT_OFFSET);
+                 if (root_ver == 5) fSet(ncp->flags, NC_64BIT_DATA);
+            else if (root_ver == 2) fSet(ncp->flags, NC_64BIT_OFFSET);
 
             /* this inconsistency is not fatal */
             DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
         }
         getbuf->version = root_ver;
+        ncp->format     = root_ver;
     }
 
 #if SIZEOF_MPI_OFFSET < 8
     if (getbuf->version > 1) {
         /* for NC_64BIT_DATA or NC_64BIT_OFFSET, MPI_Offset must be 8 bytes */
-        if (ncp->safe_mode) fprintf(stderr,"Error: cannot support CDF-2 and CDF-5 on this machine\n");
+        if (ncp->safe_mode)
+            fprintf(stderr,"Error: cannot support CDF-2 and CDF-5 on this machine\n");
         DEBUG_RETURN_ERROR(NC_ESMALL) /* should not continue */
     }
 #endif

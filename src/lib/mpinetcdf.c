@@ -376,15 +376,23 @@ err_check:
     /* set the file format version based on the create mode, cmode */
     if (fIsSet(cmode, NC_64BIT_DATA)) {
         fSet(ncp->flags, NC_64BIT_DATA);
+        ncp->format = 5;
     } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
         fSet(ncp->flags, NC_64BIT_OFFSET);
+        ncp->format = 2;
     } else {
-        if (default_format == NC_FORMAT_CDF5)
+        if (default_format == NC_FORMAT_CDF5) {
             fSet(ncp->flags, NC_64BIT_DATA);
-        else if (default_format == NC_FORMAT_CDF2)
+            ncp->format = 5;
+        }
+        else if (default_format == NC_FORMAT_CDF2) {
             fSet(ncp->flags, NC_64BIT_OFFSET);
-        else
+            ncp->format = 2;
+        }
+        else {
             fSet(ncp->flags, NC_32BIT);
+            ncp->format = 1;
+        }
     }
 
     /* find the true header size (not-yet aligned) */
@@ -708,11 +716,11 @@ ncmpi_inq_format(int  ncid,
     if (status != NC_NOERR)
         return status;
 
-    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+    if (ncp->format == 5) {
         *formatp = NC_FORMAT_CDF5;
-    } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
+    } else if (ncp->format == 2) {
         *formatp = NC_FORMAT_CDF2;
-    } else if (fIsSet(ncp->flags, NC_32BIT)) {
+    } else if (ncp->format == 1) {
         *formatp = NC_FORMAT_CLASSIC;
     } else {
         /* this should not happen, because if ncid is valid, checking whether
@@ -748,11 +756,11 @@ ncmpi_inq_file_format(char *filename,
     if (status != NC_NOERR)
          return status;
 
-    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+    if (ncp->format == 5) {
         *formatp = NC_FORMAT_CDF5;
-    } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
+    } else if (ncp->format == 2) {
         *formatp = NC_FORMAT_CDF2;
-    } else {  /* if (fIsSet(ncp->flags, NC_32BIT)) */
+    } else {  /* if (ncp->format == 1) */
         *formatp = NC_FORMAT_CLASSIC;
     }
     status = ncmpi_close(ncid);

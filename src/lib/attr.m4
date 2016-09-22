@@ -463,7 +463,7 @@ ncmpi_rename_att(int         ncid,
                  const char *name,
                  const char *newname)
 {
-    int indx, file_ver, status, err, mpireturn;
+    int indx, status, err, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp;
@@ -477,13 +477,7 @@ ncmpi_rename_att(int         ncid,
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
-    file_ver = 1;
-    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
-        file_ver = 2;
-    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        file_ver = 5;
-
-    status = ncmpii_NC_check_name(newname, file_ver);
+    status = ncmpii_NC_check_name(newname, ncp->format);
     if (status != NC_NOERR) return status;
 
     indx = ncmpii_NC_findattr(ncap, name);
@@ -549,7 +543,13 @@ ncmpi_rename_att(int         ncid,
 
 
 /*----< ncmpi_copy_att() >----------------------------------------------------*/
-/* This API is collective if called in data mode */
+/* This API is collective for processes that opened ncid_out.
+ * If the attribute does not exist in ncid_out, then this API must be called
+ * when ncid_out is in define mode.
+ * If the attribute does exist in ncid_out and the attribute in ncid_in is
+ * larger than the one in ncid_out, then this API must be called when ncid_out
+ * is in define mode.
+ */
 int
 ncmpi_copy_att(int         ncid_in,
                int         varid_in,
@@ -557,7 +557,7 @@ ncmpi_copy_att(int         ncid_in,
                int         ncid_out,
                int         varid_out)
 {
-    int indx, status, mpireturn;
+    int indx, err, status, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *iattrp, *attrp, *old=NULL;
@@ -574,7 +574,7 @@ ncmpi_copy_att(int         ncid_in,
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if (indx >= 0) { /* name in use */
+    if (indx >= 0) { /* name in use in ncid_out */
         if (!NC_indef(ncp)) {
             /* if called in data mode (collective or independent), this
              * function must be called collectively, i.e. all processes must
@@ -628,10 +628,15 @@ ncmpi_copy_att(int         ncid_in,
 
     memcpy(attrp->xvalue, iattrp->xvalue, (size_t)iattrp->xsz);
 
-    if (indx >= 0) {
+    if (indx >= 0) { /* name in use in ncid_out */
         assert(old != NULL);
         ncap->value[indx] = attrp;
         ncmpii_free_NC_attr(old);
+
+        if (!NC_indef(ncp)) { /* called in data mode */
+            err = ncmpii_write_header(ncp); /* update file header */
+            if (status == NC_NOERR) status = err;
+        }
     }
     else {
         status = incr_NC_attrarray(ncap, attrp);
@@ -754,7 +759,6 @@ int
 ncmpi_get_att_$1(int ncid, int varid, const char *name, FUNC2ITYPE($1) *buf)
 {
     int      status;
-ifelse(`$1',`uchar', `    int      cdf_ver;')
     NC      *ncp;
     NC_attr *attrp;
     const void *xp;
@@ -772,17 +776,12 @@ ifelse(`$1',`uchar', `    int      cdf_ver;')
     if (attrp->type == NC_CHAR)
         DEBUG_RETURN_ERROR(NC_ECHAR)
 
-ifelse(`$1',`uchar',`
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))        cdf_ver = 5;  /* CDF-5 */
-    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) cdf_ver = 2;  /* CDF-2 */
-    else                                          cdf_ver = 1;  /* CDF-1 */
-')
     xp = attrp->xvalue;
 
     switch(attrp->type) {
         case NC_BYTE:
             ifelse(`$1',`uchar',
-           `if (cdf_ver < 5) /* no NC_ERANGE check */
+           `if (ncp->format < 5) /* no NC_ERANGE check */
                 /* note this is not ncmpix$1_getn_NC_BYTE_uchar */
                 return ncmpix_pad_getn_NC_UBYTE_uchar(&xp, attrp->nelems, ($1*)buf);
             else')
@@ -906,7 +905,7 @@ ncmpi_put_att_$1(int         ncid,
                  MPI_Offset  nelems,   /* number of elements in buf */
                  const FUNC2ITYPE($1) *buf) /* user write buffer */
 {
-    int indx, file_ver, err, status=NC_NOERR, mpireturn;
+    int indx, err, status=NC_NOERR, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp, *old=NULL;
@@ -948,25 +947,18 @@ ncmpi_put_att_$1(int         ncid,
         varp->no_fill = 0;
     }
 
-    /* get the file format version */
-    file_ver = 1;
-    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
-        file_ver = 2;
-    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        file_ver = 5;
-
-    if (nelems < 0 || (nelems > X_INT_MAX && file_ver <= 2))
+    if (nelems < 0 || (nelems > X_INT_MAX && ncp->format <= 2))
         DEBUG_RETURN_ERROR(NC_EINVAL) /* Invalid nelems */
 
     /* check if xtype is valid */
-    ifelse(`$1',`text', , `status = ncmpii_cktype(file_ver, xtype);
+    ifelse(`$1',`text', , `status = ncmpii_cktype(ncp->format, xtype);
     if (status != NC_NOERR) return status;');
 
     /* No character conversions are allowed. */
     ifelse(`$1',`text', , `if (xtype == NC_CHAR) DEBUG_RETURN_ERROR(NC_ECHAR)')
 
     /* check if the attribute name is legal */
-    status = ncmpii_NC_check_name(name, file_ver);
+    status = ncmpii_NC_check_name(name, ncp->format);
     if (status != NC_NOERR) return status;
 
     /* get the pointer to the attribute array */
@@ -1005,7 +997,7 @@ ncmpi_put_att_$1(int         ncid,
                 void *xp = attrp->xvalue;
                 status = ifelse(`$1',`text',
                                 `ncmpix_pad_putn_text(&xp, nelems, (char*)buf);',
-                                `ncmpix_putn_$1(file_ver, &xp, nelems, buf, xtype);')
+                                `ncmpix_putn_$1(ncp->format, &xp, nelems, buf, xtype);')
                 /* wkliao: why not return here if status != NC_NOERR? */
 
                 /* PnetCDF expects all processes use the same argument values.
@@ -1052,7 +1044,7 @@ ncmpi_put_att_$1(int         ncid,
         void *xp = attrp->xvalue;
         status = ifelse(`$1',`text',
                         `ncmpix_pad_putn_text(&xp, nelems, (char*)buf);',
-                        `ncmpix_putn_$1(file_ver, &xp, nelems, buf, xtype);')
+                        `ncmpix_putn_$1(ncp->format, &xp, nelems, buf, xtype);')
         /* no immediately return error code here? Strange ... 
          * Instead, we continue and call incr_NC_attrarray() to add
          * this attribute (for create case) as it is legal. But if
