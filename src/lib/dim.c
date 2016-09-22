@@ -527,7 +527,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     if (dimidp != NULL) *dimidp = dimid;
 
 fn_exit:
-    if (safe_mode) {
+    if (ncp->safe_mode) {
         /* check if names are consistent across all processes */
         char root_name[NC_MAX_NAME];
         strcpy(root_name, name);
@@ -547,7 +547,7 @@ fn_exit:
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_SIZE)
 
         /* find min error code across processes */
-        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
     }

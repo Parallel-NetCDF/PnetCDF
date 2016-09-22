@@ -842,11 +842,12 @@ ncmpii_hdr_put_NC(NC   *ncp,
 
     /* copy numrecs, number of records */
     nrecs = ncp->numrecs;
-    if (ncp->format == 5) {
-        status = ncmpix_put_uint64((void**)(&putbuf.pos), nrecs);
-    else {
+    if (ncp->format < 5) {
         if (nrecs != (uint)nrecs) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&putbuf.pos), (uint)nrecs);
+    }
+    else {
+        status = ncmpix_put_uint64((void**)(&putbuf.pos), nrecs);
     }
     if (status != NC_NOERR) return status;
 

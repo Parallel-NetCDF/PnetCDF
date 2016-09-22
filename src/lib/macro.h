@@ -50,7 +50,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 }
 #define DEBUG_ASSIGN_ERROR(status, err) {                               \
     char *env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");               \
-    if (env_str != NULL && *env_str != '0')                             \
+    if (env_str != NULL && *env_str != '0') {                           \
         int _rank;                                                      \
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
@@ -66,7 +66,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
         _rank,ncmpii_err_code_name(err),__LINE__,__func__,__FILE__);    \
     }                                                                   \
-}                                                                       \
+}
 #else
 #define DEBUG_RETURN_ERROR(err) return err;
 #define DEBUG_ASSIGN_ERROR(status, err) status = err;
