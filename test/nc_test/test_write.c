@@ -465,13 +465,13 @@ test_ncmpi_def_dim(void)
     int  dimid;         /* dimension id */
     MPI_Offset length;
 
-        /* BAD_ID test */
+    /* BAD_ID test */
     err = ncmpi_def_dim(BAD_ID, "abc", 8, &dimid);
     IF (err != NC_EBADID)
         error("bad ncid: status = %d", err);
     ELSE_NOK
 
-        /* data mode test */
+    /* data mode test */
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
