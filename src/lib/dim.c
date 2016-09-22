@@ -420,42 +420,49 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
               MPI_Offset  size,    /* IN:  dimension size */
               int        *dimidp)  /* OUT: dimension ID */
 {
-    int dimid, file_ver, status;
+    int dimid, err, status, mpireturn;
     NC *ncp;
     NC_dim *dimp;
 
     /* check if ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto fn_exit;
+    }
 
-    /* check if called in define mode */
-    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+    /* must be called in define mode */
+    if (!NC_indef(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+        goto fn_exit;
+    }
 
-    /* check if the name string is legal for netcdf format */
-    file_ver = 1;
-    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
-        file_ver = 2;
-    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        file_ver = 5;
-
-    status = ncmpii_NC_check_name(name, file_ver);
-    if (status != NC_NOERR) return status;
+    /* check if the name string is legal for the netcdf format */
+    err = ncmpii_NC_check_name(name, ncp->format);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto fn_exit;
+    }
 
     /* MPI_Offset is usually a signed value, but serial netcdf uses
      * size_t -- normally unsigned
      * In 1999 ISO C standard, size_t is an unsigned integer type of at least
      * 16 bit. */
-    if (ncp->flags & NC_64BIT_OFFSET) { /* CDF-2 format, max is 2^32-4 */
+    if (ncp->format == 2) { /* CDF-2 format, max is 2^32-4 */
         if (size > X_UINT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
-            DEBUG_RETURN_ERROR(NC_EDIMSIZE)
-    } else if ((ncp->flags & NC_64BIT_DATA)) { /* CDF-5 format*/
+            err = NC_EDIMSIZE;
+    } else if (ncp->format == 5) { /* CDF-5 format*/
         if (size < 0)
-            DEBUG_RETURN_ERROR(NC_EDIMSIZE)
+            err = NC_EDIMSIZE;
     } else { /* CDF-1 format, max is 2^31-4 */
         if (size > X_INT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
-            DEBUG_RETURN_ERROR(NC_EDIMSIZE)
+            err = NC_EDIMSIZE;
+    }
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto fn_exit;
     }
 
     if (size == NC_UNLIMITED) {
@@ -464,35 +471,52 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
          * one per file
          */
         dimid = ncmpii_find_NC_Udim(&ncp->dims, &dimp);
-        if (dimid != -1)
-            DEBUG_RETURN_ERROR(NC_EUNLIMIT) /* found an existing one */
+        if (dimid != -1) {
+            DEBUG_ASSIGN_ERROR(err, NC_EUNLIMIT) /* found an existing one */
+            goto fn_exit;
+        }
 #endif
-        if (ncp->dims.unlimited_id != -1)
-            DEBUG_RETURN_ERROR(NC_EUNLIMIT) /* already defined */
+        if (ncp->dims.unlimited_id != -1) {
+            DEBUG_ASSIGN_ERROR(err, NC_EUNLIMIT) /* already defined */
+            goto fn_exit;
+        }
     }
 
-    /* check if exceeds the upperbound has reached */
-    if (ncp->dims.ndefined >= NC_MAX_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+    /* check if exceeds the upperbound */
+    if (ncp->dims.ndefined >= NC_MAX_DIMS) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAXDIMS)
+        goto fn_exit;
+    }
 
 #ifdef SEARCH_NAME_LINEARLY
     /* check if the name string is previously used */
-    status = ncmpii_NC_finddim(&ncp->dims, name, NULL);
-    if (status != NC_EBADDIM) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
+    err = ncmpii_NC_finddim(&ncp->dims, name, NULL);
+    if (err != NC_EBADDIM) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENAMEINUSE)
+        goto fn_exit;
+    }
 
     /* create a new dimension object */
     dimp = ncmpii_new_NC_dim(name, size);
-    if (dimp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    if (dimp == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+        goto fn_exit;
+    }
 #else
     /* create a new dimension (also check if name is already used) */
-    status = ncmpii_new_NC_dim(&ncp->dims, name, size, &dimp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_new_NC_dim(&ncp->dims, name, size, &dimp);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto fn_exit;
+    }
 #endif
 
-    /* Add a new handle to the end of an array of handles */
-    status = incr_NC_dimarray(&ncp->dims, dimp);
-    if (status != NC_NOERR) {
+    /* Add a new dim handle to the end of handle array */
+    err = incr_NC_dimarray(&ncp->dims, dimp);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
         ncmpii_free_NC_dim(dimp);
-        return status;
+        goto fn_exit;
     }
 
     /* ncp->dims.ndefined has been increased in incr_NC_dimarray() */
@@ -502,7 +526,35 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
 
     if (dimidp != NULL) *dimidp = dimid;
 
-    return NC_NOERR;
+fn_exit:
+    if (safe_mode) {
+        /* check if names are consistent across all processes */
+        char root_name[NC_MAX_NAME];
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, name))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
+
+        /* check if sizes are consistent across all processes */
+        MPI_Offset root_size;
+        root_size = size;
+        TRACE_COMM(MPI_Bcast)(&root_size, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_size != size)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_SIZE)
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+    }
+    else
+        status = err;
+
+    return status;
 }
 
 
@@ -577,13 +629,16 @@ ncmpi_inq_dimlen(int         ncid,
 
 
 /*----< ncmpi_rename_dim() >--------------------------------------------------*/
-/* This API is collective if called in data mode */
+/* This API is collective and can be called in either define or data mode..
+ * If the new name is longer than the old name, the netCDF dataset must be in
+ * the define mode.
+ */
 int
 ncmpi_rename_dim(int         ncid,
                  int         dimid,
                  const char *newname)
 {
-    int file_ver, status, err, mpireturn;
+    int status, err, mpireturn;
     NC *ncp;
     NC_dim *dimp;
 
@@ -592,13 +647,7 @@ ncmpi_rename_dim(int         ncid,
 
     if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
-    file_ver = 1;
-    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
-        file_ver = 2;
-    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        file_ver = 5;
-
-    status = ncmpii_NC_check_name(newname, file_ver);
+    status = ncmpii_NC_check_name(newname, ncp->format);
     if (status != NC_NOERR) return status;
 
     status = ncmpii_NC_finddim(&ncp->dims, newname, NULL);
@@ -612,7 +661,8 @@ ncmpi_rename_dim(int         ncid,
         if (newStr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
 #ifndef SEARCH_NAME_LINEARLY
-        /* update dim name lookup table */
+        /* update dim name lookup table, by removing the old name and add
+         * the new name */
         status = ncmpii_update_name_lookup_table(ncp->dims.nameT, dimid,
                  ncp->dims.value[dimid]->name->cp, newname);
         if (status != NC_NOERR) return status;
@@ -660,12 +710,16 @@ ncmpi_rename_dim(int         ncid,
      * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    TRACE_COMM(MPI_Bcast)(dimp->name->cp, (int)dimp->name->nchars, MPI_CHAR, 0,
+    TRACE_COMM(MPI_Bcast)(dimp->name->cp, NC_MAX_NAME, MPI_CHAR, 0,
                           ncp->nciop->comm);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
         if (status == NC_NOERR) status = err;
     }
+
+    /* check if newname is consistent */
+    if (strcmp(dimp->name->cp, newname) && status == NC_NOERR)
+        status = NC_EMULTIDEFINE_DIM_NAME;
 
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,

@@ -235,7 +235,6 @@ ncmpi_fill_var_rec(int        ncid,
 
     /* This must be called in data mode */
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)                                
-
     /* must be called in collective data mode */
     if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP)
 
