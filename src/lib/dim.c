@@ -421,15 +421,12 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
               int        *dimidp)  /* OUT: dimension ID */
 {
     int dimid, err, status, mpireturn;
-    NC *ncp;
-    NC_dim *dimp;
+    NC *ncp=NULL;
+    NC_dim *dimp=NULL;
 
     /* check if ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) {
-        DEBUG_TRACE_ERROR
-        goto fn_exit;
-    }
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* must be called in define mode */
     if (!NC_indef(ncp)) {
@@ -565,10 +562,10 @@ ncmpi_inq_dimid(int         ncid,
                 int        *dimid)
 {
     int status;
-    NC *ncp;
+    NC *ncp=NULL;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     status = ncmpii_NC_finddim(&ncp->dims, name, dimid);
     if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
@@ -589,7 +586,7 @@ ncmpi_inq_dim(int         ncid,
     NC_dim *dimp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
     if (dimp == NULL) DEBUG_RETURN_ERROR(NC_EBADDIM)
@@ -639,11 +636,11 @@ ncmpi_rename_dim(int         ncid,
                  const char *newname)
 {
     int status, err, mpireturn;
-    NC *ncp;
-    NC_dim *dimp;
+    NC *ncp=NULL;
+    NC_dim *dimp=NULL;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
