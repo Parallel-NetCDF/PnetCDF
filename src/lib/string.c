@@ -24,6 +24,7 @@
 #include "macro.h"
 
 
+/*----< ncmpii_free_NC_string() >--------------------------------------------*/
 /*
  * Free string, and, if needed, its values.
  * Formerly
