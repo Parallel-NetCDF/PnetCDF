@@ -687,60 +687,139 @@ ncmpi_def_var(int         ncid,
               const int  *dimids,
               int        *varidp)
 {
-    int status;
-    NC *ncp;
-    NC_var *varp;
+    int err, status;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
     /* check if ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* check if called in define mode */
-    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+    if (!NC_indef(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+        goto err_check;
+    }
 
     /* check if the name string is legal for netcdf format */
-    status = ncmpii_NC_check_name(name, ncp->format);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_name(name, ncp->format);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
     /* check if type is a valid netcdf type */
-    status = ncmpii_cktype(ncp->format, type);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_cktype(ncp->format, type);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
     /* TODO: make ndims of type MPI_Offset so ndims can be > 2^31-1 in CDF-5
     if ((ndims < 0) || ndims > X_INT_MAX) DEBUG_RETURN_ERROR(NC_EINVAL)
     */
-    if (ndims < 0) DEBUG_RETURN_ERROR(NC_EINVAL)
+    if (ndims < 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
 
     /* there is an upperbound for the number of variables defined in a file */
-    if (ncp->vars.ndefined >= NC_MAX_VARS) DEBUG_RETURN_ERROR(NC_EMAXVARS)
+    if (ncp->vars.ndefined >= NC_MAX_VARS) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAXVARS)
+        goto err_check;
+    }
 
 #ifdef SEARCH_NAME_LINEARLY
     /* check whether the variable name has been used */
-    status = ncmpii_NC_findvar(&ncp->vars, name, NULL);
-    if (status != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
+    err = ncmpii_NC_findvar(&ncp->vars, name, NULL);
+    if (err != NC_ENOTVAR) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENAMEINUSE)
+        goto err_check;
+    }
 
     /* create a new variable */
     varp = ncmpii_new_NC_var(name, type, ndims, dimids);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    if (varp == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+        goto err_check;
+    }
 #else
     /* create a new variable (also check if name is already used) */
-    status = ncmpii_new_NC_var(&ncp->vars, name, type, ndims, dimids, &varp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_new_NC_var(&ncp->vars, name, type, ndims, dimids, &varp);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 #endif
 
     /* set up array dimensional structures */
-    status = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
-    if (status != NC_NOERR) {
+    err = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
+    if (err != NC_NOERR) {
         ncmpii_free_NC_var(varp);
-        return status;
+        DEBUG_TRACE_ERROR
+        goto err_check;
     }
 
     /* Add a new handle to the end of an array of handles */
-    status = incr_NC_vararray(&ncp->vars, varp);
-    if (status != NC_NOERR) {
+    err = incr_NC_vararray(&ncp->vars, varp);
+    if (err != NC_NOERR) {
         ncmpii_free_NC_var(varp);
-        return status;
+        DEBUG_TRACE_ERROR
+        goto err_check;
     }
+
+err_check:
+    if (ncp->safe_mode) {
+        int mpireturn;
+
+        /* check if name is consistent among all processes */
+        char root_name[NC_MAX_NAME];
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, name))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_NAME)
+
+        /* check if type is consistent among all processes */
+        nc_type root_type=type;
+        TRACE_COMM(MPI_Bcast)(&root_type, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_type != type)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_TYPE)
+
+        /* check if ndims is consistent among all processes */
+        int root_ndims=ndims;
+        TRACE_COMM(MPI_Bcast)(&root_ndims, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_ndims != ndims)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_NDIMS)
+
+        /* check if dimids is consistent among all processes */
+        if (ndims > 0) {
+            int root_dimids[NC_MAX_DIMS];
+            if (dimids != NULL)
+                memcpy(root_dimids, dimids, ndims*sizeof(int));
+            else
+                memset(root_dimids, 0, ndims*sizeof(int));
+            TRACE_COMM(MPI_Bcast)(root_dimids, ndims, MPI_INT, 0, ncp->nciop->comm);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+            if (err == NC_NOERR && memcmp(root_dimids, dimids, ndims*sizeof(int)))
+                DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_DIMIDS)
+        }
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+    }
+    else
+        status = err;
+
+    if (status != NC_NOERR) return status;
 
     if (varidp != NULL)
         *varidp = (int)ncp->vars.ndefined - 1; /* varid */
@@ -762,14 +841,14 @@ ncmpi_inq_varid(int         ncid,
                 const char *name,
                 int        *varid)
 {
-    int status;
-    NC *ncp;
+    int err;
+    NC *ncp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
-    status = ncmpii_NC_findvar(&ncp->vars, name, varid);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+    err = ncmpii_NC_findvar(&ncp->vars, name, varid);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     return NC_NOERR;
 }
@@ -784,12 +863,12 @@ ncmpi_inq_var(int      ncid,
               int     *dimids,
               int     *nattsp)
 {
-    int status;
-    NC *ncp;
-    NC_var *varp;
+    int err;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -837,12 +916,12 @@ ncmpi_inq_varname(int   ncid,
                   int   varid,
                   char *name)
 {
-    int status;
-    NC *ncp;
-    NC_var *varp;
+    int err;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -865,12 +944,12 @@ ncmpi_inq_vartype(int      ncid,
                   int      varid,
                   nc_type *typep)
 {
-    int status;
-    NC *ncp;
-    NC_var *varp;
+    int err;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -889,12 +968,12 @@ ncmpi_inq_vartype(int      ncid,
 int
 ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 {
-    int status;
-    NC *ncp;
-    NC_var *varp;
+    int err;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -920,12 +999,12 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 int
 ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
 {
-    int status;
-    NC *ncp;
-    NC_var *varp;
+    int err;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -954,15 +1033,15 @@ ncmpi_inq_varnatts(int  ncid,
                    int  varid,
                    int *nattsp)
 {
-    int status;
-    NC *ncp;
-    NC_var *varp;
+    int err;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
     if (varid == NC_GLOBAL)
         return ncmpi_inq_natts(ncid, nattsp);
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -984,22 +1063,25 @@ ncmpi_rename_var(int         ncid,
                  const char *newname)
 {
     int status=NC_NOERR, err, mpireturn;
-    NC *ncp;
-    NC_var *varp;
+    NC *ncp=NULL;
+    NC_var *varp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    /* check whether ncid is valid */
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
+    /* check whether file's write permission */
     if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
-    /* check if variable ID is valid*/
+    /* check whether variable ID is valid */
     status = ncmpii_NC_lookupvar(ncp, varid, &varp);
     if (status != NC_NOERR) return status;
 
+    /* check whether new name is legal */
     status = ncmpii_NC_check_name(newname, ncp->format);
     if (status != NC_NOERR) return status;
 
-    /* check for name in use */
+    /* check whether new name is already in use */
     status = ncmpii_NC_findvar(&ncp->vars, newname, NULL);
     if (status != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
@@ -1079,12 +1161,12 @@ ncmpi_inq_varoffset(int         ncid,
                     int         varid,
                     MPI_Offset *offset)
 {
-    int     status;
-    NC     *ncp;
-    NC_var *varp;
+    int     err;
+    NC     *ncp=NULL;
+    NC_var *varp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -1105,11 +1187,12 @@ ncmpi_inq_varoffset(int         ncid,
 /*----< ncmpi_print_all_var_offsets() >---------------------------------------*/
 int
 ncmpi_print_all_var_offsets(int ncid) {
-    int i;
-    NC_var **vpp;
-    NC *ncp;
+    int i, err;
+    NC_var **vpp=NULL;
+    NC *ncp=NULL;
 
-    ncmpii_NC_check_id(ncid, &ncp);
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     if (ncp->begin_var%1048576)
         printf("%s header size (ncp->begin_var)=%lld MB + %lld\n",
