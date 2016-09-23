@@ -836,6 +836,7 @@ err_check:
 
 
 /*----< ncmpi_inq_varid() >--------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_varid(int         ncid,
                 const char *name,
@@ -854,6 +855,7 @@ ncmpi_inq_varid(int         ncid,
 }
 
 /*----< ncmpi_inq_var() >----------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_var(int      ncid,
               int      varid,
@@ -911,6 +913,7 @@ ncmpi_inq_var(int      ncid,
 
 
 /*----< ncmpi_inq_varname() >------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_varname(int   ncid,
                   int   varid,
@@ -939,6 +942,7 @@ ncmpi_inq_varname(int   ncid,
 }
 
 /*----< ncmpi_inq_vartype() >------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_vartype(int      ncid,
                   int      varid,
@@ -965,6 +969,7 @@ ncmpi_inq_vartype(int      ncid,
 }
 
 /*----< ncmpi_inq_varndims() >-----------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 {
@@ -996,6 +1001,7 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 }
 
 /*----< ncmpi_inq_vardimid() >-----------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
 {
@@ -1028,6 +1034,7 @@ ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
 
 
 /*----< ncmpi_inq_varnatts() >------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_varnatts(int  ncid,
                    int  varid,
@@ -1062,93 +1069,105 @@ ncmpi_rename_var(int         ncid,
                  int         varid,
                  const char *newname)
 {
-    int status=NC_NOERR, err, mpireturn;
+    int status, err;
     NC *ncp=NULL;
     NC_var *varp=NULL;
+    NC_string *newStr=NULL;
 
     /* check whether ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
-    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
 
     /* check whether variable ID is valid */
-    status = ncmpii_NC_lookupvar(ncp, varid, &varp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_lookupvar(ncp, varid, &varp);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
     /* check whether new name is legal */
-    status = ncmpii_NC_check_name(newname, ncp->format);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_name(newname, ncp->format);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
     /* check whether new name is already in use */
-    status = ncmpii_NC_findvar(&ncp->vars, newname, NULL);
-    if (status != NC_ENOTVAR) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
-
-    /* if called in define mode, just update to the NC object */
-    if (NC_indef(ncp)) {
-        NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-        if (newStr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-#ifndef SEARCH_NAME_LINEARLY
-        /* update var name lookup table */
-        status = ncmpii_update_name_lookup_table(ncp->vars.nameT, varid,
-                 ncp->vars.value[varid]->name->cp, newname);
-        if (status != NC_NOERR) return status;
-#endif
-        ncmpii_free_NC_string(varp->name);
-        varp->name = newStr;
-        return NC_NOERR;
+    err = ncmpii_NC_findvar(&ncp->vars, newname, NULL);
+    if (err != NC_ENOTVAR) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENAMEINUSE)
+        goto err_check;
     }
-    else { /* not in define mode */
-        if (varp->name->nchars < (MPI_Offset)strlen(newname))
+
+    if (! NC_indef(ncp) && /* when file is in data mode */
+        varp->name->nchars < (MPI_Offset)strlen(newname)) {
             DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+        /* must in define mode when newname is longer */
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+        goto err_check;
+    }
+
+    newStr = ncmpii_new_NC_string(strlen(newname), newname);
+    if (newStr == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+        goto err_check;
+    }
+
 #ifndef SEARCH_NAME_LINEARLY
-        /* update var name lookup table */
-        status = ncmpii_update_name_lookup_table(ncp->vars.nameT, varid,
-                 ncp->vars.value[varid]->name->cp, newname);
-        if (status != NC_NOERR) return status;
+    /* update var name lookup table */
+    err = ncmpii_update_name_lookup_table(ncp->vars.nameT, varid,
+          ncp->vars.value[varid]->name->cp, newname);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 #endif
-    }
 
-    /* if called in data mode (collective or independent), this function must
-     * be called collectively, i.e. all processes must participate.
-     */
-
+err_check:
     if (ncp->safe_mode) {
-        int nchars = (int)strlen(newname);
-        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+        int mpireturn;
 
-        if (nchars != (int) strlen(newname)) {
-            /* newname's length is inconsistent with root's */
-            printf("Warning: variable name(%s) used in %s() is inconsistent\n",
-                   newname, __func__);
-            if (status == NC_NOERR)
-                DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_NAME)
-        }
+        /* check if newname is consistent among all processes */
+        char root_name[NC_MAX_NAME];
+        strcpy(root_name, newname);
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, newname))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+    }
+    else
+        status = err;
+
+    if (status != NC_NOERR) {
+        if (newStr != NULL) ncmpii_free_NC_string(newStr);
+        return status;
     }
 
-    /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
-    err = ncmpii_set_NC_string(varp->name, newname);
-    if (status == NC_NOERR) status = err;
+    /* replace the old name with new name */
+    ncmpii_free_NC_string(varp->name);
+    varp->name = newStr;
 
-    /* PnetCDF expects all processes use the same name, However, when names
-     * are not the same, only root's value is significant. Broadcast the
-     * new name at root to overwrite new names at other processes.
-     * (This API is collective if called in data mode)
-     */
-    TRACE_COMM(MPI_Bcast)(varp->name->cp, (int)varp->name->nchars, MPI_CHAR, 0,
-                          ncp->nciop->comm);
-
-    /* Let root write the entire header to the file. Note that we cannot just
-     * update the variable name in its space occupied in the file header,
-     * because if the file space occupied by the name shrinks, all the metadata
-     * following it must be moved ahead.
-     */
-    err = ncmpii_write_header(ncp);
-    if (status == NC_NOERR) status = err;
+    if (! NC_indef(ncp)) { /* when file is in data mode */
+        /* Let root write the entire header to the file. Note that we cannot
+         * just update the variable name in its space occupied in the file
+         * header, because if the file space occupied by the name shrinks, all
+         * the metadata following it must be moved ahead.
+         */
+        err = ncmpii_write_header(ncp);
+        if (status == NC_NOERR) status = err;
+    }
 
     return status;
 }
@@ -1156,6 +1175,7 @@ ncmpi_rename_var(int         ncid,
 /* some utility functions for debugging purpose */
 
 /*----< ncmpi_inq_varoffset() >-----------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_varoffset(int         ncid,
                     int         varid,
@@ -1185,6 +1205,7 @@ ncmpi_inq_varoffset(int         ncid,
 #ifdef __DEBUG
 
 /*----< ncmpi_print_all_var_offsets() >---------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_print_all_var_offsets(int ncid) {
     int i, err;
