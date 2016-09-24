@@ -1107,6 +1107,7 @@ ncmpi_put_att_$1(int         ncid,
         goto err_check;
     }
 
+    /* check whether attribute already exists */
     indx = ncmpii_NC_findattr(ncap, name);
 
     if (indx >= 0) { /* name in use */
@@ -1121,7 +1122,7 @@ ncmpi_put_att_$1(int         ncid,
             goto err_check;
         }
     }
-    else { /* attribute does not exit in ncid_out */
+    else { /* attribute does not exit in ncid */
         if (!NC_indef(ncp)) { /* add new attribute is not allowed in data mode */
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
             goto err_check;
@@ -1133,7 +1134,7 @@ ncmpi_put_att_$1(int         ncid,
     }
 
 err_check:
-    if (ncp->safe_mode) {
+    if (ncp->safe_mode) { /* consistency check */
         int rank, mpireturn;
         char root_name[NC_MAX_NAME];
         MPI_Offset root_nelems;
@@ -1207,7 +1208,7 @@ err_check:
             attrp->nelems = nelems;
         }
     }
-    else { /* attribute does not exit in ncid_out */
+    else { /* attribute does not exit in ncid */
         attrp = ncmpii_new_NC_attr(name, xtype, nelems);
         if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -1248,9 +1249,9 @@ err_check:
 
     if (!NC_indef(ncp)) { /* called in data mode */
         /* Let root write the entire header to the file. Note that we
-         * cannot just update the variable name in its space occupied in
-         * the file header, because if the file space occupied by the name
-         * shrinks, all the metadata following it must be moved ahead.
+         * cannot just update the attribute in its space occupied in the
+         * file header, because if the file space occupied by the attribute 
+         * shrinks, all the metadata following it must be moved ahead. 
          */
         err = ncmpii_write_header(ncp); /* update file header */
         if (status == NC_NOERR) status = err;
