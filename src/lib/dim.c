@@ -527,6 +527,7 @@ err_check:
     if (ncp->safe_mode) {
         /* check if names are consistent across all processes */
         char root_name[NC_MAX_NAME];
+        assert(strlen(name) < NC_MAX_NAME);
         strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
@@ -699,6 +700,7 @@ err_check:
     if (ncp->safe_mode) {
         /* check if newname is consistent among all processes */
         char root_name[NC_MAX_NAME];
+        assert(strlen(newname) < NC_MAX_NAME);
         strcpy(root_name, newname);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
@@ -720,6 +722,7 @@ err_check:
     }
 
     /* replace the old name with new name */
+    assert(dimp != NULL);
     ncmpii_free_NC_string(dimp->name);
     dimp->name = newStr;
 

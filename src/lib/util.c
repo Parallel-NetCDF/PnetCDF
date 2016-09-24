@@ -82,8 +82,10 @@ int ncmpii_sanity_check(int               ncid,
 
 fn_exit:
     if ((*ncp)->safe_mode == 1 && io_method == COLL_IO) {
-        int min_st;
-        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, (*ncp)->nciop->comm);
+        int min_st, mpireturn;
+        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, (*ncp)->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         if (status == NC_NOERR) status = min_st;
     }
     return status;

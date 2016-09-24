@@ -774,6 +774,7 @@ err_check:
 
         /* check if name is consistent among all processes */
         char root_name[NC_MAX_NAME];
+        assert(strlen(name) < NC_MAX_NAME);
         strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
@@ -807,7 +808,8 @@ err_check:
             TRACE_COMM(MPI_Bcast)(root_dimids, ndims, MPI_INT, 0, ncp->nciop->comm);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-            if (err == NC_NOERR && memcmp(root_dimids, dimids, ndims*sizeof(int)))
+            if (err == NC_NOERR && dimids != NULL &&
+                memcmp(root_dimids, dimids, ndims*sizeof(int)))
                 DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_DIMIDS)
         }
 
@@ -824,6 +826,8 @@ err_check:
     if (varidp != NULL)
         *varidp = (int)ncp->vars.ndefined - 1; /* varid */
         /* ncp->vars.ndefined has been increased in incr_NC_vararray() */
+
+    assert(varp != NULL);
 
     /* default is NOFILL */
     varp->no_fill = 1;
@@ -1107,7 +1111,6 @@ ncmpi_rename_var(int         ncid,
 
     if (! NC_indef(ncp) && /* when file is in data mode */
         varp->name->nchars < (MPI_Offset)strlen(newname)) {
-            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
         /* must in define mode when newname is longer */
         DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
         goto err_check;
@@ -1135,6 +1138,7 @@ err_check:
 
         /* check if newname is consistent among all processes */
         char root_name[NC_MAX_NAME];
+        assert(strlen(newname) < NC_MAX_NAME);
         strcpy(root_name, newname);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
@@ -1154,6 +1158,8 @@ err_check:
         if (newStr != NULL) ncmpii_free_NC_string(newStr);
         return status;
     }
+
+    assert(varp != NULL);
 
     /* replace the old name with new name */
     ncmpii_free_NC_string(varp->name);
