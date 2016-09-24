@@ -333,13 +333,12 @@ NC_lookupattr(int ncid,
     const char *name, /* attribute name */
     NC_attr **attrpp) /* modified on return */
 {
-    int indx, status;
+    int indx, err;
     NC *ncp;
     NC_attrarray *ncap;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if(status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     ncap = NC_attrarray0(ncp, varid);
     if(ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -356,20 +355,20 @@ NC_lookupattr(int ncid,
 /* Public */
 
 /*----< ncmpi_inq_attname() >------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_attname(int   ncid,
                   int   varid,
                   int   attid,
                   char *name)
-
 {
-    int status;
+    int err;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -386,18 +385,19 @@ ncmpi_inq_attname(int   ncid,
 
 
 /*----< ncmpi_inq_attid() >--------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_attid(int         ncid,
                 int         varid,
                 const char *name,
                 int        *attidp)
 {
-    int indx, status;
+    int indx, err;
     NC *ncp;
     NC_attrarray *ncap;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -412,6 +412,7 @@ ncmpi_inq_attid(int         ncid,
 }
 
 /*----< ncmpi_inq_att() >----------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_att(int         ncid,
               int         varid,
@@ -419,11 +420,11 @@ ncmpi_inq_att(int         ncid,
               nc_type    *datatypep,
               MPI_Offset *lenp)
 {
-    int status;
+    int err;
     NC_attr *attrp;
 
-    status = NC_lookupattr(ncid, varid, name, &attrp);
-    if (status != NC_NOERR) return status;
+    err = NC_lookupattr(ncid, varid, name, &attrp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (datatypep != NULL)
         *datatypep = attrp->type;
@@ -435,6 +436,7 @@ ncmpi_inq_att(int         ncid,
 }
 
 /*----< ncmpi_inq_atttype() >------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_atttype(int         ncid,
                   int         varid,
@@ -445,6 +447,7 @@ ncmpi_inq_atttype(int         ncid,
 }
 
 /*----< ncmpi_inq_attlen() >-------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_inq_attlen(int         ncid,
                  int         varid,
@@ -463,80 +466,104 @@ ncmpi_rename_att(int         ncid,
                  const char *name,
                  const char *newname)
 {
-    int indx, status, err, mpireturn;
+    int indx, status, err;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp;
+    NC_string *newStr=NULL;
 
     /* sortof inline clone of NC_lookupattr() */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
+    /* check whether ncid is valid */
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+
+    /* check whether file's write permission */
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
 
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+    if (ncap == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTVAR)
+        goto err_check;
+    }
 
-    status = ncmpii_NC_check_name(newname, ncp->format);
-    if (status != NC_NOERR) return status;
+    /* check whether new name is legal */
+    err = ncmpii_NC_check_name(newname, ncp->format);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if (indx < 0) DEBUG_RETURN_ERROR(NC_ENOTATT)
+    if (indx < 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTATT)
+        goto err_check;
+    }
 
     attrp = ncap->value[indx];
     /* end inline clone NC_lookupattr() */
 
-    if (ncmpii_NC_findattr(ncap, newname) >= 0)
+    if (ncmpii_NC_findattr(ncap, newname) >= 0) {
         /* name in use */
-        DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
-
-    if (NC_indef(ncp)) {
-        NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-        if (newStr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-        ncmpii_free_NC_string(attrp->name);
-        attrp->name = newStr;
-        return NC_NOERR;
+        DEBUG_ASSIGN_ERROR(err, NC_ENAMEINUSE)
+        goto err_check;
     }
-    /* else, not in define mode.
-     * If called in data mode (collective or independent), this function must
-     * be called collectively, i.e. all processes must participate
-     */
 
+    if (! NC_indef(ncp) && /* when file is in data mode */
+        attrp->name->nchars < (MPI_Offset)strlen(newname)) {
+        /* must in define mode when newname is longer */
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+        goto err_check;
+    }
+
+    newStr = ncmpii_new_NC_string(strlen(newname), newname);
+    if (newStr == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+        goto err_check;
+    }
+
+err_check:
     if (ncp->safe_mode) {
-        int nchars = (int) strlen(newname);
-        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
+        int mpireturn;
+        
+        /* check if newname is consistent among all processes */
+        char root_name[NC_MAX_NAME];
+        strcpy(root_name, newname);
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);         
         if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, newname))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
 
-        if (nchars != strlen(newname)) {
-            /* newname's length is inconsistent with root's */
-            printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
-                   newname, __func__);
-            if (status == NC_NOERR)
-                DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_ATTR_NAME)
-        }
+        /* find min error code across processes */ 
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);  
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
     }
+    else
+        status = err;
+    
+    if (status != NC_NOERR) {
+        if (newStr != NULL) ncmpii_free_NC_string(newStr);
+        return status;
+    }   
 
-    /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
-    err = ncmpii_set_NC_string(attrp->name, newname);
-    if (status == NC_NOERR) status = err;
+    /* replace the old name with new name */
+    ncmpii_free_NC_string(attrp->name);
+    attrp->name = newStr;
 
-    /* PnetCDF expects all processes use the same name, However, when names
-     * are not the same, only root's value is significant. Broadcast the
-     * new name at root to overwrite new names at other processes.
-     * (This API is collective if called in data mode)
-     */
-    TRACE_COMM(MPI_Bcast)(attrp->name->cp, (int)attrp->name->nchars, MPI_CHAR,
-                          0, ncp->nciop->comm);
-
-    /* Let root write the entire header to the file. Note that we cannot just
-     * update the variable name in its space occupied in the file header,
-     * because if the file space occupied by the name shrinks, all the metadata
-     * following it must be moved ahead.
-     */
-    err = ncmpii_write_header(ncp);
-    if (status == NC_NOERR) status = err;
+    if (! NC_indef(ncp)) { /* when file is in data mode */
+        /* Let root write the entire header to the file. Note that we cannot
+         * just update the variable name in its space occupied in the file
+         * header, because if the file space occupied by the name shrinks, all
+         * the metadata following it must be moved ahead.
+         */
+        err = ncmpii_write_header(ncp);
+        if (status == NC_NOERR) status = err;
+    }
 
     return status;
 }
@@ -557,126 +584,191 @@ ncmpi_copy_att(int         ncid_in,
                int         ncid_out,
                int         varid_out)
 {
-    int indx, err, status, mpireturn;
+    int indx=0, err, status;
     NC *ncp;
     NC_attrarray *ncap;
-    NC_attr *iattrp, *attrp, *old=NULL;
+    NC_attr *iattrp, *attrp=NULL;
 
-    status = NC_lookupattr(ncid_in, varid_in, name, &iattrp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid_out, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-    status = ncmpii_NC_check_id(ncid_out, &ncp);
-    if (status != NC_NOERR) return status;
+    err = NC_lookupattr(ncid_in, varid_in, name, &iattrp);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
-    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
+    if (iattrp->xsz != (int)iattrp->xsz) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        goto err_check;
+    }
+
+    /* check whether file's write permission */
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
 
     ncap = NC_attrarray0(ncp, varid_out);
-    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+    if (ncap == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTVAR)
+        goto err_check;
+    }
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if (indx >= 0) { /* name in use in ncid_out */
-        if (!NC_indef(ncp)) {
-            /* if called in data mode (collective or independent), this
-             * function must be called collectively, i.e. all processes must
-             * participate
-             */
-
-            attrp = ncap->value[indx]; /* convenience */
-
-            if (iattrp->xsz > attrp->xsz) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
-            /* else, we can reuse existing without redef */
-
-            if (iattrp->xsz != (int)iattrp->xsz)
-                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-
-            attrp->xsz = iattrp->xsz;
-            attrp->type = iattrp->type;
-            attrp->nelems = iattrp->nelems;
-
-            memcpy(attrp->xvalue, iattrp->xvalue, (size_t)iattrp->xsz);
-
-            /* PnetCDF expects all processes use the same name, However, when
-             * new attributes are not the same, only root's value is
-             * significant. Broadcast the new attribute at root to overwrite
-             * new names at other processes.
-             */
-            TRACE_COMM(MPI_Bcast)((void*)attrp->xvalue, (int)attrp->xsz,
-                                  MPI_CHAR, 0, ncp->nciop->comm);
-            if (mpireturn != MPI_SUCCESS)
-                return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
-
-            /* Let root write the entire header to the file. Note that we
-             * cannot just update the variable name in its space occupied in
-             * the file header, because if the file space occupied by the name
-             * shrinks, all the metadata following it must be moved ahead.
-             */
-            return ncmpii_write_header(ncp);
-        }
-        /* else, redefine using existing array slot */
-        old = ncap->value[indx];
-    }
-    else {
-        if (!NC_indef(ncp)) /* add new attribute is not allowed in data mode */
-            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
-
-        if (ncap->ndefined >= NC_MAX_ATTRS)
-            DEBUG_RETURN_ERROR(NC_EMAXATTS)
-    }
-
-    attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
-    if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-    memcpy(attrp->xvalue, iattrp->xvalue, (size_t)iattrp->xsz);
 
     if (indx >= 0) { /* name in use in ncid_out */
-        assert(old != NULL);
-        ncap->value[indx] = attrp;
-        ncmpii_free_NC_attr(old);
+        attrp = ncap->value[indx];
 
-        if (!NC_indef(ncp)) { /* called in data mode */
-            err = ncmpii_write_header(ncp); /* update file header */
-            if (status == NC_NOERR) status = err;
+        if (!NC_indef(ncp) &&  /* not allowed in data mode */
+            iattrp->xsz > attrp->xsz) {
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+            goto err_check;
         }
     }
-    else {
-        status = incr_NC_attrarray(ncap, attrp);
-        if (status != NC_NOERR) {
+    else { /* attribute does not exit in ncid_out */
+        if (!NC_indef(ncp)) { /* add new attribute is not allowed in data mode */
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+            goto err_check;
+        }
+        if (ncap->ndefined >= NC_MAX_ATTRS) {
+            DEBUG_ASSIGN_ERROR(err, NC_EMAXATTS)
+            goto err_check;
+        }
+    }
+
+err_check:
+    if (ncp->safe_mode) {
+        int mpireturn;
+
+        /* check if name is consistent among all processes */
+        char root_name[NC_MAX_NAME];
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, name))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+    }
+    else
+        status = err;
+
+    if (status != NC_NOERR) return status;
+
+    if (indx >= 0) { /* name in use in ncid_out */
+        /* reuse existing attribute array slot without redef */
+        attrp = ncap->value[indx];
+
+        if (iattrp->xsz > attrp->xsz) {
+            /* Note the whole attribute object is allocated as one contiguous
+             * chunk, so we cannot realloc attrp->xvalue only
+             */
             ncmpii_free_NC_attr(attrp);
-            return status;
+            attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
+            if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+            ncap->value[indx] = attrp;
+        }
+        else {
+            attrp->xsz    = iattrp->xsz;
+            attrp->type   = iattrp->type;
+            attrp->nelems = iattrp->nelems;
         }
     }
-    return NC_NOERR;
+    else { /* attribute does not exit in ncid_out */
+        attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
+        if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+        err = incr_NC_attrarray(ncap, attrp);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    }
+
+    if (iattrp->xsz > 0)
+        memcpy(attrp->xvalue, iattrp->xvalue, (size_t)iattrp->xsz);
+
+    if (!NC_indef(ncp)) { /* called in data mode */
+        /* Let root write the entire header to the file. Note that we
+         * cannot just update the variable name in its space occupied in
+         * the file header, because if the file space occupied by the name
+         * shrinks, all the metadata following it must be moved ahead.
+         */
+        err = ncmpii_write_header(ncp); /* update file header */
+        if (status == NC_NOERR) status = err;
+    }
+
+    return status;
 }
 
 /*----< ncmpi_del_att() >---------------------------------------------------*/
+/* This is a collective subroutine and must be called in define mode */
 int
 ncmpi_del_att(int         ncid,
               int         varid,
               const char *name)
 {
-    int status, attrid;
+    int status, err, attrid;
     NC *ncp;
     NC_attrarray *ncap;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+    if (!NC_indef(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+        goto err_check;
+    }
 
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+    if (ncap == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTVAR)
+        goto err_check;
+    }
 
     attrid = ncmpii_NC_findattr(ncap, name);
-    if (attrid == -1) DEBUG_RETURN_ERROR(NC_ENOTATT)
+    if (attrid == -1) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTATT)
+        goto err_check;
+    }
 
     /* deleting attribute _FillValue means disabling fill mode */
     if (!strcmp(name, _FillValue)) {
         NC_var *varp;
-        status = ncmpii_NC_lookupvar(ncp, varid, &varp);
-        if (status != NC_NOERR) return status;
+        err = ncmpii_NC_lookupvar(ncp, varid, &varp);
+        if (err != NC_NOERR) {
+            DEBUG_TRACE_ERROR
+            goto err_check;
+        }
         varp->no_fill = 1;
     }
 
+err_check:
+    if (ncp->safe_mode) {
+        int mpireturn;
+
+        /* check if name is consistent among all processes */
+        char root_name[NC_MAX_NAME];
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, name))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+    }
+    else
+        status = err;
+
+    if (status != NC_NOERR) return status;
+
+    /* delete attribute */
     ncmpii_free_NC_attr(ncap->value[attrid]);
 
     /* shuffle down */
@@ -693,6 +785,7 @@ include(`foreach.m4')dnl
 include(`utils.m4')dnl
 
 /*----< ncmpi_get_att() >-----------------------------------------------------*/
+/* This is an independent subroutine */
 /* user buffer data type matches the external type defined in file */
 int
 ncmpi_get_att(int         ncid,
@@ -700,12 +793,12 @@ ncmpi_get_att(int         ncid,
               const char *name,
               void       *buf)
 {
-    int status;
+    int err;
     nc_type xtype;  /* external NC data type */
 
     /* obtain variable external data type */
-    status = ncmpi_inq_atttype(ncid, varid, name, &xtype);
-    if (status != NC_NOERR) return status;
+    err = ncmpi_inq_atttype(ncid, varid, name, &xtype);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     switch(xtype) {
         case NC_CHAR:   return ncmpi_get_att_text     (ncid, varid, name, buf);
@@ -724,20 +817,21 @@ ncmpi_get_att(int         ncid,
 }
 
 /*----< ncmpi_get_att_text() >-------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_get_att_text(int ncid, int varid, const char *name, char *buf)
 {
-    int      status;
+    int      err;
     NC      *ncp;
     NC_attr *attrp;
     const void *xp;
 
     /* get the file ID */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-    status = NC_lookupattr(ncid, varid, name, &attrp);
-    if (status != NC_NOERR) return status;
+    err = NC_lookupattr(ncid, varid, name, &attrp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (attrp->nelems == 0) return NC_NOERR;
 
@@ -755,20 +849,21 @@ dnl
 define(`GET_ATT',dnl
 `dnl
 /*----< ncmpi_get_att_$1() >-------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_get_att_$1(int ncid, int varid, const char *name, FUNC2ITYPE($1) *buf)
 {
-    int      status;
+    int      err;
     NC      *ncp;
     NC_attr *attrp;
     const void *xp;
 
     /* get the file ID */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-    status = NC_lookupattr(ncid, varid, name, &attrp);
-    if (status != NC_NOERR) return status;
+    err = NC_lookupattr(ncid, varid, name, &attrp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (attrp->nelems == 0) return NC_NOERR;
 
@@ -822,6 +917,7 @@ dnl
 define(`PUTN_ITYPE',dnl
 `dnl
 /*----< ncmpix_putn_$1() >---------------------------------------------------*/
+/* This is a collective subroutine */
 inline static int
 ncmpix_putn_$1(int          cdf_ver,
                void       **xpp,    /* buffer to be written to file */
@@ -891,6 +987,7 @@ dnl
 define(`PUT_ATT',dnl
 `dnl
 /*----< ncmpi_put_att_$1() >-------------------------------------------------*/
+/* This is a collective subroutine */
 /* Note from netCDF user guide:
  * Attributes are always single values or one-dimensional arrays. This works
  * out well for a string, which is a one-dimensional array of ASCII characters
@@ -918,8 +1015,8 @@ ncmpi_put_att_$1(int         ncid,
     /* if (len > X_INT_MAX) DEBUG_RETURN_ERROR(NC_EINVAL) */
 
     /* get the pointer to NC object */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* file should be opened with writable permission */
     if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
@@ -933,8 +1030,8 @@ ncmpi_put_att_$1(int         ncid,
      */
     if (!strcmp(name, "_FillValue")) {
         NC_var *varp;
-        status = ncmpii_NC_lookupvar(ncp, varid, &varp);
-        if (status != NC_NOERR) return status;
+        err = ncmpii_NC_lookupvar(ncp, varid, &varp);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
         /* Fill value must be same type and have exactly one value */
         if (xtype != varp->type)
@@ -951,15 +1048,15 @@ ncmpi_put_att_$1(int         ncid,
         DEBUG_RETURN_ERROR(NC_EINVAL) /* Invalid nelems */
 
     /* check if xtype is valid */
-    ifelse(`$1',`text', , `status = ncmpii_cktype(ncp->format, xtype);
-    if (status != NC_NOERR) return status;');
+    ifelse(`$1',`text', , `err = ncmpii_cktype(ncp->format, xtype);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)');
 
     /* No character conversions are allowed. */
     ifelse(`$1',`text', , `if (xtype == NC_CHAR) DEBUG_RETURN_ERROR(NC_ECHAR)')
 
     /* check if the attribute name is legal */
-    status = ncmpii_NC_check_name(name, ncp->format);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_name(name, ncp->format);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* get the pointer to the attribute array */
     ncap = NC_attrarray0(ncp, varid);
@@ -995,9 +1092,9 @@ ncmpi_put_att_$1(int         ncid,
                  * with nelems elements
                  */
                 void *xp = attrp->xvalue;
-                status = ifelse(`$1',`text',
-                                `ncmpix_pad_putn_text(&xp, nelems, (char*)buf);',
-                                `ncmpix_putn_$1(ncp->format, &xp, nelems, buf, xtype);')
+                err = ifelse(`$1',`text',
+                             `ncmpix_pad_putn_text(&xp, nelems, (char*)buf);',
+                             `ncmpix_putn_$1(ncp->format, &xp, nelems, buf, xtype);')
                 /* wkliao: why not return here if status != NC_NOERR? */
 
                 /* PnetCDF expects all processes use the same argument values.
@@ -1089,6 +1186,7 @@ foreach(`itype', (text,schar,uchar,short,ushort,int,uint,long,float,double,longl
 ')
 
 /*----< ncmpi_put_att() >-----------------------------------------------------*/
+/* This is a collective subroutine */
 /* This API assumes user buffer data type matches the external type defined
  * in file */
 int
