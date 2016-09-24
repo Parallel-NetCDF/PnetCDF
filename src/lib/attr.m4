@@ -531,6 +531,7 @@ err_check:
         
         /* check if newname is consistent among all processes */
         char root_name[NC_MAX_NAME];
+        assert(strlen(name) < NC_MAX_NAME);
         strcpy(root_name, newname);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);         
         if (mpireturn != MPI_SUCCESS)
@@ -643,6 +644,7 @@ err_check:
 
         /* check if name is consistent among all processes */
         char root_name[NC_MAX_NAME];
+        assert(strlen(name) < NC_MAX_NAME);
         strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
@@ -751,6 +753,7 @@ err_check:
 
         /* check if name is consistent among all processes */
         char root_name[NC_MAX_NAME];
+        assert(strlen(name) < NC_MAX_NAME);
         strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
@@ -987,12 +990,12 @@ dnl
 define(`PUT_ATT',dnl
 `dnl
 /*----< ncmpi_put_att_$1() >-------------------------------------------------*/
-/* This is a collective subroutine */
-/* Note from netCDF user guide:
+/* This is a collective subroutine, all arguments should be consistent among
+ * all processes.
+ *
+ * Note from netCDF user guide:
  * Attributes are always single values or one-dimensional arrays. This works
  * out well for a string, which is a one-dimensional array of ASCII characters
- *
- * This PnetCDF API is collective if called in data mode.
  */
 int
 ncmpi_put_att_$1(int         ncid,
@@ -1002,28 +1005,41 @@ ncmpi_put_att_$1(int         ncid,
                  MPI_Offset  nelems,   /* number of elements in buf */
                  const FUNC2ITYPE($1) *buf) /* user write buffer */
 {
-    int indx, err, status=NC_NOERR, mpireturn;
+    int indx, err, status=NC_NOERR;
+    MPI_Offset xsz;
     NC *ncp;
     NC_attrarray *ncap;
-    NC_attr *attrp, *old=NULL;
+    NC_attr *attrp;
     ifelse(`$1',`text', `nc_type xtype=NC_CHAR;')
-
-    if (!name || strlen(name) > NC_MAX_NAME)
-        DEBUG_RETURN_ERROR(NC_EBADNAME)
-
-    /* Should CDF-5 allow very large file header? */
-    /* if (len > X_INT_MAX) DEBUG_RETURN_ERROR(NC_EINVAL) */
 
     /* get the pointer to NC object */
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
+    if (!name || strlen(name) > NC_MAX_NAME) {
+        DEBUG_ASSIGN_ERROR(err, NC_EBADNAME)
+        goto err_check;
+    }
+
+    /* Should CDF-5 allow very large file header? */
+    /*
+    if (len > X_INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
+    */
+
     /* file should be opened with writable permission */
-    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
 
     /* nelems can be zero, i.e. an attribute with only its name */
-    if (nelems > 0 && buf == NULL)
-        DEBUG_RETURN_ERROR(NC_EINVAL) /* Null arg */
+    if (nelems > 0 && buf == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL) /* Null arg */
+        goto err_check;
+    }
 
     /* If this is the _FillValue attribute, then let PnetCDF return the
      * same error codes as netCDF
@@ -1031,107 +1047,173 @@ ncmpi_put_att_$1(int         ncid,
     if (!strcmp(name, "_FillValue")) {
         NC_var *varp;
         err = ncmpii_NC_lookupvar(ncp, varid, &varp);
-        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        if (err != NC_NOERR) {
+            DEBUG_TRACE_ERROR
+            goto err_check;
+        }
 
         /* Fill value must be same type and have exactly one value */
-        if (xtype != varp->type)
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+        if (xtype != varp->type) {
+            DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE)
+            goto err_check;
+        }
 
-        if (nelems != 1)
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+        if (nelems != 1) {
+            DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+            goto err_check;
+        }
 
         /* enable the fill mode for this variable */
         varp->no_fill = 0;
     }
 
-    if (nelems < 0 || (nelems > X_INT_MAX && ncp->format <= 2))
-        DEBUG_RETURN_ERROR(NC_EINVAL) /* Invalid nelems */
+    if (nelems < 0 || (nelems > X_INT_MAX && ncp->format <= 2)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL) /* Invalid nelems */
+        goto err_check;
+    }
 
-    /* check if xtype is valid */
-    ifelse(`$1',`text', , `err = ncmpii_cktype(ncp->format, xtype);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)');
+    ifelse(`$1',`text', ,`/* check if xtype is valid */
+    err = ncmpii_cktype(ncp->format, xtype);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }')
 
-    /* No character conversions are allowed. */
-    ifelse(`$1',`text', , `if (xtype == NC_CHAR) DEBUG_RETURN_ERROR(NC_ECHAR)')
+    ifelse(`$1',`text', , `/* No character conversions are allowed. */
+    if (xtype == NC_CHAR) {
+        DEBUG_ASSIGN_ERROR(err, NC_ECHAR)
+        goto err_check;
+    }')
 
     /* check if the attribute name is legal */
     err = ncmpii_NC_check_name(name, ncp->format);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
     /* get the pointer to the attribute array */
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+    if (ncap == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTVAR)
+        goto err_check;
+    }
+
+    xsz = ncmpix_len_NC_attrV(xtype, nelems);
+    /* xsz is the total size of this attribute */
+
+    if (xsz != (int)xsz) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        goto err_check;
+    }
 
     indx = ncmpii_NC_findattr(ncap, name);
+
     if (indx >= 0) { /* name in use */
-        if (!NC_indef(ncp)) {
-            /* in data mode, meaning to over-write an existing attribute
-             * if called in data mode (collective or independent), this
-             * function must be called collectively, i.e. all processes must
-             * participate
+        const MPI_Offset xsz = ncmpix_len_NC_attrV(xtype, nelems);
+        /* xsz is the total size of this attribute */
+
+        attrp = ncap->value[indx]; /* convenience */
+
+        if (!NC_indef(ncp) && xsz > attrp->xsz) {
+            /* new attribute requires a larger space, not allowed in data mode */
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+            goto err_check;
+        }
+    }
+    else { /* attribute does not exit in ncid_out */
+        if (!NC_indef(ncp)) { /* add new attribute is not allowed in data mode */
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+            goto err_check;
+        }
+        if (ncap->ndefined >= NC_MAX_ATTRS) {
+            DEBUG_ASSIGN_ERROR(err, NC_EMAXATTS)
+            goto err_check;
+        }
+    }
+
+err_check:
+    if (ncp->safe_mode) {
+        int rank, mpireturn;
+        char root_name[NC_MAX_NAME];
+        MPI_Offset root_nelems;
+        void *root_buf;
+        ifelse(`$1',`text',,`int root_xtype;')
+
+        /* check if name is consistent among all processes */
+        assert(strlen(name) < NC_MAX_NAME);
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, name))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* check if nelems is consistent across all processes */
+        root_nelems = nelems;
+        TRACE_COMM(MPI_Bcast)(&root_nelems, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_nelems != nelems)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_LEN)
+
+        ifelse(`$1',`text', , `root_xtype = xtype;
+        TRACE_COMM(MPI_Bcast)(&root_xtype, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_xtype != xtype)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_TYPE)')
+
+        /* check if buf is consistent across all processes */
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
+        if (rank > 0) {
+            root_buf = (void*) NCI_Malloc((size_t)xsz);
+            memcpy(root_buf, buf, (size_t)xsz);
+        }
+        else
+            root_buf = (void*)buf;
+        TRACE_COMM(MPI_Bcast)(&root_buf, xsz, MPI_BYTE, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && memcmp(root_buf, buf, xsz))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
+        if (rank > 0) NCI_Free(root_buf);
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+    }
+    else
+        status = err;
+
+    if (status != NC_NOERR) return status;
+
+    if (indx >= 0) { /* name in use */
+        attrp = ncap->value[indx]; /* convenience */
+
+        if (xsz > attrp->xsz) { /* new attribute requires a larger space */
+            /* Note the whole attribute object is allocated as one contiguous
+             * chunk, so we cannot realloc attrp->xvalue only
              */
-
-            const MPI_Offset xsz = ncmpix_len_NC_attrV(xtype, nelems);
-            /* xsz is the total size of this attribute */
-
-            attrp = ncap->value[indx]; /* convenience */
-
-            if (xsz > attrp->xsz) /* new attribute requires a larger space */
-                DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
-            /* else, we can reuse existing without redef */
-
-            if (xsz != (int)xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-
+            ncmpii_free_NC_attr(attrp);
+            attrp = ncmpii_new_NC_attr(name, xtype, nelems);
+            if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+            ncap->value[indx] = attrp;
+        }
+        else {
             attrp->xsz    = xsz;
             attrp->type   = xtype;
             attrp->nelems = nelems;
-
-            if (nelems != 0) {
-                /* using xp below to prevent change the pointer attr->xvalue,
-                 * as ncmpix_pad_putn_<type>() advances the first argument
-                 * with nelems elements
-                 */
-                void *xp = attrp->xvalue;
-                err = ifelse(`$1',`text',
-                             `ncmpix_pad_putn_text(&xp, nelems, (char*)buf);',
-                             `ncmpix_putn_$1(ncp->format, &xp, nelems, buf, xtype);')
-                /* wkliao: why not return here if status != NC_NOERR? */
-
-                /* PnetCDF expects all processes use the same argument values.
-                 * However, when argument values are not the same, only roots
-                 * value is significant. Broadcast the new attribute at root to
-                 * overwrite new attribute at other processes.
-                 */
-                TRACE_COMM(MPI_Bcast)(attrp->xvalue, (int)attrp->xsz, MPI_BYTE,
-                                      0, ncp->nciop->comm);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
-                    if (status == NC_NOERR) status = err;
-                }
-            }
-
-            /* Let root write the entire header to the file. Note that we
-             * cannot just update the attribute in its space occupied in the
-             * file header, because if the file space occupied by the attribute
-             * shrinks, all the metadata following it must be moved ahead.
-             */
-            err = ncmpii_write_header(ncp);
-            return (status == NC_NOERR) ? err : status;
         }
-        /* else, redefine using existing array slot */
-        old = ncap->value[indx];
     }
-    else { /* name never been used */
-        /* creating new attributes must be done in define mode */
-        if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+    else { /* attribute does not exit in ncid_out */
+        attrp = ncmpii_new_NC_attr(name, xtype, nelems);
+        if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-        if (ncap->ndefined >= NC_MAX_ATTRS)
-            DEBUG_RETURN_ERROR(NC_EMAXATTS)
+        err = incr_NC_attrarray(ncap, attrp);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
     }
-
-    /* create a new attribute object */
-    attrp = ncmpii_new_NC_attr(name, xtype, nelems);
-    if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     if (nelems != 0) { /* non-zero length attribute */
         /* using xp below to prevent change the pointer attr->xvalue, as
@@ -1164,17 +1246,14 @@ ncmpi_put_att_$1(int         ncid,
 */
     }
 
-    if (indx >= 0) { /* modify the existing attribute */
-        assert(old != NULL);
-        ncap->value[indx] = attrp;
-        ncmpii_free_NC_attr(old);
-    }
-    else { /* creating a new attribute */
-        err = incr_NC_attrarray(ncap, attrp);
-        if (err != NC_NOERR) {
-            ncmpii_free_NC_attr(attrp);
-            return err;
-        }
+    if (!NC_indef(ncp)) { /* called in data mode */
+        /* Let root write the entire header to the file. Note that we
+         * cannot just update the variable name in its space occupied in
+         * the file header, because if the file space occupied by the name
+         * shrinks, all the metadata following it must be moved ahead.
+         */
+        err = ncmpii_write_header(ncp); /* update file header */
+        if (status == NC_NOERR) status = err;
     }
 
     return status;
@@ -1186,9 +1265,12 @@ foreach(`itype', (text,schar,uchar,short,ushort,int,uint,long,float,double,longl
 ')
 
 /*----< ncmpi_put_att() >-----------------------------------------------------*/
-/* This is a collective subroutine */
-/* This API assumes user buffer data type matches the external type defined
- * in file */
+/* This is a collective subroutine, all arguments should be consistent among
+ * all processes.
+ *
+ * This API assumes user buffer data type matches the external type defined
+ * in file
+ */
 int
 ncmpi_put_att(int         ncid,
               int         varid,
