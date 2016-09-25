@@ -308,6 +308,8 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
 
     if (ncap->ndefined == 0) return -1; /* none created yet */
 
+    if (uname == NULL || *uname == 0) return -1;
+
     name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
     nchars = strlen(name);
 
@@ -324,14 +326,15 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
 }
 
 
+/*----< NC_lookupattr() >----------------------------------------------------*/
 /*
- * Look up by ncid, varid and name, return NULL if not found
+ * Look up by ncid, varid and name
  */
 static int
-NC_lookupattr(int ncid,
-    int varid,
-    const char *name, /* attribute name */
-    NC_attr **attrpp) /* modified on return */
+NC_lookupattr(int          ncid,
+              int          varid,
+              const char  *name,   /* attribute name */
+              NC_attr    **attrpp) /* modified on return */
 {
     int indx, err;
     NC *ncp;
@@ -341,12 +344,14 @@ NC_lookupattr(int ncid,
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     ncap = NC_attrarray0(ncp, varid);
-    if(ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if(indx == -1) DEBUG_RETURN_ERROR(NC_ENOTATT)
+    if (indx == -1) DEBUG_RETURN_ERROR(NC_ENOTATT)
 
-    if(attrpp != NULL)
+    if (attrpp != NULL)
         *attrpp = ncap->value[indx];
 
     return NC_NOERR;
@@ -360,7 +365,7 @@ int
 ncmpi_inq_attname(int   ncid,
                   int   varid,
                   int   attid,
-                  char *name)
+                  char *name)   /* out */
 {
     int err;
     NC *ncp;
@@ -376,8 +381,9 @@ ncmpi_inq_attname(int   ncid,
     attrp = elem_NC_attrarray(ncap, attid);
     if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOTATT)
 
+    if (name == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
+
     /* in PnetCDF, name->cp is always NULL character terminated */
-    assert(name != NULL);
     strcpy(name, attrp->name->cp);
 
     return NC_NOERR;
@@ -390,7 +396,7 @@ int
 ncmpi_inq_attid(int         ncid,
                 int         varid,
                 const char *name,
-                int        *attidp)
+                int        *attidp)  /* out */
 {
     int indx, err;
     NC *ncp;
@@ -401,6 +407,8 @@ ncmpi_inq_attid(int         ncid,
 
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
+
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx == -1) DEBUG_RETURN_ERROR(NC_ENOTATT)
@@ -422,6 +430,8 @@ ncmpi_inq_att(int         ncid,
 {
     int err;
     NC_attr *attrp;
+
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     err = NC_lookupattr(ncid, varid, name, &attrp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
@@ -497,6 +507,11 @@ ncmpi_rename_att(int         ncid,
         goto err_check;
     }
 
+    if (name == NULL || *name == 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
+
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx < 0) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTATT)
@@ -505,6 +520,11 @@ ncmpi_rename_att(int         ncid,
 
     attrp = ncap->value[indx];
     /* end inline clone NC_lookupattr() */
+
+    if (newname == NULL || *newname == 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
 
     if (ncmpii_NC_findattr(ncap, newname) >= 0) {
         /* name in use */
@@ -528,16 +548,33 @@ ncmpi_rename_att(int         ncid,
 err_check:
     if (ncp->safe_mode) {
         int mpireturn;
-        
-        /* check if newname is consistent among all processes */
         char root_name[NC_MAX_NAME];
-        assert(strlen(name) < NC_MAX_NAME);
-        strcpy(root_name, newname);
+        
+        /* check if name is consistent among all processes */
+        if (name == NULL || *name == 0)
+            root_name[0] = 0;
+        else {
+            assert(strlen(name) < NC_MAX_NAME);
+            strcpy(root_name, name);
+        }
+        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);         
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && strcmp(root_name, name))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* check if newname is consistent among all processes */
+        if (newname == NULL || *newname == 0)
+            root_name[0] = 0;
+        else {
+            assert(strlen(newname) < NC_MAX_NAME);
+            strcpy(root_name, newname);
+        }
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);         
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         if (err == NC_NOERR && strcmp(root_name, newname))
-            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
 
         /* find min error code across processes */ 
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);  
@@ -551,6 +588,8 @@ err_check:
         if (newStr != NULL) ncmpii_free_NC_string(newStr);
         return status;
     }   
+
+    assert(attrp != NULL);
 
     /* replace the old name with new name */
     ncmpii_free_NC_string(attrp->name);
@@ -616,6 +655,11 @@ ncmpi_copy_att(int         ncid_in,
         goto err_check;
     }
 
+    if (name == NULL || *name == 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
+
     indx = ncmpii_NC_findattr(ncap, name);
 
     if (indx >= 0) { /* name in use in ncid_out */
@@ -641,11 +685,15 @@ ncmpi_copy_att(int         ncid_in,
 err_check:
     if (ncp->safe_mode) {
         int mpireturn;
+        char root_name[NC_MAX_NAME];
 
         /* check if name is consistent among all processes */
-        char root_name[NC_MAX_NAME];
-        assert(strlen(name) < NC_MAX_NAME);
-        strcpy(root_name, name);
+        if (name == NULL || *name == 0)
+            root_name[0] = 0;
+        else {
+            assert(strlen(name) < NC_MAX_NAME);
+            strcpy(root_name, name);
+        }
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
@@ -662,9 +710,11 @@ err_check:
 
     if (status != NC_NOERR) return status;
 
+    assert(ncap != NULL);
+
     if (indx >= 0) { /* name in use in ncid_out */
         /* reuse existing attribute array slot without redef */
-        attrp = ncap->value[indx];
+        /* attrp = ncap->value[indx]; */
 
         if (iattrp->xsz > attrp->xsz) {
             /* Note the whole attribute object is allocated as one contiguous
@@ -730,6 +780,11 @@ ncmpi_del_att(int         ncid,
         goto err_check;
     }
 
+    if (name == NULL || *name == 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
+
     attrid = ncmpii_NC_findattr(ncap, name);
     if (attrid == -1) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTATT)
@@ -750,11 +805,15 @@ ncmpi_del_att(int         ncid,
 err_check:
     if (ncp->safe_mode) {
         int mpireturn;
+        char root_name[NC_MAX_NAME];
 
         /* check if name is consistent among all processes */
-        char root_name[NC_MAX_NAME];
-        assert(strlen(name) < NC_MAX_NAME);
-        strcpy(root_name, name);
+        if (name == NULL || *name == 0)
+            root_name[0] = 0;
+        else {
+            assert(strlen(name) < NC_MAX_NAME);
+            strcpy(root_name, name);
+        }
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
@@ -772,6 +831,7 @@ err_check:
     if (status != NC_NOERR) return status;
 
     /* delete attribute */
+    assert(ncap != NULL);
     ncmpii_free_NC_attr(ncap->value[attrid]);
 
     /* shuffle down */
@@ -839,8 +899,9 @@ ncmpi_get_att_text(int ncid, int varid, const char *name, char *buf)
     if (attrp->nelems == 0) return NC_NOERR;
 
     /* No character conversions are allowed. */
-    if (attrp->type != NC_CHAR)
-        DEBUG_RETURN_ERROR(NC_ECHAR)
+    if (attrp->type != NC_CHAR) DEBUG_RETURN_ERROR(NC_ECHAR)
+
+    if (buf == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     xp = attrp->xvalue;
     return ncmpix_pad_getn_text(&xp, attrp->nelems, (char*)buf);
@@ -871,8 +932,9 @@ ncmpi_get_att_$1(int ncid, int varid, const char *name, FUNC2ITYPE($1) *buf)
     if (attrp->nelems == 0) return NC_NOERR;
 
     /* No character conversions are allowed. */
-    if (attrp->type == NC_CHAR)
-        DEBUG_RETURN_ERROR(NC_ECHAR)
+    if (attrp->type == NC_CHAR) DEBUG_RETURN_ERROR(NC_ECHAR)
+
+    if (buf == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     xp = attrp->xvalue;
 
@@ -1005,8 +1067,8 @@ ncmpi_put_att_$1(int         ncid,
                  MPI_Offset  nelems,   /* number of elements in buf */
                  const FUNC2ITYPE($1) *buf) /* user write buffer */
 {
-    int indx, err, status=NC_NOERR;
-    MPI_Offset xsz;
+    int indx=0, err, status=NC_NOERR;
+    MPI_Offset xsz=0;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp;
@@ -1107,11 +1169,15 @@ ncmpi_put_att_$1(int         ncid,
         goto err_check;
     }
 
+    if (name == NULL || *name == 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
+
     /* check whether attribute already exists */
     indx = ncmpii_NC_findattr(ncap, name);
 
     if (indx >= 0) { /* name in use */
-        const MPI_Offset xsz = ncmpix_len_NC_attrV(xtype, nelems);
         /* xsz is the total size of this attribute */
 
         attrp = ncap->value[indx]; /* convenience */
@@ -1138,12 +1204,17 @@ err_check:
         int rank, mpireturn;
         char root_name[NC_MAX_NAME];
         MPI_Offset root_nelems;
+        size_t buf_size;
         void *root_buf;
         ifelse(`$1',`text',,`int root_xtype;')
 
         /* check if name is consistent among all processes */
-        assert(strlen(name) < NC_MAX_NAME);
-        strcpy(root_name, name);
+        if (name == NULL || *name == 0)
+            root_name[0] = 0;
+        else {
+            assert(strlen(name) < NC_MAX_NAME);
+            strcpy(root_name, name);
+        }
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
@@ -1165,18 +1236,18 @@ err_check:
         if (err == NC_NOERR && root_xtype != xtype)
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_TYPE)')
 
-        /* check if buf is consistent across all processes */
+        /* check if buf contents is consistent across all processes */
+        /* note xsz is aligned, thus must use the exact size of buf */
+        buf_size = nelems * sizeof(FUNC2ITYPE($1));
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-        if (rank > 0) {
-            root_buf = (void*) NCI_Malloc((size_t)xsz);
-            memcpy(root_buf, buf, (size_t)xsz);
-        }
+        if (rank > 0)
+            root_buf = (void*) NCI_Malloc(buf_size);
         else
             root_buf = (void*)buf;
-        TRACE_COMM(MPI_Bcast)(&root_buf, xsz, MPI_BYTE, 0, ncp->nciop->comm);
+        TRACE_COMM(MPI_Bcast)(root_buf, buf_size, MPI_BYTE, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-        if (err == NC_NOERR && memcmp(root_buf, buf, xsz))
+        if (err == NC_NOERR && memcmp(root_buf, buf, buf_size))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
         if (rank > 0) NCI_Free(root_buf);
 
@@ -1190,8 +1261,10 @@ err_check:
 
     if (status != NC_NOERR) return status;
 
+    assert(ncap != NULL);
+
     if (indx >= 0) { /* name in use */
-        attrp = ncap->value[indx]; /* convenience */
+        /* attrp = ncap->value[indx]; */
 
         if (xsz > attrp->xsz) { /* new attribute requires a larger space */
             /* Note the whole attribute object is allocated as one contiguous
@@ -1216,7 +1289,7 @@ err_check:
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
     }
 
-    if (nelems != 0) { /* non-zero length attribute */
+    if (nelems != 0 && buf != NULL) { /* non-zero length attribute */
         /* using xp below to prevent change the pointer attr->xvalue, as
          * ncmpix_pad_putn_<type>() advances the first argument with nelems
          * elements
