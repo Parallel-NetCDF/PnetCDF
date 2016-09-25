@@ -67,7 +67,7 @@
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error: %s a5 line %d (%s)\n", __FILE__,__LINE__,ncmpi_strerror(err)); } }
+        printf("Error: %s at line %d (%s)\n", __FILE__,__LINE__,ncmpi_strerror(err)); } }
 
 
 int

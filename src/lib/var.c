@@ -490,7 +490,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 
     if (ncap->ndefined == 0) return NC_ENOTVAR;
 
-    if (strlen(uname) == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+    if (uname == NULL || *uname == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
 
     /* normalized version of uname */
     name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)uname);
@@ -756,6 +756,7 @@ ncmpi_def_var(int         ncid,
     err = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
     if (err != NC_NOERR) {
         ncmpii_free_NC_var(varp);
+        varp = NULL;
         DEBUG_TRACE_ERROR
         goto err_check;
     }
@@ -764,6 +765,7 @@ ncmpi_def_var(int         ncid,
     err = incr_NC_vararray(&ncp->vars, varp);
     if (err != NC_NOERR) {
         ncmpii_free_NC_var(varp);
+        varp = NULL;
         DEBUG_TRACE_ERROR
         goto err_check;
     }
