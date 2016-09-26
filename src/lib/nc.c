@@ -82,6 +82,7 @@ ncmpii_del_from_NCList(NC *ncp)
     ncp->prev = NULL;
 }
 
+#ifdef _CHECK_HEADER_IN_DETAIL
 /*----< NC_check_header() >--------------------------------------------------*/
 /*
  * Check the consistency of defined header metadata across all processes and
@@ -161,6 +162,7 @@ NC_check_header(NC         *ncp,
 
     return status;
 }
+#endif
 
 
 #if 0

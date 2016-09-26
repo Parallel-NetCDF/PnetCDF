@@ -46,6 +46,11 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Semantics updates
+    * Header data (defining dimensions, variables, and attributes) consistency
+      check is now moved to individual APIs and performed only when safe mode
+      is enabled. Consistency check is no longer performed in ncmpi_enddef. As
+      a reminder, PnetCDF APIs that change header data are all collective and
+      API arguments are required to be consistent among the calling processes.
     * In netCDF-3, whether the contents of an NC_BYTE variable are signed or
       unsigned is determined by the calling APIs. For signed APIs, NC_BYTE
       variables are signed. For unsigned APIs (i.e. _uchar APIs) they are
@@ -72,6 +77,8 @@ This is essentially a placeholder for the next release note ...
       is less than 8 bytes, support for CDF-2 and CDF-5 is disabled.
 
   o Bug fixes
+    * Fix some missing character string normalizations for names of attributes,
+      dimensions, and variables.
     * Fix the return unlimited dimension ID of value -1, not 0, by Fortran API
       nfmpi_inq_unlimdim when no unlimited dimension is defined. This conforms
       with netCDF convention. See r3296 and r1372
