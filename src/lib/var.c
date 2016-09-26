@@ -692,23 +692,29 @@ err_check:
         else
             strncpy(root_name, name, NC_MAX_NAME);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_NAME)
 
         /* check if type is consistent among all processes */
         nc_type root_type=type;
         TRACE_COMM(MPI_Bcast)(&root_type, 1, MPI_INT, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && root_type != type)
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_TYPE)
 
         /* check if ndims is consistent among all processes */
         TRACE_COMM(MPI_Bcast)(&root_ndims, 1, MPI_INT, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && root_ndims != ndims)
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_NDIMS)
 
@@ -720,8 +726,10 @@ err_check:
             else
                 memset(root_dimids, 0, root_ndims*sizeof(int));
             TRACE_COMM(MPI_Bcast)(root_dimids, root_ndims, MPI_INT, 0, ncp->nciop->comm);
-            if (mpireturn != MPI_SUCCESS)
+            if (mpireturn != MPI_SUCCESS) {
+                if (nname != NULL) free(nname);
                 return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+            }
             if (err == NC_NOERR && dimids != NULL &&
                 memcmp(root_dimids, dimids, root_ndims*sizeof(int)))
                 DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_DIMIDS)
@@ -729,8 +737,10 @@ err_check:
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+        }
         if (err == NC_NOERR) err = status;
     }
 
@@ -738,6 +748,8 @@ err_check:
         if (nname != NULL) free(nname);
         return err;
     }
+
+    assert(nname != NULL);
 
     /* create a new variable */
     err = ncmpii_new_NC_var(&ncp->vars, nname, type, ndims, dimids, &varp);
@@ -1091,6 +1103,7 @@ ncmpi_rename_var(int         ncid,
 #endif
 
 err_check:
+    if (nnewname != NULL) free(nnewname);
     if (ncp->safe_mode) {
         int status, mpireturn;
         char root_name[NC_MAX_NAME];
@@ -1112,7 +1125,6 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
         if (err == NC_NOERR) err = status;
     }
-    if (nnewname != NULL) free(nnewname);
 
     if (err != NC_NOERR) {
         if (newStr != NULL) ncmpii_free_NC_string(newStr);

@@ -564,6 +564,8 @@ ncmpi_rename_att(int         ncid,
     }
 
 err_check:
+    if (nnewname != NULL) free(nnewname);
+
     if (ncp->safe_mode) {
         int status, mpireturn;
         char root_name[NC_MAX_NAME];
@@ -596,8 +598,6 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
         if (err == NC_NOERR) err = status;
     }
-
-    if (nnewname != NULL) free(nnewname);
 
     if (err != NC_NOERR) {
         if (newStr != NULL) ncmpii_free_NC_string(newStr);
@@ -714,20 +714,27 @@ err_check:
         else
             strncpy(root_name, name, NC_MAX_NAME);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+        }
 
         if (err == NC_NOERR) err = status;
     }
 
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        if (nname != NULL) free(nname);
+        return err;
+    }
     assert(ncap != NULL);
     assert(nname != NULL);
 
@@ -741,10 +748,12 @@ err_check:
              */
             ncmpii_free_NC_attr(attrp);
             attrp = ncmpii_new_NC_attr(nname, iattrp->type, iattrp->nelems);
+            free(nname);
             if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
             ncap->value[indx] = attrp;
         }
         else {
+            free(nname);
             attrp->xsz    = iattrp->xsz;
             attrp->type   = iattrp->type;
             attrp->nelems = iattrp->nelems;
@@ -752,6 +761,7 @@ err_check:
     }
     else { /* attribute does not exit in ncid_out */
         attrp = ncmpii_new_NC_attr(nname, iattrp->type, iattrp->nelems);
+        free(nname);
         if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         err = incr_NC_attrarray(ncap, attrp);
@@ -1263,23 +1273,29 @@ err_check:
         else
             strncpy(root_name, name, NC_MAX_NAME);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
 
         /* check if nelems is consistent across all processes */
         root_nelems = nelems;
         TRACE_COMM(MPI_Bcast)(&root_nelems, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && root_nelems != nelems)
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_LEN)
 
         ifelse(`$1',`text', , `root_xtype = xtype;
         TRACE_COMM(MPI_Bcast)(&root_xtype, 1, MPI_INT, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && root_xtype != xtype)
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_TYPE)')
 
@@ -1292,16 +1308,20 @@ err_check:
         else
             root_buf = (void*)buf;
         TRACE_COMM(MPI_Bcast)(root_buf, buf_size, MPI_BYTE, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && (root_nelems != nelems || memcmp(root_buf, buf, buf_size)))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
         if (rank > 0) NCI_Free(root_buf);
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+        }
 
         if (err == NC_NOERR) err = status;
     }
@@ -1324,6 +1344,7 @@ err_check:
             ncap->value[indx] = attrp;
         }
         else {
+            free(nname);
             attrp->xsz    = xsz;
             attrp->type   = xtype;
             attrp->nelems = nelems;

@@ -480,14 +480,15 @@ err_check:
     }
 
     if (err != NC_NOERR) {
-        if (dimp != NULL) ncmpii_free_NC_dim(dimp);
         if (nname != NULL) free(nname);
         return err;
     }
 
+    assert(nname != NULL);
+
     /* create a new dimension object */
     err = ncmpii_new_NC_dim(&ncp->dims, nname, size, &dimp);
-    if (nname != NULL) free(nname);
+    free(nname);
     if (err != NC_NOERR) {
         if (dimp != NULL) ncmpii_free_NC_dim(dimp);
         DEBUG_RETURN_ERROR(err)
@@ -674,6 +675,8 @@ ncmpi_rename_dim(int         ncid,
 #endif
 
 err_check:
+    if (nnewname != NULL) free(nnewname);
+
     if (ncp->safe_mode) {
         int status, mpireturn;
         char root_name[NC_MAX_NAME];
@@ -695,8 +698,6 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
         if (err == NC_NOERR) err = status;
     }
-
-    if (nnewname != NULL) free(nnewname);
 
     if (err != NC_NOERR) {
         if (newStr != NULL) ncmpii_free_NC_string(newStr);
