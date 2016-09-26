@@ -1326,7 +1326,10 @@ err_check:
         if (err == NC_NOERR) err = status;
     }
 
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        if (nname != NULL) free(nname);
+        return err;
+    }
     assert(ncap != NULL);
     assert(nname != NULL);
 
