@@ -101,7 +101,7 @@
               nerrs = nerrs + 1
               ! Note: even with an error, the attribute is still being created
               ! in this case, valgrind complains about uninitialised buffer at
-              ! nfmpi_enddef
+              ! nfmpi_enddef when writing header to file.
           endif
 
           err = nfmpi_put_att_int8(ncid, NF_GLOBAL, "attr3", NF_INT,
@@ -112,7 +112,7 @@
               nerrs = nerrs + 1
               ! Note: even with an error, the attribute is still being created
               ! in this case, valgrind complains about uninitialised buffer at
-              ! nfmpi_enddef
+              ! nfmpi_enddef when writing header to file.
           endif
 
           buf_int = 2147483647
@@ -122,7 +122,9 @@
 
           ! Because of the NF_ERANGE error, the attributes may become
           ! inconsistent among processes, So NC_EMULTIDEFINE_ATTR_VAL
-          ! or NF_EMULTIDEFINE may be returned from nfmpi_enddef.
+          ! or NF_EMULTIDEFINE may be returned from nfmpi_enddef (1.7.0
+          ! and before), or nfmpi_put_att_xxx (after 1.7.0 when in safe
+          ! mode).
           ! While in safe mode, the warning message of inconsistent metadata
           ! may appear on the screen. This is expected.
           ! In addition, when running under valgrind, NF_ERANGE can
