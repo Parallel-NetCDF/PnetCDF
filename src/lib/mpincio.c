@@ -179,7 +179,9 @@ ncmpiio_create(MPI_Comm     comm,
 
     MPI_Comm_rank(comm, &rank);
 
-    /* NC_CLOBBER is the default mode, even if it is not used in cmode */
+    /* NC_CLOBBER is the default mode, even if it is not used in cmode.
+     * Note ioflags has been checked for consistency before entering this API.
+     */
     if (fIsSet(ioflags, NC_NOCLOBBER)) {
         /* check if file exists: NetCDF requires NC_EEXIST returned if the file
          * already exists and NC_NOCLOBBER mode is used in create
@@ -298,7 +300,9 @@ ncmpiio_create(MPI_Comm     comm,
         return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
 
     /* get the file info actually used by MPI-IO (maybe alter user's info) */
-    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
+    mpireturn = MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_File_get_info");
 
     ncp->nciop = nciop;
     return NC_NOERR;
@@ -315,6 +319,9 @@ ncmpiio_open(MPI_Comm     comm,
     ncio *nciop;
     int i, mpireturn;
     int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
+
+    /* Note ioflags has been checked for consistency before entering this API.
+     */
 
     assert(ncp != NULL);
 
@@ -373,7 +380,9 @@ ncmpiio_open(MPI_Comm     comm,
         return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
 
     /* get the file info used by MPI-IO */
-    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
+    mpireturn = MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_File_get_info");
 
     ncp->nciop = nciop;
     return NC_NOERR;

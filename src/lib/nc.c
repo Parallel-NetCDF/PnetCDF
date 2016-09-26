@@ -766,7 +766,7 @@ static int
 write_NC(NC *ncp)
 {
     void *buf;
-    int status, mpireturn, err, max_err, rank;
+    int status, mpireturn, err, rank;
     MPI_Offset local_xsz;
 
     assert(!NC_readonly(ncp));
@@ -791,6 +791,46 @@ write_NC(NC *ncp)
         return status;
     }
 
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
+
+#ifdef _DIFF_HEADER
+    if (ncp->safe_mode == 0) {
+        int h_size=(int)ncp->xsz;
+        void *root_header;
+
+        /* check header against root's */
+        if (rank == 0)
+            root_header = buf;
+        else
+            root_header = (void*) NCI_Malloc((size_t)h_size);
+
+        TRACE_COMM(MPI_Bcast)(root_header, h_size, MPI_BYTE, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+
+        if (rank > 0) {
+            if (h_size != local_xsz || memcmp(buf, root_buf, h_size))
+                status = NC_EMULTIDEFINE;
+            NCI_Free(root_buf);
+        }
+
+        /* report error if header is inconsistency */
+        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn,"MPI_Allreduce");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
+        if (err != NC_NOERR) {
+            /* TODO: this error return is harsh. Maybe relax for inconsistent
+             * attribute contents? */
+            if (status == NC_NOERR) status = err;
+            NCI_Free(buf);
+            return status;
+        }
+    }
+#endif
+
+#ifdef _CHECK_HEADER_IN_DETAIL
     /* check the header consistency across all processes and sync header.
      * When safe_mode is on:
      *   The returned status on root can be either NC_NOERR (all headers are
@@ -803,6 +843,7 @@ write_NC(NC *ncp)
      *   error (>-250), or inconsistency error (-250 to -269).
      * For fatal error, we should stop. For others, we can continue.
      */
+    int max_err;
     status = NC_check_header(ncp, buf, local_xsz);
 
     /* check for fatal error */
@@ -817,16 +858,15 @@ write_NC(NC *ncp)
             DEBUG_RETURN_ERROR(NC_EMPI)
         }
     }
-
     if (max_err == 1) { /* some processes encounter a fatal error */
         NCI_Free(buf);
         return status;
     }
+#endif
     /* For non-fatal error, we continue to write header to the file, as now the
      * header object in memory has been sync-ed across all processes. */
 
     /* only rank 0's header gets written to the file */
-    MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0) {
         /* rank 0's fileview already includes the file header */
         MPI_Status mpistatus;
