@@ -292,7 +292,7 @@ NC_new_string(count, str)
  */
 NC_string *
 ncmpii_new_NC_string(size_t      slen,
-                     const char *str)
+                     const char *str)  /* must be already normalized */
 {
     /* str may not be NULL terminated */
     NC_string *ncstrp;
