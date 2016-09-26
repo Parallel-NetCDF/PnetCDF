@@ -2318,6 +2318,10 @@ ncmpii_comp_vars(int          safe_mode,
  * header object, ncp, with root's header if any inconsistency is detected.
  * This function is called independently and should not contain any MPI
  * communication calls.
+ *
+ * Possible error codes returned:
+ * NC_ENOTNC3, NC_ENOTNC, NC_ESMALL, and all inconsistency errors
+ * NC_EMULTIDEFINE_XXX
  */
 int
 ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
