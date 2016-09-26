@@ -499,7 +499,7 @@ I/O buffer. In particular, when a new file is created and PnetCDF fixed-sized
 variable alignment is enabled, the read in read-modify-write may read no data
 at all, resulting data sieving buffer containing uninitialized data. To
 eliminate this possibility, set the hint environment variable to disable
-alognment, e.g. PNETCDF_HINTS="nc_var_align_size=1".
+alognment, e.g. PNETCDF_HINTS="nc_var_align_size=1;nc_header_align_size=1".
 
 ==============================================================================
 Note on using clang and gprof together
