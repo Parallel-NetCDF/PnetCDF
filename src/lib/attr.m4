@@ -567,7 +567,7 @@ err_check:
     if (nnewname != NULL) free(nnewname);
 
     if (ncp->safe_mode) {
-        int status, mpireturn;
+        int root_varid, status, mpireturn;
         char root_name[NC_MAX_NAME];
         
         /* check if name is consistent among all processes */
@@ -591,6 +591,14 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         if (err == NC_NOERR && strcmp(root_name, newname))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* check if varid is consistent across all processes */
+        root_varid = varid;
+        TRACE_COMM(MPI_Bcast)(&root_varid, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_varid != varid)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* find min error code across processes */ 
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);  
@@ -705,7 +713,7 @@ ncmpi_copy_att(int         ncid_in,
 
 err_check:
     if (ncp->safe_mode) {
-        int status, mpireturn;
+        int root_ids[3], status, mpireturn;
         char root_name[NC_MAX_NAME];
 
         /* check if name is consistent among all processes */
@@ -720,6 +728,20 @@ err_check:
         }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* check if varid_in, ncid_out, varid_out, are consistent across all
+         * processes */
+        root_ids[0] = varid_in;
+        root_ids[1] = ncid_out;
+        root_ids[2] = varid_out;
+        TRACE_COMM(MPI_Bcast)(&root_ids, 3, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
+        if (err == NC_NOERR && (root_ids[0] != varid_in ||
+            root_ids[1] != ncid_out || root_ids[2] != varid_out))
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
@@ -842,7 +864,7 @@ ncmpi_del_att(int         ncid,
 
 err_check:
     if (ncp->safe_mode) {
-        int status, mpireturn;
+        int root_varid, status, mpireturn;
         char root_name[NC_MAX_NAME];
 
         /* check if name is consistent among all processes */
@@ -855,6 +877,14 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* check if varid is consistent across all processes */
+        root_varid = varid;
+        TRACE_COMM(MPI_Bcast)(&root_varid, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_varid != varid)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
@@ -1260,7 +1290,7 @@ ncmpi_put_att_$1(int         ncid,
 
 err_check:
     if (ncp->safe_mode) { /* consistency check */
-        int rank, status, mpireturn;
+        int rank, root_varid, status, mpireturn;
         char root_name[NC_MAX_NAME];
         MPI_Offset root_nelems;
         size_t buf_size;
@@ -1279,6 +1309,16 @@ err_check:
         }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+
+        /* check if varid is consistent across all processes */
+        root_varid = varid;
+        TRACE_COMM(MPI_Bcast)(&root_varid, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
+        if (err == NC_NOERR && root_varid != varid)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* check if nelems is consistent across all processes */
         root_nelems = nelems;
