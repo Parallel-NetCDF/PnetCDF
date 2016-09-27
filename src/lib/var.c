@@ -671,7 +671,8 @@ ncmpi_def_var(int         ncid,
         goto err_check;
     }
 
-    /* check whether the variable name has been used */
+    /* check whether new name is already in use, for this API (def_var) the
+     * name should NOT already exist */
     err = ncmpii_NC_findvar(&ncp->vars, nname, NULL);
     if (err != NC_ENOTVAR) {
         DEBUG_ASSIGN_ERROR(err, NC_ENAMEINUSE)
@@ -1071,11 +1072,11 @@ ncmpi_rename_var(int         ncid,
         goto err_check;
     }
 
-    /* check whether new name is already in use */
+    /* check whether new name is already in use, for this API (rename) the
+     * name should NOT already exist */
     err = ncmpii_NC_findvar(&ncp->vars, nnewname, NULL);
     if (err != NC_ENOTVAR) {
-        if (err == NC_NOERR) DEBUG_ASSIGN_ERROR(err, NC_ENAMEINUSE)
-        else                 DEBUG_TRACE_ERROR
+        DEBUG_ASSIGN_ERROR(err, NC_ENAMEINUSE)
         goto err_check;
     }
 
