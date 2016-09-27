@@ -683,9 +683,8 @@ ncmpi_def_var(int         ncid,
 
 err_check:
     if (ncp->safe_mode) {
-        int status, mpireturn;
+        int root_ndims, status, mpireturn;
         char root_name[NC_MAX_NAME];
-        int root_ndims=ndims;
 
         /* check if name is consistent among all processes */
         if (name == NULL || *name == 0)
@@ -711,6 +710,7 @@ err_check:
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_TYPE)
 
         /* check if ndims is consistent among all processes */
+        root_ndims=ndims;
         TRACE_COMM(MPI_Bcast)(&root_ndims, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);

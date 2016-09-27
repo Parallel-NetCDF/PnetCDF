@@ -406,36 +406,22 @@ ncmpi_def_var_fill(int   ncid,
 
 err_check:
     if (ncp->safe_mode) {
-        int root_varid, root_no_fill, root_fill_null, my_fill_null;
-        int status, mpireturn;
+        int root_ids[3], my_fill_null, status, mpireturn;
 
-        /* check if varid is consistent across all processes */
-        root_varid = varid;
-        TRACE_COMM(MPI_Bcast)(&root_varid, 1, MPI_INT, 0, ncp->nciop->comm);
+        /* check if varid, no_fill, fill_value, are consistent across all processes */
+        my_fill_null = (fill_value == NULL) ? 1 : 0;;
+        root_ids[0] = varid;
+        root_ids[1] = no_fill;
+        root_ids[2] = my_fill_null;
+        TRACE_COMM(MPI_Bcast)(&root_ids, 3, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-        if (err == NC_NOERR && root_varid != varid)
-            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
-
-        /* check if no_fill is consistent across all processes */
-        root_no_fill = no_fill;
-        TRACE_COMM(MPI_Bcast)(&root_no_fill, 1, MPI_INT, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-        if (err == NC_NOERR && root_no_fill != no_fill)
-            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
-
-        /* check fill_value, if NULL, is consistent across all processes */
-          my_fill_null = (fill_value == NULL) ? 1 : 0;;
-        root_fill_null = my_fill_null;
-        TRACE_COMM(MPI_Bcast)(&root_fill_null, 1, MPI_INT, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-        if (err == NC_NOERR && root_fill_null != my_fill_null)
+        if (err == NC_NOERR && (root_ids[0] != varid ||
+            root_ids[1] != no_fill || root_ids[2] != my_fill_null))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* check fill_value, if not NULL, is consistent among processes */
-        if (root_fill_null == 0) {
+        if (root_ids[2] == 0) {
             void *root_fill_value = NCI_Malloc((size_t)varp->xsz);
             memcpy(root_fill_value, fill_value, (size_t)varp->xsz);
             TRACE_COMM(MPI_Bcast)(root_fill_value, varp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
