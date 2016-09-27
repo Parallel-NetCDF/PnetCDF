@@ -229,26 +229,71 @@ ncmpi_fill_var_rec(int        ncid,
 
     /* check if ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
-    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
+    /* check file's write permission */
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
 
-    /* This must be called in data mode */
-    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)                                
-    /* must be called in collective data mode */
-    if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP)
+    /* must be called in data mode */
+    if (NC_indef(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINDEFINE)
+        goto err_check;
+    }
 
+    /* check whether variable ID is valid */
     err = ncmpii_NC_lookupvar(ncp, varid, &varp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
     /* error if this is not a record variable */
-    if (!IS_RECVAR(varp)) DEBUG_RETURN_ERROR(NC_ENOTRECVAR)
+    if (!IS_RECVAR(varp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTRECVAR)
+        goto err_check;
+    }
 
     /* check if _FillValue attribute is defined */
     indx = ncmpii_NC_findattr(&varp->attrs, _FillValue);
 
     /* error if the fill mode of this variable is not on */
-    if (varp->no_fill && indx == -1) DEBUG_RETURN_ERROR(NC_ENOTFILL)
+    if (varp->no_fill && indx == -1) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTFILL)
+        goto err_check;
+    }
+
+err_check:
+    if (ncp->safe_mode) { /* consistency check */
+        int root_varid, status, mpireturn;
+        MPI_Offset root_recno;
+
+        /* check if varid is consistent across all processes */
+        root_varid = varid;
+        TRACE_COMM(MPI_Bcast)(&root_varid, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_varid != varid)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
+
+        /* check if recno is consistent across all processes */
+        root_recno = recno;
+        TRACE_COMM(MPI_Bcast)(&root_recno, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_recno != recno)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+
+        if (err == NC_NOERR) err = status;
+    }
+    if (err != NC_NOERR) return err;
 
     return ncmpii_fill_var_rec(ncp, varp, recno);
 }
@@ -264,28 +309,43 @@ ncmpi_set_fill(int  ncid,
                int  fill_mode,
                int *old_fill_mode)
 {
-    int i, status=NC_NOERR, mpireturn, oldmode;
+    int i, err, mpireturn, oldmode;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    /* check whether ncid is valid */
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
-    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
+    /* check whether file's write permission */
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
 
     /* check if called in define mode */
-    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+    if (!NC_indef(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+        goto err_check;
+    }
 
+err_check:
     if (ncp->safe_mode) {
-        int root_fill_mode=fill_mode;
+        int status, root_fill_mode=fill_mode;
+
         TRACE_COMM(MPI_Bcast)(&root_fill_mode, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return  ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
-        if (fill_mode != root_fill_mode) {
+        if (err == NC_NOERR && fill_mode != root_fill_mode)
             /* dataset's fill mode is inconsistent with root's */
-            printf("Warning: fill mode set in %s() is inconsistent\n", __func__);
-            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_FILL_MODE)
-        }
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FILL_MODE)
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+        if (err == NC_NOERR) err = status;
     }
+    if (err != NC_NOERR) return err;
 
     oldmode = fIsSet(ncp->flags, NC_NOFILL) ? NC_NOFILL : NC_FILL;
 
@@ -306,7 +366,7 @@ ncmpi_set_fill(int  ncid,
      * call will check NC_dofill(ncp) and set their no_fill accordingly. See
      * ncmpi_def_var() */
 
-    return status;
+    return NC_NOERR;
 }
 
 /*----< ncmpi_def_var_fill() >------------------------------------------------*/
@@ -317,63 +377,85 @@ ncmpi_def_var_fill(int   ncid,
                    int   no_fill,    /* 1: no fill, 0: fill */
                    void *fill_value) /* when NULL, use default fill value */
 {
-    int err, status=NC_NOERR, mpireturn, free_fill_value=0;
+    int err;
     NC *ncp;
     NC_var *varp;
 
+    /* check whether ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
-    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
+    /* check whether file's write permission */
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
 
-    /* must be called in define mode */
-    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+    /* check if called in define mode */
+    if (!NC_indef(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+        goto err_check;
+    }
 
-    /* find the pointer to this variable's object */
+    /* check whether variable ID is valid */
     err = ncmpii_NC_lookupvar(ncp, varid, &varp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
 
+err_check:
     if (ncp->safe_mode) {
-        int root_no_fill=no_fill;
+        int root_varid, root_no_fill, root_fill_null, my_fill_null;
+        int status, mpireturn;
+
+        /* check if varid is consistent across all processes */
+        root_varid = varid;
+        TRACE_COMM(MPI_Bcast)(&root_varid, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_varid != varid)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
+
+        /* check if no_fill is consistent across all processes */
+        root_no_fill = no_fill;
         TRACE_COMM(MPI_Bcast)(&root_no_fill, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
-            return  ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_no_fill != no_fill)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
-        if (no_fill != root_no_fill) {
-            /* variable's fill mode is inconsistent with root's */
-            printf("Warning: variable (%s) fill mode (%d) set in %s() is inconsistent\n",
-                   varp->name->cp, no_fill, __func__);
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_FILL_MODE)
+        /* check fill_value, if NULL, is consistent across all processes */
+          my_fill_null = (fill_value == NULL) ? 1 : 0;;
+        root_fill_null = my_fill_null;
+        TRACE_COMM(MPI_Bcast)(&root_fill_null, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_fill_null != my_fill_null)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
+
+        /* check fill_value, if not NULL, is consistent among processes */
+        if (root_fill_null == 0) {
+            void *root_fill_value = NCI_Malloc((size_t)varp->xsz);
+            memcpy(root_fill_value, fill_value, (size_t)varp->xsz);
+            TRACE_COMM(MPI_Bcast)(root_fill_value, varp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+            if (err == NC_NOERR &&
+                memcmp(fill_value, root_fill_value, (size_t)varp->xsz))
+                /* variable's fill value is inconsistent with root's */
+                DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_FILL_VALUE)
+            NCI_Free(root_fill_value);
         }
 
-        /* check if fill_value is consistent among processes */
-        void *root_fill_value = NCI_Malloc((size_t)varp->xsz);
-        if (fill_value == NULL) {
-            /* user intends to use default fill value */
-            fill_value = NCI_Malloc((size_t)varp->xsz);
-            err = inq_default_fill_value(varp->type, fill_value);
-            if (err != NC_NOERR) {
-                NCI_Free(fill_value);
-                NCI_Free(root_fill_value);
-                return err;
-            }
-            free_fill_value=1;
-        }
-        memcpy(root_fill_value, fill_value, (size_t)varp->xsz);
-            
-        TRACE_COMM(MPI_Bcast)(root_fill_value, varp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
-        if (memcmp(fill_value, root_fill_value, (size_t)varp->xsz)) {
-            /* variable's fill value is inconsistent with root's */
-            printf("Warning: variable (%s) fill value set in %s() is inconsistent\n",
-                   varp->name->cp, __func__);
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_FILL_VALUE)
-        }
-        if (free_fill_value) {
-            NCI_Free(fill_value);
-            fill_value = NULL;
-        }
-        NCI_Free(root_fill_value);
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+
+        if (err == NC_NOERR) err = status;
     }
+    if (err != NC_NOERR) return err;
 
     if (no_fill)
         varp->no_fill = 1;
@@ -393,7 +475,7 @@ ncmpi_def_var_fill(int   ncid,
         if (err != NC_NOERR) return err;
     }
 
-    return status;
+    return NC_NOERR;
 }
 
 /*----< ncmpi_inq_var_fill() >-----------------------------------------------*/
