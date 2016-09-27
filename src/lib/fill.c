@@ -13,6 +13,7 @@
 #endif
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include <mpi.h>
 
@@ -225,7 +226,7 @@ ncmpi_fill_var_rec(int        ncid,
 {
     int     indx, err;
     NC     *ncp;
-    NC_var *varp;
+    NC_var *varp=NULL;
 
     /* check if ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
@@ -294,6 +295,8 @@ err_check:
         if (err == NC_NOERR) err = status;
     }
     if (err != NC_NOERR) return err;
+
+    assert(varp != NULL);
 
     return ncmpii_fill_var_rec(ncp, varp, recno);
 }
@@ -379,7 +382,7 @@ ncmpi_def_var_fill(int   ncid,
 {
     int err;
     NC *ncp;
-    NC_var *varp;
+    NC_var *varp=NULL;
 
     /* check whether ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
@@ -421,17 +424,17 @@ err_check:
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* check fill_value, if not NULL, is consistent among processes */
-        if (root_ids[2] == 0) {
-            void *root_fill_value = NCI_Malloc((size_t)varp->xsz);
-            memcpy(root_fill_value, fill_value, (size_t)varp->xsz);
-            TRACE_COMM(MPI_Bcast)(root_fill_value, varp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
+        if (varp!= NULL && root_ids[2] == 0) {
+            double root_fill_value; /* max nc_type space: 8 bytes */
+            if (fill_value != NULL)
+                memcpy(&root_fill_value, fill_value, (size_t)varp->xsz);
+            TRACE_COMM(MPI_Bcast)(&root_fill_value, varp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-            if (err == NC_NOERR &&
-                memcmp(fill_value, root_fill_value, (size_t)varp->xsz))
+            if (err == NC_NOERR && fill_value != NULL &&
+                memcmp(fill_value, &root_fill_value, (size_t)varp->xsz))
                 /* variable's fill value is inconsistent with root's */
                 DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_FILL_VALUE)
-            NCI_Free(root_fill_value);
         }
 
         /* find min error code across processes */
@@ -442,6 +445,8 @@ err_check:
         if (err == NC_NOERR) err = status;
     }
     if (err != NC_NOERR) return err;
+
+    assert(varp != NULL);
 
     if (no_fill)
         varp->no_fill = 1;
