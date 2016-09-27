@@ -617,21 +617,29 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         nrecs = NC_get_numrecs(old_ncp);
     }
 
+    noFill = (char*) NCI_Malloc(ncp->vars.ndefined - start_vid);
+    nVarsFill = 0;
+
+#ifdef _CHECK_FILL_MODE_CONSISTENCY
     /* Because fill mode is not part of file header, we must broadcast root's
      * variables' fill modes and overwrite local's if an inconsistency is found
      * Note ncp->vars.ndefined is already made consistent by this point.
      */
-    noFill = (char*) NCI_Malloc(ncp->vars.ndefined - start_vid);
     for (i=start_vid; i<ncp->vars.ndefined; i++)
         noFill[i-start_vid] = ncp->vars.value[i]->no_fill;
-
     TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid), MPI_BYTE, 0,
                           ncp->nciop->comm);
-    nVarsFill = 0;
-    for (i=start_vid; i<ncp->vars.ndefined; i++) { /* overwrite local's mode */
+    for (i=start_vid; i<ncp->vars.ndefined; i++) {
+        /* overwrite local's mode */
         ncp->vars.value[i]->no_fill = noFill[i-start_vid];
         if (!noFill[i-start_vid]) nVarsFill++;
     }
+#else
+    for (i=start_vid; i<ncp->vars.ndefined; i++) {
+        noFill[i-start_vid] = ncp->vars.value[i]->no_fill;
+        if (!noFill[i-start_vid]) nVarsFill++;
+    }
+#endif
     if (nVarsFill == 0) { /* no variables in fill mode */
         NCI_Free(noFill);
         return NC_NOERR;
