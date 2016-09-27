@@ -459,23 +459,29 @@ err_check:
         else
             strncpy(root_name, name, NC_MAX_NAME);
         TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
 
         /* check if sizes are consistent across all processes */
         root_size = size;
         TRACE_COMM(MPI_Bcast)(&root_size, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && root_size != size)
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_SIZE)
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+        }
         if (err == NC_NOERR) err = status;
     }
 
