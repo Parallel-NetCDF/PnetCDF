@@ -45,7 +45,7 @@
           include "mpif.h"
           include "pnetcdf.inc"
 
-          real                    buf_flt
+          real                    buf_flt, one_flt
           double precision        buf_dbl
           integer                 buf_int, XTRIM, cmode
           integer*2 buf_int2
@@ -60,6 +60,8 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
           one = 1
+          one_flt = 1.0
+
           ! take filename from command-line argument if there is any
           if (rank .EQ. 0) then
               filename = "testfile.nc"
@@ -92,6 +94,9 @@
               nerrs = nerrs + 1
               ! Note: even with an error, the attribute is still being created
           endif
+          err = nfmpi_put_att_real(ncid, NF_GLOBAL, "attr1", NF_INT,
+     +                             one, one_flt)
+          call check(err, 'In nfmpi_put_att_real: ', nerrs)
 
           err = nfmpi_put_att_double(ncid, NF_GLOBAL, "attr2", NF_INT,
      +                               one, buf_dbl)
@@ -103,6 +108,9 @@
               ! in this case, valgrind complains about uninitialised buffer at
               ! nfmpi_enddef when writing header to file.
           endif
+          err = nfmpi_put_att_real(ncid, NF_GLOBAL, "attr2", NF_INT,
+     +                             one, one_flt)
+          call check(err, 'In nfmpi_put_att_real: ', nerrs)
 
           err = nfmpi_put_att_int8(ncid, NF_GLOBAL, "attr3", NF_INT,
      +                             one, buf_int8)
@@ -114,6 +122,9 @@
               ! in this case, valgrind complains about uninitialised buffer at
               ! nfmpi_enddef when writing header to file.
           endif
+          err = nfmpi_put_att_int8(ncid, NF_GLOBAL, "attr3", NF_INT,
+     +                             one, one)
+          call check(err, 'In nfmpi_put_att_int8: ', nerrs)
 
           buf_int = 2147483647
           err = nfmpi_put_att_int(ncid, NF_GLOBAL, "attr4", NF_INT,
