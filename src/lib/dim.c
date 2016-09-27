@@ -678,7 +678,7 @@ err_check:
     if (nnewname != NULL) free(nnewname);
 
     if (ncp->safe_mode) {
-        int status, mpireturn;
+        int root_dimid, status, mpireturn;
         char root_name[NC_MAX_NAME];
 
         /* check if newname is consistent among all processes */
@@ -691,6 +691,14 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         if (err == NC_NOERR && strcmp(root_name, newname))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
+
+        /* check if dimid is consistent across all processes */
+        root_dimid = dimid;
+        TRACE_COMM(MPI_Bcast)(&root_dimid, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        if (err == NC_NOERR && root_dimid != dimid)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
