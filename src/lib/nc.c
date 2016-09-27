@@ -454,12 +454,27 @@ NC_begins(NC         *ncp,
 
     /* get the true header size (not header extent) */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
-    if (rank == 0) ncp->xsz = ncmpii_hdr_len_NC(ncp);
+    ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
-    /* only root's header size matters */
-    TRACE_COMM(MPI_Bcast)(&ncp->xsz, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+    if (ncp->safe_mode) { /* this consistency check is redundant as metadata is
+                             kept consistent at all time when safe mode is on */
+        int err, status;
+        MPI_Offset root_xsz = ncp->xsz;
+
+        /* only root's header size matters */
+        TRACE_COMM(MPI_Bcast)(&root_xsz, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+
+        err = NC_NOERR;
+        if (root_xsz != ncp->xsz) err = NC_EMULTIDEFINE;
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+        if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+    }
 
     /* This function is called in ncmpi_enddef(), which can happen either when
      * creating a new file or opening an existing file with metadata modified.
