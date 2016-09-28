@@ -668,6 +668,7 @@ ncmpi_open(MPI_Comm    comm,
 }
 
 /*----< ncmpi_inq_format() >-------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_format(int  ncid,
                  int *formatp) /* out */
@@ -696,6 +697,7 @@ ncmpi_inq_format(int  ncid,
 }
 
 /*----< ncmpi_inq_file_format() >--------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_file_format(char *filename,
                       int  *formatp) /* out */
@@ -772,6 +774,7 @@ ncmpi_inq_file_format(char *filename,
 }
 
 /*----< ncmpi_inq_file_info() >-----------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_file_info(int       ncid,
                     MPI_Info *info_used)
@@ -817,6 +820,7 @@ ncmpi_inq_file_info(int       ncid,
 }
 
 /*----< ncmpi_get_file_info() >-----------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_get_file_info(int       ncid,
                     MPI_Info *info_used)
@@ -825,6 +829,7 @@ ncmpi_get_file_info(int       ncid,
 }
 
 /*----< ncmpi_redef() >------------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_redef(int ncid) {
     int status;
@@ -838,7 +843,7 @@ ncmpi_redef(int ncid) {
     /* if open mode is inconsistent, then this return might cause parallel
      * program to hang */
 
-    /* cannot be in define mode */
+    /* cannot be in define mode, must enter from data mode */
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     /* sync all metadata, including numrecs, if changed in independent mode.
@@ -863,6 +868,7 @@ ncmpi_redef(int ncid) {
 }
 
 /*----< ncmpi_begin_indep_data() >-------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_begin_indep_data(int ncid)
 {
@@ -903,6 +909,7 @@ ncmpi_begin_indep_data(int ncid)
 }
 
 /*----< ncmpi_end_indep_data() >---------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_end_indep_data(int ncid) {
     int status;
@@ -962,6 +969,7 @@ ncmpii_end_indep_data(NC *ncp)
 }
 
 /*----< ncmpi_enddef() >-----------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_enddef(int ncid) {
     int status;
@@ -978,6 +986,7 @@ ncmpi_enddef(int ncid) {
 }
 
 /*----< ncmpi__enddef() >-----------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi__enddef(int        ncid,
               MPI_Offset h_minfree,
@@ -985,15 +994,43 @@ ncmpi__enddef(int        ncid,
               MPI_Offset v_minfree,
               MPI_Offset r_align)
 {
-    int status;
+    int err;
     NC *ncp;
 
     /* check if file ID ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (!NC_indef(ncp)) /* must currently in define mode */
         DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+
+    if (ncp->safe_mode) {
+        int status, mpireturn;
+        MPI_Offset root_args[4];
+
+        /* check if h_minfree, v_align, v_minfree, and r_align are consistent
+         * among all processes */
+        root_args[0] = h_minfree;
+        root_args[1] = v_align;
+        root_args[2] = v_minfree;
+        root_args[3] = r_align;
+        TRACE_COMM(MPI_Bcast)(&root_args, 4, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+
+        if (root_args[0] != h_minfree ||
+            root_args[1] != v_align   ||
+            root_args[2] != v_minfree ||
+            root_args[3] != r_align)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
+
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+
+        if (status != NC_NOERR) return status;
+    }
 
     return ncmpii__enddef(ncp, h_minfree, v_align, v_minfree, r_align);
 }
@@ -1132,6 +1169,7 @@ ncmpi_abort(int ncid) {
 }
 
 /*----< ncmpi_close() >------------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_close(int ncid) {
     int status = NC_NOERR;
@@ -1204,6 +1242,7 @@ ncmpii_check_mpifh(NC  *ncp,
 }
 
 /*----< ncmpi_inq_put_size() >------------------------------------------------*/
+/* This is an independent subroutine. */
 /* returns the amount of writes, in bytes, committed to file system so far */
 int
 ncmpi_inq_put_size(int         ncid,
@@ -1221,6 +1260,7 @@ ncmpi_inq_put_size(int         ncid,
 }
 
 /*----< ncmpi_inq_get_size() >------------------------------------------------*/
+/* This is an independent subroutine. */
 /* returns the amount of reads, in bytes, obtained from file system so far */
 int
 ncmpi_inq_get_size(int         ncid,
@@ -1238,7 +1278,8 @@ ncmpi_inq_get_size(int         ncid,
 }
 
 /*----< ncmpi_inq_striping() >------------------------------------------------*/
-/* return file (system) striping settings, striping size and count, if they are
+/* This is an independent subroutine.
+ * return file (system) striping settings, striping size and count, if they are
  * available from MPI-IO hint. Otherwise, 0s are returned.
  */
 int
@@ -1271,7 +1312,8 @@ ncmpi_inq_striping(int  ncid,
 }
 
 /*----< ncmpi_inq_malloc_size() >--------------------------------------------*/
-/* report the current aggregate size allocated by malloc, yet to be freed */
+/* This is an independent subroutine.
+ * report the current aggregate size allocated by malloc, yet to be freed */
 int ncmpi_inq_malloc_size(MPI_Offset *size)
 {
 #ifdef PNC_MALLOC_TRACE
@@ -1283,7 +1325,8 @@ int ncmpi_inq_malloc_size(MPI_Offset *size)
 }
 
 /*----< ncmpi_inq_malloc_max_size() >----------------------------------------*/
-/* get the max watermark ever researched by malloc (aggregated amount) */
+/* This is an independent subroutine.
+ * get the max watermark ever researched by malloc (aggregated amount) */
 int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 {
 #ifdef PNC_MALLOC_TRACE
@@ -1295,7 +1338,8 @@ int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 }
 
 /*----< ncmpi_inq_malloc_list() >--------------------------------------------*/
-/* walk the malloc tree and print yet-to-be-freed malloc residues */
+/* This is an independent subroutine.
+ * walk the malloc tree and print yet-to-be-freed malloc residues */
 int ncmpi_inq_malloc_list(void)
 {
 #ifdef PNC_MALLOC_TRACE
@@ -1307,6 +1351,7 @@ int ncmpi_inq_malloc_list(void)
 }
 
 /*----< ncmpi_inq_files_opened() >-------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_files_opened(int *num, int *ncids)
 {
@@ -1314,6 +1359,7 @@ ncmpi_inq_files_opened(int *num, int *ncids)
 }
 
 /*----< ncmpi_inq_recsize() >------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_recsize(int         ncid,
                   MPI_Offset *recsize)
@@ -1330,6 +1376,7 @@ ncmpi_inq_recsize(int         ncid,
 }
 
 /*----< ncmpi_inq_header_extent() >-------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_header_extent(int         ncid,
                         MPI_Offset *extent)
@@ -1346,6 +1393,7 @@ ncmpi_inq_header_extent(int         ncid,
 }
 
 /*----< ncmpi_inq_header_size() >---------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_header_size(int         ncid,
                       MPI_Offset *size)
