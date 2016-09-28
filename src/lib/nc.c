@@ -677,6 +677,9 @@ ncmpii_sync_numrecs(NC         *ncp,
     assert(!NC_readonly(ncp));
     assert(!NC_indef(ncp)); /* can only be called by APIs in data mode */
 
+    /* return now if there is no record variabled defined */
+    if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
+
     /* find the max new_numrecs among all processes
      * Note new_numrecs may be smaller than ncp->numrecs
      */

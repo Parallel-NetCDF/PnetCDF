@@ -1047,8 +1047,8 @@ ncmpi_sync_numrecs(int ncid) {
 }
 
 /*----< ncmpi_sync() >--------------------------------------------------------*/
-/* This API must be called collectively, no matter if it is in collective
- * or independent data mode.
+/* This API is a collective subroutine, and must be called in data mode, no
+ * matter if it is in collective or independent data mode.
  */
 int
 ncmpi_sync(int ncid) {
@@ -1058,6 +1058,7 @@ ncmpi_sync(int ncid) {
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
+    /* cannot be in define mode */
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     if (NC_readonly(ncp))
