@@ -134,8 +134,10 @@
                   sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F90 '//trim(cmd)//' for inquiring record size'
-          if (rank .eq. 0) call pass_fail(nerrs, msg)
+          if (rank .eq. 0) then
+              msg = '*** TESTING F90 '//trim(cmd)//' for inquiring record size'
+              call pass_fail(nerrs, msg)
+          endif
 
  999      call MPI_Finalize(ierr)
       end program main

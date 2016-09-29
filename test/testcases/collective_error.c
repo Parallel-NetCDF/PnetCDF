@@ -75,8 +75,10 @@ int main(int argc, char *argv[])
         start[0] = 2; /* illegal for a start > defined shape */
         count[0] = 0;
     }
-    else
+    else {
+        start[0] = 0;
         count[0] = 0;
+    }
 
     buf[0] = 1.0;
     buf[1] = 2.0;

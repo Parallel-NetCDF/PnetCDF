@@ -66,7 +66,7 @@ NC_start_count_stride_ck(const NC         *ncp,
     if (varp->ndims == 0) return NC_NOERR; /* 'scalar' variable */
 
     /* negative start[] is illegal */
-    if (start[0] < 0) DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+    if (start == NULL || start[0] < 0) DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 
     if (IS_RECVAR(varp)) {
         if (ncp->format < 5 && /* not CDF-5 */

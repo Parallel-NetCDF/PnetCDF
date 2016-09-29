@@ -180,8 +180,10 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
-      msg = '*** TESTING F90 '//trim(cmd)//' for nf90mpi_iput_var API'
-      if (rank .EQ. 0) call pass_fail(0, msg)
+      if (rank .EQ. 0) then
+          msg='*** TESTING F90 '//trim(cmd)//' for nf90mpi_iput_var API'
+          call pass_fail(0, msg)
+      endif
 
  999  call MPI_Finalize(ierr)
 
