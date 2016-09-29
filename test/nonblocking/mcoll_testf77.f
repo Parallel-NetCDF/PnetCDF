@@ -204,8 +204,10 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
-      msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for iput API'
-      if (rank .EQ. 0) call pass_fail(0, msg)
+      if (rank .EQ. 0) then
+          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for iput API'
+          call pass_fail(0, msg)
+      endif
 
  999  call MPI_Finalize  (ierr)
 

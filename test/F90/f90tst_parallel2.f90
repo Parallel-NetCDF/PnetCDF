@@ -155,8 +155,10 @@ program f90tst_parallel
   ! Close the file. 
   call handle_err(nf90mpi_close(ncid))
 
-  msg = '*** TESTING F90 '//trim(cmd)//' for strided access'
-  if (my_rank .eq. 0) call pass_fail(0, msg)
+  if (my_rank .eq. 0) then
+      msg = '*** TESTING F90 '//trim(cmd)//' for strided access'
+      call pass_fail(0, msg)
+  endif
 
  999 call MPI_Finalize(ierr)
 

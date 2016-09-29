@@ -384,8 +384,11 @@
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for vard API '
-          if (rank .eq. 0) call pass_fail(nerrs, msg)
+          if (rank .eq. 0) then
+              msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
+     +              ' for vard API '
+              call pass_fail(nerrs, msg)
+          endif
 
  999      call MPI_Finalize(ierr)
       end ! program main
