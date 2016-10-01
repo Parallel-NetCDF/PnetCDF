@@ -654,15 +654,74 @@ NC_begins(NC         *ncp,
 
 #define NC_NUMRECS_OFFSET 4
 
+/*----< ncmpii_write_numrecs() >-----------------------------------------------*/
+/* root process writes the new record number into file.
+ * This function is called by:
+ * 1. ncmpii_sync_numrecs
+ * 2. collective nonblocking wait API, if the new number of records is bigger
+ */
+int
+ncmpii_write_numrecs(NC         *ncp,
+                     MPI_Offset  new_numrecs)
+{
+    int rank, mpireturn, err;
+    MPI_File fh;
+
+    /* root process writes numrecs in file */
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
+    if (rank > 0) return NC_NOERR;
+
+    /* return now if there is no record variabled defined */
+    if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
+
+    fh = ncp->nciop->collective_fh;
+    if (NC_indep(ncp))
+        fh = ncp->nciop->independent_fh;
+
+    if (new_numrecs > ncp->numrecs || NC_ndirty(ncp)) {
+        int len;
+        char pos[8], *buf=pos;
+        MPI_Offset max_numrecs;
+        MPI_Status mpistatus;
+
+        max_numrecs = MAX(new_numrecs, ncp->numrecs);
+
+        if (ncp->format < 5) {
+            if (max_numrecs != (int)max_numrecs)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            len = X_SIZEOF_SIZE_T;
+            err = ncmpix_put_uint32((void**)&buf, (uint)max_numrecs);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        }
+        else {
+            len = X_SIZEOF_INT64;
+            err = ncmpix_put_uint64((void**)&buf, max_numrecs);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        }
+        /* ncmpix_put_xxx advances the 1st argument with size len */
+
+        /* root's file view always includes the entire file header */
+        TRACE_IO(MPI_File_write_at)(fh, NC_NUMRECS_OFFSET, (void*)pos, len,
+                                    MPI_BYTE, &mpistatus);
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            if (err == NC_EFILE) DEBUG_RETURN_ERROR(NC_EWRITE)
+        }
+        else {
+            ncp->nciop->put_size += len;
+        }
+    }
+    return NC_NOERR;
+}
+
 /*----< ncmpii_sync_numrecs() >-----------------------------------------------*/
 /* Synchronize the number of records in memory and write numrecs to file.
  * This function is called by:
  * 1. ncmpi_sync_numrecs(): by the user
  * 2. ncmpi_sync(): by the user
  * 3. ncmpii_end_indep_data(): exit from independent data mode
- * 4. all blocking collective put APIs (getput.m4) when writing record variable
- * 5. collective nonblocking wait API (ncmpii_wait_getput)
- * 6. ncmpii_close(): file close and currently in independent data mode
+ * 4. all blocking collective put APIs when writing record variables
+ * 5. ncmpii_close(): file close and currently in independent data mode
  *
  * This function is collective.
  */
@@ -670,8 +729,7 @@ int
 ncmpii_sync_numrecs(NC         *ncp,
                     MPI_Offset  new_numrecs)
 {
-    int rank, status=NC_NOERR, mpireturn, err;
-    MPI_File fh;
+    int status=NC_NOERR, mpireturn;
     MPI_Offset max_numrecs;
 
     assert(!NC_readonly(ncp));
@@ -688,62 +746,23 @@ ncmpii_sync_numrecs(NC         *ncp,
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
 
-    fh = ncp->nciop->collective_fh;
-    if (NC_indep(ncp))
-        fh = ncp->nciop->independent_fh;
-
-    /* root process writes numrecs in file */
-    MPI_Comm_rank(ncp->nciop->comm, &rank);
-    if (rank == 0 && /* Only root process writes to file header */
-        (max_numrecs > ncp->numrecs || NC_ndirty(ncp))) {
-         /* For collective data mode, we check max_numrecs against root's
-          * ncp->numrecs because root's numrecs has not been updated.
-          * For independent data mode, we check NC_ndirty bit, because root's
-          * numrecs may have been updated and in this case NC_ndirty bit has
-          * been set to dirty. */
-        int len;
-        char pos[8], *buf=pos;
-        MPI_Status mpistatus;
-
-        if (ncp->format < 5) {
-            if (max_numrecs != (int)max_numrecs)
-                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-            len = X_SIZEOF_SIZE_T;
-            err = ncmpix_put_uint32((void**)&buf, (uint)max_numrecs);
-            if (status == NC_NOERR) status = err;
-        }
-        else {
-            len = X_SIZEOF_INT64;
-            err = ncmpix_put_uint64((void**)&buf, max_numrecs);
-            if (status == NC_NOERR) status = err;
-        }
-        /* ncmpix_put_xxx advances the 1st argument with size len */
-
-        /* root's file view always includes the entire file header */
-
-        TRACE_IO(MPI_File_write_at)(fh, NC_NUMRECS_OFFSET, (void*)pos, len,
-                                    MPI_BYTE, &mpistatus);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (status == NC_NOERR && err == NC_EFILE)
-                DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
-        }
-        else {
-            ncp->nciop->put_size += len;
-        }
-    }
-    /* update numrecs in all processes's memory only if the new one is larger.
-     * Note new_numrecs may be smaller than ncp->numrecs
-     */
-    if (max_numrecs > ncp->numrecs) ncp->numrecs = max_numrecs;
+    /* root process writes max_numrecs to file */
+    status = ncmpii_write_numrecs(ncp, max_numrecs);
 
     if (ncp->safe_mode == 1) {
         /* broadcast root's status, because only root writes to the file */
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         /* root's write has failed, which is serious */
         if (root_status == NC_EWRITE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
     }
+
+    /* update numrecs in all processes's memory only if the new one is larger.
+     * Note new_numrecs may be smaller than ncp->numrecs
+     */
+    if (max_numrecs > ncp->numrecs) ncp->numrecs = max_numrecs;
 
     /* clear numrecs dirty bit */
     fClr(ncp->flags, NC_NDIRTY);
