@@ -31,8 +31,8 @@
 */
 
 /* Prototypes for functions used only in this file */
-static int ncmpii_wait_getput(NC *ncp, int num_reqs, NC_req *reqs,
-                              int rw_flag, int io_method);
+static int ncmpii_wait_getput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
+                              int io_method, MPI_Offset newnumrecs);
 
 static int ncmpii_mgetput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
                           int io_method);
@@ -770,6 +770,7 @@ ncmpii_wait(NC  *ncp,
     int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
     int first_non_null_get, first_non_null_put;
+    MPI_Offset newnumrecs=0;
     NC_req *put_list=NULL, *get_list=NULL;
 
     if (NC_indef(ncp)) { /* wait must be called in data mode */
@@ -910,14 +911,30 @@ ncmpii_wait(NC  *ncp,
         if (num_r_reqs == 0) NCI_Free(get_list);
     }
 
+    /* calculate new number of records:
+     * Need to update the number of records if new records have been created.
+     * For nonblocking APIs, there is no way for a process to know whether
+     * others write to a record variable or not. Hence, we must sync the
+     * number of records for write request.
+     * Because netCDF allows only one unlimited dimension, find the
+     * maximum number of records from all nonblocking write requests
+     */
+    newnumrecs = ncp->numrecs;
+    for (i=0; i<num_w_reqs; i++) {
+        if (!IS_RECVAR(put_list[i].varp)) continue; /* not a record var */
+        if (put_list[i].bnelems == 0) continue; /* 0-len or invalid request */
+        newnumrecs = MAX(newnumrecs, put_list[i].start[0] + put_list[i].count[0]);
+    }
+
 err_check:
     if (io_method == COLL_IO) {
         int mpireturn;
-        int io_req[3], do_io[3];  /* [0]: read [1]: write [2]: error */
+        MPI_Offset io_req[4], do_io[4];  /* [0]: read [1]: write [2]: error */
         io_req[0] = num_r_reqs;
         io_req[1] = num_w_reqs;
         io_req[2] = -err;   /* all NC errors are negative */
-        TRACE_COMM(MPI_Allreduce)(io_req, do_io, 3, MPI_INT, MPI_MAX,
+        io_req[3] = newnumrecs;
+        TRACE_COMM(MPI_Allreduce)(io_req, do_io, 4, MPI_OFFSET, MPI_MAX,
                                   ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
  	    return ncmpii_handle_error(mpireturn, "MPI_Allreduce"); 
@@ -927,8 +944,9 @@ err_check:
 
         /* if at least one process has a non-zero request, all processes must
          * participate the collective read/write */
-        do_read  = do_io[0];
-        do_write = do_io[1];
+        do_read    = do_io[0];
+        do_write   = do_io[1];
+        newnumrecs = do_io[3];
     }
     else {
         if (err != NC_NOERR) return err;
@@ -939,11 +957,11 @@ err_check:
     /* carry out writes and reads separately (writes first) */
     if (do_write > 0)
         err = ncmpii_wait_getput(ncp, num_w_reqs, put_list, WRITE_REQ,
-                                 io_method);
+                                 io_method, newnumrecs);
 
     if (do_read > 0)
         err = ncmpii_wait_getput(ncp, num_r_reqs, get_list, READ_REQ,
-                                 io_method);
+                                 io_method, newnumrecs);
 
     /* retain the first error status */
     if (status == NC_NOERR) status = err;
@@ -1871,11 +1889,12 @@ ncmpii_req_aggregation(NC     *ncp,
 
 /*----< ncmpii_wait_getput() >------------------------------------------------*/
 static int
-ncmpii_wait_getput(NC     *ncp,
-                   int     num_reqs,  /* # requests */
-                   NC_req *reqs,      /* array of requests */
-                   int     rw_flag,   /* WRITE_REQ or READ_REQ */
-                   int     io_method) /* COLL_IO or INDEP_IO */
+ncmpii_wait_getput(NC         *ncp,
+                   int         num_reqs,   /* # requests */
+                   NC_req     *reqs,       /* array of requests */
+                   int         rw_flag,    /* WRITE_REQ or READ_REQ */
+                   int         io_method,  /* COLL_IO or INDEP_IO */
+                   MPI_Offset  newnumrecs) /* new number of records */
 {
     int i, err, status=NC_NOERR, access_interleaved=0;
 
@@ -1919,32 +1938,18 @@ ncmpii_wait_getput(NC     *ncp,
 
     /* Update the number of records if new records have been created.
      * For nonblocking APIs, there is no way for a process to know whether
-     * others write to a record variable or not. Hence, we must sync the
-     * number of records for write request
+     * others write to a record variable or not. Note newnumrecs has been
+     * sync-ed and always >= ncp->numrecs.
      */
     if (rw_flag == WRITE_REQ) {
-        /* Because netCDF allows only one unlimited dimension, find the
-         * maximum number of records from all nonblocking requests and
-         * update newnumrecs once
-         */
-        MPI_Offset newnumrecs = ncp->numrecs;
-        for (i=0; i<num_reqs; i++) {
-            if (!IS_RECVAR(reqs[i].varp)) continue; /* not a record var */
-            if (reqs[i].bnelems == 0) continue; /* 0-len or invalid request */
-
-            newnumrecs = MAX(newnumrecs, reqs[i].start[0] + reqs[i].count[0]);
-        }
-
         if (io_method == COLL_IO) {
-            /* sync numrecs in memory and file. Note that even this process
-             * does not write to record variable, others might. Note in
-             * ncmpii_sync_numrecs(), new_numrecs is checked against
-             * ncp->numrecs and if NC_SHARE is set, MPI_File_sync() will
-             * be called.
-             */
-            err = ncmpii_sync_numrecs(ncp, newnumrecs);
-            if (status == NC_NOERR) status = err;
-            /* retain the first error if there is any */
+            if (newnumrecs > ncp->numrecs) {
+                /* update new record number in file */
+                err = ncmpii_write_numrecs(ncp, newnumrecs);
+                if (status == NC_NOERR) status = err;
+                /* retain the first error if there is any */
+                ncp->numrecs = newnumrecs;
+            }
         }
         else { /* INDEP_IO */
             if (ncp->numrecs < newnumrecs) {

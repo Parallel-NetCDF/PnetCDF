@@ -874,6 +874,8 @@ int ncmpii_get_offset(NC *ncp, NC_var *varp, const MPI_Offset starts[],
 
 int ncmpii_check_mpifh(NC* ncp, int collective);
 
+int ncmpii_write_numrecs(NC *ncp, MPI_Offset new_numrecs);
+
 int ncmpii_sync_numrecs(NC *ncp, MPI_Offset newnumrecs);
 
 int ncmpii_vars_create_filetype(NC* ncp, NC_var* varp,
