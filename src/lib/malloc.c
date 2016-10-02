@@ -187,7 +187,7 @@ void *NCI_Malloc_fn(size_t      size,
                     const char *func,
                     const char *filename)
 {
-#ifdef PNC_DEBUG
+#ifdef _DEBUG
     if (size == 0)
         fprintf(stderr, "Attempt to malloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
@@ -213,7 +213,7 @@ void *NCI_Calloc_fn(size_t      nelem,
                     const char *func,
                     const char *filename)
 {
-#ifdef PNC_DEBUG
+#ifdef _DEBUG
     if (nelem == 0 || elsize == 0)
         fprintf(stderr, "Attempt to calloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
@@ -239,7 +239,7 @@ void *NCI_Realloc_fn(void       *ptr,
                      const char *func,
                      const char *filename)
 {
-#ifdef PNC_DEBUG
+#ifdef _DEBUG
     if (size == 0)
         fprintf(stderr, "Attempt to realloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
@@ -267,7 +267,7 @@ void NCI_Free_fn(void       *ptr,
                  const char *func,
                  const char *filename)
 {
-#ifdef PNC_DEBUG
+#ifdef _DEBUG
     if (ptr == NULL)
 	fprintf(stderr, "Attempt to free null pointer in file %s, line %d\n", filename, lineno);
 #endif
