@@ -310,7 +310,7 @@ ncmpi_strerror(int err)
 int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
                         char *err_msg)       /* extra error message */
 {
-    int rank, errorclass, errorStringLen;
+    int errorclass, errorStringLen;
     char errorString[MPI_MAX_ERROR_STRING];
 
     /* check for specific error codes understood by PnetCDF */
@@ -365,11 +365,16 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
 
     /* other errors that currently have no corresponding PnetCDF error codes */
 
-    /* we report the world rank */
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
     if (err_msg == NULL) err_msg = "";
+#ifdef PNC_DEBUG
+    /* report the world rank */
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     printf("rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
+#else
+    printf("MPI error (%s) : %s\n", err_msg, errorString);
+#endif
 
     return NC_EFILE; /* other unknown file I/O error */
 }

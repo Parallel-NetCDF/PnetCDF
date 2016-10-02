@@ -187,7 +187,7 @@ void *NCI_Malloc_fn(size_t      size,
                     const char *func,
                     const char *filename)
 {
-#ifdef NC_DEBUG
+#ifdef PNC_DEBUG
     if (size == 0)
         fprintf(stderr, "Attempt to malloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
@@ -195,7 +195,9 @@ void *NCI_Malloc_fn(size_t      size,
     void *buf = malloc(size);
     if (!buf) {
 	fprintf(stderr, "malloc(%zd) failed in file %s, line %d\n", size, filename, lineno);
+#ifdef PNC_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
+#endif
     }
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, size, lineno, func, filename);
@@ -211,7 +213,7 @@ void *NCI_Calloc_fn(size_t      nelem,
                     const char *func,
                     const char *filename)
 {
-#ifdef NC_DEBUG
+#ifdef PNC_DEBUG
     if (nelem == 0 || elsize == 0)
         fprintf(stderr, "Attempt to calloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
@@ -219,7 +221,9 @@ void *NCI_Calloc_fn(size_t      nelem,
     void *buf =calloc(nelem, elsize);
     if (!buf) {
 	fprintf(stderr, "calloc(%zd, %zd) failed in file %s, line %d\n", nelem, elsize, filename, lineno);
+#ifdef PNC_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
+#endif
     }
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, nelem * elsize, lineno, func, filename);
@@ -235,7 +239,7 @@ void *NCI_Realloc_fn(void       *ptr,
                      const char *func,
                      const char *filename)
 {
-#ifdef NC_DEBUG
+#ifdef PNC_DEBUG
     if (size == 0)
         fprintf(stderr, "Attempt to realloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
@@ -246,7 +250,9 @@ void *NCI_Realloc_fn(void       *ptr,
     void *buf = (void *) realloc(ptr, size);
     if (!buf) {
 	fprintf(stderr, "realloc failed in file %s, line %d\n", filename, lineno);
+#ifdef PNC_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
+#endif
     }
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, size, lineno, func, filename);
@@ -261,7 +267,7 @@ void NCI_Free_fn(void       *ptr,
                  const char *func,
                  const char *filename)
 {
-#ifdef NC_DEBUG
+#ifdef PNC_DEBUG
     if (ptr == NULL)
 	fprintf(stderr, "Attempt to free null pointer in file %s, line %d\n", filename, lineno);
 #endif
