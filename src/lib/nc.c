@@ -43,7 +43,6 @@ static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
 static int move_data_r(NC *ncp, NC *old);
 static int move_vars_r(NC *ncp, NC *old);
 static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
-static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
 #endif
 
 /*----< ncmpii_add_to_NCList() >---------------------------------------------*/
@@ -289,42 +288,16 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
 /*----< ncmpi_set_default_format() >-----------------------------------------*/
 /* This function sets a default create file format.
  * Valid formats are NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, and NC_FORMAT_CDF5
- * This API is collective.
+ * This API is NOT collective, as there is no way to check against an MPI
+ * communicator. It should be called by all MPI processes that intend to
+ * create a file later. Consistency check will have to be done in other APIs.
  */
 int
 ncmpi_set_default_format(int format, int *old_formatp)
 {
-    int safe_mode=0, mpireturn, status=NC_NOERR;
-    char *env_str;
-
     /* Return existing format if desired. */
-    if (old_formatp)
+    if (old_formatp != NULL)
         *old_formatp = ncmpi_default_create_format;
-
-    env_str = getenv("PNETCDF_SAFE_MODE");
-    if (env_str != NULL) {
-        if (*env_str == '0') safe_mode = 0;
-        else                 safe_mode = 1;
-    }
-
-    if (safe_mode) {
-        /* check if format is consistent with root's */
-        int root_format=format;
-
-        TRACE_COMM(MPI_Bcast)(&root_format, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
-
-        if (root_format != format) {
-            int rank;
-            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-            /* formats are inconsistent, overwrite local format with root's */
-            printf("rank %d: Warning - inconsistent file format, overwrite with root's\n",rank);
-            format = root_format;
-            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
-        }
-    }
-
 
     /* Make sure only valid format is set. */
     if (format != NC_FORMAT_CLASSIC &&
@@ -334,7 +307,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
     }
     ncmpi_default_create_format = format;
 
-    return status;
+    return NC_NOERR;
 }
 
 /* returns a value suitable for a create flag.  Will return one or more of the

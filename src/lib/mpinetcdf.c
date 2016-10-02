@@ -1116,12 +1116,13 @@ ncmpi_sync(int ncid) {
 }
 
 /*----< ncmpi_abort() >------------------------------------------------------*/
+/* This API is a collective subroutine */
 int
 ncmpi_abort(int ncid) {
    /*
     * In data mode, same as ncmpiio_close.
     * In define mode, descard new definition.
-    * In create, remove the file.
+    * If file is just created, remove the file.
     */
     int status, err, doUnlink = 0;
     NC *ncp;
