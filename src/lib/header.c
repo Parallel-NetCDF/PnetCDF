@@ -2327,7 +2327,7 @@ int
 ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                     NC         *ncp)
 {
-    int rank, err, status=NC_NOERR;
+    int err, status=NC_NOERR;
     char magic[sizeof(ncmagic1)]; /* root's file format signature */
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
     MPI_Aint pos_addr, base_addr;
@@ -2335,8 +2335,6 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 
     assert(ncp != NULL);
     assert(getbuf != NULL);
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* check the file format signature in root's header */
     memset(magic, 0, sizeof(magic));
@@ -2398,7 +2396,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         int root_ver = magic[sizeof(ncmagic1)-1];
 
         if (ncp->format != root_ver) {
-#ifdef NC_DEBUG
+#ifdef PNC_DEBUG
             printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
                    WARN_STR, ncp->format, root_ver);
 #endif
