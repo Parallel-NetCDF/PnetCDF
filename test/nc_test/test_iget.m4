@@ -35,12 +35,12 @@ define(`CheckRange',`ifelse(`$1',`text', `1', `($2 >= $1_min && $2 <= $1_max)')'
 define(`IfCheckTextChar', `ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
 define(`CheckNumRange',
        `ifelse(`$1',`text', `1',
-               `inRange3($2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
+               `inRange3(cdf_format, $2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
 
 #include "tests.h"
 
 int
-test_ncmpi_iget_var1(void)
+test_ncmpi_iget_var1(int numVars)
 {
     int i, j, err, ncid, nok = 0; /* count of valid comparisons */
     MPI_Offset index[MAX_RANK];
@@ -119,9 +119,9 @@ dnl
 define(`TEST_NC_IGET_VAR1',dnl
 `dnl
 int
-test_ncmpi_iget_var1_$1(void)
+test_ncmpi_iget_var1_$1(int numVars)
 {
-    int ncid;
+    int ncid, cdf_format;
     int i;
     int j;
     int err;
@@ -135,6 +135,10 @@ test_ncmpi_iget_var1_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -180,7 +184,7 @@ test_ncmpi_iget_var1_$1(void)
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
 
             if (canConvert) {
-                if (inRange3(expect,var_type[i], NCT_ITYPE($1))) {
+                if (inRange3(cdf_format, expect,var_type[i], NCT_ITYPE($1))) {
                     if (CheckRange($1, expect)) {
                         IF (status != NC_NOERR) {
                             error("%s", ncmpi_strerror(status));
@@ -228,7 +232,7 @@ TEST_NC_IGET_VAR1(longlong)
 TEST_NC_IGET_VAR1(ulonglong)
 
 int
-test_ncmpi_iget_var(void)
+test_ncmpi_iget_var(int numVars)
 {
     int ncid;
     int i;
@@ -318,9 +322,9 @@ dnl
 define(`TEST_NC_IGET_VAR',dnl
 `dnl
 int
-test_ncmpi_iget_var_$1(void)
+test_ncmpi_iget_var_$1(int numVars)
 {
-    int ncid;
+    int ncid, cdf_format;
     int i;
     int j;
     int err, num_err;
@@ -337,6 +341,11 @@ test_ncmpi_iget_var_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -364,7 +373,7 @@ test_ncmpi_iget_var_$1(void)
             IF (err != NC_NOERR)
                 error("error in toMixedBase 1");
             expect[j] = hash4(var_type[i], var_rank[i], index, NCT_ITYPE($1));
-            if (inRange3(expect[j],var_type[i], NCT_ITYPE($1))) {
+            if (inRange3(cdf_format, expect[j],var_type[i], NCT_ITYPE($1))) {
                 IfCheckTextChar($1, var_type[i])
                     allInIntRange &= CheckRange($1, expect[j]);
             } else {
@@ -437,7 +446,7 @@ TEST_NC_IGET_VAR(ulonglong)
 
 
 int
-test_ncmpi_iget_vara(void)
+test_ncmpi_iget_vara(int numVars)
 {
     int ncid, d, i, j, k, err, num_err, nels, nslabs;
     int nok = 0;      /* count of valid comparisons */
@@ -587,9 +596,9 @@ dnl
 define(`TEST_NC_IGET_VARA',dnl
 `dnl
 int
-test_ncmpi_iget_vara_$1(void)
+test_ncmpi_iget_vara_$1(int numVars)
 {
-    int ncid;
+    int ncid, cdf_format;
     int d;
     int i;
     int j;
@@ -612,6 +621,11 @@ test_ncmpi_iget_vara_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -711,7 +725,7 @@ test_ncmpi_iget_vara_$1(void)
                 for (d = 0; d < var_rank[i]; d++)
                     index[d] += start[d];
                 expect[j] = hash4(var_type[i], var_rank[i], index, NCT_ITYPE($1));
-                if (inRange3(expect[j],var_type[i], NCT_ITYPE($1))) {
+                if (inRange3(cdf_format, expect[j],var_type[i], NCT_ITYPE($1))) {
                     IfCheckTextChar($1, var_type[i])
                         allInIntRange &= CheckRange($1, expect[j]);
                 } else {
@@ -786,7 +800,7 @@ TEST_NC_IGET_VARA(longlong)
 TEST_NC_IGET_VARA(ulonglong)
 
 int
-test_ncmpi_iget_vars(void)
+test_ncmpi_iget_vars(int numVars)
 {
     int ncid;
     int d;
@@ -956,9 +970,9 @@ dnl
 define(`TEST_NC_IGET_VARS',dnl
 `dnl
 int
-test_ncmpi_iget_vars_$1(void)
+test_ncmpi_iget_vars_$1(int numVars)
 {
-    int ncid;
+    int ncid, cdf_format;
     int d;
     int i;
     int j;
@@ -987,6 +1001,11 @@ test_ncmpi_iget_vars_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -1082,7 +1101,7 @@ test_ncmpi_iget_vars_$1(void)
                         index2[d] = index[d] + index2[d] * stride[d];
                     expect[j] = hash4(var_type[i], var_rank[i], index2, 
                         NCT_ITYPE($1));
-                    if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))) {
+                    if (inRange3(cdf_format, expect[j],var_type[i],NCT_ITYPE($1))) {
                         IfCheckTextChar($1, var_type[i])
                             allInIntRange &= CheckRange($1, expect[j]);
                     } else {
@@ -1159,7 +1178,7 @@ TEST_NC_IGET_VARS(longlong)
 TEST_NC_IGET_VARS(ulonglong)
 
 int
-test_ncmpi_iget_varm(void)
+test_ncmpi_iget_varm(int numVars)
 {
     int ncid;
     int d;
@@ -1335,9 +1354,9 @@ dnl
 define(`TEST_NC_IGET_VARM',dnl
 `dnl
 int
-test_ncmpi_iget_varm_$1(void)
+test_ncmpi_iget_varm_$1(int numVars)
 {
-    int ncid;
+    int ncid, cdf_format;
     int d;
     int i;
     int j;
@@ -1367,6 +1386,11 @@ test_ncmpi_iget_varm_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -1469,7 +1493,7 @@ test_ncmpi_iget_varm_$1(void)
                         index2[d] = index[d] + index2[d] * stride[d];
                     expect[j] = hash4(var_type[i], var_rank[i], index2,
                         NCT_ITYPE($1));
-                    if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))) {
+                    if (inRange3(cdf_format, expect[j],var_type[i],NCT_ITYPE($1))) {
                         IfCheckTextChar($1, var_type[i])
                             allInIntRange &= CheckRange($1, expect[j]);
                     } else {

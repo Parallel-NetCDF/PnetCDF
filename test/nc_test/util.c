@@ -42,12 +42,13 @@ inRange(const double value, const nc_type datatype)
 }
 
 static int
-inRange_uchar(const double value, const nc_type datatype)
+inRange_uchar(const int     cdf_format,
+              const double  value,
+              const nc_type datatype)
 {
     /* check value of type datatype if within uchar range */
-    extern int cdf_format;
 
-    if (cdf_format < 5 && datatype == NC_BYTE) {
+    if (cdf_format < NC_FORMAT_CDF5 && datatype == NC_BYTE) {
         /* netCDF specification make a special case for type conversion between
          * uchar and scahr: do not check for range error. See
          * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
@@ -124,7 +125,8 @@ inRange_float(const double value, const nc_type datatype)
  * within the range of external "datatype".
  */
 int
-inRange3(const double    value, 
+inRange3(const int       cdf_format,
+         const double    value, 
          const nc_type   datatype,
          const nct_itype itype)
 {
@@ -143,7 +145,7 @@ inRange3(const double    value,
      */
     switch (itype) {
         case NCT_UCHAR:
-            return inRange_uchar(value, datatype);
+            return inRange_uchar(cdf_format, value, datatype);
         case NCT_FLOAT:
             return inRange_float(value, datatype);
         default:
@@ -582,7 +584,7 @@ init_dims(const char *digit)
 }
 
 static void
-init_gatts(const char *type_letter)
+init_gatts(const char *type_letter, int numGatts)
 {
     int attid;
     for (attid = 0; attid < numGatts; attid++) {
@@ -610,7 +612,7 @@ product(size_t nn, const MPI_Offset *sp)
    att_name, gatt_name, att_type, gatt_type, att_len, gatt_len
  */
 void
-init_gvars (void)
+init_gvars(int numGatts, int numTypes, int numVars)
 {
     const MPI_Offset max_dim_len[MAX_RANK] = {MAX_DIM_LEN +1,
                                               MAX_DIM_LEN,
@@ -683,7 +685,7 @@ init_gvars (void)
             }
         }
     }
-    init_gatts(type_letter);
+    init_gatts(type_letter, numGatts);
 }
 
 
@@ -703,7 +705,7 @@ def_dims(int ncid)
 
 /* define vars defined by global variables */
 void                                                        
-def_vars(int ncid)
+def_vars(int ncid, int numVars)
 {
     int i, err, var_id;
 
@@ -717,7 +719,7 @@ def_vars(int ncid)
 
 /* put attributes defined by global variables */
 void                                                        
-put_atts(int ncid)
+put_atts(int ncid, int numGatts, int numVars)
 {
     int  i, j, allInRange, err;
     MPI_Offset  k;
@@ -758,7 +760,7 @@ put_atts(int ncid)
 
 /* put variables defined by global variables */
 void                                                        
-put_vars(int ncid)
+put_vars(int ncid, int numVars)
 {
     MPI_Offset start[MAX_RANK];
     MPI_Offset index[MAX_RANK];
@@ -798,22 +800,21 @@ put_vars(int ncid)
 
 /* Create & write all of specified file using global variables */
 void
-write_file(char *filename) 
+write_file(char *filename, int numGatts, int numVars) 
 {
     int  err, ncid;
 
-    err = ncmpi_create(comm, filename, NC_CLOBBER|extra_flags, info,
-                       &ncid);
+    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) error("ncmpi_create: %s", ncmpi_strerror(err));
 
     def_dims(ncid);
-    def_vars(ncid);
-    put_atts(ncid);
+    def_vars(ncid, numVars);
+    put_atts(ncid, numGatts, numVars);
 
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR) error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
-    put_vars(ncid);
+    put_vars(ncid, numVars);
 
     err = ncmpi_close (ncid);
     IF (err != NC_NOERR) error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -846,7 +847,7 @@ check_dims(int  ncid)
  * check variables of specified file have expected name, type, shape & values
  */
 void
-check_vars(int  ncid)
+check_vars(int ncid, int numVars)
 {
     MPI_Offset index[MAX_RANK];
     char text, name[NC_MAX_NAME];
@@ -921,7 +922,7 @@ check_vars(int  ncid)
  * check attributes of specified file have expected name, type, length & values
  */
 void
-check_atts(int  ncid) 
+check_atts(int ncid, int numGatts, int numVars) 
 {
     char name[NC_MAX_NAME], text[MAX_NELS];
     int  i, j, err;        /* status */
@@ -979,7 +980,7 @@ check_atts(int  ncid)
 
 /* Check file (dims, vars, atts) corresponds to global variables */
 void
-check_file(char *filename) 
+check_file(char *filename, int numGatts, int numVars)
 {
     int ncid, err;
 
@@ -988,8 +989,8 @@ check_file(char *filename)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     } else {
         check_dims(ncid);
-        check_vars(ncid);
-        check_atts(ncid);
+        check_vars(ncid, numVars);
+        check_atts(ncid, numGatts, numVars);
         err = ncmpi_close (ncid);
         IF (err != NC_NOERR) 
             error("ncmpi_close: %s", ncmpi_strerror(err));
