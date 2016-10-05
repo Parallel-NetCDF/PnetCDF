@@ -16,16 +16,16 @@
 
 /*
  * Test ncmpi_create
- *    For mode in NC_NOCLOBBER|extra_flags, NC_CLOBBER, info do:
+ *    For mode in NC_NOCLOBBER, NC_CLOBBER, info do:
  *       create netcdf file 'scratch.nc' with no data, close it
  *       test that it can be opened, do ncmpi_inq to check nvars = 0, etc.
- *    Try again in NC_NOCLOBBER|extra_flags mode, check error return
+ *    Try again in NC_NOCLOBBER mode, check error return
  * On exit, delete this file
  */
 int
 test_ncmpi_create(void)
 {
-    int clobber; /* 0 for NC_NOCLOBBER|extra_flags, 1 for NC_CLOBBER, info */
+    int clobber; /* 0 for NC_NOCLOBBER, 1 for NC_CLOBBER, info */
     int err;
     int ncid;
     int ndims;   /* number of dimensions */
@@ -35,7 +35,7 @@ test_ncmpi_create(void)
     int nok=0;
 
     for (clobber = 0; clobber < 2; clobber++) {
-	err = ncmpi_create(comm, scratch, clobber ? NC_CLOBBER|extra_flags : NC_NOCLOBBER, info, &ncid);
+	err = ncmpi_create(comm, scratch, clobber ? NC_CLOBBER : NC_NOCLOBBER, info, &ncid);
 	IF (err != NC_NOERR)
 	    error("ncmpi_create: %s", ncmpi_strerror(err));
         ELSE_NOK
@@ -62,7 +62,7 @@ test_ncmpi_create(void)
 	    error("ncmpi_close: %s", ncmpi_strerror(err));
     }
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_EEXIST)
 	error("attempt to overwrite file: status = %d", err);
     ELSE_NOK
@@ -93,7 +93,7 @@ test_ncmpi_create(void)
  *    check file: vars & atts
  */
 int
-test_ncmpi_redef(void)
+test_ncmpi_redef(int numGatts, int numVars)
 {
     int ncid;                   /* netcdf id */
     /* used to force effective test of ncio->move() in redef */
@@ -134,8 +134,8 @@ test_ncmpi_redef(void)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     /* tests using scratch file */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    /* err = ncmpi__create(scratch, NC_NOCLOBBER|extra_flags, 0, &sizehint, &ncid); */
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
+    /* err = ncmpi__create(scratch, NC_NOCLOBBER, 0, &sizehint, &ncid); */
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -144,8 +144,8 @@ test_ncmpi_redef(void)
     if(sizehint > 32768)
 	sizehint = 16384;
     def_dims(ncid);
-    def_vars(ncid);
-    put_atts(ncid);
+    def_vars(ncid, numVars);
+    put_atts(ncid, numGatts, numVars);
     err = ncmpi_inq_varid(ncid, "d", &varid);
     IF (err != NC_NOERR) 
 	error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
@@ -167,7 +167,7 @@ test_ncmpi_redef(void)
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     ELSE_NOK
-    put_vars(ncid);
+    put_vars(ncid, numVars);
     err = ncmpi_def_dim(ncid, "abc", sizehint, &dimid);
     IF (err != NC_ENOTINDEFINE)
         error("ncmpi_def_dim in define mode: status = %d", err);
@@ -222,7 +222,7 @@ test_ncmpi_redef(void)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* check scratch file written as expected */
-    check_file(scratch);
+    check_file(scratch, numGatts, numVars);
     err = ncmpi_open(comm, scratch, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
@@ -256,9 +256,9 @@ test_ncmpi_redef(void)
  * Simply calls test_ncmpi_redef which tests both ncmpi_redef & ncmpi_enddef
  */
 int
-test_ncmpi_enddef(void)
+test_ncmpi_enddef(int numGatts, int numVars)
 {
-    return test_ncmpi_redef();
+    return test_ncmpi_redef(numGatts, numVars);
 }
 
 
@@ -269,7 +269,7 @@ test_ncmpi_enddef(void)
  *    try writing with one handle, reading with another on same netCDF
  */
 int
-test_ncmpi_sync(void)
+test_ncmpi_sync(int numGatts, int numVars)
 {
     int ncidw;         /* netcdf id for writing */
     int ncidr;         /* netcdf id for reading */
@@ -282,7 +282,7 @@ test_ncmpi_sync(void)
     ELSE_NOK
 
         /* create scratch file & try ncmpi_sync in define mode */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncidw);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncidw);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
 	return nok;
@@ -294,12 +294,12 @@ test_ncmpi_sync(void)
 
     /* write using same handle */
     def_dims(ncidw);
-    def_vars(ncidw);
-    put_atts(ncidw);
+    def_vars(ncidw, numVars);
+    put_atts(ncidw, numGatts, numVars);
     err = ncmpi_enddef(ncidw);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
-    put_vars(ncidw);
+    put_vars(ncidw, numVars);
     err = ncmpi_sync(ncidw);
     IF (err != NC_NOERR)
         error("ncmpi_sync of ncidw failed: %s", ncmpi_strerror(err));
@@ -314,8 +314,8 @@ test_ncmpi_sync(void)
         error("ncmpi_sync of ncidr failed: %s", ncmpi_strerror(err));
     ELSE_NOK
     check_dims(ncidr);
-    check_atts(ncidr);
-    check_vars(ncidr);
+    check_atts(ncidr, numGatts, numVars);
+    check_vars(ncidr, numVars);
 
     /* close both handles */
     err = ncmpi_close(ncidr);
@@ -340,7 +340,7 @@ test_ncmpi_sync(void)
  *    try after writing variable
  */
 int
-test_ncmpi_abort(void)
+test_ncmpi_abort(int numGatts, int numVars)
 {
     int ncid;          /* netcdf id */
     int err;
@@ -356,14 +356,14 @@ test_ncmpi_abort(void)
     ELSE_NOK
 
         /* create scratch file & try ncmpi_abort in define mode */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
-    put_atts(ncid);
+    def_vars(ncid, numVars);
+    put_atts(ncid, numGatts, numVars);
     err = ncmpi_abort(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_abort of ncid failed: %s", ncmpi_strerror(err));
@@ -381,7 +381,7 @@ test_ncmpi_abort(void)
 	 * define new dims, vars, atts
 	 * try ncmpi_abort: should restore previous state (no dims, vars, atts)
 	 */ 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -393,8 +393,8 @@ test_ncmpi_abort(void)
     IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     def_dims(ncid);
-    def_vars(ncid);
-    put_atts(ncid);
+    def_vars(ncid, numVars);
+    put_atts(ncid, numGatts, numVars);
     err = ncmpi_abort(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_abort of ncid failed: %s", ncmpi_strerror(err));
@@ -419,18 +419,18 @@ test_ncmpi_abort(void)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     /* try ncmpi_abort in data mode - should just close */
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
-    put_atts(ncid);
+    def_vars(ncid, numVars);
+    put_atts(ncid, numGatts, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
-    put_vars(ncid);
+    put_vars(ncid, numVars);
     err = ncmpi_abort(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_abort of ncid failed: %s", ncmpi_strerror(err));
@@ -438,7 +438,7 @@ test_ncmpi_abort(void)
     err = ncmpi_close(ncid);       /* should already be closed */
     IF (err != NC_EBADID)
         error("bad ncid: status = %d", err);
-    check_file(scratch);
+    check_file(scratch, numGatts, numVars);
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
@@ -457,7 +457,7 @@ test_ncmpi_abort(void)
  *    try to define a second unlimited dimension, check error
  */
 int
-test_ncmpi_def_dim(void)
+test_ncmpi_def_dim(int numVars)
 {
     int ncid;
     int  err;             /* status */
@@ -472,7 +472,7 @@ test_ncmpi_def_dim(void)
     ELSE_NOK
 
     /* data mode test */
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -532,11 +532,11 @@ test_ncmpi_def_dim(void)
     }
 
         /* Following just to expand unlimited dim */
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
-    put_vars(ncid);
+    put_vars(ncid, numVars);
 
         /* Check all dims */
     check_dims(ncid);
@@ -572,7 +572,7 @@ test_ncmpi_rename_dim(void)
     ELSE_NOK
 
         /* main tests */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -618,7 +618,7 @@ test_ncmpi_rename_dim(void)
  *    try with bad dimension ids, check error
  */
 int
-test_ncmpi_def_var(void)
+test_ncmpi_def_var(int numVars)
 {
     int  ncid;
     int  varid;
@@ -637,7 +637,7 @@ test_ncmpi_def_var(void)
     ELSE_NOK
 
         /* scalar tests */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -686,7 +686,7 @@ test_ncmpi_def_var(void)
         error("remove of %s failed", scratch);
 
     /* general tests using global vars */
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -724,7 +724,7 @@ test_ncmpi_def_var(void)
  * Test ncmpi_put_var1
  */
 int
-test_ncmpi_put_var1(void)
+test_ncmpi_put_var1(int numVars)
 {
     int i, j, err, ncid, nok=0;
     MPI_Offset index[MAX_RANK];
@@ -732,13 +732,13 @@ test_ncmpi_put_var1(void)
     double value;
     double buf[1];		/* (void *) buffer */
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -793,7 +793,7 @@ test_ncmpi_put_var1(void)
     IF (err != NC_NOERR)
         error("ncmpi_end_indep_data: %s", ncmpi_strerror(err));
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -813,7 +813,7 @@ test_ncmpi_put_var1(void)
  * At end check all variables using check_vars
  */
 int
-test_ncmpi_put_vara(void)
+test_ncmpi_put_vara(int numVars)
 {
     int d, i, j, k, err, nels,nslabs, ncid, nok=0;
     MPI_Offset start[MAX_RANK];
@@ -826,13 +826,13 @@ test_ncmpi_put_vara(void)
     char *p;			/* (void *) pointer */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -918,7 +918,7 @@ test_ncmpi_put_vara(void)
         }
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -939,7 +939,7 @@ test_ncmpi_put_vara(void)
  * At end check all variables using check_vars
  */
 int
-test_ncmpi_put_vars(void)
+test_ncmpi_put_vars(int numVars)
 {
     int ncid, d, i, j, k, m, err, nels, nslabs, nok=0;
     int nstarts;        /* number of different starts */
@@ -957,13 +957,13 @@ test_ncmpi_put_vars(void)
     char *p;			/* (void *) pointer */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -1079,7 +1079,7 @@ test_ncmpi_put_vars(void)
         }
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -1101,7 +1101,7 @@ test_ncmpi_put_vars(void)
  * At end check all variables using check_vars
  */
 int
-test_ncmpi_put_varm(void)
+test_ncmpi_put_varm(int numVars)
 {
     int ncid, nok=0;
     int i;
@@ -1126,13 +1126,13 @@ test_ncmpi_put_varm(void)
     char *p;			/* (void *) pointer */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -1255,7 +1255,7 @@ test_ncmpi_put_varm(void)
         }
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -1276,7 +1276,7 @@ test_ncmpi_put_varm(void)
  *    try in data mode, check error
  */
 int
-test_ncmpi_rename_var(void)
+test_ncmpi_rename_var(int numVars)
 {
     int ncid;
     int varid;
@@ -1284,7 +1284,7 @@ test_ncmpi_rename_var(void)
     int i;
     char name[NC_MAX_NAME];
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -1294,7 +1294,7 @@ test_ncmpi_rename_var(void)
 	error("bad var id: status = %d", err);
     ELSE_NOK
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
 
 	/* Prefix "new_" to each name */
     for (i = 0; i < numVars; i++) {
@@ -1342,8 +1342,8 @@ test_ncmpi_rename_var(void)
 	    error("Unexpected varid");
     }
 
-    put_vars(ncid);
-    check_vars(ncid);
+    put_vars(ncid, numVars);
+    check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
@@ -1357,7 +1357,7 @@ test_ncmpi_rename_var(void)
 
 
 int
-test_ncmpi_put_att(void)
+test_ncmpi_put_att(int numGatts, int numVars)
 {
     int ncid, nok=0;
     int varid;
@@ -1372,13 +1372,13 @@ test_ncmpi_put_att(void)
     MPI_Offset length;		/* of att */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
 
     for (i = -1; i < numVars; i++) {
 	varid = VARID(i);
@@ -1419,7 +1419,7 @@ test_ncmpi_put_att(void)
         }
     }
 
-    check_atts(ncid);
+    check_atts(ncid, numGatts, numVars);
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -1444,7 +1444,7 @@ test_ncmpi_put_att(void)
  *    try with same ncid for source and target, same variable
  */
 int
-test_ncmpi_copy_att(void)
+test_ncmpi_copy_att(int numGatts, int numVars)
 {
     int ncid_in;
     int ncid_out;
@@ -1460,13 +1460,13 @@ test_ncmpi_copy_att(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid_in);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid_out);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid_out);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid_out);
-    def_vars(ncid_out);
+    def_vars(ncid_out, numVars);
 
     for (i = -1; i < numVars; i++) {
         varid = VARID(i);
@@ -1514,7 +1514,7 @@ test_ncmpi_copy_att(void)
     err = ncmpi_open(comm, scratch, NC_WRITE, info, &ncid_out);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    check_atts(ncid_out);
+    check_atts(ncid_out, numGatts, numVars);
 
        /* 
 	* change to define mode
@@ -1594,7 +1594,7 @@ test_ncmpi_copy_att(void)
  *    try in data mode, check error
  */
 int
-test_ncmpi_rename_att(void)
+test_ncmpi_rename_att(int numGatts, int numVars)
 {
     int ncid;
     int varid;
@@ -1616,7 +1616,7 @@ test_ncmpi_rename_att(void)
     double value[MAX_NELS];
     double expect;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -1626,8 +1626,8 @@ test_ncmpi_rename_att(void)
 	error("bad var id: status = %d", err);
     ELSE_NOK
     def_dims(ncid);
-    def_vars(ncid);
-    put_atts(ncid);
+    def_vars(ncid, numVars);
+    put_atts(ncid, numGatts, numVars);
 
     for (i = -1; i < numVars; i++) {
         varid = VARID(i);
@@ -1754,7 +1754,7 @@ test_ncmpi_rename_att(void)
  *      ncmpi_inq_attid, ncmpi_inq_natts, ncmpi_inq_varnatts
  */
 int
-test_ncmpi_del_att(void)
+test_ncmpi_del_att(int numGatts, int numVars)
 {
     int ncid;
     int err, nok=0;
@@ -1766,7 +1766,7 @@ test_ncmpi_del_att(void)
     int varid;
     char *name;                 /* of att */
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -1776,8 +1776,8 @@ test_ncmpi_del_att(void)
 	error("bad var id: status = %d", err);
     ELSE_NOK
     def_dims(ncid);
-    def_vars(ncid);
-    put_atts(ncid);
+    def_vars(ncid, numVars);
+    put_atts(ncid, numGatts, numVars);
 
     for (i = -1; i < numVars; i++) {
 	varid = VARID(i);
@@ -1839,7 +1839,7 @@ test_ncmpi_del_att(void)
     err = ncmpi_redef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
-    put_atts(ncid);
+    put_atts(ncid, numGatts, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -1877,7 +1877,7 @@ test_ncmpi_del_att(void)
  *    close file & create again for test using attribute _FillValue
  */
 int
-test_ncmpi_set_fill(void)
+test_ncmpi_set_fill(int numVars)
 {
     int ncid;
     int varid;
@@ -1908,7 +1908,7 @@ test_ncmpi_set_fill(void)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* create scratch */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -1933,7 +1933,7 @@ test_ncmpi_set_fill(void)
 
 	/* define dims & vars */
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
 
 	/* Change to data mode. Set fillmode again */
     err = ncmpi_enddef(ncid);
@@ -1997,13 +1997,13 @@ test_ncmpi_set_fill(void)
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
 
 	/* set _FillValue = 42 for all vars */
     text = fill = 42;
@@ -2183,7 +2183,7 @@ test_ncmpi_delete(void)
     int err, nok=0;;
     int ncid;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR)
 	error("error creating scratch file %s, status = %d\n", scratch,err);
     err = ncmpi_close(ncid);

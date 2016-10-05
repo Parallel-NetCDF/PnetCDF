@@ -154,7 +154,7 @@ test_ncmpi_open(void)
 	error("netCDF IDs for first and second ncmpi_open calls should differ");
 
     if (! read_only) {		/* tests using netCDF scratch file */
-	err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid2);
+	err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid2);
 	IF (err != NC_NOERR) 
 	    error("ncmpi_create: %s", ncmpi_strerror(err));
 	else 
@@ -219,7 +219,7 @@ test_ncmpi_close(void)
     ELSE_NOK
 
     if (! read_only) {		/* tests using netCDF scratch file */
-        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
         IF (err != NC_NOERR) 
             error("ncmpi_create: %s", ncmpi_strerror(err));
 	err = ncmpi_close(ncid);
@@ -244,7 +244,7 @@ test_ncmpi_close(void)
  * On exit, any open netCDF files are closed.
  */
 int
-test_ncmpi_inq(void)
+test_ncmpi_inq(int numGatts, int numVars)
 {
     int ncid;
     int ndims;			/* number of dimensions */
@@ -304,7 +304,7 @@ test_ncmpi_inq(void)
     if (! read_only) {		/* tests using netCDF scratch file */
 	int ncid2;		/* for scratch netCDF dataset */
 
-        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid2);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid2);
         IF (err != NC_NOERR) {
             error("ncmpi_create: %s", ncmpi_strerror(err));
 	} else {		/* add dim, var, gatt, check inq */
@@ -388,7 +388,7 @@ test_ncmpi_inq(void)
 
 
 int
-test_ncmpi_inq_natts(void)
+test_ncmpi_inq_natts(int numGatts)
 {
     int ncid;
     int ngatts;			/* number of global attributes */
@@ -443,7 +443,7 @@ test_ncmpi_inq_ndims(void)
 
 
 int
-test_ncmpi_inq_nvars(void)
+test_ncmpi_inq_nvars(int numVars)
 {
     int ncid;
     int nvars;
@@ -658,7 +658,7 @@ test_ncmpi_inq_dimname(void)
 
 
 int
-test_ncmpi_inq_varid(void)
+test_ncmpi_inq_varid(int numVars)
 {
     int ncid;
     int varid;
@@ -696,7 +696,7 @@ test_ncmpi_inq_varid(void)
 
 
 int
-test_ncmpi_inq_var(void)
+test_ncmpi_inq_var(int numVars)
 {
     int ncid;
     int i;
@@ -777,7 +777,7 @@ test_ncmpi_inq_var(void)
 
 
 int
-test_ncmpi_inq_vardimid(void)
+test_ncmpi_inq_vardimid(int numVars)
 {
     int ncid;
     int i;
@@ -812,7 +812,7 @@ test_ncmpi_inq_vardimid(void)
 
 
 int
-test_ncmpi_inq_varname(void)
+test_ncmpi_inq_varname(int numVars)
 {
     int ncid;
     int i;
@@ -847,7 +847,7 @@ test_ncmpi_inq_varname(void)
 
 
 int
-test_ncmpi_inq_varnatts(void)
+test_ncmpi_inq_varnatts(int numGatts, int numVars)
 {
     int ncid;
     int i;
@@ -882,7 +882,7 @@ test_ncmpi_inq_varnatts(void)
 
 
 int
-test_ncmpi_inq_varndims(void)
+test_ncmpi_inq_varndims(int numVars)
 {
     int ncid;
     int i;
@@ -917,7 +917,7 @@ test_ncmpi_inq_varndims(void)
 
 
 int
-test_ncmpi_inq_vartype(void)
+test_ncmpi_inq_vartype(int numVars)
 {
     int ncid;
     int i;
@@ -955,7 +955,7 @@ test_ncmpi_inq_vartype(void)
  * Test ncmpi_put_var1
  */
 int
-test_ncmpi_get_var1(void)
+test_ncmpi_get_var1(int numVars)
 {
     int ncid;
     int i;
@@ -1028,7 +1028,7 @@ test_ncmpi_get_var1(void)
  * Each get overwrites buffer, so check after each get.
  */
 int
-test_ncmpi_get_vara(void)
+test_ncmpi_get_vara(int numVars)
 {
     int ncid, d, i, j, k, err, nels, nslabs;
     int nok = 0;      /* count of valid comparisons */
@@ -1146,7 +1146,7 @@ test_ncmpi_get_vara(void)
  * Each get overwrites buffer, so check after each get.
  */
 int
-test_ncmpi_get_vars(void)
+test_ncmpi_get_vars(int numVars)
 {
     int ncid;
     int d;
@@ -1322,7 +1322,7 @@ test_ncmpi_get_vars(void)
  * So all gets for a variable store in different elements of buffer
  */
 int
-test_ncmpi_get_varm(void)
+test_ncmpi_get_varm(int numVars)
 {
     int ncid;
     int i;
@@ -1485,7 +1485,7 @@ test_ncmpi_get_varm(void)
 
 
 int
-test_ncmpi_get_att(void)
+test_ncmpi_get_att(int numGatts, int numVars)
 {
     int ncid;
     int i;
@@ -1556,7 +1556,7 @@ test_ncmpi_get_att(void)
 
 
 int
-test_ncmpi_inq_att(void)
+test_ncmpi_inq_att(int numGatts, int numVars)
 {
     int ncid;
     int i;
@@ -1605,7 +1605,7 @@ test_ncmpi_inq_att(void)
 
 
 int
-test_ncmpi_inq_attlen(void)
+test_ncmpi_inq_attlen(int numGatts, int numVars)
 {
     int ncid;
     int i;
@@ -1651,7 +1651,7 @@ test_ncmpi_inq_attlen(void)
 
 
 int
-test_ncmpi_inq_atttype(void)
+test_ncmpi_inq_atttype(int numGatts, int numVars)
 {
     int ncid;
     int i;
@@ -1697,7 +1697,7 @@ test_ncmpi_inq_atttype(void)
 
 
 int
-test_ncmpi_inq_attname(void)
+test_ncmpi_inq_attname(int numGatts, int numVars)
 {
     int ncid;
     int i;
@@ -1747,7 +1747,7 @@ test_ncmpi_inq_attname(void)
 
 
 int
-test_ncmpi_inq_attid(void)
+test_ncmpi_inq_attid(int numGatts, int numVars)
 {
     int ncid;
     int i;

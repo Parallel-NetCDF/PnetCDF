@@ -34,10 +34,10 @@ define(`CheckText', `ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dn
 define(`IfCheckTextChar', `ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
 define(`CheckNumRange',
        `ifelse(`$1',`text', `1',
-               `inRange3($2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
+               `inRange3(cdf_format, $2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
 define(`CheckRange3',
        `ifelse(`$1',`text', `1',
-               `inRange3($2,$3,NCT_ITYPE($1))')')dnl
+               `inRange3(cdf_format, $2,$3,NCT_ITYPE($1))')')dnl
 
 
 #include "tests.h"
@@ -89,11 +89,12 @@ define(`CHECK_VARS',dnl
  */
 static
 int
-check_vars_$1(const char *filename)
+check_vars_$1(const char *filename, int numVars)
 {
     int  ncid;                  /* netCDF id */
     MPI_Offset index[MAX_RANK];
     int  err;           /* status */
+    int  cdf_format;
     int  d;
     int  i;
     size_t  j;
@@ -110,6 +111,10 @@ check_vars_$1(const char *filename)
     err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -232,7 +237,7 @@ dbls2ncs(int nels, int var_type, double *inBuf, void *outBuf)
 }
 
 int
-test_ncmpi_iput_var1(void)
+test_ncmpi_iput_var1(int numVars)
 {
     int ncid, nok=0;
     int i;
@@ -243,13 +248,13 @@ test_ncmpi_iput_var1(void)
     int reqid, status=NC_NOERR;
     MPI_Datatype datatype;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -301,7 +306,7 @@ test_ncmpi_iput_var1(void)
         }
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR) 
@@ -318,9 +323,9 @@ dnl
 define(`TEST_NC_IPUT_VAR1',dnl
 `dnl
 int
-test_ncmpi_iput_var1_$1(void)
+test_ncmpi_iput_var1_$1(int numVars)
 {
-    int ncid, nok=0;
+    int ncid, cdf_format, nok=0;
     int i;
     int j;
     int err;
@@ -329,13 +334,18 @@ test_ncmpi_iput_var1_$1(void)
     $1 value = 5;        /* any value would do - only for error cases */
     int reqid, status=NC_NOERR;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -406,7 +416,7 @@ test_ncmpi_iput_var1_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    nok += check_vars_$1(scratch);
+    nok += check_vars_$1(scratch, numVars);
 
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
@@ -429,7 +439,7 @@ TEST_NC_IPUT_VAR1(longlong)
 TEST_NC_IPUT_VAR1(ulonglong)
 
 int
-test_ncmpi_iput_var(void)
+test_ncmpi_iput_var(int numVars)
 {
     int ncid, nok=0, varid, i, j, err, nels;
     MPI_Offset index[MAX_RANK];
@@ -437,13 +447,13 @@ test_ncmpi_iput_var(void)
     int reqid, status=NC_NOERR;
     MPI_Datatype datatype;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -504,7 +514,7 @@ test_ncmpi_iput_var(void)
         ELSE_NOK
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR) 
@@ -522,9 +532,9 @@ dnl
 define(`TEST_NC_IPUT_VAR',dnl
 `dnl
 int
-test_ncmpi_iput_var_$1(void)
+test_ncmpi_iput_var_$1(int numVars)
 {
-    int ncid, nok=0;
+    int ncid, cdf_format, nok=0;
     int varid;
     int i;
     int j;
@@ -536,13 +546,18 @@ test_ncmpi_iput_var_$1(void)
     $1 value[MAX_NELS];
     int reqid, status=NC_NOERR;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -570,7 +585,7 @@ test_ncmpi_iput_var_$1(void)
                 error("error in toMixedBase 1");
             value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
-                allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
         }
         err = ncmpi_iput_var_$1(ncid, i, value, &reqid);
         if (err == NC_NOERR || err == NC_ERANGE)
@@ -635,7 +650,7 @@ test_ncmpi_iput_var_$1(void)
                 ELSE_NOK
                 value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
-                    allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                    allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
             err = ncmpi_iput_var_$1(ncid, i, value, &reqid);
             if (err == NC_NOERR || err == NC_ERANGE)
@@ -668,7 +683,7 @@ test_ncmpi_iput_var_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    nok += check_vars_$1(scratch);
+    nok += check_vars_$1(scratch, numVars);
 
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
@@ -692,7 +707,7 @@ TEST_NC_IPUT_VAR(longlong)
 TEST_NC_IPUT_VAR(ulonglong)
 
 int
-test_ncmpi_iput_vara(void)
+test_ncmpi_iput_vara(int numVars)
 {
     int ncid, nok=0, d, i, j, k, err, nslabs, nels;
     MPI_Offset start[MAX_RANK];
@@ -703,13 +718,13 @@ test_ncmpi_iput_vara(void)
     int reqid, status=NC_NOERR;
     MPI_Datatype datatype;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -824,7 +839,7 @@ test_ncmpi_iput_vara(void)
         }
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR) 
@@ -841,9 +856,9 @@ dnl
 define(`TEST_NC_IPUT_VARA',dnl
 `dnl
 int
-test_ncmpi_iput_vara_$1(void)
+test_ncmpi_iput_vara_$1(int numVars)
 {
-    int ncid, nok=0;
+    int ncid, cdf_format, nok=0;
     int d;
     int i;
     int j;
@@ -860,13 +875,18 @@ test_ncmpi_iput_vara_$1(void)
     $1 value[MAX_NELS];
     int reqid, status=NC_NOERR;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -963,7 +983,7 @@ test_ncmpi_iput_vara_$1(void)
                     index[d] += start[d];
                 value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
-                    allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                    allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
             if (var_rank[i] == 0 && i%2 == 0)
                 err = ncmpi_iput_vara_$1(ncid, i, NULL, NULL, value, &reqid);
@@ -999,7 +1019,7 @@ test_ncmpi_iput_vara_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    nok += check_vars_$1(scratch);
+    nok += check_vars_$1(scratch, numVars);
 
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
@@ -1022,7 +1042,7 @@ TEST_NC_IPUT_VARA(longlong)
 TEST_NC_IPUT_VARA(ulonglong)
 
 int
-test_ncmpi_iput_vars(void)
+test_ncmpi_iput_vars(int numVars)
 {
     int ncid, nok=0, d, i, j, k, m, err, nels, nslabs;
     int nstarts;        /* number of different starts */
@@ -1038,13 +1058,13 @@ test_ncmpi_iput_vars(void)
     int reqid, status=NC_NOERR;
     MPI_Datatype datatype;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -1160,7 +1180,7 @@ test_ncmpi_iput_vars(void)
         }
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR) 
@@ -1177,9 +1197,9 @@ dnl
 define(`TEST_NC_IPUT_VARS',dnl
 `dnl
 int
-test_ncmpi_iput_vars_$1(void)
+test_ncmpi_iput_vars_$1(int numVars)
 {
-    int ncid, nok=0;
+    int ncid, cdf_format, nok=0;
     int d;
     int i;
     int j;
@@ -1202,13 +1222,18 @@ test_ncmpi_iput_vars_$1(void)
     $1 value[MAX_NELS];
     int reqid, status=NC_NOERR;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -1308,7 +1333,7 @@ test_ncmpi_iput_vars_$1(void)
                         index2[d] = index[d] + index2[d] * stride[d];
                     value[j] = hash_$1(var_type[i], var_rank[i], index2, NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
-                        allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                        allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
                 }
                 if (var_rank[i] == 0 && i%2 == 0)
                     err = ncmpi_iput_vars_$1(ncid, i, NULL, NULL, stride, value, &reqid);
@@ -1345,7 +1370,7 @@ test_ncmpi_iput_vars_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    nok += check_vars_$1(scratch);
+    nok += check_vars_$1(scratch, numVars);
 
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
@@ -1368,7 +1393,7 @@ TEST_NC_IPUT_VARS(longlong)
 TEST_NC_IPUT_VARS(ulonglong)
 
 int
-test_ncmpi_iput_varm(void)
+test_ncmpi_iput_varm(int numVars)
 {
     int ncid, nok=0, d, i, j, k, m, err, nels, nslabs;
     int nstarts;        /* number of different starts */
@@ -1385,13 +1410,13 @@ test_ncmpi_iput_varm(void)
     int reqid, status=NC_NOERR;
     MPI_Datatype datatype;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -1514,7 +1539,7 @@ test_ncmpi_iput_varm(void)
         }
     }
 
-    check_vars(ncid);
+    check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR) 
@@ -1531,9 +1556,9 @@ dnl
 define(`TEST_NC_IPUT_VARM',dnl
 `dnl
 int
-test_ncmpi_iput_varm_$1(void)
+test_ncmpi_iput_varm_$1(int numVars)
 {
-    int ncid, nok=0;
+    int ncid, cdf_format, nok=0;
     int d;
     int i;
     int j;
@@ -1557,13 +1582,18 @@ test_ncmpi_iput_varm_$1(void)
     $1 value[MAX_NELS];
     int reqid, status=NC_NOERR;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
+
+    err = ncmpi_inq_format(ncid, &cdf_format);
+    IF (err != NC_NOERR)
+        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+
     def_dims(ncid);
-    def_vars(ncid);
+    def_vars(ncid, numVars);
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
@@ -1670,7 +1700,7 @@ test_ncmpi_iput_varm_$1(void)
                         index2[d] = index[d] + index2[d] * stride[d];
                     value[j] = hash_$1(var_type[i], var_rank[i], index2, NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
-                        allInExtRange &= inRange3(value[j], var_type[i], NCT_ITYPE($1));
+                        allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
                 }
                 if (var_rank[i] == 0 && i%2 == 0)
                     err = ncmpi_iput_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value, &reqid);
@@ -1707,7 +1737,7 @@ test_ncmpi_iput_varm_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    nok += check_vars_$1(scratch);
+    nok += check_vars_$1(scratch, numVars);
 
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
