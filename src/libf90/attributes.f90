@@ -48,11 +48,12 @@
   end function nf90mpi_inq_attname
   ! -------
   function nf90mpi_inquire_attribute(ncid, varid, name, xtype, len, attnum)
-    integer,             intent( in)           :: ncid, varid
-    character (len = *), intent( in)           :: name
-    integer,             intent(out), optional :: xtype, attnum
-    integer (kind=MPI_OFFSET_KIND), intent(out), optional :: len
+    integer,                                  intent( in) :: ncid, varid
+    character (len = *),                      intent( in) :: name
+    integer,                        optional, intent(out) :: xtype, attnum
+    integer (kind=MPI_OFFSET_KIND), optional, intent(out) :: len
     integer                                    :: nf90mpi_inquire_attribute
+
     integer                                    :: local_xtype
     integer (kind=MPI_OFFSET_KIND)             :: local_len
 
