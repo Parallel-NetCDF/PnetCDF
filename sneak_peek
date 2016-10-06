@@ -17,10 +17,10 @@ This is essentially a placeholder for the next release note ...
   o New error code
     * NC_EINVAL_OMODE: invalid file open mode. This separates the case from
       NC_EINVAL_CMODE. The error messages for both error codes are revised
-      to indicate specifically whether in file open or create mode.
+      accordingly.
     * NC_EMULTIDEFINE_CMODE: inconsistent file create mode. This separates the
       case from NC_EMULTIDEFINE_OMODE. The error messages for both error codes
-      are revised to indicate specifically whether in file open or create mode.
+      are revised accordingly.
 
   o New run-time environment variables
     * none
@@ -32,36 +32,44 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * test/testcases/scalar.c to test if arguments start, count, stride, and
-      imap are properly ignored when getting/putting a scalar variable
+    * test/testcases/scalar.c to test whether arguments start, count, stride,
+      and imap are properly ignored when getting/putting a scalar variable
 
   o New optimization
-    * Add a table lookup based on Bernstein hash function for checking whether
-      a variable/dimension name has already been used.
+    * Use Bernstein hash function for checking whether the name of a variable
+      or dimension has already been used.
     * Replace the use of linked lists with arrays for storing the pending
-      nonblocking requests, in expectation of save time for traversing the
-      linked list.
+      nonblocking requests. This could save time for traversing the linked
+      list.
 
   o New utility program
     * none
 
   o Semantics updates
-    * Header data (defining dimensions, variables, and attributes) consistency
-      check is now moved to individual APIs and performed only when safe mode
-      is enabled. Consistency check is no longer performed in ncmpi_enddef. As
-      a reminder, PnetCDF APIs that change header data are all collective and
-      API arguments are required to be consistent among the calling processes.
-    * In netCDF-3, whether the contents of an NC_BYTE variable are signed or
-      unsigned is determined by the calling APIs. For signed APIs, NC_BYTE
-      variables are signed. For unsigned APIs (i.e. _uchar APIs) they are
-      unsigned. NetCDF-3 specifically makes an exception to skip NC_ERANGE
-      check when calling _uchar APIs on NC_BYTE variables. See
+    * Consistency check for header data (defining dimensions, variables, and
+      attributes) is moved to individual APIs and only enabled when safe mode
+      is enabled. Header data consistency check is no longer performed in
+      ncmpi_enddef. As a reminder, PnetCDF APIs that change header data are
+      all collective and their arguments are required to be consistent among
+      the calling processes.
+    * In netCDF-3, whether the contents of an NC_BYTE variable in CDF-1 or
+      CDF-2 files are signed or unsigned is determined by the calling APIs. See
       http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
-      In netCDF-4 and CDF-5, because of the introduction of the new data type
-      NC_UBYTE, an unsigned 8-bit integer, which renders the exception less
-      sense. Thus, for CDF-5 files, regular NC_ERANGE check is performed in
-      PnetCDF for all APIs that access NC_BYTE variables. For CDF-1 and 2
-      files, PnetCDF still honors that exception.
+      "In netcdf-3, we treat NC_BYTE as signed for the purposes of conversion
+      to short, int, long, float, or double. (Of course, no conversion takes
+      place when the internal type is signed char.) In the _uchar functions, we
+      treat NC_BYTE as if it were unsigned. Thus, no NC_ERANGE error can occur
+      converting between NC_BYTE and unsigned char." In other words, if called
+      from signed APIs, NC_BYTE variables are treated as signed. If called from
+      unsigned APIs (i.e. _uchar APIs, the only unsigned APIs in netCDF-3) they
+      are unsigned. NetCDF-3 specifically makes an exception to skip NC_ERANGE
+      check when calling _uchar APIs on NC_BYTE variables. However, in netCDF-4
+      and CDF-5, because of the introduction of the new data type NC_UBYTE, an
+      unsigned 8-bit integer, which makes NC_BYTE an signed 8-bit integer and
+      thus renders the above exception less sense. Starting from this release,
+      for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
+      APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
+      honors that exception.
 
   o Other updates:
     * API ncmpi_inq_file_format can now detect HDF5 file signature and report
@@ -82,7 +90,7 @@ This is essentially a placeholder for the next release note ...
     * Fix the return unlimited dimension ID of value -1, not 0, by Fortran API
       nfmpi_inq_unlimdim when no unlimited dimension is defined. This conforms
       with netCDF convention. See r3296 and r1372
-    * Fix string processing the environment variables set for PnetCDF I/O hints
+    * Fix string processing of the environment variables for PnetCDF I/O hints
       See r2385
     * Fix utility ncmpidiff to use collective read APIs in collective data mode
       See r2382
