@@ -25,10 +25,12 @@
 #include "subfile.h"
 #endif
 
-/* list of open netcdf's */
+/* list of opened netcdf file objects (not thread-safe) */
 static NC *NClist = NULL;
 
-/* This is the default create format for ncmpi_create and nc__create. */
+/* This is the default create format for ncmpi_create and nc__create.
+ * The use of this file scope variable is not thread-safe.
+ */
 static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
 
 /* These have to do with version numbers. */

@@ -609,7 +609,7 @@ by the desired type. */
 
 const char* ncmpi_strerror(int err);
 
-/* Begin Dataset Functions */
+/* Begin File Functions */
 
 int ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp);
 
@@ -647,11 +647,9 @@ int ncmpi_set_fill(int ncid, int fillmode, int *old_modep);
 
 int ncmpi_def_var_fill(int ncid, int varid, int no_fill, void *fill_value);
 
-int ncmpi_inq_var_fill(int ncid, int varid, int *no_fill, void *fill_value);
-
 int ncmpi_fill_var_rec(int ncid, int varid, MPI_Offset recno);
 
-/* End Dataset Functions */
+/* End File Functions */
 
 /* Begin Define Mode Functions */
 
@@ -733,6 +731,8 @@ int ncmpi_inq_malloc_list(void);
 int ncmpi_inq_files_opened(int *num, int *ncids);
 
 int ncmpi_inq_recsize(int ncid, MPI_Offset *recsize);
+
+int ncmpi_inq_var_fill(int ncid, int varid, int *no_fill, void *fill_value);
 
 /* End Inquiry Functions */
 
