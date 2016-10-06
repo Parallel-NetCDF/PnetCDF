@@ -115,9 +115,9 @@ typedef enum {
     NC_UNSPECIFIED =  0,
 /*  NC_BITFIELD    =  7, */
 /*  NC_STRING      =  8, */
-    NC_DIMENSION   = 10,
-    NC_VARIABLE    = 11,
-    NC_ATTRIBUTE   = 12
+    NC_DIMENSION   = 10,  /* \x00 \x00 \x00 \x0A */
+    NC_VARIABLE    = 11,  /* \x00 \x00 \x00 \x0B */
+    NC_ATTRIBUTE   = 12   /* \x00 \x00 \x00 \x0C */
 } NCtype;
 
 

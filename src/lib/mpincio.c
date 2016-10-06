@@ -51,6 +51,10 @@
 
 #define MAX_NC_ID 1024
 
+/* ncid corresponds to the index of IDalloc. The content of IDalloc[ncid] is
+ * either 0 or 1. 1 means ncid is corresponds to an opened file. 0 for
+ * otherwise. (not thread-safe)
+ */
 static unsigned char IDalloc[MAX_NC_ID];
 
 inline void
