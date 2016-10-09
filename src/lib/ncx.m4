@@ -29,9 +29,14 @@ dnl
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include "ncx.h"
 
-ifdef(`PNETCDF', `#include "macro.h"')
+ifdef(`PNETCDF',dnl
+`#include "ncx.h"
+#include "macro.h"',dnl
+`#pragma GCC diagnostic ignored "-Wdeprecated"
+#include "ncx.h"
+#include "nc3dispatch.h"')
+
 define(`IntType',   `ifdef(`PNETCDF', `MPI_Offset', `size_t')')dnl
 define(`APIPrefix', `ifdef(`PNETCDF', `ncmpi', `nc')')dnl
 define(`NC_TYPE', `ifdef(`PNETCDF', `ifelse(

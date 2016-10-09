@@ -945,7 +945,10 @@ ncmpi_get_att(int         ncid,
 }
 
 /*----< ncmpi_get_att_text() >-------------------------------------------------*/
-/* This is an independent subroutine */
+/* This is an independent subroutine.
+ * Note this API will never return NC_ERANGE error, as text is not convertible
+ * to numerical types.
+ */
 int
 ncmpi_get_att_text(int         ncid,
                    int         varid,
@@ -1147,6 +1150,9 @@ define(`PUT_ATT',dnl
  * Note from netCDF user guide:
  * Attributes are always single values or one-dimensional arrays. This works
  * out well for a string, which is a one-dimensional array of ASCII characters
+ *
+ * Note ncmpi_put_att_text will never return NC_ERANGE error, as text is not
+ * convertible to numerical types.
  */
 int
 ncmpi_put_att_$1(int         ncid,
