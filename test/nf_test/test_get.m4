@@ -77,10 +77,10 @@ define([TEST_NFMPI_GET_VAR1],[dnl
         integer i
         integer j
         integer err
-        integer nok      
+        integer nok
         integer*8 index(MAX_RANK)
         doubleprecision expect
-        logical canConvert     
+        logical canConvert
         DATATYPE_VAR1($1, value)
         doubleprecision val
 
@@ -116,16 +116,15 @@ define([TEST_NFMPI_GET_VAR1],[dnl
                 index(j) = 1
 3           continue
             do 4, j = 1, var_nels(i)
-                err = index2indexes(j, var_rank(i), var_shape(1,i), 
+                err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                              index)
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes 1')
-                expect = hash4( var_type(i), var_rank(i), index, 
-     +                          NFT_ITYPE($1) )
+                expect = hash4(var_type(i), var_rank(i), index)
                 err = nfmpi_get_var1_$1(ncid, i, index,
      +                          value)
                 if (canConvert) then
-                    if (inRange3(expect,var_type(i), 
+                    if (inRange3(expect,var_type(i),
      +                           NFT_ITYPE($1))) then
                         if (in_internal_range(NFT_ITYPE($1),
      +                                        expect)) then
@@ -134,8 +133,8 @@ define([TEST_NFMPI_GET_VAR1],[dnl
      +                                      err)
                             else
                                 val = ARITH_VAR1($1, value)
-                                if (.not. equal(val, expect, 
-     +                                          var_type(i), 
+                                if (.not. equal(val, expect,
+     +                                          var_type(i),
      +                                          NFT_ITYPE($1))) then
                                     call errori('varid: ', i)
                                     call errorc('var_name: ',
@@ -183,13 +182,13 @@ define([TEST_NFMPI_GET_VAR],[dnl
         integer i
         integer j
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer nels
-        integer nok      
+        integer nok
         integer*8 index(MAX_RANK)
         doubleprecision expect(MAX_NELS)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
 
@@ -214,12 +213,11 @@ define([TEST_NFMPI_GET_VAR],[dnl
             allInExtRange = .true.
             allInIntRange = .true.
             do 4, j = 1, var_nels(i)
-                err = index2indexes(j, var_rank(i), var_shape(1,i), 
+                err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                              index)
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes 1')
-                expect(j) = hash4( var_type(i), var_rank(i), index, 
-     +                          NFT_ITYPE($1) )
+                expect(j) = hash4(var_type(i), var_rank(i), index)
                 if (inRange3(expect(j),var_type(i), NFT_ITYPE($1))) then
                     allInIntRange = allInIntRange .and.
      +                  in_internal_range(NFT_ITYPE($1), expect(j))
@@ -231,7 +229,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
             if (canConvert) then
                 if (allInExtRange) then
                     if (allInIntRange) then
-                        if (err .ne. NF_NOERR) 
+                        if (err .ne. NF_NOERR)
      +                      call errore('nfmpi_get_var_$1_all: ',
      +                                  err)
                     else
@@ -248,8 +246,8 @@ define([TEST_NFMPI_GET_VAR],[dnl
      +                  in_internal_range(NFT_ITYPE($1),
      +                                          expect(j))) then
                         val = ARITH3($1, value, j)
-                        if (.not. equal(val, expect(j), 
-     +                                  var_type(i), 
+                        if (.not. equal(val, expect(j),
+     +                                  var_type(i),
      +                                  NFT_ITYPE($1))) then
                             call errord('unexpected: ', val)
                             call errord('expecting: ', expect(j))
@@ -288,16 +286,16 @@ define([TEST_NFMPI_GET_VARA],[dnl
         integer j
         integer k
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer nels
         integer nslabs
-        integer nok      
+        integer nok
         integer*8 start(MAX_RANK)
         integer*8 edge(MAX_RANK)
         integer*8 index(MAX_RANK)
         integer*8 mid(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -309,7 +307,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, numVars
-            canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
+            canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assert'
             if (.not.(var_nels(i) .le. MAX_NELS)) stop 'assert'
@@ -321,7 +319,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
      +                  edge, value)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_get_vara_$1_all(ncid, BAD_VARID, start, 
+            err = nfmpi_get_vara_$1_all(ncid, BAD_VARID, start,
      +                           edge, value)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
@@ -348,11 +346,11 @@ C           /* there is nothing to get (edge(j).eq.0) */
 10              continue
                 err = nfmpi_get_vara_$1_all(BAD_ID, i, start,
      +                  edge, value)
-                if (err .ne. NF_EBADID) 
+                if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
                 err = nfmpi_get_vara_$1_all(ncid, BAD_VARID,
      +                  start, edge, value)
-                if (err .ne. NF_ENOTVAR) 
+                if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
                 do 11, j = 1, var_rank(i)
                     if (var_dimid(j,i) .gt. 1) then     !/* skip record dim */
@@ -367,7 +365,7 @@ C           /* there is nothing to get (edge(j).eq.0) */
                 err = nfmpi_get_vara_$1_all(ncid, i, start,
      +                          edge, value)
                 if (canConvert) then
-                    if (err .ne. NF_NOERR) 
+                    if (err .ne. NF_NOERR)
      +                  call error(nfmpi_strerror(err))
                 else
                     if (err .ne. NF_ECHAR)
@@ -385,7 +383,7 @@ C           get 2^rank (nslabs) slabs so defined
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 4           continue
-C           bits of k determine whether to get lower or upper part of dim 
+C           bits of k determine whether to get lower or upper part of dim
             do 5, k = 1, nslabs
                 nels = 1
                 do 6, j = 1, var_rank(i)
@@ -407,11 +405,10 @@ C           bits of k determine whether to get lower or upper part of dim
                     do 8, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
 8                   continue
-                    expect(j) = hash4(var_type(i), var_rank(i), index, 
-     +                                NFT_ITYPE($1))
-                    if (inRange3(expect(j),var_type(i), 
+                    expect(j) = hash4(var_type(i), var_rank(i), index)
+                    if (inRange3(expect(j),var_type(i),
      +                           NFT_ITYPE($1))) then
-                        allInIntRange = 
+                        allInIntRange =
      +                      allInIntRange .and.
      +                      in_internal_range(NFT_ITYPE($1), expect(j))
                     else
@@ -441,7 +438,7 @@ C           bits of k determine whether to get lower or upper part of dim
      +                          then
                             val = ARITH3($1, value, j)
                             if (.not.equal(val,expect(j),
-     +                                     var_type(i),NFT_ITYPE($1))) 
+     +                                     var_type(i),NFT_ITYPE($1)))
      +                              then
                                 call error(
      +                              'value read not that expected')
@@ -450,7 +447,7 @@ C           bits of k determine whether to get lower or upper part of dim
                                     call errori('varid: ', i)
                                     call errorc('var_name: ',
      +                                  var_name(i))
-                                    call errori('element number: %d ', 
+                                    call errori('element number: %d ',
      +                                          j)
                                     call errord('expect: ', expect(j))
                                     call errord('got: ', val)
@@ -493,12 +490,12 @@ define([TEST_NFMPI_GET_VARS],dnl
         integer k
         integer m
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer nels
         integer nslabs
-        integer nstarts         
-        integer nok             
+        integer nstarts
+        integer nok
         integer*8 start(MAX_RANK)
         integer*8 edge(MAX_RANK)
         integer*8 index(MAX_RANK)
@@ -507,7 +504,7 @@ define([TEST_NFMPI_GET_VARS],dnl
         integer*8 count(MAX_RANK)
         integer*8 sstride(MAX_RANK)
         integer*8 stride(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -519,7 +516,7 @@ define([TEST_NFMPI_GET_VARS],dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, numVars
-            canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
+            canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assert'
             if (.not.(var_nels(i) .le. MAX_NELS)) stop 'assert'
@@ -533,14 +530,14 @@ define([TEST_NFMPI_GET_VARS],dnl
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
             err = nfmpi_get_vars_$1_all(ncid, BAD_VARID,
-     +                  start, edge, stride, 
+     +                  start, edge, stride,
      +                           value)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
                 err = nfmpi_get_vars_$1_all(ncid, i, start,
-     +                               edge, stride, 
+     +                               edge, stride,
      +                               value)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -552,7 +549,7 @@ define([TEST_NFMPI_GET_VARS],dnl
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
                 err = nfmpi_get_vars_$1_all(ncid, i, start,
-     +                               edge, stride, 
+     +                               edge, stride,
      +                               value)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -601,18 +598,18 @@ C           choose random stride from 1 to edge
                     nstarts = nstarts * int(stride(j))
 6               continue
                 do 7, m = 1, nstarts
-                    err = index2indexes(m, var_rank(i), sstride, 
+                    err = index2indexes(m, var_rank(i), sstride,
      +                                  index)
                     if (err .ne. NF_NOERR)
      +                  call error('error in index2indexes')
                     nels = 1
                     do 8, j = 1, var_rank(i)
-                        count(j) = 1 + (edge(j) - index(j)) / 
+                        count(j) = 1 + (edge(j) - index(j)) /
      +                                  stride(j)
                         nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
-C                   Random choice of forward or backward 
+C                   Random choice of forward or backward
 C    /* TODO
 C                   if ( roll(2) ) then
 C                       for (j = 0 j < var_rank(i) j++) {
@@ -624,21 +621,21 @@ C    */
                     allInIntRange = .true.
                     allInExtRange = .true.
                     do 9, j = 1, nels
-                        err = index2indexes(j, var_rank(i), count, 
+                        err = index2indexes(j, var_rank(i), count,
      +                                      index2)
                         if (err .ne. NF_NOERR)
      +                      call error('error in index2indexes() 1')
                         do 10, d = 1, var_rank(i)
-                            index2(d) = index(d) + (index2(d)-1) * 
+                            index2(d) = index(d) + (index2(d)-1) *
      +                                  stride(d)
 10                      continue
-                        expect(j) = hash4(var_type(i), var_rank(i), 
-     +                                    index2, NFT_ITYPE($1))
+                        expect(j) = hash4(var_type(i), var_rank(i),
+     +                                    index2)
                         if (inRange3(expect(j),var_type(i),
      +                               NFT_ITYPE($1))) then
-                            allInIntRange = 
+                            allInIntRange =
      +                          allInIntRange .and.
-     +                          in_internal_range(NFT_ITYPE($1), 
+     +                          in_internal_range(NFT_ITYPE($1),
      +                                            expect(j))
                         else
                             allInExtRange = .false.
@@ -664,7 +661,7 @@ C    */
                         do 11, j = 1, nels
                             if (inRange3(expect(j),var_type(i),
      +                          NFT_ITYPE($1)) .and.
-     +                          in_internal_range(NFT_ITYPE($1), 
+     +                          in_internal_range(NFT_ITYPE($1),
      +                                            expect(j))) then
                                 val = ARITH3($1, value, j)
                                 if (.not.equal(val, expect(j),
@@ -674,11 +671,11 @@ C    */
                                     if (verbose) then
                                         call error(' ')
                                         call errori('varid: ', i)
-                                        call errorc('var_name: ', 
+                                        call errorc('var_name: ',
      +                                              var_name(i))
                                         call errori('element number: ',
      +                                              j)
-                                        call errord('expect: ', 
+                                        call errord('expect: ',
      +                                              expect(j))
                                         call errord('got: ', val)
                                     end if
@@ -722,12 +719,12 @@ define([TEST_NFMPI_GET_VARM],dnl
         integer k
         integer m
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer nels
         integer nslabs
-        integer nstarts         
-        integer nok             
+        integer nstarts
+        integer nok
         integer*8 start(MAX_RANK)
         integer*8 edge(MAX_RANK)
         integer*8 index(MAX_RANK)
@@ -737,7 +734,7 @@ define([TEST_NFMPI_GET_VARM],dnl
         integer*8 sstride(MAX_RANK)
         integer*8 stride(MAX_RANK)
         integer*8 imap(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -749,7 +746,7 @@ define([TEST_NFMPI_GET_VARM],dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, numVars
-            canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
+            canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assertion'
             if (.not.(var_nels(i) .le. MAX_NELS)) stop 'assertion'
@@ -760,19 +757,19 @@ define([TEST_NFMPI_GET_VARM],dnl
                 imap(j) = 1
 2           continue
             err = nfmpi_get_varm_$1_all(BAD_ID, i, start, edge,
-     +                           stride, imap, 
+     +                           stride, imap,
      +                           value)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
             err = nfmpi_get_varm_$1_all(ncid, BAD_VARID, start,
-     +                           edge, stride, 
+     +                           edge, stride,
      +                           imap, value)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
                 err = nfmpi_get_varm_$1_all(ncid, i, start,
-     +                               edge, stride, 
+     +                               edge, stride,
      +                               imap, value)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -784,7 +781,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
                 err = nfmpi_get_varm_$1_all(ncid, i, start,
-     +                               edge, stride, 
+     +                               edge, stride,
      +                               imap, value)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -796,7 +793,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                 edge(j) = 1
                 stride(j) = 0
                 err = nfmpi_get_varm_$1_all(ncid, i, start,
-     +                               edge, stride, 
+     +                               edge, stride,
      +                               imap, value)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -807,14 +804,14 @@ define([TEST_NFMPI_GET_VARM],dnl
                 endif
                 stride(j) = 1
 3           continue
-C           Choose a random point dividing each dim into 2 parts 
-C           get 2^rank (nslabs) slabs so defined 
+C           Choose a random point dividing each dim into 2 parts
+C           get 2^rank (nslabs) slabs so defined
             nslabs = 1
             do 4, j = 1, var_rank(i)
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 4           continue
-C           /* bits of k determine whether to get lower or upper part 
+C           /* bits of k determine whether to get lower or upper part
 C            * of dim
 C            * choose random stride from 1 to edge */
             do 5, k = 1, nslabs
@@ -841,12 +838,12 @@ C            * choose random stride from 1 to edge */
      +                  call error('error in index2indexes')
                     nels = 1
                     do 8, j = 1, var_rank(i)
-                        count(j) = 1 + (edge(j) - index(j)) / 
+                        count(j) = 1 + (edge(j) - index(j)) /
      +                                  stride(j)
                         nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
-C                   Random choice of forward or backward 
+C                   Random choice of forward or backward
 C    /* TODO
 C                   if ( roll(2) ) then
 C                       for (j = 0 j < var_rank(i) j++) {
@@ -864,19 +861,19 @@ C     */
                     allInIntRange = .true.
                     allInExtRange = .true.
                     do 10, j = 1, nels
-                        err = index2indexes(j, var_rank(i), count, 
+                        err = index2indexes(j, var_rank(i), count,
      +                                      index2)
                         if (err .ne. NF_NOERR)
      +                      call error('error in index2indexes 1')
                         do 11, d = 1, var_rank(i)
-                            index2(d) = index(d) + (index2(d)-1) * 
+                            index2(d) = index(d) + (index2(d)-1) *
      +                                  stride(d)
 11                      continue
-                        expect(j) = hash4(var_type(i), var_rank(i), 
-     +                                    index2, NFT_ITYPE($1))
+                        expect(j) = hash4(var_type(i), var_rank(i),
+     +                                    index2)
                         if (inRange3(expect(j),var_type(i),
      +                               NFT_ITYPE($1))) then
-                            allInIntRange = 
+                            allInIntRange =
      +                          allInIntRange .and.
      +                          in_internal_range(NFT_ITYPE($1),
      +                                            expect(j))
@@ -907,18 +904,18 @@ C     */
      +                                            expect(j))) then
                                 val = ARITH3($1, value, j)
                                 if (.not.equal(val, expect(j),
-     +                                         var_type(i), 
+     +                                         var_type(i),
      +                                         NFT_ITYPE($1))) then
                                     call error(
      +                                  'value read not that expected')
                                     if (verbose) then
                                         call error(' ')
                                         call errori('varid: ', i)
-                                        call errorc('var_name: ', 
+                                        call errorc('var_name: ',
      +                                          var_name(i))
                                         call errori('element number: ',
      +                                              j)
-                                        call errord('expect: ', 
+                                        call errord('expect: ',
      +                                              expect(j))
                                         call errord('got: ', val)
                                     end if
@@ -963,16 +960,16 @@ define([TEST_NFMPI_GET_ATT],dnl
         integer*8 ndx(1)
         logical allInExtRange
         logical allInIntRange
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
-        integer nok             
+        integer nok
         doubleprecision val
 
         nok = 0
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
-        if (err .ne. NF_NOERR) 
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
 
         do 1, i = 0, numVars
@@ -980,36 +977,35 @@ define([TEST_NFMPI_GET_ATT],dnl
                 canConvert = (ATT_TYPE(j,i) .eq. NF_CHAR) .eqv.
      +                       (NFT_ITYPE($1) .eq. NFT_TEXT)
                 err = nfmpi_get_att_$1(BAD_ID, i,
-     +                  ATT_NAME(j,i), 
+     +                  ATT_NAME(j,i),
      +                  value)
-                if (err .ne. NF_EBADID) 
+                if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_get_att_$1(ncid, BAD_VARID, 
-     +                              ATT_NAME(j,i), 
+                err = nfmpi_get_att_$1(ncid, BAD_VARID,
+     +                              ATT_NAME(j,i),
      +                              value)
-                if (err .ne. NF_ENOTVAR) 
+                if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
                 err = nfmpi_get_att_$1(ncid, i,
-     +                                 'noSuch', 
+     +                                 'noSuch',
      +                                  value)
-                if (err .ne. NF_ENOTATT) 
+                if (err .ne. NF_ENOTATT)
      +              call errore('Bad attribute name: ', err)
                 allInIntRange = .true.
                 allInExtRange = .true.
                 do 3, k = 1, ATT_LEN(j,i)
                     ndx(1) = k
-                    expect(k) = hash4(ATT_TYPE(j,i), -1, ndx, 
-     +                                NFT_ITYPE($1))
+                    expect(k) = hash4(ATT_TYPE(j,i), -1, ndx)
                     if (inRange3(expect(k),ATT_TYPE(j,i),
      +                           NFT_ITYPE($1))) then
-                        allInIntRange = 
+                        allInIntRange =
      +                      allInIntRange .and.
      +                      in_internal_range(NFT_ITYPE($1), expect(k))
                     else
                         allInExtRange = .false.
                     end if
 3               continue
-                err = nfmpi_get_att_$1(ncid, i, 
+                err = nfmpi_get_att_$1(ncid, i,
      +                                 ATT_NAME(j,i),
      +                                 value)
                 if (canConvert .or. ATT_LEN(j,i) .eq. 0) then
@@ -1034,14 +1030,14 @@ define([TEST_NFMPI_GET_ATT],dnl
      +                                        expect(k))) then
                             val = ARITH3($1, value, k)
                             if (.not.equal(val, expect(k),
-     +                                     ATT_TYPE(j,i), 
+     +                                     ATT_TYPE(j,i),
      +                                     NFT_ITYPE($1)))then
                                 call error(
      +                              'value read not that expected')
                                 if (verbose) then
                                     call error(' ')
                                     call errori('varid: ', i)
-                                    call errorc('att_name: ', 
+                                    call errorc('att_name: ',
      +                                  ATT_NAME(j,i))
                                     call errori('element number: ', k)
                                     call errord('expect: ', expect(k))

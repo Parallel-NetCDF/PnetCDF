@@ -133,7 +133,7 @@ C
         maximum = internal_max(itype)
 
         hash_$1 = max(minimum, min(maximum, hash4( type, rank,
-     +      index, itype)))
+     +      index)))
         end
 ])dnl
 
@@ -205,8 +205,7 @@ C
      +                              index)
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes()')
-                expect = hash4(var_type(i), var_rank(i), index, 
-     +                         NFT_ITYPE($1))
+                expect = hash4(var_type(i), var_rank(i), index)
                 err = nfmpi_get_var1_$1(ncid, i, index, value)
                 if (.NOT. inRange3(expect,datatype,NFT_ITYPE($1)))
      +              go to 3
@@ -301,8 +300,7 @@ C */
                     nInExtRange = 0
                     do 4, k = 1, int(length)
                         ndx(1) = k
-                        expect(k) = hash4( datatype, -1, ndx, 
-     +                                    NFT_ITYPE($1))
+                        expect(k) = hash4(datatype, -1, ndx)
                         if (inRange3(expect(k), datatype, 
      +                               NFT_ITYPE($1))) then
                             nInExtRange = nInExtRange + 1
