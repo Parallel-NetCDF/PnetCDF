@@ -735,7 +735,7 @@ extern long long
 hashx_llong(const int rank, const MPI_Offset *index);
 
 extern double
-hash4(const nc_type type, const int rank, const MPI_Offset *index, const nct_itype itype);
+hash4(const int cdf_format, const nc_type type, const int rank, const MPI_Offset *index, const nct_itype itype);
 
 extern void
 init_gvars(int numGatts, int numTypes, int numVars);
