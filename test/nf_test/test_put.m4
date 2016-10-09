@@ -182,70 +182,61 @@ C
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
-            if (canConvert)  then
-                err = nfmpi_inq_var(ncid, i, name, datatype, ndims,
-     +                              dimids, ngatts)
+            if (.NOT. canConvert) go to 1
+            err = nfmpi_inq_var(ncid, i, name, datatype, ndims,
+     +                          dimids, ngatts)
+            if (err .ne. NF_NOERR)
+     +          call errore('nfmpi_inq_var: ', err)
+            if (name .ne. var_name(i))
+     +          call error('Unexpected var_name')
+            if (datatype .ne. var_type(i))
+     +          call error('Unexpected type')
+            if (ndims .ne. var_rank(i))
+     +          call error('Unexpected rank')
+            do 2, j = 1, ndims
+                err = nfmpi_inq_dim(ncid, dimids(j), name, length)
                 if (err .ne. NF_NOERR)
-     +              call errore('nfmpi_inq_var: ', err)
-                if (name .ne. var_name(i))
-     +              call error('Unexpected var_name')
-                if (datatype .ne. var_type(i))
-     +              call error('Unexpected type')
-                if (ndims .ne. var_rank(i))
-     +              call error('Unexpected rank')
-                do 2, j = 1, ndims
-                    err = nfmpi_inq_dim(ncid, dimids(j), name, 
-     +                   length)
-                    if (err .ne. NF_NOERR)
-     +                  call errore('nfmpi_inq_dim: ', err)
-                    if (length .ne. var_shape(j,i))
-     +                  call error('Unexpected shape')
-2               continue
-                do 3, j = 1, var_nels(i)
-                    err = index2indexes(j, var_rank(i), var_shape(1,i), 
-     +                                  index)
-                    if (err .ne. NF_NOERR)
-     +                  call error('error in index2indexes()')
-                    expect = hash4( var_type(i), var_rank(i), index, 
-     +                             NFT_ITYPE($1))
-                    err = nfmpi_get_var1_$1(ncid, i, index, 
-     +                      value)
-                    if (inRange3(expect,datatype,NFT_ITYPE($1)))  then
-                        if (in_internal_range(NFT_ITYPE($1), 
-     +                                        expect)) then
-                            if (err .ne. NF_NOERR)  then
-                                call errore
-     +                         ('nfmpi_get_var1_$1: ',
-     +                          err)
-                            else
-                                val = MAKE_ARITH_VAR1($1,value)
-                                if (.not.equal(
-     +                              val,
-     +                              expect,var_type(i),
-     +                              NFT_ITYPE($1)))  then
-                                    call error(
-     +                          'Var value read not that expected')
-                                    if (verbose)  then
-                                        call error(' ')
-                                        call errori('varid: %d', i)
-                                        call errorc('var_name: ', 
-     +                                          var_name(i))
-                                        call error('index:')
-                                        do 4, d = 1, var_rank(i)
-                                            intindex = int(index(d))
-                                            call errori(' ', intindex)
-4                                       continue
-                                        call errord('expect: ', expect)
-                                        call errord('got: ',  val)
-                                    end if
-                                else
-                                    nok = nok + 1
-                                end if
+     +              call errore('nfmpi_inq_dim: ', err)
+                if (length .ne. var_shape(j,i))
+     +              call error('Unexpected shape')
+2           continue
+            do 3, j = 1, var_nels(i)
+                err = index2indexes(j, var_rank(i), var_shape(1,i), 
+     +                              index)
+                if (err .ne. NF_NOERR)
+     +              call error('error in index2indexes()')
+                expect = hash4(var_type(i), var_rank(i), index, 
+     +                         NFT_ITYPE($1))
+                err = nfmpi_get_var1_$1(ncid, i, index, value)
+                if (.NOT. inRange3(expect,datatype,NFT_ITYPE($1)))
+     +              go to 3
+                if (in_internal_range(NFT_ITYPE($1), expect)) then
+                    if (err .ne. NF_NOERR) then
+                        call errore ('nfmpi_get_var1_$1: ', err)
+                    else
+                        val = MAKE_ARITH_VAR1($1,value)
+                        if (.not.equal(val, expect,var_type(i),
+     +                      NFT_ITYPE($1)))  then
+                            call error(
+     +                      'Var value read not that expected')
+                            if (verbose)  then
+                                call error(' ')
+                                call errori('varid: %d', i)
+                                call errorc('var_name: ', var_name(i))
+                                call error('index:')
+                                do 4, d = 1, var_rank(i)
+                                    intindex = int(index(d))
+                                    call errori(' ', intindex)
+4                               continue
+                                call errord('expect: ', expect)
+                                call errord('got: ',  val)
                             end if
+                        else
+                            nok = nok + 1
                         end if
                     end if
-3               continue
-            end if
+                end if
+3           continue
 1       continue
         err = nfmpi_end_indep_data(ncid)
         err = nfmpi_close (ncid)
