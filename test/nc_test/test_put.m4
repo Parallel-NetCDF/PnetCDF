@@ -56,15 +56,16 @@ define(`HASH',dnl
 static
 double
 hash_$1(
-    const nc_type type,
-    const int rank,
+    const int         cdf_format,
+    const nc_type     type,
+    const int         rank,
     const MPI_Offset *index,
-    const nct_itype itype)
+    const nct_itype   itype)
 {
     const double min = $1_min;
     const double max = $1_max;
 
-    return MAX(min, MIN(max, hash4( type, rank, index, itype)));
+    return MAX(min, MIN(max, hash4(cdf_format, type, rank, index, itype)));
 }
 ')dnl
 
@@ -107,7 +108,7 @@ check_vars_$1(const char *filename, int numVars)
     int dimids[MAX_RANK];
     char name[NC_MAX_NAME];
     MPI_Offset length;
-    int canConvert;     /* Both text or both numeric */
+    int canConvert;   /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
     double expect;
 
@@ -121,49 +122,49 @@ check_vars_$1(const char *filename, int numVars)
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
-        if (canConvert) {
-            err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
+        if (!canConvert) continue;
+
+        err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
+        IF (err != NC_NOERR)
+            error("ncmpi_inq_var: %s", ncmpi_strerror(err));
+        IF (strcmp(name, var_name[i]) != 0)
+            error("Unexpected var_name");
+        IF (datatype != var_type[i])
+            error("Unexpected type");
+        IF (ndims != var_rank[i])
+            error("Unexpected rank");
+        for (j = 0; j < ndims; j++) {
+            err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
             IF (err != NC_NOERR)
-                error("ncmpi_inq_var: %s", ncmpi_strerror(err));
-            IF (strcmp(name, var_name[i]) != 0)
-                error("Unexpected var_name");
-            IF (datatype != var_type[i])
-                error("Unexpected type");
-            IF (ndims != var_rank[i])
-                error("Unexpected rank");
-            for (j = 0; j < ndims; j++) {
-                err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
-                IF (err != NC_NOERR)
-                    error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
-                IF (length != var_shape[i][j])
-                    error("Unexpected shape");
-            }
-            for (j = 0; j < var_nels[i]; j++) {
-                err = toMixedBase(j, var_rank[i], var_shape[i], index);
-                IF (err != NC_NOERR)
-                    error("error in toMixedBase 2");
-                expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
-                err = ncmpi_get_var1_$1_all(ncid, i, index, &value);
-                if (CheckNumRange($1, expect, datatype)) {
-                    IF (err != NC_NOERR) {
-                        error("ncmpi_get_var1_$1_all: %s", ncmpi_strerror(err));
-                    } else {
-                        IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
-                            error("Var value read not that expected");
-                            if (verbose) {
-                                error("\n");
-                                error("varid: %d, ", i);
-                                error("var_name: %s, ", var_name[i]);
-                                error("var_type: %s, ", s_nc_type(var_type[i]));
-                                error("index:");
-                                for (d = 0; d < var_rank[i]; d++)
-                                    error(" %d", index[d]);
-                                error(", expect: %g, ", expect);
-                                error("got: %g", (double) value);
-                            }
-                        } else {
-                            ++nok;
+                error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
+            IF (length != var_shape[i][j])
+                error("Unexpected shape");
+        }
+        for (j = 0; j < var_nels[i]; j++) {
+            err = toMixedBase(j, var_rank[i], var_shape[i], index);
+            IF (err != NC_NOERR)
+                error("error in toMixedBase 2");
+            expect = hash4(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
+            err = ncmpi_get_var1_$1_all(ncid, i, index, &value);
+            if (CheckNumRange($1, expect, datatype)) {
+                IF (err != NC_NOERR) {
+                    error("ncmpi_get_var1_$1_all: %s", ncmpi_strerror(err));
+                } else {
+                    IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
+                        error("Var value read not that expected");
+                        if (verbose) {
+                            error("\n");
+                            error("varid: %d, ", i);
+                            error("var_name: %s, ", var_name[i]);
+                            error("var_type: %s, ", s_nc_type(var_type[i]));
+                            error("index:");
+                            for (d = 0; d < var_rank[i]; d++)
+                                error(" %d", index[d]);
+                            error(", expect: %g, ", expect);
+                            error("got: %g", (double) value);
                         }
+                    } else {
+                        ++nok;
                     }
                 }
             }
@@ -190,13 +191,17 @@ CHECK_VARS(longlong)
 CHECK_VARS(ulonglong)
 
 
-dnl CHECK_ATTS(TYPE)         numeric only
+dnl CHECK_ATTS(TYPE)
 dnl
 define(`CHECK_ATTS',dnl
 `dnl
 /* 
- *  check all attributes in file which are (text/numeric) compatible with TYPE
- *  ignore any attributes containing values outside range of TYPE
+ *  for _text tests, check all attributes in file which are of text type
+ *  Note no NC_ERANGE check for text attributes as text is not convertible to
+ *  any other numerical data types (i.e. NC_ECHAR)
+ * 
+ *  for other tests, check all numerical attributes in file against values
+ *  outside range of type $1
  */
 static
 int
@@ -211,8 +216,8 @@ check_atts_$1(int ncid, int numGatts, int numVars)
     MPI_Offset length;
     size_t nInExtRange;  /* number values within external range */
     size_t nInIntRange;  /* number values within internal range */
-    int canConvert;     /* Both text or both numeric */
-    int nok = 0;      /* count of valid comparisons */
+    int canConvert;      /* Both text or both numeric */
+    int nok = 0;         /* count of valid comparisons */
     double expect[MAX_NELS];
 
     err = ncmpi_inq_format(ncid, &cdf_format);
@@ -234,7 +239,7 @@ check_atts_$1(int ncid, int numGatts, int numVars)
             assert(length <= MAX_NELS);
             nInIntRange = nInExtRange = 0;
             for (k = 0; k < length; k++) {
-                expect[k] = hash4( datatype, -1, &k, NCT_ITYPE($1));
+                expect[k] = hash4(cdf_format, datatype, -1, &k, NCT_ITYPE($1));
                 if (inRange3(cdf_format, expect[k], datatype, NCT_ITYPE($1))) {
                     ++nInExtRange;
                     if (CheckRange($1, expect[k]))
@@ -331,21 +336,23 @@ test_ncmpi_put_var1_$1(int numVars)
         IF (err != NC_ENOTVAR) 
             error("expecting NC_ENOTVAR (bad var id), but err = %s", nc_err_code_name(err));
         ELSE_NOK
-        for (j = 0; j < var_rank[i]; j++) {
-            if (var_dimid[i][j] > 0) {                /* skip record dim */
-                index[j] = var_shape[i][j];     /* out of boundary check */
-                err = ncmpi_put_var1_$1_all(ncid, i, index, &value);
-                IF (canConvert && err != NC_EINVALCOORDS)
-                    error("expecting NC_EINVALCOORDS (bad index), but err = %s", nc_err_code_name(err));
-                ELSE_NOK
-                index[j] = 0;
+        if (canConvert) {
+            for (j = 0; j < var_rank[i]; j++) {
+                if (var_dimid[i][j] > 0) {                /* skip record dim */
+                    index[j] = var_shape[i][j];     /* out of boundary check */
+                    err = ncmpi_put_var1_$1_all(ncid, i, index, &value);
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting NC_EINVALCOORDS (bad index), but err = %s", nc_err_code_name(err));
+                    ELSE_NOK
+                    index[j] = 0;
+                }
             }
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR) 
                 error("error in toMixedBase 1");
-            value = hash_$1( var_type[i], var_rank[i], index, NCT_ITYPE($1));
+            value = hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
             if (var_rank[i] == 0 && i%2 == 0)
                 err = ncmpi_put_var1_$1_all(ncid, i, NULL, &value);
             else
@@ -414,7 +421,7 @@ test_ncmpi_put_var_$1(int numVars)
     int nels;
     MPI_Offset index[MAX_RANK];
     int canConvert;        /* Both text or both numeric */
-    int allInExtRange;        /* all values within external range? */
+    int allInExtRange;     /* all values within external range? */
     $1 value[MAX_NELS];
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
@@ -455,7 +462,7 @@ test_ncmpi_put_var_$1(int numVars)
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR) 
                 error("error in toMixedBase 1");
-            value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
+            value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index, NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
                 allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
         }
@@ -509,7 +516,7 @@ test_ncmpi_put_var_$1(int numVars)
                 IF (err != NC_NOERR) 
                     error("error in toMixedBase 1");
                 ELSE_NOK
-                value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
+                value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
                     allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
@@ -701,7 +708,7 @@ test_ncmpi_put_vara_$1(int numVars)
                     error("error in toMixedBase 1");
                 for (d = 0; d < var_rank[i]; d++) 
                     index[d] += start[d];
-                value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
+                value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
                     allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
@@ -893,7 +900,7 @@ test_ncmpi_put_vars_$1(int numVars)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    value[j] = hash_$1(var_type[i], var_rank[i], index2, 
+                    value[j] = hash_$1(cdf_format,var_type[i], var_rank[i], index2, 
                         NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
                         allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
@@ -1095,7 +1102,7 @@ test_ncmpi_put_varm_$1(int numVars)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    value[j] = hash_$1(var_type[i], var_rank[i], index2,
+                    value[j] = hash_$1(cdf_format,var_type[i], var_rank[i], index2,
                         NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
                         allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
@@ -1263,7 +1270,7 @@ test_ncmpi_put_att_$1(int numGatts, int numVars)
                     error("expecting bad type, but err = %d", err);
                 ELSE_NOK
                 for (allInExtRange = 1, k = 0; k < ATT_LEN(i,j); k++) {
-                    value[k] = hash_$1(ATT_TYPE(i,j), -1, &k, NCT_ITYPE($1));
+                    value[k] = hash_$1(cdf_format,ATT_TYPE(i,j), -1, &k, NCT_ITYPE($1));
                     IfCheckTextChar($1, ATT_TYPE(i,j))
                         allInExtRange &= inRange3(cdf_format, value[k], ATT_TYPE(i,j), NCT_ITYPE($1));
                 }

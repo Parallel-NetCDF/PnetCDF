@@ -52,15 +52,16 @@ define(`HASH',dnl
 static
 double
 hash_$1(
-    const nc_type type,
-    const int rank,
+    const int         cdf_format,
+    const nc_type     type,
+    const int         rank,
     const MPI_Offset *index,
-    const nct_itype itype)
+    const nct_itype   itype)
 {
     const double min = $1_min;
     const double max = $1_max;
 
-    return MAX(min, MIN(max, hash4( type, rank, index, itype)));
+    return MAX(min, MIN(max, hash4(cdf_format, type, rank, index, itype)));
 }
 ')dnl
 
@@ -139,7 +140,7 @@ check_vars_$1(const char *filename, int numVars)
                 err = toMixedBase(j, var_rank[i], var_shape[i], index);
                 IF (err != NC_NOERR)
                     error("error in toMixedBase 2");
-                expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
+                expect = hash4(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 err = ncmpi_get_var1_$1_all(ncid, i, index, &value);
                 if (CheckNumRange($1, expect, datatype)) {
                     IF (err != NC_NOERR) {
@@ -377,7 +378,7 @@ test_ncmpi_iput_var1_$1(int numVars)
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR) 
                 error("error in toMixedBase 1");
-            value = hash_$1( var_type[i], var_rank[i], index, NCT_ITYPE($1));
+            value = hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
             if (var_rank[i] == 0 && i%2 == 0)
                 err = ncmpi_iput_var1_$1(ncid, i, NULL, &value, &reqid);
             else
@@ -583,7 +584,7 @@ test_ncmpi_iput_var_$1(int numVars)
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR) 
                 error("error in toMixedBase 1");
-            value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
+            value[j]= hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
                 allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
         }
@@ -648,7 +649,7 @@ test_ncmpi_iput_var_$1(int numVars)
                 IF (err != NC_NOERR) 
                     error("error in toMixedBase 1");
                 ELSE_NOK
-                value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
+                value[j]= hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
                     allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
@@ -981,7 +982,7 @@ test_ncmpi_iput_vara_$1(int numVars)
                 ELSE_NOK
                 for (d = 0; d < var_rank[i]; d++) 
                     index[d] += start[d];
-                value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
+                value[j]= hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
                     allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
@@ -1331,7 +1332,7 @@ test_ncmpi_iput_vars_$1(int numVars)
                     ELSE_NOK
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    value[j] = hash_$1(var_type[i], var_rank[i], index2, NCT_ITYPE($1));
+                    value[j] = hash_$1(cdf_format, var_type[i], var_rank[i], index2, NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
                         allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
                 }
@@ -1698,7 +1699,7 @@ test_ncmpi_iput_varm_$1(int numVars)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    value[j] = hash_$1(var_type[i], var_rank[i], index2, NCT_ITYPE($1));
+                    value[j] = hash_$1(cdf_format, var_type[i], var_rank[i], index2, NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
                         allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
                 }

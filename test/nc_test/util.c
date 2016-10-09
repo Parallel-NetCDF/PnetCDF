@@ -534,7 +534,8 @@ hash( const nc_type xtype, const int rank, const MPI_Offset *index )
 
 /* wrapper for hash to handle special NC_BYTE/uchar adjustment */
 double
-hash4(const nc_type     xtype, 
+hash4(const int         cdf_format,
+      const nc_type     xtype, 
       const int         rank, 
       const MPI_Offset *index, 
       const nct_itype   itype)
@@ -542,8 +543,25 @@ hash4(const nc_type     xtype,
     double result;
 
     result = hash(xtype, rank, index);
-    if (itype == NCT_UCHAR && xtype == NC_BYTE && result >= -128 && result < 0)
+
+    /* netCDF specification make a special case for type conversion between
+     * uchar and NC_BYTE: do not check for range error. See
+     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+     * The _uchar and _schar functions were introduced in netCDF-3 to eliminate
+     * an ambiguity, and support both signed and unsigned byte data. In
+     * netCDF-2, whether the external NC_BYTE type represented signed or
+     * unsigned values was left up to the user. In netcdf-3, we treat NC_BYTE
+     * as signed for the purposes of conversion to short, int, long, float, or
+     * double. (Of course, no conversion takes place when the internal type is
+     * signed char.) In the _uchar functions, we treat NC_BYTE as if it were
+     * unsigned. Thus, no NC_ERANGE error can occur converting between NC_BYTE
+     * and unsigned char.
+     */
+    if (cdf_format < NC_FORMAT_CDF5 && 
+        itype == NCT_UCHAR && xtype == NC_BYTE &&
+        result >= -128 && result < 0)
         result += 256;
+
     return result;
 }
 
