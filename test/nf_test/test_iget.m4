@@ -124,8 +124,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
      +                              index)
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes 1')
-                expect = hash4( var_type(i), var_rank(i), index, 
-     +                          NFT_ITYPE($1) )
+                expect = hash4(var_type(i), var_rank(i), index) 
                 err = nfmpi_iget_var1_$1(ncid,i,index,value,
      +                               reqid(1))
                 if (err .eq. NF_NOERR)
@@ -219,8 +218,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
      +                              index)
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes 1')
-                expect(j) = hash4( var_type(i), var_rank(i), index, 
-     +                          NFT_ITYPE($1) )
+                expect(j) = hash4(var_type(i), var_rank(i), index) 
                 if (inRange3(expect(j),var_type(i), NFT_ITYPE($1))) then
                     allInIntRange = allInIntRange .and.
      +                  in_internal_range(NFT_ITYPE($1), expect(j))
@@ -418,8 +416,7 @@ C           bits of k determine whether to get lower or upper part of dim
                     do 8, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
 8                   continue
-                    expect(j) = hash4(var_type(i), var_rank(i), index, 
-     +                                NFT_ITYPE($1))
+                    expect(j) = hash4(var_type(i), var_rank(i), index) 
                     if (inRange3(expect(j),var_type(i), 
      +                           NFT_ITYPE($1))) then
                         allInIntRange = 
@@ -650,7 +647,7 @@ C    */
      +                                  stride(d)
 10                      continue
                         expect(j) = hash4(var_type(i), var_rank(i), 
-     +                                    index2, NFT_ITYPE($1))
+     +                                    index2)
                         if (inRange3(expect(j),var_type(i),
      +                               NFT_ITYPE($1))) then
                             allInIntRange = 
@@ -892,7 +889,7 @@ C     */
      +                                  stride(d)
 11                      continue
                         expect(j) = hash4(var_type(i), var_rank(i), 
-     +                                    index2, NFT_ITYPE($1))
+     +                                    index2)
                         if (inRange3(expect(j),var_type(i),
      +                               NFT_ITYPE($1))) then
                             allInIntRange = 

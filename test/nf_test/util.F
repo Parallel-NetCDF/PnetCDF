@@ -517,20 +517,18 @@
 
 
 ! wrapper for hash to handle special NC_BYTE/uchar adjustment */
-      double precision function hash4(type, rank, index, itype)
+      double precision function hash4(type, rank, index)
       implicit  none
-      integer   type
-      integer   rank
       include "pnetcdf.inc"
 #include "tests.inc"
+
+      integer   type
+      integer   rank
+      integer*8 index(*)
       double precision hash
 
-      integer*8 index(*)
-      integer   itype
+      hash4 = hash(type, rank, index)
 
-      hash4 = hash( type, rank, index )
-      if ((itype .eq. NFT_CHAR) .and. (type .eq. NF_BYTE) .and. 
-     +    (hash4 .ge. -128) .and. (hash4 .lt. 0)) hash4 = hash4 + 256
       end
 
 
