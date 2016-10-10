@@ -698,10 +698,10 @@ extern int
 inRange3(const int cdf_format, const double value, const nc_type datatype, const nct_itype itype);
 
 extern int
-equal(double x, double y, nc_type extType, nct_itype itype);
+equal(const double x, const double y, nc_type extType, nct_itype itype);
 
 extern int
-equal2(double x, double y, nc_type extType);
+equal2(const double x, const double y, nc_type extType);
 
 extern int
 int_vec_eq(const int *v1, const int *v2, const int n);

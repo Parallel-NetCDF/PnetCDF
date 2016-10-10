@@ -10,6 +10,45 @@ dnl
  */
 /* $Id$ */
 
+dnl
+dnl The following m4 macro is to differentiate PnetCDF and netCDF in terms of
+dnl function prefix names (ncmpi_ vs. nc_), integer data types (MPI_Offset
+dnl vs. size_t), and function name substrings for external data types.
+dnl
+
+define(`PNETCDF')dnl
+
+#include "tests.h"
+
+define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
+define(`PTRDType',`ifdef(`PNETCDF',`MPI_Offset',`ptrdiff_t')')dnl
+define(`TestFunc',`ifdef(`PNETCDF',`test_ncmpi_put_$1',`test_nc_put_$1')')dnl
+
+define(`FileClose',`ifdef(`PNETCDF',`ncmpi_close',`nc_close')')dnl
+define(`FileOpen', `ifdef(`PNETCDF',`ncmpi_open(comm, $1, $2, info, &ncid);', `file_open($1, $2, &ncid);')')
+define(`FileCreate',`ifdef(`PNETCDF',`ncmpi_create(comm, $1, $2, info, &ncid);', `file_create($1, $2, &ncid);')')
+
+define(`EndDef',`ifdef(`PNETCDF',`ncmpi_enddef($1)',`nc_enddef($1)')')dnl
+define(`FileDelete',`ifdef(`PNETCDF',`ncmpi_delete($1,$2)',`nc_delete($1)')')dnl
+define(`Inq',`ifdef(`PNETCDF',`ncmpi_inq_$1',`nc_inq_$1')')dnl
+
+define(`PutVarArgs',`ifdef(`PNETCDF',`int numVars',`void')')dnl
+define(`PutAttArgs',`ifdef(`PNETCDF',`int numGatts,int numVars',`void')')dnl
+
+define(`PutVar1',`ifdef(`PNETCDF',`ncmpi_put_var1_$1_all',`nc_put_var1_$1')')dnl
+define(`PutVar', `ifdef(`PNETCDF',`ncmpi_put_var_$1_all', `nc_put_var_$1')')dnl
+define(`PutVara',`ifdef(`PNETCDF',`ncmpi_put_vara_$1_all',`nc_put_vara_$1')')dnl
+define(`PutVars',`ifdef(`PNETCDF',`ncmpi_put_vars_$1_all',`nc_put_vars_$1')')dnl
+define(`PutVarm',`ifdef(`PNETCDF',`ncmpi_put_varm_$1_all',`nc_put_varm_$1')')dnl
+define(`PutAtt', `ifdef(`PNETCDF',`ncmpi_put_att_$1',`nc_put_att_$1')')dnl
+
+define(`GetVar1',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
+define(`GetAtt', `ifdef(`PNETCDF',`ncmpi_get_att_$1',`nc_get_att_$1')')dnl
+
+define(`StrError', `ifdef(`PNETCDF',`ncmpi_strerror',`nc_strerror')')dnl
+define(`InqFormat',`ifdef(`PNETCDF',`ncmpi_inq_format',`nc_inq_format')')dnl
+
+define(`DefVars',`ifdef(`PNETCDF',`def_vars($1,$2)',`def_vars($1)')')dnl
 
 undefine(`index')dnl
 dnl dnl dnl
@@ -44,8 +83,6 @@ define(`CheckRange3',
        `ifelse(`$1',`text', `1',
                `inRange3(cdf_format, $2,$3,NCT_ITYPE($1))')')dnl
 
-#include "tests.h"
-
 dnl HASH(TYPE)
 dnl
 define(`HASH',dnl
@@ -59,7 +96,7 @@ hash_$1(
     const int         cdf_format,
     const nc_type     type,
     const int         rank,
-    const MPI_Offset *index,
+    const IntType    *index,
     const nct_itype   itype)
 {
     const double min = $1_min;
@@ -96,37 +133,30 @@ static
 int
 check_vars_$1(const char *filename, int numVars)
 {
-    int  ncid;                  /* netCDF id */
-    MPI_Offset index[MAX_RANK];
-    int  cdf_format, err;
-    int  d;
-    int  i;
-    size_t  j;
-    $1 value;
-    nc_type datatype;
-    int ndims;
-    int dimids[MAX_RANK];
-    char name[NC_MAX_NAME];
-    MPI_Offset length;
+    int i, j, d, err, ncid, cdf_format, ndims;
     int canConvert;   /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
+    int dimids[MAX_RANK];
+    nc_type datatype;
+    char name[NC_MAX_NAME];
+    IntType index[MAX_RANK];
+    IntType length;
     double expect;
+    $1 value;
 
-    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE)
+    IF (err != NC_NOERR) error("open: %s", StrError (err));
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
-    IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+    err = Inq(format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         if (!canConvert) continue;
 
-        err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
+        err = Inq(var)(ncid, i, name, &datatype, &ndims, dimids, NULL);
         IF (err != NC_NOERR)
-            error("ncmpi_inq_var: %s", ncmpi_strerror(err));
+            error("inq_var: %s", StrError (err));
         IF (strcmp(name, var_name[i]) != 0)
             error("Unexpected var_name");
         IF (datatype != var_type[i])
@@ -134,9 +164,9 @@ check_vars_$1(const char *filename, int numVars)
         IF (ndims != var_rank[i])
             error("Unexpected rank");
         for (j = 0; j < ndims; j++) {
-            err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
+            err = Inq(dim)(ncid, dimids[j], 0, &length);
             IF (err != NC_NOERR)
-                error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
+                error("inq_dim: %s", StrError (err));
             IF (length != var_shape[i][j])
                 error("Unexpected shape");
         }
@@ -145,10 +175,10 @@ check_vars_$1(const char *filename, int numVars)
             IF (err != NC_NOERR)
                 error("error in toMixedBase 2");
             expect = hash4(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
-            err = ncmpi_get_var1_$1_all(ncid, i, index, &value);
+            err = GetVar1($1)(ncid, i, index, &value);
             if (CheckNumRange($1, expect, datatype)) {
                 IF (err != NC_NOERR) {
-                    error("ncmpi_get_var1_$1_all: %s", ncmpi_strerror(err));
+                    error("get_var1_$1_all: %s", StrError (err));
                 } else {
                     IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
                         error("Var value read not that expected");
@@ -170,9 +200,9 @@ check_vars_$1(const char *filename, int numVars)
             }
         }
     }
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
     return nok;
 }
 ')dnl
@@ -207,35 +237,32 @@ static
 int
 check_atts_$1(int ncid, int numGatts, int numVars)
 {
-    int  cdf_format, err;
-    int  i;
-    int  j;
-    MPI_Offset  k;
-    $1 value[MAX_NELS];
-    nc_type datatype;
-    MPI_Offset length;
-    size_t nInExtRange;  /* number values within external range */
-    size_t nInIntRange;  /* number values within internal range */
+    int i, j, cdf_format, err;
     int canConvert;      /* Both text or both numeric */
     int nok = 0;         /* count of valid comparisons */
+    IntType k, length;
+    nc_type datatype;
+    size_t nInExtRange;  /* number values within external range */
+    size_t nInIntRange;  /* number values within internal range */
     double expect[MAX_NELS];
+    $1 value[MAX_NELS];
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
+    err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+        error("inq_format: %s", StrError (err));
 
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             canConvert = (ATT_TYPE(i,j) == NC_CHAR) CheckText($1);
             if (!canConvert) continue;
 
-            err = ncmpi_inq_att(ncid, i, ATT_NAME(i,j), &datatype, &length);
+            err = Inq(att)(ncid, i, ATT_NAME(i,j), &datatype, &length);
             IF (err != NC_NOERR)
-                error("ncmpi_inq_att: %s", ncmpi_strerror(err));
+                error("inq_att: %s", StrError (err));
             IF (datatype != ATT_TYPE(i,j))
-            error("ncmpi_inq_att: unexpected type");
+            error("inq_att: unexpected type");
             IF (length != ATT_LEN(i,j))
-                error("ncmpi_inq_att: unexpected length");
+                error("inq_att: unexpected length");
             assert(length <= MAX_NELS);
             nInIntRange = nInExtRange = 0;
             for (k = 0; k < length; k++) {
@@ -246,10 +273,10 @@ check_atts_$1(int ncid, int numGatts, int numVars)
                         ++nInIntRange;
                 }
             }
-            err = ncmpi_get_att_$1(ncid, i, ATT_NAME(i,j), value);
+            err = GetAtt($1)(ncid, i, ATT_NAME(i,j), value);
             if (nInExtRange == length && nInIntRange == length) {
                 IF (err != NC_NOERR)
-                    error("%s", ncmpi_strerror(err));
+                    error("%s", StrError (err));
             } else {
                 IF (err != NC_NOERR && err != NC_ERANGE)
                     error("OK or Range error: err = %d", err);
@@ -297,52 +324,49 @@ dnl
 define(`TEST_NC_PUT_VAR1',dnl
 `dnl
 int
-test_ncmpi_put_var1_$1(int numVars)
+TestFunc(var1)_$1(PutVarArgs)
 {
-    int ncid, cdf_format, nok=0;
-    int i;
-    int j;
-    int err;
-    MPI_Offset index[MAX_RANK];
+    int i, j, err, ncid, cdf_format, nok=0;
+    IntType index[MAX_RANK];
     int canConvert;        /* Both text or both numeric */
     $1 value = 5;        /* any value would do - only for error cases */
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
+    err = FileCreate(scratch, NC_CLOBBER)
     IF (err != NC_NOERR) {
-        error("ncmpi_create: %s", ncmpi_strerror(err));
+        error("create: %s", StrError (err));
         return nok;
     }
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
+    err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+        error("inq_format: %s", StrError (err));
 
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    DefVars(ncid, numVars);
 
-    err = ncmpi_enddef(ncid);
+    err = EndDef(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_enddef: %s", ncmpi_strerror(err));
+        error("enddef: %s", StrError (err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
-        err = ncmpi_put_var1_$1_all(BAD_ID, i, index, &value);
+        err = PutVar1($1)(BAD_ID, i, index, &value);
         IF (err != NC_EBADID) 
             error("expecting NC_EBADID (bad ncid), but err = %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_put_var1_$1_all(ncid, BAD_VARID, index, &value);
+        err = PutVar1($1)(ncid, BAD_VARID, index, &value);
         IF (err != NC_ENOTVAR) 
             error("expecting NC_ENOTVAR (bad var id), but err = %s", nc_err_code_name(err));
         ELSE_NOK
         if (canConvert) {
             for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {                /* skip record dim */
+                if (var_dimid[i][j] > 0) {          /* skip record dim */
                     index[j] = var_shape[i][j];     /* out of boundary check */
-                    err = ncmpi_put_var1_$1_all(ncid, i, index, &value);
+                    err = PutVar1($1)(ncid, i, index, &value);
                     IF (err != NC_EINVALCOORDS)
-                        error("expecting NC_EINVALCOORDS (bad index), but err = %s", nc_err_code_name(err));
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                     ELSE_NOK
                     index[j] = 0;
                 }
@@ -354,13 +378,13 @@ test_ncmpi_put_var1_$1(int numVars)
                 error("error in toMixedBase 1");
             value = hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
             if (var_rank[i] == 0 && i%2 == 0)
-                err = ncmpi_put_var1_$1_all(ncid, i, NULL, &value);
+                err = PutVar1($1)(ncid, i, NULL, &value);
             else
-                err = ncmpi_put_var1_$1_all(ncid, i, index, &value);
+                err = PutVar1($1)(ncid, i, index, &value);
             if (canConvert) {
                 if (CheckRange3($1, value, var_type[i])) {
                     IF (err != NC_NOERR)
-                        error("%s", ncmpi_strerror(err));
+                        error("%s", StrError (err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE) {
@@ -379,13 +403,13 @@ test_ncmpi_put_var1_$1(int numVars)
         }
     }
 
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR) 
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
 
-    err = ncmpi_delete(scratch, info);
+    err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -411,45 +435,40 @@ dnl
 define(`TEST_NC_PUT_VAR',dnl
 `dnl
 int
-test_ncmpi_put_var_$1(int numVars)
+TestFunc(var)_$1(PutVarArgs)
 {
-    int ncid, cdf_format, nok=0;
-    int varid;
-    int i;
-    int j;
-    int err;
-    int nels;
-    MPI_Offset index[MAX_RANK];
+    int i, j, err, nels, ncid, varid, cdf_format, nok=0;
     int canConvert;        /* Both text or both numeric */
     int allInExtRange;     /* all values within external range? */
+    IntType index[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
+    err = FileCreate(scratch, NC_CLOBBER)
     IF (err != NC_NOERR) {
-        error("ncmpi_create: %s", ncmpi_strerror(err));
+        error("create: %s", StrError (err));
         return nok;
     }
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
+    err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+        error("inq_format: %s", StrError (err));
 
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    DefVars(ncid, numVars);
 
-    err = ncmpi_enddef(ncid);
+    err = EndDef(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_enddef: %s", ncmpi_strerror(err));
+        error("enddef: %s", StrError (err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
-        err = ncmpi_put_var_$1_all(BAD_ID, i, value);
+        err = PutVar($1)(BAD_ID, i, value);
         IF (err != NC_EBADID) 
             error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
-        err = ncmpi_put_var_$1_all(ncid, BAD_VARID, value);
+        err = PutVar($1)(ncid, BAD_VARID, value);
         IF (err != NC_ENOTVAR) 
             error("expecting bad var id, but err = %d", err);
         ELSE_NOK
@@ -466,11 +485,11 @@ test_ncmpi_put_var_$1(int numVars)
             IfCheckTextChar($1, var_type[i])
                 allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
         }
-        err = ncmpi_put_var_$1_all(ncid, i, value);
+        err = PutVar($1)(ncid, i, value);
         if (canConvert) {
             if (allInExtRange) {
                 IF (err != NC_NOERR) 
-                    error("%s", ncmpi_strerror(err));
+                    error("%s", StrError (err));
                 ELSE_NOK
             } else {
                 IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
@@ -489,20 +508,20 @@ test_ncmpi_put_var_$1(int numVars)
 
     /* Write record number NRECS to force writing of preceding records */
     /* Assumes variable cr is char vector with UNLIMITED dimension */
-    err = ncmpi_inq_varid(ncid, "cr", &varid);
+    err = Inq(varid)(ncid, "cr", &varid);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
+        error("inq_varid: %s", StrError (err));
     index[0] = NRECS-1;
-    err = ncmpi_put_var1_text_all(ncid, varid, index, "x");
+    err = PutVar1(text)(ncid, varid, index, "x");
     IF (err != NC_NOERR)
-        error("ncmpi_put_var1_text_all: %s", ncmpi_strerror(err));
+        error("put_var1_text_all: %s", StrError (err));
 
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] == RECDIM) {  /* only test record variables here */
             canConvert = (var_type[i] == NC_CHAR) CheckText($1);
             assert(var_rank[i] <= MAX_RANK);
             assert(var_nels[i] <= MAX_NELS);
-            err = ncmpi_put_var_$1_all(BAD_ID, i, value);
+            err = PutVar($1)(BAD_ID, i, value);
             IF (err != NC_EBADID) 
                 error("expecting bad ncid, but err = %d", err);
             ELSE_NOK
@@ -520,11 +539,11 @@ test_ncmpi_put_var_$1(int numVars)
                 IfCheckTextChar($1, var_type[i])
                     allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
-            err = ncmpi_put_var_$1_all(ncid, i, value);
+            err = PutVar($1)(ncid, i, value);
             if (canConvert) {
                 if (allInExtRange) {
                     IF (err != NC_NOERR) 
-                        error("%s", ncmpi_strerror(err));
+                        error("%s", StrError (err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
@@ -539,13 +558,13 @@ test_ncmpi_put_var_$1(int numVars)
         }
     }
 
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR) 
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
 
-    err = ncmpi_delete(scratch, info);
+    err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -571,40 +590,31 @@ dnl
 define(`TEST_NC_PUT_VARA',dnl
 `dnl
 int
-test_ncmpi_put_vara_$1(int numVars)
+TestFunc(vara)_$1(PutVarArgs)
 {
-    int ncid, cdf_format, nok=0;
-    int d;
-    int i;
-    int j;
-    int k;
-    int err;
-    int nslabs;
-    int nels;
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
+    int i, j, k, d, err, nels, nslabs, ncid, cdf_format, nok=0;
     int canConvert;        /* Both text or both numeric */
-    int allInExtRange;        /* all values within external range? */
+    int allInExtRange;     /* all values within external range? */
+    IntType start[MAX_RANK], edge[MAX_RANK];
+    IntType mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
+    err = FileCreate(scratch, NC_CLOBBER)
     IF (err != NC_NOERR) {
-        error("ncmpi_create: %s", ncmpi_strerror(err));
+        error("create: %s", StrError (err));
         return nok;
     }
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
+    err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+        error("inq_format: %s", StrError (err));
 
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    DefVars(ncid, numVars);
 
-    err = ncmpi_enddef(ncid);
+    err = EndDef(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_enddef: %s", ncmpi_strerror(err));
+        error("enddef: %s", StrError (err));
 
     value[0] = 0;
     for (i = 0; i < numVars; i++) {
@@ -615,24 +625,24 @@ test_ncmpi_put_vara_$1(int numVars)
             start[j] = 0;
             edge[j] = 1;
         }
-        err = ncmpi_put_vara_$1_all(BAD_ID, i, start, edge, value);
+        err = PutVara($1)(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
             error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
-        err = ncmpi_put_vara_$1_all(ncid, BAD_VARID, start, edge, value);
+        err = PutVara($1)(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
             error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
-            if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
-                err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
+            if (var_dimid[i][j] > 0) {        /* skip record dim */
+                start[j] = var_shape[i][j];   /* out of boundary check */
+                err = PutVara($1)(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EINVALCOORDS)
-                    error("expecting bad start, but err = %d", err);
+                    error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                 ELSE_NOK
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;
-                err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
+                err = PutVara($1)(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EEDGE)
                     error("expecting bad edge, but err = %d", err);
                 ELSE_NOK
@@ -644,20 +654,20 @@ test_ncmpi_put_vara_$1(int numVars)
         for (j = 0; j < var_rank[i]; j++) {
             edge[j] = 0;
         }
-        err = ncmpi_put_vara_$1_all(BAD_ID, i, start, edge, value);
+        err = PutVara($1)(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
             error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
-        err = ncmpi_put_vara_$1_all(ncid, BAD_VARID, start, edge, value);
+        err = PutVara($1)(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
             error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
-            if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
-                err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
+            if (var_dimid[i][j] > 0) {        /* skip record dim */
+                start[j] = var_shape[i][j];   /* out of boundary check */
+                err = PutVara($1)(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EINVALCOORDS)
-                    error("expecting bad start, but err = %d", err);
+                    error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                 ELSE_NOK
                 start[j] = 0;
             }
@@ -667,10 +677,10 @@ test_ncmpi_put_vara_$1(int numVars)
            value[] set from the previously iteration. There is no such test
            in put_vars and put_varm.
 
-        err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
+        err = PutVara($1)(ncid, i, start, edge, value);
         if (canConvert) {
             IF (err != NC_NOERR)
-                error("%s", ncmpi_strerror(err));
+                error("%s", StrError (err));
             ELSE_NOK
         } else {
             IF (err != NC_ECHAR)
@@ -713,13 +723,13 @@ test_ncmpi_put_vara_$1(int numVars)
                     allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
             }
             if (var_rank[i] == 0 && i%2 == 0)
-                err = ncmpi_put_vara_$1_all(ncid, i, NULL, NULL, value);
+                err = PutVara($1)(ncid, i, NULL, NULL, value);
             else
-                err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
+                err = PutVara($1)(ncid, i, start, edge, value);
             if (canConvert) {
                 if (allInExtRange) {
                     IF (err != NC_NOERR) 
-                        error("%s", ncmpi_strerror(err));
+                        error("%s", StrError (err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
@@ -734,13 +744,13 @@ test_ncmpi_put_vara_$1(int numVars)
         }
     }
 
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR) 
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
 
-    err = ncmpi_delete(scratch, info);
+    err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -766,46 +776,34 @@ dnl
 define(`TEST_NC_PUT_VARS',dnl
 `dnl
 int
-test_ncmpi_put_vars_$1(int numVars)
+TestFunc(vars)_$1(PutVarArgs)
 {
-    int ncid, cdf_format, nok=0;
-    int d;
-    int i;
-    int j;
-    int k;
-    int m;
-    int err;
-    int nels;
-    int nslabs;
+    int i, j, k, m, d, err, nels, nslabs, ncid, cdf_format, nok=0;
     int nstarts;        /* number of different starts */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset index2[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
-    MPI_Offset count[MAX_RANK];
-    MPI_Offset sstride[MAX_RANK];
-    MPI_Offset stride[MAX_RANK];
-    int canConvert;        /* Both text or both numeric */
-    int allInExtRange;        /* all values within external range? */
+    int canConvert;     /* Both text or both numeric */
+    int allInExtRange;  /* all values within external range? */
+    IntType start[MAX_RANK], edge[MAX_RANK], index[MAX_RANK];
+    IntType index2[MAX_RANK], mid[MAX_RANK], count[MAX_RANK];
+    IntType sstride[MAX_RANK];
+    PTRDType stride[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
+    err = FileCreate(scratch, NC_CLOBBER)
     IF (err != NC_NOERR) {
-        error("ncmpi_create: %s", ncmpi_strerror(err));
+        error("create: %s", StrError (err));
         return nok;
     }
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
+    err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+        error("inq_format: %s", StrError (err));
 
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    DefVars(ncid, numVars);
 
-    err = ncmpi_enddef(ncid);
+    err = EndDef(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_enddef: %s", ncmpi_strerror(err));
+        error("enddef: %s", StrError (err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -816,35 +814,35 @@ test_ncmpi_put_vars_$1(int numVars)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = ncmpi_put_vars_$1_all(BAD_ID, i, start, edge, stride, value);
+        err = PutVars($1)(BAD_ID, i, start, edge, stride, value);
         IF (err != NC_EBADID) 
             error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
-        err = ncmpi_put_vars_$1_all(ncid, BAD_VARID, start, edge, stride, value);
+        err = PutVars($1)(ncid, BAD_VARID, start, edge, stride, value);
         IF (err != NC_ENOTVAR) 
             error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
-            if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
-                err = ncmpi_put_vars_$1_all(ncid, i, start, edge, stride, value);
+            if (var_dimid[i][j] > 0) {        /* skip record dim */
+                start[j] = var_shape[i][j];   /* out of boundary check */
+                err = PutVars($1)(ncid, i, start, edge, stride, value);
                 if (!canConvert) {
                     IF (err != NC_ECHAR)
                         error("conversion: err = %d", err);
                     ELSE_NOK
                 } else {
                     IF (err != NC_EINVALCOORDS)
-                        error("expecting bad start, but err = %d", err);
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                     ELSE_NOK
                     start[j] = 0;
                     edge[j] = var_shape[i][j] + 1;
-                    err = ncmpi_put_vars_$1_all(ncid, i, start, edge, stride, value);
+                    err = PutVars($1)(ncid, i, start, edge, stride, value);
                     IF (err != NC_EEDGE)
                         error("expecting bad edge, but err = %d", err);
                     ELSE_NOK
                     edge[j] = 1;
                     stride[j] = 0;
-                    err = ncmpi_put_vars_$1_all(ncid, i, start, edge, stride, value);
+                    err = PutVars($1)(ncid, i, start, edge, stride, value);
                     IF (err != NC_ESTRIDE)
                         error("expecting bad stride, but err = %d", err);
                     ELSE_NOK
@@ -906,13 +904,13 @@ test_ncmpi_put_vars_$1(int numVars)
                         allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
                 }
                 if (var_rank[i] == 0 && i%2 == 0)
-                    err = ncmpi_put_vars_$1_all(ncid, i, NULL, NULL, stride, value);
+                    err = PutVars($1)(ncid, i, NULL, NULL, stride, value);
                 else
-                    err = ncmpi_put_vars_$1_all(ncid, i, index, count, stride, value);
+                    err = PutVars($1)(ncid, i, index, count, stride, value);
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR) 
-                            error("%s", ncmpi_strerror(err));
+                            error("%s", StrError (err));
                         ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
@@ -928,13 +926,13 @@ test_ncmpi_put_vars_$1(int numVars)
         }
     }
 
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR) 
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
 
-    err = ncmpi_delete(scratch, info);
+    err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -960,47 +958,34 @@ dnl
 define(`TEST_NC_PUT_VARM',dnl
 `dnl
 int
-test_ncmpi_put_varm_$1(int numVars)
+TestFunc(varm)_$1(PutVarArgs)
 {
-    int ncid, cdf_format, nok=0;
-    int d;
-    int i;
-    int j;
-    int k;
-    int m;
-    int err;
-    int nels;
-    int nslabs;
+    int i, j, k, m, d, err, nels, nslabs, ncid, cdf_format, nok=0;
     int nstarts;        /* number of different starts */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset index2[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
-    MPI_Offset count[MAX_RANK];
-    MPI_Offset sstride[MAX_RANK];
-    MPI_Offset stride[MAX_RANK];
-    MPI_Offset imap[MAX_RANK];
-    int canConvert;        /* Both text or both numeric */
-    int allInExtRange;        /* all values within external range? */
+    int canConvert;     /* Both text or both numeric */
+    int allInExtRange;  /* all values within external range? */
+    IntType start[MAX_RANK], edge[MAX_RANK], index[MAX_RANK];
+    IntType index2[MAX_RANK], mid[MAX_RANK], count[MAX_RANK];
+    IntType sstride[MAX_RANK];
+    PTRDType stride[MAX_RANK], imap[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid);
+    err = FileCreate(scratch, NC_CLOBBER)
     IF (err != NC_NOERR) {
-        error("ncmpi_create: %s", ncmpi_strerror(err));
+        error("create: %s", StrError (err));
         return nok;
     }
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
+    err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+        error("inq_format: %s", StrError (err));
 
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    DefVars(ncid, numVars);
 
-    err = ncmpi_enddef(ncid);
+    err = EndDef(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_enddef: %s", ncmpi_strerror(err));
+        error("enddef: %s", StrError (err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -1012,35 +997,35 @@ test_ncmpi_put_varm_$1(int numVars)
             stride[j] = 1;
             imap[j] = 1;
         }
-        err = ncmpi_put_varm_$1_all(BAD_ID, i, start, edge, stride, imap, value);
+        err = PutVarm($1)(BAD_ID, i, start, edge, stride, imap, value);
         IF (err != NC_EBADID) 
             error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
-        err = ncmpi_put_varm_$1_all(ncid, BAD_VARID, start, edge, stride, imap, value);
+        err = PutVarm($1)(ncid, BAD_VARID, start, edge, stride, imap, value);
         IF (err != NC_ENOTVAR) 
             error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
-            if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
-                err = ncmpi_put_varm_$1_all(ncid, i, start, edge, stride, imap, value);
+            if (var_dimid[i][j] > 0) {        /* skip record dim */
+                start[j] = var_shape[i][j];   /* out of boundary check */
+                err = PutVarm($1)(ncid, i, start, edge, stride, imap, value);
                 if (!canConvert) {
                     IF (err != NC_ECHAR)
                         error("conversion: err = %d", err);
                     ELSE_NOK
                 } else {
                     IF (err != NC_EINVALCOORDS)
-                        error("expecting bad start, but err = %d", err);
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                     ELSE_NOK
                     start[j] = 0;
                     edge[j] = var_shape[i][j] + 1;
-                    err = ncmpi_put_varm_$1_all(ncid, i, start, edge, stride, imap, value);
+                    err = PutVarm($1)(ncid, i, start, edge, stride, imap, value);
                     IF (err != NC_EEDGE)
                         error("expecting bad edge, but err = %d", err);
                     ELSE_NOK
                     edge[j] = 1;
                     stride[j] = 0;
-                    err = ncmpi_put_varm_$1_all(ncid, i, start, edge, stride, imap, value);
+                    err = PutVarm($1)(ncid, i, start, edge, stride, imap, value);
                     IF (err != NC_ESTRIDE)
                         error("expecting bad stride, but err = %d", err);
                     ELSE_NOK
@@ -1108,13 +1093,13 @@ test_ncmpi_put_varm_$1(int numVars)
                         allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
                 }
                 if (var_rank[i] == 0 && i%2 == 0)
-                    err = ncmpi_put_varm_$1_all(ncid,i,NULL,NULL,NULL,NULL,value);
+                    err = PutVarm($1)(ncid,i,NULL,NULL,NULL,NULL,value);
                 else
-                    err = ncmpi_put_varm_$1_all(ncid,i,index,count,stride,imap,value);
+                    err = PutVarm($1)(ncid,i,index,count,stride,imap,value);
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
-                            error("%s", ncmpi_strerror(err));
+                            error("%s", StrError (err));
                         ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
@@ -1130,13 +1115,13 @@ test_ncmpi_put_varm_$1(int numVars)
         }
     }
 
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR) 
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
 
-    err = ncmpi_delete(scratch, info);
+    err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -1158,28 +1143,25 @@ TEST_NC_PUT_VARM(ulonglong)
 
 
 int
-test_ncmpi_put_att_text(int numGatts, int numVars)
+TestFunc(att)_text(PutAttArgs)
 {
-    int ncid, nok=0;
-    int i;
-    int j;
-    MPI_Offset k;
-    int err;
+    int i, j, err, ncid, nok=0;
+    IntType k;
     text value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
+    err = FileCreate(scratch, NC_NOCLOBBER)
     IF (err != NC_NOERR) {
-        error("ncmpi_create: %s", ncmpi_strerror(err));
+        error("create: %s", StrError (err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    DefVars(ncid, numVars);
 
     {
         const char *const tval = "value for bad name";
         const size_t tval_len = strlen(tval);
         
-        err = ncmpi_put_att_text(ncid, 0, "", tval_len, tval);
+        err = PutAtt(text)(ncid, 0, "", tval_len, tval);
         IF (err != NC_EBADNAME)
            error("should be NC_EBADNAME: err = %d", err);
         ELSE_NOK
@@ -1188,34 +1170,31 @@ test_ncmpi_put_att_text(int numGatts, int numVars)
         for (j = 0; j < NATTS(i); j++) {
             if (ATT_TYPE(i,j) == NC_CHAR) {
                 assert(ATT_LEN(i,j) <= MAX_NELS);
-                err = ncmpi_put_att_text(BAD_ID, i, ATT_NAME(i,j), ATT_LEN(i,j), 
-                    value);
+                err = PutAtt(text)(BAD_ID, i, ATT_NAME(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_EBADID)
                     error("expecting bad ncid, but err = %d", err);
                 ELSE_NOK
-                err = ncmpi_put_att_text(ncid, BAD_VARID, ATT_NAME(i,j), 
-                    ATT_LEN(i,j), value);
+                err = PutAtt(text)(ncid, BAD_VARID, ATT_NAME(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_ENOTVAR)
                     error("expecting bad var id, but err = %d", err);
                 ELSE_NOK
                 for (k = 0; k < ATT_LEN(i,j); k++) {
                     value[k] = hash(ATT_TYPE(i,j), -1, &k);
                 }
-                err = ncmpi_put_att_text(ncid, i, ATT_NAME(i,j), 
-                    ATT_LEN(i,j), value);
+                err = PutAtt(text)(ncid, i, ATT_NAME(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_NOERR)
-                    error("%s", ncmpi_strerror(err));
+                    error("%s", StrError (err));
                 ELSE_NOK
             }
         }
     }
 
     nok += check_atts_text(ncid, numGatts, numVars);
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
 
-    err = ncmpi_delete(scratch, info);
+    err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -1227,45 +1206,39 @@ dnl
 define(`TEST_NC_PUT_ATT',dnl
 `dnl
 int
-test_ncmpi_put_att_$1(int numGatts, int numVars)
+TestFunc(att)_$1(PutAttArgs)
 {
-    int ncid, cdf_format, nok=0;
-    int i;
-    int j;
-    MPI_Offset k;
-    int err;
-    $1 value[MAX_NELS];
+    int i, j, err, ncid, cdf_format, nok=0;
     int allInExtRange;  /* all values within external range? */
+    IntType k;
+    $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
+    err = FileCreate(scratch, NC_NOCLOBBER)
     IF (err != NC_NOERR) {
-        error("ncmpi_create: %s", ncmpi_strerror(err));
+        error("create: %s", StrError (err));
         return nok;
     }
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
+    err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+        error("inq_format: %s", StrError (err));
 
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    DefVars(ncid, numVars);
 
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             if (!(ATT_TYPE(i,j) == NC_CHAR)) {
                 assert(ATT_LEN(i,j) <= MAX_NELS);
-                err = ncmpi_put_att_$1(BAD_ID, i, ATT_NAME(i,j), ATT_TYPE(i,j), 
-                    ATT_LEN(i,j), value);
+                err = PutAtt($1)(BAD_ID, i, ATT_NAME(i,j), ATT_TYPE(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_EBADID)
                     error("expecting bad ncid, but err = %d", err);
                 ELSE_NOK
-                err = ncmpi_put_att_$1(ncid, BAD_VARID, ATT_NAME(i,j), 
-                    ATT_TYPE(i,j), ATT_LEN(i,j), value);
+                err = PutAtt($1)(ncid, BAD_VARID, ATT_NAME(i,j), ATT_TYPE(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_ENOTVAR)
                     error("expecting bad var id, but err = %d", err);
                 ELSE_NOK
-                err = ncmpi_put_att_$1(ncid, i, ATT_NAME(i,j), BAD_TYPE, 
-                    ATT_LEN(i,j), value);
+                err = PutAtt($1)(ncid, i, ATT_NAME(i,j), BAD_TYPE, ATT_LEN(i,j), value);
                 IF (err != NC_EBADTYPE)
                     error("expecting bad type, but err = %d", err);
                 ELSE_NOK
@@ -1274,11 +1247,10 @@ test_ncmpi_put_att_$1(int numGatts, int numVars)
                     IfCheckTextChar($1, ATT_TYPE(i,j))
                         allInExtRange &= inRange3(cdf_format, value[k], ATT_TYPE(i,j), NCT_ITYPE($1));
                 }
-                err = ncmpi_put_att_$1(ncid, i, ATT_NAME(i,j), ATT_TYPE(i,j),
-                    ATT_LEN(i,j), value);
+                err = PutAtt($1)(ncid, i, ATT_NAME(i,j), ATT_TYPE(i,j), ATT_LEN(i,j), value);
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
-                        error("%s", ncmpi_strerror(err));
+                        error("%s", StrError (err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
@@ -1290,11 +1262,11 @@ test_ncmpi_put_att_$1(int numGatts, int numVars)
     }
 
     nok += check_atts_$1(ncid, numGatts, numVars);
-    err = ncmpi_close(ncid);
+    err = FileClose (ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", StrError (err));
 
-    err = ncmpi_delete(scratch, info);
+    err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
