@@ -93,10 +93,7 @@ inRange_float(const double value, const nc_type xtype)
         case NC_UINT:   min = 0;            max = X_UINT_MAX;   break;
         case NC_INT64:  min = X_INT64_MIN;  max = X_INT64_MAX;  break;
         case NC_UINT64: min = 0;            max = X_UINT64_MAX; break;
-        default:
-            min = 0.0;
-            max = 0.0;
-            assert(0);
+        default: assert(0);
     }
     if (!( value >= min && value <= max)) {
 #if 0    /* DEBUG */
@@ -160,8 +157,8 @@ inRange3(const int       cdf_format,
  *  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
  */
 int
-equal(double x, 
-      double y, 
+equal(const double x, 
+      const double y, 
       nc_type      xtype,     /* external data type */
       nct_itype    itype)
 {
@@ -178,8 +175,7 @@ equal(double x,
          */
         char x2 = (char) x;
         char y2 = (char) y;
-        x = x2;
-        y = y2;
+        return ABS(x2-y2) <= epsilon * MAX( ABS(x2), ABS(y2));
     }
     return ABS(x-y) <= epsilon * MAX( ABS(x), ABS(y));
 }
@@ -187,8 +183,8 @@ equal(double x,
 /* this function is for the APIs without itype, i.e. xtype == itype */
 int
 equal2(
-    double x,
-    double y,
+    const double x,
+    const double y,
     nc_type xtype)    /* external data type */
 {
     const double flt_epsilon = 1.19209290E-07;
@@ -203,8 +199,7 @@ equal2(
          */
         char x2 = (char) x;
         char y2 = (char) y;
-        x = x2;
-        y = y2;
+        return ABS(x2-y2) <= epsilon * MAX( ABS(x2), ABS(y2));
     }
 
     return ABS(x-y) <= epsilon * MAX( ABS(x), ABS(y));
