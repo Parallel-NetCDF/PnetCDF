@@ -9,10 +9,6 @@ dnl
  */
 /* $Id$ */
 
-#if HAVE_CONFIG_H
-# include <ncconfig.h>
-#endif
-
 dnl
 dnl The following m4 macro is to differentiate PnetCDF and netCDF in terms of
 dnl function prefix names (ncmpi_ vs. nc_), integer data types (MPI_Offset
@@ -25,17 +21,22 @@ dnl
 dnl the rest of this file is shared with PnetCDF's ncx.m4
 dnl
 
+ifdef(`PNETCDF',`
+`#'if HAVE_CONFIG_H
+`#'include <ncconfig.h>
+`#'endif')
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 
-ifdef(`PNETCDF',dnl
-`#include "ncx.h"
-#include "macro.h"',dnl
-`#pragma GCC diagnostic ignored "-Wdeprecated"
-#include "ncx.h"
-#include "nc3dispatch.h"')
+ifdef(`PNETCDF',`
+`#'include "ncx.h"
+`#'include "macro.h"',`
+`#'pragma GCC diagnostic ignored "-Wdeprecated"
+`#'include "ncx.h"
+`#'include "nc3dispatch.h"')
 
 define(`IntType',   `ifdef(`PNETCDF', `MPI_Offset', `size_t')')dnl
 define(`APIPrefix', `ifdef(`PNETCDF', `ncmpi', `nc')')dnl
@@ -56,9 +57,9 @@ define(`NC_TYPE', `ifdef(`PNETCDF', `ifelse(
 `$1')')')dnl
 
 ifdef(`PNETCDF', , `
-#define DEBUG_RETURN_ERROR(err) return err;
-#define DEBUG_ASSIGN_ERROR(status, err) status = err;
-#define DEBUG_TRACE_ERROR')dnl
+`#'define DEBUG_RETURN_ERROR(err) return err;
+`#'define DEBUG_ASSIGN_ERROR(status, err) status = err;
+`#'define DEBUG_TRACE_ERROR')
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h> /* uint16_t, uint32_t, uint64_t */
