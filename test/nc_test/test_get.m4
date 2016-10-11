@@ -87,26 +87,26 @@ TestFunc(var1)_$1(GetVarArgs)
     err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
+    /* check if can detect a bad file ID */
+    err = GetVar1($1)(BAD_ID, 0, NULL, &value);
+    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+
+    /* check if can detect a bad variable ID */
+    err = GetVar1($1)(ncid, BAD_VARID, NULL, &value);
+    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
-        for (j = 0; j < var_rank[i]; j++) index[j] = 0;
-
-        /* check if can detect a bad file ID */
-        err = GetVar1($1)(BAD_ID, i, index, &value);
-        IF (err != NC_EBADID) error("bad ncid: err = %d", err);
-
-        /* check if can detect a bad variable ID */
-        err = GetVar1($1)(ncid, BAD_VARID, index, &value);
-        IF (err != NC_ENOTVAR) error("bad var id: err = %d", err);
 
         /* check if can detect out of boundary requests */
         for (j = 0; j < var_rank[i]; j++) {
             index[j] = var_shape[i][j]; /* make an out-of-boundary starts[] */
             err = GetVar1($1)(ncid, i, index, &value);
             if (!canConvert) {
-                IF (err != NC_ECHAR) error("conversion: err = %d", err);
+                IF (err != NC_ECHAR)
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
             } else IF (err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
             index[j] = 0;
         }
 
@@ -139,15 +139,15 @@ TestFunc(var1)_$1(GetVarArgs)
                         }
                     } else {
                         IF (err != NC_ERANGE)
-                            error("Range error: err = %d", err);
+                            error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
                     }
                 } else {
                     IF (err != NC_NOERR && err != NC_ERANGE)
-                        error("OK or Range error: err = %d", err);
+                        error("expecting NC_NOERR or NC_ERANGE but got %s", nc_err_code_name(err));
                 }
             } else {
                 IF (err != NC_ECHAR)
-                    error("wrong type: err = %d", err);
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
             }
         }
     }
@@ -194,18 +194,18 @@ TestFunc(var)_$1(GetVarArgs)
     err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
+    /* check if can detect a bad file ID */
+    err = GetVar($1)(BAD_ID, 0, value);
+    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+
+    /* check if can detect a bad variable ID */
+    err = GetVar($1)(ncid, BAD_VARID, value);
+    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
-
-        /* check if can detect a bad file ID */
-        err = GetVar($1)(BAD_ID, i, value);
-        IF (err != NC_EBADID) error("bad ncid: err = %d", err);
-
-        /* check if can detect a bad variable ID */
-        err = GetVar($1)(ncid, BAD_VARID, value);
-        IF (err != NC_ENOTVAR) error("bad var id: err = %d", err);
 
         /* check if the contents are supposed to be */
         for (nels=1,j=0; j<var_rank[i]; j++) nels *= var_shape[i][j];
@@ -231,11 +231,11 @@ TestFunc(var)_$1(GetVarArgs)
                         error(" %s", StrError (err));
                 } else {
                     IF (err != NC_ERANGE)
-                        error("Range error: err = %d", err);
+                        error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
                 }
             } else {
                 IF (err != NC_NOERR && err != NC_ERANGE)
-                    error("OK or Range error: err = %d", err);
+                    error("expecting NC_NOERR or NC_ERANGE but got %s", nc_err_code_name(err));
             }
             for (j = 0; j < nels; j++) {
                 if (CheckNumRange($1, expect[j], var_type[i])) {
@@ -257,7 +257,7 @@ TestFunc(var)_$1(GetVarArgs)
             }
         } else {
             IF (nels > 0 && err != NC_ECHAR)
-                error("wrong type: err = %d", err);
+                error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
         }
     }
     err = FileClose (ncid);
@@ -303,6 +303,12 @@ TestFunc(vara)_$1(GetVarArgs)
     err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
+    err = GetVara($1)(BAD_ID, 0, NULL, NULL, value);
+    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+
+    err = GetVara($1)(ncid, BAD_VARID, NULL, NULL, value);
+    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -311,21 +317,16 @@ TestFunc(vara)_$1(GetVarArgs)
             start[j] = 0;
             edge[j] = 1;
         }
-        err = GetVara($1)(BAD_ID, i, start, edge, value);
-        IF (err != NC_EBADID) error("bad ncid: err = %d", err);
-
-        err = GetVara($1)(ncid, BAD_VARID, start, edge, value);
-        IF (err != NC_ENOTVAR) error("bad var id: err = %d", err);
-
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j]; /* causes NC_EINVALCOORDS */
             err = GetVara($1)(ncid, i, start, edge, value);
             IF (canConvert && err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1; /* causes NC_EEDGE */
             err = GetVara($1)(ncid, i, start, edge, value);
-            IF (canConvert && err != NC_EEDGE) error("bad edge: err = %d", err);
+            IF (canConvert && err != NC_EEDGE)
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             edge[j] = 1;
         }
         /* Check non-scalars for correct error returned even when */
@@ -333,18 +334,12 @@ TestFunc(vara)_$1(GetVarArgs)
         if (var_rank[i] > 0) {
             for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
-            err = GetVara($1)(BAD_ID, i, start, edge, value);
-            IF (err != NC_EBADID) error("bad ncid: err = %d", err);
-
-            err = GetVara($1)(ncid, BAD_VARID, start, edge, value);
-            IF (err != NC_ENOTVAR) error("bad var id: err = %d", err);
-
             for (j = 0; j < var_rank[i]; j++) {
                 if (var_dimid[i][j] > 0) {                /* skip record dim */
                     start[j] = var_shape[i][j];
                     err = GetVara($1)(ncid, i, start, edge, value);
                     IF (canConvert && err != NC_EINVALCOORDS)
-                        error("bad start: err = %d", err);
+                        error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                     start[j] = 0;
                 }
             }
@@ -354,7 +349,7 @@ TestFunc(vara)_$1(GetVarArgs)
                     error("%s", StrError (err));
             } else {
                 IF (err != NC_ECHAR)
-                    error("wrong type: err = %d", err);
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
             }
             for (j = 0; j < var_rank[i]; j++) {
                 edge[j] = 1;
@@ -406,11 +401,11 @@ TestFunc(vara)_$1(GetVarArgs)
                             error("%s", StrError (err));
                     } else {
                         IF (err != NC_ERANGE)
-                            error("Range error: err = %d", err);
+                            error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
                     }
                 } else {
                     IF (err != NC_NOERR && err != NC_ERANGE)
-                        error("OK or Range error: err = %d", err);
+                        error("expecting NC_NOERR or NC_ERANGE but got %s", nc_err_code_name(err));
                 }
                 for (j = 0; j < nels; j++) {
                     if (CheckNumRange($1, expect[j], var_type[i])) {
@@ -432,7 +427,7 @@ TestFunc(vara)_$1(GetVarArgs)
                 }
             } else {
                 IF (nels > 0 && err != NC_ECHAR)
-                    error("wrong type: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
             }
         }
     }
@@ -483,6 +478,12 @@ TestFunc(vars)_$1(GetVarArgs)
     err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
+    err = GetVars($1)(BAD_ID, 0, NULL, NULL, NULL, value);
+    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+
+    err = GetVars($1)(ncid, BAD_VARID, NULL, NULL, NULL, value);
+    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -492,31 +493,25 @@ TestFunc(vars)_$1(GetVarArgs)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = GetVars($1)(BAD_ID, i, start, edge, stride, value);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        err = GetVars($1)(ncid, BAD_VARID, start, edge, stride, value);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
             err = GetVars($1)(ncid, i, start, edge, stride, value);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("conversion: err = %d", err);
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
             } else {
                 IF (err != NC_EINVALCOORDS)
-                    error("bad index: err = %d", err);
+                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;
                 err = GetVars($1)(ncid, i, start, edge, stride, value);
                 IF (err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
+                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 edge[j] = 1;
                 stride[j] = 0;
                 err = GetVars($1)(ncid, i, start, edge, stride, value);
                 IF (err != NC_ESTRIDE)
-                    error("bad stride: err = %d", err);
+                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 stride[j] = 1;
             }
         }
@@ -588,11 +583,11 @@ TestFunc(vars)_$1(GetVarArgs)
                                 error("%s", StrError (err));
                         } else {
                             IF (err != NC_ERANGE)
-                                error("Range error: err = %d", err);
+                                error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
                         }
                     } else {
                         IF (err != NC_NOERR && err != NC_ERANGE)
-                            error("OK or Range error: err = %d", err);
+                            error("expecting NC_NOERR or NC_ERANGE but got %s", nc_err_code_name(err));
                     }
                     for (j = 0; j < nels; j++) {
                         if (CheckNumRange($1, expect[j], var_type[i])) {
@@ -614,7 +609,7 @@ TestFunc(vars)_$1(GetVarArgs)
                     }
                 } else {
                     IF (nels > 0 && err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
+                        error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                 }
             }
         }
@@ -667,6 +662,12 @@ TestFunc(varm)_$1(GetVarArgs)
     err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
+    err = GetVarm($1)(BAD_ID, 0, NULL, NULL, NULL, NULL, value);
+    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+
+    err = GetVarm($1)(ncid, BAD_VARID, NULL, NULL, NULL, NULL, value);
+    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -677,31 +678,25 @@ TestFunc(varm)_$1(GetVarArgs)
             stride[j] = 1;
             imap[j] = 1;
         }
-        err = GetVarm($1)(BAD_ID, i, start, edge, stride, imap, value);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        err = GetVarm($1)(ncid, BAD_VARID, start, edge, stride, imap, value);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
             err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("conversion: err = %d", err);
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
             } else {
                 IF (err != NC_EINVALCOORDS)
-                    error("bad index: err = %d", err);
+                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;
                 err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
                 IF (err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
+                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 edge[j] = 1;
                 stride[j] = 0;
                 err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
                 IF (err != NC_ESTRIDE)
-                    error("bad stride: err = %d", err);
+                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 stride[j] = 1;
             }
         }
@@ -779,11 +774,11 @@ TestFunc(varm)_$1(GetVarArgs)
                                 error("%s", StrError (err));
                         } else {
                             IF (err != NC_ERANGE)
-                                error("Range error: err = %d", err);
+                                error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
                         }
                     } else {
                         IF (err != NC_NOERR && err != NC_ERANGE)
-                            error("OK or Range error: err = %d", err);
+                            error("expecting NC_NOERR or NC_ERANGE but got %s", nc_err_code_name(err));
                     }
                     for (j = 0; j < nels; j++) {
                         if (CheckNumRange($1, expect[j], var_type[i])) {
@@ -805,7 +800,7 @@ TestFunc(varm)_$1(GetVarArgs)
                     }
                 } else {
                     IF (nels > 0 && err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
+                        error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                 }
             }
         }
@@ -853,18 +848,26 @@ TestFunc(att)_$1(GetAttArgs)
     err = InqFormat (ncid, &cdf_format);
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
+    err = GetAtt($1)(BAD_ID, 0, NULL, value);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+
+    err = GetAtt($1)(ncid, BAD_VARID, NULL, value);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             canConvert = (ATT_TYPE(i,j) == NC_CHAR) CheckText($1);
-            err = GetAtt($1)(BAD_ID, i, ATT_NAME(i,j), value);
-            IF (err != NC_EBADID) 
-                error("bad ncid: err = %d", err);
+
             err = GetAtt($1)(ncid, BAD_VARID, ATT_NAME(i,j), value);
-            IF (err != NC_ENOTVAR) 
-                error("bad var id: err = %d", err);
+            IF (err != NC_ENOTVAR)
+                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+
             err = GetAtt($1)(ncid, i, "noSuch", value);
             IF (err != NC_ENOTATT) 
-                error("Bad attribute name: err = %d", err);
+                error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+
             allInExtRange = allInIntRange = 1;
             for (k = 0; k < ATT_LEN(i,j); k++) {
                 expect[k] = hash4(cdf_format, ATT_TYPE(i,j), -1, &k, NCT_ITYPE($1));
@@ -889,11 +892,11 @@ TestFunc(att)_$1(GetAttArgs)
                             error("%s", StrError (err));
                     } else {
                         IF (err != NC_ERANGE)
-                            error("Range error: err = %d", err);
+                            error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
                     }
                 } else {
                     IF (err != NC_NOERR && err != NC_ERANGE)
-                        error("OK or Range error: err = %d", err);
+                        error("expecting NC_NOERR or NC_ERANGE but got %s", nc_err_code_name(err));
                 }
                 for (k = 0; k < ATT_LEN(i,j); k++) {
                     if (CheckNumRange($1, expect[k], ATT_TYPE(i,j))) {
@@ -919,7 +922,7 @@ TestFunc(att)_$1(GetAttArgs)
                 }
             } else {
                 IF (err != NC_ECHAR)
-                    error("wrong type: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
             }
         }
     }
