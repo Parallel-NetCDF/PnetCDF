@@ -764,7 +764,7 @@ put_atts(int ncid, int numGatts, int numVars)
                      * 4th, ... will be specially made to cause NC_ERANG
                      */
                     IF (err != NC_ERANGE)
-                        error("type-conversion range error: status = %d", err);
+                        error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
                 }
             }
         }
@@ -804,7 +804,7 @@ put_vars(int ncid, int numVars)
                     error("ncmpi_put_vara_double_all: %s", ncmpi_strerror(err));
             } else {
                 IF (err != NC_ERANGE)
-                    error("type-conversion range error: status = %d", err);
+                    error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
             }
         }
     }

@@ -52,25 +52,28 @@ test_ncmpi_iget_var1(int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_var1(BAD_ID, 0, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_var1(ncid, BAD_VARID, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         for (j = 0; j < var_rank[i]; j++) index[j] = 0;
         datatype = nc_mpi_type(var_type[i]);
 
-        /* check if pnetcdf can detect a bad file ID */
-        err = ncmpi_iget_var1(BAD_ID, i, index, buf, 1, datatype, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_var1(ncid, BAD_VARID, index, buf, 1, datatype, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
         /* check if pnetcdf can detect out of boundary requests */
         for (j = 0; j < var_rank[i]; j++) {
             index[j] = var_shape[i][j]; /* make an out-of-boundary starts[] */
             err = ncmpi_iget_var1(ncid, i, index, buf, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
             index[j] = 0;
         }
@@ -140,29 +143,32 @@ test_ncmpi_iget_var1_$1(int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_inq_format: %s", ncmpi_strerror(err));
 
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_var1_$1(BAD_ID, 0, NULL, NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_var1_$1(ncid, BAD_VARID, NULL, NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
 
-        /* check if pnetcdf can detect a bad file ID */
-        err = ncmpi_iget_var1_$1(BAD_ID, i, index, &value, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_var1_$1(ncid, BAD_VARID, index, &value, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
         /* check if pnetcdf can detect out of boundary requests */
         for (j = 0; j < var_rank[i]; j++) {
             index[j] = var_shape[i][j]; /* make an out-of-boundary starts[] */
             err = ncmpi_iget_var1_$1(ncid, i, index, &value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("conversion: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
             } else IF (err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
             index[j] = 0;
         }
@@ -206,7 +212,7 @@ test_ncmpi_iget_var1_$1(int numVars)
                 }
             } else {
                 IF (err != NC_ECHAR)
-                    error("wrong type: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                 ELSE_NOK
             }
         }
@@ -249,21 +255,23 @@ test_ncmpi_iget_var(int numVars)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_var(BAD_ID, 0, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_var(ncid, BAD_VARID, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
-
-        /* check if pnetcdf can detect a bad file ID */
-        err = ncmpi_iget_var(BAD_ID, i, buf, 1, datatype, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        /* check if pnetcdf can detect a bad variable ID */
-        err = ncmpi_iget_var(ncid, BAD_VARID, buf, 1, datatype, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
 
         /* check if the contents are supposed to be */
         nels = 1;
@@ -346,21 +354,22 @@ test_ncmpi_iget_var_$1(int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_inq_format: %s", ncmpi_strerror(err));
 
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_var_$1(BAD_ID, 0, NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_var_$1(ncid, BAD_VARID, NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
-
-        /* check if pnetcdf can detect a bad file ID */
-        err = ncmpi_iget_var_$1(BAD_ID, i, value, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        /* check if pnetcdf can detect a bad variable ID */
-        err = ncmpi_iget_var_$1(ncid, BAD_VARID, value, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
 
         /* check if the contents are supposed to be */
         nels = 1;
@@ -420,7 +429,7 @@ test_ncmpi_iget_var_$1(int numVars)
             if (num_err == 0) nok++;
         } else {
             IF (nels > 0 && err != NC_ECHAR)
-                error("wrong type: err = %d", err);
+                error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
     }
@@ -462,6 +471,19 @@ test_ncmpi_iget_vara(int numVars)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_vara(BAD_ID, 0, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_vara(ncid, BAD_VARID, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
@@ -470,47 +492,32 @@ test_ncmpi_iget_vara(int numVars)
             start[j] = 0;
             edge[j] = 1;
         }
-        err = ncmpi_iget_vara(BAD_ID, i, start, edge, buf, 1, datatype, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_vara(ncid, BAD_VARID, start, edge, buf, 1, datatype, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];  /* out of boundary check */
             err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
             err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
             IF (err != NC_EEDGE)
-                error("bad index/edge: err = %d", err);
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
             edge[j] = 1;
         }
         /* Check non-scalars for correct error returned even when */
         /* there is nothing to get (edge[j]==0) */
         if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++)
-                edge[j] = 0;
-            err = ncmpi_iget_vara(BAD_ID, i, start, edge, buf, 1, datatype, &reqid);
-            IF (err != NC_EBADID) 
-                error("bad ncid: err = %d", err);
-            ELSE_NOK
-            err = ncmpi_iget_vara(ncid, BAD_VARID, start, edge, buf, 1, datatype, &reqid);
-            IF (err != NC_ENOTVAR) 
-                error("bad var id: err = %d", err);
-            ELSE_NOK
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
             for (j = 0; j < var_rank[i]; j++) {
                 if (var_dimid[i][j] > 0) {                /* skip record dim */
                     start[j] = var_shape[i][j];     /* out of boundary check */
                     err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
                     IF (err != NC_EINVALCOORDS)
-                        error("bad start: err = %d", err);
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                     ELSE_NOK
                     start[j] = 0;
                 }
@@ -626,6 +633,18 @@ test_ncmpi_iget_vara_$1(int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_inq_format: %s", ncmpi_strerror(err));
 
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_vara_$1(BAD_ID, 0, NULL, NULL, NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_vara_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -634,26 +653,19 @@ test_ncmpi_iget_vara_$1(int numVars)
             start[j] = 0;
             edge[j] = 1;
         }
-        err = ncmpi_iget_vara_$1(BAD_ID, i, start, edge, value, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_vara_$1(ncid, BAD_VARID, start, edge, value, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];  /* out of boundary check */
             err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
             IF (canConvert && err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
             if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
             err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
             IF (canConvert && err != NC_EEDGE)
-                error("bad index/edge: err = %d", err);
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
             if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
             edge[j] = 1;
@@ -661,23 +673,14 @@ test_ncmpi_iget_vara_$1(int numVars)
         /* Check non-scalars for correct error returned even when */
         /* there is nothing to get (edge[j]==0) */
         if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++) {
-                edge[j] = 0;
-            }
-            err = ncmpi_iget_vara_$1(BAD_ID, i, start, edge, value, &reqid);
-            IF (err != NC_EBADID) 
-                error("bad ncid: err = %d", err);
-            ELSE_NOK
-            err = ncmpi_iget_vara_$1(ncid, BAD_VARID, start, edge, value, &reqid);
-            IF (err != NC_ENOTVAR) 
-                error("bad var id: err = %d", err);
-            ELSE_NOK
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
             for (j = 0; j < var_rank[i]; j++) {
                 if (var_dimid[i][j] > 0) {                /* skip record dim */
                     start[j] = var_shape[i][j];     /* out of boundary check */
                     err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
                     IF (canConvert && err != NC_EINVALCOORDS)
-                        error("bad start: err = %d", err);
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                     ELSE_NOK
                     if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
                     start[j] = 0;
@@ -689,7 +692,7 @@ test_ncmpi_iget_vara_$1(int numVars)
                     error("Error: ncmpi_iget_vara_$1 %s",ncmpi_strerror(err));
             } else {
                 IF (err != NC_ECHAR)
-                    error("wrong type: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                 ELSE_NOK
             }
             if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
@@ -774,7 +777,7 @@ test_ncmpi_iget_vara_$1(int numVars)
                 if (num_err == 0) nok++;
             } else {
                 IF (nels > 0 && err != NC_ECHAR)
-                    error("wrong type: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                 ELSE_NOK
             }
         }
@@ -829,6 +832,19 @@ test_ncmpi_iget_vars(int numVars)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_vars(BAD_ID, 0, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_vars(ncid, BAD_VARID, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
@@ -838,32 +854,25 @@ test_ncmpi_iget_vars(int numVars)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = ncmpi_iget_vars(BAD_ID, i, start, edge, stride, buf, 1, datatype, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_vars(ncid, BAD_VARID, start, edge, stride, buf, 1, datatype, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
 
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
             err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
             IF (err != NC_EEDGE)
-                error("bad edge: err = %d", err);
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
             err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
             IF (err != NC_ESTRIDE)
-                error("bad stride: err = %d", err);
+                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
             ELSE_NOK
             stride[j] = 1;
         }
@@ -1006,6 +1015,18 @@ test_ncmpi_iget_vars_$1(int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_inq_format: %s", ncmpi_strerror(err));
 
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_vars_$1(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_vars_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -1015,36 +1036,29 @@ test_ncmpi_iget_vars_$1(int numVars)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = ncmpi_iget_vars_$1(BAD_ID, i, start, edge, stride, value, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_vars_$1(ncid, BAD_VARID, start, edge, stride, value, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("conversion: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
             } else {
                 IF (err != NC_EINVALCOORDS)
-                    error("bad index: err = %d", err);
+                    error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                 ELSE_NOK
 
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;  /* edge error check */
                 err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
                 IF (err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
+                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
                 edge[j] = 1;
                 stride[j] = 0;
                 err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
                 IF (err != NC_ESTRIDE)
-                    error("bad stride: err = %d", err);
+                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
                 stride[j] = 1;
             }
@@ -1150,7 +1164,7 @@ test_ncmpi_iget_vars_$1(int numVars)
                     if (num_err == 0) nok++;
                 } else {
                     IF (nels > 0 && err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
+                        error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                     ELSE_NOK
                 }
             }
@@ -1207,6 +1221,19 @@ test_ncmpi_iget_varm(int numVars)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
+
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_varm(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_varm(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
@@ -1217,32 +1244,25 @@ test_ncmpi_iget_varm(int numVars)
             stride[j] = 1;
             imap[j] = 1;
         }
-        err = ncmpi_iget_varm(BAD_ID, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_varm(ncid, BAD_VARID, start, edge, stride, imap, buf, 1, datatype, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("bad index: err = %d", err);
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
 
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
             err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
             IF (err != NC_EEDGE)
-                error("bad edge: err = %d", err);
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
             err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
             IF (err != NC_ESTRIDE)
-                error("bad stride: err = %d", err);
+                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
             ELSE_NOK
             stride[j] = 1;
         }
@@ -1391,6 +1411,18 @@ test_ncmpi_iget_varm_$1(int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_inq_format: %s", ncmpi_strerror(err));
 
+    /* check if can detect a bad file ID */
+    err = ncmpi_iget_varm_$1(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, NULL);
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
+    /* check if can detect a bad variable ID */
+    err = ncmpi_iget_varm_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, NULL);
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
+
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
@@ -1401,36 +1433,29 @@ test_ncmpi_iget_varm_$1(int numVars)
             stride[j] = 1;
             imap[j] = 1;
         }
-        err = ncmpi_iget_varm_$1(BAD_ID, i, start, edge, stride, imap, value, &reqid);
-        IF (err != NC_EBADID)
-            error("bad ncid: err = %d", err);
-        ELSE_NOK
-        err = ncmpi_iget_varm_$1(ncid, BAD_VARID, start, edge, stride, imap, value, &reqid);
-        IF (err != NC_ENOTVAR)
-            error("bad var id: err = %d", err);
-        ELSE_NOK
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("conversion: err = %d", err);
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
             } else {
                 IF (err != NC_EINVALCOORDS)
-                    error("bad index: err = %d", err);
+                    error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                 ELSE_NOK
 
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;  /* edge error check */
                 err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
                 IF (err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
+                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
                 edge[j] = 1;
                 stride[j] = 0;
                 err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
                 IF (err != NC_ESTRIDE)
-                    error("bad stride: err = %d", err);
+                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
                 stride[j] = 1;
             }
@@ -1542,7 +1567,7 @@ test_ncmpi_iget_varm_$1(int numVars)
                     if (num_err == 0) nok++;
                 } else {
                     IF (nels > 0 && err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
+                        error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                     ELSE_NOK
                 }
             }
