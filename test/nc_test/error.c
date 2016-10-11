@@ -18,7 +18,7 @@ extern int  max_nmpt;		/* max. number of messages per test */
 /* Prototypes */
 void error(const char *fmt, ...);
 void print(const char *fmt, ...);
-int ifFail(const int expr, const int line, const char *file);
+int ifFail(const int expr, const int line, const char *file, const char *func);
 void print_n_size_t(size_t nelems, const MPI_Offset *array);
 
 /*
@@ -53,11 +53,11 @@ print(const char *fmt, ...)
  * Called by macro IF
  */
 int
-ifFail(const int expr, const int line, const char *file)
+ifFail(const int expr, const int line, const char *file, const char *func)
 {
     if (expr) {
 	++nfails;
-	error("\n\tFAILURE at line %d of %s: ", line, file);
+	error("\n\tFAILURE at line %d of %s in %s: ", line, func, file);
     }
     return expr;
 }

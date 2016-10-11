@@ -24,7 +24,7 @@ __attribute__ ((format (printf, 1, 2)))
 ;
 
 
-extern int ifFail(const int expr, const int line, const char *file);
+extern int ifFail(const int expr, const int line, const char *file, const char *func);
 
 extern void
 print_n_size_t(size_t nelems, const MPI_Offset *array);
@@ -33,5 +33,5 @@ print_n_size_t(size_t nelems, const MPI_Offset *array);
 }
 #endif
 
-#define IF(EXPR) if (ifFail(EXPR, __LINE__, __FILE__))
+#define IF(EXPR) if (ifFail(EXPR, __LINE__, __FILE__, __func__))
 #define ELSE_NOK else {nok++;}
