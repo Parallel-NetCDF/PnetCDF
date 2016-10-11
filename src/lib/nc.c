@@ -223,7 +223,7 @@ ncmpii_NC_check_id(int   ncid,
     if (ncid >= 0) {
         for (ncp = NClist; ncp != NULL; ncp = ncp->next) {
             if (ncp->nciop->fd == ncid) {
-                *ncpp = ncp;
+                if (ncpp != NULL) *ncpp = ncp;
                 return NC_NOERR; /* normal return */
             }
         }
