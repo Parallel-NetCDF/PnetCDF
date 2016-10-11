@@ -54,10 +54,6 @@ PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) $(PROG_SRCS) \
 
 all: $(PROGS)
 
-$(OBJS): $(srcdir)/../common/testutils.h
-
-$(PROG_SRCS:.c=.o): $(srcdir)/../common/testutils.h
-
 $(PROGS): ../common/libtestutils.a
 
 ../common/libtestutils.a:
