@@ -357,7 +357,7 @@ TestFunc(vara)_$1(GetVarArgs)
             }
             err = GetVara($1)(ncid, i, start, edge, value);
             if (canConvert) {
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("%s", StrError (err));
             } else {
                 IF (err != NC_ECHAR)
@@ -579,7 +579,7 @@ TestFunc(vars)_$1(GetVarArgs)
                         error("error in toMixedBase 1");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index2, 
+                    expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index2,
                         NCT_ITYPE($1));
                     if (inRange3(cdf_format, expect[j],var_type[i],NCT_ITYPE($1))) {
 		        IfCheckTextChar($1, var_type[i])
@@ -888,7 +888,7 @@ TestFunc(att)_$1(GetAttArgs)
             ELSE_NOK
 
             err = GetAtt($1)(ncid, i, "noSuch", value);
-            IF (err != NC_ENOTATT) 
+            IF (err != NC_ENOTATT)
                 error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
 
             allInExtRange = allInIntRange = 1;

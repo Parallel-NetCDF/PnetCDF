@@ -75,11 +75,11 @@ test_ncmpi_create(void)
 
 
 /*
- * Test ncmpi_redef 
+ * Test ncmpi_redef
  * (In fact also tests ncmpi_enddef - called from test_ncmpi_enddef)
  *    BAD_ID
  *    attempt redef (error) & enddef on read-only file
- *    create file, define dims & vars. 
+ *    create file, define dims & vars.
  *    attempt put var (error)
  *    attempt redef (error) & enddef.
  *    put vars
@@ -130,7 +130,7 @@ test_ncmpi_redef(int numGatts, int numVars)
 	error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     /* tests using scratch file */
@@ -147,7 +147,7 @@ test_ncmpi_redef(int numGatts, int numVars)
     def_vars(ncid, numVars);
     put_atts(ncid, numGatts, numVars);
     err = ncmpi_inq_varid(ncid, "d", &varid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     var = 1.0;
     err = ncmpi_begin_indep_data(ncid);
@@ -209,16 +209,16 @@ test_ncmpi_redef(int numGatts, int numVars)
     IF (err != NC_ENOTINDEP)
         error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));
     err = ncmpi_begin_indep_data(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_begin_indep_data: %s", ncmpi_strerror(err));
     err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
     IF (err != NC_NOERR)
         error("ncmpi_put_var1_double: %s", ncmpi_strerror(err));
     err = ncmpi_end_indep_data(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_begin_indep_data: %s", ncmpi_strerror(err));
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* check scratch file written as expected */
@@ -227,11 +227,11 @@ test_ncmpi_redef(int numGatts, int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_dim(ncid, dimid, name, &length);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
-    IF (strcmp(name, "abc") != 0) 
+    IF (strcmp(name, "abc") != 0)
 	error("Unexpected dim name");
-    IF (length != sizehint) 
+    IF (length != sizehint)
 	error("Unexpected dim length");
     ncmpi_begin_indep_data(ncid);
     err = ncmpi_get_var1_double(ncid, varid, NULL, &var);
@@ -252,7 +252,7 @@ test_ncmpi_redef(int numGatts, int numVars)
 
 
 /*
- * Test ncmpi_enddef 
+ * Test ncmpi_enddef
  * Simply calls test_ncmpi_redef which tests both ncmpi_redef & ncmpi_enddef
  */
 int
@@ -375,12 +375,12 @@ test_ncmpi_abort(int numGatts, int numVars)
     IF (!err) /* err is expected to be NC_ENOENT */
         error("file %s should not exist", scratch);
 
-        /* 
+        /*
          * create scratch file
 	 * do ncmpi_enddef & ncmpi_redef
 	 * define new dims, vars, atts
 	 * try ncmpi_abort: should restore previous state (no dims, vars, atts)
-	 */ 
+	 */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
@@ -490,19 +490,19 @@ test_ncmpi_def_dim(int numVars)
     IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     err = ncmpi_def_dim(ncid, dim_name[0], NC_UNLIMITED, &dimid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_def_dim: %s", ncmpi_strerror(err));
     ELSE_NOK
-    IF (dimid != 0) 
+    IF (dimid != 0)
 	error("Unexpected dimid");
     ELSE_NOK
     err = ncmpi_inq_unlimdim(ncid, &dimid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
 	error("ncmpi_inq_unlimdim: %s", ncmpi_strerror(err));
-    IF (dimid != 0) 
+    IF (dimid != 0)
 	error("Unexpected recdim");
     err = ncmpi_inq_dimlen(ncid, dimid, &length);
-    IF (length != 0) 
+    IF (length != 0)
 	error("Unexpected length");
     err = ncmpi_def_dim(ncid, "abc", NC_UNLIMITED, &dimid);
     IF (err != NC_EUNLIMIT)
@@ -524,10 +524,10 @@ test_ncmpi_def_dim(int numVars)
             error("expecting NC_EDIMSIZE but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_def_dim(ncid, dim_name[i], dim_len[i], &dimid);
-        IF (err != NC_NOERR) 
+        IF (err != NC_NOERR)
 	    error("ncmpi_def_dim: %s", ncmpi_strerror(err));
         ELSE_NOK
-	IF (dimid != i) 
+	IF (dimid != i)
 	    error("Unexpected dimid");
     }
 
@@ -695,7 +695,7 @@ test_ncmpi_def_var(int numVars)
     for (i = 0; i < numVars; i++) {
         err = ncmpi_def_var(ncid, var_name[i], var_type[i], var_rank[i],
             var_dimid[i], &varid);
-        IF (err != NC_NOERR) 
+        IF (err != NC_NOERR)
 	    error("ncmpi_def_var: %s", ncmpi_strerror(err));
         ELSE_NOK
 	IF (varid != i)
@@ -1146,7 +1146,7 @@ test_ncmpi_put_varm(int numVars)
             stride[j] = 1;
         }
 	if (var_rank[i] > 0) {
-	    j = var_rank[i] - 1; 
+	    j = var_rank[i] - 1;
 	    imap[j] = nctypelen(var_type[i]); /*  netCDF considers imap in bytes */
 	    imap[j] = 1;                      /* PnetCDF considers imap in elements */
 	    for (; j > 0; j--)
@@ -1516,7 +1516,7 @@ test_ncmpi_copy_att(int numGatts, int numVars)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     check_atts(ncid_out, numGatts, numVars);
 
-       /* 
+       /*
 	* change to define mode
 	* define single char. global att. ':a' with value 'A'
 	* This will be used as source for following copies
@@ -1528,7 +1528,7 @@ test_ncmpi_copy_att(int numGatts, int numVars)
     IF (err != NC_NOERR)
 	error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
 
-       /* 
+       /*
 	* change to data mode
 	* Use scratch as both source & dest.
 	* try copy to existing att. change type & decrease length
@@ -1571,8 +1571,8 @@ test_ncmpi_copy_att(int numGatts, int numVars)
 		error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
 	    IF (value != 'A')
 		error("Unexpected value");
-	}                                                   
-    }                                                   
+	}
+    }
 
     err = ncmpi_close(ncid_out);
     IF (err != NC_NOERR)
@@ -2088,10 +2088,10 @@ int ncmpi_get_file_version(char *path, int *version)
        printf("Error: reading NC magic string unexpected short read\n");
        return 0;
    }
-   
+
    if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0)
    {
-      if (magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CLASSIC || 
+      if (magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CLASSIC ||
          magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CDF2 ||
          magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CDF2)
         *version = magic[MAGIC_NUM_LEN-1];
@@ -2145,7 +2145,7 @@ test_ncmpi_set_default_format(void)
        ELSE_NOK
        if ((err=ncmpi_create(comm, scratch, NC_CLOBBER, info, &ncid)))
          error("bad nc_create: status = %d", err);
-       if ((err=ncmpi_put_att_text(ncid, NC_GLOBAL, "testatt", 
+       if ((err=ncmpi_put_att_text(ncid, NC_GLOBAL, "testatt",
                                sizeof("blah"), "blah")))
          error("bad put_att: status = %d", err);
        if ( (err=ncmpi_close(ncid)))

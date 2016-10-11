@@ -107,7 +107,7 @@ test_ncmpi_iget_var1(int numVars)
                     error("expected: %G, got: %G", expect, value);
                 } else {
                     nok++;
-                }   
+                }
             }
         }
     }
@@ -1113,7 +1113,7 @@ test_ncmpi_iget_vars_$1(int numVars)
                     ELSE_NOK
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index2, 
+                    expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index2,
                         NCT_ITYPE($1));
                     if (inRange3(cdf_format, expect[j],var_type[i],NCT_ITYPE($1))) {
                         IfCheckTextChar($1, var_type[i])

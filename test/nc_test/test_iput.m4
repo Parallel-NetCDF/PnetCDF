@@ -85,7 +85,7 @@ dnl CHECK_VARS(TYPE)
 dnl
 define(`CHECK_VARS',dnl
 `dnl
-/* 
+/*
  *  check all vars in file which are (text/numeric) compatible with TYPE
  */
 static
@@ -261,12 +261,12 @@ test_ncmpi_iput_var1(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_var1(BAD_ID, 0, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_var1(ncid, BAD_VARID, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -287,7 +287,7 @@ test_ncmpi_iput_var1(int numVars)
         for (j = 0; j < var_nels[i]; j++) {
             double buf;
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("error in toMixedBase 1");
             value = hash2nc(var_type[i], var_rank[i], index);
             err = dbl2nc(value, var_type[i], &buf);
@@ -312,7 +312,7 @@ test_ncmpi_iput_var1(int numVars)
     check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
@@ -354,12 +354,12 @@ test_ncmpi_iput_var1_$1(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_var1_$1(BAD_ID, 0, NULL, NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_var1_$1(ncid, BAD_VARID, NULL, NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -380,7 +380,7 @@ test_ncmpi_iput_var1_$1(int numVars)
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("error in toMixedBase 1");
             value = hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
             if (var_rank[i] == 0 && i%2 == 0)
@@ -418,7 +418,7 @@ test_ncmpi_iput_var1_$1(int numVars)
     }
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -480,12 +480,12 @@ test_ncmpi_iput_var(int numVars)
         error("ncmpi_wait_all: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_var(BAD_ID, 0, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_var(ncid, BAD_VARID, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -502,13 +502,13 @@ test_ncmpi_iput_var(int numVars)
         double ncbuf[MAX_NELS];
         for (j = 0; j < nels; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("error in toMixedBase 1");
             ncbuf[j] = hash2nc(var_type[i], var_rank[i], index);
         }
         /* type convert ncbuf[] to value[] */
         err = dbls2ncs(nels, var_type[i], ncbuf, value);
-        IF (err != NC_NOERR) 
+        IF (err != NC_NOERR)
             error("error in dbls2ncs");
         err = ncmpi_iput_var(ncid, i, value, nels, datatype, &reqid);
         IF (err != NC_NOERR)
@@ -524,7 +524,7 @@ test_ncmpi_iput_var(int numVars)
     check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
@@ -570,12 +570,12 @@ test_ncmpi_iput_var_$1(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_var_$1(BAD_ID, 0, NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_var_$1(ncid, BAD_VARID, NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -590,7 +590,7 @@ test_ncmpi_iput_var_$1(int numVars)
         }
         for (allInExtRange = 1, j = 0; j < nels; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("error in toMixedBase 1");
             value[j]= hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
@@ -603,10 +603,10 @@ test_ncmpi_iput_var_$1(int numVars)
 
         if (canConvert) {
             if (allInExtRange) {
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("%s", ncmpi_strerror(err));
                 ELSE_NOK
-                IF (status != NC_NOERR) 
+                IF (status != NC_NOERR)
                     error("%s", ncmpi_strerror(status));
                 ELSE_NOK
             } else {
@@ -650,7 +650,7 @@ test_ncmpi_iput_var_$1(int numVars)
             }
             for (allInExtRange = 1, j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], var_shape[i], index);
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("error in toMixedBase 1");
                 ELSE_NOK
                 value[j]= hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
@@ -663,10 +663,10 @@ test_ncmpi_iput_var_$1(int numVars)
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
             if (canConvert) {
                 if (allInExtRange) {
-                    IF (err != NC_NOERR) 
+                    IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
                     ELSE_NOK
-                    IF (status != NC_NOERR) 
+                    IF (status != NC_NOERR)
                         error("%s", ncmpi_strerror(status));
                     ELSE_NOK
                 } else {
@@ -685,7 +685,7 @@ test_ncmpi_iput_var_$1(int numVars)
     }
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -735,11 +735,11 @@ test_ncmpi_iput_vara(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_vara(BAD_ID, 0, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_iput_vara(ncid, BAD_VARID, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -810,10 +810,10 @@ test_ncmpi_iput_vara(int numVars)
             double ncbuf[MAX_NELS];
             for (j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("error in toMixedBase 1");
                 ELSE_NOK
-                for (d = 0; d < var_rank[i]; d++) 
+                for (d = 0; d < var_rank[i]; d++)
                     index[d] += start[d];
                 ncbuf[j] = hash2nc(var_type[i], var_rank[i], index);
             }
@@ -840,7 +840,7 @@ test_ncmpi_iput_vara(int numVars)
     check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
@@ -890,12 +890,12 @@ test_ncmpi_iput_vara_$1(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_vara_$1(BAD_ID, 0, NULL, NULL, NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_vara_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -968,10 +968,10 @@ test_ncmpi_iput_vara_$1(int numVars)
             }
             for (allInExtRange = 1, j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("error in toMixedBase 1");
                 ELSE_NOK
-                for (d = 0; d < var_rank[i]; d++) 
+                for (d = 0; d < var_rank[i]; d++)
                     index[d] += start[d];
                 value[j]= hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
@@ -986,10 +986,10 @@ test_ncmpi_iput_vara_$1(int numVars)
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
             if (canConvert) {
                 if (allInExtRange) {
-                    IF (err != NC_NOERR) 
+                    IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
                     ELSE_NOK
-                    IF (status != NC_NOERR) 
+                    IF (status != NC_NOERR)
                         error("%s", ncmpi_strerror(status));
                     ELSE_NOK
                 } else {
@@ -1008,7 +1008,7 @@ test_ncmpi_iput_vara_$1(int numVars)
     }
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -1062,12 +1062,12 @@ test_ncmpi_iput_vars(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_vars(BAD_ID, 0, NULL, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_vars(ncid, BAD_VARID, NULL, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -1177,7 +1177,7 @@ test_ncmpi_iput_vars(int numVars)
     check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
@@ -1233,12 +1233,12 @@ test_ncmpi_iput_vars_$1(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_vars_$1(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_vars_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -1340,10 +1340,10 @@ test_ncmpi_iput_vars_$1(int numVars)
                     ncmpi_wait_all(ncid, 1, &reqid, &status);
                 if (canConvert) {
                     if (allInExtRange) {
-                        IF (err != NC_NOERR) 
+                        IF (err != NC_NOERR)
                             error("%s", ncmpi_strerror(err));
                         ELSE_NOK
-                        IF (status != NC_NOERR) 
+                        IF (status != NC_NOERR)
                             error("%s", ncmpi_strerror(status));
                         ELSE_NOK
                     } else {
@@ -1363,7 +1363,7 @@ test_ncmpi_iput_vars_$1(int numVars)
     }
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -1418,12 +1418,12 @@ test_ncmpi_iput_varm(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_varm(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_varm(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -1540,7 +1540,7 @@ test_ncmpi_iput_varm(int numVars)
     check_vars(ncid, numVars);
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
@@ -1597,12 +1597,12 @@ test_ncmpi_iput_varm_$1(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     err = ncmpi_iput_varm_$1(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_iput_varm_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -1734,7 +1734,7 @@ test_ncmpi_iput_varm_$1(int numVars)
     }
 
     err = ncmpi_close(ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     nok += check_vars_$1(scratch, numVars);
