@@ -54,7 +54,7 @@ inRange_uchar(const int     cdf_format,
          * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
          */
         return(value >= 0 && value <= 255);
-        /* this is to ensure value is within the range of uchar */
+        /* this is to ensure value is within the range of uchar internal type */
     }
     /* else */
     return inRange(value, xtype);
