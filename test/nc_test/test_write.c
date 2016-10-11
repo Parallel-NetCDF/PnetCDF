@@ -64,7 +64,7 @@ test_ncmpi_create(void)
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_EEXIST)
-	error("attempt to overwrite file: status = %d", err);
+	error("expecting NC_EEXIST but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_delete(scratch, info);
@@ -110,11 +110,11 @@ test_ncmpi_redef(int numGatts, int numVars)
     /* BAD_ID tests */
     err = ncmpi_redef(BAD_ID);
     IF (err != NC_EBADID)
-	error("bad ncid: status = %d", err);
+	error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_enddef(BAD_ID);
     IF (err != NC_EBADID)
-	error("bad ncid: status = %d", err);
+	error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* read-only tests */
@@ -123,11 +123,11 @@ test_ncmpi_redef(int numGatts, int numVars)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_redef(ncid);
     IF (err != NC_EPERM)
-	error("ncmpi_redef in NC_NOWRITE, info mode: status = %d", err);
+	error("expecting NC_EPERM but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_enddef(ncid);
     IF (err != NC_ENOTINDEFINE)
-	error("ncmpi_endfef in NC_NOWRITE, info mode: status = %d", err);
+	error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR) 
@@ -152,16 +152,16 @@ test_ncmpi_redef(int numGatts, int numVars)
     var = 1.0;
     err = ncmpi_begin_indep_data(ncid);
     IF (err != NC_EINDEFINE)
-        error("ncmpi_begin_indep_data... in define mode: status = %d", err);
+        error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
     err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
     IF (err != NC_EINDEFINE)
-        error("ncmpi_put_var... in define mode: status = %d", err);
+        error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
     err = ncmpi_end_indep_data(ncid);
     IF (err != NC_ENOTINDEP)
-        error("ncmpi_end_indep_data... not in indep mode: status = %d", err);
+        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));
     err = ncmpi_redef(ncid);
     IF (err != NC_EINDEFINE)
-        error("ncmpi_redef in define mode: status = %d", err);
+        error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
@@ -170,7 +170,7 @@ test_ncmpi_redef(int numGatts, int numVars)
     put_vars(ncid, numVars);
     err = ncmpi_def_dim(ncid, "abc", sizehint, &dimid);
     IF (err != NC_ENOTINDEFINE)
-        error("ncmpi_def_dim in define mode: status = %d", err);
+        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
     err = ncmpi_redef(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
@@ -207,7 +207,7 @@ test_ncmpi_redef(int numGatts, int numVars)
     var = 1.0;
     err = ncmpi_end_indep_data(ncid);
     IF (err != NC_ENOTINDEP)
-        error("ncmpi_end_indep_data: in collective mode status = %s", ncmpi_strerror(err));
+        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));
     err = ncmpi_begin_indep_data(ncid);
     IF (err != NC_NOERR) 
 	error("ncmpi_begin_indep_data: %s", ncmpi_strerror(err));
@@ -278,7 +278,7 @@ test_ncmpi_sync(int numGatts, int numVars)
     /* BAD_ID test */
     err = ncmpi_sync(BAD_ID);
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
         /* create scratch file & try ncmpi_sync in define mode */
@@ -289,7 +289,7 @@ test_ncmpi_sync(int numGatts, int numVars)
     }
     err = ncmpi_sync(ncidw);
     IF (err != NC_EINDEFINE)
-        error("ncmpi_sync called in define mode: status = %d", err);
+        error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* write using same handle */
@@ -352,7 +352,7 @@ test_ncmpi_abort(int numGatts, int numVars)
     /* BAD_ID test */
     err = ncmpi_abort(BAD_ID);
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
         /* create scratch file & try ncmpi_abort in define mode */
@@ -370,7 +370,7 @@ test_ncmpi_abort(int numGatts, int numVars)
     ELSE_NOK
     err = ncmpi_close(ncid);	/* should already be closed */
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     err = ncmpi_delete(scratch, info);	/* should already be deleted */
     IF (!err) /* err is expected to be NC_ENOENT */
         error("file %s should not exist", scratch);
@@ -401,7 +401,7 @@ test_ncmpi_abort(int numGatts, int numVars)
     ELSE_NOK
     err = ncmpi_close(ncid);	/* should already be closed */
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     err = ncmpi_open(comm, scratch, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
@@ -437,7 +437,7 @@ test_ncmpi_abort(int numGatts, int numVars)
     ELSE_NOK
     err = ncmpi_close(ncid);       /* should already be closed */
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     check_file(scratch, numGatts, numVars);
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
@@ -468,7 +468,7 @@ test_ncmpi_def_dim(int numVars)
     /* BAD_ID test */
     err = ncmpi_def_dim(BAD_ID, "abc", 8, &dimid);
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* data mode test */
@@ -482,7 +482,7 @@ test_ncmpi_def_dim(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_def_dim(ncid, "abc", 8, &dimid);
     IF (err != NC_ENOTINDEFINE)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* define-mode tests: unlimited dim */
@@ -506,22 +506,22 @@ test_ncmpi_def_dim(int numVars)
 	error("Unexpected length");
     err = ncmpi_def_dim(ncid, "abc", NC_UNLIMITED, &dimid);
     IF (err != NC_EUNLIMIT)
-        error("2nd unlimited dimension: status = %d", err);
+        error("expecting NC_EUNLIMIT but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* define-mode tests: remaining dims */
     for (i = 1; i < NDIMS; i++) {
         err = ncmpi_def_dim(ncid, dim_name[i-1], dim_len[i], &dimid);
 	IF (err != NC_ENAMEINUSE)
-	    error("duplicate name: status = %d", err);
+            error("expecting NC_ENAMEINUSE but got %s", nc_err_code_name(err));
         ELSE_NOK
 	err = ncmpi_def_dim(ncid, BAD_NAME, dim_len[i], &dimid);
 	IF (err != NC_EBADNAME)
-	    error("bad name: status = %d", err);
+            error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_def_dim(ncid, dim_name[i], NC_UNLIMITED-1, &dimid);
 	IF (err != NC_EDIMSIZE)
-	    error("bad size: status = %d", err);
+            error("expecting NC_EDIMSIZE but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_def_dim(ncid, dim_name[i], dim_len[i], &dimid);
         IF (err != NC_NOERR) 
@@ -568,7 +568,7 @@ test_ncmpi_rename_dim(void)
         /* BAD_ID test */
     err = ncmpi_rename_dim(BAD_ID, 0, "abc");
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
         /* main tests */
@@ -580,7 +580,7 @@ test_ncmpi_rename_dim(void)
     def_dims(ncid);
     err = ncmpi_rename_dim(ncid, BAD_DIMID, "abc");
     IF (err != NC_EBADDIM)
-        error("bad dimid: status = %d", err);
+        error("expecting NC_EBADDIM but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_rename_dim(ncid, 2, "abc");
     IF (err != NC_NOERR)
@@ -591,7 +591,7 @@ test_ncmpi_rename_dim(void)
         error("Unexpected name: %s", name);
     err = ncmpi_rename_dim(ncid, 0, "abc");
     IF (err != NC_ENAMEINUSE)
-        error("duplicate name: status = %d", err);
+        error("expecting NC_ENAMEINUSE but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = ncmpi_close(ncid);
@@ -633,7 +633,7 @@ test_ncmpi_def_var(int numVars)
         /* BAD_ID test */
     err = ncmpi_def_var(BAD_ID, "abc", NC_SHORT, 0, NULL, &varid);
     IF (err != NC_EBADID)
-        error("bad ncid: status = %d", err);
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
         /* scalar tests */
@@ -657,26 +657,26 @@ test_ncmpi_def_var(int numVars)
         error("Unexpected rank");
     err = ncmpi_def_var(ncid, BAD_NAME, NC_SHORT, 0, NULL, &varid);
     IF (err != NC_EBADNAME)
-        error("bad name: status = %d", err);
+        error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_def_var(ncid, "abc", NC_SHORT, 0, NULL, &varid);
     IF (err != NC_ENAMEINUSE)
-        error("duplicate name: status = %d", err);
+        error("expecting NC_ENAMEINUSE but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_def_var(ncid, "ABC", BAD_TYPE, -1, dimids, &varid);
     IF (err != NC_EBADTYPE)
-        error("bad type: status = %d", err);
+        error("expecting NC_EBADTYPE but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_def_var(ncid, "ABC", NC_SHORT, -1, dimids, &varid);
     IF (err != NC_EINVAL)
-        error("bad rank: status = %d", err);
+        error("expecting NC_EINVAL but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_enddef(ncid);
     IF (err != NC_NOERR)
 	error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_def_var(ncid, "ABC", NC_SHORT, 0, dimids, &varid);
     IF (err != NC_ENOTINDEFINE)
-        error("ncmpi_def_var called in data mode: status = %d", err);
+        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
@@ -707,7 +707,7 @@ test_ncmpi_def_var(int numVars)
     dimids[0] = BAD_DIMID;
     err = ncmpi_def_var(ncid, "abc", NC_SHORT, 1, dimids, &varid);
     IF (err != NC_EBADDIM)
-        error("bad dim ids: status = %d", err);
+        error("expecting NC_EBADDIM but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
@@ -754,18 +754,18 @@ test_ncmpi_put_var1(int numVars)
             index[j] = 0;
         err = ncmpi_put_var1(BAD_ID, i, index, buf, 1, buftype);
         IF (err != NC_EBADID)
-            error("bad ncid: status = %d", err);
+            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_put_var1(ncid, BAD_VARID, index, buf, 1, buftype);
         IF (err != NC_ENOTVAR)
-            error("bad var id: status = %d", err);
+            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
                 index[j] = var_shape[i][j];
                 err = ncmpi_put_var1(ncid, i, index, buf, 1, buftype);
                 IF (err != NC_EINVALCOORDS)
-                    error("bad index: status = %d", err);
+                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
                 index[j] = 0;
             }
@@ -848,11 +848,11 @@ test_ncmpi_put_vara(int numVars)
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
         err = ncmpi_put_vara_all(BAD_ID, i, start, edge, buf, bufcount, buftype);
         IF (err != NC_EBADID)
-            error("expecting bad ncid: status = %d", err);
+            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_put_vara_all(ncid, BAD_VARID, start, edge, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
-            error("expecting bad var id: status = %d", err);
+            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
@@ -860,14 +860,14 @@ test_ncmpi_put_vara(int numVars)
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_vara_all(ncid, i, start, edge, buf, bufcount, buftype);
                 IF (err != NC_EINVALCOORDS)
-                    error("expecting bad start, but err = %d", err);
+                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_vara_all(ncid, i, start, edge, buf, bufcount, buftype);
                 IF (err != NC_EEDGE)
-                    error("expecting bad edge, but err = %d", err);
+                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		edge[j] = 1;
 	    }
@@ -980,11 +980,11 @@ test_ncmpi_put_vars(int numVars)
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
         err = ncmpi_put_vars_all(BAD_ID, i, start, edge, stride, buf, bufcount, buftype);
         IF (err != NC_EBADID)
-            error("bad ncid: status = %d", err);
+            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_put_vars_all(ncid, BAD_VARID, start, edge, stride, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
-            error("bad var id: status = %d", err);
+            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
@@ -992,21 +992,21 @@ test_ncmpi_put_vars(int numVars)
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_vars_all(ncid, i, start, edge, stride, buf, bufcount, buftype);
 		IF (err != NC_EINVALCOORDS)
-		    error("bad index: status = %d", err);
+                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_vars_all(ncid, i, start, edge, stride, buf, bufcount, buftype);
 		IF (err != NC_EEDGE)
-		    error("bad edge: status = %d", err);
+                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		edge[j] = 1;
 		stride[j] = 0;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_vars_all(ncid, i, start, edge, stride, buf, bufcount, buftype);
 		IF (err != NC_ESTRIDE)
-		    error("bad stride: status = %d", err);
+                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		stride[j] = 1;
 	    }
@@ -1169,11 +1169,11 @@ test_ncmpi_put_varm(int numVars)
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
         err = ncmpi_put_varm_all(BAD_ID, i, start, edge, stride, imap, buf, bufcount, buftype);
         IF (err != NC_EBADID)
-            error("bad ncid: status = %d", err);
+            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_put_varm_all(ncid, BAD_VARID, start, edge, stride, imap, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
-            error("bad var id: status = %d", err);
+            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
@@ -1181,21 +1181,21 @@ test_ncmpi_put_varm(int numVars)
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_varm_all(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
 		IF (err != NC_EINVALCOORDS)
-		    error("bad index: status = %d", err);
+                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_varm_all(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
 		IF (err != NC_EEDGE)
-		    error("bad edge: status = %d", err);
+                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		edge[j] = 1;
 		stride[j] = 0;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
 		err = ncmpi_put_varm_all(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
 		IF (err != NC_ESTRIDE)
-		    error("bad stride: status = %d", err);
+                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		stride[j] = 1;
 	    }
@@ -1291,7 +1291,7 @@ test_ncmpi_rename_var(int numVars)
     }
     err = ncmpi_rename_var(ncid, BAD_VARID, "newName");
     IF (err != NC_ENOTVAR)
-	error("bad var id: status = %d", err);
+	error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
     def_dims(ncid);
     def_vars(ncid, numVars);
@@ -1300,11 +1300,11 @@ test_ncmpi_rename_var(int numVars)
     for (i = 0; i < numVars; i++) {
         err = ncmpi_rename_var(BAD_ID, i, "newName");
         IF (err != NC_EBADID)
-            error("bad ncid: status = %d", err);
+            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_rename_var(ncid, i, var_name[numVars-1]);
         IF (err != NC_ENAMEINUSE)
-            error("duplicate name: status = %d", err);
+            error("expecting NC_ENAMEINUSE but got %s", nc_err_code_name(err));
         ELSE_NOK
 	strcpy(name, "new_");
 	strcat(name, var_name[i]);
@@ -1329,7 +1329,7 @@ test_ncmpi_rename_var(int numVars)
 	strcat(name, var_name[i]);
         err = ncmpi_rename_var(ncid, i, name);
         IF (err != NC_ENOTINDEFINE)
-            error("longer name in data mode: status = %d", err);
+            error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_rename_var(ncid, i, var_name[i]);
         IF (err != NC_NOERR)
@@ -1388,19 +1388,19 @@ test_ncmpi_put_att(int numGatts, int numVars)
 	    length = ATT_LEN(i,j);
             err = ncmpi_put_att(BAD_ID, varid, name, datatype, length, buf);
             IF (err != NC_EBADID)
-                error("bad ncid: status = %d", err);
+                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
             err = ncmpi_put_att(ncid, varid, BAD_NAME, datatype, length, buf);
 	    IF (err != NC_EBADNAME)
-		error("bad name: status = %d", err);
+                error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
             ELSE_NOK
             err = ncmpi_put_att(ncid, BAD_VARID, name, datatype, length, buf);
             IF (err != NC_ENOTVAR)
-                error("bad var id: status = %d", err);
+                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_put_att(ncid, varid, name, BAD_TYPE, length, buf);
 	    IF (err != NC_EBADTYPE)
-		error("bad type: status = %d", err);
+                error("expecting NC_EBADTYPE but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    p = (char *) buf;
 	    for (k=0; k<length; k++) {
@@ -1474,23 +1474,23 @@ test_ncmpi_copy_att(int numGatts, int numVars)
             name = ATT_NAME(i,j);
 	    err = ncmpi_copy_att(ncid_in, BAD_VARID, name, ncid_out, varid);
 	    IF (err != NC_ENOTVAR)
-		error("bad var id: status = %d", err);
+		error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_copy_att(ncid_in, varid, name, ncid_out, BAD_VARID);
 	    IF (err != NC_ENOTVAR)
-		error("bad var id: status = %d", err);
+		error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_copy_att(BAD_ID, varid, name, ncid_out, varid);
 	    IF (err != NC_EBADID)
-		error("bad ncid: status = %d", err);
+		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_copy_att(ncid_in, varid, name, BAD_ID, varid);
 	    IF (err != NC_EBADID)
-		error("bad ncid: status = %d", err);
+		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_copy_att(ncid_in, varid, "noSuch", ncid_out, varid);
 	    IF (err != NC_ENOTATT)
-		error("bad attname: status = %d", err);
+                error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_copy_att(ncid_in, varid, name, ncid_out, varid);
 	    IF (err != NC_NOERR)
@@ -1623,7 +1623,7 @@ test_ncmpi_rename_att(int numGatts, int numVars)
     }
     err = ncmpi_rename_att(ncid, BAD_VARID, "abc", "newName");
     IF (err != NC_ENOTVAR)
-	error("bad var id: status = %d", err);
+	error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
     def_dims(ncid);
     def_vars(ncid, numVars);
@@ -1635,11 +1635,11 @@ test_ncmpi_rename_att(int numGatts, int numVars)
 	    attname = ATT_NAME(i,j);
 	    err = ncmpi_rename_att(BAD_ID, varid, attname, "newName");
 	    IF (err != NC_EBADID)
-		error("bad ncid: status = %d", err);
+		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_rename_att(ncid, varid, "noSuch", "newName");
 	    IF (err != NC_ENOTATT)
-		error("bad attname: status = %d", err);
+                error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    strcpy(newname, "new_");
 	    strcat(newname, attname);
@@ -1720,7 +1720,7 @@ test_ncmpi_rename_att(int numGatts, int numVars)
 	    strcat(newname, attname);
 	    err = ncmpi_rename_att(ncid, varid, oldname, newname);
 	    IF (err != NC_ENOTINDEFINE)
-		error("longer name in data mode: status = %d", err);
+		error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_rename_att(ncid, varid, oldname, attname);
 	    IF (err != NC_NOERR)
@@ -1773,7 +1773,7 @@ test_ncmpi_del_att(int numGatts, int numVars)
     }
     err = ncmpi_del_att(ncid, BAD_VARID, "abc");
     IF (err != NC_ENOTVAR)
-	error("bad var id: status = %d", err);
+	error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
     def_dims(ncid);
     def_vars(ncid, numVars);
@@ -1786,11 +1786,11 @@ test_ncmpi_del_att(int numGatts, int numVars)
 	    name = ATT_NAME(i,j);
 	    err = ncmpi_del_att(BAD_ID, varid, name);
 	    IF (err != NC_EBADID)
-		error("bad ncid: status = %d", err);
+		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_del_att(ncid, varid, "noSuch");
 	    IF (err != NC_ENOTATT)
-		error("bad attname: status = %d", err);
+                error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
             ELSE_NOK
 	    err = ncmpi_del_att(ncid, varid, name);
 	    IF (err != NC_NOERR)
@@ -1798,7 +1798,7 @@ test_ncmpi_del_att(int numGatts, int numVars)
             ELSE_NOK
 	    err = ncmpi_inq_attid(ncid, varid, name, &attnum);
 	    IF (err != NC_ENOTATT)
-		error("bad attname: status = %d", err);
+                error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
 	    if (i < 0) {
 		err = ncmpi_inq_natts(ncid, &natts);
 		IF (err != NC_NOERR)
@@ -1851,7 +1851,7 @@ test_ncmpi_del_att(int numGatts, int numVars)
 	    name = ATT_NAME(i,j);
 	    err = ncmpi_del_att(ncid, varid, name);
 	    IF (err != NC_ENOTINDEFINE)
-		error("in data mode: status = %d", err);
+		error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
             ELSE_NOK
 	}
     }
@@ -1891,35 +1891,35 @@ test_ncmpi_set_fill(int numVars)
     double fill;
     MPI_Offset index[MAX_RANK];
 
-	/* bad ncid */
+    /* bad ncid */
     err = ncmpi_set_fill(BAD_ID, NC_NOFILL, &old_fillmode);
     IF (err != NC_EBADID)
-	error("bad ncid: status = %d", err);
+	error("expecting NC_EBADID but got %s", nc_err_code_name(err));
 
-	/* try in read-only mode */
+    /* try in read-only mode */
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_set_fill(ncid, NC_NOFILL, &old_fillmode);
     IF (err != NC_EPERM)
-	error("read-only: status = %d", err);
+	error("expecting NC_EPERM but got %s", nc_err_code_name(err));
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-	/* create scratch */
+    /* create scratch */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
 
-	/* BAD_FILLMODE */
+    /* BAD_FILLMODE */
     err = ncmpi_set_fill(ncid, BAD_FILLMODE, &old_fillmode);
     IF (err != NC_EINVAL)
-        error("bad fillmode: status = %d", err);
+        error("expecting NC_EINVAL but got %s", nc_err_code_name(err));
 
-	/* proper calls */
+    /* proper calls */
     err = ncmpi_set_fill(ncid, NC_NOFILL, &old_fillmode);
     IF (err != NC_NOERR)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
@@ -1941,7 +1941,7 @@ test_ncmpi_set_fill(int numVars)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_set_fill(ncid, NC_FILL, &old_fillmode);
     IF (err != NC_ENOTINDEFINE)
-        error("ncmpi_set_fill: %s", ncmpi_strerror(err));
+        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
 
 	/* Write record number NRECS to force writing of preceding records */
 	/* Assumes variable cr is char vector with UNLIMITED dimension */
@@ -2126,7 +2126,7 @@ test_ncmpi_set_default_format(void)
     /* bad format */
     err = ncmpi_set_default_format(BAD_DEFAULT_FORMAT, &old_format);
     IF (err != NC_EINVAL)
-       error("bad default format: status = %d", err);
+        error("expecting NC_EINVAL but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* NULL old_formatp */

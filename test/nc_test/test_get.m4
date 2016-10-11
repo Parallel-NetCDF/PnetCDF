@@ -89,11 +89,15 @@ TestFunc(var1)_$1(GetVarArgs)
 
     /* check if can detect a bad file ID */
     err = GetVar1($1)(BAD_ID, 0, NULL, &value);
-    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     /* check if can detect a bad variable ID */
     err = GetVar1($1)(ncid, BAD_VARID, NULL, &value);
-    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -196,11 +200,15 @@ TestFunc(var)_$1(GetVarArgs)
 
     /* check if can detect a bad file ID */
     err = GetVar($1)(BAD_ID, 0, value);
-    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     /* check if can detect a bad variable ID */
     err = GetVar($1)(ncid, BAD_VARID, value);
-    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -304,10 +312,14 @@ TestFunc(vara)_$1(GetVarArgs)
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
     err = GetVara($1)(BAD_ID, 0, NULL, NULL, value);
-    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     err = GetVara($1)(ncid, BAD_VARID, NULL, NULL, value);
-    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -479,10 +491,14 @@ TestFunc(vars)_$1(GetVarArgs)
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
     err = GetVars($1)(BAD_ID, 0, NULL, NULL, NULL, value);
-    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     err = GetVars($1)(ncid, BAD_VARID, NULL, NULL, NULL, value);
-    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -663,10 +679,14 @@ TestFunc(varm)_$1(GetVarArgs)
     IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
 
     err = GetVarm($1)(BAD_ID, 0, NULL, NULL, NULL, NULL, value);
-    IF (err != NC_EBADID) error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    IF (err != NC_EBADID)
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     err = GetVarm($1)(ncid, BAD_VARID, NULL, NULL, NULL, NULL, value);
-    IF (err != NC_ENOTVAR) error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    IF (err != NC_ENOTVAR)
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
@@ -851,10 +871,12 @@ TestFunc(att)_$1(GetAttArgs)
     err = GetAtt($1)(BAD_ID, 0, NULL, value);
     IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     err = GetAtt($1)(ncid, BAD_VARID, NULL, value);
     IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+    ELSE_NOK
 
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
@@ -863,6 +885,7 @@ TestFunc(att)_$1(GetAttArgs)
             err = GetAtt($1)(ncid, BAD_VARID, ATT_NAME(i,j), value);
             IF (err != NC_ENOTVAR)
                 error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            ELSE_NOK
 
             err = GetAtt($1)(ncid, i, "noSuch", value);
             IF (err != NC_ENOTATT) 
