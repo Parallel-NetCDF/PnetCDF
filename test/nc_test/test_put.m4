@@ -126,7 +126,7 @@ dnl CHECK_VARS(TYPE)
 dnl
 define(`CHECK_VARS',dnl
 `dnl
-/* 
+/*
  *  check all vars in file which are (text/numeric) compatible with TYPE
  */
 static
@@ -225,11 +225,11 @@ dnl CHECK_ATTS(TYPE)
 dnl
 define(`CHECK_ATTS',dnl
 `dnl
-/* 
+/*
  *  for _text tests, check all attributes in file which are of text type
  *  Note no NC_ERANGE check for text attributes as text is not convertible to
  *  any other numerical data types (i.e. NC_ECHAR)
- * 
+ *
  *  for other tests, check all numerical attributes in file against values
  *  outside range of type $1
  */
@@ -298,8 +298,8 @@ check_atts_$1(int ncid, int numGatts, int numVars)
                         nok++;
                     }
                 }
-            }                                               
-        }                                               
+            }
+        }
     }
     return nok;
 }
@@ -350,13 +350,13 @@ TestFunc(var1)_$1(PutVarArgs)
 
     /* check if can detect a bad file ID */
     err = PutVar1($1)(BAD_ID, 0, NULL, &value);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
     err = PutVar1($1)(ncid, BAD_VARID, NULL, &value);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -378,7 +378,7 @@ TestFunc(var1)_$1(PutVarArgs)
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("error in toMixedBase 1");
             value = hash_$1(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
             if (var_rank[i] == 0 && i%2 == 0)
@@ -408,7 +408,7 @@ TestFunc(var1)_$1(PutVarArgs)
     }
 
     err = FileClose (ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -466,13 +466,13 @@ TestFunc(var)_$1(PutVarArgs)
 
     /* check if can detect a bad file ID */
     err = PutVar($1)(BAD_ID, 0, NULL);
-    IF (err != NC_EBADID) 
+    IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
     err = PutVar($1)(ncid, BAD_VARID, NULL);
-    IF (err != NC_ENOTVAR) 
+    IF (err != NC_ENOTVAR)
         error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
 
@@ -487,7 +487,7 @@ TestFunc(var)_$1(PutVarArgs)
         }
         for (allInExtRange = 1, j = 0; j < nels; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("error in toMixedBase 1");
             value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index, NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
@@ -496,7 +496,7 @@ TestFunc(var)_$1(PutVarArgs)
         err = PutVar($1)(ncid, i, value);
         if (canConvert) {
             if (allInExtRange) {
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("%s", StrError (err));
                 ELSE_NOK
             } else {
@@ -530,7 +530,7 @@ TestFunc(var)_$1(PutVarArgs)
             assert(var_rank[i] <= MAX_RANK);
             assert(var_nels[i] <= MAX_NELS);
             err = PutVar($1)(BAD_ID, i, value);
-            IF (err != NC_EBADID) 
+            IF (err != NC_EBADID)
                 error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
 
@@ -540,7 +540,7 @@ TestFunc(var)_$1(PutVarArgs)
             }
             for (allInExtRange = 1, j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], var_shape[i], index);
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("error in toMixedBase 1");
                 ELSE_NOK
                 value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index, NCT_ITYPE($1));
@@ -550,7 +550,7 @@ TestFunc(var)_$1(PutVarArgs)
             err = PutVar($1)(ncid, i, value);
             if (canConvert) {
                 if (allInExtRange) {
-                    IF (err != NC_NOERR) 
+                    IF (err != NC_NOERR)
                         error("%s", StrError (err));
                     ELSE_NOK
                 } else {
@@ -567,7 +567,7 @@ TestFunc(var)_$1(PutVarArgs)
     }
 
     err = FileClose (ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -719,9 +719,9 @@ TestFunc(vara)_$1(PutVarArgs)
             }
             for (allInExtRange = 1, j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("error in toMixedBase 1");
-                for (d = 0; d < var_rank[i]; d++) 
+                for (d = 0; d < var_rank[i]; d++)
                     index[d] += start[d];
                 value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 IfCheckTextChar($1, var_type[i])
@@ -733,7 +733,7 @@ TestFunc(vara)_$1(PutVarArgs)
                 err = PutVara($1)(ncid, i, start, edge, value);
             if (canConvert) {
                 if (allInExtRange) {
-                    IF (err != NC_NOERR) 
+                    IF (err != NC_NOERR)
                         error("%s", StrError (err));
                     ELSE_NOK
                 } else {
@@ -750,7 +750,7 @@ TestFunc(vara)_$1(PutVarArgs)
     }
 
     err = FileClose (ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -908,7 +908,7 @@ TestFunc(vars)_$1(PutVarArgs)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    value[j] = hash_$1(cdf_format,var_type[i], var_rank[i], index2, 
+                    value[j] = hash_$1(cdf_format,var_type[i], var_rank[i], index2,
                         NCT_ITYPE($1));
                     IfCheckTextChar($1, var_type[i])
                         allInExtRange &= inRange3(cdf_format, value[j], var_type[i], NCT_ITYPE($1));
@@ -919,7 +919,7 @@ TestFunc(vars)_$1(PutVarArgs)
                     err = PutVars($1)(ncid, i, index, count, stride, value);
                 if (canConvert) {
                     if (allInExtRange) {
-                        IF (err != NC_NOERR) 
+                        IF (err != NC_NOERR)
                             error("%s", StrError (err));
                         ELSE_NOK
                     } else {
@@ -937,7 +937,7 @@ TestFunc(vars)_$1(PutVarArgs)
     }
 
     err = FileClose (ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -1131,7 +1131,7 @@ TestFunc(varm)_$1(PutVarArgs)
     }
 
     err = FileClose (ncid);
-    IF (err != NC_NOERR) 
+    IF (err != NC_NOERR)
         error("close: %s", StrError (err));
 
     nok += check_vars_$1(scratch, numVars);
@@ -1187,7 +1187,7 @@ TestFunc(att)_text(PutAttArgs)
     {
         const char *const tval = "value for bad name";
         const size_t tval_len = strlen(tval);
-        
+
         err = PutAtt(text)(ncid, 0, "", tval_len, tval);
         IF (err != NC_EBADNAME)
            error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
