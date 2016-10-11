@@ -368,6 +368,9 @@ Escape character is !
   for example ncmpi__enddef will show underscore "enddef", so add ! before the
   double underscores to disable the formatting. eg. ncmpi!__enddef
 
+Example of using it on the command line:
+  svn commit -m "add \!__func\!__ to error message" error.c error.h
+
 =====================================================
 Trace MPI communication calls and I/O calls
 =====================================================
