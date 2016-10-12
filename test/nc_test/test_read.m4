@@ -37,6 +37,8 @@ define(`FileDelete',`ifdef(`PNETCDF',`ncmpi_delete($1,$2)',`nc_delete($1)')')dnl
 define(`VarArgs',   `ifdef(`PNETCDF',`int numVars',`void')')dnl
 define(`AttVarArgs',`ifdef(`PNETCDF',`int numGatts, int numVars',`void')')dnl
 
+define(`GetVar', `ifdef(`PNETCDF',`ncmpi_get_$1_all', `nc_get_$1')')dnl
+
 /*
  * Test APIFunc(strerror).
  *    Try on a bad error status.
@@ -978,7 +980,7 @@ TestFunc(inq_vartype)(VarArgs)
 
 
 /*
- * Test ncmpi_put_var1
+ * Test GetVar(var1)
  */
 int
 TestFunc(get_var1)(VarArgs)
@@ -997,22 +999,21 @@ TestFunc(get_var1)(VarArgs)
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
-    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
-        err = ncmpi_get_var1(BAD_ID, i, index, buf, 1, datatype);
+        err = GetVar(var1)(BAD_ID, i, index, buf, 1, datatype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_get_var1(ncid, BAD_VARID, index, buf, 1, datatype);
+        err = GetVar(var1)(ncid, BAD_VARID, index, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             index[j] = var_shape[i][j];
-            err = ncmpi_get_var1(ncid, i, index, buf, 1, datatype);
+            err = GetVar(var1)(ncid, i, index, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
@@ -1024,9 +1025,9 @@ TestFunc(get_var1)(VarArgs)
                 error("error in toMixedBase 2");
             expect = hash( var_type[i], var_rank[i], index );
             if (var_rank[i] == 0 && i%2 )
-                err = ncmpi_get_var1(ncid, i, NULL, buf, 1, datatype);
+                err = GetVar(var1)(ncid, i, NULL, buf, 1, datatype);
             else
-                err = ncmpi_get_var1(ncid, i, index, buf, 1, datatype);
+                err = GetVar(var1)(ncid, i, index, buf, 1, datatype);
             IF (err != NC_NOERR)
                 error("%s", APIFunc(strerror)(err));
             ELSE_NOK
@@ -1048,7 +1049,7 @@ TestFunc(get_var1)(VarArgs)
 
 
 /*
- * Test ncmpi_get_vara
+ * Test GetVar(vara)
  * Choose a random point dividing each dim into 2 parts
  * Get 2^rank (nslabs) slabs so defined
  * Each get overwrites buffer, so check after each get.
@@ -1069,7 +1070,6 @@ TestFunc(get_vara)(VarArgs)
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
-    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
@@ -1078,23 +1078,23 @@ TestFunc(get_vara)(VarArgs)
             start[j] = 0;
             edge[j] = 1;
         }
-        err = ncmpi_get_vara(BAD_ID, i, start, edge, buf, 1, datatype);
+        err = GetVar(vara)(BAD_ID, i, start, edge, buf, 1, datatype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_get_vara(ncid, BAD_VARID, start, edge, buf, 1, datatype);
+        err = GetVar(vara)(ncid, BAD_VARID, start, edge, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = ncmpi_get_vara(ncid, i, start, edge, buf, 1, datatype);
+            err = GetVar(vara)(ncid, i, start, edge, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;
-            err = ncmpi_get_vara(ncid, i, start, edge, buf, 1, datatype);
+            err = GetVar(vara)(ncid, i, start, edge, buf, 1, datatype);
             IF (err != NC_EEDGE)
                 error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
@@ -1121,9 +1121,9 @@ TestFunc(get_vara)(VarArgs)
                 nels *= edge[j];
             }
             if (var_rank[i] == 0 && i%2 )
-                err = ncmpi_get_vara(ncid, i, NULL, NULL, buf, nels, datatype);
+                err = GetVar(vara)(ncid, i, NULL, NULL, buf, nels, datatype);
             else
-                err = ncmpi_get_vara(ncid, i, start, edge, buf, nels, datatype);
+                err = GetVar(vara)(ncid, i, start, edge, buf, nels, datatype);
             IF (err != NC_NOERR) {
                 error("%s", APIFunc(strerror)(err));
             } else {
@@ -1166,7 +1166,7 @@ TestFunc(get_vara)(VarArgs)
 
 
 /*
- * Test ncmpi_get_vars
+ * Test GetVar(vars)
  * Choose a random point dividing each dim into 2 parts
  * Get 2^rank (nslabs) slabs so defined
  * Each get overwrites buffer, so check after each get.
@@ -1203,7 +1203,6 @@ TestFunc(get_vars)(VarArgs)
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
-    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
@@ -1213,29 +1212,29 @@ TestFunc(get_vars)(VarArgs)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = ncmpi_get_vars(BAD_ID, i, start, edge, stride, buf, 1, datatype);
+        err = GetVar(vars)(BAD_ID, i, start, edge, stride, buf, 1, datatype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_get_vars(ncid, BAD_VARID, start, edge, stride, buf, 1, datatype);
+        err = GetVar(vars)(ncid, BAD_VARID, start, edge, stride, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = ncmpi_get_vars(ncid, i, start, edge, stride, buf, 1, datatype);
+            err = GetVar(vars)(ncid, i, start, edge, stride, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;
-            err = ncmpi_get_vars(ncid, i, start, edge, stride, buf, 1, datatype);
+            err = GetVar(vars)(ncid, i, start, edge, stride, buf, 1, datatype);
             IF (err != NC_EEDGE)
                 error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
-            err = ncmpi_get_vars(ncid, i, start, edge, stride, buf, 1, datatype);
+            err = GetVar(vars)(ncid, i, start, edge, stride, buf, 1, datatype);
             IF (err != NC_ESTRIDE)
                 error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
             ELSE_NOK
@@ -1284,9 +1283,9 @@ TestFunc(get_vars)(VarArgs)
                 }
  */
                 if (var_rank[i] == 0 && i%2 )
-                    err = ncmpi_get_vars(ncid, i, NULL, NULL, NULL, buf, 1, datatype);
+                    err = GetVar(vars)(ncid, i, NULL, NULL, NULL, buf, 1, datatype);
                 else
-                    err = ncmpi_get_vars(ncid, i, index, count, stride, buf, nels, datatype);
+                    err = GetVar(vars)(ncid, i, index, count, stride, buf, nels, datatype);
                 IF (err != NC_NOERR) {
                     error("%s", APIFunc(strerror)(err));
                 } else {
@@ -1340,7 +1339,7 @@ TestFunc(get_vars)(VarArgs)
 
 
 /*
- * Test ncmpi_get_varm
+ * Test GetVar(varm)
  * Choose a random point dividing each dim into 2 parts
  * Get 2^rank (nslabs) slabs so defined
  * Choose random stride from 1 to edge
@@ -1378,7 +1377,6 @@ TestFunc(get_varm)(VarArgs)
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
-    err = ncmpi_begin_indep_data(ncid);
     for (i = 0; i < numVars; i++) {
         datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
@@ -1395,29 +1393,29 @@ TestFunc(get_varm)(VarArgs)
             for (; j > 0; j--)
                 imap[j-1] = imap[j] * var_shape[i][j];
         }
-        err = ncmpi_get_varm(BAD_ID, i, start, edge, stride, imap, buf, 1, datatype);
+        err = GetVar(varm)(BAD_ID, i, start, edge, stride, imap, buf, 1, datatype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_get_varm(ncid, BAD_VARID, start, edge, stride, imap, buf, 1, datatype);
+        err = GetVar(varm)(ncid, BAD_VARID, start, edge, stride, imap, buf, 1, datatype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype);
+            err = GetVar(varm)(ncid, i, start, edge, stride, imap, buf, 1, datatype);
             IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;
-            err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype);
+            err = GetVar(varm)(ncid, i, start, edge, stride, imap, buf, 1, datatype);
             IF (err != NC_EEDGE)
                 error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
-            err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype);
+            err = GetVar(varm)(ncid, i, start, edge, stride, imap, buf, 1, datatype);
             IF (err != NC_ESTRIDE)
                 error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
             ELSE_NOK
@@ -1448,7 +1446,7 @@ TestFunc(get_varm)(VarArgs)
             }
             for (m = 0; m < nstarts; m++) {
                 if (var_rank[i] == 0 && i%2 ) {
-                    err = ncmpi_get_varm(ncid, i, NULL, NULL, NULL, NULL, buf, var_nels[i], datatype);
+                    err = GetVar(varm)(ncid, i, NULL, NULL, NULL, NULL, buf, var_nels[i], datatype);
                 } else {
                     err = toMixedBase(m, var_rank[i], sstride, index);
                     IF (err != NC_NOERR)
@@ -1470,7 +1468,7 @@ TestFunc(get_varm)(VarArgs)
  */
                     j = fromMixedBase(var_rank[i], index, var_shape[i]);
                     p = (char *) buf + j * nctypelen(var_type[i]);
-                    err = ncmpi_get_varm(ncid, i, index, count, stride, imap2, p, nels, datatype);
+                    err = GetVar(varm)(ncid, i, index, count, stride, imap2, p, nels, datatype);
                 }
                 IF (err != NC_NOERR)
                     error("%s", APIFunc(strerror)(err));
