@@ -39,6 +39,10 @@ define(`FileDelete',`ifdef(`PNETCDF',`ncmpi_delete($1,$2)',`nc_delete($1)')')dnl
 define(`VarArgs',   `ifdef(`PNETCDF',`int numVars',`void')')dnl
 define(`AttVarArgs',`ifdef(`PNETCDF',`int numGatts, int numVars',`void')')dnl
 
+define(`GetVar1',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
+define(`PutVar1',`ifdef(`PNETCDF',`ncmpi_put_var1_$1_all',`nc_put_var1_$1')')dnl
+define(`PutVar', `ifdef(`PNETCDF',`ncmpi_put_$1_all', `nc_put_$1')')dnl
+
 /*
  * Test create
  *    For mode in NC_NOCLOBBER, NC_CLOBBER, info do:
@@ -174,15 +178,21 @@ TestFunc(redef)(AttVarArgs)
     IF (err != NC_NOERR)
 	error("inq_varid: %s", APIFunc(strerror)(err));
     var = 1.0;
+
+ifdef(`PNETCDF', `
     err = ncmpi_begin_indep_data(ncid);
     IF (err != NC_EINDEFINE)
-        error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
-    err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
+        error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));')
+
+    err = PutVar1(double)(ncid, varid, NULL, &var);
     IF (err != NC_EINDEFINE)
         error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
+
+ifdef(`PNETCDF', `
     err = ncmpi_end_indep_data(ncid);
     IF (err != NC_ENOTINDEP)
-        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));
+        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));')
+
     err = APIFunc(redef)(ncid);
     IF (err != NC_EINDEFINE)
         error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
@@ -229,18 +239,15 @@ TestFunc(redef)(AttVarArgs)
         error("enddef: %s", APIFunc(strerror)(err));
     ELSE_NOK
     var = 1.0;
+
+ifdef(`PNETCDF', `
     err = ncmpi_end_indep_data(ncid);
     IF (err != NC_ENOTINDEP)
-        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));
-    err = ncmpi_begin_indep_data(ncid);
-    IF (err != NC_NOERR)
-	error("ncmpi_begin_indep_data: %s", APIFunc(strerror)(err));
-    err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
+        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));')
+
+    err = PutVar1(double)(ncid, varid, NULL, &var);
     IF (err != NC_NOERR)
         error("put_var1_double: %s", APIFunc(strerror)(err));
-    err = ncmpi_end_indep_data(ncid);
-    IF (err != NC_NOERR)
-	error("ncmpi_end_indep_data: %s", APIFunc(strerror)(err));
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
 	error("close: %s", APIFunc(strerror)(err));
@@ -257,11 +264,9 @@ TestFunc(redef)(AttVarArgs)
 	error("Unexpected dim name");
     IF (length != sizehint)
 	error("Unexpected dim length");
-    ncmpi_begin_indep_data(ncid);
-    err = ncmpi_get_var1_double(ncid, varid, NULL, &var);
+    err = GetVar1(double)(ncid, varid, NULL, &var);
     IF (err != NC_NOERR)
         error("get_var1_double: %s", APIFunc(strerror)(err));
-    ncmpi_end_indep_data(ncid);
     IF (var != 1.0)
         error("get_var1_double: unexpected value");
     err = APIFunc(close)(ncid);
@@ -745,7 +750,7 @@ TestFunc(def_var)(VarArgs)
 
 
 /*
- * Test ncmpi_put_var1
+ * Test PutVar(var1)
  */
 int
 TestFunc(put_var1)(VarArgs)
@@ -767,27 +772,22 @@ TestFunc(put_var1)(VarArgs)
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
 
-    /* var1 is only available for indep mode */
-    err = ncmpi_begin_indep_data(ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_begin_indep_data: %s", APIFunc(strerror)(err));
-
     for (i = 0; i < numVars; i++) {
         buftype = nc_mpi_type(var_type[i]);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
-        err = ncmpi_put_var1(BAD_ID, i, index, buf, 1, buftype);
+        err = PutVar(var1)(BAD_ID, i, index, buf, 1, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_put_var1(ncid, BAD_VARID, index, buf, 1, buftype);
+        err = PutVar(var1)(ncid, BAD_VARID, index, buf, 1, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
                 index[j] = var_shape[i][j];
-                err = ncmpi_put_var1(ncid, i, index, buf, 1, buftype);
+                err = PutVar(var1)(ncid, i, index, buf, 1, buftype);
                 IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
@@ -804,18 +804,15 @@ TestFunc(put_var1)(VarArgs)
 		IF (err != NC_NOERR)
 		    error("error in dbl2nc");
 		if (var_rank[i] == 0 && i%2 == 0)
-		    err = ncmpi_put_var1(ncid, i, NULL, buf, 1, buftype);
+		    err = PutVar(var1)(ncid, i, NULL, buf, 1, buftype);
 		else
-		    err = ncmpi_put_var1(ncid, i, index, buf, 1, buftype);
+		    err = PutVar(var1)(ncid, i, index, buf, 1, buftype);
 		IF (err != NC_NOERR)
 		    error("%s", APIFunc(strerror)(err));
                 ELSE_NOK
 	    }
         }
     }
-    err = ncmpi_end_indep_data(ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_end_indep_data: %s", APIFunc(strerror)(err));
 
     check_vars(ncid, numVars);
     err = APIFunc(close)(ncid);
@@ -830,7 +827,7 @@ TestFunc(put_var1)(VarArgs)
 
 
 /*
- * Test ncmpi_put_vara
+ * Test PutVar(vara)
  * Choose a random point dividing each dim into 2 parts
  * Put 2^rank (nslabs) slabs so defined
  * Redefine buffer for each put.
@@ -870,11 +867,11 @@ TestFunc(put_vara)(VarArgs)
         }
         buftype = nc_mpi_type(var_type[i]);
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
-        err = ncmpi_put_vara_all(BAD_ID, i, start, edge, buf, bufcount, buftype);
+        err = PutVar(vara)(BAD_ID, i, start, edge, buf, bufcount, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_put_vara_all(ncid, BAD_VARID, start, edge, buf, bufcount, buftype);
+        err = PutVar(vara)(ncid, BAD_VARID, start, edge, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
@@ -882,14 +879,14 @@ TestFunc(put_vara)(VarArgs)
             if (var_dimid[i][j] > 0) {          /* skip record dim */
 		start[j] = var_shape[i][j];
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_vara_all(ncid, i, start, edge, buf, bufcount, buftype);
+		err = PutVar(vara)(ncid, i, start, edge, buf, bufcount, buftype);
                 IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_vara_all(ncid, i, start, edge, buf, bufcount, buftype);
+		err = PutVar(vara)(ncid, i, start, edge, buf, bufcount, buftype);
                 IF (err != NC_EEDGE)
                     error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
@@ -933,9 +930,9 @@ TestFunc(put_vara)(VarArgs)
             }
             for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
             if (var_rank[i] == 0 && i%2 == 0)
-		err = ncmpi_put_vara_all(ncid, i, NULL, NULL, buf, bufcount, buftype);
+		err = PutVar(vara)(ncid, i, NULL, NULL, buf, bufcount, buftype);
             else
-		err = ncmpi_put_vara_all(ncid, i, start, edge, buf, bufcount, buftype);
+		err = PutVar(vara)(ncid, i, start, edge, buf, bufcount, buftype);
             IF (err != NC_NOERR)
                 error("%s", APIFunc(strerror)(err));
             ELSE_NOK
@@ -955,7 +952,7 @@ TestFunc(put_vara)(VarArgs)
 
 
 /*
- * Test ncmpi_put_vars
+ * Test PutVar(vars)
  * Choose a random point dividing each dim into 2 parts
  * Put 2^rank (nslabs) slabs so defined
  * Choose random stride from 1 to edge
@@ -1002,11 +999,11 @@ TestFunc(put_vars)(VarArgs)
         }
         buftype = nc_mpi_type(var_type[i]);
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
-        err = ncmpi_put_vars_all(BAD_ID, i, start, edge, stride, buf, bufcount, buftype);
+        err = PutVar(vars)(BAD_ID, i, start, edge, stride, buf, bufcount, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_put_vars_all(ncid, BAD_VARID, start, edge, stride, buf, bufcount, buftype);
+        err = PutVar(vars)(ncid, BAD_VARID, start, edge, stride, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
@@ -1014,21 +1011,21 @@ TestFunc(put_vars)(VarArgs)
             if (var_dimid[i][j] > 0) {          /* skip record dim */
 		start[j] = var_shape[i][j];
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_vars_all(ncid, i, start, edge, stride, buf, bufcount, buftype);
+		err = PutVar(vars)(ncid, i, start, edge, stride, buf, bufcount, buftype);
 		IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_vars_all(ncid, i, start, edge, stride, buf, bufcount, buftype);
+		err = PutVar(vars)(ncid, i, start, edge, stride, buf, bufcount, buftype);
 		IF (err != NC_EEDGE)
                     error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		edge[j] = 1;
 		stride[j] = 0;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_vars_all(ncid, i, start, edge, stride, buf, bufcount, buftype);
+		err = PutVar(vars)(ncid, i, start, edge, stride, buf, bufcount, buftype);
 		IF (err != NC_ESTRIDE)
                     error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
@@ -1093,9 +1090,9 @@ TestFunc(put_vars)(VarArgs)
 		}
                 for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= count[j];
 		if (var_rank[i] == 0 && i%2 == 0)
-		    err = ncmpi_put_vars_all(ncid, i, NULL, NULL, NULL, buf, bufcount, buftype);
+		    err = PutVar(vars)(ncid, i, NULL, NULL, NULL, buf, bufcount, buftype);
 		else
-		    err = ncmpi_put_vars_all(ncid, i, index, count, stride, buf, bufcount, buftype);
+		    err = PutVar(vars)(ncid, i, index, count, stride, buf, bufcount, buftype);
 		IF (err != NC_NOERR)
 		    error("%s", APIFunc(strerror)(err));
                 ELSE_NOK
@@ -1116,7 +1113,7 @@ TestFunc(put_vars)(VarArgs)
 
 
 /*
- * Test ncmpi_put_varm
+ * Test PutVar(varm)
  * Choose a random point dividing each dim into 2 parts
  * Put 2^rank (nslabs) slabs so defined
  * Choose random stride from 1 to edge
@@ -1191,11 +1188,11 @@ TestFunc(put_varm)(VarArgs)
 	}
         buftype = nc_mpi_type(var_type[i]);
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
-        err = ncmpi_put_varm_all(BAD_ID, i, start, edge, stride, imap, buf, bufcount, buftype);
+        err = PutVar(varm)(BAD_ID, i, start, edge, stride, imap, buf, bufcount, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = ncmpi_put_varm_all(ncid, BAD_VARID, start, edge, stride, imap, buf, bufcount, buftype);
+        err = PutVar(varm)(ncid, BAD_VARID, start, edge, stride, imap, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
@@ -1203,21 +1200,21 @@ TestFunc(put_varm)(VarArgs)
             if (var_dimid[i][j] > 0) {          /* skip record dim */
 		start[j] = var_shape[i][j];
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_varm_all(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
+		err = PutVar(varm)(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
 		IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_varm_all(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
+		err = PutVar(varm)(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
 		IF (err != NC_EEDGE)
                     error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
 		edge[j] = 1;
 		stride[j] = 0;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = ncmpi_put_varm_all(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
+		err = PutVar(varm)(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
 		IF (err != NC_ESTRIDE)
                     error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
@@ -1249,7 +1246,7 @@ TestFunc(put_varm)(VarArgs)
             }
             for (m = 0; m < nstarts; m++) {
 		if (var_rank[i] == 0 && i%2 == 0) {
-		    err = ncmpi_put_varm_all(ncid, i, NULL, NULL, NULL, NULL, buf, 1, buftype);
+		    err = PutVar(varm)(ncid, i, NULL, NULL, NULL, NULL, buf, 1, buftype);
 		} else {
 		    err = toMixedBase(m, var_rank[i], sstride, index);
 		    IF (err != NC_NOERR)
@@ -1270,7 +1267,7 @@ TestFunc(put_varm)(VarArgs)
 		    j = fromMixedBase(var_rank[i], index, var_shape[i]);
                     p = (char *) buf + j * nctypelen(var_type[i]);
                     for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= count[j];
-		    err = ncmpi_put_varm_all(ncid, i, index, count, stride, imap2, p, bufcount, buftype);
+		    err = PutVar(varm)(ncid, i, index, count, stride, imap2, p, bufcount, buftype);
 		}
 		IF (err != NC_NOERR)
 		    error("i=%d var_rank[i]=%d %s", i,var_rank[i],APIFunc(strerror)(err));
@@ -1975,7 +1972,7 @@ TestFunc(set_fill)(VarArgs)
     index[0] = NRECS;
     for (i=0; i<=index[0]; i++)
         err = APIFunc(fill_var_rec)(ncid, varid, i);
-    err = ncmpi_put_var1_text_all(ncid, varid, index, &text);
+    err = PutVar1(text)(ncid, varid, index, &text);
     IF (err != NC_NOERR)
         error("put_var1_text_all: %s", APIFunc(strerror)(err));
 
@@ -2001,12 +1998,12 @@ TestFunc(set_fill)(VarArgs)
             IF (err != NC_NOERR)
                 error("error in toMixedBase");
 	    if (var_type[i] == NC_CHAR) {
-		err = ncmpi_get_var1_text_all(ncid, i, index, &text);
+		err = GetVar1(text)(ncid, i, index, &text);
 		IF (err != NC_NOERR)
 		    error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
 		value = text;
 	    } else {
-		err = ncmpi_get_var1_double_all(ncid, i, index, &value);
+		err = GetVar1(double)(ncid, i, index, &value);
 		IF (err != NC_NOERR)
 		    error("get_var1_double_all failed: %s", APIFunc(strerror)(err));
 	    }
@@ -2050,7 +2047,7 @@ TestFunc(set_fill)(VarArgs)
     index[0] = NRECS;
     for (i=0; i<=index[0]; i++)
         err = APIFunc(fill_var_rec)(ncid, varid, i);
-    err = ncmpi_put_var1_text_all(ncid, varid, index, &text);
+    err = PutVar1(text)(ncid, varid, index, &text);
     IF (err != NC_NOERR)
         error("put_var1_text_all: %s", APIFunc(strerror)(err));
 
@@ -2062,12 +2059,12 @@ TestFunc(set_fill)(VarArgs)
             IF (err != NC_NOERR)
                 error("error in toMixedBase");
 	    if (var_type[i] == NC_CHAR) {
-		err = ncmpi_get_var1_text_all(ncid, i, index, &text);
+		err = GetVar1(text)(ncid, i, index, &text);
 		IF (err != NC_NOERR)
 		    error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
 		value = text;
 	    } else {
-		err = ncmpi_get_var1_double_all(ncid, i, index, &value);
+		err = GetVar1(double)(ncid, i, index, &value);
 		IF (err != NC_NOERR)
 		    error("get_var1_double_all failed: %s", APIFunc(strerror)(err));
 	    }
