@@ -23,7 +23,7 @@ LIBRARY		= @BUILDDIR@/src/lib/libpnetcdf.a
 
 # Useful tools
 M4		= @M4@
-M4FLAGS		= @M4FLAGS@ -I@abs_top_srcdir@/scripts
+M4FLAGS		= @M4FLAGS@ -I@abs_top_srcdir@/scripts -DPNETCDF
 EGREP		= @EGREP@
 
 # AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
