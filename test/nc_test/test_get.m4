@@ -927,6 +927,12 @@ TestFunc(att)_$1(GetAttArgs)
                 error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
             ELSE_NOK
 
+            /* check if can detect a bad name */
+            err = GetAtt($1)(ncid, i, NULL, NULL);
+            IF (err != NC_EBADNAME)
+                error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
+            ELSE_NOK
+
             err = GetAtt($1)(ncid, i, "noSuch", value);
             IF (err != NC_ENOTATT)
                 error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));

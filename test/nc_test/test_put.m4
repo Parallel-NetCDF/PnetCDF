@@ -1290,6 +1290,12 @@ TestFunc(att)_$1(PutAttArgs)
                     error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
                 ELSE_NOK
 
+                /* check if can detect a bad name */
+                err = PutAtt($1)(ncid, i, NULL, 0, 0, NULL);
+                IF (err != NC_EBADNAME)
+                    error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
+                ELSE_NOK
+
                 err = PutAtt($1)(ncid, i, ATT_NAME(i,j), BAD_TYPE, ATT_LEN(i,j), value);
                 IF (err != NC_EBADTYPE)
                     error("expecting NC_EBADTYPE but got %s", nc_err_code_name(err));
