@@ -61,6 +61,9 @@ ifdef(`PNETCDF', , `
 `#'define DEBUG_ASSIGN_ERROR(status, err) status = err;
 `#'define DEBUG_TRACE_ERROR')
 
+dnl define(`ERANGE_SKIP')dnl
+define(`SKIP_ASSIGN', `ifdef(`ERANGE_SKIP', `$1++; $2++; continue;')')
+
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h> /* uint16_t, uint32_t, uint64_t */
 #elif defined(HAVE_STDINT_H)
@@ -520,35 +523,9 @@ define(`Dmin',  `ifelse(index(`$1',`u'), 0, `0', `(double)Imin($1)')')dnl
 define(`FXmin', `ifelse(index(`$1',`u'), 0, `0', `(double)Xmin($1)')')dnl
 define(`DXmin', `ifelse(index(`$1',`u'), 0, `0',         `Xmin($1)')')dnl
 
-dnl For GET APIs:
-dnl       check for negative $3 if $1 is   signed && $2 is unsigned
-dnl Don't check for negative $3 if $1 is   signed && $2 is   signed
-dnl Don't check for negative $3 if $1 is unsigned
-dnl
-define(`GETI_CheckNegReturn',
-       `ifelse(index(`$1',`u'), 0, ,
-               index(`$2',`u'), 0,
-               `if ($3 < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because $4 is unsigned */')')dnl
-
-define(`GETI_CheckNegAssign',
-       `ifelse(index(`$1',`u'), 0, ,
-               index(`$2',`u'), 0,
-               `if ($3 < 0) DEBUG_ASSIGN_ERROR(status, NC_ERANGE) /* because $4 is unsigned */')')dnl
-
 define(`Cast_Signed2Unsigned',
        `ifelse(index(`$1',`u'), 0,
                `ifelse(index(`$2',`u'), 0, , `(signed)')')')dnl
-
-dnl
-dnl For PUT APIs:
-dnl       check for negative $3 if $1 is unsigned && $2 is   signed
-dnl Don't check for negative $3 if $1 is unsigned && $2 is unsigned
-dnl Don't check for negative $3 if $1 is   signed
-dnl
-define(`PUTI_CheckNeg',
-       `ifelse(index(`$1',`u'), 0,
-               `ifelse(index(`$2',`u'), 0, ,
-                       `	if ($3 < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because $4 is unsigned */')')')dnl
 
 dnl
 dnl For GET APIs boundary check
@@ -633,17 +610,21 @@ APIPrefix`x_get_'NC_TYPE($1)_$2(const void *xp, $2 *ip)
 {
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
-	get_ix_$1(xp, (ix_$1 *)ip);
+    get_ix_$1(xp, (ix_$1 *)ip);
 `#'else
 ')dnl
-	ix_$1 xx;
-	get_ix_$1(xp, &xx);
+    ix_$1 xx;
+    get_ix_$1(xp, &xx);
 GETI_CheckBND($1, $2)
-	GETI_CheckNegReturn($1, $2, xx, ip)
-	*ip = ($2) xx;
+
+    ifelse(index(`$1',`u'), 0, ,
+           index(`$2',`u'), 0,
+           `if (xx < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because ip is unsigned */')dnl
+
+    *ip = ($2) xx;
 ifelse(`$3', `1', ``#'endif
 ')dnl
-	return NC_NOERR;
+    return NC_NOERR;
 }
 ')dnl
 
@@ -675,17 +656,21 @@ APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip)
 {
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
-	put_ix_$1(xp, (const ix_$1 *)ip);
+    put_ix_$1(xp, (const ix_$1 *)ip);
 `#'else
 ')dnl
-	ix_$1 xx;
+    ix_$1 xx;
 PUTI_CheckBND($1, $2)
-PUTI_CheckNeg($1, $2, *ip, xp)
-	xx = (ix_$1)*ip;
-	put_ix_$1(xp, &xx);
+
+    ifelse(index(`$1',`u'), 0,
+   `ifelse(index(`$2',`u'), 0, ,
+   `if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because xp is unsigned */')')dnl
+
+    xx = (ix_$1)*ip;
+    put_ix_$1(xp, &xx);
 ifelse(`$3', `1', ``#'endif
 ')dnl
-	return NC_NOERR;
+    return NC_NOERR;
 }
 ')dnl
 
@@ -2334,20 +2319,22 @@ define(`NCX_GETN_BYTE',dnl
 int
 APIPrefix`x_getn_'NC_TYPE($1)_$2(const void **xpp, IntType nelems, $2 *tp)
 {
-	int status = NC_NOERR;
-	$1 *xp = ($1 *)(*xpp);
+    int status = NC_NOERR;
+    $1 *xp = ($1 *)(*xpp);
 
-	while (nelems-- != 0)
-	{
-		GETI_CheckNegAssign($1, $2, *xp, tp)
-		*tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
-		/* TODO: skip the assignment if NC_ERANGE occurs?
-		 * However, if doing so, many nc_test/nf_test will fail
-		 */
-	}
+    while (nelems-- != 0) {
+        ifelse(index(`$1',`u'), 0, ,
+               index(`$2',`u'), 0, `
+        if (*xp < 0) {
+            DEBUG_ASSIGN_ERROR(status, NC_ERANGE) /* because tp is unsigned */
+            SKIP_ASSIGN(xp, tp)
+        }')dnl
 
-	*xpp = (const void *)xp;
-	return status;
+        *tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
+    }
+
+    *xpp = (const void *)xp;
+    return status;
 }
 ')dnl
 dnl dnl dnl
@@ -2359,24 +2346,26 @@ define(`NCX_PAD_GETN_BYTE',dnl
 int
 APIPrefix`x_pad_getn_'NC_TYPE($1)_$2(const void **xpp, IntType nelems, $2 *tp)
 {
-	int status = NC_NOERR;
-	IntType rndup = nelems % X_ALIGN;
-	$1 *xp = ($1 *) *xpp;
+    int status = NC_NOERR;
+    IntType rndup = nelems % X_ALIGN;
+    $1 *xp = ($1 *) *xpp;
 
-	if (rndup)
-		rndup = X_ALIGN - rndup;
+    if (rndup)
+        rndup = X_ALIGN - rndup;
 
-	while (nelems-- != 0)
-	{
-		GETI_CheckNegAssign($1, $2, *xp, tp)
-		*tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
-		/* TODO: skip the assignment if NC_ERANGE occurs?
-		 * However, if doing so, many nc_test/nf_test will fail
-		 */
-	}
+    while (nelems-- != 0) {
+        ifelse(index(`$1',`u'), 0, ,
+               index(`$2',`u'), 0, `
+        if (*xp < 0) {
+            DEBUG_ASSIGN_ERROR(status, NC_ERANGE) /* because tp is unsigned */
+            SKIP_ASSIGN(xp, tp)
+        }')dnl
 
-	*xpp = (void *)(xp + rndup);
-	return status;
+        *tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
+    }
+
+    *xpp = (void *)(xp + rndup);
+    return status;
 }
 ')dnl
 dnl dnl dnl
@@ -2520,21 +2509,19 @@ define(`NCX_PUTN_BYTE',dnl
 int
 APIPrefix`x_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp)
 {
-	int status = NC_NOERR;
-	$1 *xp = ($1 *) *xpp;
+    int status = NC_NOERR;
+    $1 *xp = ($1 *) *xpp;
 
-	while (nelems-- != 0)
-	{
-		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
-			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-		*xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
-		/* TODO: skip the assignment if NC_ERANGE occurs?
-		 * However, if doing so, many nc_test/nf_test will fail
-		 */
-	}
+    while (nelems-- != 0) {
+        if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')) {
+            DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+            SKIP_ASSIGN(xp, tp)
+        }
+        *xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
+    }
 
-	*xpp = (void *)xp;
-	return status;
+    *xpp = (void *)xp;
+    return status;
 }
 ')dnl
 dnl dnl dnl
@@ -2546,32 +2533,28 @@ define(`NCX_PAD_PUTN_BYTE',dnl
 int
 APIPrefix`x_pad_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp)
 {
-	int status = NC_NOERR;
-	IntType rndup = nelems % X_ALIGN;
-	$1 *xp = ($1 *) *xpp;
+    int status = NC_NOERR;
+    IntType rndup = nelems % X_ALIGN;
+    $1 *xp = ($1 *) *xpp;
 
-	if (rndup)
-		rndup = X_ALIGN - rndup;
+    if (rndup) rndup = X_ALIGN - rndup;
 
-	while (nelems-- != 0)
-	{
-		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
-			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-		*xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
-		/* TODO: skip the assignment if NC_ERANGE occurs?
-		 * However, if doing so, many nc_test/nf_test will fail
-		 */
-	}
+    while (nelems-- != 0) {
+        if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')) {
+            DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+            SKIP_ASSIGN(xp, tp)
+        }
+        *xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
+    }
 
 
-	if (rndup)
-	{
-		(void) memcpy(xp, nada, (size_t)rndup);
-		xp += rndup;
-	}
+    if (rndup) {
+        (void) memcpy(xp, nada, (size_t)rndup);
+        xp += rndup;
+    }
 
-	*xpp = (void *)xp;
-	return status;
+    *xpp = (void *)xp;
+    return status;
 }
 ')dnl
 dnl dnl dnl
@@ -2778,21 +2761,19 @@ dnl NCX_GETN_BYTE(uchar, schar)
 int
 APIPrefix`x_getn_'NC_TYPE(uchar)_schar(const void **xpp, IntType nelems, schar *tp)
 {
-	int status = NC_NOERR;
-	uchar *xp = (uchar *)(*xpp);
+    int status = NC_NOERR;
+    uchar *xp = (uchar *)(*xpp);
 
-	while (nelems-- != 0)
-	{
-		if (*xp > SCHAR_MAX)
-			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-		*tp++ = (schar) *xp++; /* type cast from uchar to schar */
-		/* TODO: skip the assignment if NC_ERANGE occurs?
-		 * However, if doing so, many nc_test/nf_test will fail
-		 */
-	}
+    while (nelems-- != 0) {
+        if (*xp > SCHAR_MAX) {
+       	    DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+            SKIP_ASSIGN(xp, tp)
+        }
+	*tp++ = (schar) *xp++; /* type cast from uchar to schar */
+    }
 
-	*xpp = (const void *)xp;
-	return status;
+    *xpp = (const void *)xp;
+    return status;
 }
 dnl NCX_GETN_BYTE(uchar, uchar)
 int
@@ -2814,25 +2795,22 @@ dnl NCX_PAD_GETN_BYTE(uchar, schar)
 int
 APIPrefix`x_pad_getn_'NC_TYPE(uchar)_schar(const void **xpp, IntType nelems, schar *tp)
 {
-        int status = NC_NOERR;
-        IntType rndup = nelems % X_ALIGN;
-        uchar *xp = (uchar *) *xpp;
+    int status = NC_NOERR;
+    IntType rndup = nelems % X_ALIGN;
+    uchar *xp = (uchar *) *xpp;
 
-        if (rndup)
-                rndup = X_ALIGN - rndup;
+    if (rndup) rndup = X_ALIGN - rndup;
 
-        while (nelems-- != 0)
-        {
-                if (*xp > SCHAR_MAX)
-                        DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-                *tp++ = (schar) *xp++; /* type cast from uchar to schar */
-                /* TODO: skip the assignment if NC_ERANGE occurs?
-                 * However, if doing so, many nc_test/nf_test will fail
-                 */
+    while (nelems-- != 0) {
+        if (*xp > SCHAR_MAX) {
+            DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+            SKIP_ASSIGN(xp, tp)
         }
+        *tp++ = (schar) *xp++; /* type cast from uchar to schar */
+    }
 
-        *xpp = (void *)(xp + rndup);
-        return status;
+    *xpp = (void *)(xp + rndup);
+    return status;
 }
 dnl NCX_PAD_GETN_BYTE(uchar, uchar)
 int
@@ -2854,21 +2832,19 @@ dnl NCX_PUTN_BYTE(uchar, schar)
 int
 APIPrefix`x_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *tp)
 {
-	int status = NC_NOERR;
-	uchar *xp = (uchar *) *xpp;
+    int status = NC_NOERR;
+    uchar *xp = (uchar *) *xpp;
 
-	while (nelems-- != 0)
-	{
-		if (*tp < 0)
-			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-		*xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
-		/* TODO: skip the assignment if NC_ERANGE occurs?
-		 * However, if doing so, many nc_test/nf_test will fail
-		 */
-	}
+    while (nelems-- != 0) {
+        if (*tp < 0) {
+            DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+            SKIP_ASSIGN(xp, tp)
+        }
+        *xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
+    }
 
-	*xpp = (void *)xp;
-	return status;
+    *xpp = (void *)xp;
+    return status;
 }
 dnl NCX_PUTN_BYTE(uchar, uchar)
 int
@@ -2890,32 +2866,27 @@ dnl NCX_PAD_PUTN_BYTE(uchar, schar)
 int
 APIPrefix`x_pad_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *tp)
 {
-	int status = NC_NOERR;
-	IntType rndup = nelems % X_ALIGN;
-	uchar *xp = (uchar *) *xpp;
+    int status = NC_NOERR;
+    IntType rndup = nelems % X_ALIGN;
+    uchar *xp = (uchar *) *xpp;
 
-	if (rndup)
-		rndup = X_ALIGN - rndup;
+    if (rndup) rndup = X_ALIGN - rndup;
 
-	while (nelems-- != 0)
-	{
-		if (*tp < 0)
-			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-		*xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
-		/* TODO: skip the assignment if NC_ERANGE occurs?
-		 * However, if doing so, many nc_test/nf_test will fail
-		 */
-	}
+    while (nelems-- != 0) {
+        if (*tp < 0) {
+            DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
+            SKIP_ASSIGN(xp, tp)
+        }
+        *xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
+    }
 
+    if (rndup) {
+        (void) memcpy(xp, nada, (size_t)rndup);
+        xp += rndup;
+    }
 
-	if (rndup)
-	{
-		(void) memcpy(xp, nada, (size_t)rndup);
-		xp += rndup;
-	}
-
-	*xpp = (void *)xp;
-	return status;
+    *xpp = (void *)xp;
+    return status;
 }
 dnl NCX_PAD_PUTN_UCHAR(uchar, uchar)
 int

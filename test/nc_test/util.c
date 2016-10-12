@@ -789,7 +789,7 @@ put_vars(int ncid, int numVars)
             if (var_name[i][0] == 'c') { /* var_type[i] is NC_CHAR */
                 text[j] = hash(var_type[i], var_rank[i], index);
             } else {
-                value[j]  = hash(var_type[i], var_rank[i], index);
+                value[j] = hash(var_type[i], var_rank[i], index);
                 allInRange = allInRange && inRange(value[j], var_type[i]);
             }
         }

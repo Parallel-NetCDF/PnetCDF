@@ -103,6 +103,14 @@ test_ncmpi_iget_var1(int numVars)
             IF (err)
                 error("error in nc2dbl");
             if (inRange(expect,var_type[i])) {
+                ifelse(`$1', `uchar', `
+                /* in put_vars(), API _put_vara_double() is used to
+                 * write the NC_BYTE variables to files. In this
+                 * case, NC_BYTE variables are treated as signed
+                 * for CDF-1 and 2 formats. Thus, we must skip the
+                 * equal test below for uchar.
+                 */
+                if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect > schar_max) continue;')
                 IF (!equal2(value,expect,var_type[i])) {
                     error("expected: %G, got: %G", expect, value);
                 } else {
@@ -195,6 +203,14 @@ test_ncmpi_iget_var1_$1(int numVars)
                         IF (status != NC_NOERR) {
                             error("%s", ncmpi_strerror(status));
                         } else {
+                            ifelse(`$1', `uchar', `
+                                        /* in put_vars(), API _put_vara_double() is used to
+                             * write the NC_BYTE variables to files. In this
+                             * case, NC_BYTE variables are treated as signed
+                             * for CDF-1 and 2 formats. Thus, we must skip the
+                             * equal test below for uchar.
+                             */
+                            if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect > schar_max) continue;')
                             IF (!equal(value,expect,var_type[i],NCT_ITYPE($1)))
                                 error("expected: %G, got: %G", expect,
                                     (double) value);
@@ -303,6 +319,14 @@ test_ncmpi_iget_var(int numVars)
                 err = nc2dbl(var_type[i], p, &got);
                 IF (err != NC_NOERR)
                     error("error in nc2dbl");
+                ifelse(`$1', `uchar', `
+                /* in put_vars(), API _put_vara_double() is used to
+                 * write the NC_BYTE variables to files. In this
+                 * case, NC_BYTE variables are treated as signed
+                 * for CDF-1 and 2 formats. Thus, we must skip the
+                 * equal test below for uchar.
+                 */
+                if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                 IF (!equal2(got,expect[j],var_type[i])) {
                     error("value read not that expected");
                     if (verbose) {
@@ -412,6 +436,14 @@ test_ncmpi_iget_var_$1(int numVars)
             num_err = 0;
             for (j = 0; j < nels; j++) {
                 if (CheckNumRange($1, expect[j], var_type[i])) {
+                    ifelse(`$1', `uchar', `
+                    /* in put_vars(), API _put_vara_double() is used to
+                     * write the NC_BYTE variables to files. In this
+                     * case, NC_BYTE variables are treated as signed
+                     * for CDF-1 and 2 formats. Thus, we must skip the
+                     * equal test below for uchar.
+                     */
+                    if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                     IF (!equal(value[j],expect[j],var_type[i],NCT_ITYPE($1))){
                         error("value read not that expected");
                         if (verbose) {
@@ -575,6 +607,14 @@ test_ncmpi_iget_vara(int numVars)
                     err = nc2dbl(var_type[i], p, &got);
                     IF (err != NC_NOERR)
                         error("error in nc2dbl");
+                    ifelse(`$1', `uchar', `
+                    /* in put_vars(), API _put_vara_double() is used to
+                     * write the NC_BYTE variables to files. In this
+                     * case, NC_BYTE variables are treated as signed
+                     * for CDF-1 and 2 formats. Thus, we must skip the
+                     * equal test below for uchar.
+                     */
+                    if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                     IF (!equal2(got,expect[j],var_type[i])) {
                         error("value read not that expected");
                         if (verbose) {
@@ -760,6 +800,14 @@ test_ncmpi_iget_vara_$1(int numVars)
                 num_err = 0;
                 for (j = 0; j < nels; j++) {
                     if (CheckNumRange($1, expect[j], var_type[i])) {
+                        ifelse(`$1', `uchar', `
+                        /* in put_vars(), API _put_vara_double() is used to
+                         * write the NC_BYTE variables to files. In this
+                         * case, NC_BYTE variables are treated as signed
+                         * for CDF-1 and 2 formats. Thus, we must skip the
+                         * equal test below for uchar.
+                         */
+                        if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                         IF (!equal(value[j],expect[j],var_type[i],NCT_ITYPE($1))){
                             error("value read not that expected");
                             if (verbose) {
@@ -949,6 +997,14 @@ test_ncmpi_iget_vars(int numVars)
                         err = nc2dbl(var_type[i], p, &got);
                         IF (err != NC_NOERR)
                             error("error in nc2dbl");
+                        ifelse(`$1', `uchar', `
+                        /* in put_vars(), API _put_vara_double() is used to
+                         * write the NC_BYTE variables to files. In this
+                         * case, NC_BYTE variables are treated as signed
+                         * for CDF-1 and 2 formats. Thus, we must skip the
+                         * equal test below for uchar.
+                         */
+                        if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                         IF (!equal2(got,expect[j],var_type[i])) {
                             error("value read not that expected");
                             if (verbose) {
@@ -1147,6 +1203,14 @@ test_ncmpi_iget_vars_$1(int numVars)
                     num_err = 0;
                     for (j = 0; j < nels; j++) {
                         if (CheckNumRange($1, expect[j], var_type[i])) {
+                            ifelse(`$1', `uchar', `
+                            /* in put_vars(), API _put_vara_double() is used to
+                             * write the NC_BYTE variables to files. In this
+                             * case, NC_BYTE variables are treated as signed
+                             * for CDF-1 and 2 formats. Thus, we must skip the
+                             * equal test below for uchar.
+                             */
+                            if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                             IF (!equal(value[j],expect[j],var_type[i], NCT_ITYPE($1))){
                                 error("value read not that expected");
                                 if (verbose) {
@@ -1345,6 +1409,14 @@ test_ncmpi_iget_varm(int numVars)
                         err = nc2dbl(var_type[i], p, &got);
                         IF (err != NC_NOERR)
                             error("error in nc2dbl");
+                        ifelse(`$1', `uchar', `
+                        /* in put_vars(), API _put_vara_double() is used to
+                         * write the NC_BYTE variables to files. In this
+                         * case, NC_BYTE variables are treated as signed
+                         * for CDF-1 and 2 formats. Thus, we must skip the
+                         * equal test below for uchar.
+                         */
+                        if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                         IF (!equal2(got,expect[j],var_type[i])) {
                             error("value read not that expected");
                             if (verbose) {
@@ -1550,6 +1622,14 @@ test_ncmpi_iget_varm_$1(int numVars)
                     num_err = 0;
                     for (j = 0; j < nels; j++) {
                         if (CheckNumRange($1, expect[j], var_type[i])) {
+                            ifelse(`$1', `uchar', `
+                            /* in put_vars(), API _put_vara_double() is used to
+                             * write the NC_BYTE variables to files. In this
+                             * case, NC_BYTE variables are treated as signed
+                             * for CDF-1 and 2 formats. Thus, we must skip the
+                             * equal test below for uchar.
+                             */
+                            if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect[j] > schar_max) continue;')
                             IF (!equal(value[j],expect[j],var_type[i], NCT_ITYPE($1))){
                                 error("value read not that expected");
                                 if (verbose) {
