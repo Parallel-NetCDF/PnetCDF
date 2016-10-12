@@ -36,12 +36,24 @@ define(`FileOpen', `ifdef(`PNETCDF',`ncmpi_open(comm, $1, $2, info, $3)', `file_
 define(`FileCreate',`ifdef(`PNETCDF',`ncmpi_create(comm, $1, $2, info, $3)', `file_create($1, $2, $3)')')dnl
 define(`FileDelete',`ifdef(`PNETCDF',`ncmpi_delete($1,$2)',`nc_delete($1)')')dnl
 
+define(`Def_Vars',  `ifdef(`PNETCDF',`def_vars($1,$2)',`def_vars($1)')')dnl
+define(`Put_Atts',  `ifdef(`PNETCDF',`put_atts($1,$2,$3)',`put_atts($1)')')dnl
+define(`Put_Vars',  `ifdef(`PNETCDF',`put_vars($1,$2)',`put_vars($1)')')dnl
+define(`Check_File',`ifdef(`PNETCDF',`check_file($1,$2,$3)',`check_file($1)')')dnl
+define(`Check_Atts',`ifdef(`PNETCDF',`check_atts($1,$2,$3)',`check_atts($1)')')dnl
+define(`Check_Vars',`ifdef(`PNETCDF',`check_vars($1,$2)',`check_vars($1)')')dnl
 define(`VarArgs',   `ifdef(`PNETCDF',`int numVars',`void')')dnl
 define(`AttVarArgs',`ifdef(`PNETCDF',`int numGatts, int numVars',`void')')dnl
 
-define(`GetVar1',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
-define(`PutVar1',`ifdef(`PNETCDF',`ncmpi_put_var1_$1_all',`nc_put_var1_$1')')dnl
-define(`PutVar', `ifdef(`PNETCDF',`ncmpi_put_$1_all', `nc_put_$1')')dnl
+define(`GetVar1TYPE',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
+define(`PutVar1TYPE',`ifdef(`PNETCDF',`ncmpi_put_var1_$1_all',`nc_put_var1_$1')')dnl
+
+define(`PutVar1', `ifdef(`PNETCDF',`ncmpi_put_var1_all($1,$2,$3,$4,$5,$6)',          `nc_put_var1($1,$2,$3,$4)')')dnl
+define(`PutVar',  `ifdef(`PNETCDF',`ncmpi_put_var_all( $1,$2,$3,$4,$5)',             `nc_put_var( $1,$2,$3)')')dnl
+define(`PutVara', `ifdef(`PNETCDF',`ncmpi_put_vara_all($1,$2,$3,$4,$5,$6,$7)',       `nc_put_vara($1,$2,$3,$4,$5)')')dnl
+define(`PutVars', `ifdef(`PNETCDF',`ncmpi_put_vars_all($1,$2,$3,$4,$5,$6,$7,$8)',    `nc_put_vars($1,$2,$3,$4,$5,$6)')')dnl
+define(`PutVarm', `ifdef(`PNETCDF',`ncmpi_put_varm_all($1,$2,$3,$4,$5,$6,$7,$8,$9)', `nc_put_varm($1,$2,$3,$4,$5,$6,$7)')')dnl
+
 
 /*
  * Test create
@@ -64,41 +76,41 @@ TestFunc(create)(void)
     int nok=0;
 
     for (clobber = 0; clobber < 2; clobber++) {
-	err = FileCreate(scratch, clobber ? NC_CLOBBER : NC_NOCLOBBER, &ncid);
-	IF (err != NC_NOERR)
-	    error("create: %s", APIFunc(strerror)(err));
+        err = FileCreate(scratch, clobber ? NC_CLOBBER : NC_NOCLOBBER, &ncid);
+        IF (err != NC_NOERR)
+            error("create: %s", APIFunc(strerror)(err));
         ELSE_NOK
-	err = APIFunc(close)(ncid);
-	IF (err != NC_NOERR)
-	    error("close: %s", APIFunc(strerror)(err));
-	err = FileOpen(scratch, NC_NOWRITE, &ncid);
-	IF (err != NC_NOERR)
-	    error("open: %s", APIFunc(strerror)(err));
-	err = APIFunc(inq)(ncid, &ndims, &nvars, &ngatts, &recdim);
-	IF (err != NC_NOERR)
-	    error("inq: %s", APIFunc(strerror)(err));
-	else IF (ndims != 0)
-	    error("inq: wrong number of dimensions returned, %d", ndims);
-	else IF (nvars != 0)
-	    error("inq: wrong number of variables returned, %d", nvars);
-	else IF (ngatts != 0)
-	    error("inq: wrong number of global atts returned, %d", ngatts);
-	else IF (recdim != -1)
-	    error("inq: wrong record dimension ID returned, %d", recdim);
+        err = APIFunc(close)(ncid);
+        IF (err != NC_NOERR)
+            error("close: %s", APIFunc(strerror)(err));
+        err = FileOpen(scratch, NC_NOWRITE, &ncid);
+        IF (err != NC_NOERR)
+            error("open: %s", APIFunc(strerror)(err));
+        err = APIFunc(inq)(ncid, &ndims, &nvars, &ngatts, &recdim);
+        IF (err != NC_NOERR)
+            error("inq: %s", APIFunc(strerror)(err));
+        else IF (ndims != 0)
+            error("inq: wrong number of dimensions returned, %d", ndims);
+        else IF (nvars != 0)
+            error("inq: wrong number of variables returned, %d", nvars);
+        else IF (ngatts != 0)
+            error("inq: wrong number of global atts returned, %d", ngatts);
+        else IF (recdim != -1)
+            error("inq: wrong record dimension ID returned, %d", recdim);
         ELSE_NOK
-	err = APIFunc(close)(ncid);
-	IF (err != NC_NOERR)
-	    error("close: %s", APIFunc(strerror)(err));
+        err = APIFunc(close)(ncid);
+        IF (err != NC_NOERR)
+            error("close: %s", APIFunc(strerror)(err));
     }
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_EEXIST)
-	error("expecting NC_EEXIST but got %s", nc_err_code_name(err));
+        error("expecting NC_EEXIST but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-	error("remove of %s failed", scratch);
+        error("remove of %s failed", scratch);
     return nok;
 }
 
@@ -124,7 +136,7 @@ TestFunc(create)(void)
 int
 TestFunc(redef)(AttVarArgs)
 {
-    int ncid;                   /* netcdf id */
+    int ncid;          /* netcdf id */
     /* used to force effective test of ncio->move() in redef */
     size_t sizehint = 8192;
     int dimid;         /* dimension id */
@@ -139,11 +151,11 @@ TestFunc(redef)(AttVarArgs)
     /* BAD_ID tests */
     err = APIFunc(redef)(BAD_ID);
     IF (err != NC_EBADID)
-	error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = APIFunc(enddef)(BAD_ID);
     IF (err != NC_EBADID)
-	error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
     /* read-only tests */
@@ -152,15 +164,15 @@ TestFunc(redef)(AttVarArgs)
         error("open: %s", APIFunc(strerror)(err));
     err = APIFunc(redef)(ncid);
     IF (err != NC_EPERM)
-	error("expecting NC_EPERM but got %s", nc_err_code_name(err));
+        error("expecting NC_EPERM but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = APIFunc(enddef)(ncid);
     IF (err != NC_ENOTINDEFINE)
-	error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
+        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
     ELSE_NOK
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-	error("close: %s", APIFunc(strerror)(err));
+        error("close: %s", APIFunc(strerror)(err));
 
     /* tests using scratch file */
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
@@ -170,13 +182,13 @@ TestFunc(redef)(AttVarArgs)
     }
     /* limit for ncio implementations which which have infinite chunksize */
     if(sizehint > 32768)
-	sizehint = 16384;
+        sizehint = 16384;
     def_dims(ncid);
-    def_vars(ncid, numVars);
-    put_atts(ncid, numGatts, numVars);
+    Def_Vars(ncid, numVars);
+    Put_Atts(ncid, numGatts, numVars);
     err = APIFunc(inq_varid)(ncid, "d", &varid);
     IF (err != NC_NOERR)
-	error("inq_varid: %s", APIFunc(strerror)(err));
+        error("inq_varid: %s", APIFunc(strerror)(err));
     var = 1.0;
 
 ifdef(`PNETCDF', `
@@ -184,7 +196,7 @@ ifdef(`PNETCDF', `
     IF (err != NC_EINDEFINE)
         error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));')
 
-    err = PutVar1(double)(ncid, varid, NULL, &var);
+    err = PutVar1TYPE(double)(ncid, varid, NULL, &var);
     IF (err != NC_EINDEFINE)
         error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));
 
@@ -201,7 +213,7 @@ ifdef(`PNETCDF', `
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     ELSE_NOK
-    put_vars(ncid, numVars);
+    Put_Vars(ncid, numVars);
     err = APIFunc(def_dim)(ncid, "abc", sizehint, &dimid);
     IF (err != NC_ENOTINDEFINE)
         error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
@@ -222,14 +234,14 @@ ifdef(`PNETCDF', `
     IF (err != NC_NOERR)
         error("def_var: %s", APIFunc(strerror)(err));
     {
-	int dimids[NDIMS +1];
-	int ii = 0;
-	for(ii = 0; ii < NDIMS; ii++)
-		dimids[ii] = ii;
-	dimids[NDIMS] = dimid;
-    	err = APIFunc(def_var)(ncid, "abcRec", NC_INT, NDIMS, dimids, &varid1);
-    	IF (err != NC_NOERR)
-        	error("def_var: %s", APIFunc(strerror)(err));
+        int dimids[NDIMS +1];
+        int ii = 0;
+        for(ii = 0; ii < NDIMS; ii++)
+                dimids[ii] = ii;
+        dimids[NDIMS] = dimid;
+            err = APIFunc(def_var)(ncid, "abcRec", NC_INT, NDIMS, dimids, &varid1);
+            IF (err != NC_NOERR)
+                error("def_var: %s", APIFunc(strerror)(err));
     }
     err = APIFunc(put_att_text)(ncid, NC_GLOBAL, "title", 1+strlen(title), title);
     IF (err != NC_NOERR)
@@ -245,26 +257,26 @@ ifdef(`PNETCDF', `
     IF (err != NC_ENOTINDEP)
         error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));')
 
-    err = PutVar1(double)(ncid, varid, NULL, &var);
+    err = PutVar1TYPE(double)(ncid, varid, NULL, &var);
     IF (err != NC_NOERR)
         error("put_var1_double: %s", APIFunc(strerror)(err));
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-	error("close: %s", APIFunc(strerror)(err));
+        error("close: %s", APIFunc(strerror)(err));
 
-	/* check scratch file written as expected */
-    check_file(scratch, numGatts, numVars);
+    /* check scratch file written as expected */
+    Check_File(scratch, numGatts, numVars);
     err = FileOpen(scratch, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
     err = APIFunc(inq_dim)(ncid, dimid, name, &length);
     IF (err != NC_NOERR)
-	error("inq_dim: %s", APIFunc(strerror)(err));
+        error("inq_dim: %s", APIFunc(strerror)(err));
     IF (strcmp(name, "abc") != 0)
-	error("Unexpected dim name");
+        error("Unexpected dim name");
     IF (length != sizehint)
-	error("Unexpected dim length");
-    err = GetVar1(double)(ncid, varid, NULL, &var);
+        error("Unexpected dim length");
+    err = GetVar1TYPE(double)(ncid, varid, NULL, &var);
     IF (err != NC_NOERR)
         error("get_var1_double: %s", APIFunc(strerror)(err));
     IF (var != 1.0)
@@ -287,7 +299,9 @@ ifdef(`PNETCDF', `
 int
 TestFunc(enddef)(AttVarArgs)
 {
-    return TestFunc(redef)(numGatts, numVars);
+    ifdef(`PNETCDF',
+    `return test_ncmpi_redef(numGatts, numVars);',
+    `return test_nc_redef();')
 }
 
 
@@ -314,7 +328,7 @@ TestFunc(sync)(AttVarArgs)
     err = FileCreate(scratch, NC_NOCLOBBER, &ncidw);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
-	return nok;
+        return nok;
     }
     err = APIFunc(sync)(ncidw);
     IF (err != NC_EINDEFINE)
@@ -323,12 +337,12 @@ TestFunc(sync)(AttVarArgs)
 
     /* write using same handle */
     def_dims(ncidw);
-    def_vars(ncidw, numVars);
-    put_atts(ncidw, numGatts, numVars);
+    Def_Vars(ncidw, numVars);
+    Put_Atts(ncidw, numGatts, numVars);
     err = APIFunc(enddef)(ncidw);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
-    put_vars(ncidw, numVars);
+    Put_Vars(ncidw, numVars);
     err = APIFunc(sync)(ncidw);
     IF (err != NC_NOERR)
         error("sync of ncidw failed: %s", APIFunc(strerror)(err));
@@ -343,8 +357,8 @@ TestFunc(sync)(AttVarArgs)
         error("sync of ncidr failed: %s", APIFunc(strerror)(err));
     ELSE_NOK
     check_dims(ncidr);
-    check_atts(ncidr, numGatts, numVars);
-    check_vars(ncidr, numVars);
+    Check_Atts(ncidr, numGatts, numVars);
+    Check_Vars(ncidr, numVars);
 
     /* close both handles */
     err = APIFunc(close)(ncidr);
@@ -384,32 +398,32 @@ TestFunc(abort)(AttVarArgs)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     ELSE_NOK
 
-        /* create scratch file & try APIFunc(abort) in define mode */
+    /* create scratch file & try APIFunc(abort) in define mode */
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
-    put_atts(ncid, numGatts, numVars);
+    Def_Vars(ncid, numVars);
+    Put_Atts(ncid, numGatts, numVars);
     err = APIFunc(abort)(ncid);
     IF (err != NC_NOERR)
         error("abort of ncid failed: %s", APIFunc(strerror)(err));
     ELSE_NOK
-    err = APIFunc(close)(ncid);	/* should already be closed */
+    err = APIFunc(close)(ncid);        /* should already be closed */
     IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
-    err = FileDelete(scratch, info);	/* should already be deleted */
+    err = FileDelete(scratch, info);        /* should already be deleted */
     IF (!err) /* err is expected to be NC_ENOENT */
         error("file %s should not exist", scratch);
 
-        /*
-         * create scratch file
-	 * do APIFunc(enddef) & APIFunc(redef)
-	 * define new dims, vars, atts
-	 * try APIFunc(abort): should restore previous state (no dims, vars, atts)
-	 */
+    /*
+     * create scratch file
+     * do APIFunc(enddef) & APIFunc(redef)
+     * define new dims, vars, atts
+     * try APIFunc(abort): should restore previous state (no dims, vars, atts)
+     */
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
@@ -422,13 +436,13 @@ TestFunc(abort)(AttVarArgs)
     IF (err != NC_NOERR)
         error("redef: %s", APIFunc(strerror)(err));
     def_dims(ncid);
-    def_vars(ncid, numVars);
-    put_atts(ncid, numGatts, numVars);
+    Def_Vars(ncid, numVars);
+    Put_Atts(ncid, numGatts, numVars);
     err = APIFunc(abort)(ncid);
     IF (err != NC_NOERR)
         error("abort of ncid failed: %s", APIFunc(strerror)(err));
     ELSE_NOK
-    err = APIFunc(close)(ncid);	/* should already be closed */
+    err = APIFunc(close)(ncid);        /* should already be closed */
     IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     err = FileOpen(scratch, NC_NOWRITE, &ncid);
@@ -454,12 +468,12 @@ TestFunc(abort)(AttVarArgs)
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
-    put_atts(ncid, numGatts, numVars);
+    Def_Vars(ncid, numVars);
+    Put_Atts(ncid, numGatts, numVars);
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
-    put_vars(ncid, numVars);
+    Put_Vars(ncid, numVars);
     err = APIFunc(abort)(ncid);
     IF (err != NC_NOERR)
         error("abort of ncid failed: %s", APIFunc(strerror)(err));
@@ -467,7 +481,7 @@ TestFunc(abort)(AttVarArgs)
     err = APIFunc(close)(ncid);       /* should already be closed */
     IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
-    check_file(scratch, numGatts, numVars);
+    Check_File(scratch, numGatts, numVars);
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
@@ -489,7 +503,7 @@ int
 TestFunc(def_dim)(VarArgs)
 {
     int ncid;
-    int  err;             /* status */
+    int  err;           /* status */
     int  i, nok=0;
     int  dimid;         /* dimension id */
     IntType length;
@@ -520,19 +534,19 @@ TestFunc(def_dim)(VarArgs)
         error("redef: %s", APIFunc(strerror)(err));
     err = APIFunc(def_dim)(ncid, dim_name[0], NC_UNLIMITED, &dimid);
     IF (err != NC_NOERR)
-	error("def_dim: %s", APIFunc(strerror)(err));
+        error("def_dim: %s", APIFunc(strerror)(err));
     ELSE_NOK
     IF (dimid != 0)
-	error("Unexpected dimid");
+        error("Unexpected dimid");
     ELSE_NOK
     err = APIFunc(inq_unlimdim)(ncid, &dimid);
     IF (err != NC_NOERR)
-	error("inq_unlimdim: %s", APIFunc(strerror)(err));
+        error("inq_unlimdim: %s", APIFunc(strerror)(err));
     IF (dimid != 0)
-	error("Unexpected recdim");
+        error("Unexpected recdim");
     err = APIFunc(inq_dimlen)(ncid, dimid, &length);
     IF (length != 0)
-	error("Unexpected length");
+        error("Unexpected length");
     err = APIFunc(def_dim)(ncid, "abc", NC_UNLIMITED, &dimid);
     IF (err != NC_EUNLIMIT)
         error("expecting NC_EUNLIMIT but got %s", nc_err_code_name(err));
@@ -541,38 +555,38 @@ TestFunc(def_dim)(VarArgs)
     /* define-mode tests: remaining dims */
     for (i = 1; i < NDIMS; i++) {
         err = APIFunc(def_dim)(ncid, dim_name[i-1], dim_len[i], &dimid);
-	IF (err != NC_ENAMEINUSE)
+        IF (err != NC_ENAMEINUSE)
             error("expecting NC_ENAMEINUSE but got %s", nc_err_code_name(err));
         ELSE_NOK
-	err = APIFunc(def_dim)(ncid, BAD_NAME, dim_len[i], &dimid);
-	IF (err != NC_EBADNAME)
+        err = APIFunc(def_dim)(ncid, BAD_NAME, dim_len[i], &dimid);
+        IF (err != NC_EBADNAME)
             error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = APIFunc(def_dim)(ncid, dim_name[i], NC_UNLIMITED-1, &dimid);
-	IF (err != NC_EDIMSIZE)
+        IF (err != NC_EDIMSIZE)
             error("expecting NC_EDIMSIZE but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = APIFunc(def_dim)(ncid, dim_name[i], dim_len[i], &dimid);
         IF (err != NC_NOERR)
-	    error("def_dim: %s", APIFunc(strerror)(err));
+            error("def_dim: %s", APIFunc(strerror)(err));
         ELSE_NOK
-	IF (dimid != i)
-	    error("Unexpected dimid");
+        IF (dimid != i)
+            error("Unexpected dimid");
     }
 
-        /* Following just to expand unlimited dim */
-    def_vars(ncid, numVars);
+    /* Following just to expand unlimited dim */
+    Def_Vars(ncid, numVars);
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
-    put_vars(ncid, numVars);
+    Put_Vars(ncid, numVars);
 
-        /* Check all dims */
+    /* Check all dims */
     check_dims(ncid);
 
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-	error("close: %s", APIFunc(strerror)(err));
+        error("close: %s", APIFunc(strerror)(err));
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
@@ -702,7 +716,7 @@ TestFunc(def_var)(VarArgs)
     ELSE_NOK
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
-	error("enddef: %s", APIFunc(strerror)(err));
+        error("enddef: %s", APIFunc(strerror)(err));
     err = APIFunc(def_var)(ncid, "ABC", NC_SHORT, 0, dimids, &varid);
     IF (err != NC_ENOTINDEFINE)
         error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
@@ -725,10 +739,10 @@ TestFunc(def_var)(VarArgs)
         err = APIFunc(def_var)(ncid, var_name[i], var_type[i], var_rank[i],
             var_dimid[i], &varid);
         IF (err != NC_NOERR)
-	    error("def_var: %s", APIFunc(strerror)(err));
+            error("def_var: %s", APIFunc(strerror)(err));
         ELSE_NOK
-	IF (varid != i)
-	    error("Unexpected varid");
+        IF (varid != i)
+            error("Unexpected varid");
         ELSE_NOK
     }
 
@@ -750,16 +764,16 @@ TestFunc(def_var)(VarArgs)
 
 
 /*
- * Test PutVar(var1)
+ * Test PutVar1
  */
 int
 TestFunc(put_var1)(VarArgs)
 {
     int i, j, err, ncid, nok=0;
     IntType index[MAX_RANK];
-    MPI_Datatype buftype;
     double value;
-    double buf[1];		/* (void *) buffer */
+    double buf[1];                /* (void *) buffer */
+    ifdef(`PNETCDF', `MPI_Datatype buftype;')
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
@@ -767,27 +781,27 @@ TestFunc(put_var1)(VarArgs)
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
 
     for (i = 0; i < numVars; i++) {
-        buftype = nc_mpi_type(var_type[i]);
+        ifdef(`PNETCDF', `buftype = nc_mpi_type(var_type[i]);')
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
-        err = PutVar(var1)(BAD_ID, i, index, buf, 1, buftype);
+        err = PutVar1(BAD_ID, i, index, buf, 1, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = PutVar(var1)(ncid, BAD_VARID, index, buf, 1, buftype);
+        err = PutVar1(ncid, BAD_VARID, index, buf, 1, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
                 index[j] = var_shape[i][j];
-                err = PutVar(var1)(ncid, i, index, buf, 1, buftype);
+                err = PutVar1(ncid, i, index, buf, 1, buftype);
                 IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
@@ -799,22 +813,22 @@ TestFunc(put_var1)(VarArgs)
             IF (err != NC_NOERR)
                 error("error in toMixedBase");
             value = hash(var_type[i], var_rank[i], index);
-	    if (inRange(value, var_type[i])) {
-		err = dbl2nc(value, var_type[i], buf);
-		IF (err != NC_NOERR)
-		    error("error in dbl2nc");
-		if (var_rank[i] == 0 && i%2 == 0)
-		    err = PutVar(var1)(ncid, i, NULL, buf, 1, buftype);
-		else
-		    err = PutVar(var1)(ncid, i, index, buf, 1, buftype);
-		IF (err != NC_NOERR)
-		    error("%s", APIFunc(strerror)(err));
+            if (inRange(value, var_type[i])) {
+                err = dbl2nc(value, var_type[i], buf);
+                IF (err != NC_NOERR)
+                    error("error in dbl2nc");
+                if (var_rank[i] == 0 && i%2 == 0)
+                    err = PutVar1(ncid, i, NULL, buf, 1, buftype);
+                else
+                    err = PutVar1(ncid, i, index, buf, 1, buftype);
+                IF (err != NC_NOERR)
+                    error("%s", APIFunc(strerror)(err));
                 ELSE_NOK
-	    }
+            }
         }
     }
 
-    check_vars(ncid, numVars);
+    Check_Vars(ncid, numVars);
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -827,11 +841,11 @@ TestFunc(put_var1)(VarArgs)
 
 
 /*
- * Test PutVar(vara)
+ * Test PutVara
  * Choose a random point dividing each dim into 2 parts
  * Put 2^rank (nslabs) slabs so defined
  * Redefine buffer for each put.
- * At end check all variables using check_vars
+ * At end check all variables using Check_Vars
  */
 int
 TestFunc(put_vara)(VarArgs)
@@ -842,10 +856,10 @@ TestFunc(put_vara)(VarArgs)
     IntType index[MAX_RANK];
     IntType mid[MAX_RANK];
     IntType bufcount;
-    MPI_Datatype buftype;
-    double buf[MAX_NELS]; 	/* (void *) buffer */
-    char *p;			/* (void *) pointer */
+    double buf[MAX_NELS];         /* (void *) buffer */
+    char *p;                      /* (void *) pointer */
     double value;
+    ifdef(`PNETCDF', `MPI_Datatype buftype;')
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
@@ -853,7 +867,7 @@ TestFunc(put_vara)(VarArgs)
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
@@ -865,42 +879,42 @@ TestFunc(put_vara)(VarArgs)
             start[j] = 0;
             edge[j] = 1;
         }
-        buftype = nc_mpi_type(var_type[i]);
+        ifdef(`PNETCDF', `buftype = nc_mpi_type(var_type[i]);')
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
-        err = PutVar(vara)(BAD_ID, i, start, edge, buf, bufcount, buftype);
+        err = PutVara(BAD_ID, i, start, edge, buf, bufcount, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = PutVar(vara)(ncid, BAD_VARID, start, edge, buf, bufcount, buftype);
+        err = PutVara(ncid, BAD_VARID, start, edge, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
-		start[j] = var_shape[i][j];
+                start[j] = var_shape[i][j];
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(vara)(ncid, i, start, edge, buf, bufcount, buftype);
+                err = PutVara(ncid, i, start, edge, buf, bufcount, buftype);
                 IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		start[j] = 0;
-		edge[j] = var_shape[i][j] + 1;
+                start[j] = 0;
+                edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(vara)(ncid, i, start, edge, buf, bufcount, buftype);
+                err = PutVara(ncid, i, start, edge, buf, bufcount, buftype);
                 IF (err != NC_EEDGE)
                     error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		edge[j] = 1;
-	    }
+                edge[j] = 1;
+            }
         }
-            /* Choose a random point dividing each dim into 2 parts */
-            /* put 2^rank (nslabs) slabs so defined */
+        /* Choose a random point dividing each dim into 2 parts */
+        /* put 2^rank (nslabs) slabs so defined */
         nslabs = 1;
         for (j = 0; j < var_rank[i]; j++) {
             mid[j] = roll( var_shape[i][j] );
             nslabs *= 2;
         }
-            /* bits of k determine whether to put lower or upper part of dim */
+        /* bits of k determine whether to put lower or upper part of dim */
         for (k = 0; k < nslabs; k++) {
             nels = 1;
             for (j = 0; j < var_rank[i]; j++) {
@@ -913,33 +927,33 @@ TestFunc(put_vara)(VarArgs)
                 }
                 nels *= edge[j];
             }
-	    p = (char *) buf;
-	    for (j = 0; j < nels; j++) {
-		err = toMixedBase(j, var_rank[i], edge, index);
-		IF (err != NC_NOERR)
-		    error("error in toMixedBase");
-		for (d = 0; d < var_rank[i]; d++)
-		    index[d] += start[d];
-		value = hash(var_type[i], var_rank[i], index);
-		if (!inRange(value, var_type[i]))
-		    value = 0;
-		err = dbl2nc(value, var_type[i], p);
-		IF (err != NC_NOERR)
-		    error("error in dbl2nc");
-		p += nctypelen(var_type[i]);
+            p = (char *) buf;
+            for (j = 0; j < nels; j++) {
+                err = toMixedBase(j, var_rank[i], edge, index);
+                IF (err != NC_NOERR)
+                    error("error in toMixedBase");
+                for (d = 0; d < var_rank[i]; d++)
+                    index[d] += start[d];
+                value = hash(var_type[i], var_rank[i], index);
+                if (!inRange(value, var_type[i]))
+                    value = 0;
+                err = dbl2nc(value, var_type[i], p);
+                IF (err != NC_NOERR)
+                    error("error in dbl2nc");
+                p += nctypelen(var_type[i]);
             }
             for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
             if (var_rank[i] == 0 && i%2 == 0)
-		err = PutVar(vara)(ncid, i, NULL, NULL, buf, bufcount, buftype);
+                err = PutVara(ncid, i, NULL, NULL, buf, bufcount, buftype);
             else
-		err = PutVar(vara)(ncid, i, start, edge, buf, bufcount, buftype);
+                err = PutVara(ncid, i, start, edge, buf, bufcount, buftype);
             IF (err != NC_NOERR)
                 error("%s", APIFunc(strerror)(err));
             ELSE_NOK
         }
     }
 
-    check_vars(ncid, numVars);
+    Check_Vars(ncid, numVars);
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -952,12 +966,12 @@ TestFunc(put_vara)(VarArgs)
 
 
 /*
- * Test PutVar(vars)
+ * Test PutVars
  * Choose a random point dividing each dim into 2 parts
  * Put 2^rank (nslabs) slabs so defined
  * Choose random stride from 1 to edge
  * Redefine buffer for each put.
- * At end check all variables using check_vars
+ * At end check all variables using Check_Vars
  */
 int
 TestFunc(put_vars)(VarArgs)
@@ -973,10 +987,10 @@ TestFunc(put_vars)(VarArgs)
     IntType sstride[MAX_RANK];
     PTRDType stride[MAX_RANK];
     IntType bufcount;
-    MPI_Datatype buftype;
     double buf[MAX_NELS]; /* (void *) buffer */
-    char *p;			/* (void *) pointer */
+    char *p;              /* (void *) pointer */
     double value;
+    ifdef(`PNETCDF', `MPI_Datatype buftype;')
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
@@ -984,7 +998,7 @@ TestFunc(put_vars)(VarArgs)
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
@@ -997,50 +1011,50 @@ TestFunc(put_vars)(VarArgs)
             edge[j] = 1;
             stride[j] = 1;
         }
-        buftype = nc_mpi_type(var_type[i]);
+        ifdef(`PNETCDF', `buftype = nc_mpi_type(var_type[i]);')
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
-        err = PutVar(vars)(BAD_ID, i, start, edge, stride, buf, bufcount, buftype);
+        err = PutVars(BAD_ID, i, start, edge, stride, buf, bufcount, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = PutVar(vars)(ncid, BAD_VARID, start, edge, stride, buf, bufcount, buftype);
+        err = PutVars(ncid, BAD_VARID, start, edge, stride, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
-		start[j] = var_shape[i][j];
+                start[j] = var_shape[i][j];
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(vars)(ncid, i, start, edge, stride, buf, bufcount, buftype);
-		IF (err != NC_EINVALCOORDS)
+                err = PutVars(ncid, i, start, edge, stride, buf, bufcount, buftype);
+                IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		start[j] = 0;
-		edge[j] = var_shape[i][j] + 1;
+                start[j] = 0;
+                edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(vars)(ncid, i, start, edge, stride, buf, bufcount, buftype);
-		IF (err != NC_EEDGE)
+                err = PutVars(ncid, i, start, edge, stride, buf, bufcount, buftype);
+                IF (err != NC_EEDGE)
                     error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		edge[j] = 1;
-		stride[j] = 0;
+                edge[j] = 1;
+                stride[j] = 0;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(vars)(ncid, i, start, edge, stride, buf, bufcount, buftype);
-		IF (err != NC_ESTRIDE)
+                err = PutVars(ncid, i, start, edge, stride, buf, bufcount, buftype);
+                IF (err != NC_ESTRIDE)
                     error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		stride[j] = 1;
-	    }
+                stride[j] = 1;
+            }
         }
-            /* Choose a random point dividing each dim into 2 parts */
-            /* put 2^rank (nslabs) slabs so defined */
+        /* Choose a random point dividing each dim into 2 parts */
+        /* put 2^rank (nslabs) slabs so defined */
         nslabs = 1;
         for (j = 0; j < var_rank[i]; j++) {
             mid[j] = roll( var_shape[i][j] );
             nslabs *= 2;
         }
-            /* bits of k determine whether to put lower or upper part of dim */
-            /* choose random stride from 1 to edge */
+        /* bits of k determine whether to put lower or upper part of dim */
+        /* choose random stride from 1 to edge */
         for (k = 0; k < nslabs; k++) {
             nstarts = 1;
             for (j = 0; j < var_rank[i]; j++) {
@@ -1064,7 +1078,7 @@ TestFunc(put_vars)(VarArgs)
                     nels *= count[j];
                     index[j] += start[j];
                 }
-                        /* Random choice of forward or backward */
+                /* Random choice of forward or backward */
 /* TODO
                 if ( roll(2) ) {
                     for (j = 0; j < var_rank[i]; j++) {
@@ -1073,34 +1087,34 @@ TestFunc(put_vars)(VarArgs)
                     }
                 }
  */
-		p = (char *) buf;
-		for (j = 0; j < nels; j++) {
-		    err = toMixedBase(j, var_rank[i], count, index2);
-		    IF (err != NC_NOERR)
-			error("error in toMixedBase");
-		    for (d = 0; d < var_rank[i]; d++)
-			index2[d] = index[d] + index2[d] * stride[d];
-		    value = hash(var_type[i], var_rank[i], index2);
-		    if (!inRange(value, var_type[i]))
-			value = 0;
-		    err = dbl2nc(value, var_type[i], p);
-		    IF (err != NC_NOERR)
-			error("error in dbl2nc");
-		    p += nctypelen(var_type[i]);
-		}
+                p = (char *) buf;
+                for (j = 0; j < nels; j++) {
+                    err = toMixedBase(j, var_rank[i], count, index2);
+                    IF (err != NC_NOERR)
+                        error("error in toMixedBase");
+                    for (d = 0; d < var_rank[i]; d++)
+                        index2[d] = index[d] + index2[d] * stride[d];
+                    value = hash(var_type[i], var_rank[i], index2);
+                    if (!inRange(value, var_type[i]))
+                        value = 0;
+                    err = dbl2nc(value, var_type[i], p);
+                    IF (err != NC_NOERR)
+                        error("error in dbl2nc");
+                    p += nctypelen(var_type[i]);
+                }
                 for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= count[j];
-		if (var_rank[i] == 0 && i%2 == 0)
-		    err = PutVar(vars)(ncid, i, NULL, NULL, NULL, buf, bufcount, buftype);
-		else
-		    err = PutVar(vars)(ncid, i, index, count, stride, buf, bufcount, buftype);
-		IF (err != NC_NOERR)
-		    error("%s", APIFunc(strerror)(err));
+                if (var_rank[i] == 0 && i%2 == 0)
+                    err = PutVars(ncid, i, NULL, NULL, NULL, buf, bufcount, buftype);
+                else
+                    err = PutVars(ncid, i, index, count, stride, buf, bufcount, buftype);
+                IF (err != NC_NOERR)
+                    error("%s", APIFunc(strerror)(err));
                 ELSE_NOK
             }
         }
     }
 
-    check_vars(ncid, numVars);
+    Check_Vars(ncid, numVars);
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -1113,13 +1127,13 @@ TestFunc(put_vars)(VarArgs)
 
 
 /*
- * Test PutVar(varm)
+ * Test PutVarm
  * Choose a random point dividing each dim into 2 parts
  * Put 2^rank (nslabs) slabs so defined
  * Choose random stride from 1 to edge
  * Buffer is bit image of whole external variable.
  * So all puts for a variable put different elements of buffer
- * At end check all variables using check_vars
+ * At end check all variables using Check_Vars
  */
 int
 TestFunc(put_varm)(VarArgs)
@@ -1142,10 +1156,10 @@ TestFunc(put_varm)(VarArgs)
     PTRDType imap[MAX_RANK];
     PTRDType imap2[MAX_RANK];
     IntType bufcount;
-    MPI_Datatype buftype;
     double buf[MAX_NELS];       /* (void *) buffer */
-    char *p;			/* (void *) pointer */
+    char *p;                    /* (void *) pointer */
     double value;
+    ifdef(`PNETCDF', `MPI_Datatype buftype;')
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
@@ -1153,7 +1167,7 @@ TestFunc(put_varm)(VarArgs)
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
@@ -1166,70 +1180,70 @@ TestFunc(put_varm)(VarArgs)
             edge[j] = 1;
             stride[j] = 1;
         }
-	if (var_rank[i] > 0) {
-	    j = var_rank[i] - 1;
-	    imap[j] = nctypelen(var_type[i]); /*  netCDF considers imap in bytes */
-	    imap[j] = 1;                      /* PnetCDF considers imap in elements */
-	    for (; j > 0; j--)
-		imap[j-1] = imap[j] * var_shape[i][j];
-	}
-	p = (char *) buf;
-	for (j = 0; j < var_nels[i]; j++) {
-	    err = toMixedBase(j, var_rank[i], var_shape[i], index);
-	    IF (err != NC_NOERR)
-		error("error in toMixedBase");
-	    value = hash(var_type[i], var_rank[i], index);
-	    if (!inRange(value, var_type[i]))
-		value = 0;
-	    err = dbl2nc(value, var_type[i], p);
-	    IF (err != NC_NOERR)
-		error("error in dbl2nc");
-	    p += nctypelen(var_type[i]);
-	}
-        buftype = nc_mpi_type(var_type[i]);
+        if (var_rank[i] > 0) {
+            j = var_rank[i] - 1;
+            imap[j] = nctypelen(var_type[i]); /*  netCDF considers imap in bytes */
+            imap[j] = 1;                      /* PnetCDF considers imap in elements */
+            for (; j > 0; j--)
+                imap[j-1] = imap[j] * var_shape[i][j];
+        }
+        p = (char *) buf;
+        for (j = 0; j < var_nels[i]; j++) {
+            err = toMixedBase(j, var_rank[i], var_shape[i], index);
+            IF (err != NC_NOERR)
+                error("error in toMixedBase");
+            value = hash(var_type[i], var_rank[i], index);
+            if (!inRange(value, var_type[i]))
+                value = 0;
+            err = dbl2nc(value, var_type[i], p);
+            IF (err != NC_NOERR)
+                error("error in dbl2nc");
+            p += nctypelen(var_type[i]);
+        }
+        ifdef(`PNETCDF', `buftype = nc_mpi_type(var_type[i]);')
         for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= edge[j];
-        err = PutVar(varm)(BAD_ID, i, start, edge, stride, imap, buf, bufcount, buftype);
+        err = PutVarm(BAD_ID, i, start, edge, stride, imap, buf, bufcount, buftype);
         IF (err != NC_EBADID)
             error("expecting NC_EBADID but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = PutVar(varm)(ncid, BAD_VARID, start, edge, stride, imap, buf, bufcount, buftype);
+        err = PutVarm(ncid, BAD_VARID, start, edge, stride, imap, buf, bufcount, buftype);
         IF (err != NC_ENOTVAR)
             error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {          /* skip record dim */
-		start[j] = var_shape[i][j];
+                start[j] = var_shape[i][j];
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(varm)(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
-		IF (err != NC_EINVALCOORDS)
+                err = PutVarm(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
+                IF (err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		start[j] = 0;
-		edge[j] = var_shape[i][j] + 1;
+                start[j] = 0;
+                edge[j] = var_shape[i][j] + 1;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(varm)(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
-		IF (err != NC_EEDGE)
+                err = PutVarm(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
+                IF (err != NC_EEDGE)
                     error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		edge[j] = 1;
-		stride[j] = 0;
+                edge[j] = 1;
+                stride[j] = 0;
                 for (bufcount=1,k=0; k<var_rank[i]; k++) bufcount *= edge[k];
-		err = PutVar(varm)(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
-		IF (err != NC_ESTRIDE)
+                err = PutVarm(ncid, i, start, edge, stride, imap, buf, bufcount, buftype);
+                IF (err != NC_ESTRIDE)
                     error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
                 ELSE_NOK
-		stride[j] = 1;
-	    }
+                stride[j] = 1;
+            }
         }
-            /* Choose a random point dividing each dim into 2 parts */
-            /* put 2^rank (nslabs) slabs so defined */
+        /* Choose a random point dividing each dim into 2 parts */
+        /* put 2^rank (nslabs) slabs so defined */
         nslabs = 1;
         for (j = 0; j < var_rank[i]; j++) {
             mid[j] = roll( var_shape[i][j] );
             nslabs *= 2;
         }
-            /* bits of k determine whether to put lower or upper part of dim */
-            /* choose random stride from 1 to edge */
+        /* bits of k determine whether to put lower or upper part of dim */
+        /* choose random stride from 1 to edge */
         for (k = 0; k < nslabs; k++) {
             nstarts = 1;
             for (j = 0; j < var_rank[i]; j++) {
@@ -1245,38 +1259,38 @@ TestFunc(put_varm)(VarArgs)
                 nstarts *= stride[j];
             }
             for (m = 0; m < nstarts; m++) {
-		if (var_rank[i] == 0 && i%2 == 0) {
-		    err = PutVar(varm)(ncid, i, NULL, NULL, NULL, NULL, buf, 1, buftype);
-		} else {
-		    err = toMixedBase(m, var_rank[i], sstride, index);
-		    IF (err != NC_NOERR)
-			error("error in toMixedBase");
-		    for (j = 0; j < var_rank[i]; j++) {
-			count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
-			index[j] += start[j];
-		    }
-			    /* Random choice of forward or backward */
+                if (var_rank[i] == 0 && i%2 == 0) {
+                    err = PutVarm(ncid, i, NULL, NULL, NULL, NULL, buf, 1, buftype);
+                } else {
+                    err = toMixedBase(m, var_rank[i], sstride, index);
+                    IF (err != NC_NOERR)
+                        error("error in toMixedBase");
+                    for (j = 0; j < var_rank[i]; j++) {
+                        count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
+                        index[j] += start[j];
+                    }
+                    /* Random choice of forward or backward */
 /* TODO
-		    if ( roll(2) ) {
-			for (j = 0; j < var_rank[i]; j++) {
-			    index[j] += (count[j] - 1) * stride[j];
-			    stride[j] = -stride[j];
-			}
-		    }
+                    if ( roll(2) ) {
+                        for (j = 0; j < var_rank[i]; j++) {
+                            index[j] += (count[j] - 1) * stride[j];
+                            stride[j] = -stride[j];
+                        }
+                    }
  */
-		    j = fromMixedBase(var_rank[i], index, var_shape[i]);
+                    j = fromMixedBase(var_rank[i], index, var_shape[i]);
                     p = (char *) buf + j * nctypelen(var_type[i]);
                     for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= count[j];
-		    err = PutVar(varm)(ncid, i, index, count, stride, imap2, p, bufcount, buftype);
-		}
-		IF (err != NC_NOERR)
-		    error("i=%d var_rank[i]=%d %s", i,var_rank[i],APIFunc(strerror)(err));
+                    err = PutVarm(ncid, i, index, count, stride, imap2, p, bufcount, buftype);
+                }
+                IF (err != NC_NOERR)
+                    error("i=%d var_rank[i]=%d %s", i,var_rank[i],APIFunc(strerror)(err));
                 ELSE_NOK
             }
         }
     }
 
-    check_vars(ncid, numVars);
+    Check_Vars(ncid, numVars);
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -1312,12 +1326,12 @@ TestFunc(rename_var)(VarArgs)
     }
     err = APIFunc(rename_var)(ncid, BAD_VARID, "newName");
     IF (err != NC_ENOTVAR)
-	error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
 
-	/* Prefix "new_" to each name */
+    /* Prefix "new_" to each name */
     for (i = 0; i < numVars; i++) {
         err = APIFunc(rename_var)(BAD_ID, i, "newName");
         IF (err != NC_EBADID)
@@ -1327,44 +1341,44 @@ TestFunc(rename_var)(VarArgs)
         IF (err != NC_ENAMEINUSE)
             error("expecting NC_ENAMEINUSE but got %s", nc_err_code_name(err));
         ELSE_NOK
-	strcpy(name, "new_");
-	strcat(name, var_name[i]);
+        strcpy(name, "new_");
+        strcat(name, var_name[i]);
         err = APIFunc(rename_var)(ncid, i, name);
         IF (err != NC_NOERR)
-	    error("rename_var: %s", APIFunc(strerror)(err));
+            error("rename_var: %s", APIFunc(strerror)(err));
         ELSE_NOK
         err = APIFunc(inq_varid)(ncid, name, &varid);
         IF (err != NC_NOERR)
-	    error("inq_varid: %s", APIFunc(strerror)(err));
+            error("inq_varid: %s", APIFunc(strerror)(err));
         IF (varid != i)
-	    error("Unexpected varid");
+            error("Unexpected varid");
     }
 
-	/* Change to data mode */
-	/* Try making names even longer. Then restore original names */
+    /* Change to data mode */
+    /* Try making names even longer. Then restore original names */
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     for (i = 0; i < numVars; i++) {
-	strcpy(name, "even_longer_");
-	strcat(name, var_name[i]);
+        strcpy(name, "even_longer_");
+        strcat(name, var_name[i]);
         err = APIFunc(rename_var)(ncid, i, name);
         IF (err != NC_ENOTINDEFINE)
             error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
         ELSE_NOK
         err = APIFunc(rename_var)(ncid, i, var_name[i]);
         IF (err != NC_NOERR)
-	    error("rename_var: %s", APIFunc(strerror)(err));
+            error("rename_var: %s", APIFunc(strerror)(err));
         ELSE_NOK
         err = APIFunc(inq_varid)(ncid, var_name[i], &varid);
         IF (err != NC_NOERR)
-	    error("inq_varid: %s", APIFunc(strerror)(err));
+            error("inq_varid: %s", APIFunc(strerror)(err));
         IF (varid != i)
-	    error("Unexpected varid");
+            error("Unexpected varid");
     }
 
-    put_vars(ncid, numVars);
-    check_vars(ncid, numVars);
+    Put_Vars(ncid, numVars);
+    Check_Vars(ncid, numVars);
 
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
@@ -1388,9 +1402,9 @@ TestFunc(put_att)(AttVarArgs)
     int err;
     double buf[MAX_NELS];       /* (void *) buffer */
     char *p;                    /* (void *) pointer */
-    char *name;			/* of att */
-    nc_type datatype;		/* of att */
-    IntType length;		/* of att */
+    char *name;                 /* of att */
+    nc_type datatype;           /* of att */
+    IntType length;             /* of att */
     double value;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
@@ -1399,40 +1413,40 @@ TestFunc(put_att)(AttVarArgs)
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
 
     for (i = -1; i < numVars; i++) {
-	varid = VARID(i);
+        varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
-	    name = ATT_NAME(i,j);
-	    datatype = ATT_TYPE(i,j);
-	    length = ATT_LEN(i,j);
+            name = ATT_NAME(i,j);
+            datatype = ATT_TYPE(i,j);
+            length = ATT_LEN(i,j);
             err = APIFunc(put_att)(BAD_ID, varid, name, datatype, length, buf);
             IF (err != NC_EBADID)
                 error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
             err = APIFunc(put_att)(ncid, varid, BAD_NAME, datatype, length, buf);
-	    IF (err != NC_EBADNAME)
+            IF (err != NC_EBADNAME)
                 error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
             ELSE_NOK
             err = APIFunc(put_att)(ncid, BAD_VARID, name, datatype, length, buf);
             IF (err != NC_ENOTVAR)
                 error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(put_att)(ncid, varid, name, BAD_TYPE, length, buf);
-	    IF (err != NC_EBADTYPE)
+            err = APIFunc(put_att)(ncid, varid, name, BAD_TYPE, length, buf);
+            IF (err != NC_EBADTYPE)
                 error("expecting NC_EBADTYPE but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    p = (char *) buf;
-	    for (k=0; k<length; k++) {
-		value = hash(datatype, -1, &k);
-		if (!inRange(value, datatype))
-		    value = 0;
-		err = dbl2nc(value, datatype, p);
-		IF (err != NC_NOERR)
-		    error("error in dbl2nc");
-		p += nctypelen(datatype);
-	    }
+            p = (char *) buf;
+            for (k=0; k<length; k++) {
+                value = hash(datatype, -1, &k);
+                if (!inRange(value, datatype))
+                    value = 0;
+                err = dbl2nc(value, datatype, p);
+                IF (err != NC_NOERR)
+                    error("error in dbl2nc");
+                p += nctypelen(datatype);
+            }
             err = APIFunc(put_att)(ncid, varid, name, datatype, length, buf);
             IF (err != NC_NOERR)
                 error("%s", APIFunc(strerror)(err));
@@ -1440,7 +1454,7 @@ TestFunc(put_att)(AttVarArgs)
         }
     }
 
-    check_atts(ncid, numGatts, numVars);
+    Check_Atts(ncid, numGatts, numVars);
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -1475,7 +1489,7 @@ TestFunc(copy_att)(AttVarArgs)
     int j=0;
     char *name;                 /* of att */
     nc_type datatype;           /* of att */
-    IntType length;          /* of att */
+    IntType length;             /* of att */
     char  value;
 
     err = FileOpen(testfile, NC_NOWRITE, &ncid_in);
@@ -1487,55 +1501,55 @@ TestFunc(copy_att)(AttVarArgs)
         return nok;
     }
     def_dims(ncid_out);
-    def_vars(ncid_out, numVars);
+    Def_Vars(ncid_out, numVars);
 
     for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
             name = ATT_NAME(i,j);
-	    err = APIFunc(copy_att)(ncid_in, BAD_VARID, name, ncid_out, varid);
-	    IF (err != NC_ENOTVAR)
-		error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            err = APIFunc(copy_att)(ncid_in, BAD_VARID, name, ncid_out, varid);
+            IF (err != NC_ENOTVAR)
+                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(copy_att)(ncid_in, varid, name, ncid_out, BAD_VARID);
-	    IF (err != NC_ENOTVAR)
-		error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            err = APIFunc(copy_att)(ncid_in, varid, name, ncid_out, BAD_VARID);
+            IF (err != NC_ENOTVAR)
+                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(copy_att)(BAD_ID, varid, name, ncid_out, varid);
-	    IF (err != NC_EBADID)
-		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            err = APIFunc(copy_att)(BAD_ID, varid, name, ncid_out, varid);
+            IF (err != NC_EBADID)
+                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(copy_att)(ncid_in, varid, name, BAD_ID, varid);
-	    IF (err != NC_EBADID)
-		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            err = APIFunc(copy_att)(ncid_in, varid, name, BAD_ID, varid);
+            IF (err != NC_EBADID)
+                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(copy_att)(ncid_in, varid, "noSuch", ncid_out, varid);
-	    IF (err != NC_ENOTATT)
+            err = APIFunc(copy_att)(ncid_in, varid, "noSuch", ncid_out, varid);
+            IF (err != NC_ENOTATT)
                 error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(copy_att)(ncid_in, varid, name, ncid_out, varid);
-	    IF (err != NC_NOERR)
-		error("copy_att: %s", APIFunc(strerror)(err));
+            err = APIFunc(copy_att)(ncid_in, varid, name, ncid_out, varid);
+            IF (err != NC_NOERR)
+                error("copy_att: %s", APIFunc(strerror)(err));
             ELSE_NOK
-	    err = APIFunc(copy_att)(ncid_out, varid, name, ncid_out, varid);
-	    IF (err != NC_NOERR)
-		error("source = target: %s", APIFunc(strerror)(err));
+            err = APIFunc(copy_att)(ncid_out, varid, name, ncid_out, varid);
+            IF (err != NC_NOERR)
+                error("source = target: %s", APIFunc(strerror)(err));
             ELSE_NOK
-	}
+        }
     }
 
     err = APIFunc(close)(ncid_in);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
 
-        /* Close scratch. Reopen & check attributes */
+    /* Close scratch. Reopen & check attributes */
     err = APIFunc(close)(ncid_out);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
     err = FileOpen(scratch, NC_WRITE, &ncid_out);
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
-    check_atts(ncid_out, numGatts, numVars);
+    Check_Atts(ncid_out, numGatts, numVars);
 
    /*
     * change to define mode
@@ -1547,7 +1561,7 @@ TestFunc(copy_att)(AttVarArgs)
         error("redef: %s", APIFunc(strerror)(err));
     err = APIFunc(put_att_text)(ncid_out, NC_GLOBAL, "a", 1, "A");
     IF (err != NC_NOERR)
-	error("put_att_text: %s", APIFunc(strerror)(err));
+        error("put_att_text: %s", APIFunc(strerror)(err));
 
    /*
     * change to data mode
@@ -1560,15 +1574,15 @@ TestFunc(copy_att)(AttVarArgs)
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     for (i = 0; i < numVars; i++) {
-	if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
-	    err = APIFunc(rename_att)(ncid_out, i, att_name[i][0], "a");
-	    IF (err != NC_NOERR)
-		error("rename_att: %s", APIFunc(strerror)(err));
-	    err = APIFunc(copy_att)(ncid_out, NC_GLOBAL, "a", ncid_out, i);
-	    IF (err != NC_NOERR)
-		error("copy_att: %s", APIFunc(strerror)(err));
+        if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
+            err = APIFunc(rename_att)(ncid_out, i, att_name[i][0], "a");
+            IF (err != NC_NOERR)
+                error("rename_att: %s", APIFunc(strerror)(err));
+            err = APIFunc(copy_att)(ncid_out, NC_GLOBAL, "a", ncid_out, i);
+            IF (err != NC_NOERR)
+                error("copy_att: %s", APIFunc(strerror)(err));
             ELSE_NOK
-	}
+        }
     }
     err = APIFunc(close)(ncid_out);
     IF (err != NC_NOERR)
@@ -1579,20 +1593,20 @@ TestFunc(copy_att)(AttVarArgs)
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
     for (i = 0; i < numVars; i++) {
-	if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
-	    err = APIFunc(inq_att)(ncid_out, i, "a", &datatype, &length);
-	    IF (err != NC_NOERR)
-		error("inq_att: %s", APIFunc(strerror)(err));
-	    IF (datatype != NC_CHAR)
-		error("Unexpected type");
-	    IF (length != 1)
-		error("Unexpected length");
-	    err = APIFunc(get_att_text)(ncid_out, i, "a", &value);
-	    IF (err != NC_NOERR)
-		error("get_att_text: %s", APIFunc(strerror)(err));
-	    IF (value != 'A')
-		error("Unexpected value");
-	}
+        if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
+            err = APIFunc(inq_att)(ncid_out, i, "a", &datatype, &length);
+            IF (err != NC_NOERR)
+                error("inq_att: %s", APIFunc(strerror)(err));
+            IF (datatype != NC_CHAR)
+                error("Unexpected type");
+            IF (length != 1)
+                error("Unexpected length");
+            err = APIFunc(get_att_text)(ncid_out, i, "a", &value);
+            IF (err != NC_NOERR)
+                error("get_att_text: %s", APIFunc(strerror)(err));
+            IF (value != 'A')
+                error("Unexpected value");
+        }
     }
 
     err = APIFunc(close)(ncid_out);
@@ -1644,36 +1658,36 @@ TestFunc(rename_att)(AttVarArgs)
     }
     err = APIFunc(rename_att)(ncid, BAD_VARID, "abc", "newName");
     IF (err != NC_ENOTVAR)
-	error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
     def_dims(ncid);
-    def_vars(ncid, numVars);
-    put_atts(ncid, numGatts, numVars);
+    Def_Vars(ncid, numVars);
+    Put_Atts(ncid, numGatts, numVars);
 
     for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
-	    attname = ATT_NAME(i,j);
-	    err = APIFunc(rename_att)(BAD_ID, varid, attname, "newName");
-	    IF (err != NC_EBADID)
-		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            attname = ATT_NAME(i,j);
+            err = APIFunc(rename_att)(BAD_ID, varid, attname, "newName");
+            IF (err != NC_EBADID)
+                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(rename_att)(ncid, varid, "noSuch", "newName");
-	    IF (err != NC_ENOTATT)
+            err = APIFunc(rename_att)(ncid, varid, "noSuch", "newName");
+            IF (err != NC_ENOTATT)
                 error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    strcpy(newname, "new_");
-	    strcat(newname, attname);
-	    err = APIFunc(rename_att)(ncid, varid, attname, newname);
-	    IF (err != NC_NOERR)
-		error("rename_att: %s", APIFunc(strerror)(err));
+            strcpy(newname, "new_");
+            strcat(newname, attname);
+            err = APIFunc(rename_att)(ncid, varid, attname, newname);
+            IF (err != NC_NOERR)
+                error("rename_att: %s", APIFunc(strerror)(err));
             ELSE_NOK
-	    err = APIFunc(inq_attid)(ncid, varid, newname, &attnum);
-	    IF (err != NC_NOERR)
-		error("inq_attid: %s", APIFunc(strerror)(err));
-	    IF (attnum != j)
-		error("Unexpected attnum");
-	}
+            err = APIFunc(inq_attid)(ncid, varid, newname, &attnum);
+            IF (err != NC_NOERR)
+                error("inq_attid: %s", APIFunc(strerror)(err));
+            IF (attnum != j)
+                error("Unexpected attnum");
+        }
     }
 
     /* Close. Reopen & check */
@@ -1687,9 +1701,9 @@ TestFunc(rename_att)(AttVarArgs)
     for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
-	    attname = ATT_NAME(i,j);
-	    atttype = ATT_TYPE(i,j);
-	    attlength = ATT_LEN(i,j);
+            attname = ATT_NAME(i,j);
+            atttype = ATT_TYPE(i,j);
+            attlength = ATT_LEN(i,j);
             strcpy(newname, "new_");
             strcat(newname, attname);
             err = APIFunc(inq_attname)(ncid, varid, j, name);
@@ -1719,40 +1733,40 @@ TestFunc(rename_att)(AttVarArgs)
                     error("get_att_double: %s", APIFunc(strerror)(err));
                 for (k = 0; k < attlength; k++) {
                     expect = hash(datatype, -1, &k);
-		    if (inRange(expect, datatype)) {
-			IF (!equal(value[k],expect,datatype,NCT_DOUBLE))
-			    error("get_att_double: unexpected value");
+                    if (inRange(expect, datatype)) {
+                        IF (!equal(value[k],expect,datatype,NCT_DOUBLE))
+                            error("get_att_double: unexpected value");
                     }
                 }
             }
         }
     }
 
-	/* Now in data mode */
-	/* Try making names even longer. Then restore original names */
+    /* Now in data mode */
+    /* Try making names even longer. Then restore original names */
 
     for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
-	    attname = ATT_NAME(i,j);
-	    strcpy(oldname, "new_");
-	    strcat(oldname, attname);
-	    strcpy(newname, "even_longer_");
-	    strcat(newname, attname);
-	    err = APIFunc(rename_att)(ncid, varid, oldname, newname);
-	    IF (err != NC_ENOTINDEFINE)
-		error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
+            attname = ATT_NAME(i,j);
+            strcpy(oldname, "new_");
+            strcat(oldname, attname);
+            strcpy(newname, "even_longer_");
+            strcat(newname, attname);
+            err = APIFunc(rename_att)(ncid, varid, oldname, newname);
+            IF (err != NC_ENOTINDEFINE)
+                error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(rename_att)(ncid, varid, oldname, attname);
-	    IF (err != NC_NOERR)
-		error("rename_att: %s", APIFunc(strerror)(err));
+            err = APIFunc(rename_att)(ncid, varid, oldname, attname);
+            IF (err != NC_NOERR)
+                error("rename_att: %s", APIFunc(strerror)(err));
             ELSE_NOK
-	    err = APIFunc(inq_attid)(ncid, varid, attname, &attnum);
-	    IF (err != NC_NOERR)
-		error("inq_attid: %s", APIFunc(strerror)(err));
-	    IF (attnum != j)
-		error("Unexpected attnum");
-	}
+            err = APIFunc(inq_attid)(ncid, varid, attname, &attnum);
+            IF (err != NC_NOERR)
+                error("inq_attid: %s", APIFunc(strerror)(err));
+            IF (attnum != j)
+                error("Unexpected attnum");
+        }
     }
 
     err = APIFunc(close)(ncid);
@@ -1794,48 +1808,48 @@ TestFunc(del_att)(AttVarArgs)
     }
     err = APIFunc(del_att)(ncid, BAD_VARID, "abc");
     IF (err != NC_ENOTVAR)
-	error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
     ELSE_NOK
     def_dims(ncid);
-    def_vars(ncid, numVars);
-    put_atts(ncid, numGatts, numVars);
+    Def_Vars(ncid, numVars);
+    Put_Atts(ncid, numGatts, numVars);
 
     for (i = -1; i < numVars; i++) {
-	varid = VARID(i);
-	numatts = NATTS(i);
+        varid = VARID(i);
+        numatts = NATTS(i);
         for (j = 0; j < numatts; j++) {
-	    name = ATT_NAME(i,j);
-	    err = APIFunc(del_att)(BAD_ID, varid, name);
-	    IF (err != NC_EBADID)
-		error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            name = ATT_NAME(i,j);
+            err = APIFunc(del_att)(BAD_ID, varid, name);
+            IF (err != NC_EBADID)
+                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(del_att)(ncid, varid, "noSuch");
-	    IF (err != NC_ENOTATT)
+            err = APIFunc(del_att)(ncid, varid, "noSuch");
+            IF (err != NC_ENOTATT)
                 error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
             ELSE_NOK
-	    err = APIFunc(del_att)(ncid, varid, name);
-	    IF (err != NC_NOERR)
-		error("del_att: %s", APIFunc(strerror)(err));
+            err = APIFunc(del_att)(ncid, varid, name);
+            IF (err != NC_NOERR)
+                error("del_att: %s", APIFunc(strerror)(err));
             ELSE_NOK
-	    err = APIFunc(inq_attid)(ncid, varid, name, &attnum);
-	    IF (err != NC_ENOTATT)
+            err = APIFunc(inq_attid)(ncid, varid, name, &attnum);
+            IF (err != NC_ENOTATT)
                 error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
-	    if (i < 0) {
-		err = APIFunc(inq_natts)(ncid, &natts);
-		IF (err != NC_NOERR)
-		    error("inq_natts: %s", APIFunc(strerror)(err));
-		IF (natts != numatts-j-1)
-		    error("natts: expected %d, got %d", numatts-j-1, natts);
-	    }
-	    err = APIFunc(inq_varnatts)(ncid, varid, &natts);
-	    IF (err != NC_NOERR)
-		error("inq_natts: %s", APIFunc(strerror)(err));
-	    IF (natts != numatts-j-1)
-		error("natts: expected %d, got %d", numatts-j-1, natts);
-	}
+            if (i < 0) {
+                err = APIFunc(inq_natts)(ncid, &natts);
+                IF (err != NC_NOERR)
+                    error("inq_natts: %s", APIFunc(strerror)(err));
+                IF (natts != numatts-j-1)
+                    error("natts: expected %d, got %d", numatts-j-1, natts);
+            }
+            err = APIFunc(inq_varnatts)(ncid, varid, &natts);
+            IF (err != NC_NOERR)
+                error("inq_natts: %s", APIFunc(strerror)(err));
+            IF (natts != numatts-j-1)
+                error("natts: expected %d, got %d", numatts-j-1, natts);
+        }
     }
 
-        /* Close. Reopen & check no attributes left */
+    /* Close. Reopen & check no attributes left */
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -1844,37 +1858,37 @@ TestFunc(del_att)(AttVarArgs)
         error("open: %s", APIFunc(strerror)(err));
     err = APIFunc(inq_natts)(ncid, &natts);
     IF (err != NC_NOERR)
-	error("inq_natts: %s", APIFunc(strerror)(err));
+        error("inq_natts: %s", APIFunc(strerror)(err));
     IF (natts != 0)
-	error("natts: expected %d, got %d", 0, natts);
+        error("natts: expected %d, got %d", 0, natts);
     for (i = -1; i < numVars; i++) {
-	varid = VARID(i);
-	err = APIFunc(inq_varnatts)(ncid, varid, &natts);
-	IF (err != NC_NOERR)
-	    error("inq_natts: %s", APIFunc(strerror)(err));
-	IF (natts != 0)
-	    error("natts: expected %d, got %d", 0, natts);
+        varid = VARID(i);
+        err = APIFunc(inq_varnatts)(ncid, varid, &natts);
+        IF (err != NC_NOERR)
+            error("inq_natts: %s", APIFunc(strerror)(err));
+        IF (natts != 0)
+            error("natts: expected %d, got %d", 0, natts);
     }
 
-	/* restore attributes. change to data mode. try to delete */
+    /* restore attributes. change to data mode. try to delete */
     err = APIFunc(redef)(ncid);
     IF (err != NC_NOERR)
         error("redef: %s", APIFunc(strerror)(err));
-    put_atts(ncid, numGatts, numVars);
+    Put_Atts(ncid, numGatts, numVars);
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
 
     for (i = -1; i < numVars; i++) {
-	varid = VARID(i);
-	numatts = NATTS(i);
+        varid = VARID(i);
+        numatts = NATTS(i);
         for (j = 0; j < numatts; j++) {
-	    name = ATT_NAME(i,j);
-	    err = APIFunc(del_att)(ncid, varid, name);
-	    IF (err != NC_ENOTINDEFINE)
-		error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
+            name = ATT_NAME(i,j);
+            err = APIFunc(del_att)(ncid, varid, name);
+            IF (err != NC_ENOTINDEFINE)
+                error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
             ELSE_NOK
-	}
+        }
     }
 
     err = APIFunc(close)(ncid);
@@ -1915,7 +1929,7 @@ TestFunc(set_fill)(VarArgs)
     /* bad ncid */
     err = APIFunc(set_fill)(BAD_ID, NC_NOFILL, &old_fillmode);
     IF (err != NC_EBADID)
-	error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
 
     /* try in read-only mode */
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
@@ -1923,7 +1937,7 @@ TestFunc(set_fill)(VarArgs)
         error("open: %s", APIFunc(strerror)(err));
     err = APIFunc(set_fill)(ncid, NC_NOFILL, &old_fillmode);
     IF (err != NC_EPERM)
-	error("expecting NC_EPERM but got %s", nc_err_code_name(err));
+        error("expecting NC_EPERM but got %s", nc_err_code_name(err));
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -1952,69 +1966,77 @@ TestFunc(set_fill)(VarArgs)
     IF (old_fillmode != NC_NOFILL)
         error("Unexpected old fill mode: %d", old_fillmode);
 
-	/* define dims & vars */
+    /* define dims & vars */
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
 
-	/* Change to data mode. Set fillmode again */
+    /* Change to data mode. Set fillmode again */
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     err = APIFunc(set_fill)(ncid, NC_FILL, &old_fillmode);
-    IF (err != NC_ENOTINDEFINE)
-        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
+ifdef(`PNETCDF',
+    `IF (err != NC_ENOTINDEFINE)
+        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));',
+    `IF (err)
+        error("nc_set_fill: %s", nc_strerror(err));
+    IF (old_fillmode != NC_FILL)
+        error("Unexpected old fill mode: %d", old_fillmode);')dnl
 
-	/* Write record number NRECS to force writing of preceding records */
-	/* Assumes variable cr is char vector with UNLIMITED dimension */
+    /* Write record number NRECS to force writing of preceding records */
+    /* Assumes variable cr is char vector with UNLIMITED dimension */
     err = APIFunc(inq_varid)(ncid, "cr", &varid);
     IF (err != NC_NOERR)
         error("inq_varid: %s", APIFunc(strerror)(err));
     index[0] = NRECS;
+
+ifdef(`PNETCDF', `
     for (i=0; i<=index[0]; i++)
-        err = APIFunc(fill_var_rec)(ncid, varid, i);
-    err = PutVar1(text)(ncid, varid, index, &text);
+        err = APIFunc(fill_var_rec)(ncid, varid, i);')dnl
+
+    err = PutVar1TYPE(text)(ncid, varid, index, &text);
     IF (err != NC_NOERR)
         error("put_var1_text_all: %s", APIFunc(strerror)(err));
 
-	/* get all variables & check all values equal default fill */
+    /* get all variables & check all values equal default fill */
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] == RECDIM) continue; /* skip record variables */
-	switch (var_type[i]) {
-	    case NC_CHAR:   fill = NC_FILL_CHAR; break;
-	    case NC_BYTE:   fill = NC_FILL_BYTE; break;
-	    case NC_SHORT:  fill = NC_FILL_SHORT; break;
-	    case NC_INT:   fill = NC_FILL_INT; break;
-	    case NC_FLOAT:  fill = NC_FILL_FLOAT; break;
-	    case NC_DOUBLE: fill = NC_FILL_DOUBLE; break;
-	    case NC_UBYTE: fill = NC_FILL_UBYTE; break;
-	    case NC_USHORT: fill = NC_FILL_USHORT; break;
-	    case NC_UINT: fill = NC_FILL_UINT; break;
-	    case NC_INT64: fill = NC_FILL_INT64; break;
-	    case NC_UINT64: fill = NC_FILL_UINT64; break;
-	    default: assert(0);
-	}
-	for (j = 0; j < var_nels[i]; j++) {
+        switch (var_type[i]) {
+            case NC_CHAR:   fill = NC_FILL_CHAR;   break;
+            case NC_BYTE:   fill = NC_FILL_BYTE;   break;
+            case NC_SHORT:  fill = NC_FILL_SHORT;  break;
+            case NC_INT:    fill = NC_FILL_INT;    break;
+            case NC_FLOAT:  fill = NC_FILL_FLOAT;  break;
+            case NC_DOUBLE: fill = NC_FILL_DOUBLE; break;
+            case NC_UBYTE:  fill = NC_FILL_UBYTE;  break;
+            case NC_USHORT: fill = NC_FILL_USHORT; break;
+            case NC_UINT:   fill = NC_FILL_UINT;   break;
+            case NC_INT64:  fill = NC_FILL_INT64;  break;
+            case NC_UINT64: fill = NC_FILL_UINT64; break;
+            default: assert(0);
+        }
+        for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR)
                 error("error in toMixedBase");
-	    if (var_type[i] == NC_CHAR) {
-		err = GetVar1(text)(ncid, i, index, &text);
-		IF (err != NC_NOERR)
-		    error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
-		value = text;
-	    } else {
-		err = GetVar1(double)(ncid, i, index, &value);
-		IF (err != NC_NOERR)
-		    error("get_var1_double_all failed: %s", APIFunc(strerror)(err));
-	    }
-	    IF (value != fill && fabs((fill - value)/fill) > DBL_EPSILON)
-		error("\n\t\t%s Value expected: %-23.17e,\n\t\t          read: %-23.17e\n",
-			var_name[i],fill, value);
-	    ELSE_NOK
+            if (var_type[i] == NC_CHAR) {
+                err = GetVar1TYPE(text)(ncid, i, index, &text);
+                IF (err != NC_NOERR)
+                    error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
+                value = text;
+            } else {
+                err = GetVar1TYPE(double)(ncid, i, index, &value);
+                IF (err != NC_NOERR)
+                    error("get_var1_double_all failed: %s", APIFunc(strerror)(err));
+            }
+            IF (value != fill && fabs((fill - value)/fill) > DBL_EPSILON)
+                error("\n\t\t%s Value expected: %-23.17e,\n\t\t          read: %-23.17e\n",
+                        var_name[i],fill, value);
+            ELSE_NOK
         }
     }
 
-	/* close scratch & create again for test using attribute _FillValue */
+    /* close scratch & create again for test using attribute _FillValue */
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
@@ -2024,53 +2046,56 @@ TestFunc(set_fill)(VarArgs)
         return nok;
     }
     def_dims(ncid);
-    def_vars(ncid, numVars);
+    Def_Vars(ncid, numVars);
 
-	/* set _FillValue = 42 for all vars */
+    /* set _FillValue = 42 for all vars */
     text = fill = 42;
     for (i = 0; i < numVars; i++) {
-	if (var_type[i] == NC_CHAR) {
-	    err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
-	    IF (err != NC_NOERR)
-		error("put_att_text: %s", APIFunc(strerror)(err));
-	} else {
-	    err = APIFunc(put_att_double)(ncid, i, "_FillValue",var_type[i],1,&fill);
-	    IF (err != NC_NOERR)
-		error("put_att_double: %s", APIFunc(strerror)(err));
-	}
+        if (var_type[i] == NC_CHAR) {
+            err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
+            IF (err != NC_NOERR)
+                error("put_att_text: %s", APIFunc(strerror)(err));
+        } else {
+            err = APIFunc(put_att_double)(ncid, i, "_FillValue",var_type[i],1,&fill);
+            IF (err != NC_NOERR)
+                error("put_att_double: %s", APIFunc(strerror)(err));
+        }
     }
 
-	/* data mode. write records */
+    /* data mode. write records */
     err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     index[0] = NRECS;
+
+ifdef(`PNETCDF', `
     for (i=0; i<=index[0]; i++)
-        err = APIFunc(fill_var_rec)(ncid, varid, i);
-    err = PutVar1(text)(ncid, varid, index, &text);
+        err = APIFunc(fill_var_rec)(ncid, varid, i);')dnl
+
+    err = PutVar1TYPE(text)(ncid, varid, index, &text);
     IF (err != NC_NOERR)
         error("put_var1_text_all: %s", APIFunc(strerror)(err));
 
-	/* get all variables & check all values equal 42 */
+    /* get all variables & check all values equal 42 */
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] == RECDIM) continue; /* skip record variables */
-	for (j = 0; j < var_nels[i]; j++) {
+        for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR)
                 error("error in toMixedBase");
-	    if (var_type[i] == NC_CHAR) {
-		err = GetVar1(text)(ncid, i, index, &text);
-		IF (err != NC_NOERR)
-		    error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
-		value = text;
-	    } else {
-		err = GetVar1(double)(ncid, i, index, &value);
-		IF (err != NC_NOERR)
-		    error("get_var1_double_all failed: %s", APIFunc(strerror)(err));
-	    }
-	    IF (value != fill)
-		error(" %s Value expected: %g, read: %g\n", var_name[i],fill, value);
-	    ELSE_NOK
+            if (var_type[i] == NC_CHAR) {
+                err = GetVar1TYPE(text)(ncid, i, index, &text);
+                IF (err != NC_NOERR)
+                    error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
+                value = text;
+            } else {
+                err = GetVar1TYPE(double)(ncid, i, index, &value);
+                IF (err != NC_NOERR)
+                    error("get_var1_double_all failed: %s", APIFunc(strerror)(err));
+            }
+            IF (value != fill)
+                error(" %s Value expected: %g, read: %g\n", var_name[i],fill, value);
+            ELSE_NOK
         }
     }
     err = APIFunc(close)(ncid);
@@ -2114,8 +2139,8 @@ int APIFunc(get_file_version)(char *path, int *version)
    if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0)
    {
       if (magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CLASSIC ||
-         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CDF2 ||
-         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CDF2)
+         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_64BIT_OFFSET ||
+         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_64BIT_OFFSET)
         *version = magic[MAGIC_NUM_LEN-1];
       else
         return NC_ENOTNC;
@@ -2152,7 +2177,7 @@ TestFunc(set_default_format)(void)
     ELSE_NOK
 
     /* NULL old_formatp */
-    err = APIFunc(set_default_format)(NC_FORMAT_CDF2, NULL);
+    err = APIFunc(set_default_format)(NC_FORMAT_64BIT_OFFSET, NULL);
     IF (err != NC_NOERR)
        error("null old_fortmatp: status = %d", err);
     ELSE_NOK
@@ -2200,8 +2225,8 @@ TestFunc(set_default_format)(void)
 
 /*
  * Test FileDelete
- * 	create netcdf file 'scratch.nc' with no data, close it
- * 	delete the file
+ *         create netcdf file 'scratch.nc' with no data, close it
+ *         delete the file
  */
 int
 TestFunc(delete)(void)
@@ -2211,13 +2236,13 @@ TestFunc(delete)(void)
 
     err = FileCreate(scratch, NC_CLOBBER, &ncid);
     IF (err != NC_NOERR)
-	error("error creating scratch file %s, status = %d\n", scratch,err);
+        error("error creating scratch file %s, status = %d\n", scratch,err);
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-	error("remove of %s failed", scratch);
+        error("remove of %s failed", scratch);
     ELSE_NOK
     return nok;
 }
