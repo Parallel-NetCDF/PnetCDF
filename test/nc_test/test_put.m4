@@ -180,6 +180,14 @@ check_vars_$1(const char *filename, int numVars)
                 IF (err != NC_NOERR) {
                     error("get_var1_$1_all: %s", StrError (err));
                 } else {
+                    ifelse(`$1', `uchar', `
+                    /* in put_vars(), API _put_vara_double() is used to
+                     * write the NC_BYTE variables to files. In this
+                     * case, NC_BYTE variables are treated as signed
+                     * for CDF-1 and 2 formats. Thus, we must skip the
+                     * equal test below for uchar.
+                     */
+                    if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect > schar_max) continue;')
                     IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
                         error("Var value read not that expected");
                         if (verbose) {
@@ -283,6 +291,14 @@ check_atts_$1(int ncid, int numGatts, int numVars)
             }
             for (k = 0; k < length; k++) {
                 if (CheckNumRange($1, expect[k], datatype)) {
+                    ifelse(`$1', `uchar', `
+                    /* in put_vars(), API _put_vara_double() is used to
+                     * write the NC_BYTE variables to files. In this
+                     * case, NC_BYTE variables are treated as signed
+                     * for CDF-1 and 2 formats. Thus, we must skip the
+                     * equal test below for uchar.
+                     */
+                    if (cdf_format < NC_FORMAT_CDF5 && ATT_TYPE(i,j) == NC_BYTE && expect[k] > schar_max) continue;')
                     IF (!equal(value[k],expect[k],datatype,NCT_ITYPE($1))) {
                         error("att. value read not that expected");
                         if (verbose) {
@@ -328,7 +344,7 @@ TestFunc(var1)_$1(PutVarArgs)
 {
     int i, j, err, ncid, cdf_format, nok=0;
     IntType index[MAX_RANK];
-    int canConvert;        /* Both text or both numeric */
+    int canConvert;      /* Both text or both numeric */
     $1 value = 5;        /* any value would do - only for error cases */
 
     err = FileCreate(scratch, NC_CLOBBER)
@@ -415,7 +431,7 @@ TestFunc(var1)_$1(PutVarArgs)
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-        error("remove of %s failed", scratch);
+        error("delete file %s failed", scratch);
     return nok;
 }
 ')dnl
@@ -574,7 +590,7 @@ TestFunc(var)_$1(PutVarArgs)
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-        error("remove of %s failed", scratch);
+        error("delete file %s failed", scratch);
     return nok;
 }
 ')dnl
@@ -757,7 +773,7 @@ TestFunc(vara)_$1(PutVarArgs)
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-        error("remove of %s failed", scratch);
+        error("delete file %s failed", scratch);
     return nok;
 }
 ')dnl
@@ -944,7 +960,7 @@ TestFunc(vars)_$1(PutVarArgs)
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-        error("remove of %s failed", scratch);
+        error("delete file %s failed", scratch);
     return nok;
 }
 ')dnl
@@ -1138,7 +1154,7 @@ TestFunc(varm)_$1(PutVarArgs)
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-        error("remove of %s failed", scratch);
+        error("delete file %s failed", scratch);
     return nok;
 }
 ')dnl
@@ -1221,7 +1237,7 @@ TestFunc(att)_text(PutAttArgs)
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-        error("remove of %s failed", scratch);
+        error("delete file %s failed", scratch);
     return nok;
 }
 
@@ -1304,7 +1320,7 @@ TestFunc(att)_$1(PutAttArgs)
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
-        error("remove of %s failed", scratch);
+        error("delete file %s failed", scratch);
     return nok;
 }
 ')dnl
