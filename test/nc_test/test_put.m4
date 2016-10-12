@@ -24,17 +24,14 @@ dnl
 define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
 define(`PTRDType',`ifdef(`PNETCDF',`MPI_Offset',`ptrdiff_t')')dnl
 define(`TestFunc',`ifdef(`PNETCDF',`test_ncmpi_put_$1',`test_nc_put_$1')')dnl
+define(`APIFunc',` ifdef(`PNETCDF',`ncmpi_$1',`nc_$1')')dnl
 
-define(`FileClose',`ifdef(`PNETCDF',`ncmpi_close',`nc_close')')dnl
-define(`FileOpen', `ifdef(`PNETCDF',`ncmpi_open(comm, $1, $2, info, &ncid);', `file_open($1, $2, &ncid);')')
-define(`FileCreate',`ifdef(`PNETCDF',`ncmpi_create(comm, $1, $2, info, &ncid);', `file_create($1, $2, &ncid);')')
-
-define(`EndDef',`ifdef(`PNETCDF',`ncmpi_enddef($1)',`nc_enddef($1)')')dnl
+define(`FileOpen', `ifdef(`PNETCDF',`ncmpi_open(comm, $1, $2, info, &ncid)', `file_open($1, $2, &ncid)')')dnl
+define(`FileCreate',`ifdef(`PNETCDF',`ncmpi_create(comm, $1, $2, info, &ncid)', `file_create($1, $2, &ncid)')')dnl
 define(`FileDelete',`ifdef(`PNETCDF',`ncmpi_delete($1,$2)',`nc_delete($1)')')dnl
-define(`Inq',`ifdef(`PNETCDF',`ncmpi_inq_$1',`nc_inq_$1')')dnl
 
-define(`PutVarArgs',`ifdef(`PNETCDF',`int numVars',`void')')dnl
-define(`PutAttArgs',`ifdef(`PNETCDF',`int numGatts,int numVars',`void')')dnl
+define(`VarArgs',   `ifdef(`PNETCDF',`int numVars',`void')')dnl
+define(`AttVarArgs',`ifdef(`PNETCDF',`int numGatts,int numVars',`void')')dnl
 
 define(`PutVar1',`ifdef(`PNETCDF',`ncmpi_put_var1_$1_all',`nc_put_var1_$1')')dnl
 define(`PutVar', `ifdef(`PNETCDF',`ncmpi_put_var_$1_all', `nc_put_var_$1')')dnl
@@ -42,13 +39,7 @@ define(`PutVara',`ifdef(`PNETCDF',`ncmpi_put_vara_$1_all',`nc_put_vara_$1')')dnl
 define(`PutVars',`ifdef(`PNETCDF',`ncmpi_put_vars_$1_all',`nc_put_vars_$1')')dnl
 define(`PutVarm',`ifdef(`PNETCDF',`ncmpi_put_varm_$1_all',`nc_put_varm_$1')')dnl
 define(`PutAtt', `ifdef(`PNETCDF',`ncmpi_put_att_$1',`nc_put_att_$1')')dnl
-
 define(`GetVar1',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
-define(`GetAtt', `ifdef(`PNETCDF',`ncmpi_get_att_$1',`nc_get_att_$1')')dnl
-
-define(`StrError', `ifdef(`PNETCDF',`ncmpi_strerror',`nc_strerror')')dnl
-define(`InqFormat',`ifdef(`PNETCDF',`ncmpi_inq_format',`nc_inq_format')')dnl
-
 define(`DefVars',`ifdef(`PNETCDF',`def_vars($1,$2)',`def_vars($1)')')dnl
 
 undefine(`index')dnl
@@ -145,19 +136,19 @@ check_vars_$1(const char *filename, int numVars)
     double expect;
     $1 value;
 
-    err = FileOpen(testfile, NC_NOWRITE)
-    IF (err != NC_NOERR) error("open: %s", StrError (err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = Inq(format)(ncid, &cdf_format);
-    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         if (!canConvert) continue;
 
-        err = Inq(var)(ncid, i, name, &datatype, &ndims, dimids, NULL);
+        err = APIFunc(inq_var)(ncid, i, name, &datatype, &ndims, dimids, NULL);
         IF (err != NC_NOERR)
-            error("inq_var: %s", StrError (err));
+            error("inq_var: %s", APIFunc(strerror)(err));
         IF (strcmp(name, var_name[i]) != 0)
             error("Unexpected var_name");
         IF (datatype != var_type[i])
@@ -165,9 +156,9 @@ check_vars_$1(const char *filename, int numVars)
         IF (ndims != var_rank[i])
             error("Unexpected rank");
         for (j = 0; j < ndims; j++) {
-            err = Inq(dim)(ncid, dimids[j], 0, &length);
+            err = APIFunc(inq_dim)(ncid, dimids[j], 0, &length);
             IF (err != NC_NOERR)
-                error("inq_dim: %s", StrError (err));
+                error("inq_dim: %s", APIFunc(strerror)(err));
             IF (length != var_shape[i][j])
                 error("Unexpected shape");
         }
@@ -179,7 +170,7 @@ check_vars_$1(const char *filename, int numVars)
             err = GetVar1($1)(ncid, i, index, &value);
             if (CheckNumRange($1, expect, datatype)) {
                 IF (err != NC_NOERR) {
-                    error("get_var1_$1_all: %s", StrError (err));
+                    error("get_var1_$1_all: %s", APIFunc(strerror)(err));
                 } else {
                     ifelse(`$1', `uchar', `
                     /* in put_vars(), API _put_vara_double() is used to
@@ -209,9 +200,9 @@ check_vars_$1(const char *filename, int numVars)
             }
         }
     }
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -256,18 +247,18 @@ check_atts_$1(int ncid, int numGatts, int numVars)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = InqFormat (ncid, &cdf_format);
+    err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("inq_format: %s", StrError (err));
+        error("inq_format: %s", APIFunc(strerror)(err));
 
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             canConvert = (ATT_TYPE(i,j) == NC_CHAR) CheckText($1);
             if (!canConvert) continue;
 
-            err = Inq(att)(ncid, i, ATT_NAME(i,j), &datatype, &length);
+            err = APIFunc(inq_att)(ncid, i, ATT_NAME(i,j), &datatype, &length);
             IF (err != NC_NOERR)
-                error("inq_att: %s", StrError (err));
+                error("inq_att: %s", APIFunc(strerror)(err));
             IF (datatype != ATT_TYPE(i,j))
             error("inq_att: unexpected type");
             IF (length != ATT_LEN(i,j))
@@ -282,10 +273,10 @@ check_atts_$1(int ncid, int numGatts, int numVars)
                         ++nInIntRange;
                 }
             }
-            err = GetAtt($1)(ncid, i, ATT_NAME(i,j), value);
+            err = APIFunc(get_att_$1)(ncid, i, ATT_NAME(i,j), value);
             if (nInExtRange == length && nInIntRange == length) {
                 IF (err != NC_NOERR)
-                    error("%s", StrError (err));
+                    error("%s", APIFunc(strerror)(err));
             } else {
                 IF (err != NC_NOERR && err != NC_ERANGE)
                     error("expecting NC_NOERR or NC_ERANGE but got %s", nc_err_code_name(err));
@@ -341,29 +332,29 @@ dnl
 define(`TEST_NC_PUT_VAR1',dnl
 `dnl
 int
-TestFunc(var1)_$1(PutVarArgs)
+TestFunc(var1)_$1(VarArgs)
 {
     int i, j, err, ncid, cdf_format, nok=0;
     IntType index[MAX_RANK];
     int canConvert;      /* Both text or both numeric */
     $1 value = 5;        /* any value would do - only for error cases */
 
-    err = FileCreate(scratch, NC_CLOBBER)
+    err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
-        error("create: %s", StrError (err));
+        error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
 
-    err = InqFormat (ncid, &cdf_format);
+    err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("inq_format: %s", StrError (err));
+        error("inq_format: %s", APIFunc(strerror)(err));
 
     def_dims(ncid);
     DefVars(ncid, numVars);
 
-    err = EndDef(ncid);
+    err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
-        error("enddef: %s", StrError (err));
+        error("enddef: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
     err = PutVar1($1)(BAD_ID, 0, NULL, &value);
@@ -405,7 +396,7 @@ TestFunc(var1)_$1(PutVarArgs)
             if (canConvert) {
                 if (CheckRange3($1, value, var_type[i])) {
                     IF (err != NC_NOERR)
-                        error("%s", StrError (err));
+                        error("%s", APIFunc(strerror)(err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE) {
@@ -424,9 +415,9 @@ TestFunc(var1)_$1(PutVarArgs)
         }
     }
 
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
 
     nok += check_vars_$1(scratch, numVars);
 
@@ -456,7 +447,7 @@ dnl
 define(`TEST_NC_PUT_VAR',dnl
 `dnl
 int
-TestFunc(var)_$1(PutVarArgs)
+TestFunc(var)_$1(VarArgs)
 {
     int i, j, err, nels, ncid, varid, cdf_format, nok=0;
     int canConvert;        /* Both text or both numeric */
@@ -464,22 +455,22 @@ TestFunc(var)_$1(PutVarArgs)
     IntType index[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = FileCreate(scratch, NC_CLOBBER)
+    err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
-        error("create: %s", StrError (err));
+        error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
 
-    err = InqFormat (ncid, &cdf_format);
+    err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("inq_format: %s", StrError (err));
+        error("inq_format: %s", APIFunc(strerror)(err));
 
     def_dims(ncid);
     DefVars(ncid, numVars);
 
-    err = EndDef(ncid);
+    err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
-        error("enddef: %s", StrError (err));
+        error("enddef: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
     err = PutVar($1)(BAD_ID, 0, NULL);
@@ -514,7 +505,7 @@ TestFunc(var)_$1(PutVarArgs)
         if (canConvert) {
             if (allInExtRange) {
                 IF (err != NC_NOERR)
-                    error("%s", StrError (err));
+                    error("%s", APIFunc(strerror)(err));
                 ELSE_NOK
             } else {
                 IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
@@ -533,13 +524,13 @@ TestFunc(var)_$1(PutVarArgs)
 
     /* Write record number NRECS to force writing of preceding records */
     /* Assumes variable cr is char vector with UNLIMITED dimension */
-    err = Inq(varid)(ncid, "cr", &varid);
+    err = APIFunc(inq_varid)(ncid, "cr", &varid);
     IF (err != NC_NOERR)
-        error("inq_varid: %s", StrError (err));
+        error("inq_varid: %s", APIFunc(strerror)(err));
     index[0] = NRECS-1;
     err = PutVar1(text)(ncid, varid, index, "x");
     IF (err != NC_NOERR)
-        error("put_var1_text_all: %s", StrError (err));
+        error("put_var1_text_all: %s", APIFunc(strerror)(err));
 
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] == RECDIM) {  /* only test record variables here */
@@ -568,7 +559,7 @@ TestFunc(var)_$1(PutVarArgs)
             if (canConvert) {
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
-                        error("%s", StrError (err));
+                        error("%s", APIFunc(strerror)(err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
@@ -583,9 +574,9 @@ TestFunc(var)_$1(PutVarArgs)
         }
     }
 
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
 
     nok += check_vars_$1(scratch, numVars);
 
@@ -615,7 +606,7 @@ dnl
 define(`TEST_NC_PUT_VARA',dnl
 `dnl
 int
-TestFunc(vara)_$1(PutVarArgs)
+TestFunc(vara)_$1(VarArgs)
 {
     int i, j, k, d, err, nels, nslabs, ncid, cdf_format, nok=0;
     int canConvert;        /* Both text or both numeric */
@@ -624,22 +615,22 @@ TestFunc(vara)_$1(PutVarArgs)
     IntType mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = FileCreate(scratch, NC_CLOBBER)
+    err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
-        error("create: %s", StrError (err));
+        error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
 
-    err = InqFormat (ncid, &cdf_format);
+    err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("inq_format: %s", StrError (err));
+        error("inq_format: %s", APIFunc(strerror)(err));
 
     def_dims(ncid);
     DefVars(ncid, numVars);
 
-    err = EndDef(ncid);
+    err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
-        error("enddef: %s", StrError (err));
+        error("enddef: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
     err = PutVara($1)(BAD_ID, 0, NULL, NULL, NULL);
@@ -702,7 +693,7 @@ TestFunc(vara)_$1(PutVarArgs)
         err = PutVara($1)(ncid, i, start, edge, value);
         if (canConvert) {
             IF (err != NC_NOERR)
-                error("%s", StrError (err));
+                error("%s", APIFunc(strerror)(err));
             ELSE_NOK
         } else {
             IF (err != NC_ECHAR)
@@ -751,7 +742,7 @@ TestFunc(vara)_$1(PutVarArgs)
             if (canConvert) {
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
-                        error("%s", StrError (err));
+                        error("%s", APIFunc(strerror)(err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
@@ -766,9 +757,9 @@ TestFunc(vara)_$1(PutVarArgs)
         }
     }
 
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
 
     nok += check_vars_$1(scratch, numVars);
 
@@ -798,7 +789,7 @@ dnl
 define(`TEST_NC_PUT_VARS',dnl
 `dnl
 int
-TestFunc(vars)_$1(PutVarArgs)
+TestFunc(vars)_$1(VarArgs)
 {
     int i, j, k, m, d, err, nels, nslabs, ncid, cdf_format, nok=0;
     int nstarts;        /* number of different starts */
@@ -810,22 +801,22 @@ TestFunc(vars)_$1(PutVarArgs)
     PTRDType stride[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = FileCreate(scratch, NC_CLOBBER)
+    err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
-        error("create: %s", StrError (err));
+        error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
 
-    err = InqFormat (ncid, &cdf_format);
+    err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("inq_format: %s", StrError (err));
+        error("inq_format: %s", APIFunc(strerror)(err));
 
     def_dims(ncid);
     DefVars(ncid, numVars);
 
-    err = EndDef(ncid);
+    err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
-        error("enddef: %s", StrError (err));
+        error("enddef: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
     err = PutVars($1)(BAD_ID, 0, NULL, NULL, NULL, NULL);
@@ -937,7 +928,7 @@ TestFunc(vars)_$1(PutVarArgs)
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
-                            error("%s", StrError (err));
+                            error("%s", APIFunc(strerror)(err));
                         ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
@@ -953,9 +944,9 @@ TestFunc(vars)_$1(PutVarArgs)
         }
     }
 
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
 
     nok += check_vars_$1(scratch, numVars);
 
@@ -985,7 +976,7 @@ dnl
 define(`TEST_NC_PUT_VARM',dnl
 `dnl
 int
-TestFunc(varm)_$1(PutVarArgs)
+TestFunc(varm)_$1(VarArgs)
 {
     int i, j, k, m, d, err, nels, nslabs, ncid, cdf_format, nok=0;
     int nstarts;        /* number of different starts */
@@ -997,22 +988,22 @@ TestFunc(varm)_$1(PutVarArgs)
     PTRDType stride[MAX_RANK], imap[MAX_RANK];
     $1 value[MAX_NELS];
 
-    err = FileCreate(scratch, NC_CLOBBER)
+    err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
-        error("create: %s", StrError (err));
+        error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
 
-    err = InqFormat (ncid, &cdf_format);
+    err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("inq_format: %s", StrError (err));
+        error("inq_format: %s", APIFunc(strerror)(err));
 
     def_dims(ncid);
     DefVars(ncid, numVars);
 
-    err = EndDef(ncid);
+    err = APIFunc(enddef)(ncid);
     IF (err != NC_NOERR)
-        error("enddef: %s", StrError (err));
+        error("enddef: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
     err = PutVarm($1)(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL);
@@ -1131,7 +1122,7 @@ TestFunc(varm)_$1(PutVarArgs)
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
-                            error("%s", StrError (err));
+                            error("%s", APIFunc(strerror)(err));
                         ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
@@ -1147,9 +1138,9 @@ TestFunc(varm)_$1(PutVarArgs)
         }
     }
 
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
 
     nok += check_vars_$1(scratch, numVars);
 
@@ -1175,15 +1166,15 @@ TEST_NC_PUT_VARM(ulonglong)
 
 
 int
-TestFunc(att)_text(PutAttArgs)
+TestFunc(att)_text(AttVarArgs)
 {
     int i, j, err, ncid, nok=0;
     IntType k;
     text value[MAX_NELS];
 
-    err = FileCreate(scratch, NC_NOCLOBBER)
+    err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
-        error("create: %s", StrError (err));
+        error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
     def_dims(ncid);
@@ -1225,16 +1216,16 @@ TestFunc(att)_text(PutAttArgs)
                 }
                 err = PutAtt(text)(ncid, i, ATT_NAME(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_NOERR)
-                    error("%s", StrError (err));
+                    error("%s", APIFunc(strerror)(err));
                 ELSE_NOK
             }
         }
     }
 
     nok += check_atts_text(ncid, numGatts, numVars);
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
@@ -1248,22 +1239,22 @@ dnl
 define(`TEST_NC_PUT_ATT',dnl
 `dnl
 int
-TestFunc(att)_$1(PutAttArgs)
+TestFunc(att)_$1(AttVarArgs)
 {
     int i, j, err, ncid, cdf_format, nok=0;
     int allInExtRange;  /* all values within external range? */
     IntType k;
     $1 value[MAX_NELS];
 
-    err = FileCreate(scratch, NC_NOCLOBBER)
+    err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
-        error("create: %s", StrError (err));
+        error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
 
-    err = InqFormat (ncid, &cdf_format);
+    err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
-        error("inq_format: %s", StrError (err));
+        error("inq_format: %s", APIFunc(strerror)(err));
 
     def_dims(ncid);
     DefVars(ncid, numVars);
@@ -1309,7 +1300,7 @@ TestFunc(att)_$1(PutAttArgs)
                 err = PutAtt($1)(ncid, i, ATT_NAME(i,j), ATT_TYPE(i,j), ATT_LEN(i,j), value);
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
-                        error("%s", StrError (err));
+                        error("%s", APIFunc(strerror)(err));
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
@@ -1321,9 +1312,9 @@ TestFunc(att)_$1(PutAttArgs)
     }
 
     nok += check_atts_$1(ncid, numGatts, numVars);
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
 
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)

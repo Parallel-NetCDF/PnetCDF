@@ -24,12 +24,12 @@ dnl
 define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
 define(`PTRDType',`ifdef(`PNETCDF',`MPI_Offset',`ptrdiff_t')')dnl
 define(`TestFunc',`ifdef(`PNETCDF',`test_ncmpi_get_$1',`test_nc_get_$1')')dnl
+define(`APIFunc',` ifdef(`PNETCDF',`ncmpi_$1',`nc_$1')')dnl
 
-define(`FileClose',`ifdef(`PNETCDF',`ncmpi_close',`nc_close')')dnl
-define(`FileOpen', `ifdef(`PNETCDF',`ncmpi_open(comm, $1, $2, info, &ncid);', `file_open($1, $2, &ncid);')')
+define(`FileOpen', `ifdef(`PNETCDF',`ncmpi_open(comm, $1, $2, info, &ncid)', `file_open($1, $2, &ncid)')')dnl
 
-define(`GetVarArgs',`ifdef(`PNETCDF',`int numVars',`void')')dnl
-define(`GetAttArgs',`ifdef(`PNETCDF',`int numGatts,int numVars',`void')')dnl
+define(`VarArgs',   `ifdef(`PNETCDF',`int numVars',`void')')dnl
+define(`AttVarArgs',`ifdef(`PNETCDF',`int numGatts,int numVars',`void')')dnl
 
 define(`GetVar1',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
 define(`GetVar', `ifdef(`PNETCDF',`ncmpi_get_var_$1_all', `nc_get_var_$1')')dnl
@@ -37,9 +37,6 @@ define(`GetVara',`ifdef(`PNETCDF',`ncmpi_get_vara_$1_all',`nc_get_vara_$1')')dnl
 define(`GetVars',`ifdef(`PNETCDF',`ncmpi_get_vars_$1_all',`nc_get_vars_$1')')dnl
 define(`GetVarm',`ifdef(`PNETCDF',`ncmpi_get_varm_$1_all',`nc_get_varm_$1')')dnl
 define(`GetAtt', `ifdef(`PNETCDF',`ncmpi_get_att_$1',`nc_get_att_$1')')dnl
-
-define(`StrError', `ifdef(`PNETCDF',`ncmpi_strerror',`nc_strerror')')dnl
-define(`InqFormat',`ifdef(`PNETCDF',`ncmpi_inq_format',`nc_inq_format')')dnl
 
 undefine(`index')dnl
 dnl dnl dnl
@@ -72,7 +69,7 @@ dnl
 define(`TEST_NC_GET_VAR1',dnl
 `dnl
 int
-TestFunc(var1)_$1(GetVarArgs)
+TestFunc(var1)_$1(VarArgs)
 {
     int i, j, err, ncid, cdf_format;
     int nok = 0;        /* count of valid comparisons */
@@ -81,11 +78,11 @@ TestFunc(var1)_$1(GetVarArgs)
     double expect;
     $1 value;
 
-    err = FileOpen(testfile, NC_NOWRITE)
-    IF (err != NC_NOERR) error("open: %s", StrError (err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = InqFormat (ncid, &cdf_format);
-    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
     err = GetVar1($1)(BAD_ID, 0, NULL, &value);
@@ -133,7 +130,7 @@ TestFunc(var1)_$1(GetVarArgs)
                 if (inRange3(cdf_format, expect,var_type[i], NCT_ITYPE($1))) {
                     if (CheckRange($1, expect)) {
                         IF (err != NC_NOERR) {
-                            error("%s", StrError (err));
+                            error("%s", APIFunc(strerror)(err));
                         } else {
                             ifelse(`$1', `uchar', `
                             /* in put_vars(), API _put_vara_double() is used to
@@ -163,9 +160,9 @@ TestFunc(var1)_$1(GetVarArgs)
             }
         }
     }
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -189,7 +186,7 @@ dnl
 define(`TEST_NC_GET_VAR',dnl
 `dnl
 int
-TestFunc(var)_$1(GetVarArgs)
+TestFunc(var)_$1(VarArgs)
 {
     int i, j, err, nels, ncid, cdf_format;
     int allInExtRange;  /* all values within range of external data type */
@@ -200,11 +197,11 @@ TestFunc(var)_$1(GetVarArgs)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = FileOpen(testfile, NC_NOWRITE)
-    IF (err != NC_NOERR) error("open: %s", StrError (err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = InqFormat (ncid, &cdf_format);
-    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
     err = GetVar($1)(BAD_ID, 0, value);
@@ -244,7 +241,7 @@ TestFunc(var)_$1(GetVarArgs)
             if (allInExtRange) {
                 if (allInIntRange) {
                     IF (err != NC_NOERR)
-                        error(" %s", StrError (err));
+                        error(" %s", APIFunc(strerror)(err));
                 } else {
                     IF (err != NC_ERANGE)
                         error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
@@ -284,9 +281,9 @@ TestFunc(var)_$1(GetVarArgs)
                 error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
         }
     }
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -310,7 +307,7 @@ dnl
 define(`TEST_NC_GET_VARA',dnl
 `dnl
 int
-TestFunc(vara)_$1(GetVarArgs)
+TestFunc(vara)_$1(VarArgs)
 {
     int i, j, k, d, err, nels, nslabs, ncid, cdf_format;
     int allInExtRange;  /* all values within external range? */
@@ -321,11 +318,11 @@ TestFunc(vara)_$1(GetVarArgs)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = FileOpen(testfile, NC_NOWRITE)
-    IF (err != NC_NOERR) error("open: %s", StrError (err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = InqFormat (ncid, &cdf_format);
-    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     err = GetVara($1)(BAD_ID, 0, NULL, NULL, value);
     IF (err != NC_EBADID)
@@ -374,7 +371,7 @@ TestFunc(vara)_$1(GetVarArgs)
             err = GetVara($1)(ncid, i, start, edge, value);
             if (canConvert) {
                 IF (err != NC_NOERR)
-                    error("%s", StrError (err));
+                    error("%s", APIFunc(strerror)(err));
             } else {
                 IF (err != NC_ECHAR)
                     error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
@@ -426,7 +423,7 @@ TestFunc(vara)_$1(GetVarArgs)
                 if (allInExtRange) {
                     if (allInIntRange) {
                         IF (err != NC_NOERR)
-                            error("%s", StrError (err));
+                            error("%s", APIFunc(strerror)(err));
                     } else {
                         IF (err != NC_ERANGE)
                             error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
@@ -467,9 +464,9 @@ TestFunc(vara)_$1(GetVarArgs)
             }
         }
     }
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -493,7 +490,7 @@ dnl
 define(`TEST_NC_GET_VARS',dnl
 `dnl
 int
-TestFunc(vars)_$1(GetVarArgs)
+TestFunc(vars)_$1(VarArgs)
 {
     int i, j, k, d, m, err, nels, nslabs, ncid, cdf_format;
     int allInExtRange;  /* all values within external range? */
@@ -508,11 +505,11 @@ TestFunc(vars)_$1(GetVarArgs)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = FileOpen(testfile, NC_NOWRITE)
-    IF (err != NC_NOERR) error("open: %s", StrError (err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = InqFormat (ncid, &cdf_format);
-    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     err = GetVars($1)(BAD_ID, 0, NULL, NULL, NULL, value);
     IF (err != NC_EBADID)
@@ -620,7 +617,7 @@ TestFunc(vars)_$1(GetVarArgs)
                     if (allInExtRange) {
                         if (allInIntRange) {
                             IF (err != NC_NOERR)
-                                error("%s", StrError (err));
+                                error("%s", APIFunc(strerror)(err));
                         } else {
                             IF (err != NC_ERANGE)
                                 error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
@@ -663,9 +660,9 @@ TestFunc(vars)_$1(GetVarArgs)
         }
 
     }
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -689,7 +686,7 @@ dnl
 define(`TEST_NC_GET_VARM',dnl
 `dnl
 int
-TestFunc(varm)_$1(GetVarArgs)
+TestFunc(varm)_$1(VarArgs)
 {
     int i, j, k, m, d, err, nels, nslabs, ncid, cdf_format;
     int allInExtRange;  /* all values within external range? */
@@ -704,11 +701,11 @@ TestFunc(varm)_$1(GetVarArgs)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = FileOpen(testfile, NC_NOWRITE)
-    IF (err != NC_NOERR) error("open: %s", StrError (err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = InqFormat (ncid, &cdf_format);
-    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     err = GetVarm($1)(BAD_ID, 0, NULL, NULL, NULL, NULL, value);
     IF (err != NC_EBADID)
@@ -823,7 +820,7 @@ TestFunc(varm)_$1(GetVarArgs)
                     if (allInExtRange) {
                         if (allInIntRange) {
                             IF (err != NC_NOERR)
-                                error("%s", StrError (err));
+                                error("%s", APIFunc(strerror)(err));
                         } else {
                             IF (err != NC_ERANGE)
                                 error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
@@ -865,9 +862,9 @@ TestFunc(varm)_$1(GetVarArgs)
             }
         }
     }
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -891,7 +888,7 @@ dnl
 define(`TEST_NC_GET_ATT',dnl
 `dnl
 int
-TestFunc(att)_$1(GetAttArgs)
+TestFunc(att)_$1(AttVarArgs)
 {
     int i, j, err, ncid, cdf_format;
     IntType k;
@@ -902,11 +899,11 @@ TestFunc(att)_$1(GetAttArgs)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = FileOpen(testfile, NC_NOWRITE)
-    IF (err != NC_NOERR) error("open: %s", StrError (err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = InqFormat (ncid, &cdf_format);
-    IF (err != NC_NOERR) error("inq_format: %s", StrError (err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     err = GetAtt($1)(BAD_ID, 0, NULL, value);
     IF (err != NC_EBADID)
@@ -958,7 +955,7 @@ TestFunc(att)_$1(GetAttArgs)
                 if (allInExtRange) {
                     if (allInIntRange) {
                         IF (err != NC_NOERR)
-                            error("%s", StrError (err));
+                            error("%s", APIFunc(strerror)(err));
                     } else {
                         IF (err != NC_ERANGE)
                             error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
@@ -1004,9 +1001,9 @@ TestFunc(att)_$1(GetAttArgs)
         }
     }
 
-    err = FileClose (ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("close: %s", StrError (err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
