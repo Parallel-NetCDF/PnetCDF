@@ -18,8 +18,7 @@ ifeq (@PNC_DEBUG@, yes)
 CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
 endif
 
-SRCS      = test_read.c \
-            error.c \
+SRCS      = error.c \
             util.c
 
 PROG_SRCS = nc_test.c \
@@ -36,6 +35,7 @@ M4_SRCS   = test_get.m4 \
             test_put.m4 \
             test_iget.m4 \
             test_iput.m4 \
+            test_read.m4 \
             test_write.m4
 
 HEADERS   = tests.h \
