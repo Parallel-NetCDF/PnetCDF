@@ -562,10 +562,13 @@ TestFunc(def_dim)(VarArgs)
         IF (err != NC_EBADNAME)
             error("expecting NC_EBADNAME but got %s", nc_err_code_name(err));
         ELSE_NOK
-        err = APIFunc(def_dim)(ncid, dim_name[i], NC_UNLIMITED-1, &dimid);
-        IF (err != NC_EDIMSIZE)
-            error("expecting NC_EDIMSIZE but got %s", nc_err_code_name(err));
-        ELSE_NOK
+ifdef(`PNETCDF', ,`if(sizeof(long) > 4) /* Fix: dmh 11/4/2011: works only if sizeof(long) > 4 */')dnl
+        {
+            err = APIFunc(def_dim)(ncid, dim_name[i], NC_UNLIMITED-1, &dimid);
+            IF (err != NC_EDIMSIZE)
+                error("expecting NC_EDIMSIZE but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
         err = APIFunc(def_dim)(ncid, dim_name[i], dim_len[i], &dimid);
         IF (err != NC_NOERR)
             error("def_dim: %s", APIFunc(strerror)(err));
