@@ -1005,11 +1005,14 @@ ncmpi_inq_varnatts(int  ncid,
     NC *ncp=NULL;
     NC_var *varp=NULL;
 
-    if (varid == NC_GLOBAL)
-        return ncmpi_inq_natts(ncid, nattsp);
-
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+
+    if (varid == NC_GLOBAL) {
+        if (nattsp != NULL)
+            *nattsp = (int) ncp->attrs.ndefined;
+        return NC_NOERR;
+    }
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
