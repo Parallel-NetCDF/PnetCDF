@@ -27,7 +27,7 @@ __attribute__ ((format (printf, 1, 2)))
 extern int ifFail(const int expr, const int line, const char *file, const char *func);
 
 extern void
-print_n_size_t(size_t nelems, const MPI_Offset *array);
+print_n_size_t(int nelems, const MPI_Offset *array);
 
 #ifdef __cplusplus
 }

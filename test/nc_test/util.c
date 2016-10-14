@@ -109,7 +109,7 @@ inRange_float(const double value, const nc_type xtype)
 #if FLT_MANT_DIG != DBL_MANT_DIG
     /* else */
     {
-        const float fvalue = value;
+        const float fvalue = (float)value;
         return fvalue >= min && fvalue <= max;
     }
 #else
@@ -232,7 +232,7 @@ int roll( int n )
      * We don't use RAND_MAX here because not all compilation
      * environments define it (e.g. gcc(1) under SunOS 4.1.4).
      */
-    r = ((rand() % 32768) / 32767.0) * (n - 1) + 0.5;
+    r = (int)(((rand() % 32768) / 32767.0) * (n - 1) + 0.5);
     while (r >= n);
 
     return r;
@@ -256,11 +256,11 @@ int roll( int n )
  */
 int
 toMixedBase(size_t           number,   /* to be converted to mixed base */
-            size_t           length,
+            int              length,
             const MPI_Offset base[],   /* in:  [length], base[0] ignored */
             MPI_Offset       result[]) /* out: [length] */
 {
-    size_t i;
+    int i;
 
     if (length > 0) {
         for (i = length - 1; i > 0; i--) {
@@ -610,7 +610,7 @@ init_gatts(const char *type_letter, int numGatts)
 }
 
 static MPI_Offset
-product(size_t nn, const MPI_Offset *sp)
+product(int nn, const MPI_Offset *sp)
 {
     MPI_Offset result = 1;
     while (nn-- > 0)
@@ -636,7 +636,7 @@ init_gvars(int numGatts, int numTypes, int numVars)
      */
     const char digit[] = "r123456789";
 
-    size_t rank;
+    int rank;
     int vn;           /* var number */
     int xtype;        /* index of type */
     int an;           /* attribute number */
@@ -656,7 +656,7 @@ init_gvars(int numGatts, int numTypes, int numVars)
          * == max_dim_len[0] * max_dim_len[1] * ... * max_dim_len[rank-1] */
         const size_t nvars = product(rank, max_dim_len);
 
-        int jj;
+        size_t jj;
         for (jj=0; jj<nvars; jj++) {
             /* number types of this shape */
             const int ntypes = rank < 2 ? numTypes : 1;

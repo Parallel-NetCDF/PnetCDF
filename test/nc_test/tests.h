@@ -283,11 +283,11 @@ extern char       dim_name[NDIMS][3];
 extern MPI_Offset dim_len[NDIMS];
 extern char       var_name[NVARS][2+MAX_RANK];
 extern nc_type    var_type[NVARS];
-extern size_t     var_rank[NVARS];
+extern int        var_rank[NVARS];
 extern int        var_dimid[NVARS][MAX_RANK];
 extern MPI_Offset var_shape[NVARS][MAX_RANK];
 extern size_t     var_nels[NVARS];
-extern size_t     var_natts[NVARS];
+extern int        var_natts[NVARS];
 extern char       att_name[NVARS][MAX_NATTS][2];
 extern char       gatt_name[NGATTS][3];
 extern nc_type    att_type[NVARS][NGATTS];
@@ -712,7 +712,7 @@ roll(int n);
 extern int
 toMixedBase(
     size_t number,           /* number to be converted to mixed base */
-    size_t length,
+    int    length,
     const MPI_Offset base[], /* dimensioned [length], base[0] ignored */
     MPI_Offset result[]);    /* dimensioned [length] */
 
