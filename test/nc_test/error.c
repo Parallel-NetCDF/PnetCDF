@@ -19,7 +19,7 @@ extern int  max_nmpt;		/* max. number of messages per test */
 void error(const char *fmt, ...);
 void print(const char *fmt, ...);
 int ifFail(const int expr, const int line, const char *file, const char *func);
-void print_n_size_t(size_t nelems, const MPI_Offset *array);
+void print_n_size_t(int nelems, const MPI_Offset *array);
 
 /*
  * Use for logging error conditions
@@ -67,7 +67,7 @@ ifFail(const int expr, const int line, const char *file, const char *func)
  * "architecture" of this program.
  */
 void
-print_n_size_t(size_t nelems, const MPI_Offset *array)
+print_n_size_t(int nelems, const MPI_Offset *array)
 {
 	fprintf(stderr, "[");
 	while(nelems-- > 0)
