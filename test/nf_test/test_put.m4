@@ -94,11 +94,6 @@ ifelse($1, text, char(int($2)),
        $2))))[]dnl
 ])
 
-HAVE_F77_GNU_INT=no
-HAVE_F77_INT1=no
-HAVE_F77_INT2=no
-HAVE_F77_INT8=no
-
 dnl Use GNU intrinsic INT if available
 define([ConvInt1], [ifdef([HAVE_F77_INT1],INT1($1),ifdef([HAVE_F77_GNU_INT],INT($1,1),$1))])dnl
 define([ConvInt2], [ifdef([HAVE_F77_INT2],INT2($1),ifdef([HAVE_F77_GNU_INT],INT($1,2),$1))])dnl

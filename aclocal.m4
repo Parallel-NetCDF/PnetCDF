@@ -1763,7 +1763,7 @@ AC_DEFUN(UD_CHECK_F77_INT1,
            real r
            integer*1 i1
            r = 12.34
-           i1 = INT(r, 1)
+           i1 = INT1(r)
            end
        ])],
        [ac_cv_f77_int1="yes"],
@@ -1784,7 +1784,7 @@ AC_DEFUN(UD_CHECK_F77_INT2,
            real r
            integer*2 i2
            r = 12.34
-           i2 = INT(r, 2)
+           i2 = INT2(r)
            end
        ])],
        [ac_cv_f77_int2="yes"],
@@ -1805,7 +1805,7 @@ AC_DEFUN(UD_CHECK_F77_INT8,
            real r
            integer*8 i8
            r = 12.34
-           i8 = INT(r, 8)
+           i8 = INT8(r)
            end
        ])],
        [ac_cv_f77_int8="yes"],
