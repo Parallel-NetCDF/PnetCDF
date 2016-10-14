@@ -1725,3 +1725,29 @@ AC_DEFUN([UD_CHECK_MPI_CPP_SEEK_SET], [
    AC_LANG_POP(C++)]
 )
 
+AC_DEFUN(UD_CHECK_FORTRAN_INT,
+[
+    AC_MSG_CHECKING([for Fortran intrinsic INT])
+    AC_LANG_PUSH([Fortran])
+    AC_COMPILE_IFELSE(
+       [AC_LANG_SOURCE([
+           program main
+           real r
+           integer*1 i1
+           integer*2 i2
+           integer   i4
+           integer*8 i8
+           r = 12.34
+           i1 = INT(r, 1)
+           i2 = INT(r, 2)
+           i4 = INT(r)
+           i8 = INT(r, 8)
+           end
+       ])],
+       [ac_cv_fortran_int="yes"],
+       [ac_cv_fortran_int="no"]
+    )
+    AC_LANG_POP([Fortran])
+    AC_MSG_RESULT([$ac_cv_fortran_int])
+])
+

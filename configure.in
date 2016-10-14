@@ -966,6 +966,14 @@ if test "x${enable_fortran}" = xyes ; then
    UD_MSG_DEBUG([FC_MODOUT=$FC_MODOUT])
 fi
 
+HAVE_INTRINSIC_INT=no
+if test "x${enable_fortran}" = xyes ; then
+   UD_CHECK_FORTRAN_INT
+   UD_MSG_DEBUG([ac_cv_fortran_int=$ac_cv_fortran_int])
+   HAVE_INTRINSIC_INT=$ac_cv_fortran_int
+   AC_SUBST(HAVE_INTRINSIC_INT)
+fi
+
 dnl
 dnl Below is to check if a Fortran compiler produces module files with upper
 dnl case file name, eg. PNETCDF.mod. However, this does not work for Mac OSX

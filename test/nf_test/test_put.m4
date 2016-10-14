@@ -94,21 +94,27 @@ ifelse($1, text, char(int($2)),
        $2))))[]dnl
 ])
 
+dnl Use GNU intrinsic INT if available
+define([ConvInt1], [ifdef([HAVE_INTRINSIC_INT],INT($1,1),$1)])dnl
+define([ConvInt2], [ifdef([HAVE_INTRINSIC_INT],INT($1,2),$1)])dnl
+define([ConvInt],  [ifdef([HAVE_INTRINSIC_INT],INT($1),  $1)])dnl
+define([ConvInt8], [ifdef([HAVE_INTRINSIC_INT],INT($1,8),$1)])dnl
+
 dnl  MAKE_TYPE2(funf_suffix, var_dest, var_src)
 dnl
-define([MAKE_TYPE2], [dnl
-ifelse($1, text, $2 = char(int($3)),
-       ifelse($1, int, $2 = INT($3),
-       ifelse($1, int8, 
-                  if ($3 .EQ. X_INT8_MAX) then 
-                      $2 = X_INT8_MAX 
-                  else 
-                      $2 = $3
-                  endif, 
-       ifelse($1, real, $2 = REAL($3),
-       ifelse($1, double, $2 = DBLE($3),
-       $2 = $3)))))[]dnl
-])
+define([MAKE_TYPE2], [ifelse($1, text,   $2 = char(INT($3)),
+                             $1, real,   $2 = REAL($3),
+                             $1, double, $2 = DBLE($3),
+                             $1, int,    $2 = ConvInt($3),
+                             $1, int1,   $2 = ConvInt1($3),
+                             $1, int2,   $2 = ConvInt2($3),
+                             $1, int8,
+                      if ($3 .EQ. X_INT8_MAX) then 
+                          $2 = X_INT8_MAX 
+                      else 
+                          $2 = ConvInt8($3)
+                      endif,
+                             $2 = $3)])
 
 dnl HASH(TYPE)
 dnl

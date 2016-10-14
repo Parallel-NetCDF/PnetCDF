@@ -16,6 +16,10 @@ INCLUDES += -I$(srcdir)/../../src/libf
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
+ifeq (@HAVE_INTRINSIC_INT@, yes)
+M4FLAGS += -DHAVE_INTRINSIC_INT
+endif
+
 M4SRCS    = test_get.m4 \
             test_put.m4  \
             test_iget.m4 \
