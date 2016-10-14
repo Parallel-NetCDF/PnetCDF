@@ -128,8 +128,8 @@ end function nf90mpi_close
 ! -------
 function nf90mpi_delete(name, mpi_info)
   character(len = *), intent( in) :: name
-  integer                         :: nf90mpi_delete
   integer,            intent( in) :: mpi_info
+  integer                         :: nf90mpi_delete
 
   nf90mpi_delete = nfmpi_delete(name, mpi_info)
 end function nf90mpi_delete

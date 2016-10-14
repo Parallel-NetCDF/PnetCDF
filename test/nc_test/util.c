@@ -37,7 +37,7 @@ inRange(const double value, const nc_type xtype)
         case NC_UINT64: return value >= 0            && value <= X_UINT64_MAX;
         default:
             assert(0);
-	    return(0);
+            return(0);
     }
 }
 
@@ -761,7 +761,7 @@ put_atts(int ncid, int numGatts, int numVars)
                         error("ncmpi_put_att_double: %s", ncmpi_strerror(err));
                 } else {
                     /* when ATT_LEN(i,j) >= 3, some values returned for 3rd,
-                     * 4th, ... will be specially made to cause NC_ERANG
+                     * 4th, ... will be specially made to cause NC_ERANGE
                      */
                     IF (err != NC_ERANGE)
                         error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
@@ -798,11 +798,26 @@ put_vars(int ncid, int numVars)
             IF (err != NC_NOERR)
                 error("ncmpi_put_vara_text_all: %s", ncmpi_strerror(err));
         } else {
+            /* Note netCDF below uses vara_double to write variables of all NC
+             * types. This will cause a problem for the special case when
+             * calling uchar APIs to access NC_BYTE variables in CDF-1 and 2
+             * files. For example, writing 128.0 double to NC_BYTE through
+             * vara_double API will get NC_ERANGE error, because NC_BYTE is
+             * considered a signed 1-byte integer by vara_double API. However,
+             * later on, when using vara_uchar APIs to read NC_BYTE, NC_ERANGE
+             * may not be expected, because NC_BYTE is considered unsigned by
+             * uchar APIs when file is in CDF-1 and 2 format.
+             */
             err = ncmpi_put_vara_double_all(ncid, i, start, var_shape[i],value);
             if (allInRange) {
                 IF (err != NC_NOERR)
                     error("ncmpi_put_vara_double_all: %s", ncmpi_strerror(err));
             } else {
+                /* In netCDF convention, even when NC_ERANGE is returned, the
+                 * out-of-bound data is still casted and written to the file.
+                 * See
+                 * http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
+                 */
                 IF (err != NC_ERANGE)
                     error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
             }
