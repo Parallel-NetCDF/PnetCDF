@@ -84,14 +84,13 @@ define([MAKE_DOUBLE], [dnl
 ifelse($1, text, dble(ichar($2)), dble($2))[]dnl
 ])
 
-dnl  MAKE_TYPE(funf_suffix, var)
+dnl  MAKE_TYPE(itype, constant)
 dnl
 define([MAKE_TYPE], [dnl
-ifelse($1, text, char(int($2)),
-       ifelse($1, int, INT($2),
-       ifelse($1, real, REAL($2),
-       ifelse($1, double, DBLE($2),
-       $2))))[]dnl
+ifelse($1, text,   char(INT($2)),
+       $1, real,   REAL($2),
+       $1, double, DBLE($2),
+                   $2)[]dnl
 ])
 
 dnl Use GNU intrinsic INT if available
@@ -99,7 +98,7 @@ define([ConvInt1], [ifdef([HAVE_F77_INT1],INT1($1),ifdef([HAVE_F77_GNU_INT],INT(
 define([ConvInt2], [ifdef([HAVE_F77_INT2],INT2($1),ifdef([HAVE_F77_GNU_INT],INT($1,2),$1))])dnl
 define([ConvInt8], [ifdef([HAVE_F77_INT8],INT8($1),ifdef([HAVE_F77_GNU_INT],INT($1,8),$1))])dnl
 
-dnl  MAKE_TYPE2(funf_suffix, var_dest, var_src)
+dnl  MAKE_TYPE2(itype, dest, src)
 dnl
 define([MAKE_TYPE2], [ifelse($1, text,   $2 = char(INT($3)),
                              $1, real,   $2 = REAL($3),
