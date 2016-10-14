@@ -16,8 +16,17 @@ INCLUDES += -I$(srcdir)/../../src/libf
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
-ifeq (@HAVE_INTRINSIC_INT@, yes)
-M4FLAGS += -DHAVE_INTRINSIC_INT
+ifeq (@HAVE_F77_GNU_INT@, yes)
+M4FLAGS += -DHAVE_F77_GNU_INT
+endif
+ifeq (@HAVE_F77_INT1@, yes)
+M4FLAGS += -DHAVE_F77_INT1
+endif
+ifeq (@HAVE_F77_INT2@, yes)
+M4FLAGS += -DHAVE_F77_INT2
+endif
+ifeq (@HAVE_F77_INT8@, yes)
+M4FLAGS += -DHAVE_F77_INT8
 endif
 
 M4SRCS    = test_get.m4 \
