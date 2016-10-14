@@ -1725,13 +1725,14 @@ AC_DEFUN([UD_CHECK_MPI_CPP_SEEK_SET], [
    AC_LANG_POP(C++)]
 )
 
-AC_DEFUN(UD_CHECK_FORTRAN_INT,
+AC_DEFUN(UD_CHECK_F77_GNU_INT,
 [
-    AC_MSG_CHECKING([for Fortran intrinsic INT])
-    AC_LANG_PUSH([Fortran])
+    AC_MSG_CHECKING([for Fortran 77 GNU intrinsic INT])
+    AC_LANG_PUSH([Fortran 77])
     AC_COMPILE_IFELSE(
        [AC_LANG_SOURCE([
            program main
+           implicit none
            real r
            integer*1 i1
            integer*2 i2
@@ -1744,10 +1745,73 @@ AC_DEFUN(UD_CHECK_FORTRAN_INT,
            i8 = INT(r, 8)
            end
        ])],
-       [ac_cv_fortran_int="yes"],
-       [ac_cv_fortran_int="no"]
+       [ac_cv_f77_gnu_int="yes"],
+       [ac_cv_f77_gnu_int="no"]
     )
-    AC_LANG_POP([Fortran])
-    AC_MSG_RESULT([$ac_cv_fortran_int])
+    AC_LANG_POP([Fortran 77])
+    AC_MSG_RESULT([$ac_cv_f77_gnu_int])
+])
+
+AC_DEFUN(UD_CHECK_F77_INT1,
+[
+    AC_MSG_CHECKING([for Fortran 77 intrinsic INT1])
+    AC_LANG_PUSH([Fortran 77])
+    AC_COMPILE_IFELSE(
+       [AC_LANG_SOURCE([
+           program main
+           implicit none
+           real r
+           integer*1 i1
+           r = 12.34
+           i1 = INT(r, 1)
+           end
+       ])],
+       [ac_cv_f77_int1="yes"],
+       [ac_cv_f77_int1="no"]
+    )
+    AC_LANG_POP([Fortran 77])
+    AC_MSG_RESULT([$ac_cv_f77_int1])
+])
+
+AC_DEFUN(UD_CHECK_F77_INT2,
+[
+    AC_MSG_CHECKING([for Fortran 77 intrinsic INT2])
+    AC_LANG_PUSH([Fortran 77])
+    AC_COMPILE_IFELSE(
+       [AC_LANG_SOURCE([
+           program main
+           implicit none
+           real r
+           integer*2 i2
+           r = 12.34
+           i2 = INT(r, 2)
+           end
+       ])],
+       [ac_cv_f77_int2="yes"],
+       [ac_cv_f77_int2="no"]
+    )
+    AC_LANG_POP([Fortran 77])
+    AC_MSG_RESULT([$ac_cv_f77_int2])
+])
+
+AC_DEFUN(UD_CHECK_F77_INT8,
+[
+    AC_MSG_CHECKING([for Fortran 77 intrinsic INT8])
+    AC_LANG_PUSH([Fortran 77])
+    AC_COMPILE_IFELSE(
+       [AC_LANG_SOURCE([
+           program main
+           implicit none
+           real r
+           integer*8 i8
+           r = 12.34
+           i8 = INT(r, 8)
+           end
+       ])],
+       [ac_cv_f77_int8="yes"],
+       [ac_cv_f77_int8="no"]
+    )
+    AC_LANG_POP([Fortran 77])
+    AC_MSG_RESULT([$ac_cv_f77_int8])
 ])
 

@@ -966,12 +966,28 @@ if test "x${enable_fortran}" = xyes ; then
    UD_MSG_DEBUG([FC_MODOUT=$FC_MODOUT])
 fi
 
-HAVE_INTRINSIC_INT=no
+HAVE_F77_GNU_INT=no
+HAVE_F77_INT1=no
+HAVE_F77_INT2=no
+HAVE_F77_INT8=no
 if test "x${enable_fortran}" = xyes ; then
-   UD_CHECK_FORTRAN_INT
-   UD_MSG_DEBUG([ac_cv_fortran_int=$ac_cv_fortran_int])
-   HAVE_INTRINSIC_INT=$ac_cv_fortran_int
-   AC_SUBST(HAVE_INTRINSIC_INT)
+   UD_CHECK_F77_GNU_INT
+   UD_MSG_DEBUG([ac_cv_f77_gnu_int=$ac_cv_f77_gnu_int])
+   HAVE_F77_GNU_INT=$ac_cv_f77_gnu_int
+   AC_SUBST(HAVE_F77_GNU_INT)
+
+   UD_CHECK_F77_INT1
+   UD_MSG_DEBUG([ac_cv_f77_int1=$ac_cv_f77_int1])
+   HAVE_F77_INT1=$ac_cv_f77_int1
+   AC_SUBST(HAVE_F77_INT1)
+   UD_CHECK_F77_INT2
+   UD_MSG_DEBUG([ac_cv_f77_int2=$ac_cv_f77_int2])
+   HAVE_F77_INT2=$ac_cv_f77_int2
+   AC_SUBST(HAVE_F77_INT2)
+   UD_CHECK_F77_INT8
+   UD_MSG_DEBUG([ac_cv_f77_int8=$ac_cv_f77_int8])
+   HAVE_F77_INT8=$ac_cv_f77_int8
+   AC_SUBST(HAVE_F77_INT8)
 fi
 
 dnl
