@@ -137,7 +137,7 @@ tst_atts3(char *filename, int cmode)
     signed char schar_in[ATT_LEN], schar_out[ATT_LEN] = {NC_MIN_BYTE, 1, NC_MAX_BYTE};
     unsigned char uchar_in[ATT_LEN];
     short short_in[ATT_LEN], short_out[ATT_LEN] = {NC_MIN_SHORT, -128, NC_MAX_SHORT};
-    int int_in[ATT_LEN], int_out[ATT_LEN] = {-100000, 128, 100000};
+    int int_in[ATT_LEN], int_out[ATT_LEN] = {-100000, 127, 100000};
     float float_in[ATT_LEN], float_out[ATT_LEN] = {-0.5, 0.25, 0.125};
     double double_in[ATT_LEN], double_out[ATT_LEN] = {-0.25, .5, 0.125};
     long long longlong_in[ATT_LEN] = {-1LL, -1LL, -1LL};
@@ -343,7 +343,7 @@ tst_atts3(char *filename, int cmode)
       }
       if ((err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_INT_NAME, schar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
-	 if (i == 0 || i == 2) continue;
+	 if (i == 0 || i == 2) continue; /* int_out[0] and int_out[2] are out of schar range */
 	 if (schar_in[i] != (signed char) int_out[i]) ERRV
       }
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_FLOAT_NAME, schar_in); ERR
@@ -355,8 +355,10 @@ tst_atts3(char *filename, int cmode)
 
       /* Read all atts (except text) as uchar. */
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, uchar_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+	 if (i == 0) continue; /* skip schar_out[0]=NC_MIN_BYTE as it causes NC_ERANGE */
 	 if (uchar_in[i] != (unsigned char) schar_out[i]) ERRV
+      }
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SHORT_NAME, uchar_in)) != NC_ERANGE) ERR
 /*
       for (i = 0; i < ATT_LEN; i++)
