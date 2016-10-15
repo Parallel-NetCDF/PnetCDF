@@ -12,12 +12,13 @@ dnl
 /* $Id$ */
 
 dnl
-dnl If the m4 macro "ERANGE_SKIP" below is defined, the I/O to data elements
-dnl that cause NC_ERANGE will be skipped.
+dnl If the m4 macro "ERANGE_FILL" below is defined, the I/O to data elements
+dnl that cause NC_ERANGE will be filled with the NC default fill values.
+dnl TODO: to fill with user defined fill values
 dnl
 
-dnl define(`ERANGE_SKIP')dnl
-define(`SKIP_ASSIGN', `ifdef(`ERANGE_SKIP', `$1++; $2++; continue;')')
+dnl define(`ERANGE_FILL')dnl
+define(`SKIP_LOOP', `ifdef(`ERANGE_FILL', `$1++; $2++; continue;')')
 
 dnl
 dnl The command-line m4 macro "PNETCDF" is to differentiate PnetCDF and netCDF
@@ -71,6 +72,43 @@ ifdef(`PNETCDF', , `
 #elif defined(HAVE_STDINT_H)
 #include <stdint.h>   /* uint16_t, uint32_t, uint64_t */
 #endif
+
+ifdef(`ERANGE_FILL', `
+static unsigned char FILL_CHAR[1]   = {0x00};
+static unsigned char FILL_BYTE[1]   = {0x81};
+static unsigned char FILL_SHORT[2]  = {0x80, 0x01};
+static unsigned char FILL_INT[4]    = {0x80, 0x00, 0x00, 0x01};
+static unsigned char FILL_FLOAT[4]  = {0x7C, 0xF0, 0x00, 0x00};
+static unsigned char FILL_DOUBLE[8] = {0x47, 0x9E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static unsigned char FILL_UBYTE[1]  = {0xFF};
+static unsigned char FILL_USHORT[2] = {0xFF, 0xFF};
+static unsigned char FILL_UINT[4]   = {0xFF, 0xFF, 0xFF, 0xFF};
+static unsigned char FILL_INT64[8]  = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
+static unsigned char FILL_UINT64[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE};
+#if SIZEOF_LONG == X_SIZEOF_INT
+static unsigned char FILL_LONG[4]   = {0x80, 0x00, 0x00, 0x01};
+static unsigned char FILL_ULONG[4]  = {0xFF, 0xFF, 0xFF, 0xFF};
+#else
+static unsigned char FILL_LONG[8]  = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
+static unsigned char FILL_ULONG[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE};
+#endif
+')
+
+define(`FillValue', `ifdef(`ERANGE_FILL', `ifelse(
+`$1', `schar',     `memcpy($2, FILL_BYTE,   1);',dnl
+`$1', `uchar',     `memcpy($2, FILL_UBYTE,  1);',dnl
+`$1', `short',     `memcpy($2, FILL_SHORT,  2);',dnl
+`$1', `ushort',    `memcpy($2, FILL_USHORT, 2);',dnl
+`$1', `int',       `memcpy($2, FILL_INT,    4);',dnl
+`$1', `uint',      `memcpy($2, FILL_UINT,   4);',dnl
+`$1', `long',      `memcpy($2, FILL_LONG,   SIZEOF_LONG);', dnl
+`$1', `ulong',     `memcpy($2, FILL_ULONG,  SIZEOF_ULONG);',dnl
+`$1', `float',     `memcpy($2, FILL_FLOAT,  4);',dnl
+`$1', `double',    `memcpy($2, FILL_DOUBLE, 8);',dnl
+`$1', `longlong',  `memcpy($2, FILL_INT64,  8);',dnl
+`$1', `int64',     `memcpy($2, FILL_INT64,  8);',dnl
+`$1', `ulonglong', `memcpy($2, FILL_UINT64, 8);',dnl
+`$1', `uint64',    `memcpy($2, FILL_UINT64, 8);')')')dnl
 
 /*
  * The only error code returned from subroutines in this file is NC_ERANGE,
@@ -533,8 +571,11 @@ dnl
 dnl For GET APIs boundary check
 dnl
 define(`GETF_CheckBND',
-`if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)
-	*ip = ($1)xx;')
+`if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) {
+            FillValue($1, ip)
+            DEBUG_RETURN_ERROR(NC_ERANGE)
+        }
+	*ip = ($1)xx;')dnl
 
 dnl
 dnl For GET APIs boudnary check for when $1 is either 'longlong' or 'ulonglong'
@@ -544,35 +585,11 @@ define(`GETF_CheckBND2',
 `if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;',dnl for unsigned type
 `if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;
 	else if (xx == Upcase($1)_MIN) *ip = Upcase($1)_MIN;')
-	else if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)
+	else if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) {
+	    FillValue($1, ip)
+            DEBUG_RETURN_ERROR(NC_ERANGE)
+        }
 	else *ip = ($1)xx;')
-
-dnl
-dnl For PUT APIs and either $1 and $2 is float or double:
-dnl
-define(`PUTF_CheckBND',
-`ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)',
-        `$2', `float',  `if (*ip > (double)Xmax($1) || *ip < FXmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)')')
-
-dnl
-dnl For GET APIs and $1 and $2 are not float or double
-dnl
-define(`GETI_CheckBND',
-``#'if IXmax($1) > Imax($2)
-	if (xx > Imax($2)'`ifelse(index(`$1',`u'), 0, ,
-                                  index(`$2',`u'), 0, ,
-                                  ` || xx < Imin($2)')'`) DEBUG_RETURN_ERROR(NC_ERANGE)'
-`#'endif)
-
-dnl
-dnl For PUT APIs and $1 and $2 are not float or double
-dnl
-define(`PUTI_CheckBND',
-``#'if IXmax($1) < Imax($2)
-	if (*ip > IXmax($1)'`ifelse(index(`$1',`u'), 0, ,
-                                    index(`$2',`u'), 0, ,
-                                    ` || *ip < Xmin($1)')'`) DEBUG_RETURN_ERROR(NC_ERANGE)'
-`#'endif)
 
 /*
  * Primitive numeric conversion functions.
@@ -617,14 +634,24 @@ ifelse(`$3', `1',
 ')dnl
     ix_$1 xx;
     get_ix_$1(xp, &xx);
-GETI_CheckBND($1, $2)
 
-    ifelse(index(`$1',`u'), 0, ,
-           index(`$2',`u'), 0,
-           `if (xx < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because ip is unsigned */')dnl
+`#'if IXmax($1) > Imax($2)
+    if (xx > Imax($2)'`ifelse(index(`$1',`u'), 0, ,
+                              index(`$2',`u'), 0, ,
+                              ` || xx < Imin($2)')'`) {
+        FillValue($2, ip)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }'
+`#'endif
+
+`ifelse(index(`$1',`u'), 0, , index(`$2',`u'), 0,`
+    if (xx < 0) {
+        FillValue($2, ip)
+        DEBUG_RETURN_ERROR(NC_ERANGE) /* because ip is unsigned */
+    }')'
 
     *ip = ($2) xx;
-ifelse(`$3', `1', ``#'endif
+`ifelse(`$3', `1', ``#'endif
 ')dnl
     return NC_NOERR;
 }
@@ -639,11 +666,20 @@ define(`NCX_PUT1F',dnl
 static int
 APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip)
 {
-	ix_$1 xx;
-	PUTF_CheckBND($1, $2)
-	xx = (ix_$1)*ip;
-	put_ix_$1(xp, &xx);
-	return NC_NOERR;
+    ix_$1 xx;
+
+    ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) {
+        FillValue($1, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }',
+        `$2', `float',  `if (*ip > (double)Xmax($1) || *ip < FXmin($1)) {
+        FillValue($1, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }')
+    xx = (ix_$1)*ip;
+
+    put_ix_$1(xp, &xx);
+    return NC_NOERR;
 }
 ')dnl
 
@@ -662,11 +698,21 @@ ifelse(`$3', `1',
 `#'else
 ')dnl
     ix_$1 xx;
-PUTI_CheckBND($1, $2)
 
-    ifelse(index(`$1',`u'), 0,
-   `ifelse(index(`$2',`u'), 0, ,
-   `if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because xp is unsigned */')')dnl
+`#'if IXmax($1) < Imax($2)
+    if (*ip > IXmax($1)'`ifelse(index(`$1',`u'), 0, ,
+                                index(`$2',`u'), 0, ,
+                                ` || *ip < Xmin($1)')'`) {
+        FillValue($1, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
+`#'endif
+ifelse(index(`$1',`u'), 0, `ifelse(index(`$2',`u'), 0, ,`dnl
+    if (*ip < 0) {
+        FillValue($1, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE) /* because xp is unsigned */
+    }
+')')dnl
 
     xx = (ix_$1)*ip;
     put_ix_$1(xp, &xx);
@@ -830,16 +876,19 @@ NCX_GET1F(ushort, double)
 static int
 APIPrefix`x_put_'NC_TYPE(ushort)_schar(void *xp, const schar *ip)
 {
-	uchar *cp;
-        if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE)
-	cp = (uchar *) xp;
-	if (*ip & 0x80)
-		*cp++ = 0xff;
-	else
-		*cp++ = 0;
-	*cp = (uchar)*ip;
+    uchar *cp;
+    if (*ip < 0) {
+        FillValue(ushort, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
+    cp = (uchar *) xp;
+    if (*ip & 0x80)
+        *cp++ = 0xff;
+    else
+        *cp++ = 0;
+    *cp = (uchar)*ip;
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 static int
@@ -1026,16 +1075,19 @@ NCX_GET1F(uint, double)
 static int
 APIPrefix`x_put_'NC_TYPE(uint)_schar(void *xp, const schar *ip)
 {
-	uchar *cp;
-	if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE)
+    uchar *cp;
+    if (*ip < 0) {
+        FillValue(uint, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
 
-	cp = (uchar *) xp;
-	*cp++ = 0x00;
-	*cp++ = 0x00;
-	*cp++ = 0x00;
-	*cp = (uchar)*ip;
+    cp = (uchar *) xp;
+    *cp++ = 0x00;
+    *cp++ = 0x00;
+    *cp++ = 0x00;
+    *cp = (uchar)*ip;
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 static int
@@ -1501,11 +1553,13 @@ static int
 APIPrefix`x_put_'NC_TYPE(float)_float(void *xp, const float *ip)
 {
 #ifdef NO_IEEE_FLOAT
-	if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
-		DEBUG_RETURN_ERROR(NC_ERANGE)
+    if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN) {
+        FillValue(float, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
 #endif
-	put_ix_float(xp, ip);
-	return NC_NOERR;
+    put_ix_float(xp, ip);
+    return NC_NOERR;
 }
 #endif
 
@@ -1813,20 +1867,20 @@ NCX_GET1F(double, ulonglong)
 static int
 APIPrefix`x_get_'NC_TYPE(double)_float(const void *xp, float *ip)
 {
-	double xx;
-	get_ix_double(xp, &xx);
-	if (xx > FLT_MAX)
-	{
-		*ip = FLT_MAX;
-		DEBUG_RETURN_ERROR(NC_ERANGE)
-	}
-	if (xx < (-FLT_MAX))
-	{
-		*ip = (-FLT_MAX);
-		DEBUG_RETURN_ERROR(NC_ERANGE)
-	}
-	*ip = (float) xx;
-	return NC_NOERR;
+    double xx;
+    get_ix_double(xp, &xx);
+    if (xx > FLT_MAX) {
+        // *ip = FLT_MAX;
+        FillValue(float, ip)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
+    if (xx < (-FLT_MAX)) {
+        // *ip = (-FLT_MAX);
+        FillValue(float, ip)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
+    *ip = (float) xx;
+    return NC_NOERR;
 }
 
 #if X_SIZEOF_DOUBLE != SIZEOF_DOUBLE  || defined(NO_IEEE_FLOAT)
@@ -1866,11 +1920,13 @@ static int
 APIPrefix`x_put_'NC_TYPE(double)_double(void *xp, const double *ip)
 {
 #ifdef NO_IEEE_FLOAT
-	if (*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
-		DEBUG_RETURN_ERROR(NC_ERANGE)
+    if (*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN) {
+        FillValue(double, xp)
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
 #endif
-	put_ix_double(xp, ip);
-	return NC_NOERR;
+    put_ix_double(xp, ip);
+    return NC_NOERR;
 }
 #endif
 
@@ -2328,8 +2384,9 @@ APIPrefix`x_getn_'NC_TYPE($1)_$2(const void **xpp, IntType nelems, $2 *tp)
         ifelse(index(`$1',`u'), 0, ,
                index(`$2',`u'), 0, `
         if (*xp < 0) {
+            FillValue($2, tp)
             DEBUG_ASSIGN_ERROR(status, NC_ERANGE) /* because tp is unsigned */
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }')dnl
 
         *tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
@@ -2359,8 +2416,9 @@ APIPrefix`x_pad_getn_'NC_TYPE($1)_$2(const void **xpp, IntType nelems, $2 *tp)
         ifelse(index(`$1',`u'), 0, ,
                index(`$2',`u'), 0, `
         if (*xp < 0) {
+            FillValue($2, tp)
             DEBUG_ASSIGN_ERROR(status, NC_ERANGE) /* because tp is unsigned */
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }')dnl
 
         *tp++ = ($2) Cast_Signed2Unsigned($2,$1) (*xp++);  /* type cast from $1 to $2 */
@@ -2516,8 +2574,9 @@ APIPrefix`x_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp)
 
     while (nelems-- != 0) {
         if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')) {
+            FillValue($1, xp)
             DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }
         *xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
     }
@@ -2543,8 +2602,9 @@ APIPrefix`x_pad_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp)
 
     while (nelems-- != 0) {
         if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')) {
+            FillValue($1, xp)
             DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }
         *xp++ = ($1) Cast_Signed2Unsigned($1,$2) *tp++; /* type cast from $2 to $1 */
     }
@@ -2768,8 +2828,9 @@ APIPrefix`x_getn_'NC_TYPE(uchar)_schar(const void **xpp, IntType nelems, schar *
 
     while (nelems-- != 0) {
         if (*xp > SCHAR_MAX) {
+            FillValue(schar, tp)
        	    DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }
 	*tp++ = (schar) *xp++; /* type cast from uchar to schar */
     }
@@ -2805,8 +2866,9 @@ APIPrefix`x_pad_getn_'NC_TYPE(uchar)_schar(const void **xpp, IntType nelems, sch
 
     while (nelems-- != 0) {
         if (*xp > SCHAR_MAX) {
+            FillValue(schar, tp)
             DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }
         *tp++ = (schar) *xp++; /* type cast from uchar to schar */
     }
@@ -2839,8 +2901,9 @@ APIPrefix`x_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *
 
     while (nelems-- != 0) {
         if (*tp < 0) {
+            FillValue(uchar, xp)
             DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }
         *xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
     }
@@ -2876,8 +2939,9 @@ APIPrefix`x_pad_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const sch
 
     while (nelems-- != 0) {
         if (*tp < 0) {
+            FillValue(uchar, xp)
             DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
-            SKIP_ASSIGN(xp, tp)
+            SKIP_LOOP(xp, tp)
         }
         *xp++ = (uchar) (signed) *tp++; /* type cast from schar to uchar */
     }
