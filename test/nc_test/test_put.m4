@@ -384,6 +384,19 @@ TestFunc(var1)_$1(VarArgs)
                 }
             }
         }
+
+ifdef(`PNETCDF',`dnl
+        err = PutVar1($1)(ncid, i, NULL, &value);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+')dnl
+
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR)
@@ -654,10 +667,36 @@ TestFunc(vara)_$1(VarArgs)
             edge[j] = 1;
         }
 
+ifdef(`PNETCDF',`dnl
+        err = PutVara($1)(ncid, i, NULL, NULL, value);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        for (j=0; j<var_rank[i]; j++) start[j] = 0;
+        err = PutVara($1)(ncid, i, start, NULL, value);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {        /* skip record dim */
                 start[j] = var_shape[i][j];   /* out of boundary check */
                 err = PutVara($1)(ncid, i, start, edge, value);
+                IF (!canConvert && err != NC_ECHAR)
+                    error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                ELSE_NOK
                 IF (canConvert && err != NC_EINVALCOORDS)
                     error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                 ELSE_NOK
@@ -839,6 +878,29 @@ TestFunc(vars)_$1(VarArgs)
             edge[j] = 1;
             stride[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = PutVars($1)(ncid, i, NULL, NULL, NULL, value);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        for (j=0; j<var_rank[i]; j++) start[j] = 0;
+        err = PutVars($1)(ncid, i, start, NULL, NULL, value);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+')dnl
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {        /* skip record dim */
@@ -1027,6 +1089,29 @@ TestFunc(varm)_$1(VarArgs)
             stride[j] = 1;
             imap[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = PutVarm($1)(ncid, i, NULL, NULL, NULL, NULL, value);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        for (j=0; j<var_rank[i]; j++) start[j] = 0;
+        err = PutVarm($1)(ncid, i, start, NULL, NULL, NULL, value);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+')dnl
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {        /* skip record dim */

@@ -82,7 +82,8 @@ ncmpi_$1_varn$2(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARN,
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, buftype,
+                                 API_VARN, 1,
                                  1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
@@ -115,7 +116,8 @@ ncmpi_$1_varn_$3$2(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VARN,
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, ITYPE2MPI($3),
+                                 API_VARN, 0,
                                  1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
