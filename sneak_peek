@@ -85,6 +85,7 @@ This is essentially a placeholder for the next release note ...
       is less than 8 bytes, support for CDF-2 and CDF-5 is disabled.
 
   o Bug fixes
+    * Fix to allow putting global attribute _FillValue
     * Fix some missing character string normalizations for names of attributes,
       dimensions, and variables.
     * Fix the return unlimited dimension ID of value -1, not 0, by Fortran API
