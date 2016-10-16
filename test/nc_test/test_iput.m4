@@ -274,6 +274,19 @@ test_ncmpi_iput_var1(int numVars)
         datatype = nc_mpi_type(var_type[i]);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_var1(ncid, i, NULL, &value, 1, datatype, &reqid);
+        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 index[j] = var_shape[i][j];     /* out of boundary check */
@@ -367,6 +380,24 @@ test_ncmpi_iput_var1_$1(int numVars)
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_var1_$1(ncid, i, NULL, &value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 index[j] = var_shape[i][j];     /* out of boundary check */
@@ -752,6 +783,29 @@ test_ncmpi_iput_vara(int numVars)
             start[j] = 0;
             edge[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_vara(ncid, i, NULL, NULL, value, 1, datatype, &reqid);
+        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+
+        err = ncmpi_iput_vara(ncid, i, start, NULL, value, 1, datatype, &reqid);
+        IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];      /* out of bundary check */
@@ -908,6 +962,39 @@ test_ncmpi_iput_vara_$1(int numVars)
             start[j] = 0;
             edge[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_vara_$1(ncid, i, NULL, NULL, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+
+        err = ncmpi_iput_vara_$1(ncid, i, start, NULL, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];      /* out of bundary check */
@@ -1080,6 +1167,29 @@ test_ncmpi_iput_vars(int numVars)
             edge[j] = 1;
             stride[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_vars(ncid, i, NULL, NULL, NULL, value, 1, datatype, &reqid);
+        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+
+        err = ncmpi_iput_vars(ncid, i, start, NULL, NULL, value, 1, datatype, &reqid);
+        IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */
@@ -1251,6 +1361,39 @@ test_ncmpi_iput_vars_$1(int numVars)
             edge[j] = 1;
             stride[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_vars_$1(ncid, i, NULL, NULL, NULL, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+
+        err = ncmpi_iput_vars_$1(ncid, i, start, NULL, NULL, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */
@@ -1437,6 +1580,29 @@ test_ncmpi_iput_varm(int numVars)
             stride[j] = 1;
             imap[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_varm(ncid, i, NULL, NULL, NULL, NULL, value, 1, datatype, &reqid);
+        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+
+        err = ncmpi_iput_varm(ncid, i, start, NULL, NULL, NULL, value, 1, datatype, &reqid);
+        IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */
@@ -1616,6 +1782,39 @@ test_ncmpi_iput_varm_$1(int numVars)
             stride[j] = 1;
             imap[j] = 1;
         }
+
+ifdef(`PNETCDF',`dnl
+        err = ncmpi_iput_varm_$1(ncid, i, NULL, NULL, NULL, NULL, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
+            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+
+        err = ncmpi_iput_varm_$1(ncid, i, start, NULL, NULL, NULL, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+        }
+        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
+            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        ELSE_NOK
+
+        if (var_rank[i] == 0) {
+            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        }
+')dnl
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */

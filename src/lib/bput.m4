@@ -188,7 +188,9 @@ APINAME($1,$2)(int ncid, int varid, ArgKind($1) BufArgs(`put',$2), int *reqid)
     if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, ArgStartCount($1),
                                  ifelse(`$2', `', `bufcount', `0'),
-                                 API_KIND($1), 0, WRITE_REQ,
+                                 ifelse(`$2', `', `buftype',  `ITYPE2MPI($2)'),
+                                 API_KIND($1), ifelse(`$2', `', `1', `0'),
+                                 0, WRITE_REQ,
                                  NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 

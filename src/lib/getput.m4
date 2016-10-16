@@ -705,7 +705,9 @@ APINAME($1,$2,$3,$4)(int ncid, int varid, ArgKind($2) BufArgs($1,$3))
 
     status = ncmpii_sanity_check(ncid, varid, ArgStartCount($2),
                                  ifelse(`$3', `', `bufcount', `0'),
-                                 API_KIND($2), 1, ReadWrite($1),
+                                 ifelse(`$3', `', `buftype',  `ITYPE2MPI($3)'),
+                                 API_KIND($2), ifelse(`$3', `', `1', `0'),
+                                 1, ReadWrite($1),
                                  CollIndep($4), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
