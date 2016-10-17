@@ -58,10 +58,10 @@ static unsigned char FILL_UINT[4]   = {0xFF, 0xFF, 0xFF, 0xFF};
 static unsigned char FILL_INT64[8]  = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
 static unsigned char FILL_UINT64[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE};
 
-/*----< inq_default_fill_value() >-------------------------------------------*/
+/*----< ncmpii_inq_default_fill_value() >------------------------------------*/
 /* copy the default fill value to the memory space pointed by fill_value */
-static int
-inq_default_fill_value(int type, void *fill_value)
+int
+ncmpii_inq_default_fill_value(int type, void *fill_value)
 {
     if (fill_value == NULL) return NC_NOERR;
 
@@ -495,12 +495,44 @@ ncmpi_inq_var_fill(int   ncid,
         if (err != NC_NOERR && err != NC_ENOTATT)
             return err;
         if (err == NC_ENOTATT) {
-            err = inq_default_fill_value(varp->type, fill_value);
+            err = ncmpii_inq_default_fill_value(varp->type, fill_value);
             if (err != NC_NOERR) return err;
         }
     }
 
     return NC_NOERR;
+}
+
+/*----< ncmpii_inq_var_fill() >----------------------------------------------*/
+int
+ncmpii_inq_var_fill(NC_var *varp,
+                    void   *fill_value) /* OUT: user-defined or
+                                                default fill value */
+{
+    int i, nchars;
+    NC_attrarray *attrs;
+
+    assert(varp != NULL); /* NC_GLOBAL varid is illegal in this context */
+
+    nchars = strlen("_FillValue");
+
+    /* Check if _FillValue is defined for this variable */
+    attrs = &varp->attrs;
+    for (i=0; i<attrs->ndefined; i++) {
+        if (attrs->value[i]->name->nchars == nchars &&
+            strncmp(attrs->value[i]->name->cp, "_FillValue", nchars) == 0) {
+            memcpy(fill_value, attrs->value[i]->xvalue, (size_t)varp->xsz);
+            return NC_NOERR;
+        }
+    }
+
+    /* NetCDF 4.4.1 and prior does not use global attribute _FillValue if
+     * it is not defined for the variable. Default fill values are used.
+     * See fill_NC_var() in putget.m4.
+     */
+
+    /* return default _FillValue */
+    return ncmpii_inq_default_fill_value(varp->type, fill_value);
 }
 
 #ifdef FILL_ONE_VAR_AT_A_TIME

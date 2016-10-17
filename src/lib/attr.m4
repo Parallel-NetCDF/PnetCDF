@@ -1016,12 +1016,13 @@ ncmpi_get_att_$1(int             ncid,
                  const char     *name,
                  FUNC2ITYPE($1) *buf)
 {
-    int      err;
+    int      err=NC_NOERR;
     char    *nname=NULL; /* normalized name */
     NC      *ncp;
     NC_attr *attrp;
     NC_attrarray *ncap=NULL;
     const void *xp;
+    void *xfill_value;
 
     /* get the file ID */
     err = ncmpii_NC_check_id(ncid, &ncp);
@@ -1051,37 +1052,56 @@ ncmpi_get_att_$1(int             ncid,
 
     xp = attrp->xvalue;
 
+    /* find the fill value */
+    xfill_value = NCI_Malloc((size_t)attrp->xsz);
+    err = ncmpii_inq_default_fill_value(attrp->type, xfill_value);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+
     switch(attrp->type) {
         case NC_BYTE:
             ifelse(`$1',`uchar',
            `if (ncp->format < 5) /* no NC_ERANGE check */
                 /* note this is not ncmpix$1_getn_NC_BYTE_uchar */
-                return ncmpix_pad_getn_NC_UBYTE_uchar(&xp, attrp->nelems, ($1*)buf);
+                err = ncmpix_pad_getn_NC_UBYTE_uchar(&xp, attrp->nelems, ($1*)buf, xfill_value);
             else')
-                return ncmpix_pad_getn_NC_BYTE_$1 (&xp, attrp->nelems, ($1*)buf);
+                err = ncmpix_pad_getn_NC_BYTE_$1 (&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_UBYTE:
-            return ncmpix_pad_getn_NC_UBYTE_$1 (&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_pad_getn_NC_UBYTE_$1 (&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_SHORT:
-            return ncmpix_pad_getn_NC_SHORT_$1 (&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_pad_getn_NC_SHORT_$1 (&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_USHORT:
-            return ncmpix_pad_getn_NC_USHORT_$1(&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_pad_getn_NC_USHORT_$1(&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_INT:
-            return ncmpix_getn_NC_INT_$1   (&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_getn_NC_INT_$1   (&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_UINT:
-            return ncmpix_getn_NC_UINT_$1  (&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_getn_NC_UINT_$1  (&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_FLOAT:
-            return ncmpix_getn_NC_FLOAT_$1 (&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_getn_NC_FLOAT_$1 (&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_DOUBLE:
-            return ncmpix_getn_NC_DOUBLE_$1(&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_getn_NC_DOUBLE_$1(&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_INT64:
-            return ncmpix_getn_NC_INT64_$1 (&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_getn_NC_INT64_$1 (&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_UINT64:
-            return ncmpix_getn_NC_UINT64_$1(&xp, attrp->nelems, ($1*)buf);
+            err = ncmpix_getn_NC_UINT64_$1(&xp, attrp->nelems, ($1*)buf, xfill_value);
+            break;
         case NC_CHAR:
-            return NC_ECHAR; /* NC_ECHAR already checked earlier */
-        default: break;
+            err = NC_ECHAR; /* NC_ECHAR already checked earlier */
+            break;
+        default: fprintf(stderr, "Error: bad attrp->type(%d) in %s\n",attrp->type,__func__);
+            err = NC_EBADTYPE;
+            break;
     }
-    return NC_NOERR;
+    NCI_Free(xfill_value);
+    return err;
 }
 ')dnl
 
@@ -1103,36 +1123,58 @@ ncmpix_putn_$1(int          cdf_ver,
                const void  *buf,    /* user buffer of type $1 */
                nc_type      xtype)  /* external NC type */
 {
+    int err=NC_NOERR;
+    void *xfill_value;
+
+    /* find the fill value */
+    xfill_value = NCI_Malloc(8);
+    err = ncmpii_inq_default_fill_value(xtype, xfill_value);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+
     switch(xtype) {
         case NC_BYTE:
             ifelse(`$1',`uchar',
            `if (cdf_ver < 5) /* no NC_ERANGE check */
-                return ncmpix_pad_putn_NC_UBYTE_uchar(xpp, nelems, ($1*)buf);
+                err = ncmpix_pad_putn_NC_UBYTE_uchar(xpp, nelems, ($1*)buf, xfill_value);
             else')
-                return ncmpix_pad_putn_NC_BYTE_$1(xpp, nelems, ($1*)buf);
+                err = ncmpix_pad_putn_NC_BYTE_$1(xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_UBYTE:
-            return ncmpix_pad_putn_NC_UBYTE_$1 (xpp, nelems, ($1*)buf);
+            err = ncmpix_pad_putn_NC_UBYTE_$1 (xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_SHORT:
-            return ncmpix_pad_putn_NC_SHORT_$1 (xpp, nelems, ($1*)buf);
+            err = ncmpix_pad_putn_NC_SHORT_$1 (xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_USHORT:
-            return ncmpix_pad_putn_NC_USHORT_$1(xpp, nelems, ($1*)buf);
+            err = ncmpix_pad_putn_NC_USHORT_$1(xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_INT:
-            return ncmpix_putn_NC_INT_$1   (xpp, nelems, ($1*)buf);
+            err = ncmpix_putn_NC_INT_$1   (xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_UINT:
-            return ncmpix_putn_NC_UINT_$1  (xpp, nelems, ($1*)buf);
+            err = ncmpix_putn_NC_UINT_$1  (xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_FLOAT:
-            return ncmpix_putn_NC_FLOAT_$1 (xpp, nelems, ($1*)buf);
+            err = ncmpix_putn_NC_FLOAT_$1 (xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_DOUBLE:
-            return ncmpix_putn_NC_DOUBLE_$1(xpp, nelems, ($1*)buf);
+            err = ncmpix_putn_NC_DOUBLE_$1(xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_INT64:
-            return ncmpix_putn_NC_INT64_$1 (xpp, nelems, ($1*)buf);
+            err = ncmpix_putn_NC_INT64_$1 (xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_UINT64:
-            return ncmpix_putn_NC_UINT64_$1(xpp, nelems, ($1*)buf);
+            err = ncmpix_putn_NC_UINT64_$1(xpp, nelems, ($1*)buf, xfill_value);
+            break;
         case NC_CHAR:
-            return NC_ECHAR; /* NC_ECHAR check is done earlier */
+            err = NC_ECHAR; /* NC_ECHAR check is done earlier */
+            break;
         default: fprintf(stderr, "Error: bad xtype(%d) in %s\n",xtype,__func__);
+            err = NC_EBADTYPE;
+            break;
     }
-    return NC_EBADTYPE;
+    NCI_Free(xfill_value);
+    return err;
 }
 ')dnl
 
