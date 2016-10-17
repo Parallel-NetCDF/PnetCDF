@@ -70,6 +70,10 @@ This is essentially a placeholder for the next release note ...
       for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
       APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
       honors that exception.
+    * When NC_ERANGE occurs, the data elements that cause the error will be
+      replaced by _FillValue. For put APIs, the value of attribute _FillValue,
+      if defined, will be used. For get APIs, the default CDF _FillValue will
+      be used.
 
   o Other updates:
     * API ncmpi_inq_file_format can now detect HDF5 file signature and report
