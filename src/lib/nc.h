@@ -833,25 +833,25 @@ int ncmpii_x_getn_NC_CHAR  (const void *xbuf, void *buf, MPI_Offset nelems,
                            MPI_Datatype datatype);
 int ncmpii_x_getn_NC_BYTE  (int cdf_ver,
                            const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_UBYTE (const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_SHORT (const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_USHORT(const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_INT   (const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_UINT  (const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_FLOAT (const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_DOUBLE(const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_INT64 (const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 int ncmpii_x_getn_NC_UINT64(const void *xbuf, void *buf, MPI_Offset nelems,
-                           MPI_Datatype datatype, void *xfill);
+                           MPI_Datatype datatype, void *ifill);
 
 int NC_start_count_stride_ck(const NC *ncp, const NC_var *varp,
                 const MPI_Offset *start, const MPI_Offset *count,

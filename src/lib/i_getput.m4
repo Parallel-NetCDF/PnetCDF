@@ -284,7 +284,7 @@ ncmpii_igetput_varm(NC               *ncp,
 
         /* when user buf type != nc var type defined in file */
         if (need_convert) {
-            void *xfill_value;
+            void *xfill; /* fill value for external type */
 
             if (use_abuf) { /* use attached buffer to allocate xbuf */
                 assert(abuf_allocated == 0);
@@ -298,13 +298,13 @@ ncmpii_igetput_varm(NC               *ncp,
             else xbuf = NCI_Malloc((size_t)nbytes);
 
             /* find the fill value */
-            xfill_value = NCI_Malloc((size_t)varp->xsz);
-            ncmpii_inq_var_fill(varp, xfill_value);
+            xfill = NCI_Malloc((size_t)varp->xsz);
+            ncmpii_inq_var_fill(varp, xfill);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(ncp->format, varp->type, xbuf, cbuf, bnelems,
-                                 ptype, xfill_value, status)
-            NCI_Free(xfill_value);
+                                 ptype, xfill, status)
+            NCI_Free(xfill);
 
             /* NC_ERANGE can be caused by a subset of buf that is out of range
              * of the external data type, it is not considered a fatal error.
