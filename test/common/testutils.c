@@ -59,6 +59,16 @@ void parse_write_args(int argc, char **argv, int rank, params *p)
 char* nc_err_code_name(int err)
 {
     static char unknown_str[32];
+
+    if (err > 0) { /* system error */
+        const char *cp = (const char *) strerror(err);
+        if (cp == NULL)
+            sprintf(unknown_str,"Unknown error code %d",err);
+        else
+            sprintf(unknown_str,"Error code %d (%s)",err,cp);
+        return unknown_str;
+    }
+
     switch (err) {
         case (NC_NOERR):			return "NC_NOERR";
         case (NC_EBADID):			return "NC_EBADID";

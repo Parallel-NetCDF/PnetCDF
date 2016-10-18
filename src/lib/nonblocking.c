@@ -1039,7 +1039,9 @@ err_check:
 
             /* find the default fill value */
             ifill = NCI_Malloc((size_t)el_size);
-            ncmpii_inq_default_fill_value(ncmpii_mpi2nctype(get_list[i].ptype), ifill);
+            err = ncmpii_inq_default_fill_value(ncmpii_mpi2nctype(get_list[i].ptype), ifill);
+            if (status == NC_NOERR && err != NC_NOERR)
+                DEBUG_ASSIGN_ERROR(status, err)
 
             /* type convert + byte swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(ncp->format, varp->type, get_list[i].xbuf,
