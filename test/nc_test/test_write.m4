@@ -467,8 +467,11 @@ TestFunc(abort)(AttVarArgs)
     IF (err != NC_EBADID)
         error("expecting NC_EBADID but got %s", nc_err_code_name(err));
     err = FileDelete(scratch, info);        /* should already be deleted */
-    IF (!err) /* err is expected to be NC_ENOENT */
-        error("file %s should not exist", scratch);
+ifdef(`PNETCDF',
+    `IF (err != NC_ENOENT && err != NC_EFILE)
+        error("expecting NC_ENOENT or NC_EFILE but got %s", nc_err_code_name(err));',
+    `IF (err != ENOENT && err != NC_EIO)
+        error("expecting ENOENT or NC_EIO but got %s", nc_err_code_name(err));')dnl
 
     /*
      * create scratch file
@@ -2275,8 +2278,10 @@ TestFunc(set_default_format)(void)
     }
 
     /* Remove the left-over file. */
-    if ((err = FileDelete(scratch, info)))
+    err = FileDelete(scratch, info);
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+
     return nok;
 }
 

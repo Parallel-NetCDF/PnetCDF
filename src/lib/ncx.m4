@@ -17,7 +17,7 @@ dnl that cause NC_ERANGE will be filled with the NC default fill values.
 dnl TODO: to fill with user defined fill values
 dnl
 
-dnl ifdef(`PNETCDF',`define(`ERANGE_FILL')')dnl
+ifdef(`PNETCDF',`define(`ERANGE_FILL')')dnl
 define(`SKIP_LOOP', `ifdef(`ERANGE_FILL', `$1++; $2++; continue;')')
 
 dnl

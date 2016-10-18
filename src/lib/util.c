@@ -74,7 +74,7 @@ int ncmpii_sanity_check(int               ncid,
         if (buftype != MPI_DATATYPE_NULL) {
             int isderived, el_size, buftype_is_contig;
             MPI_Datatype ptype;
-            MPI_Offset   bnelems;
+            MPI_Offset   bnelems=0;
 
             err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
                                       &isderived, &buftype_is_contig);
