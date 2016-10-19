@@ -174,7 +174,7 @@ int main(int argc, char** argv)
     if (no_fill != 0)
         printf("Error: expecting no_fill to be 0\n");
     if (fill_value != NC_FILL_INT)
-        printf("Error: expecting no_fill to be %ld but got %d\n",NC_FILL_INT,fill_value);
+        printf("Error: expecting no_fill to be %d but got %d\n",NC_FILL_INT,fill_value);
 
     /* fill the 1st record of the record variable */
     start[0] = 0;
