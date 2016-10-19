@@ -429,18 +429,17 @@ err_check:
          */
         xbuf = cbuf;
         if (need_convert) { /* user buf type != nc var type defined in file */
-            void *xfill; /* fill value for external type */
+            void *ifill; /* fill value in internal representation */
 
             xbuf = NCI_Malloc((size_t)nbytes);
 
             /* find the fill value */
-            xfill = NCI_Malloc((size_t)varp->xsz);
-            ncmpii_inq_var_fill(varp, xfill);
-
+            ifill = NCI_Malloc((size_t)varp->xsz);
+            ncmpii_inq_var_fill(varp, ifill);
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(ncp->format, varp->type, xbuf, cbuf, bnelems,
-                                 ptype, xfill, status)
-            NCI_Free(xfill);
+                                 ptype, ifill, status)
+            NCI_Free(ifill);
 
             /* NC_ERANGE can be caused by a subset of buf that is out of range
              * of the external data type, it is not considered a fatal error.
@@ -586,7 +585,7 @@ mpi_io:
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         if (need_convert) {
-            void *ifill; /* fill value for internal type */
+            void *ifill; /* fill value in internal representation */
 
             /* xbuf cannot be buf, but cbuf can */
             if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL)

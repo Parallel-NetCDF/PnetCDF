@@ -73,24 +73,27 @@ ifdef(`PNETCDF', , `
 #include <stdint.h>   /* uint16_t, uint32_t, uint64_t */
 #endif
 
-define(`FILL_ARG',`ifdef(`PNETCDF',`, void *xfill')')dnl
-define(`XFILL',`ifdef(`PNETCDF',`, xfill')')dnl
+dnl
+dnl ifill is the fill value in internal representation
+dnl
+define(`FILL_ARG',`ifdef(`PNETCDF',`, void *ifill')')dnl
+define(`XFILL',`ifdef(`PNETCDF',`, ifill')')dnl
 
 define(`FillValue', `ifdef(`ERANGE_FILL', `ifelse(
-`$1', `schar',     `memcpy($2, xfill, 1);',dnl
-`$1', `uchar',     `memcpy($2, xfill, 1);',dnl
-`$1', `short',     `memcpy($2, xfill, 2);',dnl
-`$1', `ushort',    `memcpy($2, xfill, 2);',dnl
-`$1', `int',       `memcpy($2, xfill, 4);',dnl
-`$1', `uint',      `memcpy($2, xfill, 4);',dnl
-`$1', `long',      `memcpy($2, xfill, SIZEOF_LONG);', dnl
-`$1', `ulong',     `memcpy($2, xfill, SIZEOF_ULONG);',dnl
-`$1', `float',     `memcpy($2, xfill, 4);',dnl
-`$1', `double',    `memcpy($2, xfill, 8);',dnl
-`$1', `longlong',  `memcpy($2, xfill, 8);',dnl
-`$1', `int64',     `memcpy($2, xfill, 8);',dnl
-`$1', `ulonglong', `memcpy($2, xfill, 8);',dnl
-`$1', `uint64',    `memcpy($2, xfill, 8);')')')dnl
+`$1', `schar',     `memcpy($2, ifill, 1);',dnl
+`$1', `uchar',     `memcpy($2, ifill, 1);',dnl
+`$1', `short',     `memcpy($2, ifill, 2);',dnl
+`$1', `ushort',    `memcpy($2, ifill, 2);',dnl
+`$1', `int',       `memcpy($2, ifill, 4);',dnl
+`$1', `uint',      `memcpy($2, ifill, 4);',dnl
+`$1', `long',      `memcpy($2, ifill, SIZEOF_LONG);', dnl
+`$1', `ulong',     `memcpy($2, ifill, SIZEOF_ULONG);',dnl
+`$1', `float',     `memcpy($2, ifill, 4);',dnl
+`$1', `double',    `memcpy($2, ifill, 8);',dnl
+`$1', `longlong',  `memcpy($2, ifill, 8);',dnl
+`$1', `int64',     `memcpy($2, ifill, 8);',dnl
+`$1', `ulonglong', `memcpy($2, ifill, 8);',dnl
+`$1', `uint64',    `memcpy($2, ifill, 8);')')')dnl
 
 /*
  * The only error code returned from subroutines in this file is NC_ERANGE,
@@ -227,6 +230,7 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
 inline static void
 swapn2b(void *dst, const void *src, IntType nn)
 {
+    /* it is OK if dst == src */
     int i;
     uint16_t *op = (uint16_t*) dst;
     uint16_t *ip = (uint16_t*) src;
@@ -651,11 +655,13 @@ APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip FILL_ARG)
     ix_$1 xx;
 
     ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) {
-        FillValue($1, xp)
+        FillValue($1, &xx)
+        put_ix_$1(xp, &xx);
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }',
         `$2', `float',  `if (*ip > (double)Xmax($1) || *ip < FXmin($1)) {
-        FillValue($1, xp)
+        FillValue($1, &xx)
+        put_ix_$1(xp, &xx);
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }')
     xx = (ix_$1)*ip;
@@ -685,13 +691,15 @@ ifelse(`$3', `1',
     if (*ip > IXmax($1)'`ifelse(index(`$1',`u'), 0, ,
                                 index(`$2',`u'), 0, ,
                                 ` || *ip < Xmin($1)')'`) {
-        FillValue($1, xp)
+        FillValue($1, &xx)
+        put_ix_$1(xp, &xx);
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
 `#'endif
 ifelse(index(`$1',`u'), 0, `ifelse(index(`$2',`u'), 0, ,`dnl
     if (*ip < 0) {
-        FillValue($1, xp)
+        FillValue($1, &xx)
+        put_ix_$1(xp, &xx);
         DEBUG_RETURN_ERROR(NC_ERANGE) /* because xp is unsigned */
     }
 ')')dnl
@@ -859,10 +867,15 @@ static int
 APIPrefix`x_put_'NC_TYPE(ushort)_schar(void *xp, const schar *ip FILL_ARG)
 {
     uchar *cp;
+
     if (*ip < 0) {
         FillValue(ushort, xp)
+#ifndef WORDS_BIGENDIAN
+        swapn2b(xp, xp, 1);
+#endif
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
+
     cp = (uchar *) xp;
     if (*ip & 0x80)
         *cp++ = 0xff;
@@ -1060,6 +1073,9 @@ APIPrefix`x_put_'NC_TYPE(uint)_schar(void *xp, const schar *ip FILL_ARG)
     uchar *cp;
     if (*ip < 0) {
         FillValue(uint, xp)
+#ifndef WORDS_BIGENDIAN
+        swapn4b(xp, xp, 1);
+#endif
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
 
@@ -1537,6 +1553,9 @@ APIPrefix`x_put_'NC_TYPE(float)_float(void *xp, const float *ip FILL_ARG)
 #ifdef NO_IEEE_FLOAT
     if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN) {
         FillValue(float, xp)
+#ifndef WORDS_BIGENDIAN
+        swapn4b(xp, xp, 1);
+# endif
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
 #endif
@@ -1903,7 +1922,9 @@ APIPrefix`x_put_'NC_TYPE(double)_double(void *xp, const double *ip FILL_ARG)
 {
 #ifdef NO_IEEE_FLOAT
     if (*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN) {
-        FillValue(double, xp)
+        double tmp;
+        FillValue(double, tmp)
+        put_ix_double(xp, &tmp);
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
 #endif

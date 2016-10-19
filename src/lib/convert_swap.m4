@@ -290,35 +290,35 @@ ncmpii_x_putn_$1(ifelse(`$1',`NC_BYTE',`int cdf_ver,/* 1,2,or 5 CDF format */')
               const void   *buf,    /* user buffer of internal type, itype */
               MPI_Offset    nelems,
               MPI_Datatype  itype,  /* internal data type (MPI_Datatype) */
-              void         *xfill)  /* in external representation */
+              void         *ifill)  /* in internal representation */
 {
     if (itype == MPI_CHAR || /* assume ECHAR has been checked before */
         itype == MPI_SIGNED_CHAR)
-        return ncmpix_putn_$1_schar(&xp, nelems, (signed char*)buf, xfill);
+        return ncmpix_putn_$1_schar(&xp, nelems, (signed char*)buf, ifill);
     else if (itype == MPI_UNSIGNED_CHAR)
         ifelse(`$1',`NC_BYTE',
        `if (cdf_ver < 5)
-            return ncmpix_putn_NC_UBYTE_uchar(&xp, nelems, (const uchar*)buf, xfill);
+            return ncmpix_putn_NC_UBYTE_uchar(&xp, nelems, (const uchar*)buf, ifill);
         else')
-            return ncmpix_putn_$1_uchar(&xp, nelems, (const uchar*)     buf, xfill);
+            return ncmpix_putn_$1_uchar(&xp, nelems, (const uchar*)     buf, ifill);
     else if (itype == MPI_SHORT)
-        return ncmpix_putn_$1_short    (&xp, nelems, (const short*)     buf, xfill);
+        return ncmpix_putn_$1_short    (&xp, nelems, (const short*)     buf, ifill);
     else if (itype == MPI_UNSIGNED_SHORT)
-        return ncmpix_putn_$1_ushort   (&xp, nelems, (const ushort*)    buf, xfill);
+        return ncmpix_putn_$1_ushort   (&xp, nelems, (const ushort*)    buf, ifill);
     else if (itype == MPI_INT)
-        return ncmpix_putn_$1_int      (&xp, nelems, (const int*)       buf, xfill);
+        return ncmpix_putn_$1_int      (&xp, nelems, (const int*)       buf, ifill);
     else if (itype == MPI_UNSIGNED)
-        return ncmpix_putn_$1_uint     (&xp, nelems, (const uint*)      buf, xfill);
+        return ncmpix_putn_$1_uint     (&xp, nelems, (const uint*)      buf, ifill);
     else if (itype == MPI_LONG)
-        return ncmpix_putn_$1_long     (&xp, nelems, (const long*)      buf, xfill);
+        return ncmpix_putn_$1_long     (&xp, nelems, (const long*)      buf, ifill);
     else if (itype == MPI_FLOAT)
-        return ncmpix_putn_$1_float    (&xp, nelems, (const float*)     buf, xfill);
+        return ncmpix_putn_$1_float    (&xp, nelems, (const float*)     buf, ifill);
     else if (itype == MPI_DOUBLE)
-        return ncmpix_putn_$1_double   (&xp, nelems, (const double*)    buf, xfill);
+        return ncmpix_putn_$1_double   (&xp, nelems, (const double*)    buf, ifill);
     else if (itype == MPI_LONG_LONG_INT)
-        return ncmpix_putn_$1_longlong (&xp, nelems, (const longlong*)  buf, xfill);
+        return ncmpix_putn_$1_longlong (&xp, nelems, (const longlong*)  buf, ifill);
     else if (itype == MPI_UNSIGNED_LONG_LONG)
-        return ncmpix_putn_$1_ulonglong(&xp, nelems, (const ulonglong*) buf, xfill);
+        return ncmpix_putn_$1_ulonglong(&xp, nelems, (const ulonglong*) buf, ifill);
     DEBUG_RETURN_ERROR(NC_EBADTYPE)
 }
 ')dnl
