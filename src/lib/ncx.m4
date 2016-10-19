@@ -652,22 +652,21 @@ define(`NCX_PUT1F',dnl
 static int
 APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip FILL_ARG)
 {
+    int err=NC_NOERR;
     ix_$1 xx;
 
     ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) {
         FillValue($1, &xx)
-        put_ix_$1(xp, &xx);
-        DEBUG_RETURN_ERROR(NC_ERANGE)
-    }',
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)
+    } ifdef(`ERANGE_FILL',`else')',
         `$2', `float',  `if (*ip > (double)Xmax($1) || *ip < FXmin($1)) {
         FillValue($1, &xx)
-        put_ix_$1(xp, &xx);
-        DEBUG_RETURN_ERROR(NC_ERANGE)
-    }')
-    xx = (ix_$1)*ip;
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)
+    } ifdef(`ERANGE_FILL',`else')')
+        xx = (ix_$1)*ip;
 
     put_ix_$1(xp, &xx);
-    return NC_NOERR;
+    return err;
 }
 ')dnl
 
@@ -680,6 +679,7 @@ define(`NCX_PUT1I',dnl
 static int
 APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip FILL_ARG)
 {
+    int err=NC_NOERR;
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
     put_ix_$1(xp, (const ix_$1 *)ip);
@@ -692,23 +692,21 @@ ifelse(`$3', `1',
                                 index(`$2',`u'), 0, ,
                                 ` || *ip < Xmin($1)')'`) {
         FillValue($1, &xx)
-        put_ix_$1(xp, &xx);
-        DEBUG_RETURN_ERROR(NC_ERANGE)
-    }
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)
+    } ifdef(`ERANGE_FILL',`else')
 `#'endif
 ifelse(index(`$1',`u'), 0, `ifelse(index(`$2',`u'), 0, ,`dnl
     if (*ip < 0) {
         FillValue($1, &xx)
-        put_ix_$1(xp, &xx);
-        DEBUG_RETURN_ERROR(NC_ERANGE) /* because xp is unsigned */
-    }
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE) /* because xp is unsigned */
+    } ifdef(`ERANGE_FILL',`else')
 ')')dnl
+        xx = (ix_$1)*ip;
 
-    xx = (ix_$1)*ip;
     put_ix_$1(xp, &xx);
 ifelse(`$3', `1', ``#'endif
 ')dnl
-    return NC_NOERR;
+    return err;
 }
 ')dnl
 
@@ -867,12 +865,12 @@ static int
 APIPrefix`x_put_'NC_TYPE(ushort)_schar(void *xp, const schar *ip FILL_ARG)
 {
     uchar *cp;
-
     if (*ip < 0) {
         FillValue(ushort, xp)
+ifdef(`ERANGE_FILL', `dnl
 #ifndef WORDS_BIGENDIAN
         swapn2b(xp, xp, 1);
-#endif
+#endif')
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
 
@@ -1073,9 +1071,10 @@ APIPrefix`x_put_'NC_TYPE(uint)_schar(void *xp, const schar *ip FILL_ARG)
     uchar *cp;
     if (*ip < 0) {
         FillValue(uint, xp)
+ifdef(`ERANGE_FILL', `dnl
 #ifndef WORDS_BIGENDIAN
         swapn4b(xp, xp, 1);
-#endif
+#endif')
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
 
@@ -1550,17 +1549,18 @@ NCX_GET1F(float, ulonglong)
 static int
 APIPrefix`x_put_'NC_TYPE(float)_float(void *xp, const float *ip FILL_ARG)
 {
+    int err=NC_NOERR;
+    float *_ip=ip;
 #ifdef NO_IEEE_FLOAT
+    ifdef(`ERANGE_FILL',`float tmp;')
     if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN) {
-        FillValue(float, xp)
-#ifndef WORDS_BIGENDIAN
-        swapn4b(xp, xp, 1);
-# endif
-        DEBUG_RETURN_ERROR(NC_ERANGE)
+        FillValue(float, &tmp)
+        ifdef(`ERANGE_FILL',`_ip = &tmp;')
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)
     }
 #endif
-    put_ix_float(xp, ip);
-    return NC_NOERR;
+    put_ix_float(xp, _ip);
+    return err;
 }
 #endif
 
@@ -1871,13 +1871,11 @@ APIPrefix`x_get_'NC_TYPE(double)_float(const void *xp, float *ip FILL_ARG)
     double xx;
     get_ix_double(xp, &xx);
     if (xx > FLT_MAX) {
-        // *ip = FLT_MAX;
-        FillValue(float, ip)
+        *ip = FLT_MAX;
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
     if (xx < (-FLT_MAX)) {
-        // *ip = (-FLT_MAX);
-        FillValue(float, ip)
+        *ip = (-FLT_MAX);
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
     *ip = (float) xx;
@@ -1920,16 +1918,18 @@ APIPrefix`x_put_'NC_TYPE(double)_float(void *xp, const float *ip FILL_ARG)
 static int
 APIPrefix`x_put_'NC_TYPE(double)_double(void *xp, const double *ip FILL_ARG)
 {
+    int err=NC_NOERR;
+    double *_ip = ip;
 #ifdef NO_IEEE_FLOAT
+    ifdef(`ERANGE_FILL',`double tmp;')
     if (*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN) {
-        double tmp;
         FillValue(double, tmp)
-        put_ix_double(xp, &tmp);
-        DEBUG_RETURN_ERROR(NC_ERANGE)
+        ifdef(`ERANGE_FILL',`_ip = &tmp;')
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)
     }
 #endif
-    put_ix_double(xp, ip);
-    return NC_NOERR;
+    put_ix_double(xp, _ip);
+    return err;
 }
 #endif
 
