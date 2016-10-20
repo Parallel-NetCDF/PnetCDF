@@ -3,7 +3,15 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * none
+    * A new configure option "--enable-erange-fill" is added. When enabled,
+      data elements that cause the NC_ERANGE error will be replaced by the
+      "fill value". For put APIs, the value of attribute _FillValue, if
+      defined, will be used to write to files. For get APIs, the default CDF
+      _FillValue will be copied to the read buffer in memory. When this
+      feature is disabled, the traditional NetCDF method is used, i.e. the
+      type conversion still proceed and is handled like a C type conversion,
+      whether or not it is within range. See URL below for details
+      http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
 
   o New APIs
     * none
@@ -34,6 +42,8 @@ This is essentially a placeholder for the next release note ...
   o New test program
     * test/testcases/scalar.c to test whether arguments start, count, stride,
       and imap are properly ignored when getting/putting a scalar variable
+    * test/testcases/erang_fill.m4 to test the new configure-time feature of
+      --enable-erange-fill
 
   o New optimization
     * Use Bernstein hash function for checking whether the name of a variable
@@ -70,10 +80,6 @@ This is essentially a placeholder for the next release note ...
       for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
       APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
       honors that exception.
-    * When NC_ERANGE occurs, data elements that cause the error will be
-      replaced by the "fill value". For put APIs, the value of attribute
-      _FillValue, if defined, will be used for writing to files. For get APIs,
-      the default CDF _FillValue will be used for reading to memory buffers.
 
   o Other updates:
     * API ncmpi_inq_file_format can now detect HDF5 file signature and report

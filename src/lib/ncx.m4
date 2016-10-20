@@ -12,12 +12,10 @@ dnl
 /* $Id$ */
 
 dnl
-dnl If the m4 macro "ERANGE_FILL" below is defined, the I/O to data elements
+dnl If the m4 macro "ERANGE_FILL" is defined, the I/O to data elements
 dnl that cause NC_ERANGE will be filled with the NC default fill values.
-dnl TODO: to fill with user defined fill values
 dnl
 
-ifdef(`PNETCDF',`define(`ERANGE_FILL')')dnl
 define(`SKIP_LOOP', `ifdef(`ERANGE_FILL', `$1++; $2++; continue;')')
 
 dnl
@@ -62,10 +60,8 @@ define(`NC_TYPE',  `ifdef(`PNETCDF', `ifelse(
 `$1', `uint64', `ulonglong',dnl
 `$1')')')dnl
 
-ifdef(`PNETCDF', , `
-`#'define DEBUG_RETURN_ERROR(err) return err;
-`#'define DEBUG_ASSIGN_ERROR(status, err) status = err;
-`#'define DEBUG_TRACE_ERROR')
+ifdef(`PNETCDF',,`define(`DEBUG_RETURN_ERROR',`return $1;')')
+ifdef(`PNETCDF',,`define(`DEBUG_ASSIGN_ERROR',`$1 = $2;')')
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h> /* uint16_t, uint32_t, uint64_t */
@@ -613,6 +609,7 @@ define(`NCX_GET1I',dnl
 static int
 APIPrefix`x_get_'NC_TYPE($1)_$2(const void *xp, $2 *ip FILL_ARG)
 {
+    int err=NC_NOERR;
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
     get_ix_$1(xp, (ix_$1 *)ip);
@@ -625,21 +622,25 @@ ifelse(`$3', `1',
     if (xx > Imax($2)'`ifelse(index(`$1',`u'), 0, ,
                               index(`$2',`u'), 0, ,
                               ` || xx < Imin($2)')'`) {
+ifdef(`ERANGE_FILL',`dnl
         FillValue($2, ip)
-        DEBUG_RETURN_ERROR(NC_ERANGE)
+        DEBUG_RETURN_ERROR(NC_ERANGE)',`
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)')
     }'
 `#'endif
 
-`ifelse(index(`$1',`u'), 0, , index(`$2',`u'), 0,`
+`ifelse(index(`$1',`u'), 0, , index(`$2',`u'), 0,`dnl
     if (xx < 0) {
+ifdef(`ERANGE_FILL',`dnl
         FillValue($2, ip)
-        DEBUG_RETURN_ERROR(NC_ERANGE) /* because ip is unsigned */
-    }')'
+        DEBUG_RETURN_ERROR(NC_ERANGE)',`
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)') /* because ip is unsigned */
+    }')'dnl
 
     *ip = ($2) xx;
 `ifelse(`$3', `1', ``#'endif
 ')dnl
-    return NC_NOERR;
+    return err;
 }
 ')dnl
 
@@ -864,14 +865,16 @@ NCX_GET1F(ushort, double)
 static int
 APIPrefix`x_put_'NC_TYPE(ushort)_schar(void *xp, const schar *ip FILL_ARG)
 {
+    int err=NC_NOERR;
     uchar *cp;
     if (*ip < 0) {
-        FillValue(ushort, xp)
 ifdef(`ERANGE_FILL', `dnl
+        FillValue(ushort, xp)
 #ifndef WORDS_BIGENDIAN
         swapn2b(xp, xp, 1);
-#endif')
-        DEBUG_RETURN_ERROR(NC_ERANGE)
+#endif
+        DEBUG_RETURN_ERROR(NC_ERANGE)',`dnl
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)')
     }
 
     cp = (uchar *) xp;
@@ -881,7 +884,7 @@ ifdef(`ERANGE_FILL', `dnl
         *cp++ = 0;
     *cp = (uchar)*ip;
 
-    return NC_NOERR;
+    return err;
 }
 
 static int
@@ -1871,11 +1874,11 @@ APIPrefix`x_get_'NC_TYPE(double)_float(const void *xp, float *ip FILL_ARG)
     double xx;
     get_ix_double(xp, &xx);
     if (xx > FLT_MAX) {
-        *ip = FLT_MAX;
+        ifdef(`ERANGE_FILL', `FillValue(float, ip)', `*ip = FLT_MAX;')
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
     if (xx < (-FLT_MAX)) {
-        *ip = (-FLT_MAX);
+        ifdef(`ERANGE_FILL', `FillValue(float, ip)', `*ip = (-FLT_MAX);')
         DEBUG_RETURN_ERROR(NC_ERANGE)
     }
     *ip = (float) xx;
@@ -1905,13 +1908,18 @@ NCX_PUT1F(double, ulonglong)
 static int
 APIPrefix`x_put_'NC_TYPE(double)_float(void *xp, const float *ip FILL_ARG)
 {
-#if 0	/* TODO: figure this out (if condition below will never be true)*/
-	if ((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
-		DEBUG_RETURN_ERROR(NC_ERANGE)
+    int err=NC_NOERR;
+    double xx;
+#if 1	/* TODO: figure this out (if condition below will never be true)*/
+    if ((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN) {
+        FillValue(double, &xx)
+        DEBUG_ASSIGN_ERROR(err, NC_ERANGE)
+    } ifdef(`ERANGE_FILL',`else')
 #endif
-	double xx = (double) *ip;
-	put_ix_double(xp, &xx);
-	return NC_NOERR;
+        xx = (double) *ip;
+
+    put_ix_double(xp, &xx);
+    return err;
 }
 
 #if X_SIZEOF_DOUBLE != SIZEOF_DOUBLE  || defined(NO_IEEE_FLOAT)
