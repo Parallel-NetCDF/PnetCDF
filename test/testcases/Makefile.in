@@ -25,6 +25,8 @@ endif
 NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff
 
+M4_SRCS  = erange_fill.m4
+
 C_SRCS   = ncmpi_vars_null_stride.c \
            vectors.c \
            collective_error.c \
@@ -66,7 +68,7 @@ F90_SRCS = inq_num_varsf.f90 \
            varn_real.f90
 
 PROGS    = $(C_SRCS:.c=)
-OBJS     = $(C_SRCS:.c=.o)
+OBJS     = $(C_SRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 ifeq (@has_fortran@, yes)
 PROGS   += $(F77_SRCS:.f=)   $(F77F_SRCS:.F=)
@@ -81,8 +83,12 @@ OBJS    += bigrecords.o
 endif
 endif
 
-GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F77F_SRCS) $(F90_SRCS) \
+ifeq (@enable_erange_fill@, yes)
+PROGS   += $(M4_SRCS:.m4=)
+endif
+
+GARBAGE      = $(PROGS) *.nc $(M4_SRCS:.m4=.c)
+PACKING_LIST = $(C_SRCS) $(M4_SRCS) $(F77_SRCS) $(F77F_SRCS) $(F90_SRCS) \
                bigrecords.f \
                Makefile.in depend \
                geopotential.ncdump \
@@ -184,6 +190,9 @@ test_erange: test_erange.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 scalar: scalar.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+erange_fill: erange_fill.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)

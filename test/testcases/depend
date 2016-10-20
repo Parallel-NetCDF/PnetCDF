@@ -36,3 +36,4 @@ last_large_var.o: last_large_var.c
 check_type.o: check_type.c
 test_erange.o: test_erange.c
 scalar.o: scalar.c
+erange_fill.o: erange_fill.c

@@ -24,6 +24,10 @@ LIBRARY  = libpnetcdf.a
 HEADER   = pnetcdf.h
 PKGCONFIG = pnetcdf.pc
 
+ifeq (@enable_erange_fill@, yes)
+M4FLAGS += -DERANGE_FILL
+endif
+
 M4_HEADERS = ncx_h.m4
 
 M4_SRCS   = getput.m4 \

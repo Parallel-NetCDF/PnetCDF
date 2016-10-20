@@ -841,8 +841,7 @@ main(int argc, char *argv[])
         goto fn_exit;
     }
 
-    if (rank == 0)
-        file_kind = check_file_signature(argv[0]);
+    file_kind = check_file_signature(argv[0]);
     MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     if (file_kind == UNKNOWN) {
