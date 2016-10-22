@@ -1058,10 +1058,12 @@ ncmpi_get_att_$1(int             ncid,
     switch(attrp->type) {
         case NC_BYTE:
             ifelse(`$1',`uchar',
-           `if (ncp->format < 5) /* no NC_ERANGE check */
+           `if (ncp->format < 5) { /* no NC_ERANGE check */
+                err = ncmpii_inq_default_fill_value(NC_UBYTE, &fill);
+                if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
                 /* note this is not ncmpix_getn_NC_BYTE_$1 */
                 return ncmpix_pad_getn_NC_UBYTE_$1(&xp, attrp->nelems, buf, &fill);
-            else')
+            } else')
                 return ncmpix_pad_getn_NC_BYTE_$1 (&xp, attrp->nelems, buf, &fill);
         case NC_UBYTE:
             return ncmpix_pad_getn_NC_UBYTE_$1 (&xp, attrp->nelems, buf, &fill);
@@ -1444,9 +1446,11 @@ err_check:
 
         ifelse(`$1',`text', `err = ncmpix_pad_putn_text(&xp, nelems, buf);',
                `$1',`uchar',`
-        if (ncp->format < 5 && xtype == NC_BYTE) /* no NC_ERANGE check */
+        if (ncp->format < 5 && xtype == NC_BYTE) { /* no NC_ERANGE check */
+            err = ncmpii_inq_default_fill_value(NC_UBYTE, &fill);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
             err = ncmpix_putn_uchar(&xp, nelems, buf, NC_UBYTE, &fill);
-        else
+        } else
             err = ncmpix_putn_$1(&xp, nelems, buf, xtype, &fill);',
         `err = ncmpix_putn_$1(&xp, nelems, buf, xtype, &fill);')
 
