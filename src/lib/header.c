@@ -90,7 +90,7 @@ ncmpii_NC_computeshapes(NC *ncp)
 
     for ( /*NADA*/; vpp < end; vpp++) {
         /* (*vpp)->len is recomputed from dimensions in ncmpii_NC_var_shape64() */
-        status = ncmpii_NC_var_shape64(ncp, *vpp, &ncp->dims);
+        status = ncmpii_NC_var_shape64(*vpp, &ncp->dims);
 
         if (status != NC_NOERR) return status ;
 

@@ -323,8 +323,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
  * Look up by ncid, ncap, and name
  */
 static int
-NC_lookupattr(int            ncid,
-              NC_attrarray  *ncap,
+NC_lookupattr(NC_attrarray  *ncap,
               const char    *name,   /* normalized attribute name */
               NC_attr      **attrpp) /* modified on return */
 {
@@ -438,7 +437,7 @@ ncmpi_inq_att(int         ncid,
     nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
     if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    err = NC_lookupattr(ncid, ncap, nname, &attrp);
+    err = NC_lookupattr(ncap, nname, &attrp);
     free(nname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -685,7 +684,7 @@ ncmpi_copy_att(int         ncid_in,
         goto err_check;
     }
 
-    err = NC_lookupattr(ncid_in, ncap_in, nname, &iattrp);
+    err = NC_lookupattr(ncap_in, nname, &iattrp);
     if (err != NC_NOERR) {
         DEBUG_TRACE_ERROR
         goto err_check;
@@ -988,7 +987,7 @@ ncmpi_get_att_text(int         ncid,
     nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
     if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    err = NC_lookupattr(ncid, ncap, nname, &attrp);
+    err = NC_lookupattr(ncap, nname, &attrp);
     free(nname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -1039,7 +1038,7 @@ ncmpi_get_att_$1(int             ncid,
     nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
     if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    err = NC_lookupattr(ncid, ncap, nname, &attrp);
+    err = NC_lookupattr(ncap, nname, &attrp);
     free(nname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -1120,7 +1119,7 @@ define(`PUTN_ITYPE',dnl
 /*----< ncmpix_putn_$1() >---------------------------------------------------*/
 /* This is a collective subroutine */
 inline static int
-ncmpix_putn_$1(int          cdf_ver,
+ncmpix_putn_$1(ifelse(`$1',`uchar',`int cdf_ver,')
                void       **xpp,    /* buffer to be written to file */
                MPI_Offset   nelems, /* no. elements in user buffer */
                const $1    *buf,    /* user buffer of type $1 */
@@ -1480,9 +1479,9 @@ err_check:
          * elements
          */
         void *xp = attrp->xvalue;
-        err = ifelse(`$1',`text',
-                     `ncmpix_pad_putn_text(&xp, nelems, (char*)buf);',
-                     `ncmpix_putn_$1(ncp->format, &xp, nelems, buf, xtype);')
+        ifelse(`$1',`text', `err = ncmpix_pad_putn_text(&xp, nelems, buf);',
+               `$1',`uchar',`err = ncmpix_putn_uchar(ncp->format, &xp, nelems, buf, xtype);',
+                            `err = ncmpix_putn_$1(&xp, nelems, buf, xtype);')
         /* no immediately return error code here? Strange ... 
          * Instead, we continue and call incr_NC_attrarray() to add
          * this attribute (for create case) as it is legal. But if
