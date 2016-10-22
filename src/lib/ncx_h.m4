@@ -307,7 +307,7 @@ dnl
 define(`CONV_GET_XTYPE_ITYPE',dnl
 `dnl
 extern int
-ncmpix_$1_$2_$3(const void **xpp, MPI_Offset nelems, $3 *ip, void *ifill);
+ncmpix_$1_$2_$3(const void **xpp, MPI_Offset nelems, $3 *ip, void *fillp);
 ')dnl
 dnl
 dnl CONV_PUT_XTYPE_ITYPE(op, xtype, itype)
@@ -315,7 +315,7 @@ dnl
 define(`CONV_PUT_XTYPE_ITYPE',dnl
 `dnl
 extern int
-ncmpix_$1_$2_$3(void **xpp, MPI_Offset nelems, const $3 *ip, void *ifill);
+ncmpix_$1_$2_$3(void **xpp, MPI_Offset nelems, const $3 *ip, void *fillp);
 ')dnl
 dnl
 define(`_concat3', $1$2$3)dnl
@@ -368,14 +368,14 @@ ncmpix_pad_putn_text(void **xpp, MPI_Offset nchars, const char *cp);
 
 /* read opaque data */
 extern int
-ncmpix_getn_void(const void **xpp, MPI_Offset nchars, void *vp, void *ifill);
+ncmpix_getn_void(const void **xpp, MPI_Offset nchars, void *vp);
 extern int
-ncmpix_pad_getn_void(const void **xpp, MPI_Offset nchars, void *vp, void *ifill);
+ncmpix_pad_getn_void(const void **xpp, MPI_Offset nchars, void *vp);
 
 /* write opaque data */
 extern int
-ncmpix_putn_void(void **xpp, MPI_Offset nchars, const void *vp, void *ifill);
+ncmpix_putn_void(void **xpp, MPI_Offset nchars, const void *vp);
 extern int
-ncmpix_pad_putn_void(void **xpp, MPI_Offset nchars, const void *vp, void *ifill);
+ncmpix_pad_putn_void(void **xpp, MPI_Offset nchars, const void *vp);
 
 #endif /* _NCX_H_ */
