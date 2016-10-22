@@ -479,8 +479,7 @@ ncx_szof(nc_type type)
  * set varp->xsz, varp->shape and varp->len of a variable
  */
 int
-ncmpii_NC_var_shape64(NC                *ncp,
-                      NC_var            *varp,
+ncmpii_NC_var_shape64(NC_var            *varp,
                       const NC_dimarray *dims)
 {
     int i;
@@ -758,7 +757,7 @@ err_check:
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* set up array dimensional structures */
-    err = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
+    err = ncmpii_NC_var_shape64(varp, &ncp->dims);
     if (err != NC_NOERR) {
         ncmpii_free_NC_var(varp);
         DEBUG_RETURN_ERROR(err)

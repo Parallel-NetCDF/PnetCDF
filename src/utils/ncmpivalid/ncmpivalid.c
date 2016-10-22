@@ -44,9 +44,6 @@ static int val_get_NC_var(bufferinfo *gbp, NC_var **varpp);
 static int val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap);
 static int val_get_NC(NC *ncp);
 
-static int val_fetch(bufferinfo *gbp, MPI_Offset fsize);
-static int val_check_buffer(bufferinfo *gbp, MPI_Offset nextread);
-
 
 #define ABORT {printf("Abort: at line=%d func=%s\n", __LINE__,__func__); fflush(stdout); MPI_Abort(MPI_COMM_WORLD, -1);}
 
@@ -56,7 +53,7 @@ static int val_check_buffer(bufferinfo *gbp, MPI_Offset nextread);
  * Fetch the next header chunk.
  */
 static int
-val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
+val_fetch(bufferinfo *gbp) {
   ssize_t nn = 0;
   MPI_Offset slack;        /* any leftover data in the buffer */
   MPI_Aint pos_addr, base_addr;
@@ -71,8 +68,8 @@ val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
     MPI_Address(gbp->base, &base_addr);
 #endif
   slack = gbp->size - (pos_addr - base_addr);
-  /* . if gbp->pos and gbp->base are the same, there is no leftover buffer data
-   *   to worry about.  
+  /* if gbp->pos and gbp->base are the same, there is no leftover buffer data
+   * to worry about.  
    * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then all
    * data in the buffer has been consumed */
   if (slack == gbp->size) slack = 0;
@@ -114,7 +111,7 @@ val_check_buffer(bufferinfo *gbp,
     if (pos_addr + nextread <= base_addr + gbp->size)
         return NC_NOERR;
 
-    return val_fetch(gbp, MIN(gbp->size, nextread));
+    return val_fetch(gbp);
 } 
 
 static int
@@ -193,7 +190,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
       cpos += strcount; 
       bufremain -= strcount;
     } else {
-      status = val_fetch(gbp, MIN(gbp->size, X_SIZEOF_CHAR * nchars));
+      status = val_fetch(gbp);
       if(status != NC_NOERR) {
 	printf("fetching the name string of ");
         ncmpii_free_NC_string(ncstrp);
@@ -374,7 +371,7 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
       value = (void *)((char *)value + attcount);
       bufremain -= attcount;
     } else {
-      status = val_fetch(gbp, MIN(gbp->size, esz * nvalues));
+      status = val_fetch(gbp);
       if(status != NC_NOERR) {
 	printf("fetching the values of ");
         return status;
@@ -678,7 +675,7 @@ val_get_NC(NC *ncp) {
     getbuf.index = 0;
 
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
-    status = val_fetch(&getbuf, sizeof(magic));
+    status = val_fetch(&getbuf);
     if (status != NC_NOERR) {
         printf("magic number (C D F \\001) is expected!\n");
         return status;

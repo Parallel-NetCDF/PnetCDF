@@ -431,7 +431,7 @@ extern int
 ncmpii_dup_NC_vararray(NC_vararray *ncap, const NC_vararray *ref);
 
 extern int
-ncmpii_NC_var_shape64(NC *ncp, NC_var *varp, const NC_dimarray *dims);
+ncmpii_NC_var_shape64(NC_var *varp, const NC_dimarray *dims);
 
 extern int
 ncmpii_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);

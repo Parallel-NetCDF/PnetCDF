@@ -59,12 +59,9 @@ ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf, int *abuf_index)
  * variable request
  */
 static int
-add_record_requests(NC               *ncp,
-                    NC_var           *varp,
+add_record_requests(NC_var           *varp,
                     NC_req           *reqs,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[])
+                    const MPI_Offset *stride)
 {
     int    i, j;
     size_t dims_chunk = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
@@ -448,7 +445,7 @@ ncmpii_igetput_varm(NC               *ncp,
     if (IS_RECVAR(varp) && req->count[0] > 1) {
         req->num_recs = req->count[0];
 
-        add_record_requests(ncp, varp, req, start, count, stride);
+        add_record_requests(varp, req, stride);
         /* req->count[0] has been changed to 1 */
 
         if (rw_flag == WRITE_REQ) ncp->numPutReqs += req->num_recs - 1;
