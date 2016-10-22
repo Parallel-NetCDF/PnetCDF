@@ -61,22 +61,22 @@ static unsigned char FILL_UINT64[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 /*----< ncmpii_inq_default_fill_value() >------------------------------------*/
 /* copy the default fill value to the memory space pointed by fill_value */
 int
-ncmpii_inq_default_fill_value(int type, void *fill_value)
+ncmpii_inq_default_fill_value(int xtype, void *fillp)
 {
-    if (fill_value == NULL) return NC_NOERR;
+    if (fillp == NULL) return NC_NOERR;
 
-    switch(type) {
-        case NC_CHAR   :               *(char*)fill_value = NC_FILL_CHAR;   break;
-        case NC_BYTE   :        *(signed char*)fill_value = NC_FILL_BYTE;   break;
-        case NC_SHORT  :              *(short*)fill_value = NC_FILL_SHORT;  break;
-        case NC_INT    :                *(int*)fill_value = NC_FILL_INT;    break;
-        case NC_FLOAT  :              *(float*)fill_value = NC_FILL_FLOAT;  break;
-        case NC_DOUBLE :             *(double*)fill_value = NC_FILL_DOUBLE; break;
-        case NC_UBYTE  :      *(unsigned char*)fill_value = NC_FILL_UBYTE;  break;
-        case NC_USHORT :     *(unsigned short*)fill_value = NC_FILL_USHORT; break;
-        case NC_UINT   :       *(unsigned int*)fill_value = NC_FILL_UINT;   break;
-        case NC_INT64  :          *(long long*)fill_value = NC_FILL_INT64;  break;
-        case NC_UINT64 : *(unsigned long long*)fill_value = NC_FILL_UINT64; break;
+    switch(xtype) {
+        case NC_CHAR   :               *(char*)fillp = NC_FILL_CHAR;   break;
+        case NC_BYTE   :        *(signed char*)fillp = NC_FILL_BYTE;   break;
+        case NC_SHORT  :              *(short*)fillp = NC_FILL_SHORT;  break;
+        case NC_INT    :                *(int*)fillp = NC_FILL_INT;    break;
+        case NC_FLOAT  :              *(float*)fillp = NC_FILL_FLOAT;  break;
+        case NC_DOUBLE :             *(double*)fillp = NC_FILL_DOUBLE; break;
+        case NC_UBYTE  :      *(unsigned char*)fillp = NC_FILL_UBYTE;  break;
+        case NC_USHORT :     *(unsigned short*)fillp = NC_FILL_USHORT; break;
+        case NC_UINT   :       *(unsigned int*)fillp = NC_FILL_UINT;   break;
+        case NC_INT64  :          *(long long*)fillp = NC_FILL_INT64;  break;
+        case NC_UINT64 : *(unsigned long long*)fillp = NC_FILL_UINT64; break;
         default : DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
     return NC_NOERR;

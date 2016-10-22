@@ -11,6 +11,8 @@ dnl
  */
 /* $Id$ */
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 dnl
 dnl If the m4 macro "ERANGE_FILL" is defined, the I/O to data elements
 dnl that cause NC_ERANGE will be filled with the NC default fill values.
@@ -70,26 +72,27 @@ ifdef(`PNETCDF',,`define(`DEBUG_ASSIGN_ERROR',`$1 = $2;')')
 #endif
 
 dnl
-dnl ifill is the fill value in internal representation
+dnl *fillp is the fill value in internal representation
 dnl
-define(`FILL_ARG',`ifdef(`PNETCDF',`, void *ifill')')dnl
-define(`XFILL',`ifdef(`PNETCDF',`, ifill')')dnl
+dnl define(`FILL_ARG',`ifdef(`PNETCDF',`, void *fillp __attribute__((unused))')')dnl
+define(`FILL_ARG',`ifdef(`PNETCDF',`, void *fillp')')dnl
+define(`XFILL',`ifdef(`PNETCDF',`, fillp')')dnl
 
 define(`FillValue', `ifdef(`ERANGE_FILL', `ifelse(
-`$1', `schar',     `memcpy($2, ifill, 1);',dnl
-`$1', `uchar',     `memcpy($2, ifill, 1);',dnl
-`$1', `short',     `memcpy($2, ifill, 2);',dnl
-`$1', `ushort',    `memcpy($2, ifill, 2);',dnl
-`$1', `int',       `memcpy($2, ifill, 4);',dnl
-`$1', `uint',      `memcpy($2, ifill, 4);',dnl
-`$1', `long',      `memcpy($2, ifill, SIZEOF_LONG);', dnl
-`$1', `ulong',     `memcpy($2, ifill, SIZEOF_ULONG);',dnl
-`$1', `float',     `memcpy($2, ifill, 4);',dnl
-`$1', `double',    `memcpy($2, ifill, 8);',dnl
-`$1', `longlong',  `memcpy($2, ifill, 8);',dnl
-`$1', `int64',     `memcpy($2, ifill, 8);',dnl
-`$1', `ulonglong', `memcpy($2, ifill, 8);',dnl
-`$1', `uint64',    `memcpy($2, ifill, 8);')')')dnl
+`$1', `schar',     `memcpy($2, fillp, 1);',dnl
+`$1', `uchar',     `memcpy($2, fillp, 1);',dnl
+`$1', `short',     `memcpy($2, fillp, 2);',dnl
+`$1', `ushort',    `memcpy($2, fillp, 2);',dnl
+`$1', `int',       `memcpy($2, fillp, 4);',dnl
+`$1', `uint',      `memcpy($2, fillp, 4);',dnl
+`$1', `long',      `memcpy($2, fillp, SIZEOF_LONG);', dnl
+`$1', `ulong',     `memcpy($2, fillp, SIZEOF_ULONG);',dnl
+`$1', `float',     `memcpy($2, fillp, 4);',dnl
+`$1', `double',    `memcpy($2, fillp, 8);',dnl
+`$1', `longlong',  `memcpy($2, fillp, 8);',dnl
+`$1', `int64',     `memcpy($2, fillp, 8);',dnl
+`$1', `ulonglong', `memcpy($2, fillp, 8);',dnl
+`$1', `uint64',    `memcpy($2, fillp, 8);')')')dnl
 
 /*
  * The only error code returned from subroutines in this file is NC_ERANGE,
@@ -3630,25 +3633,25 @@ NCX_PAD_PUTN_Byte_Body
 /* opaque */
 
 int
-APIPrefix`x_getn_void'(const void **xpp, IntType nelems, void *tp FILL_ARG)
+APIPrefix`x_getn_void'(const void **xpp, IntType nelems, void *tp)
 {
 NCX_GETN_Byte_Body
 }
 
 int
-APIPrefix`x_pad_getn_void'(const void **xpp, IntType nelems, void *tp FILL_ARG)
+APIPrefix`x_pad_getn_void'(const void **xpp, IntType nelems, void *tp)
 {
 NCX_PAD_GETN_Byte_Body
 }
 
 int
-APIPrefix`x_putn_void'(void **xpp, IntType nelems, const void *tp FILL_ARG)
+APIPrefix`x_putn_void'(void **xpp, IntType nelems, const void *tp)
 {
 NCX_PUTN_Byte_Body
 }
 
 int
-APIPrefix`x_pad_putn_void'(void **xpp, IntType nelems, const void *tp FILL_ARG)
+APIPrefix`x_pad_putn_void'(void **xpp, IntType nelems, const void *tp)
 {
 NCX_PAD_PUTN_Byte_Body
 }

@@ -429,17 +429,17 @@ err_check:
          */
         xbuf = cbuf;
         if (need_convert) { /* user buf type != nc var type defined in file */
-            void *ifill; /* fill value in internal representation */
+            void *fillp; /* fill value in internal representation */
 
             xbuf = NCI_Malloc((size_t)nbytes);
 
             /* find the fill value */
-            ifill = NCI_Malloc((size_t)varp->xsz);
-            ncmpii_inq_var_fill(varp, ifill);
+            fillp = NCI_Malloc((size_t)varp->xsz);
+            ncmpii_inq_var_fill(varp, fillp);
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(ncp->format, varp->type, xbuf, cbuf, bnelems,
-                                 ptype, ifill, status)
-            NCI_Free(ifill);
+                                 ptype, fillp, status)
+            NCI_Free(fillp);
 
             /* NC_ERANGE can be caused by a subset of buf that is out of range
              * of the external data type, it is not considered a fatal error.
@@ -585,7 +585,7 @@ mpi_io:
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         if (need_convert) {
-            void *ifill; /* fill value in internal representation */
+            void *fillp; /* fill value in internal representation */
 
             /* xbuf cannot be buf, but cbuf can */
             if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL)
@@ -594,13 +594,13 @@ mpi_io:
                 cbuf = NCI_Malloc((size_t)insize);
 
             /* find the default fill value */
-            ifill = NCI_Malloc((size_t)el_size);
-            ncmpii_inq_default_fill_value(ncmpii_mpi2nctype(ptype), ifill);
+            fillp = NCI_Malloc((size_t)el_size);
+            ncmpii_inq_default_fill_value(ncmpii_mpi2nctype(ptype), fillp);
 
             /* type conversion + byte-swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(ncp->format, varp->type, xbuf, cbuf, bnelems,
-                                 ptype, ifill, err)
-            NCI_Free(ifill);
+                                 ptype, fillp, err)
+            NCI_Free(fillp);
 
             /* retain the first error status */
             if (status == NC_NOERR) status = err;

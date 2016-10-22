@@ -1027,7 +1027,7 @@ err_check:
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         if (ncmpii_need_convert(ncp->format, varp->type, get_list[i].ptype)) {
-            void *ifill; /* fill value in internal representation */
+            void *fillp; /* fill value in internal representation */
 
             /* need type conversion from the external type to user buffer
                type */
@@ -1038,15 +1038,15 @@ err_check:
                 cbuf = get_list[i].buf;
 
             /* find the default fill value */
-            ifill = NCI_Malloc((size_t)el_size);
-            err = ncmpii_inq_default_fill_value(ncmpii_mpi2nctype(get_list[i].ptype), ifill);
+            fillp = NCI_Malloc((size_t)el_size);
+            err = ncmpii_inq_default_fill_value(ncmpii_mpi2nctype(get_list[i].ptype), fillp);
             if (status == NC_NOERR && err != NC_NOERR)
                 DEBUG_ASSIGN_ERROR(status, err)
 
             /* type convert + byte swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(ncp->format, varp->type, get_list[i].xbuf,
-                                 cbuf, bnelems, get_list[i].ptype, ifill, err)
-            NCI_Free(ifill);
+                                 cbuf, bnelems, get_list[i].ptype, fillp, err)
+            NCI_Free(fillp);
 
             /* keep the first error */
             if (get_list[i].status != NULL && *get_list[i].status == NC_NOERR)
