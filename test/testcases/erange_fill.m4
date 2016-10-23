@@ -181,7 +181,7 @@ int test_erange_put_$1_$2(char* filename) {
 
     err = ncmpi_inq_format(ncid, &cdf); ERR
 
-    /* put data with ERANGE vaues */
+    /* put data with ERANGE values */
     $2 wbuf[LEN];
     for (i=0; i<LEN; i++) wbuf[i] = ($2) ifelse(index(`$1',`u'), 0, `-1', `XTYPE_MAX($2)');
     err = PUT_VAR($2)(ncid, varid, wbuf);
@@ -244,7 +244,7 @@ int test_erange_get_$1_$2(char* filename) {
     err = ncmpi_open(comm, filename, omode, info, &ncid); ERR
     err = ncmpi_inq_varid(ncid, "var", &varid); ERR
 
-    /* get data with ERANGE vaues */
+    /* get data with ERANGE values */
     $2 rbuf[LEN];
     err = GET_VAR($2)(ncid, varid, rbuf);
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) ERR',`ERR_EXPECT(NC_ERANGE)')',`ERR_EXPECT(NC_ERANGE)')

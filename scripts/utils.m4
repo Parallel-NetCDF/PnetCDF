@@ -36,6 +36,21 @@ define(`ITYPE2MPI',  `ifelse(`$1', `text',      `MPI_CHAR',
 dnl
 dnl dnl dnl
 dnl
+define(`MPI2ITYPE',  `ifelse(`$1', `MPI_CHAR',               `text',
+                             `$1', `MPI_SIGNED_CHAR',        `schar',
+                             `$1', `MPI_UNSIGNED_CHAR',      `uchar',
+                             `$1', `MPI_SHORT',              `short',
+                             `$1', `MPI_UNSIGNED_SHORT',     `ushort',
+                             `$1', `MPI_INT',                `int',
+                             `$1', `MPI_UNSIGNED',           `uint',
+                             `$1', `MPI_LONG',               `long',
+                             `$1', `MPI_FLOAT',              `float',
+                             `$1', `MPI_DOUBLE',             `double',
+                             `$1', `MPI_LONG_LONG_INT',      `longlong',
+                             `$1', `MPI_UNSIGNED_LONG_LONG', `ulonglong')')dnl
+dnl
+dnl dnl dnl
+dnl
 define(`ITYPE_LIST', `text, schar, uchar, short, ushort, int, uint, long, float, double, longlong, ulonglong')dnl
 dnl
 dnl

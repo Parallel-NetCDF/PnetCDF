@@ -7,10 +7,11 @@ This is essentially a placeholder for the next release note ...
       data elements that cause the NC_ERANGE error will be replaced by the
       "fill value". For put APIs, the value of attribute _FillValue, if
       defined, will be used to write to files. For get APIs, the default CDF
-      _FillValue will be copied to the read buffer in memory. When this
-      feature is disabled, the traditional NetCDF method is used, i.e. the
-      type conversion still proceed and is handled like a C type conversion,
-      whether or not it is within range. See URL below for details
+      _FillValue corresponding to the internal data type will be copied to
+      the read buffer in memory. When this feature is disabled, the traditional
+      NetCDF method is used, i.e. the type conversion still proceed and is
+      handled like a C type conversion, whether or not it is within range.
+      See URL below for details
       http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
 
   o New APIs
