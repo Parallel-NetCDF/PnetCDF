@@ -136,7 +136,7 @@ check_vars_$1(const char *filename, int numVars)
     double expect;
     $1 value;
 
-    err = FileOpen(testfile, NC_NOWRITE);
+    err = FileOpen(filename, NC_NOWRITE);
     IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
     err = APIFunc(inq_format)(ncid, &cdf_format);

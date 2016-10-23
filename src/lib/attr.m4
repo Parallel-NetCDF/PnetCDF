@@ -1015,13 +1015,14 @@ ncmpi_get_att_$1(int             ncid,
                  const char     *name,
                  FUNC2ITYPE($1) *buf)
 {
-    int      err=NC_NOERR;
-    char    *nname=NULL; /* normalized name */
-    NC      *ncp;
-    NC_attr *attrp;
-    NC_attrarray *ncap=NULL;
-    const void *xp;
-    unsigned char fill[8]; /* fill value in internal representation */
+    int            err=NC_NOERR;
+    char           *nname=NULL; /* normalized name */
+    NC             *ncp;
+    NC_attr        *attrp;
+    NC_attrarray   *ncap=NULL;
+    const void     *xp;
+    MPI_Offset      nelems;
+    FUNC2ITYPE($1)  fill; /* fill value in internal representation */
 
     /* get the file ID */
     err = ncmpii_NC_check_id(ncid, &ncp);
@@ -1043,6 +1044,7 @@ ncmpi_get_att_$1(int             ncid,
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (attrp->nelems == 0) return NC_NOERR;
+    nelems = attrp->nelems;
 
     /* No character conversions are allowed. */
     if (attrp->type == NC_CHAR) DEBUG_RETURN_ERROR(NC_ECHAR)
@@ -1052,7 +1054,7 @@ ncmpi_get_att_$1(int             ncid,
     xp = attrp->xvalue;
 
     /* find the fill value */
-    err = ncmpii_inq_default_fill_value(attrp->type, &fill);
+    err = ncmpii_inq_default_fill_value(NC_TYPE($1), &fill);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     switch(attrp->type) {
@@ -1062,30 +1064,32 @@ ncmpi_get_att_$1(int             ncid,
                 err = ncmpii_inq_default_fill_value(NC_UBYTE, &fill);
                 if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
                 /* note this is not ncmpix_getn_NC_BYTE_$1 */
-                return ncmpix_pad_getn_NC_UBYTE_$1(&xp, attrp->nelems, buf, &fill);
+                return ncmpix_pad_getn_NC_UBYTE_$1(&xp, nelems, buf, fill);
             } else')
-                return ncmpix_pad_getn_NC_BYTE_$1 (&xp, attrp->nelems, buf, &fill);
+                return ncmpix_pad_getn_NC_BYTE_$1 (&xp, nelems, buf, fill);
         case NC_UBYTE:
-            return ncmpix_pad_getn_NC_UBYTE_$1 (&xp, attrp->nelems, buf, &fill);
+            return ncmpix_pad_getn_NC_UBYTE_$1 (&xp, nelems, buf, fill);
         case NC_SHORT:
-            return ncmpix_pad_getn_NC_SHORT_$1 (&xp, attrp->nelems, buf, &fill);
+            return ncmpix_pad_getn_NC_SHORT_$1 (&xp, nelems, buf, fill);
         case NC_USHORT:
-            return ncmpix_pad_getn_NC_USHORT_$1(&xp, attrp->nelems, buf, &fill);
+            return ncmpix_pad_getn_NC_USHORT_$1(&xp, nelems, buf, fill);
         case NC_INT:
-            return ncmpix_getn_NC_INT_$1   (&xp, attrp->nelems, buf, &fill);
+            return ncmpix_getn_NC_INT_$1   (&xp, nelems, buf, fill);
         case NC_UINT:
-            return ncmpix_getn_NC_UINT_$1  (&xp, attrp->nelems, buf, &fill);
+            return ncmpix_getn_NC_UINT_$1  (&xp, nelems, buf, fill);
         case NC_FLOAT:
-            return ncmpix_getn_NC_FLOAT_$1 (&xp, attrp->nelems, buf, &fill);
+            return ncmpix_getn_NC_FLOAT_$1 (&xp, nelems, buf, fill);
         case NC_DOUBLE:
-            return ncmpix_getn_NC_DOUBLE_$1(&xp, attrp->nelems, buf, &fill);
+            return ncmpix_getn_NC_DOUBLE_$1(&xp, nelems, buf, fill);
         case NC_INT64:
-            return ncmpix_getn_NC_INT64_$1 (&xp, attrp->nelems, buf, &fill);
+            return ncmpix_getn_NC_INT64_$1 (&xp, nelems, buf, fill);
         case NC_UINT64:
-            return ncmpix_getn_NC_UINT64_$1(&xp, attrp->nelems, buf, &fill);
+            return ncmpix_getn_NC_UINT64_$1(&xp, nelems, buf, fill);
         case NC_CHAR:
             return NC_ECHAR; /* NC_ECHAR already checked earlier */
-        default: fprintf(stderr, "Error: bad attrp->type(%d) in %s\n",attrp->type,__func__);
+        default:
+            fprintf(stderr, "Error: bad attrp->type(%d) in %s\n",
+                    attrp->type,__func__);
             return NC_EBADTYPE;
     }
     return err;
