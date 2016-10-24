@@ -119,10 +119,10 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 
 #define DATATYPE_GET_CONVERT(cdf_ver,xtype,xbuf,ibuf,bnelems,itype,fillp,err) {\
     /* xtype is the NC variable's external data type stored in the nc file    \
-     * itype (internal type)is the user I/O buffer data type (MPI_Datatype)   \
+     * itype (internal type) is the user I/O buffer data type (MPI_Datatype)  \
      * xbuf is the buffer containing the data read from the nc file in the    \
-     * external format, they need to be converted to internal format to user  \
-     * buffer, ibuf */                                                        \
+     * external representation, to be converted to internal representation r  \
+     * into user buffer, ibuf */                                              \
     switch(xtype) {                                                           \
         case NC_BYTE:                                                         \
             err = ncmpii_x_getn_NC_BYTE(cdf_ver,xbuf,ibuf,bnelems,itype,fillp);\
