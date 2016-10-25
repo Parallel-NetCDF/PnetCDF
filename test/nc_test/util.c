@@ -182,10 +182,9 @@ equal(const double x,
 
 /* this function is for the APIs without itype, i.e. xtype == itype */
 int
-equal2(
-    const double x,
-    const double y,
-    nc_type xtype)    /* external data type */
+equal2(const double x,
+       const double y,
+       nc_type xtype)    /* external data type */
 {
     const double flt_epsilon = 1.19209290E-07;
     const double dbl_epsilon = 2.2204460492503131E-16;
@@ -864,9 +863,9 @@ check_dims(int  ncid)
         IF (err != NC_NOERR)
             error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
         IF (strcmp(name, dim_name[i]) != 0)
-            error("Unexpected name of dimension %d", i);
+            error("Unexpected name of dimension %d: '%s', expected: '%s'", i, name, dim_name[i]);
         IF (length != dim_len[i])
-            error("Unexpected length %d of dimension %d", length, i);
+            error("Unexpected length %d of dimension %d, expected %zu", length, i, dim_len[i]);
     }
 }
 
