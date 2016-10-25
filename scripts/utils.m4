@@ -147,33 +147,25 @@ define(`IFMT',`ifelse(
 `$1', `longlong',  `%lld',
 `$1', `ulonglong', `%llu')')dnl
 dnl
-define(`PUT_VAR',`ifelse(
-`$1', `text',      `ncmpi_put_var_$1_all',dnl
-`$1', `schar',     `ncmpi_put_var_$1_all',dnl
-`$1', `uchar',     `ncmpi_put_var_$1_all',dnl
-`$1', `short',     `ncmpi_put_var_$1_all',dnl
-`$1', `ushort',    `ncmpi_put_var_$1_all',dnl
-`$1', `int',       `ncmpi_put_var_$1_all',dnl
-`$1', `long',      `ncmpi_put_var_$1_all',dnl
-`$1', `uint',      `ncmpi_put_var_$1_all',dnl
-`$1', `float',     `ncmpi_put_var_$1_all',dnl
-`$1', `double',    `ncmpi_put_var_$1_all',dnl
-`$1', `longlong',  `ncmpi_put_var_$1_all',dnl
-`$1', `ulonglong', `ncmpi_put_var_$1_all')')dnl
+define(`PUT_VAR',`ifdef(`PNETCDF',`ncmpi_put_var_$1_all',`nc_put_var_$1')')dnl
 dnl
-define(`GET_VAR',`ifelse(
-`$1', `text',      `ncmpi_get_var_$1_all',dnl
-`$1', `schar',     `ncmpi_get_var_$1_all',dnl
-`$1', `uchar',     `ncmpi_get_var_$1_all',dnl
-`$1', `short',     `ncmpi_get_var_$1_all',dnl
-`$1', `ushort',    `ncmpi_get_var_$1_all',dnl
-`$1', `int',       `ncmpi_get_var_$1_all',dnl
-`$1', `long',      `ncmpi_get_var_$1_all',dnl
-`$1', `uint',      `ncmpi_get_var_$1_all',dnl
-`$1', `float',     `ncmpi_get_var_$1_all',dnl
-`$1', `double',    `ncmpi_get_var_$1_all',dnl
-`$1', `longlong',  `ncmpi_get_var_$1_all',dnl
-`$1', `ulonglong', `ncmpi_get_var_$1_all')')dnl
+define(`GET_VAR',`ifdef(`PNETCDF',`ncmpi_get_var_$1_all',`nc_get_var_$1')')dnl
+dnl
+define(`PUT_VAR1',`ifdef(`PNETCDF',`ncmpi_put_var1_$1_all',`nc_put_var1_$1')')dnl
+dnl
+define(`GET_VAR1',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
+dnl
+define(`PUT_VARA',`ifdef(`PNETCDF',`ncmpi_put_vara_$1_all',`nc_put_vara_$1')')dnl
+dnl
+define(`GET_VARA',`ifdef(`PNETCDF',`ncmpi_get_vara_$1_all',`nc_get_vara_$1')')dnl
+dnl
+define(`PUT_VARS',`ifdef(`PNETCDF',`ncmpi_put_vars_$1_all',`nc_put_vars_$1')')dnl
+dnl
+define(`GET_VARS',`ifdef(`PNETCDF',`ncmpi_get_vars_$1_all',`nc_get_vars_$1')')dnl
+dnl
+define(`PUT_VARM',`ifdef(`PNETCDF',`ncmpi_put_varm_$1_all',`nc_put_varm_$1')')dnl
+dnl
+define(`GET_VARM',`ifdef(`PNETCDF',`ncmpi_get_varm_$1_all',`nc_get_varm_$1')')dnl
 dnl
 define(`XTYPE_MAX',`ifelse(
 `$1', `text',      `127',
