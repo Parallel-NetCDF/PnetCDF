@@ -773,7 +773,9 @@ sub print_copyright {
  *     ./buildiface $arg_string\
  * DO NOT EDIT\
  */\
+#ifdef __GNUC__\
 #pragma GCC diagnostic ignored \"-Wunused-parameter\"\
+#endif\
 #include \"${header_file}\"\n\n";
 }
 

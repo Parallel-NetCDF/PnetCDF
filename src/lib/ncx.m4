@@ -11,7 +11,9 @@ dnl
  */
 /* $Id$ */
 
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
 
 dnl
 dnl If the m4 macro "ERANGE_FILL" is defined, the I/O to data elements
