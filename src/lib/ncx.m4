@@ -74,25 +74,21 @@ ifdef(`PNETCDF',,`define(`DEBUG_ASSIGN_ERROR',`$1 = $2;')')
 dnl
 dnl *fillp is the fill value in internal representation
 dnl
-dnl define(`FILL_ARG',`ifdef(`PNETCDF',`, void *fillp __attribute__((unused))')')dnl
-define(`FILL_ARG',`ifdef(`PNETCDF',`, void *fillp')')dnl
-define(`XFILL',`ifdef(`PNETCDF',`, fillp')')dnl
-
 define(`FillValue', `ifdef(`ERANGE_FILL', `ifelse(
-`$1', `schar',     `memcpy($2, fillp, 1);',dnl
-`$1', `uchar',     `memcpy($2, fillp, 1);',dnl
-`$1', `short',     `memcpy($2, fillp, 2);',dnl
-`$1', `ushort',    `memcpy($2, fillp, 2);',dnl
-`$1', `int',       `memcpy($2, fillp, 4);',dnl
-`$1', `uint',      `memcpy($2, fillp, 4);',dnl
-`$1', `long',      `memcpy($2, fillp, SIZEOF_LONG);', dnl
-`$1', `ulong',     `memcpy($2, fillp, SIZEOF_ULONG);',dnl
-`$1', `float',     `memcpy($2, fillp, 4);',dnl
-`$1', `double',    `memcpy($2, fillp, 8);',dnl
-`$1', `longlong',  `memcpy($2, fillp, 8);',dnl
-`$1', `int64',     `memcpy($2, fillp, 8);',dnl
-`$1', `ulonglong', `memcpy($2, fillp, 8);',dnl
-`$1', `uint64',    `memcpy($2, fillp, 8);')')')dnl
+`$1', `schar',     `if (fillp != NULL) memcpy($2, fillp, 1);',dnl
+`$1', `uchar',     `if (fillp != NULL) memcpy($2, fillp, 1);',dnl
+`$1', `short',     `if (fillp != NULL) memcpy($2, fillp, 2);',dnl
+`$1', `ushort',    `if (fillp != NULL) memcpy($2, fillp, 2);',dnl
+`$1', `int',       `if (fillp != NULL) memcpy($2, fillp, 4);',dnl
+`$1', `uint',      `if (fillp != NULL) memcpy($2, fillp, 4);',dnl
+`$1', `long',      `if (fillp != NULL) memcpy($2, fillp, SIZEOF_LONG);', dnl
+`$1', `ulong',     `if (fillp != NULL) memcpy($2, fillp, SIZEOF_ULONG);',dnl
+`$1', `float',     `if (fillp != NULL) memcpy($2, fillp, 4);',dnl
+`$1', `double',    `if (fillp != NULL) memcpy($2, fillp, 8);',dnl
+`$1', `longlong',  `if (fillp != NULL) memcpy($2, fillp, 8);',dnl
+`$1', `int64',     `if (fillp != NULL) memcpy($2, fillp, 8);',dnl
+`$1', `ulonglong', `if (fillp != NULL) memcpy($2, fillp, 8);',dnl
+`$1', `uint64',    `if (fillp != NULL) memcpy($2, fillp, 8);')')')dnl
 
 /*
  * The only error code returned from subroutines in this file is NC_ERANGE,
@@ -654,7 +650,7 @@ dnl
 define(`NCX_PUT1F',dnl
 `dnl
 static int
-APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip, void *fillp)
 {
     int err=NC_NOERR;
     ix_$1 xx;
@@ -681,7 +677,7 @@ dnl
 define(`NCX_PUT1I',dnl
 `dnl
 static int
-APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip, void *fillp)
 {
     int err=NC_NOERR;
 ifelse(`$3', `1',
@@ -778,7 +774,7 @@ NCX_GET1F(short, float)
 NCX_GET1F(short, double)
 
 static int
-APIPrefix`x_put_'NC_TYPE(short)_schar(void *xp, const schar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(short)_schar(void *xp, const schar *ip, void *fillp)
 {
 	uchar *cp = (uchar *) xp;
 	if (*ip & 0x80)
@@ -790,7 +786,7 @@ APIPrefix`x_put_'NC_TYPE(short)_schar(void *xp, const schar *ip FILL_ARG)
 }
 
 static int
-APIPrefix`x_put_'NC_TYPE(short)_uchar(void *xp, const uchar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(short)_uchar(void *xp, const uchar *ip, void *fillp)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0;
@@ -866,7 +862,7 @@ NCX_GET1F(ushort, float)
 NCX_GET1F(ushort, double)
 
 static int
-APIPrefix`x_put_'NC_TYPE(ushort)_schar(void *xp, const schar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(ushort)_schar(void *xp, const schar *ip, void *fillp)
 {
     int err=NC_NOERR;
     uchar *cp;
@@ -891,7 +887,7 @@ ifdef(`ERANGE_FILL', `dnl
 }
 
 static int
-APIPrefix`x_put_'NC_TYPE(ushort)_uchar(void *xp, const uchar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(ushort)_uchar(void *xp, const uchar *ip, void *fillp)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0;
@@ -972,7 +968,7 @@ NCX_GET1F(int, float)
 NCX_GET1F(int, double)
 
 static int
-APIPrefix`x_put_'NC_TYPE(int)_schar(void *xp, const schar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(int)_schar(void *xp, const schar *ip, void *fillp)
 {
 	uchar *cp = (uchar *) xp;
 	if (*ip & 0x80)
@@ -992,7 +988,7 @@ APIPrefix`x_put_'NC_TYPE(int)_schar(void *xp, const schar *ip FILL_ARG)
 }
 
 static int
-APIPrefix`x_put_'NC_TYPE(int)_uchar(void *xp, const uchar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(int)_uchar(void *xp, const uchar *ip, void *fillp)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0x00;
@@ -1072,7 +1068,7 @@ NCX_GET1F(uint, float)
 NCX_GET1F(uint, double)
 
 static int
-APIPrefix`x_put_'NC_TYPE(uint)_schar(void *xp, const schar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(uint)_schar(void *xp, const schar *ip, void *fillp)
 {
     uchar *cp;
     if (*ip < 0) {
@@ -1094,7 +1090,7 @@ ifdef(`ERANGE_FILL', `dnl
 }
 
 static int
-APIPrefix`x_put_'NC_TYPE(uint)_uchar(void *xp, const uchar *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(uint)_uchar(void *xp, const uchar *ip, void *fillp)
 {
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0x00;
@@ -1530,7 +1526,7 @@ put_ix_float(void *xp, const float *ip)
 
 #if X_SIZEOF_FLOAT != SIZEOF_FLOAT || defined(NO_IEEE_FLOAT)
 static int
-APIPrefix`x_get_'NC_TYPE(float)_float(const void *xp, float *ip FILL_ARG)
+APIPrefix`x_get_'NC_TYPE(float)_float(const void *xp, float *ip, void *fillp)
 {
 	/* TODO */
 	get_ix_float(xp, ip);
@@ -1553,7 +1549,7 @@ NCX_GET1F(float, ulonglong)
 
 #if X_SIZEOF_FLOAT != SIZEOF_FLOAT || defined(NO_IEEE_FLOAT)
 static int
-APIPrefix`x_put_'NC_TYPE(float)_float(void *xp, const float *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(float)_float(void *xp, const float *ip, void *fillp)
 {
     int err=NC_NOERR;
     float *_ip=ip;
@@ -1890,7 +1886,7 @@ APIPrefix`x_get_'NC_TYPE(double)_float(const void *xp, float *ip, float fillv)
 
 #if X_SIZEOF_DOUBLE != SIZEOF_DOUBLE  || defined(NO_IEEE_FLOAT)
 static int
-APIPrefix`x_get_'NC_TYPE(double)_double(const void *xp, double *ip FILL_ARG)
+APIPrefix`x_get_'NC_TYPE(double)_double(const void *xp, double *ip, void *fillp)
 {
 	/* TODO */
 	get_ix_double(xp, ip);
@@ -1909,7 +1905,7 @@ NCX_PUT1F(double, longlong)
 NCX_PUT1F(double, ulonglong)
 
 static int
-APIPrefix`x_put_'NC_TYPE(double)_float(void *xp, const float *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(double)_float(void *xp, const float *ip, void *fillp)
 {
     int err=NC_NOERR;
     double xx;
@@ -1927,7 +1923,7 @@ APIPrefix`x_put_'NC_TYPE(double)_float(void *xp, const float *ip FILL_ARG)
 
 #if X_SIZEOF_DOUBLE != SIZEOF_DOUBLE  || defined(NO_IEEE_FLOAT)
 static int
-APIPrefix`x_put_'NC_TYPE(double)_double(void *xp, const double *ip FILL_ARG)
+APIPrefix`x_put_'NC_TYPE(double)_double(void *xp, const double *ip, void *fillp)
 {
     int err=NC_NOERR;
     double *_ip = ip;
@@ -2581,7 +2577,7 @@ dnl
 define(`NCX_PUTN_BYTE',dnl
 `dnl
 int
-APIPrefix`x_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp, void *fillp)
 {
     int status = NC_NOERR;
     $1 *xp = ($1 *) *xpp;
@@ -2606,7 +2602,7 @@ dnl
 define(`NCX_PAD_PUTN_BYTE',dnl
 `dnl
 int
-APIPrefix`x_pad_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp FILL_ARG)
+APIPrefix`x_pad_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp, void *fillp)
 {
     int status = NC_NOERR;
     IntType rndup = nelems % X_ALIGN;
@@ -2640,7 +2636,7 @@ dnl
 define(`NCX_PUTN',dnl
 `dnl
 int
-APIPrefix`x_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp, void *fillp)
 {
 `#'if defined(_SX) && _SX != 0 && Xsizeof($1) == Isizeof($1)
 
@@ -2712,7 +2708,7 @@ ifelse( $1$2, intfloat,dnl
 
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
-		int lstatus = APIPrefix`x_put_'NC_TYPE($1)_$2(xp, tp XFILL);
+		int lstatus = APIPrefix`x_put_'NC_TYPE($1)_$2(xp, tp, fillp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -2729,7 +2725,7 @@ dnl
 define(`NCX_PAD_PUTN_SHORT',dnl
 `dnl
 int
-APIPrefix`x_pad_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp FILL_ARG)
+APIPrefix`x_pad_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp, void *fillp)
 {
 	const IntType rndup = nelems % X_SIZEOF_SHORT;
 
@@ -2738,7 +2734,7 @@ APIPrefix`x_pad_putn_'NC_TYPE($1)_$2(void **xpp, IntType nelems, const $2 *tp FI
 
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
-		int lstatus = APIPrefix`x_put_'NC_TYPE($1)_$2(xp, tp XFILL);
+		int lstatus = APIPrefix`x_put_'NC_TYPE($1)_$2(xp, tp, fillp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -2798,7 +2794,7 @@ NCX_PAD_GETN_BYTE(schar, ulonglong)
 
 dnl NCX_PUTN_BYTE(schar, schar)
 int
-APIPrefix`x_putn_'NC_TYPE(schar)_schar(void **xpp, IntType nelems, const schar *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(schar)_schar(void **xpp, IntType nelems, const schar *tp, void *fillp)
 {
 	NCX_PUTN_Byte_Body
 }
@@ -2815,7 +2811,7 @@ NCX_PUTN_BYTE(schar, ulonglong)
 
 dnl NCX_PAD_PUTN_BYTE(schar, schar)
 int
-APIPrefix`x_pad_putn_'NC_TYPE(schar)_schar(void **xpp, IntType nelems, const schar *tp FILL_ARG)
+APIPrefix`x_pad_putn_'NC_TYPE(schar)_schar(void **xpp, IntType nelems, const schar *tp, void *fillp)
 {
 	NCX_PAD_PUTN_Byte_Body
 }
@@ -2908,7 +2904,7 @@ NCX_PAD_GETN_BYTE(uchar, ulonglong)
 
 dnl NCX_PUTN_BYTE(uchar, schar)
 int
-APIPrefix`x_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *tp, void *fillp)
 {
     int status = NC_NOERR;
     uchar *xp = (uchar *) *xpp;
@@ -2927,7 +2923,7 @@ APIPrefix`x_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *
 }
 dnl NCX_PUTN_BYTE(uchar, uchar)
 int
-APIPrefix`x_putn_'NC_TYPE(uchar)_uchar(void **xpp, IntType nelems, const uchar *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(uchar)_uchar(void **xpp, IntType nelems, const uchar *tp, void *fillp)
 {
 	NCX_PUTN_Byte_Body
 }
@@ -2943,7 +2939,7 @@ NCX_PUTN_BYTE(uchar, ulonglong)
 
 dnl NCX_PAD_PUTN_BYTE(uchar, schar)
 int
-APIPrefix`x_pad_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *tp FILL_ARG)
+APIPrefix`x_pad_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const schar *tp, void *fillp)
 {
     int status = NC_NOERR;
     IntType rndup = nelems % X_ALIGN;
@@ -2970,7 +2966,7 @@ APIPrefix`x_pad_putn_'NC_TYPE(uchar)_schar(void **xpp, IntType nelems, const sch
 }
 dnl NCX_PAD_PUTN_UCHAR(uchar, uchar)
 int
-APIPrefix`x_pad_putn_'NC_TYPE(uchar)_uchar(void **xpp, IntType nelems, const uchar *tp FILL_ARG)
+APIPrefix`x_pad_putn_'NC_TYPE(uchar)_uchar(void **xpp, IntType nelems, const uchar *tp, void *fillp)
 {
 	NCX_PAD_PUTN_Byte_Body
 }
@@ -3028,7 +3024,7 @@ NCX_PAD_GETN_SHORT(short, ushort)
 #if X_SIZEOF_SHORT == SIZEOF_SHORT
 /* optimized version */
 int
-APIPrefix`x_putn_'NC_TYPE(short)_short(void **xpp, IntType nelems, const short *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(short)_short(void **xpp, IntType nelems, const short *tp, void *fillp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_SHORT);
@@ -3109,7 +3105,7 @@ NCX_PAD_GETN_SHORT(ushort, ulonglong)
 #if X_SIZEOF_USHORT == SIZEOF_USHORT
 /* optimized version */
 int
-APIPrefix`x_putn_'NC_TYPE(ushort)_ushort(void **xpp, IntType nelems, const unsigned short *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(ushort)_ushort(void **xpp, IntType nelems, const unsigned short *tp, void *fillp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_USHORT);
@@ -3178,7 +3174,7 @@ NCX_GETN(int, ulonglong)
 #if X_SIZEOF_INT == SIZEOF_INT
 /* optimized version */
 int
-APIPrefix`x_putn_'NC_TYPE(int)_int(void **xpp, IntType nelems, const int *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(int)_int(void **xpp, IntType nelems, const int *tp, void *fillp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_INT);
@@ -3234,7 +3230,7 @@ NCX_GETN(uint, ulonglong)
 #if X_SIZEOF_UINT == SIZEOF_UINT
 /* optimized version */
 int
-APIPrefix`x_putn_'NC_TYPE(uint)_uint(void **xpp, IntType nelems, const unsigned int *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(uint)_uint(void **xpp, IntType nelems, const unsigned int *tp, void *fillp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_UINT);
@@ -3298,7 +3294,7 @@ APIPrefix`x_getn_'NC_TYPE(float)_float(const void **xpp, IntType nelems, float *
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
-		const int lstatus = APIPrefix`x_get_'NC_TYPE(float)_float(xp, tp XFILL);
+		const int lstatus = APIPrefix`x_get_'NC_TYPE(float)_float(xp, tp, fillp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3320,7 +3316,7 @@ NCX_GETN(float, uint)
 NCX_GETN(float, ulonglong)
 
 int
-APIPrefix`x_putn_'NC_TYPE(float)_float(void **xpp, IntType nelems, const float *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(float)_float(void **xpp, IntType nelems, const float *tp, void *fillp)
 #if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
 /* optimized version */
 {
@@ -3349,7 +3345,7 @@ APIPrefix`x_putn_'NC_TYPE(float)_float(void **xpp, IntType nelems, const float *
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++) {
-		int lstatus = APIPrefix`x_put_'NC_TYPE(float)_float(xp, tp XFILL);
+		int lstatus = APIPrefix`x_put_'NC_TYPE(float)_float(xp, tp, fillp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3408,7 +3404,7 @@ APIPrefix`x_getn_'NC_TYPE(double)_double(const void **xpp, IntType nelems, doubl
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
-		const int lstatus = APIPrefix`x_get_'NC_TYPE(double)_double(xp, tp XFILL);
+		const int lstatus = APIPrefix`x_get_'NC_TYPE(double)_double(xp, tp, fillp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3431,7 +3427,7 @@ NCX_GETN(double, ulonglong)
 #if X_SIZEOF_DOUBLE == SIZEOF_DOUBLE && !defined(NO_IEEE_FLOAT)
 /* optimized version */
 int
-APIPrefix`x_putn_'NC_TYPE(double)_double(void **xpp, IntType nelems, const double *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(double)_double(void **xpp, IntType nelems, const double *tp, void *fillp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_DOUBLE);
@@ -3443,7 +3439,7 @@ APIPrefix`x_putn_'NC_TYPE(double)_double(void **xpp, IntType nelems, const doubl
 }
 #elif defined(vax) && vax != 0
 int
-APIPrefix`x_putn_'NC_TYPE(double)_double(void **xpp, IntType ndoubles, const double *ip FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(double)_double(void **xpp, IntType ndoubles, const double *ip, void *fillp)
 {
 	const double *const end = ip + ndoubles;
 
@@ -3458,14 +3454,14 @@ PUT_VAX_DDOUBLE_Body(`(*xpp)')
 	/* vax */
 #else
 int
-APIPrefix`x_putn_'NC_TYPE(double)_double(void **xpp, IntType nelems, const double *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(double)_double(void **xpp, IntType nelems, const double *tp, void *fillp)
 {
 	char *xp = *xpp;
 	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
-		int lstatus = APIPrefix`x_put_'NC_TYPE(double)_double(xp, tp XFILL);
+		int lstatus = APIPrefix`x_put_'NC_TYPE(double)_double(xp, tp, fillp);
 		if (status == NC_NOERR) /* report the first encountered error */
 			status = lstatus;
 	}
@@ -3518,7 +3514,7 @@ NCX_GETN(int64, ulonglong)
 #if X_SIZEOF_INT64 == SIZEOF_LONGLONG
 /* optimized version */
 int
-APIPrefix`x_putn_'NC_TYPE(int64)_longlong(void **xpp, IntType nelems, const long long *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(int64)_longlong(void **xpp, IntType nelems, const long long *tp, void *fillp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_INT64);
@@ -3574,7 +3570,7 @@ NCX_GETN(uint64, uint)
 #if X_SIZEOF_UINT64 == SIZEOF_ULONGLONG
 /* optimized version */
 int
-APIPrefix`x_putn_'NC_TYPE(uint64)_ulonglong(void **xpp, IntType nelems, const unsigned long long *tp FILL_ARG)
+APIPrefix`x_putn_'NC_TYPE(uint64)_ulonglong(void **xpp, IntType nelems, const unsigned long long *tp, void *fillp)
 {
 #ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_UINT64);
