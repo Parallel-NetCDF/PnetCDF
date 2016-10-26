@@ -10,7 +10,7 @@
  * This program tests whether NC_ERANGE error code can be reported correctly.
  * Note in CDF-1 and CDF-2, a special case is made to NOT report NC_ERANGE
  * when the variable is of NC_BYTE type and the calling APIs are of uchar. See
- * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+ * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
  *
  * In CDF-5, NC_ERANGE is checked for when the external data type mismatches the
  * internal one.
@@ -50,7 +50,7 @@ int test_cdf2(char *filename)
 
     /* for CDF-1 and CDF-2, a special case is made: there is no NC_ERANGE
      * error can occur converting between NC_BYTE and unsigned char.
-     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+     * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
      * In brief, NC_BYTE is signed in all signed CDF-2 APIs, and unsigned in
      * all unsigned APIs. In CDF-2, there is only one unsigned API, _uchar.
      */
