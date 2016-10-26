@@ -624,6 +624,12 @@ ncmpi_def_var(int         ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
 
+    /* check whether file's write permission */
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
+
     /* check if called in define mode */
     if (!NC_indef(ncp)) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
@@ -1120,7 +1126,7 @@ err_check:
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         if (err == NC_NOERR && strcmp(root_name, newname))
-            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_NAME)
 
         /* check if varid is consistent across all processes */
         root_varid = varid;
