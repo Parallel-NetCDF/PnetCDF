@@ -1022,7 +1022,7 @@ TestFunc(att)_$1(AttVarArgs)
 		    /* netCDF specification make a special case for type
 		     * conversion between uchar and scahr: do not check for
 		     * range error. See
-		     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+		     * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
                      */
 		    IfCheckTextChar($1, ATT_TYPE(i,j))
 		    ifelse(`$1',`uchar', `if (cdf_format > NC_FORMAT_64BIT_OFFSET || (cdf_format < NC_FORMAT_CDF5 && ATT_TYPE(i,j) != NC_BYTE))')

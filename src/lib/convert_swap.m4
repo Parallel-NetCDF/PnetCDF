@@ -93,7 +93,7 @@ ncmpii_mpi2nctype(MPI_Datatype itype)
 /*----< ncmpii_need_convert() >----------------------------------------------*/
 /* netCDF specification makes a special case for type conversion between
  * uchar and NC_BYTE: do not check for range error. See
- * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+ * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
  */
 inline int
 ncmpii_need_convert(int          format, /* 1, 2, or 5 (CDF format number) */
@@ -337,7 +337,7 @@ PUTN_XTYPE(NC_UINT64)
 /* In CDF-2, NC_BYTE is considered a signed 1-byte integer in signed APIs, and
  * unsigned 1-byte integer in unsigned APIs. In CDF-5, NC_BYTE is always a
  * signed 1-byte integer. See
- * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+ * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
  */
 PUTN_XTYPE(NC_BYTE)
 
@@ -400,7 +400,7 @@ GETN_XTYPE(NC_UINT64)
 /* In CDF-2, NC_BYTE is considered a signed 1-byte integer in signed APIs, and
  * unsigned 1-byte integer in unsigned APIs. In CDF-5, NC_BYTE is always a
  * signed 1-byte integer. See
- * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+ * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
  */
 GETN_XTYPE(NC_BYTE)
 
