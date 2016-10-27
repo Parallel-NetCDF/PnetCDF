@@ -307,7 +307,7 @@ dnl
 define(`CONV_GET_XTYPE_ITYPE',dnl
 `dnl
 extern int
-ncmpix_$1_$2_$3(const void **xpp, MPI_Offset nelems, $3 *ip, $3 fillv);
+ncmpix_$1_$2_$3(const void **xpp, MPI_Offset nelems, $3 *ip);
 ')dnl
 dnl
 dnl CONV_PUT_XTYPE_ITYPE(op, xtype, itype)

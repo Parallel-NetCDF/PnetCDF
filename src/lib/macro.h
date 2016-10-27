@@ -117,7 +117,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 }
 #endif
 
-#define DATATYPE_GET_CONVERT(cdf_ver,xtype,xbuf,ibuf,bnelems,itype,fillp,err) {\
+#define DATATYPE_GET_CONVERT(cdf_ver,xtype,xbuf,ibuf,bnelems,itype,err) {     \
     /* xtype is the NC variable's external data type stored in the nc file    \
      * itype (internal type) is the user I/O buffer data type (MPI_Datatype)  \
      * xbuf is the buffer containing the data read from the nc file in the    \
@@ -125,34 +125,34 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
      * into user buffer, ibuf */                                              \
     switch(xtype) {                                                           \
         case NC_BYTE:                                                         \
-            err = ncmpii_x_getn_NC_BYTE(cdf_ver,xbuf,ibuf,bnelems,itype,fillp);\
+            err = ncmpii_x_getn_NC_BYTE(cdf_ver,xbuf,ibuf,bnelems,itype);     \
             break;                                                            \
         case NC_UBYTE:                                                        \
-            err = ncmpii_x_getn_NC_UBYTE(xbuf,ibuf,bnelems,itype,fillp);      \
+            err = ncmpii_x_getn_NC_UBYTE(xbuf,ibuf,bnelems,itype);            \
             break;                                                            \
         case NC_SHORT:                                                        \
-            err = ncmpii_x_getn_NC_SHORT(xbuf,ibuf,bnelems,itype,fillp);      \
+            err = ncmpii_x_getn_NC_SHORT(xbuf,ibuf,bnelems,itype);            \
             break;                                                            \
         case NC_USHORT:                                                       \
-            err = ncmpii_x_getn_NC_USHORT(xbuf,ibuf,bnelems,itype,fillp);     \
+            err = ncmpii_x_getn_NC_USHORT(xbuf,ibuf,bnelems,itype);           \
             break;                                                            \
         case NC_INT:                                                          \
-            err = ncmpii_x_getn_NC_INT(xbuf,ibuf,bnelems,itype,fillp);        \
+            err = ncmpii_x_getn_NC_INT(xbuf,ibuf,bnelems,itype);              \
             break;                                                            \
         case NC_UINT:                                                         \
-            err = ncmpii_x_getn_NC_UINT(xbuf,ibuf,bnelems,itype,fillp);       \
+            err = ncmpii_x_getn_NC_UINT(xbuf,ibuf,bnelems,itype);             \
             break;                                                            \
         case NC_FLOAT:                                                        \
-            err = ncmpii_x_getn_NC_FLOAT(xbuf,ibuf,bnelems,itype,fillp);      \
+            err = ncmpii_x_getn_NC_FLOAT(xbuf,ibuf,bnelems,itype);            \
             break;                                                            \
         case NC_DOUBLE:                                                       \
-            err = ncmpii_x_getn_NC_DOUBLE(xbuf,ibuf,bnelems,itype,fillp);     \
+            err = ncmpii_x_getn_NC_DOUBLE(xbuf,ibuf,bnelems,itype);           \
             break;                                                            \
         case NC_INT64:                                                        \
-            err = ncmpii_x_getn_NC_INT64(xbuf,ibuf,bnelems,itype,fillp);      \
+            err = ncmpii_x_getn_NC_INT64(xbuf,ibuf,bnelems,itype);            \
             break;                                                            \
         case NC_UINT64:                                                       \
-            err = ncmpii_x_getn_NC_UINT64(xbuf,ibuf,bnelems,itype,fillp);     \
+            err = ncmpii_x_getn_NC_UINT64(xbuf,ibuf,bnelems,itype);           \
             break;                                                            \
         default:                                                              \
             err = NC_EBADTYPE;                                                \
