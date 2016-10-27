@@ -15,7 +15,8 @@ This is essentially a placeholder for the next release note ...
       http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
 
   o New APIs
-    * none
+    * ncmpi_strerrno, nfmpi_strerrno, nf90mpi_strerrno return the string name
+      of a NC error code.
 
   o Syntax changes
     * ncmpi_cancel can now be called in define mode.

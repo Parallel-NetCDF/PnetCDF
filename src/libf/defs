@@ -2402,6 +2402,7 @@ sub blankpad_out_ftoc {
 # ---------------------------------------------------------------------------
 # Functions to add routines that need special handling
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";
+$ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerrno";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxinqlibvers";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfissyserr";
@@ -2419,6 +2420,28 @@ sub ncfxstrerror {
     &print_args( $OUTFD, $args, 0, "xstrerror" );
     print $OUTFD "{
     const char *p = ncmpi_strerror( *v1 );
+    size_t len = strlen(p);
+    /* d2 is the length of the string passed into the routine */
+    if (len > d2) len = d2;  /* MIN(len, d2) */
+    memcpy(v2, p, len);
+    /* Blank pad */
+    if (len < d2) memset(v2+len, ' ', d2-len);
+    return 0;
+}\n";
+    close ($OUTFD);
+}
+
+sub ncfxstrerrno {
+    $OUTFD = "NCFXSTRERRNOFD";
+    open( $OUTFD, ">xstrerrnof.c" ) || die "Cannot open xstrerrnof.c\n";
+    $out_prefix = "nfmpi_";
+    $files[$#files+1] = "xstrerrnof.c";
+    $args = "int *, char *";
+    &print_header( "ncfmpi_xstrerrno", "xstrerrno", $args );
+    &print_routine_type_decl( $OUTFD, "xstrerrno" );
+    &print_args( $OUTFD, $args, 0, "xstrerrno" );
+    print $OUTFD "{
+    const char *p = ncmpi_strerrno( *v1 );
     size_t len = strlen(p);
     /* d2 is the length of the string passed into the routine */
     if (len > d2) len = d2;  /* MIN(len, d2) */

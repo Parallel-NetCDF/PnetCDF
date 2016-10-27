@@ -713,9 +713,11 @@
 !
       character*80  nfmpi_inq_libvers
       character*80  nfmpi_strerror
+      character*80  nfmpi_strerrno
 
       external      nfmpi_inq_libvers
       external      nfmpi_strerror
+      external      nfmpi_strerrno
 
       logical       nfmpi_issyserr
       external      nfmpi_issyserr

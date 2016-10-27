@@ -609,6 +609,8 @@ by the desired type. */
 
 const char* ncmpi_strerror(int err);
 
+const char* ncmpi_strerrno(int err);
+
 /* Begin File Functions */
 
 int ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp);

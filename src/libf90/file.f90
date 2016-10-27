@@ -29,6 +29,13 @@ function nf90mpi_strerror(ncerr)
   nf90mpi_strerror = nfmpi_strerror(ncerr)
 end function nf90mpi_strerror
 ! -------
+function nf90mpi_strerrno(ncerr)
+  integer, intent( in) :: ncerr
+  character(len = 80)  :: nf90mpi_strerrno
+
+  nf90mpi_strerrno = nfmpi_strerrno(ncerr)
+end function nf90mpi_strerrno
+! -------
 !
 ! File level control routines:
 !
