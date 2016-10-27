@@ -585,22 +585,15 @@ mpi_io:
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         if (need_convert) {
-            void *fillp; /* fill value in internal representation */
-
             /* xbuf cannot be buf, but cbuf can */
             if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL)
                 cbuf = buf; /* vars call and buftype is contiguous */
             else
                 cbuf = NCI_Malloc((size_t)insize);
 
-            /* find the default fill value */
-            fillp = NCI_Malloc((size_t)el_size);
-            ncmpii_inq_default_fill_value(ncmpii_mpi2nctype(ptype), fillp);
-
             /* type conversion + byte-swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(ncp->format, varp->type, xbuf, cbuf, bnelems,
-                                 ptype, fillp, err)
-            NCI_Free(fillp);
+                                 ptype, err)
 
             /* retain the first error status */
             if (status == NC_NOERR) status = err;

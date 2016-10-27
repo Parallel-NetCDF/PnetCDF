@@ -353,36 +353,35 @@ ncmpii_x_getn_$1(ifelse(`$1',`NC_BYTE',`int cdf_ver,/* 1,2,or 5 CDF format */')
               const void   *xp,     /* buffer of external type $1 */
               void         *ip,     /* user buffer of internal type, itype */
               MPI_Offset    nelems,
-              MPI_Datatype  itype,  /* internal data type (MPI_Datatype) */
-              void         *fillp)  /* in internal representation */
+              MPI_Datatype  itype)  /* internal data type (MPI_Datatype) */
 {
     if (itype == MPI_CHAR || itype == MPI_SIGNED_CHAR)
         /* This is for 1-byte integer, assuming ECHAR has been checked before */
-        return ncmpix_getn_$1_schar(&xp, nelems, (signed char*)ip, *(schar*)fillp);
+        return ncmpix_getn_$1_schar(&xp, nelems, (signed char*)ip);
     else if (itype == MPI_UNSIGNED_CHAR) {
         ifelse(`$1',`NC_BYTE',`if (cdf_ver < 5)
-            return ncmpix_getn_NC_UBYTE_uchar(&xp, nelems,(uchar*)ip, *(uchar*)fillp);
+            return ncmpix_getn_NC_UBYTE_uchar(&xp, nelems,(uchar*)ip);
         else')
-            return ncmpix_getn_$1_uchar(&xp, nelems,      (uchar*)ip, *(uchar*)fillp);
+            return ncmpix_getn_$1_uchar(&xp, nelems,      (uchar*)ip);
     }
     else if (itype == MPI_SHORT)
-        return ncmpix_getn_$1_short    (&xp, nelems,      (short*)ip, *(short*)fillp);
+        return ncmpix_getn_$1_short    (&xp, nelems,      (short*)ip);
     else if (itype == MPI_UNSIGNED_SHORT)
-        return ncmpix_getn_$1_ushort   (&xp, nelems,     (ushort*)ip, *(ushort*)fillp);
+        return ncmpix_getn_$1_ushort   (&xp, nelems,     (ushort*)ip);
     else if (itype == MPI_INT)
-        return ncmpix_getn_$1_int      (&xp, nelems,        (int*)ip, *(int*)fillp);
+        return ncmpix_getn_$1_int      (&xp, nelems,        (int*)ip);
     else if (itype == MPI_UNSIGNED)
-        return ncmpix_getn_$1_uint     (&xp, nelems,       (uint*)ip, *(uint*)fillp);
+        return ncmpix_getn_$1_uint     (&xp, nelems,       (uint*)ip);
     else if (itype == MPI_LONG)
-        return ncmpix_getn_$1_long     (&xp, nelems,       (long*)ip, *(long*)fillp);
+        return ncmpix_getn_$1_long     (&xp, nelems,       (long*)ip);
     else if (itype == MPI_FLOAT)
-        return ncmpix_getn_$1_float    (&xp, nelems,      (float*)ip, *(float*)fillp);
+        return ncmpix_getn_$1_float    (&xp, nelems,      (float*)ip);
     else if (itype == MPI_DOUBLE)
-        return ncmpix_getn_$1_double   (&xp, nelems,     (double*)ip, *(double*)fillp);
+        return ncmpix_getn_$1_double   (&xp, nelems,     (double*)ip);
     else if (itype == MPI_LONG_LONG_INT)
-        return ncmpix_getn_$1_longlong (&xp, nelems,   (longlong*)ip, *(longlong*)fillp);
+        return ncmpix_getn_$1_longlong (&xp, nelems,   (longlong*)ip);
     else if (itype == MPI_UNSIGNED_LONG_LONG)
-        return ncmpix_getn_$1_ulonglong(&xp, nelems,  (ulonglong*)ip, *(ulonglong*)fillp);
+        return ncmpix_getn_$1_ulonglong(&xp, nelems,  (ulonglong*)ip);
     DEBUG_RETURN_ERROR(NC_EBADTYPE)
 }
 ')dnl

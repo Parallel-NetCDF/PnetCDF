@@ -1022,7 +1022,6 @@ ncmpi_get_att_$1(int             ncid,
     NC_attrarray   *ncap=NULL;
     const void     *xp;
     MPI_Offset      nelems;
-    FUNC2ITYPE($1)  fill; /* fill value in internal representation */
 
     /* get the file ID */
     err = ncmpii_NC_check_id(ncid, &ncp);
@@ -1053,38 +1052,32 @@ ncmpi_get_att_$1(int             ncid,
 
     xp = attrp->xvalue;
 
-    /* find the fill value */
-    err = ncmpii_inq_default_fill_value(NC_TYPE($1), &fill);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
     switch(attrp->type) {
         case NC_BYTE:
             ifelse(`$1',`uchar',
            `if (ncp->format < 5) { /* no NC_ERANGE check */
-                err = ncmpii_inq_default_fill_value(NC_UBYTE, &fill);
-                if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
                 /* note this is not ncmpix_getn_NC_BYTE_$1 */
-                return ncmpix_pad_getn_NC_UBYTE_$1(&xp, nelems, buf, fill);
+                return ncmpix_pad_getn_NC_UBYTE_$1(&xp, nelems, buf);
             } else')
-                return ncmpix_pad_getn_NC_BYTE_$1 (&xp, nelems, buf, fill);
+                return ncmpix_pad_getn_NC_BYTE_$1 (&xp, nelems, buf);
         case NC_UBYTE:
-            return ncmpix_pad_getn_NC_UBYTE_$1 (&xp, nelems, buf, fill);
+            return ncmpix_pad_getn_NC_UBYTE_$1 (&xp, nelems, buf);
         case NC_SHORT:
-            return ncmpix_pad_getn_NC_SHORT_$1 (&xp, nelems, buf, fill);
+            return ncmpix_pad_getn_NC_SHORT_$1 (&xp, nelems, buf);
         case NC_USHORT:
-            return ncmpix_pad_getn_NC_USHORT_$1(&xp, nelems, buf, fill);
+            return ncmpix_pad_getn_NC_USHORT_$1(&xp, nelems, buf);
         case NC_INT:
-            return ncmpix_getn_NC_INT_$1   (&xp, nelems, buf, fill);
+            return ncmpix_getn_NC_INT_$1   (&xp, nelems, buf);
         case NC_UINT:
-            return ncmpix_getn_NC_UINT_$1  (&xp, nelems, buf, fill);
+            return ncmpix_getn_NC_UINT_$1  (&xp, nelems, buf);
         case NC_FLOAT:
-            return ncmpix_getn_NC_FLOAT_$1 (&xp, nelems, buf, fill);
+            return ncmpix_getn_NC_FLOAT_$1 (&xp, nelems, buf);
         case NC_DOUBLE:
-            return ncmpix_getn_NC_DOUBLE_$1(&xp, nelems, buf, fill);
+            return ncmpix_getn_NC_DOUBLE_$1(&xp, nelems, buf);
         case NC_INT64:
-            return ncmpix_getn_NC_INT64_$1 (&xp, nelems, buf, fill);
+            return ncmpix_getn_NC_INT64_$1 (&xp, nelems, buf);
         case NC_UINT64:
-            return ncmpix_getn_NC_UINT64_$1(&xp, nelems, buf, fill);
+            return ncmpix_getn_NC_UINT64_$1(&xp, nelems, buf);
         case NC_CHAR:
             return NC_ECHAR; /* NC_ECHAR already checked earlier */
         default:
