@@ -26,6 +26,7 @@ ld_netcdf = -L../lib -lpnetcdf
 UTIL_SRCS = issyserrf.c \
 	nfxutil.c \
 	xstrerrorf.c \
+	xstrerrnof.c \
 	xinq_libversf.c
 
 C2F_SRCS = createf.c \
@@ -355,7 +356,7 @@ C2F_SRCS = createf.c \
 
 LIB_CSRCS = $(C2F_SRCS) $(UTIL_SRCS)
 
-LIB_FSRCS = strerrorf.f inq_libversf.f
+LIB_FSRCS = strerrorf.f strerrnof.f inq_libversf.f
 
 PACKING_LIST = $(LIB_FSRCS) \
 	       nfconfig_inc.in \

@@ -623,7 +623,10 @@ nc_strerror(int ncerr1)
 }
 /** \} */
 
-char* ncmpii_err_code_name(int err)
+/*----< ncmpi_strerrno() >---------------------------------------------------*/
+/* print the NC error code name */
+const char *
+ncmpi_strerrno(int err)
 {
     static char unknown_str[32];
 

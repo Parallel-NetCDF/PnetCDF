@@ -16,6 +16,10 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncerr
     END FUNCTION   nfmpi_strerror
 
+    character(LEN=80) FUNCTION nfmpi_strerrno(ncerr)
+                            INTEGER,                       INTENT(IN)  :: ncerr
+    END FUNCTION   nfmpi_strerrno
+
     logical        FUNCTION nfmpi_issyserr(ncerr)
                             INTEGER,                       INTENT(IN)  :: ncerr
     END FUNCTION   nfmpi_issyserr

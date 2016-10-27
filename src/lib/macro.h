@@ -44,7 +44,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
         int _rank;                                                      \
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
-        _rank,ncmpii_err_code_name(err),__LINE__,__func__,__FILE__);    \
+        _rank,ncmpi_strerrno(err),__LINE__,__func__,__FILE__);          \
     }                                                                   \
     return err;                                                         \
 }
@@ -54,7 +54,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
         int _rank;                                                      \
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
-        _rank,ncmpii_err_code_name(err),__LINE__,__func__,__FILE__);    \
+        _rank,ncmpi_strerrno(err),__LINE__,__func__,__FILE__);          \
     }                                                                   \
     status = err;                                                       \
 }
@@ -64,7 +64,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
         int _rank;                                                      \
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
-        _rank,ncmpii_err_code_name(err),__LINE__,__func__,__FILE__);    \
+        _rank,ncmpi_strerrno(err),__LINE__,__func__,__FILE__);          \
     }                                                                   \
 }
 #else
