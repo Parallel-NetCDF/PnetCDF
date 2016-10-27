@@ -227,23 +227,6 @@ ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref);
 extern NC_dim *
 ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, int elem);
 
-extern int
-ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp);
-
-extern int
-ncmpi_rename_dim( int ncid, int dimid, const char *newname);
-
-extern int
-ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr);
-
-extern int
-ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep);
-
-extern int
-ncmpi_inq_dimname(int ncid, int dimid, char *name);
-
-extern int
-ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 /* End defined in dim.c */
 
 /*
@@ -295,84 +278,6 @@ ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref);
 extern NC_attr *
 ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem);
 
-extern int
-ncmpi_put_att_text(int ncid, int varid, const char *name,
-        MPI_Offset nelems, const char *value);
-
-extern int
-ncmpi_get_att_text(int ncid, int varid, const char *name, char *str);
-
-extern int
-ncmpi_put_att_schar(int ncid, int varid, const char *name,
-        nc_type type, MPI_Offset nelems, const signed char *value);
-
-extern int
-ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp);
-
-extern int
-ncmpi_put_att_uchar(int ncid, int varid, const char *name,
-        nc_type type, MPI_Offset nelems, const unsigned char *value);
-
-extern int
-ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp);
-
-extern int
-ncmpi_put_att_short(int ncid, int varid, const char *name,
-        nc_type type, MPI_Offset nelems, const short *value);
-
-extern int
-ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp);
-
-extern int
-ncmpi_put_att_int(int ncid, int varid, const char *name,
-        nc_type type, MPI_Offset nelems, const int *value);
-
-extern int
-ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp);
-
-extern int
-ncmpi_put_att_long(int ncid, int varid, const char *name,
-        nc_type type, MPI_Offset nelems, const long *value);
-
-extern int
-ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp);
-
-extern int
-ncmpi_put_att_float(int ncid, int varid, const char *name,
-        nc_type type, MPI_Offset nelems, const float *value);
-extern int
-ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp);
-extern int
-ncmpi_put_att_double(int ncid, int varid, const char *name,
-        nc_type type, MPI_Offset nelems, const double *value);
-extern int
-ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp);
-
-extern int
-ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump);
-
-extern int
-ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep);
-
-extern int
-ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp);
-
-extern int
-ncmpi_inq_att(int ncid, int varid, const char *name,
-        nc_type *datatypep, MPI_Offset *lenp);
-
-extern int
-ncmpi_copy_att(int ncid_in, int varid_in, const char *name,
-        int ncid_out, int ovarid);
-
-extern int
-ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname);
-
-extern int
-ncmpi_del_att(int ncid, int varid, const char *name);
-
-extern int
-ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
 /* End defined in attr.c */
 
 /*
@@ -439,37 +344,6 @@ ncmpii_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);
 extern int
 ncmpii_NC_lookupvar(NC *ncp, int varid, NC_var **varp);
 
-extern int
-ncmpi_def_var(int ncid, const char *name, nc_type type,
-        int ndims, const int *dimidsp, int *varidp);
-
-extern int
-ncmpi_rename_var(int ncid, int varid, const char *newname);
-
-extern int
-ncmpi_inq_var(int ncid, int varid, char *name, nc_type *typep,
-        int *ndimsp, int *dimids, int *nattsp);
-
-extern int
-ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr);
-
-extern int
-ncmpi_inq_varname(int ncid, int varid, char *name);
-
-extern int
-ncmpi_inq_vartype(int ncid, int varid, nc_type *typep);
-
-extern int
-ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
-
-extern int
-ncmpi_inq_vardimid(int ncid, int varid, int *dimids);
-
-extern int
-ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
-
-extern int
-ncmpi_rename_var(int ncid, int varid, const char *newname);
 /* End defined in var.c */
 
 #define IS_RECVAR(vp) \
@@ -672,30 +546,6 @@ ncmpii__enddef(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
 extern int
 ncmpii_close(NC *ncp);
 
-extern int
-ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
-
-extern int
-ncmpi_inq_ndims(int ncid, int *ndimsp);
-
-extern int
-ncmpi_inq_nvars(int ncid, int *nvarsp);
-
-extern int
-ncmpi_inq_natts(int ncid, int *nattsp);
-
-extern int
-ncmpi_inq_unlimdim(int ncid, int *xtendimp);
-
-extern int
-ncmpi_get_default_format(void);
-
-extern int
-ncmpi_inq_num_rec_vars(int ncid, int *nump);
-
-extern int
-ncmpi_inq_num_fix_vars(int ncid, int *nump);
-
 /* End defined in nc.c */
 
 #if 0
@@ -792,7 +642,6 @@ NC_computeshapes(NC *ncp);
 /* end defined in mpincio.h */
 
 /* begin defined in error.c */
-const char* ncmpi_strerror(int err);
 
 int ncmpii_handle_error(int mpi_errorcode, char *msg);
 
