@@ -157,7 +157,6 @@ hint indicates the chunk size (in bytes). The default is 256 KB.
 Can be use to check if the file exists.
 \returns ::NC_EMULTIDEFINE_OMODE Bad file create/open mode or modes are
 inconsistent across processes
-\returns ::NC_EOFILE: Can not open/create file (MPI-IO errors)
 \returns ::NC_EFILE: Unknown error in file operation
 
 <h1>Examples</h1>
