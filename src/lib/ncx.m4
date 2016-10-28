@@ -170,7 +170,13 @@ define(`FillDefaultValue', `ifelse(
 #define SIZEOF_UCHAR SIZEOF_UNSIGNED_CHAR
 #endif
 #ifndef SIZEOF_USHORT
+#ifdef  SIZEOF_UNSIGNED_SHORT_INT
 #define SIZEOF_USHORT SIZEOF_UNSIGNED_SHORT_INT
+#elif defined(SIZEOF_UNSIGNED_SHORT)
+#define SIZEOF_USHORT SIZEOF_UNSIGNED_SHORT
+#else
+#error "size of short is unknown"
+#endif
 #endif
 #ifndef SIZEOF_UINT
 #define SIZEOF_UINT SIZEOF_UNSIGNED_INT
@@ -178,8 +184,14 @@ define(`FillDefaultValue', `ifelse(
 #ifndef SIZEOF_LONGLONG
 #define SIZEOF_LONGLONG SIZEOF_LONG_LONG
 #endif
+#ifndef SIZEOF_INT64
+#define SIZEOF_INT64 SIZEOF_LONG_LONG
+#endif
 #ifndef SIZEOF_ULONGLONG
 #define SIZEOF_ULONGLONG SIZEOF_UNSIGNED_LONG_LONG
+#endif
+#ifndef SIZEOF_UINT64
+#define SIZEOF_UINT64 SIZEOF_UNSIGNED_LONG_LONG
 #endif
 
 /*
@@ -2267,7 +2279,7 @@ APIPrefix`x_get_uint32'(const void **xpp, uint *ip)
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
      * some system, such as HPUX */
-    (void) memcpy(ip, *xpp, X_SIZEOF_UINT);
+    (void) memcpy(ip, *xpp, SIZEOF_UINT);
 #else
     const uchar *cp = (const uchar *) *xpp;
 
@@ -2289,7 +2301,7 @@ APIPrefix`x_get_uint64'(const void **xpp, unsigned long long *llp)
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
      * some system, such as HPUX */
-    (void) memcpy(llp, *xpp, X_SIZEOF_UINT64);
+    (void) memcpy(llp, *xpp, SIZEOF_UINT64);
 #else
     const uchar *cp = (const uchar *) *xpp;
 
@@ -3089,7 +3101,7 @@ int
 APIPrefix`x_getn_'NC_TYPE(ushort)_ushort(const void **xpp, IntType nelems, unsigned short *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_UNSIGNED_SHORT);
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_USHORT);
 # else
 	swapn2b(tp, *xpp, nelems);
 # endif
