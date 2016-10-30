@@ -23,7 +23,7 @@ int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
 {
     unsigned int i, hash=0;
     for (i=0; i<strlen(str_name); ++i) {
-        hash += str_name[i];
+        hash += (unsigned int)str_name[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);
     }
@@ -47,8 +47,10 @@ int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
  */
 int ncmpii_additive_hash(const char *str_name)
 {
-    int i, hash=strlen(str_name);
-    for (i=0; i<strlen(str_name); ++i)
+    int i;
+    size_t len = strlen(str_name);
+    int hash = (int)len;
+    for (i=0; i<len; ++i)
         hash += str_name[i]; /* additive hash */
 
     return (hash % 251); /* 251 is the largest prime <= 255 */
@@ -56,9 +58,11 @@ int ncmpii_additive_hash(const char *str_name)
 
 int ncmpii_rotating_hash(const char *str_name)
 {
-    unsigned int i, hash=strlen(str_name);
-    for (i=0; i<strlen(str_name); ++i)
-        hash = (hash<<4)^(hash>>28)^str_name[i];
+    int i;
+    size_t len = strlen(str_name);
+    unsigned int hash = (unsigned int)len;
+    for (i=0; i<len; ++i)
+        hash = (hash<<4)^(hash>>28)^(unsigned int)str_name[i];
 
     /* below is a clever way to replace (hash % prime) */
     return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));
@@ -66,10 +70,12 @@ int ncmpii_rotating_hash(const char *str_name)
 
 int ncmpii_Bernstein_hash(const char *str_name)
 {
-    unsigned int i, hash=strlen(str_name);
-    for (i=0; i<strlen(str_name); ++i)
+    int i;
+    size_t len = strlen(str_name);
+    unsigned int hash = (unsigned int)len;
+    for (i=0; i<len; ++i)
         /* hash = 65*hash+str_name[i]; */
-        hash = hash+(hash<<6)+str_name[i];
+        hash = hash+(hash<<6)+(unsigned int)str_name[i];
 
     return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));
 }
@@ -97,7 +103,7 @@ int ncmpii_Pearson_hash(const char *str_name)
         149, 80, 170, 68, 6, 169, 234, 151
     };
     size_t i, len=strlen(str_name);
-    unsigned char hash = len;
+    unsigned char hash = (unsigned char)len;
     for (i=len; i>0; ) hash = T[hash ^ str_name[--i]];
     return (int)hash;
 #else

@@ -509,7 +509,8 @@ ncmpii_inq_var_fill(NC_var *varp,
                     void   *fill_value) /* OUT: user-defined or
                                                 default fill value */
 {
-    int i, nchars;
+    int i;
+    size_t nchars;
     NC_attrarray *attrs;
 
     assert(varp != NULL); /* NC_GLOBAL varid is illegal in this context */
@@ -630,13 +631,13 @@ fill_added_recs(NC *ncp, NC *old_ncp)
 static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
-    int i, j, k, rank, nprocs, start_vid, nsegs, recno;
+    int i, j, k, rank, nprocs, start_vid, recno;
     int nVarsFill, *blocklengths;
     int mpireturn, err, status=NC_NOERR;
     char *buf_ptr, *noFill;
     void *buf;
-    size_t buf_len;
-    MPI_Offset var_len, nrecs, start, *count;
+    size_t nsegs;
+    MPI_Offset buf_len, var_len, nrecs, start, *count;
     MPI_Aint *offset;
     MPI_Datatype filetype;
     MPI_File fh;
@@ -654,7 +655,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         nrecs = NC_get_numrecs(old_ncp);
     }
 
-    noFill = (char*) NCI_Malloc(ncp->vars.ndefined - start_vid);
+    noFill = (char*) NCI_Malloc((size_t)(ncp->vars.ndefined - start_vid));
     nVarsFill = 0;
 
 #ifdef _CHECK_FILL_MODE_CONSISTENCY
@@ -683,7 +684,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
 
     /* find the number of write segments (upper bound) */
-    nsegs = ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs;
+    nsegs = (size_t)(ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs);
     count  = (MPI_Offset*) NCI_Malloc(nsegs * sizeof(MPI_Offset));
     offset = (MPI_Aint*)   NCI_Malloc(nsegs * sizeof(MPI_Aint));
 
@@ -773,8 +774,8 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
 
     /* allocate one contiguous buffer space for all writes */
-    blocklengths = (int*) NCI_Malloc(j * sizeof(int));
-    buf = NCI_Malloc(buf_len);
+    blocklengths = (int*) NCI_Malloc((size_t)j * sizeof(int));
+    buf = NCI_Malloc((size_t)buf_len);
     buf_ptr = (char*)buf;
 
     /* fill write buffers for fixed-size variables first */
@@ -872,8 +873,12 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
                                 MPI_INFO_NULL);
     if (k > 0) MPI_Type_free(&filetype);
 
+    if (buf_len != (int)buf_len)
+        if (status == NC_NOERR)
+            status = NC_EINTOVERFLOW;
+
     /* write to variable collectively */
-    TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, buf_len, MPI_BYTE, &mpistatus);
+    TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, (int)buf_len, MPI_BYTE, &mpistatus);
 
     NCI_Free(buf);
 

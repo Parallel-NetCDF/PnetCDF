@@ -196,8 +196,8 @@ ncmpii_swapn(void       *dest_p,  /* destination array */
         const uint16_t *src  = (const uint16_t*) src_p;
         for (i=0; i<nelems; i++) {
             dest[i] = src[i];
-            dest[i] = ((dest[i] & 0xff) << 8) |
-                      ((dest[i] >> 8) & 0xff);
+            dest[i] = (uint16_t)((dest[i] & 0xff) << 8) |
+                                 ((dest[i] >> 8) & 0xff);
         }
     }
     else {
@@ -264,8 +264,8 @@ ncmpii_in_swapn(void       *buf,
     else if (esize == 2) {
         uint16_t *dest = (uint16_t*) buf;
         for (i=0; i<nelems; i++)
-            dest[i] = ((dest[i] & 0xff) << 8) |
-                      ((dest[i] >> 8) & 0xff);
+            dest[i] = (uint16_t)((dest[i] & 0xff) << 8) |
+                                ((dest[i] >> 8) & 0xff);
     }
     else {
         uchar tmp, *op = (uchar*)buf;

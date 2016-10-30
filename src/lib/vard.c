@@ -187,7 +187,7 @@ ncmpii_getput_vard(NC               *ncp,
 #endif
                 /* allocate cbuf and copy buf to cbuf, cbuf is to be freed */
                 cbuf = NCI_Malloc((size_t)filetype_size);
-                memcpy(cbuf, buf, filetype_size);
+                memcpy(cbuf, buf, (size_t)filetype_size);
             }
             /* perform array in-place byte swap on cbuf */
             ncmpii_in_swapn(cbuf, bnelems, ncmpix_len_nctype(varp->type));

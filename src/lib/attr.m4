@@ -1368,13 +1368,13 @@ err_check:
 
         /* check if buf contents is consistent across all processes */
         /* note xsz is aligned, thus must use the exact size of buf */
-        buf_size = root_nelems * sizeof(FUNC2ITYPE($1));
+        buf_size = (size_t)root_nelems * sizeof(FUNC2ITYPE($1));
         MPI_Comm_rank(ncp->nciop->comm, &rank);
         if (rank > 0)
             root_buf = (void*) NCI_Malloc(buf_size);
         else
             root_buf = (void*)buf;
-        TRACE_COMM(MPI_Bcast)(root_buf, buf_size, MPI_BYTE, 0, ncp->nciop->comm);
+        TRACE_COMM(MPI_Bcast)(root_buf, (int)buf_size, MPI_BYTE, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");

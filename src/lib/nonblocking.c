@@ -944,8 +944,8 @@ err_check:
 
         /* if at least one process has a non-zero request, all processes must
          * participate the collective read/write */
-        do_read    = do_io[0];
-        do_write   = do_io[1];
+        do_read    = (int)do_io[0];
+        do_write   = (int)do_io[1];
         newnumrecs = do_io[3];
     }
     else {
