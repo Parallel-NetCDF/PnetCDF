@@ -39,8 +39,8 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 
 #ifdef PNC_DEBUG
 #define DEBUG_RETURN_ERROR(err) {                                       \
-    char *env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");               \
-    if (env_str != NULL && *env_str != '0') {                           \
+    char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \
+    if (_env_str != NULL && *_env_str != '0') {                         \
         int _rank;                                                      \
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
@@ -49,8 +49,8 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     return err;                                                         \
 }
 #define DEBUG_ASSIGN_ERROR(status, err) {                               \
-    char *env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");               \
-    if (env_str != NULL && *env_str != '0') {                           \
+    char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \
+    if (_env_str != NULL && *_env_str != '0') {                         \
         int _rank;                                                      \
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
@@ -59,8 +59,8 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     status = err;                                                       \
 }
 #define DEBUG_TRACE_ERROR {                                             \
-    char *env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");               \
-    if (env_str != NULL && *env_str != '0') {                           \
+    char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \
+    if (_env_str != NULL && *_env_str != '0') {                         \
         int _rank;                                                      \
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
         fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
