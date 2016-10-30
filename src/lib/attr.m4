@@ -1085,7 +1085,6 @@ ncmpi_get_att_$1(int             ncid,
                     attrp->type,__func__);
             return NC_EBADTYPE;
     }
-    return err;
 }
 ')dnl
 

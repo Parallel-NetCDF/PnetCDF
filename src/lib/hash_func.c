@@ -47,8 +47,7 @@ int ncmpii_jenkins_one_at_a_time_hash(const char *str_name)
  */
 int ncmpii_additive_hash(const char *str_name)
 {
-    int i;
-    size_t len = strlen(str_name);
+    size_t i, len = strlen(str_name);
     int hash = (int)len;
     for (i=0; i<len; ++i)
         hash += str_name[i]; /* additive hash */
@@ -58,8 +57,7 @@ int ncmpii_additive_hash(const char *str_name)
 
 int ncmpii_rotating_hash(const char *str_name)
 {
-    int i;
-    size_t len = strlen(str_name);
+    size_t i, len = strlen(str_name);
     unsigned int hash = (unsigned int)len;
     for (i=0; i<len; ++i)
         hash = (hash<<4)^(hash>>28)^(unsigned int)str_name[i];
@@ -70,8 +68,7 @@ int ncmpii_rotating_hash(const char *str_name)
 
 int ncmpii_Bernstein_hash(const char *str_name)
 {
-    int i;
-    size_t len = strlen(str_name);
+    size_t i, len = strlen(str_name);
     unsigned int hash = (unsigned int)len;
     for (i=0; i<len; ++i)
         /* hash = 65*hash+str_name[i]; */

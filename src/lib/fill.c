@@ -363,7 +363,7 @@ err_check:
 
     /* loop thru all variables defined so far to set/overwrite its fill mode */
     for (i=0; i<ncp->vars.ndefined; i++)
-        ncp->vars.value[i]->no_fill = (fill_mode == NC_NOFILL) ? 1 : 0;
+        ncp->vars.value[i]->no_fill = (char)((fill_mode == NC_NOFILL) ? 1 : 0);
 
     /* once the file's fill mode is set, any new variables defined after this
      * call will check NC_dofill(ncp) and set their no_fill accordingly. See
@@ -855,7 +855,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
                                       &filetype);
 #endif
         if (mpireturn != MPI_SUCCESS) {
-            int err = ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
+            err = ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
             /* return the first encountered error if there is any */
             if (status == NC_NOERR) status = err;
         }

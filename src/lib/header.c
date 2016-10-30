@@ -2117,8 +2117,10 @@ ncmpii_comp_attrs(int           safe_mode,
             for (j=0; j<v1->nelems; j++) {
                 /* floating-point inequality here but we genuinely do
                  * expect all processors to set bit-for-bit identical
-                 * headers */
+                 * headers
                 if (fa[j] != fb[j]) {
+                 */
+                if (memcmp(fa+j, fb+j, sizeof(float))) {
                     msg = "%s attribute \"%s\"[%d] FLOAT (root=%f, local=%f)\n";
                     ATTR_WARN_J(msg, name, j, fa[j], fb[j])
                     DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
@@ -2132,8 +2134,10 @@ ncmpii_comp_attrs(int           safe_mode,
             for (j=0; j<v1->nelems; j++) {
                 /* floating-point inequality here but we genuinely do
                  * expect all processors to set bit-for-bit identical
-                 * headers */
+                 * headers
                 if (da[j] != db[j]) {
+                 */
+                if (memcmp(da+j, db+j, sizeof(double))) {
                     msg = "%s attribute \"%s\"[%d] DOUBLE (root=%f, local=%f)\n";
                     ATTR_WARN_J(msg, name, j, da[j], db[j])
                     DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
