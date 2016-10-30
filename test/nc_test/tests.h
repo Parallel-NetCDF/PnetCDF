@@ -706,8 +706,8 @@ equal2(const double x, const double y, nc_type extType);
 extern int
 int_vec_eq(const int *v1, const int *v2, const int n);
 
-extern int
-roll(int n);
+extern MPI_Offset
+roll(MPI_Offset n);
 
 extern int
 toMixedBase(
