@@ -670,7 +670,7 @@ ncmpii_write_numrecs(NC         *ncp,
         }
         else {
             len = X_SIZEOF_INT64;
-            err = ncmpix_put_uint64((void**)&buf, max_numrecs);
+            err = ncmpix_put_uint64((void**)&buf, (uint64)max_numrecs);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */

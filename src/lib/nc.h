@@ -357,7 +357,7 @@ typedef struct NC_req {
     void          *buf;         /* the original user buffer */
     void          *xbuf;        /* the buffer used to read/write, may point to
                                    the same address as buf */
-    int            num_recs;    /* number of records requested (1 for
+    MPI_Offset     num_recs;    /* number of records requested (1 for
                                    fixed-size variable) */
     int            buftype_is_contig;
     int            need_swap_back_buf;

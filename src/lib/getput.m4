@@ -466,7 +466,7 @@ err_check:
             {
                 /* allocate cbuf and copy buf to xbuf, before byte-swap */
                 xbuf = NCI_Malloc((size_t)nbytes);
-                memcpy(xbuf, buf, nbytes);
+                memcpy(xbuf, buf, (size_t)nbytes);
             }
 
             /* perform array in-place byte-swap on xbuf */

@@ -360,7 +360,7 @@ ncmpii_igetput_varm(NC               *ncp,
         /* allocate write/read request array */
         if (ncp->numPutReqs % NC_REQUEST_CHUNK == 0)
             ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list,
-                                      (ncp->numPutReqs + NC_REQUEST_CHUNK) *
+                                      ((size_t)ncp->numPutReqs + NC_REQUEST_CHUNK) *
                                       sizeof(NC_req));
         req = ncp->put_list + ncp->numPutReqs;
 
@@ -375,7 +375,7 @@ ncmpii_igetput_varm(NC               *ncp,
         /* allocate write/read request array */
         if (ncp->numGetReqs % NC_REQUEST_CHUNK == 0)
             ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list,
-                                      (ncp->numGetReqs + NC_REQUEST_CHUNK) *
+                                      ((size_t)ncp->numGetReqs + NC_REQUEST_CHUNK) *
                                       sizeof(NC_req));
         req = ncp->get_list + ncp->numGetReqs;
 

@@ -641,7 +641,7 @@ ncmpi_open(MPI_Comm    comm,
         nameT = &ncp->dims.nameT[key];
         if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
             nameT->list = (int*) NCI_Realloc(nameT->list,
-                          (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+                          (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
         nameT->list[nameT->num] = i;
         nameT->num++;
     }
@@ -657,7 +657,7 @@ ncmpi_open(MPI_Comm    comm,
         nameT = &ncp->vars.nameT[key];
         if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
             nameT->list = (int*) NCI_Realloc(nameT->list,
-                          (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+                          (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
         nameT->list[nameT->num] = i;
         nameT->num++;
     }
@@ -734,7 +734,8 @@ ncmpi_inq_file_format(char *filename,
     char *cdf_signature="CDF";
     char *hdf5_signature="\211HDF\r\n\032\n";
     char signature[8];
-    int fd, rlen;
+    int fd;
+    ssize_t rlen;
 
     *formatp = NC_FORMAT_UNKNOWN;
 

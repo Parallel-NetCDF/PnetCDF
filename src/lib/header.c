@@ -430,7 +430,7 @@ hdr_put_NC_name(bufferinfo      *pbp,
 
     /* copy nelems */
     if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), ncstrp->nchars);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)ncstrp->nchars);
     else {
         if (ncstrp->nchars != (uint)ncstrp->nchars) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)ncstrp->nchars);
@@ -505,7 +505,7 @@ hdr_put_NC_dim(bufferinfo   *pbp,
 
     /* copy dim_length */
     if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), dimp->size);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)dimp->size);
     else {
         /* TODO: Isn't checking dimension size already done in def_dim()? */
         if (dimp->size != (uint)dimp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
@@ -555,9 +555,9 @@ hdr_put_NC_dimarray(bufferinfo        *pbp,
 
         /* copy nelems */
         if (pbp->version == 5)
-            status = ncmpix_put_uint64((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)ncap->ndefined);
         else
-            status = ncmpix_put_uint32((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)ncap->ndefined);
         if (status != NC_NOERR) return status;
 
         /* copy [dim ...] */
@@ -590,12 +590,12 @@ hdr_put_NC_attr(bufferinfo    *pbp,
     if (status != NC_NOERR) return status;
 
     /* copy nc_type */
-    status = ncmpix_put_uint32((void**)(&pbp->pos), attrp->type);
+    status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)attrp->type);
     if (status != NC_NOERR) return status;
 
     /* copy nelems */
     if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), attrp->nelems);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)attrp->nelems);
     else {
         if (attrp->nelems != (uint)attrp->nelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)attrp->nelems);
@@ -648,9 +648,9 @@ hdr_put_NC_attrarray(bufferinfo         *pbp,
 
         /* copy nelems */
         if (pbp->version == 5)
-            status = ncmpix_put_uint64((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)ncap->ndefined);
         else
-            status = ncmpix_put_uint32((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)ncap->ndefined);
         if (status != NC_NOERR) return status;
 
         /* copy [attr ...] */
@@ -692,17 +692,17 @@ hdr_put_NC_var(bufferinfo   *pbp,
 
     /* copy nelems */
     if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), varp->ndims);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)varp->ndims);
     else
-        status = ncmpix_put_uint32((void**)(&pbp->pos), varp->ndims);
+        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->ndims);
     if (status != NC_NOERR) return status;
 
     /* copy [dimid ...] */
     for (i=0; i<varp->ndims; i++) {
         if (pbp->version == 5)
-            status = ncmpix_put_uint64((void**)(&pbp->pos), varp->dimids[i]);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)varp->dimids[i]);
         else
-            status = ncmpix_put_uint32((void**)(&pbp->pos), varp->dimids[i]);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->dimids[i]);
         if (status != NC_NOERR) return status;
     }
 
@@ -711,7 +711,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
     if (status != NC_NOERR) return status;
 
     /* copy nc_type */
-    status = ncmpix_put_uint32((void**)(&pbp->pos), varp->type);
+    status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->type);
     if (status != NC_NOERR) return status;
 
     /* copy vsize */
@@ -719,7 +719,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
      * in CDF-5, it is a 64-bit integer
      */
     if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), varp->len);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)varp->len);
     else {
         /* Special case, when there is no record variable, the last fixed-size
          * variable can be larger than 2 GiB if its file starting offset is
@@ -741,7 +741,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
         status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->begin);
     }
     else
-        status = ncmpix_put_uint64((void**)(&pbp->pos), varp->begin);
+        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)varp->begin);
     if (status != NC_NOERR) return status;
 
     return NC_NOERR;
@@ -788,9 +788,9 @@ hdr_put_NC_vararray(bufferinfo        *pbp,
 
         /* copy nelems */
         if (pbp->version == 5)
-            status = ncmpix_put_uint64((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)ncap->ndefined);
         else
-            status = ncmpix_put_uint32((void**)(&pbp->pos), ncap->ndefined);
+            status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)ncap->ndefined);
         if (status != NC_NOERR) return status;
 
         /* copy [var ...] */
@@ -847,7 +847,7 @@ ncmpii_hdr_put_NC(NC   *ncp,
         status = ncmpix_put_uint32((void**)(&putbuf.pos), (uint)nrecs);
     }
     else {
-        status = ncmpix_put_uint64((void**)(&putbuf.pos), nrecs);
+        status = ncmpix_put_uint64((void**)(&putbuf.pos), (uint64)nrecs);
     }
     if (status != NC_NOERR) return status;
 
@@ -1959,7 +1959,7 @@ ncmpii_comp_dims(int          safe_mode,
             NC_nametable *nameT = &local_dim->nameT[key];
             if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
                 nameT->list = (int*) NCI_Realloc(nameT->list,
-                              (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+                              (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
             nameT->list[nameT->num] = i;
             nameT->num++;
         }
@@ -2302,7 +2302,7 @@ ncmpii_comp_vars(int          safe_mode,
             NC_nametable *nameT = &local_var->nameT[key];
             if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
                 nameT->list = (int*) NCI_Realloc(nameT->list,
-                              (nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
+                              (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) * sizeof(int));
             nameT->list[nameT->num] = i;
             nameT->num++;
         }
