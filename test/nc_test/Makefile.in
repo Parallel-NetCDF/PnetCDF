@@ -14,9 +14,6 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir) -I$(srcdir)/../common
 LDFLAGS  := -L../common $(LDFLAGS)
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) -lm @LCOV_LIB@
-ifeq (@PNC_DEBUG@, yes)
-CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
-endif
 
 SRCS      = error.c \
             util.c

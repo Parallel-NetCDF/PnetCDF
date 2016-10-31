@@ -367,7 +367,7 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
 
     MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
     if (err_msg == NULL) err_msg = "";
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

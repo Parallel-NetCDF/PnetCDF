@@ -22,7 +22,7 @@ typedef struct {
 void parse_read_args(int argc, char **argv, int rank, params *p);
 void parse_write_args(int argc, char **argv, int rank, params *p);
 
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
 #define PASS_STR "\x1b[32mpass\x1b[0m\n"
 #define FAIL_STR "\x1b[31mfail\x1b[0m with %d mismatches\n"
 #else

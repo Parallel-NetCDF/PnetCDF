@@ -18,9 +18,6 @@ FPPFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
 endif
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
-ifeq (@PNC_DEBUG@, yes)
-CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
-endif
 
 NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff

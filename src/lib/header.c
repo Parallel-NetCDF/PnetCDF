@@ -2400,7 +2400,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         int root_ver = magic[sizeof(ncmagic1)-1];
 
         if (ncp->format != root_ver) {
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
             printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
                    WARN_STR, ncp->format, root_ver);
 #endif

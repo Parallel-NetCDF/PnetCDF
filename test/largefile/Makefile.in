@@ -14,9 +14,6 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
-ifeq (@PNC_DEBUG@, yes)
-CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
-endif
 
 ifeq (@is_bigendian@, yes)
 DEFS := $(DEFS) -DWORDS_BIGENDIAN
