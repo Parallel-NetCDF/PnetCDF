@@ -46,13 +46,13 @@ UD_MSG_DEBUG([PNETCDF_VERSION_PRE=$PNETCDF_VERSION_PRE])
 UD_MSG_DEBUG([PNETCDF_VERSION=$PNETCDF_VERSION])
 UD_MSG_DEBUG([PNETCDF_RELEASE_DATE=$PNETCDF_RELEASE_DATE])
 
-AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MAJOR, $PNETCDF_VERSION_MAJOR, major version number)
-AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MINOR, $PNETCDF_VERSION_MINOR, minor version number)
-AC_DEFINE_UNQUOTED(PNETCDF_VERSION_SUB, $PNETCDF_VERSION_SUB, sub version number)
-AC_DEFINE_UNQUOTED(PNETCDF_VERSION_PRE, $PNETCDF_VERSION_PRE, pre-release string)
-AC_DEFINE_UNQUOTED(PNETCDF_VERSION, ["$PNETCDF_VERSION"], full PnetCDF version string)
-AC_DEFINE_UNQUOTED(PNETCDF_RELEASE_DATE, ["$PNETCDF_RELEASE_DATE"], PnetCDF release date string)
-AC_DEFINE_UNQUOTED(CONFIGURE_ARGS_CLEAN, ["$CONFIGURE_ARGS_CLEAN"], configure command-line arguments used)
+dnl AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MAJOR, $PNETCDF_VERSION_MAJOR, major version number)
+dnl AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MINOR, $PNETCDF_VERSION_MINOR, minor version number)
+dnl AC_DEFINE_UNQUOTED(PNETCDF_VERSION_SUB, $PNETCDF_VERSION_SUB, sub version number)
+dnl AC_DEFINE_UNQUOTED(PNETCDF_VERSION_PRE, $PNETCDF_VERSION_PRE, pre-release string)
+dnl AC_DEFINE_UNQUOTED(PNETCDF_VERSION, ["$PNETCDF_VERSION"], full PnetCDF version string)
+dnl AC_DEFINE_UNQUOTED(PNETCDF_RELEASE_DATE, ["$PNETCDF_RELEASE_DATE"], PnetCDF release date string)
+dnl AC_DEFINE_UNQUOTED(CONFIGURE_ARGS_CLEAN, ["$CONFIGURE_ARGS_CLEAN"], configure command-line arguments used)
 
 AC_SUBST(PNETCDF_VERSION_MAJOR)
 AC_SUBST(PNETCDF_VERSION_MINOR)
@@ -81,7 +81,6 @@ AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
-AH_TEMPLATE([PNC_DEBUG],                [Define if to enable debugging])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
@@ -725,10 +724,9 @@ AC_ARG_ENABLE([debug],
                      @<:@default: disabled@:>@])],
     [debug=${enableval}], [debug=no]
 )
-AC_MSG_CHECKING(PnetCDF debug mode)
-if test "x${debug}" = xyes; then
-   AC_DEFINE(PNC_DEBUG)
 
+PNETCDF_DEBUG=0
+if test "x${debug}" = xyes; then
    dnl malloc memory allocation tracing relies on tdelete and tsearch
    AC_CHECK_HEADERS([search.h])
    AC_CHECK_FUNCS([tsearch tdelete])
@@ -738,10 +736,9 @@ if test "x${debug}" = xyes; then
       (test "x${ac_cv_func_tdelete}" = xyes) ; then
       AC_DEFINE(PNC_MALLOC_TRACE)
    fi
+   PNETCDF_DEBUG=1
 fi
-AC_MSG_RESULT($debug)
-PNC_DEBUG=${debug}
-AC_SUBST(PNC_DEBUG)
+AC_SUBST(PNETCDF_DEBUG)
 
 AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
 if test "x${ac_cv_type_MPI_Offset}" = xyes; then
@@ -1118,10 +1115,14 @@ AC_ARG_ENABLE([subfiling],
                    [Enable subfiling support. @<:@default: disabled@:>@])],
    [enable_subfiling=${enableval}], [enable_subfiling=no]
 )
+AC_SUBST(enable_subfiling)
+
+ENABLE_SUBFILING=0
 if test "x$enable_subfiling" = "xyes" ; then
    AC_DEFINE(ENABLE_SUBFILING)
-   AC_SUBST(enable_subfiling)
+   ENABLE_SUBFILING=1
 fi
+AC_SUBST(ENABLE_SUBFILING)
 
 AC_ARG_ENABLE([erange_fill],
    [AS_HELP_STRING([--enable-erange-fill],
@@ -1130,6 +1131,12 @@ AC_ARG_ENABLE([erange_fill],
    [enable_erange_fill=${enableval}], [enable_erange_fill=no]
 )
 AC_SUBST(enable_erange_fill)
+
+ENABLE_ERANGE_FILL=0
+if test "x$enable_erange_fill" = "xyes" ; then
+   ENABLE_ERANGE_FILL=1
+fi
+AC_SUBST(ENABLE_ERANGE_FILL)
 
 AC_PATH_PROG([LATEX],  [latex])
 AC_PATH_PROG([DVIPDF], [dvipdf])
@@ -1211,6 +1218,11 @@ AC_CONFIG_FILES(macros.make \
                 test/header/Makefile \
                 test/cdf_format/Makefile \
                 test/largefile/Makefile \
+                test/test_int/Makefile \
+                test/test_float/Makefile \
+                test/test_double/Makefile \
+                test/test_double_int/Makefile \
+                test/test_dtype/Makefile \
                 examples/C/Makefile \
                 examples/tutorial/Makefile \
                 examples/Makefile \
@@ -1263,11 +1275,14 @@ echo \
               Build C++ APIs                                    - ${has_mpicxx}
               Build Fortran APIs                                - ${enable_fortran}
               Enable request aggregation in nonblocking APIs    - ${enable_aggregation}
-              Build CDF-2 and CDF-5 support                     - ${enable_cdf_2_n_5}
-              Build subfiling support                           - ${enable_subfiling}"
+              Build CDF-2 and CDF-5 support                     - ${enable_cdf_2_n_5}"
 if test "x${enable_erange_fill}" = xyes; then
    echo "\
-              Fill variables when NC_ERANGE occurs              - enabled"
+              Fill variables when NC_ERANGE occurs              - yes"
+fi
+if test "x${enable_subfiling}" = xyes; then
+   echo "\
+              Build subfiling support                           - yes"
 fi
 if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
    echo "\

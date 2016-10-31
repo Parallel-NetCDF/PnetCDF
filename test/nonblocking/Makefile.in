@@ -15,9 +15,6 @@ INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90 @FC_MODINC@../common
 LDFLAGS  := -L../common $(LDFLAGS)
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
-ifeq (@PNC_DEBUG@, yes)
-CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
-endif
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c \

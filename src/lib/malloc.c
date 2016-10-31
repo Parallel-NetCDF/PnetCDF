@@ -195,7 +195,7 @@ void *NCI_Malloc_fn(size_t      size,
     void *buf = malloc(size);
     if (!buf) {
 	fprintf(stderr, "malloc(%zd) failed in file %s, line %d\n", size, filename, lineno);
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
     }
@@ -221,7 +221,7 @@ void *NCI_Calloc_fn(size_t      nelem,
     void *buf =calloc(nelem, elsize);
     if (!buf) {
 	fprintf(stderr, "calloc(%zd, %zd) failed in file %s, line %d\n", nelem, elsize, filename, lineno);
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
     }
@@ -250,7 +250,7 @@ void *NCI_Realloc_fn(void       *ptr,
     void *buf = (void *) realloc(ptr, size);
     if (!buf) {
 	fprintf(stderr, "realloc failed in file %s, line %d\n", filename, lineno);
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
     }

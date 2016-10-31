@@ -16,9 +16,6 @@ FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 F90FLAGS += @FC_MODOUT@.
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
-ifeq (@PNC_DEBUG@, yes)
-CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
-endif
 
 C_SRCS   = test_subfile.c
 

@@ -14,9 +14,6 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I../../src/libcxx -I$(srcdir)/../common
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
-ifeq (@PNC_DEBUG@, yes)
-CXXCPPFLAGS := $(CXXCPPFLAGS) -DPNC_DEBUG
-endif
 
 SRCS    = nctst.cpp \
           test_classic.cpp

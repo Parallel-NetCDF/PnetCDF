@@ -213,7 +213,7 @@ ncmpi_create(MPI_Comm    comm,
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp=NULL;
 
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
     safe_mode = 1;
     /* this configure time setting will be overwritten by the run-time
      * environment variable PNETCDF_SAFE_MODE */
@@ -341,6 +341,7 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode = 1;
     if (env_info != MPI_INFO_NULL) {
+        int flag;
         char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
                      value, &flag);
@@ -436,7 +437,7 @@ ncmpi_open(MPI_Comm    comm,
     NC_nametable *nameT;
 #endif
 
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
     safe_mode = 1;
     /* this configure time setting will be overwritten by the run-time
      * environment variable PNETCDF_SAFE_MODE */
@@ -544,6 +545,7 @@ ncmpi_open(MPI_Comm    comm,
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode = 1;
     if (env_info != MPI_INFO_NULL) {
+        int flag;
         char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
                      value, &flag);

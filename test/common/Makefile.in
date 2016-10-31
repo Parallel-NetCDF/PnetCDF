@@ -13,11 +13,6 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 
-ifeq (@PNC_DEBUG@, yes)
-CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
-FPPFLAGS := $(FPPFLAGS) @FC_DEFINE@PNC_DEBUG
-endif
-
 C_SRCS   = testutils.c
 
 F_SRCS   = testutilsf.F90

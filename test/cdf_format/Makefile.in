@@ -14,9 +14,6 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
-ifeq (@PNC_DEBUG@, yes)
-CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
-endif
 
 SRCS    = test_inq_format.c \
           cdf_type.c \

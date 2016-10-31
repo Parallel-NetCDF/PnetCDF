@@ -37,7 +37,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     }                                                                         \
 }
 
-#ifdef PNC_DEBUG
+#ifdef PNETCDF_DEBUG
 #define DEBUG_RETURN_ERROR(err) {                                       \
     char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \
     if (_env_str != NULL && *_env_str != '0') {                         \
