@@ -540,3 +540,14 @@ Autoconf manual suggests it is a good habit to use angle brackets, because in
 the rare case when the source directory contains another ncconfig.h, the build
 directory should be searched first.
 
+==============================================================================
+Note on using NAG Fortran compiler
+==============================================================================
+Type conversion that causes NC_ERANGE error will also cause a coredump with
+message of "Arithmetic exception". See discussion threads in
+http://www.unidata.ucar.edu/support/help/MailArchives/netcdf/msg13327.html
+The solution is to enable "erange-fill" option at the configure time (default
+in PnetCDF).  The implementation of this option is also provided to netCDF,
+but need manually activate. See
+https://github.com/Unidata/netcdf-c/pull/319#issuecomment-256982471
+

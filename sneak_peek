@@ -3,16 +3,22 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * A new configure option "--enable-erange-fill" is added. When enabled,
-      data elements that cause the NC_ERANGE error will be replaced by the
-      "fill value". For put APIs, the value of attribute _FillValue, if
-      defined, will be used to write to files. For get APIs, the default CDF
-      _FillValue corresponding to the internal data type will be copied to
-      the read buffer in memory. When this feature is disabled, the traditional
-      NetCDF method is used, i.e. the type conversion still proceed and is
-      handled like a C type conversion, whether or not it is within range.
-      See URL below for details
+    * Copy fill values to data elements that cause out-of-bound error (i.e.
+      NC_ERANGE.) In netCDF v4.4.1 and priors, type conversion for out-of-
+      bound elements proceeds even if the out-of-bound error is detected, and
+      the contents (in both files and read buffers) are left up to the user
+      to handle. See the URL below for details.
       http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
+      Instead of carrying out the type conversion, PnetCDF fills the out-of-
+      bound data elements with their "fill values", as specified by the
+      variable's attribute "_FillValue" or default CDF fill values if the
+      attribute is not defined. Specifically, for PnetCDF put APIs, the value
+      of attribute _FillValue, if defined, will be used when writing to files.
+      For get APIs, the default CDF _FillValue corresponding to the internal
+      data type will be used to fill the read buffer. This feature can be
+      disabled by adding option "--disable-erange-fill" to the configure
+      command line. In this case, the conventional NetCDF method described
+      above is used.
 
   o New APIs
     * ncmpi_strerrno, nfmpi_strerrno, nf90mpi_strerrno return the string name
