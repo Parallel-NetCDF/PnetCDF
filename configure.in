@@ -1218,11 +1218,6 @@ AC_CONFIG_FILES(macros.make \
                 test/header/Makefile \
                 test/cdf_format/Makefile \
                 test/largefile/Makefile \
-                test/test_int/Makefile \
-                test/test_float/Makefile \
-                test/test_double/Makefile \
-                test/test_double_int/Makefile \
-                test/test_dtype/Makefile \
                 examples/C/Makefile \
                 examples/tutorial/Makefile \
                 examples/Makefile \
