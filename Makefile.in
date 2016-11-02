@@ -28,13 +28,14 @@ SUBDIRS		= src \
 		  benchmarks \
 		  examples
 
-GARBAGE		=
+GARBAGE		= pnetcdf_pc
 
 DIST_GARBAGE	= config.cache \
 		  config.status \
 		  config.log \
 		  macros.make \
-		  stamp-h
+		  stamp-h \
+                  pnetcdf.pc
 
 PACKING_LIST	= Makefile.in \
 		  aclocal.m4 \
@@ -55,7 +56,8 @@ PACKING_LIST	= Makefile.in \
 		  RELEASE_NOTES \
 		  pbs.script \
 		  cobalt.script \
-		  stamp-h.in
+		  stamp-h.in \
+                  pnetcdf_pc.in
 
 PACKING_SUBDIRS	= $(SUBDIRS)
 

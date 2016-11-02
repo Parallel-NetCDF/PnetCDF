@@ -79,7 +79,6 @@ PACKING_LIST = $(LIB_CSRCS) \
                pnetcdf.h.in \
                depend \
                Makefile.in \
-               pnetcdf.pc.in \
                ncconfig.h.in
 
 ifeq (@enable_subfiling@, no)
@@ -90,7 +89,7 @@ LIB_OBJS   = $(LIB_CSRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 GARBAGE    = $(LIBRARY) $(M4_SRCS:.m4=.c) ncx.h
 
-DIST_GARBAGE = ncconfig.h pnetcdf.h pnetcdf.pc
+DIST_GARBAGE = ncconfig.h pnetcdf.h
 
 all: $(LIBRARY)
 
