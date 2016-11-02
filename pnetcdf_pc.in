@@ -25,9 +25,14 @@
 #               but not exposed to applications. The same rule as Cflags
 #               applies here.
 
+prefix=INSTALL_PREFIX   # prefix can be changed by "make install prefix=/path"
+exec_prefix=@exec_prefix@
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
 Name: Parallel-NetCDF
 Description: Parallel-NetCDF (pnetcdf) provides parallel access to NetCDF files
 URL: http://cucis.ece.northwestern.edu/projects/PnetCDF/
 Version: @PNETCDF_VERSION@
-Cflags: -I@prefix@/include
-Libs: -L@prefix@/lib -lpnetcdf
+Cflags: -I${includedir}
+Libs: -L${libdir} -lpnetcdf

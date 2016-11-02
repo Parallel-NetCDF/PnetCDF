@@ -22,7 +22,6 @@ INCLUDES = -I. -I$(srcdir)
 
 LIBRARY  = libpnetcdf.a
 HEADER   = pnetcdf.h
-PKGCONFIG = pnetcdf.pc
 
 ifeq (@enable_erange_fill@, yes)
 M4FLAGS += -DERANGE_FILL
@@ -104,11 +103,8 @@ install: $(LIBRARY)
 	$(INSTALL_DATA) $(LIBRARY) $(LIBDIR)/$(LIBRARY)
 	$(INSTALL) -d -m 755 $(INCDIR)
 	$(INSTALL_DATA) $(HEADER) $(INCDIR)/$(HEADER)
-	$(INSTALL) -d -m 755 $(LIBDIR)/pkgconfig
-	$(INSTALL_DATA) $(PKGCONFIG) $(LIBDIR)/pkgconfig/$(PKGCONFIG)
 
 uninstall:
-	$(RM) -f $(LIBDIR)/pkgconfig/$(PKGCONFIG)
 	$(RM) -f $(LIBDIR)/$(LIBRARY)
 	$(RM) -f $(INCDIR)/$(HEADER)
 
