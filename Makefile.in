@@ -100,7 +100,7 @@ ptests-examples: ptests-test
 ptests-benchmarks: ptests-examples
 
 INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
-install: $(INSTALLDIRS)
+install: $(INSTALLDIRS) install_PKGCONFIG
 	@echo '+----------------------------------------------------------------------------+'
 	@echo '|'
 	@echo '|  PnetCDF has been successfully installed under $(prefix)'
@@ -130,10 +130,21 @@ install: $(INSTALLDIRS)
 $(INSTALLDIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
 
+PKGCONFIG_IN = pnetcdf_pc
+PKGCONFIG    = pnetcdf.pc
+
+install_PKGCONFIG:
+	$(SED) -e "s%INSTALL_PREFIX%${prefix}%g" $(PKGCONFIG_IN) > $(PKGCONFIG)
+	$(INSTALL) -d -m 755 $(LIBDIR)/pkgconfig
+	$(INSTALL_DATA) $(PKGCONFIG) $(LIBDIR)/pkgconfig/$(PKGCONFIG)
+
 UNINSTALLDIRS = $(INSTALL_SUBDIRS:%=uninstall-%)
-uninstall: $(UNINSTALLDIRS)
+uninstall: $(UNINSTALLDIRS) uninstall_PKGCONFIG
 $(UNINSTALLDIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
+
+uninstall_PKGCONFIG:
+	$(RM) -f $(LIBDIR)/pkgconfig/$(PKGCONFIG)
 
 ################################################################################
 # Distribution:

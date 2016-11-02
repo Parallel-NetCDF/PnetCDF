@@ -1197,10 +1197,10 @@ AC_SUBST(SEQ_CC)
 AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
 AC_CONFIG_FILES(macros.make \
                 Makefile \
+                pnetcdf_pc \
                 src/Makefile \
                 src/lib/Makefile \
                 src/lib/pnetcdf.h \
-                src/lib/pnetcdf.pc \
                 src/utils/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpidiff/Makefile \

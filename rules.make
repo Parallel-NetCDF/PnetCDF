@@ -257,4 +257,5 @@ FORCE:
 .PHONY: subdirs $(SUBDIRS) install $(INSTALLDIRS) uninstall $(UNINSTALLDIRS)
 .PHONY: tests check testing $(CHECK_DIRS) $(PTEST_DIRS) verbose_check verbose_testing $(VCHECK_DIRS)
 .PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
+.PHONY: install_PKGCONFIG uninstall_PKGCONFIG
 
