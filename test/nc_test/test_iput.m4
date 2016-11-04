@@ -277,8 +277,8 @@ test_ncmpi_iput_var1(int numVars)
 
 ifdef(`PNETCDF',`dnl
         err = ncmpi_iput_var1(ncid, i, NULL, &value, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -388,8 +388,8 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -786,8 +786,8 @@ test_ncmpi_iput_vara(int numVars)
 
 ifdef(`PNETCDF',`dnl
         err = ncmpi_iput_vara(ncid, i, NULL, NULL, value, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -796,8 +796,8 @@ ifdef(`PNETCDF',`dnl
         }
 
         err = ncmpi_iput_vara(ncid, i, start, NULL, value, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
-            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        IF (var_rank[i] > 0 && err != NC_EEDGE)
+            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -970,8 +970,8 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -985,8 +985,8 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
-            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        else IF (var_rank[i] > 0 && err != NC_EEDGE)
+            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1170,8 +1170,8 @@ test_ncmpi_iput_vars(int numVars)
 
 ifdef(`PNETCDF',`dnl
         err = ncmpi_iput_vars(ncid, i, NULL, NULL, NULL, value, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1180,8 +1180,8 @@ ifdef(`PNETCDF',`dnl
         }
 
         err = ncmpi_iput_vars(ncid, i, start, NULL, NULL, value, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
-            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        IF (var_rank[i] > 0 && err != NC_EEDGE)
+            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1369,8 +1369,8 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1384,8 +1384,8 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
-            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        else IF (var_rank[i] > 0 && err != NC_EEDGE)
+            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1583,8 +1583,8 @@ test_ncmpi_iput_varm(int numVars)
 
 ifdef(`PNETCDF',`dnl
         err = ncmpi_iput_varm(ncid, i, NULL, NULL, NULL, NULL, value, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1593,8 +1593,8 @@ ifdef(`PNETCDF',`dnl
         }
 
         err = ncmpi_iput_varm(ncid, i, start, NULL, NULL, NULL, value, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
-            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        IF (var_rank[i] > 0 && err != NC_EEDGE)
+            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1790,8 +1790,8 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_ENULLSTART)
-            error("expecting NC_ENULLSTART, but got %s", nc_err_code_name(err));
+        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
+            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
@@ -1805,8 +1805,8 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_ENULLCOUNT)
-            error("expecting NC_ENULLCOUNT, but got %s", nc_err_code_name(err));
+        else IF (var_rank[i] > 0 && err != NC_EEDGE)
+            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
         ELSE_NOK
 
         if (var_rank[i] == 0) {
