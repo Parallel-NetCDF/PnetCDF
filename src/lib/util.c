@@ -92,13 +92,13 @@ int ncmpii_sanity_check(int               ncid,
 
     /* for API var1, vara, vars, varm, and varn, start cannot be NULL */
     if (start == NULL && api >= API_VAR1 && (*varp)->ndims > 0) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENULLSTART)
+        DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
         goto fn_exit;
     }
 
     /* for API vara, vars, and varm, count cannot be NULL */
     if (count == NULL && api >= API_VARA && (*varp)->ndims > 0) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENULLCOUNT)
+        DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
         goto fn_exit;
     }
 
