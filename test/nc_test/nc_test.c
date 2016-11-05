@@ -79,56 +79,41 @@ usage(char *progname)
     error("   [-d directory] directory for storing input/output files\n");
 }
 
-#define NC_TEST(func) {                                                  \
-    char func_name[64];                                                  \
-    int noks;                                                            \
-    nfails = 0;                                                          \
-    sprintf(func_name, "test_%s",#func);                                 \
-    noks = test_ ## func();                                              \
-    nfailsTotal += nfails;                                               \
-    if (verbose && nfails == 0) {                                        \
-        if (verbose) printf( "*** Testing %-30s ... ",func_name);        \
-        if (noks > 0)                                                    \
-            printf("%4d good comparisons. ok\n", noks);                  \
-        else                                                             \
-            printf("\n");                                                \
-    }                                                                    \
-    else if (nfails > 0) {                                               \
-        if (verbose) print( "*** Testing %-30s ... ",func_name);         \
-        print("\n\t### %d FAILURES TESTING %s! Stop ... ###\n",          \
-              nfails,func_name);                                         \
-        goto fn_exit;                                                    \
-    }                                                                    \
-}
-
 #define NC_CHECK_AND_PRINT                                               \
-    nfails = 0;                                                          \
     nfailsTotal += nfails;                                               \
-    if (verbose && nfails == 0) {                                        \
-        if (verbose) printf( "*** Testing %-30s ... ",func_name);        \
-        if (noks > 0)                                                    \
-            printf("%4d good comparisons. ok\n", noks);                  \
-        else                                                             \
-            printf("\n");                                                \
+    if (verbose) print( "*** Testing %-30s ... ",func_name);             \
+    if (nfails == 0 && verbose) {                                        \
+        if (noks > 0) printf("%4d good comparisons. ok", noks);          \
+        printf("\n");                                                    \
     }                                                                    \
-    else if (nfails > 0) {                                               \
-        if (verbose) print( "*** Testing %-30s ... ",func_name);         \
+    if (nfails > 0) {                                                    \
         print("\n\t### %d FAILURES TESTING %s! Stop ... ###\n",          \
               nfails,func_name);                                         \
         goto fn_exit;                                                    \
     }
 
+#define NC_TEST(func) {                                                  \
+    int noks;                                                            \
+    char func_name[64];                                                  \
+    nfails = 0;                                                          \
+    sprintf(func_name, "test_%s",#func);                                 \
+    noks = test_ ## func();                                              \
+    NC_CHECK_AND_PRINT                                                   \
+}
+
 #define NC_TEST1(func, arg) {                                            \
-    int noks = test_ ## func(arg);                                       \
+    int noks;                                                            \
     char func_name[64];                                                  \
     sprintf(func_name, "test_%s",#func);                                 \
+    noks = test_ ## func(arg);                                           \
     NC_CHECK_AND_PRINT                                                   \
 }
 
 #define NC_TEST2(func, arg1, arg2) {                                     \
-    int noks = test_ ## func(arg1, arg2);                                \
+    int noks;                                                            \
     char func_name[64];                                                  \
     sprintf(func_name, "test_%s",#func);                                 \
+    noks = test_ ## func(arg1, arg2);                                    \
     NC_CHECK_AND_PRINT                                                   \
 }
 
