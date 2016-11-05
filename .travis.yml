@@ -4,17 +4,17 @@ env:
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
-   - secure: "mJGeYdnFGvRn9xfpQTc0Z1A21SUf0qCUfsERMUM32Lmm7rc+KDty+O4Jrq87ZK8Qn+3CiW0w/IJluyQOksib84d1jHDKII7IZHzlKKFOvCeHgkiG7cbir62apK9XZah3q4vY55RhA7Ogr/lSmOdYcIZUwuQ9yVbnBc4e+ZUnHteQg8UUv2wSTQgfcQF+0aDqugEfJfu/0zjNhf93ljyOUhzda2yvqRxEI494fGeXPndApaZDKwuK9w0+VA5BY8IrKUafzQ8eBw3iEmR2DPNi3kS2wbnmo6Y1Wh3xzKysIxx6lbegAOMVeVO7Oz6Ry8pMzTd+t9yekxe6iZpHHSzET6h874YrwyIRblLuS9PXcy1NvGqFwQD13jEqcnjKgvROopff+BSMzKblhoc0yOUUwgguasQsx9itYas74N3qRha5iRH6LtBlaCVb805fieNzk01kSeh+5egcpljEjsUotSJL+mLiuMhgkQM2XPbZB0SRUmM7WHMG2DTtyf3J50er+M9chh2h6U9CCC5QhCkF+9zna3LuesZtqolwbWfqDBqJ28TzW/XeqmxuQfLr9pLpg8Q8LiHyjqADNeJKYM/rhYZvkYwDkIzezol9pBOKNjNBh8mEOS2Ne2aZh25hZo5noQGY4tE8HScezX7GrsHfi2Z4pHEo7T8R0pt6e9czMUw="
+   - secure: "E6vCBMCw031Xmc5kawuNm0tE5u7mLNloxDBqk2kEj19n7SAfK14vsGDFnU1FlRZkeauCu42v4IkvFd8vWpvy6bXsHG1byP/qpoIYw4KDLutIV3Pht2wdWgwVkIyf2XVLeH1vsy8Il1y86ki2cAyxT2ViERLsk0iIDl0F92eih6kzSaxcsiLdbQmmVmyAaxxMhqOHzNJ9GDJdoFZVjOsLL1MpBx3Tlyj72fnHnzy4yc/P3g9rj14Ma3ul/acWFKCP7UZw/D7RFDQkSSr6VX8QbypgTFByTas5YVbxnI7U5jgp++/owjHUm82KUnQn7qMKaZKxTmZOdNkWiDICiPz6WhRV3rov0QdJlhy0fTaP6SElGP8FDUFhHS2W+l1PfZD3o0kqQ3PjDHq+tLWUcP/8SlUCSpujX0PXVf1tT1FeMJXLo9xJptzRFLKiVMh4r9DZhWO1NiXbEE0tLIPQeOX+vzxMIQGCx6yxUoKNzRrpEFYtJ12AvHX0na0PFxkz8Pe5kS24sMoFhpdxu7rzeO+57KSuvBniN39QPOv7NczrslM2KWx6OeUSt6TVUA++G56BZPi0jtVjITADmqsIYAYFio89fp4sjiDcKOrmSlEFCjYwkSLjzKPuGzjiNFDfNO9jQQR4Zfkv8BAeyFSmZ1yY8k9JLt0ucL69eVVdxkKJs88="
 
 addons:
   coverity_scan:
     project:
       name: "wkliao/parallel-netcdf"
-      description: "Build submitted via Travis CI"
+      description: "Parallel netCDF build submitted via Travis CI"
     notification_email: wkliao@eecs.northwestern.edu
     build_command_prepend: "./configure; make clean"
     build_command:   "make -j 4"
-    branch_pattern: master
+    branch_pattern: coverity_scan
 
 before_install:
   - test -n $CC && unset CC
