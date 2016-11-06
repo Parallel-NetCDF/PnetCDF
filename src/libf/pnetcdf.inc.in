@@ -888,23 +888,23 @@
 !
 ! entire variable put/get routines:
 !
-      integer  nfmpi_put_var
-      integer  nfmpi_put_var_text
-      integer  nfmpi_put_var_int1
-      integer  nfmpi_put_var_int2
-      integer  nfmpi_put_var_int
-      integer  nfmpi_put_var_real
-      integer  nfmpi_put_var_double
-      integer  nfmpi_put_var_int8
+      integer  nfmpi_put_var,        nfmpi_put_var_all
+      integer  nfmpi_put_var_text,   nfmpi_put_var_text_all
+      integer  nfmpi_put_var_int1,   nfmpi_put_var_int1_all
+      integer  nfmpi_put_var_int2,   nfmpi_put_var_int2_all
+      integer  nfmpi_put_var_int,    nfmpi_put_var_int_all
+      integer  nfmpi_put_var_real,   nfmpi_put_var_real_all
+      integer  nfmpi_put_var_double, nfmpi_put_var_double_all
+      integer  nfmpi_put_var_int8,   nfmpi_put_var_int8_all
 
-      external nfmpi_put_var
-      external nfmpi_put_var_text
-      external nfmpi_put_var_int1
-      external nfmpi_put_var_int2
-      external nfmpi_put_var_int
-      external nfmpi_put_var_real
-      external nfmpi_put_var_double
-      external nfmpi_put_var_int8
+      external nfmpi_put_var,        nfmpi_put_var_all
+      external nfmpi_put_var_text,   nfmpi_put_var_text_all
+      external nfmpi_put_var_int1,   nfmpi_put_var_int1_all
+      external nfmpi_put_var_int2,   nfmpi_put_var_int2_all
+      external nfmpi_put_var_int,    nfmpi_put_var_int_all
+      external nfmpi_put_var_real,   nfmpi_put_var_real_all
+      external nfmpi_put_var_double, nfmpi_put_var_double_all
+      external nfmpi_put_var_int8,   nfmpi_put_var_int8_all
 
       integer  nfmpi_get_var,        nfmpi_get_var_all
       integer  nfmpi_get_var_text,   nfmpi_get_var_text_all
