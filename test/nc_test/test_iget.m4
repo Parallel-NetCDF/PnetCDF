@@ -576,8 +576,9 @@ ifdef(`PNETCDF',`dnl
         }
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
-            start[j] = var_shape[i][j];  /* out of boundary check */
+            start[j] = var_shape[i][j];
             err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
@@ -596,8 +597,18 @@ ifdef(`PNETCDF',`dnl
             for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
             for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {                /* skip record dim */
-                    start[j] = var_shape[i][j];     /* out of boundary check */
+                if (var_dimid[i][j] > 0) {      /* skip record dim */
+                    start[j] = var_shape[i][j];
+                    err = ncmpi_iget_vara(ncid, i, start, edge, buf, 0, datatype, &reqid);
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    ELSE_NOK
+                    start[j] = var_shape[i][j]+1;  /* out of boundary check */
                     err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
                     IF (err != NC_EINVALCOORDS)
                         error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
@@ -605,8 +616,11 @@ ifdef(`PNETCDF',`dnl
                     start[j] = 0;
                 }
             }
-            for (j = 0; j < var_rank[i]; j++)
-                edge[j] = 1;
+            err = ncmpi_iget_vara(ncid, i, start, edge, buf, 0, datatype, &reqid);
+            IF (err != NC_NOERR)
+                error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
@@ -777,20 +791,26 @@ ifdef(`PNETCDF',`dnl
         }
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
-            start[j] = var_shape[i][j];  /* out of boundary check */
+            start[j] = var_shape[i][j];
             err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
-            IF (canConvert && err != NC_EINVALCOORDS)
+            if (!canConvert) {
+                IF (err != NC_ECHAR)
+                    error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                ELSE_NOK
+                start[j] = 0;
+                continue;
+            }
+            IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
-            if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
             err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
-            IF (canConvert && err != NC_EEDGE)
+            IF (err != NC_EEDGE)
                 error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             ELSE_NOK
-            if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
             edge[j] = 1;
         }
         /* Check non-scalars for correct error returned even when */
@@ -799,13 +819,29 @@ ifdef(`PNETCDF',`dnl
             for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
             for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {                /* skip record dim */
-                    start[j] = var_shape[i][j];     /* out of boundary check */
+                if (var_dimid[i][j] > 0) {      /* skip record dim */
+                    start[j] = var_shape[i][j];
                     err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
-                    IF (canConvert && err != NC_EINVALCOORDS)
+                    if (!canConvert) {
+                        IF (err != NC_ECHAR)
+                            error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                        ELSE_NOK
+                        start[j] = 0;
+                        continue;
+                    }
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    ELSE_NOK
+                    start[j] = var_shape[i][j]+1; /* out of boundary check */
+                    err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
+                    IF (err != NC_EINVALCOORDS)
                         error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
                     ELSE_NOK
-                    if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
                     start[j] = 0;
                 }
             }
@@ -818,10 +854,7 @@ ifdef(`PNETCDF',`dnl
                     error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
                 ELSE_NOK
             }
-            if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
-            for (j = 0; j < var_rank[i]; j++) {
-                edge[j] = 1;
-            }
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
@@ -1008,13 +1041,13 @@ ifdef(`PNETCDF',`dnl
         }
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
-
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
             err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
@@ -1028,6 +1061,36 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
             ELSE_NOK
             stride[j] = 1;
+        }
+        /* Check non-scalars for correct error returned even when */
+        /* there is nothing to get (edge[j]==0) */
+        if (var_rank[i] > 0) {
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
+            for (j = 0; j < var_rank[i]; j++) {
+                if (var_dimid[i][j] > 0) {      /* skip record dim */
+                    start[j] = var_shape[i][j];
+                    err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 0, datatype, &reqid);
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    ELSE_NOK
+                    start[j] = var_shape[i][j]+1; /* out of boundary check */
+                    err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                    ELSE_NOK
+                    start[j] = 0;
+                }
+            }
+            err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 0, datatype, &reqid);
+            IF (err != NC_NOERR)
+                error("Error: ncmpi_iget_vars %s",ncmpi_strerror(err));
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
@@ -1230,31 +1293,75 @@ ifdef(`PNETCDF',`dnl
         }
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
                     error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
-            } else {
-                IF (err != NC_EINVALCOORDS)
-                    error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                ELSE_NOK
-
                 start[j] = 0;
-                edge[j] = var_shape[i][j] + 1;  /* edge error check */
-                err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                IF (err != NC_EEDGE)
-                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
-                ELSE_NOK
-                edge[j] = 1;
-                stride[j] = 0;
-                err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                IF (err != NC_ESTRIDE)
-                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
-                ELSE_NOK
-                stride[j] = 1;
+                continue;
             }
+            IF (err != NC_EINVALCOORDS)
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+            start[j] = 0;
+            edge[j] = var_shape[i][j] + 1;  /* edge error check */
+            err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+            IF (err != NC_EEDGE)
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+            ELSE_NOK
+            edge[j] = 1;
+            stride[j] = 0;
+            err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+            IF (err != NC_ESTRIDE)
+                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+            ELSE_NOK
+            stride[j] = 1;
+        }
+        /* Check non-scalars for correct error returned even when */
+        /* there is nothing to get (edge[j]==0) */
+        if (var_rank[i] > 0) {
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
+            for (j = 0; j < var_rank[i]; j++) {
+                if (var_dimid[i][j] > 0) {      /* skip record dim */
+                    start[j] = var_shape[i][j];
+                    err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+                    if (!canConvert) {
+                        IF (err != NC_ECHAR)
+                            error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                        ELSE_NOK
+                        start[j] = 0;
+                        continue;
+                    }
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    ELSE_NOK
+                    start[j] = var_shape[i][j]+1; /* out of boundary check */
+                    err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                    ELSE_NOK
+                    start[j] = 0;
+                }
+            }
+            err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+            if (canConvert) {
+                IF (err != NC_NOERR)
+                    error("Error: ncmpi_iget_vars_$1 %s",ncmpi_strerror(err));
+            } else {
+                IF (err != NC_ECHAR)
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                ELSE_NOK
+            }
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
@@ -1468,13 +1575,13 @@ ifdef(`PNETCDF',`dnl
         }
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
             ELSE_NOK
-
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
             err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
@@ -1488,6 +1595,36 @@ ifdef(`PNETCDF',`dnl
                 error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
             ELSE_NOK
             stride[j] = 1;
+        }
+        /* Check non-scalars for correct error returned even when */
+        /* there is nothing to get (edge[j]==0) */
+        if (var_rank[i] > 0) {
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
+            for (j = 0; j < var_rank[i]; j++) {
+                if (var_dimid[i][j] > 0) {      /* skip record dim */
+                    start[j] = var_shape[i][j];
+                    err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 0, datatype, &reqid);
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    ELSE_NOK
+                    start[j] = var_shape[i][j]+1; /* out of boundary check */
+                    err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                    ELSE_NOK
+                    start[j] = 0;
+                }
+            }
+            err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 0, datatype, &reqid);
+            IF (err != NC_NOERR)
+                error("Error: ncmpi_iget_varm %s",ncmpi_strerror(err));
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
@@ -1697,31 +1834,75 @@ ifdef(`PNETCDF',`dnl
         }
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];    /* out of boundary check */
             err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
                     error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
-            } else {
-                IF (err != NC_EINVALCOORDS)
-                    error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                ELSE_NOK
-
                 start[j] = 0;
-                edge[j] = var_shape[i][j] + 1;  /* edge error check */
-                err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                IF (err != NC_EEDGE)
-                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
-                ELSE_NOK
-                edge[j] = 1;
-                stride[j] = 0;
-                err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                IF (err != NC_ESTRIDE)
-                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
-                ELSE_NOK
-                stride[j] = 1;
+                continue;
             }
+            IF (err != NC_EINVALCOORDS)
+                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+            ELSE_NOK
+            start[j] = 0;
+            edge[j] = var_shape[i][j] + 1;  /* edge error check */
+            err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+            IF (err != NC_EEDGE)
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+            ELSE_NOK
+            edge[j] = 1;
+            stride[j] = 0;
+            err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+            IF (err != NC_ESTRIDE)
+                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+            ELSE_NOK
+            stride[j] = 1;
+        }
+        /* Check non-scalars for correct error returned even when */
+        /* there is nothing to get (edge[j]==0) */
+        if (var_rank[i] > 0) {
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
+            for (j = 0; j < var_rank[i]; j++) {
+                if (var_dimid[i][j] > 0) {      /* skip record dim */
+                    start[j] = var_shape[i][j];
+                    err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+                    if (!canConvert) {
+                        IF (err != NC_ECHAR)
+                            error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                        ELSE_NOK
+                        start[j] = 0;
+                        continue;
+                    }
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    ELSE_NOK
+                    start[j] = var_shape[i][j]+1; /* out of boundary check */
+                    err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                    ELSE_NOK
+                    start[j] = 0;
+                }
+            }
+            err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+            if (canConvert) {
+                IF (err != NC_NOERR)
+                    error("Error: ncmpi_iget_varm_$1 %s",ncmpi_strerror(err));
+            } else {
+                IF (err != NC_ECHAR)
+                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                ELSE_NOK
+            }
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */

@@ -286,7 +286,7 @@ extern nc_type    var_type[NVARS];
 extern int        var_rank[NVARS];
 extern int        var_dimid[NVARS][MAX_RANK];
 extern MPI_Offset var_shape[NVARS][MAX_RANK];
-extern size_t     var_nels[NVARS];
+extern MPI_Offset var_nels[NVARS];
 extern int        var_natts[NVARS];
 extern char       att_name[NVARS][MAX_NATTS][2];
 extern char       gatt_name[NGATTS][3];
