@@ -28,6 +28,9 @@ endif
 ifeq (@HAVE_F77_INT8@, yes)
 M4FLAGS += -DHAVE_F77_INT8
 endif
+ifeq (@enable_relax_coord_bound@, yes)
+FPPFLAGS := $(FPPFLAGS) @FC_DEFINE@RELAX_COORD_BOUND
+endif
 
 M4SRCS    = test_get.m4 \
             test_put.m4  \

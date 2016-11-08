@@ -15,6 +15,10 @@ INCLUDES  = -I../../src/lib -I$(srcdir) -I$(srcdir)/../common
 LDFLAGS  := -L../common $(LDFLAGS)
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) -lm @LCOV_LIB@
 
+ifeq (@enable_relax_coord_bound@, yes)
+CPPFLAGS := $(CPPFLAGS) -DRELAX_COORD_BOUND
+endif
+
 SRCS      = error.c \
             util.c
 

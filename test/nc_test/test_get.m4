@@ -378,15 +378,22 @@ ifdef(`PNETCDF',`dnl
         ELSE_NOK
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j]; /* causes NC_EINVALCOORDS */
             err = GetVara($1)(ncid, i, start, edge, value);
-            IF (canConvert && err != NC_EINVALCOORDS)
+            if (!canConvert) {
+                IF (err != NC_ECHAR)
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                start[j] = 0;
+                continue;
+            }
+            IF (err != NC_EINVALCOORDS)
                 error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1; /* causes NC_EEDGE */
             err = GetVara($1)(ncid, i, start, edge, value);
-            IF (canConvert && err != NC_EEDGE)
+            IF (err != NC_EEDGE)
                 error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
             edge[j] = 1;
         }
@@ -396,14 +403,30 @@ ifdef(`PNETCDF',`dnl
             for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
             for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {                /* skip record dim */
+                if (var_dimid[i][j] > 0) {       /* skip record dim */
                     start[j] = var_shape[i][j];
                     err = GetVara($1)(ncid, i, start, edge, value);
-                    IF (canConvert && err != NC_EINVALCOORDS)
+                    if (!canConvert) {
+                        IF (err != NC_ECHAR)
+                            error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                        start[j] = 0;
+                        continue;
+                    }
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    start[j] = var_shape[i][j]+1;  /* should cause NC_EINVALCOORDS */
+                    err = GetVara($1)(ncid, i, start, edge, value);
+                    IF (err != NC_EINVALCOORDS)
                         error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                     start[j] = 0;
                 }
             }
+
             err = GetVara($1)(ncid, i, start, edge, value);
             if (canConvert) {
                 IF (err != NC_NOERR)
@@ -412,9 +435,7 @@ ifdef(`PNETCDF',`dnl
                 IF (err != NC_ECHAR)
                     error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
             }
-            for (j = 0; j < var_rank[i]; j++) {
-                edge[j] = 1;
-            }
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
@@ -590,27 +611,74 @@ ifdef(`PNETCDF',`dnl
         ELSE_NOK
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
             err = GetVars($1)(ncid, i, start, edge, stride, value);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
                     error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
-            } else {
-                IF (err != NC_EINVALCOORDS)
-                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
                 start[j] = 0;
-                edge[j] = var_shape[i][j] + 1;
-                err = GetVars($1)(ncid, i, start, edge, stride, value);
-                IF (err != NC_EEDGE)
-                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
-                edge[j] = 1;
-                stride[j] = 0;
-                err = GetVars($1)(ncid, i, start, edge, stride, value);
-                IF (err != NC_ESTRIDE)
-                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
-                stride[j] = 1;
+                continue;
             }
+            IF (err != NC_EINVALCOORDS)
+                error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
+            start[j] = 0;
+            edge[j] = var_shape[i][j] + 1;
+            err = GetVars($1)(ncid, i, start, edge, stride, value);
+            IF (err != NC_EEDGE)
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+            edge[j] = 1;
+            stride[j] = 0;
+            err = GetVars($1)(ncid, i, start, edge, stride, value);
+            IF (err != NC_ESTRIDE)
+                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+            stride[j] = 1;
+        }
+        /* Check non-scalars for correct error returned even when */
+        /* there is nothing to get (edge[j]==0) */
+        if (var_rank[i] > 0) {
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
+            for (j = 0; j < var_rank[i]; j++) {
+                if (var_dimid[i][j] > 0) {       /* skip record dim */
+                    start[j] = var_shape[i][j];
+                    err = GetVars($1)(ncid, i, start, edge, stride, value);
+                    if (!canConvert) {
+                        IF (err != NC_ECHAR)
+                            error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                        start[j] = 0;
+                        continue;
+                    }
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    start[j] = var_shape[i][j]+1;  /* should cause NC_EINVALCOORDS */
+                    err = GetVars($1)(ncid, i, start, edge, stride, value);
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
+                    start[j] = 0;
+                    stride[j] = 0;
+                    err = GetVars($1)(ncid, i, start, edge, stride, value);
+                    IF (err != NC_ESTRIDE)
+                        error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+                    stride[j] = 1;
+                }
+            }
+
+            err = GetVars($1)(ncid, i, start, edge, stride, value);
+            if (canConvert) {
+                IF (err != NC_NOERR)
+                    error("%s", APIFunc(strerror)(err));
+            } else {
+                IF (err != NC_ECHAR)
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
+            }
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
@@ -812,27 +880,73 @@ ifdef(`PNETCDF',`dnl
         ELSE_NOK
 ')dnl
 
+        /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
             err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
                     error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
-            } else {
-                IF (err != NC_EINVALCOORDS)
-                    error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
-                start[j] = 0;
-                edge[j] = var_shape[i][j] + 1;
-                err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
-                IF (err != NC_EEDGE)
-                    error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
-                edge[j] = 1;
-                stride[j] = 0;
-                err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
-                IF (err != NC_ESTRIDE)
-                    error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
-                stride[j] = 1;
+                continue;
             }
+            IF (err != NC_EINVALCOORDS)
+                error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
+            start[j] = 0;
+            edge[j] = var_shape[i][j] + 1;
+            err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
+            IF (err != NC_EEDGE)
+                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+            edge[j] = 1;
+            stride[j] = 0;
+            err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
+            IF (err != NC_ESTRIDE)
+                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+            stride[j] = 1;
+        }
+        /* Check non-scalars for correct error returned even when */
+        /* there is nothing to get (edge[j]==0) */
+        if (var_rank[i] > 0) {
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+
+            for (j = 0; j < var_rank[i]; j++) {
+                if (var_dimid[i][j] > 0) {       /* skip record dim */
+                    start[j] = var_shape[i][j];
+                    err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
+                    if (!canConvert) {
+                        IF (err != NC_ECHAR)
+                            error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                        start[j] = 0;
+                        continue;
+                    }
+#ifdef RELAX_COORD_BOUND
+                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+#else
+                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+#endif
+                    start[j] = var_shape[i][j]+1;  /* should cause NC_EINVALCOORDS */
+                    err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting NC_EINVALCOORDS but got %s", nc_err_code_name(err));
+                    start[j] = 0;
+                    stride[j] = 0;
+                    err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
+                    IF (err != NC_ESTRIDE)
+                        error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+                    stride[j] = 1;
+                }
+            }
+
+            err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
+            if (canConvert) {
+                IF (err != NC_NOERR)
+                    error("%s", APIFunc(strerror)(err));
+            } else {
+                IF (err != NC_ECHAR)
+                    error("expecting NC_ECHAR but got %s", nc_err_code_name(err));
+            }
+            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
         }
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */

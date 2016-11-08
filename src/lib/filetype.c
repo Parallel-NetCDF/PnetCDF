@@ -78,10 +78,16 @@ NC_start_count_stride_ck(const NC         *ncp,
 
         /* for record variable, [0] is the NC_UNLIMITED dimension */
         if (rw_flag == READ_REQ) { /* read cannot go beyond current numrecs */
-            if (start[0] >= ncp->numrecs)
-                DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-
+#ifdef RELAX_COORD_BOUND
+            if (start[0] > ncp->numrecs) DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+#else
+            if (start[0] >= ncp->numrecs) DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+#endif
             if (count != NULL) {
+#ifdef RELAX_COORD_BOUND
+                if (start[0] == ncp->numrecs && count[0] > 0)
+                    DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+#endif
                 if (stride == NULL) { /* for vara APIs */
                     if (start[0] + count[0] > ncp->numrecs)
                         DEBUG_RETURN_ERROR(NC_EEDGE)
@@ -121,8 +127,16 @@ NC_start_count_stride_ck(const NC         *ncp,
     }
 
     for (; i<varp->ndims; i++) {
+#ifdef RELAX_COORD_BOUND
+        if (start[i] < 0 || start[i] > varp->shape[i])
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+
+        if (count != NULL && start[i] == varp->shape[i] && count[i] > 0)
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+#else
         if (start[i] < 0 || start[i] >= varp->shape[i])
             DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+#endif
 
         if (varp->shape[i] < 0) DEBUG_RETURN_ERROR(NC_EEDGE)
 

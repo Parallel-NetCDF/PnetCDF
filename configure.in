@@ -1124,7 +1124,7 @@ if test "x$enable_subfiling" = "xyes" ; then
 fi
 AC_SUBST(ENABLE_SUBFILING)
 
-AC_ARG_ENABLE([erange_fill],
+AC_ARG_ENABLE([erange-fill],
    [AS_HELP_STRING([--disable-erange-fill],
                    [Disable use of fill value when out-of-range type
                     conversion causes NC_ERANGE error. @<:@default: enabled@:>@])],
@@ -1137,6 +1137,15 @@ if test "x$enable_erange_fill" = "xyes" ; then
    ENABLE_ERANGE_FILL=1
 fi
 AC_SUBST(ENABLE_ERANGE_FILL)
+
+AC_ARG_ENABLE([relax-coord-bound],
+   [AS_HELP_STRING([--enable-relax-coord-bound],
+                   [Enable relaxed error NC_EINVALCOORDS to allow coordinate
+                    start argument equal to dimension size when argument
+                    count is zero. @<:@default: disabled@:>@])],
+   [enable_relax_coord_bound=${enableval}], [enable_relax_coord_bound=no]
+)
+AC_SUBST(enable_relax_coord_bound)
 
 AC_PATH_PROG([LATEX],  [latex])
 AC_PATH_PROG([DVIPDF], [dvipdf])
@@ -1278,6 +1287,10 @@ fi
 if test "x${enable_subfiling}" = xyes; then
    echo "\
               Build subfiling support                           - yes"
+fi
+if test "x${enable_relax_coord_bound}" = xyes; then
+   echo "\
+              Relax start coordinate bound check                - enabled"
 fi
 if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
    echo "\

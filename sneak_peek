@@ -88,6 +88,16 @@ This is essentially a placeholder for the next release note ...
       for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
       APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
       honors that exception.
+    * A new configure option --enable-relax-coord-bound is added to provide a
+      more relaxed boundary check for argument start. Traditionally, both NetCDF
+      and PnetCDF detect the error code NC_EINVALCOORDS when the value of start
+      is larger than or equal to the defined dimension size. This can be
+      inconvenient for some applications that make a zero-length request with
+      start being the dimension size, usually the last process. The new
+      configure option relaxes the boundary check by allowing the above
+      exception, i.e. start[i] can be the size of dimension i only when count[i]
+      is zero. The default of this feature is disabled. See discussion in
+      http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
 
   o Other updates:
     * API ncmpi_inq_file_format can now detect HDF5 file signature and report

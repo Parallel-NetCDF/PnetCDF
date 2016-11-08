@@ -40,7 +40,7 @@ nc_type var_type[NVARS];
 int var_rank[NVARS];
 int var_dimid[NVARS][MAX_RANK];
 MPI_Offset var_shape[NVARS][MAX_RANK];
-size_t var_nels[NVARS];
+MPI_Offset var_nels[NVARS];
 int  var_natts[NVARS];
 char att_name[NVARS][MAX_NATTS][2];
 char gatt_name[NGATTS][3];

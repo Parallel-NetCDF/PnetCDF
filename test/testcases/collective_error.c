@@ -23,7 +23,7 @@
    if (rank == 0 && err != NC_NOERR) \
        printf("PE %d: %s error is %s\n",rank,fn,ncmpi_strerror(err)); \
    if (rank == 1 && err != NC_EINVALCOORDS) \
-       printf("PE %d: %s error code should be NC_EINVALCOORDS but got %s",rank,fn,nc_err_code_name(err)); \
+       printf("PE %d: %s error code should be NC_EINVALCOORDS but got %s\n",rank,fn,nc_err_code_name(err)); \
 }
 
 int main(int argc, char *argv[])
@@ -72,7 +72,11 @@ int main(int argc, char *argv[])
         start[0] = 0;
         count[0] = 2;
     } else if (rank == 1) {
-        start[0] = 2; /* illegal for a start > defined shape */
+#ifdef RELAX_COORD_BOUND
+        start[0] = 3; /* illegal for a start > defined shape */
+#else
+        start[0] = 2; /* illegal for a start >= defined shape */
+#endif
         count[0] = 0;
     }
     else {
