@@ -1519,22 +1519,28 @@ ncmpii_close(NC *ncp)
     /* We can cancel or complete all outstanding nonblocking I/O.
      * For now, cancelling makes more sense. */
 #ifdef COMPLETE_NONBLOCKING_IO
-    if (ncp->numGetReqs > 0)
+    if (ncp->numGetReqs > 0) {
         ncmpii_wait(ncp, INDEP_IO, NC_GET_REQ_ALL, NULL, NULL);
-    if (ncp->numPutReqs > 0)
+        if (status == NC_NOERR ) status = NC_EPENDING;
+    }
+    if (ncp->numPutReqs > 0) {
         ncmpii_wait(ncp, INDEP_IO, NC_PUT_REQ_ALL, NULL, NULL);
+        if (status == NC_NOERR ) status = NC_EPENDING;
+    }
 #else
     if (ncp->numGetReqs > 0) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
         printf("PnetCDF warning: %d nonblocking get requests still pending on process %d. Cancelling ...\n",ncp->numGetReqs,rank);
         ncmpii_cancel(ncp, NC_GET_REQ_ALL, NULL, NULL);
+        if (status == NC_NOERR ) status = NC_EPENDING;
     }
     if (ncp->numPutReqs > 0) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
         printf("PnetCDF warning: %d nonblocking put requests still pending on process %d. Cancelling ...\n",ncp->numPutReqs,rank);
         ncmpii_cancel(ncp, NC_PUT_REQ_ALL, NULL, NULL);
+        if (status == NC_NOERR ) status = NC_EPENDING;
     }
 #endif
 

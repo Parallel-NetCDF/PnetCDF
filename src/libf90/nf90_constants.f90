@@ -267,6 +267,7 @@
       NF90_ENOTRECVAR               = NF_ENOTRECVAR               , & ! Attempting operation only for record variables
       NF90_ENOTFILL                 = NF_ENOTFILL                 , & ! Attempting to fill a variable when its fill mode is off
       NF90_EINVAL_OMODE             = NF_EINVAL_OMODE             , & ! Invalid file open mode
+      NF90_EPENDING                 = NF_EPENDING                 , & ! Pending nonblocking request is found at file close
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! inconsistent file open modes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions

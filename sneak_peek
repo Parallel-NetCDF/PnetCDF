@@ -31,12 +31,14 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New error code
+    * NC_EPENDING: Pending nonblocking request is found at file close.
     * NC_EINVAL_OMODE: invalid file open mode. This separates the case from
       NC_EINVAL_CMODE. The error messages for both error codes are revised
       accordingly.
     * NC_EMULTIDEFINE_CMODE: inconsistent file create mode. This separates the
       case from NC_EMULTIDEFINE_OMODE. The error messages for both error codes
       are revised accordingly.
+    * The Fortran error codes corresponding to the above are also added.
 
   o New run-time environment variables
     * none
@@ -98,6 +100,10 @@ This is essentially a placeholder for the next release note ...
       exception, i.e. start[i] can be the size of dimension i only when count[i]
       is zero. The default of this feature is disabled. See discussion in
       http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
+    * Prior to version 1.7.0, any outstanding nonblocking requests detected at
+      file close are automatically cancelled without reporting an error. In
+      this release, error code NC_EPENDING will be returned when pending
+      requests are detected.
 
   o Other updates:
     * API ncmpi_inq_file_format can now detect HDF5 file signature and report
