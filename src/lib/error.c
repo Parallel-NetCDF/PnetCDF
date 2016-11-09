@@ -246,6 +246,8 @@ ncmpi_strerror(int err)
             return "Attempting to fill a variable when its fill mode is off";
         case NC_EINVAL_OMODE:
             return "Invalid file open mode";
+        case NC_EPENDING:
+            return "Pending nonblocking request is found at file close";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
             /* this error means the metadata (dimension names, variable names,
@@ -751,6 +753,7 @@ ncmpi_strerrno(int err)
         case (NC_ENULLCOUNT):			return "NC_ENULLCOUNT";
         case (NC_EINVAL_CMODE):			return "NC_EINVAL_CMODE";
         case (NC_EINVAL_OMODE):			return "NC_EINVAL_OMODE";
+        case (NC_EPENDING):			return "NC_EPENDING";
         case (NC_ETYPESIZE):			return "NC_ETYPESIZE";
         case (NC_ETYPE_MISMATCH):		return "NC_ETYPE_MISMATCH";
         case (NC_ETYPESIZE_MISMATCH):		return "NC_ETYPESIZE_MISMATCH";

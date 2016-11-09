@@ -554,6 +554,7 @@ by the desired type. */
 #define NC_ENOTRECVAR			(-233) /**< Attempting operation only for record variables */
 #define NC_ENOTFILL			(-234) /**< Attempting to fill a variable when its fill mode is off */
 #define NC_EINVAL_OMODE			(-235) /**< Invalid file open mode */
+#define NC_EPENDING			(-236) /**< Pending nonblocking request is found at file close */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
