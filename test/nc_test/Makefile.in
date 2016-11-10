@@ -32,6 +32,8 @@ PROG_SRCS = nc_test.c \
             tst_atts.c \
             tst_nofill.c
 
+M4_HEADERS = tests.h.m4
+
 M4_SRCS   = test_get.m4 \
             test_put.m4 \
             test_iget.m4 \
@@ -39,18 +41,17 @@ M4_SRCS   = test_get.m4 \
             test_read.m4 \
             test_write.m4
 
-HEADERS   = tests.h \
-            error.h
+HEADERS   = error.h
 
 OBJS      = $(SRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 PROGS     = $(PROG_SRCS:.c=)
 
-GARBAGE      = $(PROGS) $(M4_SRCS:.m4=.c) \
-               test.nc testfile.nc scratch.nc testfile.nc.2 \
-               testfile.nc.nofill testfile.nc.fill
+GARBAGE   = $(PROGS) $(M4_SRCS:.m4=.c) tests.h \
+            test.nc testfile.nc scratch.nc testfile.nc.2 \
+            testfile.nc.nofill testfile.nc.fill
 
-PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) $(PROG_SRCS) \
+PACKING_LIST = $(SRCS) $(M4_SRCS) $(M4_HEADERS) $(HEADERS) $(PROG_SRCS) \
                Makefile.in depend README
 
 all: $(PROGS)
@@ -59,6 +60,9 @@ $(PROGS): ../common/libtestutils.a
 
 ../common/libtestutils.a:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+
+tests.h: tests.h.m4
+	$(M4) $(M4FLAGS) $< >$@
 
 nc_test: nc_test.o $(OBJS) $(LIBRARY)
 	$(LINK.c) $< $(OBJS) $(LDFLAGS) $(LIBS)

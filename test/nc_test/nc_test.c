@@ -46,8 +46,8 @@ char att_name[NVARS][MAX_NATTS][2];
 char gatt_name[NGATTS][3];
 nc_type att_type[NVARS][NGATTS];
 nc_type gatt_type[NGATTS];
-size_t att_len[NVARS][MAX_NATTS];
-size_t gatt_len[NGATTS];
+MPI_Offset att_len[NVARS][MAX_NATTS];
+MPI_Offset gatt_len[NGATTS];
 
 /* 
  * command-line options
