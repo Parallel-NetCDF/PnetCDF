@@ -50,6 +50,9 @@
 #.F.f:
 #	$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*.f || ($(RM) -f $*.f; exit 1)
 
+.m4.h:
+	$(M4) $(M4FLAGS) $< >$@
+
 .m4.c:
 	$(M4) $(M4FLAGS) $< >$@
 
