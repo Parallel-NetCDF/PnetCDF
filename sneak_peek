@@ -117,6 +117,21 @@ This is essentially a placeholder for the next release note ...
       used. These modes are currently not supported.
     * Clarify support for CDF-2 and CDF-5 formats. When the size of MPI_Offset
       is less than 8 bytes, support for CDF-2 and CDF-5 is disabled.
+    * When using OpenMPI 2.0.1 to build PnetCDF, users may encounter an error
+      message of "test_write.c: file ./scratch.nc should not exist" while
+      running "make check". This is due to OpenMPI 2.0.1 fails to return the
+      correct MPI error class MPI_ERR_NO_SUCH_FILE when deleting a non-existing
+      file. The bug fix will appear in OpenMPI 2.0.2. See the bug report in
+      https://github.com/open-mpi/ompi/issues/2232
+    * When using OpenMPI 1.10.2 and 1.8.5 to build PnetCDF, users may encounter
+      an error message of "An error occurred in MPI_Type_create_hindexed" when
+      running "make check". This is due to a bug in OpenMPI that fails to
+      create a zero-size datatype in MPI_Type_create_hindexed. The bug fix will
+      appear in 2.0.1. See the bug report in
+      https://github.com/open-mpi/ompi/issues/1611
+    * When using SGI MPI with MPT 2.14 to build PnetCDF, users may encounter an
+      error message of "function:MPI_TYPE_CREATE_HVECTOR, Invalid argument".
+      The bug fix will appear in 2.15 to be released in Novermber 2016.
 
   o Bug fixes
     * Fix to allow putting global attribute _FillValue
