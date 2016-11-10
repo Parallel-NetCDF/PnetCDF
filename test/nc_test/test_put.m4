@@ -84,7 +84,7 @@ define(`HASH',dnl
 /*
  *  ensure hash value within range for internal TYPE
  */
-static $1
+$1
 hash_$1(const int         cdf_format,
         const nc_type     type,
         const int         rank,
@@ -122,7 +122,6 @@ define(`CHECK_VARS',dnl
 /*
  *  check all vars in file which are (text/numeric) compatible with TYPE
  */
-static
 int
 check_vars_$1(const char *filename, int numVars)
 {
@@ -164,9 +163,10 @@ check_vars_$1(const char *filename, int numVars)
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 2");
-            expect = hash4(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
+            IF (err != 0)
+                error("error in toMixedBase");
+            expect = hash4(cdf_format, var_type[i], var_rank[i], index,
+                           NCT_ITYPE($1));
             err = GetVar1($1)(ncid, i, index, &value);
             if (CheckNumRange($1, expect, datatype)) {
                 IF (err != NC_NOERR) {
@@ -235,7 +235,6 @@ define(`CHECK_ATTS',dnl
  *  for other tests, check all numerical attributes in file against values
  *  outside range of type $1
  */
-static
 int
 check_atts_$1(int ncid, int numGatts, int numVars)
 {
@@ -244,8 +243,8 @@ check_atts_$1(int ncid, int numGatts, int numVars)
     int nok = 0;         /* count of valid comparisons */
     IntType k, length;
     nc_type datatype;
-    size_t nInExtRange;  /* number values within external range */
-    size_t nInIntRange;  /* number values within internal range */
+    IntType nInExtRange;  /* number values within external range */
+    IntType nInIntRange;  /* number values within internal range */
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
@@ -339,8 +338,8 @@ int
 TestFunc(var1)_$1(VarArgs)
 {
     int i, err, ncid, cdf_format, nok=0;
-    IntType j, index[MAX_RANK];
     int canConvert;      /* Both text or both numeric */
+    IntType j, index[MAX_RANK];
     $1 value[1];
 
     err = FileCreate(scratch, NC_CLOBBER);
@@ -423,8 +422,8 @@ ifdef(`PNETCDF',`dnl
 
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 1");
+            IF (err != 0)
+                error("error in toMixedBase");
             value[0] = hash_$1(cdf_format, var_type[i], var_rank[i], index,
                                NCT_ITYPE($1));
             err = PutVar1($1)(ncid, i, index, value);
@@ -435,7 +434,7 @@ ifdef(`PNETCDF',`dnl
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE) {
-                        EXPECT_ERR(NC_ERANG, err)
+                        EXPECT_ERR(NC_ERANGE, err)
                         error("\n\t\tfor type %s value %.17e %ld",
                                 s_nc_type(var_type[i]),
                                 (double)value[0], (long)value[0]);
@@ -523,6 +522,8 @@ TestFunc(var)_$1(VarArgs)
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
 
+        if (var_dimid[i][0] == RECDIM) continue; /* fixed-size variables only */
+
         value[0] = 5;  /* reset to a value within bounds */
 
         /* check if can detect a bad file ID */
@@ -535,8 +536,8 @@ TestFunc(var)_$1(VarArgs)
 
         for (allInExtRange = 1, j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 1");
+            IF (err != 0)
+                error("error in toMixedBase");
             value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
                               NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
@@ -550,7 +551,7 @@ TestFunc(var)_$1(VarArgs)
                     error("%s", APIFunc(strerror)(err));
                 ELSE_NOK
             } else {
-                IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
+                IF (err != NC_ERANGE)
                     EXPECT_ERR(NC_ERANGE, err)
                 ELSE_NOK
             }
@@ -581,8 +582,8 @@ TestFunc(var)_$1(VarArgs)
 
         for (allInExtRange = 1, j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 1");
+            IF (err != 0)
+                error("error in toMixedBase");
             value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
                               NCT_ITYPE($1));
             IfCheckTextChar($1, var_type[i])
@@ -803,7 +804,7 @@ ifdef(`PNETCDF',`dnl
 
             for (allInExtRange = 1, j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err != NC_NOERR)
+                IF (err != 0)
                     error("error in toMixedBase");
                 for (d = 0; d < var_rank[i]; d++)
                     index[d] += start[d];
@@ -817,11 +818,11 @@ ifdef(`PNETCDF',`dnl
             if (canConvert) {
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
-                        error("%s", APIFunc(strerror)(err));
+                        EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
-                        EXPECT_ERR(NC_ERANG, err)
+                        EXPECT_ERR(NC_ERANGE, err)
                     ELSE_NOK
                 }
             } else {
@@ -1038,7 +1039,7 @@ ifdef(`PNETCDF',`dnl
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err != NC_NOERR)
+                IF (err != 0)
                     error("error in toMixedBase");
                 nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
@@ -1057,7 +1058,7 @@ ifdef(`PNETCDF',`dnl
 */
                 for (allInExtRange = 1, j = 0; j < nels; j++) {
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != NC_NOERR)
+                    IF (err != 0)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * (IntType)stride[d];
@@ -1295,7 +1296,7 @@ ifdef(`PNETCDF',`dnl
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err != NC_NOERR)
+                IF (err != 0)
                     error("error in toMixedBase");
                 nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
@@ -1320,7 +1321,7 @@ ifdef(`PNETCDF',`dnl
                 }
                 for (allInExtRange = 1, j = 0; j < nels; j++) {
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != NC_NOERR)
+                    IF (err != 0)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * (IntType)stride[d];
@@ -1342,7 +1343,7 @@ ifdef(`PNETCDF',`dnl
                         ELSE_NOK
                     }
                 } else {
-                    IF (nels > 0 && err != NC_ECHAR)
+                    IF (err != NC_ECHAR)
                         EXPECT_ERR(NC_ECHAR, err)
                     ELSE_NOK
                 }

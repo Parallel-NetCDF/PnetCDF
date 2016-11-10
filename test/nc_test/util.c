@@ -254,7 +254,7 @@ MPI_Offset roll( MPI_Offset n )
  *              because 37 = 2x(3x4) + 2x(4) + 5
  */
 int
-toMixedBase(size_t           number,   /* to be converted to mixed base */
+toMixedBase(MPI_Offset       number,   /* to be converted to mixed base */
             int              length,
             const MPI_Offset base[],   /* in:  [length], base[0] ignored */
             MPI_Offset       result[]) /* out: [length] */
@@ -282,13 +282,13 @@ toMixedBase(size_t           number,   /* to be converted to mixed base */
  *
  *      Author: Harvey Davies, Unidata/UCAR, Boulder, Colorado
  */
-size_t
-fromMixedBase(size_t     length,
+MPI_Offset
+fromMixedBase(int        length,
               MPI_Offset number[],  /* [length] */
               MPI_Offset base[])    /* [length], base[0] ignored */
 {
-    size_t i;
-    size_t result = 0;
+    int i;
+    MPI_Offset result = 0;
 
     for (i = 1; i < length; i++) {
         result += number[i-1];
@@ -873,7 +873,7 @@ check_dims(int  ncid)
 /*
  * check variables of specified file have expected name, type, shape & values
  */
-void
+int
 check_vars(int ncid, int numVars)
 {
     MPI_Offset index[MAX_RANK];
@@ -909,10 +909,9 @@ check_vars(int ncid, int numVars)
                 error("error in toMixedBase 2");
             expect = hash( var_type[i], var_rank[i], index );
             if (isChar) {
-                ncmpi_begin_indep_data(ncid);
-                err = ncmpi_get_var1_text(ncid, i, index, &text);
+                err = ncmpi_get_var1_text_all(ncid, i, index, &text);
                 IF (err != NC_NOERR)
-                    error("ncmpi_get_var1_text: %s", ncmpi_strerror(err));
+                    error("ncmpi_get_var1_text_all: %s", ncmpi_strerror(err));
                 IF (text != (char)expect) {
                     error("Var %s (varid=%d) value read 0x%02x not that expected 0x%02x ",
                           var_name[i], i, text, (char)expect);
@@ -920,10 +919,8 @@ check_vars(int ncid, int numVars)
                 } else {
                     nok++;
                 }
-                ncmpi_end_indep_data(ncid);
             } else {
-                ncmpi_begin_indep_data(ncid);
-                err = ncmpi_get_var1_double(ncid, i, index, &value); 
+                err = ncmpi_get_var1_double_all(ncid, i, index, &value); 
                 if (inRange(expect,var_type[i])) {
                     IF (err != NC_NOERR) {
                         error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
@@ -937,11 +934,10 @@ check_vars(int ncid, int numVars)
                         }
                     }
                 }
-                ncmpi_end_indep_data(ncid);
             }
         }
     }
-    /* print_nok(nok); */
+    return nok;
 }
 
 
