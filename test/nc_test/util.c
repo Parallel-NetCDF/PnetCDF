@@ -1078,3 +1078,22 @@ nc_mpi_type(nc_type xtype)
     }
 }
 
+int
+default_fill_value(int xtype, double *fillp) {
+    switch(xtype) {
+        case NC_CHAR   : *fillp = (double)NC_FILL_CHAR;   break;
+        case NC_BYTE   : *fillp = (double)NC_FILL_BYTE;   break;
+        case NC_SHORT  : *fillp = (double)NC_FILL_SHORT;  break;
+        case NC_INT    : *fillp = (double)NC_FILL_INT;    break;
+        case NC_FLOAT  : *fillp = (double)NC_FILL_FLOAT;  break;
+        case NC_DOUBLE : *fillp = (double)NC_FILL_DOUBLE; break;
+        case NC_UBYTE  : *fillp = (double)NC_FILL_UBYTE;  break;
+        case NC_USHORT : *fillp = (double)NC_FILL_USHORT; break;
+        case NC_UINT   : *fillp = (double)NC_FILL_UINT;   break;
+        case NC_INT64  : *fillp = (double)NC_FILL_INT64;  break;
+        case NC_UINT64 : *fillp = (double)NC_FILL_UINT64; break;
+        default:         return NC_EBADTYPE;
+    }
+    return NC_NOERR;
+}
+
