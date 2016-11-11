@@ -498,6 +498,9 @@ nc_mpi_type(nc_type type);
 extern char*
 ncmpii_err_code_name(int err);
 
+extern int
+default_fill_value(int xtype, double *fillp);
+
 dnl
 define(`HASH',`extern $1 hash_$1(const int cdf_format, const nc_type type,
        const int rank, const IntType *index, const nct_itype `itype');')dnl
