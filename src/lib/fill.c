@@ -488,7 +488,7 @@ ncmpi_inq_var_fill(int   ncid,
     err = ncmpii_NC_lookupvar(ncp, varid, &varp);
     if (err != NC_NOERR) return err;
 
-    *no_fill = varp->no_fill;
+    if (no_fill != NULL) *no_fill = varp->no_fill;
 
     if (fill_value != NULL) {
         err = ncmpi_get_att(ncid, varid, _FillValue, fill_value);
