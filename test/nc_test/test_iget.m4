@@ -11,6 +11,25 @@ dnl
 /* $Id$ */
 
 
+define(`EXPECT_ERR',`error("expecting $1 but got %s",nc_err_code_name($2));')dnl
+
+define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
+define(`PTRDType',`ifdef(`PNETCDF',`MPI_Offset',`ptrdiff_t')')dnl
+define(`TestFunc',`ifdef(`PNETCDF',`test_ncmpi_iget_$1',`test_nc_iget_$1')')dnl
+define(`APIFunc',` ifdef(`PNETCDF',`ncmpi_$1',`nc_$1')')dnl
+
+define(`FileOpen', `ifdef(`PNETCDF',`ncmpi_open(comm, $1, $2, info, &ncid)', `fi
+le_open($1, $2, &ncid)')')dnl
+
+define(`VarArgs',   `ifdef(`PNETCDF',`int numVars',`void')')dnl
+define(`AttVarArgs',`ifdef(`PNETCDF',`int numGatts,int numVars',`void')')dnl
+
+define(`iGetVar1',`ifdef(`PNETCDF',`ncmpi_iget_var1_$1',`nc_iget_var1_$1')')dnl
+define(`iGetVar', `ifdef(`PNETCDF',`ncmpi_iget_var_$1', `nc_iget_var_$1')')dnl
+define(`iGetVara',`ifdef(`PNETCDF',`ncmpi_iget_vara_$1',`nc_iget_vara_$1')')dnl
+define(`iGetVars',`ifdef(`PNETCDF',`ncmpi_iget_vars_$1',`nc_iget_vars_$1')')dnl
+define(`iGetVarm',`ifdef(`PNETCDF',`ncmpi_iget_varm_$1',`nc_iget_varm_$1')')dnl
+
 undefine(`index')dnl
 dnl dnl dnl
 dnl
@@ -40,78 +59,87 @@ define(`CheckNumRange',
 #include "tests.h"
 
 int
-test_ncmpi_iget_var1(int numVars)
+TestFunc(var1)(VarArgs)
 {
-    int i, j, err, ncid, nok = 0; /* count of valid comparisons */
-    MPI_Offset index[MAX_RANK];
-    double expect, value, buf[1];
-    int reqid, status;
+    int i, j, err, ncid, nok=0, reqid;
+    IntType index[MAX_RANK];
+    double expect, value[1];
     MPI_Datatype datatype;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_var1(BAD_ID, 0, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_var1)(BAD_ID, 0, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_var1(ncid, BAD_VARID, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_var1)(ncid, BAD_VARID, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        for (j = 0; j < var_rank[i]; j++) index[j] = 0;
+        assert(var_rank[i] <= MAX_RANK);
+        assert(var_nels[i] <= MAX_NELS);
+
+        /* check if can detect a bad file ID */
+        err = APIFunc(iget_var1)(BAD_ID, i, NULL, value, 1, MPI_DATATYPE_NULL, NULL);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
         datatype = nc_mpi_type(var_type[i]);
 
 ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_var1(ncid, i, NULL, buf, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-        ELSE_NOK
-
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        err = APIFunc(iget_var1)(ncid, i, NULL, value, 1, datatype, &reqid);
+        if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
+        else IF (err != NC_EINVALCOORDS) {
+            EXPECT_ERR(NC_EINVALCOORDS, err)
+        }
+        ELSE_NOK
 ')dnl
 
-        /* check if pnetcdf can detect out of boundary requests */
+        /* test NC_EINVALCOORDS */
         for (j = 0; j < var_rank[i]; j++) {
             index[j] = var_shape[i][j]; /* make an out-of-boundary starts[] */
-            err = ncmpi_iget_var1(ncid, i, index, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_var1)(ncid, i, index, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             index[j] = 0;
         }
+        err = APIFunc(iget_var1)(ncid, i, index, value, 1, datatype, &reqid);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+
         /* check if the contents are supposed to be */
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 1");
-
+            IF (err != 0) error("error in toMixedBase");
             /* when file is created the variable contents are generated by
              * hash functions */
             expect = hash(var_type[i], var_rank[i], index);
-            if (var_rank[i] == 0 && i%2 )
-                err = ncmpi_iget_var1(ncid, i, NULL, buf, 1, datatype, &reqid);
-            else
-                err = ncmpi_iget_var1(ncid, i, index, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_var1)(ncid, i, index, value, 1, datatype, &reqid);
             IF (err != NC_NOERR)
-                error("ncmpi_iget_var: %s", ncmpi_strerror(err));
+                EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
-
-            err = ncmpi_wait_all(ncid, 1, &reqid, &status);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
             IF (err != NC_NOERR)
-                error("ncmpi_wait_all: %s", ncmpi_strerror(err));
+                EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
-
-            err = nc2dbl( var_type[i], buf, &value );
+            err = nc2dbl(var_type[i], value, value);
             IF (err)
                 error("error in nc2dbl");
             if (inRange(expect,var_type[i])) {
@@ -123,17 +151,16 @@ ifdef(`PNETCDF',`dnl
                  * equal test below for uchar.
                  */
                 if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect > schar_max) continue;')
-                IF (!equal2(value,expect,var_type[i])) {
-                    error("expected: %G, got: %G", expect, value);
-                } else {
-                    nok++;
+                IF (!equal2(value[0],expect,var_type[i])) {
+                    error("expected: %G, got: %G", expect, value[0]);
                 }
+                ELSE_NOK
             }
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 
@@ -142,129 +169,132 @@ dnl
 define(`TEST_NC_IGET_VAR1',dnl
 `dnl
 int
-test_ncmpi_iget_var1_$1(int numVars)
+TestFunc(var1)_$1(VarArgs)
 {
-    int ncid, cdf_format;
-    int i;
-    int j;
-    int err;
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset index[MAX_RANK];
+    int i, err, ncid, cdf_format, reqid;
+    int nok = 0;        /* count of valid comparisons */
     int canConvert;     /* Both text or both numeric */
+    IntType j, index[MAX_RANK];
     double expect;
-    $1 value;
-    int reqid, status;
+    $1 value[1];
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
-    IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_var1_$1(BAD_ID, 0, NULL, NULL, NULL);
+    err = iGetVar1($1)(BAD_ID, 0, NULL, NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_var1_$1(ncid, BAD_VARID, NULL, NULL, NULL);
+    err = iGetVar1($1)(ncid, BAD_VARID, NULL, NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
-        for (j = 0; j < var_rank[i]; j++)
-            index[j] = 0;
+        assert(var_rank[i] <= MAX_RANK);
+        assert(var_nels[i] <= MAX_NELS);
 
-ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_var1_$1(ncid, i, NULL, &value, &reqid);
-        if (!canConvert) {
-            IF (err != NC_ECHAR)
-                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
-            ELSE_NOK
-        }
-        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+        /* check if can detect a bad file ID */
+        err = iGetVar1($1)(BAD_ID, i, NULL, value, NULL);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
 
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
+
+ifdef(`PNETCDF',`dnl
+        /* for non-scalar variables, argument start cannot be NULL */
+        err = iGetVar1($1)(ncid, i, NULL, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR) EXPECT_ERR(NC_ECHAR, err)
         }
+        else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            index[0] = 0;
+            expect = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect, var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect)) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
+        }
+        else IF (err != NC_EINVALCOORDS) {
+            EXPECT_ERR(NC_EINVALCOORDS, err)
+        }
+        ELSE_NOK
 ')dnl
 
-        /* check if pnetcdf can detect out of boundary requests */
+        /* test NC_EINVALCOORDS */
+        for (j = 0; j < var_rank[i]; j++) index[j] = 0;
+
         for (j = 0; j < var_rank[i]; j++) {
             index[j] = var_shape[i][j]; /* make an out-of-boundary starts[] */
-            err = ncmpi_iget_var1_$1(ncid, i, index, &value, &reqid);
+            err = iGetVar1($1)(ncid, i, index, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
             } else IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             index[j] = 0;
         }
+
         /* check if the contents are supposed to be */
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 1");
-
+            IF (err != 0) error("error in toMixedBase");
             /* when file is created the variable contents are generated by
              * hash functions */
-            expect = hash4(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
-
-            if (var_rank[i] == 0 && i%2 )
-                err = ncmpi_iget_var1_$1(ncid, i, NULL, &value, &reqid);
-            else
-                err = ncmpi_iget_var1_$1(ncid, i, index, &value, &reqid);
-            if (err == NC_NOERR)
-                ncmpi_wait_all(ncid, 1, &reqid, &status);
-
+            expect = hash4(cdf_format, var_type[i], var_rank[i], index,
+                           NCT_ITYPE($1));
+            err = iGetVar1($1)(ncid, i, index, value, &reqid);
             if (canConvert) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
                 if (inRange3(cdf_format, expect,var_type[i], NCT_ITYPE($1))) {
                     if (CheckRange($1, expect)) {
-                        IF (status != NC_NOERR) {
-                            error("%s", ncmpi_strerror(status));
+                        IF (err != NC_NOERR) {
+                            EXPECT_ERR(NC_NOERR, err)
                         } else {
                             ifelse(`$1', `uchar', `
-                                        /* in put_vars(), API _put_vara_double() is used to
+                            /* in put_vars(), API _put_vara_double() is used to
                              * write the NC_BYTE variables to files. In this
                              * case, NC_BYTE variables are treated as signed
                              * for CDF-1 and 2 formats. Thus, we must skip the
                              * equal test below for uchar.
                              */
                             if (cdf_format < NC_FORMAT_CDF5 && var_type[i] == NC_BYTE && expect > schar_max) continue;')
-                            IF (!equal(value,expect,var_type[i],NCT_ITYPE($1)))
-                                error("expected: %G, got: %G", expect,
-                                    (double) value);
+                            IF (!equal(value[0],expect,var_type[i],NCT_ITYPE($1)))
+                                error("expected: %G, got: %G", expect, (double)value[0]);
                             ELSE_NOK
                         }
                     } else {
-                        IF (status != NC_ERANGE)
-                            error("Range error: status = %d", status);
+                        IF (err != NC_ERANGE)
+                            EXPECT_ERR(NC_ERANGE, err)
                         ELSE_NOK
                     }
                 } else {
-                    IF (status != NC_NOERR && status != NC_ERANGE)
-                        error("OK or Range error: status = %d", status);
+                    IF (err != NC_NOERR && err != NC_ERANGE)
+                        EXPECT_ERR(NC_NOERR or NC_ERANGE, err)
                     ELSE_NOK
                 }
             } else {
                 IF (err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
                 ELSE_NOK
             }
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -283,66 +313,58 @@ TEST_NC_IGET_VAR1(longlong)
 TEST_NC_IGET_VAR1(ulonglong)
 
 int
-test_ncmpi_iget_var(int numVars)
+TestFunc(var)(VarArgs)
 {
-    int ncid;
-    int i;
-    int j;
-    int err, num_err;
-    int nels;
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset index[MAX_RANK];
-    double expect[MAX_NELS];
-    double buf[MAX_NELS];
-    int reqid, status;
+    int i, err, ncid, nok=0, reqid;
+    IntType j, index[MAX_RANK];
     MPI_Datatype datatype;
+    double value[MAX_NELS], expect[MAX_NELS];
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_var(BAD_ID, 0, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_var)(BAD_ID, 0, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_var(ncid, BAD_VARID, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_var)(ncid, BAD_VARID, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
 
+        /* check if can detect a bad file ID */
+        err = APIFunc(iget_var)(BAD_ID, i, NULL, 0, MPI_DATATYPE_NULL, NULL);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        datatype = nc_mpi_type(var_type[i]);
+
         /* check if the contents are supposed to be */
-        nels = 1;
-        for (j = 0; j < var_rank[i]; j++) {
-            nels *= var_shape[i][j];
-        }
-        for (j = 0; j < nels; j++) {
+        for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 1");
+            IF (err != 0) error("error in toMixedBase");
             expect[j] = hash(var_type[i], var_rank[i], index);
         }
-        err = ncmpi_iget_var(ncid, i, buf, nels, datatype, &reqid);
+        err = APIFunc(iget_var)(ncid, i, value, var_nels[i], datatype, &reqid);
         IF (err != NC_NOERR)
-            error("ncmpi_iget_var: %s", ncmpi_strerror(err));
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
 
-        err = ncmpi_wait_all(ncid, 1, &reqid, &status);
-        IF (err != NC_NOERR)
-            error("ncmpi_wait_all: %s", ncmpi_strerror(err));
-        ELSE_NOK
-
-        num_err = 0;
-        for (j = 0; j < nels; j++) {
+        for (j = 0; j < var_nels[i]; j++) {
             double got;
-            char *p = (char *) buf;
+            char *p = (char *) value;
             p += j * nctypelen(var_type[i]);
             if (inRange(expect[j],var_type[i])) {
                 err = nc2dbl(var_type[i], p, &got);
@@ -366,15 +388,14 @@ test_ncmpi_iget_var(int numVars)
                         error("expect: %g", expect[j]);
                         error("got: %g", got);
                     }
-                    num_err++;
                 }
+                ELSE_NOK
             }
-            if (num_err == 0) nok++;
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 
@@ -383,87 +404,80 @@ dnl
 define(`TEST_NC_IGET_VAR',dnl
 `dnl
 int
-test_ncmpi_iget_var_$1(int numVars)
+TestFunc(var)_$1(VarArgs)
 {
-    int ncid, cdf_format;
-    int i;
-    int j;
-    int err, num_err;
-    int allInExtRange;        /* all values within external range? */
-    int allInIntRange;        /* all values within internal range? */
-    int nels;
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset index[MAX_RANK];
+    int i, err, ncid, cdf_format, reqid;
+    int allInExtRange;  /* all values within range of external data type */
+    int allInIntRange;  /* all values within range of internal data type */
+    int nok = 0;        /* count of valid comparisons */
     int canConvert;     /* Both text or both numeric */
+    IntType j, index[MAX_RANK];
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
-    int reqid, status;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
-    IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_var_$1(BAD_ID, 0, NULL, NULL);
+    err = iGetVar($1)(BAD_ID, 0, NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_var_$1(ncid, BAD_VARID, NULL, NULL);
+    err = iGetVar($1)(ncid, BAD_VARID, NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
 
+        /* check if can detect a bad file ID */
+        err = iGetVar($1)(BAD_ID, i, value, NULL);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
+
         /* check if the contents are supposed to be */
-        nels = 1;
-        for (j = 0; j < var_rank[i]; j++) {
-            nels *= var_shape[i][j];
-        }
         allInExtRange = allInIntRange = 1;
-        for (j = 0; j < nels; j++) {
+        for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR)
-                error("error in toMixedBase 1");
-            expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
+            IF (err != 0) error("error in toMixedBase");
+            expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index,
+                              NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[j],var_type[i], NCT_ITYPE($1))) {
                 IfCheckTextChar($1, var_type[i])
                     allInIntRange &= CheckRange($1, expect[j]);
-            } else {
+            } else
                 allInExtRange = 0;
-            }
         }
-        err = ncmpi_iget_var_$1(ncid, i, value, &reqid);
-        if (err == NC_NOERR)
-            ncmpi_wait_all(ncid, 1, &reqid, &status);
-        ELSE_NOK
+        err = iGetVar($1)(ncid, i, value, &reqid);
         if (canConvert) {
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
             if (allInExtRange) {
                 if (allInIntRange) {
-                    IF (status != NC_NOERR)
-                        error("%s", ncmpi_strerror(status));
+                    IF (err != NC_NOERR)
+                        EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
                 } else {
-                    IF (status != NC_ERANGE)
-                        error("Range error: status = %d", status);
+                    IF (err != NC_ERANGE)
+                        EXPECT_ERR(NC_ERANGE, err)
                     ELSE_NOK
                 }
             } else {
-                IF (status != NC_NOERR && status != NC_ERANGE)
-                    error("OK or Range error: status = %d", status);
+                IF (err != NC_NOERR && err != NC_ERANGE)
+                    EXPECT_ERR(NC_NOERR or NC_ERANGE, err)
                 ELSE_NOK
             }
-            num_err = 0;
-            for (j = 0; j < nels; j++) {
+            for (j = 0; j < var_nels[i]; j++) {
                 if (CheckNumRange($1, expect[j], var_type[i])) {
                     ifelse(`$1', `uchar', `
                     /* in put_vars(), API _put_vara_double() is used to
@@ -483,20 +497,19 @@ test_ncmpi_iget_var_$1(int numVars)
                             error("expect: %g", expect[j]);
                             error("got: %g", (double) value[j]);
                         }
-                        num_err++;
                     }
+                    ELSE_NOK
                 }
             }
-            if (num_err == 0) nok++;
         } else {
-            IF (nels > 0 && err != NC_ECHAR)
-                error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+            IF (err != NC_ECHAR)
+                EXPECT_ERR(NC_ECHAR, err)
             ELSE_NOK
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -516,112 +529,117 @@ TEST_NC_IGET_VAR(ulonglong)
 
 
 int
-test_ncmpi_iget_vara(int numVars)
+TestFunc(vara)(VarArgs)
 {
-    int ncid, d, i, j, k, err, num_err, nels, nslabs;
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
+    int i, j, k, err, ncid, nok=0, nslabs, reqid;
+    double value[MAX_NELS], expect[MAX_NELS];
+    IntType start[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], index[MAX_RANK];
     MPI_Datatype datatype;
-    double buf[MAX_NELS];
-    double expect[MAX_NELS];
-    int reqid, status;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_vara(BAD_ID, 0, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_vara)(BAD_ID, 0, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_vara(ncid, BAD_VARID, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_vara)(ncid, BAD_VARID, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
+
+        /* check if can detect a bad file ID */
+        err = APIFunc(iget_vara)(BAD_ID, i, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        datatype = nc_mpi_type(var_type[i]);
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = 0;
             edge[j] = 1;
         }
 
 ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_vara(ncid, i, NULL, NULL, buf, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+        err = APIFunc(iget_vara)(ncid, i, NULL, NULL, value, 1, datatype, &reqid);
+        if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+        }
+        else IF (err != NC_EINVALCOORDS) {
+            EXPECT_ERR(NC_EINVALCOORDS, err)
+        }
         ELSE_NOK
 
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        err = APIFunc(iget_vara)(ncid, i, start, NULL, value, 1, datatype, &reqid);
+        if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
-
-        err = ncmpi_iget_vara(ncid, i, start, NULL, buf, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_EEDGE)
-            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
+        else IF (err != NC_EEDGE)
+            EXPECT_ERR(NC_EEDGE, err)
         ELSE_NOK
-
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
-        }
 ')dnl
 
-        /* first test when edge[*] > 0 */
+        /* test NC_EINVALCOORDS, first when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_vara)(ncid, i, start, edge, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
-            err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_vara)(ncid, i, start, edge, value, 1, datatype, &reqid);
             IF (err != NC_EEDGE)
-                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EEDGE, err)
             ELSE_NOK
             edge[j] = 1;
         }
-        /* Check non-scalars for correct error returned even when */
-        /* there is nothing to get (edge[j]==0) */
-        if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+        /* Check non-scalars for correct error returned even when there is
+         * nothing to get (edge[j]==0) */
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
-            for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {      /* skip record dim */
-                    start[j] = var_shape[i][j];
-                    err = ncmpi_iget_vara(ncid, i, start, edge, buf, 0, datatype, &reqid);
+        for (j = 0; j < var_rank[i]; j++) {
+            if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
+            start[j] = var_shape[i][j];
+            err = APIFunc(iget_vara)(ncid, i, start, edge, value, 0, datatype, &reqid);
 #ifdef RELAX_COORD_BOUND
-                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #else
-                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                EXPECT_ERR(NC_EINVALCOORDS, err)
 #endif
-                    ELSE_NOK
-                    start[j] = var_shape[i][j]+1;  /* out of boundary check */
-                    err = ncmpi_iget_vara(ncid, i, start, edge, buf, 1, datatype, &reqid);
-                    IF (err != NC_EINVALCOORDS)
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                    ELSE_NOK
-                    start[j] = 0;
-                }
-            }
-            err = ncmpi_iget_vara(ncid, i, start, edge, buf, 0, datatype, &reqid);
-            IF (err != NC_NOERR)
-                error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
             ELSE_NOK
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+            start[j] = var_shape[i][j]+1;  /* out of boundary check */
+            err = APIFunc(iget_vara)(ncid, i, start, edge, value, 1, datatype, &reqid);
+            IF (err != NC_EINVALCOORDS)
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+            ELSE_NOK
+            start[j] = 0;
         }
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+
+        err = APIFunc(iget_vara)(ncid, i, start, edge, value, 1, datatype, &reqid);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
         nslabs = 1;
@@ -631,7 +649,7 @@ ifdef(`PNETCDF',`dnl
         }
         /* bits of k determine whether to get lower or upper part of dim */
         for (k = 0; k < nslabs; k++) {
-            nels = 1;
+            IntType nels = 1;
             for (j = 0; j < var_rank[i]; j++) {
                 if ((k >> j) & 1) {
                     start[j] = 0;
@@ -643,30 +661,25 @@ ifdef(`PNETCDF',`dnl
                 nels *= edge[j];
             }
             for (j = 0; j < nels; j++) {
+                int d;
                 err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err != NC_NOERR)
-                    error("error in toMixedBase 1");
+                IF (err != 0) error("error in toMixedBase");
                 for (d = 0; d < var_rank[i]; d++)
                     index[d] += start[d];
                 expect[j] = hash(var_type[i], var_rank[i], index);
             }
-            if (var_rank[i] == 0 && i%2)
-                err = ncmpi_iget_vara(ncid, i, NULL, NULL, buf, 1, datatype, &reqid);
-            else
-                err = ncmpi_iget_vara(ncid, i, start, edge, buf, nels, datatype, &reqid);
+            err = APIFunc(iget_vara)(ncid, i, start, edge, value, nels, datatype, &reqid);
             IF (err != NC_NOERR)
                 error("ncmpi_iget_vara %s", ncmpi_strerror(err));
             ELSE_NOK
-
-            err = ncmpi_wait_all(ncid, 1, &reqid, &status);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
             IF (err != NC_NOERR)
-                error("ncmpi_wait_all %s", ncmpi_strerror(err));
+                EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
 
-            num_err = 0;
             for (j = 0; j < nels; j++) {
                 double got;
-                char *p = (char *) buf;
+                char *p = (char *) value;
                 p += j * nctypelen(var_type[i]);
                 if (inRange(expect[j],var_type[i])) {
                     err = nc2dbl(var_type[i], p, &got);
@@ -690,16 +703,15 @@ ifdef(`PNETCDF',`dnl
                             error("expect: %g", expect[j]);
                             error("got: %g", got);
                         }
-                        num_err++;
                     }
+                    ELSE_NOK
                 }
-                if (num_err == 0) nok++;
             }
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 
@@ -708,154 +720,170 @@ dnl
 define(`TEST_NC_IGET_VARA',dnl
 `dnl
 int
-test_ncmpi_iget_vara_$1(int numVars)
+TestFunc(vara)_$1(VarArgs)
 {
-    int ncid, cdf_format;
-    int d;
-    int i;
-    int j;
-    int k;
-    int err, num_err;
-    int allInExtRange;        /* all values within external range? */
-    int allInIntRange;        /* all values within internal range? */
-    int nels;
-    int nslabs;
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
+    int i, k, err, nslabs, ncid, cdf_format, reqid;
+    int allInExtRange;  /* all values within external range? */
+    int allInIntRange;  /* all values within internal range? */
+    int nok = 0;        /* count of valid comparisons */
     int canConvert;     /* Both text or both numeric */
+    IntType j;
+    IntType start[MAX_RANK], edge[MAX_RANK], index[MAX_RANK], mid[MAX_RANK];
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
-    int reqid, status;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
-    IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_vara_$1(BAD_ID, 0, NULL, NULL, NULL, NULL);
+    err = iGetVara($1)(BAD_ID, 0, NULL, NULL, NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_vara_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL);
+    err = iGetVara($1)(ncid, BAD_VARID, NULL, NULL, NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
+
+        /* check if can detect a bad file ID */
+        err = iGetVara($1)(BAD_ID, i, NULL, NULL, value, &reqid);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = 0;
             edge[j] = 1;
         }
 
 ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_vara_$1(ncid, i, NULL, NULL, value, &reqid);
+        err = iGetVara($1)(ncid, i, NULL, NULL, value, &reqid);
         if (!canConvert) {
             IF (err != NC_ECHAR)
-                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ECHAR, err)
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+        else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            index[0] = 0;
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
+        }
+        else IF (err != NC_EINVALCOORDS)
+            EXPECT_ERR(NC_EINVALCOORDS, err)
         ELSE_NOK
 
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
-        }
-
-        err = ncmpi_iget_vara_$1(ncid, i, start, NULL, value, &reqid);
+        err = iGetVara($1)(ncid, i, start, NULL, value, &reqid);
         if (!canConvert) {
             IF (err != NC_ECHAR)
-                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ECHAR, err)
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_EEDGE)
-            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
-        ELSE_NOK
-
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            index[0] = 0;
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
         }
+        else IF (err != NC_EEDGE)
+            EXPECT_ERR(NC_EEDGE, err)
+        ELSE_NOK
 ')dnl
 
-        /* first test when edge[*] > 0 */
+        /* test NC_EINVALCOORDS and NC_EEDGE, first when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
+            err = iGetVara($1)(ncid, i, start, edge, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
                 ELSE_NOK
                 start[j] = 0;
                 continue;
             }
             IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
-            err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
+            err = iGetVara($1)(ncid, i, start, edge, value, &reqid);
             IF (err != NC_EEDGE)
-                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EEDGE, err)
             ELSE_NOK
             edge[j] = 1;
         }
-        /* Check non-scalars for correct error returned even when */
-        /* there is nothing to get (edge[j]==0) */
-        if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+        /* Check non-scalars for correct error returned even when there is
+         * nothing to get (edge[j]==0) */
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
-            for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {      /* skip record dim */
-                    start[j] = var_shape[i][j];
-                    err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
-                    if (!canConvert) {
-                        IF (err != NC_ECHAR)
-                            error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
-                        ELSE_NOK
-                        start[j] = 0;
-                        continue;
-                    }
-#ifdef RELAX_COORD_BOUND
-                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
-#else
-                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-#endif
-                    ELSE_NOK
-                    start[j] = var_shape[i][j]+1; /* out of boundary check */
-                    err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
-                    IF (err != NC_EINVALCOORDS)
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                    ELSE_NOK
-                    start[j] = 0;
-                }
-            }
-            err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
-            if (canConvert) {
-                IF (err != NC_NOERR)
-                    error("Error: ncmpi_iget_vara_$1 %s",ncmpi_strerror(err));
-            } else {
+        for (j = 0; j < var_rank[i]; j++) {
+            if (var_rank[i] == RECDIM) continue; /* skip record dim */
+            start[j] = var_shape[i][j];
+            err = iGetVara($1)(ncid, i, start, edge, value, &reqid);
+            if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
                 ELSE_NOK
+                start[j] = 0;
+                continue;
             }
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+#ifdef RELAX_COORD_BOUND
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#else
+            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+#endif
+            ELSE_NOK
+            start[j] = var_shape[i][j]+1; /* out of boundary check */
+            err = iGetVara($1)(ncid, i, start, edge, value, &reqid);
+            IF (err != NC_EINVALCOORDS)
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+            ELSE_NOK
+            start[j] = 0;
         }
+        err = iGetVara($1)(ncid, i, start, edge, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                EXPECT_ERR(NC_ECHAR, err)
+        } else if (var_rank[i] == 0) {
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
+        } else {
+            IF (err != NC_NOERR)
+                EXPECT_ERR(NC_NOERR, err)
+        }
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
         nslabs = 1;
@@ -865,7 +893,7 @@ ifdef(`PNETCDF',`dnl
         }
         /* bits of k determine whether to get lower or upper part of dim */
         for (k = 0; k < nslabs; k++) {
-            nels = 1;
+            IntType nels = 1;
             for (j = 0; j < var_rank[i]; j++) {
                 if ((k >> j) & 1) {
                     start[j] = 0;
@@ -878,12 +906,13 @@ ifdef(`PNETCDF',`dnl
             }
             allInExtRange = allInIntRange = 1;
             for (j = 0; j < nels; j++) {
+                int d;
                 err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err != NC_NOERR)
-                    error("error in toMixedBase 1");
+                IF (err != 0) error("error in toMixedBase");
                 for (d = 0; d < var_rank[i]; d++)
                     index[d] += start[d];
-                expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index, NCT_ITYPE($1));
+                expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index,
+                                  NCT_ITYPE($1));
                 if (inRange3(cdf_format, expect[j],var_type[i], NCT_ITYPE($1))) {
                     IfCheckTextChar($1, var_type[i])
                         allInIntRange &= CheckRange($1, expect[j]);
@@ -891,29 +920,25 @@ ifdef(`PNETCDF',`dnl
                     allInExtRange = 0;
                 }
             }
-            if (var_rank[i] == 0 && i%2)
-                err = ncmpi_iget_vara_$1(ncid, i, NULL, NULL, value, &reqid);
-            else
-                err = ncmpi_iget_vara_$1(ncid, i, start, edge, value, &reqid);
-            if (err == NC_NOERR)
-                ncmpi_wait_all(ncid, 1, &reqid, &status);
+            err = iGetVara($1)(ncid, i, start, edge, value, &reqid);
             if (canConvert) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
                 if (allInExtRange) {
                     if (allInIntRange) {
-                        IF (status != NC_NOERR)
-                            error("%s", ncmpi_strerror(status));
+                        IF (err != NC_NOERR)
+                            EXPECT_ERR(NC_NOERR, err)
                         ELSE_NOK
                     } else {
-                        IF (status != NC_ERANGE)
-                            error("Range error: status = %d", status);
+                        IF (err != NC_ERANGE)
+                            EXPECT_ERR(NC_ERANGE, err)
                         ELSE_NOK
                     }
                 } else {
-                    IF (status != NC_NOERR && status != NC_ERANGE)
-                        error("OK or Range error: status = %d", status);
+                    IF (err != NC_NOERR && err != NC_ERANGE)
+                        EXPECT_ERR(NC_NOERR or NC_ERANGE, err)
                     ELSE_NOK
                 }
-                num_err = 0;
                 for (j = 0; j < nels; j++) {
                     if (CheckNumRange($1, expect[j], var_type[i])) {
                         ifelse(`$1', `uchar', `
@@ -934,21 +959,20 @@ ifdef(`PNETCDF',`dnl
                                 error("expect: %g", expect[j]);
                                 error("got: %g", (double) value[j]);
                             }
-                            num_err++;
                         }
+                        ELSE_NOK
                     }
                 }
-                if (num_err == 0) nok++;
             } else {
-                IF (nels > 0 && err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                IF (err != NC_ECHAR)
+                    EXPECT_ERR(NC_ECHAR, err)
                 ELSE_NOK
             }
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -967,52 +991,43 @@ TEST_NC_IGET_VARA(longlong)
 TEST_NC_IGET_VARA(ulonglong)
 
 int
-test_ncmpi_iget_vars(int numVars)
+TestFunc(vars)(VarArgs)
 {
-    int ncid;
-    int d;
-    int i;
-    int j;
-    int k;
-    int m;
-    int err, num_err;
-    int nels;
-    int nslabs;
-    int nstarts;        /* number of different starts */
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset index2[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
-    MPI_Offset count[MAX_RANK];
-    MPI_Offset sstride[MAX_RANK];
-    MPI_Offset stride[MAX_RANK];
-    double buf[MAX_NELS];
-    double expect[MAX_NELS];
-    int reqid, status;
+    int i, j, k, err, ncid, nok=0, nslabs, reqid;
+    double value[MAX_NELS], expect[MAX_NELS];
+    IntType m, start[MAX_RANK], index[MAX_RANK], index2[MAX_RANK];
+    IntType count[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], sstride[MAX_RANK];
+    PTRDType nstarts;   /* number of different starts */
+    PTRDType stride[MAX_RANK];
     MPI_Datatype datatype;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_vars(BAD_ID, 0, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_vars)(BAD_ID, 0, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_vars(ncid, BAD_VARID, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_vars)(ncid, BAD_VARID, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
+
+        /* check if can detect a bad file ID */
+        err = APIFunc(iget_vars)(BAD_ID, i, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        datatype = nc_mpi_type(var_type[i]);
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = 0;
             edge[j] = 1;
@@ -1020,78 +1035,83 @@ test_ncmpi_iget_vars(int numVars)
         }
 
 ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_vars(ncid, i, NULL, NULL, NULL, buf, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+        err = APIFunc(iget_vars)(ncid, i, NULL, NULL, NULL, value, 1, datatype, &reqid);
+        if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+        }
+        else IF (err != NC_EINVALCOORDS) {
+            EXPECT_ERR(NC_EINVALCOORDS, err)
+        }
         ELSE_NOK
 
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        err = APIFunc(iget_vars)(ncid, i, start, NULL, NULL, value, 1, datatype, &reqid);
+        if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
-
-        err = ncmpi_iget_vars(ncid, i, start, NULL, NULL, buf, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_EEDGE)
-            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
+        else IF (err != NC_EEDGE)
+            EXPECT_ERR(NC_EEDGE, err)
         ELSE_NOK
-
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
-        }
 ')dnl
 
-        /* first test when edge[*] > 0 */
+        /* test NC_EINVALCOORDS, first when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
-            start[j] = var_shape[i][j];    /* out of boundary check */
-            err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
+            start[j] = var_shape[i][j];
+            err = APIFunc(iget_vars)(ncid, i, start, edge, stride, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
-            err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_vars)(ncid, i, start, edge, stride, value, 1, datatype, &reqid);
             IF (err != NC_EEDGE)
-                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EEDGE, err)
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
-            err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_vars)(ncid, i, start, edge, stride, value, 1, datatype, &reqid);
             IF (err != NC_ESTRIDE)
-                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ESTRIDE, err)
             ELSE_NOK
             stride[j] = 1;
         }
-        /* Check non-scalars for correct error returned even when */
-        /* there is nothing to get (edge[j]==0) */
-        if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+        /* Check non-scalars for correct error returned even when there is
+         * nothing to get (edge[j]==0) */
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
-            for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {      /* skip record dim */
-                    start[j] = var_shape[i][j];
-                    err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 0, datatype, &reqid);
+        for (j = 0; j < var_rank[i]; j++) {
+            if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
+            start[j] = var_shape[i][j];
+            err = APIFunc(iget_vars)(ncid, i, start, edge, stride, value, 0, datatype, &reqid);
 #ifdef RELAX_COORD_BOUND
-                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #else
-                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                EXPECT_ERR(NC_EINVALCOORDS, err)
 #endif
-                    ELSE_NOK
-                    start[j] = var_shape[i][j]+1; /* out of boundary check */
-                    err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 1, datatype, &reqid);
-                    IF (err != NC_EINVALCOORDS)
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                    ELSE_NOK
-                    start[j] = 0;
-                }
-            }
-            err = ncmpi_iget_vars(ncid, i, start, edge, stride, buf, 0, datatype, &reqid);
-            IF (err != NC_NOERR)
-                error("Error: ncmpi_iget_vars %s",ncmpi_strerror(err));
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+            ELSE_NOK
+            start[j] = var_shape[i][j]+1;  /* out of boundary check */
+            err = APIFunc(iget_vars)(ncid, i, start, edge, stride, value, 1, datatype, &reqid);
+            IF (err != NC_EINVALCOORDS)
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+            ELSE_NOK
+            start[j] = 0;
         }
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+
+        err = APIFunc(iget_vars)(ncid, i, start, edge, stride, value, 1, datatype, &reqid);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
         nslabs = 1;
@@ -1116,10 +1136,8 @@ ifdef(`PNETCDF',`dnl
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err != NC_NOERR)
-                    error("error in toMixedBase");
-                ELSE_NOK
-                nels = 1;
+                IF (err != 0) error("error in toMixedBase");
+                IntType nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
                     count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
                     nels *= count[j];
@@ -1135,31 +1153,25 @@ ifdef(`PNETCDF',`dnl
                 }
 */
                 for (j = 0; j < nels; j++) {
+                    int d;
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != NC_NOERR)
-                        error("error in toMixedBase 1");
-                    ELSE_NOK
+                    IF (err != 0) error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
                     expect[j] = hash(var_type[i], var_rank[i], index2);
                 }
-                if (var_rank[i] == 0 && i%2 )
-                    err = ncmpi_iget_vars(ncid, i, NULL, NULL, NULL, buf, 1, datatype, &reqid);
-                else
-                    err = ncmpi_iget_vars(ncid, i, index, count, stride, buf, nels, datatype, &reqid);
+                err = APIFunc(iget_vars)(ncid, i, index, count, stride, value, nels, datatype, &reqid);
                 IF (err != NC_NOERR)
-                    error("%s", ncmpi_strerror(err));
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                IF (err != NC_NOERR)
+                    EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
 
-                err = ncmpi_wait_all(ncid, 1, &reqid, &status);
-                IF (err != NC_NOERR)
-                    error("%s", ncmpi_strerror(err));
-                ELSE_NOK
-
-                num_err = 0;
                 for (j = 0; j < nels; j++) {
                     double got;
-                    char *p = (char *) buf;
+                    char *p = (char *) value;
                     p += j * nctypelen(var_type[i]);
                     if (inRange(expect[j],var_type[i])) {
                         err = nc2dbl(var_type[i], p, &got);
@@ -1183,18 +1195,16 @@ ifdef(`PNETCDF',`dnl
                                 error("expect: %g, ", expect[j]);
                                 error("got: %g", got);
                             }
-                            num_err++;
                         }
+                        ELSE_NOK
                     }
                 }
-                if (num_err == 0) nok++;
             }
         }
-
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 
@@ -1203,58 +1213,52 @@ dnl
 define(`TEST_NC_IGET_VARS',dnl
 `dnl
 int
-test_ncmpi_iget_vars_$1(int numVars)
+TestFunc(vars)_$1(VarArgs)
 {
-    int ncid, cdf_format;
-    int d;
-    int i;
-    int j;
-    int k;
-    int m;
-    int err, num_err;
-    int allInExtRange;        /* all values within external range? */
-    int allInIntRange;        /* all values within internal range? */
-    int nels;
-    int nslabs;
-    int nstarts;        /* number of different starts */
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset index2[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
-    MPI_Offset count[MAX_RANK];
-    MPI_Offset sstride[MAX_RANK];
-    MPI_Offset stride[MAX_RANK];
+    int i, k, err, nslabs, ncid, cdf_format, reqid;
+    int allInExtRange;  /* all values within external range? */
+    int allInIntRange;  /* all values within internal range? */
+    int nok = 0;        /* count of valid comparisons */
     int canConvert;     /* Both text or both numeric */
+    IntType j, m;
+    IntType start[MAX_RANK], edge[MAX_RANK], index[MAX_RANK];
+    IntType index2[MAX_RANK], mid[MAX_RANK], count[MAX_RANK];
+    IntType sstride[MAX_RANK];
+    PTRDType nstarts;   /* number of different starts */
+    PTRDType stride[MAX_RANK];
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
-    int reqid, status;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
-    IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_vars_$1(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL);
+    err = iGetVars($1)(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_vars_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL);
+    err = iGetVars($1)(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
+
+        /* check if can detect a bad file ID */
+        err = iGetVars($1)(BAD_ID, i, NULL, NULL, NULL, value, &reqid);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = 0;
             edge[j] = 1;
@@ -1262,107 +1266,128 @@ test_ncmpi_iget_vars_$1(int numVars)
         }
 
 ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_vars_$1(ncid, i, NULL, NULL, NULL, value, &reqid);
+        err = iGetVars($1)(ncid, i, NULL, NULL, NULL, value, &reqid);
         if (!canConvert) {
             IF (err != NC_ECHAR)
-                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ECHAR, err)
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+        else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            index[0] = 0;
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
+        }
+        else IF (err != NC_EINVALCOORDS)
+            EXPECT_ERR(NC_EINVALCOORDS, err)
         ELSE_NOK
 
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
-        }
-
-        err = ncmpi_iget_vars_$1(ncid, i, start, NULL, NULL, value, &reqid);
+        err = iGetVars($1)(ncid, i, start, NULL, NULL, value, &reqid);
         if (!canConvert) {
             IF (err != NC_ECHAR)
-                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ECHAR, err)
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_EEDGE)
-            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
-        ELSE_NOK
-
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            index[0] = 0;
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
         }
+        else IF (err != NC_EEDGE)
+            EXPECT_ERR(NC_EEDGE, err)
+        ELSE_NOK
 ')dnl
 
-        /* first test when edge[*] > 0 */
+        /* test NC_EINVALCOORDS, NC_EEDGE and NC_ESTRIDE, first when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
-            start[j] = var_shape[i][j];    /* out of boundary check */
-            err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+            start[j] = var_shape[i][j];
+            err = iGetVars($1)(ncid, i, start, edge, stride, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
+                ELSE_NOK
                 start[j] = 0;
                 continue;
             }
             IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
-            err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+            err = iGetVars($1)(ncid, i, start, edge, stride, value, &reqid);
             IF (err != NC_EEDGE)
-                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EEDGE, err)
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
-            err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+            err = iGetVars($1)(ncid, i, start, edge, stride, value, &reqid);
             IF (err != NC_ESTRIDE)
-                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ESTRIDE, err)
             ELSE_NOK
             stride[j] = 1;
         }
-        /* Check non-scalars for correct error returned even when */
-        /* there is nothing to get (edge[j]==0) */
-        if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+        /* Check non-scalars for correct error returned even when there is
+         * nothing to get (edge[j]==0) */
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
-            for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {      /* skip record dim */
-                    start[j] = var_shape[i][j];
-                    err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                    if (!canConvert) {
-                        IF (err != NC_ECHAR)
-                            error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
-                        ELSE_NOK
-                        start[j] = 0;
-                        continue;
-                    }
-#ifdef RELAX_COORD_BOUND
-                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
-#else
-                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-#endif
-                    ELSE_NOK
-                    start[j] = var_shape[i][j]+1; /* out of boundary check */
-                    err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                    IF (err != NC_EINVALCOORDS)
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                    ELSE_NOK
-                    start[j] = 0;
-                }
-            }
-            err = ncmpi_iget_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-            if (canConvert) {
-                IF (err != NC_NOERR)
-                    error("Error: ncmpi_iget_vars_$1 %s",ncmpi_strerror(err));
-            } else {
+        for (j = 0; j < var_rank[i]; j++) {
+            if (var_rank[i] == RECDIM) continue; /* skip record dim */
+            start[j] = var_shape[i][j];
+            err = iGetVars($1)(ncid, i, start, edge, stride, value, &reqid);
+            if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
                 ELSE_NOK
+                start[j] = 0;
+                continue;
             }
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+#ifdef RELAX_COORD_BOUND
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#else
+            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+#endif
+            ELSE_NOK
+            start[j] = var_shape[i][j]+1; /* out of boundary check */
+            err = iGetVars($1)(ncid, i, start, edge, stride, value, &reqid);
+            IF (err != NC_EINVALCOORDS)
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+            ELSE_NOK
+            start[j] = 0;
         }
+        err = iGetVars($1)(ncid, i, start, edge, stride, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                EXPECT_ERR(NC_ECHAR, err)
+        } else if (var_rank[i] == 0) {
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
+        } else {
+            IF (err != NC_NOERR)
+                EXPECT_ERR(NC_NOERR, err)
+        }
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
         nslabs = 1;
@@ -1387,10 +1412,8 @@ ifdef(`PNETCDF',`dnl
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err != NC_NOERR)
-                    error("error in toMixedBase");
-                ELSE_NOK
-                nels = 1;
+                IF (err != 0) error("error in toMixedBase");
+                IntType nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
                     count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
                     nels *= count[j];
@@ -1407,14 +1430,13 @@ ifdef(`PNETCDF',`dnl
 */
                 allInExtRange = allInIntRange = 1;
                 for (j = 0; j < nels; j++) {
+                    int d;
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != NC_NOERR)
-                        error("error in toMixedBase 1");
-                    ELSE_NOK
+                    IF (err != 0) error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
-                    expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index2,
-                        NCT_ITYPE($1));
+                    expect[j] = hash4(cdf_format, var_type[i], var_rank[i],
+                                      index2, NCT_ITYPE($1));
                     if (inRange3(cdf_format, expect[j],var_type[i],NCT_ITYPE($1))) {
                         IfCheckTextChar($1, var_type[i])
                             allInIntRange &= CheckRange($1, expect[j]);
@@ -1422,29 +1444,25 @@ ifdef(`PNETCDF',`dnl
                         allInExtRange = 0;
                     }
                 }
-                if (var_rank[i] == 0 && i%2 )
-                    err = ncmpi_iget_vars_$1(ncid, i, NULL, NULL, NULL, value, &reqid);
-                else
-                    err = ncmpi_iget_vars_$1(ncid, i, index, count, stride, value, &reqid);
-                if (err == NC_NOERR)
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
+                err = iGetVars($1)(ncid, i, index, count, stride, value, &reqid);
                 if (canConvert) {
+                    IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+                    err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
                     if (allInExtRange) {
                         if (allInIntRange) {
-                            IF (status != NC_NOERR)
-                                error("%s", ncmpi_strerror(status));
+                            IF (err != NC_NOERR)
+                                EXPECT_ERR(NC_NOERR, err)
                             ELSE_NOK
                         } else {
-                            IF (status != NC_ERANGE)
-                                error("Range error: status = %d", status);
+                            IF (err != NC_ERANGE)
+                                EXPECT_ERR(NC_ERANGE, err)
                             ELSE_NOK
                         }
                     } else {
-                        IF (status != NC_NOERR && status != NC_ERANGE)
-                            error("OK or Range error: status = %d", status);
+                        IF (err != NC_NOERR && err != NC_ERANGE)
+                            EXPECT_ERR(NC_NOERR or NC_ERANGE, err)
                         ELSE_NOK
                     }
-                    num_err = 0;
                     for (j = 0; j < nels; j++) {
                         if (CheckNumRange($1, expect[j], var_type[i])) {
                             ifelse(`$1', `uchar', `
@@ -1465,23 +1483,21 @@ ifdef(`PNETCDF',`dnl
                                     error("expect: %g, ", expect[j]);
                                     error("got: %g", (double) value[j]);
                                 }
-                                num_err++;
                             }
+                            ELSE_NOK
                         }
                     }
-                    if (num_err == 0) nok++;
                 } else {
-                    IF (nels > 0 && err != NC_ECHAR)
-                        error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    IF (err != NC_ECHAR)
+                        EXPECT_ERR(NC_ECHAR, err)
                     ELSE_NOK
                 }
             }
         }
-
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
@@ -1500,52 +1516,43 @@ TEST_NC_IGET_VARS(longlong)
 TEST_NC_IGET_VARS(ulonglong)
 
 int
-test_ncmpi_iget_varm(int numVars)
+TestFunc(varm)(VarArgs)
 {
-    int ncid;
-    int d;
-    int i;
-    int j;
-    int k;
-    int m;
-    int err, num_err;
-    int nels;
-    int nslabs;
-    int nstarts;        /* number of different starts */
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset index2[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
-    MPI_Offset count[MAX_RANK];
-    MPI_Offset sstride[MAX_RANK];
-    MPI_Offset stride[MAX_RANK];
-    MPI_Offset imap[MAX_RANK];
-    double buf[MAX_NELS], expect[MAX_NELS];
-    int reqid, status;
+    int i, j, k, err, ncid, nok=0, nslabs, reqid;
+    double value[MAX_NELS], expect[MAX_NELS];
+    IntType m, start[MAX_RANK], index[MAX_RANK], index2[MAX_RANK];
+    IntType count[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], sstride[MAX_RANK];
+    PTRDType nstarts;   /* number of different starts */
+    PTRDType stride[MAX_RANK], imap[MAX_RANK];
     MPI_Datatype datatype;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_varm(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_varm)(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_varm(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+    err = APIFunc(iget_varm)(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        datatype = nc_mpi_type(var_type[i]);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
+
+        /* check if can detect a bad file ID */
+        err = APIFunc(iget_varm)(BAD_ID, i, NULL, NULL, NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, NULL);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        datatype = nc_mpi_type(var_type[i]);
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = 0;
             edge[j] = 1;
@@ -1554,78 +1561,83 @@ test_ncmpi_iget_varm(int numVars)
         }
 
 ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_varm(ncid, i, NULL, NULL, NULL, NULL, buf, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+        err = APIFunc(iget_varm)(ncid, i, NULL, NULL, NULL, NULL, value, 1, datatype, &reqid);
+        if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+        }
+        else IF (err != NC_EINVALCOORDS) {
+            EXPECT_ERR(NC_EINVALCOORDS, err)
+        }
         ELSE_NOK
 
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        err = APIFunc(iget_varm)(ncid, i, start, NULL, NULL, NULL, value, 1, datatype, &reqid);
+        if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
-
-        err = ncmpi_iget_varm(ncid, i, start, NULL, NULL, NULL, buf, 1, datatype, &reqid);
-        IF (var_rank[i] > 0 && err != NC_EEDGE)
-            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
+        else IF (err != NC_EEDGE)
+            EXPECT_ERR(NC_EEDGE, err)
         ELSE_NOK
-
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
-        }
 ')dnl
 
-        /* first test when edge[*] > 0 */
+        /* test NC_EINVALCOORDS, first when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
-            start[j] = var_shape[i][j];    /* out of boundary check */
-            err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
+            start[j] = var_shape[i][j];
+            err = APIFunc(iget_varm)(ncid, i, start, edge, stride, imap, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
-            err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_varm)(ncid, i, start, edge, stride, imap, value, 1, datatype, &reqid);
             IF (err != NC_EEDGE)
-                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EEDGE, err)
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
-            err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
+            err = APIFunc(iget_varm)(ncid, i, start, edge, stride, imap, value, 1, datatype, &reqid);
             IF (err != NC_ESTRIDE)
-                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ESTRIDE, err)
             ELSE_NOK
             stride[j] = 1;
         }
-        /* Check non-scalars for correct error returned even when */
-        /* there is nothing to get (edge[j]==0) */
-        if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+        /* Check non-scalars for correct error returned even when there is
+         * nothing to get (edge[j]==0) */
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
-            for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {      /* skip record dim */
-                    start[j] = var_shape[i][j];
-                    err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 0, datatype, &reqid);
+        for (j = 0; j < var_rank[i]; j++) {
+            if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
+            start[j] = var_shape[i][j];
+            err = APIFunc(iget_varm)(ncid, i, start, edge, stride, imap, value, 0, datatype, &reqid);
 #ifdef RELAX_COORD_BOUND
-                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #else
-                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                EXPECT_ERR(NC_EINVALCOORDS, err)
 #endif
-                    ELSE_NOK
-                    start[j] = var_shape[i][j]+1; /* out of boundary check */
-                    err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 1, datatype, &reqid);
-                    IF (err != NC_EINVALCOORDS)
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                    ELSE_NOK
-                    start[j] = 0;
-                }
-            }
-            err = ncmpi_iget_varm(ncid, i, start, edge, stride, imap, buf, 0, datatype, &reqid);
-            IF (err != NC_NOERR)
-                error("Error: ncmpi_iget_varm %s",ncmpi_strerror(err));
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+            ELSE_NOK
+            start[j] = var_shape[i][j]+1;  /* out of boundary check */
+            err = APIFunc(iget_varm)(ncid, i, start, edge, stride, imap, value, 1, datatype, &reqid);
+            IF (err != NC_EINVALCOORDS)
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+            ELSE_NOK
+            start[j] = 0;
         }
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+
+        err = APIFunc(iget_varm)(ncid, i, start, edge, stride, imap, value, 1, datatype, &reqid);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        IF (err != NC_NOERR)
+            EXPECT_ERR(NC_NOERR, err)
+        ELSE_NOK
+
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
         nslabs = 1;
@@ -1650,10 +1662,8 @@ ifdef(`PNETCDF',`dnl
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err != NC_NOERR)
-                    error("error in toMixedBase");
-                ELSE_NOK
-                nels = 1;
+                IF (err != 0) error("error in toMixedBase");
+                IntType nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
                     count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
                     index[j] += start[j];
@@ -1675,31 +1685,25 @@ ifdef(`PNETCDF',`dnl
                         imap[j-1] = imap[j] * count[j];
                 }
                 for (j = 0; j < nels; j++) {
+                    int d;
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != NC_NOERR)
-                        error("error in toMixedBase 1");
-                    ELSE_NOK
+                    IF (err != 0) error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
                     expect[j] = hash(var_type[i], var_rank[i], index2);
                 }
-                if (var_rank[i] == 0 && i%2 )
-                    err = ncmpi_iget_varm(ncid,i,NULL,NULL,NULL,NULL,buf, 1, datatype, &reqid);
-                else
-                    err = ncmpi_iget_varm(ncid,i,index,count,stride,imap,buf, nels, datatype, &reqid);
+                err = APIFunc(iget_varm)(ncid,i,index,count,stride,imap,value, nels, datatype, &reqid);
                 IF (err != NC_NOERR)
-                    error("%s", ncmpi_strerror(err));
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                IF (err != NC_NOERR)
+                    EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
 
-                err = ncmpi_wait_all(ncid, 1, &reqid, &status);
-                IF (err != NC_NOERR)
-                    error("%s", ncmpi_strerror(err));
-                ELSE_NOK
-
-                num_err = 0;
                 for (j = 0; j < nels; j++) {
                     double got;
-                    char *p = (char *) buf;
+                    char *p = (char *) value;
                     p += j * nctypelen(var_type[i]);
                     if (inRange(expect[j],var_type[i])) {
                         err = nc2dbl(var_type[i], p, &got);
@@ -1723,17 +1727,16 @@ ifdef(`PNETCDF',`dnl
                                 error("expect: %g, ", expect[j]);
                                 error("got: %g", got);
                             }
-                            num_err++;
                         }
+                        ELSE_NOK
                     }
-                    if (num_err == 0) nok++;
                 }
             }
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 
@@ -1742,59 +1745,52 @@ dnl
 define(`TEST_NC_IGET_VARM',dnl
 `dnl
 int
-test_ncmpi_iget_varm_$1(int numVars)
+TestFunc(varm)_$1(VarArgs)
 {
-    int ncid, cdf_format;
-    int d;
-    int i;
-    int j;
-    int k;
-    int m;
-    int err, num_err;
-    int allInExtRange;        /* all values within external range? */
-    int allInIntRange;        /* all values within internal range? */
-    int nels;
-    int nslabs;
-    int nstarts;        /* number of different starts */
-    int nok = 0;      /* count of valid comparisons */
-    MPI_Offset start[MAX_RANK];
-    MPI_Offset edge[MAX_RANK];
-    MPI_Offset index[MAX_RANK];
-    MPI_Offset index2[MAX_RANK];
-    MPI_Offset mid[MAX_RANK];
-    MPI_Offset count[MAX_RANK];
-    MPI_Offset sstride[MAX_RANK];
-    MPI_Offset stride[MAX_RANK];
-    MPI_Offset imap[MAX_RANK];
+    int i, k, err, nslabs, ncid, cdf_format, reqid;
+    int allInExtRange;  /* all values within external range? */
+    int allInIntRange;  /* all values within internal range? */
+    int nok = 0;        /* count of valid comparisons */
     int canConvert;     /* Both text or both numeric */
+    IntType j, m;
+    IntType start[MAX_RANK], edge[MAX_RANK], index[MAX_RANK];
+    IntType index2[MAX_RANK], mid[MAX_RANK], count[MAX_RANK];
+    IntType sstride[MAX_RANK];
+    PTRDType nstarts;   /* number of different starts */
+    PTRDType stride[MAX_RANK], imap[MAX_RANK];
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
-    int reqid, status;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err != NC_NOERR)
-        error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = FileOpen(testfile, NC_NOWRITE);
+    IF (err != NC_NOERR) error("open: %s", APIFunc(strerror)(err));
 
-    err = ncmpi_inq_format(ncid, &cdf_format);
-    IF (err != NC_NOERR)
-        error("ncmpi_inq_format: %s", ncmpi_strerror(err));
+    err = APIFunc(inq_format)(ncid, &cdf_format);
+    IF (err != NC_NOERR) error("inq_format: %s", APIFunc(strerror)(err));
 
     /* check if can detect a bad file ID */
-    err = ncmpi_iget_varm_$1(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, NULL);
+    err = iGetVarm($1)(BAD_ID, 0, NULL, NULL, NULL, NULL, NULL, NULL);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = ncmpi_iget_varm_$1(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, NULL);
+    err = iGetVarm($1)(ncid, BAD_VARID, NULL, NULL, NULL, NULL, NULL, NULL);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
-        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
+
+        /* check if can detect a bad file ID */
+        err = iGetVarm($1)(BAD_ID, i, NULL, NULL, NULL, NULL, value, &reqid);
+        IF (err != NC_EBADID)
+            EXPECT_ERR(NC_EBADID, err)
+        ELSE_NOK
+
+        canConvert = (var_type[i] == NC_CHAR) CheckText($1);
+
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = 0;
             edge[j] = 1;
@@ -1803,107 +1799,128 @@ test_ncmpi_iget_varm_$1(int numVars)
         }
 
 ifdef(`PNETCDF',`dnl
-        err = ncmpi_iget_varm_$1(ncid, i, NULL, NULL, NULL, NULL, value, &reqid);
+        err = iGetVarm($1)(ncid, i, NULL, NULL, NULL, NULL, value, &reqid);
         if (!canConvert) {
             IF (err != NC_ECHAR)
-                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ECHAR, err)
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_EINVALCOORDS)
-            error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+        else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            index[0] = 0;
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
+        }
+        else IF (err != NC_EINVALCOORDS)
+            EXPECT_ERR(NC_EINVALCOORDS, err)
         ELSE_NOK
 
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
-        }
-
-        err = ncmpi_iget_varm_$1(ncid, i, start, NULL, NULL, NULL, value, &reqid);
+        err = iGetVarm($1)(ncid, i, start, NULL, NULL, NULL, value, &reqid);
         if (!canConvert) {
             IF (err != NC_ECHAR)
-                error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ECHAR, err)
             ELSE_NOK
         }
-        else IF (var_rank[i] > 0 && err != NC_EEDGE)
-            error("expecting NC_EEDGE, but got %s", nc_err_code_name(err));
-        ELSE_NOK
-
-        if (var_rank[i] == 0) {
-            err = ncmpi_cancel(ncid, 1, &reqid, NULL);
-            IF (err != NC_NOERR) error("error in ncmpi_cancel");
+        else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            index[0] = 0;
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
         }
+        else IF (err != NC_EEDGE)
+            EXPECT_ERR(NC_EEDGE, err)
+        ELSE_NOK
 ')dnl
 
-        /* first test when edge[*] > 0 */
+        /* test NC_EINVALCOORDS, NC_EEDGE and NC_ESTRIDE, first when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
-            start[j] = var_shape[i][j];    /* out of boundary check */
-            err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+            start[j] = var_shape[i][j];
+            err = iGetVarm($1)(ncid, i, start, edge, stride, imap, value, &reqid);
             if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
+                ELSE_NOK
                 start[j] = 0;
                 continue;
             }
             IF (err != NC_EINVALCOORDS)
-                error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EINVALCOORDS, err)
             ELSE_NOK
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;  /* edge error check */
-            err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+            err = iGetVarm($1)(ncid, i, start, edge, stride, imap, value, &reqid);
             IF (err != NC_EEDGE)
-                error("expecting NC_EEDGE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EEDGE, err)
             ELSE_NOK
             edge[j] = 1;
             stride[j] = 0;
-            err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+            err = iGetVarm($1)(ncid, i, start, edge, stride, imap, value, &reqid);
             IF (err != NC_ESTRIDE)
-                error("expecting NC_ESTRIDE but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ESTRIDE, err)
             ELSE_NOK
             stride[j] = 1;
         }
-        /* Check non-scalars for correct error returned even when */
-        /* there is nothing to get (edge[j]==0) */
-        if (var_rank[i] > 0) {
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
+        /* Check non-scalars for correct error returned even when there is
+         * nothing to get (edge[j]==0) */
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
-            for (j = 0; j < var_rank[i]; j++) {
-                if (var_dimid[i][j] > 0) {      /* skip record dim */
-                    start[j] = var_shape[i][j];
-                    err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                    if (!canConvert) {
-                        IF (err != NC_ECHAR)
-                            error("expecting NC_ECHAR, but got %s", nc_err_code_name(err));
-                        ELSE_NOK
-                        start[j] = 0;
-                        continue;
-                    }
-#ifdef RELAX_COORD_BOUND
-                    IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                        error("expecting NC_NOERR, but got %s", nc_err_code_name(err));
-#else
-                    IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-#endif
-                    ELSE_NOK
-                    start[j] = var_shape[i][j]+1; /* out of boundary check */
-                    err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                    IF (err != NC_EINVALCOORDS)
-                        error("expecting NC_EINVALCOORDS, but got %s", nc_err_code_name(err));
-                    ELSE_NOK
-                    start[j] = 0;
-                }
-            }
-            err = ncmpi_iget_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-            if (canConvert) {
-                IF (err != NC_NOERR)
-                    error("Error: ncmpi_iget_varm_$1 %s",ncmpi_strerror(err));
-            } else {
+        for (j = 0; j < var_rank[i]; j++) {
+            if (var_rank[i] == RECDIM) continue; /* skip record dim */
+            start[j] = var_shape[i][j];
+            err = iGetVarm($1)(ncid, i, start, edge, stride, imap, value, &reqid);
+            if (!canConvert) {
                 IF (err != NC_ECHAR)
-                    error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    EXPECT_ERR(NC_ECHAR, err)
                 ELSE_NOK
+                start[j] = 0;
+                continue;
             }
-            for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+#ifdef RELAX_COORD_BOUND
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#else
+            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+#endif
+            ELSE_NOK
+            start[j] = var_shape[i][j]+1; /* out of boundary check */
+            err = iGetVarm($1)(ncid, i, start, edge, stride, imap, value, &reqid);
+            IF (err != NC_EINVALCOORDS)
+                EXPECT_ERR(NC_EINVALCOORDS, err)
+            ELSE_NOK
+            start[j] = 0;
         }
+        err = iGetVarm($1)(ncid, i, start, edge, stride, imap, value, &reqid);
+        if (!canConvert) {
+            IF (err != NC_ECHAR)
+                EXPECT_ERR(NC_ECHAR, err)
+        } else if (var_rank[i] == 0) {
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
+            if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
+                CheckRange($1, expect[0])) {
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
+            else IF (err != NC_ERANGE) EXPECT_ERR(NC_ERANGE, err)
+        } else {
+            IF (err != NC_NOERR)
+                EXPECT_ERR(NC_NOERR, err)
+        }
+        for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
+
         /* Choose a random point dividing each dim into 2 parts */
         /* get 2^rank (nslabs) slabs so defined */
         nslabs = 1;
@@ -1928,10 +1945,8 @@ ifdef(`PNETCDF',`dnl
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err != NC_NOERR)
-                    error("error in toMixedBase");
-                ELSE_NOK
-                nels = 1;
+                IF (err != 0) error("error in toMixedBase");
+                IntType nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
                     count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
                     nels *= count[j];
@@ -1954,10 +1969,9 @@ ifdef(`PNETCDF',`dnl
                 }
                 allInExtRange = allInIntRange = 1;
                 for (j = 0; j < nels; j++) {
+                    int d;
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != NC_NOERR)
-                        error("error in toMixedBase 1");
-                    ELSE_NOK
+                    IF (err != 0) error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
                     expect[j] = hash4(cdf_format, var_type[i], var_rank[i], index2,
@@ -1969,29 +1983,25 @@ ifdef(`PNETCDF',`dnl
                         allInExtRange = 0;
                     }
                 }
-                if (var_rank[i] == 0 && i%2 )
-                    err = ncmpi_iget_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value, &reqid);
-                else
-                    err = ncmpi_iget_varm_$1(ncid,i,index,count,stride,imap,value, &reqid);
-                if (err == NC_NOERR)
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
+                err = iGetVarm($1)(ncid,i,index,count,stride,imap,value, &reqid);
                 if (canConvert) {
+                    IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+                    err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
                     if (allInExtRange) {
                         if (allInIntRange) {
-                            IF (status != NC_NOERR)
-                                error("%s", ncmpi_strerror(status));
+                            IF (err != NC_NOERR)
+                                EXPECT_ERR(NC_NOERR, err)
                             ELSE_NOK
                         } else {
-                            IF (status != NC_ERANGE)
-                                error("Range error: status = %d", status);
+                            IF (err != NC_ERANGE)
+                                EXPECT_ERR(NC_ERANGE, err)
                             ELSE_NOK
                         }
                     } else {
-                        IF (status != NC_NOERR && status != NC_ERANGE)
-                            error("OK or Range error: status = %d", status);
+                        IF (err != NC_NOERR && err != NC_ERANGE)
+                            EXPECT_ERR(NC_NOERR or NC_ERANGE, err)
                         ELSE_NOK
                     }
-                    num_err = 0;
                     for (j = 0; j < nels; j++) {
                         if (CheckNumRange($1, expect[j], var_type[i])) {
                             ifelse(`$1', `uchar', `
@@ -2012,22 +2022,21 @@ ifdef(`PNETCDF',`dnl
                                     error("expect: %g, ", expect[j]);
                                     error("got: %g", (double) value[j]);
                                 }
-                                num_err++;
                             }
+                            ELSE_NOK
                         }
                     }
-                    if (num_err == 0) nok++;
                 } else {
-                    IF (nels > 0 && err != NC_ECHAR)
-                        error("wrong type: expecting NC_ECHAR but got %s", nc_err_code_name(err));
+                    IF (err != NC_ECHAR)
+                        EXPECT_ERR(NC_ECHAR, err)
                     ELSE_NOK
                 }
             }
         }
     }
-    err = ncmpi_close(ncid);
+    err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
-        error("ncmpi_close: %s", ncmpi_strerror(err));
+        error("close: %s", APIFunc(strerror)(err));
     return nok;
 }
 ')dnl
