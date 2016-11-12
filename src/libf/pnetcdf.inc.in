@@ -14,6 +14,19 @@
       parameter (PNETCDF_VERSION_SUB   = @PNETCDF_VERSION_SUB@)
 
 !
+! list of PnetCDF options enabled/disabled at configure time
+!
+      integer PNETCDF_ERANGE_FILL
+      integer PNETCDF_SUBFILING
+      integer PNETCDF_RELAX_COORD_BOUND
+      integer PNETCDF_DEBUG_MODE
+
+      parameter (PNETCDF_ERANGE_FILL       = @ENABLE_ERANGE_FILL@)
+      parameter (PNETCDF_SUBFILING         = @ENABLE_SUBFILING@)
+      parameter (PNETCDF_RELAX_COORD_BOUND = @RELAX_COORD_BOUND@)
+      parameter (PNETCDF_DEBUG_MODE        = @PNETCDF_DEBUG@)
+
+!
 ! external netcdf data types: (must conform with netCDF release)
 !
       integer nf_byte

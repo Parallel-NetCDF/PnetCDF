@@ -23,10 +23,6 @@ INCLUDES = -I. -I$(srcdir)
 LIBRARY  = libpnetcdf.a
 HEADER   = pnetcdf.h
 
-ifeq (@enable_relax_coord_bound@, yes)
-CPPFLAGS := $(CPPFLAGS) -DRELAX_COORD_BOUND
-endif
-
 ifeq (@enable_erange_fill@, yes)
 M4FLAGS += -DERANGE_FILL
 endif

@@ -28,7 +28,7 @@ endif
 ifeq (@HAVE_F77_INT8@, yes)
 M4FLAGS += -DHAVE_F77_INT8
 endif
-ifeq (@enable_relax_coord_bound@, yes)
+ifeq (@RELAX_COORD_BOUND@, 1)
 FPPFLAGS := $(FPPFLAGS) @FC_DEFINE@RELAX_COORD_BOUND
 endif
 
