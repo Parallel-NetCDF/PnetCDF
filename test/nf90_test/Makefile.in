@@ -17,7 +17,7 @@ INCLUDES += @FC_MODINC@../../src/libf90
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
-ifeq (@enable_relax_coord_bound@, yes)
+ifeq (@RELAX_COORD_BOUND@, 1)
 FPPFLAGS := $(FPPFLAGS) @FC_DEFINE@RELAX_COORD_BOUND
 endif
 

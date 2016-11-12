@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         start[0] = 0;
         count[0] = 2;
     } else if (rank == 1) {
-#ifdef RELAX_COORD_BOUND
+#if defined(PNETCDF_RELAX_COORD_BOUND) && PNETCDF_RELAX_COORD_BOUND==1
         start[0] = 3; /* illegal for a start > defined shape */
 #else
         start[0] = 2; /* illegal for a start >= defined shape */

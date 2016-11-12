@@ -19,10 +19,6 @@ endif
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
-ifeq (@enable_relax_coord_bound@, yes)
-CPPFLAGS := $(CPPFLAGS) -DRELAX_COORD_BOUND
-endif
-
 NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff
 
