@@ -792,7 +792,7 @@ ifdef(`PNETCDF',`dnl
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
             start[j] = var_shape[i][j];
-            err = APIFunc(iput_vara)(ncid, i, start, edge, value, 1, datatype, &reqid);
+            err = APIFunc(iput_vara)(ncid, i, start, edge, value, 0, datatype, &reqid);
 #ifdef RELAX_COORD_BOUND
             IF (err != NC_NOERR) /* allowed when edge[j]==0 */
                 EXPECT_ERR(NC_NOERR, err)
