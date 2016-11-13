@@ -1,7 +1,14 @@
+#
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
 # $Id$
-
+#
+# @configure_input@
+#
 # The purpose of this file is to contain common make(1) macros.
 # It should be processed by every execution of that utility.
+#
 
 @SET_MAKE@
 

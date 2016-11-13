@@ -35,7 +35,8 @@ DIST_GARBAGE	= config.cache \
 		  config.log \
 		  macros.make \
 		  stamp-h \
-                  pnetcdf.pc
+                  pnetcdf.pc \
+                  pnetcdf-config
 
 PACKING_LIST	= Makefile.in \
 		  aclocal.m4 \
@@ -57,7 +58,8 @@ PACKING_LIST	= Makefile.in \
 		  pbs.script \
 		  cobalt.script \
 		  stamp-h.in \
-                  pnetcdf_pc.in
+                  pnetcdf_pc.in \
+                  pnetcdf-config.in
 
 PACKING_SUBDIRS	= $(SUBDIRS)
 
@@ -102,7 +104,7 @@ ptests-examples: ptests-test
 ptests-benchmarks: ptests-examples
 
 INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
-install: $(INSTALLDIRS) install_PKGCONFIG
+install: $(INSTALLDIRS) install_PKGCONFIG install_CONFIG
 	@echo '+----------------------------------------------------------------------------+'
 	@echo '|'
 	@echo '|  PnetCDF has been successfully installed under $(prefix)'
@@ -140,13 +142,20 @@ install_PKGCONFIG:
 	$(INSTALL) -d -m 755 $(LIBDIR)/pkgconfig
 	$(INSTALL_DATA) $(PKGCONFIG) $(LIBDIR)/pkgconfig/$(PKGCONFIG)
 
+install_CONFIG:
+	$(INSTALL) -d $(BINDIR)
+	$(INSTALL) -m 755 pnetcdf-config $(BINDIR)/pnetcdf-config
+
 UNINSTALLDIRS = $(INSTALL_SUBDIRS:%=uninstall-%)
-uninstall: $(UNINSTALLDIRS) uninstall_PKGCONFIG
+uninstall: $(UNINSTALLDIRS) uninstall_PKGCONFIG uninstall_CONFIG
 $(UNINSTALLDIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
 
 uninstall_PKGCONFIG:
 	$(RM) -f $(LIBDIR)/pkgconfig/$(PKGCONFIG)
+
+uninstall_CONFIG:
+	$(RM) -f $(BINDIR)/pnetcdf-config
 
 ################################################################################
 # Distribution:

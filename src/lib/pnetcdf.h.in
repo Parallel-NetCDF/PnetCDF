@@ -1,9 +1,12 @@
 /*
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
+ * 
+ * $Id$
+ *
+ * @configure_input@
  */
-/* $Id$ */
-
+
 #ifndef _PNETCDF_
 #define _PNETCDF_
 
