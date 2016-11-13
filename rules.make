@@ -180,7 +180,7 @@ clean:		FORCE
 	    done; \
 	fi
 	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* vgcore.* $(GARBAGE) \
-		  *.gcda *.gcno gmon.out
+		  *.gcda *.gcno *.gcov gmon.out
 
 distclean:	FORCE
 	@if [ -n "$(PACKING_SUBDIRS)" ]; then \
@@ -260,5 +260,5 @@ FORCE:
 .PHONY: subdirs $(SUBDIRS) install $(INSTALLDIRS) uninstall $(UNINSTALLDIRS)
 .PHONY: tests check testing $(CHECK_DIRS) $(PTEST_DIRS) verbose_check verbose_testing $(VCHECK_DIRS)
 .PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
-.PHONY: install_PKGCONFIG uninstall_PKGCONFIG
+.PHONY: install_PKGCONFIG uninstall_PKGCONFIG install_CONFIG uninstall_CONFIG
 

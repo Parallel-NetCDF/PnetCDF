@@ -851,6 +851,7 @@ if test "x${enable_fortran}" = xyes ; then
     UD_HAS_MPI_DATATYPE(MPI_COMPLEX32)
 fi
 
+in_place_swap=yes
 AC_ARG_ENABLE([in-place-swap],
     [AS_HELP_STRING([--disable-in-place-swap],
                     [Disable memory in-place byte swap on Little Endian
@@ -860,6 +861,7 @@ AC_ARG_ENABLE([in-place-swap],
 if test "x${in_place_swap}" = xno ; then
     AC_DEFINE(DISABLE_IN_PLACE_SWAP)
 fi
+AC_SUBST(in_place_swap)
 
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
@@ -1213,6 +1215,7 @@ AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
 AC_CONFIG_FILES(macros.make \
                 Makefile \
                 pnetcdf_pc \
+                pnetcdf-config \
                 src/Makefile \
                 src/lib/Makefile \
                 src/lib/pnetcdf.h \

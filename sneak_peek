@@ -63,7 +63,8 @@ This is essentially a placeholder for the next release note ...
       list.
 
   o New utility program
-    * none
+    * Added pnetcdf-config shell script to display the options used in building
+      PnetCDF.
 
   o Semantics updates
     * Consistency check for header data (defining dimensions, variables, and
