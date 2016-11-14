@@ -112,8 +112,8 @@ if test "x$has_cxx" = xyes ; then
         echo "  --cxx               -> $MPICXX"
         echo "  --cxxflags          -> $CXXFLAGS"
         echo "  --cxxppflags        -> $CXXCPPFLAGS"
-        echo
 fi
+        echo
         echo "  --has-fortran       -> $has_fortran"
 if test "x$has_fortran" = xyes ; then
         echo "  --f77               -> $MPIF77"
@@ -124,8 +124,8 @@ if test "x$has_fortran" = xyes ; then
         echo "  --f90               -> $MPIF90"
         echo "  --f90flags          -> $F90FLAGS"
         echo "  --f90libs           -> $F90LIBS"
-        echo
 fi
+        echo
 if test "x${enable_erange_fill}" = xno; then
         echo "  --erange-fill       -> disabled"
         echo
