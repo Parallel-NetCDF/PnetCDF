@@ -189,7 +189,7 @@ ifdef(`PNETCDF',`dnl
         for (j = 0; j < var_rank[i]; j++) index[j] = 0;
 
         for (j = 0; j < var_rank[i]; j++) {
-            if (var_dimid[i][j] == 0) continue; /* skip record dim */
+            if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
             index[j] = var_shape[i][j]; /* out of boundary check */
             err = APIFunc(iput_var1)(ncid, i, index, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
@@ -714,8 +714,7 @@ TestFunc(vara)(VarArgs)
     ELSE_NOK
 
     /* check if can detect a bad variable ID */
-    err = APIFunc(iput_vara)(ncid, BAD_VARID, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, 
-NULL);
+    err = APIFunc(iput_vara)(ncid, BAD_VARID, NULL, NULL, NULL, 1, MPI_DATATYPE_NULL, NULL);
     IF (err != NC_ENOTVAR)
         EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
@@ -1298,7 +1297,7 @@ ifdef(`PNETCDF',`dnl
 
                 err = APIFunc(iput_vars)(ncid, i, index, count, stride, value, nels, datatype, &reqid);
                 IF (err != NC_NOERR)
-                    error("iput_vars: %s", APIFunc(strerror)(err));
+                    EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
 
                 err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
@@ -1684,7 +1683,7 @@ ifdef(`PNETCDF',`dnl
         /* first test when edge[*] > 0 */
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
-            start[j] = var_shape[i][j]; /* starting PnetCDF 1.8.0 this is fine when edge[j]==0 */
+            start[j] = var_shape[i][j];
             err = APIFunc(iput_varm)(ncid, i, start, edge, stride, imap, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
                 EXPECT_ERR(NC_EINVALCOORDS, err)

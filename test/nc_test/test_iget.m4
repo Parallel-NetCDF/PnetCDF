@@ -670,7 +670,7 @@ ifdef(`PNETCDF',`dnl
             }
             err = APIFunc(iget_vara)(ncid, i, start, edge, value, nels, datatype, &reqid);
             IF (err != NC_NOERR)
-                error("ncmpi_iget_vara %s", ncmpi_strerror(err));
+                EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
             err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
             IF (err != NC_NOERR)
