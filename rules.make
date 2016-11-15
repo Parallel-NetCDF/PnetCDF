@@ -197,7 +197,7 @@ distclean:	FORCE
 	fi
 	@$(RM) -rf SunWS_cache
 	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* vgcore.* $(GARBAGE) \
-		  *.gcda *.gcno gmon.out \
+		  *.gcda *.gcno *.gcov gmon.out \
 	          MANIFEST *.log $(DIST_GARBAGE) cscope.out cscope.files
 	@$(RM) -f Makefile
 
