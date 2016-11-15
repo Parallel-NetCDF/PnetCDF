@@ -1398,7 +1398,7 @@ TestFunc(att)_text(AttVarArgs)
 
     {
         const char *const tval = "value for bad name";
-        const IntType tval_len = (InteType)strlen(tval);
+        const IntType tval_len = (IntType)strlen(tval);
 
         err = PutAtt(text)(ncid, 0, "", tval_len, tval);
         IF (err != NC_EBADNAME)
