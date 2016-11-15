@@ -81,11 +81,9 @@ Available values for OPTION include:
   --has-fortran whether Fortran API is installed
   --f77         Fortran 77 compiler
   --f77flags    Fortran 77 compiler flags
-  --f77libs     Fortran 77 linker libraries
   --fppflags    Fortran pre-processor flags
   --f90         Fortran 90 compiler
   --f90flags    Fortran 90 compiler flags
-  --f90libs     Fortran 90 linker libraries
   --ldflags     Linker options
   --libs        library linking information for PnetCDF
   --prefix      Install prefix
@@ -119,11 +117,11 @@ if test "x$has_fortran" = xyes ; then
         echo "  --f77               -> $MPIF77"
         echo "  --f77flags          -> $F77FLAGS"
         echo "  --fppflags          -> $FPPFLAGS"
-        echo "  --f77libs           -> $FCLIBS"
+#        echo "  --f77libs           -> $FCLIBS"
         echo
         echo "  --f90               -> $MPIF90"
         echo "  --f90flags          -> $F90FLAGS"
-        echo "  --f90libs           -> $F90LIBS"
+#        echo "  --f90libs           -> $F90LIBS"
 fi
         echo
 if test "x${enable_erange_fill}" = xno; then
@@ -176,92 +174,88 @@ while test $# -gt 0; do
         ;;
 
     --cc)
-        echo $cc
+        echo "$MPICC" | sed -e 's/^[ \t]*//'
         ;;
 
     --cflags)
-        echo $cflags
+        echo "$CFLAGS" | sed -e 's/^[ \t]*//'
         ;;
 
     --cppflags)
-        echo $CPPFLAGS
+        echo "$CPPFLAGS" | sed -e 's/^[ \t]*//'
         ;;
 
-     --libs)
-       echo $libs
-       ;;
-
     --prefix)
-       echo "${prefix}"
+       echo "$prefix" | sed -e 's/^[ \t]*//'
        ;;
 
     --includedir)
-       echo "${includedir}"
+       echo "$includedir" | sed -e 's/^[ \t]*//'
        ;;
 
     --libdir)
-       echo "${libdir}"
+       echo "$libdir" | sed -e 's/^[ \t]*//'
        ;;
 
     --ldflags)
-       echo "${LDFLAGS}"
+       echo "$LDFLAGS" | sed -e 's/^[ \t]*//'
        ;;
 
     --libs)
-       echo "${LIBS}"
+       echo "$LIBS" | sed -e 's/^[ \t]*//'
        ;;
 
     --version)
-        echo $version
+        echo "$version" | sed -e 's/^[ \t]*//'
         ;;
 
     --has-c++)
-        echo $has_cxx
+        echo "$has_cxx" | sed -e 's/^[ \t]*//'
         ;;
 
     --cxx)
-        echo $cxx
+        echo "$MPICXX" | sed -e 's/^[ \t]*//'
         ;;
 
     --cxxflags)
-        echo $cxxflags
+        echo "$CXXFLAGS" | sed -e 's/^[ \t]*//'
         ;;
 
     --cxxppflags)
-        echo $CXXCPPFLAGS
+        echo "$CXXCPPFLAGS" | sed -e 's/^[ \t]*//'
         ;;
 
     --has-fortran)
-        echo $has_fortran
+        echo "$has_fortran" | sed -e 's/^[ \t]*//'
         ;;
 
     --f77)
-        echo $f77
+        echo "$MPIF77" | sed -e 's/^[ \t]*//'
         ;;
 
     --f77flags)
-        echo $f77flags
+        echo "$F77FLAGS" | sed -e 's/^[ \t]*//'
         ;;
 
     --fppflags)
-        echo $FPPFLAGS
+        echo "$FPPFLAGS" | sed -e 's/^[ \t]*//'
         ;;
 
-    --f77libs)
-        echo $FCLIBS
-        ;;
+#    --f77libs)
+#        echo "$FCLIBS" | sed -e 's/^[ \t]*//'
+#        ;;
 
     --f90)
-        echo $f90
+        echo "$MPIF90" | sed -e 's/^[ \t]*//'
         ;;
 
     --f90flags)
-        echo $f90flags
+        echo "$F90FLAGS" | sed -e 's/^[ \t]*//'
         ;;
 
-    --f90libs)
-        echo $F90LIBS
-        ;;
+#    --f90libs)
+#        echo "$F90LIBS" | sed -e 's/^[ \t]*//'
+#        ;;
 
     *)
         echo "unknown option: $1"
