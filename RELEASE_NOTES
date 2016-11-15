@@ -2,6 +2,12 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
+version  1.8.0.pre1 (November 15, 2016)
+-------------------------------------
+  o The full list of updates can be found in
+    http://trac.mcs.anl.gov/projects/parallel-netcdf/browser/tags/v1-8-0pre1/sneak_peek
+
+-------------------------------------
 version  1.7.0 (March 3, 2016)
 -------------------------------------
 
