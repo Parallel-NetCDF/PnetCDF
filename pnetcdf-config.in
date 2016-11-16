@@ -49,15 +49,13 @@ FCLIBS="@FCLIBS@"
 F90LIBS="@F90LIBS@"
 FLDFLAGS="@FLDFLAGS@"
 F90LDFLAGS="@F90LDFLAGS@"
-LDFLAGS="@LDFLAGS@ -L${libdir}"
+LDFLAGS="@LDFLAGS@"
 LIBS="@LIBS@"
 
 version="@PACKAGE_NAME@ @PNETCDF_VERSION@"
 CC=${MPICC}
 F77=${MPIF77}
 F90=${MPIF90}
-CFLAGS="-I${includedir} ${CFLAGS}"
-LIBS="-lpnetcdf ${LIBS}"
 
 has_fortran="@has_fortran@"
 has_cxx="@has_mpicxx@"
