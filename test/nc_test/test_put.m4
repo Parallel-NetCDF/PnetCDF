@@ -276,7 +276,7 @@ check_atts_$1(int ncid, int numGatts, int numVars)
             err = APIFunc(get_att_$1)(ncid, i, ATT_NAME(i,j), value);
             if (nInExtRange == length && nInIntRange == length) {
                 IF (err != NC_NOERR)
-                    error("%s", APIFunc(strerror)(err));
+                    EXPECT_ERR(NC_NOERR, err)
             } else {
                 IF (err != NC_NOERR && err != NC_ERANGE)
                     EXPECT_ERR(NC_NOERR or NC_ERANGE, err)
@@ -428,9 +428,18 @@ ifdef(`PNETCDF',`dnl
             if (canConvert) {
                 if (CheckRange3($1, value[0], var_type[i])) {
                     IF (err != NC_NOERR)
-                        error("%s", APIFunc(strerror)(err));
+                        EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
-                } else {
+                }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
+                else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
+                else {')',
+       `$1',`schar',`ifdef(`PNETCDF',`dnl
+                else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+                else if (cdf_format < NC_FORMAT_CDF5) {')',`
+                else {')
                     IF (err != NC_ERANGE) {
                         EXPECT_ERR(NC_ERANGE, err)
                         error("\n\t\tfor type %s value %.17e %ld",
@@ -439,6 +448,8 @@ ifdef(`PNETCDF',`dnl
                     }
                     ELSE_NOK
                 }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
+       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
             } else {
                 IF (err != NC_ECHAR)
                     EXPECT_ERR(NC_ECHAR, err)
@@ -545,13 +556,24 @@ TestFunc(var)_$1(VarArgs)
         if (canConvert) {
             if (allInExtRange) {
                 IF (err != NC_NOERR)
-                    error("%s", APIFunc(strerror)(err));
+                    EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
-            } else {
+            }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
+            else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
+            else {')',
+       `$1',`schar',`ifdef(`PNETCDF',`dnl
+            else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+            else if (cdf_format < NC_FORMAT_CDF5) {')',`
+            else {')
                 IF (err != NC_ERANGE)
                     EXPECT_ERR(NC_ERANGE, err)
                 ELSE_NOK
             }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
+       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
         } else { /* should flag wrong type even if nothing to write */
             IF (err != NC_ECHAR)
                 EXPECT_ERR(NC_ECHAR, err)
@@ -590,7 +612,7 @@ TestFunc(var)_$1(VarArgs)
         if (canConvert) {
             if (allInExtRange) {
                 IF (err != NC_NOERR)
-                    error("%s", APIFunc(strerror)(err));
+                    EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
             } else {
                 IF (err != NC_ERANGE)
@@ -815,11 +837,22 @@ ifdef(`PNETCDF',`dnl
                     IF (err != NC_NOERR)
                         EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
-                } else {
+                }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
+                else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
+                else {')',
+       `$1',`schar',`ifdef(`PNETCDF',`dnl
+                else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+                else if (cdf_format < NC_FORMAT_CDF5) {')',`
+                else {')
                     IF (err != NC_ERANGE)
                         EXPECT_ERR(NC_ERANGE, err)
                     ELSE_NOK
                 }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
+       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
             } else {
                 IF (err != NC_ECHAR)
                     EXPECT_ERR(NC_ECHAR, err)
@@ -1065,13 +1098,24 @@ ifdef(`PNETCDF',`dnl
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
-                            error("%s", APIFunc(strerror)(err));
+                            EXPECT_ERR(NC_NOERR, err)
                         ELSE_NOK
-                    } else {
+                    }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
+                    else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
+                    else {')',
+       `$1',`schar',`ifdef(`PNETCDF',`dnl
+                    else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+                    else if (cdf_format < NC_FORMAT_CDF5) {')',`
+                    else {')
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         ELSE_NOK
                     }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
+       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
                 } else {
                     IF (err != NC_ECHAR)
                         EXPECT_ERR(NC_ECHAR, err)
@@ -1326,13 +1370,24 @@ ifdef(`PNETCDF',`dnl
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
-                            error("%s", APIFunc(strerror)(err));
+                            EXPECT_ERR(NC_NOERR, err)
                         ELSE_NOK
-                    } else {
+                    }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
+                    else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
+                    else {')',
+       `$1',`schar',`ifdef(`PNETCDF',`dnl
+                    else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+                    else if (cdf_format < NC_FORMAT_CDF5) {')',`
+                    else {')
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         ELSE_NOK
                     }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
+       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
                 } else {
                     IF (err != NC_ECHAR)
                         EXPECT_ERR(NC_ECHAR, err)
@@ -1421,7 +1476,7 @@ TestFunc(att)_text(AttVarArgs)
                 }
                 err = PutAtt(text)(ncid, i, ATT_NAME(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_NOERR)
-                    error("%s", APIFunc(strerror)(err));
+                    EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
             }
         }
@@ -1505,13 +1560,24 @@ TestFunc(att)_$1(AttVarArgs)
                 err = PutAtt($1)(ncid, i, ATT_NAME(i,j), ATT_TYPE(i,j), ATT_LEN(i,j), value);
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
-                        error("%s", APIFunc(strerror)(err));
+                        EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
-                } else {
+                }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
+                else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
+                else {')',
+       `$1',`schar',`ifdef(`PNETCDF',`dnl
+                else {',
+``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+                else if (cdf_format < NC_FORMAT_CDF5) {')',`
+                else {')
                     IF (err != NC_ERANGE)
                         EXPECT_ERR(NC_ERANGE, err)
                     ELSE_NOK
                 }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
+       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
             }
         }
     }
