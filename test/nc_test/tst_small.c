@@ -46,6 +46,7 @@ test_small_atts(const char *testfile, int cmode)
       {
 	 /* Create null-terminated text string of correct length. */
 	 strncpy(att, source, t);
+         att[t] = '\0';
 	 
 	 /* Create a file with one attribute. */
          err = ncmpi_create(MPI_COMM_WORLD, testfile,cmode, MPI_INFO_NULL, &ncid); ERR
