@@ -2557,8 +2557,14 @@ int ncmpii_write_header(NC *ncp)
     if (NC_indep(ncp))
         fh = ncp->nciop->independent_fh;
 
+    /* update file header size, as this subroutine may be called from a rename
+     * API (var or attribute) and the new name is smaller/bigger which changes
+     * the header size. We recalculate ncp->xsz by getting the un-aligned size
+     * occupied by the file header */
+    ncp->xsz = ncmpii_hdr_len_NC(ncp);
+
     MPI_Comm_rank(ncp->nciop->comm, &rank);
-    if (rank == 0) {
+    if (rank == 0) { /* only root writes to file header */
         MPI_Status mpistatus;
         void *buf = NCI_Malloc((size_t)ncp->xsz); /* header's write buffer */
 
@@ -2594,9 +2600,6 @@ int ncmpii_write_header(NC *ncp)
             DEBUG_RETURN_ERROR(NC_EMPI)
         }
     }
-
-    /* update file header size */
-    ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
     if (NC_doFsync(ncp)) { /* NC_SHARE is set */
         TRACE_IO(MPI_File_sync)(fh);
