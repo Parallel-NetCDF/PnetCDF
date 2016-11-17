@@ -1781,7 +1781,7 @@ TestFunc(copy_att)(AttVarArgs)
             IF (err != NC_NOERR)
                 error("copy_att: %s", APIFunc(strerror)(err));
             ELSE_NOK
-            err = APIFunc(copy_att)(ncid_out, varid, name, ncid_out, varid);
+            err = APIFunc(copy_att)(ncid_in, varid, name, ncid_out, varid);
             IF (err != NC_NOERR)
                 error("source = target: %s", APIFunc(strerror)(err));
             ELSE_NOK
