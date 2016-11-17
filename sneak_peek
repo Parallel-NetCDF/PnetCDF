@@ -19,6 +19,20 @@ This is essentially a placeholder for the next release note ...
       disabled by adding option "--disable-erange-fill" to the configure
       command line. In this case, the conventional NetCDF method described
       above is used.
+    * A new configure option --enable-relax-coord-bound is added to provide a
+      more relaxed boundary check for argument start. Traditionally, both NetCDF
+      and PnetCDF detect the error code NC_EINVALCOORDS when the value of start
+      is larger than or equal to the defined dimension size. This can be
+      inconvenient for some applications that make a zero-length request with
+      start being the dimension size, usually the last process. The new
+      configure option relaxes the boundary check by allowing the above
+      exception, i.e. start[i] can be the size of dimension i only when count[i]
+      is zero. The default of this feature is disabled. See discussion in
+      http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
+    * New macros have been added to PnetCDF header file, pnetcdf.h, to indicate
+      the configurable options that were enabled/disabled. These macros are
+      PNETCDF_ERANGE_FILL, PNETCDF_SUBFILING, PNETCDF_RELAX_COORD_BOUND, and
+      PNETCDF_DEBUG_MODE. Their values are set to 1 when enabled, 0 otherwise.
 
   o New APIs
     * ncmpi_strerrno, nfmpi_strerrno, nf90mpi_strerrno return the string name
@@ -91,20 +105,13 @@ This is essentially a placeholder for the next release note ...
       for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
       APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
       honors that exception.
-    * A new configure option --enable-relax-coord-bound is added to provide a
-      more relaxed boundary check for argument start. Traditionally, both NetCDF
-      and PnetCDF detect the error code NC_EINVALCOORDS when the value of start
-      is larger than or equal to the defined dimension size. This can be
-      inconvenient for some applications that make a zero-length request with
-      start being the dimension size, usually the last process. The new
-      configure option relaxes the boundary check by allowing the above
-      exception, i.e. start[i] can be the size of dimension i only when count[i]
-      is zero. The default of this feature is disabled. See discussion in
-      http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
     * Prior to version 1.7.0, any outstanding nonblocking requests detected at
       file close are automatically cancelled without reporting an error. In
       this release, error code NC_EPENDING will be returned when pending
       requests are detected.
+    * Change API ncmpi_set_default_format to be an independent API. However, it
+      is expected to be called by all processes that intend to create a file
+      later.
 
   o Other updates:
     * API ncmpi_inq_file_format can now detect HDF5 file signature and report
@@ -135,6 +142,8 @@ This is essentially a placeholder for the next release note ...
       The bug fix will appear in 2.15 to be released in Novermber 2016.
 
   o Bug fixes
+    * Fix to allow argument no_fill in API ncmpi_inq_var_fill to be NULL. See
+      r2609
     * Fix to allow putting global attribute _FillValue
     * Fix some missing character string normalizations for names of attributes,
       dimensions, and variables.
