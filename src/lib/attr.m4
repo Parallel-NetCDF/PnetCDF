@@ -105,11 +105,11 @@ ncmpii_new_x_NC_attr(NC_string  *strp,
 
 /*----< ncmpii_new_NC_attr() >------------------------------------------------*/
 /*
- * Formerly
-NC_new_attr(name,type,count,value)
+ * IN:  name is an already normalized attribute name (NULL terminated)
+ * OUT: attrp->xvalue is malloc-ed with a space of an aligned size
  */
 static NC_attr *
-ncmpii_new_NC_attr(const char *name,  /* normalized attribute name (NULL terminated) */
+ncmpii_new_NC_attr(const char *name,
                    nc_type     type,
                    MPI_Offset  nelems)
 {
@@ -1431,14 +1431,16 @@ err_check:
     if (nelems != 0 && buf != NULL) { /* non-zero length attribute */
         /* using xp below to prevent change the pointer attr->xvalue, as
          * ncmpix_pad_putn_<type>() advances the first argument with nelems
-         * elements
+         * elements. Note that attrp->xvalue is malloc-ed with a buffer of
+         * size that is aligned with a 4-byte boundary.
          */
         void *xp = attrp->xvalue;
+        ifelse(`$1',`text',,`dnl
         unsigned char fill[8]; /* fill value in internal representation */
 
         /* find the fill value */
         err = ncmpii_inq_default_fill_value(xtype, &fill);
-        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)')
 
         ifelse(`$1',`text', `err = ncmpix_pad_putn_text(&xp, nelems, buf);',
                `$1',`uchar',`
