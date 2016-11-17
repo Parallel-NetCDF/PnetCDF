@@ -60,6 +60,9 @@ F90=${MPIF90}
 has_fortran="@has_fortran@"
 has_cxx="@has_mpicxx@"
 
+config_date="@CONFIG_DATE@"
+release_date="@PNETCDF_RELEASE_DATE@"
+
 usage()
 {
     cat <<EOF
@@ -93,6 +96,8 @@ Available values for OPTION include:
   --includedir         Include directory
   --libdir             Library directory
   --version            Library version
+  --release-date       Date of PnetCDF source was released
+  --config-date        Date of PnetCDF library was configured
 EOF
     exit $1
 }
@@ -157,6 +162,8 @@ fi
         echo "  --includedir        -> $includedir"
         echo "  --libdir            -> $libdir"
         echo "  --version           -> $version"
+        echo "  --release-date      -> $release_date"
+        echo "  --config-date       -> $config_date"
 }
 
 if test $# -eq 0; then
@@ -304,6 +311,14 @@ if test "x@PNETCDF_DEBUG@" = xyes; then
 else
         echo "disabled"
 fi
+        ;;
+
+    --release-date)
+        echo "$release_date"
+        ;;
+
+    --config-date)
+        echo "$config_date"
         ;;
 
     *)

@@ -1211,6 +1211,13 @@ dnl find if gcc is available for compiling ncoffsets to run in sequential
 AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
 AC_SUBST(SEQ_CC)
 
+# Configuration Date
+if test "x$SOURCE_DATE_EPOCH" != "x" ; then
+    AC_SUBST([CONFIG_DATE]) CONFIG_DATE="`date -u -d "${SOURCE_DATE_EPOCH}"`"
+else
+    AC_SUBST([CONFIG_DATE]) CONFIG_DATE="`date`"
+fi
+
 AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
 AC_CONFIG_FILES(macros.make \
                 Makefile \
