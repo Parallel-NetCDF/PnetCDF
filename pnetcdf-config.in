@@ -83,7 +83,7 @@ Available values for OPTION include:
   --f90                Fortran 90 compiler
   --f90flags           Fortran 90 compiler flags
   --ldflags            Linker options
-  --libs               library linking information for PnetCDF
+  --libs               Libraries used to build PnetCDF
   --relax-coord-bound  Whether using a relaxed coordinate boundary check
   --in-place-swap      Whether using buffer in-place Endianness byte swap
   --erange-fill        Whether using fill values for NC_ERANGE error
