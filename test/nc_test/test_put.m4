@@ -21,6 +21,17 @@ dnl
 
 #include "tests.h"
 
+ifdef(`PNETCDF',,`dnl
+#ifdef USE_PNETCDF
+#include <pnetcdf.h>
+#ifndef PNETCDF_VERSION_MAJOR
+#error("PNETCDF_VERSION_MAJOR is not defined in pnetcdf.h")
+#endif
+#ifndef PNETCDF_VERSION_MINOR
+#error("PNETCDF_VERSION_MAJOR is not defined in pnetcdf.h")
+#endif
+#endif')
+
 define(`EXPECT_ERR',`error("expecting $1 but got %s",nc_err_code_name($2));')dnl
 
 define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
@@ -43,6 +54,22 @@ define(`PutVarm',`ifdef(`PNETCDF',`ncmpi_put_varm_$1_all',`nc_put_varm_$1')')dnl
 define(`PutAtt', `ifdef(`PNETCDF',`ncmpi_put_att_$1',`nc_put_att_$1')')dnl
 define(`GetVar1',`ifdef(`PNETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
 define(`DefVars',`ifdef(`PNETCDF',`def_vars($1,$2)',`def_vars($1)')')dnl
+
+define(`PNETCDF_CHECK_ERANGE',`dnl
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,`
+`#'if !defined(USE_PNETCDF) || (PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>=8)')',
+       `$1',`schar',`ifdef(`PNETCDF',,`
+`#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+                    else if (cdf_format < NC_FORMAT_CDF5) {
+`#'else')')
+                    else {
+ifelse(`$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+                        IF (err != NC_ERANGE)
+                            EXPECT_ERR(NC_ERANGE, err)
+                        ELSE_NOK
+                    }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')')'
+)dnl
 
 undefine(`index')dnl
 dnl dnl dnl
@@ -431,25 +458,7 @@ ifdef(`PNETCDF',`dnl
                         EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
                 }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
-                else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
-                else {')',
-       `$1',`schar',`ifdef(`PNETCDF',`dnl
-                else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
-                else if (cdf_format < NC_FORMAT_CDF5) {')',`
-                else {')
-                    IF (err != NC_ERANGE) {
-                        EXPECT_ERR(NC_ERANGE, err)
-                        error("\n\t\tfor type %s value %.17e %ld",
-                                s_nc_type(var_type[i]),
-                                (double)value[0], (long)value[0]);
-                    }
-                    ELSE_NOK
-                }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
-       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+                PNETCDF_CHECK_ERANGE($1)
             } else {
                 IF (err != NC_ECHAR)
                     EXPECT_ERR(NC_ECHAR, err)
@@ -559,21 +568,7 @@ TestFunc(var)_$1(VarArgs)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
             }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
-            else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
-            else {')',
-       `$1',`schar',`ifdef(`PNETCDF',`dnl
-            else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
-            else if (cdf_format < NC_FORMAT_CDF5) {')',`
-            else {')
-                IF (err != NC_ERANGE)
-                    EXPECT_ERR(NC_ERANGE, err)
-                ELSE_NOK
-            }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
-       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+            PNETCDF_CHECK_ERANGE($1)
         } else { /* should flag wrong type even if nothing to write */
             IF (err != NC_ECHAR)
                 EXPECT_ERR(NC_ECHAR, err)
@@ -838,21 +833,7 @@ ifdef(`PNETCDF',`dnl
                         EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
                 }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
-                else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
-                else {')',
-       `$1',`schar',`ifdef(`PNETCDF',`dnl
-                else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
-                else if (cdf_format < NC_FORMAT_CDF5) {')',`
-                else {')
-                    IF (err != NC_ERANGE)
-                        EXPECT_ERR(NC_ERANGE, err)
-                    ELSE_NOK
-                }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
-       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+                PNETCDF_CHECK_ERANGE($1)
             } else {
                 IF (err != NC_ECHAR)
                     EXPECT_ERR(NC_ECHAR, err)
@@ -1101,21 +1082,7 @@ ifdef(`PNETCDF',`dnl
                             EXPECT_ERR(NC_NOERR, err)
                         ELSE_NOK
                     }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
-                    else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
-                    else {')',
-       `$1',`schar',`ifdef(`PNETCDF',`dnl
-                    else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
-                    else if (cdf_format < NC_FORMAT_CDF5) {')',`
-                    else {')
-                        IF (err != NC_ERANGE)
-                            EXPECT_ERR(NC_ERANGE, err)
-                        ELSE_NOK
-                    }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
-       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+                    PNETCDF_CHECK_ERANGE($1)
                 } else {
                     IF (err != NC_ECHAR)
                         EXPECT_ERR(NC_ECHAR, err)
@@ -1373,21 +1340,7 @@ ifdef(`PNETCDF',`dnl
                             EXPECT_ERR(NC_NOERR, err)
                         ELSE_NOK
                     }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
-                    else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
-                    else {')',
-       `$1',`schar',`ifdef(`PNETCDF',`dnl
-                    else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
-                    else if (cdf_format < NC_FORMAT_CDF5) {')',`
-                    else {')
-                        IF (err != NC_ERANGE)
-                            EXPECT_ERR(NC_ERANGE, err)
-                        ELSE_NOK
-                    }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
-       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+                    PNETCDF_CHECK_ERANGE($1)
                 } else {
                     IF (err != NC_ECHAR)
                         EXPECT_ERR(NC_ECHAR, err)
@@ -1563,21 +1516,7 @@ TestFunc(att)_$1(AttVarArgs)
                         EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
                 }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',`dnl
-                else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>7
-                else {')',
-       `$1',`schar',`ifdef(`PNETCDF',`dnl
-                else {',
-``#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
-                else if (cdf_format < NC_FORMAT_CDF5) {')',`
-                else {')
-                    IF (err != NC_ERANGE)
-                        EXPECT_ERR(NC_ERANGE, err)
-                    ELSE_NOK
-                }
-ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')',
-       `$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+                PNETCDF_CHECK_ERANGE($1)
             }
         }
     }
