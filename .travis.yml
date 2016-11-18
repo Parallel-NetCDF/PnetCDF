@@ -13,7 +13,7 @@ addons:
       description: "PnetCDF nightly build submitted via Travis CI"
     notification_email: wkliao@eecs.northwestern.edu
     build_command_prepend: "./configure; make clean"
-    build_command:   "make ; make tests"
+    build_command:   "make all tests"
     branch_pattern: master
 
 before_install:
