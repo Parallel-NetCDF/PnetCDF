@@ -132,7 +132,7 @@ tst_att_ordering(char *filename, int cmode)
 static int
 tst_atts3(char *filename, int cmode)
 {
-    char filename2[128];
+    char filename2[256];
     int err, nerrs=0;
     signed char schar_in[ATT_LEN], schar_out[ATT_LEN] = {NC_MIN_BYTE, 1, NC_MAX_BYTE};
     unsigned char uchar_in[ATT_LEN];
@@ -225,9 +225,11 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_inq_att(ncid, NC_GLOBAL, ATT_TEXT_NAME, &att_type, &att_len); ERR
       if (att_type != NC_CHAR || att_len != strlen(speech) + 1) ERRV
       if (!(speech_in = malloc(att_len + 1))) ERRV
-      err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in); ERR
-      if (strcmp(speech, speech_in)) ERRV
-      free(speech_in);
+      else {
+          err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in); ERR
+          if (strcmp(speech, speech_in)) ERRV
+          free(speech_in);
+      }
       /* Check numeric values. */
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
@@ -530,10 +532,12 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_inq_att(ncid, NC_GLOBAL, ATT_TEXT_NAME2, &att_type, &att_len); ERR
       if (att_type != NC_CHAR || att_len != strlen(speech) + 1) ERRV
       if (!(speech_in = malloc(att_len + 1))) ERRV
-      err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME2, speech_in); ERR
-      if (strcmp(speech, speech_in)) ERRV
-      free(speech_in);
-      if ((err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in)) != NC_ENOTATT) ERR      
+      else {
+          err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME2, speech_in); ERR
+          if (strcmp(speech, speech_in)) ERRV
+          free(speech_in);
+          if ((err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in)) != NC_ENOTATT) ERR      
+      }
       err=ncmpi_close(ncid); ERR
 
       /* Now delete the att. */
@@ -725,9 +729,11 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_inq_att(ncid, NC_GLOBAL, ATT_TEXT_NAME, &att_type, &att_len); ERR
       if (att_type != NC_CHAR || att_len != strlen(speech) + 1) ERRV
       if (!(speech_in = malloc(att_len + 1))) ERRV
-      err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in); ERR
-      if (strcmp(speech, speech_in)) ERRV
-      free(speech_in);
+      else {
+          err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in); ERR
+          if (strcmp(speech, speech_in)) ERRV
+          free(speech_in);
+      }
       /* Check numeric values. */
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
@@ -752,7 +758,7 @@ tst_atts3(char *filename, int cmode)
 
 int main(int argc, char *argv[])
 {
-    char filename[128];
+    char filename[256];
     int cmode, rank, nprocs, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
@@ -765,8 +771,8 @@ int main(int argc, char *argv[])
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    if (argc == 2) strncpy(filename, argv[1], 256);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_atts3 ", argv[0]);

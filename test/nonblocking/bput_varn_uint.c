@@ -243,13 +243,16 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+#ifdef DEBUG
+    verbose = 1;
+#endif
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
+    if (argc == 2) strncpy(filename, argv[1], 256);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {

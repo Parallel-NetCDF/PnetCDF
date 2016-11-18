@@ -35,7 +35,7 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h> /* strlen() */
+#include <string.h> /* strlen(), strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
@@ -71,7 +71,7 @@ usage(char *argv0)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char filename[128], str[512];
+    char filename[256], str[512];
     int i, j, k, rank, nprocs, len, bufsize, verbose=1;
     int *buf, psizes[NDIMS];
     vector<MPI_Offset> gsizes(NDIMS), starts(NDIMS), counts(NDIMS), imap(NDIMS);
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc >= 1) strcpy(filename, argv[0]); /* optional argument */
+    if (argc >= 1) strncpy(filename, argv[0], 256); /* optional argument */
     else           strcpy(filename, "testfile.nc");
     len = 2;
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */

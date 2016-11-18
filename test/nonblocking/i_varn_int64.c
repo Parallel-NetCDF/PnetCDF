@@ -69,6 +69,12 @@
 #define NX 10
 #define NDIMS 2
 
+#define FATAL_ERR \
+    if (err != NC_NOERR) { \
+        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
+        exit(1); \
+    }
+
 #define ERR \
     if (err != NC_NOERR) { \
         printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
@@ -218,13 +224,16 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+#ifdef DEBUG
+    verbose = 1;
+#endif
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
+    if (argc == 2) strncpy(filename, argv[1], 256);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
@@ -239,7 +248,7 @@ int main(int argc, char** argv)
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    ERR
+    FATAL_ERR
 
     /* create a global array of size NY * NX */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); ERR
@@ -336,9 +345,11 @@ int main(int argc, char** argv)
 
     /* try with buffer being a single contiguous space */
     for (i=0; i<nreqs; i++) bufsize += req_lens[i];
-    if (bufsize>0) cbuffer[0] = (long long*) malloc(bufsize * sizeof(long long));
-    for (i=1; i<nreqs; i++) cbuffer[i] = cbuffer[i-1] + req_lens[i-1];
-    for (i=0; i<bufsize; i++) cbuffer[0][i] = rank+10;
+    if (bufsize>0) {
+        cbuffer[0] = (long long*) malloc(bufsize * sizeof(long long));
+        for (i=1; i<nreqs; i++) cbuffer[i] = cbuffer[i-1] + req_lens[i-1];
+        for (i=0; i<bufsize; i++) cbuffer[0][i] = rank+10;
+    }
 
     /* write usning varn API */
     clear_file_contents(ncid, varid);

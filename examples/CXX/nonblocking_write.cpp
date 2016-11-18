@@ -38,7 +38,7 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h> /* strcpy() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     int nprocs, len, *buf[NUM_VARS], bufsize, rank;
     int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
-    char filename[128], str[512];
+    char filename[256], str[512];
     int req[NUM_VARS], st[NUM_VARS];
     MPI_Offset write_size, sum_write_size;
     vector<MPI_Offset> starts(NDIMS), counts(NDIMS);
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc >= 1) strcpy(filename, argv[0]); /* optional argument */
+    if (argc >= 1) strncpy(filename, argv[0], 256); /* optional argument */
     else           strcpy(filename, "testfile.nc");
     len = 10; 
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */

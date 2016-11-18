@@ -58,7 +58,6 @@ int main(int argc, char **argv)
     strcpy(data[0], "2005-04-11_12:00:00"); /* 19 bytes not a multiply of 4 */
     strcpy(data[1], "2005-04-11_13:00:00");
 
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
     cmode = NC_CLOBBER;
     err  = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); ERR
 

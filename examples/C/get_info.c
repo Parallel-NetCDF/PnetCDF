@@ -38,7 +38,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strcpy() */
 #include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>

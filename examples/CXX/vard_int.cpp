@@ -48,7 +48,7 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h> /* strcpy() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
@@ -76,7 +76,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char filename[128];
+    char filename[256];
     int i, j, verbose=1;
     int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    if (argc == 1) strncpy(filename, argv[0], 256); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     vector <MPI_Offset> start(2), count(2);

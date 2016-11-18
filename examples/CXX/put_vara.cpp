@@ -58,7 +58,7 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h> /* strcpy() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <time.h>   /* time() localtime(), asctime() */
 
@@ -88,7 +88,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char filename[128], str_att[128];
+    char filename[256], str_att[256];
     int i, j, verbose=1, rank, nprocs, buf[NY][NX];
     float float_att[100];
     MPI_Offset  global_ny, global_nx;
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    if (argc == 1) strncpy(filename, argv[0], 256); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     try {
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
         asctime_r(localtime(&ltime), str_att);
 
         /* make sure the time string are consistent among all processes */
-        MPI_Bcast(str_att, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_Bcast(str_att, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
         ncFile.putAtt(string("history"), string(str_att));
 

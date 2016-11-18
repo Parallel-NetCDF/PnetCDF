@@ -179,14 +179,16 @@ TestFunc(redef)(AttVarArgs)
         error("close: %s", APIFunc(strerror)(err));
 
     /* tests using scratch file */
-    err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
+ifdef(`PNETCDF',`dnl
+    err = FileCreate(scratch, NC_NOCLOBBER, &ncid);',`dnl
+    err = nc__create(scratch, NC_NOCLOBBER, 0, &sizehint, &ncid);')
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+ifdef(`PNETCDF',,`dnl
     /* limit for ncio implementations which have infinite chunksize */
-    if(sizehint > 32768)
-        sizehint = 16384;
+    if(sizehint > 32768) sizehint = 16384;')
     def_dims(ncid);
     Def_Vars(ncid, numVars);
     Put_Atts(ncid, numGatts, numVars);
@@ -2389,6 +2391,7 @@ APIFunc(get_file_version)(char *path, int *version)
        close(fd);
        return 0;
    }
+   close(fd);
 
    if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0)
    {
@@ -2457,11 +2460,13 @@ TestFunc(set_default_format)(void)
        if (err != NC_NOERR)
            error("bad file version = %d", err);
        if (version != i) {
+#if 0
           if (i == 4) {
               if (version == 3) continue;
               printf("expect version 3 but got %d (file=%s)",version,scratch);
               continue;
           }
+#endif
           printf("expect version %d but got %d (file=%s)",i,version,scratch);
           error("bad file version = %d", version);
         }

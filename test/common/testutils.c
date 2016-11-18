@@ -18,8 +18,8 @@ void parse_read_args(int argc, char **argv, int rank, params *p)
 	int inlen, outlen;
 	if ( rank == 0 ) {
 		if (argc == 3 ) {
-			strcpy(p->infname, argv[1]);
-			strcpy(p->outfname, argv[2]);
+			strncpy(p->infname, argv[1], PATH_MAX);
+			strncpy(p->outfname, argv[2], PATH_MAX);
 		} else if (argc == 1) {
 			strcpy(p->infname, "../data/test_double.nc");
 			strcpy(p->outfname, "testread.nc");
@@ -42,7 +42,7 @@ void parse_write_args(int argc, char **argv, int rank, params *p)
 	int outlen;
 	if ( rank == 0 ) {
 		if (argc == 2 ) {
-			strcpy(p->outfname, argv[1]);
+			strncpy(p->outfname, argv[1], PATH_MAX);
 		} else if (argc == 1) {
 			strcpy(p->outfname, "testwrite.nc");
 		} else {

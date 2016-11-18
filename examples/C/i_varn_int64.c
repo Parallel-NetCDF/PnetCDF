@@ -60,7 +60,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> /* getopt() */
-#include <string.h> /* strcpy() */
+#include <string.h> /* strncpy() */
+#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -91,6 +92,7 @@ static MPI_Offset *** calloc_3D(size_t z, size_t y, size_t x)
     MPI_Offset ***buf  = (MPI_Offset***) malloc(z     * sizeof(MPI_Offset**));
     MPI_Offset  **bufy = (MPI_Offset**)  malloc(z*y   * sizeof(MPI_Offset*));
     MPI_Offset   *bufx = (MPI_Offset*)   calloc(z*y*x,  sizeof(MPI_Offset));
+    assert(z >= 0 && y >=0 && x >= 0);
     for (_k=0; _k<z; _k++, bufy+=y) {
         buf[_k] = bufy;
         for (_j=0; _j<y; _j++, bufx+=x)
@@ -170,7 +172,7 @@ int main(int argc, char** argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    strcpy(exec, argv[0]);
+    strncpy(exec, argv[0], 256);
 
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
@@ -185,6 +187,7 @@ int main(int argc, char** argv)
     argc -= optind;
     argv += optind;
     if (argc == 1) filename = argv[0]; /* optional argument */
+    assert(filename != NULL);
 
     if (nprocs != 4 && rank == 0 && verbose)
         printf("Warning: %s is intended to run on 4 processes\n",exec);

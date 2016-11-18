@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <pnetcdf.h>
 
 #include <testutils.h>
@@ -19,7 +20,7 @@
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs, verbose;
+    int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs, verbose=0;
     int req[2], status[2];
     float  var[4][6];
     char *filename="testfile.nc";
@@ -30,7 +31,9 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    verbose = 0;
+#ifdef DEBUG
+    verbose = 1;
+#endif
     if (nprocs > 1 && rank == 0 && verbose)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
 
@@ -40,6 +43,7 @@ int main(int argc, char **argv) {
         return 0;
     }
     if (argc == 2) filename = argv[1];
+    assert(filename != NULL);
 
     if (rank == 0) {
         char cmd_str[256];
