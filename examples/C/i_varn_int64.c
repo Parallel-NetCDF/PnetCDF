@@ -88,11 +88,11 @@
 
 static MPI_Offset *** calloc_3D(size_t z, size_t y, size_t x)
 {
+    if (z*y*x == 0) return NULL;
     int _j, _k;
     MPI_Offset ***buf  = (MPI_Offset***) malloc(z     * sizeof(MPI_Offset**));
     MPI_Offset  **bufy = (MPI_Offset**)  malloc(z*y   * sizeof(MPI_Offset*));
     MPI_Offset   *bufx = (MPI_Offset*)   calloc(z*y*x,  sizeof(MPI_Offset));
-    assert(z >= 0 && y >=0 && x >= 0);
     for (_k=0; _k<z; _k++, bufy+=y) {
         buf[_k] = bufy;
         for (_j=0; _j<y; _j++, bufx+=x)
