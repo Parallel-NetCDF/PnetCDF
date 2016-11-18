@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h> /* strcpy() */
 #include <unistd.h> /* getopt() */
+#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -117,8 +118,10 @@ int main(int argc, char **argv)
     argc -= optind;
     argv += optind;
     if (argc >= 1) filename = argv[0];  /* optional argument */
+    assert(filename != NULL);
     len = 10; 
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
+    assert(len >= 0);
 
     for (i=0; i<NDIMS; i++) psizes[i] = 0;
 

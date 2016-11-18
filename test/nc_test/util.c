@@ -421,7 +421,9 @@ int dbl2nc ( const double d, const nc_type xtype, void *p)
 
 /* Generate data values as function of type, rank (-1 for attribute), index */
 double
-hash( const nc_type xtype, const int rank, const MPI_Offset *index ) 
+hash(const nc_type           xtype,
+     const int               rank,
+     const MPI_Offset *const index ) 
 {
     double base;
     double result = 0.0;
@@ -528,11 +530,11 @@ hash( const nc_type xtype, const int rank, const MPI_Offset *index )
 
 /* wrapper for hash to handle special NC_BYTE/uchar adjustment */
 double
-hash4(const int         cdf_format,
-      const nc_type     xtype, 
-      const int         rank, 
-      const MPI_Offset *index, 
-      const nct_itype   itype)
+hash4(const int               cdf_format,
+      const nc_type           xtype, 
+      const int               rank, 
+      const MPI_Offset *const index, 
+      const nct_itype         itype)
 {
     double result;
 

@@ -73,7 +73,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strcpy() */
 #include <unistd.h> /* getopt() */
 #include <assert.h>
 #include <mpi.h>

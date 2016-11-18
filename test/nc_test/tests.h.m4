@@ -451,13 +451,13 @@ extern int
 dbl2nc(const double d, const nc_type datatype, void *p);
 
 extern double
-hash(const nc_type type, const int rank, const IntType *index );
+hash(const nc_type type, const int rank, const IntType *const index);
 
 extern long long
 hashx_llong(const int rank, const IntType *index);
 
 extern double
-hash4(const int cdf_format, const nc_type type, const int rank, const IntType *index, const nct_itype itype);
+hash4(const int cdf_format, const nc_type type, const int rank, const IntType *const index, const nct_itype itype);
 
 extern void
 init_gvars(int numGatts, int numTypes, int numVars);

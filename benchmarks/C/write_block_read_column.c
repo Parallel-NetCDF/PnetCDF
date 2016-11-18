@@ -336,7 +336,8 @@ int main(int argc, char** argv) {
         MPI_Finalize();
         return 0;
     }
-    len = atoll(argv[1]);
+    len = atoi(argv[1]);
+    assert(len >= 0);
 
     benchmark_write(argv[2], len, &w_size, &w_info_used, timing);
     benchmark_read (argv[2], len, &r_size, &r_info_used, timing+5);

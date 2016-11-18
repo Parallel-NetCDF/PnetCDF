@@ -71,6 +71,7 @@
 #include <stdlib.h>
 #include <string.h> /* strlen() */
 #include <unistd.h> /* getopt() */
+#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -120,8 +121,10 @@ int main(int argc, char **argv)
     argc -= optind;
     argv += optind;
     if (argc >= 1) filename = argv[0];  /* optional argument */
+    assert(filename != NULL);
     len = 4;
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
+    assert(len >= 0);
 
     /* calculate number of processes along each dimension */
     psizes[0] = psizes[1] = 0;
@@ -129,8 +132,8 @@ int main(int argc, char **argv)
     if (verbose && rank == 0)
         printf("psizes=%d %d\n", psizes[0], psizes[1]);
 
-    gsizes[0] = len     * psizes[0]; /* global array size */
-    gsizes[1] = (len+1) * psizes[1];
+    gsizes[0] = (MPI_Offset)len     * psizes[0]; /* global array size */
+    gsizes[1] = (MPI_Offset)(len+1) * psizes[1];
     if (verbose && rank == 0)
         printf("global variable shape: %lld %lld\n", gsizes[0],gsizes[1]);
 

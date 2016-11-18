@@ -326,7 +326,7 @@ int main(int argc, char **argv)
         return 0;
     }
     strcpy(basename, "testfile.nc");
-    if (argc == 2) strcpy(basename, argv[1]);
+    if (argc == 2) strncpy(basename, argv[1], 256);
     MPI_Bcast(basename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {

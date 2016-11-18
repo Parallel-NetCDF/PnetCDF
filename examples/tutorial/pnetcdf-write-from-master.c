@@ -48,7 +48,7 @@ static void handle_error(int status, int lineno)
 }
 
 int main(int argc, char **argv) {
-    int ret, ncfile, nprocs, rank, dimid, varid1, varid2, ndims=1;
+    int ret, ncid=0, nprocs, rank, dimid, varid1=0, varid2=0, ndims=1;
     MPI_Offset start, count=1;
     char buf[13] = "Hello World\n";
     int *data=NULL;
@@ -66,22 +66,22 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         ret = ncmpi_create(MPI_COMM_SELF, argv[1],
-                           NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
+                           NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        ret = ncmpi_def_dim(ncfile, "d1", nprocs, &dimid);
+        ret = ncmpi_def_dim(ncid, "d1", nprocs, &dimid);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        ret = ncmpi_def_var(ncfile, "v1", NC_INT, ndims, &dimid, &varid1);
+        ret = ncmpi_def_var(ncid, "v1", NC_INT, ndims, &dimid, &varid1);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        ret = ncmpi_def_var(ncfile, "v2", NC_INT, ndims, &dimid, &varid2);
+        ret = ncmpi_def_var(ncid, "v2", NC_INT, ndims, &dimid, &varid2);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        ret = ncmpi_put_att_text(ncfile, NC_GLOBAL, "string", 13, buf);
+        ret = ncmpi_put_att_text(ncid, NC_GLOBAL, "string", 13, buf);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
         
-        ret = ncmpi_enddef(ncfile);
+        ret = ncmpi_enddef(ncid);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
         /* first reason this approach is not scalable:  need to allocate
@@ -100,13 +100,13 @@ int main(int argc, char **argv) {
          * amount of data is quite small, but almost always the underlying
          * MPI-IO library can do a better job */
         start=0, count=nprocs;
-        ret = ncmpi_put_vara_int_all(ncfile, varid1, &start, &count, data);
+        ret = ncmpi_put_vara_int_all(ncid, varid1, &start, &count, data);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        ret = ncmpi_put_vara_int_all(ncfile, varid2, &start, &count, data);
+        ret = ncmpi_put_vara_int_all(ncid, varid2, &start, &count, data);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        ret = ncmpi_close(ncfile);
+        ret = ncmpi_close(ncid);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
         free(data);

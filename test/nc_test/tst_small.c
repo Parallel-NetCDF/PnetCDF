@@ -415,6 +415,9 @@ int main(int argc, char *argv[])
     int i, rank, nprocs, err, nerrs=0, verbose=0;
     int cmode[NUM_FORMATS]={0, NC_64BIT_OFFSET, NC_64BIT_DATA};
 
+#ifdef DEBUG
+    verbose = 1;
+#endif
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -425,7 +428,7 @@ int main(int argc, char *argv[])
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
+    if (argc == 2) strncpy(filename, argv[1], 256);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     char cmd_str[256];

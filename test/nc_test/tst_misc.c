@@ -26,7 +26,7 @@
 int
 main(int argc, char **argv) 
 {
-    char filename[128];
+    char filename[256];
     int rank, nprocs, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
@@ -39,7 +39,7 @@ main(int argc, char **argv)
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
+    if (argc == 2) strncpy(filename, argv[1], 256);
     if (rank > 0) goto fn_exit;
 
     char cmd_str[256];
@@ -64,8 +64,10 @@ main(int argc, char **argv)
       {
 	 /* Create a small file which is not a netCDF file. */
 	 if (!(file = fopen(filename, "w+"))) nerrs++;
-	 if (fwrite(dummy_data, 1, i, file) != i) nerrs++;
-	 if (fclose(file)) nerrs++;
+         else {
+	     if (fwrite(dummy_data, 1, i, file) != i) nerrs++;
+	     if (fclose(file)) nerrs++;
+         }
 	 
 	 /* Make sure that netCDF rejects this file politely. */
 	 openstat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);

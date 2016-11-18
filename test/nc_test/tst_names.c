@@ -217,7 +217,7 @@ main(int argc, char **argv)
    char *format_names[] = { "CDF-2", "CDF-5" };
    int cmode[2] = {NC_64BIT_OFFSET, NC_64BIT_DATA};
 
-    char filename[128];
+    char filename[256];
     int rank, nprocs, err, nerrs=0, verbose=0;
 
     MPI_Init(&argc, &argv);
@@ -230,7 +230,7 @@ main(int argc, char **argv)
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
+    if (argc == 2) strncpy(filename, argv[1], 256);
 
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_names ", argv[0]);

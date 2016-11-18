@@ -15,8 +15,8 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -O2 -o i_varn_uint i_varn_uint.c -lpnetcdf
- *    % mpiexec -n 4 ./i_varn_uint /pvfs2/wkliao/testfile.nc
+ *    % mpicc -O2 -o bput_varn_uint bput_varn_uint.c -lpnetcdf
+ *    % mpiexec -n 4 ./bput_varn_uint /pvfs2/wkliao/testfile.nc
  *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
@@ -59,7 +59,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> /* getopt() */
-#include <string.h> /* strcpy() */
+#include <string.h> /* strncpy() */
+#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -169,7 +170,7 @@ int main(int argc, char** argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    strcpy(exec, argv[0]);
+    strncpy(exec, argv[0], 256);
 
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
@@ -184,6 +185,7 @@ int main(int argc, char** argv)
     argc -= optind;
     argv += optind;
     if (argc == 1) filename = argv[0]; /* optional argument */
+    assert(filename != NULL);
 
     if (nprocs != 4 && rank == 0 && verbose)
         printf("Warning: %s is intended to run on 4 processes\n",exec);

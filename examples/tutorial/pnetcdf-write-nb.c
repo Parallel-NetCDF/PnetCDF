@@ -36,10 +36,11 @@
     }
 */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 static void handle_error(int status, int lineno)
 {
@@ -69,6 +70,7 @@ int main(int argc, char **argv) {
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "1");
 
+    assert(argv[1] != NULL);
     ret = ncmpi_create(MPI_COMM_WORLD, argv[1],
                        NC_CLOBBER|NC_64BIT_OFFSET, info, &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);

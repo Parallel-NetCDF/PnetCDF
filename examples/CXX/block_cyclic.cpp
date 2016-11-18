@@ -72,7 +72,7 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h> /* strcpy() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
@@ -102,7 +102,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char filename[128];
+    char filename[256];
     int i, j, verbose=1, rank, nprocs, num_reqs;
     int *reqs, *sts, **buf;
     MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    if (argc == 1) strncpy(filename, argv[0], 256); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     try {

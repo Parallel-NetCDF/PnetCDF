@@ -83,7 +83,7 @@ int main(int argc, char** argv)
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
+    if (argc == 2) strncpy(filename, argv[1], 256);
 
     if (rank == 0) {
         char cmd_str[256];

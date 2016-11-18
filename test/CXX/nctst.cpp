@@ -76,13 +76,14 @@ check_string_att(NcmpiAtt &att, const char *theName, const char *value)
        att.getType() != ncmpiChar || att.getAttLength() != (long)strlen(value))
       return NC_ERR;
 
+   int err=0;
    char *value_in = (char*)malloc(strlen(value)+1);
    att.getValues(value_in);
    if (strncmp(value_in, value, strlen(value)))
-      return NC_ERR;
+      err = NC_ERR;
    free(value_in);
 
-   return 0;
+   return err;
 }
 
 // Check the units and long_name attributes of a var to make sure they
@@ -503,13 +504,17 @@ main(int argc, char* argv[])	// test new netCDF interface
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+#ifdef DEBUG
+    verbose = 1;
+#endif
+
    if (argc > 2) {
        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
        MPI_Finalize();
        return 0;
    }
    strcpy(filename, "testfile.nc");
-   if (argc == 2) strcpy(filename, argv[1]);
+   if (argc == 2) strncpy(filename, argv[1], 256);
 
     if (rank == 0) {
         char cmd_str[256];

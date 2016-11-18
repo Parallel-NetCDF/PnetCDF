@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         MPI_Finalize();
         return 0;
     }
-    strcpy(dir_name, argv[1]);
+    strncpy(dir_name, argv[1], 256);
     MPI_Bcast(dir_name, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {

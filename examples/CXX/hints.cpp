@@ -34,7 +34,7 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h> /* strcpy() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
@@ -120,7 +120,7 @@ void print_hints(NcmpiFile &ncFile,
 int main(int argc, char** argv)
 {
     extern int optind;
-    char filename[128];
+    char filename[256];
     int i, rank, nprocs, verbose=1, *buf_zy;
     float *buf_yx;
     vector<MPI_Offset> start(2), count(2);
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    if (argc == 1) strncpy(filename, argv[0], 256); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     try {

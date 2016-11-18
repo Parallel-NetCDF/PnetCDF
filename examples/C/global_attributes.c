@@ -33,7 +33,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strlen(), strcpy() */
+#include <string.h> /* strlen() */
 #include <unistd.h> /* getopt() */
 #include <time.h>   /* time() localtime(), asctime() */
 #include <mpi.h>
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     extern int optind;
     char *filename="testfile.nc";
     char str_att[128], att_name[NC_MAX_NAME];
-    int i, rank, err, nerrs=0, verbose=0, ncid, cmode, omode, ngatts;
+    int i, rank, err, nerrs=0, verbose=1, ncid, cmode, omode, ngatts;
     short short_att[10], digit[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     time_t ltime;
 

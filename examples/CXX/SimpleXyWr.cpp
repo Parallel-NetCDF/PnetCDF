@@ -22,7 +22,7 @@
 
 #include <iostream>
 #include <vector>
-#include <string.h> /* strcpy() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
@@ -55,7 +55,7 @@ usage(char *argv0)
 int main(int argc, char *argv[])
 {
     extern int optind;
-    char filename[128];
+    char filename[256];
     int i, err=0, verbose=1;
 
     MPI_Init(&argc, &argv);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    if (argc == 1) strncpy(filename, argv[0], 256); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     // This is the data array we will write. It will just be filled

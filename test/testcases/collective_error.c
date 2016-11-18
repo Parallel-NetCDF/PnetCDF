@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 {
     char *filename="testfile.nc";
     int rank, nproc, ncid, err, nerrs=0, varid, dimids[1];
-    int req, status, verbose;
+    int req, status, verbose=0;
     MPI_Offset start[1], count[1];
     double buf[2];
 
@@ -38,12 +38,16 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
+#ifdef DEBUG
+    verbose = 1;
+#endif
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
     if (argc == 2) filename = argv[1];
+    assert(filename != NULL);
 
     if (rank == 0) {
         char cmd_str[256];
@@ -51,7 +55,6 @@ int main(int argc, char *argv[])
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 
-    verbose = 0;
     if (nproc != 2 && rank == 0 && verbose)
         printf("Warning: %s is designed to run on 2 processes\n",argv[0]);
 

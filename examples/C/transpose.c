@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h> /* strlen() */
 #include <unistd.h> /* getopt() */
+#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -86,8 +87,10 @@ int main(int argc, char **argv)
     argc -= optind;
     argv += optind;
     if (argc >= 1) filename = argv[0];  /* optional argument */
+    assert(filename != NULL);
     len = 2;
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
+    assert(len >= 0);
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;
@@ -115,9 +118,9 @@ int main(int argc, char **argv)
 
     bufsize = 1;
     for (i=0; i<NDIMS; i++) {
-        gsizes[i]  = (len + i) * psizes[i]; /* global array size */
-        starts[i] *= (len + i);             /* start indices */
-        counts[i]  = (len + i);             /* array elements */
+        gsizes[i]  = (MPI_Offset)(len + i) * psizes[i]; /* global array size */
+        starts[i] *= (MPI_Offset)(len + i);             /* start indices */
+        counts[i]  = (MPI_Offset)(len + i);             /* array elements */
         bufsize   *= (len + i);
     }
 
