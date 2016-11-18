@@ -630,14 +630,14 @@ nc_strerror(int ncerr1)
 const char *
 ncmpi_strerrno(int err)
 {
-    static char unknown_str[32];
+    static char unknown_str[64];
 
     if (err > 0) { /* system error */
         const char *cp = (const char *) strerror(err);
         if (cp == NULL)
             sprintf(unknown_str,"Unknown error code %d",err);
         else
-            sprintf(unknown_str,"Error code %d (%s)",err,cp);
+            sprintf(unknown_str,"System error code %d (%s)",err,cp);
         return unknown_str;
     }
 
