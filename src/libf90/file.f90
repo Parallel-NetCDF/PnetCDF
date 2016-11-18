@@ -32,8 +32,15 @@ end function nf90mpi_strerror
 function nf90mpi_strerrno(ncerr)
   integer, intent( in) :: ncerr
   character(len = 80)  :: nf90mpi_strerrno
+  character(len = 80)  :: strerrno
 
-  nf90mpi_strerrno = nfmpi_strerrno(ncerr)
+  strerrno = nfmpi_strerrno(ncerr)
+  if (strerrno(1:3) .EQ. 'NF_') then
+      nf90mpi_strerrno(1:5) = 'NF90_'
+      nf90mpi_strerrno(6:80) = strerrno(4:78)
+  else
+      nf90mpi_strerrno = strerrno
+  end if
 end function nf90mpi_strerrno
 ! -------
 !
