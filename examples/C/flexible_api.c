@@ -73,8 +73,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
-#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -102,7 +102,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc";
+    char filename[256];
     int i, j, rank, nprocs, verbose=1, err, nerrs=0, req, status, ghost_len=3;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -126,7 +126,11 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) filename = argv[0]; /* optional argument */
+    if (argc == 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
 
     if (verbose && rank == 0) printf("%s: example of using flexible APIs\n",__FILE__);
 

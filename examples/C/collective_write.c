@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <string.h> /* strcpy() */
 #include <mpi.h>
@@ -95,7 +96,7 @@ void print_info(MPI_Info *info_used)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char *filename="testfile.nc", str[512];
+    char filename[256], str[512];
     int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
     int *buf[NUM_VARS], psizes[NDIMS], dimids[NDIMS], varids[NUM_VARS];
     double write_timing, max_write_timing, write_bw;
@@ -119,7 +120,11 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc >= 1) filename = argv[0];  /* optional argument */
+    if (argc >= 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
     len = 10; 
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
 

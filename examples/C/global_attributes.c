@@ -33,7 +33,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strlen() */
+#include <string.h> /* strcpy(), strncpy(), strlen() */
 #include <unistd.h> /* getopt() */
 #include <time.h>   /* time() localtime(), asctime() */
 #include <mpi.h>
@@ -65,7 +65,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc";
+    char filename[256];
     char str_att[128], att_name[NC_MAX_NAME];
     int i, rank, err, nerrs=0, verbose=1, ncid, cmode, omode, ngatts;
     short short_att[10], digit[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -86,7 +86,11 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) filename = argv[0]; /* optional argument */
+    if (argc == 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;

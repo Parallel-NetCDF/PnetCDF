@@ -55,6 +55,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -85,7 +86,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc", str_att[NC_MAX_NAME];
+    char filename[256], str_att[NC_MAX_NAME];
     int i, rank, nprocs, err, nerrs=0, verbose=1, ncid, varid, dimid[2], *buf;
     float *float_att;
     MPI_Offset len, global_ny, global_nx, local_ny, local_nx;
@@ -107,7 +108,11 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) filename = argv[0]; /* optional argument */
+    if (argc == 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
 
     /* open an existing file for reading -------------------------------------*/
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);

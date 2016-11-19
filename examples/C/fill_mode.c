@@ -59,7 +59,6 @@
 #include <stdlib.h>
 #include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
-#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -109,9 +108,11 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strncpy(filename, argv[0], 255); /* optional argument */
+    if (argc == 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
     else strcpy(filename, "testfile.nc");
-    filename[255] = '\0';
 
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 

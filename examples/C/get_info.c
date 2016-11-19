@@ -38,6 +38,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -88,7 +89,7 @@ void print_info(MPI_Info *info_used)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char *filename="testfile.nc";
+    char filename[256];
     int i, rank, ncid, verbose=1, err, nerrs=0;
     MPI_Info info_used;
 
@@ -107,7 +108,11 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) filename = argv[0]; /* optional argument */
+    if (argc == 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
 
     /* create the file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,

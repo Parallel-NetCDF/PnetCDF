@@ -30,8 +30,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
-#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -114,7 +114,7 @@ int print_hints(int ncid,
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc";
+    char filename[256];
     int i, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
     float *buf_yx;
@@ -137,8 +137,11 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) filename = argv[0]; /* optional argument */
-    assert(filename != NULL);
+    if (argc == 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_header_align_size",      "1024"); /* size in bytes */
