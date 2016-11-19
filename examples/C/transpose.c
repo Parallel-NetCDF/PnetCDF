@@ -31,9 +31,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strlen() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
-#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -62,7 +61,7 @@ usage(char *argv0)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char *filename="testfile.nc", str[512];
+    char filename[256], str[512];
     int i, j, k, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
     int *buf, psizes[NDIMS], dimids[NDIMS], dimidsT[NDIMS];
     int XYZ_id, XZY_id, YZX_id, YXZ_id, ZYX_id, ZXY_id;
@@ -86,11 +85,14 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc >= 1) filename = argv[0];  /* optional argument */
-    assert(filename != NULL);
+    if (argc >= 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
+
     len = 2;
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
-    assert(len >= 0);
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;

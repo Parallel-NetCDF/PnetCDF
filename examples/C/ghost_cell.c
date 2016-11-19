@@ -69,9 +69,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strlen() */
+#include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
-#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -98,7 +97,7 @@ usage(char *argv0)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char *filename="testfile.nc";
+    char filename[256];
     int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
     int psizes[2], local_rank[2], dimids[2], varid, nghosts;
     int *buf, *buf_ptr;
@@ -120,11 +119,13 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc >= 1) filename = argv[0];  /* optional argument */
-    assert(filename != NULL);
+    if (argc >= 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
     len = 4;
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
-    assert(len >= 0);
 
     /* calculate number of processes along each dimension */
     psizes[0] = psizes[1] = 0;

@@ -515,7 +515,7 @@ main(int argc, char* argv[])	// test new netCDF interface
    }
    strcpy(filename, "testfile.nc");
    if (argc == 2) strncpy(filename, argv[1], 255);
-    filename[255] = '\0';
+   filename[255] = '\0';
 
     if (rank == 0) {
         char cmd_str[256];

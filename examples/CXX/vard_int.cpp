@@ -100,9 +100,11 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strncpy(filename, argv[0], 255); /* optional argument */
-    else           strcpy(filename, "testfile.nc");
-    filename[255] = '\0';
+    if (argc == 1) {
+        strncpy(filename, argv[0], 255); /* optional argument */
+        filename[255] = '\0';
+    }
+    else strcpy(filename, "testfile.nc");
 
     vector <MPI_Offset> start(2), count(2);
     start[0] = 0; start[1] = NX*rank;
