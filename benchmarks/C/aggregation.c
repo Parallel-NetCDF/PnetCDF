@@ -150,9 +150,6 @@ int benchmark_write(char       *filename,
     MPI_Offset gsizes[2], start[2], count[2];
     MPI_Info info=MPI_INFO_NULL;
 
-#ifdef DEBUG
-    verbose = 1;
-#endif
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
@@ -358,7 +355,7 @@ int benchmark_read(char       *filename,
                    MPI_Info   *r_info_used,
                    double     *timing)  /* [5] */
 {
-    int i, j, k, verbose, rank, nprocs, s_rank, err, num_reqs;
+    int i, j, k, verbose=0, rank, nprocs, s_rank, err, num_reqs;
     int ncid, omode, varid[NVARS], *reqs, *sts, psizes[2];
     void *buf[NVARS];
     double start_t, end_t;
@@ -366,7 +363,6 @@ int benchmark_read(char       *filename,
     MPI_Offset start[2], count[2];
     MPI_Info info=MPI_INFO_NULL;
 
-    verbose = 0;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
     s_rank = (rank + nprocs / 2 ) % nprocs;
@@ -530,7 +526,6 @@ int main(int argc, char** argv) {
         return 0;
     }
     len = atoll(argv[1]);
-    assert(len >= 0);
 
     benchmark_write(argv[2], len, &w_size, &w_info_used, timing);
     benchmark_read (argv[2], len, &r_size, &r_info_used, timing+6);

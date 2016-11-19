@@ -535,8 +535,8 @@ tst_atts3(char *filename, int cmode)
       else {
           err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME2, speech_in); ERR
           if (strcmp(speech, speech_in)) ERRV
-          free(speech_in);
           if ((err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in)) != NC_ENOTATT) ERR      
+          free(speech_in);
       }
       err=ncmpi_close(ncid); ERR
 
@@ -771,7 +771,8 @@ int main(int argc, char *argv[])
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strncpy(filename, argv[1], 256);
+    if (argc == 2) strncpy(filename, argv[1], 255);
+    filename[255] = '\0';
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     char cmd_str[256];

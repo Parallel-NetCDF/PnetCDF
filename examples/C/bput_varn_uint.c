@@ -59,7 +59,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> /* getopt() */
-#include <string.h> /* strncpy() */
 #include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -160,7 +159,7 @@ static int check_contents(int ncid, int *varid)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc", exec[256];
+    char *filename="testfile.nc", *exec;
     int i, j, k, n, rank, nprocs, verbose=1, err, nerrs=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     unsigned int *buffer[4];
@@ -171,7 +170,7 @@ int main(int argc, char** argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    strncpy(exec, argv[0], 256);
+    exec = argv[0];
 
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)

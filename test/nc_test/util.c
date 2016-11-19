@@ -517,13 +517,15 @@ hash(const nc_type           xtype,
                 base = 0;
                 assert(0);
         }
-        if (rank < 0)  /* attribute */
+        if (rank < 0) { /* attribute */
             result = base * 7;
-        else
+	    result = base * (result + index[0]);
+        }
+        else {
             result = base * (rank + 1);
-
-        for (d=0; d<abs(rank); d++)
-            result = base * (result + index[d]);
+            for (d=0; d<abs(rank); d++)
+                result = base * (result + index[d]);
+        }
     }
     return result;
 }

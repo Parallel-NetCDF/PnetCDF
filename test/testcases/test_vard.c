@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 
     char         filename[256];
     int          i, j, err, ncid, varid0, varid1, varid2, dimids[2], nerrs=0;
-    int          rank, nprocs, debug=0, blocklengths[2], **buf, *bufptr;
+    int          rank, nprocs, blocklengths[2], **buf, *bufptr;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int          buftype_size, expected_put_size, format;
     MPI_Offset   start[2], count[2], header_size, put_size, new_put_size;
@@ -197,7 +197,6 @@ int main(int argc, char **argv) {
 
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
-    if (debug) printf("put start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
 
     /* create a file type for the fixed-size variable */
     array_of_sizes[0] = 2;

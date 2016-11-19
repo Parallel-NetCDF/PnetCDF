@@ -39,7 +39,8 @@ main(int argc, char **argv)
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strncpy(filename, argv[1], 256);
+    if (argc == 2) strncpy(filename, argv[1], 255);
+    filename[255] = '\0';
     if (rank > 0) goto fn_exit;
 
     char cmd_str[256];

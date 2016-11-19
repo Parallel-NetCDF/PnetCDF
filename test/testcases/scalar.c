@@ -24,7 +24,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int err, nerrs=0, rank, nprocs, verbose, ncid, varid;
+    int err, nerrs=0, rank, nprocs, verbose=0, ncid, varid;
     MPI_Offset start[1], count[1], stride[1], imap[1];
     int   buf;
     char *filename="testfile.nc";
@@ -46,8 +46,7 @@ int main(int argc, char **argv)
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 
-    verbose = 0;
-    if (nprocs > 1 && rank == 0 && verbose)
+    if (verbose && nprocs > 1 && rank == 0)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA,
