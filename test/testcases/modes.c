@@ -43,7 +43,7 @@
 static
 int check_modes(char *filename)
 {
-    int rank, err, nerrs=0, file_exist;
+    int rank, err, nerrs=0;
     int ncid, cmode;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -62,52 +62,57 @@ int check_modes(char *filename)
     EXPECT_ERR(NC_EINVAL_CMODE)
 
     /* The file should not be created */
-    file_exist = 0;
-    if (rank == 0 && access(filename, F_OK) == 0) file_exist = 1;
-    MPI_Bcast(&file_exist, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    if (file_exist) {
-        printf("Error at line %d: file (%s) should not be created\n", __LINE__, filename);
-        nerrs++;
+    if (rank == 0) {
+        if (access(filename, F_OK) == 0) {
+            printf("Error at line %d: file (%s) should not be created\n",
+                   __LINE__, filename);
+            nerrs++;
+            /* delete the file and ignore error */
+            unlink(filename);
+        }
+        /* else : file does not exist */
     }
-
-    /* delete the file and ignore error */
-    unlink(filename);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Collectively opening a non-existing file for read, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
+    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
+     * MPI_ERR_NO_SUCH_FILE */
     EXPECT_ERR2(NC_ENOENT, NC_EFILE)
 
-    file_exist = 0;
-    if (rank == 0 && access(filename, F_OK) == 0) file_exist = 1;
-    MPI_Bcast(&file_exist, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    if (file_exist) {
-        printf("Error at line %d: file (%s) should not be created\n", __LINE__, filename);
-        nerrs++;
+    /* The file should not be created */
+    if (rank == 0) {
+        if (access(filename, F_OK) == 0) {
+            printf("Error at line %d: file (%s) should not be created\n",
+                   __LINE__, filename);
+            nerrs++;
+            /* delete the file and ignore error */
+            unlink(filename);
+        }
+        /* else : file does not exist */
     }
-
-    /* delete the file and ignore error */
-    unlink(filename);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Collectively opening a non-existing file for write, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
-    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
+    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
+     * MPI_ERR_NO_SUCH_FILE */
     EXPECT_ERR2(NC_ENOENT, NC_EFILE)
 
-    file_exist = 0;
-    if (rank == 0 && access(filename, F_OK) == 0) file_exist = 1;
-    MPI_Bcast(&file_exist, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    if (file_exist) {
-        printf("Error at line %d: file (%s) should not be created\n", __LINE__, filename);
-        nerrs++;
+    /* The file should not be created */
+    if (rank == 0) {
+        if (access(filename, F_OK) == 0) {
+            printf("Error at line %d: file (%s) should not be created\n",
+                   __LINE__, filename);
+            nerrs++;
+            /* delete the file and ignore error */
+            unlink(filename);
+        }
+        /* else : file does not exist */
     }
-
-    /* delete the file and ignore error */
-    unlink(filename);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     return nerrs;
 }
@@ -126,7 +131,8 @@ int main(int argc, char** argv)
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strncpy(filename, argv[1], 256);
+    if (argc == 2) strncpy(filename, argv[1], 255);
+    filename[255] = '\0';
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {

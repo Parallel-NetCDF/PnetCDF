@@ -20,7 +20,7 @@
 #define STRIDE   5
 int main(int argc, char ** argv)
 {
-    int ncid, dimid, varid, rank, nprocs, verbose;
+    int ncid, dimid, varid, rank, nprocs, verbose=0;
     MPI_Datatype vtype, rtype, usertype;
     MPI_Aint lb, extent;
     int userbufsz, *userbuf, *cmpbuf, i, err, errs=0, nerrs=0;
@@ -46,8 +46,7 @@ int main(int argc, char ** argv)
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 
-    verbose = 0;
-    if (nprocs > 2 && rank == 0 && verbose)
+    if (verbose && nprocs > 2 && rank == 0)
         printf("Warning: %s is designed to run on 1 process\n",argv[0]);
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);

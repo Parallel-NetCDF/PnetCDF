@@ -72,8 +72,9 @@ int main(int argc, char *argv[])
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strncpy(filename, argv[0], 256); /* optional argument */
+    if (argc == 1) strncpy(filename, argv[0], 255); /* optional argument */
     else           strcpy(filename, "testfile.nc");
+    filename[255] = '\0';
 
     // This is the data array we will write. It will just be filled
     // with a progression of numbers for this example.

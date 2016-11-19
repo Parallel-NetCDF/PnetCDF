@@ -89,8 +89,9 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) strncpy(filename, argv[0], 256); /* optional argument */
+    if (argc == 1) strncpy(filename, argv[0], 255); /* optional argument */
     else           strcpy(filename, "testfile.nc");
+    filename[255] = '\0';
 
     if (nprocs != 4 && rank == 0 && verbose)
         printf("Warning: this program is intended to run on 4 processes\n");

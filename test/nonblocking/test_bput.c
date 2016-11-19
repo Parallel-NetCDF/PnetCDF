@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 #ifdef DEBUG
     verbose = 1;
 #endif
-    if (nprocs > 1 && rank == 0 && verbose)
+    if (verbose && nprocs > 1 && rank == 0)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
 
     if (argc > 2) {

@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 
-    if (nproc != 2 && rank == 0 && verbose)
+    if (verbose && nproc != 2 && rank == 0)
         printf("Warning: %s is designed to run on 2 processes\n",argv[0]);
 
     /* Create a 2 element vector of doubles */

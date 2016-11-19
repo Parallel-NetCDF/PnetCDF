@@ -118,8 +118,9 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc >= 1) strncpy(filename, argv[0], 256); /* optional argument */
+    if (argc >= 1) strncpy(filename, argv[0], 255); /* optional argument */
     else           strcpy(filename, "testfile.nc");
+    filename[255] = '\0';
     len = 10; 
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
 
