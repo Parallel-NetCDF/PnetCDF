@@ -1294,8 +1294,11 @@ echo \
    Features:  Support for large files (> 4 GB)                  - ${msg_large_files}
               Build C++ APIs                                    - ${has_mpicxx}
               Build Fortran APIs                                - ${enable_fortran}
-              Enable request aggregation in nonblocking APIs    - ${enable_aggregation}
               Build CDF-2 and CDF-5 support                     - ${enable_cdf_2_n_5}"
+if test "x${enable_aggreg}" = xno; then
+   echo "\
+              Request aggregation in nonblocking APIs           - $no"
+fi
 if test "x${enable_erange_fill}" = xno; then
    echo "\
               Fill variables when NC_ERANGE occurs              - no"
@@ -1370,10 +1373,10 @@ if test "x${LIBS}" != x ; then
 fi
 echo "\
 
-   Now type 'make' to build the library and utility tools.
-   Type 'make @<:@<target>@:>@'
+   Now type 'make' to build the library and utility tools and then
+   type 'make @<:@<target>@:>@' for testing and installation,
        where the optional <target> is:
-           testing          - test PnetCDF build for sequential run
+           check            - test PnetCDF build for sequential run
            ptest            - test PnetCDF build for parallel run
            install          - install PnetCDF
 ------------------------------------------------------------------------------"

@@ -523,7 +523,7 @@ hash(const nc_type           xtype,
         }
         else {
             result = base * (rank + 1);
-            for (d=0; d<abs(rank); d++)
+            for (d=0; d<rank; d++)
                 result = base * (result + index[d]);
         }
     }
@@ -672,6 +672,7 @@ init_gvars(int numGatts, int numTypes, int numVars)
                 var_type[vn]    = char2type(type_letter[xtype]);
                 var_rank[vn]    = rank;
                 var_natts[vn]   = rank == 0 ? vn % (MAX_NATTS + 1) : 0;
+                /* set atteributes only for scalar variables */
 
                 /* ac block */
                 for (ac=0; ac<var_natts[vn]; ac++, an++) {
