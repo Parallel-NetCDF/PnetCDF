@@ -46,7 +46,7 @@ endif
 endif
 
 GARBAGE      = $(PROGS) $(M4_SRCS:.m4=.c) *.nc
-PACKING_LIST = $(M4_SRC) $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
+PACKING_LIST = $(M4_SRCS) $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
                Makefile.in README depend
 
 all: $(PROGS)
