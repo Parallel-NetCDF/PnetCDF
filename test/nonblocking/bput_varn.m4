@@ -66,6 +66,7 @@ dnl
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#include <ncconfig.h> /* output of 'configure' */
 #include <testutils.h>
 
 #define NLOOPS 4
@@ -77,11 +78,21 @@ dnl
 
 typedef char text;
 typedef signed char schar;
+#ifndef HAVE_UCHAR 
 typedef unsigned char uchar;
+#endif
+#ifndef HAVE_USHORT
 typedef unsigned short ushort;
+#endif
+#ifndef HAVE_UINT
 typedef unsigned int uint;
+#endif
+#ifndef HAVE_LONGLONG
 typedef long long longlong;
+#endif
+#ifndef HAVE_ULONGLONG
 typedef unsigned long long ulonglong;
+#endif
 
 include(`foreach.m4')dnl
 include(`utils.m4')dnl

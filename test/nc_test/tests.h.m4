@@ -30,7 +30,7 @@ define(`APIFunc',` ifdef(`PNETCDF',`ncmpi_$1',`nc_$1')')dnl
 #include <testutils.h>
 #include "error.h"
 
-#include "ncconfig.h" /* output of 'configure' */
+#include <ncconfig.h> /* output of 'configure' */
 
 #if defined(_CRAY) && !defined(_CRAYIEEE)
 #define CRAYFLOAT 1 /* CRAY Floating point */

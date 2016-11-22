@@ -246,7 +246,8 @@
 
       integer ncid, cmode, file_info
       integer(kind=MPI_OFFSET_KIND) starts(5), counts(4), put_size
-      integer gsizes(5), subsizes(5), buftype, reqs(nvar+6), stats(nvar+6)
+      integer gsizes(5), subsizes(5), gstarts(5)
+      integer buftype, reqs(nvar+6), stats(nvar+6)
 
 !-----------------------------------------------------------------------------
 ! compute the total number of blocks left of a given processor number
@@ -555,12 +556,12 @@
          subsizes(3) = nyb
          subsizes(4) = nzb
          subsizes(5) = lnblocks
-         starts(1) = 0
-         starts(2) = nguard
-         starts(3) = nguard*k2d
-         starts(4) = nguard*k3d
-         starts(5) = 0
-         call MPI_Type_create_subarray(5, gsizes, subsizes, starts, &
+         gstarts(1) = 0
+         gstarts(2) = nguard
+         gstarts(3) = nguard*k2d
+         gstarts(4) = nguard*k3d
+         gstarts(5) = 0
+         call MPI_Type_create_subarray(5, gsizes, subsizes, gstarts, &
                                        MPI_ORDER_FORTRAN, &
                                        MPI_DOUBLE_PRECISION, buftype, &
                                        err)
