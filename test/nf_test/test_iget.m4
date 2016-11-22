@@ -19,6 +19,20 @@ dnl Process using m4 to produce FORTRAN language file.
 
 changequote([,])
 
+define([TestFunc],[ifdef([PNETCDF],[test_nfmpi_iget_$1],[test_nf_iget_$1])])dnl
+define([APIFunc],[ifdef([PNETCDF],[nfmpi_$1],[nf_$1])])dnl
+define([ErrFunc],[ifdef([PNETCDF],[nfmpi_strerror($1)],[nf_strerror($1)])])dnl
+
+define([FileOpen],[ifdef([PNETCDF],[nfmpi_open(comm, $1, $2, info, ncid)],[nf_ope
+n($1, $2, ncid)])])dnl
+define([FileClose],[ifdef([PNETCDF],[nfmpi_close($1)],[nf_close($1)])])dnl
+
+define([iGetVar1],[ifdef([PNETCDF],[nfmpi_iget_var1_$1],[nf_iget_var1_$1])])dnl
+define([iGetVar], [ifdef([PNETCDF],[nfmpi_iget_var_$1], [nf_iget_var_$1])])dnl
+define([iGetVara],[ifdef([PNETCDF],[nfmpi_iget_vara_$1],[nf_iget_vara_$1])])dnl
+define([iGetVars],[ifdef([PNETCDF],[nfmpi_iget_vars_$1],[nf_iget_vars_$1])])dnl
+define([iGetVarm],[ifdef([PNETCDF],[nfmpi_iget_varm_$1],[nf_iget_varm_$1])])dnl
+
 undefine([index])dnl
 
 dnl Macros
@@ -79,7 +93,7 @@ ifelse($1, double, doubleprecision $2)[]dnl
 dnl TEST_NFMPI_IGET_VAR1(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VAR1],[dnl
-        subroutine test_nfmpi_iget_var1_$1()
+        subroutine TestFunc(var1_$1)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -101,26 +115,26 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
+        err = FileOpen(testfile, NF_NOWRITE)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_open: ', err)
+     +      call errore('APIFunc(open): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             do 2, j = 1, var_rank(i)
                 index(j) = 1
 2           continue
-            err = nfmpi_iget_var1_$1(BAD_ID,i,index,value,
+            err = iGetVar1($1)(BAD_ID,i,index,value,
      +                               reqid(1))
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_iget_var1_$1(ncid,BAD_VARID,
+            err = iGetVar1($1)(ncid,BAD_VARID,
      +                  index, value, reqid(1))
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 index(j) = var_shape(j,i) + 1
-                err = nfmpi_iget_var1_$1(ncid,i,index,value,
+                err = iGetVar1($1)(ncid,i,index,value,
      +                               reqid(1))
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -137,10 +151,10 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes 1')
                 expect = hash4(var_type(i), var_rank(i), index)
-                err = nfmpi_iget_var1_$1(ncid,i,index,value,
+                err = iGetVar1($1)(ncid,i,index,value,
      +                               reqid(1))
                 if (err .eq. NF_NOERR)
-     +              err_w = nfmpi_wait_all(ncid, 1, reqid, st)
+     +              err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
                 if (.NOT. canConvert) then
                     if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
@@ -151,7 +165,8 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
                     if (in_internal_range(NFT_ITYPE($1),
      +                                    expect)) then
                         if (st(1) .ne. 0) then
-                            call errore('nfmpi_iget_var: ',st(1))
+                            call errore('iGetVar1($1): ',
+     +                                  st(1))
                         else
                             val = ARITH_VAR1($1, value)
                             if (.not. equal(val, expect,
@@ -172,9 +187,9 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
                 end if
 4           continue
 1       continue
-        err = nfmpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_close: ',  err)
+     +      call errore('APIFunc(close): ',  err)
         call print_nok(nok)
         end
 ])
@@ -182,7 +197,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
 dnl TEST_NFMPI_IGET_VAR(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VAR],[dnl
-        subroutine test_nfmpi_iget_var_$1()
+        subroutine TestFunc(var_$1)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -207,16 +222,16 @@ define([TEST_NFMPI_IGET_VAR],[dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
+        err = FileOpen(testfile, NF_NOWRITE)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_open: ', err)
+     +      call errore('APIFunc(open): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
-            err = nfmpi_iget_var_$1(BAD_ID, i, value,reqid(1))
+            err = iGetVar($1)(BAD_ID, i, value,reqid(1))
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_iget_var_$1(ncid, BAD_VARID, value,reqid(1))
+            err = iGetVar($1)(ncid, BAD_VARID, value,reqid(1))
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             nels = 1
@@ -238,9 +253,9 @@ define([TEST_NFMPI_IGET_VAR],[dnl
                     allInExtRange = .false.
                 end if
 4           continue
-            err = nfmpi_iget_var_$1(ncid, i, value,reqid(1))
+            err = iGetVar($1)(ncid, i, value,reqid(1))
             if (err .eq. NF_NOERR)
-     +          err_w = nfmpi_wait_all(ncid,1,reqid,st)
+     +          err_w = APIFunc(wait_all)(ncid,1,reqid,st)
             if (.NOT. canConvert) then
                 if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
@@ -249,7 +264,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
             if (allInExtRange) then
                 if (allInIntRange) then
                     if (st(1) .ne. 0)
-     +                  call errore('nfmpi_iget_var: ', st(1))
+     +                  call errore('iGetVar($1): ', st(1))
                 else
                     if (st(1) .ne. NF_ERANGE)
      +                  call errore('Range error: ', st(1))
@@ -273,9 +288,9 @@ define([TEST_NFMPI_IGET_VAR],[dnl
                 endif
 5           continue
 1       continue
-        err = nfmpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_close: ',  err)
+     +      call errore('APIFunc(close): ',  err)
         call print_nok(nok)
         end
 ])
@@ -284,7 +299,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
 dnl TEST_NFMPI_IGET_VARA(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VARA],[dnl
-        subroutine test_nfmpi_iget_vara_$1()
+        subroutine TestFunc(vara_$1)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -316,9 +331,9 @@ define([TEST_NFMPI_IGET_VARA],[dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
+        err = FileOpen(testfile, NF_NOWRITE)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_open: ', err)
+     +      call errore('APIFunc(open): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -328,17 +343,17 @@ define([TEST_NFMPI_IGET_VARA],[dnl
                 start(j) = 1
                 edge(j) = 1
 2           continue
-            err = nfmpi_iget_vara_$1(BAD_ID, i,
+            err = iGetVara($1)(BAD_ID, i,
      +            start, edge, value,reqid(1))
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_iget_vara_$1(ncid, BAD_VARID,
+            err = iGetVara($1)(ncid, BAD_VARID,
      +            start,  edge, value,reqid(1))
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
-                err = nfmpi_iget_vara_$1(ncid, i,
+                err = iGetVara($1)(ncid, i,
      +                start, edge, value,reqid(1))
                 if (.NOT. canConvert) then
                     if (err .NE. NF_ECHAR)
@@ -349,7 +364,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = nfmpi_iget_vara_$1(ncid, i,
+                err = iGetVara($1)(ncid, i,
      +                start, edge, value,reqid(1))
                 if (.NOT. canConvert) then
                     if (err .NE. NF_ECHAR)
@@ -367,18 +382,18 @@ C           /* there is nothing to get (edge(j).eq.0) */
                 do 4, j = 1, var_rank(i)
                     edge(j) = 0
 4               continue
-                err = nfmpi_iget_vara_$1(BAD_ID, i,
+                err = iGetVara($1)(BAD_ID, i,
      +                start, edge, value,reqid(1))
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_iget_vara_$1(ncid, BAD_VARID,
+                err = iGetVara($1)(ncid, BAD_VARID,
      +                start, edge, value,reqid(1))
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
                 do 5, j = 1, var_rank(i)
                     if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
                     start(j) = var_shape(j,i) + 1
-                    err = nfmpi_iget_vara_$1(ncid, i,
+                    err = iGetVara($1)(ncid, i,
      +                    start, edge, value,reqid(1))
                     if (.NOT. canConvert) then
                         if (err .NE. NF_ECHAR)
@@ -386,14 +401,14 @@ C           /* there is nothing to get (edge(j).eq.0) */
                     else
 #ifdef RELAX_COORD_BOUND
                         if (err .ne. NF_NOERR)
-     +                      call error(nfmpi_strerror(err))
+     +                      call error(ErrFunc(err))
 #else
                         if (err .ne. NF_EINVALCOORDS)
      +                      call errore('bad start: ', err)
 #endif
                     endif
                     start(j) = var_shape(j,i) + 2
-                    err = nfmpi_iget_vara_$1(ncid, i,
+                    err = iGetVara($1)(ncid, i,
      +                    start, edge, value,reqid(1))
                     if (.NOT. canConvert) then
                         if (err .NE. NF_ECHAR)
@@ -404,11 +419,11 @@ C           /* there is nothing to get (edge(j).eq.0) */
                     endif
                     start(j) = 1
 5               continue
-                err = nfmpi_iget_vara_$1(ncid, i,
+                err = iGetVara($1)(ncid, i,
      +                start, edge, value,reqid(1))
                 if (canConvert) then
                     if (err .ne. NF_NOERR)
-     +                  call error(nfmpi_strerror(err))
+     +                  call error(ErrFunc(err))
                 else
                     if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
@@ -457,10 +472,10 @@ C           bits of k determine whether to get lower or upper part of dim
                         allInExtRange = .false.
                     end if
 10              continue
-                err = nfmpi_iget_vara_$1(ncid, i, start,
+                err = iGetVara($1)(ncid, i, start,
      +                          edge, value,reqid(1))
                 if (err .EQ. NF_NOERR)
-     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
+     +              err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                 if (.NOT. canConvert) then
                     if (nels .gt. 0  .and. err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
@@ -469,7 +484,7 @@ C           bits of k determine whether to get lower or upper part of dim
                 if (allInExtRange) then
                     if (allInIntRange) then
                         if (st(1) .ne. 0) call errore(
-     +                          'nfmpi_iget_vara_$1:',st(1))
+     +                          'iGetVara($1):',st(1))
                     else
                         if (st(1) .ne. NF_ERANGE)
      +                      call errore('Range error: ', st(1))
@@ -503,9 +518,9 @@ C           bits of k determine whether to get lower or upper part of dim
 12              continue
 8           continue
 1       continue
-        err = nfmpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF_NOERR)
-     +      call errorc('nfmpi_close: ', nfmpi_strerror(err))
+     +      call errorc('APIFunc(close): ', ErrFunc(err))
         call print_nok(nok)
         end
 ])dnl
@@ -515,7 +530,7 @@ dnl TEST_NFMPI_IGET_VARS(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VARS],dnl
 [dnl
-        subroutine test_nfmpi_iget_vars_$1()
+        subroutine TestFunc(vars_$1)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -553,9 +568,9 @@ define([TEST_NFMPI_IGET_VARS],dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
+        err = FileOpen(testfile, NF_NOWRITE)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_open: ', err)
+     +      call errore('APIFunc(open): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -566,17 +581,17 @@ define([TEST_NFMPI_IGET_VARS],dnl
                 edge(j) = 1
                 stride(j) = 1
 2           continue
-            err = nfmpi_iget_vars_$1(BAD_ID, i,
+            err = iGetVars($1)(BAD_ID, i,
      +            start, edge, stride, value,reqid(1))
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_iget_vars_$1(ncid, BAD_VARID,
+            err = iGetVars($1)(ncid, BAD_VARID,
      +            start, edge, stride, value,reqid(1))
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
-                err = nfmpi_iget_vars_$1(ncid, i,
+                err = iGetVars($1)(ncid, i,
      +                start, edge, stride,value,reqid(1))
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -587,7 +602,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = nfmpi_iget_vars_$1(ncid, i,
+                err = iGetVars($1)(ncid, i,
      +                start, edge, stride,value,reqid(1))
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -598,7 +613,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                err = nfmpi_iget_vars_$1(ncid, i,
+                err = iGetVars($1)(ncid, i,
      +                start, edge, stride,value,reqid(1))
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -616,18 +631,18 @@ C           /* there is nothing to get (edge(j).eq.0) */
                 do 4, j = 1, var_rank(i)
                     edge(j) = 0
 4               continue
-                err = nfmpi_iget_vars_$1(BAD_ID, i,
+                err = iGetVars($1)(BAD_ID, i,
      +                start, edge, stride, value,reqid(1))
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_iget_vars_$1(ncid, BAD_VARID,
+                err = iGetVars($1)(ncid, BAD_VARID,
      +                start, edge, stride, value,reqid(1))
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
                 do 5, j = 1, var_rank(i)
                     if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
                     start(j) = var_shape(j,i) + 1
-                    err = nfmpi_iget_vars_$1(ncid, i,
+                    err = iGetVars($1)(ncid, i,
      +                    start, edge, stride, value,reqid(1))
                     if (.NOT. canConvert) then
                         if (err .NE. NF_ECHAR)
@@ -635,14 +650,14 @@ C           /* there is nothing to get (edge(j).eq.0) */
                     else
 #ifdef RELAX_COORD_BOUND
                         if (err .ne. NF_NOERR)
-     +                      call error(nfmpi_strerror(err))
+     +                      call error(ErrFunc(err))
 #else
                         if (err .ne. NF_EINVALCOORDS)
      +                      call errore('bad start: ', err)
 #endif
                     endif
                     start(j) = var_shape(j,i) + 2
-                    err = nfmpi_iget_vars_$1(ncid, i,
+                    err = iGetVars($1)(ncid, i,
      +                    start, edge, stride, value,reqid(1))
                     if (.NOT. canConvert) then
                         if (err .NE. NF_ECHAR)
@@ -653,11 +668,11 @@ C           /* there is nothing to get (edge(j).eq.0) */
                     endif
                     start(j) = 1
 5               continue
-                err = nfmpi_iget_vars_$1(ncid, i,
+                err = iGetVars($1)(ncid, i,
      +                start, edge, stride, value,reqid(1))
                 if (canConvert) then
                     if (err .ne. NF_NOERR)
-     +                  call error(nfmpi_strerror(err))
+     +                  call error(ErrFunc(err))
                 else
                     if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
@@ -737,10 +752,10 @@ C    */
                             allInExtRange = .false.
                         end if
 12                  continue
-                    err = nfmpi_iget_vars_$1(ncid, i, index,
+                    err = iGetVars($1)(ncid, i, index,
      +                                    count,stride,value,reqid(1))
                     if (err .EQ. NF_NOERR)
-     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+     +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     if (.NOT. canConvert) then
                         if (nels .gt. 0 .and. err .ne. NF_ECHAR)
      +                      call errore('wrong type: ', err)
@@ -749,7 +764,7 @@ C    */
                     if (allInExtRange) then
                         if (allInIntRange) then
                             if (st(1) .ne. 0)
-     +                          call error(nfmpi_strerror(st(1)))
+     +                          call error(ErrFunc(st(1)))
                         else
                             if (st(1) .ne. NF_ERANGE)
      +                          call errore('Range error: ', st(1))
@@ -786,9 +801,9 @@ C    */
 8           continue
 
 1       continue
-        err = nfmpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_close: ', err)
+     +      call errore('APIFunc(close): ', err)
         call print_nok(nok)
         end
 ])dnl
@@ -798,7 +813,7 @@ dnl TEST_NFMPI_IGET_VARM(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VARM],dnl
 [dnl
-        subroutine test_nfmpi_iget_varm_$1()
+        subroutine TestFunc(varm_$1)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -837,9 +852,9 @@ define([TEST_NFMPI_IGET_VARM],dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
+        err = FileOpen(testfile, NF_NOWRITE)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_open: ', err)
+     +      call errore('APIFunc(open): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -851,17 +866,17 @@ define([TEST_NFMPI_IGET_VARM],dnl
                 stride(j) = 1
                 imap(j) = 1
 2           continue
-            err = nfmpi_iget_varm_$1(BAD_ID, i,
+            err = iGetVarm($1)(BAD_ID, i,
      +            start, edge, stride, imap, value,reqid(1))
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_iget_varm_$1(ncid, BAD_VARID,
+            err = iGetVarm($1)(ncid, BAD_VARID,
      +            start, edge, stride, imap, value,reqid(1))
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
-                err = nfmpi_iget_varm_$1(ncid, i,
+                err = iGetVarm($1)(ncid, i,
      +                start, edge, stride, imap, value,reqid(1))
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -872,7 +887,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = nfmpi_iget_varm_$1(ncid, i,
+                err = iGetVarm($1)(ncid, i,
      +                start, edge, stride, imap, value,reqid(1))
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -883,7 +898,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                err = nfmpi_iget_varm_$1(ncid, i,
+                err = iGetVarm($1)(ncid, i,
      +                start, edge, stride, imap, value, reqid(1))
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -901,18 +916,18 @@ C           /* there is nothing to get (edge(j).eq.0) */
                 do 4, j = 1, var_rank(i)
                     edge(j) = 0
 4               continue
-                err = nfmpi_iget_varm_$1(BAD_ID, i,
+                err = iGetVarm($1)(BAD_ID, i,
      +                start, edge, stride, imap, value,reqid(1))
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_iget_varm_$1(ncid, BAD_VARID,
+                err = iGetVarm($1)(ncid, BAD_VARID,
      +                start, edge, stride, imap, value,reqid(1))
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
                 do 5, j = 1, var_rank(i)
                     if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
                     start(j) = var_shape(j,i) + 1
-                    err = nfmpi_iget_varm_$1(ncid, i,
+                    err = iGetVarm($1)(ncid, i,
      +                    start, edge, stride, imap, value,reqid(1))
                     if (.NOT. canConvert) then
                         if (err .NE. NF_ECHAR)
@@ -920,14 +935,14 @@ C           /* there is nothing to get (edge(j).eq.0) */
                     else
 #ifdef RELAX_COORD_BOUND
                         if (err .ne. NF_NOERR)
-     +                      call error(nfmpi_strerror(err))
+     +                      call error(ErrFunc(err))
 #else
                         if (err .ne. NF_EINVALCOORDS)
      +                      call errore('bad start: ', err)
 #endif
                     endif
                     start(j) = var_shape(j,i) + 2
-                    err = nfmpi_iget_varm_$1(ncid, i,
+                    err = iGetVarm($1)(ncid, i,
      +                    start, edge, stride, imap, value,reqid(1))
                     if (.NOT. canConvert) then
                         if (err .NE. NF_ECHAR)
@@ -938,11 +953,11 @@ C           /* there is nothing to get (edge(j).eq.0) */
                     endif
                     start(j) = 1
 5               continue
-                err = nfmpi_iget_varm_$1(ncid, i,
+                err = iGetVarm($1)(ncid, i,
      +                start, edge, stride, imap, value,reqid(1))
                 if (canConvert) then
                     if (err .ne. NF_NOERR)
-     +                  call error(nfmpi_strerror(err))
+     +                  call error(ErrFunc(err))
                 else
                     if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
@@ -1029,10 +1044,10 @@ C     */
                             allInExtRange = .false.
                         end if
 13                  continue
-                    err = nfmpi_iget_varm_$1(ncid,i,index,count,
+                    err = iGetVarm($1)(ncid,i,index,count,
      +                                   stride,imap, value, reqid(1))
                     if (err .EQ. NF_NOERR)
-     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+     +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     if (.NOT. canConvert) then
                         if (nels .gt. 0 .and. err .ne. NF_ECHAR)
      +                      call errore('wrong type: ', err)
@@ -1041,7 +1056,7 @@ C     */
                     if (allInExtRange) then
                         if (allInIntRange) then
                             if (st(1) .ne. 0)
-     +                          call error(nfmpi_strerror(st(1)))
+     +                          call error(ErrFunc(st(1)))
                         else
                             if (st(1) .ne. NF_ERANGE)
      +                          call errore('Range error: ', st(1))
@@ -1077,9 +1092,9 @@ C     */
 10              continue
 8           continue
 1       continue
-        err = nfmpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_close: ',  err)
+     +      call errore('APIFunc(close): ',  err)
         call print_nok(nok)
         end
 ])dnl

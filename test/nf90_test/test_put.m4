@@ -19,6 +19,20 @@ dnl Process using m4 to produce FORTRAN language file.
 
 changequote([,]) dnl
 
+define([TestFunc],[ifdef([PNETCDF],[test_nf90mpi_put_$1],[test_nf90_put_$1])])dnl
+define([APIFunc],[ifdef([PNETCDF],[nf90mpi_$1],[nf90_$1])])dnl
+define([ErrFunc],[ifdef([PNETCDF],[nf90mpi_strerror($1)],[nf90_strerror($1)])])dnl
+
+define([FileOpen],[ifdef([PNETCDF],[nf90mpi_open(comm,$1,$2,info,ncid)],[nf90_open($1,$2,ncid)])])dnl
+define([FileCreate],[ifdef([PNETCDF],[nf90mpi_create(comm,$1,$2,info,ncid)],[nf90_create($1,$2,ncid)])])dnl
+define([FileDelete],[ifdef([PNETCDF],[nf90mpi_delete($1,$2)],[nf90_delete($1)])])dnl
+define([FileClose],[ifdef([PNETCDF],[nf90mpi_close($1)],[nf90_close($1)])])dnl
+
+define([PutVar],[ifdef([PNETCDF],[nf90mpi_put_var_all($*)], [nf90_put_var($*)])])dnl
+define([PutAtt],[ifdef([PNETCDF],[nf90mpi_put_att($*)],[nf90_put_att($*)])])dnl
+define([GetAtt],[ifdef([PNETCDF],[nf90mpi_get_att($*)],[nf90_get_att($*)])])dnl
+define([GetVar],[ifdef([PNETCDF],[nf90mpi_get_var_all($*)],[nf90_get_var($*)])])dnl
+
 undefine([index])dnl
 
 dnl Macros
@@ -216,19 +230,17 @@ define([CHECK_VARS],dnl
 
         nok = 0
 
-        err = nf90mpi_open(comm, filename, NF90_NOWRITE, info, &
-                         ncid)
+        err = FileOpen(filename,NF90_NOWRITE)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_open: ', err)
-        err = nf90mpi_begin_indep_data(ncid)
+            call errore('APIFunc(open): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (canConvert)  then
-                err = nf90mpi_inquire_variable(ncid, i, name, datatype, ndims, &
+                err = APIFunc(inquire_variable)(ncid, i, name, datatype, ndims, &
                                     dimids, ngatts)
                 if (err .ne. NF90_NOERR) &
-                    call errore('nf90mpi_inquire_variable: ', err)
+                    call errore('APIFunc(inquire_variable): ', err)
                 if (name .ne. var_name(i)) &
                     call error('Unexpected var_name')
                 if (datatype .ne. var_type(i)) &
@@ -236,10 +248,10 @@ define([CHECK_VARS],dnl
                 if (ndims .ne. var_rank(i)) &
                     call error('Unexpected rank')
                 do 2, j = 1, ndims
-                    err = nf90mpi_inquire_dimension(ncid, dimids(j), name,  &
+                    err = APIFunc(inquire_dimension)(ncid, dimids(j), name,  &
                          length)
                     if (err .ne. NF90_NOERR) &
-                        call errore('nf90mpi_inquire_dimension: ', err)
+                        call errore('APIFunc(inquire_dimension): ', err)
                     if (length .ne. var_shape(j,i)) &
                         call error('Unexpected shape')
 2               continue
@@ -250,12 +262,12 @@ define([CHECK_VARS],dnl
                         call error('error in index2indexes()')
                     expect = hash4( var_type(i), var_rank(i), index,  &
                                    NFT_ITYPE($1))
-                    err = nf90mpi_get_var(ncid, i, value, index)
+                    err = GetVar(ncid, i, value, index)
                     if (inRange3(expect,datatype,NFT_ITYPE($1)))  then
                         if (in_internal_range(NFT_ITYPE($1), expect)) then
                             if (err .ne. NF90_NOERR)  then
                                 call errore &
-                               ('nf90mpi_get_var: ', err)
+                               ('GetVar: ', err)
                             else
                                 val = MAKE_ARITH_VAR1($1,value)
                                 if (.not.equal( &
@@ -286,10 +298,9 @@ define([CHECK_VARS],dnl
 3               continue
             end if
 1       continue
-        err = nf90mpi_end_indep_data(ncid)
-        err = nf90mpi_close (ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
         call print_nok(nok)
         end
 ])dnl
@@ -335,14 +346,14 @@ define([CHECK_ATTS],dnl
                 canConvert = (ATT_TYPE(j,i) .eq. NF90_CHAR) .eqv. &
                              (NFT_ITYPE($1) .eq. NFT_TEXT)
                 if (canConvert) then
-                    err = nf90mpi_inquire_attribute(ncid, i, ATT_NAME(j,i),  &
+                    err = APIFunc(inquire_attribute)(ncid, i, ATT_NAME(j,i),  &
                                      datatype, length)
                     if (err .ne. NF90_NOERR) &
-                        call errore('nf90mpi_inquire_attribute: ', err)
+                        call errore('APIFunc(inquire_attribute): ', err)
                     if (datatype .ne. ATT_TYPE(j,i)) &
-                        call error('nf90mpi_inquire_attribute: unexpected type')
+                        call error('APIFunc(inquire_attribute): unexpected type')
                     if (length .ne. ATT_LEN(j,i)) &
-                        call error('nf90mpi_inquire_attribute: unexpected length')
+                        call error('APIFunc(inquire_attribute): unexpected length')
                     if (.not.(length .le. MAX_NELS)) &
                         stop 'assert(length .le. MAX_NELS)'
                     nInIntRange = 0
@@ -359,11 +370,11 @@ define([CHECK_ATTS],dnl
                                 nInIntRange = nInIntRange + 1
                         end if
 4                   continue
-                    err = nf90mpi_get_att(ncid, i, ATT_NAME(j,i), value)
+                    err = GetAtt(ncid, i, ATT_NAME(j,i), value)
                     if (nInExtRange .eq. length .and.  &
                         nInIntRange .eq. length) then
                         if (err .ne. NF90_NOERR) &
-                            call error(nf90mpi_strerror(err))
+                            call error(ErrFunc(err))
                     else
                         if (err .ne. NF90_NOERR .and. err .ne. NF90_ERANGE) &
                             call errore('OK or Range error: ', err)
@@ -407,7 +418,7 @@ dnl TEST_NFMPI_PUT_VAR1(TYPE)
 dnl
 define([TEST_NFMPI_PUT_VAR1],dnl
 [dnl
-        subroutine test_nf90mpi_put_var1_$1()
+        subroutine TestFunc(var1_$1)
         use pnetcdf
         implicit        none
 #include "tests.inc"
@@ -427,33 +438,32 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, info, ncid)
+        err = FileCreate(scratch, flags)
         if (err .ne. NF90_NOERR) then
-            call errore('nf90mpi_create: ', err)
+            call errore('APIFunc(create): ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf90mpi_enddef(ncid)
+        err = APIFunc(enddef)(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_enddef: ', err)
-        err = nf90mpi_begin_indep_data(ncid)
+            call errore('APIFunc(enddef): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
             do 2, j = 1, var_rank(i)
                 index(j) = 1
 2           continue
-            err = nf90mpi_put_var(BAD_ID, i, value(1:1), index)
+            err = PutVar(BAD_ID, i, value(1:1), index)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var(ncid, BAD_VARID, value(1:1), index)
+            err = PutVar(ncid, BAD_VARID, value(1:1), index)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
                 index(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var(ncid, i, value(1:1), index)
+                err = PutVar(ncid, i, value(1:1), index)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -470,12 +480,12 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                 val = hash_$1(var_type(i),var_rank(i), &
                               index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, value, val)
-                err = nf90mpi_put_var(ncid, i, value(1:1), index)
+                err = PutVar(ncid, i, value(1:1), index)
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('nf90mpi_put_var: ', err)
+                            call errore('PutVar: ', err)
                     else
                         if (err .ne. NF90_ERANGE) &
                             call errore('Range error: ', err)
@@ -486,14 +496,13 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                 end if
 4           continue
 1       continue
-        err = nf90mpi_end_indep_data(ncid)
-        err = nf90mpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR)  &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf90mpi_delete(scratch, info)
+        err = FileDelete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed: ',  &
                         scratch)
@@ -505,7 +514,7 @@ dnl TEST_NFMPI_PUT_VAR(TYPE)
 dnl
 define([TEST_NFMPI_PUT_VAR],dnl
 [dnl
-        subroutine test_nf90mpi_put_var_$1()
+        subroutine TestFunc(var_$1)
         use pnetcdf
         implicit        none
 #include "tests.inc"
@@ -526,25 +535,23 @@ define([TEST_NFMPI_PUT_VAR],dnl
         doubleprecision val
 
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, info, &
-                           ncid)
+        err = FileCreate(scratch, flags)
         if (err .ne. NF90_NOERR) then
-            call errore('nf90mpi_create: ', err)
+            call errore('APIFunc(create): ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf90mpi_enddef(ncid)
+        err = APIFunc(enddef)(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_enddef: ', err)
-        err = nf90mpi_begin_indep_data(ncid)
+            call errore('APIFunc(enddef): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
-            err = nf90mpi_put_var(BAD_ID, i, value)
+            err = PutVar(BAD_ID, i, value)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var(ncid, BAD_VARID, value)
+            err = PutVar(ncid, BAD_VARID, value)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             nels = 1
@@ -563,11 +570,11 @@ define([TEST_NFMPI_PUT_VAR],dnl
                 allInExtRange = allInExtRange .and. &
                     inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
-            err = nf90mpi_put_var(ncid, i, VALUE3($1, value), count=var_shape(:,i))
+            err = PutVar(ncid, i, VALUE3($1, value), count=var_shape(:,i))
             if (canConvert) then
                 if (allInExtRange) then
                     if (err .ne. NF90_NOERR) &
-                        call errore('nf90mpi_put_var: ', err)
+                        call errore('PutVar: ', err)
                 else
                     if (err .ne. NF90_ERANGE .and. &
                             var_dimid(var_rank(i),i) .ne. RECDIM) &
@@ -578,7 +585,6 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     call errore('wrong type: ', err)
             endif
 1       continue
-        err = nf90mpi_end_indep_data(ncid)
 
 !       The preceeding has written nothing for record variables, now try
 !       again with more than 0 records.
@@ -586,14 +592,13 @@ define([TEST_NFMPI_PUT_VAR],dnl
 !       Write record number NRECS to force writing of preceding records.
 !       Assumes variable cr is char vector with UNLIMITED dimension.
 
-        err = nf90mpi_inq_varid(ncid, "cr", vid)
+        err = APIFunc(inq_varid)(ncid, "cr", vid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_inq_varid: ', err)
+            call errore('APIFunc(inq_varid): ', err)
         index(1) = NRECS
-        err = nf90mpi_begin_indep_data(ncid)
-        err = nf90mpi_put_var(ncid, vid, 'x', index)
+        err = PutVar(ncid, vid, 'x', index)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_put_var: ', err)
+            call errore('PutVar: ', err)
 
         do 5 i = 1, numVars
 !           Only test record variables here
@@ -622,11 +627,11 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     allInExtRange = allInExtRange .and. &
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
-                err = nf90mpi_put_var(ncid, i, value, count=var_shape(:,i))
+                err = PutVar(ncid, i, value, count=var_shape(:,i))
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('nf90mpi_put_var: ', err)
+                            call errore('PutVar: ', err)
                     else
                         if (err .ne. NF90_ERANGE) &
                             call errore('range error: ', err)
@@ -637,14 +642,13 @@ define([TEST_NFMPI_PUT_VAR],dnl
                 endif
             endif
 5       continue
-        err = nf90mpi_end_indep_data(ncid);
-        err = nf90mpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR)  &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf90mpi_delete(scratch, info)
+        err = FileDelete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed: ',  &
                         scratch)
@@ -656,7 +660,7 @@ dnl TEST_NFMPI_PUT_VARA(TYPE)
 dnl
 define([TEST_NFMPI_PUT_VARA],dnl
 [dnl
-        subroutine test_nf90mpi_put_vara_$1()
+        subroutine TestFunc(vara_$1)
         use pnetcdf
         implicit        none
 #include "tests.inc"
@@ -683,17 +687,16 @@ define([TEST_NFMPI_PUT_VARA],dnl
         integer ud_shift
 
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, info, &
-                           ncid)
+        err = FileCreate(scratch, flags)
         if (err .ne. NF90_NOERR) then
-            call errore('nf90mpi_create: ', err)
+            call errore('APIFunc(create): ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf90mpi_enddef(ncid)
+        err = APIFunc(enddef)(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_enddef: ', err)
+            call errore('APIFunc(enddef): ', err)
 
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
@@ -706,16 +709,16 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 start(j) = 1
                 edge(j) = 1
 2           continue
-            err = nf90mpi_put_var_all(BAD_ID, i, value, start, edge)
+            err = PutVar(BAD_ID, i, value, start, edge)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var_all(ncid, BAD_VARID, value, start, edge)
+            err = PutVar(ncid, BAD_VARID, value, start, edge)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge)
+                err = PutVar(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -725,7 +728,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge)
+                err = PutVar(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -740,30 +743,30 @@ define([TEST_NFMPI_PUT_VARA],dnl
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
 4           continue
-            err = nf90mpi_put_var_all(BAD_ID, i, value, start, edge)
+            err = PutVar(BAD_ID, i, value, start, edge)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var_all(ncid, BAD_VARID, value, start, edge)
+            err = PutVar(ncid, BAD_VARID, value, start, edge)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge)
+                err = PutVar(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
                 else
 #ifdef RELAX_COORD_BOUND
                     if (err .ne. NF90_NOERR) &
-                        call error(nf90mpi_strerror(err))
+                        call error(ErrFunc(err))
 #else
                     if (err .ne. NF90_EINVALCOORDS) &
                         call errore('bad start: ', err)
 #endif
                 endif
                 start(j) = var_shape(j,i) + 2
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge)
+                err = PutVar(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -774,10 +777,10 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 start(j) = 1
 5           continue
             MAKE_TYPE2($1, value, 0)
-            err = nf90mpi_put_var_all(ncid, i, value, start, edge)
+            err = PutVar(ncid, i, value, start, edge)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
-                    call error(nf90mpi_strerror(err))
+                    call error(ErrFunc(err))
             else
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
@@ -821,11 +824,11 @@ define([TEST_NFMPI_PUT_VARA],dnl
                     allInExtRange = allInExtRange .and. &
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 10              continue
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge)
+                err = PutVar(ncid, i, value, start, edge)
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR)  &
-                            call error(nf90mpi_strerror(err))
+                            call error(ErrFunc(err))
                     else
                         if (err .ne. NF90_ERANGE) &
                             call errore('range error: ', err)
@@ -837,13 +840,13 @@ define([TEST_NFMPI_PUT_VARA],dnl
 8           continue
 1       continue
 
-        err = nf90mpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR)  &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf90mpi_delete(scratch, info)
+        err = FileDelete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed: ',  &
                 scratch)
@@ -855,7 +858,7 @@ dnl TEST_NFMPI_PUT_VARS(TYPE)
 dnl
 define([TEST_NFMPI_PUT_VARS],dnl
 [dnl
-        subroutine test_nf90mpi_put_vars_$1()
+        subroutine TestFunc(vars_$1)
         use pnetcdf
         implicit        none
 #include "tests.inc"
@@ -888,17 +891,16 @@ define([TEST_NFMPI_PUT_VARS],dnl
         integer ud_shift
 
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, info, &
-                           ncid)
+        err = FileCreate(scratch, flags)
         if (err .ne. NF90_NOERR) then
-            call errore('nf90mpi_create: ', err)
+            call errore('APIFunc(create): ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf90mpi_enddef(ncid)
+        err = APIFunc(enddef)(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_enddef: ', err)
+            call errore('APIFunc(enddef): ', err)
 
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
@@ -912,16 +914,16 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 edge(j) = 1
                 stride(j) = 1
 2           continue
-            err = nf90mpi_put_var_all(BAD_ID, i, value, start, edge, stride)
+            err = PutVar(BAD_ID, i, value, start, edge, stride)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var_all(ncid, BAD_VARID, value, start, edge, stride)
+            err = PutVar(ncid, BAD_VARID, value, start, edge, stride)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride)
+                err = PutVar(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -931,7 +933,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride)
+                err = PutVar(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -941,7 +943,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride)
+                err = PutVar(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -956,30 +958,30 @@ define([TEST_NFMPI_PUT_VARS],dnl
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
 4           continue
-            err = nf90mpi_put_var_all(BAD_ID, i, value, start, edge, stride)
+            err = PutVar(BAD_ID, i, value, start, edge, stride)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var_all(ncid, BAD_VARID, value, start, edge, stride)
+            err = PutVar(ncid, BAD_VARID, value, start, edge, stride)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride)
+                err = PutVar(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
                 else
 #ifdef RELAX_COORD_BOUND
                     if (err .ne. NF90_NOERR) &
-                        call error(nf90mpi_strerror(err))
+                        call error(ErrFunc(err))
 #else
                     if (err .ne. NF90_EINVALCOORDS) &
                         call errore('bad start: ', err)
 #endif
                 endif
                 start(j) = var_shape(j,i) + 2
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride)
+                err = PutVar(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -990,10 +992,10 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 start(j) = 1
 5           continue
             MAKE_TYPE2($1, value, 0)
-            err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride)
+            err = PutVar(ncid, i, value, start, edge, stride)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
-                    call error(nf90mpi_strerror(err))
+                    call error(ErrFunc(err))
             else
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
@@ -1066,12 +1068,12 @@ define([TEST_NFMPI_PUT_VARS],dnl
                             inRange3(val, var_type(i),  &
                                      NFT_ITYPE($1))
 12                  continue
-                    err = nf90mpi_put_var_all(ncid, i, value, index, &
+                    err = PutVar(ncid, i, value, index, &
                                          count, stride)
                     if (canConvert) then
                         if (allInExtRange) then
                             if (err .ne. NF90_NOERR)  &
-                                call error(nf90mpi_strerror(err))
+                                call error(ErrFunc(err))
                         else
                             if (err .ne. NF90_ERANGE) &
                                 call errore('range error: ', err)
@@ -1084,13 +1086,13 @@ define([TEST_NFMPI_PUT_VARS],dnl
 8           continue
 1       continue
 
-        err = nf90mpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR)  &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf90mpi_delete(scratch, info)
+        err = FileDelete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed:',  &
                 scratch)
@@ -1104,7 +1106,7 @@ dnl TEST_NFMPI_PUT_VARM(TYPE)
 dnl
 define([TEST_NFMPI_PUT_VARM],dnl
 [dnl
-        subroutine test_nf90mpi_put_varm_$1()
+        subroutine TestFunc(varm_$1)
         use pnetcdf
         implicit        none
 #include "tests.inc"
@@ -1138,17 +1140,16 @@ define([TEST_NFMPI_PUT_VARM],dnl
         integer ud_shift
 
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, info, &
-                           ncid)
+        err = FileCreate(scratch, flags)
         if (err .ne. NF90_NOERR) then
-            call errore('nf90mpi_create: ', err)
+            call errore('APIFunc(create): ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf90mpi_enddef(ncid)
+        err = APIFunc(enddef)(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_enddef: ', err)
+            call errore('APIFunc(enddef): ', err)
 
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
@@ -1163,18 +1164,18 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 stride(j) = 1
                 imap(j) = 1
 2           continue
-            err = nf90mpi_put_var_all(BAD_ID, i, value, start, &
+            err = PutVar(BAD_ID, i, value, start, &
                                  edge, stride, imap)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var_all(ncid, BAD_VARID, value, start, &
+            err = PutVar(ncid, BAD_VARID, value, start, &
                                       edge, stride, imap)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, &
+                err = PutVar(ncid, i, value, start, &
                                           edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
@@ -1185,7 +1186,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, &
+                err = PutVar(ncid, i, value, start, &
                                           edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
@@ -1196,7 +1197,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                err = nf90mpi_put_var_all(ncid, i, value, start, &
+                err = PutVar(ncid, i, value, start, &
                                           edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
@@ -1212,30 +1213,30 @@ define([TEST_NFMPI_PUT_VARM],dnl
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
 4           continue
-            err = nf90mpi_put_var_all(BAD_ID, i, value, start, edge, stride, imap)
+            err = PutVar(BAD_ID, i, value, start, edge, stride, imap)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = nf90mpi_put_var_all(ncid, BAD_VARID, value, start, edge, stride, imap)
+            err = PutVar(ncid, BAD_VARID, value, start, edge, stride, imap)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride, imap)
+                err = PutVar(ncid, i, value, start, edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
                 else
 #ifdef RELAX_COORD_BOUND
                     if (err .ne. NF90_NOERR) &
-                        call error(nf90mpi_strerror(err))
+                        call error(ErrFunc(err))
 #else
                     if (err .ne. NF90_EINVALCOORDS) &
                         call errore('bad start: ', err)
 #endif
                 endif
                 start(j) = var_shape(j,i) + 2
-                err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride, imap)
+                err = PutVar(ncid, i, value, start, edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1246,10 +1247,10 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 start(j) = 1
 5           continue
             MAKE_TYPE2($1, value, 0)
-            err = nf90mpi_put_var_all(ncid, i, value, start, edge, stride, imap)
+            err = PutVar(ncid, i, value, start, edge, stride, imap)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
-                    call error(nf90mpi_strerror(err))
+                    call error(ErrFunc(err))
             else
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
@@ -1329,12 +1330,12 @@ define([TEST_NFMPI_PUT_VARM],dnl
                             inRange3(val, var_type(i),  &
                                      NFT_ITYPE($1))
 14                  continue
-                    err = nf90mpi_put_var_all(ncid,i,value,index,count, &
+                    err = PutVar(ncid,i,value,index,count, &
                                          stride,imap)
                     if (canConvert) then
                         if (allInExtRange) then
                             if (err .ne. NF90_NOERR) &
-                                call error(nf90mpi_strerror(err))
+                                call error(ErrFunc(err))
                         else
                             if (err .ne. NF90_ERANGE) &
                                 call errore('range error: ', err)
@@ -1347,13 +1348,13 @@ define([TEST_NFMPI_PUT_VARM],dnl
 8           continue
 1       continue
 
-        err = nf90mpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR)  &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf90mpi_delete(scratch, info)
+        err = FileDelete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed:',  &
                 scratch)
@@ -1365,7 +1366,7 @@ dnl TEST_NFMPI_PUT_ATT(TYPE)         numeric only
 dnl
 define([TEST_NFMPI_PUT_ATT],dnl
 [dnl
-        subroutine test_nf90mpi_put_att_$1()
+        subroutine TestFunc(att_$1)
         use pnetcdf
         implicit        none
 #include "tests.inc"
@@ -1386,10 +1387,9 @@ define([TEST_NFMPI_PUT_ATT],dnl
         doubleprecision val
 
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, info, &
-                           ncid)
+        err = FileCreate(scratch, flags)
         if (err .ne. NF90_NOERR) then
-            call errore('nf90mpi_create: ', err)
+            call errore('APIFunc(create): ', err)
             return
         end if
         call def_dims(ncid)
@@ -1401,10 +1401,10 @@ define([TEST_NFMPI_PUT_ATT],dnl
                     ATT_LEN_LL = ATT_LEN(j,i)
                     if (.not.((ATT_LEN_LL .le. MAX_NELS))) &
                         stop 'assert(ATT_LEN_LL .le. MAX_NELS)'
-                    err = nf90mpi_put_att(BAD_ID, i, ATT_NAME(j,i), value)
+                    err = PutAtt(BAD_ID, i, ATT_NAME(j,i), value)
                     if (err .ne. NF90_EBADID) &
                         call errore('bad ncid: ', err)
-                    err = nf90mpi_put_att(ncid, BAD_VARID, ATT_NAME(j,i), value)
+                    err = PutAtt(ncid, BAD_VARID, ATT_NAME(j,i), value)
                     if (err .ne. NF90_ENOTVAR) &
                         call errore('bad var id: ', err)
                     allInExtRange = .true.
@@ -1418,14 +1418,14 @@ define([TEST_NFMPI_PUT_ATT],dnl
                             inRange3(val, ATT_TYPE(j,i),  &
                                      NFT_ITYPE($1))
 3                   continue
-                    ! err = nf90mpi_put_att(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN_LL))
+                    ! err = PutAtt(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN_LL))
                     ! cannot use F90 API, as type casting is performed,
                     ! as ATT_TYPE(j,i) may not be the same as value's type
                     err = nfmpi_put_att_$1(ncid, i, ATT_NAME(j,i), &
                                            ATT_TYPE(j,i), ATT_LEN_LL, value)
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('nf90mpi_put_att: ', err)
+                            call errore('PutAtt: ', err)
                     else
                         if (err .ne. NF90_ERANGE) &
                             call errore('range error: ', err)
@@ -1435,11 +1435,11 @@ define([TEST_NFMPI_PUT_ATT],dnl
 1       continue
 
         call check_atts_$1(ncid)
-        err = nf90mpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
 
-        err = nf90mpi_delete(scratch, info)
+        err = FileDelete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed:',  &
                 scratch)
@@ -1544,7 +1544,7 @@ TEST_NFMPI_PUT_VARM(int8)
 TEST_NFMPI_PUT_VARM(real)
 TEST_NFMPI_PUT_VARM(double)
 
-        subroutine test_nf90mpi_put_att_text()
+        subroutine TestFunc(att_text)
         use pnetcdf
         implicit        none
 #include "tests.inc"
@@ -1560,10 +1560,9 @@ TEST_NFMPI_PUT_VARM(double)
         character(len=MAX_NELS) value
 
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, info, &
-                           ncid)
+        err = FileCreate(scratch, flags)
         if (err .ne. NF90_NOERR) then
-            call errore('nf90mpi_create: ', err)
+            call errore('APIFunc(create): ', err)
             return
         end if
         call def_dims(ncid)
@@ -1574,10 +1573,10 @@ TEST_NFMPI_PUT_VARM(double)
                 if (ATT_TYPE(j,i) .eq. NF90_CHAR) then
                     if (.not.(ATT_LEN(j,i) .le. MAX_NELS)) &
                         stop 'assert(ATT_LEN(j,i) .le. MAX_NELS)'
-                    err = nf90mpi_put_att(BAD_ID, i, ATT_NAME(j,i), value)
+                    err = PutAtt(BAD_ID, i, ATT_NAME(j,i), value)
                     if (err .ne. NF90_EBADID) &
                         call errore('bad ncid: ', err)
-                    err = nf90mpi_put_att(ncid, BAD_VARID,  &
+                    err = PutAtt(ncid, BAD_VARID,  &
                                           ATT_NAME(j,i), value)
                     if (err .ne. NF90_ENOTVAR) &
                         call errore('bad var id: ', err)
@@ -1585,19 +1584,19 @@ TEST_NFMPI_PUT_VARM(double)
                         value(k:k) = char(int(hash(ATT_TYPE(j,i), &
                                                    -1, k)))
 3                   continue
-                    err = nf90mpi_put_att(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN(j,i)))
+                    err = PutAtt(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN(j,i)))
                     if (err .ne. NF90_NOERR) &
-                        call error(nf90mpi_strerror(err))
+                        call error(ErrFunc(err))
                 end if
 2           continue
 1       continue
 
         call check_atts_text(ncid)
-        err = nf90mpi_close(ncid)
+        err = FileClose(ncid)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_close: ', err)
+            call errore('APIFunc(close): ', err)
 
-        err = nf90mpi_delete(scratch, info)
+        err = FileDelete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed:',  &
                 scratch)
