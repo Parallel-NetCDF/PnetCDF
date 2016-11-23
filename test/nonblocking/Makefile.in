@@ -16,7 +16,8 @@ FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90 @FC_MODINC@../common
 LDFLAGS  := -L../common $(LDFLAGS)
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
-M4_SRCS  = bput_varn.m4
+M4_SRCS  = bput_varn.m4 \
+           column_wise.m4
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c \
@@ -24,7 +25,6 @@ C_SRCS   = mcoll_perf.c \
            i_varn_int64.c \
            flexible_bput.c \
            wait_after_indep.c \
-           column_wise.c \
            req_all.c \
            i_varn_indef.c
 
@@ -81,6 +81,9 @@ flexible_bput: flexible_bput.o $(LIBRARY)
 
 wait_after_indep: wait_after_indep.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+column_wise.c: column_wise.m4
+	$(M4) $(M4FLAGS) $< >$@
 
 column_wise: column_wise.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
