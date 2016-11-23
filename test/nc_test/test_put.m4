@@ -112,11 +112,11 @@ define(`HASH',dnl
  *  ensure hash value within range for internal TYPE
  */
 $1
-hash_$1(const int               cdf_format,
-        const nc_type           type,
-        const int               rank,
-        const IntType    *const index,
-        const nct_itype         itype)
+hash_$1(const int       cdf_format,
+        const nc_type   type,
+        const int       rank,
+        const  IntType *index,
+        const nct_itype itype)
 {
     double value;
 

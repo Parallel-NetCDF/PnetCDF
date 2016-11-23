@@ -421,18 +421,17 @@ int dbl2nc ( const double d, const nc_type xtype, void *p)
 
 /* Generate data values as function of type, rank (-1 for attribute), index */
 double
-hash(const nc_type           xtype,
-     const int               rank,
-     const MPI_Offset *const index ) 
+hash(const nc_type     xtype,
+     const int         rank,
+     const MPI_Offset *index) 
 {
     double base;
     double result = 0.0;
-    int  d;       /* index of dimension */
 
     /* If vector then elements 0 & 1 are min & max. Elements 2 & 3 are */
     /* just < min & > max (except for NC_CHAR & NC_DOUBLE) */
-    if (abs(rank) == 1 && index[0] <= 3) {
-        switch (index[0]) {
+    if (abs(rank) == 1 && *index <= 3) {
+        switch (*index) {
             case 0:
                 switch (xtype) {  /* test if can get/put MIN value */
                     case NC_CHAR:   return X_CHAR_MIN;
@@ -519,12 +518,13 @@ hash(const nc_type           xtype,
         }
         if (rank < 0) { /* attribute */
             result = base * 7;
-	    result = base * (result + index[0]);
+	    result = base * (result + *index);
         }
         else {
+            int d; /* index of dimension */
             result = base * (rank + 1);
-            for (d=0; d<rank; d++)
-                result = base * (result + index[d]);
+            for (d=0; d<rank; d++, index++)
+                result = base * (result + *index);
         }
     }
     return result;
@@ -532,11 +532,11 @@ hash(const nc_type           xtype,
 
 /* wrapper for hash to handle special NC_BYTE/uchar adjustment */
 double
-hash4(const int               cdf_format,
-      const nc_type           xtype, 
-      const int               rank, 
-      const MPI_Offset *const index, 
-      const nct_itype         itype)
+hash4(const int         cdf_format,
+      const nc_type     xtype, 
+      const int         rank, 
+      const MPI_Offset *index, 
+      const nct_itype   itype)
 {
     double result;
 
