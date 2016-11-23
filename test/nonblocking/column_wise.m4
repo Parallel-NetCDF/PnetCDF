@@ -23,6 +23,7 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
+ *    % m4 column_wise.m4 > column_wise.c
  *    % mpicc -O2 -o column_wise column_wise.c -lpnetcdf
  *    % mpiexec -l -n 4 ./column_wise /pvfs2/wkliao/testfile.nc
  *    0:  0: myOff=  0 myNX=  4
@@ -65,42 +66,52 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#include <ncconfig.h> /* output of 'configure' */
 #include <testutils.h>
 
 #define NY 10
 #define NX 4
 
+typedef char text;
+typedef signed char schar;
+#ifndef HAVE_UCHAR
+typedef unsigned char uchar;
+#endif
+#ifndef HAVE_USHORT
+typedef unsigned short ushort;
+#endif
+#ifndef HAVE_UINT
+typedef unsigned int uint;
+#endif
+#ifndef HAVE_LONGLONG
+typedef long long longlong;
+#endif
+#ifndef HAVE_ULONGLONG
+typedef unsigned long long ulonglong;
+#endif
+
+include(`foreach.m4')dnl
+include(`utils.m4')dnl
+
 #define ERR {if(err!=NC_NOERR){nerrs++; printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
-int main(int argc, char** argv)
+define(`TEST_COLUMN_WISE',`dnl
+static
+int test_column_wise_$1(char *filename, int cdf)
 {
-    extern int optind;
-    char filename[256];
     int i, j, nerrs=0, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
-    int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
+    int ncid, cmode, varid, dimid[2], *reqs, *sts;
+    $1 **buf;
     MPI_Offset start[2], count[2];
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    strcpy(filename, "testfile.nc");
-    if (argc == 2) strncpy(filename, argv[1], 255);
-    filename[255] = '\0';
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for iput/iget interleaved access ", argv[0]);
-        printf("%-66s ------ ", cmd_str);
-    }
-
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
+    cmode = NC_CLOBBER;
+    if (cdf == NC_FORMAT_CDF2)
+        cmode |= NC_64BIT_OFFSET;
+    else if (cdf == NC_FORMAT_CDF5)
+        cmode |= NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     ERR
 
@@ -109,29 +120,25 @@ int main(int argc, char** argv)
     myOff = NX * rank;
     myNX  = NX;
 
-    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]);
-    ERR
-    err = ncmpi_def_dim(ncid, "X", G_NX, &dimid[1]);
-    ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid);
-    ERR
-    err = ncmpi_enddef(ncid);
-    ERR
+    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", G_NX, &dimid[1]); ERR
+    err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 2, dimid, &varid); ERR
+    err = ncmpi_enddef(ncid); ERR
 
     /* First, fill the entire array with zeros, using a blocking I/O.
        Every process writes a subarray of size NY * myNX */
-    buf    = (int**) malloc(myNX * sizeof(int*));
-    buf[0] = (int*)  calloc(NY * myNX, sizeof(int));
+    buf    = ($1**) malloc(myNX * sizeof($1*));
+    buf[0] = ($1*)  calloc(NY * myNX, sizeof($1));
     start[0] = 0;   start[1] = myOff;
     count[0] = NY;  count[1] = myNX;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf[0]);
+    err = ncmpi_put_vara_`$1'_all(ncid, varid, start, count, buf[0]);
     free(buf[0]);
 
     /* initialize the buffer with rank ID. Also make the case interesting,
        by allocatsing buffersd separately */
     for (i=0; i<myNX; i++) {
-        buf[i] = (int*) malloc(NY * sizeof(int));
-        for (j=0; j<NY; j++) buf[i][j] = rank+10;
+        buf[i] = ($1*) malloc(NY * sizeof($1));
+        for (j=0; j<NY; j++) buf[i][j] = ($1)rank+10;
     }
 
     reqs = (int*) malloc(myNX * sizeof(int));
@@ -143,9 +150,8 @@ int main(int argc, char** argv)
 
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
-        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i],
-                                  &reqs[num_reqs++]);
-        ERR
+        err = ncmpi_iput_vara_$1(ncid, varid, start, count, buf[i],
+                                 &reqs[num_reqs++]); ERR
         start[1] += nprocs;
     }
 
@@ -161,14 +167,14 @@ int main(int argc, char** argv)
      * changed to use a number > NC_BYTE_SWAP_BUFFER_SIZE/sizeof(int), say
      * 1025
      */
-    err = ncmpi_cancel(ncid, num_reqs, reqs, sts);
-    ERR
+    err = ncmpi_cancel(ncid, num_reqs, reqs, sts); ERR
 
     /* check if write buffer contents have been altered after cancelling */
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++) {
-            if (buf[i][j] != rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=%d\n", i,j,buf[i][j]);
+            if (buf[i][j] != ($1)rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                       i,j,buf[i][j]);
                 nerrs++;
             }
         }
@@ -178,9 +184,8 @@ int main(int argc, char** argv)
     start[1] = rank;
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
-        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i],
-                                  &reqs[num_reqs++]);
-        ERR
+        err = ncmpi_iput_vara_$1(ncid, varid, start, count, buf[i],
+                                 &reqs[num_reqs++]); ERR
         start[1] += nprocs;
     }
 
@@ -191,14 +196,14 @@ int main(int argc, char** argv)
         reqs[2*i+1] = tmp;
     }
 
-    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
-    ERR
+    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); ERR
 
     /* check if write buffer contents have been altered after wait */
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++) {
-            if (buf[i][j] != rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=%d\n", i,j,buf[i][j]);
+            if (buf[i][j] != ($1)rank+10) {
+                printf("Error: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                       i,j,buf[i][j]);
                 nerrs++;
             }
         }
@@ -219,7 +224,7 @@ int main(int argc, char** argv)
 
     /* read back using the same access pattern */
     for (i=0; i<myNX; i++)
-        for (j=0; j<NY; j++) buf[i][j] = -1;
+        for (j=0; j<NY; j++) buf[i][j] = ($1)99;
 
     /* each proc reads myNX single columns of the 2D array */
     start[0]  = 0;   start[1] = rank;
@@ -227,26 +232,22 @@ int main(int argc, char** argv)
 
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
-        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[i],
-                                  &reqs[num_reqs++]);
-        ERR
+        err = ncmpi_iget_vara_$1(ncid, varid, start, count, buf[i],
+                                 &reqs[num_reqs++]); ERR
         start[1] += nprocs;
     }
     /* this test is to see if cancelling free up all the internal malloc */
-    err = ncmpi_cancel(ncid, num_reqs, reqs, sts);
-    ERR
+    err = ncmpi_cancel(ncid, num_reqs, reqs, sts); ERR
 
     /* post iget requests again */
     start[1] = rank;
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
-        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[i],
-                                  &reqs[num_reqs++]);
-        ERR
+        err = ncmpi_iget_vara_$1(ncid, varid, start, count, buf[i],
+                                 &reqs[num_reqs++]); ERR
         start[1] += nprocs;
     }
-    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
-    ERR
+    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); ERR
 
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
@@ -257,20 +258,80 @@ int main(int argc, char** argv)
         }
 
     for (i=0; i<myNX; i++) {
-        for (j=0; j<NY; j++)
-            if (buf[i][j] != rank+10) {
-                printf("Error: expect buf[%d][%d]=%d but got %d\n",i,j,rank+10,buf[i][j]);
+        for (j=0; j<NY; j++) {
+            $1 expected = ($1)rank+10;
+            if (buf[i][j] != expected) {
+                printf("Error: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                       i,j,expected,buf[i][j]);
                 nerrs++;
             }
+        }
     }
 
-    err = ncmpi_close(ncid);
-    ERR
+    err = ncmpi_close(ncid); ERR
 
     free(sts);
     free(reqs);
     for (i=0; i<myNX; i++) free(buf[i]);
     free(buf);
+
+    return nerrs;
+}'
+)dnl
+
+TEST_COLUMN_WISE(text)
+TEST_COLUMN_WISE(schar)
+TEST_COLUMN_WISE(uchar)
+TEST_COLUMN_WISE(short)
+TEST_COLUMN_WISE(ushort)
+TEST_COLUMN_WISE(int)
+TEST_COLUMN_WISE(uint)
+TEST_COLUMN_WISE(float)
+TEST_COLUMN_WISE(double)
+TEST_COLUMN_WISE(longlong)
+TEST_COLUMN_WISE(ulonglong)
+
+int main(int argc, char** argv)
+{
+    extern int optind;
+    char filename[256];
+    int i, nerrs=0, rank, err;
+    int cdf_formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, NC_FORMAT_CDF5};
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+    }
+    strcpy(filename, "testfile.nc");
+    if (argc == 2) strncpy(filename, argv[1], 255);
+    filename[255] = '\0';
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for iput/iget interleaved access ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
+
+    for (i=0; i<3; i++) {
+        nerrs += test_column_wise_text(filename, cdf_formats[i]);
+        nerrs += test_column_wise_schar(filename, cdf_formats[i]);
+        nerrs += test_column_wise_short(filename, cdf_formats[i]);
+        nerrs += test_column_wise_int(filename, cdf_formats[i]);
+        nerrs += test_column_wise_float(filename, cdf_formats[i]);
+        nerrs += test_column_wise_double(filename, cdf_formats[i]);
+        if (cdf_formats[i] == NC_FORMAT_CDF5) {
+            nerrs += test_column_wise_uchar(filename, cdf_formats[i]);
+            nerrs += test_column_wise_ushort(filename, cdf_formats[i]);
+            nerrs += test_column_wise_uint(filename, cdf_formats[i]);
+            nerrs += test_column_wise_longlong(filename, cdf_formats[i]);
+            nerrs += test_column_wise_ulonglong(filename, cdf_formats[i]);
+        }
+    }
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
