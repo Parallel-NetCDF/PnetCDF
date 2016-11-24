@@ -3292,7 +3292,10 @@ sub ReadAndProcessInterface {
 	    }
 	}
 
-	if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
+	# if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
+	if (/extern int/) { # next line is the API
+            $_ = <FD>;
+          if (/$routine_prefix($routine_pattern)\s*\((.*)/) {
 	    $routine_name = $1;
 	    $args = $2;
 	    while (! ($args =~ /;/)) {
@@ -3303,7 +3306,7 @@ sub ReadAndProcessInterface {
 	    $args =~ s/[\r\n]*//g;
 	    # remove qualifiers from args
 ### TEMP - REMEMBER const because we may need it later	    
-	    #$args =~ s/\s*const\s+//g;
+	    $args =~ s/\s*const\s+//g;
 	    # Convert MPIO_Request to MPI_Request (temporary)
 #	    $args =~ s/MPIO_Request/MPI_Request/g;
 
@@ -3415,6 +3418,7 @@ sub ReadAndProcessInterface {
 		    print PROTOFD ";\n";
 		}
 	    }
+	  }
 	}
     }
 }
