@@ -2406,10 +2406,10 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 #endif
 
             /* overwrite the local header object with root's */
-                 if (ncp->format == 5) fClr(ncp->flags, NC_64BIT_DATA);
+            if      (ncp->format == 5) fClr(ncp->flags, NC_64BIT_DATA);
             else if (ncp->format == 2) fClr(ncp->flags, NC_64BIT_OFFSET);
 
-                 if (root_ver == 5) fSet(ncp->flags, NC_64BIT_DATA);
+            if      (root_ver == 5) fSet(ncp->flags, NC_64BIT_DATA);
             else if (root_ver == 2) fSet(ncp->flags, NC_64BIT_OFFSET);
 
             /* this inconsistency is not fatal */
