@@ -700,8 +700,8 @@ ncmpi_inq_format(int  ncid,
 /*----< ncmpi_inq_file_format() >--------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_file_format(char *filename,
-                      int  *formatp) /* out */
+ncmpi_inq_file_format(const char *filename,
+                      int        *formatp) /* out */
 {
 #ifdef _USE_NCMPI
     int ncid, status;
