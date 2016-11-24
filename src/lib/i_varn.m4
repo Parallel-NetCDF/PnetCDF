@@ -303,6 +303,7 @@ ncmpii_igetput_varn(NC                *ncp,
                 for (i=ncp->numPutReqs-1; i>=0; i--)
                     if (ncp->put_list[i].num_recs > 0)
                         break;
+                assert(i >= 0);
                 /* Set the last request object to let wait() to free cbuf */
                 ncp->put_list[i].tmpBuf = cbuf;
             }
