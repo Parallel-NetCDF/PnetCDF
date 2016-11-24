@@ -1196,8 +1196,8 @@ ncmpi_close(int ncid) {
  * hints.
  */
 int
-ncmpi_delete(char     *filename,
-             MPI_Info  info)
+ncmpi_delete(const char *filename,
+             MPI_Info    info)
 {
     int err=NC_NOERR, mpireturn;
 

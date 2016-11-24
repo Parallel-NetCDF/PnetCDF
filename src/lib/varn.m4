@@ -49,16 +49,16 @@ include(`utils.m4')
  */
 
 static int
-ncmpii_getput_varn(NC               *ncp,
-                   NC_var           *varp,
-                   int               num,
-                   MPI_Offset* const starts[],  /* [num][varp->ndims] */
-                   MPI_Offset* const counts[],  /* [num][varp->ndims] */
-                   void             *buf,
-                   MPI_Offset        bufcount,
-                   MPI_Datatype      buftype,   /* data type of the buffer */
-                   int               rw_flag,
-                   int               io_method);
+ncmpii_getput_varn(NC                *ncp,
+                   NC_var            *varp,
+                   int                num,
+                   MPI_Offset* const *starts,  /* [num][varp->ndims] */
+                   MPI_Offset* const *counts,  /* [num][varp->ndims] */
+                   void              *buf,
+                   MPI_Offset         bufcount,
+                   MPI_Datatype       buftype,   /* data type of the buffer */
+                   int                rw_flag,
+                   int                io_method);
 
 define(`BufConst',  `ifelse(`$1', `put', `const')')dnl
 
@@ -72,8 +72,8 @@ int
 ncmpi_$1_varn$2(int                ncid,
                 int                varid,
                 int                num,
-                MPI_Offset* const  starts[],
-                MPI_Offset* const  counts[],
+                MPI_Offset* const *starts,
+                MPI_Offset* const *counts,
                 BufConst($1) void *buf,
                 MPI_Offset         bufcount,
                 MPI_Datatype       buftype)
@@ -108,8 +108,8 @@ int
 ncmpi_$1_varn_$3$2(int                ncid,
                    int                varid,
                    int                num,
-                   MPI_Offset* const  starts[],
-                   MPI_Offset* const  counts[],
+                   MPI_Offset* const *starts,
+                   MPI_Offset* const *counts,
                    BufConst($1) $4   *buf)
 {
     int     status;
@@ -135,16 +135,16 @@ foreach(`putget', (put, get),
 
 /*----< ncmpii_getput_varn() >------------------------------------------------*/
 static int
-ncmpii_getput_varn(NC               *ncp,
-                   NC_var           *varp,
-                   int               num,
-                   MPI_Offset* const starts[],  /* [num][varp->ndims] */
-                   MPI_Offset* const counts[],  /* [num][varp->ndims] */
-                   void             *buf,
-                   MPI_Offset        bufcount,
-                   MPI_Datatype      buftype,   /* data type of the buffer */
-                   int               rw_flag,   /* WRITE_REQ or READ_REQ */
-                   int               io_method) /* COLL_IO or INDEP_IO */
+ncmpii_getput_varn(NC                *ncp,
+                   NC_var            *varp,
+                   int                num,
+                   MPI_Offset* const *starts,  /* [num][varp->ndims] */
+                   MPI_Offset* const *counts,  /* [num][varp->ndims] */
+                   void              *buf,
+                   MPI_Offset         bufcount,
+                   MPI_Datatype       buftype,   /* data type of the buffer */
+                   int                rw_flag,   /* WRITE_REQ or READ_REQ */
+                   int                io_method) /* COLL_IO or INDEP_IO */
 {
     int i, j, el_size, status=NC_NOERR, min_st, err, free_cbuf=0;
     int req_id=NC_REQ_NULL, st, isSameGroup, position;
