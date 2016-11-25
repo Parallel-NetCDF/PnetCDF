@@ -551,3 +551,15 @@ in PnetCDF).  The implementation of this option is also provided to netCDF,
 but need manually activate. See
 https://github.com/Unidata/netcdf-c/pull/319#issuecomment-256982471
 
+==============================================================================
+Note on M4 flags
+==============================================================================
+M4 has a nice feature called synclines that adds line numbers into m4 files
+so compilers can report the error locations in the m4 files, instead of the
+derived C/Fortran files. To enable this feature, developers add M4FLAGS=-s to
+the configure command line. Note that synclines currently only take effect for
+C files. There is still some issues needed to be resolved for Fortran files.
+Developers are also warned that when m4 macro functions are used, the line
+numbers reported are the locations the functions are invoked, not the lines
+inside the functions.
+
