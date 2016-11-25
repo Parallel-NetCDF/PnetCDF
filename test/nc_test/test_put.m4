@@ -115,7 +115,7 @@ $1
 hash_$1(const int       cdf_format,
         const nc_type   type,
         const int       rank,
-        const  IntType *index,
+        const IntType  *index,
         const nct_itype itype)
 {
     double value;

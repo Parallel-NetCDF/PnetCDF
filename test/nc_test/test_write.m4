@@ -181,7 +181,7 @@ TestFunc(redef)(AttVarArgs)
     /* tests using scratch file */
 ifdef(`PNETCDF',`dnl
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);',`dnl
-    err = nc__create(scratch, NC_NOCLOBBER, 0, &sizehint, &ncid);')
+    err = file__create(scratch, NC_NOCLOBBER, 0, &sizehint, &ncid);')
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
@@ -2382,19 +2382,17 @@ APIFunc(get_file_version)(char *path, int *version)
    if (fd == -1) return errno;
 
    read_len = read(fd, magic, MAGIC_NUM_LEN);
-   if (read_len == -1) {
-       close(fd);
+   if (-1 == close(fd)) return errno;
+
+   if (read_len == -1)
        return errno;
-   }
+
    if (read_len != MAGIC_NUM_LEN) {
        printf("Error: reading NC magic string unexpected short read\n");
-       close(fd);
        return 0;
    }
-   close(fd);
 
-   if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0)
-   {
+   if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0) {
       if (magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CLASSIC ||
           magic[MAGIC_NUM_LEN-1] == NC_FORMAT_64BIT_OFFSET ||
           magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CDF5)
