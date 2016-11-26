@@ -1089,7 +1089,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     int status;
     MPI_Offset  nchars, nbytes, padding, bufremain, strcount;
     NC_string *ncstrp;
-    char *cpos, pad[X_ALIGN-1];
+    char *cpos;
     MPI_Aint pos_addr, base_addr;
 
     /* get nelems */
@@ -1126,7 +1126,8 @@ hdr_get_NC_name(bufferinfo  *gbp,
     while (nbytes > 0) {
         if (bufremain > 0) {
             strcount = MIN(bufremain, nbytes);
-            if (strcount != (size_t)strcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (strcount != (size_t)strcount)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             memcpy(cpos, gbp->pos, (size_t)strcount);
             nbytes -= strcount;
             gbp->pos = (void *)((char *)gbp->pos + strcount);
@@ -1145,6 +1146,8 @@ hdr_get_NC_name(bufferinfo  *gbp,
 
     /* handle the padding */
     if (padding > 0) {
+        /* CDF specification: Header padding uses null (\x00) bytes. */
+        char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
             ncmpii_free_NC_string(ncstrp);
@@ -1297,7 +1300,6 @@ hdr_get_NC_attrV(bufferinfo *gbp,
      */
     int status;
     void *value = attrp->xvalue;
-    char pad[X_ALIGN-1];
     MPI_Offset nbytes, padding, bufremain, attcount;
     MPI_Aint pos_addr, base_addr;
 
@@ -1316,7 +1318,8 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     while (nbytes > 0) {
         if (bufremain > 0) {
             attcount = MIN(bufremain, nbytes);
-            if (attcount != (size_t)attcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (attcount != (size_t)attcount)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             memcpy(value, gbp->pos, (size_t)attcount);
             nbytes -= attcount;
             gbp->pos = (void *)((char *)gbp->pos + attcount);
@@ -1332,8 +1335,11 @@ hdr_get_NC_attrV(bufferinfo *gbp,
 
     /* handle the padding */
     if (padding > 0) {
+        /* CDF specification: Header padding uses null (\x00) bytes. */
+        char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) DEBUG_RETURN_ERROR(NC_EINVAL)
+        if (memcmp(gbp->pos, pad, (size_t)padding) != 0)
+            DEBUG_RETURN_ERROR(NC_EINVAL)
         gbp->pos = (void *)((char *)gbp->pos + padding);
         gbp->index += padding;
     }
