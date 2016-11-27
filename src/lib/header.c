@@ -426,22 +426,22 @@ hdr_put_NC_name(bufferinfo      *pbp,
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    int status;
+    int err;
 
     /* copy nelems */
     if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)ncstrp->nchars);
+        err = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)ncstrp->nchars);
     else {
-        if (ncstrp->nchars != (uint)ncstrp->nchars) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)ncstrp->nchars);
+        if (ncstrp->nchars != (uint)ncstrp->nchars)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        err = ncmpix_put_uint32((void**)(&pbp->pos), (uint)ncstrp->nchars);
     }
-    if (status != NC_NOERR) return status;
+    if (err != NC_NOERR) return err;
 
     /* copy namestring */
-    status = ncmpix_pad_putn_text(&pbp->pos, ncstrp->nchars, ncstrp->cp);
-    if (status != NC_NOERR) return status;
+    err = ncmpix_pad_putn_text(&pbp->pos, ncstrp->nchars, ncstrp->cp);
 
-    return NC_NOERR;
+    return err;
 }
 
 /*----< hdr_put_NC_attrV() >-------------------------------------------------*/
@@ -478,9 +478,11 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
     memcpy(pbp->pos, attrp->xvalue, (size_t)sz);
     pbp->pos = (void *)((char *)pbp->pos + sz);
 
-    /* zero-padding is per buffer, not per element */
-    memset(pbp->pos, 0, (size_t)padding);
-    pbp->pos = (void *)((char *)pbp->pos + padding);
+    if (padding > 0) {
+        /* zero-padding is per buffer, not per element */
+        memset(pbp->pos, 0, (size_t)padding);
+        pbp->pos = (void *)((char *)pbp->pos + padding);
+    }
 
     return NC_NOERR;
 }
@@ -497,23 +499,22 @@ hdr_put_NC_dim(bufferinfo   *pbp,
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    int status;
+    int err;
 
     /* copy name */
-    status = hdr_put_NC_name(pbp, dimp->name);
-    if (status != NC_NOERR) return status;
+    err = hdr_put_NC_name(pbp, dimp->name);
+    if (err != NC_NOERR) return err;
 
     /* copy dim_length */
     if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)dimp->size);
+        err = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)dimp->size);
     else {
         /* TODO: Isn't checking dimension size already done in def_dim()? */
         if (dimp->size != (uint)dimp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)dimp->size);
+        err = ncmpix_put_uint32((void**)(&pbp->pos), (uint)dimp->size);
     }
-    if (status != NC_NOERR) return status;
 
-    return NC_NOERR;
+    return err;
 }
 
 /*----< hdr_put_NC_dimarray() >----------------------------------------------*/
@@ -1042,7 +1043,7 @@ hdr_get_nc_type(bufferinfo *gbp,
         type != NC_INT64   &&
         type != NC_UINT64
        )
-        DEBUG_RETURN_ERROR(NC_EINVAL)
+        DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
     *typep = (nc_type) type;
     return NC_NOERR;
@@ -1086,24 +1087,24 @@ hdr_get_NC_name(bufferinfo  *gbp,
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    int status;
-    MPI_Offset  nchars, nbytes, padding, bufremain, strcount;
-    NC_string *ncstrp;
+    int err;
     char *cpos;
+    NC_string *ncstrp;
     MPI_Aint pos_addr, base_addr;
+    MPI_Offset  nchars, nbytes, padding, bufremain, strcount;
 
     /* get nelems */
     if (gbp->version == 5) {
         uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
+        err = hdr_get_uint64(gbp, &tmp);
         nchars = (MPI_Offset)tmp;
     }
     else {
         uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
+        err = hdr_get_uint32(gbp, &tmp);
         nchars = (MPI_Offset)tmp;
     }
-    if (status != NC_NOERR) return status;
+    if (err != NC_NOERR) return err;
 
     /* Allocate a NC_string structure large enough to hold nchars characters */
     ncstrp = ncmpii_new_NC_string((size_t)nchars, NULL);
@@ -1135,10 +1136,10 @@ hdr_get_NC_name(bufferinfo  *gbp,
             cpos += strcount;
             bufremain -= strcount;
         } else {
-            status = hdr_fetch(gbp);
-            if (status != NC_NOERR) {
+            err = hdr_fetch(gbp);
+            if (err != NC_NOERR) {
                 ncmpii_free_NC_string(ncstrp);
-                return status;
+                return err;
             }
             bufremain = gbp->size;
         }
@@ -1150,6 +1151,9 @@ hdr_get_NC_name(bufferinfo  *gbp,
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header non-zero padding found\n",__FILE__,__func__,__LINE__);
+#endif
             ncmpii_free_NC_string(ncstrp);
             DEBUG_RETURN_ERROR(NC_EINVAL)
         }
@@ -1254,10 +1258,19 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     ncap->unlimited_id = -1;
 
     if (ndefined == 0) {
-        if (type != NC_DIMENSION && type != NC_UNSPECIFIED)
+        if (type != NC_DIMENSION && type != NC_UNSPECIFIED) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_DIMENSION\n",__FILE__,__func__,__LINE__);
+#endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
+        }
     } else {
-        if (type != NC_DIMENSION) DEBUG_RETURN_ERROR(NC_EINVAL)
+        if (type != NC_DIMENSION) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_DIMENSION\n",__FILE__,__func__,__LINE__);
+#endif
+            DEBUG_RETURN_ERROR(NC_EINVAL)
+        }
 
         ncap->value = (NC_dim **) NCI_Malloc((size_t)ndefined * sizeof(NC_dim*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -1298,7 +1311,6 @@ hdr_get_NC_attrV(bufferinfo *gbp,
      * doubles = [DOUBLE ...]
      * padding = <0, 1, 2, or 3 bytes to next 4-byte boundary>
      */
-    int status;
     void *value = attrp->xvalue;
     MPI_Offset nbytes, padding, bufremain, attcount;
     MPI_Aint pos_addr, base_addr;
@@ -1327,8 +1339,9 @@ hdr_get_NC_attrV(bufferinfo *gbp,
             value = (void *)((char *)value + attcount);
             bufremain -= attcount;
         } else {
-            status = hdr_fetch(gbp);
-            if (status != NC_NOERR) return status;
+            int err;
+            err = hdr_fetch(gbp);
+            if (err != NC_NOERR) return err;
             bufremain = gbp->size;
         }
     }
@@ -1338,8 +1351,12 @@ hdr_get_NC_attrV(bufferinfo *gbp,
         /* CDF specification: Header padding uses null (\x00) bytes. */
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, (size_t)padding) != 0)
+        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header non-zero padding found\n",__FILE__,__func__,__LINE__);
+#endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
+        }
         gbp->pos = (void *)((char *)gbp->pos + padding);
         gbp->index += padding;
     }
@@ -1456,10 +1473,19 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
-        if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED)
+        if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_ATTRIBUTE\n",__FILE__,__func__,__LINE__);
+#endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
+        }
     } else {
-        if (type != NC_ATTRIBUTE) DEBUG_RETURN_ERROR(NC_EINVAL)
+        if (type != NC_ATTRIBUTE) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_ATTRIBUTE\n",__FILE__,__func__,__LINE__);
+#endif
+            DEBUG_RETURN_ERROR(NC_EINVAL)
+        }
 
         ncap->value = (NC_attr **)NCI_Malloc((size_t)ndefined * sizeof(NC_attr*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -1680,10 +1706,19 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
      * of ndefined from int to MPI_Offset */
 
     if (ndefined == 0) { /* no variable defined */
-        if (type != NC_VARIABLE && type != NC_UNSPECIFIED)
+        if (type != NC_VARIABLE && type != NC_UNSPECIFIED) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_VARIABLE\n",__FILE__,__func__,__LINE__);
+#endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
+        }
     } else {
-        if (type != NC_VARIABLE) DEBUG_RETURN_ERROR(NC_EINVAL)
+        if (type != NC_VARIABLE) {
+#ifdef PNETCDF_DEBUG
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_VARIABLE\n",__FILE__,__func__,__LINE__);
+#endif
+            DEBUG_RETURN_ERROR(NC_EINVAL)
+        }
 
         ncap->value = (NC_var **) NCI_Malloc((size_t)ndefined * sizeof(NC_var*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
