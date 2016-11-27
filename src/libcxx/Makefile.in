@@ -61,7 +61,13 @@ DIST_GARBAGE =
 
 all: $(CXX_HEADER) $(LIBRARY)
 
-library $(LIBRARY): $(LIB_OBJS)
+objs: $(CXX_HEADER) $(LIB_OBJS)
+
+library:
+	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
+	$(RANLIB) $(LIBRARY)
+
+$(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
 	$(RANLIB) $(LIBRARY)
 
