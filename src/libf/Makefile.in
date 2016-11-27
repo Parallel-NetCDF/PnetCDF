@@ -77,6 +77,7 @@ C2F_SRCS = createf.c \
 	inq_atttypef.c \
 	inq_attlenf.c \
 	inq_attnamef.c \
+	inq_pathf.c \
 	copy_attf.c \
 	rename_attf.c \
 	del_attf.c \
@@ -372,17 +373,23 @@ LIB_OBJS = $(LIB_CSRCS:.c=.o) $(LIB_FSRCS:.f=.o)
 GARBAGE		= nfconfig.inc $(LIB_CSRCS) mpifnetcdf.h
 DIST_GARBAGE	= nfconfig_inc pnetcdf.inc
 
-all: $(LIB_CSRCS) nfconfig.inc $(LIBRARY)
+all: nfconfig.inc $(LIBRARY)
 
-library $(LIBRARY): $(LIB_OBJS)
+objs: nfconfig.inc $(LIB_OBJS)
+
+library:
+	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
+	$(RANLIB) $(LIBRARY)
+
+$(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
 	$(RANLIB) $(LIBRARY)
 
 $(LIB_CSRCS): mpifnetcdf.h
-$(LIB_OBJS): mpifnetcdf.h
 
 mpifnetcdf.h: defs buildiface $(HEADER)
 	$(srcdir)/buildiface -infile=$(HEADER) -deffile=$(srcdir)/defs
+	@touch $(LIB_CSRCS)
 
 # Starting from 1.4.0, nfconfig.inc is only used in test/nf_test/tests.inc and
 # test/nf90_test/tests.inc

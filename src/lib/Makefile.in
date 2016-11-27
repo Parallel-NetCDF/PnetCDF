@@ -93,6 +93,12 @@ DIST_GARBAGE = ncconfig.h pnetcdf.h
 
 all: $(LIBRARY)
 
+objs: $(LIB_OBJS)
+
+library:
+	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
+	$(RANLIB) $(LIBRARY)
+
 $(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
 	$(RANLIB) $(LIBRARY)

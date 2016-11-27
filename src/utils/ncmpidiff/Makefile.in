@@ -60,4 +60,3 @@ TAGS:		FORCE
 include $(srcdir)/../../../rules.make
 include $(srcdir)/depend
 
-.PHONY: $(LIBRARY)
