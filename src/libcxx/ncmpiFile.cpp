@@ -203,3 +203,8 @@ void NcmpiFile::Inq_header_extent(MPI_Offset *header_extent)
     ncmpiCheck(ncmpi_inq_header_extent(myId, header_extent),__FILE__,__LINE__);
 }
 
+void NcmpiFile::Inq_path(int *pathlen, char *path)
+{
+    ncmpiCheck(ncmpi_inq_path(myId, pathlen, path),__FILE__,__LINE__);
+}
+

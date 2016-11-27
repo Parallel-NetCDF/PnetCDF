@@ -21,7 +21,7 @@
   ! File level inquiry
   public :: nf90mpi_inquire,          nf90mpi_inq_striping, &
             nf90mpi_inq_num_rec_vars, nf90mpi_inq_num_fix_vars, &
-            nf90mpi_inq_default_format
+            nf90mpi_inq_path,         nf90mpi_inq_default_format
   
   ! Dimension routines
   public :: nf90mpi_def_dim,    nf90mpi_inq_dimid, &
@@ -492,7 +492,8 @@
         nfmpi_inq_malloc_max_size, &
         nfmpi_inq_malloc_list, &
         nfmpi_inq_files_opened, &
-        nfmpi_inq_recsize
+        nfmpi_inq_recsize, &
+        nfmpi_inq_path
 
 !
 ! Begin of varn subroutines:

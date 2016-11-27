@@ -343,3 +343,13 @@ function nf90mpi_inq_default_format(default_format)
   nf90mpi_inq_default_format = nfmpi_inq_default_format(default_format)
 end function nf90mpi_inq_default_format
 
+! -------
+function nf90mpi_inq_path(ncid, pathlen, path)
+  integer,             intent( in) :: ncid
+  integer,             intent(out) :: pathlen
+  character (len = *), intent(out) :: path
+  integer                          :: nf90mpi_inq_path
+
+  nf90mpi_inq_path = nfmpi_inq_path(ncid, pathlen, path)
+end function nf90mpi_inq_path
+

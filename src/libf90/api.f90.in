@@ -3427,6 +3427,12 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: recsize
     END FUNCTION   nfmpi_inq_recsize
 
+    INTEGER        FUNCTION nfmpi_inq_path(ncid, pathlen, path)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(OUT) :: pathlen
+                            CHARACTER(len=*),              INTENT(OUT) :: path
+    END FUNCTION   nfmpi_inq_path
+
 !
 ! Begin of varn subroutines:
 !
