@@ -1424,6 +1424,7 @@
       integer  nfmpi_inq_header_extent
       integer  nfmpi_inq_varoffset
       integer  nfmpi_inq_nreqs
+      integer  nfmpi_inq_path
 
       external nfmpi_buffer_attach
       external nfmpi_buffer_detach
@@ -1435,6 +1436,7 @@
       external nfmpi_inq_header_extent
       external nfmpi_inq_varoffset
       external nfmpi_inq_nreqs
+      external nfmpi_inq_path
 
 !
 ! varn routines:

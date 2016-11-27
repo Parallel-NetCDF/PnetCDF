@@ -809,6 +809,9 @@ ncmpi_inq_recsize(int ncid, MPI_Offset *recsize);
 extern int
 ncmpi_inq_var_fill(int ncid, int varid, int *no_fill, void *fill_value);
 
+extern int
+ncmpi_inq_path(int ncid, int *pathlen, char *path);
+
 /* End Inquiry Functions */
 
 /* Begin _att */

@@ -1412,3 +1412,31 @@ ncmpi_inq_header_size(int         ncid,
     return NC_NOERR;
 }
 
+/*----< ncmpi_inq_path() >----------------------------------------------------*/
+/* Get the file pathname which was used to open/create the ncid's file.
+ * This is an independent subroutine.
+ */
+int
+ncmpi_inq_path(int   ncid,
+               int  *pathlen,/* Ignored if NULL */
+               char *path)   /*  must already be allocated. Ignored if NULL */
+{        
+    int err;
+    NC *ncp;
+
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) return err;
+
+    if (pathlen != NULL)
+        *pathlen = (int)strlen(ncp->nciop->path);
+    else
+        *pathlen = 0;
+
+    if (path != NULL)
+        strcpy(path, ncp->nciop->path);
+    else
+        *path = '\0';
+
+    return NC_NOERR;
+}
+

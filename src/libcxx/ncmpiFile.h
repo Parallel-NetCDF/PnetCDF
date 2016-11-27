@@ -107,6 +107,8 @@ namespace PnetCDF
 
       void Inq_header_extent(MPI_Offset *header_extent);
 
+      void Inq_path(int *pathlen, char *path);
+
    private:
 	/* Do not allow definition of NcmpiFile involving copying any NcmpiFile
            or NcmpiGroup.  Because the destructor closes the file and releases
