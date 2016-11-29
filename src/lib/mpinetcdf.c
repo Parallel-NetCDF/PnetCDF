@@ -1427,15 +1427,13 @@ ncmpi_inq_path(int   ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) return err;
 
-    if (pathlen != NULL)
-        *pathlen = (int)strlen(ncp->nciop->path);
-    else
-        *pathlen = 0;
-
-    if (path != NULL)
-        strcpy(path, ncp->nciop->path);
-    else
-        *path = '\0';
+    if (ncp->nciop->path == NULL) {
+        if (pathlen != NULL) *pathlen = 0;
+        if (path    != NULL) *path = '\0';
+    } else {
+        if (pathlen != NULL) *pathlen = (int)strlen(ncp->nciop->path);
+        if (path    != NULL) strcpy(path, ncp->nciop->path);
+    }
 
     return NC_NOERR;
 }
