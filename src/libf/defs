@@ -2403,9 +2403,9 @@ sub blankpad_out_ftoc {
 # Functions to add routines that need special handling
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerrno";
-$ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxinqlibvers";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfissyserr";
+# $ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
 
 sub ncfxstrerror {
     $OUTFD = "NCFXSTRERRORFD";
