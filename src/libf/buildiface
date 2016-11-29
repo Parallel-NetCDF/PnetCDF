@@ -3451,11 +3451,11 @@ sub ReadAndProcessInterface {
 		        print $OUTFD "    return $errparmrval;\n";
 		    }
 		    print $OUTFD "}\n";
-		    if ($buildfiles) {
-		        close ($OUTFD);
-		        &ReplaceIfDifferent( $filename, $newfilename );
-		    }
 	        }
+		if ($buildfiles) {
+		    close ($OUTFD);
+		    &ReplaceIfDifferent( $filename, $newfilename );
+		}
 		if ($build_prototypes) {
 		    if ($do_subdecls) {
 			print PROTOFD "extern FORTRAN_API $returnType FORT_CALL ${out_prefix}${lcname}_ ";

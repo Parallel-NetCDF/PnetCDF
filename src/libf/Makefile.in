@@ -24,7 +24,6 @@ LIBRARY   = ../lib/libpnetcdf.a
 ld_netcdf = -L../lib -lpnetcdf
 
 UTIL_SRCS = issyserrf.c \
-            nfxutil.c \
             xstrerrorf.c \
             xstrerrnof.c \
             xinq_libversf.c
