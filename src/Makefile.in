@@ -37,12 +37,14 @@ library: $(SUBDIRS)
 utils: library
 	$(MAKE) $(MFLAGS) -C utils
 
-INSTALLDIRS = $(SUBDIRS:%=install-%)
+INSTALL_SUBDIRS = $(SUBDIRS) utils
+
+INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
 install: $(INSTALLDIRS)
 $(INSTALLDIRS): all
 	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
 
-UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
+UNINSTALLDIRS = $(INSTALL_SUBDIRS:%=uninstall-%)
 uninstall: $(UNINSTALLDIRS)
 $(UNINSTALLDIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
