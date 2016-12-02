@@ -147,7 +147,7 @@ ncmpii_igetput_varm(NC               *ncp,
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
-    /* check NC_ECHAR error and calculate the followings:
+    /* calculate the followings:
      * ptype: element data type (MPI primitive type) in buftype
      * bufcount: If it is -1, then this is called from a high-level API and in
      * this case buftype will be an MPI primitive data type. If not, then this

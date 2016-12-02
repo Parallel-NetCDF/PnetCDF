@@ -1201,7 +1201,7 @@ ncmpi_delete(const char *filename,
 {
     int err=NC_NOERR, mpireturn;
 
-    TRACE_IO(MPI_File_delete)(filename, info);
+    TRACE_IO(MPI_File_delete)((char*)filename, info);
     if (mpireturn != MPI_SUCCESS)
         err = ncmpii_handle_error(mpireturn, "MPI_File_delete");
     return err;
