@@ -563,3 +563,23 @@ Developers are also warned that when m4 macro functions are used, the line
 numbers reported are the locations the functions are invoked, not the lines
 inside the functions.
 
+==============================================================================
+NC error code precedence
+==============================================================================
+The precedence of reporting error codes depends on the seriousness of the
+error. The guide line is the following. The most serious ones are related to
+ncid, such as NC_EBADID, NC_EPERM, and NC_EINDEFINE. The next is related to
+varid, such as NC_ENOTVAR. These two types of errors will make PnetCDF programs
+difficult to continue, even if we modified the request to NULL for processes
+that produce an error.
+
+For put att APIs:
+    NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
+    NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE
+For get att APIs:
+    NC_EBADID, NC_ENOTVAR, NC_EBADNAME, NC_ENOTATT, NC_ECHAR, NC_EINVAL,
+    NC_ERANGE
+For put/get variable APIs:
+    NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_ENOTVAR, NC_ECHAR, NC_EINVALCOORDS,
+    NC_EEDGE, NC_ESTRIDE, NC_EINVAL, NC_ERANGE
+

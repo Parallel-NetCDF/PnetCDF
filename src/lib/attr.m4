@@ -972,7 +972,7 @@ ncmpi_get_att_text(int         ncid,
     NC_attrarray *ncap=NULL;
     const void *xp;
 
-    /* get the file ID */
+    /* get the file ID (check NC_EBADID) */
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -1023,7 +1023,7 @@ ncmpi_get_att_$1(int             ncid,
     const void     *xp;
     MPI_Offset      nelems;
 
-    /* get the file ID */
+    /* get the file ID (check NC_EBADID) */
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -1038,6 +1038,7 @@ ncmpi_get_att_$1(int             ncid,
     nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
     if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
+    /* whether the attr exists (check NC_ENOTATT) */
     err = NC_lookupattr(ncap, nname, &attrp);
     free(nname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
@@ -1053,6 +1054,7 @@ ncmpi_get_att_$1(int             ncid,
     xp = attrp->xvalue;
 
     switch(attrp->type) {
+        /* possible error returned n this switch block is NC_ERANGE */
         case NC_BYTE:
             ifelse(`$1',`uchar',
            `if (ncp->format < 5) { /* no NC_ERANGE check */
@@ -1081,6 +1083,7 @@ ncmpi_get_att_$1(int             ncid,
         case NC_CHAR:
             return NC_ECHAR; /* NC_ECHAR already checked earlier */
         default:
+            /* this error is unlikely, but an internal error if happened */
             fprintf(stderr, "Error: bad attrp->type(%d) in %s\n",
                     attrp->type,__func__);
             return NC_EBADTYPE;
@@ -1190,7 +1193,7 @@ ncmpi_put_att_$1(int         ncid,
     NC_attr *attrp=NULL;
     ifelse(`$1',`text', `nc_type xtype=NC_CHAR;')
 
-    /* get the pointer to NC object */
+    /* get the pointer to NC object (check NC_EBADID) */
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -1207,6 +1210,31 @@ ncmpi_put_att_$1(int         ncid,
         goto err_check;
     }
 
+    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME) {
+        DEBUG_ASSIGN_ERROR(err, NC_EBADNAME)
+        goto err_check;
+    }
+
+    /* check if the attribute name is legal (check for NC_EBADNAME) */
+    err = ncmpii_NC_check_name(name, ncp->format);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }
+
+    ifelse(`$1',`text', ,`/* check if xtype is valid (check for NC_EBADTYPE) */
+    err = ncmpii_cktype(ncp->format, xtype);
+    if (err != NC_NOERR) {
+        DEBUG_TRACE_ERROR
+        goto err_check;
+    }')
+
+    ifelse(`$1',`text', , `/* No character conversions are allowed. */
+    if (xtype == NC_CHAR) {
+        DEBUG_ASSIGN_ERROR(err, NC_ECHAR)
+        goto err_check;
+    }')
+
     /* Should CDF-5 allow very large file header? */
     /*
     if (len > X_INT_MAX) {
@@ -1218,11 +1246,6 @@ ncmpi_put_att_$1(int         ncid,
     /* nelems can be zero, i.e. an attribute with only its name */
     if (nelems > 0 && buf == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL) /* Null arg */
-        goto err_check;
-    }
-
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME) {
-        DEBUG_ASSIGN_ERROR(err, NC_EBADNAME)
         goto err_check;
     }
 
@@ -1254,26 +1277,6 @@ ncmpi_put_att_$1(int         ncid,
 
     if (nelems < 0 || (nelems > X_INT_MAX && ncp->format <= 2)) {
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL) /* Invalid nelems */
-        goto err_check;
-    }
-
-    ifelse(`$1',`text', ,`/* check if xtype is valid */
-    err = ncmpii_cktype(ncp->format, xtype);
-    if (err != NC_NOERR) {
-        DEBUG_TRACE_ERROR
-        goto err_check;
-    }')
-
-    ifelse(`$1',`text', , `/* No character conversions are allowed. */
-    if (xtype == NC_CHAR) {
-        DEBUG_ASSIGN_ERROR(err, NC_ECHAR)
-        goto err_check;
-    }')
-
-    /* check if the attribute name is legal */
-    err = ncmpii_NC_check_name(name, ncp->format);
-    if (err != NC_NOERR) {
-        DEBUG_TRACE_ERROR
         goto err_check;
     }
 

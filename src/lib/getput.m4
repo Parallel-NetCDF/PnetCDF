@@ -63,28 +63,20 @@ ncmpii_calc_datatype_elems(NC               *ncp,
     int i, err=NC_NOERR;
     MPI_Offset fnelems;
 
-    /* In netCDF, error code reporting priority is NC_ECHAR, NC_EINVALCOORDS,
-     * NC_EEDGE, NC_ESTRIDE
+    /* Sanity check for error codes should have already done before reaching
+     * here
+     *
+     * when (*bufcount == -1), same as if (IsPrimityMPIType(buftype)),
+     * it means this subroutine is called from a high-level API.
      */
-    if (*bufcount == -1) { /* same as if (IsPrimityMPIType(buftype)) */
-        /* this subroutine is called from a high-level API */
-        err = NCMPII_ECHAR(varp->type, buftype);
-        if (err != NC_NOERR) return err;
-    }
-    else if (buftype != MPI_DATATYPE_NULL) {
+    if (*bufcount != -1 && buftype != MPI_DATATYPE_NULL) {
         /* This subroutine is called from a flexible API */
         int isderived;
+        /* check MPI derived datatype error */
         err = ncmpii_dtype_decode(buftype, ptype, el_size, bnelems,
                                   &isderived, buftype_is_contig);
         if (err != NC_NOERR) return err;
-
-        err = NCMPII_ECHAR(varp->type, *ptype);
-        if (err != NC_NOERR) return err;
     }
-
-    /* check whether start, count, and stride are valid */
-    err = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
-    if (err != NC_NOERR) return err;
 
     /* fnelems is the total number of nc_type elements calculated from
      * count[]. count[] is the access count to the variable defined in
@@ -711,7 +703,7 @@ APINAME($1,$2,$3,$4)(int ncid, int varid, ArgKind($2) BufArgs($1,$3))
     ifelse(`$2', `',  `MPI_Offset *start, *count;',
            `$2', `1', `MPI_Offset *count;')
 
-    status = ncmpii_sanity_check(ncid, varid, ArgStartCount($2),
+    status = ncmpii_sanity_check(ncid, varid, ArgStartCountStride($2),
                                  ifelse(`$3', `', `bufcount', `0'),
                                  ifelse(`$3', `', `buftype',  `ITYPE2MPI($3)'),
                                  API_KIND($2), ifelse(`$3', `', `1', `0'),

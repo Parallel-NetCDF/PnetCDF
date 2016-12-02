@@ -46,6 +46,21 @@ This is essentially a placeholder for the next release note ...
   o New PnetCDF hint
     * none
 
+  o New error code precedence
+    * When two or more errors are detected by the PnetCDF library (e.g. due to
+      the use of bad API arguments), the error code returned from an API will
+      follow the precedence below. In principle, the errors related to ncid is
+      the most serious, followed by varid.
+      For put att APIs:
+          NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
+          NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE
+      For get att APIs:
+          NC_EBADID, NC_ENOTVAR, NC_EBADNAME, NC_ENOTATT, NC_ECHAR, NC_EINVAL,
+          NC_ERANGE
+      For put/get variable APIs:
+          NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_ENOTVAR, NC_ECHAR,
+          NC_EINVALCOORDS, NC_EEDGE, NC_ESTRIDE, NC_EINVAL, NC_ERANGE
+
   o New error code
     * NC_EPENDING: Pending nonblocking request is found at file close.
     * NC_EINVAL_OMODE: invalid file open mode. This separates the case from
