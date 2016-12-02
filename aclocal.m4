@@ -28,9 +28,13 @@ AC_DEFUN(UD_PROG_M4,
                ${RM} -f conftest.err
                ;;
     esac
-    AC_MSG_RESULT($M4FLAGS)
+    if test "x$M4FLAGS" = x; then
+       AC_MSG_RESULT("none")
+    else
+       AC_MSG_RESULT($M4FLAGS)
+    fi
     M4FFLAGS=`echo $M4FLAGS | sed 's/-s *//g'`
-    AC_MSG_NOTICE(M4FFLAGS=$M4FFLAGS)
+    dnl AC_MSG_NOTICE(M4FFLAGS=$M4FFLAGS)
     AC_SUBST(M4FLAGS)
     AC_SUBST(M4FFLAGS)
 ])

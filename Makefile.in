@@ -138,6 +138,7 @@ PKGCONFIG_IN = pnetcdf_pc
 PKGCONFIG    = pnetcdf.pc
 
 install_PKGCONFIG:
+	$(RM) -f $(PKGCONFIG)
 	$(SED) -e "s%INSTALL_PREFIX%${prefix}%g" $(PKGCONFIG_IN) > $(PKGCONFIG)
 	$(INSTALL) -d -m 755 $(LIBDIR)/pkgconfig
 	$(INSTALL_DATA) $(PKGCONFIG) $(LIBDIR)/pkgconfig/$(PKGCONFIG)
