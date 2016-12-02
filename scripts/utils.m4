@@ -86,10 +86,11 @@ define(`ArgKind', `ifelse(
 dnl
 dnl arguments passed to a function for APIs of different kinds
 dnl
-define(`ArgStartCount', `ifelse(
-       `$1', `',  `NULL,  NULL',
-       `$1', `1', `start, NULL',
-                  `start, count')')dnl
+define(`ArgStartCountStride', `ifelse(
+       `$1', `',  `NULL,  NULL, NULL',
+       `$1', `1', `start, NULL, NULL',
+       `$1', `a', `start, count, NULL',
+                  `start, count, stride')')dnl
 dnl
 define(`ArgStrideMap', `ifelse(
        `$1', `s', `stride, NULL',

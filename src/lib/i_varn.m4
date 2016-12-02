@@ -91,9 +91,9 @@ ncmpi_$1_varn(int                 ncid,
     /* check for zero-size request */
     if (num == 0 || bufcount == 0) return NC_NOERR;
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, buftype,
-                                 API_VARN, 1,
-                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
+                                 buftype, API_VARN, 1, 0, ReadWrite($1),
+                                 NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varn(ncp, varp, num, starts, counts, (void*)buf,
@@ -131,9 +131,9 @@ ncmpi_$1_varn_$2(int                ncid,
     /* check for zero request */
     if (num == 0) return NC_NOERR;
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, ITYPE2MPI($2),
-                                 API_VARN, 0,
-                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, 0,
+                                 ITYPE2MPI($2), API_VARN, 0, 0, ReadWrite($1),
+                                 NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     /* set bufcount to -1 indicating non-flexible API */

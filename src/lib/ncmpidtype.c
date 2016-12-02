@@ -286,6 +286,7 @@ ncmpii_darray_get_totalblks(int rank,
 #endif
 
 
+/*----< ncmpii_dtype_decode() >-----------------------------------------------*/
 /*@
   ncmpii_dtype_decode - Decode the MPI derived datatype to get the bottom
   level primitive datatype information.
