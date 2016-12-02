@@ -37,7 +37,7 @@ int ncmpii_sanity_check(int               ncid,
                         NC_var          **varp)  /* OUT */
 {
     /* all errors detected here are fatal, must return immediately */
-    int i, err;
+    int i, firstDim, err;
 
     /* check if ncid is valid (check NC_EBADID) */
     err = ncmpii_NC_check_id(ncid, ncp);
@@ -107,153 +107,159 @@ int ncmpii_sanity_check(int               ncid,
         goto fn_exit;
     }
 
+    if (api <= API_VAR) { /* var/varn/vard APIs, start/count/stride are NULL */
+        err = NC_NOERR;
+        goto fn_exit;
+    }
+
+    /* Now only check var1, vara, vars, and varm APIs */
+
     /* Check NC_EINVALCOORDS
-     * for API var1, vara, vars, varm, and varn, start cannot be NULL, except
-     * for scalars */
-    if (api >= API_VAR1 && start == NULL && (*varp)->ndims > 0) {
+     * for API var1/vara/vars/varm, start cannot be NULL, except for scalars */
+    if (start == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
         goto fn_exit;
     }
-    if (start != NULL) {
-        if (start[0] < 0) {
+
+    firstDim = 0;
+    if (IS_RECVAR(*varp)) {
+        if (start[0] < 0) { /* no negative value */
             DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
             goto fn_exit;
         }
 
-        i = 0;
-        if (IS_RECVAR(*varp)) {
-            if ((*ncp)->format < 5 && /* not CDF-5 */
-                start[0] > X_UINT_MAX) { /* sanity check */
+        if ((*ncp)->format < 5 &&    /* not CDF-5 */
+            start[0] > X_UINT_MAX) { /* sanity check */
+            DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
+            goto fn_exit;
+        }
+
+        /* for record variable, [0] is the NC_UNLIMITED dimension */
+        if (rw_flag == READ_REQ) {
+            /* read cannot go beyond current numrecs */
+#ifdef RELAX_COORD_BOUND
+            if (start[0] >  (*ncp)->numrecs) {
                 DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
                 goto fn_exit;
             }
-
-            /* for record variable, [0] is the NC_UNLIMITED dimension */
-            if (rw_flag == READ_REQ) {
-                /* read cannot go beyond current numrecs */
-#ifdef RELAX_COORD_BOUND
-                if (start[0] > (*ncp)->numrecs)
-#else
-                if (start[0] >= (*ncp)->numrecs)
-#endif
-                {
-                    DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
-                    goto fn_exit;
-                }
-#ifdef RELAX_COORD_BOUND
-                if (api == API_VAR1 && start[0] == (*ncp)->numrecs) {
+            if (start[0] == (*ncp)->numrecs) {
+                if (api == API_VAR1) {
                     /* for var1 APIs, count[0] is considered of 1 */
                     DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
                     goto fn_exit;
                 }
-                if (count != NULL && start[0] == (*ncp)->numrecs &&
-                    count[0] > 0) {
+                else if (count != NULL && count[0] > 0) {
                     DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
                     goto fn_exit;
                 }
-#endif          
-            }
-            i = 1; /* skip checking the record dimension */
-        }
-
-        for (; i<(*varp)->ndims; i++) {
-#ifdef RELAX_COORD_BOUND
-            if (start[i] < 0 || start[i] > (*varp)->shape[i]) {
-                DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
-                goto fn_exit;
-            }
-            if (api == API_VAR1 && start[i] >= (*varp)->shape[i]) {
-                /* for var1 APIs, count[i] is considered of 1 */
-                DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
-                goto fn_exit;
-            }
-            if (count != NULL && start[i] == (*varp)->shape[i] && count[i] > 0) {
-                DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
-                goto fn_exit;
             }
 #else
-            if (start[i] < 0 || start[i] >= (*varp)->shape[i]) {
+            if (start[0] >= (*ncp)->numrecs) {
                 DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
                 goto fn_exit;
             }
-#endif
+#endif          
         }
+        firstDim = 1; /* skip checking the record dimension */
+    }
+
+    for (i=firstDim; i<(*varp)->ndims; i++) {
+#ifdef RELAX_COORD_BOUND
+        if (start[i] < 0 || start[i] > (*varp)->shape[i]) {
+            DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
+            goto fn_exit;
+        }
+        if (start[i] == (*ncp)->numrecs) {
+            if (api == API_VAR1) {
+                /* for var1 APIs, count[0] is considered of 1 */
+                DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
+                goto fn_exit;
+            }
+            else if (count != NULL && count[i] > 0) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
+                goto fn_exit;
+            }
+        }
+#else
+        if (start[i] < 0 || start[i] >= (*varp)->shape[i]) {
+            DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
+            goto fn_exit;
+        }
+#endif
+    }
+
+    if (api <= API_VAR1) {
+        /* var1/var APIs have no count argument */
+        err = NC_NOERR;
+        goto fn_exit;
     }
 
     /* Check NC_EEDGE
-     * for API vara, vars, and varm, count cannot be NULL, except for scalars */
-    if (api >= API_VARA && count == NULL && (*varp)->ndims > 0) {
+     * for API vara/vars/varm, count cannot be NULL, except for scalars */
+    if (count == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
         goto fn_exit;
     }
-    i = 0;
+    firstDim = 0;
     if (IS_RECVAR(*varp)) {
-        if (count != NULL && count[0] < 0) { /* no negative count[] */
+        if (count[0] < 0) { /* no negative count[] */
             DEBUG_ASSIGN_ERROR(err, NC_ENEGATIVECNT)
             goto fn_exit;
         }
         /* for record variable, [0] is the NC_UNLIMITED dimension */
         if (rw_flag == READ_REQ) { /* read cannot go beyond current numrecs */
-            if (count != NULL) {
-                if (stride == NULL) { /* for vara APIs */
-                    if (start[0] + count[0] > (*ncp)->numrecs) {
-                        DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
-                        goto fn_exit;
-                    }
-                }
-                else { /* for vars APIs */
-                    if (count[0] > 0 &&
-                        start[0] + (count[0]-1) * stride[0] >= (*ncp)->numrecs) {
-                        DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
-                        goto fn_exit;
-                    }
+            if (stride == NULL) {  /* for vara APIs */
+                if (start[0] + count[0] > (*ncp)->numrecs) {
+                    DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
+                    goto fn_exit;
                 }
             }
-            /* else is for var1 APIs */
+            else { /* for vars/varm APIs */
+                if (count[0] > 0 &&
+                    start[0] + (count[0]-1) * stride[0] >= (*ncp)->numrecs) {
+                    DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
+                    goto fn_exit;
+                }
+            }
         }
-        i = 1; /* skip checking the record dimension */
+        firstDim = 1; /* skip checking the record dimension */
     }
 
-    for (; i<(*varp)->ndims; i++) {
+    for (i=firstDim; i<(*varp)->ndims; i++) {
         if ((*varp)->shape[i] < 0) {
             DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
             goto fn_exit;
         }
-        if (count != NULL) {
-            if (count[i] < 0) { /* no negative count[] */
-                DEBUG_ASSIGN_ERROR(err, NC_ENEGATIVECNT)
+        if (count[i] < 0) { /* no negative count[] */
+            DEBUG_ASSIGN_ERROR(err, NC_ENEGATIVECNT)
+            goto fn_exit;
+        }
+
+        if (stride == NULL) { /* for vara APIs */
+            if (count[i] > (*varp)->shape[i] ||
+                start[i] + count[i] > (*varp)->shape[i]) {
+                DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
                 goto fn_exit;
             }
-
-            if (stride == NULL) { /* for vara APIs */
-                if (count[i] > (*varp)->shape[i] ||
-                    start[i] + count[i] > (*varp)->shape[i]) {
-                    DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
-                    goto fn_exit;
-                }
-            }
-            else { /* for vars APIs */
-                if (count[i] > 0 &&
-                    start[i] + (count[i]-1) * stride[i] >= (*varp)->shape[i]) {
-                    DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
-                    goto fn_exit;
-                }
+        }
+        else { /* for vars APIs */
+            if (count[i] > 0 &&
+                start[i] + (count[i]-1) * stride[i] >= (*varp)->shape[i]) {
+                DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
+                goto fn_exit;
             }
         }
-        /* else is for var1 APIs */
+    }
+
+    if (api <= API_VARA) {
+        /* vara APIs have no stride argument */
+        err = NC_NOERR;
+        goto fn_exit;
     }
 
     /* Check NC_ESTRIDE */
-    i = 0;
-    if (IS_RECVAR(*varp)) {
-        if (stride != NULL && stride[0] == 0) {
-            DEBUG_ASSIGN_ERROR(err, NC_ESTRIDE)
-            goto fn_exit;
-        }
-        i = 1; /* skip checking the record dimension */
-    }
-    for (; i<(*varp)->ndims; i++) {
-        if (count != NULL && stride != NULL && stride[i] == 0) {
+    for (i=0; i<(*varp)->ndims; i++) {
+        if (stride != NULL && stride[i] == 0) {
             DEBUG_ASSIGN_ERROR(err, NC_ESTRIDE)
             goto fn_exit;
         }
