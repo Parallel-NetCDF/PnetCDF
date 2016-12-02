@@ -33,7 +33,7 @@ dnl
 
 
 /*----< ncmpii_calc_datatype_elems() >---------------------------------------*/
-/* check NC_ECHAR and obtain the following metadata about buftype:
+/* obtain the following metadata about buftype:
  * ptype: element data type (MPI primitive type) in buftype
  * bufcount: If it is -1, then this is called from a high-level API and in
  * this case buftype will be an MPI primitive data type. If not -1, then this
@@ -313,7 +313,7 @@ ncmpii_getput_varm(NC               *ncp,
     }
 #endif
 
-    /* check NC_ECHAR error and calculate the followings:
+    /* calculate the followings:
      * ptype: element data type (MPI primitive type) in buftype
      * bufcount: If it is -1, then this is called from a high-level API and in
      * this case buftype will be an MPI primitive data type. If not, then this
