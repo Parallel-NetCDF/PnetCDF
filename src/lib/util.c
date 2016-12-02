@@ -96,6 +96,17 @@ int ncmpii_sanity_check(int               ncid,
         if (err != NC_NOERR) goto fn_exit;
     }
 
+    /* for flexible APIs, bufcount cannot be negative */
+    if (bufcount < 0) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto fn_exit;
+    }
+
+    if ((*varp)->ndims == 0) { /* scalar variable: ignore start/count/stride */
+        err = NC_NOERR;
+        goto fn_exit;
+    }
+
     /* Check NC_EINVALCOORDS
      * for API var1, vara, vars, varm, and varn, start cannot be NULL, except
      * for scalars */
@@ -246,12 +257,6 @@ int ncmpii_sanity_check(int               ncid,
             DEBUG_ASSIGN_ERROR(err, NC_ESTRIDE)
             goto fn_exit;
         }
-    }
-
-    /* for flexible APIs, bufcount cannot be negative */
-    if (bufcount < 0) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
-        goto fn_exit;
     }
 
 fn_exit:
