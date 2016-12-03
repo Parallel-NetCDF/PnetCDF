@@ -45,16 +45,25 @@
 #define MPI_OFFSET MPI_LONG_LONG_INT
 #endif
 
-static void handle_error(int status, int lineno)
+#define MPI_ERR(err) { \
+    if (err != MPI_SUCCESS) { \
+        char err_string[MPI_MAX_ERROR_STRING+1]; \
+        int  err_len; \
+        MPI_Error_string(err, err_string, &err_len); \
+        fprintf(stderr, "Rank %d: Error at line %d (%s)\n",rank,__LINE__,err_string); \
+    } \
+}
+
+static void handle_error(int err, int lineno)
 {
-    fprintf(stderr, "Error at line %d: %s\n", lineno, ncmpi_strerror(status));
+    fprintf(stderr, "Error at line %d: %s\n", lineno, ncmpi_strerror(err));
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
 
 int main(int argc, char **argv) {
 
-    int i, j=0, rank, nprocs, ret;
+    int i, j=0, rank, nprocs, err;
     int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
     int dimids[NC_MAX_VAR_DIMS];
     char varname[NC_MAX_NAME+1];
@@ -74,17 +83,17 @@ int main(int argc, char **argv) {
     }
 
     if (rank == 0) {
-        ret = ncmpi_open(MPI_COMM_SELF, argv[1],
+        err = ncmpi_open(MPI_COMM_SELF, argv[1],
                          NC_NOWRITE, MPI_INFO_NULL, &ncfile);
-        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        if (err != NC_NOERR) handle_error(err, __LINE__);
 
         /* reader knows nothing about dataset, but we can interrogate with
          * query routines: ncmpi_inq tells us how many of each kind of
          * "thing" (dimension, variable, attribute) we will find in the
          * file  */
 
-        ret = ncmpi_inq(ncfile, &ndims, &nvars, &ngatts, &unlimited);
-        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        err = ncmpi_inq(ncfile, &ndims, &nvars, &ngatts, &unlimited);
+        if (err != NC_NOERR) handle_error(err, __LINE__);
 
         /* we do not really need the name of the dimension or the variable
          * for reading in this example.  we could, in a different example,
@@ -95,28 +104,30 @@ int main(int argc, char **argv) {
         /* netcdf dimension identifiers are allocated sequentially starting
          * at zero; same for variable identifiers */
         for(i=0; i<ndims; i++)  {
-            ret = ncmpi_inq_dimlen(ncfile, i, &(dim_sizes[i]) );
-            if (ret != NC_NOERR) handle_error(ret, __LINE__);
+            err = ncmpi_inq_dimlen(ncfile, i, &(dim_sizes[i]) );
+            if (err != NC_NOERR) handle_error(err, __LINE__);
         }
     }
 
     /* need to inform other MPI processors how many variables we will send */
-    MPI_Bcast(&nvars, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    err = MPI_Bcast(&nvars, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_ERR(err)
 
     for(i=0; i<nvars; i++) { 
         /* rank 0 will find out the size of each variable, read it, and
          * broadcast it to the rest of the processors */
         if (rank == 0) {
-            ret = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
+            err = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
                     &var_natts);
-            if (ret != NC_NOERR) handle_error(ret, __LINE__);
+            if (err != NC_NOERR) handle_error(err, __LINE__);
 
             for (j=0, var_size=1; j<var_ndims; j++)  {
                 var_size *= dim_sizes[dimids[j]];
             }
         }
         /* oddity: there's no predefined MPI_Offset type */
-        MPI_Bcast(&var_size, 1, MPI_OFFSET, 0, MPI_COMM_WORLD);
+        err = MPI_Bcast(&var_size, 1, MPI_OFFSET, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
 
         data = (int*) calloc(var_size, sizeof(int));
 
@@ -131,8 +142,8 @@ int main(int argc, char **argv) {
                      * data is quite small, but almost always the underlying
                      * MPI-IO library can do a better job */
 
-                    ret = ncmpi_get_var_int_all(ncfile, j, data);
-                    if (ret != NC_NOERR) handle_error(ret, __LINE__);
+                    err = ncmpi_get_var_int_all(ncfile, j, data);
+                    if (err != NC_NOERR) handle_error(err, __LINE__);
                     break;
                 default:
                     /* we can do this for all the known netcdf types but this
@@ -142,7 +153,8 @@ int main(int argc, char **argv) {
         }
 
         /*and finally all processors have the data */
-        MPI_Bcast(data, var_size, MPI_INT, 0, MPI_COMM_WORLD);
+        err = MPI_Bcast(data, var_size, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
 
         /* Here, every process can do computation on the local buffer, data,
            or copy the contents to somewhere else */
@@ -151,8 +163,8 @@ int main(int argc, char **argv) {
     }
 
     if (rank == 0) {
-        ret = ncmpi_close(ncfile);
-        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        err = ncmpi_close(ncfile);
+        if (err != NC_NOERR) handle_error(err, __LINE__);
         free(dim_sizes);
     }
 
