@@ -1228,7 +1228,7 @@ int
 TestFunc(att)_$1(AttVarArgs)
 {
     int i, j, err, ncid, cdf_format;
-    IntType k;
+    IntType k, ndx[1];
     int allInExtRange;
     int allInIntRange;
     int canConvert;     /* Both text or both numeric */
@@ -1276,7 +1276,8 @@ ifdef(`PNETCDF',,``#'endif')
 
             allInExtRange = allInIntRange = 1;
             for (k = 0; k < ATT_LEN(i,j); k++) {
-                expect[k] = hash4(cdf_format, ATT_TYPE(i,j), -1, &k, NCT_ITYPE($1));
+                ndx[0] = k;
+                expect[k] = hash4(cdf_format, ATT_TYPE(i,j), -1, ndx, NCT_ITYPE($1));
                 if (inRange3(cdf_format, expect[k],ATT_TYPE(i,j),NCT_ITYPE($1))) {
 		    /* netCDF specification make a special case for type
 		     * conversion between uchar and scahr: do not check for

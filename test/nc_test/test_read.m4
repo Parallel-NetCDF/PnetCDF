@@ -1735,7 +1735,7 @@ TestFunc(get_att)(AttVarArgs)
     int ncid;
     int i;
     int j;
-    IntType k;
+    IntType k, ndx[1];
     int err;
     double buf[MAX_NELS];        /* (void *) buffer */
     char *p;                     /* (void *) pointer */
@@ -1767,7 +1767,8 @@ TestFunc(get_att)(AttVarArgs)
             } else {
                 nok++;
                 for (k = 0; k < ATT_LEN(i,j); k++) {
-                    expect = hash(ATT_TYPE(i,j), -1, &k);
+                    ndx[0] = k;
+                    expect = hash(ATT_TYPE(i,j), -1, ndx);
                     p = (char *) buf;
                     p += k * (IntType)nctypelen(ATT_TYPE(i,j));
                     err = nc2dbl( ATT_TYPE(i,j), p, &got );
