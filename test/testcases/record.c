@@ -38,7 +38,7 @@ static
 int test_only_record_var_1D(char *filename)
 {
     int ncid, cmode, varid, dimid, buf[20], err, nerrs=0;
-    MPI_Offset start, count, length;
+    MPI_Offset start[1], count[1], length;
     MPI_Info info=MPI_INFO_NULL;
 
     /* create a new file for writing ----------------------------------------*/
@@ -52,13 +52,13 @@ int test_only_record_var_1D(char *filename)
 
     /* write the 2nd record first */
     buf[0] = 91;
-    start = 1; count = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid, &start, &count, buf); ERR
+    start[0] = 1; count[0] = 1;
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); ERR
 
     /* write the 1st record now */
     buf[0] = 90;
-    start = 0; count = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid, &start, &count, buf); ERR
+    start[0] = 0; count[0] = 1;
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); ERR
 
     err = ncmpi_inq_dimlen(ncid, dimid, &length); ERR
     if (length != 2) {
@@ -70,13 +70,13 @@ int test_only_record_var_1D(char *filename)
         err = ncmpi_begin_indep_data(ncid); ERR
         /* write the 4th record */
         buf[0] = 93;
-        start = 3; count = 1;
-        err = ncmpi_put_vara_int(ncid, varid, &start, &count, buf); ERR
+        start[0] = 3; count[0] = 1;
+        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); ERR
 
         /* write the 3rd record */
         buf[0] = 92; buf[1] = 93;
-        start = 2; count = 2;
-        err = ncmpi_put_vara_int(ncid, varid, &start, &count, buf); ERR
+        start[0] = 2; count[0] = 2;
+        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); ERR
 
         err = ncmpi_inq_dimlen(ncid, dimid, &length); ERR
         if (length != 4) {
