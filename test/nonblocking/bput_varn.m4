@@ -60,13 +60,13 @@ dnl
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <ncconfig.h> /* output of 'configure' */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* strcpy() */
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#include <ncconfig.h> /* output of 'configure' */
 #include <testutils.h>
 
 #define NLOOPS 4
@@ -75,6 +75,10 @@ dnl
 
 #define NY 4
 #define NX 10
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h> /* ushort, uint */
+#endif
 
 typedef char text;
 typedef signed char schar;
