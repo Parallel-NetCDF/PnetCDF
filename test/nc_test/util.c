@@ -739,7 +739,7 @@ void
 put_atts(int ncid, int numGatts, int numVars)
 {
     int  i, j, allInRange, err;
-    MPI_Offset  k;
+    MPI_Offset k, ndx[1];
     char catt[MAX_NELS];
     double att[MAX_NELS];
 
@@ -747,7 +747,8 @@ put_atts(int ncid, int numGatts, int numVars)
         for (j=0; j<NATTS(i); j++) {
             if (ATT_TYPE(i,j) == NC_CHAR) {
                 for (k=0; k<ATT_LEN(i,j); k++) {
-                    catt[k] = hash(ATT_TYPE(i,j), -1, &k);
+                    ndx[0] = k;
+                    catt[k] = hash(ATT_TYPE(i,j), -1, ndx);
                 }
                 err = ncmpi_put_att_text(ncid, i, ATT_NAME(i,j),
                                          ATT_LEN(i,j), catt);
@@ -755,7 +756,8 @@ put_atts(int ncid, int numGatts, int numVars)
                     error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
             } else {
                 for (allInRange=1, k=0; k<ATT_LEN(i,j); k++) {
-                    att[k] = hash(ATT_TYPE(i,j), -1, &k);
+                    ndx[0] = k;
+                    att[k] = hash(ATT_TYPE(i,j), -1, ndx);
                     allInRange = allInRange && inRange(att[k], ATT_TYPE(i,j));
                 }
                 err = ncmpi_put_att_double(ncid, i, ATT_NAME(i,j),
@@ -955,7 +957,7 @@ check_atts(int ncid, int numGatts, int numVars)
     char name[NC_MAX_NAME], text[MAX_NELS];
     int  i, j, err;        /* status */
     nc_type xtype;
-    MPI_Offset k, length;
+    MPI_Offset k, length, ndx[1];
     double expect, value[MAX_NELS];
     int nok = 0;      /* count of valid comparisons */
 
@@ -978,7 +980,8 @@ check_atts(int ncid, int numGatts, int numVars)
                 IF (err != NC_NOERR)
                     error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
                 for (k = 0; k < ATT_LEN(i,j); k++) {
-                    expect = hash(xtype, -1, &k);
+                    ndx[0] = k;
+                    expect = hash(xtype, -1, ndx);
                     if (text[k] != (char)expect) {
                         error("ncmpi_get_att_text: unexpected value");
                     } else {
@@ -988,7 +991,8 @@ check_atts(int ncid, int numGatts, int numVars)
             } else {
                 err = ncmpi_get_att_double(ncid, i, name, value);
                 for (k = 0; k < ATT_LEN(i,j); k++) {
-                    expect = hash(xtype, -1, &k);
+                    ndx[0] = k;
+                    expect = hash(xtype, -1, ndx);
                     if (inRange(expect,ATT_TYPE(i,j))) {
                         IF (err != NC_NOERR)
                             error("ncmpi_get_att_double: %s", ncmpi_strerror(err));
