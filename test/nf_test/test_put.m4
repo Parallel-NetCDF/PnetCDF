@@ -1556,6 +1556,7 @@ TEST_NFMPI_PUT_VARM(double)
         integer i
         integer j
         integer*8 k
+        integer*8 ndx(1)
         integer err, flags
         character*MAX_NELS value
 
@@ -1584,8 +1585,9 @@ TEST_NFMPI_PUT_VARM(double)
                     if (err .ne. NF_ENOTVAR)
      +                  call errore('bad var id: ', err)
                     do 3, k = 1, int(ATT_LEN_LL)
+                        ndx(1) = k
                         value(k:k) = char(int(hash(ATT_TYPE(j,i),
-     +                                             -1, k)))
+     +                                             -1, ndx)))
 3                   continue
                     err = PutAtt(text)(ncid, i, ATT_NAME(j,i),
      +                  ATT_LEN_LL, value)

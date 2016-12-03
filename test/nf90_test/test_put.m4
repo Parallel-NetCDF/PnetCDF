@@ -1556,6 +1556,7 @@ TEST_NFMPI_PUT_VARM(double)
         integer i
         integer j
         integer(kind=MPI_OFFSET_KIND) k
+        integer(kind=MPI_OFFSET_KIND) ndx(1)
         integer err, flags
         character(len=MAX_NELS) value
 
@@ -1581,8 +1582,9 @@ TEST_NFMPI_PUT_VARM(double)
                     if (err .ne. NF90_ENOTVAR) &
                         call errore('bad var id: ', err)
                     do 3, k = 1, ATT_LEN(j,i)
+                        ndx(1) = k
                         value(k:k) = char(int(hash(ATT_TYPE(j,i), &
-                                                   -1, k)))
+                                                   -1, ndx)))
 3                   continue
                     err = PutAtt(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN(j,i)))
                     if (err .ne. NF90_NOERR) &
