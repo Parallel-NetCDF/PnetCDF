@@ -78,14 +78,29 @@ ncmpi_$1_varn$2(int                ncid,
                 MPI_Offset         bufcount,
                 MPI_Datatype       buftype)
 {
-    int     status;
+    int     err, status;
     NC     *ncp;
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
                                  buftype, API_VARN, 1, 1, ReadWrite($1),
                                  CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) {
+        if (CollIndep($2) == INDEP_IO ||
+            status == NC_EBADID ||
+            status == NC_EPERM ||
+            status == NC_EINDEFINE ||
+            status == NC_EINDEP ||
+            status == NC_ENOTINDEP)
+            return status;  /* fatal error, cannot continue */
+
+        /* for collective API, participate the collective I/O with zero-length
+         * request for this process */
+        err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
+
+        /* return the error code from sanity check */
+        return status;
+    }
 
     return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,
                               bufcount, buftype, ReadWrite($1), CollIndep($2));
@@ -112,14 +127,29 @@ ncmpi_$1_varn_$3$2(int                ncid,
                    MPI_Offset* const *counts,
                    BufConst($1) $4   *buf)
 {
-    int     status;
+    int     err, status;
     NC     *ncp;
     NC_var *varp=NULL;
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, 0, ITYPE2MPI($3),
-                                 API_VARN, 0, 1, ReadWrite($1), CollIndep($2),
-                                 &ncp, &varp);
-    if (status != NC_NOERR) return status;
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, 0,
+                                 ITYPE2MPI($3), API_VARN, 0, 1, ReadWrite($1),
+                                 CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) {
+        if (CollIndep($2) == INDEP_IO ||
+            status == NC_EBADID ||
+            status == NC_EPERM ||
+            status == NC_EINDEFINE ||
+            status == NC_EINDEP ||
+            status == NC_ENOTINDEP)
+            return status;  /* fatal error, cannot continue */
+
+        /* for collective API, participate the collective I/O with zero-length
+         * request for this process */
+        err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
+
+        /* return the error code from sanity check */
+        return status;
+    }
 
     /* set bufcount to -1 indicating non-flexible API */
     return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,

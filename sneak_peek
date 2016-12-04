@@ -43,6 +43,51 @@ This is essentially a placeholder for the next release note ...
   o Syntax changes
     * ncmpi_cancel can now be called in define mode.
 
+  o Semantics updates
+    * For collective APIs, the following errors are considered fatal:
+      NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_EINDEP, and NC_ENOTINDEP. PnetCDF
+      once detects these errors will return these error codes immediately.
+      Note the fatal errors, if only happen to a subset of processes, can cause
+      the running program to hang for collective APIs. (Hanging will never
+      occur to independent APIs.) To debug a program hanging problem, users are
+      suggested to enable the safe mode by setting the environment variable
+      PNETCDF_SAFE_MODE to 1. In safe mode, error codes are synchronized among
+      all processes.  Other error codes, if detected, are not as fatal and the
+      processes encountering the non-fatal errors will continue to participate
+      the collective call but with zero-length requests. Thus, the collective
+      calls can nicely complete without hanging.
+    * Consistency check for header data (defining dimensions, variables, and
+      attributes) is moved to individual APIs and only enabled when safe mode
+      is enabled. Header data consistency check is no longer performed in
+      ncmpi_enddef. As a reminder, PnetCDF APIs that change header data are
+      all collective and their arguments are required to be consistent among
+      the calling processes.
+    * In netCDF-3, whether the contents of an NC_BYTE variable in CDF-1 or
+      CDF-2 files are signed or unsigned is determined by the calling APIs. See
+      http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
+      "In netcdf-3, we treat NC_BYTE as signed for the purposes of conversion
+      to short, int, long, float, or double. (Of course, no conversion takes
+      place when the internal type is signed char.) In the _uchar functions, we
+      treat NC_BYTE as if it were unsigned. Thus, no NC_ERANGE error can occur
+      converting between NC_BYTE and unsigned char." In other words, if called
+      from signed APIs, NC_BYTE variables are treated as signed. If called from
+      unsigned APIs (i.e. _uchar APIs, the only unsigned APIs in netCDF-3) they
+      are unsigned. NetCDF-3 specifically makes an exception to skip NC_ERANGE
+      check when calling _uchar APIs on NC_BYTE variables. However, in netCDF-4
+      and CDF-5, because of the introduction of the new data type NC_UBYTE, an
+      unsigned 8-bit integer, which makes NC_BYTE an signed 8-bit integer and
+      thus renders the above exception less sense. Starting from this release,
+      for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
+      APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
+      honors that exception.
+    * Prior to version 1.7.0, any outstanding nonblocking requests detected at
+      file close are automatically cancelled without reporting an error. In
+      this release, error code NC_EPENDING will be returned when pending
+      requests are detected.
+    * Change API ncmpi_set_default_format to be an independent API. However, it
+      is expected to be called by all processes that intend to create a file
+      later.
+
   o New PnetCDF hint
     * none
 
@@ -96,39 +141,6 @@ This is essentially a placeholder for the next release note ...
   o New utility program
     * Added pnetcdf-config shell script to display the options used in building
       PnetCDF.
-
-  o Semantics updates
-    * Consistency check for header data (defining dimensions, variables, and
-      attributes) is moved to individual APIs and only enabled when safe mode
-      is enabled. Header data consistency check is no longer performed in
-      ncmpi_enddef. As a reminder, PnetCDF APIs that change header data are
-      all collective and their arguments are required to be consistent among
-      the calling processes.
-    * In netCDF-3, whether the contents of an NC_BYTE variable in CDF-1 or
-      CDF-2 files are signed or unsigned is determined by the calling APIs. See
-      http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
-      "In netcdf-3, we treat NC_BYTE as signed for the purposes of conversion
-      to short, int, long, float, or double. (Of course, no conversion takes
-      place when the internal type is signed char.) In the _uchar functions, we
-      treat NC_BYTE as if it were unsigned. Thus, no NC_ERANGE error can occur
-      converting between NC_BYTE and unsigned char." In other words, if called
-      from signed APIs, NC_BYTE variables are treated as signed. If called from
-      unsigned APIs (i.e. _uchar APIs, the only unsigned APIs in netCDF-3) they
-      are unsigned. NetCDF-3 specifically makes an exception to skip NC_ERANGE
-      check when calling _uchar APIs on NC_BYTE variables. However, in netCDF-4
-      and CDF-5, because of the introduction of the new data type NC_UBYTE, an
-      unsigned 8-bit integer, which makes NC_BYTE an signed 8-bit integer and
-      thus renders the above exception less sense. Starting from this release,
-      for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
-      APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
-      honors that exception.
-    * Prior to version 1.7.0, any outstanding nonblocking requests detected at
-      file close are automatically cancelled without reporting an error. In
-      this release, error code NC_EPENDING will be returned when pending
-      requests are detected.
-    * Change API ncmpi_set_default_format to be an independent API. However, it
-      is expected to be called by all processes that intend to create a file
-      later.
 
   o Other updates:
     * API ncmpi_inq_file_format can now detect HDF5 file signature and report
