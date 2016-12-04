@@ -15,7 +15,7 @@
 
 void parse_read_args(int argc, char **argv, int rank, params *p)
 {
-	int inlen, outlen;
+	int err, inlen, outlen;
 	if ( rank == 0 ) {
 		if (argc == 3 ) {
 			strncpy(p->infname, argv[1], PATH_MAX-1);
@@ -33,15 +33,20 @@ void parse_read_args(int argc, char **argv, int rank, params *p)
 		inlen = strlen(p->infname);
 		outlen = strlen(p->outfname);
 	}
-	MPI_Bcast(&inlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(p->infname, inlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&outlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(p->outfname, outlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+	err = MPI_Bcast(&inlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
+	err = MPI_Bcast(p->infname, inlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
+	err = MPI_Bcast(&outlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
+	err = MPI_Bcast(p->outfname, outlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
 }
 
 void parse_write_args(int argc, char **argv, int rank, params *p)
 {
-	int outlen;
+	int err, outlen;
 	if ( rank == 0 ) {
 		if (argc == 2 ) {
 			strncpy(p->outfname, argv[1], PATH_MAX-1);
@@ -54,8 +59,10 @@ void parse_write_args(int argc, char **argv, int rank, params *p)
 		}
 		outlen = strlen(p->outfname);
 	}
-	MPI_Bcast(&outlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(p->outfname, outlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+	err = MPI_Bcast(&outlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
+	err = MPI_Bcast(p->outfname, outlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_ERR(err)
 }
 
 

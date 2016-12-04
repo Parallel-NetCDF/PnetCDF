@@ -59,8 +59,10 @@ int main(int argc, char** argv) {
 
     root_striping_size  = striping_size;
     root_striping_count = striping_count;
-    MPI_Bcast(&root_striping_size,  1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&root_striping_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    err = MPI_Bcast(&root_striping_size,  1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_ERR(err)
+    err = MPI_Bcast(&root_striping_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_ERR(err)
     if (root_striping_size != striping_size) {
         printf("Error at PE %2d: inconsistent striping_size (root=%d local=%d)\n",
                rank, root_striping_size, striping_size);
