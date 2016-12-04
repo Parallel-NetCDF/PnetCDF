@@ -30,6 +30,14 @@ void parse_write_args(int argc, char **argv, int rank, params *p);
 #define FAIL_STR "fail with %d mismatches\n"
 #endif
 
+#define MPI_ERR(err) \
+    if (err != MPI_SUCCESS) { \
+        char err_string[MPI_MAX_ERROR_STRING+1]; \
+        int  err_len; \
+        MPI_Error_string(err, err_string, &err_len); \
+        printf("MPI Error at file %s line %d (%s)\n",__FILE__,__LINE__,err_string); \
+    }
+
 extern char* nc_err_code_name(int err);
 
 #ifndef MPI_OFFSET
