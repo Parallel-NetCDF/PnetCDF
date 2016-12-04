@@ -108,9 +108,10 @@ main(int argc, char **argv)
    if (argc == 2) filename = argv[1];
 
    if (rank == 0) {
-       char cmd_str[256];
+       char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
        sprintf(cmd_str, "*** TESTING C   %s for reading file", argv[0]);
        printf("%-66s ------ ", cmd_str);
+       free(cmd_str);
    }
 
    /* Open the file. */

@@ -224,8 +224,8 @@ testing check verbose_testing : $(PROGS)
 	for i in $(PROGS); do ( \
 	$(TEST_SEQRUN) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	$(TEST_SEQRUN) ./redef1 $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) $(NCMPIGEN) -v 2 -o $(TEST_OUTDIR)/redef1.nc $(srcdir)/redef-good.ncdump
+	$(TEST_SEQRUN) ./redef1 $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) $(NCMPIDIFF) $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 
 # Some of these tests are designed to run on one process,

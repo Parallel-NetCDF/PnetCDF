@@ -842,9 +842,9 @@ main(int argc, char *argv[])
     }
 
     file_kind = check_file_signature(argv[0]);
-    MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    err = MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (file_kind == UNKNOWN) {
+    if (file_kind == UNKNOWN || err != MPI_SUCCESS) {
         err = EXIT_FAILURE;
         goto fn_exit; /* file I/O error */
     }
@@ -878,9 +878,9 @@ main(int argc, char *argv[])
     do {
         if (rank == 0)
             file_kind = check_hdf5_signature(argv[i]);
-        MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        err = MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-        if (file_kind == UNKNOWN) {
+        if (file_kind == UNKNOWN || err != MPI_SUCCESS) {
             err = EXIT_FAILURE;
             goto fn_exit; /* file I/O error */
         }

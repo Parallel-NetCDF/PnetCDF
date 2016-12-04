@@ -8,6 +8,8 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 
 #ifndef PATH_MAX

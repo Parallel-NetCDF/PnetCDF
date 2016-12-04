@@ -233,9 +233,10 @@ main(int argc, char **argv)
     if (argc == 2) strncpy(filename, argv[1], 255);
     filename[255] = '\0';
 
-    char cmd_str[256];
+    char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_names ", argv[0]);
     if (rank == 0) printf("%-66s ------ ", cmd_str);
+    free(cmd_str);
 
 #define ERROR {printf("Error at line %d: %s\n",__LINE__,ncmpi_strerror(res)); nerrs++;}
 #define ERRORI {printf("Error at line %d (loop=%d): %s\n",__LINE__,i,ncmpi_strerror(res)); nerrs++;}

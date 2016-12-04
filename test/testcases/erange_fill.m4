@@ -284,13 +284,15 @@ int main(int argc, char** argv) {
         return 0;
     }
     strcpy(filename, "testfile.nc");
-    if (argc == 2) strncpy(filename, argv[1], 256);
+    if (argc == 2) strncpy(filename, argv[1], 255);
+    filename[255] = '\0';
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
-        char cmd_str[256];
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for checking for type conflict ", argv[0]);
         printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
     }
 
     /*---- CDF-2 format -----------------------------------------------------*/

@@ -33,7 +33,7 @@
 
 int main(int argc, char** argv)
 {
-    char filename[256]="redef1.nc";
+    char filename[256]="redef2.nc";
     int i, j, k, commsize, rank, ncid, verbose=0, err, nerrs=0;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
@@ -55,9 +55,10 @@ int main(int argc, char** argv)
     if (argc == 2) strcpy(filename, argv[1]);
 
     if (rank == 0) {
-        char cmd_str[256];
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for entering re-define mode ", argv[0]);
         printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
     }
 
     if (verbose && commsize > 1 && rank == 0)
