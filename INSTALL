@@ -121,19 +121,56 @@ Here lists a few important options:
   --enable-debug          Enable PnetCDF internal debug mode. This also
                           enables safe mode. [default: disabled]
   --disable-in-place-swap Disable memory in-place byte swap on Little Endian
-                          machines. [default: enabled]. See note below.
+                          machines. [default: enabled]
   --enable-coverage       Compile with coverage support (gcc-based only).
                           [default: disabled]
-  --disable-subfiling     Turns off subfiling support. [default: disabled]
+  --enable-subfiling      Enable subfiling support. [default: disabled]
+  --disable-erange-fill   Disable use of fill value when out-of-range type
+                          conversion causes NC_ERANGE error. [default:
+                          enabled]
+  --enable-relax-coord-bound
+                          Enable relaxed error NC_EINVALCOORDS to allow
+                          coordinate start argument equal to dimension size
+                          when argument count is zero. [default: disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
                           can provide data consistency. [default: enabled]
   --enable-large-file-test
                           Enable testing for large (>4GB) file/variable I/O.
-                          This can run very slow. [default: disabled]
+                          Note "make testing" can run very slow. [default:
+                          disabled]
 
-Optional Packages:
   --with-mpi=/path/to/implementation
                           installation prefix for MPI implementation
+
+Some influential environment variables:
+  RM          Command for deleting files or directories. default: rm
+  MPICC       MPI C compiler
+  MPICXX      MPI C++ compiler
+  MPIF77      MPI Fortran 77 compiler
+  MPIF90      MPI Fortran 90 compiler
+  CC          Overwritten by MPICC if MPICC is set
+  CXX         Overwritten by MPICXX if MPICXX is set
+  F77         Overwritten by MPIF77 if MPIF77 is set
+  FC          Overwritten by MPIF90 if MPIF90 is set
+  CFLAGS      Debugging and optimization options for the C compiler
+  CPPFLAGS    Preprocessor options for C and C++ compilers, e.g. -I<include
+              dir> if you have headers in a nonstandard directory <include dir>
+  CXXFLAGS    Debugging and optimization options for the C compiler
+  FFLAGS      Debugging and optimization options for the Fortran 77 compiler
+  FCFLAGS     Debugging and optimization options for the Fortran 90 compiler
+  FPPFLAGS    Preprocessor options for Fortran compilers, e.g. -I<include dir>
+  LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
+              nonstandard directory <lib dir>
+  LIBS        libraries to pass to the linker, e.g. -l<library>
+  CPP         C preprocessor
+  TEST_SEQRUN Run command (on one process) for make target check on
+              cross-compile environment. Example: "aprun -n 1". [default:
+              none]
+  TEST_MPIRUN MPI run command for make target ptest, [default: mpiexec -n NP]
+  TEST_OUTDIR Output file directory for make target ptest, [default: ./]
+
+Use these variables to override the choices made by `configure' or to help
+it to find libraries and programs with nonstandard names/locations.
 
 PnetCDF can automatically detect the available MPI compilers and compile flags.
 If alternate compilers or flags are desired, they can be specified by the

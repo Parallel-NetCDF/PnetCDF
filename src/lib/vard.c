@@ -214,6 +214,8 @@ err_check:
             return err;
         }
         /* else for COLL_IO, must participate successive collective calls */
+        offset = 0;
+        bufcount = 0;
     }
     status = err;
 
@@ -355,14 +357,25 @@ ncmpi_get_vard_all(int           ncid,
                    MPI_Offset    bufcount,
                    MPI_Datatype  buftype)   /* data type of the buffer */
 {
-    int     status;
+    int     err, status;
     NC     *ncp;
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
                                  buftype, API_VARD, 1, 1, READ_REQ, COLL_IO,
                                  &ncp, &varp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) {
+        if (status == NC_EBADID    || status == NC_EPERM ||
+            status == NC_EINDEFINE || status == NC_EINDEP)
+            return status; /* fatal error, cannot continue */
+
+        /* for collective API, participate the collective I/O with zero-length
+         * request for this process */
+        err = ncmpii_getput_zero_req(ncp, READ_REQ);
+
+        /* return the error code from sanity check */
+        return status;
+    }
 
     return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
                               READ_REQ, COLL_IO);
@@ -399,14 +412,25 @@ ncmpi_put_vard_all(int           ncid,
                    MPI_Offset    bufcount,
                    MPI_Datatype  buftype)   /* data type of the buffer */
 {
-    int     status;
+    int     err, status;
     NC     *ncp;
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
                                  buftype, API_VARD, 1, 1, WRITE_REQ, COLL_IO,
                                  &ncp, &varp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) {
+        if (status == NC_EBADID    || status == NC_EPERM ||
+            status == NC_EINDEFINE || status == NC_EINDEP)
+            return status; /* fatal error, cannot continue */
+
+        /* for collective API, participate the collective I/O with zero-length
+         * request for this process */
+        err = ncmpii_getput_zero_req(ncp, WRITE_REQ);
+
+        /* return the error code from sanity check */
+        return status;
+    }
 
     return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,
                               buftype, WRITE_REQ, COLL_IO);

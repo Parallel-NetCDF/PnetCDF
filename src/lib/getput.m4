@@ -697,7 +697,7 @@ define(`GETPUT_API',dnl
 int
 APINAME($1,$2,$3,$4)(int ncid, int varid, ArgKind($2) BufArgs($1,$3))
 {
-    int         status;
+    int         err, status;
     NC         *ncp;
     NC_var     *varp=NULL;
     ifelse(`$2', `',  `MPI_Offset *start, *count;',
@@ -709,7 +709,22 @@ APINAME($1,$2,$3,$4)(int ncid, int varid, ArgKind($2) BufArgs($1,$3))
                                  API_KIND($2), ifelse(`$3', `', `1', `0'),
                                  1, ReadWrite($1),
                                  CollIndep($4), &ncp, &varp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) {
+        if (CollIndep($4) == INDEP_IO ||
+            status == NC_EBADID ||
+            status == NC_EPERM ||
+            status == NC_EINDEFINE ||
+            status == NC_EINDEP ||
+            status == NC_ENOTINDEP)
+            return status;  /* fatal error, cannot continue */
+
+        /* for collective API, participate the collective I/O with zero-length
+         * request for this process */
+        err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
+
+        /* return the error code from sanity check */
+        return status;
+    }
 
     ifelse(`$2', `',  `GET_FULL_DIMENSIONS(start, count)',
            `$2', `1', `GET_ONE_COUNT(count)')

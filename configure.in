@@ -133,10 +133,11 @@ AC_ARG_VAR(CXX,    Overwritten by MPICXX if MPICXX is set)
 AC_ARG_VAR(F77,    Overwritten by MPIF77 if MPIF77 is set)
 AC_ARG_VAR(FC,     Overwritten by MPIF90 if MPIF90 is set)
 AC_ARG_VAR(CFLAGS, Debugging and optimization options for the C compiler)
-AC_ARG_VAR(CPPFLAGS, [Preprocessor options for the C and C++ compilers, e.g. -I<include dir> if you have headers in a nonstandard directory <include dir>])
+AC_ARG_VAR(CPPFLAGS, [Preprocessor options for C and C++ compilers, e.g. -I<include dir> if you have headers in a nonstandard directory <include dir>])
 AC_ARG_VAR(CXXFLAGS, Debugging and optimization options for the C compiler)
 AC_ARG_VAR(FFLAGS, Debugging and optimization options for the Fortran 77 compiler)
 AC_ARG_VAR(FCFLAGS, Debugging and optimization options for the Fortran 90 compiler)
+AC_ARG_VAR(FPPFLAGS, [Preprocessor options for Fortran compilers, e.g. -I<include dir>])
 
 dnl Check if MPICC, MPICXX, MPIF77, MPIF90 are set by the user.
 dnl If not, set MPICC equal to CC. Similarly, for MPICXX, MPIF77, and MPIF90

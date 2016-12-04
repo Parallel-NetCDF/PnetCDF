@@ -45,7 +45,7 @@ static int ncmpii_mgetput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
  *
  * This function is collective.
  */
-static int
+int
 ncmpii_getput_zero_req(NC  *ncp,
                        int  rw_flag)      /* WRITE_REQ or READ_REQ */
 {

@@ -5,11 +5,20 @@
  *  $Id$
  */
 
-/* This test program checks under safe mode whether a collective API can be
- * nicely aborted without causing the program to hang. It runs on 2 processes.
+/* This test program checks whether a collective API can be nicely aborted
+ * without causing the program to hang. It runs on 2 processes.
  * One process deliberately produces an error (using an illegal start argument),
  * while the other does not.
- * Note when not in safe mode, the program will hang.
+ *
+ * Note when in safe mode, all processes obtain the same error code and hence
+ * can terminate nicely. However, when not in safe mode, collective APIs can
+ * hang for the following erros: NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_EINDEP,
+ * and NC_ENOTINDEP. These errors are considered fatal and program should stop.
+ * For other kinds of errors, the processes causing the error will continue to
+ * participate the collective I/O with zero-length requests, so that the MPI
+ * collective I/O can complete with all processes participating the call.
+ *
+ * This program tests error code NC_EINVALCOORDS, not in the above list.
  */
 
 #include <stdio.h>
@@ -67,8 +76,8 @@ int test_collective_error(char *filename, int safe_mode)
 
     err = ncmpi_put_vara_all(ncid, varid, start, count,
 			     buf, count[0], MPI_DOUBLE);
-    if (nproc > 1) EXP_ERR(NC_EINVALCOORDS)
-    else           EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
+    else                                       EXP_ERR(NC_NOERR)
 
     /* check if user put buffer contents altered */
     if (buf[0] != 1.0) {
@@ -83,8 +92,8 @@ int test_collective_error(char *filename, int safe_mode)
     }
 
     err = ncmpi_put_vara_double_all(ncid, varid, start, count, buf);
-    if (nproc > 1) EXP_ERR(NC_EINVALCOORDS)
-    else           EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
+    else                                       EXP_ERR(NC_NOERR)
 
     /* check if user put buffer contents altered */
     if (buf[0] != 1.0) {
@@ -120,12 +129,12 @@ int test_collective_error(char *filename, int safe_mode)
 
     err = ncmpi_get_vara_all(ncid, varid, start, count,
 			     buf, count[0], MPI_DOUBLE);
-    if (nproc > 1) EXP_ERR(NC_EINVALCOORDS)
-    else           EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
+    else                                       EXP_ERR(NC_NOERR)
 
     err = ncmpi_get_vara_double_all(ncid, varid, start, count, buf);
-    if (nproc > 1) EXP_ERR(NC_EINVALCOORDS)
-    else           EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
+    else                                       EXP_ERR(NC_NOERR)
 
     err = ncmpi_iget_vara_double(ncid, varid, start, count, buf, &req);
     if (rank == 1)
@@ -162,7 +171,11 @@ int main(int argc, char *argv[])
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 
-    /* Must test in safe mode, otherwise the program will hang if nproc > 1 */
+    /* test in non-safe mode */
+    setenv("PNETCDF_SAFE_MODE", "0", 1);
+    nerrs += test_collective_error(filename, 0);
+
+    /* test in safe mode */
     setenv("PNETCDF_SAFE_MODE", "1", 1);
     nerrs += test_collective_error(filename, 1);
 
