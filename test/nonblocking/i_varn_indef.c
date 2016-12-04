@@ -233,9 +233,10 @@ int main(int argc, char** argv)
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
-        char cmd_str[256];
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for iput/iget varn in define mode ", argv[0]);
         printf("%-66s ------ ", cmd_str);
+        free(cmd_str);
     }
 
     if (verbose && nprocs != 4 && rank == 0)

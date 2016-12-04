@@ -591,9 +591,10 @@ int main(int argc, char** argv)
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
-        char cmd_str[256];
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for bput_varn ", argv[0]);
         printf("%-66s ------ ", cmd_str);
+        free(cmd_str);
     }
 
     for (i=0; i<3; i++) {

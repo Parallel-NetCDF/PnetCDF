@@ -79,9 +79,10 @@ int main(int argc, char* argv[])
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
-        char cmd_str[256];
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for checking for type conflict ", argv[0]);
         printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
     }
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid); ERR0

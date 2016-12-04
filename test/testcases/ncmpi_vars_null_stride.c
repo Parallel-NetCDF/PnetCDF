@@ -54,9 +54,10 @@ int main(int argc, char **argv)
     if (argc == 2) filename = argv[1];
 
     if (rank == 0) {
-        char cmd_str[256];
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for NULL stride ", argv[0]);
         printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
     }
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid);

@@ -43,9 +43,10 @@ main(int argc, char **argv)
     filename[255] = '\0';
     if (rank > 0) goto fn_exit;
 
-    char cmd_str[256];
+    char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", argv[0]);
     if (rank == 0) printf("%-66s ------ ", cmd_str);
+    free(cmd_str);
 /*
    printf("\n*** Testing some extra stuff.\n");
    printf("*** Trying to open non-netCDF files of tiny length...");

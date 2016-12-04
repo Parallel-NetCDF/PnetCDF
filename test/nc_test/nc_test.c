@@ -211,9 +211,10 @@ main(int argc, char *argv[])
             unlink(scratch);
     }
 
-    char cmd_str[256];
+    char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
     printf("%-66s ------ ",cmd_str);
+    free(cmd_str);
 
     /* Test read-only functions, using pregenerated test-file */
     NC_TEST(ncmpi_strerror);
