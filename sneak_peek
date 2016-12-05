@@ -33,6 +33,12 @@ This is essentially a placeholder for the next release note ...
       the configurable options that were enabled/disabled. These macros are
       PNETCDF_ERANGE_FILL, PNETCDF_SUBFILING, PNETCDF_RELAX_COORD_BOUND, and
       PNETCDF_DEBUG_MODE. Their values are set to 1 when enabled, 0 otherwise.
+    * API ncmpi_inq_file_format can now detect HDF5 file signature and report
+      NC_FORMAT_NETCDF4.
+    * Enable ncmpidump to check whether input file is in HDF5 format when -k
+      option is used at the command line.
+    * In ncmpi_open, add a checking for HDF5 file signature and return error
+      code NC_ENOTNC3 if detected.
 
   o New APIs
     * ncmpi_strerrno, nfmpi_strerrno, nf90mpi_strerrno return the string name
@@ -40,20 +46,27 @@ This is essentially a placeholder for the next release note ...
     * ncmpi_inq_path, nfmpi_inq_path, nf90mpi_inq_path for inquiring the file
       pathname which was used to open/create the CDF file.
 
+  o New optimization
+    * Use Bernstein hash function for checking whether the name of a variable
+      or dimension has already been used.
+    * Replace the use of linked lists with arrays for storing the pending
+      nonblocking requests. This could save time for traversing the linked
+      list.
+
   o Syntax changes
     * ncmpi_cancel can now be called in define mode.
 
   o Semantics updates
     * For collective APIs, the following errors are considered fatal:
-      NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_EINDEP, and NC_ENOTINDEP. PnetCDF
-      once detects these errors will return these error codes immediately.
-      Note the fatal errors, if only happen to a subset of processes, can cause
-      the running program to hang for collective APIs. (Hanging will never
-      occur to independent APIs.) To debug a program hanging problem, users are
-      suggested to enable the safe mode by setting the environment variable
+      NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_EINDEP, and NC_ENOTINDEP. Once
+      detects these errors the calling APIs return immediately. If the fatal
+      errors happen only to a subset of processes, the running program may hang,
+      due to other processes being waiting at an MPI collective call. (Note
+      hanging will never occur to independent APIs.) To debug a hanging problem,
+      users can run the program in safe mode by setting the environment variable
       PNETCDF_SAFE_MODE to 1. In safe mode, error codes are synchronized among
-      all processes.  Other error codes, if detected, are not as fatal and the
-      processes encountering the non-fatal errors will continue to participate
+      all processes. Error codes other than the above, if detected, are not as
+      fatal. The processes encountering the non-fatal errors will continue to
       the collective call but with zero-length requests. Thus, the collective
       calls can nicely complete without hanging.
     * Consistency check for header data (defining dimensions, variables, and
@@ -81,21 +94,23 @@ This is essentially a placeholder for the next release note ...
       APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
       honors that exception.
     * Prior to version 1.7.0, any outstanding nonblocking requests detected at
-      file close are automatically cancelled without reporting an error. In
-      this release, error code NC_EPENDING will be returned when pending
-      requests are detected.
-    * Change API ncmpi_set_default_format to be an independent API. However, it
+      file close are automatically cancelled without reporting an error. Starting
+      from this 1.8.0 release, error code NC_EPENDING will be returned when
+      pending requests are detected at the file close.
+    * API ncmpi_set_default_format is changed to an independent API. However, it
       is expected to be called by all processes that intend to create a file
-      later.
+      later. Inconsistency in default format setting will be detected at file
+      create time.
 
-  o New PnetCDF hint
-    * none
+  o New utility program
+    * Added pnetcdf-config shell script to display the options used in building
+      PnetCDF.
 
   o New error code precedence
     * When two or more errors are detected by the PnetCDF library (e.g. due to
-      the use of bad API arguments), the error code returned from an API will
-      follow the precedence below. In principle, the errors related to ncid is
-      the most serious, followed by varid.
+      the use of more than one bad API argument), the error code returned from
+      an API will follow the precedence below. In principle, the errors related
+      to ncid is the most serious, followed by varid.
       For put att APIs:
           NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
           NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE
@@ -108,13 +123,16 @@ This is essentially a placeholder for the next release note ...
 
   o New error code
     * NC_EPENDING: Pending nonblocking request is found at file close.
-    * NC_EINVAL_OMODE: invalid file open mode. This separates the case from
-      NC_EINVAL_CMODE. The error messages for both error codes are revised
-      accordingly.
+    * NC_EINVAL_OMODE: invalid file open mode. This separates the case from the
+      file create API which uses NC_EINVAL_CMODE mode. The error messages for
+      both error codes are revised accordingly.
     * NC_EMULTIDEFINE_CMODE: inconsistent file create mode. This separates the
       case from NC_EMULTIDEFINE_OMODE. The error messages for both error codes
       are revised accordingly.
     * The Fortran error codes corresponding to the above are also added.
+
+  o New PnetCDF hint
+    * none
 
   o New run-time environment variables
     * none
@@ -131,24 +149,7 @@ This is essentially a placeholder for the next release note ...
     * test/testcases/erang_fill.m4 to test the new configure-time feature of
       --enable-erange-fill
 
-  o New optimization
-    * Use Bernstein hash function for checking whether the name of a variable
-      or dimension has already been used.
-    * Replace the use of linked lists with arrays for storing the pending
-      nonblocking requests. This could save time for traversing the linked
-      list.
-
-  o New utility program
-    * Added pnetcdf-config shell script to display the options used in building
-      PnetCDF.
-
   o Other updates:
-    * API ncmpi_inq_file_format can now detect HDF5 file signature and report
-      NC_FORMAT_NETCDF4.
-    * Enable ncmpidump to check whether input file is in HDF5 format when -k
-      option is used at the command line.
-    * In ncmpi_open, add a checking for HDF5 file signature and return error
-      code NC_ENOTNC3 if detected.
     * Check file open/create mode for NC_DISKLESS and NC_MMAP and return error
       code NC_EINVAL_OMODE/NC_EINVAL_CMODE if either of these two modes is
       used. These modes are currently not supported.
@@ -170,7 +171,7 @@ This is essentially a placeholder for the next release note ...
       https://github.com/open-mpi/ompi/issues/1611
     * When using SGI MPI with MPT 2.14 to build PnetCDF, users may encounter an
       error message of "function:MPI_TYPE_CREATE_HVECTOR, Invalid argument".
-      The bug fix will appear in 2.15 to be released in Novermber 2016.
+      The bug fix will appear in 2.15 to be released in November 2016.
 
   o Bug fixes
     * Fix to allow argument no_fill in API ncmpi_inq_var_fill to be NULL. See
