@@ -117,19 +117,19 @@ void ncmpiio_extract_hints(ncio     *nciop,
 
     MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
                  &flag);
-    if (flag) nciop->hints.h_align = atoll(value);
+    if (flag) nciop->hints.h_align = strtoll(value,NULL,10);
 
     MPI_Info_get(info, "nc_var_align_size",    MPI_MAX_INFO_VAL-1, value,
                  &flag);
-    if (flag) nciop->hints.v_align = atoll(value);
+    if (flag) nciop->hints.v_align = strtoll(value,NULL,10);
 
     MPI_Info_get(info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
                  value, &flag);
-    if (flag) nciop->hints.r_align = atoll(value);
+    if (flag) nciop->hints.r_align = strtoll(value,NULL,10);
 
     MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                  value, &flag);
-    if (flag) nciop->hints.header_read_chunk_size = atoll(value);
+    if (flag) nciop->hints.header_read_chunk_size = strtoll(value,NULL,10);
 
 #ifdef ENABLE_SUBFILING
     MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
@@ -139,7 +139,7 @@ void ncmpiio_extract_hints(ncio     *nciop,
 
     MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
                  value, &flag);
-    if (flag) nciop->hints.num_subfiles = atoi(value);
+    if (flag) nciop->hints.num_subfiles = (int)strtol(value,NULL,10);
 #endif
 
     /* nc_header_align_size, nc_var_align_size, and nciop->hints.r_align
@@ -161,7 +161,7 @@ void ncmpiio_extract_hints(ncio     *nciop,
     char *num_sf_env;
     num_sf_env = getenv("NC_NUM_SUBFILES");
     if (num_sf_env != NULL)
-        nciop->hints.num_subfiles = atoi(num_sf_env);
+        nciop->hints.num_subfiles = (int)strtol(num_sf_env,NULL,10);
     if (nciop->hints.subfile_mode == 0)
         nciop->hints.num_subfiles = 0;
 #endif

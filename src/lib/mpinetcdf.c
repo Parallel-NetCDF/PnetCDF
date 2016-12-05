@@ -325,7 +325,7 @@ ncmpi_create(MPI_Comm    comm,
         char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
-        if (flag) chunksize = atoll(value);
+        if (flag) chunksize = strtoll(value,NULL,10);
     }
 
     /* allocate buffer for header object NC */
@@ -530,7 +530,7 @@ ncmpi_open(MPI_Comm    comm,
         char value[MPI_MAX_INFO_VAL];
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
-        if (flag) chunksize = atoll(value);
+        if (flag) chunksize = strtoll(value,NULL,10);
     }
 
     /* allocate NC file object */
@@ -1302,14 +1302,14 @@ ncmpi_inq_striping(int  ncid,
         MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         *striping_size = 0;
-        if (flag) *striping_size = atoi(value);
+        if (flag) *striping_size = (int)strtol(value,NULL,10);
     }
 
     if (striping_count != NULL) {
         MPI_Info_get(ncp->nciop->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         *striping_count = 0;
-        if (flag) *striping_count = atoi(value);
+        if (flag) *striping_count = (int)strtol(value,NULL,10);
     }
     return NC_NOERR;
 }

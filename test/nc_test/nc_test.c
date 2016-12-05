@@ -159,7 +159,7 @@ main(int argc, char *argv[])
 	  verbose = 1;
 	  break;
 	case 'n':		/* verbose mode */
-	  max_nmpt = atoi(optarg);
+	  max_nmpt = (int)strtol(optarg,NULL,10);
 	  break;
 	case '2':
 	  cdf_format = 2;

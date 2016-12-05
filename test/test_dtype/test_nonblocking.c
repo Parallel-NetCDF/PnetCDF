@@ -35,11 +35,11 @@ void parse_args(int argc, char **argv, int rank) {
         break;
 
       case 'd':
-        ndims = atoi(optarg);
+        ndims = (int)strtol(optarg,NULL,10);
         break;
 
       case 'n':
-        test_n = atoi(optarg);
+        test_n = (int)strtol(optarg,NULL,10);
         break;
 
       case 'm':
