@@ -63,7 +63,7 @@ $(LIBRARY): $(LIB_OBJS)
 $(LIB_CSRCS): mpifnetcdf.h
 
 mpifnetcdf.h: defs buildiface $(HEADER)
-	$(RM) -f $@
+	$(RM) -f $@ allf.c
 	$(srcdir)/buildiface -infile=$(HEADER) -deffile=$(srcdir)/defs > allf.c
 	@touch $(LIB_CSRCS)
 
