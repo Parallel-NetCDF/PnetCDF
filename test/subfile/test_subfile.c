@@ -71,15 +71,15 @@ int main(int argc, char **argv)
 	    switch (opt) {
 	    case 'f': basename = optarg;
 		break;
-	    case 's': num_sf = atoi(optarg);
+	    case 's': num_sf = (int)strtol(optarg,NULL,10);
 		break;
 	    case 'r': do_read = 1;
 		break;
-            case 'p': par_dim_id = atoi(optarg);
+            case 'p': par_dim_id = (int)strtol(optarg,NULL,10);
                 break;
-            case 'n': nvars = atoi(optarg);
+            case 'n': nvars = (int)strtol(optarg,NULL,10);
                 break;
-            case 'l': length = atoi(optarg);
+            case 'l': length = (int)strtol(optarg,NULL,10);
                 break;
 	    default:
 		break;

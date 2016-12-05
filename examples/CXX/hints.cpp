@@ -83,17 +83,17 @@ void print_hints(NcmpiFile &ncFile,
     MPI_Info_get_valuelen(info_used, (char*)"nc_header_align_size", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, (char*)"nc_header_align_size", len+1, value, &flag);
-        h_align = atoll(value);
+        h_align = strtoll(value,NULL,10);
     }
         MPI_Info_get_valuelen(info_used, (char*)"nc_var_align_size", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, (char*)"nc_var_align_size", len+1, value, &flag);
-        v_align = atoll(value);
+        v_align = strtoll(value,NULL,10);
     }
     MPI_Info_get_valuelen(info_used, (char*)"nc_header_read_chunk_size", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, (char*)"nc_header_read_chunk_size", len+1, value,&flag);
-        h_chunk = atoll(value);
+        h_chunk = strtoll(value,NULL,10);
     }
     MPI_Info_free(&info_used);
 

@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     }
     else strcpy(filename, "testfile.nc");
     len = 4;
-    if (argc >= 2) len = atoi(argv[1]); /* optional argument */
+    if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
 
     /* calculate number of processes along each dimension */
     psizes[0] = psizes[1] = 0;

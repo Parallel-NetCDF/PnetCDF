@@ -19,25 +19,27 @@ ifeq (@has_fortran@, yes)
    OPT_DIRS += libf
    OPT_DIRS += libf90
 endif
-SUBDIRS = lib $(OPT_DIRS)
+OBJ_SUBDIRS = lib $(OPT_DIRS)
+
+SUBDIRS = $(OBJ_SUBDIRS) utils
 
 PACKING_LIST = Makefile.in
 
 PACKING_SUBDIRS = lib libcxx libf libf90 utils
 
-all: $(SUBDIRS) library utils
+all: $(OBJ_SUBDIRS) library utils
 
-$(SUBDIRS):
+$(OBJ_SUBDIRS):
 	$(MAKE) $(MFLAGS) -C $@ objs
 
-library: $(SUBDIRS)
-	@set -e; for i in $(SUBDIRS); do ( $(MAKE) $(MFLAGS) -C $$i library; ) ; done
+library: $(OBJ_SUBDIRS)
+	@set -e; for i in $(OBJ_SUBDIRS); do ( $(MAKE) $(MFLAGS) -C $$i library; ) ; done
 
 # utils must be built after lib
 utils: library
 	$(MAKE) $(MFLAGS) -C utils
 
-INSTALL_SUBDIRS = $(SUBDIRS) utils
+INSTALL_SUBDIRS = $(SUBDIRS)
 
 INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
 install: $(INSTALLDIRS)

@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     }
     else strcpy(filename, "testfile.nc");
     len = 10; 
-    if (argc >= 2) len = atoi(argv[1]); /* optional argument */
+    if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;
