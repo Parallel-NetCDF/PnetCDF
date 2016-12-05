@@ -98,10 +98,10 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[256];
-    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
+    int i, j, rank, nprocs, ncid, bufsize, verbose=1, err, nerrs=0;
     int psizes[2], local_rank[2], dimids[2], varid, nghosts;
     int *buf, *buf_ptr;
-    MPI_Offset gsizes[2], starts[2], counts[2], imap[2];
+    MPI_Offset len, gsizes[2], starts[2], counts[2], imap[2];
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     }
     else strcpy(filename, "testfile.nc");
     len = 4;
-    if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
+    if (argc >= 2) len = strtoll(argv[1],NULL,10); /* optional argument */
 
     /* calculate number of processes along each dimension */
     psizes[0] = psizes[1] = 0;
@@ -133,8 +133,8 @@ int main(int argc, char **argv)
     if (verbose && rank == 0)
         printf("psizes=%d %d\n", psizes[0], psizes[1]);
 
-    gsizes[0] = (MPI_Offset)len     * psizes[0]; /* global array size */
-    gsizes[1] = (MPI_Offset)(len+1) * psizes[1];
+    gsizes[0] = len     * psizes[0]; /* global array size */
+    gsizes[1] = (len+1) * psizes[1];
     if (verbose && rank == 0)
         printf("global variable shape: %lld %lld\n", gsizes[0],gsizes[1]);
 
