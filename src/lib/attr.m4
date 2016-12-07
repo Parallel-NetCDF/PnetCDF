@@ -226,7 +226,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 
 	assert(ncap != NULL);
 
-	if(ncap->nalloc == 0)
+	if (ncap->nalloc == 0)
 	{
 		assert(ncap->ndefined == 0);
 		vp = (NC_attr **) NCI_Malloc(sizeof(NC_attr*) * NC_ARRAY_GROWBY);
@@ -235,7 +235,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 		ncap->value = vp;
 		ncap->nalloc = NC_ARRAY_GROWBY;
 	}
-	else if(ncap->ndefined +1 > ncap->nalloc)
+	else if (ncap->ndefined +1 > ncap->nalloc)
 	{
 		vp = (NC_attr **) NCI_Realloc(ncap->value,
 			(size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr*));
@@ -245,7 +245,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 		ncap->nalloc += NC_ARRAY_GROWBY;
 	}
 
-	if(newelemp != NULL)
+	if (newelemp != NULL)
 	{
 		ncap->value[ncap->ndefined] = newelemp;
 		ncap->ndefined++;
@@ -258,7 +258,7 @@ static NC_attr *
 elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem)
 {
 	assert(ncap != NULL);
-	if((elem < 0) || ncap->ndefined == 0 || elem >= ncap->ndefined)
+	if ((elem < 0) || ncap->ndefined == 0 || elem >= ncap->ndefined)
 		return NULL;
 
 	assert(ncap->value != NULL);

@@ -1640,18 +1640,23 @@ AC_DEFUN([UD_CHECK_MPI_COMPILER], [
    if test "x$MPI_INSTALL" != x ; then
       UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
       if test "x$$1" = x ; then
-         if test "x$$1" = x && (test -d "${MPI_INSTALL}/bin") ; then
+         dnl If $1 is not defined, first search under ${MPI_INSTALL}/bin
+         if test -d "${MPI_INSTALL}/bin" ; then
             UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL/bin)
             AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL/bin])
          fi
+         dnl If no valid $1 can be found under ${MPI_INSTALL}/bin, search
+         dnl under ${MPI_INSTALL}
          if test "x$$1" = x ; then
              UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL)
              AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL])
          fi
       else
+         dnl if $1 is defined, check whether the file exists
          UD_MSG_DEBUG(check if file $$1 exists)
          if ! test -f "$$1" ; then
-            dnl file does not exist, check under MPI_INSTALL
+            dnl file does not exist in the current directory, check under
+            dnl MPI_INSTALL
             UD_MSG_DEBUG(File $1= $$1 cannot be found ... check under $MPI_INSTALL)
             if test -f "$MPI_INSTALL/$$1" ; then
                UD_MSG_DEBUG(File $1= $$1 is found under $MPI_INSTALL)
