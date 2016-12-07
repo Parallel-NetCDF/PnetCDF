@@ -624,12 +624,6 @@ ncmpi_def_var(int         ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-    /* check whether file's write permission */
-    if (NC_readonly(ncp)) {
-        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
-        goto err_check;
-    }
-
     /* check if called in define mode */
     if (!NC_indef(ncp)) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
