@@ -939,7 +939,7 @@ ncmpii_mgetput_varm(int                ncid,
 
     /* check if ncid is valid */
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
     /* if ncid is invalid, we must return the error now. However, the program
      * might hang when only a subset or processes have this error.
      */

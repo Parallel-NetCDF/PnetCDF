@@ -1186,7 +1186,7 @@ ncmpii_NC_enddef(NC         *ncp,
     if (ncp->nc_num_subfiles > 1) {
         /* get ncp info for the subfile */
         status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);
-        CHECK_ERROR(status)
+        if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
         status = NC_begins(ncp_sf, h_align, h_minfree, v_align, v_minfree,
                            r_align);
@@ -1574,8 +1574,7 @@ ncmpi_inq(int  ncid,
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (ndimsp != NULL)
         *ndimsp = (int) ncp->dims.ndefined;
@@ -1598,8 +1597,7 @@ ncmpi_inq_version(int ncid, int *nc_mode)
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (ncp->format == 5)
         *nc_mode = NC_64BIT_DATA;
@@ -1619,7 +1617,7 @@ ncmpi_inq_ndims(int ncid, int *ndimsp)
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (ndimsp != NULL)
         *ndimsp = (int) ncp->dims.ndefined;
@@ -1634,7 +1632,7 @@ ncmpi_inq_nvars(int ncid, int *nvarsp)
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (nvarsp != NULL)
         *nvarsp = (int) ncp->vars.ndefined;
@@ -1649,7 +1647,7 @@ ncmpi_inq_natts(int ncid, int *nattsp)
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (nattsp != NULL)
         *nattsp = (int) ncp->attrs.ndefined;
@@ -1664,7 +1662,7 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp)
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     /* TODO: it makes no sense xtendimp being NULL */
     if (xtendimp != NULL)
@@ -1683,8 +1681,7 @@ ncmpi_inq_num_rec_vars(int ncid, int *nvarsp)
 
     /* get ncp object */
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (nvarsp != NULL) {
         if (NC_indef(ncp)) {
@@ -1709,8 +1706,7 @@ ncmpi_inq_num_fix_vars(int ncid, int *nvarsp)
 
     /* get ncp object */
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     if (nvarsp != NULL) {
         if (NC_indef(ncp)) {

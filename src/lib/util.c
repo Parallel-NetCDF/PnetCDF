@@ -41,7 +41,7 @@ int ncmpii_sanity_check(int               ncid,
 
     /* check if ncid is valid (check NC_EBADID) */
     err = ncmpii_NC_check_id(ncid, ncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
     /* For invalid ncid, we must return error now, as there is no way to
      * continue with invalid ncp. However, collective APIs might hang if this
      * error occurs only on a subset of processes

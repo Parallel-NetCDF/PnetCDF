@@ -135,7 +135,7 @@ ncmpi_cancel(int  ncid,
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     /* 1.7.0 and after nonblocking APIs can be called in define mode.
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
@@ -327,7 +327,7 @@ ncmpi_inq_nreqs(int  ncid,
     NC  *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     /* cannot just use *nreqs = ncp->numGetReqs + ncp->numPutReqs;
      * because some request IDs are repeated, such as record variables and
@@ -430,13 +430,13 @@ ncmpi_wait(int  ncid,
            int *req_ids,  /* [num_reqs]: IN/OUT */
            int *statuses) /* [num_reqs] */
 {
-    int  status=NC_NOERR;
+    int  status;
     NC  *ncp;
 
     if (num_reqs == 0) return NC_NOERR;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
 #ifdef ENABLE_REQ_AGGREGATION
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
@@ -478,7 +478,7 @@ ncmpi_wait_all(int  ncid,
                int *req_ids,  /* [num_reqs]: IN/OUT */
                int *statuses) /* [num_reqs], can be NULL */
 {
-    int  status=NC_NOERR;
+    int  status;
     NC  *ncp;
     /* the following line CANNOT be added, because ncmpi_wait_all() is a
      * collective call, all processes must participate some MPI collective
@@ -487,9 +487,8 @@ ncmpi_wait_all(int  ncid,
     /* if (num_reqs == 0) return NC_NOERR; */
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        /* must return the error now, parallel program might hang */
-        return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+    /* must return the error now, parallel program might hang */
 
 #ifdef ENABLE_REQ_AGGREGATION
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
