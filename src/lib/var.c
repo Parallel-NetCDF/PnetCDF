@@ -622,7 +622,7 @@ ncmpi_def_var(int         ncid,
 
     /* check if ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {
@@ -804,7 +804,7 @@ ncmpi_inq_varid(int         ncid,
     NC *ncp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
         DEBUG_RETURN_ERROR(NC_EBADNAME)
@@ -836,7 +836,7 @@ ncmpi_inq_var(int      ncid,
     NC_var *varp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -890,7 +890,7 @@ ncmpi_inq_varname(int   ncid,
     NC_var *varp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -919,7 +919,7 @@ ncmpi_inq_vartype(int      ncid,
     NC_var *varp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -944,7 +944,7 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
     NC_var *varp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -976,7 +976,7 @@ ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
     NC_var *varp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -1011,7 +1011,7 @@ ncmpi_inq_varnatts(int  ncid,
     NC_var *varp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (varid == NC_GLOBAL) {
         if (nattsp != NULL)
@@ -1046,7 +1046,7 @@ ncmpi_rename_var(int         ncid,
 
     /* check whether ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {
@@ -1181,7 +1181,7 @@ ncmpi_inq_varoffset(int         ncid,
     NC_var *varp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
@@ -1208,7 +1208,7 @@ ncmpi_print_all_var_offsets(int ncid) {
     NC *ncp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (ncp->begin_var%1048576)
         printf("%s header size (ncp->begin_var)=%lld MB + %lld\n",

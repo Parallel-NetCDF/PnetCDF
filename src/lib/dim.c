@@ -367,7 +367,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
 
     /* check if ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* must be called in define mode */
     if (!NC_indef(ncp)) {
@@ -530,7 +530,7 @@ ncmpi_inq_dimid(int         ncid,
     NC *ncp=NULL;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
         DEBUG_RETURN_ERROR(NC_EBADNAME)
@@ -615,7 +615,7 @@ ncmpi_rename_dim(int         ncid,
 
     /* check whether ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check file's write permission */
     if (NC_readonly(ncp)) {

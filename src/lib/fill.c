@@ -230,7 +230,7 @@ ncmpi_fill_var_rec(int        ncid,
 
     /* check if ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check file's write permission */
     if (NC_readonly(ncp)) {
@@ -317,7 +317,7 @@ ncmpi_set_fill(int  ncid,
 
     /* check whether ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {
@@ -386,7 +386,7 @@ ncmpi_def_var_fill(int   ncid,
 
     /* check whether ncid is valid */
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(err)
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {
