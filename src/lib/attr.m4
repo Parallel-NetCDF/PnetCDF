@@ -660,6 +660,12 @@ ncmpi_copy_att(int         ncid_in,
     err = ncmpii_NC_check_id(ncid_out, &ncp_out);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
+    /* check whether file's write permission */
+    if (NC_readonly(ncp_out)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
+
     ncap_in = NC_attrarray0(ncp_in, varid_in);
     if (ncap_in == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTVAR)
@@ -695,12 +701,6 @@ ncmpi_copy_att(int         ncid_in,
         goto err_check;
     }
 
-    /* check whether file's write permission */
-    if (NC_readonly(ncp_out)) {
-        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
-        goto err_check;
-    }
-
     indx = ncmpii_NC_findattr(ncap_out, nname);
 
     if (indx >= 0) { /* name in use in ncid_out */
@@ -711,7 +711,8 @@ ncmpi_copy_att(int         ncid_in,
         }
     }
     else { /* attribute does not exit in ncid_out */
-        if (!NC_indef(ncp_out)) { /* add new attribute is not allowed in data mode */
+        if (!NC_indef(ncp_out)) {
+            /* add new attribute is not allowed in data mode */
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
             goto err_check;
         }
@@ -831,11 +832,19 @@ ncmpi_del_att(int         ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
+    /* check whether file's write permission */
+    if (NC_readonly(ncp)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
+        goto err_check;
+    }
+
+    /* must in define mode */
     if (!NC_indef(ncp)) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
         goto err_check;
     }
 
+    /* check NC_ENOTVAR */
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTVAR)
@@ -1301,13 +1310,15 @@ ncmpi_put_att_$1(int         ncid,
     if (indx >= 0) { /* name in use */
         /* xsz is the total size of this attribute */
         if (!NC_indef(ncp) && xsz > ncap->value[indx]->xsz) {
-            /* new attribute requires a larger space, not allowed in data mode */
+            /* The new attribute requires a larger space, which is not allowed
+             * in data mode */
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
             goto err_check;
         }
     }
     else { /* attribute does not exit in ncid */
-        if (!NC_indef(ncp)) { /* add new attribute is not allowed in data mode */
+        if (!NC_indef(ncp)) {
+            /* add new attribute is not allowed in data mode */
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
             goto err_check;
         }
