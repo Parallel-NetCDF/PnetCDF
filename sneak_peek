@@ -166,9 +166,9 @@ This is essentially a placeholder for the next release note ...
     * When using OpenMPI 1.10.2 and 1.8.5 to build PnetCDF, users may encounter
       an error message of "An error occurred in MPI_Type_create_hindexed" when
       running "make check". This is due to a bug in OpenMPI that fails to
-      create a zero-size datatype in MPI_Type_create_hindexed. The bug fix will
-      appear in 2.0.1. See the bug report in
-      https://github.com/open-mpi/ompi/issues/1611
+      create a zero-size datatype in MPI_Type_create_hindexed. The bug fix has
+      appeared in the releases of 1.10.3, 1.8.6, and 2.0.1. See the bug report
+      in https://github.com/open-mpi/ompi/issues/1611
     * When using SGI MPI with MPT 2.14 to build PnetCDF, users may encounter an
       error message of "function:MPI_TYPE_CREATE_HVECTOR, Invalid argument".
       The bug fix will appear in 2.15 to be released in November 2016.
