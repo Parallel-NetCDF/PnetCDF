@@ -32,13 +32,13 @@ int
 ncmpi_buffer_attach(int        ncid,
                     MPI_Offset bufsize)
 {
-    int status;
+    int err;
     NC *ncp;
 
     if (bufsize <= 0) DEBUG_RETURN_ERROR(NC_ENULLBUF)
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check if the buffer has been previously attached
      * note that in nc.c, the NC object is allocated with calloc, so
@@ -62,11 +62,11 @@ ncmpi_buffer_attach(int        ncid,
 int
 ncmpi_buffer_detach(int ncid)
 {
-    int  i, status;
+    int  i, err;
     NC  *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -97,11 +97,11 @@ ncmpi_buffer_detach(int         ncid,
                     void       *bufptr,
                     MPI_Offset *bufsize)
 {
-    int  i, status;
+    int  i, err;
     NC  *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -131,11 +131,11 @@ int
 ncmpi_inq_buffer_usage(int         ncid,
                        MPI_Offset *usage) /* OUT: in bytes */
 {
-    int  status;
+    int  err;
     NC  *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -151,11 +151,11 @@ int
 ncmpi_inq_buffer_size(int         ncid,
                       MPI_Offset *buf_size) /* OUT: in bytes */
 {
-    int  status;
+    int  err;
     NC  *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -179,20 +179,19 @@ define(`BPUT_API',dnl
 int
 APINAME($1,$2)(int ncid, int varid, ArgKind($1) BufArgs(`put',$2), int *reqid)
 {
-    int         status;
+    int         err;
     NC         *ncp;
     NC_var     *varp=NULL;
     ifelse(`$1', `',  `MPI_Offset *start, *count;',
            `$1', `1', `MPI_Offset *count;')
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, ArgStartCountStride($1),
-                                 ifelse(`$2', `', `bufcount', `0'),
-                                 ifelse(`$2', `', `buftype',  `ITYPE2MPI($2)'),
-                                 API_KIND($1), ifelse(`$2', `', `1', `0'),
-                                 0, WRITE_REQ,
-                                 NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_sanity_check(ncid, varid, ArgStartCountStride($1),
+                              ifelse(`$2', `', `bufcount', `0'),
+                              ifelse(`$2', `', `buftype',  `ITYPE2MPI($2)'),
+                              API_KIND($1), ifelse(`$2', `', `1', `0'),
+                              0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+    if (err != NC_NOERR) return err;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
@@ -200,13 +199,13 @@ APINAME($1,$2)(int ncid, int varid, ArgKind($1) BufArgs(`put',$2), int *reqid)
            `$1', `1', `GET_ONE_COUNT(count)')
 
     /* APINAME($1,$2) is a special case of APINAME(m,$2) */
-    status = ncmpii_igetput_varm(ncp, varp, start, count, ArgStrideMap($1),
-                                 (void*)buf,
-                                 ifelse(`$2', `', `bufcount, buftype',
-                                                  `-1, ITYPE2MPI($2)'),
-                                 reqid, WRITE_REQ, 1, 0);
+    err = ncmpii_igetput_varm(ncp, varp, start, count, ArgStrideMap($1),
+                              (void*)buf,
+                              ifelse(`$2', `', `bufcount, buftype',
+                                           `-1, ITYPE2MPI($2)'),
+                              reqid, WRITE_REQ, 1, 0);
     ifelse(`$1', `', `NCI_Free(start);', `$1', `1', `NCI_Free(count);')
-    return status;
+    return err;
 }
 ')dnl
 dnl

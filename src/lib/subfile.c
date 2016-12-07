@@ -190,8 +190,7 @@ int ncmpii_subfile_close(NC *ncp)
     NC *ncp_sf;
 
     status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     status = ncmpii_close(ncp_sf);
     if (status != NC_NOERR)

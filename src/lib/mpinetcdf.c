@@ -674,12 +674,11 @@ int
 ncmpi_inq_format(int  ncid,
                  int *formatp) /* out */
 {
-    int status;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (ncp->format == 5) {
         *formatp = NC_FORMAT_CDF5;
@@ -694,7 +693,7 @@ ncmpi_inq_format(int  ncid,
          */
         *formatp = NC_FORMAT_UNKNOWN;
     }
-    return status;
+    return err;
 }
 
 /*----< ncmpi_inq_file_format() >--------------------------------------------*/
@@ -704,23 +703,21 @@ ncmpi_inq_file_format(const char *filename,
                       int        *formatp) /* out */
 {
 #ifdef _USE_NCMPI
-    int ncid, status;
+    int ncid, err;
     NC *ncp;
 
     /* open file for reading its header */
-    status = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL,
-                        &ncid);
-    if (status != NC_NOERR) {
-        if (status == NC_ENOTNC3)
+    err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    if (err != NC_NOERR) {
+        if (err == NC_ENOTNC3)
             DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_NETCDF4)
-        else if (status == NC_ENOTNC)
+        else if (err == NC_ENOTNC)
             DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_UNKNOWN)
-        return status;
+        return err;
     }
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-         return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (ncp->format == 5) {
         *formatp = NC_FORMAT_CDF5;
@@ -729,9 +726,9 @@ ncmpi_inq_file_format(const char *filename,
     } else {  /* if (ncp->format == 1) */
         *formatp = NC_FORMAT_CLASSIC;
     }
-    status = ncmpi_close(ncid);
+    err = ncmpi_close(ncid);
 
-    return status;
+    return err;
 #else
     char *cdf_signature="CDF";
     char *hdf5_signature="\211HDF\r\n\032\n";
@@ -781,13 +778,12 @@ int
 ncmpi_inq_file_info(int       ncid,
                     MPI_Info *info_used)
 {
-    int mpireturn, status=NC_NOERR;
+    int mpireturn, err;
     char value[MPI_MAX_INFO_VAL];
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
 #ifdef HAVE_MPI_INFO_DUP
     mpireturn = MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
@@ -834,12 +830,11 @@ ncmpi_get_file_info(int       ncid,
 /* This is a collective subroutine. */
 int
 ncmpi_redef(int ncid) {
-    int status;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
     /* if open mode is inconsistent, then this return might cause parallel
@@ -855,8 +850,8 @@ ncmpi_redef(int ncid) {
         ncmpii_end_indep_data(ncp);
 
     if (NC_doFsync(ncp)) { /* re-read the header from file */
-        status = ncmpii_read_NC(ncp);
-        if (status != NC_NOERR) return status;
+        err = ncmpii_read_NC(ncp);
+        if (err != NC_NOERR) return err;
     }
 
     /* duplicate a header to be used in enddef() for checking if header grows */
@@ -874,11 +869,11 @@ ncmpi_redef(int ncid) {
 int
 ncmpi_begin_indep_data(int ncid)
 {
-    int status=NC_NOERR;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (NC_indef(ncp))  /* must not be in define mode */
         DEBUG_RETURN_ERROR(NC_EINDEFINE)
@@ -887,7 +882,7 @@ ncmpi_begin_indep_data(int ncid)
         return NC_NOERR;
 
     /* we need no MPI_File_sync() here. If users want a stronger data
-     * consistency, they can either use NC_SHARE or call ncmpi_sync()
+     * consistency, they can call ncmpi_sync()
      */
 #if 0 && !defined(DISABLE_FILE_SYNC)
     if (!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
@@ -897,7 +892,7 @@ ncmpi_begin_indep_data(int ncid)
         TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
-            if (status == NC_NOERR) status = err;
+            if (err == NC_NOERR) return err;
         }
         TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
     }
@@ -905,20 +900,20 @@ ncmpi_begin_indep_data(int ncid)
 
     fSet(ncp->flags, NC_INDEP);
 
-    status = ncmpii_check_mpifh(ncp, 0);
+    err = ncmpii_check_mpifh(ncp, 0);
 
-    return status;
+    return err;
 }
 
 /*----< ncmpi_end_indep_data() >---------------------------------------------*/
 /* This is a collective subroutine. */
 int
 ncmpi_end_indep_data(int ncid) {
-    int status;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (!NC_indep(ncp)) /* must be in independent data mode */
         DEBUG_RETURN_ERROR(NC_ENOTINDEP)
@@ -974,12 +969,12 @@ ncmpii_end_indep_data(NC *ncp)
 /* This is a collective subroutine. */
 int
 ncmpi_enddef(int ncid) {
-    int status;
+    int err;
     NC *ncp;
 
     /* check if file ID ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (!NC_indef(ncp)) /* must currently in define mode */
         DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
@@ -1044,11 +1039,11 @@ ncmpi__enddef(int        ncid,
  */
 int
 ncmpi_sync_numrecs(int ncid) {
-    int status = NC_NOERR;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* cannot be in define mode */
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
@@ -1062,11 +1057,11 @@ ncmpi_sync_numrecs(int ncid) {
         set_NC_ndirty(ncp);
 
     /* sync numrecs in memory and file */
-    status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+    err = ncmpii_sync_numrecs(ncp, ncp->numrecs);
 
 #ifndef DISABLE_FILE_SYNC
     if (NC_doFsync(ncp)) { /* NC_SHARE is set */
-        int err, mpireturn;
+        int mpierr, mpireturn;
         if (NC_indep(ncp)) {
             TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
         }
@@ -1074,15 +1069,15 @@ ncmpi_sync_numrecs(int ncid) {
             TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
         }
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
-            if (status == NC_NOERR) status = err;
+            mpierr = ncmpii_handle_error(mpireturn, "MPI_File_sync");
+            if (err == NC_NOERR) err = mpierr;
         }
         TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Barrier");
     }
 #endif
-    return status;
+    return err;
 }
 
 /*----< ncmpi_sync() >--------------------------------------------------------*/
@@ -1091,11 +1086,11 @@ ncmpi_sync_numrecs(int ncid) {
  */
 int
 ncmpi_sync(int ncid) {
-    int status = NC_NOERR;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* cannot be in define mode */
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
@@ -1109,8 +1104,8 @@ ncmpi_sync(int ncid) {
     if (ncp->vars.num_rec_vars > 0 && NC_indep(ncp)) {
         /* sync numrecs in memory among processes and in file */
         set_NC_ndirty(ncp);
-        status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
-        if (status != NC_NOERR) return status;
+        err = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+        if (err != NC_NOERR) return err;
     }
 
     /* calling MPI_File_sync() on both collective and independent handlers */
@@ -1130,7 +1125,7 @@ ncmpi_abort(int ncid) {
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
+    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
     /* delete the file if it is newly created by ncmpi_create() */
     doUnlink = NC_IsNew(ncp);
@@ -1175,12 +1170,11 @@ ncmpi_abort(int ncid) {
 /* This is a collective subroutine. */
 int
 ncmpi_close(int ncid) {
-    int status = NC_NOERR;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* calling the implementation of ncmpi_close() */
     return ncmpii_close(ncp);
@@ -1251,12 +1245,11 @@ int
 ncmpi_inq_put_size(int         ncid,
                    MPI_Offset *size)
 {
-    int status;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     *size = ncp->nciop->put_size;
     return NC_NOERR;
@@ -1269,12 +1262,11 @@ int
 ncmpi_inq_get_size(int         ncid,
                    MPI_Offset *size)
 {
-    int status;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     *size = ncp->nciop->get_size;
     return NC_NOERR;
@@ -1290,13 +1282,12 @@ ncmpi_inq_striping(int  ncid,
                    int *striping_size,
                    int *striping_count)
 {
-    int flag, status=NC_NOERR;
+    int flag, err;
     char value[MPI_MAX_INFO_VAL];
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (striping_size != NULL) {
         MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
@@ -1367,12 +1358,11 @@ int
 ncmpi_inq_recsize(int         ncid,
                   MPI_Offset *recsize)
 {
-    int status;
+    int err;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     *recsize = ncp->recsize;
     return NC_NOERR;
@@ -1388,7 +1378,7 @@ ncmpi_inq_header_extent(int         ncid,
     NC *ncp;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     *extent = ncp->begin_var;
 
@@ -1405,7 +1395,7 @@ ncmpi_inq_header_size(int         ncid,
     NC *ncp;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     *size = ncp->xsz;
 
@@ -1425,7 +1415,7 @@ ncmpi_inq_path(int   ncid,
     NC *ncp;
 
     err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     if (ncp->nciop->path == NULL) {
         if (pathlen != NULL) *pathlen = 0;
