@@ -183,8 +183,11 @@ typedef struct {
  */
 
 typedef struct NC_nametable {
-    int  num;
-    int *list; /* variable IDs */
+    int  num;  /* number of elements added in the list array. Its value starts
+                  with zero and incremented with new name is created. When its
+                  value becomes a multiple of NC_NAME_TABLE_CHUNK, list will be
+                  reallocated to a space of size (num + NC_NAME_TABLE_CHUNK) */
+    int *list; /* dimension or variable IDs */
 } NC_nametable;
 
 /* the dimension ID returned from ncmpi_def_dim() is an integer pointer
@@ -192,11 +195,16 @@ typedef struct NC_nametable {
  * is up to 2^31-1. Thus, the member ndefined below should be of type int.
  */
 typedef struct NC_dimarray {
-    int            nalloc;    /* number allocated >= ndefined */
-    int            ndefined;  /* number of defined dimensions */
+    int            nalloc;        /* number allocated >= ndefined */
+    int            ndefined;      /* number of defined dimensions */
     int            unlimited_id;  /* -1 for not defined, otherwise >= 0 */
     NC_dim       **value;
-    NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup */
+    NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup.
+                    * indices 0, 1, ... HASH_TABLE_SIZE-1 are the hash keys.
+                    * nameT[i].num is the number of hash collisions. The IDs of
+                    * dimensions with names producing the same hash key i are
+                    * stored in nameT[i].list[*]
+                    */
 } NC_dimarray;
 
 /* Begin defined in dim.c */
@@ -310,7 +318,12 @@ typedef struct NC_vararray {
     int            ndefined;    /* number of defined variables */
     int            num_rec_vars;/* number of defined record variables */
     NC_var       **value;
-    NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup */
+    NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup.
+                    * indices 0, 1, ... HASH_TABLE_SIZE-1 are the hash keys.
+                    * nameT[i].num is the number of hash collisions. The IDs of
+                    * variables with names producing the same hash key i are
+                    * stored in nameT[i].list[*]
+                    */
 } NC_vararray;
 
 /* Begin defined in var.c */
