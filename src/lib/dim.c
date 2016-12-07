@@ -553,12 +553,12 @@ ncmpi_inq_dim(int         ncid,
               char       *name,
               MPI_Offset *sizep)
 {
-    int status;
+    int err;
     NC *ncp=NULL;
     NC_dim *dimp=NULL;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR || ncp == NULL) DEBUG_RETURN_ERROR(status)
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
     if (dimp == NULL) DEBUG_RETURN_ERROR(NC_EBADDIM)
