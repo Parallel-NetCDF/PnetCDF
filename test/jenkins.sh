@@ -21,6 +21,7 @@ autoreconf -fi
 #    String of "jenkins-${JOB_NAME}-${BUILD_NUMBER}". Convenient to put into a
 #    resource file, a jar file, etc for easier identification.
 ./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`}
+make clean
 make
 make testing
 make ptest
