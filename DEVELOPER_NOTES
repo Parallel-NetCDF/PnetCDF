@@ -14,6 +14,13 @@ Tasks immediately before a new release (must run in the following order)
                                               --disable-fortran
                                               CPPFLAGS=-funsigned-char
                    and their combinations)
+
+      - run make check with valgrind by adding the following lines to configure
+        command line. As of PnetCDF 1.8.0, make check and make ptest pass
+        without any warning and error from valgrind.
+            TEST_SEQRUN="valgrind --quiet --leak-check=full"
+            TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
+
       - make check
       - make ptests
       - make install (and check if all files are installed in the right places)
