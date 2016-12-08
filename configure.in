@@ -1026,7 +1026,7 @@ dnl
 dnl GNU coverage
 dnl
 dnl This is for internal testing only. It should not be enabled for building a
-dnl production PnetCDF. This is because when run an executable compiled with
+dnl production PnetCDF. This is because running an executable compiled with
 dnl coverage will produce an output file named "gmon.out". Since coverage is
 dnl not parallelized, running a program compiled with coverage may cause
 dnl problems on concurrently writing to gmon.out in conflicts, possible

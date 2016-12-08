@@ -20,8 +20,11 @@ autoreconf -fi
 # BUILD_TAG
 #    String of "jenkins-${JOB_NAME}-${BUILD_NUMBER}". Convenient to put into a
 #    resource file, a jar file, etc for easier identification.
-./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`}
-make clean
-make
-make testing
-make ptest
+./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`}  \
+            TEST_SEQRUN="valgrind --quiet --leak-check=full" \
+            TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
+make -s clean
+make -s
+make -s check
+make -s ptest
+make -s distclean
