@@ -703,7 +703,11 @@ ncmpi_copy_att(int         ncid_in,
 
     indx = ncmpii_NC_findattr(ncap_out, nname);
 
-    if (indx >= 0) { /* name in use in ncid_out */
+    if (indx >= 0) { /* name in use in ncap_out */
+        if (ncid_in == ncid_out && varid_in == varid_out)
+            /* self copy is not considered an error */
+            goto err_check;
+
         if (!NC_indef(ncp_out) &&  /* not allowed in data mode */
             iattrp->xsz > ncap_out->value[indx]->xsz) {
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
@@ -772,6 +776,12 @@ err_check:
     assert(nname != NULL);
 
     if (indx >= 0) { /* name in use in ncid_out */
+        if (ncid_in == ncid_out && varid_in == varid_out) {
+            /* self copy is not considered an error */
+            free(nname);
+            return NC_NOERR;
+        }
+
         /* reuse existing attribute array slot without redef */
         attrp = ncap_out->value[indx];
 
