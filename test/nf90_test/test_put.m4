@@ -1395,6 +1395,8 @@ define([TEST_NFMPI_PUT_ATT],dnl
         call def_dims(ncid)
         call def_vars(ncid)
 
+        value(:) = 0
+
         do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 if (.not.(ATT_TYPE(j,i) .eq. NF90_CHAR)) then
@@ -1568,6 +1570,8 @@ TEST_NFMPI_PUT_VARM(double)
         end if
         call def_dims(ncid)
         call def_vars(ncid)
+
+        value(:) = CHAR(0)
 
         do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)

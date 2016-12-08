@@ -50,6 +50,7 @@
     integer (kind=MPI_OFFSET_KIND) :: length
     
     nf90mpi_inquire_dimension = nfmpi_inq_dim(ncid, dimid, dimName, length)
+    if (nf90mpi_inquire_dimension .NE. NF90_NOERR) return
     if(present(name)) name = trim(dimName)
     if(present(len )) len  = length
   end function nf90mpi_inquire_dimension
