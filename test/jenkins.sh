@@ -14,6 +14,10 @@
 # autoconf-2.68 and mpich-1.4.1
 autoreconf -fi
 
+
+soft add +gcc-6.2.0
+soft add +mpich-3.2-gcc-6.2.0
+
 # We are using the following Jenkins environment variables:
 # WORKSPACE
 #     The absolute path of the directory assigned to the build as a workspace.
