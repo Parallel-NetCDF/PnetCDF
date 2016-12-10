@@ -97,6 +97,7 @@ ncmpi_$1_varn$2(int                ncid,
         /* for collective API, participate the collective I/O with zero-length
          * request for this process */
         err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
+        if (status == NC_NOERR) status = err;
 
         /* return the error code from sanity check */
         return status;
@@ -146,6 +147,7 @@ ncmpi_$1_varn_$3$2(int                ncid,
         /* for collective API, participate the collective I/O with zero-length
          * request for this process */
         err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
+        if (status == NC_NOERR) status = err;
 
         /* return the error code from sanity check */
         return status;
