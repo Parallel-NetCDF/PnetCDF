@@ -26,7 +26,7 @@
 int
 main(int argc, char **argv) 
 {
-    char filename[256];
+    char *cmd_str, filename[256];
     int rank, nprocs, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
@@ -38,12 +38,12 @@ main(int argc, char **argv)
         MPI_Finalize();
         return 0;
     }
+    if (rank > 0) goto fn_exit;
     strcpy(filename, "testfile.nc");
     if (argc == 2) strncpy(filename, argv[1], 255);
     filename[255] = '\0';
-    if (rank > 0) goto fn_exit;
 
-    char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+    cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", argv[0]);
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
