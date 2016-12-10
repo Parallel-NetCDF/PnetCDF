@@ -721,7 +721,7 @@ APINAME($1,$2,$3,$4)(int ncid, int varid, ArgKind($2) BufArgs($1,$3))
         /* for collective API, participate the collective I/O with zero-length
          * request for this process */
         err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
-        if (status == NC_NOERR) status = err;
+        assert(err == NO_NOERR);
 
         /* return the error code from sanity check */
         return status;
