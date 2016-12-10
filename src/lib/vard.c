@@ -372,7 +372,7 @@ ncmpi_get_vard_all(int           ncid,
         /* for collective API, participate the collective I/O with zero-length
          * request for this process */
         err = ncmpii_getput_zero_req(ncp, READ_REQ);
-        if (status == NC_NOERR) status = err;
+        assert(err == NC_NOERR);
 
         /* return the error code from sanity check */
         return status;
@@ -428,7 +428,7 @@ ncmpi_put_vard_all(int           ncid,
         /* for collective API, participate the collective I/O with zero-length
          * request for this process */
         err = ncmpii_getput_zero_req(ncp, WRITE_REQ);
-        if (status == NC_NOERR) status = err;
+        assert(err == NC_NOERR);
 
         /* return the error code from sanity check */
         return status;
