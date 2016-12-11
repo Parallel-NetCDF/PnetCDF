@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h> /* getopt() */
+
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -318,9 +320,23 @@ int benchmark_read(char       *filename,
     return 1;
 }
 
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h | -q] len file_name\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode\n"
+    "       len: local variable of size len x len (default 10)\n"
+    "       filename: output netCDF file name (default ./testfile.nc)\n";
+    fprintf(stderr, help, argv0);
+}
+
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char** argv) {
-    int rank, nprocs;
+    extern int optind;
+    char *filename;
+    int i, rank, nprocs, verbose=1;;
     double timing[10], max_t[10];
     MPI_Offset len, w_size, r_size, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -330,15 +346,29 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
-    if (argc != 3) {
-        if (!rank) printf("Usage: %s len filename\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    len = strtoll(argv[1],NULL,10);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
 
-    benchmark_write(argv[2], len, &w_size, &w_info_used, timing);
-    benchmark_read (argv[2], len, &r_size, &r_info_used, timing+5);
+    len = 10;
+    if (argc > 0) {
+        len = strtoll(argv[0],NULL,10);
+        if (len <= 0) len = 10;
+    }
+    if (argc > 1) filename = argv[1];
+    else          filename = "testfile.nc";
+
+    benchmark_write(filename, len, &w_size, &w_info_used, timing);
+    benchmark_read (filename, len, &r_size, &r_info_used, timing+5);
 
     MPI_Reduce(&timing, &max_t,     10, MPI_DOUBLE, MPI_MAX, 0, comm);
 #ifdef MPI_OFFSET
@@ -348,7 +378,7 @@ int main(int argc, char** argv) {
     MPI_Reduce(&w_size, &sum_w_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
     MPI_Reduce(&r_size, &sum_r_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
 #endif
-    if (rank == 0) {
+    if (verbose && rank == 0) {
         double bw = sum_w_size;
         bw /= 1048576.0;
         print_info(&w_info_used);
