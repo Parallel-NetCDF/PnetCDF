@@ -49,10 +49,14 @@ PACKING_LIST	= Makefile.in \
 		  INSTALL \
 		  README \
 		  README.CRAY \
+                  README.Fujitsu \
+                  README.INTEL \
 		  README.IBM \
+                  README.K-Computer \
 		  README.LINUX \
 		  README.SGI \
 		  README.SX \
+                  README.consistency \
 		  README.large_files \
 		  RELEASE_NOTES \
 		  pbs.script \
