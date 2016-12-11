@@ -15,18 +15,15 @@
 autoreconf -fi
 
 
-soft add +gcc-6.2.0
-soft add +mpich-3.2-gcc-6.2.0
-
 # We are using the following Jenkins environment variables:
 # WORKSPACE
 #     The absolute path of the directory assigned to the build as a workspace.
 # BUILD_TAG
 #    String of "jenkins-${JOB_NAME}-${BUILD_NUMBER}". Convenient to put into a
 #    resource file, a jar file, etc for easier identification.
-./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`}  \
-            TEST_SEQRUN="valgrind --quiet --leak-check=full" \
-            TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
+
+./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`}
+
 make -s clean
 make -s
 make -s check
