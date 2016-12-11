@@ -23,7 +23,7 @@
 #endif
       integer i, argc, ierr
       character(len=128) executable
-      logical isArgvRight
+      logical verbose, isArgvRight
 
       double precision time_io(3), time_begin
       double precision chk_io, corner_io, nocorner_io
@@ -38,21 +38,25 @@
       call MPI_Comm_Size (MPI_Comm_World, NumPEs, ierr)
 
       MasterPE = 0
+      verbose = .TRUE.
 
       ! root process reads command-line arguments
       if (MyPE .EQ. MasterPE) then
          isArgvRight = .TRUE.
          argc = IARGC()
          call getarg(0, executable)
-         if (argc .GT. 1) then
+         if (argc .GT. 2) then
             print *, &
-            'Usage: ',trim(executable),' <ouput file base name>'
+            'Usage: ',trim(executable),' [-q] <ouput file base name>'
             isArgvRight = .FALSE.
          else
+            ! default file name prefix
+            basenm = "flash_io_test_"
             if (argc .EQ. 1) then
                call getarg(1, basenm)
-            else ! default file name prefix
-               basenm = "flash_io_test_"
+            else
+               verbose = .FALSE.
+               call getarg(2, basenm)
             endif
          endif
       endif
@@ -114,7 +118,7 @@
       corner_io = plotfile_ncmpi_par(0,0.e0,.true.)
       time_io(3) = MPI_Wtime() - time_begin
     
-      call report_io_performance(local_blocks, time_io, chk_io, &
+      call report_io_performance(verbose, local_blocks, time_io, chk_io, &
                                  corner_io, nocorner_io)
 
  999  call MPI_Finalize(ierr)
@@ -159,11 +163,12 @@
 !---------------------------------------------------------------------------
 ! print I/O performance numbers
 !---------------------------------------------------------------------------
-      subroutine report_io_performance(local_blocks, time_io, chk_io, &
-                                       corner_io, nocorner_io)
+      subroutine report_io_performance(verbose, local_blocks, time_io, &
+                                       chk_io, corner_io, nocorner_io)
        use pnetcdf
 #include "common.fh"
 
+       logical verbose
        integer local_blocks
        double precision time_io(3)
        double precision chk_io, corner_io, nocorner_io
@@ -198,7 +203,7 @@
                        MasterPE, MPI_COMM_WORLD, ierr)
        corner_io = bw
 
-      if (MyPE .EQ. MasterPE) then
+      if (verbose .AND. MyPE .EQ. MasterPE) then
 
           striping_factor = 0
           striping_unit   = 0
@@ -256,7 +261,7 @@
       if (ierr .EQ. NF_NOERR) then
           call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, MPI_SUM, &
                           MasterPE, MPI_COMM_WORLD, ierr)
-          if (MyPE .EQ. MasterPE) &
+          if (verbose .AND. MyPE .EQ. MasterPE) &
               print 1002, &
               'maximum heap memory allocted by PnetCDF internally is', &
               sum_size/1048576, ' MiB'
@@ -264,7 +269,8 @@
           ierr = nfmpi_inq_malloc_size(malloc_size)
           call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, MPI_SUM, &
                           MasterPE, MPI_COMM_WORLD, ierr)
-          if (MyPE .EQ. MasterPE .AND. sum_size .GT. 0_MPI_OFFSET_KIND) &
+          if (verbose .AND. MyPE .EQ. MasterPE .AND. &
+              sum_size .GT. 0_MPI_OFFSET_KIND) &
               print 1002, &
               'heap memory allocated by PnetCDF internally has ', &
               sum_size/1048576, ' MiB yet to be freed'

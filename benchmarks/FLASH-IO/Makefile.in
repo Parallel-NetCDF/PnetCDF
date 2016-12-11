@@ -61,7 +61,12 @@ $(PROGS): $(OBJS)
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 
 ptest: $(PROGS)
-	$(TEST_MPIRUN_4) ./$(PROGS) $(TEST_OUTDIR)/flash_io_test_
+	$(TEST_MPIRUN_4) ./$(PROGS) -q $(TEST_OUTDIR)/flash_io_test_ ; \
+	if [ $$? = 0 ] ; then \
+	    echo "PASS: F90 parallel run on 4 processes --------------- FLASH_IO"; \
+	else \
+	    echo "FAILED: F90 parallel run on 4 processes ------------- FLASH_IO"; \
+	fi
 
 ptests:
 
