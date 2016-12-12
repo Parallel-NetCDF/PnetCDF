@@ -9,6 +9,11 @@
 #   a finer-grained "N of M tests failed" instead of a single "pass/fail" for
 #   all tests
 
+#
+# the MCS environment uses the uncommon 'softenv' environment.
+#
+resoft test/mcs-environment.soft
+
 # presumes the presence of the autotools and an mpi compiler.  The jenkins
 # build slaves use the MCS workstation environment, which today is
 # autoconf-2.68 and mpich-1.4.1
@@ -22,7 +27,9 @@ autoreconf -fi
 #    String of "jenkins-${JOB_NAME}-${BUILD_NUMBER}". Convenient to put into a
 #    resource file, a jar file, etc for easier identification.
 
-./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`}
+./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`} \
+            TEST_SEQRUN="valgrind --quiet --leak-check=full" \
+            TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
 
 make -s clean
 make -s
