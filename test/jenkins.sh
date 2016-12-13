@@ -12,6 +12,18 @@
 #
 # the MCS environment uses the uncommon 'softenv' environment.
 #
+# taken from /etc/bash.bashrc on MCS workstations
+if [ -e /software/common/adm/etc/softenv-aliases.sh ]; then
+	source /software/common/adm/etc/softenv-aliases.sh
+else
+	echo "Unable to load Soft Environmant"
+fi
+if [ -r /software/common/adm/etc/softenv-load.sh ] ; then
+	source /software/common/adm/etc/softenv-load.sh
+else
+	echo "Unable to load SoftEnv system."
+fi
+
 resoft test/mcs-environment.soft
 
 # presumes the presence of the autotools and an mpi compiler.  The jenkins
