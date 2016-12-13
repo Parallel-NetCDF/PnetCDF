@@ -10,21 +10,10 @@
 #   all tests
 
 #
-# the MCS environment uses the uncommon 'softenv' environment.
-#
-# taken from /etc/bash.bashrc on MCS workstations
-if [ -e /software/common/adm/etc/softenv-aliases.sh ]; then
-	source /software/common/adm/etc/softenv-aliases.sh
-else
-	echo "Unable to load Soft Environmant"
-fi
-if [ -r /software/common/adm/etc/softenv-load.sh ] ; then
-	source /software/common/adm/etc/softenv-load.sh
-else
-	echo "Unable to load SoftEnv system."
-fi
+# the MCS environment uses the uncommon 'softenv' environment.  It's not
+# helpful to us
 
-resoft ${WORKSPACE:-`pwd`}/test/mcs-environment.soft
+export PATH=/soft/apps/packages/gcc/gcc-6.2.0/bin/:/soft/apps/packages/climate/mpich/3.2/gcc-6.2.0/bin/mpicc:${PATH}
 
 # presumes the presence of the autotools and an mpi compiler.  The jenkins
 # build slaves use the MCS workstation environment, which today is
