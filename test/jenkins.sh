@@ -13,7 +13,7 @@
 # the MCS environment uses the uncommon 'softenv' environment.  It's not
 # helpful to us
 
-export PATH=${PATH}:/soft/apps/packages/gcc/gcc-6.2.0/bin/:/soft/apps/packages/climate/mpich/3.2/gcc-6.2.0/bin
+export PATH=/soft/apps/packages/gcc/gcc-6.2.0/bin/:/soft/apps/packages/climate/mpich/3.2/gcc-6.2.0/bin:${PATH}
 
 # presumes the presence of the autotools and an mpi compiler.  The jenkins
 # build slaves use the MCS workstation environment, which today is
