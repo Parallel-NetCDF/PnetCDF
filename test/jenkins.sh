@@ -24,7 +24,7 @@ else
 	echo "Unable to load SoftEnv system."
 fi
 
-resoft test/mcs-environment.soft
+resoft ${WORKSPACE:-`pwd`}/test/mcs-environment.soft
 
 # presumes the presence of the autotools and an mpi compiler.  The jenkins
 # build slaves use the MCS workstation environment, which today is
