@@ -143,11 +143,10 @@ int main(int argc, char **argv)
         bufsize   *= len;
     }
 
-    /* allocate buffer and initialize with random numbers */
-    srand(rank);
+    /* allocate buffer and initialize with some non-zero numbers */
     for (i=0; i<NUM_VARS; i++) {
         buf[i] = (int *) malloc(bufsize * sizeof(int));
-        for (j=0; j<bufsize; j++) buf[i][j] = rand();
+        for (j=0; j<bufsize; j++) buf[i][j] = rank + 123;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);

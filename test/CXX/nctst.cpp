@@ -498,15 +498,11 @@ int
 main(int argc, char* argv[])	// test new netCDF interface
 {
    char filename[256];
-   int rank, nprocs, verbose=0;
+   int rank, nprocs;
 
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-#ifdef DEBUG
-    verbose = 1;
-#endif
 
    if (argc > 2) {
        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -527,9 +523,10 @@ main(int argc, char* argv[])	// test new netCDF interface
    // Set up the format constants.
    NcmpiFile::FileFormat format[NUM_FORMATS] =
               {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::classic5};
-
+#ifdef DEBUG
    char format_name[NUM_FORMATS][NC_MAX_NAME] = 
         {"classic", "classic2", "classic5"};
+#endif
 
    int nerrs = 0;
    for (int i = 0; i < NUM_FORMATS; i++)
@@ -537,15 +534,20 @@ main(int argc, char* argv[])	// test new netCDF interface
       if (gen(MPI_COMM_WORLD, filename, format[i]) || 
 	  read(MPI_COMM_WORLD, filename, format[i]))
       {
-	 if (verbose)
-             cout << "*** FAILURE with format " << format_name[i] << "\n";
+#ifdef DEBUG
+	 cout << "*** FAILURE with format " << format_name[i] << "\n";
+#endif
 	 nerrs++;
       }
-      else if (verbose)
+#ifdef DEBUG
+      else
 	 cout << "*** SUCCESS with format " << format_name[i] << "\n";
+#endif
    }
 
-   if (verbose) cout << "\n*** Total number of failures: " << nerrs << "\n";
+#ifdef DEBUG
+   cout << "\n*** Total number of failures: " << nerrs << "\n";
+#endif
 
     MPI_Offset malloc_size, sum_size;
     int err = ncmpi_inq_malloc_size(&malloc_size);
