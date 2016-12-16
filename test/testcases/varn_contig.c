@@ -74,7 +74,7 @@ int check_contents_for_fail(int *buffer)
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, rank, nprocs, err, verbose=0, nerrs=0;
+    int i, rank, nprocs, err, nerrs=0;
     int ncid, cmode, varid[3], dimid[2], num_reqs, *buffer, *r_buffer;
     MPI_Offset w_len, **starts, **counts;
 
@@ -99,8 +99,10 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    if (verbose && nprocs != 4 && rank == 0)
+#ifdef DEBUG
+    if (nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
+#endif
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;

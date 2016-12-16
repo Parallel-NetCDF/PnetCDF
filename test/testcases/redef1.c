@@ -34,7 +34,7 @@
 int main(int argc, char** argv)
 {
     char filename[256]="redef2.nc";
-    int i, j, k, commsize, rank, ncid, verbose=0, err, nerrs=0;
+    int i, j, k, commsize, rank, ncid, err, nerrs=0;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
     int *data;
@@ -61,8 +61,10 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    if (verbose && commsize > 1 && rank == 0)
+#ifdef DEBUG
+    if (commsize > 1 && rank == 0)
         printf("Warning: %s is designed to run on 1 process\n",argv[0]);
+#endif
   
     err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
                           MPI_INFO_NULL, &ncid);

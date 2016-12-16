@@ -412,12 +412,9 @@ test_one_with_att(const char *testfile, int cmode)
 int main(int argc, char *argv[])
 {
     char filename[256];
-    int i, rank, nprocs, err, nerrs=0, verbose=0;
+    int i, rank, nprocs, err, nerrs=0;
     int cmode[NUM_FORMATS]={0, NC_64BIT_OFFSET, NC_64BIT_DATA};
 
-#ifdef DEBUG
-    verbose = 1;
-#endif
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -438,30 +435,46 @@ int main(int argc, char *argv[])
     free(cmd_str);
 
     for (i=0; i<NUM_FORMATS; i++) {
-      if (verbose) printf("*** testing simple small file with a global attribute...");
+#ifdef DEBUG
+      printf("*** testing simple small file with a global attribute...");
+#endif
       nerrs += test_small_atts(filename, cmode[i]|NC_CLOBBER);
       
-      if (verbose) printf("*** testing simple small file with fixed dimensions...");
+#ifdef DEBUG
+      printf("*** testing simple small file with fixed dimensions...");
+#endif
       nerrs += test_small_fixed(filename, cmode[i]|NC_CLOBBER);
 
-      if (verbose) printf("*** testing simple small file with an unlimited dimension...");
+#ifdef DEBUG
+      printf("*** testing simple small file with an unlimited dimension...");
+#endif
       nerrs += test_small_unlim(filename, cmode[i]|NC_CLOBBER);
       
-      if (verbose) printf("*** testing small file with one variable...");
+#ifdef DEBUG
+      printf("*** testing small file with one variable...");
+#endif
       nerrs += test_small_one(filename, cmode[i]|NC_CLOBBER);
       
-      if (verbose) printf("*** testing small file with one variable and one att...");
+#ifdef DEBUG
+      printf("*** testing small file with one variable and one att...");
+#endif
       nerrs += test_one_with_att(filename, cmode[i]|NC_CLOBBER);
       
-      if (verbose) printf("*** testing small file with one record variable, which grows...");
+#ifdef DEBUG
+      printf("*** testing small file with one record variable, which grows...");
+#endif
       nerrs += test_one_growing(filename, cmode[i]|NC_CLOBBER);
 
-      if (verbose) printf("*** testing small file with one growing record "
+#ifdef DEBUG
+      printf("*** testing small file with one growing record "
 	     "variable, with attributes added...");
+#endif
       nerrs += test_one_growing_with_att(filename, cmode[i]|NC_CLOBBER);
 
+#ifdef DEBUG
       if (verbose) printf("*** testing small file with two growing record "
 	     "variables, with attributes added...");
+#endif
       nerrs += test_two_growing_with_att(filename, cmode[i]|NC_CLOBBER);
    }
 

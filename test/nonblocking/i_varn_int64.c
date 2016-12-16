@@ -184,7 +184,7 @@ void permute(MPI_Offset *a, MPI_Offset *b)
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, k, rank, nprocs, verbose=0, err, nerrs=0, bufsize=0;
+    int i, j, k, rank, nprocs, err, nerrs=0, bufsize=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     long long *buffer[4], *cbuffer[4];
     int num_segs[4] = {4, 6, 5, 4};
@@ -224,9 +224,6 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-#ifdef DEBUG
-    verbose = 1;
-#endif
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
@@ -244,8 +241,10 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    if (verbose && nprocs != 4 && rank == 0)
+#ifdef DEBUG
+    if (nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
+#endif
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -314,7 +313,6 @@ int main(int argc, char** argv)
                 req_len *= counts[i][j][k];
             req_lens[i] += req_len;
         }
-        if (verbose) printf("req_lens[%d]=%d\n",i,req_lens[i]);
 
         /* allocate I/O buffer and initialize its contents */
         buffer[i] = (long long*) malloc(req_lens[i] * sizeof(long long));

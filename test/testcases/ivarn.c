@@ -156,7 +156,7 @@ int check_dbl_buf(double *buffer, double extra)
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, rank, nprocs, err, verbose=0, nerrs=0;
+    int i, rank, nprocs, err, nerrs=0;
     int ncid, cmode, dimid[2];
     int vari0001, vari0002, varr0001, varr0002, vard0001, vard0002;
     MPI_Offset **starts, **counts;
@@ -169,9 +169,6 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-#ifdef DEBUG
-    verbose = 1;
-#endif
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
@@ -189,8 +186,10 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    if (verbose && nprocs != 4 && rank == 0)
+#ifdef DEBUG
+    if (nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
+#endif
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;

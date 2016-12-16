@@ -20,7 +20,7 @@
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs, verbose=0;
+    int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs;
     int req[2], status[2];
     float  var[4][6];
     char *filename="testfile.nc";
@@ -32,10 +32,9 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
 #ifdef DEBUG
-    verbose = 1;
-#endif
-    if (verbose && nprocs > 1 && rank == 0)
+    if (nprocs > 1 && rank == 0)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
+#endif
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
