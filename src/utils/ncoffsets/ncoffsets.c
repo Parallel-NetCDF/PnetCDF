@@ -1707,22 +1707,23 @@ make_lvars(char *optarg, struct fspec* fspecp)
     MALLOC_CHECK(fspecp->varp)
 }
 
+/*----< check_gap_in_fixed_vars() >------------------------------------------*/
+/* check whether a gap (unused space in file between) two consecutive
+ * fixed-size variables. The gap is produced by file offset alignment which
+ * can be set by PnetCDF hint nc_var_align_size.
+ */
 static int
 check_gap_in_fixed_vars(NC *ncp)
 {
     int i, j;
-    long long size, prev_end;
+    long long prev_end;
     NC_var *varp, *prev;
 
-    /* check only fixed-size variables */
+    /* check all fixed-size variables */
     for (i=1; i<ncp->vars.ndefined; i++) {
         varp = ncp->vars.value[i];
 
         if (IS_RECVAR(varp)) continue;
-
-        /* calculate the size in bytes of this variable */
-        size = type_size(varp->type);
-        if (varp->ndims) size *= varp->dsizes[0];
 
         /* search for the previous fixed-size variable */
         prev = NULL;
