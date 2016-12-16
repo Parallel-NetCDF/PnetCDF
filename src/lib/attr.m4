@@ -652,7 +652,7 @@ ncmpi_copy_att(int         ncid_in,
     char *nname=NULL;    /* normalized name */
     NC *ncp_in, *ncp_out;
     NC_attrarray *ncap_out=NULL, *ncap_in;
-    NC_attr *iattrp, *attrp=NULL;
+    NC_attr *iattrp=NULL, *attrp=NULL;
 
     err = ncmpii_NC_check_id(ncid_in, &ncp_in);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
