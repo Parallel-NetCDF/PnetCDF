@@ -44,7 +44,7 @@ int test_cdf2(char *filename)
     int err, nerrs=0, ncid, vid, dimid;
     unsigned char uc[1];
     signed char sc[1];
-    int si;
+    int si[1];
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); ERR
 
@@ -96,28 +96,28 @@ int test_cdf2(char *filename)
     }
 
     /* expect NC_ERANGE */
-    si = -129;
-    err = ncmpi_put_var_int_all(ncid, vid, &si); EXPECT_ERR
-    if (si != -129) { /* check if put buffer content is altered */
-        printf("Error at line %d: put buffer content altered %d (expecting -128)\n",__LINE__,si);
+    si[0] = -129;
+    err = ncmpi_put_var_int_all(ncid, vid, si); EXPECT_ERR
+    if (si[0] != -129) { /* check if put buffer content is altered */
+        printf("Error at line %d: put buffer content altered %d (expecting -128)\n",__LINE__,si[0]);
         nerrs++;
     }
 
     /* expect NC_ERANGE */
-    si = 256;
-    err = ncmpi_put_var_int_all(ncid, vid, &si); EXPECT_ERR
-    if (si != 256) { /* check if put buffer content is altered */
-        printf("Error at line %d: put buffer content altered %d (expecting 256)\n",__LINE__,si);
+    si[0] = 256;
+    err = ncmpi_put_var_int_all(ncid, vid, si); EXPECT_ERR
+    if (si[0] != 256) { /* check if put buffer content is altered */
+        printf("Error at line %d: put buffer content altered %d (expecting 256)\n",__LINE__,si[0]);
         nerrs++;
     }
 
     /* expect no error */
-    si = -128;
-    err = ncmpi_put_var_int_all(ncid, vid, &si); ERR
-    si = 0;
-    err = ncmpi_get_var_int_all(ncid, vid, &si); ERR
-    if (si != -128) {
-        printf("Error at line %d: unexpected read value %d (expecting -128)\n",__LINE__,si);
+    si[0] = -128;
+    err = ncmpi_put_var_int_all(ncid, vid, si); ERR
+    si[0] = 0;
+    err = ncmpi_get_var_int_all(ncid, vid, si); ERR
+    if (si[0] != -128) {
+        printf("Error at line %d: unexpected read value %d (expecting -128)\n",__LINE__,si[0]);
         nerrs++;
     }
 
