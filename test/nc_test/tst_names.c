@@ -21,6 +21,9 @@
 
 #include <testutils.h>
 
+#define ERROR {printf("Error at line %d: %s\n",__LINE__,ncmpi_strerror(res)); nerrs++;}
+#define ERRORI {printf("Error at line %d (loop=%d): %s\n",__LINE__,i,ncmpi_strerror(res)); nerrs++;}
+
 /* The data file we will create. */
 #define NDIMS 1
 #define DIMLEN 1
@@ -211,14 +214,13 @@ main(int argc, char **argv)
    char attstr_in[MAX_ATTSTRING_LEN];
    int dimids[NUM_GOOD];
    int varids[NUM_GOOD];
-#if 0
-   int attnums[NUM_GOOD];
-#endif
-   char *format_names[] = { "CDF-2", "CDF-5" };
    int cmode[2] = {NC_64BIT_OFFSET, NC_64BIT_DATA};
+#ifdef DEBUG
+   char *format_names[] = { "CDF-2", "CDF-5" };
+#endif
 
     char filename[256];
-    int rank, nprocs, err, nerrs=0, verbose=0;
+    int rank, nprocs, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -238,13 +240,14 @@ main(int argc, char **argv)
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
 
-#define ERROR {printf("Error at line %d: %s\n",__LINE__,ncmpi_strerror(res)); nerrs++;}
-#define ERRORI {printf("Error at line %d (loop=%d): %s\n",__LINE__,i,ncmpi_strerror(res)); nerrs++;}
-
-   if (verbose) printf("\n*** testing names with file %s...\n", filename);
+#ifdef DEBUG
+   printf("\n*** testing names with file %s...\n", filename);
+#endif
    for (j = 0; j < 2; j++)
    {
-       if (verbose) printf("*** switching to netCDF %s format...", format_names[j]);
+#ifdef DEBUG
+       printf("*** switching to netCDF %s format...", format_names[j]);
+#endif
        if((res = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|cmode[j], MPI_INFO_NULL, &ncid)))
 	   ERROR
        
@@ -264,9 +267,6 @@ main(int argc, char **argv)
 	       ERRORI
 	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, valid[i], NC_DOUBLE, NATTVALS, attvals)))
 	       ERRORI
-#if 0
-	   attnums[i] = i;
-#endif
        }
        
        /* Try defining dimensions, variables, and attributes with various

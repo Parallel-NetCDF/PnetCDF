@@ -168,11 +168,8 @@ int
 main(int argc, char **argv)
 {
     char filename[256];
-    int rank, nprocs, cmode, err, nerrs=0, verbose=0;
+    int rank, nprocs, cmode, err, nerrs=0;
 
-#ifdef DEBUG
-    verbose = 1;
-#endif
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -192,7 +189,7 @@ main(int argc, char **argv)
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
 
-    if (verbose) printf("\n*** testing UTF-8 normalization...");
+    /*---- testing UTF-8 normalization ----*/
 
     /* test CDF-2 format */
     cmode = NC_CLOBBER | NC_64BIT_OFFSET;

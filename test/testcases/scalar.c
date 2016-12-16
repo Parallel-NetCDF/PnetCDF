@@ -24,7 +24,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int err, nerrs=0, rank, nprocs, verbose=0, ncid, varid;
+    int err, nerrs=0, rank, nprocs, ncid, varid;
     MPI_Offset start[1], count[1], stride[1], imap[1];
     int   buf;
     char *filename="testfile.nc";
@@ -47,8 +47,10 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-    if (verbose && nprocs > 1 && rank == 0)
+#ifdef DEBUG
+    if (nprocs > 1 && rank == 0)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
+#endif
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA,
                        MPI_INFO_NULL, &ncid); ERR
