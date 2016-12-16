@@ -17,7 +17,7 @@ Tasks immediately before a new release (must run in the following order)
 
       - run make check with valgrind by adding the following lines to configure
         command line. As of PnetCDF 1.8.0, make check and make ptest pass
-        without any warning and error from valgrind.
+        without any warning and error from valgrind. (See note below.)
             TEST_SEQRUN="valgrind --quiet --leak-check=full"
             TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
 
@@ -34,7 +34,7 @@ Tasks immediately before a new release (must run in the following order)
       - cetus.alcf.anl.gov : IBM BGQ, XL compilers, cross-compiling, Big Endian
       - k.aics.riken.jp : Fujitsu compilers, cross-compiling, Big Endian
     * build benchmarks/FLASH-IO separately from PnetCDF (it has its own build
-      script, i.e. configure.in.)
+      script, i.e. configure.in)
     * build netCDF latest release against PnetCDF
 
  2. Set the release version.
@@ -186,7 +186,7 @@ read/write a NC_CHAR variable will result in NC_ECHAR error code returned.
 There is no NC_ERANGE error code possibly returned from text APIs.
 
 In netCDF, NC_CHAR is designed purely for storing text data.  NC_CHAR is
-considered by netCDF as unisgned 8-bit integer, but not for used to store a
+considered by netCDF as unsigned 8-bit integer, but not for used to store a
 numerical value.  Others netCDF external numerical data types and their
 numerical meanings:
 
@@ -510,7 +510,11 @@ I/O buffer. In particular, when a new file is created and PnetCDF fixed-sized
 variable alignment is enabled, the read in read-modify-write may read no data
 at all, resulting data sieving buffer containing uninitialized data. To
 eliminate this possibility, set the hint environment variable to disable
-alognment, e.g. PNETCDF_HINTS="nc_var_align_size=1;nc_header_align_size=1".
+alignment, e.g. PNETCDF_HINTS="nc_var_align_size=1;nc_header_align_size=1".
+
+When using MPICH 3.2 with the bug of #2332 fixed, running "make check" and
+"make ptests" through valgrind should run without any complains. See MPICH
+ticket #2332 in https://trac.mpich.org/projects/mpich/ticket/2332.
 
 ==============================================================================
 Note on using clang and gprof together
