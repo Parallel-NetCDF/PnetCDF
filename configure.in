@@ -341,7 +341,7 @@ if test "x${enable_fortran}" = xyes ; then
       AC_MSG_ERROR([
          ------------------------------------------------------------
            Fortran support is explicitly requested, but configure
-           cannot find a Fortran77 or Fortran90 compiler. Please
+           cannot find a Fortran 77 or Fortran 90 compiler. Please
            specify the locations of the compilers either with the
            MPIF77 MPIF90 environment variables or the --with-mpi
            configure flag.
@@ -522,7 +522,7 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(FPP)
    AC_SUBST(FPPFLAGS)
 
-   dnl compiler command-line define preprocess flag, result in FC_DEFINE
+   dnl compiler command-line define preprocessor flag, result in FC_DEFINE
    UD_FC_PP_DEFINE
 
    dnl check compiler flags for file extensions in .f .F .f90 .F90
@@ -597,7 +597,7 @@ if test "x${enable_fortran}" = xyes ; then
    fi
 
    dnl check Fortran parameter modifier for 8-byte integer type
-   dnl We need this to set the max constants for UINT INT64 and UINT64
+   dnl We need this to set the max constants for UINT, INT64, and UINT64
    UD_FC_CONSTANT_MODIFIER
    UD_MSG_DEBUG([ac_cv_fc_constant_modifier=$ac_cv_fc_constant_modifier])
    PNF_INT8_MODIFIER=""
@@ -872,8 +872,8 @@ if test "x${ac_cv_c_bigendian}" = xyes ; then
 fi
 AC_SUBST(is_bigendian)
 
-dnl For big endian, put buffer needs no byte swap and hence can be declared as
-dnl INTENT(IN). For little endian, put buffer may be used for byte swap in
+dnl For big Endian, put buffer needs no byte swap and hence can be declared as
+dnl INTENT(IN). For little Endian, put buffer may be used for byte swap in
 dnl place and hence must be declared as INTENT(INOUT).
 dnl This will configure/produce the file src/libf90/api.f90
 if test "x${ac_cv_c_bigendian}" = xyes  || (test "x${in_place_swap}" = xno) ; then
@@ -994,7 +994,7 @@ fi
 
 dnl
 dnl Below is to check if a Fortran compiler produces module files with upper
-dnl case file name, eg. PNETCDF.mod. However, this does not work for Mac OSX
+dnl case file name, e.g. PNETCDF.mod. However, this does not work for Mac OSX
 dnl file system which is case insensitive
 dnl
 if test "x${enable_fortran}" = xyes ; then

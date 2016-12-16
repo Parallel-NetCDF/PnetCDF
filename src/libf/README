@@ -3,12 +3,12 @@
 f2c files are now automatically generated in Makefile.
 
 
-The fortran bindings are automatically generated from the c header file.
+The fortran bindings are automatically generated from the C header file.
 The script file, createffiles, that can be run to generate the C interface
 files is borrowed from MPICH. It reads the input file, defs, that defines
 the translation of Fortran arguments to C.
 
-This is nifty, but not flawless.  Compliation under 'gcc -Wall' may produce
+This is nifty, but not flawless.  Compilation under 'gcc -Wall' may produce
 some warning messages.  
 
 To regenerate all C files, run command below:
