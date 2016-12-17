@@ -91,6 +91,12 @@ int main(int argc, char **argv)
     }
     else strcpy(filename, "testfile.nc");
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     len = 2;
     if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
 

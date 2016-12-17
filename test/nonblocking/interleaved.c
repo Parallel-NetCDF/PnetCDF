@@ -86,6 +86,12 @@ int main(int argc, char** argv)
     if (argc == 2) strncpy(filename, argv[1], 255);
     filename[255] = '\0';
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;
+    }
+
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for writing interleaved fileviews ", argv[0]);

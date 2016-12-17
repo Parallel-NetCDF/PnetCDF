@@ -129,6 +129,12 @@ int main(int argc, char** argv) {
     }
     else strcpy(filename, "testfile.nc");
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */
     MPI_Info_create(&info);

@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs;
     int req[2], status[2];
     float  var[4][6];
-    char *filename="testfile.nc";
+    char filename[256];
     MPI_Offset bufsize,  start[2], count[2], stride[2], imap[2];
     MPI_Info info;
 
@@ -41,8 +41,16 @@ int main(int argc, char **argv) {
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) filename = argv[1];
-    assert(filename != NULL);
+
+    strcpy(filename, "testfile.nc");
+    if (argc == 2) strncpy(filename, argv[1], 255);
+    filename[255] = '\0';
+
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;
+    }
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);

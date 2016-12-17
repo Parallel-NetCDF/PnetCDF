@@ -77,6 +77,12 @@ int main(int argc, char** argv)
     }
     else strcpy(filename, "testfile.nc");
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     if (verbose && rank == 0) printf("%s: example of file create and open\n",__FILE__);
 
     /* create a new file using clobber mode ----------------------------------*/

@@ -143,6 +143,12 @@ int main(int argc, char** argv)
     }
     else strcpy(filename, "testfile.nc");
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_header_align_size",      "1024"); /* size in bytes */
     MPI_Info_set(info, "nc_var_align_size",         "512");  /* size in bytes */

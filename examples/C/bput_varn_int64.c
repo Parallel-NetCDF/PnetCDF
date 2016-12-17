@@ -214,6 +214,12 @@ int main(int argc, char** argv)
     }
     else strcpy(filename, "testfile.nc");
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     if (nprocs != 4 && rank == 0 && verbose)
         printf("Warning: %s is intended to run on 4 processes\n",exec);
 
