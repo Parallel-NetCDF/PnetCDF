@@ -125,6 +125,13 @@ int main(int argc, char **argv)
         filename[255] = '\0';
     }
     else strcpy(filename, "testfile.nc");
+
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     len = 10; 
     if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
 
@@ -144,11 +151,10 @@ int main(int argc, char **argv)
         bufsize   *= len;
     }
 
-    /* allocate buffer and initialize with random numbers */
-    srand(rank);
+    /* allocate buffer and initialize with non-zero numbers */
     for (i=0; i<NUM_VARS; i++) {
         buf[i] = (int *) malloc(bufsize * sizeof(int));
-        for (j=0; j<bufsize; j++) buf[i][j] = rand();
+        for (j=0; j<bufsize; j++) buf[i][j] = rank * i + 123 + j;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);

@@ -132,6 +132,12 @@ int main(int argc, char** argv)
     }
     else strcpy(filename, "testfile.nc");
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     if (verbose && rank == 0) printf("%s: example of using flexible APIs\n",__FILE__);
 
     /* create a new file for writing ----------------------------------------*/

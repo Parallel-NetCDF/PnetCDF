@@ -328,6 +328,13 @@ int main(int argc, char **argv)
     strcpy(basename, "testfile.nc");
     if (argc == 2) strncpy(basename, argv[1], 255);
     basename[255] = '\0';
+
+    if (basename[0] == '\0') {
+        printf("Error: invalid output file base name\n");
+        MPI_Finalize();
+        return 0;
+    }
+
     MPI_Bcast(basename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {

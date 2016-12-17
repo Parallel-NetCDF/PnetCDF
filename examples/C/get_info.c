@@ -114,6 +114,12 @@ int main(int argc, char **argv)
     }
     else strcpy(filename, "testfile.nc");
 
+    if (filename[0] == '\0') {
+        printf("Error: invalid output file name\n");
+        MPI_Finalize();
+        return 0;     
+    }
+
     /* create the file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
                        MPI_INFO_NULL, &ncid);

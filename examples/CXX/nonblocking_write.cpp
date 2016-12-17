@@ -127,6 +127,7 @@ int main(int argc, char **argv)
 
     len = 10; 
     if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
+    if (len <= 0) len = 10;
 
     for (i=0; i<NDIMS; i++) psizes[i] = 0;
 
@@ -146,7 +147,7 @@ int main(int argc, char **argv)
     /* allocate buffer and initialize with some non-zero numbers */
     for (i=0; i<NUM_VARS; i++) {
         buf[i] = (int *) malloc(bufsize * sizeof(int));
-        for (j=0; j<bufsize; j++) buf[i][j] = rank + 123;
+        for (j=0; j<bufsize; j++) buf[i][j] = rank * i + 123 + j;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
