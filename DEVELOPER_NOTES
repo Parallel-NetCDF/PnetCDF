@@ -459,6 +459,10 @@ cron_sync.sh. Its contents are:
   git svn rebase
   git push origin master
 
+Push a new PnetCDF tag branch to github:
+  git checkout -b 1-8-0pre1 remotes/origin/tags/v1-8-0pre1
+  git push -u origin 1-8-0pre1
+
 ==============================================================================
 Setting up Travis CI for PnetCDF @ Github
 ==============================================================================
