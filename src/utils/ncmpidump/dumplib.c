@@ -110,8 +110,9 @@ has_c_format_att(
     case NC_NOERR:
 	if (cfmt_type == NC_CHAR && cfmt_len != 0 && cfmt_len < MAX_CFMT_LEN) {
 	    ncmpi_stat = ncmpi_get_att_text(ncid, varid, "C_format", cfmt);
-	    if(ncmpi_stat != NC_NOERR)
+	    if(ncmpi_stat != NC_NOERR) {
 		ncmpi_advise("Getting 'C_format' attribute", ncmpi_stat, "");
+            }
 	    return &cfmt[0];
 	}
 	break;
