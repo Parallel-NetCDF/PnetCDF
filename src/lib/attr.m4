@@ -308,7 +308,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
     */
 
     for (i=0; i<ncap->ndefined; i++) {
-        if (ncap->value[i]->name->nchars == nchars &&
+        if (ncap->value[i]->name->nchars == (MPI_Offset)nchars &&
             strncmp(ncap->value[i]->name->cp, name, nchars) == 0) {
             return i;
         }

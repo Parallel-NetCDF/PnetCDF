@@ -520,7 +520,7 @@ ncmpii_inq_var_fill(NC_var *varp,
     /* Check if _FillValue is defined for this variable */
     attrs = &varp->attrs;
     for (i=0; i<attrs->ndefined; i++) {
-        if (attrs->value[i]->name->nchars == nchars &&
+        if (attrs->value[i]->name->nchars == (MPI_Offset)nchars &&
             strncmp(attrs->value[i]->name->cp, "_FillValue", nchars) == 0) {
             memcpy(fill_value, attrs->value[i]->xvalue, (size_t)varp->xsz);
             return NC_NOERR;
