@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) snprintf(dir_ame, 256, "%s", argv[1]);
-    else           strcpy(dir_ame, "testfile.nc");
+    if (argc == 2) snprintf(dir_name, 256, "%s", argv[1]);
+    else           strcpy(dir_name, "testfile.nc");
     MPI_Bcast(dir_name, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
