@@ -33,6 +33,7 @@
 
 int main(int argc, char** argv)
 {
+    char filename[256];
     int i, j, rank, nprocs, err, nerrs=0;
     int ncid, varid, dimid[2], req, st;
     MPI_Offset start[2], count[2], stride[2];
@@ -42,6 +43,15 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for ncmpi_end_indep_data ", argv[0]);
@@ -49,7 +59,7 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    err = ncmpi_create(MPI_COMM_WORLD, "testfile.nc", NC_CLOBBER|NC_64BIT_DATA,
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
                        MPI_INFO_NULL, &ncid);
     ERR
 

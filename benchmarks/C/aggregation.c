@@ -556,19 +556,11 @@ int main(int argc, char** argv) {
     argv += optind;
 
     len = 10;
-    if (argc > 0) {
-        len = strtoll(argv[0],NULL,10);
-        if (len <= 0) len = 10;
-    }
-    if (argc > 1) strncpy(filename, argv[1], 255);
-    else          strcpy (filename, "testfile.nc");
-    filename[255] = '\0';
+    if (argc > 0) len = strtoll(argv[0],NULL,10);
+    len = (len <= 0) ? 10 : len;
 
-    if (filename[0] == '\0') {
-        printf("Error: invalid output file name\n");
-        MPI_Finalize();
-        return 0;     
-    }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
     benchmark_write(filename, len, &w_size, &w_info_used, timing);
     benchmark_read (filename, len, &r_size, &r_info_used, timing+6);

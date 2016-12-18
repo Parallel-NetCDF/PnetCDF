@@ -372,8 +372,8 @@ int main(int argc, char **argv) {
         }
         argc -= optind;
         argv += optind;
-        if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
-        else strcpy(filename, "testfile.nc");
+        if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
+        else           strcpy(filename, "testfile.nc");
     }
     MPI_Bcast(&err, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (err == 1) {

@@ -31,7 +31,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
-    char *filename="testfile.nc";
+    char filename[256];
     int nerrs, rank, nprocs, err;
     int ncid, cmode, varid[7], dimid[3];
     MPI_Offset expected_recsize, recsize;
@@ -45,7 +45,8 @@ int main(int argc, char** argv) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         goto fn_exit;
     }
-    if (argc == 2) filename = argv[1];
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);

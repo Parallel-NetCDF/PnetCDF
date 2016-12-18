@@ -39,9 +39,8 @@ main(int argc, char **argv)
         return 0;
     }
     if (rank > 0) goto fn_exit;
-    strcpy(filename, "testfile.nc");
-    if (argc == 2) strncpy(filename, argv[1], 255);
-    filename[255] = '\0';
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", argv[0]);

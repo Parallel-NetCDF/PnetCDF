@@ -125,6 +125,7 @@ int main(int argc, char **argv)
 
     len = 10; 
     if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
+    len = (len <= 0) ? 10 : len;
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;

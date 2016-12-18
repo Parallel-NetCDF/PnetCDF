@@ -231,9 +231,8 @@ main(int argc, char **argv)
         MPI_Finalize();
         return 0;
     }
-    strcpy(filename, "testfile.nc");
-    if (argc == 2) strncpy(filename, argv[1], 255);
-    filename[255] = '\0';
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_names ", argv[0]);

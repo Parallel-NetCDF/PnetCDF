@@ -249,7 +249,7 @@ int test_two_record_var(char *filename)
 }
 
 int main(int argc, char** argv) {
-    char *filename="testfile.nc";
+    char filename[256];
     int nerrs=0, rank, nprocs, err;
 
     MPI_Init(&argc, &argv);
@@ -260,7 +260,8 @@ int main(int argc, char** argv) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         goto fn_exit;
     }
-    if (argc == 2) filename = argv[1];
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
