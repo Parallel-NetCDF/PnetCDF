@@ -2482,10 +2482,10 @@ sub ncfxinqlibvers {
     const char *p = ncmpi_inq_libvers();
     size_t len = strlen(p);
     /* d1 is the length of the string passed into the routine */
-    if (len > d1) len = d1;  /* MIN(len, d1) */
+    if (len > (size_t)d1) len = d1;  /* MIN(len, d1) */
     memcpy(v1, p, len);
     /* Blank pad */
-    if (len < d1) memset(v1+len, ' ', d1-len);
+    if (len < (size_t)d1) memset(v1+len, ' ', (size_t)d1-len);
     return 0;
 }\n";
     close ($OUTFD);
