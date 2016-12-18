@@ -811,9 +811,8 @@ ncmpii_create_imaptype(NC_var *varp, const MPI_Offset *count,
                        MPI_Datatype *imaptype);
 
 extern int
-ncmpii_calc_datatype_elems(NC *ncp, NC_var *varp, const MPI_Offset *start,
-                           const MPI_Offset *count, const MPI_Offset *stride,
-                           int rw_flag, MPI_Datatype buftype,
+ncmpii_calc_datatype_elems(NC_var *varp, const MPI_Offset *count,
+                           MPI_Datatype buftype,
                            MPI_Datatype *ptype, MPI_Offset *bufcount,
                            MPI_Offset *bnelems, MPI_Offset *nbytes,
                            int *el_size, int *buftype_is_contig);

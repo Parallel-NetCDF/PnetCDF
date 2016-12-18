@@ -46,12 +46,8 @@ dnl
  * buftype_is_contig: whether buftype is contiguous
  */
 int
-ncmpii_calc_datatype_elems(NC               *ncp,
-                           NC_var           *varp,
-                           const MPI_Offset *start,
+ncmpii_calc_datatype_elems(NC_var           *varp,
                            const MPI_Offset *count,
-                           const MPI_Offset *stride,
-                           int               rw_flag,
                            MPI_Datatype      buftype,
                            MPI_Datatype     *ptype,             /* out */
                            MPI_Offset       *bufcount,          /* in/out */

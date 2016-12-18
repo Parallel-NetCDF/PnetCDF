@@ -159,7 +159,7 @@ ncmpii_igetput_varm(NC               *ncp,
      * el_size: size of ptype
      * buftype_is_contig: whether buftype is contiguous
      */
-    err = ncmpii_calc_datatype_elems(ncp, varp, start, count, stride, rw_flag,
+    err = ncmpii_calc_datatype_elems(varp, count,
                                      buftype, &ptype, &bufcount, &bnelems,
                                      &nbytes, &el_size, &buftype_is_contig);
     if (err == NC_EIOMISMATCH) DEBUG_ASSIGN_ERROR(warning, err)
