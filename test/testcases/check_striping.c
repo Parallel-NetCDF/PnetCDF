@@ -30,7 +30,7 @@
 #define ERR {if(err!=NC_NOERR){nerrs++;printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
 int main(int argc, char** argv) {
-    char *filename="testfile.nc";
+    char filename[256];
     int rank, nprocs, err, nerrs=0, ncid, cmode;
     int striping_size, striping_count, root_striping_size, root_striping_count;
 
@@ -43,7 +43,8 @@ int main(int argc, char** argv) {
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) filename = argv[1];
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);

@@ -126,7 +126,6 @@ int main(int argc, char** argv) {
 
     if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
     else           strcpy (filename, "testfile.nc");
-    filename[255] = '\0';
 
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */

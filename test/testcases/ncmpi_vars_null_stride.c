@@ -35,12 +35,12 @@
 
 int main(int argc, char **argv)
 {
+    char filename[256];
     int err, nerrs=0, ncid, dimid[NDIMS], varid[5], ndims=NDIMS;
     int i, j, k, nprocs, rank, req, *buf;
     MPI_Offset start[NDIMS] = {0};
     MPI_Offset count[NDIMS] = {0};
     MPI_Offset stride[NDIMS] = {0};
-    char *filename="testfile.nc";
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -51,7 +51,8 @@ int main(int argc, char **argv)
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) filename = argv[1];
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);

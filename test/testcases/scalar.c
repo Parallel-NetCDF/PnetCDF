@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     int err, nerrs=0, rank, nprocs, ncid, varid;
     MPI_Offset start[1], count[1], stride[1], imap[1];
     int   buf;
-    char *filename="testfile.nc";
+    char filename[256];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -38,7 +38,8 @@ int main(int argc, char **argv)
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) filename = argv[1];
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);

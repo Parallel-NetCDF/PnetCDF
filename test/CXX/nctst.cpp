@@ -509,16 +509,15 @@ main(int argc, char* argv[])	// test new netCDF interface
        MPI_Finalize();
        return 0;
    }
-   strcpy(filename, "testfile.nc");
-   if (argc == 2) strncpy(filename, argv[1], 255);
-   filename[255] = '\0';
+   if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+   else           strcpy(filename, "testfile.nc");
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", argv[0]);
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
+   if (rank == 0) {
+       char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+       sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", argv[0]);
+       printf("%-66s ------ ", cmd_str);
+       free(cmd_str);
+   }
 
    // Set up the format constants.
    NcmpiFile::FileFormat format[NUM_FORMATS] =

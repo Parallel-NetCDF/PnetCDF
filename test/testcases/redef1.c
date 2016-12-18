@@ -33,7 +33,7 @@
 
 int main(int argc, char** argv)
 {
-    char filename[256]="redef2.nc";
+    char filename[256];
     int i, j, k, commsize, rank, ncid, err, nerrs=0;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
@@ -52,14 +52,8 @@ int main(int argc, char** argv)
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) strncpy(filename, argv[1], 255);
-    filename[255] = '\0';
-
-    if (filename[0] == '\0') {
-        printf("Error: invalid output file name\n");
-        MPI_Finalize();
-        return 0;
-    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "redef2.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);

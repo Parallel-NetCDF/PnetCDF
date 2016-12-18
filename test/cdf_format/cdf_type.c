@@ -81,7 +81,7 @@ int test_var_types(char *filename,
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    char *filename="testfile.nc";
+    char filename[256];
     int rank, nerrs=0;
 
     MPI_Init(&argc, &argv);
@@ -92,7 +92,8 @@ int main(int argc, char **argv)
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) filename = argv[1];
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
