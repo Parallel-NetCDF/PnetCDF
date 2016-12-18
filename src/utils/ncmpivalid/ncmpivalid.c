@@ -499,9 +499,8 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
 static int
 val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   NC_string *strp;
-  int status;
+  int dim, status;
   MPI_Offset ndims, *tmp_dim;
-  size_t dim;
   NC_var *varp;
 
   status = val_get_NC_string(gbp, &strp);
@@ -524,7 +523,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   for (dim = 0; dim < ndims; dim++ ) {
     status = val_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
     if(status != NC_NOERR) {
-      printf("the dimid[%d] is expected for \"%s\" - ", (int)dim, strp->cp);
+      printf("the dimid[%d] is expected for \"%s\" - ", dim, strp->cp);
       ncmpii_free_NC_var(varp);
       return status;
     }
