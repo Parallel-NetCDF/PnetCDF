@@ -71,17 +71,8 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) {
-        strncpy(filename, argv[0], 255); /* optional argument */
-        filename[255] = '\0';
-    }
-    else strcpy(filename, "testfile.nc");
-
-    if (filename[0] == '\0') {
-        printf("Error: invalid output file name\n");
-        MPI_Finalize();
-        return 0;     
-    }
+    if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
+    else           strcpy(filename, "testfile.nc");
 
     if (verbose && rank == 0) printf("%s: example of file create and open\n",__FILE__);
 
