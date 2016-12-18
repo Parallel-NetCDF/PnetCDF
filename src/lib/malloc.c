@@ -189,12 +189,12 @@ void *NCI_Malloc_fn(size_t      size,
 {
 #ifdef _DEBUG
     if (size == 0)
-        fprintf(stderr, "Attempt to malloc zero-size in file %s, line %d\n", filename, lineno);
+        fprintf(stderr, "Attempt to malloc zero-size in file %s func %s line %d\n", filename, func, lineno);
 #endif
     if (size == 0) return NULL;
     void *buf = malloc(size);
     if (!buf) {
-	fprintf(stderr, "malloc(%zd) failed in file %s, line %d\n", size, filename, lineno);
+	fprintf(stderr, "malloc(%zd) failed in file %s func %s line %d\n", size, filename, func, lineno);
 #ifdef PNETCDF_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
@@ -215,12 +215,12 @@ void *NCI_Calloc_fn(size_t      nelem,
 {
 #ifdef _DEBUG
     if (nelem == 0 || elsize == 0)
-        fprintf(stderr, "Attempt to calloc zero-size in file %s, line %d\n", filename, lineno);
+        fprintf(stderr, "Attempt to calloc zero-size in file %s func %s line %d\n", filename, func, lineno);
 #endif
     if (nelem == 0 || elsize == 0) return NULL;
     void *buf =calloc(nelem, elsize);
     if (!buf) {
-	fprintf(stderr, "calloc(%zd, %zd) failed in file %s, line %d\n", nelem, elsize, filename, lineno);
+	fprintf(stderr, "calloc(%zd, %zd) failed in file %s func %s line %d\n", nelem, elsize, filename, func, lineno);
 #ifdef PNETCDF_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
@@ -241,7 +241,7 @@ void *NCI_Realloc_fn(void       *ptr,
 {
 #ifdef _DEBUG
     if (size == 0)
-        fprintf(stderr, "Attempt to realloc zero-size in file %s, line %d\n", filename, lineno);
+        fprintf(stderr, "Attempt to realloc zero-size in file %s func %s line %d\n", filename, func, lineno);
 #endif
 #ifdef PNC_MALLOC_TRACE
     if (ptr != NULL) ncmpii_del_mem_entry(ptr);
@@ -249,7 +249,7 @@ void *NCI_Realloc_fn(void       *ptr,
     if (size == 0) return NULL;
     void *buf = (void *) realloc(ptr, size);
     if (!buf) {
-	fprintf(stderr, "realloc failed in file %s, line %d\n", filename, lineno);
+	fprintf(stderr, "realloc failed in file %s func %s line %d\n", filename, func, lineno);
 #ifdef PNETCDF_DEBUG
 	MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
@@ -269,7 +269,7 @@ void NCI_Free_fn(void       *ptr,
 {
 #ifdef _DEBUG
     if (ptr == NULL)
-	fprintf(stderr, "Attempt to free null pointer in file %s, line %d\n", filename, lineno);
+	fprintf(stderr, "Attempt to free null pointer in file %s func %s line %d\n", filename, func, lineno);
 #endif
     if (ptr == NULL) return;
 #ifdef PNC_MALLOC_TRACE
