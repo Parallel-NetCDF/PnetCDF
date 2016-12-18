@@ -71,8 +71,7 @@ int main(int argc, char **argv) {
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "1");
 
-    strncpy(filename, argv[1], 255);
-    filename[255] = '\0';
+    snprintf(filename, 256, "%s", argv[1]);
 
     ret = ncmpi_create(MPI_COMM_WORLD, filename,
                        NC_CLOBBER|NC_64BIT_OFFSET, info, &ncfile);

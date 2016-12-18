@@ -85,20 +85,12 @@ int main(int argc, char **argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc >= 1) {
-        strncpy(filename, argv[0], 255); /* optional argument */
-        filename[255] = '\0';
-    }
-    else strcpy(filename, "testfile.nc");
-
-    if (filename[0] == '\0') {
-        printf("Error: invalid output file name\n");
-        MPI_Finalize();
-        return 0;     
-    }
+    if (argc >= 1) snprintf(filename, 256, "%s", argv[0]);
+    else           strcpy(filename, "testfile.nc");
 
     len = 2;
     if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
+    len = (len <= 0) ? 2 : len;
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;
