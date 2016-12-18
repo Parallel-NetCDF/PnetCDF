@@ -35,7 +35,7 @@
 #define ERR {if(err!=NC_NOERR){nerrs++;printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
 int main(int argc, char** argv) {
-    char *filename="redef1.nc";
+    char filename[256];
     int i, j, rank, nprocs, err, verbose=0, nerrs=0;
     int ncid, cmode, varid[NVARS], dimid[2], *buf;
     char str[32];
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         return 0;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
+    else           strcpy(filename, "redef1.nc");
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
