@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (!rank) printf("Usage: %s dir_name\n",argv[0]);
         MPI_Finalize();
         return 0;
