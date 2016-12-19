@@ -8,23 +8,26 @@ ncmpidiff \- compares two netCDF files in parallel
 .SH SYNOPSIS
 .ft B
 .HP
-mpiexec -n 4 ncmpidiff
+mpiexec -n np ncmpidiff
 .nh
 \%[-b]
+\%[-q]
 \%[-h]
 \%[-v \fIvar1,...\fP]
 \%\fIfile1 file2\fP
 .hy
 .ft
 .SH DESCRIPTION
-\fBncmpidiff\fP compares the contents of the two files and reports
-the difference to the standard output.
+\fBncmpidiff\fP runs in parallel using np number of MPI processes to compare the
+contents of the two files and reports the difference to the standard output.
 
-If no argument is given besides the two file names, the entire
+If neither argument -v nor -h is given besides the two file names, the entire
 files are compared.
 .SH OPTIONS
 .IP "\fB-b\fP"
-Verbose mode 
+Verbose mode - print results (same or different) for all components (file, header, or variables) in comparison
+.IP "\fB-q\fP"
+Quiet mode - print nothing when two components in comparison are the same
 .IP "\fB-h\fP"
 Compare file header only
 .IP "\fB-v\fP \fIvar1,...,varn\fP"
