@@ -1223,7 +1223,6 @@ AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
 AC_CONFIG_FILES(macros.make \
                 Makefile \
                 pnetcdf_pc \
-                pnetcdf-config \
                 src/Makefile \
                 src/lib/Makefile \
                 src/lib/pnetcdf.h \
@@ -1273,6 +1272,10 @@ AC_CONFIG_FILES(macros.make \
 # The following dependency is for configure.in and configure
 # See autoconf manual 2.69, Section 4.8.5 Automatic Remaking
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
+
+dnl add executable permission to pnetcdf-config and check_install
+AC_CONFIG_FILES([pnetcdf-config], [chmod u+x pnetcdf-config])
+AC_CONFIG_FILES([check_install],  [chmod u+x check_install])
 
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
