@@ -9,7 +9,9 @@
 
 prefix="@prefix@"
 
-if test $# -eq 0 ; then
+if test $# -eq 1 ; then
+   prefix=$1
+elif test $# -eq 0 ; then
    if test "x$prefix" = "x" ; then
       echo "This utility checks the PnetCDF install files" >& 2
       echo "Usage: $0 install_path" >&2
