@@ -27,7 +27,7 @@ for f in $headerfiles
 do
    installfile=$installdir/include/$f
    if ! test -e $installfile ; then
-       echo "Error: file NOT found: $installfile"
+       echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
    fi
 done
@@ -37,7 +37,7 @@ for f in $libfiles
 do
    installfile=$installdir/lib/$f
    if ! test -e $installfile ; then
-       echo "Error: file NOT found: $installfile"
+       echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
    fi
 done
@@ -47,7 +47,7 @@ for f in $pkgfiles
 do
    installfile=$installdir/lib/pkgconfig/$f
    if ! test -e $installfile ; then
-       echo "Error: file NOT found: $installfile"
+       echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
    fi
 done
@@ -57,7 +57,7 @@ for f in $binfiles
 do
    installfile=$installdir/bin/$f
    if ! test -e $installfile ; then
-       echo "Error: file NOT found: $installfile"
+       echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
    fi
 done
@@ -67,7 +67,7 @@ for f in $man1files
 do
    installfile=$installdir/man/man1/$f
    if ! test -e $installfile ; then
-       echo "Error: file NOT found: $installfile"
+       echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
    fi
 done
@@ -77,7 +77,7 @@ for f in $man3files
 do
    installfile=$installdir/man/man3/$f
    if ! test -e $installfile ; then
-       echo "Error: file NOT found: $installfile"
+       echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
    fi
 done
@@ -85,6 +85,7 @@ done
 if test $nerrs = 0 ; then
    echo "PASS -- all PnetCDF files appear in $installdir"
 else
-   echo "FAIL -- $nerrs error(s) found"
+   echo "FAIL -- $nerrs error(s) found" >& 2
+   exit 1
 fi
 
