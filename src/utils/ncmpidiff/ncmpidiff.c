@@ -164,15 +164,15 @@ static void
 usage(int rank, char *progname)
 {
 #define USAGE   "\
-  Compare the contents of two netCDF files.\n\n\
+  Compare the contents of two netCDF files.\n\
   [-b]             Verbose output\n\
-  [-h]             Compare header information only, no data\n\
   [-q]             quiet mode (no output if two files are the same)\n\
+  [-h]             Compare header information only, no variables\n\
   [-v var1[,...]]  Compare variable(s) <var1>,... only\n\
   file1 file2      File names of two input netCDF files to be compared\n"
 
     if (rank == 0) {
-        printf("  %s [-h] [-v ...] [-b] file1 file2\n%s", progname, USAGE);
+        printf("  %s [-b] [-q] [-h] [-v ...] file1 file2\n%s", progname, USAGE);
         printf("  PnetCDF library version %s\n", ncmpi_inq_libvers());
     }
     MPI_Finalize();
