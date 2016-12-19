@@ -4,7 +4,7 @@ dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
 AC_PREREQ([2.59])
-AC_INIT([parallel-netcdf],[1.8.0.pre1],[parallel-netcdf@mcs.anl.gov])
+AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
 AC_CONFIG_HEADERS([src/lib/ncconfig.h])
@@ -1296,8 +1296,8 @@ echo \
    ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
    Features:  Support for large files (> 4 GB)                  - ${msg_large_files}
-              Build C++ APIs                                    - ${has_mpicxx}
               Build Fortran APIs                                - ${enable_fortran}
+              Build C++ APIs                                    - ${has_mpicxx}
               Build CDF-2 and CDF-5 support                     - ${enable_cdf_2_n_5}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
