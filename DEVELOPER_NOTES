@@ -24,8 +24,8 @@ Tasks immediately before a new release (must run in the following order)
       - make check
       - make ptests
       - make install
-      - ./check_install (check if all files are installed in the right places)
-      - make uninstall (and make sure all installed files are deleted)
+      - ./check_install (check if all files are installed under $prefix)
+      - make uninstall (check all installed files are deleted from $prefix)
       - make clean (and make sure all object files are deleted)
       - make distclean (and make sure all non-source files are deleted)
     * build and test under a different directory (VPATH build)
