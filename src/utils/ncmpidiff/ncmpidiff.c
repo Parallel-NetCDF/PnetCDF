@@ -167,7 +167,7 @@ usage(int rank, char *progname)
   Compare the contents of two netCDF files.\n\n\
   [-b]             Verbose output\n\
   [-h]             Compare header information only, no data\n\
-  [-q]             quiet mode (return 0/1 for same/different)\n\
+  [-q]             quiet mode (no output if two files are the same)\n\
   [-v var1[,...]]  Compare variable(s) <var1>,... only\n\
   file1 file2      File names of two input netCDF files to be compared\n"
 
@@ -734,22 +734,25 @@ int main(int argc, char **argv)
 
     /* summary of the difference */
     MPI_Reduce(&numVarDIFF, &varDIFF, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, comm);
-    if (!quiet && rank == 0) {
+    if (rank == 0) {
         if (check_header) {
-            if (numHeadDIFF == 0)
-                printf("Headers of two files are the same\n");
+            if (numHeadDIFF == 0) {
+                if (!quiet) printf("Headers of two files are the same\n");
+            }
             else
                 printf("Number of differences in header %lld\n",numHeadDIFF);
         }
         if (check_variable_list) {
-            if (varDIFF == 0)
-                printf("Compared variable(s) are the same\n");
+            if (varDIFF == 0) {
+                if (!quiet) printf("Compared variable(s) are the same\n");
+            }
             else
                 printf("Compared variables(s) has %lld differences\n",varDIFF);
         }
         if (check_entire_file) {
-            if (varDIFF == 0)
-                printf("All variables of two files are the same\n");
+            if (varDIFF == 0) {
+                if (!quiet) printf("All variables of two files are the same\n");
+            }
             else
                 printf("Number of differences in variables %lld\n",varDIFF);
         }
