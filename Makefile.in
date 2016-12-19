@@ -36,7 +36,8 @@ DIST_GARBAGE	= config.cache \
 		  macros.make \
 		  stamp-h \
                   pnetcdf.pc \
-                  pnetcdf-config
+                  pnetcdf-config \
+                  check_install
 
 PACKING_LIST	= Makefile.in \
 		  aclocal.m4 \
@@ -63,7 +64,8 @@ PACKING_LIST	= Makefile.in \
 		  cobalt.script \
 		  stamp-h.in \
                   pnetcdf_pc.in \
-                  pnetcdf-config.in
+                  pnetcdf-config.in \
+                  check_install.in
 
 PACKING_SUBDIRS	= $(SUBDIRS)
 
