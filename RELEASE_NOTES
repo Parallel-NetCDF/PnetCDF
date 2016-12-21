@@ -180,12 +180,12 @@ version  1.8.0 (December 19, 2016)
   o Bug fixes
     * Fix to allow argument no_fill in API ncmpi_inq_var_fill to be NULL. See
       r2609
-    * Fix to allow putting global attribute _FillValue
+    * Fix to allow putting global attribute _FillValue. See r2560
     * Fix some missing character string normalizations for names of attributes,
       dimensions, and variables.
     * Fix the return unlimited dimension ID of value -1, not 0, by Fortran API
       nfmpi_inq_unlimdim when no unlimited dimension is defined. This conforms
-      with netCDF convention. See r3296 and r1372
+      with netCDF convention. See r2396 and r1372
     * Fix string processing of the environment variables for PnetCDF I/O hints
       See r2385
     * Fix utility ncmpidiff to use collective read APIs in collective data mode
