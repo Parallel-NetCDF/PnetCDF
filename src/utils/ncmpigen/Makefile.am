@@ -17,7 +17,7 @@ dist_man_MANS = ncmpigen.1
 HFILES = generic.h genlib.h ncmpigen.h ncmpigentab.h
 
 EXTRA_DIST = $(HFILES) $(MANUAL) \
-             ncmpigenyy.c depend Makefile.in \
+             ncmpigenyy.c Makefile.in \
              ncmpigen.l ncmpigen.y c0.cdl
 
 CLEANFILES = c0.nc c1.cdl c1.nc c2.cdl f0.nc \
