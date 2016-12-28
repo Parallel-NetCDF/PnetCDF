@@ -1288,8 +1288,7 @@ else
 fi
 
 dnl AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
-AC_CONFIG_FILES(macros.make \
-                Makefile \
+AC_CONFIG_FILES(Makefile \
                 libpnetcdf.pc \
                 src/Makefile \
                 src/lib/Makefile \

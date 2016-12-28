@@ -6,80 +6,52 @@
 #
 # @configure_input@
 
+SUFFIXES = .o .c .f .f90
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+AM_DEFAULT_SOURCE_EXT = .c
 
-include ../../macros.make
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+AM_FFLAGS = -I$(top_builddir)/src/libf
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf 
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+TESTPROGRAMS = pnctest \
+               csnap
 
-C_SRCS   = pnctest.c \
-           csnap.c
-
-F77_SRCS = pnf_test.f \
-           pnctestf.f
-
-ifeq (@F77_SUPPORT_FREEFORM@, yes)
-F77_SRCS += freeform.f
+if HAS_FORTRAN
+TESTPROGRAMS += pnf_test pnctestf fixedform
+pnf_test_SOURCES = pnf_test.f
+pnctestf_SOURCES = pnctestf.f
+fixedform_SOURCES = fixedform.f90
+fixedform_FCFLAGS = $(FFIXEDFORMFLAG) $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf
+if HAVE_F77_SUPPORT_FREEFORM
+TESTPROGRAMS += freeform
+freeform_SOURCES = freeform.f
+freeform_FFLAGS = $(FFREEFORMFLAG) -I$(top_builddir)/src/libf
+endif
 endif
 
-F90_SRCS = fixedform.f90
+check_PROGRAMS = $(TESTPROGRAMS)
 
-PROGS  = $(C_SRCS:.c=)
-OBJS   = $(C_SRCS:.c=.o)
-ifeq (@has_fortran@, yes)
-PROGS += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
-OBJS  += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
-endif
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in depend
+# programs in this folder are just for testing compile error/warning messages,
+# not for running
+# TESTS = $(TESTPROGRAMS)
 
-all: $(PROGS)
+CLEANFILES = *.nc core core.*
 
-$(C_SRCS:.c=.o): $(srcdir)/../common/testutils.h
-
-$(PROGS): ../common/libtestutils.a
-
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
-
-pnctest: pnctest.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-csnap:  csnap.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS) -lm
-
-pnctestf: pnctestf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-pnf_test:  pnf_test.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-# check F77 program to see if accept Fortran free form
-freeform.o: freeform.f
-	$(COMPILE.f) @FFREEFORMFLAG@ $<
-
-freeform: freeform.o
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-# check F90 program to see if accept Fortran fixed form
-fixedform.o: fixedform.f90
-	$(COMPILE.f90) @FFIXEDFORMFLAG@ $<
-
-fixedform: fixedform.o
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-testing check verbose_testing:
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
