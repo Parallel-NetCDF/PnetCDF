@@ -42,7 +42,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
-    * none
+    * To conform with GNU Coding Standards, the installation location for man
+      pages are changed to ${prefix}/share/man.
+    * Support of DESTDIR for Building Binary Packages has been added, as
+      suggested by sunpoet@FreeBSD.org. Ticket #25
 
   o Bug fixes
     * none
