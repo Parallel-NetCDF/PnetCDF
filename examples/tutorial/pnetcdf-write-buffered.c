@@ -6,8 +6,9 @@
  *********************************************************************/
 /* $Id$ */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <string.h>
 #include <pnetcdf.h>
 
@@ -19,6 +20,7 @@ int main(int argc, char **argv) {
     int i, j, ncid, dimid[2], varid, err, rank, nprocs, cmode;
     int req[2], status[2]; 
     float  var[4][6];
+    char filename[256];
     MPI_Offset start[2], count[2], stride[2], imap[2];
     MPI_Offset bufsize;
 
@@ -26,14 +28,16 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    if (NC_NOERR != (err = ncmpi_create(MPI_COMM_WORLD, argv[1],
+    if (NC_NOERR != (err = ncmpi_create(MPI_COMM_WORLD, filename,
                                         cmode, MPI_INFO_NULL, &ncid)))
        ERR(err);
 
