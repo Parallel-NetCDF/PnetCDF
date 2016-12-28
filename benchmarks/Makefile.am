@@ -6,51 +6,32 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
-
-include ../macros.make
-
 SUBDIRS = C
 
-ifeq (@has_fortran@, yes)
-ifeq (@mpi_mod@, yes)
+if HAS_FORTRAN
+if HAVE_MPI_MOD
 SUBDIRS += FLASH-IO
 endif
 endif
 
-PACKING_LIST = Makefile.in README
+EXTRA_DIST = README
 
-PACKING_SUBDIRS = C FLASH-IO
-
-GARBAGE =
-
-all: $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) $(MFLAGS) -C $@
-
-PTEST_DIRS = $(SUBDIRS:%=ptest-%)
-ptest: all $(PTEST_DIRS)
-$(PTEST_DIRS):
-ifeq (@enable_coverage@, yes)
-	echo "Parallel test is disabled because coverage analysis was enabled"
+if ENABLE_COVERAGE
+   PTEST_SUBDIRS =
 else
-	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+   PTEST_SUBDIRS = $(SUBDIRS)
 endif
-# make sure ptest runs one directory after another
-ptest-FLASH-IO: ptest-C
 
-ptests: ptest
+ptest ptests:
+	(echo "=============================================")  && \
+	(echo "    Parallel testing on 4 MPI processes")  && \
+	(echo "=============================================")  && \
+	( for d in $(PTEST_SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest4 $$* ; \
+	done ) ;
 
-INSTALLDIRS = $(SUBDIRS:%=install-%)
-install: all $(INSTALLDIRS)
-$(INSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
-UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
-uninstall: $(UNINSTALLDIRS)
-$(UNINSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
-
-include $(srcdir)/../rules.make
+.PHONY: ptest ptests
 

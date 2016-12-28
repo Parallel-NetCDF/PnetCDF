@@ -6,43 +6,23 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
+SUFFIXES = .o .c
 
-include ../../macros.make
+AM_CPPFLAGS = -I$(top_builddir)/src/lib
+LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
-# note the order of -L list matters
-INCLUDES  = -I../../src/lib
-LDFLAGS  := -L../../src/lib $(LDFLAGS)
-LIBS     := -lpnetcdf $(LIBS)
+TESTPROGRAMS = aggregation \
+               write_block_read_column
 
-C_SRCS    = aggregation.c \
-            write_block_read_column.c
+check_PROGRAMS = $(TESTPROGRAMS)
 
-PROGS     = $(C_SRCS:.c=)
-OBJS      = $(C_SRCS:.c=.o)
+TESTS = $(TESTPROGRAMS)
 
-GARBAGE      = $(PROGS) *.nc
+CLEANFILES = *.nc core core.*
 
-PACKING_LIST = $(C_SRCS) Makefile.in depend
-
-all: $(PROGS)
-
-install:
-
-uninstall:
-
-aggregation: aggregation.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-write_block_read_column: write_block_read_column.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-
-ptest: $(PROGS)
-	@for i in $(PROGS); do { \
-	$(TEST_MPIRUN_4) ./$$i -q 10 $(TEST_OUTDIR)/testfile.nc ; \
+ptest ptests ptest4: $(TESTPROGRAMS)
+	for i in $(TESTPROGRAMS); do { \
+	$(TESTMPIRUN4) ./$$i -q 10 $(TESTOUTDIR)/testfile.nc ; \
 	if [ $$? = 0 ] ; then \
 	    echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
 	else \
@@ -50,11 +30,12 @@ ptest: $(PROGS)
 	    exit 1; \
 	fi ; } ; done
 
-ptests:
+ptest2 ptest6 ptest8 ptest10:
 
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-include $(srcdir)/../../rules.make
-
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
