@@ -6,50 +6,17 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
-
-include ../macros.make
-
-OPT_DIRS =
-ifeq (@has_mpicxx@, yes)
-   OPT_DIRS += libcxx
+SUBDIRS =
+if HAS_MPICXX
+SUBDIRS += libcxx
 endif
-ifeq (@has_fortran@, yes)
-   OPT_DIRS += libf
-   OPT_DIRS += libf90
+if HAS_FORTRAN
+SUBDIRS += libf libf90
 endif
-OBJ_SUBDIRS = lib $(OPT_DIRS)
 
-SUBDIRS = $(OBJ_SUBDIRS) utils
+SUBDIRS += lib
+SUBDIRS += utils
 
-PACKING_LIST = Makefile.in
-
-PACKING_SUBDIRS = lib libcxx libf libf90 utils
-
-all: $(OBJ_SUBDIRS) library utils
-
-$(OBJ_SUBDIRS):
-	$(MAKE) $(MFLAGS) -C $@ objs
-
-library: $(OBJ_SUBDIRS)
-	@set -e; for i in $(OBJ_SUBDIRS); do ( $(MAKE) $(MFLAGS) -C $$i library; ) ; done
-
-# utils must be built after lib
-utils: library
-	$(MAKE) $(MFLAGS) -C utils
-
-INSTALL_SUBDIRS = $(SUBDIRS)
-
-INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
-install: $(INSTALLDIRS)
-$(INSTALLDIRS): all
-	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
-
-UNINSTALLDIRS = $(INSTALL_SUBDIRS:%=uninstall-%)
-uninstall: $(UNINSTALLDIRS)
-$(UNINSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
-
-include $(srcdir)/../rules.make
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 

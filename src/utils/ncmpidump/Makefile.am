@@ -4,70 +4,30 @@
 #
 # $Id$
 #
-# @configure_input@
 
-srcdir = @srcdir@
-VPATH = @srcdir@
 
-include ../../../macros.make
+NCGEN = ../ncmpigen/ncmpigen
 
-NCGEN		= ../ncmpigen/ncmpigen
+bin_PROGRAMS = ncmpidump
+ncmpidump_SOURCES = ncmpidump.c vardata.c dumplib.c
+ncmpidump_CPPFLAGS = -I$(top_builddir)/src/lib
+ncmpidump_LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
-# For VPATH build:
-# Add ../../lib into search path because ../../lib/pnetcdf.h is created in
-# the build directory at configure time and is included by C files here.
-INCLUDES	= -I../../lib
+dist_man_MANS = ncmpidump.1
 
-LDFLAGS        += -L../../lib
-LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
+HFILES = ncmpidump.h vardata.h dumplib.h
 
-C_SOURCES	= ncmpidump.c vardata.c dumplib.c
-HEADERS		= ncmpidump.h vardata.h dumplib.h
+EXTRA_DIST = $(HFILES) $(MANUAL) test0.cdl
 
-OBJS            = $(C_SOURCES:.c=.o)
+CLEANFILES = test0.nc test1.nc test1.cdl test2.cdl
 
-PROGRAM		= ncmpidump
-MANUAL		= ncmpidump.1
-
-PACKING_LIST    = $(C_SOURCES) $(HEADERS) $(MANUAL) \
-                  depend Makefile.in \
-                  test0.cdl
-
-GARBAGE		= $(PROGRAM) test0.nc test1.nc test1.cdl test2.cdl
-
-all:		$(PROGRAM)
-
-$(PROGRAM):	$(LIBRARY) $(OBJS)
-	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
-
-test:		$(PROGRAM) FORCE
-	$(NCGEN) -b $(srcdir)/test0.cdl -o `pwd`/test0.nc
-	./$(PROGRAM) -n test1 test0.nc > test1.cdl
-	$(NCGEN) -b `pwd`/test1.cdl -o `pwd`/test1.nc
-	./$(PROGRAM) test1.nc > test2.cdl
+test: $(bin_PROGRAMS)
+	$(NCGEN) -b -o `pwd`/test0.nc $(srcdir)/test0.cdl
+	./$(bin_PROGRAMS) -n test1 test0.nc > test1.cdl
+	$(NCGEN) -b -o `pwd`/test1.nc `pwd`/test1.cdl
+	./$(bin_PROGRAMS) test1.nc > test2.cdl
 	@cmp test1.cdl test2.cdl && \
-	     echo "*** $(PROGRAM) test successful ***"
-
-install: $(PROGRAM) $(MANUAL)
-	$(INSTALL) -d -m 755 $(MANDIR)/man1
-	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
-
-	$(INSTALL) -d $(BINDIR)
-	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
-
-uninstall:
-	$(RM) -f $(BINDIR)/$(PROGRAM)
-	$(RM) -f $(MANDIR)/man1/$(MANUAL)
-
-$(PROGRAM)_oc : $(C_SOURCES)
-	#setopt primary_language C
-	#load -C $(CPPFLAGS) $(C_SOURCES)
-	#load -C $(LIBS)
-	#setopt program_name $(PROGRAM)
-
-TAGS:		FORCE
-	etags `echo $(PACKING_LIST) | fmt -1 | $(EGREP) '\.c|\.h'
-
-include $(srcdir)/../../../rules.make
-include $(srcdir)/depend
+	     echo "*** $(bin_PROGRAMS) test successful ***"
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 

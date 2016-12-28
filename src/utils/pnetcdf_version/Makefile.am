@@ -6,50 +6,28 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH = @srcdir@
+CC = $(SEQ_CC)
+bin_PROGRAMS = pnetcdf_version
+pnetcdf_version_SOURCES = pnetcdf_version.c
 
-include ../../../macros.make
+XDEFS = -DMPICC="\"$(MPICC)\""   -DCFLAGS="\"$(CFLAGS)\""
+XDEFS += -DCONFIGURE_ARGS_CLEAN="\"$(CONFIGURE_ARGS_CLEAN)\""
+XDEFS += -DPNETCDF_VERSION="\"$(PNETCDF_VERSION)\""
+XDEFS += -DPNETCDF_RELEASE_DATE="\"$(PNETCDF_RELEASE_DATE)\""
 
-DEFS  = -DMPICC="\"$(MPICC)\""   -DCFLAGS="\"$(CFLAGS)\""
-DEFS += -DCONFIGURE_ARGS_CLEAN="\"@CONFIGURE_ARGS_CLEAN@\""
-DEFS += -DPNETCDF_VERSION="\"@PNETCDF_VERSION@\""
-DEFS += -DPNETCDF_RELEASE_DATE="\"@PNETCDF_RELEASE_DATE@\""
-
-ifeq (@has_mpicxx@, yes)
-DEFS += -DMPICXX="\"$(MPICXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
+if HAS_MPICXX
+XDEFS += -DMPICXX="\"$(MPICXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
 endif
 
-ifeq (@has_fortran@, yes)
-DEFS += -DMPIF77="\"$(MPIF77)\"" -DF77FLAGS="\"$(F77FLAGS)\""
-DEFS += -DMPIF90="\"$(MPIF90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
+if HAS_FORTRAN
+XDEFS += -DMPIF77="\"$(MPIF77)\"" -DF77FLAGS="\"$(F77FLAGS)\""
+XDEFS += -DMPIF90="\"$(MPIF90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
 endif
 
-C_SOURCES	= pnetcdf_version.c
+AM_CPPFLAGS = $(XDEFS)
 
-PROGRAM		= pnetcdf_version
-MANUAL		= pnetcdf_version.1
+dist_man_MANS = pnetcdf_version.1
 
-PACKING_LIST    = $(C_SOURCES) $(MANUAL) \
-                  Makefile.in depend
-
-GARBAGE		= $(PROGRAM)
-
-all: $(PROGRAM)
-
-pnetcdf_version: pnetcdf_version.c
-	$(SEQ_CC) $(DEFS) -o $@ $<
-
-install: $(PROGRAM) $(MANUAL)
-	$(INSTALL) -d -m 755 $(MANDIR)/man1
-	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
-	$(INSTALL) -d $(BINDIR)
-	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
-
-uninstall:
-	$(RM) -f $(BINDIR)/$(PROGRAM)
-	$(RM) -f $(MANDIR)/man1/$(MANUAL)
-
-include $(srcdir)/../../../rules.make
-include $(srcdir)/depend
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
