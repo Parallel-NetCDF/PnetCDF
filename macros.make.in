@@ -20,13 +20,20 @@ LN_S		= @LN_S@
 # Installation Directories:
 # SRCDIR	= @SRCDIR@
 prefix		= @prefix@
-INCDIR		= $(prefix)/include
-LIBDIR		= $(prefix)/lib
-BINDIR		= $(prefix)/bin
-MANDIR		= $(prefix)/man
 BUILDDIR	= @BUILDDIR@
 LIBRARY		= @BUILDDIR@/src/lib/libpnetcdf.a
 
+ifdef DESTDIR
+INCDIR		= $(DESTDIR)/$(prefix)/include
+LIBDIR		= $(DESTDIR)/$(prefix)/lib
+BINDIR		= $(DESTDIR)/$(prefix)/bin
+MANDIR		= $(DESTDIR)/$(prefix)/share/man
+else
+INCDIR		= $(prefix)/include
+LIBDIR		= $(prefix)/lib
+BINDIR		= $(prefix)/bin
+MANDIR		= $(prefix)/share/man
+endif
 
 # Useful tools
 M4		= @M4@
