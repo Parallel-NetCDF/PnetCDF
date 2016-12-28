@@ -1,5 +1,5 @@
 dnl $Id$
-dnl UD macros for netcdf configure
+dnl UD macros for PnetCDF configure
 
 
 dnl Convert a string to all uppercase.
@@ -10,7 +10,7 @@ define([uppercase],
 dnl
 dnl Check for an m4(1) preprocessor utility.
 dnl
-AC_DEFUN(UD_PROG_M4,
+AC_DEFUN([UD_PROG_M4],
 [
     dnl AS_MESSAGE([checking for m4 preprocessor...])
     case "${M4-unset}" in
@@ -42,7 +42,7 @@ AC_DEFUN(UD_PROG_M4,
 dnl
 dnl Check for an ar(1) utility.
 dnl
-AC_DEFUN(UD_PROG_AR,
+AC_DEFUN([UD_PROG_AR],
 [
     dnl AS_MESSAGE([checking for ar utility...])
     case "${AR-unset}" in
@@ -60,7 +60,7 @@ AC_DEFUN(UD_PROG_AR,
 dnl
 dnl Check for an nm(1) utility.
 dnl
-AC_DEFUN(UD_PROG_NM,
+AC_DEFUN([UD_PROG_NM],
 [
     dnl AS_MESSAGE([checking for nm utility...])
     case "${NM-unset}" in
@@ -78,7 +78,7 @@ AC_DEFUN(UD_PROG_NM,
 dnl
 dnl Set the top-level source-directory.
 dnl
-AC_DEFUN(UD_SRCDIR,
+AC_DEFUN([UD_SRCDIR],
 [
     AC_MSG_CHECKING(for top-level source-directory)
     SRCDIR=`(cd $srcdir && pwd)`
@@ -91,7 +91,7 @@ dnl Check for a Standard C compiler.  Prefer a native one over the
 dnl GNU one to reduce the chance that the environment variable LIBS
 dnl will have to be set to reference the GNU C runtime library.
 dnl
-AC_DEFUN(UD_PROG_CC,
+AC_DEFUN([UD_PROG_CC],
 [
     # Because we must have a C compiler, we treat an unset CC
     # the same as an empty CC.
@@ -151,7 +151,7 @@ dnl Check for a C++ compiler.  Prefer a native one over the
 dnl GNU one to reduce the chance that the environment variable LIBS
 dnl will have to be set to reference the GNU C runtime library.
 dnl
-AC_DEFUN(UD_PROG_CXX,
+AC_DEFUN([UD_PROG_CXX],
 [
     case "${CXX-unset}" in
 	unset)
@@ -225,7 +225,7 @@ AC_DEFUN(UD_PROG_CXX,
 dnl
 dnl like AC_TYPE_LONG_DOUBLE, except checks for 'long long'
 dnl
-AC_DEFUN(UD_C_LONG_LONG,
+AC_DEFUN([UD_C_LONG_LONG],
 [AC_MSG_CHECKING(for long long)
 AC_CACHE_VAL(ac_cv_c_long_long,
 [if test "$GCC" = yes; then
@@ -249,7 +249,7 @@ dnl If the 'double' is not an IEEE double
 dnl or the 'float' is not and IEEE single,
 dnl define NO_IEEE_FLOAT
 dnl
-AC_DEFUN(UD_CHECK_IEEE,
+AC_DEFUN([UD_CHECK_IEEE],
 [
 AC_MSG_CHECKING(for IEEE floating point format)
 AC_RUN_IFELSE([AC_LANG_SOURCE([[#ifndef NO_FLOAT_H
@@ -291,7 +291,7 @@ fi
 dnl Check for utility for generating makefile dependencies.
 dnl Should only be used at the UPC.
 dnl
-AC_DEFUN(UD_PROG_CC_MAKEDEPEND,
+AC_DEFUN([UD_PROG_CC_MAKEDEPEND],
 [
     AC_MSG_CHECKING(how to make dependencies)
     case `uname -s` in
@@ -334,7 +334,7 @@ AC_DEFUN(UD_PROG_CC_MAKEDEPEND,
 
 dnl Check for Fortran-90 compiler.
 dnl
-AC_DEFUN(UD_PROG_F90,
+AC_DEFUN([UD_PROG_F90],
 [
     case "${F90+set}" in
 	set)
@@ -454,7 +454,7 @@ EOF
 
 dnl Check for Fortran-77 compiler.
 dnl
-AC_DEFUN(UD_PROG_FC,
+AC_DEFUN([UD_PROG_FC],
 [
     AC_BEFORE([UD_FORTRAN_TYPES])
     case "${FC+set}" in
@@ -641,7 +641,7 @@ EOF
 
 dnl Check for Fortran preprocessor.
 dnl
-AC_DEFUN(UD_PROG_FPP,
+AC_DEFUN([UD_PROG_FPP],
 [
     AC_MSG_CHECKING(for Fortran preprocessor)
     case "$FPP" in
@@ -659,7 +659,7 @@ dnl Check for a Fortran type equivalent to a netCDF type.
 dnl
 dnl UD_CHECK_FORTRAN_NCTYPE(forttype, possibs, nctype)
 dnl
-AC_DEFUN(UD_CHECK_FORTRAN_NCTYPE,
+AC_DEFUN([UD_CHECK_FORTRAN_NCTYPE],
 [
     AC_MSG_CHECKING([for Fortran-equivalent to netCDF "$3"])
 dnl     for type in $2; do
@@ -695,7 +695,7 @@ dnl Check for a Fortran type equivalent to a C type.
 dnl
 dnl UD_CHECK_FORTRAN_CTYPE(v3forttype, v2forttype, ctype, min, max)
 dnl
-AC_DEFUN(UD_CHECK_FORTRAN_CTYPE,
+AC_DEFUN([UD_CHECK_FORTRAN_CTYPE],
 [
     AC_MSG_CHECKING([for Fortran-equivalent to C "$3"])
     AC_LANG_PUSH([Fortran])
@@ -769,7 +769,7 @@ dnl Check for a Fortran data type.
 dnl
 dnl UD_CHECK_FORTRAN_TYPE(varname, ftypes)
 dnl
-AC_DEFUN(UD_CHECK_FORTRAN_TYPE,
+AC_DEFUN([UD_CHECK_FORTRAN_TYPE],
 [
     AC_LANG_PUSH([Fortran])
     for ftype in $2; do
@@ -815,7 +815,7 @@ dnl Check for a C type equivalent to a Fortran type.
 dnl
 dnl UD_CHECK_CTYPE_FORTRAN(ftype, ctypes, fmacro_root)
 dnl
-AC_DEFUN(UD_CHECK_CTYPE_FORTRAN,
+AC_DEFUN([UD_CHECK_CTYPE_FORTRAN],
 [
     cat >conftestf.f <<EOF
            $1 values(4)
@@ -922,7 +922,7 @@ dnl	UD_CHECK_FORTRAN_CTYPE(NF_DOUBLE_T, $NCDOUBLE_T, double, DBL_MIN, DBL_MAX)
 
 dnl Setup for making a manual-page database.
 dnl
-AC_DEFUN(UD_MAKEWHATIS,
+AC_DEFUN([UD_MAKEWHATIS],
 [
     #
     # NB: We always want to define WHATIS to prevent the
@@ -978,7 +978,7 @@ AC_DEFUN(UD_MAKEWHATIS,
 
 dnl Check for the math library.
 dnl
-AC_DEFUN(UD_CHECK_LIB_MATH,
+AC_DEFUN([UD_CHECK_LIB_MATH],
 [
     dnl AS_MESSAGE([checking for math library...])
     case "${MATHLIB}" in
@@ -1737,7 +1737,7 @@ AC_DEFUN([UD_CHECK_MPI_CPP_SEEK_SET], [
    AC_LANG_POP(C++)]
 )
 
-AC_DEFUN(UD_CHECK_F77_GNU_INT,
+AC_DEFUN([UD_CHECK_F77_GNU_INT],
 [
     AC_MSG_CHECKING([for Fortran 77 GNU intrinsic INT])
     AC_LANG_PUSH([Fortran 77])
@@ -1764,7 +1764,7 @@ AC_DEFUN(UD_CHECK_F77_GNU_INT,
     AC_MSG_RESULT([$ac_cv_f77_gnu_int])
 ])
 
-AC_DEFUN(UD_CHECK_F77_INT1,
+AC_DEFUN([UD_CHECK_F77_INT1],
 [
     AC_MSG_CHECKING([for Fortran 77 intrinsic INT1])
     AC_LANG_PUSH([Fortran 77])
@@ -1785,7 +1785,7 @@ AC_DEFUN(UD_CHECK_F77_INT1,
     AC_MSG_RESULT([$ac_cv_f77_int1])
 ])
 
-AC_DEFUN(UD_CHECK_F77_INT2,
+AC_DEFUN([UD_CHECK_F77_INT2],
 [
     AC_MSG_CHECKING([for Fortran 77 intrinsic INT2])
     AC_LANG_PUSH([Fortran 77])
@@ -1806,7 +1806,7 @@ AC_DEFUN(UD_CHECK_F77_INT2,
     AC_MSG_RESULT([$ac_cv_f77_int2])
 ])
 
-AC_DEFUN(UD_CHECK_F77_INT8,
+AC_DEFUN([UD_CHECK_F77_INT8],
 [
     AC_MSG_CHECKING([for Fortran 77 intrinsic INT8])
     AC_LANG_PUSH([Fortran 77])
