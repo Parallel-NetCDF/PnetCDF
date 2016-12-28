@@ -6,30 +6,17 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH = @srcdir@
-
-include ../macros.make
-
-MANUAL_C   = pnetcdf.3
-MANUAL_F77 = pnetcdf_f77.3
-MANUAL_F90 = pnetcdf_f90.3
-
-MANUAL = $(MANUAL_C)
-ifeq (@has_fortran@, yes)
-MANUAL += $(MANUAL_F77)
-MANUAL += $(MANUAL_F90)
+man_MANS = pnetcdf.3
+if HAS_FORTRAN
+man_MANS += pnetcdf_f77.3 pnetcdf_f90.3
 endif
 
-PACKING_LIST = pnetcdf.m4 pnetcdf_f90.m4 \
-               Makefile.in
+CLEANFILES = $(man_MANS)
 
-GARBAGE = $(MANUAL)
+EXTRA_DIST = pnetcdf.m4 pnetcdf_f90.m4
 
-all: $(MANUAL)
-
-RELEASE_DATE = "@PNETCDF_RELEASE_DATE2@"
-RELEASE_STR  = "@PNETCDF_VERSION@ of @PNETCDF_RELEASE_DATE@"
+RELEASE_DATE = $(PNETCDF_RELEASE_DATE2)
+RELEASE_STR  = "$(PNETCDF_VERSION) of $(PNETCDF_RELEASE_DATE)"
 
 pnetcdf.3: pnetcdf.m4
 	$(M4) $(M4FLAGS) -DAPI=C -DRELEASE_STR=$(RELEASE_STR) -DRELEASE_DATE=$(RELEASE_DATE) $? > $@  || $(RM) -f $@
@@ -40,21 +27,6 @@ pnetcdf_f77.3: pnetcdf.m4
 pnetcdf_f90.3: pnetcdf_f90.m4
 	$(M4) $(M4FLAGS) -DRELEASE_STR=$(RELEASE_STR) -DRELEASE_DATE=$(RELEASE_DATE) $? > $@  || $(RM) -f $@
 
-test:
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
-install: $(MANUAL)
-	$(INSTALL) -d -m 755 $(MANDIR)/man3
-	@for i in $(MANUAL) ; do ( \
-	    if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	    else file=$$i; fi; \
-	    fn=`basename $$i` ; \
-	    $(INSTALL_DATA) $$file $(MANDIR)/man3/$$fn \
-	; ) ; done
-
-uninstall:
-	@for i in $(MANUAL) ; do ( \
-	    fn=`basename $$i` ; \
-	    $(RM) -f $(MANDIR)/man3/$$fn \
-	; ) ; done
-
-include $(srcdir)/../rules.make
