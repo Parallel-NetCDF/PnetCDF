@@ -6,144 +6,95 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .o .c .f .F .f90
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90 @FC_MODINC@../common
-LDFLAGS  := -L../common $(LDFLAGS)
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+AM_FFLAGS = -I$(top_builddir)/src/libf
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
+
+TESTPROGRAMS = mcoll_perf \
+               test_bput \
+               interleaved \
+               i_varn_int64 \
+               flexible_bput \
+               wait_after_indep \
+               req_all \
+               i_varn_indef
 
 M4_SRCS  = bput_varn.m4 \
            column_wise.m4
 
-C_SRCS   = mcoll_perf.c \
-           test_bput.c \
-           interleaved.c \
-           i_varn_int64.c \
-           flexible_bput.c \
-           wait_after_indep.c \
-           req_all.c \
-           i_varn_indef.c
+TESTPROGRAMS += $(M4_SRCS:.m4=)
 
-F77_SRCS = mcoll_testf77.f \
-           test_bputf77.f
+$(M4_SRCS:.m4=.c): Makefile
 
-F90_SRCS = mcoll_testf.f90 \
-           test_bputf.f90
+.m4.c:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-PROGS     = $(C_SRCS:.c=) $(M4_SRCS:.m4=)
-OBJS      = $(C_SRCS:.c=.o) $(M4_SRCS:.m4=.o)
-ifeq (@has_fortran@, yes)
-PROGS     += $(F77_SRCS:.f=)
-OBJS      += $(F77_SRCS:.f=.o)
-ifeq (@mpi_mod@, yes)
-PROGS     += $(F90_SRCS:.f90=)
-OBJS      += $(F90_SRCS:.f90=.o)
+M4FLAGS += -I${top_srcdir}/m4
+
+if HAS_FORTRAN
+   TESTPROGRAMS += mcoll_testf77 \
+                   test_bputf77
+
+   mcoll_testf77_SOURCES = mcoll_testf77.f
+   test_bputf77_SOURCES = test_bputf77.f
+if HAVE_MPI_MOD
+   TESTPROGRAMS += mcoll_testf \
+                   test_bputf
+   mcoll_testf_SOURCES = mcoll_testf.f90
+   test_bputf_SOURCES = test_bputf.f90
 endif
 endif
 
-GARBAGE      = $(PROGS) $(M4_SRCS:.m4=.c) *.nc
-PACKING_LIST = $(M4_SRCS) $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
-               Makefile.in README depend
+check_PROGRAMS = $(TESTPROGRAMS)
 
-all: $(PROGS)
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-$(OBJS): $(srcdir)/../common/testutils.h
+TESTS = seq_runs.sh
 
-$(PROGS): ../common/libtestutils.a
+CLEANFILES = $(M4_SRCS:.m4=.c) *.nc core core.*
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh
 
-mcoll_perf: mcoll_perf.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-test_bput: test_bput.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-i_varn_int64: i_varn_int64.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-bput_varn.c: bput_varn.m4
-	$(M4) $(M4FLAGS) $< >$@
-
-bput_varn: bput_varn.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-interleaved: interleaved.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-flexible_bput: flexible_bput.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-wait_after_indep: wait_after_indep.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-column_wise.c: column_wise.m4
-	$(M4) $(M4FLAGS) $< >$@
-
-column_wise: column_wise.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-req_all: req_all.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-i_varn_indef: i_varn_indef.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-mcoll_testf77: mcoll_testf77.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-mcoll_testf: mcoll_testf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-test_bputf: test_bputf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-test_bputf77: test_bputf77.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-check testing verbose_check verbose_testing: $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc*
-	for i in $(PROGS); do ( \
-	$(TEST_SEQRUN) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 # Some of these tests are designed to run on one process,
 # # Run them on 4 processes to see if they can handle well
 # Some of these tests are designed to run on 4 processes,
 # # Run them on 2, 4, and 6 processes to see if they can handle well
-TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
 
-ptest4: $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+ptest ptest4: $(TESTPROGRAMS)
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest2 : $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+ptest2 : $(TESTPROGRAMS)
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest6 : $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+ptest6 : $(TESTPROGRAMS)
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest: ptest4
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
