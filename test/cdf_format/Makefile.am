@@ -6,69 +6,41 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
+SUFFIXES = .o .c
 
-include ../../macros.make
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+TESTPROGRAMS = test_inq_format \
+               cdf_type \
+               dim_cdf12
 
-SRCS    = test_inq_format.c \
-          cdf_type.c \
-          dim_cdf12.c
+check_PROGRAMS = $(TESTPROGRAMS)
 
-OBJS    = $(SRCS:.c=.o)
-PROGS   = $(SRCS:.c=)
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-GARBAGE      = $(PROGS) testfile.nc
-PACKING_LIST = $(SRCS) Makefile.in depend \
-               test_cdf1.nc test_cdf2.nc test_cdf5.nc
+TESTS = seq_runs.sh
 
-all: $(PROGS)
+CLEANFILES = testfile.nc core core.*
 
-$(OBJS): $(srcdir)/../common/testutils.h
+EXTRA_DIST = seq_runs.sh test_cdf1.nc test_cdf2.nc test_cdf5.nc
 
-$(PROGS): ../common/libtestutils.a
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
-
-test_inq_format: test_inq_format.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-cdf_type: cdf_type.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-dim_cdf12: dim_cdf12.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-testing check verbose_testing: all
-	$(TEST_SEQRUN) ./test_inq_format $(srcdir)
-	$(TEST_SEQRUN) ./cdf_type $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./dim_cdf12 $(TEST_OUTDIR)/testfile.nc
-
-# Some of these tests are designed to run on one process,
-# # Run them on 4 processes to see if they can handle well
-# Some of these tests are designed to run on 4 processes,
-# # Run them on 2, 4, and 6 processes to see if they can handle well
-TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
-TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
-TEST_MPIRUN_10 = $(subst NP,10,$(TEST_MPIRUN))
-
-ptest4: $(PROGS)
-	$(TEST_MPIRUN_4) ./test_inq_format $(srcdir)
-	$(TEST_MPIRUN_4) ./cdf_type $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN_4) ./dim_cdf12 $(TEST_OUTDIR)/testfile.nc
-
-ptest ptests: ptest4
+ptest ptests ptest4: $(TESTPROGRAMS)
+	$(TESTMPIRUN4) ./test_inq_format $(srcdir)
+	$(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/testfile.nc
+	$(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/testfile.nc
 
 ptest2 ptest6 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
+
