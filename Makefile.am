@@ -6,99 +6,52 @@
 #
 # @configure_input@
 
-ACLOCAL_AMFLAGS = -I m4
+SUFFIXES = .o .c .f .f90
 
-SUBDIRS = src man
+AM_DEFAULT_SOURCE_EXT = .c
 
-if BUILD_TESTSETS
-SUBDIRS += examples benchmarks test
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+AM_FFLAGS = -I$(top_builddir)/src/libf
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf 
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
+
+TESTPROGRAMS = pnctest \
+               csnap
+
+if HAS_FORTRAN
+TESTPROGRAMS += pnf_test pnctestf fixedform
+pnf_test_SOURCES = pnf_test.f
+pnctestf_SOURCES = pnctestf.f
+fixedform_SOURCES = fixedform.f90
+fixedform_FCFLAGS = $(FFIXEDFORMFLAG) $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf
+if HAVE_F77_SUPPORT_FREEFORM
+TESTPROGRAMS += freeform
+freeform_SOURCES = freeform.f
+freeform_FFLAGS = $(FFREEFORMFLAG) -I$(top_builddir)/src/libf
+endif
 endif
 
-if BUILD_DOCS
-SUBDIRS += doc
-endif
+check_PROGRAMS = $(TESTPROGRAMS)
 
-# Below is a trick to build all test executables, without running them
-# tests:
-# 	$(MAKE) $(AM_MAKEFLAGS) check TESTS=
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-CLEANFILES = pnetcdf_pc
+# programs in this folder are just for testing compile error/warning messages,
+# not for running
+# TESTS = $(TESTPROGRAMS)
 
-DISTCLEANFILES = pnetcdf.pc
+CLEANFILES = *.nc core core.*
 
-EXTRA_DIST = COPYRIGHT \
-             CREDITS \
-             INSTALL \
-             README \
-             README.CRAY \
-             README.Fujitsu \
-             README.INTEL \
-             README.IBM \
-             README.K-Computer \
-             README.LINUX \
-             README.SGI \
-             README.SX \
-             README.consistency \
-             README.large_files \
-             RELEASE_NOTES \
-             pbs.script \
-             cobalt.script \
-             check_install.in \
-             m4/foreach.m4 \
-             m4/foreachq.m4 \
-             m4/utils.m4
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-if ENABLE_COVERAGE
-   PTEST_SUBDIRS =
-else
-   PTEST_SUBDIRS = test examples benchmarks
-endif
+ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
-ptest:
-	( for d in $(PTEST_SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest $$* ; \
-	done ) ;
-
-ptests:
-	( for d in $(PTEST_SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptests $$* ; \
-	done ) ;
-
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libpnetcdf.pc
-
-# The script shows the end users how pnetcdf is built
-bin_SCRIPTS = pnetcdf-config
-
-install-data-hook:
-	@echo '+----------------------------------------------------------------------------+'
-	@echo '|'
-	@echo '|  PnetCDF has been successfully installed under $(prefix)'
-	@echo '|'
-	@echo '|  * PnetCDF header files are installed in $(prefix)/include'
-	@echo '|  * PnetCDF library file is installed in $(prefix)/lib'
-	@echo '|  * PnetCDF utility programs are installed in $(prefix)/bin'
-	@echo '|  * PnetCDF man pages are installed in $(prefix)/share/man'
-	@echo '|'
-	@echo '|  To compile your PnetCDF programs, please add the following to the command'
-	@echo '|  line, so the compiler can find the PnetCDF header files:'
-	@echo '|      -I$(prefix)/include'
-	@echo '|'
-	@echo '|  Add the following line to link your program to PnetCDF library:'
-	@echo '|      -L$(prefix)/lib -lpnetcdf'
-	@echo '|'
-	@echo '|  PnetCDF is jointly developed by a team at Northwestern University and'
-	@echo '|  Argonne National Laboratory.'
-	@echo '|'
-	@echo '|  Visit PnetCDF web sites for more information'
-	@echo '|      http://cucis.ece.northwestern.edu/projects/PnetCDF'
-	@echo '|      http://trac.mcs.anl.gov/projects/parallel-netcdf'
-	@echo '|'
-	@echo '+----------------------------------------------------------------------------+'
-
-.PHONY: ptest ptests
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
-
 
