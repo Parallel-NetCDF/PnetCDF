@@ -6,74 +6,42 @@
 #
 # @configure_input@
 
-srcdir	= @srcdir@
-VPATH	= @srcdir@
+SUFFIXES = .o .c
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la
 
-SRCS    = pres_temp_4D_wr.c \
-          pres_temp_4D_rd.c
+TESTPROGRAMS = pres_temp_4D_wr \
+               pres_temp_4D_rd
 
-OBJS    = $(SRCS:.c=.o)
-PROGS   = $(SRCS:.c=)
+check_PROGRAMS = $(TESTPROGRAMS)
 
-GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(SRCS) Makefile.in
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-all: $(PROGS)
+TESTS = seq_runs.sh
 
-$(OBJS): $(srcdir)/../common/testutils.h 
+EXTRA_DIST = seq_runs.sh
 
-$(PROGS): ../common/libtestutils.a
+CLEANFILES = *.nc core core.*
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-pres_temp_4D_wr.o: pres_temp_4D_wr.c 
+ptest ptests ptest4: $(TESTPROGRAMS)
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-pres_temp_4D_wr: pres_temp_4D_wr.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+ptest2 ptest6 ptest8 ptest10:
 
-pres_temp_4D_rd.o: pres_temp_4D_rd.c 
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-pres_temp_4D_rd: pres_temp_4D_rd.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-check testing verbose_testing: $(PROGS)
-	@for i in $(PROGS); do ( \
-	$(TEST_SEQRUN) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
-
-TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
-
-ptest2: $(PROGS)
-	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
-
-ptest4: $(PROGS)
-	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
-
-ptest6: $(PROGS)
-	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
-
-ptest: ptest4
-
-ptests: ptest2 ptest4 ptest6
-
-ptest8 ptest10:
-
-include $(srcdir)/../../rules.make
-
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
