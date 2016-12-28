@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <pnetcdf.h>
 
 #include <testutils.h>
@@ -43,7 +44,7 @@ main(int argc, char **argv)
     else           strcpy(filename, "testfile.nc");
 
     cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", argv[0]);
+    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", basename(argv[0]));
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
 /*

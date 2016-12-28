@@ -5,6 +5,7 @@
  *  $Id$
  */
 
+#include <libgen.h> /* basename() */
 #include <unistd.h>
 #include "tests.h"
 
@@ -212,7 +213,7 @@ main(int argc, char *argv[])
     }
 
     char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-    sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
+    sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
     printf("%-66s ------ ",cmd_str);
     free(cmd_str);
 

@@ -5,12 +5,13 @@
  *
  *  $Id$
  */
-#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pnetcdf.h>
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <unistd.h>
+#include <mpi.h>
+#include <pnetcdf.h>
 
 #include <testutils.h>
 
@@ -294,7 +295,7 @@ int main(int argc, char **argv)
     int array_of_psizes[3];
     int status;
     MPI_Offset array_of_starts[3], stride[3];
-    char basename[256], filename[256];
+    char fbasename[256], filename[256];
     char filename1[256], filename2[256], filename3[256];
     char dimname[20], varname[20];
     int ncid, dimids0[3], dimids1[3], rank_dim[3], *varid;
@@ -325,13 +326,13 @@ int main(int argc, char **argv)
         MPI_Finalize();
         return 0;
     }
-    if (argc == 2) snprintf(basename, 256, "%s", argv[1]);
-    else           strcpy(basename, "testfile");
-    MPI_Bcast(basename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    if (argc == 2) snprintf(fbasename, 256, "%s", argv[1]);
+    else           strcpy(fbasename, "testfile");
+    MPI_Bcast(fbasename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
         free(cmd_str);
     }
@@ -443,7 +444,7 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "romio_cb_write", "true");
  */
     for (k=0; k<=9; k++){
-        sprintf(filename, "%s.%d.%d.%d.nc", basename, length, nvars, k);
+        sprintf(filename, "%s.%d.%d.%d.nc", fbasename, length, nvars, k);
         if (k==0)
             strcpy(filename1, filename);
         else if (k==7)

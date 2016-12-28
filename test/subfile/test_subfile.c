@@ -3,13 +3,14 @@
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
-#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <mpi.h>
 #include <pnetcdf.h>
 
 #include <testutils.h>
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
     int array_of_psizes[3];
     int status;
     MPI_Offset array_of_starts[3];
-    char *basename = NULL, *basename1 = NULL, filename[256];
+    char *fbasename = NULL, *fbasename1 = NULL, filename[256];
     char dimname[20], varname[20];
     int ncid, dimids0[3], rank_dim[3], *varid=NULL;
     MPI_Info info=MPI_INFO_NULL, info_used=MPI_INFO_NULL;
@@ -69,7 +70,7 @@ int main(int argc, char **argv)
     if (!rank) {
 	while ((opt = getopt(argc, argv, "f:s:rp:n:l:")) != EOF) {
 	    switch (opt) {
-	    case 'f': basename = optarg;
+	    case 'f': fbasename = optarg;
 		break;
 	    case 's': num_sf = (int)strtol(optarg,NULL,10);
 		break;
@@ -85,16 +86,16 @@ int main(int argc, char **argv)
 		break;
 	    }
 	}
-	if (basename == NULL) {
+	if (fbasename == NULL) {
 	    fprintf(stderr, "\n*#  Usage: test_subfile -f pathname -s num_sf -p par_dim_id \n\n");
 	    MPI_Abort(MPI_COMM_WORLD, 1);
 	}
 
-	basename1 = (char *) malloc (MAXLINE);
-	sprintf(basename1, "%s", basename);
-	len = strlen(basename1);
+	fbasename1 = (char *) malloc (MAXLINE);
+	sprintf(fbasename1, "%s", fbasename);
+	len = strlen(fbasename1);
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(basename, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+	MPI_Bcast(fbasename, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);
         MPI_Bcast(&num_sf, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&par_dim_id, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&nvars, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -102,9 +103,9 @@ int main(int argc, char **argv)
         MPI_Bcast(&length, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     else {
-	basename1 = (char *) malloc (MAXLINE);
+	fbasename1 = (char *) malloc (MAXLINE);
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(basename1, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);
+	MPI_Bcast(fbasename1, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);
         MPI_Bcast(&num_sf, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&par_dim_id, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&nvars, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -114,7 +115,7 @@ int main(int argc, char **argv)
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for subfiling", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for subfiling", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
         free(cmd_str);
     }
@@ -209,7 +210,7 @@ int main(int argc, char **argv)
     sprintf(tmp, "%d", num_sf);
     MPI_Info_set(info, "nc_num_subfiles", tmp);
 
-    sprintf(filename, "%s.%d.%d.%d.nc", basename1, length, 1, 0);
+    sprintf(filename, "%s.%d.%d.%d.nc", fbasename1, length, 1, 0);
 
     if (do_read == 1) goto read;
 
@@ -387,7 +388,7 @@ end:
     if (!do_read) free(varid);
     free(starts_list);
     free(count_list);
-    free(basename1);
+    free(fbasename1);
 
     MPI_Offset malloc_size, sum_size;
     int err, nfiles, ncids[10];

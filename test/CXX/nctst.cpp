@@ -13,6 +13,7 @@
 using namespace std;
 
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <pnetcdf>
 #include <testutils.h>
 
@@ -514,7 +515,7 @@ main(int argc, char* argv[])	// test new netCDF interface
 
    if (rank == 0) {
        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-       sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", argv[0]);
+       sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", basename(argv[0]));
        printf("%-66s ------ ", cmd_str);
        free(cmd_str);
    }
