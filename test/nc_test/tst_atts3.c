@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <pnetcdf.h>
 #include <signal.h>
 
@@ -775,7 +776,7 @@ int main(int argc, char *argv[])
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_atts3 ", argv[0]);
+    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_atts3 ", basename(argv[0]));
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
 

@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <pnetcdf.h>
 #include <mpi.h>
 #include <testutils.h>
@@ -118,7 +119,7 @@ main(int argc, char ** argv)
 
    if (rank == 0) {
        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-       sprintf(cmd_str, "*** TESTING C   %s for writing file", argv[0]);
+       sprintf(cmd_str, "*** TESTING C   %s for writing file", basename(argv[0]));
        printf("%-66s ------ ", cmd_str);
        free(cmd_str);
    }
@@ -289,5 +290,5 @@ main(int argc, char ** argv)
 
     MPI_Finalize();
 
-    return 0;
+    return nerrs;
 }

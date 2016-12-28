@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -626,7 +627,7 @@ int main(int argc, char *argv[])
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_nc ", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_nc ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
         free(cmd_str);
     }

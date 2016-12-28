@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h> /* basename() */
 #include <mpi.h>
 #include <pnetcdf.h>
 #include <testutils.h>
@@ -28,12 +29,12 @@ int main(int argc, char **argv) {
         return 0;
     }
     if (argc == 2) snprintf(dir_name, 256, "%s", argv[1]);
-    else           strcpy(dir_name, "testfile.nc");
+    else           strcpy(dir_name, ".");
     MPI_Bcast(dir_name, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file formats ", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file formats ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
         free(cmd_str);
     }
@@ -108,5 +109,5 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs) ? 2 : 0;
 }
