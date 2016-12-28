@@ -6,69 +6,45 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
-
-include ../macros.make
-
-GARBAGE =
-
 SUBDIRS = C tutorial
-
-ifeq (@has_mpicxx@, yes)
+if HAS_MPICXX
 SUBDIRS += CXX
 endif
-
-ifeq (@has_fortran@, yes)
+if HAS_FORTRAN
 SUBDIRS += F77
-ifeq (@mpi_mod@, yes)
+if HAVE_MPI_MOD
 SUBDIRS += F90
 endif
 endif
 
-PACKING_LIST = Makefile.in README
+EXTRA_DIST = README
 
-PACKING_SUBDIRS = C tutorial F77 F90 CXX
-
-all: $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) $(MFLAGS) -C $@
-
-ptest: all
-ifeq (@enable_coverage@, yes)
-	echo "Parallel test is disabled because coverage analysis was enabled"
+if ENABLE_COVERAGE
+   PTEST_SUBDIRS =
 else
+   PTEST_SUBDIRS = $(SUBDIRS)
+endif
+
+ptest:
 	(echo "=============================================")  && \
 	(echo "    Parallel testing on 4 MPI processes")  && \
 	(echo "=============================================")  && \
-	( for d in $(SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest4 ; \
+	( for d in $(PTEST_SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest4 $$* ; \
 	done ) ;
-endif
 
-ptests: all
-ifeq (@enable_coverage@, yes)
-	echo "Parallel test is disabled because coverage analysis was enabled"
-else
+ptests:
 	for i in 3 4 8 ; do \
 	(echo "=============================================")  && \
 	(echo "    Parallel testing on $$i MPI processes")  && \
 	(echo "=============================================")  && \
-	( for d in $(SUBDIRS) ; do \
-	$(MAKE) $(MFLAGS) -C $$d ptest$$i ; \
+	( for d in $(PTEST_SUBDIRS) ; do \
+	$(MAKE) $(MFLAGS) -C $$d ptest$$i $$* ; \
 	done ) ; \
 	done ;
-endif
 
-INSTALLDIRS = $(SUBDIRS:%=install-%)
-install: all $(INSTALLDIRS)
-$(INSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
-UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
-uninstall: $(UNINSTALLDIRS)
-$(UNINSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
-
-include $(srcdir)/../rules.make
+.PHONY: ptest ptests
 

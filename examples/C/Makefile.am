@@ -6,131 +6,47 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
+SUFFIXES = .o .c
 
-include ../../macros.make
+AM_CPPFLAGS = -I$(top_builddir)/src/lib
+LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
-# note the order of -L list matters
-INCLUDES  = -I../../src/lib
-LDFLAGS  := -L../../src/lib $(LDFLAGS)
-LIBS     := -lpnetcdf $(LIBS)
+TESTPROGRAMS = collective_write \
+               nonblocking_write \
+               nonblocking_write_in_def \
+               column_wise \
+               block_cyclic \
+               flexible_api \
+               get_info \
+               hints \
+               mput \
+               put_varn_float \
+               put_varn_int \
+               create_open \
+               global_attributes \
+               put_vara \
+               get_vara \
+               transpose \
+               vard_int \
+               i_varn_int64 \
+               bput_varn_uint \
+               bput_varn_int64 \
+               fill_mode \
+               ghost_cell \
+               req_all
 
-C_SRCS  = collective_write.c \
-          nonblocking_write.c \
-          nonblocking_write_in_def.c \
-          column_wise.c \
-          block_cyclic.c \
-          flexible_api.c \
-          get_info.c \
-          hints.c \
-          mput.c \
-          put_varn_float.c \
-          put_varn_int.c \
-          create_open.c \
-          global_attributes.c \
-          put_vara.c \
-          get_vara.c \
-          transpose.c \
-          vard_int.c \
-          i_varn_int64.c \
-          bput_varn_uint.c \
-          bput_varn_int64.c \
-          fill_mode.c \
-          ghost_cell.c \
-          req_all.c
+check_PROGRAMS = $(TESTPROGRAMS)
+
+# parallel runs only
+# TESTS = $(TESTPROGRAMS)
 
 # Note: put_vara must be run immediately before get_vara
 
-PROGS     = $(C_SRCS:.c=)
-OBJS      = $(C_SRCS:.c=.o)
+CLEANFILES = *.nc core core.*
 
-GARBAGE      = $(PROGS) *.nc
-
-PACKING_LIST = $(C_SRCS) depend Makefile.in
-
-all: $(PROGS)
-
-install:
-
-uninstall:
-
-collective_write: collective_write.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-nonblocking_write: nonblocking_write.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-nonblocking_write_in_def: nonblocking_write_in_def.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-get_info: get_info.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-column_wise: column_wise.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-block_cyclic: block_cyclic.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-put_vara: put_vara.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-mput: mput.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-hints: hints.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-flexible_api: flexible_api.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-put_varn_int: put_varn_int.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-put_varn_float: put_varn_float.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-create_open: create_open.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-global_attributes: global_attributes.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-get_vara: get_vara.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-transpose: transpose.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-vard_int: vard_int.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-i_varn_int64: i_varn_int64.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-bput_varn_uint: bput_varn_uint.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-bput_varn_int64: bput_varn_int64.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-fill_mode: fill_mode.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-ghost_cell: ghost_cell.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-req_all: req_all.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
-TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
-
-ptest4: $(PROGS)
-	@for i in $(PROGS); do { \
-        $(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+ptest ptest4: $(TESTPROGRAMS)
+	for i in $(TESTPROGRAMS); do { \
+        $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
         else \
@@ -138,9 +54,9 @@ ptest4: $(PROGS)
 	   exit 1; \
         fi ; } ; done
 
-ptest8: $(PROGS)
-	@for i in $(PROGS); do { \
-        $(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+ptest8: $(TESTPROGRAMS)
+	for i in $(TESTPROGRAMS); do { \
+        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:  C  parallel run on 8 processes --------------- $$i"; \
         else \
@@ -148,9 +64,9 @@ ptest8: $(PROGS)
 	   exit 1; \
         fi ; } ; done
 
-ptest3: $(PROGS)
-	@for i in $(PROGS) ; do { \
-        $(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+ptest3: $(TESTPROGRAMS)
+	for i in $(TESTPROGRAMS) ; do { \
+        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:  C  parallel run on 3 processes --------------- $$i"; \
         else \
@@ -158,12 +74,13 @@ ptest3: $(PROGS)
 	   exit 1; \
         fi ; } ; done
 
-ptest: ptest4
 ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:
 
-include $(srcdir)/depend
-include $(srcdir)/../../rules.make
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 

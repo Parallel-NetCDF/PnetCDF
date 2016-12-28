@@ -6,99 +6,49 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .o .c .f .f90
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-# note the order of -L list matters
-INCLUDES    = -I../../src/lib
-FPPFLAGS   += -I../../src/libf @FC_MODINC@../../src/libf90
-LDFLAGS    := -L../../src/lib $(LDFLAGS)
-FLDFLAGS   += $(LDFLAGS)
-F90LDFLAGS += $(LDFLAGS)
-LIBS       := -lpnetcdf $(LIBS)
+AM_CPPFLAGS = -I$(top_builddir)/src/lib
+AM_FFLAGS = -I$(top_builddir)/src/libf
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la
 
-C_SRCS = pnetcdf-write-from-master.c \
-         pnetcdf-read-from-master.c \
-         pnetcdf-write-nfiles.c \
-         pnetcdf-read-nfiles.c \
-         pnetcdf-write-standard.c \
-         pnetcdf-read-standard.c \
-         pnetcdf-write-flexible.c \
-         pnetcdf-read-flexible.c \
-         pnetcdf-write-nb.c \
-         pnetcdf-read-nb.c \
-         pnetcdf-write-buffered.c \
-         pnetcdf-permute.c
+TESTPROGRAMS = pnetcdf-write-from-master \
+               pnetcdf-read-from-master \
+               pnetcdf-write-nfiles \
+               pnetcdf-read-nfiles \
+               pnetcdf-write-standard \
+               pnetcdf-read-standard \
+               pnetcdf-write-flexible \
+               pnetcdf-read-flexible \
+               pnetcdf-write-nb \
+               pnetcdf-read-nb \
+               pnetcdf-write-buffered \
+               pnetcdf-permute
 
-F77_SRCS = pnetcdf-write-bufferedf77.f
-
-F90_SRCS = pnetcdf-write-bufferedf.f90
-
-PROGS  = $(C_SRCS:.c=)
-OBJS   = $(C_SRCS:.c=.o)
-ifeq (@has_fortran@, yes)
-PROGS += $(F77_SRCS:.f=)
-OBJS  += $(F77_SRCS:.f=.o)
-ifeq (@mpi_mod@, yes)
-PROGS += $(F90_SRCS:.f90=)
-OBJS  += $(F90_SRCS:.f90=.o)
+if HAS_FORTRAN
+TESTPROGRAMS += pnetcdf-write-bufferedf77
+pnetcdf_write_bufferedf77_SOURCES = pnetcdf-write-bufferedf77.f
+if HAVE_MPI_MOD
+TESTPROGRAMS += pnetcdf-write-bufferedf
+pnetcdf_write_bufferedf_SOURCES = pnetcdf-write-bufferedf.f90
 endif
 endif
 
-GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in depend
+check_PROGRAMS = $(TESTPROGRAMS)
 
-all: $(PROGS)
+# parallel runs only
+# TESTS = $(TESTPROGRAMS)
 
-pnetcdf-write-from-master: pnetcdf-write-from-master.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+CLEANFILES = *.nc core core.*
 
-pnetcdf-read-from-master: pnetcdf-read-from-master.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+TESTMPIRUN4  = `echo $(TESTMPIRUN) | sed -e 's/NP/4/g'`
 
-pnetcdf-write-nfiles: pnetcdf-write-nfiles.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-read-nfiles: pnetcdf-read-nfiles.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-write-standard: pnetcdf-write-standard.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-read-standard: pnetcdf-read-standard.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-write-flexible: pnetcdf-write-flexible.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-read-flexible: pnetcdf-read-flexible.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-write-nb: pnetcdf-write-nb.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-read-nb: pnetcdf-read-nb.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-write-buffered: pnetcdf-write-buffered.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
-
-pnetcdf-write-bufferedf77: pnetcdf-write-bufferedf77.o $(LIBRARY)
-	$(LINK.F90) $< $(FLDFLAGS) $(LIBS)
-
-pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-
-ptest4: $(PROGS)
-	@for i in $(PROGS); do { \
-        $(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+ptest ptest4: $(TESTPROGRAMS)
+	@for i in $(TESTPROGRAMS); do { \
+        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:     parallel run on 4 processes --------------- $$i"; \
         else \
@@ -106,12 +56,13 @@ ptest4: $(PROGS)
            exit 1; \
         fi ; } ; done
 
-ptest: ptest4
 ptests: ptest4
 ptest2 ptest3 ptest6 ptest8 ptest10:
 
-include $(srcdir)/depend
-include $(srcdir)/../../rules.make
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
