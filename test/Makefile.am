@@ -6,103 +6,63 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
-
-include ../macros.make
-
 SUBDIRS = common \
-          nc_test \
           C \
           fandc \
-          nonblocking \
+          nc_test \
           cdf_format \
           header \
-          testcases
+          testcases \
+          nonblocking
 
-# Packing subdirs must include all directories
-PACKING_SUBDIRS := $(SUBDIRS) largefile nf_test nf90_test F90 subfile CXX
-
-ifeq (@large_file_test@, yes)
+if BUILD_LARGE_FILE_TEST
 SUBDIRS += largefile
 endif
 
-ifeq (@has_mpicxx@, yes)
+if HAS_MPICXX
 SUBDIRS += CXX
 endif
 
-ifeq (@has_fortran@, yes)
+if HAS_FORTRAN
 SUBDIRS += nf_test
-ifeq (@mpi_mod@, yes)
+if HAVE_MPI_MOD
 SUBDIRS += nf90_test
 SUBDIRS += F90
 endif
 endif
 
-ifeq (@enable_subfiling@, yes)
+if ENABLE_SUBFILING
 SUBDIRS += subfile
 endif
 
-PACKING_LIST = Makefile.in
-
-all: $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) $(MFLAGS) -C $@
-
-tests: all
-
-test_int: common
-test_float: common
-test_double_int: common
-test_double: common
-
-CHECK_DIRS = $(SUBDIRS:%=check-%)
-check testing: $(CHECK_DIRS)
-$(CHECK_DIRS):
-	$(MAKE) $(MFLAGS) -C $(@:check-%=%) testing
-
-VCHECK_DIRS = $(SUBDIRS:%=vcheck-%)
-verbose_check verbose_testing: $(VCHECK_DIRS)
-$(VCHECK_DIRS):
-	$(MAKE) $(MFLAGS) -C $(@:vcheck-%=%) verbose_testing
-
-ptest: all
-ifeq (@enable_coverage@, yes)
-	echo "Parallel test is disabled because coverage analysis was enabled"
+if ENABLE_COVERAGE
+   PTEST_SUBDIRS =
 else
+   PTEST_SUBDIRS = $(SUBDIRS)
+endif
+
+ptest:
 	(echo "=============================================")  && \
 	(echo "    Parallel testing on 4 MPI processes")  && \
 	(echo "=============================================")  && \
-	( for d in $(SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest4 ; \
+	( for d in $(PTEST_SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest4 $$* ; \
 	  done ) ;
-endif
 
-ptests: all
-ifeq (@enable_coverage@, yes)
-	echo "Parallel test is disabled because coverage analysis was enabled"
-else
+ptests:
 	for i in 2 4 6 8 10 ; do \
 	(echo "=============================================")  && \
 	(echo "    Parallel testing on $$i MPI processes")  && \
 	(echo "=============================================")  && \
-	( for d in $(SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest$$i ; \
+	( for d in $(PTEST_SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest$$i $$* ; \
 	  done ) ; \
 	done ;
-endif
 
-INSTALLDIRS = $(SUBDIRS:%=install-%)
-install: all $(INSTALLDIRS)
-$(INSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
-
-UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
-uninstall: $(UNINSTALLDIRS)
-$(UNINSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
-
-include $(srcdir)/../rules.make
+.PHONY: ptest ptests
 
 .NOTPARALLEL:
+
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
