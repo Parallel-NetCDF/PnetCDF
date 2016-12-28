@@ -131,7 +131,7 @@ install: $(INSTALLDIRS) install_PKGCONFIG install_CONFIG
 	@echo '|  PnetCDF is jointly developed by a team at Northwestern University and'
 	@echo '|  Argonne National Laboratory.'
 	@echo '|'
-	@echo '|  Vist PnetCDF web sites for more information'
+	@echo '|  Visit PnetCDF web sites for more information'
 	@echo '|      http://cucis.ece.northwestern.edu/projects/PnetCDF'
 	@echo '|      http://trac.mcs.anl.gov/projects/parallel-netcdf'
 	@echo '|'
