@@ -6,57 +6,13 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+bin_PROGRAMS = ncmpidiff
+ncmpidiff_SOURCES = ncmpidiff.c
+ncmpidiff_CPPFLAGS = -I$(top_builddir)/src/lib
+ncmpidiff_LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
-include ../../../macros.make
+dist_man_MANS = ncmpidiff.1
 
-# For VPATH build:
-# Add ../../lib into search path because ../../lib/pnetcdf.h is created in
-# the build directory at configure time and is included by C files here.
-INCLUDES	= -I../../lib
-
-LDFLAGS        += -L../../lib
-LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
-
-C_SOURCES	= ncmpidiff.c
-HEADERS		=
-
-OBJS		= $(C_SOURCES:.c=.o)
-
-PROGRAM		= ncmpidiff
-MANUAL		= ncmpidiff.1
-
-PACKING_LIST	= $(C_SOURCES) $(HEADERS) $(MANUAL) \
-                  depend Makefile.in
-
-GARBAGE		= $(PROGRAM)
-
-all:		$(PROGRAM)
-
-$(PROGRAM):	$(LIBRARY) $(OBJS)
-	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
-
-install: $(PROGRAM) $(MANUAL)
-	$(INSTALL) -d -m 755 $(MANDIR)/man1
-	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
-
-	$(INSTALL) -d $(BINDIR)
-	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
-
-uninstall:
-	$(RM) -f $(BINDIR)/$(PROGRAM)
-	$(RM) -f $(MANDIR)/man1/$(MANUAL)
-
-$(PROGRAM)_oc : $(C_SOURCES)
-	#setopt primary_language C
-	#load -C $(CPPFLAGS) $(C_SOURCES)
-	#load -C $(LIBS)
-	#setopt program_name $(PROGRAM)
-
-TAGS:		FORCE
-	etags `echo $(PACKING_LIST) | fmt -1 | $(EGREP) '\.c|\.h'
-
-include $(srcdir)/../../../rules.make
-include $(srcdir)/depend
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 

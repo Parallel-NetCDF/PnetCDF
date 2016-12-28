@@ -6,33 +6,15 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH = @srcdir@
+SUFFIXES = .o .c
 
-include ../../../macros.make
+CC = $(SEQ_CC)
 
-C_SOURCES	= ncoffsets.c
-OBJS            = $(C_SOURCES:.c=.o)
+bin_PROGRAMS = ncoffsets
+ncoffsets_SOURCES = ncoffsets.c
 
-PROGRAM		= $(C_SOURCES:.c=)
-MANUAL		= ncoffsets.1
-PACKING_LIST    = $(C_SOURCES) $(MANUAL) Makefile.in
-GARBAGE		= $(PROGRAM)
+dist_man_MANS = ncoffsets.1
 
-all: $(PROGRAM)
-
-ncoffsets: ncoffsets.c
-	$(SEQ_CC) -o $@ $<
-
-install: $(PROGRAM) $(MANUAL)
-	$(INSTALL) -d -m 755 $(MANDIR)/man1
-	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
-	$(INSTALL) -d $(BINDIR)
-	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
-
-uninstall:
-	$(RM) -f $(BINDIR)/$(PROGRAM)
-	$(RM) -f $(MANDIR)/man1/$(MANUAL)
-
-include $(srcdir)/../../../rules.make
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 

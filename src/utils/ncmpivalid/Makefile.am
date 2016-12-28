@@ -6,59 +6,13 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+bin_PROGRAMS = ncmpivalid
+ncmpivalid_SOURCES = ncmpivalid.c
+ncmpivalid_CPPFLAGS = -I$(top_builddir)/src/lib -I$(top_srcdir)/src/lib
+ncmpivalid_LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
-include ../../../macros.make
+dist_man_MANS = ncmpivalid.1
 
-# For VPATH build:
-# Add ../../lib into search path because ../../lib/pnetcdf.h is created at the
-# configure time and included by ncmpivalid.c
-# Add $(srcdir)/../../lib into search path because $(srcdir)/../../lib/ncx.h
-# and $(srcdir)/../../lib/macro.h are included by ncmpivalid.c
-INCLUDES	= -I../../lib -I$(srcdir)/../../lib
-
-LDFLAGS        += -L../../lib
-LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
-
-C_SOURCES	= ncmpivalid.c
-HEADERS		=
-
-OBJS            = $(C_SOURCES:.c=.o)
-
-PROGRAM		= ncmpivalid
-MANUAL		= ncmpivalid.1
-
-PACKING_LIST	= $(C_SOURCES) $(HEADERS) $(MANUAL) \
-                  Makefile.in depend
-
-GARBAGE		= $(PROGRAM)
-
-all:		$(PROGRAM)
-
-$(PROGRAM):	$(LIBRARY) $(OBJS)
-	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
-
-install: $(PROGRAM) $(MANUAL)
-	$(INSTALL) -d -m 755 $(MANDIR)/man1
-	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
-
-	$(INSTALL) -d $(BINDIR)
-	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
-
-uninstall:
-	$(RM) -f $(BINDIR)/$(PROGRAM)
-	$(RM) -f $(MANDIR)/man1/$(MANUAL)
-
-$(PROGRAM)_oc : $(C_SOURCES)
-	#setopt primary_language C
-	#load -C $(CPPFLAGS) $(C_SOURCES)
-	#load -C $(LIBS)
-	#setopt program_name $(PROGRAM)
-
-TAGS:		FORCE
-	etags `echo $(PACKING_LIST) | fmt -1 | $(EGREP) '\.c|\.h'
-
-include $(srcdir)/../../../rules.make
-include $(srcdir)/depend
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 

@@ -6,29 +6,8 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
-
-include ../../macros.make
-
 SUBDIRS = ncmpigen ncmpidump ncmpidiff ncmpivalid pnetcdf_version ncoffsets
 
-PACKING_LIST = Makefile.in
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
-PACKING_SUBDIRS = $(SUBDIRS)
-
-all: $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) $(MFLAGS) -C $@
-
-INSTALLDIRS = $(SUBDIRS:%=install-%)
-install: $(INSTALLDIRS)
-$(INSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
-
-UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
-uninstall: $(UNINSTALLDIRS)
-$(UNINSTALLDIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
-
-include $(srcdir)/../../rules.make
