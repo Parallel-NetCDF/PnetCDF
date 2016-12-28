@@ -5,6 +5,13 @@ dnl
 
 AC_PREREQ([2.59])
 AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
+
+dnl ncconfig.h.in will be created by autoreconf (autoheader)
+dnl call it right after AC_INIT, as suggested by autoconf
+AC_CONFIG_HEADERS([src/lib/ncconfig.h])
+
+AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
+
 AC_CONFIG_AUX_DIR([./scripts])
 
 dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
@@ -19,10 +26,6 @@ AM_MAINTAINER_MODE
 
 AC_CONFIG_MACRO_DIR([m4])
 AM_EXTRA_RECURSIVE_TARGETS([tests])
-
-dnl ncconfig.h.in will be created by autoreconf (autoheader)
-AC_CONFIG_HEADERS([src/lib/ncconfig.h])
-AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 
 dnl parse the version numbers to 4 env variables
 PNETCDF_VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
