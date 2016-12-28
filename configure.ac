@@ -5,14 +5,24 @@ dnl
 
 AC_PREREQ([2.59])
 AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
+AC_CONFIG_AUX_DIR([./scripts])
+
+dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
+dnl as AM_INIT_AUTOMAKE modfies command line $*
+CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
+
+AM_INIT_AUTOMAKE
+
+dnl maintainer mode is disabled in default, meaning make will *never* attempt
+dnl to rebuild configure, Makefile.ins, etc.
+AM_MAINTAINER_MODE
+
+AC_CONFIG_MACRO_DIR([m4])
+AM_EXTRA_RECURSIVE_TARGETS([tests])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
 AC_CONFIG_HEADERS([src/lib/ncconfig.h])
 AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
-
-AC_CONFIG_AUX_DIR([./scripts])
-
-CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
 dnl parse the version numbers to 4 env variables
 PNETCDF_VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
@@ -197,7 +207,8 @@ CC=${MPICC}
 AC_SUBST(MPICC)
 
 dnl Now MPICC is configured, let's do some basic compiler tests
-AC_PROG_CC
+AC_PROG_CC([${MPICC}])
+AM_PROG_CC_C_O
 
 dnl this call needs at least autoconf version 2.60
 dnl AC_USE_SYSTEM_EXTENSIONS
@@ -252,6 +263,7 @@ AC_ARG_ENABLE(cxx,
                      if you only need the C interface. @<:@default: enabled@:>@])],
     [enable_cxx=${enableval}], [enable_cxx=auto]
 )
+UD_MSG_DEBUG(enable_cxx=$enable_cxx)
 
 if test "x${enable_cxx}" != xno ; then
    UD_CHECK_MPI_COMPILER([MPICXX], [$CANDIDATE_MPICXX])
@@ -299,9 +311,13 @@ if test "x${enable_cxx}" != xno ; then
       fi
    fi
 else
-has_mpicxx=no
+   dnl must invoke AC_PROG_CXX here otherwise got "error: conditional "am__fastdepCXX" was never defined."
+   AC_PROG_CXX
+   has_mpicxx=no
 fi
 AC_SUBST(has_mpicxx)
+UD_MSG_DEBUG(has_mpicxx=$has_mpicxx)
+AM_CONDITIONAL(HAS_MPICXX, [test x$has_mpicxx = xyes])
 
 dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
 dnl preventing PATH_MAX from being defined for some of the test files,
@@ -316,7 +332,9 @@ AC_ARG_ENABLE(strict,
 if test "x${enable_strict}" = xyes; then
    if test "x${GCC}" = xyes; then
       CPPFLAGS="${CPPFLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
-      CXXCPPFLAGS="${CXXCPPFLAGS} -Wall -Wundef -Wpointer-arith"
+      if test "x${has_mpicxx}" = xyes ; then
+         CXXCPPFLAGS="${CXXCPPFLAGS} -Wall -Wundef -Wpointer-arith"
+      fi
    else
       AC_MSG_WARN([--enable-strict is for GNU compiler only])
       enable_strict=no
@@ -348,8 +366,7 @@ if test "x${enable_fortran}" = xyes ; then
          ------------------------------------------------------------])
    fi
 fi
-
-dnl AC_MSG_NOTICE(enable_fortran=${enable_fortran})
+UD_MSG_DEBUG(enable_fortran=${enable_fortran})
 
 dnl Check if MPIF90 is a valid MPI compiler
 if test "x${MPIF90}" != x ; then
@@ -427,6 +444,7 @@ if test "x${MPIF90}" != x ; then
       AC_SUBST(mpi_mod)
    fi
 fi
+AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])
 
 dnl Check if MPIF77 is a valid MPI compiler
 F77_SUPPORT_FREEFORM=no
@@ -481,6 +499,7 @@ if test "x${enable_fortran}" != xno && test "x${MPIF77}" != xno ; then
    fi
 fi
 AC_SUBST(F77_SUPPORT_FREEFORM)
+AM_CONDITIONAL(HAVE_F77_SUPPORT_FREEFORM, [test x$F77_SUPPORT_FREEFORM = xyes])
 
 if test "x${enable_fortran}" = xauto ; then
    if test "x${valid_mpif77}" = xyes && test "x${valid_mpif90}" = xyes ; then
@@ -634,6 +653,10 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(MPIF90)
 fi
 
+LT_PREREQ([2.2])
+dnl LT_INIT([dlopen disable-shared])
+LT_INIT([dlopen])
+
 AC_PROG_INSTALL
 
 have_yacc_lex=no
@@ -658,6 +681,7 @@ dnl    dnl cannot find flex or lex required to build ncmpigenyy.c
 dnl    have_yacc_lex=no
 dnl fi
 AC_SUBST(have_yacc_lex)
+AM_CONDITIONAL(HAVE_YACC_LEX, [test x$have_yacc_lex = xyes])
 
 dnl AC_PROG_AWK
 AC_PROG_LN_S
@@ -666,8 +690,8 @@ AC_SUBST(SET_MAKE)
 AC_PROG_EGREP
 
 dnl AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
-dnl AC_PROG_SED
-dnl AC_PROG_GREP
+AC_PROG_SED
+AC_PROG_GREP
 
 dnl YACC and LEX are required to build PnetCDF utility tool ncmpigen
 dnl if configure finds bison then YACC is set to bison -y, so we need to clean
@@ -685,12 +709,14 @@ dnl     AC_MSG_ERROR([could not find flex/lex required by PnetCDF])
 dnl fi
 
 UD_PROG_M4
+M4FLAGS="$M4FLAGS -DPNETCDF"
+M4FFLAGS="$M4FFLAGS -DPNETCDF"
 UD_PROG_AR()
 UD_PROG_NM()
 # We could use the PAC check for ranlib (it also makes sure that ranlib works,
 # which is not always true, particularly when GNU tools are installed on 
 # a system that doesn't have (or need) ranlib
-AC_PROG_RANLIB
+# AC_PROG_RANLIB
 
 dnl Check for <stdbool.h> that conforms to C99 requirements
 dnl this is also for using bool type in utf8proc.h/utf8proc.c to support
@@ -765,6 +791,7 @@ if test "x$ac_cv_sizeof_MPI_Aint" = x4; then
    SIZEOF_MPI_AINT_IS_4=yes
 fi
 AC_SUBST(SIZEOF_MPI_AINT_IS_4)
+AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$SIZEOF_MPI_AINT_IS_4 = xyes])
 
 dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
 dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
@@ -871,6 +898,7 @@ if test "x${ac_cv_c_bigendian}" = xyes ; then
    is_bigendian=yes
 fi
 AC_SUBST(is_bigendian)
+AM_CONDITIONAL(IS_BIGENDIAN, [test x$is_bigendian = xyes])
 
 dnl For big Endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little Endian, put buffer may be used for byte swap in
@@ -923,6 +951,9 @@ if test "x${enable_fortran}" = xyes ; then
     else
         UD_FORTRAN_TYPES
     fi
+    AC_SUBST(NF_INT1_T)
+    AC_SUBST(NF_INT2_T)
+    AC_SUBST(NF_INT8_T)
 
     NFMPI_OFFSET="integer*$ac_cv_sizeof_MPI_Offset"
     AC_MSG_CHECKING([for Fortran NFMPI_OFFSET "$NFMPI_OFFSET"])
@@ -963,9 +994,10 @@ if test "x${enable_fortran}" = xyes ; then
    dnl UD_FC_MODULE_FLAG defines FC_MODINC
    UD_MSG_DEBUG([FC_MODINC=$FC_MODINC])
 
-   UD_FC_MODULE_OUTPUT_FLAG
+   AC_FC_MODULE_FLAG
+   dnl UD_FC_MODULE_OUTPUT_FLAG
    dnl UD_FC_MODULE_OUTPUT_FLAG defines FC_MODOUT
-   UD_MSG_DEBUG([FC_MODOUT=$FC_MODOUT])
+   dnl UD_MSG_DEBUG([FC_MODOUT=$FC_MODOUT])
 fi
 
 HAVE_F77_GNU_INT=no
@@ -991,6 +1023,10 @@ if test "x${enable_fortran}" = xyes ; then
    HAVE_F77_INT8=$ac_cv_f77_int8
    AC_SUBST(HAVE_F77_INT8)
 fi
+AM_CONDITIONAL(HAVE_F77_GNU_INT, [test x$HAVE_F77_GNU_INT = xyes])
+AM_CONDITIONAL(HAVE_F77_INT1, [test x$HAVE_F77_INT1 = xyes])
+AM_CONDITIONAL(HAVE_F77_INT2, [test x$HAVE_F77_INT2 = xyes])
+AM_CONDITIONAL(HAVE_F77_INT8, [test x$HAVE_F77_INT8 = xyes])
 
 dnl
 dnl Below is to check if a Fortran compiler produces module files with upper
@@ -1005,6 +1041,7 @@ if test "x$ac_cv_prog_f90_uppercase_mod" = xyes ; then
    UPPER_CASE_MOD=yes
 fi
 AC_SUBST(UPPER_CASE_MOD)
+AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
 if test "x${enable_fortran}" = xyes ; then
    if test "x${enable_strict}" = xyes; then
@@ -1019,6 +1056,7 @@ fi
 
 has_fortran=${enable_fortran}
 AC_SUBST(has_fortran)
+AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 
 UD_MAKEWHATIS
 
@@ -1062,7 +1100,7 @@ if test "x${enable_coverage}" = xyes; then
       enable_coverage=no
    fi
 fi
-AC_SUBST(enable_coverage)
+AM_CONDITIONAL(ENABLE_COVERAGE, [test x$enable_coverage = xyes])
 
 if test "x${has_mpicxx}" = xyes ; then
    UD_CXX_MACRO_FUNC
@@ -1127,6 +1165,7 @@ if test "x$enable_subfiling" = "xyes" ; then
    ENABLE_SUBFILING=1
 fi
 AC_SUBST(ENABLE_SUBFILING)
+AM_CONDITIONAL(ENABLE_SUBFILING, [test x$enable_subfiling = xyes])
 
 AC_ARG_ENABLE([erange-fill],
    [AS_HELP_STRING([--disable-erange-fill],
@@ -1135,6 +1174,7 @@ AC_ARG_ENABLE([erange-fill],
    [enable_erange_fill=${enableval}], [enable_erange_fill=yes]
 )
 AC_SUBST(enable_erange_fill)
+AM_CONDITIONAL(ENABLE_ERANGE_FILL, [test x$enable_erange_fill = xyes])
 
 ENABLE_ERANGE_FILL=0
 if test "x$enable_erange_fill" = "xyes" ; then
@@ -1155,6 +1195,13 @@ if test "x$enable_relax_coord_bound" = "xyes" ; then
    RELAX_COORD_BOUND=1
 fi
 AC_SUBST(RELAX_COORD_BOUND)
+AM_CONDITIONAL([RELAX_COORD_BOUND], [test "x$RELAX_COORD_BOUND" = x1])
+
+AC_ARG_ENABLE([doxygen],
+  [AS_HELP_STRING([--enable-doxygen],
+    [Enable generation of documentation.])])
+test "x$enable_doxygen" = xyes || enable_doxygen=no
+AM_CONDITIONAL([BUILD_DOCS], [test "x$enable_doxygen" = xyes])
 
 AC_PATH_PROG([LATEX],  [latex])
 AC_PATH_PROG([DVIPDF], [dvipdf])
@@ -1164,7 +1211,7 @@ if test "x${LATEX}" != x ; then
 fi
 AC_SUBST(LATEX)
 AC_SUBST(DVIPDF)
-AC_SUBST(has_latex)
+AM_CONDITIONAL([HAS_LATEX], [test "x$has_latex" = xyes])
 
 BUILDDIR=`pwd`
 AC_SUBST(BUILDDIR)
@@ -1179,6 +1226,15 @@ if test "x${file_sync}" = xno ; then
     AC_DEFINE(DISABLE_FILE_SYNC)
 fi
 
+AC_MSG_CHECKING([whether test should be built and run])
+AC_ARG_ENABLE([testsets],
+              [AS_HELP_STRING([--disable-testsets],
+                              [don't build or run netCDF tests])])
+test "x$enable_testsets" = xno || enable_testsets=yes
+build_tests=$enable_testsets
+AC_MSG_RESULT($build_tests)
+AM_CONDITIONAL(BUILD_TESTSETS, [test x$build_tests = xyes])
+
 AC_ARG_ENABLE([large-file-test],
     [AS_HELP_STRING([--enable-large-file-test],
                     [Enable testing for large (>4GB) file/variable I/O. Note
@@ -1186,6 +1242,7 @@ AC_ARG_ENABLE([large-file-test],
     [large_file_test=${enableval}], [large_file_test=no]
 )
 AC_SUBST(large_file_test)
+AM_CONDITIONAL(BUILD_LARGE_FILE_TEST, [test x$large_file_test = xyes])
 
 dnl PNETCDF_INC and PNETCDF_LIB are for benchmark programs use only
 PNETCDF_INC=${BUILDDIR}/src/libf90
@@ -1193,20 +1250,31 @@ PNETCDF_LIB="-L${BUILDDIR}/src/lib"
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
-AC_ARG_VAR(TEST_SEQRUN, [Run command (on one process) for make target check on cross-compile environment. Example: "aprun -n 1". @<:@default: none@:>@])
-AC_ARG_VAR(TEST_MPIRUN, [MPI run command for make target ptest, @<:@default: mpiexec -n NP@:>@])
-AC_ARG_VAR(TEST_OUTDIR, [Output file directory for make target ptest, @<:@default: ./@:>@])
-if test "x${TEST_MPIRUN}" = x ; then
-    dnl set default to mpiexec
-    TEST_MPIRUN="mpiexec -n NP"
+AC_ARG_VAR(TESTSEQRUN, [Run command (on one process) for make target check on cross-compile environment. Example: "aprun -n 1". @<:@default: none@:>@])
+AC_ARG_VAR(TESTMPIRUN, [MPI run command for make target ptest, @<:@default: mpiexec@:>@])
+AC_ARG_VAR(TESTOUTDIR, [Output file directory for make target check/ptest, @<:@default: ./@:>@])
+if test "x${TESTMPIRUN}" = x ; then
+   dnl set default to mpiexec
+   UD_CHECK_MPI_COMPILER([TESTMPIRUN], [mpiexec mpirun])
 fi
-if test "x${TEST_OUTDIR}" = x ; then
-    dnl set default to current directory
-    TEST_OUTDIR=.
+if test "x${TESTOUTDIR}" = x ; then
+   dnl set default to current directory
+   TESTOUTDIR=.
 fi
-AC_SUBST(TEST_SEQRUN)
-AC_SUBST(TEST_MPIRUN)
-AC_SUBST(TEST_OUTDIR)
+TESTMPIRUN2="${TESTMPIRUN} -n 2"
+TESTMPIRUN4="${TESTMPIRUN} -n 4"
+TESTMPIRUN3="${TESTMPIRUN} -n 3"
+TESTMPIRUN6="${TESTMPIRUN} -n 6"
+TESTMPIRUN8="${TESTMPIRUN} -n 8"
+TESTMPIRUN10="${TESTMPIRUN} -n 10"
+AC_SUBST(TESTMPIRUN2)
+AC_SUBST(TESTMPIRUN4)
+AC_SUBST(TESTMPIRUN3)
+AC_SUBST(TESTMPIRUN6)
+AC_SUBST(TESTMPIRUN8)
+AC_SUBST(TESTMPIRUN10)
+AC_SUBST(TESTSEQRUN)
+AC_SUBST(TESTOUTDIR)
 
 dnl find if gcc is available for compiling ncoffsets to run in sequential
 AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
@@ -1219,59 +1287,60 @@ else
     AC_SUBST([CONFIG_DATE]) CONFIG_DATE="`date`"
 fi
 
-AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
+dnl AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
 AC_CONFIG_FILES(macros.make \
                 Makefile \
-                pnetcdf_pc \
+                libpnetcdf.pc \
                 src/Makefile \
                 src/lib/Makefile \
                 src/lib/pnetcdf.h \
-                src/utils/Makefile \
-                src/utils/ncmpidump/Makefile \
-                src/utils/ncmpidiff/Makefile \
-                src/utils/ncmpigen/Makefile \
-                src/utils/ncmpivalid/Makefile \
-                src/utils/pnetcdf_version/Makefile \
-                src/utils/ncoffsets/Makefile \
-                test/Makefile \
-                test/common/Makefile \
-                test/nc_test/Makefile \
-                test/C/Makefile \
-                test/fandc/Makefile \
-                test/testcases/Makefile \
-                test/nonblocking/Makefile \
-                test/header/Makefile \
-                test/cdf_format/Makefile \
-                test/largefile/Makefile \
-                examples/C/Makefile \
-                examples/tutorial/Makefile \
-                examples/Makefile \
-                doc/Makefile \
-                man/Makefile \
-                scripts/Makefile \
-                benchmarks/Makefile \
-                benchmarks/C/Makefile \
-                test/nf_test/Makefile \
-                test/nf_test/tests.inc \
-                test/nf90_test/Makefile \
-                test/F90/Makefile \
-                examples/F77/Makefile \
-                examples/F90/Makefile \
+                src/libf/Makefile \
+                src/libf/pnetcdf.inc \
+                src/libcxx/Makefile \
                 src/libf90/Makefile \
                 src/libf90/pnetcdf.f90 \
                 src/libf90/api.f90 \
                 src/libf90/nfmpi_constants.f90 \
-                src/libf/Makefile \
-                src/libf/pnetcdf.inc \
-                src/libcxx/Makefile \
+                src/utils/Makefile \
+                src/utils/ncoffsets/Makefile \
+                src/utils/pnetcdf_version/Makefile \
+                src/utils/ncmpivalid/Makefile \
+                src/utils/ncmpidiff/Makefile \
+                src/utils/ncmpidump/Makefile \
+                src/utils/ncmpigen/Makefile \
+                examples/Makefile \
+                examples/C/Makefile \
+                examples/tutorial/Makefile \
                 examples/CXX/Makefile \
-                test/CXX/Makefile \
+                examples/F77/Makefile \
+                examples/F90/Makefile \
+                benchmarks/Makefile \
+                benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
-                test/subfile/Makefile)
+                doc/Makefile \
+                man/Makefile \
+                test/Makefile \
+                test/common/Makefile \
+                test/C/Makefile \
+                test/fandc/Makefile \
+                test/nc_test/Makefile \
+                test/cdf_format/Makefile \
+                test/header/Makefile \
+                test/testcases/Makefile \
+                test/nonblocking/Makefile \
+                test/largefile/Makefile \
+                test/CXX/Makefile \
+                test/subfile/Makefile \
+                test/nf_test/Makefile \
+                test/nf_test/tests.inc \
+                test/nf90_test/Makefile \
+                test/nf90_test/tests.inc \
+                test/F90/Makefile \
+)
 
 # The following dependency is for configure.in and configure
 # See autoconf manual 2.69, Section 4.8.5 Automatic Remaking
-AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
+# AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 
 dnl add executable permission to pnetcdf-config and check_install
 AC_CONFIG_FILES([pnetcdf-config], [chmod u+x pnetcdf-config])
