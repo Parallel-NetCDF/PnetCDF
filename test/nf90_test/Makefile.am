@@ -6,19 +6,15 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .o .F90
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .F90
+AM_CFLAGS = -I$(top_srcdir)/src/libf -I$(top_builddir)/src/libf
+AM_FCFLAGS = -I$(top_builddir)/src/libf $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)../common
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la
 
-INCLUDES  = -I../../src/lib -I../../src/libf
-INCLUDES += -I$(srcdir) -I$(srcdir)/../../src/libf
-INCLUDES += @FC_MODINC@../../src/libf90
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
-
-ifeq (@RELAX_COORD_BOUND@, 1)
-FPPFLAGS := $(FPPFLAGS) @FC_DEFINE@RELAX_COORD_BOUND
+if RELAX_COORD_BOUND
+AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
 endif
 
 M4SRCS      = test_get.m4 \
@@ -28,69 +24,48 @@ M4SRCS      = test_get.m4 \
 
 M4SRCS_F90  = $(M4SRCS:.m4=.F90)
 
-F90_SRCS    = nf90_error.F90 \
-              nf90_test.F90 \
+F90_SRCS    = nf90_test.F90 \
+              nf90_error.F90 \
               test_read.F90 \
               test_write.F90 \
               util.F90
 
-C_SRCS      = fortlib.c
+TESTPROGRAMS = nf90_test
 
-HEADERS     = tests.inc
+nf90_test_SOURCES = $(F90_SRCS) fortlib.c
+nodist_nf90_test_SOURCES = $(M4SRCS_F90)
 
-C_OBJS   = $(C_SRCS:.c=.o)
-F90_OBJS = $(F90_SRCS:.F90=.o) $(M4SRCS_F90:.F90=.o)
-OBJS     = $(C_OBJS) $(F90_OBJS)
+$(M4SRCS_F90): Makefile
 
-PROGS    = nf90_test
+M4FLAGS += -I${top_srcdir}/m4
 
-GARBAGE  = $(PROGS) $(M4SRCS_F90) \
-           scratch.nc test.nc
+.m4.F90:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-PACKING_LIST = $(C_SRCS) $(F90_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in README
+BUILT_SOURCES = $(M4SRCS_F90)
 
-all: $(PROGS)
+check_PROGRAMS = $(TESTPROGRAMS)
 
-$(C_OBJS): $(srcdir)/../common/testutils.h
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-$(PROGS): ../common/libtestutils.a
+TESTS = seq_runs.sh
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+CLEANFILES = $(M4SRCS_F90) scratch.nc test.nc core core.*
 
-nf90_test: $(OBJS) $(LIBRARY)
-	$(LINK.F90) $(OBJS) $(LDFLAGS) $(LIBS)
+EXTRA_DIST = $(M4SRCS) tests.inc README seq_runs.sh
 
-tags: $(F90_SRCS) $(C_SRCS) FORCE
-	ctags -t $(F90_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-# This simple testing target ensures that the test files are present
-testing check: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nf90_test -c    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test       -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -c -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -2    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -c -5 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -5    -d $(TEST_OUTDIR)
-
-verbose_testing: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nf90_test -v -c    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -v       -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -v -c -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -v -2    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -v -c -5 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf90_test -v -5    -d $(TEST_OUTDIR)
-
-#test.nc: 
-#	(cd ../nc_test && $(MAKE) $(MFLAGS) nc_test && ./nc_test -c)
-#	cp ../nc_test/test.nc .
-
+# sequential runs only
 ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
