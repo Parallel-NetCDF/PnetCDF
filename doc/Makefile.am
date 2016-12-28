@@ -6,17 +6,15 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH = @srcdir@
+SUFFIXES = .tex .pdf
 
-include ../macros.make
+AM_DEFAULT_SOURCE_EXT = .tex
 
-LATEX  = @LATEX@
-DVIPDF = @DVIPDF@
-ifeq (@has_latex@, yes)
-    API_GUIDE = pnetcdf-api.pdf
-else
-    API_GUIDE =
+API_GUIDE =
+if BUILD_DOCS
+if HAS_LATEX
+    API_GUIDE += pnetcdf-api.pdf
+endif
 endif
 
 all: $(API_GUIDE)
@@ -26,20 +24,23 @@ pnetcdf-api.pdf: $(srcdir)/pnetcdf-api.tex
 	$(LATEX) $<
 	$(DVIPDF) pnetcdf-api
 
-PACKING_LIST = Makefile.in \
-               c_api.tex \
-               data_mode_api.tex \
-               flexible_api.tex \
-               latex8.sty \
-               Makefile.in \
-               multiple_io.tex \
-               nonblocking.tex \
-               pnetcdf-api.bbl \
-               pnetcdf-api.tex \
-               porting_notes.txt \
-               symbol_renaming.txt
+EXTRA_DIST = c_api.tex \
+             data_mode_api.tex \
+             flexible_api.tex \
+             latex8.sty \
+             Makefile.in \
+             multiple_io.tex \
+             nonblocking.tex \
+             pnetcdf-api.bbl \
+             pnetcdf-api.tex \
+             porting_notes.txt \
+             symbol_renaming.txt
 
-GARBAGE = *.dvi *.log *.aux *.ps $(API_GUIDE)
+CLEANFILES = *.dvi *.log *.aux *.ps $(API_GUIDE)
 
-include $(srcdir)/../rules.make
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
+
+# Turn off parallel builds in this directory.
+.NOTPARALLEL:
 
