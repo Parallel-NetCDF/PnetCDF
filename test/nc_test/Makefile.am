@@ -6,29 +6,14 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .o .c
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-INCLUDES  = -I. -I../../src/lib -I$(srcdir) -I$(srcdir)/../common
-LDFLAGS  := -L../common $(LDFLAGS)
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) -lm @LCOV_LIB@
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
 
-SRCS      = error.c \
-            util.c
-
-PROG_SRCS = nc_test.c \
-            t_nc.c \
-            tst_misc.c \
-            tst_norm.c \
-            tst_small.c \
-            tst_names.c \
-            tst_atts3.c \
-            tst_atts.c \
-            tst_nofill.c
-
-M4_HEADERS = tests.h.m4
+M4_HFILES = tests.h.m4
 
 M4_SRCS   = test_get.m4 \
             test_put.m4 \
@@ -37,99 +22,55 @@ M4_SRCS   = test_get.m4 \
             test_read.m4 \
             test_write.m4
 
-HEADERS   = error.h
+TESTPROGRAMS = nc_test \
+               t_nc \
+               tst_misc \
+               tst_norm \
+               tst_small \
+               tst_names \
+               tst_atts3 \
+               tst_atts \
+               tst_nofill
 
-OBJS      = $(SRCS:.c=.o) $(M4_SRCS:.m4=.o)
+nc_test_SOURCES = nc_test.c error.c util.c
+nodist_nc_test_SOURCES = $(M4_SRCS:.m4=.c)
 
-PROGS     = $(PROG_SRCS:.c=)
+$(M4_SRCS:.m4=.c): Makefile
 
-GARBAGE   = $(PROGS) $(M4_SRCS:.m4=.c) tests.h \
-            test.nc testfile.nc scratch.nc testfile.nc.2 \
-            testfile.nc.nofill testfile.nc.fill
+M4FLAGS += -I${top_srcdir}/m4
 
-PACKING_LIST = $(SRCS) $(M4_SRCS) $(M4_HEADERS) $(HEADERS) $(PROG_SRCS) \
-               Makefile.in depend README
+.m4.c:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-all: $(PROGS)
-
-$(PROGS): ../common/libtestutils.a
-
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
-
-tests.h: tests.h.m4
+tests.h: tests.h.m4 Makefile
 	$(M4) $(M4FLAGS) $< >$@
 
-nc_test: nc_test.o $(OBJS) $(LIBRARY)
-	$(LINK.c) $< $(OBJS) $(LDFLAGS) $(LIBS)
+BUILT_SOURCES = tests.h $(M4_SRCS:.m4=.c)
 
-t_nc: t_nc.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+check_PROGRAMS = $(TESTPROGRAMS)
 
-tst_misc: tst_misc.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-tst_norm: tst_norm.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+TESTS = seq_runs.sh
 
-tst_small: tst_small.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+CLEANFILES = tests.h $(M4_SRCS:.m4=.c) \
+             test.nc testfile.nc scratch.nc testfile.nc.2 \
+             testfile.nc.nofill testfile.nc.fill core core.*
 
-tst_names: tst_names.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+EXTRA_DIST = error.h $(M4_SRCS) $(M4_HFILES) README seq_runs.sh
 
-tst_atts3: tst_atts3.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-tst_atts: tst_atts.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-tst_nofill: tst_nofill.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-# This simple testing target ensures that the test files are present
-check testing: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc
-	$(RM) -f $(TEST_OUTDIR)/tooth-fairy.nc
-	$(TEST_SEQRUN) ./nc_test -c    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -d       $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -2 -d    $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -5 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -5 -d    $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./t_nc             $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_misc         $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_norm         $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_small        $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_names        $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_atts3        $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_atts         $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_nofill       $(TEST_OUTDIR)/testfile.nc
-
-verbose_testing: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc
-	$(RM) -f $(TEST_OUTDIR)/tooth-fairy.nc
-	$(TEST_SEQRUN) ./nc_test -c -v    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -v -d       $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -v -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -v -2 -d    $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -v -5 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -v -5 -d    $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./t_nc                $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_misc            $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_norm            $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_small           $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_names           $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_atts3           $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_atts            $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_nofill          $(TEST_OUTDIR)/testfile.nc
-
+# sequential runs only
 ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
