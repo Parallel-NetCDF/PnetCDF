@@ -36,10 +36,11 @@
     }
 */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 #ifndef MPI_OFFSET
 #define MPI_OFFSET MPI_LONG_LONG_INT
@@ -66,7 +67,7 @@ int main(int argc, char **argv) {
     int i, j=0, rank, nprocs, err;
     int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
     int dimids[NC_MAX_VAR_DIMS];
-    char varname[NC_MAX_NAME+1];
+    char filename[256], varname[NC_MAX_NAME+1];
     MPI_Offset *dim_sizes=NULL, var_size;
     nc_type type;
     int *data=NULL;
@@ -76,14 +77,16 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
-        err = ncmpi_open(MPI_COMM_SELF, argv[1],
+        err = ncmpi_open(MPI_COMM_SELF, filename,
                          NC_NOWRITE, MPI_INFO_NULL, &ncfile);
         if (err != NC_NOERR) handle_error(err, __LINE__);
 

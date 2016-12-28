@@ -15,10 +15,11 @@
  * Note this program demonstrates transposition for one process only
  */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 #include <assert.h>
 
@@ -31,6 +32,7 @@ static void handle_error(int status, int lineno)
 int main(int argc, char **argv) {
 
 #define NDIMS 3
+    char filename[256];
     int i, j, k, rank, nprocs, ret;
     int ncfile, ndims=NDIMS;
     MPI_Offset dim_sizes[NDIMS];
@@ -45,14 +47,16 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
-    ret = ncmpi_create(MPI_COMM_WORLD, argv[1], 
-	    NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
+    ret = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_OFFSET,
+                       MPI_INFO_NULL, &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     dim_sizes[0] = 4;
