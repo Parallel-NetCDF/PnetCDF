@@ -6,78 +6,62 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .o .c
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la
 
-ifeq (@is_bigendian@, yes)
-DEFS := $(DEFS) -DWORDS_BIGENDIAN
+if IS_BIGENDIAN
+   AM_CPPFLAGS += -DWORDS_BIGENDIAN
 endif
 
-SRCS    = large_files.c \
-          large_var.c
+TESTPROGRAMS = large_files large_var
 
-OBJS    = $(SRCS:.c=.o)
-PROGS   = $(SRCS:.c=)
+check_PROGRAMS = $(TESTPROGRAMS)
 
-GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(SRCS) Makefile.in
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-all: $(PROGS)
+TESTS = seq_runs.sh
 
-$(OBJS): $(srcdir)/../common/testutils.h
+EXTRA_DIST = seq_runs.sh
 
-$(PROGS): ../common/libtestutils.a
+CLEANFILES = *.nc core core.*
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
-
-large_files: large_files.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-large_var: large_var.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-testing check verbose_testing: $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
-	for i in $< ; do ( \
-	$(TEST_SEQRUN) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well
-TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
 
-ptest4: $(PROGS)
+ptest ptest4: $(TESTPROGRAMS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
-	for i in $< ; do ( \
-	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+	set -e ; for i in $(TESTPROGRAMS) ; do ( \
+	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest2: $(PROGS)
+ptest2: $(TESTPROGRAMS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
-	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest6: $(PROGS)
+ptest6: $(TESTPROGRAMS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
-	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest: ptest4
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
