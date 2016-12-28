@@ -6,30 +6,29 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .o .f .F
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .f
+AM_CFLAGS = -I$(top_builddir)/src/libf -I$(top_srcdir)/src/libf
+AM_FFLAGS = -I$(top_builddir)/src/libf
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la
 
-INCLUDES  = -I. -I../../src/lib -I../../src/libf
-INCLUDES += -I$(srcdir)/../../src/libf
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+M4FLAGS += -I${top_srcdir}/m4
 
-ifeq (@HAVE_F77_GNU_INT@, yes)
+if HAVE_F77_GNU_INT
 M4FFLAGS += -DHAVE_F77_GNU_INT
 endif
-ifeq (@HAVE_F77_INT1@, yes)
+if HAVE_F77_INT1
 M4FFLAGS += -DHAVE_F77_INT1
 endif
-ifeq (@HAVE_F77_INT2@, yes)
+if HAVE_F77_INT2
 M4FFLAGS += -DHAVE_F77_INT2
 endif
-ifeq (@HAVE_F77_INT8@, yes)
+if HAVE_F77_INT8
 M4FFLAGS += -DHAVE_F77_INT8
 endif
-ifeq (@RELAX_COORD_BOUND@, 1)
-FPPFLAGS := $(FPPFLAGS) @FC_DEFINE@RELAX_COORD_BOUND
+if RELAX_COORD_BOUND
+AM_FFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
 endif
 
 M4SRCS    = test_get.m4 \
@@ -37,73 +36,47 @@ M4SRCS    = test_get.m4 \
             test_iget.m4 \
             test_iput.m4
 
-M4SRCS_F  = $(M4SRCS:.m4=.F)
+.m4.F:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-F_SRCS    = nf_error.F \
-            nf_test.F \
+F_SRCS    = nf_test.F \
+            nf_error.F \
             test_read.F \
             test_write.F \
             util.F
 
-C_SRCS    = fortlib.c
+HFILES   = tests.inc.in
 
-HEADERS   = tests.inc.in
+TESTPROGRAMS = nf_test
+check_PROGRAMS = $(TESTPROGRAMS)
 
-C_OBJS  = $(C_SRCS:.c=.o)
-F_OBJS  = $(F_SRCS:.F=.o) $(M4SRCS_F:.F=.o)
-OBJS    = $(C_OBJS) $(F_OBJS)
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-PROGS  = nf_test
+TESTS = seq_runs.sh
 
-GARBAGE = $(PROGS) $(M4SRCS_F) \
-          scratch.nc test.nc
+nf_test_SOURCES = $(F_SRCS) fortlib.c
+nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
 
-DIST_GARBAGE = tests.inc
+BUILT_SOURCES = $(M4SRCS:.m4=.F)
 
-PACKING_LIST = $(C_SRCS) $(F_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in README
+$(M4SRCS:.m4=.F): Makefile
 
-all: $(PROGS)
+CLEANFILES = $(M4SRCS:.m4=.F) scratch.nc test.nc core core.*
 
-$(C_OBJS): $(srcdir)/../common/testutils.h
+EXTRA_DIST = $(M4SRCS) $(HFILES) README seq_runs.sh
 
-$(PROGS): ../common/libtestutils.a
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
-
-nf_test: $(OBJS) $(LIBRARY)
-	$(LINK.F90) $(OBJS) $(LDFLAGS) $(LIBS)
-
-tags: $(F_SRCS) $(C_SRCS) FORCE
-	ctags -t $(F_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c
-
-# This simple testing target ensures that the test files are present
-testing check: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nf_test -c    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test       -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -c -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -2    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -c -5 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -5    -d $(TEST_OUTDIR)
-
-verbose_testing: all
-	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nf_test -v -c    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -v       -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -v -c -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -v -2    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -v -c -5 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -v -5    -d $(TEST_OUTDIR)
-
-#test.nc: 
-#	(cd ../nc_test && $(MAKE) $(MFLAGS) nc_test && ./nc_test -c)
-#	cp ../nc_test/test.nc .
-
+# sequential runs only
 ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
