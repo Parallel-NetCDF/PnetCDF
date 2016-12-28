@@ -6,260 +6,135 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .o .c .f .F .f90
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-ifeq (@SIZEOF_MPI_AINT_IS_4@, yes)
-FPPFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
+AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
+AM_FFLAGS = -I$(top_builddir)/src/libf
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf 
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
+
+if SIZEOF_MPI_AINT_IS_4
+AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
 endif
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
-NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
-NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff
+NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
+NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
+
+TESTPROGRAMS = ncmpi_vars_null_stride \
+               vectors \
+               collective_error \
+               test_varm \
+               alignment_test \
+               flexible \
+               flexible2 \
+               flexible_varm \
+               nonblocking \
+               noclobber \
+               record \
+               inq_num_vars \
+               varn_int \
+               modes \
+               one_record \
+               inq_recsize \
+               test_vard \
+               varn_contig \
+               ivarn \
+               check_striping \
+               add_var \
+               buftype_free \
+               last_large_var \
+               check_type \
+               test_erange \
+               scalar
 
 M4_SRCS  = erange_fill.m4
 
-C_SRCS   = ncmpi_vars_null_stride.c \
-           vectors.c \
-           collective_error.c \
-           test_varm.c \
-           alignment_test.c \
-           flexible.c \
-           flexible2.c \
-           flexible_varm.c \
-           nonblocking.c \
-           noclobber.c \
-           record.c \
-           inq_num_vars.c \
-           varn_int.c \
-           modes.c \
-           one_record.c \
-           inq_recsize.c \
-           test_vard.c \
-           varn_contig.c \
-           ivarn.c \
-           check_striping.c \
-           add_var.c \
-           buftype_free.c \
-           last_large_var.c \
-           check_type.c \
-           test_erange.c \
-           scalar.c \
-           redef1.c
+M4FLAGS += -I${top_srcdir}/m4
 
-F77_SRCS = varn_intf.f \
-           attrf.f \
-           buftype_freef.f \
-           put_parameter.f
+$(M4_SRCS:.m4=.c): Makefile
 
-F77F_SRCS = test_vardf.F
+.m4.c:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-F90_SRCS = inq_num_varsf.f90 \
-           inq_recsizef.f90 \
-           test_vardf90.f90 \
-           varn_real.f90
-
-PROGS    = $(C_SRCS:.c=)
-OBJS     = $(C_SRCS:.c=.o) $(M4_SRCS:.m4=.o)
-
-ifeq (@has_fortran@, yes)
-PROGS   += $(F77_SRCS:.f=)   $(F77F_SRCS:.F=)
-OBJS    += $(F77_SRCS:.f=.o) $(F77F_SRCS:.F=.o)
-ifeq (@mpi_mod@, yes)
-PROGS   += $(F90_SRCS:.f90=)
-OBJS    += $(F90_SRCS:.f90=.o)
+if ENABLE_ERANGE_FILL
+   M4FLAGS += -DERANGE_FILL
+   TESTPROGRAMS += erange_fill
+   BUILT_SOURCES = erange_fill.c
 endif
-ifeq (@large_file_test@, yes)
-PROGS   += bigrecords
-OBJS    += bigrecords.o
+
+if HAS_FORTRAN
+   TESTPROGRAMS += varn_intf \
+                   attrf \
+                   buftype_freef \
+                   put_parameter \
+                   test_vardf
+
+   varn_intf_SOURCES = varn_intf.f
+   attrf_SOURCES = attrf.f
+   buftype_freef_SOURCES = buftype_freef.f
+   put_parameter_SOURCES = put_parameter.f
+   test_vardf_SOURCES = test_vardf.F
+if HAVE_MPI_MOD
+   TESTPROGRAMS += inq_num_varsf \
+                   inq_recsizef \
+                   test_vardf90 \
+                   varn_real
+
+   inq_num_varsf_SOURCES = inq_num_varsf.f90
+   inq_recsizef_SOURCES = inq_recsizef.f90
+   test_vardf90_SOURCES = test_vardf90.f90
+   varn_real_SOURCES = varn_real.f90
+endif
+if BUILD_LARGE_FILE_TEST
+   TESTPROGRAMS += bigrecords
+   bigrecords_SOURCES = bigrecords.f
 endif
 endif
 
-ifeq (@enable_erange_fill@, yes)
-PROGS   += $(M4_SRCS:.m4=)
-endif
+check_PROGRAMS = $(TESTPROGRAMS) redef1
 
-GARBAGE      = $(PROGS) *.nc $(M4_SRCS:.m4=.c)
-PACKING_LIST = $(C_SRCS) $(M4_SRCS) $(F77_SRCS) $(F77F_SRCS) $(F90_SRCS) \
-               bigrecords.f \
-               Makefile.in depend \
-               geopotential.ncdump \
-               redef-good.ncdump \
-               interop1.sh \
-               redef1.sh
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-all: $(PROGS)
+TESTS = seq_runs.sh
 
-$(C_SRCS:.c=.o): $(srcdir)/../common/testutils.h
+CLEANFILES = $(M4_SRCS:.m4=.c) *.nc core core.*
 
-$(PROGS): ../common/libtestutils.a
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
-
-ncmpi_vars_null_stride: ncmpi_vars_null_stride.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-vectors: vectors.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-bigrecords: bigrecords.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-redef1: redef1.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-collective_error: collective_error.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-test_varm: test_varm.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-alignment_test: alignment_test.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-flexible: flexible.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-flexible2: flexible2.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-flexible_varm: flexible_varm.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-nonblocking: nonblocking.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-noclobber: noclobber.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-record: record.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-inq_num_vars: inq_num_vars.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-varn_int: varn_int.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-varn_contig: varn_contig.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-modes: modes.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-one_record: one_record.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-inq_recsize: inq_recsize.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-test_vard: test_vard.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-profile: profile.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-ivarn: ivarn.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-check_striping: check_striping.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-add_var: add_var.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-buftype_free: buftype_free.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-last_large_var: last_large_var.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-check_type: check_type.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-test_erange: test_erange.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-scalar: scalar.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-erange_fill: erange_fill.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-inq_num_varsf: inq_num_varsf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-inq_recsizef: inq_recsizef.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-test_vardf: test_vardf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-varn_intf: varn_intf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-attrf: attrf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-buftype_freef: buftype_freef.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-put_parameter: put_parameter.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-test_vardf90: test_vardf90.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-varn_real: varn_real.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-testing check verbose_testing : $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	for i in $(PROGS); do ( \
-	$(TEST_SEQRUN) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
-	$(TEST_SEQRUN) $(NCMPIGEN) -v 2 -o $(TEST_OUTDIR)/redef1.nc $(srcdir)/redef-good.ncdump
-	$(TEST_SEQRUN) ./redef1 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) $(NCMPIDIFF) -q $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 # Some of these tests are designed to run on one process,
 # Run them on 4 processes to see if they can handle well
 # Some of these tests are designed to run on 4 processes,
 # Run them on 2, 4, and 6 processes to see if they can handle well
-TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
 
-ptest4: $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+ptest ptest4: $(TESTPROGRAMS)
+	set -e; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest2: $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+ptest2: $(TESTPROGRAMS)
+	set -e; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest6: $(PROGS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+ptest6: $(TESTPROGRAMS)
+	set -e; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest: ptest4
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:
 
-include $(srcdir)/../../rules.make
-include $(srcdir)/depend
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
