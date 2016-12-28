@@ -6,137 +6,74 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
+SUFFIXES = .o .f90
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .f90
+AM_FCFLAGS = -I$(top_builddir)/src/libf $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)../common
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la
 
-INCLUDES  =
-FPPFLAGS += @FC_MODINC@../../src/libf90 @FC_MODINC@../common
-F90FLAGS += @FC_MODOUT@.
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+TESTPROGRAMS = tst_f90 \
+               tst_io \
+               f90tst_vars \
+               tst_types2 \
+               tst_f90_cdf5 \
+               f90tst_vars2 \
+               f90tst_vars3 \
+               f90tst_vars4 \
+               tst_flarge \
+               f90tst_parallel \
+               f90tst_parallel2 \
+               f90tst_parallel3 \
+               f90tst_parallel4 \
+               test_intent
 
-F90_SRCS = tst_f90.f90 \
-           tst_io.f90 \
-           f90tst_vars.f90 \
-           tst_types2.f90 \
-           tst_f90_cdf5.f90 \
-           f90tst_vars2.f90 \
-           f90tst_vars3.f90 \
-           f90tst_vars4.f90 \
-           tst_flarge.f90 \
-           f90tst_parallel.f90 \
-           f90tst_parallel2.f90 \
-           f90tst_parallel3.f90 \
-           f90tst_parallel4.f90 \
-           test_intent.f90
+check_PROGRAMS = $(TESTPROGRAMS)
 
-PROGS    = $(F90_SRCS:.f90=)
-OBJS     = $(F90_SRCS:.f90=.o)
+AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-GARBAGE  = $(PROGS) *.nc *.@FC_MODEXT@
+TESTS = seq_runs.sh
 
-PACKING_LIST = $(F90_SRCS) Makefile.in depend
+EXTRA_DIST = seq_runs.sh
 
-all: $(PROGS)
+CLEANFILES  = *.nc *.$(FC_MODEXT) core core.*
 
-$(PROGS): ../common/libtestutils.a
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+PARALLEL_PROGS = f90tst_parallel \
+                 f90tst_parallel2 \
+                 f90tst_parallel3 \
+                 f90tst_parallel4
 
-tst_f90: tst_f90.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-tst_io: tst_io.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_vars: f90tst_vars.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-tst_types2: tst_types2.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-tst_f90_cdf5: tst_f90_cdf5.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_vars2: f90tst_vars2.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_vars3: f90tst_vars3.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_vars4: f90tst_vars4.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-tst_flarge: tst_flarge.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_parallel: f90tst_parallel.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_parallel2: f90tst_parallel2.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_parallel3: f90tst_parallel3.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-f90tst_parallel4: f90tst_parallel4.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-test_intent: test_intent.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
-
-testing check verbose_testing: $(PROGS)
-	$(TEST_SEQRUN) ./test_intent  $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_f90      $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./f90tst_vars  $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_types2   $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_f90_cdf5 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./f90tst_vars2 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./f90tst_vars3 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./f90tst_vars4 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_flarge   $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./tst_io       $(TEST_OUTDIR)
-
-PARALLEL_PROGS = f90tst_parallel f90tst_parallel2 f90tst_parallel3 f90tst_parallel4
-
-TEST_MPIRUN_2   = $(subst NP,2,$(TEST_MPIRUN))
-TEST_MPIRUN_4   = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_8   = $(subst NP,8,$(TEST_MPIRUN))
-TEST_MPIRUN_10  = $(subst NP,10,$(TEST_MPIRUN))
-
-ptest4: $(PARALLEL_PROGS)
-	@for i in $(PARALLEL_PROGS); do ( \
-	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+ptest ptest4: $(PARALLEL_PROGS)
+	set -e ; for i in $(PARALLEL_PROGS); do ( \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
 ptest2: $(PARALLEL_PROGS)
-	@for i in $(PARALLEL_PROGS); do ( \
-	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+	set -e ; for i in $(PARALLEL_PROGS); do ( \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
 ptest8: $(PARALLEL_PROGS)
-	@for i in $(PARALLEL_PROGS); do ( \
-	$(TEST_MPIRUN_8) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+	set -e ; for i in $(PARALLEL_PROGS); do ( \
+	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
 ptest10: $(PARALLEL_PROGS)
-	@for i in $(PARALLEL_PROGS); do ( \
-	$(TEST_MPIRUN_10) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+	set -e ; for i in $(PARALLEL_PROGS); do ( \
+	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-ptest: ptest4
 ptests: ptest2 ptest4 ptest8 ptest10
 ptest6:
 
-install:
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-uninstall:
-
-include $(srcdir)/depend
-include $(srcdir)/../../rules.make
-
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
