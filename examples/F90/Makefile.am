@@ -6,88 +6,53 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
 
-include ../../macros.make
+SUFFIXES = .o .f .F90 .f90
 
-# note the order of -L list matters
-INCLUDES    = @FC_MODINC@../../src/libf90
-F90LDFLAGS := -L../../src/lib $(F90LDFLAGS) $(LDFLAGS)
-LIBS       := -lpnetcdf $(LIBS)
+AM_DEFAULT_SOURCE_EXT = .f90
+AM_FCFLAGS = ${FC_MODINC}$(top_builddir)/src/libf90
+LDADD = ${top_builddir}/src/lib/libpnetcdf.la
 
-F90_SRCS  = nonblocking_write.f90 \
-            column_wise.f90 \
-            block_cyclic.f90 \
-            flexible_api.f90 \
-            get_info.f90 \
-            hints.f90 \
-            put_var.f90 \
-            put_varn_real.f90 \
-            put_varn_int.f90 \
-            transpose.f90 \
-            vard_int.f90 \
-            fill_mode.f90
+TESTPROGRAMS = nonblocking_write \
+               column_wise \
+               block_cyclic \
+               flexible_api \
+               get_info \
+               hints \
+               put_var \
+               put_varn_real \
+               put_varn_int \
+               transpose \
+               fill_mode \
+               vard_int
 
-PROGS     = $(F90_SRCS:.f90=)
-OBJS      = $(F90_SRCS:.f90=.o)
+nonblocking_write_SOURCES = nonblocking_write.f90 utils.F90
+column_wise_SOURCES = column_wise.f90 utils.F90
+block_cyclic_SOURCES = block_cyclic.f90 utils.F90
+flexible_api_SOURCES = flexible_api.f90 utils.F90
+get_info_SOURCES = get_info.f90 utils.F90
+hints_SOURCES = hints.f90 utils.F90
+put_var_SOURCES =  put_var.f90 utils.F90
+put_varn_real_SOURCES = put_varn_real.f90 utils.F90
+put_varn_int_SOURCES = put_varn_int.f90 utils.F90
+transpose_SOURCES = transpose.f90 utils.F90
+vard_int_SOURCES = vard_int.f90 utils.F90
+fill_mode_SOURCES = fill_mode.f90 utils.F90
 
-UTIL_SRCS  = utils.F90
-UTIL_OBJS  = $(UTIL_SRCS:.F90=.o)
+check_PROGRAMS = $(TESTPROGRAMS)
 
-GARBAGE      = $(PROGS) *.nc
+# parallel runs only
+# TESTS = $(TESTPROGRAMS)
 
-PACKING_LIST = $(F90_SRCS) $(UTIL_SRCS) depend Makefile.in
+CLEANFILES = *.nc core core.*
 
-all: $(PROGS)
+TESTMPIRUN4  = `echo $(TESTMPIRUN) | sed -e 's/NP/4/g'`
+TESTMPIRUN8  = `echo $(TESTMPIRUN) | sed -e 's/NP/8/g'`
+TESTMPIRUN3  = `echo $(TESTMPIRUN) | sed -e 's/NP/3/g'`
 
-install:
-
-uninstall:
-
-nonblocking_write: nonblocking_write.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-get_info: get_info.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-column_wise: column_wise.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-block_cyclic: block_cyclic.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-put_var: put_var.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-hints: hints.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-flexible_api: flexible_api.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-put_varn_int: put_varn_int.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-put_varn_real: put_varn_real.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-transpose: transpose.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-vard_int: vard_int.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-fill_mode: fill_mode.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
-
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
-TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
-
-ptest4: $(PROGS)
-	@for i in $(PROGS); do { \
-        $(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+ptest ptest4: $(TESTPROGRAMS)
+	@for i in $(TESTPROGRAMS); do { \
+        $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F90 parallel run on 4 processes --------------- $$i"; \
         else \
@@ -95,9 +60,9 @@ ptest4: $(PROGS)
            exit 1; \
         fi ; } ; done
 
-ptest8: $(PROGS)
-	@for i in $(PROGS); do { \
-        $(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+ptest8: $(TESTPROGRAMS)
+	@for i in $(TESTPROGRAMS); do { \
+        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F90 parallel run on 8 processes --------------- $$i"; \
         else \
@@ -105,9 +70,9 @@ ptest8: $(PROGS)
            exit 1; \
         fi ; } ; done
 
-ptest3: $(PROGS)
-	@for i in $(PROGS); do { \
-        $(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+ptest3: $(TESTPROGRAMS)
+	@for i in $(TESTPROGRAMS); do { \
+        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F90 parallel run on 3 processes --------------- $$i"; \
         else \
@@ -115,12 +80,13 @@ ptest3: $(PROGS)
            exit 1; \
         fi ; } ; done
 
-ptest: ptest4
 ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:
 
-include $(srcdir)/depend
-include $(srcdir)/../../rules.make
+# build check targets but not invoke
+tests: $(check_PROGRAMS)
+.PHONY: tests ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10
 
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
