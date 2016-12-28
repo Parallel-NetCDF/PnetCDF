@@ -6,45 +6,29 @@
 #
 # @configure_input@
 
-srcdir = @srcdir@
-VPATH  = @srcdir@
+SUFFIXES = .a .o .c .F90 .h
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-INCLUDES  = -I../../src/lib
+AM_CPPFLAGS = -I$(top_builddir)/src/lib
 
-C_SRCS   = testutils.c
+check_LTLIBRARIES = libtestutils.la
 
-F_SRCS   = testutilsf.F90
+libtestutils_la_SOURCES = testutils.c testutils.h
 
-HEADERS  = testutils.h
-
-OBJS     = $(C_SRCS:.c=.o)
-ifeq (@has_fortran@, yes)
-OBJS    += $(F_SRCS:.F90=.o)
+# Must build the Fortran library separately, otherwise libtools will keep
+# using FCLINK to build C library even when --disable-fortran is used
+if HAS_FORTRAN
+check_LTLIBRARIES += libtestutilsf.la
+libtestutilsf_la_SOURCES = testutilsf.F90
+libtestutils_la_LIBADD = libtestutilsf.la
+CLEANFILES = testutilsf.mod
 endif
 
-UTIL_LIB = libtestutils.a
+# build check targets but not invoke
+tests: $(check_LTLIBRARIES)
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-GARBAGE      = $(UTIL_LIB) *.mod
-PACKING_LIST = $(C_SRCS) $(F_SRCS) $(HEADERS) Makefile.in
-
-all: $(UTIL_LIB)
-
-$(C_SRCS:.c=.o) : $(HEADERS)
-
-$(UTIL_LIB): $(OBJS)
-	$(AR) $(ARFLAGS) $@ $(OBJS)
-
-testutils.o: testutils.c testutils.h
-
-testutilsf.o: testutilsf.F90
-
-testing check verbose_testing: $(UTIL_LIB)
-
-ptest ptests: $(UTIL_LIB)
-
-ptest2 ptest4 ptest6 ptest8 ptest10:
-
-include $(srcdir)/../../rules.make
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 
