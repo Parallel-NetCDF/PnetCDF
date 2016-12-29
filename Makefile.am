@@ -18,10 +18,6 @@ if BUILD_DOCS
 SUBDIRS += doc
 endif
 
-# Below is a trick to build all test executables, without running them
-# tests:
-# 	$(MAKE) $(AM_MAKEFLAGS) check TESTS=
-
 CLEANFILES = pnetcdf_pc
 
 DISTCLEANFILES = pnetcdf.pc
@@ -47,6 +43,17 @@ EXTRA_DIST = COPYRIGHT \
              m4/foreach.m4 \
              m4/foreachq.m4 \
              m4/utils.m4
+
+# Below is a trick to build all test executables, without running them
+# tests:
+# 	$(MAKE) $(AM_MAKEFLAGS) check TESTS=
+
+# below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
+TESTS_SUBDIRS = test examples benchmarks
+TESTS_DIRS = $(TESTS_SUBDIRS:%=tests-%)
+tests: all $(TESTS_DIRS)
+$(TESTS_DIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
 
 if ENABLE_COVERAGE
    PTEST_SUBDIRS =
