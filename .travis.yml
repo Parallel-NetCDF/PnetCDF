@@ -12,8 +12,8 @@ addons:
       name: "wkliao/parallel-netcdf"
       description: "PnetCDF nightly build submitted via Travis CI"
     notification_email: wkliao@eecs.northwestern.edu
-    build_command_prepend: "./configure; make clean"
-    build_command:   "make all tests"
+    build_command_prepend: "./configure ; make clean"
+    build_command:   "make ; make tests"
     branch_pattern: master
 
 before_install:
@@ -22,19 +22,19 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y gfortran
   - sudo apt-get install -y mpich2
-  - autoreconf
-  # string substritute for SVN keyword LastChangedDate
+  - autoreconf -i
+  # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
-  # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.in` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
+  # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
   # Below is for Ubuntu
-  - DateStr=`date -r configure.in +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
+  - DateStr=`date -r configure.ac +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
 
 script:
   - ./configure
-  - make clean
-  - make
-  - make tests
-  - make check
+  - make -s LIBTOOLFLAGS=--silent clean
+  - make -s LIBTOOLFLAGS=--silent
+  - make -s LIBTOOLFLAGS=--silent tests
+  - make -s LIBTOOLFLAGS=--silent check
   
 after_failure:
   - cat ./config.log
