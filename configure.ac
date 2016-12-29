@@ -25,7 +25,9 @@ dnl to rebuild configure, Makefile.ins, etc.
 AM_MAINTAINER_MODE
 
 AC_CONFIG_MACRO_DIR([m4])
-AM_EXTRA_RECURSIVE_TARGETS([tests])
+
+dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
+dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
 
 dnl parse the version numbers to 4 env variables
 PNETCDF_VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
@@ -997,8 +999,9 @@ if test "x${enable_fortran}" = xyes ; then
    dnl UD_FC_MODULE_FLAG defines FC_MODINC
    UD_MSG_DEBUG([FC_MODINC=$FC_MODINC])
 
-   AC_FC_MODULE_FLAG
-   dnl UD_FC_MODULE_OUTPUT_FLAG
+   dnl AC_FC_MODULE_FLAG was first introduced in autoconf 2.69
+   dnl AC_FC_MODULE_FLAG
+   UD_FC_MODULE_OUTPUT_FLAG
    dnl UD_FC_MODULE_OUTPUT_FLAG defines FC_MODOUT
    dnl UD_MSG_DEBUG([FC_MODOUT=$FC_MODOUT])
 fi
