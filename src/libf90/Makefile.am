@@ -55,7 +55,6 @@ pnetcdf.o pnetcdf.mod: pnetcdf.f90 $(SRCS)
 EXTRA_DIST = $(F90_SRCS) \
              $(M4_SRCS) \
              Makefile.in \
-             pnetcdf.f90.in \
              api.f90.in \
              nfmpi_constants.f90.in
 
