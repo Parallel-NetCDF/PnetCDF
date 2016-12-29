@@ -42,7 +42,7 @@ do
    fi
 done
 
-pkgfiles="pnetcdf.pc"
+pkgfiles="libpnetcdf.pc"
 for f in $pkgfiles
 do
    installfile=$installdir/lib/pkgconfig/$f
@@ -65,7 +65,7 @@ done
 man1files="ncmpidiff.1 ncmpigen.1 ncoffsets.1 ncmpidump.1 ncmpivalid.1 pnetcdf_version.1"
 for f in $man1files
 do
-   installfile=$installdir/man/man1/$f
+   installfile=$installdir/share/man/man1/$f
    if ! test -e $installfile ; then
        echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
@@ -75,7 +75,7 @@ done
 man3files="pnetcdf.3 pnetcdf_f77.3 pnetcdf_f90.3"
 for f in $man3files
 do
-   installfile=$installdir/man/man3/$f
+   installfile=$installdir/share/man/man3/$f
    if ! test -e $installfile ; then
        echo "Error: file NOT found: $installfile" >& 2
        nerrs=`expr $nerrs + 1`
