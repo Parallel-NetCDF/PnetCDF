@@ -19,9 +19,14 @@ addons:
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - test -n $CC && unset CC
+  # apt-package-whitelist can be found in
+  # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
   - sudo apt-get update -qq
   - sudo apt-get install -y gfortran
   - sudo apt-get install -y mpich2
+  - sudo apt-get install -y autoconf
+  - sudo apt-get install -y automake
+  - sudo apt-get install -y libtool
   - autoreconf -i
   # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
