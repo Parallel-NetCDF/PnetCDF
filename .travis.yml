@@ -36,10 +36,10 @@ before_install:
 
 script:
   - ./configure
-  - make -s LIBTOOLFLAGS=--silent clean
-  - make -s LIBTOOLFLAGS=--silent
-  - make -s LIBTOOLFLAGS=--silent tests
-  - make -s LIBTOOLFLAGS=--silent check
+  - make -s clean
+  - make -s
+  - make -s tests
+  - make -s check
   
 after_failure:
   - cat ./config.log
