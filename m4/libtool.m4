@@ -723,7 +723,7 @@ _LT_CONFIG_SAVE_COMMANDS([
 
     cfgfile=${ofile}T
     trap "$RM \"$cfgfile\"; exit 1" 1 2 15
-    $RM "$cfgfile"
+    $RM -f "$cfgfile"
 
     cat <<_LT_EOF >> "$cfgfile"
 #! $SHELL
@@ -956,7 +956,7 @@ ac_outfile=conftest.$ac_objext
 echo "$lt_simple_compile_test_code" >conftest.$ac_ext
 eval "$ac_compile" 2>&1 >/dev/null | $SED '/^$/d; /^ *+/d' >conftest.err
 _lt_compiler_boilerplate=`cat conftest.err`
-$RM conftest*
+$RM -f conftest*
 ])# _LT_COMPILER_BOILERPLATE
 
 
@@ -2096,7 +2096,7 @@ AC_CACHE_CHECK([if $compiler supports -c -o file.$ac_objext],
    test -d out/ii_files && $RM out/ii_files/* && rmdir out/ii_files
    $RM out/* && rmdir out
    cd ..
-   $RM -rf conftest
+   $RM -r conftest
    $RM -f conftest*
 ])
 _LT_TAGDECL([compiler_c_o], [lt_cv_prog_compiler_c_o], [1],
@@ -6078,7 +6078,7 @@ x|xyes)
       # to ld, don't add -lc before -lgcc.
       AC_CACHE_CHECK([whether -lc should be explicitly linked in],
 	[lt_cv_]_LT_TAGVAR(archive_cmds_need_lc, $1),
-	[$RM conftest*
+	[$RM -f conftest*
 	echo "$lt_simple_compile_test_code" > conftest.$ac_ext
 
 	if AC_TRY_EVAL(ac_compile) 2>conftest.err; then
@@ -6105,7 +6105,7 @@ x|xyes)
 	else
 	  cat conftest.err 1>&5
 	fi
-	$RM conftest*
+	$RM -f conftest*
 	])
       _LT_TAGVAR(archive_cmds_need_lc, $1)=$lt_cv_[]_LT_TAGVAR(archive_cmds_need_lc, $1)
       ;;
