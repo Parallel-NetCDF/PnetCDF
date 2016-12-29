@@ -6,6 +6,10 @@
 #
 # @configure_input@
 
+SUFFIXES = .a .o .c .h
+
+AM_DEFAULT_SOURCE_EXT = .c
+
 bin_PROGRAMS = ncmpigen
 ncmpigen_SOURCES = main.c load.c escapes.c getfill.c init.c genlib.c ncmpigentab.c
 ncmpigen_CPPFLAGS = -I$(top_builddir)/src/lib
