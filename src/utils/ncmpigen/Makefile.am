@@ -33,33 +33,33 @@ CLEANFILES = c0.nc c1.cdl c1.nc c2.cdl f0.nc \
 # ncmpigentab.c. In that case, configure.in at the root directory needs
 # to check the availability of commands yacc/lex/bison. Otherwise the
 # below is never invoked, but records how to do it.
-$(srcdir)/ncmpigentab.c \
-$(srcdir)/ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
-if HAVE_YACC_LEX
-	$(yacc) -d $(srcdir)/ncmpigen.y; \
-	cp -f y.tab.c ncmpigentab.c; \
-	cp -f y.tab.h ncmpigentab.h
-else
-	@echo "Error: one of $? is modified, but cannot find bison or yacc, required to re-generate $@"
-endif
+# $(srcdir)/ncmpigentab.c \
+# $(srcdir)/ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
+# if HAVE_YACC_LEX
+# 	$(yacc) -d $(srcdir)/ncmpigen.y; \
+# 	cp -f y.tab.c ncmpigentab.c; \
+# 	cp -f y.tab.h ncmpigentab.h
+# else
+# 	@echo "Error: one of $? is modified, but cannot find bison or yacc, required to re-generate $@"
+# endif
 
-ncmpigenyy.c:	ncmpigen.l
-if HAVE_YACC_LEX
-	$(lex) $(srcdir)/ncmpigen.l; \
-	cp -f lex.ncmpi.c ncmpigenyy.c
-else
-	@echo "Error: $? is modified, but cannot find flex or lex, required to re-generate $@"
-endif
+# ncmpigenyy.c:	ncmpigen.l
+# if HAVE_YACC_LEX
+# 	$(lex) $(srcdir)/ncmpigen.l; \
+# 	cp -f lex.ncmpi.c ncmpigenyy.c
+# else
+# 	@echo "Error: $? is modified, but cannot find flex or lex, required to re-generate $@"
+# endif
 
-vmstab.h \
-vmstab.c:	ncmpigen.y
-	@echo 1>&2 "$@ is out-of-date with respect to $?"
-	@echo 1>&2 "It must be recreated via POSIX yacc(1) on a VMS system"
-	false
-vms_yy.c:	ncmpigenyy.c
-	@echo 1>&2 "$@ is out-of-date with respect to $?"
-	@echo 1>&2 "It must be recreated via POSIX lex(1) on a VMS system"
-	false
+# vmstab.h \
+# vmstab.c:	ncmpigen.y
+# 	@echo 1>&2 "$@ is out-of-date with respect to $?"
+# 	@echo 1>&2 "It must be recreated via POSIX yacc(1) on a VMS system"
+# 	false
+# vms_yy.c:	ncmpigenyy.c
+# 	@echo 1>&2 "$@ is out-of-date with respect to $?"
+# 	@echo 1>&2 "It must be recreated via POSIX lex(1) on a VMS system"
+# 	false
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
