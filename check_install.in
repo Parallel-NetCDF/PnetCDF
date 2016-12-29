@@ -42,7 +42,7 @@ do
    fi
 done
 
-pkgfiles="libpnetcdf.pc"
+pkgfiles="pnetcdf.pc"
 for f in $pkgfiles
 do
    installfile=$installdir/lib/pkgconfig/$f
