@@ -52,5 +52,5 @@ ptests:
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
-.PHONY: ptest ptests
+.PHONY: ptest ptests tests
 
