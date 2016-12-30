@@ -658,6 +658,11 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(MPIF90)
 fi
 
+AM_PROG_AR
+# compute canonical system types
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+
 LT_PREREQ([2.2])
 dnl LT_INIT([dlopen disable-shared])
 dnl LT_INIT([dlopen])
