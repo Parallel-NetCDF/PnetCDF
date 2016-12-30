@@ -103,7 +103,7 @@ install-data-hook:
 	@echo '|'
 	@echo '+----------------------------------------------------------------------------+'
 
-.PHONY: ptest ptests
+.PHONY: ptest ptests tests
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

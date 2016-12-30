@@ -65,7 +65,7 @@ ptests:
 	  done ) ; \
 	done ;
 
-.PHONY: ptest ptests
+.PHONY: ptest ptests tests tests
 
 .NOTPARALLEL:
 
