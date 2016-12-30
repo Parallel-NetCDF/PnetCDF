@@ -6,6 +6,13 @@ dnl
 AC_PREREQ(2.69)
 AC_INIT([PnetCDF-FLASH-IO], [1.0.0], [parallel-netcdf@mcs.anl.gov])
 
+AM_INIT_AUTOMAKE([foreign])
+AM_MAINTAINER_MODE
+AC_CONFIG_MACRO_DIRS([m4])
+
+dnl line below indicates this is not built as part of PnetCDF testsets
+AM_CONDITIONAL(BUILD_TESTSETS, [false])
+
 dnl user defined macro for printing messages for debugging
 _DEBUG=no
 AC_DEFUN([UD_MSG_DEBUG],
@@ -109,7 +116,7 @@ AC_SUBST(FCFLAGS_F90)
 FPPFLAGS=${FPPFLAGS-}
 AC_SUBST(FPPFLAGS)
 
-dnl compiler command-line define preprocess flag, result in FC_DEFINE
+dnl compiler command-line define preprocessor flag, result in FC_DEFINE
 AC_FC_PP_DEFINE
 
 AC_LANG_PUSH([Fortran])
@@ -189,18 +196,22 @@ if test "x${have_pnetcdf}" = xno ; then
     ------------------------------------------------------------])
 fi
 
-AC_ARG_VAR(TEST_MPIRUN, [MPI run command for running test])
-AC_ARG_VAR(TEST_OUTDIR, [Output file directory for running test])
-if test "x${TEST_MPIRUN}" = x ; then
-    dnl set default to mpiexec
-    TEST_MPIRUN=mpiexec
+LT_PREREQ([2.2])
+LT_INIT
+
+AC_ARG_VAR(TESTMPIRUN, [MPI run command for running ptest, , @<:@default: mpiexec@:>@])
+AC_ARG_VAR(TESTOUTDIR, [Output file directory for running check/ptest, @<:@default: ./@:>@])
+if test "x${TESTMPIRUN}" = x ; then
+   dnl set default to mpiexec
+   AC_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun])
 fi
-if test "x${TEST_OUTDIR}" = x ; then
+if test "x${TESTOUTDIR}" = x ; then
     dnl set default to current directory
-    TEST_OUTDIR=.
+    TESTOUTDIR=.
 fi
-AC_SUBST(TEST_MPIRUN)
-AC_SUBST(TEST_OUTDIR)
+TESTMPIRUN4="${TESTMPIRUN} -n 4"
+AC_SUBST(TESTMPIRUN4)
+AC_SUBST(TESTOUTDIR)
 
 LCOV_LIB=
 AC_SUBST(LCOV_LIB)

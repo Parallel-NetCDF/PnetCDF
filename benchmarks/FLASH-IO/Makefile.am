@@ -6,6 +6,8 @@
 #
 # @configure_input@
 
+ACLOCAL_AMFLAGS = -I m4
+
 SUFFIXES = .o .F90
 
 FC          = $(MPIF90)
@@ -17,7 +19,11 @@ AM_FCFLAGS += $(FC_DEFINE)N_DIM=3
 AM_FCFLAGS += $(FC_DEFINE)MAXBLOCKS=100
 AM_FCFLAGS += $(FC_DEFINE)IONMAX=13
 
+if !BUILD_TESTSETS
 noinst_PROGRAMS = flash_benchmark_io
+else
+RUN_QUIETLY = -q
+endif
 check_PROGRAMS = flash_benchmark_io
 
 TESTS = $(check_PROGRAMS)
@@ -42,7 +48,7 @@ EXTRA_DIST = block_boundary_data.fh \
 CLEANFILES = *.nc core core.*
 
 ptests ptest ptest4: $(check_PROGRAMS)
-	$(TESTMPIRUN) -n 4 ./$(check_PROGRAMS) -q $(TESTOUTDIR)/flash_io_test_ ; \
+	$(TESTMPIRUN4) ./$(check_PROGRAMS) $(RUN_QUIETLY) $(TESTOUTDIR)/flash_io_test_ ; \
 	if [ $$? = 0 ] ; then \
 	    echo "PASS: F90 parallel run on 4 processes --------------- FLASH_IO"; \
 	else \
