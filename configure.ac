@@ -24,7 +24,7 @@ dnl maintainer mode is disabled in default, meaning make will *never* attempt
 dnl to rebuild configure, Makefile.ins, etc.
 AM_MAINTAINER_MODE
 
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIRS([m4])
 
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
 dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
@@ -660,7 +660,8 @@ fi
 
 LT_PREREQ([2.2])
 dnl LT_INIT([dlopen disable-shared])
-LT_INIT([dlopen])
+dnl LT_INIT([dlopen])
+LT_INIT
 
 AC_PROG_INSTALL
 
@@ -1370,6 +1371,8 @@ echo \
    ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
    Features:  Support for large files (> 4 GB)                  - ${msg_large_files}
+              Build static libraries                            - ${enable_static}
+              Build shared libraries                            - ${enable_shared}
               Build Fortran APIs                                - ${enable_fortran}
               Build C++ APIs                                    - ${has_mpicxx}
               Build CDF-2 and CDF-5 support                     - ${enable_cdf_2_n_5}"
