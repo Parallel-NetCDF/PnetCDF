@@ -79,7 +79,7 @@ if HAS_MPICXX
 libpnetcdf_la_LIBADD += ../libcxx/libpnetcdfcxx.la
 endif
 if HAS_FORTRAN
-libpnetcdf_la_LIBADD += ../libf/libpnetcdff.la ../libf90/libpnetcdff90.la
+libpnetcdf_la_LIBADD += ../libf/libpnetcdff.la ../libf90/libpnetcdff90.la $(FLIBS) $(FCLIBS)
 endif
 
 CLEANFILES = $(M4_SRCS:.m4=.c) ncx.h
