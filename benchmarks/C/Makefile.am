@@ -11,17 +11,16 @@ SUFFIXES = .o .c
 AM_CPPFLAGS = -I$(top_builddir)/src/lib
 LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
-TESTPROGRAMS = aggregation \
-               write_block_read_column
+check_PROGRAMS = aggregation \
+                 write_block_read_column
 
-check_PROGRAMS = $(TESTPROGRAMS)
-
-TESTS = $(TESTPROGRAMS)
+# parallel runs only
+# TESTS = $(check_PROGRAMS)
 
 CLEANFILES = *.nc core core.*
 
-ptest ptests ptest4: $(TESTPROGRAMS)
-	for i in $(TESTPROGRAMS); do { \
+ptest ptests ptest4: $(check_PROGRAMS)
+	for i in $(check_PROGRAMS); do { \
 	$(TESTMPIRUN4) ./$$i -q 10 $(TESTOUTDIR)/testfile.nc ; \
 	if [ $$? = 0 ] ; then \
 	    echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
