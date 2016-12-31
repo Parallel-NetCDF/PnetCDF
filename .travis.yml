@@ -43,6 +43,20 @@ script:
   - make
   - make tests
   - make check
+  - make distcheck
+  - make distclean
+  - ./configure --disable-shared
+  - make
+  - make tests
+  - make check
+  - make distcheck
+  - make distclean
+  - ./configure --disable-static
+  - make
+  - make tests
+  - make check
+  - make distcheck
+  - make distclean
   
 after_failure:
   - cat ./config.log
