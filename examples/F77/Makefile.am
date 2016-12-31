@@ -12,20 +12,20 @@ AM_DEFAULT_SOURCE_EXT = .f
 AM_FFLAGS = -I$(top_builddir)/src/libf
 LDADD = ${top_builddir}/src/lib/libpnetcdf.la
 
-TESTPROGRAMS = nonblocking_write \
-               column_wise \
-               block_cyclic \
-               flexible_api \
-               get_info \
-               hints \
-               put_vara \
-               put_varn_real \
-               put_varn_int \
-               transpose \
-               i_varn_real \
-               bput_varn_int8 \
-               fill_mode \
-               vard_int
+check_PROGRAMS = nonblocking_write \
+                 column_wise \
+                 block_cyclic \
+                 flexible_api \
+                 get_info \
+                 hints \
+                 put_vara \
+                 put_varn_real \
+                 put_varn_int \
+                 transpose \
+                 i_varn_real \
+                 bput_varn_int8 \
+                 fill_mode \
+                 vard_int
 
 nonblocking_write_SOURCES = nonblocking_write.f utils.F90
 column_wise_SOURCES = column_wise.f utils.F90
@@ -42,15 +42,13 @@ bput_varn_int8_SOURCES = bput_varn_int8.f utils.F90
 fill_mode_SOURCES = fill_mode.f utils.F90
 vard_int_SOURCES = vard_int.F utils.F90
 
-check_PROGRAMS = $(TESTPROGRAMS)
-
 # parallel runs only
-# TESTS = $(TESTPROGRAMS)
+# TESTS = $(check_PROGRAMS)
 
 CLEANFILES = *.nc core core.*
 
-ptest ptest4: $(TESTPROGRAMS)
-	@for i in $(TESTPROGRAMS); do { \
+ptest ptest4: $(check_PROGRAMS)
+	@for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F77 parallel run on 4 processes --------------- $$i"; \
@@ -59,8 +57,8 @@ ptest ptest4: $(TESTPROGRAMS)
            exit 1; \
         fi ; } ; done
 
-ptest8: $(TESTPROGRAMS)
-	@for i in $(TESTPROGRAMS); do { \
+ptest8: $(check_PROGRAMS)
+	@for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F77 parallel run on 8 processes --------------- $$i"; \
@@ -69,8 +67,8 @@ ptest8: $(TESTPROGRAMS)
            exit 1; \
         fi ; } ; done
 
-ptest3: $(TESTPROGRAMS)
-	@for i in $(TESTPROGRAMS); do { \
+ptest3: $(check_PROGRAMS)
+	@for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F77 parallel run on 3 processes --------------- $$i"; \

@@ -11,41 +11,39 @@ SUFFIXES = .o .c
 AM_CPPFLAGS = -I$(top_builddir)/src/lib
 LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
-TESTPROGRAMS = collective_write \
-               nonblocking_write \
-               nonblocking_write_in_def \
-               column_wise \
-               block_cyclic \
-               flexible_api \
-               get_info \
-               hints \
-               mput \
-               put_varn_float \
-               put_varn_int \
-               create_open \
-               global_attributes \
-               put_vara \
-               get_vara \
-               transpose \
-               vard_int \
-               i_varn_int64 \
-               bput_varn_uint \
-               bput_varn_int64 \
-               fill_mode \
-               ghost_cell \
-               req_all
-
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = collective_write \
+                 nonblocking_write \
+                 nonblocking_write_in_def \
+                 column_wise \
+                 block_cyclic \
+                 flexible_api \
+                 get_info \
+                 hints \
+                 mput \
+                 put_varn_float \
+                 put_varn_int \
+                 create_open \
+                 global_attributes \
+                 put_vara \
+                 get_vara \
+                 transpose \
+                 vard_int \
+                 i_varn_int64 \
+                 bput_varn_uint \
+                 bput_varn_int64 \
+                 fill_mode \
+                 ghost_cell \
+                 req_all
 
 # parallel runs only
-# TESTS = $(TESTPROGRAMS)
+# TESTS = $(check_PROGRAMS)
 
 # Note: put_vara must be run immediately before get_vara
 
 CLEANFILES = *.nc core core.*
 
-ptest ptest4: $(TESTPROGRAMS)
-	for i in $(TESTPROGRAMS); do { \
+ptest ptest4: $(check_PROGRAMS)
+	for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
@@ -54,8 +52,8 @@ ptest ptest4: $(TESTPROGRAMS)
 	   exit 1; \
         fi ; } ; done
 
-ptest8: $(TESTPROGRAMS)
-	for i in $(TESTPROGRAMS); do { \
+ptest8: $(check_PROGRAMS)
+	for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:  C  parallel run on 8 processes --------------- $$i"; \
@@ -64,8 +62,8 @@ ptest8: $(TESTPROGRAMS)
 	   exit 1; \
         fi ; } ; done
 
-ptest3: $(TESTPROGRAMS)
-	for i in $(TESTPROGRAMS) ; do { \
+ptest3: $(check_PROGRAMS)
+	for i in $(check_PROGRAMS) ; do { \
         $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:  C  parallel run on 3 processes --------------- $$i"; \
