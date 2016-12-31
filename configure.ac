@@ -25,7 +25,7 @@ dnl maintainer mode is disabled in default, meaning make will *never* attempt
 dnl to rebuild configure, Makefile.ins, etc.
 AM_MAINTAINER_MODE
 
-AC_CONFIG_MACRO_DIRS([m4])
+m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
 
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
 dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
