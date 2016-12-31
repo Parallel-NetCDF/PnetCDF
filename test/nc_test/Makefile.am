@@ -49,7 +49,7 @@ BUILT_SOURCES = tests.h $(M4_SRCS:.m4=.c)
 
 check_PROGRAMS = $(TESTPROGRAMS)
 
-# autimake 1.11.3 does not implement AM_TESTS_ENVIRONMENT
+# autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
 # AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 # AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
