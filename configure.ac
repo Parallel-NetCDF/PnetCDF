@@ -18,6 +18,7 @@ dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
 dnl as AM_INIT_AUTOMAKE modfies command line $*
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
+dnl AM_INIT_AUTOMAKE([subdir-objects])
 AM_INIT_AUTOMAKE
 
 dnl maintainer mode is disabled in default, meaning make will *never* attempt

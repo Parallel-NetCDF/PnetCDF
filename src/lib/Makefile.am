@@ -75,11 +75,18 @@ libpnetcdf_la_SOURCES += subfile.c
 endif
 
 libpnetcdf_la_LIBADD =
+nodist_EXTRA_libpnetcdf_la_SOURCES =
 if HAS_MPICXX
 libpnetcdf_la_LIBADD += ../libcxx/libpnetcdfcxx.la
+# According Automake Manual, Section 8.3.5 Libtool Convenience Libraries,
+# using nodist_EXTRA to trick automake to use C++ compiler
+nodist_EXTRA_libpnetcdf_la_SOURCES += dummycxx.cxx
 endif
 if HAS_FORTRAN
+# According to Automake Manual, Section 8.14.3 Mixing Fortran 77 With C and
+# C++, adding $(FLIBS) is necessary
 libpnetcdf_la_LIBADD += ../libf/libpnetcdff.la ../libf90/libpnetcdff90.la $(FLIBS) $(FCLIBS)
+nodist_EXTRA_libpnetcdf_la_SOURCES += dummyf90.f90
 endif
 
 CLEANFILES = $(M4_SRCS:.m4=.c) ncx.h
