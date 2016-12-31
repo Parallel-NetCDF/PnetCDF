@@ -51,7 +51,7 @@
 
         subroutine report_test
         implicit        none
-        character*128   msg
+        character*1024   msg
 #include "tests.inc"
 
         integer MY_LEN_TRIM

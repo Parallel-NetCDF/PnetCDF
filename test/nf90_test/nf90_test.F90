@@ -47,7 +47,7 @@
 
         subroutine report_test
         implicit        none
-        character*128   msg
+        character*1024  msg
 #include "tests.inc"
 
         write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
