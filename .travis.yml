@@ -27,6 +27,9 @@ before_install:
   - sudo apt-get install -y autoconf
   - sudo apt-get install -y automake
   - sudo apt-get install -y libtool
+  - autoconf --version
+  - automake --version
+  - libtool --version
   - autoreconf -i
   # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
