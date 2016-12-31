@@ -13,30 +13,28 @@ AM_DEFAULT_SOURCE_EXT = .cpp
 AM_CPPFLAGS = -I$(top_builddir)/src/libcxx
 LDADD = ${top_builddir}/src/lib/libpnetcdf.la
 
-TESTPROGRAMS = collective_write \
-               nonblocking_write \
-               column_wise \
-               block_cyclic \
-               flexible_api \
-               get_info \
-               hints \
-               put_varn_float \
-               put_varn_int \
-               put_vara \
-               get_vara \
-               transpose \
-               vard_int \
-               fill_mode
-
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = collective_write \
+                 nonblocking_write \
+                 column_wise \
+                 block_cyclic \
+                 flexible_api \
+                 get_info \
+                 hints \
+                 put_varn_float \
+                 put_varn_int \
+                 put_vara \
+                 get_vara \
+                 transpose \
+                 vard_int \
+                 fill_mode
 
 # parallel runs only
-# TESTS = $(TESTPROGRAMS)
+# TESTS = $(check_PROGRAMS)
 
 CLEANFILES = *.nc core core.*
 
-ptest ptest4: $(TESTPROGRAMS)
-	@for i in $(TESTPROGRAMS); do { \
+ptest ptest4: $(check_PROGRAMS)
+	@for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: C++ parallel run on 4 processes --------------- $$i"; \
@@ -45,8 +43,8 @@ ptest ptest4: $(TESTPROGRAMS)
            exit 1; \
         fi ; } ; done
 
-ptest8: $(TESTPROGRAMS)
-	@for i in $(TESTPROGRAMS) ; do { \
+ptest8: $(check_PROGRAMS)
+	@for i in $(check_PROGRAMS) ; do { \
         $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: C++ parallel run on 8 processes --------------- $$i"; \
@@ -55,8 +53,8 @@ ptest8: $(TESTPROGRAMS)
            exit 1; \
         fi ; } ; done
 
-ptest3: $(TESTPROGRAMS)
-	@for i in $(TESTPROGRAMS) ; do { \
+ptest3: $(check_PROGRAMS)
+	@for i in $(check_PROGRAMS) ; do { \
         $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: C++ parallel run on 3 processes --------------- $$i"; \
