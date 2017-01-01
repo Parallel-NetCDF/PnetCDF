@@ -24,8 +24,8 @@
 #define NC_BYTE_SWAP_BUFFER_SIZE 4096
 
 /* define MPI_OFFSET if not defined */
-#ifndef HAVE_MPI_OFFSET_DATATYPE
-    #ifdef HAVE_MPI_LONG_LONG_INT
+#ifndef HAVE_DECL_MPI_OFFSET
+    #ifdef HAVE_DECL_MPI_LONG_LONG_INT
         #define MPI_OFFSET MPI_LONG_LONG_INT
     #else
         #define MPI_OFFSET MPI_INT

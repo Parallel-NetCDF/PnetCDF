@@ -33,7 +33,7 @@
 static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 {
     /* char types */
-#ifdef HAVE_MPI_CHARACTER
+#ifdef HAVE_DECL_MPI_CHARACTER
     if (type == MPI_CHARACTER)
         return  MPI_CHAR;
 #endif
@@ -48,7 +48,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
     if (type == MPI_SIGNED_CHAR)
         return  MPI_SIGNED_CHAR;
 
-#ifdef HAVE_MPI_INTEGER1
+#ifdef HAVE_DECL_MPI_INTEGER1
     if (type == MPI_INTEGER1)
         return  MPI_SIGNED_CHAR;
 #endif
@@ -57,7 +57,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 
     /* 2-byte integer types (only supported if MPI_SHORT is 2-bytes). */
 #if (SIZEOF_SHORT == 2)
-  #ifdef HAVE_MPI_INTEGER2
+  #ifdef HAVE_DECL_MPI_INTEGER2
     if (type == MPI_INTEGER2)
         return  MPI_SHORT;
   #endif
@@ -91,11 +91,11 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 #endif
 #endif
 
-#ifdef HAVE_MPI_INTEGER
+#ifdef HAVE_DECL_MPI_INTEGER
     if (type == MPI_INTEGER)
         return int_4byte;
 #endif
-#ifdef HAVE_MPI_INTEGER4
+#ifdef HAVE_DECL_MPI_INTEGER4
     if (type == MPI_INTEGER4)
         return int_4byte;
 #endif
@@ -122,7 +122,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
       * is 8-bytes).
       */
 #if (SIZEOF_INT == 8) || (SIZEOF_LONG == 8)
-  #ifdef HAVE_MPI_INTEGER8
+  #ifdef HAVE_DECL_MPI_INTEGER8
     if (type == MPI_INTEGER8)
       #if (SIZEOF_INT == 8)
         return MPI_INT;
@@ -130,7 +130,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
         return MPI_LONG;
       #endif
   #endif
-  #ifdef HAVE_MPI_UNSIGNED_INTEGER8
+  #ifdef HAVE_DECL_MPI_UNSIGNED_INTEGER8
     if (type == MPI_UNSIGNED_INTEGER8)
       #if (SIZEOF_UINT == 8)
         return MPI_UNSIGNED;
@@ -162,11 +162,11 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 #endif
 
     /* 4-byte float types (we assume float is 4-bytes). */
-#ifdef HAVE_MPI_REAL
+#ifdef HAVE_DECL_MPI_REAL
     if (type == MPI_REAL)
         return  MPI_FLOAT;
 #endif
-#ifdef HAVE_MPI_REAL4
+#ifdef HAVE_DECL_MPI_REAL4
     if (type == MPI_REAL4)
         return  MPI_FLOAT;
 #endif
@@ -174,11 +174,11 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
         return  MPI_FLOAT;
 
     /* 8-byte float types (we assume double is 8-bytes). */
-#ifdef HAVE_MPI_REAL8
+#ifdef HAVE_DECL_MPI_REAL8
     if (type == MPI_REAL8)
         return MPI_DOUBLE;
 #endif
-#ifdef HAVE_MPI_DOUBLE_PRECISION
+#ifdef HAVE_DECL_MPI_DOUBLE_PRECISION
     if (type == MPI_DOUBLE_PRECISION)
         return  MPI_DOUBLE;
 #endif
@@ -192,7 +192,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
         return  MPI_UNSIGNED_LONG_LONG;
 
 /* HP-MPI for example needs to handle MPI_LB and MPI_UB */
-#ifdef HAVE_MPI_LB
+#ifdef HAVE_DECL_MPI_LB
     if (type == MPI_LB) {
 #if SIZEOF_SIZE_T == 8
         return MPI_DOUBLE;
@@ -201,7 +201,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 #endif
     }
 #endif
-#ifdef HAVE_MPI_UB
+#ifdef HAVE_DECL_MPI_UB
     if (type == MPI_UB) {
 #if SIZEOF_SIZE_T == 8
         return MPI_DOUBLE;
@@ -233,7 +233,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
   Return:
 . total number of blocks assigned from the distributed array
 @*/
-#ifdef HAVE_MPI_COMBINER_DARRAY
+#ifdef HAVE_DECL_MPI_COMBINER_DARRAY
 static int
 ncmpii_darray_get_totalblks(int rank,
                             MPI_Offset ndims,
@@ -332,13 +332,13 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   MPI_Type_get_envelope(dtype, &num_ints, &num_adds, &num_dtypes, &combiner);
 
   if (
-#ifdef HAVE_MPI_COMBINER_F90_INTEGER
+#ifdef HAVE_DECL_MPI_COMBINER_F90_INTEGER
       combiner == MPI_COMBINER_F90_INTEGER ||
 #endif
-#ifdef HAVE_MPI_COMBINER_F90_REAL
+#ifdef HAVE_DECL_MPI_COMBINER_F90_REAL
       combiner == MPI_COMBINER_F90_REAL ||
 #endif
-#ifdef HAVE_MPI_COMBINER_F90_COMPLEX
+#ifdef HAVE_DECL_MPI_COMBINER_F90_COMPLEX
       combiner == MPI_COMBINER_F90_COMPLEX ||
 #endif
      0 )
@@ -373,25 +373,25 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     case MPI_COMBINER_VECTOR:
     case MPI_COMBINER_HINDEXED:
     case MPI_COMBINER_INDEXED:
-#ifdef HAVE_MPI_COMBINER_DUP
+#ifdef HAVE_DECL_MPI_COMBINER_DUP
     case MPI_COMBINER_DUP:
 #endif
-#ifdef HAVE_MPI_COMBINER_HVECTOR_INTEGER
+#ifdef HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER
     case MPI_COMBINER_HVECTOR_INTEGER:
 #endif
-#ifdef HAVE_MPI_COMBINER_INDEXED_BLOCK
+#ifdef HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK
     case MPI_COMBINER_INDEXED_BLOCK:
 #endif
-#ifdef HAVE_MPI_COMBINER_HINDEXED_INTEGER
+#ifdef HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER
     case MPI_COMBINER_HINDEXED_INTEGER:
 #endif
-#ifdef HAVE_MPI_COMBINER_SUBARRAY
+#ifdef HAVE_DECL_MPI_COMBINER_SUBARRAY
     case MPI_COMBINER_SUBARRAY:
 #endif
-#ifdef HAVE_MPI_COMBINER_DARRAY
+#ifdef HAVE_DECL_MPI_COMBINER_DARRAY
     case MPI_COMBINER_DARRAY:
 #endif
-#ifdef HAVE_MPI_COMBINER_RESIZED
+#ifdef HAVE_DECL_MPI_COMBINER_RESIZED
     case MPI_COMBINER_RESIZED:
 #endif
 
@@ -405,7 +405,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     /* multiple etypes */
 
     case MPI_COMBINER_STRUCT:
-#ifdef HAVE_MPI_COMBINER_STRUCT_INTEGER
+#ifdef HAVE_DECL_MPI_COMBINER_STRUCT_INTEGER
     case MPI_COMBINER_STRUCT_INTEGER:
 #endif
         count = array_of_ints[0];
@@ -463,10 +463,10 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 
     case MPI_COMBINER_HVECTOR:
     case MPI_COMBINER_VECTOR:
-#ifdef HAVE_MPI_COMBINER_HVECTOR_INTEGER
+#ifdef HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER
     case MPI_COMBINER_HVECTOR_INTEGER:
 #endif
-#ifdef HAVE_MPI_COMBINER_INDEXED_BLOCK
+#ifdef HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK
     case MPI_COMBINER_INDEXED_BLOCK:
 #endif
         *iscontig_of_ptypes = 0;
@@ -475,7 +475,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 
     case MPI_COMBINER_HINDEXED:
     case MPI_COMBINER_INDEXED:
-#ifdef HAVE_MPI_COMBINER_HINDEXED_INTEGER
+#ifdef HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER
     case MPI_COMBINER_HINDEXED_INTEGER:
 #endif
         *iscontig_of_ptypes = 0;
@@ -483,7 +483,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
           total_blocks += array_of_ints[1+i];
         break;
 
-#ifdef HAVE_MPI_COMBINER_SUBARRAY
+#ifdef HAVE_DECL_MPI_COMBINER_SUBARRAY
     case MPI_COMBINER_SUBARRAY:
         *iscontig_of_ptypes = 0;
         ndims = array_of_ints[0];
@@ -492,7 +492,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
         break;
 #endif
 
-#ifdef HAVE_MPI_COMBINER_DARRAY
+#ifdef HAVE_DECL_MPI_COMBINER_DARRAY
     case MPI_COMBINER_DARRAY:
         *iscontig_of_ptypes = 0;
         ndims = array_of_ints[2];
@@ -507,7 +507,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
         break;
 #endif
 
-#ifdef HAVE_MPI_COMBINER_RESIZED
+#ifdef HAVE_DECL_MPI_COMBINER_RESIZED
     case MPI_COMBINER_RESIZED:
         *iscontig_of_ptypes = 0;
         total_blocks = 1;

@@ -1294,7 +1294,11 @@ AC_CONFIG_COMMANDS_PRE([case $FC_MODOUT in #(
 esac])dnl
 ])
 
+dnl
 dnl steal from autoconf 2.69
+dnl customized AC_FC_FREEFORM: to just get ac_cv_fc_freeform without
+dnl appending ac_cv_fc_freeform to FCFLAGS
+dnl
 # AC_FC_FREEFORM([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # ------------------------------------------------------------------
 # Look for a compiler flag to make the Fortran (FC) compiler accept
@@ -1356,7 +1360,11 @@ fi
 AC_LANG_POP([Fortran])dnl
 ])# AC_FC_FREEFORM
 
+dnl
 dnl steal from autoconf 2.69
+dnl customized AC_FC_FIXEDFORM: to just get ac_cv_fc_fixedform without
+dnl appending ac_cv_fc_fixedform to FCFLAGS
+dnl
 # AC_FC_FIXEDFORM([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # ------------------------------------------------------------------
 # Look for a compiler flag to make the Fortran (FC) compiler accept
@@ -1636,7 +1644,8 @@ AC_LANG_PUSH([C])
 ])
 
 
-AC_DEFUN([UD_CHECK_MPI_COMPILER], [
+dnl check the availability of MPI executables
+AC_DEFUN([UD_MPI_PATH_PROGS], [
    if test "x$MPI_INSTALL" != x ; then
       UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
       if test "x$$1" = x ; then
@@ -1704,7 +1713,7 @@ AC_DEFUN([UD_HAS_MPI_CONST], [
 
 dnl Check for presence of an MPI datatype.
 dnl These could be enums, so we have to do compile checks.
-AC_DEFUN([UD_HAS_MPI_DATATYPE], [
+AC_DEFUN([UD_CHECK_MPI_DATATYPE], [
    AC_MSG_CHECKING(if MPI datatype $1 is defined )
    AC_COMPILE_IFELSE(
       [AC_LANG_SOURCE([
@@ -1712,7 +1721,7 @@ AC_DEFUN([UD_HAS_MPI_DATATYPE], [
           MPI_Datatype dummy = $1;
       ])],
       [AC_MSG_RESULT(yes)
-       AC_DEFINE(HAVE_$1$2, 1, available)
+       AC_DEFINE(HAVE_DECL_$1$2, 1, available)
       ],
       [AC_MSG_RESULT(no)]
    )]

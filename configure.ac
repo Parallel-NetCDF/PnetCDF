@@ -3,7 +3,7 @@ dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
-AC_PREREQ([2.59])
+AC_PREREQ([2.68])
 AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
@@ -20,6 +20,8 @@ CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
 dnl AM_INIT_AUTOMAKE([subdir-objects])
 AM_INIT_AUTOMAKE
+dnl enable silent rules by default 
+dnl AM_SILENT_RULES([yes])
 
 dnl maintainer mode is disabled in default, meaning make will *never* attempt
 dnl to rebuild configure, Makefile.ins, etc.
@@ -199,7 +201,7 @@ CANDIDATE_MPICXX="${CANDIDATE_MPICXX} mpiicpc icpc"
 CANDIDATE_MPIF77="${CANDIDATE_MPIF77} mpiifort mpiifc ifort"
 CANDIDATE_MPIF90="${CANDIDATE_MPIF90} mpiifort mpiifc ifort"
 
-UD_CHECK_MPI_COMPILER([MPICC], [$CANDIDATE_MPICC])
+UD_MPI_PATH_PROGS([MPICC], [$CANDIDATE_MPICC])
 if test "x${MPICC}" = x ; then
    AC_MSG_ERROR([
    -----------------------------------------------------------------------
@@ -222,7 +224,7 @@ dnl AC_USE_SYSTEM_EXTENSIONS
 dnl enable large file support
 AC_SYS_LARGEFILE
 
-UD_PROG_CC_MAKEDEPEND
+dnl UD_PROG_CC_MAKEDEPEND
 
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([malloc.h])
@@ -272,7 +274,7 @@ AC_ARG_ENABLE(cxx,
 UD_MSG_DEBUG(enable_cxx=$enable_cxx)
 
 if test "x${enable_cxx}" != xno ; then
-   UD_CHECK_MPI_COMPILER([MPICXX], [$CANDIDATE_MPICXX])
+   UD_MPI_PATH_PROGS([MPICXX], [$CANDIDATE_MPICXX])
 
    if test "x${MPICXX}" = x ; then
       AC_MSG_ERROR([
@@ -356,8 +358,8 @@ AC_ARG_ENABLE(fortran,
 )
 
 if test "x${enable_fortran}" != xno ; then
-    UD_CHECK_MPI_COMPILER([MPIF77], [$CANDIDATE_MPIF77])
-    UD_CHECK_MPI_COMPILER([MPIF90], [$CANDIDATE_MPIF90])
+    UD_MPI_PATH_PROGS([MPIF77], [$CANDIDATE_MPIF77])
+    UD_MPI_PATH_PROGS([MPIF90], [$CANDIDATE_MPIF90])
 fi
 if test "x${enable_fortran}" = xyes ; then
    dnl user explicitly requests to build Fortran APIs
@@ -465,9 +467,12 @@ if test "x${enable_fortran}" != xno && test "x${MPIF77}" != xno ; then
    F77FLAGS=${FFLAGS}
    AC_SUBST(F77FLAGS)
 
-   dnl get flag for Fortran free form (this flag is only used in testing)
    FC_saved=${FC}
    FC=${F77}
+   dnl customized AC_FC_FREEFORM: to just get ac_cv_fc_freeform without
+   dnl appending ac_cv_fc_freeform to FCFLAGS
+   dnl ac_cv_fc_freeform is the flag for enabling Fortran free form
+   dnl we use this flag only in testing programs
    UD_FC_FREEFORM
    if test "x${ac_cv_fc_freeform}" != xunknown ; then
       F77_SUPPORT_FREEFORM=yes
@@ -548,7 +553,8 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(FPPFLAGS)
 
    dnl compiler command-line define preprocessor flag, result in FC_DEFINE
-   UD_FC_PP_DEFINE
+   dnl UD_FC_PP_DEFINE
+   AC_FC_PP_DEFINE
 
    dnl check compiler flags for file extensions in .f .F .f90 .F90
    AC_LANG_PUSH([Fortran])
@@ -562,7 +568,10 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(F90FLAGS_F90)
    AC_LANG_POP([Fortran])
 
-   dnl get flag for Fortran fixed form (this flag is only used in testing)
+   dnl customized AC_FC_FIXEDFORM: to just get ac_cv_fc_fixedform without
+   dnl appending ac_cv_fc_fixedform to FCFLAGS
+   dnl ac_cv_fc_fixedform flag is for enabling Fortran fixed form.
+   dnl we use this flag only in testing programs
    UD_FC_FIXEDFORM
    FFIXEDFORMFLAG=${ac_cv_fc_fixedform}
    UD_MSG_DEBUG([FC=$FC F90FLAGS=$F90FLAGS FFIXEDFORMFLAG=$FFIXEDFORMFLAG])
@@ -723,12 +732,12 @@ dnl fi
 UD_PROG_M4
 M4FLAGS="$M4FLAGS -DPNETCDF"
 M4FFLAGS="$M4FFLAGS -DPNETCDF"
-UD_PROG_AR()
-UD_PROG_NM()
+# UD_PROG_AR()
+# UD_PROG_NM()
 # We could use the PAC check for ranlib (it also makes sure that ranlib works,
 # which is not always true, particularly when GNU tools are installed on 
 # a system that doesn't have (or need) ranlib
-# AC_PROG_RANLIB
+AC_PROG_RANLIB
 
 dnl Check for <stdbool.h> that conforms to C99 requirements
 dnl this is also for using bool type in utf8proc.h/utf8proc.c to support
@@ -816,55 +825,62 @@ else
    enable_aggregation=yes
 fi
 
-# check for MPI-2 only functions
-AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address)
-AC_CHECK_FUNCS(MPI_Type_create_subarray MPI_Type_create_hvector MPI_Type_create_hindexed MPI_Type_create_struct MPI_Type_create_resized MPI_Type_get_extent)
+dnl check MPI-2 only functions
+AC_CHECK_FUNCS([MPI_Info_dup \
+                MPI_Info_free \
+                MPI_Get_address \
+                MPI_Type_create_subarray \
+                MPI_Type_create_hvector \
+                MPI_Type_create_hindexed \
+                MPI_Type_create_struct \
+                MPI_Type_create_resized \
+                MPI_Type_get_extent])
 
-dnl Check for presence of MPI COMBINERS.
-UD_HAS_MPI_CONST(MPI_COMBINER_DUP)
-UD_HAS_MPI_CONST(MPI_COMBINER_HVECTOR_INTEGER)
-UD_HAS_MPI_CONST(MPI_COMBINER_HINDEXED_INTEGER)
-UD_HAS_MPI_CONST(MPI_COMBINER_SUBARRAY)
-UD_HAS_MPI_CONST(MPI_COMBINER_DARRAY)
-UD_HAS_MPI_CONST(MPI_COMBINER_RESIZED)
-UD_HAS_MPI_CONST(MPI_COMBINER_STRUCT_INTEGER)
-UD_HAS_MPI_CONST(MPI_COMBINER_INDEXED_BLOCK)
-UD_HAS_MPI_CONST(MPI_COMBINER_F90_REAL)
-UD_HAS_MPI_CONST(MPI_COMBINER_F90_INTEGER)
-UD_HAS_MPI_CONST(MPI_COMBINER_F90_COMPLEX)
+dnl Check presence of MPI COMBINERS. These are of type int.
+AC_CHECK_DECLS([MPI_COMBINER_DUP,
+                MPI_COMBINER_HVECTOR_INTEGER,
+                MPI_COMBINER_HINDEXED_INTEGER,
+                MPI_COMBINER_SUBARRAY,
+                MPI_COMBINER_DARRAY,
+                MPI_COMBINER_RESIZED,
+                MPI_COMBINER_STRUCT_INTEGER,
+                MPI_COMBINER_INDEXED_BLOCK,
+                MPI_COMBINER_F90_REAL,
+                MPI_COMBINER_F90_INTEGER,
+                MPI_COMBINER_F90_COMPLEX],
+                [], [], [[#include <mpi.h>]])
 
-dnl Check for presence of various MPI error classes.
+dnl Check presence of various MPI error classes.
 dnl These could be enums, so we have to do compile checks.
-UD_HAS_MPI_CONST(MPI_ERR_FILE_EXISTS)
-UD_HAS_MPI_CONST(MPI_ERR_NO_SUCH_FILE)
-UD_HAS_MPI_CONST(MPI_ERR_AMODE)
-UD_HAS_MPI_CONST(MPI_ERR_NOT_SAME)
-UD_HAS_MPI_CONST(MPI_ERR_BAD_FILE)
-UD_HAS_MPI_CONST(MPI_ERR_READ_ONLY)
-UD_HAS_MPI_CONST(MPI_ERR_ACCESS)
-UD_HAS_MPI_CONST(MPI_ERR_NO_SPACE)
-UD_HAS_MPI_CONST(MPI_ERR_QUOTA)
+AC_CHECK_DECLS([MPI_ERR_FILE_EXISTS,
+                MPI_ERR_NO_SUCH_FILE,
+                MPI_ERR_AMODE,
+                MPI_ERR_NOT_SAME,
+                MPI_ERR_BAD_FILE,
+                MPI_ERR_READ_ONLY,
+                MPI_ERR_ACCESS,
+                MPI_ERR_NO_SPACE,
+                MPI_ERR_QUOTA],
+                [], [], [[#include <mpi.h>]])
 
-dnl Check for presence of C types
-UD_HAS_MPI_DATATYPE(MPI_CHAR)
-UD_HAS_MPI_DATATYPE(MPI_BYTE)
-UD_HAS_MPI_DATATYPE(MPI_SIGNED_CHAR)
-UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_CHAR)
-UD_HAS_MPI_DATATYPE(MPI_SHORT)
-UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_SHORT)
-UD_HAS_MPI_DATATYPE(MPI_INT)
-UD_HAS_MPI_DATATYPE(MPI_UNSIGNED)
-UD_HAS_MPI_DATATYPE(MPI_LONG)
-UD_HAS_MPI_DATATYPE(MPI_FLOAT)
-UD_HAS_MPI_DATATYPE(MPI_DOUBLE)
-UD_HAS_MPI_DATATYPE(MPI_LONG_LONG_INT)
-UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
-UD_HAS_MPI_DATATYPE(MPI_UB)
-UD_HAS_MPI_DATATYPE(MPI_LB)
-dnl UD_HAS_MPI_DATATYPE(MPI_OFFSET)
-dnl HAVE_MPI_OFFSET might have already been defined in mpi.h
-dnl Add "_DATATYPE" suffix to distinguish from checking MPI_Offset
-UD_HAS_MPI_DATATYPE(MPI_OFFSET, _DATATYPE)
+dnl Check presence of C MPI data types.
+dnl Note they are of type MPI_Datatype, thus cannot use AC_CHECK_DECLS
+UD_CHECK_MPI_DATATYPE(MPI_CHAR)
+UD_CHECK_MPI_DATATYPE(MPI_BYTE)
+UD_CHECK_MPI_DATATYPE(MPI_SIGNED_CHAR)
+UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_CHAR)
+UD_CHECK_MPI_DATATYPE(MPI_SHORT)
+UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_SHORT)
+UD_CHECK_MPI_DATATYPE(MPI_INT)
+UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED)
+UD_CHECK_MPI_DATATYPE(MPI_LONG)
+UD_CHECK_MPI_DATATYPE(MPI_FLOAT)
+UD_CHECK_MPI_DATATYPE(MPI_DOUBLE)
+UD_CHECK_MPI_DATATYPE(MPI_LONG_LONG_INT)
+UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
+UD_CHECK_MPI_DATATYPE(MPI_UB)
+UD_CHECK_MPI_DATATYPE(MPI_LB)
+UD_CHECK_MPI_DATATYPE(MPI_OFFSET)
 
 dnl Check for presence of Fortran types
 dnl These could be enums, so we have to do compile checks.
@@ -874,21 +890,21 @@ dnl built without Fortran support, in which case these types might not
 dnl exist.  Second, we need to map these types to corresponding C types
 dnl where possible to simplify processing at run time.
 if test "x${enable_fortran}" = xyes ; then
-    UD_HAS_MPI_DATATYPE(MPI_CHARACTER)
-    UD_HAS_MPI_DATATYPE(MPI_REAL)
-    UD_HAS_MPI_DATATYPE(MPI_INTEGER)
-    UD_HAS_MPI_DATATYPE(MPI_DOUBLE_PRECISION)
-    UD_HAS_MPI_DATATYPE(MPI_INTEGER1)
-    UD_HAS_MPI_DATATYPE(MPI_INTEGER2)
-    UD_HAS_MPI_DATATYPE(MPI_INTEGER4)
-    UD_HAS_MPI_DATATYPE(MPI_INTEGER8)
-    UD_HAS_MPI_DATATYPE(MPI_INTEGER16)
-    UD_HAS_MPI_DATATYPE(MPI_REAL4)
-    UD_HAS_MPI_DATATYPE(MPI_REAL8)
-    UD_HAS_MPI_DATATYPE(MPI_REAL16)
-    UD_HAS_MPI_DATATYPE(MPI_COMPLEX8)
-    UD_HAS_MPI_DATATYPE(MPI_COMPLEX16)
-    UD_HAS_MPI_DATATYPE(MPI_COMPLEX32)
+    UD_CHECK_MPI_DATATYPE(MPI_CHARACTER)
+    UD_CHECK_MPI_DATATYPE(MPI_REAL)
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER)
+    UD_CHECK_MPI_DATATYPE(MPI_DOUBLE_PRECISION)
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER1)
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER2)
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER4)
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER8)
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER16)
+    UD_CHECK_MPI_DATATYPE(MPI_REAL4)
+    UD_CHECK_MPI_DATATYPE(MPI_REAL8)
+    UD_CHECK_MPI_DATATYPE(MPI_REAL16)
+    UD_CHECK_MPI_DATATYPE(MPI_COMPLEX8)
+    UD_CHECK_MPI_DATATYPE(MPI_COMPLEX16)
+    UD_CHECK_MPI_DATATYPE(MPI_COMPLEX32)
 fi
 
 in_place_swap=yes
@@ -995,7 +1011,8 @@ AC_SUBST(SIZEOF_MPI_OFFSET)
 
 if test "x${enable_fortran}" = xyes ; then
 
-   UD_FC_MODULE_EXTENSION
+   AC_FC_MODULE_EXTENSION
+   dnl UD_FC_MODULE_EXTENSION
    dnl UD_FC_MODULE_EXTENSION defines FC_MODEXT
    if test "x${FC_MODEXT}" = x ; then
       AC_MSG_ERROR([cannot determine Fortran module file extension!])
@@ -1071,7 +1088,7 @@ has_fortran=${enable_fortran}
 AC_SUBST(has_fortran)
 AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 
-UD_MAKEWHATIS
+dnl UD_MAKEWHATIS
 
 dnl
 dnl GNU coverage
@@ -1268,7 +1285,7 @@ AC_ARG_VAR(TESTMPIRUN, [MPI run command for make target ptest, @<:@default: mpie
 AC_ARG_VAR(TESTOUTDIR, [Output file directory for make target check/ptest, @<:@default: ./@:>@])
 if test "x${TESTMPIRUN}" = x ; then
    dnl set default to mpiexec
-   UD_CHECK_MPI_COMPILER([TESTMPIRUN], [mpiexec mpirun])
+   UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun])
 fi
 if test "x${TESTOUTDIR}" = x ; then
    dnl set default to current directory
