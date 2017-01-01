@@ -86,7 +86,7 @@ if HAS_FORTRAN
 # According to Automake Manual, Section 8.14.3 Mixing Fortran 77 With C and
 # C++, adding $(FLIBS) is necessary
 libpnetcdf_la_LIBADD += ../libf/libpnetcdff.la ../libf90/libpnetcdff90.la $(FLIBS) $(FCLIBS)
-nodist_EXTRA_libpnetcdf_la_SOURCES += dummyf90.f90
+# nodist_EXTRA_libpnetcdf_la_SOURCES += dummyf90.f90
 endif
 
 CLEANFILES = $(M4_SRCS:.m4=.c) ncx.h
