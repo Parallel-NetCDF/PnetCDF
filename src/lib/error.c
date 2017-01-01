@@ -327,13 +327,13 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
      * have not been defined.
      */
     MPI_Error_class(mpi_errorcode, &errorclass);
-#ifdef HAVE_MPI_ERR_FILE_EXISTS
+#ifdef HAVE_DECL_MPI_ERR_FILE_EXISTS
     if (errorclass == MPI_ERR_FILE_EXISTS) return NC_EEXIST;
 #endif
-#ifdef HAVE_MPI_ERR_NO_SUCH_FILE
+#ifdef HAVE_DECL_MPI_ERR_NO_SUCH_FILE
     if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
 #endif
-#ifdef HAVE_MPI_ERR_NOT_SAME
+#ifdef HAVE_DECL_MPI_ERR_NOT_SAME
     /* MPI-IO should return MPI_ERR_NOT_SAME when one or more arguments of a
      * collective MPI call are different. However, MPI-IO may not report this
      * error code correctly. For instance, some MPI-IO returns MPI_ERR_AMODE
@@ -341,7 +341,7 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
      * report inconsistent file name. */
     if (errorclass == MPI_ERR_NOT_SAME) return NC_EMULTIDEFINE_FNC_ARGS;
 #endif
-#ifdef HAVE_MPI_ERR_AMODE
+#ifdef HAVE_DECL_MPI_ERR_AMODE
     /* MPI-IO may or may not report MPI_ERR_AMODE if inconsistent amode is
      * detected. MPI_ERR_AMODE can also indicate other conflict amode used
      * on each process. But in PnetCDF, MPI_ERR_AMODE can only be caused by
@@ -349,19 +349,19 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
      * we are sure it is because of the inconsistent mode */
     if (errorclass == MPI_ERR_AMODE) return NC_EMULTIDEFINE_OMODE;
 #endif
-#ifdef HAVE_MPI_ERR_READ_ONLY
+#ifdef HAVE_DECL_MPI_ERR_READ_ONLY
     if (errorclass == MPI_ERR_READ_ONLY) return NC_EPERM;
 #endif
-#ifdef HAVE_MPI_ERR_ACCESS
+#ifdef HAVE_DECL_MPI_ERR_ACCESS
     if (errorclass == MPI_ERR_ACCESS) return NC_EACCESS;
 #endif
-#ifdef HAVE_MPI_ERR_BAD_FILE
+#ifdef HAVE_DECL_MPI_ERR_BAD_FILE
     if (errorclass == MPI_ERR_BAD_FILE) return NC_EBAD_FILE;
 #endif
-#ifdef HAVE_MPI_ERR_NO_SPACE
+#ifdef HAVE_DECL_MPI_ERR_NO_SPACE
     if (errorclass == MPI_ERR_NO_SPACE) return NC_ENO_SPACE;
 #endif
-#ifdef HAVE_MPI_ERR_QUOTA
+#ifdef HAVE_DECL_MPI_ERR_QUOTA
     if (errorclass == MPI_ERR_QUOTA) return NC_EQUOTA;
 #endif
 
