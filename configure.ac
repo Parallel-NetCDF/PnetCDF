@@ -553,8 +553,8 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(FPPFLAGS)
 
    dnl compiler command-line define preprocessor flag, result in FC_DEFINE
-   dnl UD_FC_PP_DEFINE
-   AC_FC_PP_DEFINE
+   dnl AC_FC_PP_DEFINE
+   UD_FC_PP_DEFINE
 
    dnl check compiler flags for file extensions in .f .F .f90 .F90
    AC_LANG_PUSH([Fortran])
@@ -1012,8 +1012,8 @@ AC_SUBST(SIZEOF_MPI_OFFSET)
 
 if test "x${enable_fortran}" = xyes ; then
 
-   AC_FC_MODULE_EXTENSION
-   dnl UD_FC_MODULE_EXTENSION
+   dnl AC_FC_MODULE_EXTENSION
+   UD_FC_MODULE_EXTENSION
    dnl UD_FC_MODULE_EXTENSION defines FC_MODEXT
    if test "x${FC_MODEXT}" = x ; then
       AC_MSG_ERROR([cannot determine Fortran module file extension!])
