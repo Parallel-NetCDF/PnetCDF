@@ -15,6 +15,10 @@ AM_FFLAGS = -I$(top_builddir)/src/libf
 AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90
 LDADD = ${top_builddir}/src/lib/libpnetcdf.la
 
+if DECL_MPI_OFFSET
+AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+endif
+
 check_PROGRAMS = pnetcdf-write-from-master \
                  pnetcdf-read-from-master \
                  pnetcdf-write-nfiles \

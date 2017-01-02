@@ -110,7 +110,7 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef MPI_OFFSET
+#ifndef HAVE_DECL_MPI_OFFSET
 #define MPI_OFFSET MPI_LONG_LONG_INT
 #endif
 
@@ -566,13 +566,8 @@ int main(int argc, char** argv) {
     benchmark_read (filename, len, &r_size, &r_info_used, timing+6);
 
     MPI_Reduce(&timing, &max_t,     11, MPI_DOUBLE, MPI_MAX, 0, comm);
-#ifdef MPI_OFFSET
     MPI_Reduce(&w_size, &sum_w_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
     MPI_Reduce(&r_size, &sum_r_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
-#else
-    MPI_Reduce(&w_size, &sum_w_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
-    MPI_Reduce(&r_size, &sum_r_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
-#endif
     if (verbose && rank == 0) {
         double bw = sum_w_size;
         bw /= 1048576.0;

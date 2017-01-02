@@ -881,6 +881,7 @@ UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
 UD_CHECK_MPI_DATATYPE(MPI_UB)
 UD_CHECK_MPI_DATATYPE(MPI_LB)
 UD_CHECK_MPI_DATATYPE(MPI_OFFSET)
+AM_CONDITIONAL(DECL_MPI_OFFSET, [test x$ac_cv_CHECK_MPI_DATATYPE_MPI_OFFSET = xyes])
 
 dnl Check for presence of Fortran types
 dnl These could be enums, so we have to do compile checks.

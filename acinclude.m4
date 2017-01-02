@@ -1720,12 +1720,14 @@ AC_DEFUN([UD_CHECK_MPI_DATATYPE], [
           #include <mpi.h>
           MPI_Datatype dummy = $1;
       ])],
-      [AC_MSG_RESULT(yes)
-       AC_DEFINE(HAVE_DECL_$1$2, 1, available)
-      ],
-      [AC_MSG_RESULT(no)]
-   )]
-)
+      [ac_cv_CHECK_MPI_DATATYPE_$1=yes],
+      [ac_cv_CHECK_MPI_DATATYPE_$1=no]
+   )
+   AC_MSG_RESULT(ac_cv_CHECK_MPI_DATATYPE_$1)
+   if test "x$ac_cv_CHECK_MPI_DATATYPE_$1" = xyes; then
+       AC_DEFINE(HAVE_DECL_$1, 1, available)
+   fi
+])
 
 dnl Check if older Intel MPI C compiler (4.x) for issue of redefined SEEK_SET
 dnl See https://software.intel.com/en-us/articles/intel-cluster-toolkit-for-linux-error-when-compiling-c-aps-using-intel-mpi-library-compilation-driver-mpiicpc
@@ -1743,8 +1745,8 @@ AC_DEFUN([UD_CHECK_MPI_CPP_SEEK_SET], [
       [ac_cv_CHECK_MPI_CPP_SEEK_SET=yes]
    )
    AC_MSG_RESULT([$ac_cv_CHECK_MPI_CPP_SEEK_SET])
-   AC_LANG_POP(C++)]
-)
+   AC_LANG_POP(C++)
+])
 
 AC_DEFUN([UD_CHECK_F77_GNU_INT],
 [

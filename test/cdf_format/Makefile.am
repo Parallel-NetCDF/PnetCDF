@@ -11,6 +11,10 @@ SUFFIXES = .o .c
 AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
 LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la
 
+if DECL_MPI_OFFSET
+   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+endif
+
 TESTPROGRAMS = test_inq_format \
                cdf_type \
                dim_cdf12
