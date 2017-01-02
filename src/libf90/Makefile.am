@@ -13,9 +13,9 @@ AM_DEFAULT_SOURCE_EXT = .f90
 AM_FCFLAGS = -I. -I$(top_srcdir)/src/libf90
 
 if UPPER_CASE_MOD
-  PNETCDF_MOD = PNETCDF.$(FC_MODEXT)
+   PNETCDF_MOD = PNETCDF.$(FC_MODEXT)
 else
-  PNETCDF_MOD = pnetcdf.$(FC_MODEXT)
+   PNETCDF_MOD = pnetcdf.$(FC_MODEXT)
 endif
 
 M4FFLAGS += -DINTENTV=$(INTENTV)
@@ -39,8 +39,8 @@ libpnetcdff90_la_SOURCES = pnetcdf.f90
 
 BUILT_SOURCES = $(M4_SRCS:.m4=.f90)
 
-SRCS     = $(F90_SRCS) $(M4_SRCS:.m4=.f90) \
-           api.f90 nfmpi_constants.f90
+SRCS = $(F90_SRCS) $(M4_SRCS:.m4=.f90) \
+       api.f90 nfmpi_constants.f90
 
 # libpnetcdff90_la_DEPENDENCIES = $(SRCS)
 # EXTRA_libpnetcdff90_la_DEPENDENCIES = $(SRCS)
