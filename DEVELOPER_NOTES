@@ -18,8 +18,8 @@ Tasks immediately before a new release (must run in the following order)
       - run make check with valgrind by adding the following lines to configure
         command line. As of PnetCDF 1.8.0, make check and make ptest pass
         without any warning and error from valgrind. (See note below.)
-            TEST_SEQRUN="valgrind --quiet --leak-check=full"
-            TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
+            TESTSEQRUN="valgrind --quiet --leak-check=full"
+            TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
 
       - make check
       - make ptests

@@ -14,7 +14,11 @@ AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
 LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la
 
 if DECL_MPI_OFFSET
-   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
+   # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   AM_CFLAGS = -DHAVE_DECL_MPI_OFFSET
+   # AM_FFLAGS  += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   # AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
 TESTPROGRAMS = test_subfile
@@ -32,12 +36,12 @@ EXTRA_DIST = README seq_runs.sh
 
 ptest ptest4: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TEST_MPIRUN_4) ./$$i -f $(TEST_OUTDIR)/testfile.nc -s 2 ; \
+	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/testfile.nc -s 2 ; \
 	) ; done
 
 ptest2: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TEST_MPIRUN_2) ./$$i -f $(TEST_OUTDIR)/testfile.nc -s 2 ; \
+	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/testfile.nc -s 2 ; \
 	) ; done
 
 ptests: ptest2 ptest4

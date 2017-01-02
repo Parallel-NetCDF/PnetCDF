@@ -13,12 +13,17 @@ AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
 LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la
 
+AM_CFLAGS =
 if IS_BIGENDIAN
-   AM_CPPFLAGS += -DWORDS_BIGENDIAN
+   AM_CFLAGS += -DWORDS_BIGENDIAN
 endif
 
 if DECL_MPI_OFFSET
-   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
+   # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   AM_CFLAGS += -DHAVE_DECL_MPI_OFFSET
+   # AM_FFLAGS  += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   # AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
 TESTPROGRAMS = large_files large_var
@@ -47,21 +52,21 @@ CLEANFILES = *.nc core core.*
 # Run them on 4 processes to see if they can handle well
 
 ptest ptest4: $(TESTPROGRAMS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/testfile.nc
 	set -e ; for i in $(TESTPROGRAMS) ; do ( \
-	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
 	) ; done
 
 ptest2: $(TESTPROGRAMS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/testfile.nc
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
 	) ; done
 
 ptest6: $(TESTPROGRAMS)
-	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/testfile.nc
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/testfile.nc ; \
 	) ; done
 
 ptests: ptest2 ptest4 ptest6

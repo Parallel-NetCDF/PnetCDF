@@ -6,7 +6,7 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .F90
+SUFFIXES = .o .F90 .c
 
 AM_DEFAULT_SOURCE_EXT = .F90
 AM_CFLAGS = -I$(top_srcdir)/src/libf -I$(top_builddir)/src/libf
@@ -14,7 +14,10 @@ AM_FCFLAGS = -I$(top_builddir)/src/libf $(FC_MODINC)$(top_builddir)/src/libf90 $
 LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la
 
 if RELAX_COORD_BOUND
-AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
+   AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
+endif
+if DECL_MPI_OFFSET
+   AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
 M4SRCS      = test_get.m4 \

@@ -49,8 +49,8 @@ or
               CXXFLAGS="-Kfast" \
               FFLAGS="-Kfast" \
               FCFLAGS="-Kfast" \
-              TEST_MPIRUN="mpiexec -n NP" \
-              TEST_SEQRUN="mpiexec -n 1"
+              TESTMPIRUN="mpiexec -n NP" \
+              TESTSEQRUN="mpiexec -n 1"
 
 
 ----------------------------------

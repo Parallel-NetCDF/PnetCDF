@@ -3,7 +3,9 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * none
+    * The configure system has migrated to use automake.
+    * Building shared libraries is now supported. Note using shared libraries
+      is not recommended due to the likely performance degradation.
 
   o New APIs
     * none
@@ -47,6 +49,9 @@ This is essentially a placeholder for the next release note ...
       pages are changed to ${prefix}/share/man.
     * Support of DESTDIR for Building Binary Packages has been added, as
       suggested by sunpoet@FreeBSD.org. Ticket #25
+    * Configure time variables TEST_SEQRUN, TEST_MPIRUN, and TEST_OUTDIR are
+      renamed to TESTSEQRUN, TESTMPIRUN, and TESTOUTDIR, respectively, to
+      avoid the variable name convention used by automake.
 
   o Bug fixes
     * none

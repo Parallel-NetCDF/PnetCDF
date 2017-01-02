@@ -23,9 +23,9 @@ AM_INIT_AUTOMAKE
 dnl enable silent rules by default 
 dnl AM_SILENT_RULES([yes])
 
-dnl maintainer mode is disabled in default, meaning make will *never* attempt
-dnl to rebuild configure, Makefile.ins, etc.
-AM_MAINTAINER_MODE
+dnl if maintainer mode is disabled, make will *never* attempt to rebuild configure,
+dnl Makefile.ins, etc.
+AM_MAINTAINER_MODE([enable])
 
 m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
 
@@ -105,7 +105,7 @@ AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is def
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coord check is enabled])
 
 dnl an option to use a customized rm command
-AC_ARG_VAR(RM, Command for deleting files or directories. default: rm)
+AC_ARG_VAR(RM, Command for deleting files or directories. @<:@default: rm@:>@)
 if test "x${RM}" != x ; then
    AC_MSG_CHECKING(rm )
    if ! test -f ${RM} ; then
@@ -150,12 +150,11 @@ AC_ARG_VAR(CC,     Overwritten by MPICC  if MPICC is set)
 AC_ARG_VAR(CXX,    Overwritten by MPICXX if MPICXX is set)
 AC_ARG_VAR(F77,    Overwritten by MPIF77 if MPIF77 is set)
 AC_ARG_VAR(FC,     Overwritten by MPIF90 if MPIF90 is set)
-AC_ARG_VAR(CFLAGS, Debugging and optimization options for the C compiler)
-AC_ARG_VAR(CPPFLAGS, [Preprocessor options for C and C++ compilers, e.g. -I<include dir> if you have headers in a nonstandard directory <include dir>])
-AC_ARG_VAR(CXXFLAGS, Debugging and optimization options for the C compiler)
-AC_ARG_VAR(FFLAGS, Debugging and optimization options for the Fortran 77 compiler)
-AC_ARG_VAR(FCFLAGS, Debugging and optimization options for the Fortran 90 compiler)
-AC_ARG_VAR(FPPFLAGS, [Preprocessor options for Fortran compilers, e.g. -I<include dir>])
+dnl AC_ARG_VAR(CPPFLAGS, [Preprocessor options for C and C++ compilers, e.g. -I<include_dir> if you have headers in a nonstandard directory <include_dir>])
+dnl AC_ARG_VAR(CFLAGS, Debugging and optimization options for the C compiler)
+dnl AC_ARG_VAR(CXXFLAGS, Debugging and optimization options for the C++ compiler)
+dnl AC_ARG_VAR(FFLAGS, Debugging and optimization options for the Fortran 77 compiler)
+dnl AC_ARG_VAR(FCFLAGS, Debugging and optimization options for the Fortran 90 compiler)
 
 dnl Check if MPICC, MPICXX, MPIF77, MPIF90 are set by the user.
 dnl If not, set MPICC equal to CC. Similarly, for MPICXX, MPIF77, and MPIF90
@@ -314,9 +313,6 @@ if test "x${enable_cxx}" != xno ; then
    if test "x${has_mpicxx}" = xyes ; then
       UD_CHECK_MPI_CPP_SEEK_SET
       UD_MSG_DEBUG(ac_cv_CHECK_MPI_CPP_SEEK_SET=$ac_cv_CHECK_MPI_CPP_SEEK_SET)
-      if test "x${ac_cv_CHECK_MPI_CPP_SEEK_SET}" = xyes ; then
-         CXXCPPFLAGS="${CXXCPPFLAGS} -DMPICH_IGNORE_CXX_SEEK -DMPICH_SKIP_MPICXX"
-      fi
    fi
 else
    dnl must invoke AC_PROG_CXX here otherwise got "error: conditional "am__fastdepCXX" was never defined."
@@ -339,16 +335,12 @@ AC_ARG_ENABLE(strict,
 
 if test "x${enable_strict}" = xyes; then
    if test "x${GCC}" = xyes; then
-      CPPFLAGS="${CPPFLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
-      if test "x${has_mpicxx}" = xyes ; then
-         CXXCPPFLAGS="${CXXCPPFLAGS} -Wall -Wundef -Wpointer-arith"
-      fi
+      CFLAGS="${CFLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
    else
       AC_MSG_WARN([--enable-strict is for GNU compiler only])
       enable_strict=no
    fi
 fi
-AC_SUBST(CXXCPPFLAGS)
 
 AC_ARG_ENABLE(fortran,
     [AS_HELP_STRING([--disable-fortran],
@@ -398,10 +390,6 @@ if test "x${MPIF90}" != x ; then
    UD_MSG_DEBUG([after FCLIBS=$FCLIBS])
    FLIBS="$FCLIBS"
    F90LIBS="$FCLIBS"
-
-   dnl We use F90FLAGS for debugging and optimization options for Fortran 90 programs
-   F90FLAGS=${FCFLAGS}
-   AC_SUBST(F90FLAGS)
 
    AC_LANG_PUSH([Fortran])
    AC_MSG_CHECKING([if mpi.mod is available])
@@ -463,10 +451,6 @@ if test "x${enable_fortran}" != xno && test "x${MPIF77}" != xno ; then
 
    AC_F77_LIBRARY_LDFLAGS
 
-   dnl We use F77FLAGS for debugging and optimization options for Fortran 77 programs
-   F77FLAGS=${FFLAGS}
-   AC_SUBST(F77FLAGS)
-
    FC_saved=${FC}
    FC=${F77}
    dnl customized AC_FC_FREEFORM: to just get ac_cv_fc_freeform without
@@ -478,7 +462,7 @@ if test "x${enable_fortran}" != xno && test "x${MPIF77}" != xno ; then
       F77_SUPPORT_FREEFORM=yes
       FFREEFORMFLAG=${ac_cv_fc_freeform}
    fi
-   UD_MSG_DEBUG([FC=$FC F90FLAGS=$F90FLAGS FFREEFORMFLAG=$FFREEFORMFLAG])
+   UD_MSG_DEBUG([FC=$FC FFREEFORMFLAG=$FFREEFORMFLAG])
    AC_SUBST(FFREEFORMFLAG)
    FC=${FC_saved}
 
@@ -533,27 +517,14 @@ if test "x${enable_fortran}" = xyes ; then
    dnl use compiler flag -cpp. To disable, use -nocpp.
    dnl For other compilers, we need to find the compile flags for Fortran
    dnl preprocessor.
-   dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make UD_FC_PP_SRCEXT
-   UD_FC_PP_SRCEXT([f])    dnl sets ac_cv_fc_pp_srcext_f
+   dnl AC_FC_PP_SRCEXT is first introduced in autoconf 2.69
+   dnl steal AC_FC_PP_SRCEXT from autoconf 2.69 to make UD_FC_PP_SRCEXT
    UD_FC_PP_SRCEXT([F])    dnl sets ac_cv_fc_pp_srcext_F
-   UD_FC_PP_SRCEXT([f90])  dnl sets ac_cv_fc_pp_srcext_f90
    UD_FC_PP_SRCEXT([F90])  dnl sets ac_cv_fc_pp_srcext_F90
 
-   F77PPFLAGS_f=${ac_cv_fc_pp_srcext_f}
-   F77PPFLAGS_F=${ac_cv_fc_pp_srcext_F}
-   F90PPFLAGS_f90=${ac_cv_fc_pp_srcext_f90}
-   F90PPFLAGS_F90=${ac_cv_fc_pp_srcext_F90}
-   AC_SUBST(F77PPFLAGS_f)
-   AC_SUBST(F77PPFLAGS_F)
-   AC_SUBST(F90PPFLAGS_f90)
-   AC_SUBST(F90PPFLAGS_F90)
-
-   FPPFLAGS=${FPPFLAGS-}
-   AC_SUBST(FPP)
-   AC_SUBST(FPPFLAGS)
-
-   dnl compiler command-line define preprocessor flag, result in FC_DEFINE
-   dnl AC_FC_PP_DEFINE
+   dnl compiler command-line define preprocessor flag, result in ${FC_DEFINE}
+   dnl Not all Fortran compilers use -D
+   dnl AC_FC_PP_DEFINE is first introduced in autoconf 2.69
    UD_FC_PP_DEFINE
 
    dnl check compiler flags for file extensions in .f .F .f90 .F90
@@ -562,10 +533,6 @@ if test "x${enable_fortran}" = xyes ; then
    AC_FC_SRCEXT([F])
    AC_FC_SRCEXT([f90])
    AC_FC_SRCEXT([F90])
-   AC_SUBST(F77FLAGS_f)
-   AC_SUBST(F77FLAGS_F)
-   AC_SUBST(F90FLAGS_f90)
-   AC_SUBST(F90FLAGS_F90)
    AC_LANG_POP([Fortran])
 
    dnl customized AC_FC_FIXEDFORM: to just get ac_cv_fc_fixedform without
@@ -574,7 +541,7 @@ if test "x${enable_fortran}" = xyes ; then
    dnl we use this flag only in testing programs
    UD_FC_FIXEDFORM
    FFIXEDFORMFLAG=${ac_cv_fc_fixedform}
-   UD_MSG_DEBUG([FC=$FC F90FLAGS=$F90FLAGS FFIXEDFORMFLAG=$FFIXEDFORMFLAG])
+   UD_MSG_DEBUG([FC=$FC FFIXEDFORMFLAG=$FFIXEDFORMFLAG])
    AC_SUBST(FFIXEDFORMFLAG)
 
    # Checking for Fortran types also determines the Fortran name mangling
@@ -624,10 +591,7 @@ if test "x${enable_fortran}" = xyes ; then
    dnl Check if the Fortran compiler is an NAG
    UD_CHECK_FC_NAG
    if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
-      NAGf90FPPFLAGS="-DNAGf90Fortran"
-      NAG_FCFLAGS="-mismatch"
-      AC_SUBST(NAGf90FPPFLAGS)
-      AC_SUBST(NAG_FCFLAGS)
+      FCFLAGS="${FCFLAGS} -DNAGf90Fortran -mismatch"
    fi
 
    dnl check Fortran parameter modifier for 8-byte integer type
@@ -1076,7 +1040,8 @@ AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
 if test "x${enable_fortran}" = xyes ; then
    if test "x${enable_strict}" = xyes; then
-      FPPFLAGS="${FPPFLAGS} -Wall"
+      FFLAGS="${FFLAGS} -Wall"
+      FCFLAGS="${FCFLAGS} -Wall"
    fi
    AC_SUBST(FLIBS)
    AC_SUBST(FCLIBS)
@@ -1120,9 +1085,8 @@ if test "x${enable_coverage}" = xyes; then
           CXXFLAGS="${CXXFLAGS} ${LCOV_FLAGS}"
        fi
        if test "x${enable_fortran}" = xyes ; then
+            FFLAGS="${FFLAGS}   ${LCOV_FLAGS}"
            FCFLAGS="${FCFLAGS}  ${LCOV_FLAGS}"
-          F77FLAGS="${F77FLAGS} ${LCOV_FLAGS}"
-          F90FLAGS="${F90FLAGS} ${LCOV_FLAGS}"
        fi
        LCOV_LIB=-lgcov
        AC_SUBST(LCOV_LIB)
@@ -1162,22 +1126,17 @@ if test "x${debug}" = xyes; then
    fi
 
    if test "x${enable_fortran}" = xyes ; then
+      if ! echo "${FFLAGS}" | ${EGREP} -q -- "-g" ; then
+         FFLAGS="${FFLAGS} -g"
+      fi
       if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-g" ; then
          FCFLAGS="${FCFLAGS} -g"
       fi
-      if ! echo "${F77FLAGS}" | ${EGREP} -q -- "-g" ; then
-         F77FLAGS="${F77FLAGS} -g"
-      fi
-      if ! echo "${F90FLAGS}" | ${EGREP} -q -- "-g" ; then
-         F90FLAGS="${F90FLAGS} -g"
-      fi
 
-       FCFLAGS=`echo $FCFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
-      F77FLAGS=`echo $F77FLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
-      F90FLAGS=`echo $F90FLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
-       FCFLAGS="${FCFLAGS}  -O0"
-      F77FLAGS="${F77FLAGS} -O0"
-      F90FLAGS="${F90FLAGS} -O0"
+       FFLAGS=`echo $FFLAGS  | sed 's/-O. *//g' | sed 's/-fast *//g'`
+      FCFLAGS=`echo $FCFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
+       FFLAGS="${FFLAGS}  -O0"
+      FCFLAGS="${FCFLAGS} -O0"
    fi
 fi
 
@@ -1281,30 +1240,33 @@ PNETCDF_LIB="-L${BUILDDIR}/src/lib"
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
-AC_ARG_VAR(TESTSEQRUN, [Run command (on one process) for make target check on cross-compile environment. Example: "aprun -n 1". @<:@default: none@:>@])
-AC_ARG_VAR(TESTMPIRUN, [MPI run command for make target ptest, @<:@default: mpiexec@:>@])
-AC_ARG_VAR(TESTOUTDIR, [Output file directory for make target check/ptest, @<:@default: ./@:>@])
+AC_ARG_VAR(TESTSEQRUN, [Run command (on one MPI process) for "make check" on cross-compile environment. Example: "aprun -n 1". @<:@default: none@:>@])
+AC_SUBST(TESTSEQRUN)
+
+AC_ARG_VAR(TESTMPIRUN, [MPI run command for "make ptest", @<:@default: mpiexec -n NP@:>@])
 if test "x${TESTMPIRUN}" = x ; then
-   dnl set default to mpiexec
+   dnl set default to "mpiexec -n NP"
    UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun])
+   TESTMPIRUN="${TESTMPIRUN} -n NP"
 fi
+TESTMPIRUN2=`echo $TESTMPIRUN | sed 's/ NP/ 2/g'`
+TESTMPIRUN3=`echo $TESTMPIRUN | sed 's/ NP/ 3/g'`
+TESTMPIRUN4=`echo $TESTMPIRUN | sed 's/ NP/ 4/g'`
+TESTMPIRUN6=`echo $TESTMPIRUN | sed 's/ NP/ 6/g'`
+TESTMPIRUN8=`echo $TESTMPIRUN | sed 's/ NP/ 8/g'`
+TESTMPIRUN10=`echo $TESTMPIRUN | sed 's/ NP/ 10/g'`
+AC_SUBST(TESTMPIRUN2)
+AC_SUBST(TESTMPIRUN3)
+AC_SUBST(TESTMPIRUN4)
+AC_SUBST(TESTMPIRUN6)
+AC_SUBST(TESTMPIRUN8)
+AC_SUBST(TESTMPIRUN10)
+
+AC_ARG_VAR(TESTOUTDIR, [Output file directory for "make check" and "make ptest", @<:@default: ./@:>@])
 if test "x${TESTOUTDIR}" = x ; then
    dnl set default to current directory
    TESTOUTDIR=.
 fi
-TESTMPIRUN2="${TESTMPIRUN} -n 2"
-TESTMPIRUN4="${TESTMPIRUN} -n 4"
-TESTMPIRUN3="${TESTMPIRUN} -n 3"
-TESTMPIRUN6="${TESTMPIRUN} -n 6"
-TESTMPIRUN8="${TESTMPIRUN} -n 8"
-TESTMPIRUN10="${TESTMPIRUN} -n 10"
-AC_SUBST(TESTMPIRUN2)
-AC_SUBST(TESTMPIRUN4)
-AC_SUBST(TESTMPIRUN3)
-AC_SUBST(TESTMPIRUN6)
-AC_SUBST(TESTMPIRUN8)
-AC_SUBST(TESTMPIRUN10)
-AC_SUBST(TESTSEQRUN)
 AC_SUBST(TESTOUTDIR)
 
 dnl find if gcc is available for compiling ncoffsets to run in sequential
@@ -1454,19 +1416,11 @@ fi
 if test "${has_mpicxx}" = yes ; then
    echo "\
               CXXFLAGS    = ${CXXFLAGS}"
-   if test "x${CXXCPPFLAGS}" != x ; then
-      echo "\
-              CXXCPPFLAGS = ${CXXCPPFLAGS}"
-   fi
 fi
 if test "${enable_fortran}" = yes ; then
    echo "\
-              F77FLAGS    = ${F77FLAGS}
-              F90FLAGS    = ${F90FLAGS}"
-   if test "x${FPPFLAGS}" != x ; then
-      echo "\
-              FPPFLAGS    = ${FPPFLAGS}"
-   fi
+              FFLAGS      = ${FFLAGS}
+              FCFLAGS     = ${FCFLAGS}"
 fi
 if test "x${LDFLAGS}" != x ; then
    echo "\
