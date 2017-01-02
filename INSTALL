@@ -105,8 +105,6 @@ options can be found using:
 
 Here lists a few important options:
 
-  --prefix=PREFIX         install PnetCDF files in PREFIX [/usr/local]
-  --enable-echo           Turn on strong echoing. [default: disabled]
   --disable-largefile     omit support for large files
   --disable-mpi-io-test   Disable check for MPI-IO support in MPI
                           implementation, if you know your MPI implementation
@@ -118,6 +116,11 @@ Here lists a few important options:
                           disabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
                           only need the C interface. [default: enabled]
+  --enable-shared[=PKGS]  build shared libraries [default=yes]
+  --enable-static[=PKGS]  build static libraries [default=yes]
+  --enable-fast-install[=PKGS]
+                          optimize for fast installation [default=yes]
+  --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-debug          Enable PnetCDF internal debug mode. This also
                           enables safe mode. [default: disabled]
   --disable-in-place-swap Disable memory in-place byte swap on Little Endian
@@ -132,18 +135,22 @@ Here lists a few important options:
                           Enable relaxed error NC_EINVALCOORDS to allow
                           coordinate start argument equal to dimension size
                           when argument count is zero. [default: disabled]
+  --enable-doxygen        Enable generation of documentation.
   --disable-file-sync     Disable MPI file sync if you know your file system
                           can provide data consistency. [default: enabled]
+  --disable-testsets      don't build or run netCDF tests
   --enable-large-file-test
                           Enable testing for large (>4GB) file/variable I/O.
                           Note "make testing" can run very slow. [default:
                           disabled]
 
+Optional Packages:
+
   --with-mpi=/path/to/implementation
                           installation prefix for MPI implementation
 
 Some influential environment variables:
-  RM          Command for deleting files or directories. default: rm
+  RM          Command for deleting files or directories. [default: rm]
   MPICC       MPI C compiler
   MPICXX      MPI C++ compiler
   MPIF77      MPI Fortran 77 compiler
@@ -152,22 +159,25 @@ Some influential environment variables:
   CXX         Overwritten by MPICXX if MPICXX is set
   F77         Overwritten by MPIF77 if MPIF77 is set
   FC          Overwritten by MPIF90 if MPIF90 is set
-  CFLAGS      Debugging and optimization options for the C compiler
-  CPPFLAGS    Preprocessor options for C and C++ compilers, e.g. -I<include
-              dir> if you have headers in a nonstandard directory <include dir>
-  CXXFLAGS    Debugging and optimization options for the C compiler
-  FFLAGS      Debugging and optimization options for the Fortran 77 compiler
-  FCFLAGS     Debugging and optimization options for the Fortran 90 compiler
-  FPPFLAGS    Preprocessor options for Fortran compilers, e.g. -I<include dir>
+  CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
   LIBS        libraries to pass to the linker, e.g. -l<library>
+  CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
+              you have headers in a nonstandard directory <include dir>
+  CXXFLAGS    C++ compiler flags
+  FCFLAGS     Fortran compiler flags
+  FFLAGS      Fortran 77 compiler flags
+  LT_SYS_LIBRARY_PATH
+              User-defined run-time library search path.
   CPP         C preprocessor
-  TEST_SEQRUN Run command (on one process) for make target check on
+  CXXCPP      C++ preprocessor
+  TESTSEQRUN  Run command (on one MPI process) for "make check" on
               cross-compile environment. Example: "aprun -n 1". [default:
               none]
-  TEST_MPIRUN MPI run command for make target ptest, [default: mpiexec -n NP]
-  TEST_OUTDIR Output file directory for make target ptest, [default: ./]
+  TESTMPIRUN  MPI run command for "make ptest", [default: mpiexec -n NP]
+  TESTOUTDIR  Output file directory for "make check" and "make ptest",
+              [default: ./]
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -183,8 +193,8 @@ Some influential environment variables:
 
     MPICC, MPICXX, MPIF77, MPIF90
     Setting these variables would result in the PnetCDF library being built
-    with these compilers. CC, CXX, F77, and F90 will be ignored if these MPI
-    variables are present.
+    with these compilers. CC, CXX, F77, FC, and F90 will be overwritten by
+    their corresponding MPI compiler variables.
 
     Note the compile flags, such as -O2 or -g, should be given in CFLAGS and
     other flag environment variables. Please do not set them in compiler
@@ -236,15 +246,15 @@ executables built before submitting a batch job could save a lot of time.
 
 There are three environment variables that can be used to run make check/ptest
 on a cross compile platform.
- - TEST_MPIRUN : command to launch MPI jobs. default: mpiexec
- - TEST_SEQRUN : command to run MPI executable sequentially. default: ./
- - TEST_OUTDIR : output directory. default: ./
+ - TESTMPIRUN : command to launch MPI jobs. default: mpiexec -n NP
+ - TESTSEQRUN : command to run MPI executable sequentially. default: none
+ - TESTOUTDIR : output directory. default: ./
 
 Examples:
-    make check TEST_OUTDIR=/scratch
-    make ptest TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=/scratch
+    make check TESTOUTDIR=/scratch
+    make ptest TESTMPIRUN="aprun -n NP" TESTOUTDIR=/scratch
 
-Note the keyword "NP" used in the environment variable string TEST_MPIRUN.  It
+Note the keyword "NP" used in the environment variable string TESTMPIRUN.  It
 will be replaced with the different numbers of MPI processes used in testing.
 Currently, the testing uses up to 8 processes. Hence, please make sure the
 process allocation at least contains 8 processes.
@@ -254,7 +264,7 @@ provide "pbs.script". It is recommended to build all the testing executables
 before submitting the batch job. This can be done by running the below command.
     cd test ; make ; cd ../examples ; make ; cd ..
 
-Note on setting TEST_OUTDIR. In order to run parallel test correctly, the
+Note on setting TESTOUTDIR. In order to run parallel test correctly, the
 output directory must be on a file system accessible to all MPI processes.  We
 recommend to use parallel file systems or POSIX compliant file systems (Using
 NFS will most likely fail the parallel test.)

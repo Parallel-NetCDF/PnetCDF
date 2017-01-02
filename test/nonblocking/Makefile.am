@@ -16,7 +16,11 @@ AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../com
 LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
 
 if DECL_MPI_OFFSET
-   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
+   # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   AM_CFLAGS = -DHAVE_DECL_MPI_OFFSET
+   AM_FFLAGS  += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
 TESTPROGRAMS = mcoll_perf \

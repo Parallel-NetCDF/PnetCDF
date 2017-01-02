@@ -33,8 +33,8 @@ configure command that was used to build PnetCDF successfully on K.
             CXXFLAGS="-Kfast" \
             FFLAGS="-Kfast" \
             FCFLAGS="-Kfast" \
-            TEST_MPIRUN="mpiexec -n NP" \
-            TEST_SEQRUN="mpiexec -n 1"
+            TESTMPIRUN="mpiexec -n NP" \
+            TESTSEQRUN="mpiexec -n 1"
 
 For users who would customize the source codes and edit configure.in, it is
 necessary to run command "autoreconf" to generate an updated "configure" file.

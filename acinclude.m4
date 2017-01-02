@@ -1035,14 +1035,13 @@ if test "x$ac_cv_fc_pp_srcext_$1" = xunknown; then
 else
   ac_fc_srcext=$1
   if test "x$ac_cv_fc_pp_srcext_$1" = xnone; then
-    FCFLAGS_SRCEXT=""
-    ac_cv_fc_pp_srcext_$1=""
-    dnl FCPPFLAGS_[]$1[]=""
+    ac_fcflags_srcext=""
+    FCFLAGS_[]$1[]=""
   else
-    FCFLAGS_SRCEXT=$ac_cv_fc_pp_srcext_$1
-    dnl FCPPFLAGS_[]$1[]=$ac_cv_fc_pp_srcext_$1
+    ac_fcflags_srcext=$ac_cv_fc_pp_srcext_$1
+    FCFLAGS_[]$1[]=$ac_cv_fc_pp_srcext_$1
   fi
-  dnl AC_SUBST(FCPPFLAGS_[]$1)
+  AC_SUBST(FCFLAGS_[]$1)
   $2
 fi
 AC_LANG_POP(Fortran)dnl

@@ -29,8 +29,8 @@ autoreconf -fi
 #    resource file, a jar file, etc for easier identification.
 
 ./configure --prefix=${WORKSPACE:-`pwd`}/install-${BUILD_TAG:-`date +"Y%m%d-%H%M%S"`} \
-            TEST_SEQRUN="valgrind --quiet --leak-check=full" \
-            TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
+            TESTSEQRUN="valgrind --quiet --leak-check=full" \
+            TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
 
 make -s clean
 make -s

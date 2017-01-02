@@ -16,36 +16,36 @@ LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la
 M4FLAGS += -I${top_srcdir}/m4
 
 if HAVE_F77_GNU_INT
-M4FFLAGS += -DHAVE_F77_GNU_INT
+   M4FFLAGS += -DHAVE_F77_GNU_INT
 endif
 if HAVE_F77_INT1
-M4FFLAGS += -DHAVE_F77_INT1
+   M4FFLAGS += -DHAVE_F77_INT1
 endif
 if HAVE_F77_INT2
-M4FFLAGS += -DHAVE_F77_INT2
+   M4FFLAGS += -DHAVE_F77_INT2
 endif
 if HAVE_F77_INT8
-M4FFLAGS += -DHAVE_F77_INT8
+   M4FFLAGS += -DHAVE_F77_INT8
 endif
 if RELAX_COORD_BOUND
-AM_FFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
+   AM_FFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
 endif
 
-M4SRCS    = test_get.m4 \
-            test_put.m4  \
-            test_iget.m4 \
-            test_iput.m4
+M4SRCS = test_get.m4 \
+         test_put.m4  \
+         test_iget.m4 \
+         test_iput.m4
 
 .m4.F:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-F_SRCS    = nf_test.F \
-            nf_error.F \
-            test_read.F \
-            test_write.F \
-            util.F
+F_SRCS = nf_test.F \
+         nf_error.F \
+         test_read.F \
+         test_write.F \
+         util.F
 
-HFILES   = tests.inc.in
+HFILES = tests.inc.in
 
 TESTPROGRAMS = nf_test
 check_PROGRAMS = $(TESTPROGRAMS)

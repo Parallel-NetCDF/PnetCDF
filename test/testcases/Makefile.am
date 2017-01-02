@@ -20,7 +20,11 @@ if SIZEOF_MPI_AINT_IS_4
 endif
 
 if DECL_MPI_OFFSET
-   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
+   # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+   AM_CFLAGS   = -DHAVE_DECL_MPI_OFFSET
+   AM_FFLAGS  += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
 NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
