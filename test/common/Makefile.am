@@ -25,6 +25,10 @@ libtestutils_la_LIBADD = libtestutilsf.la
 CLEANFILES = testutilsf.mod
 endif
 
+if DECL_MPI_OFFSET
+   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+endif
+
 # build check targets but not invoke
 tests: $(check_LTLIBRARIES)
 .PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10

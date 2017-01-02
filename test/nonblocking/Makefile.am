@@ -15,6 +15,10 @@ AM_FFLAGS = -I$(top_builddir)/src/libf
 AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf
 LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
 
+if DECL_MPI_OFFSET
+   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+endif
+
 TESTPROGRAMS = mcoll_perf \
                test_bput \
                interleaved \

@@ -45,7 +45,7 @@ using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
-#ifndef MPI_OFFSET
+#ifndef HAVE_DECL_MPI_OFFSET
 #define MPI_OFFSET MPI_LONG_LONG_INT
 #endif
 
@@ -212,11 +212,7 @@ int main(int argc, char **argv)
         nc.Buffer_detach();
 
         nc.Inq_put_size(&put_size);
-#ifdef MPI_OFFSET
         MPI_Allreduce(MPI_IN_PLACE, &put_size, 1, MPI_OFFSET, MPI_SUM, MPI_COMM_WORLD);
-#else
-        MPI_Allreduce(MPI_IN_PLACE, &put_size, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
-#endif
     }
     catch(NcmpiException& e) {
        cout << e.what() << " error code=" << e.errorCode() << " Error!\n";
@@ -227,11 +223,7 @@ int main(int argc, char **argv)
     write_size = bufsize * NUM_VARS * sizeof(int);
     for (i=0; i<NUM_VARS; i++) free(buf[i]);
 
-#ifdef MPI_OFFSET
     MPI_Reduce(&write_size,   &sum_write_size,   1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-#else
-    MPI_Reduce(&write_size,   &sum_write_size,   1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-#endif
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
     if (rank == 0 && verbose) {

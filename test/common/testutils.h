@@ -42,7 +42,7 @@ void parse_write_args(int argc, char **argv, int rank, params *p);
 
 extern char* nc_err_code_name(int err);
 
-#ifndef MPI_OFFSET
+#ifndef HAVE_DECL_MPI_OFFSET
 #define MPI_OFFSET MPI_LONG_LONG_INT
 #endif
 
