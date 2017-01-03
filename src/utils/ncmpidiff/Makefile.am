@@ -8,7 +8,6 @@
 
 bin_PROGRAMS = ncmpidiff
 ncmpidiff_SOURCES = ncmpidiff.c
-ncmpidiff_CPPFLAGS = -I$(top_builddir)/src/lib
 ncmpidiff_LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
 dist_man_MANS = ncmpidiff.1

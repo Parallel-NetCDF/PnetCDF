@@ -10,7 +10,6 @@ NCGEN = ../ncmpigen/ncmpigen
 
 bin_PROGRAMS = ncmpidump
 ncmpidump_SOURCES = ncmpidump.c vardata.c dumplib.c
-ncmpidump_CPPFLAGS = -I$(top_builddir)/src/lib
 ncmpidump_LDADD = $(top_builddir)/src/lib/libpnetcdf.la
 
 dist_man_MANS = ncmpidump.1
