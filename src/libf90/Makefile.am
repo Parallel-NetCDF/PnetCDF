@@ -10,8 +10,6 @@ SUFFIXES = .a .o .mod .f90 .m4
 
 AM_DEFAULT_SOURCE_EXT = .f90
 
-AM_FCFLAGS = -I. -I$(top_srcdir)/src/libf90
-
 if UPPER_CASE_MOD
    PNETCDF_MOD = PNETCDF.$(FC_MODEXT)
 else
