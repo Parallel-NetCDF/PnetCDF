@@ -5,7 +5,7 @@
 ! $Id$
 !
 ! This file is taken from netcdf_attributes.f90 with changes for PnetCDF use
-!  
+!
 !
 
   !

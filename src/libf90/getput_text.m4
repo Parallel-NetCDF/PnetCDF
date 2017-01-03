@@ -22,7 +22,7 @@ define(`TEXTVAR1',dnl
 
      integer                                                            :: nf90mpi_$1_var_text$3
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride
- 
+
      ! Set local arguments to default values
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
@@ -63,11 +63,11 @@ define(`TEXTVAR',dnl
      integer,                                                intent(in) :: ncid, varid
      character (len=*), dimension($3),                       intent($5) :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: start, count, stride, map
- 
+
      integer                                                            :: nf90mpi_$1_var_$2_text$6
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride, localMap
      integer                                                            :: numDims, counter
- 
+
      ! Set local arguments to default values
      numDims = substr(`$2', `0', `1')
 
@@ -80,7 +80,7 @@ define(`TEXTVAR',dnl
      do counter = 1, numDims - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
+
      if(present(start))  localStart (:size(start))  = start(:)
      if(present(count))  localCount (:size(count))  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
@@ -148,12 +148,12 @@ define(`NBTEXTVAR1',dnl
 
      integer                                                             :: nf90mpi_$1_var_text
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride
- 
+
      ! Set local arguments to default values
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
      localStride(:)  = 1
-          
+
      if(present(start))  localStart (:size(start) ) = start(:)
      if(present(count))  localCount (:size(count) ) = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
@@ -189,11 +189,11 @@ define(`NBTEXTVAR',dnl
      integer,                                                intent(out) :: req
      character (len=*), dimension($3),                       intent( $5) :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
- 
+
      integer                                                             :: nf90mpi_$1_var_$2_text
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
      integer                                                             :: numDims, counter
- 
+
      ! Set local arguments to default values
      numDims = substr(`$2', `0', `1')
 
@@ -206,7 +206,7 @@ define(`NBTEXTVAR',dnl
      do counter = 1, numDims - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
+
      if(present(start))  localStart (:size(start))  = start(:)
      if(present(count))  localCount (:size(count))  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
