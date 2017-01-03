@@ -5,7 +5,7 @@
 ! $Id$
 !
 ! This file is taken from netcdf_file.f90 with changes for PnetCDF use
-!  
+!
 !
 
 ! This is part of the netCDF F90 API, or. Copyright 2006 UCAR. See COPYRIGHT file
@@ -50,14 +50,14 @@ end function nf90mpi_strerrno
 !   integer, intent( in) :: ncid
 !   integer, intent(out) :: pe
 !   integer              :: nf90mpi_inq_base_pe
-! 
+!
 !   nf90mpi_inq_base_pe = nfmpi_inq_base_pe(ncid, pe)
 ! end function nf90mpi_inq_base_pe
 ! -------
 ! function nf90mpi_set_base_pe(ncid, pe)
 !   integer, intent( in) :: ncid, pe
 !   integer              :: nf90mpi_set_base_pe
-! 
+!
 !   nf90mpi_set_base_pe = nfmpi_set_base_pe(ncid, pe)
 ! end function nf90mpi_set_base_pe
 ! -------
@@ -80,7 +80,7 @@ function nf90mpi_open(mpi_comm, path, omode, mpi_info, ncid)
 end function nf90mpi_open
 ! -------
 function nf90mpi_set_fill(ncid, fillmode, old_mode)
-  integer, intent( in) :: ncid, fillmode 
+  integer, intent( in) :: ncid, fillmode
   integer, intent(out) :: old_mode
   integer              :: nf90mpi_set_fill
 
@@ -149,8 +149,8 @@ function nf90mpi_delete(name, mpi_info)
 end function nf90mpi_delete
 
 !
-! A single file level inquiry routine 
-! 
+! A single file level inquiry routine
+!
 function nf90mpi_inquire(ncid, nDimensions, nVariables, nAttributes, unlimitedDimId, formatNum)
   integer,           intent( in) :: ncid
   integer, optional, intent(out) :: nDimensions, nVariables, nAttributes, unlimitedDimId, formatNum
@@ -159,7 +159,7 @@ function nf90mpi_inquire(ncid, nDimensions, nVariables, nAttributes, unlimitedDi
   integer :: nDims, nVars, nGAtts, unlimDimId, frmt
 
   nf90mpi_inquire = nfmpi_inq(ncid, nDims, nVars, nGAtts, unlimDimId)
-  if(present(nDimensions))    nDimensions    = nDims 
+  if(present(nDimensions))    nDimensions    = nDims
   if(present(nVariables))     nVariables     = nVars
   if(present(nAttributes))    nAttributes    = nGAtts
   if(present(unlimitedDimId)) unlimitedDimId = unlimDimId

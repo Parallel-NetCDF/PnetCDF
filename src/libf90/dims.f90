@@ -5,7 +5,7 @@
 ! $Id$
 !
 ! This file is taken from netcdf_dims.f90 with changes for PnetCDF use
-!  
+!
 !
 
   !
@@ -18,7 +18,7 @@
     integer (kind=MPI_OFFSET_KIND), intent( in) :: len
     integer,                        intent(out) :: dimid
     integer                                     :: nf90mpi_def_dim
-  
+
     nf90mpi_def_dim = nfmpi_def_dim(ncid, name, len, dimid)
   end function nf90mpi_def_dim
   ! -----------
@@ -27,7 +27,7 @@
     character (len=*),   intent( in) :: name
     integer,             intent(out) :: dimid
     integer                          :: nf90mpi_inq_dimid
-    
+
     nf90mpi_inq_dimid = nfmpi_inq_dimid(ncid, name, dimid)
   end function nf90mpi_inq_dimid
   ! -----------
@@ -45,10 +45,10 @@
     character (len=*), optional,              intent(out) :: name
     integer (kind=MPI_OFFSET_KIND), optional, intent(out) :: len
     integer                                               :: nf90mpi_inquire_dimension
-    
+
     character (len=nf90_max_name)  :: dimName
     integer (kind=MPI_OFFSET_KIND) :: length
-    
+
     nf90mpi_inquire_dimension = nfmpi_inq_dim(ncid, dimid, dimName, length)
     if (nf90mpi_inquire_dimension .NE. NF90_NOERR) return
     if(present(name)) name = trim(dimName)

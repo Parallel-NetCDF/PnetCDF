@@ -21,7 +21,7 @@ define(`VARN1',dnl
      $5 (kind=$4),                                   intent($3) :: value
      integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent(in) :: start
      integer                                                    :: nf90mpi_$1_varn_$4$2
- 
+
      nf90mpi_$1_varn_$4$2 = nfmpi_$1_var1_$6$2(ncid, varid, start(:,1), value)
    end function nf90mpi_$1_varn_$4$2
 ')dnl
@@ -67,7 +67,7 @@ define(`VARN',dnl
      integer                                                              :: nf90mpi_$1_varn_$2_$3$8
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
      integer                                                              :: numDims
- 
+
      ! Set local arguments to default values
      numDims = size(start(:,1))
      localCount(1:numDims,1:num) = 1
@@ -300,7 +300,7 @@ define(`TEXTVARN1',dnl
      character (len=*),                              intent($2) :: value
      integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent(in) :: start
      integer                                                    :: nf90mpi_$1_varn_text$3
- 
+
      nf90mpi_$1_varn_text$3 = nfmpi_$1_var1_text$3(ncid, varid, start(:,1), value)
    end function nf90mpi_$1_varn_text$3
 ')dnl
@@ -323,7 +323,7 @@ define(`TEXTVARN',dnl
      integer                                                              :: nf90mpi_$1_varn_$2_text$6
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
      integer                                                              :: numDims
- 
+
      ! Set local arguments to default values
      numDims = size(start(:,1))
      localCount(1:numDims,1:num) = 1
@@ -385,7 +385,7 @@ define(`IVARN1',dnl
      integer,                                        intent(out):: req
      integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent(in) :: start
      integer                                                    :: nf90mpi_$1_varn_$3
- 
+
      nf90mpi_$1_varn_$3 = nfmpi_$1_var1_$5(ncid, varid, start(:,1), value, req)
    end function nf90mpi_$1_varn_$3
 ')dnl
@@ -425,7 +425,7 @@ define(`IVARN',dnl
      integer                                                              :: nf90mpi_$1_varn_$2_$3
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
      integer                                                              :: numDims
- 
+
      ! Set local arguments to default values
      numDims = size(start(:,1))
      localCount(1:numDims,1:num) = 1
@@ -607,7 +607,7 @@ define(`ITEXTVARN1',dnl
      integer,                                        intent(out):: req
      integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent(in) :: start
      integer                                                    :: nf90mpi_$1_varn_text
- 
+
      nf90mpi_$1_varn_text = nfmpi_$1_var1_text(ncid, varid, start(:,1), value, req)
    end function nf90mpi_$1_varn_text
 ')dnl
@@ -630,7 +630,7 @@ define(`ITEXTVARN',dnl
      integer                                                              :: nf90mpi_$1_varn_$2_text
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
      integer                                                              :: numDims
- 
+
      ! Set local arguments to default values
      numDims = size(start(:,1))
      localCount(1:numDims,1:num) = 1

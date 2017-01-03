@@ -24,11 +24,11 @@ define(`VAR_SCALAR',dnl
 
      integer                                                             :: nf90mpi_$1_var_$3$2
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localIndex
- 
+
      ! Set local arguments to default values
      localIndex(:) = 1
      if (present(start)) localIndex(:size(start)) = start(:)
- 
+
      if (present(buftype)) then
          nf90mpi_$1_var_$3$2 = nfmpi_$1_var1$2(ncid, varid, localIndex, values, bufcount, buftype)
      else
@@ -80,11 +80,11 @@ define(`NBVAR1',dnl
 
      integer                                                             :: nf90mpi_$1_var_$2
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localIndex
- 
+
      ! Set local arguments to default values
      localIndex(:) = 1
      if (present(start)) localIndex(:size(start)) = start(:)
- 
+
      if (present(buftype)) then
          nf90mpi_$1_var_$2 = nfmpi_$1_var1(ncid, varid, localIndex, values, bufcount, buftype, req)
      else
@@ -137,11 +137,11 @@ define(`VAR',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
- 
+
      integer                                                             :: nf90mpi_$1_var_$2_$3$8
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
      integer                                                             :: numDims, counter
- 
+
      ! Set local arguments to default values
      numDims = substr(`$2', `0', `1')
      localStart (:         ) = 1
@@ -153,7 +153,7 @@ define(`VAR',dnl
      do counter = 1, numDims - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
+
      if (present(start))  localStart (:size(start) )  = start(:)
      if (present(count))  localCount (:size(count) )  = count(:)
      if (present(stride)) localStride(:size(stride)) = stride(:)
@@ -409,11 +409,11 @@ define(`NBVAR',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
- 
+
      integer                                                             :: nf90mpi_$1_var_$2_$3
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
      integer                                                             :: numDims, counter
- 
+
      ! Set local arguments to default values
      numDims = substr(`$2', `0', `1')
      localStart (:         ) = 1
@@ -425,7 +425,7 @@ define(`NBVAR',dnl
      do counter = 1, numDims - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
+
      if (present(start))  localStart (:size(start) )  = start(:)
      if (present(count))  localCount (:size(count) )  = count(:)
      if (present(stride)) localStride(:size(stride)) = stride(:)
@@ -623,7 +623,7 @@ NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
      integer, dimension(:), intent(inout) :: req
      integer, dimension(:), intent(out)   :: st
      integer                              :: nf90mpi_wait
- 
+
      nf90mpi_wait = nfmpi_wait(ncid, num, req, st)
    end function nf90mpi_wait
 
@@ -632,7 +632,7 @@ NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
      integer, dimension(:), intent(inout) :: req
      integer, dimension(:), intent(out)   :: st
      integer                              :: nf90mpi_wait_all
- 
+
      nf90mpi_wait_all = nfmpi_wait_all(ncid, num, req, st)
    end function nf90mpi_wait_all
 
@@ -641,7 +641,7 @@ NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
      integer, dimension(:), intent(inout) :: req
      integer, dimension(:), intent(out)   :: st
      integer                              :: nf90mpi_cancel
- 
+
      nf90mpi_cancel = nfmpi_cancel(ncid, num, req, st)
    end function nf90mpi_cancel
 

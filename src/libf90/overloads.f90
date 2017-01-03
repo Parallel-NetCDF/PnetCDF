@@ -5,14 +5,14 @@
 ! $Id$
 !
 ! This file is taken from netcdf_overloads.f90 with changes for PnetCDF use
-!  
+!
 !
 
   ! Overloaded variable functions
   interface nf90mpi_def_var
     module procedure nf90mpi_def_var_Scalar, nf90mpi_def_var_oneDim, nf90mpi_def_var_ManyDims
   end interface ! nf90mpi_def_var
-  
+
   ! Overloaded variable fill functions
   interface nf90mpi_def_var_fill
     module procedure nf90mpi_def_var_fill_text,                                            &
