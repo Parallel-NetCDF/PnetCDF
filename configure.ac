@@ -591,7 +591,8 @@ if test "x${enable_fortran}" = xyes ; then
    dnl Check if the Fortran compiler is an NAG
    UD_CHECK_FC_NAG
    if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
-      FCFLAGS="${FCFLAGS} -DNAGf90Fortran -mismatch"
+       FFLAGS="${FFLAGS}  -DNAGFortran -mismatch"
+      FCFLAGS="${FCFLAGS} -DNAGFortran -mismatch"
    fi
 
    dnl check Fortran parameter modifier for 8-byte integer type
