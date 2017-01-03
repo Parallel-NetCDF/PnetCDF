@@ -1039,7 +1039,8 @@ AC_SUBST(UPPER_CASE_MOD)
 AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
 if test "x${enable_fortran}" = xyes ; then
-   if test "x${enable_strict}" = xyes; then
+   if test "x${enable_strict}" = xyes && test "x${GFC}" = xyes; then
+      dnl not all Fortran compilers recognize -Wall
       FFLAGS="${FFLAGS} -Wall"
       FCFLAGS="${FCFLAGS} -Wall"
    fi
