@@ -23,7 +23,6 @@ LIB_FSRCS = strerrorf.f \
 noinst_LTLIBRARIES  = libpnetcdff.la
 libpnetcdff_la_SOURCES = $(LIB_FSRCS) mpinetcdf_impl.h
 nodist_libpnetcdff_la_SOURCES = $(C2F_SRCS) mpifnetcdf.h
-# libpnetcdff_la_CPPFLAGS = -I$(top_srcdir)/lib
 
 EXTRA_DIST = buildiface \
 	     defs \
