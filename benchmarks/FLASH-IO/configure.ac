@@ -102,7 +102,7 @@ AC_DEFUN([UD_CHECK_FC_NAG],[
 dnl Check if the Fortran compiler is an NAG
 UD_CHECK_FC_NAG
 if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
-   NAGf90FPPFLAGS="-DNAGf90Fortran"
+   NAGf90FPPFLAGS="-DNAGFortran"
    NAG_FCFLAGS="-mismatch"
    AC_SUBST(NAGf90FPPFLAGS)
    AC_SUBST(NAG_FCFLAGS)

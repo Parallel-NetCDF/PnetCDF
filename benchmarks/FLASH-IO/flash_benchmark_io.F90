@@ -9,7 +9,7 @@
 ! #define MPI_OFFSET MPI_INTEGER8
 ! #endif
 
-#ifdef NAGf90Fortran
+#ifdef NAGFortran
       USE F90_UNIX_ENV, only : iargc, getarg
 #endif
 
@@ -18,7 +18,7 @@
 
 #include "common.fh"
 
-#ifndef NAGf90Fortran
+#ifndef NAGFortran
       integer iargc
 #endif
       integer i, argc, ierr

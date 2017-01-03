@@ -114,7 +114,7 @@
 !       DIGITAL Visual Fortran needs DFPORT for iargc
         USE DFPORT
         implicit        none
-#elif defined(NAGf90Fortran)
+#elif defined(NAGFortran)
         USE F90_UNIX_ENV, only : iargc, getarg
         implicit none
 #else
