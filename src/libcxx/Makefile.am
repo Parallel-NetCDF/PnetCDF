@@ -13,7 +13,6 @@ CXX_HEADER = pnetcdf
 nodist_include_HEADERS = $(CXX_HEADER)
 
 noinst_LTLIBRARIES = libpnetcdfcxx.la
-# libpnetcdfcxx_la_CPPFLAGS = -I$(top_srcdir)/src/libcxx
 
 # Note the file order is important
 HPP_FILES = ncmpi_notyet.h \
