@@ -133,6 +133,7 @@ echo "mpicc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               test "x${func_cc_basename_result}" = xifort ||
               test "x${func_cc_basename_result}" = xgcc ||
               test "x${func_cc_basename_result}" = xg++ ||
+              test "x${func_cc_basename_result}" = xgfortran ||
               test "x${func_cc_basename_result}" = xGNU ; then
 echo "cc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               return
