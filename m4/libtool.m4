@@ -128,6 +128,7 @@ echo "mpicc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            # func_cc_basename_result=`$cc_temp --version | cut -d' ' -f1`
            eval "$cc_temp --version" </dev/null >& conftest.ver
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
+           ${RM} -f conftest.ver
            if test "x${func_cc_basename_result}" = xicc ||
               test "x${func_cc_basename_result}" = xifort ||
               test "x${func_cc_basename_result}" = xgcc ||
