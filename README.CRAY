@@ -19,9 +19,10 @@ http://www.nersc.gov/users/software/compilers/intel-fortran-c-and-c/
             FFLAGS="-fast -no-ipo" FCFLAGS="-fast -no-ipo"
 
 
-Note if running make is slow, try parallel make, e.g.
+Note on building shared library of PnetCDF. Please add LDFLAGS=-dynamic to the
+configure command line. See further information at the following NERSC web site:
+http://www.nersc.gov/users/computational-systems/edison/running-jobs/shared-and-dynamic-libraries/
 
-    make -j8
 
 ===============================================================================
     Cray XE6
