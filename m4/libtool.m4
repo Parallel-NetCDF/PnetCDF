@@ -113,11 +113,40 @@ func_cc_basename ()
       case $cc_temp in
         compile | *[[\\/]]compile | ccache | *[[\\/]]ccache ) ;;
         distcc | *[[\\/]]distcc | purify | *[[\\/]]purify ) ;;
+        \-*) ;;
         *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 )
-           func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1`
+           # func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1`
+           eval "$cc_temp -show" </dev/null >& conftest.ver
+           func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
+           ${RM} -f conftest.ver
+echo "mpicc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            return
            ;;
-        \-*) ;;
+        *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
+           # For Cray PrgEnv-intel, cc is a wrapper of icc
+           # For Cray PrgEnv-gnu, cc is a wrapper of gcc
+           # func_cc_basename_result=`$cc_temp --version | cut -d' ' -f1`
+           eval "$cc_temp --version" </dev/null >& conftest.ver
+           func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
+           if test "x${func_cc_basename_result}" = xicc ||
+              test "x${func_cc_basename_result}" = xifort ||
+              test "x${func_cc_basename_result}" = xgcc ||
+              test "x${func_cc_basename_result}" = xg++ ||
+              test "x${func_cc_basename_result}" = xGNU ; then
+echo "cc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+              return
+           fi
+           # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
+           # func_cc_basename_result=`$cc_temp -V | cut -d' ' -f1`
+           eval "$cc_temp -V" </dev/null >& conftest.ver
+           func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
+           ${RM} -f conftest.ver
+           if test "x${func_cc_basename_result}" = xCray ; then
+echo "cc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+              return
+           fi
+           return
+           ;;
         *) break;;
       esac
     done
