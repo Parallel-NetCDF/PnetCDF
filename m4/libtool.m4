@@ -119,7 +119,17 @@ func_cc_basename ()
            eval "$cc_temp -show" </dev/null >& conftest.ver
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
-echo "mpicc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+           return
+           ;;
+        *[[\\/]]mpifccpx | *[[\\/]]mpiFCCpx | *[[\\/]]mpifrtpx )
+           # Fujitsu compilers: fccpx, FCCpx, frtpx
+           # func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1`
+           eval "$cc_temp -show" </dev/null >& conftest.ver
+           cc_fullname=`head -n1 conftest.ver |cut -d' ' -f1`
+           func_cc_basename_result=`basename $cc_fullname`
+           ${RM} -f conftest.ver
+echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            return
            ;;
         *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
@@ -130,12 +140,13 @@ echo "mpicc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
            if test "x${func_cc_basename_result}" = xicc ||
+              test "x${func_cc_basename_result}" = xicpc ||
               test "x${func_cc_basename_result}" = xifort ||
               test "x${func_cc_basename_result}" = xgcc ||
               test "x${func_cc_basename_result}" = xg++ ||
               test "x${func_cc_basename_result}" = xgfortran ||
               test "x${func_cc_basename_result}" = xGNU ; then
-echo "cc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               return
            fi
            # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
@@ -144,7 +155,7 @@ echo "cc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
            if test "x${func_cc_basename_result}" = xCray ; then
-echo "cc cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               return
            fi
            return
