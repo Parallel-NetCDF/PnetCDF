@@ -3,7 +3,7 @@ dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
-AC_PREREQ([2.68])
+AC_PREREQ([2.63])
 AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
@@ -633,7 +633,6 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(MPIF90)
 fi
 
-AM_PROG_AR
 # compute canonical system types
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -697,12 +696,18 @@ dnl fi
 UD_PROG_M4
 M4FLAGS="$M4FLAGS -DPNETCDF"
 M4FFLAGS="$M4FFLAGS -DPNETCDF"
-# UD_PROG_AR()
-# UD_PROG_NM()
-# We could use the PAC check for ranlib (it also makes sure that ranlib works,
-# which is not always true, particularly when GNU tools are installed on 
-# a system that doesn't have (or need) ranlib
-AC_PROG_RANLIB
+
+dnl AM_PROG_AR is first recognized/traced in autoconf 2.68
+dnl Use it only if we want support for unusual archivers such as Microsoft
+dnl lib.
+dnl AM_PROG_AR
+dnl UD_PROG_AR()
+dnl UD_PROG_NM()
+dnl We could use the PAC check for ranlib (it also makes sure that ranlib
+dnl works, which is not always true, particularly when GNU tools are
+dnl installed on a system that doesn't have (or need) ranlib
+dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
+dnl AC_PROG_RANLIB
 
 dnl Check for <stdbool.h> that conforms to C99 requirements
 dnl this is also for using bool type in utf8proc.h/utf8proc.c to support
