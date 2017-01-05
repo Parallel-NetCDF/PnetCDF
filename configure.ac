@@ -200,7 +200,10 @@ CANDIDATE_MPICXX="${CANDIDATE_MPICXX} mpiicpc icpc"
 CANDIDATE_MPIF77="${CANDIDATE_MPIF77} mpiifort mpiifc ifort"
 CANDIDATE_MPIF90="${CANDIDATE_MPIF90} mpiifort mpiifc ifort"
 
-UD_MPI_PATH_PROGS([MPICC], [$CANDIDATE_MPICC])
+dnl if MPICC or CC has not been set by users, then search from CANDIDATE_MPICC
+if test "x${MPICC}" = x ; then
+   UD_MPI_PATH_PROGS([MPICC], [$CANDIDATE_MPICC])
+fi
 if test "x${MPICC}" = x ; then
    AC_MSG_ERROR([
    -----------------------------------------------------------------------
@@ -273,7 +276,11 @@ AC_ARG_ENABLE(cxx,
 UD_MSG_DEBUG(enable_cxx=$enable_cxx)
 
 if test "x${enable_cxx}" != xno ; then
-   UD_MPI_PATH_PROGS([MPICXX], [$CANDIDATE_MPICXX])
+   dnl if MPICXX or CXX has not been set by users, then search from
+   dnl CANDIDATE_MPICXX
+   if test "x${MPICXX}" = x ; then
+      UD_MPI_PATH_PROGS([MPICXX], [$CANDIDATE_MPICXX])
+   fi
 
    if test "x${MPICXX}" = x ; then
       AC_MSG_ERROR([
@@ -350,8 +357,16 @@ AC_ARG_ENABLE(fortran,
 )
 
 if test "x${enable_fortran}" != xno ; then
-    UD_MPI_PATH_PROGS([MPIF77], [$CANDIDATE_MPIF77])
-    UD_MPI_PATH_PROGS([MPIF90], [$CANDIDATE_MPIF90])
+   dnl if MPIF77 or F77 has not been set by users, then search from
+   dnl CANDIDATE_MPIF77
+   if test "x${MPIF77}" = x ; then
+      UD_MPI_PATH_PROGS([MPIF77], [$CANDIDATE_MPIF77])
+   fi
+   dnl if MPIF90 or F90 has not been set by users, then search from
+   dnl CANDIDATE_MPIF90
+   if test "x${MPIF90}" = x ; then
+      UD_MPI_PATH_PROGS([MPIF90], [$CANDIDATE_MPIF90])
+   fi
 fi
 if test "x${enable_fortran}" = xyes ; then
    dnl user explicitly requests to build Fortran APIs
