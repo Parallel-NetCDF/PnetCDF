@@ -33,6 +33,16 @@ if DECL_MPI_OFFSET
    AM_FCFLAGS = $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
+# overwrite PPFCCOMPILE and LTPPFCCOMPILE to avoid using DEFS
+# IBM xlf compiler uses -WF,-D not -D
+# FCDEFS=`echo $(DEFS) | sed 's/-D/-WF,-D/g'`
+# PPFCCOMPILE = $(FC) $(FCDEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+#         $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_FCFLAGS) $(FCFLAGS)
+# LTPPFCCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=FC $(AM_LIBTOOLFLAGS) \
+#         $(LIBTOOLFLAGS) --mode=compile $(FC) $(FCDEFS) \
+#         $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+#         $(AM_FCFLAGS) $(FCFLAGS)
+
 # build check targets but not invoke
 tests: $(check_LTLIBRARIES)
 .PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
