@@ -6,12 +6,11 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .c
-
-CC = $(SEQ_CC)
-
 bin_PROGRAMS = ncoffsets
-ncoffsets_SOURCES = ncoffsets.c
+EXTRA_DIST = ncoffsets.c
+
+ncoffsets$(EXEEXT): ncoffsets.c
+	$(SEQ_CC) -o $@ $<
 
 dist_man_MANS = ncoffsets.1
 

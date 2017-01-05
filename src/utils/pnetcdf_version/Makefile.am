@@ -6,9 +6,8 @@
 #
 # @configure_input@
 
-CC = $(SEQ_CC)
 bin_PROGRAMS = pnetcdf_version
-pnetcdf_version_SOURCES = pnetcdf_version.c
+EXTRA_DIST = pnetcdf_version.c
 
 XDEFS = -DMPICC="\"$(MPICC)\""   -DCFLAGS="\"$(CFLAGS)\""
 XDEFS += -DCONFIGURE_ARGS_CLEAN="\"$(CONFIGURE_ARGS_CLEAN)\""
@@ -24,7 +23,8 @@ XDEFS += -DMPIF77="\"$(MPIF77)\"" -DF77FLAGS="\"$(F77FLAGS)\""
 XDEFS += -DMPIF90="\"$(MPIF90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
 endif
 
-AM_CPPFLAGS = $(XDEFS)
+pnetcdf_version$(EXEEXT): pnetcdf_version.c
+	$(SEQ_CC) $(XDEFS) -o $@ $<
 
 dist_man_MANS = pnetcdf_version.1
 
