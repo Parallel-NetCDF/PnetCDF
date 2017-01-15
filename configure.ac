@@ -3,7 +3,8 @@ dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
-AC_PREREQ([2.63])
+dnl autoconf v2.69 was released in 2012-04-24
+AC_PREREQ([2.69])
 AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
@@ -652,7 +653,8 @@ fi
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
-LT_PREREQ([2.2])
+dnl libtool v2.4.6 was released in 2015-02-15
+LT_PREREQ([2.4.6])
 dnl LT_INIT([dlopen disable-shared])
 dnl LT_INIT([dlopen])
 LT_INIT
