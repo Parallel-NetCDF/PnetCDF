@@ -1722,7 +1722,7 @@ AC_DEFUN([UD_CHECK_MPI_DATATYPE], [
       [ac_cv_CHECK_MPI_DATATYPE_$1=yes],
       [ac_cv_CHECK_MPI_DATATYPE_$1=no]
    )
-   AC_MSG_RESULT(ac_cv_CHECK_MPI_DATATYPE_$1)
+   AC_MSG_RESULT($ac_cv_CHECK_MPI_DATATYPE_$1)
    if test "x$ac_cv_CHECK_MPI_DATATYPE_$1" = xyes; then
        AC_DEFINE(HAVE_DECL_$1, 1, available)
    fi
