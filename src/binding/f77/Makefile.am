@@ -32,7 +32,7 @@ CLEANFILES = mpifnetcdf.h $(C2F_SRCS)
 
 $(C2F_SRCS): mpifnetcdf.h
 
-PNETCDF_HEADER = ../../include/pnetcdf.h
+PNETCDF_HEADER = $(top_builddir)/include/pnetcdf.h
 
 mpifnetcdf.h: defs buildiface $(PNETCDF_HEADER)
 	$(RM) -f $@ allf.c
