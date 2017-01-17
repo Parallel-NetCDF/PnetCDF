@@ -9,9 +9,9 @@
 SUFFIXES = .o .F90 .c
 
 AM_DEFAULT_SOURCE_EXT = .F90
-AM_CFLAGS = -I$(top_srcdir)/src/libf -I$(top_builddir)/src/libf
-AM_FCFLAGS = -I$(top_builddir)/src/libf $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)../common
-LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la
+AM_CFLAGS = -I$(top_srcdir)/src/binding/f77 -I$(top_builddir)/src/binding/f77
+AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)../common
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 if RELAX_COORD_BOUND
    AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND

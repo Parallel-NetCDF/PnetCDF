@@ -2,15 +2,15 @@
 # Copyright (C) 2012, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
-# $Id$
+# $Id: Makefile.am 2815 2017-01-01 23:06:33Z wkliao $
 #
 # @configure_input@
 
-bin_PROGRAMS = ncmpidiff
-ncmpidiff_SOURCES = ncmpidiff.c
-ncmpidiff_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
+SUFFIXES = .a .o .c .m4 .h
 
-dist_man_MANS = ncmpidiff.1
+nodist_include_HEADERS = pnetcdf.h
+
+EXTRA_DIST = pnetcdf.h.in ncconfig.h.in
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

@@ -6,11 +6,11 @@
 #
 # @configure_input@
 
-AM_CPPFLAGS = -I$(top_srcdir)/src/lib
+AM_CPPFLAGS = -I$(top_builddir)/src/drivers/ncmpi -I$(top_srcdir)/src/drivers/ncmpi
 
 bin_PROGRAMS = ncmpivalid
 ncmpivalid_SOURCES = ncmpivalid.c
-ncmpivalid_LDADD = $(top_builddir)/src/lib/libpnetcdf.la
+ncmpivalid_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 
 dist_man_MANS = ncmpivalid.1
 
