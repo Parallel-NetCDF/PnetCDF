@@ -9,9 +9,9 @@ AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
-AC_CONFIG_HEADERS([src/lib/ncconfig.h])
+AC_CONFIG_HEADERS([src/include/ncconfig.h])
 
-AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
+AC_CONFIG_SRCDIR([src/include/pnetcdf.h.in])
 
 AC_CONFIG_AUX_DIR([./scripts])
 
@@ -919,7 +919,7 @@ AM_CONDITIONAL(IS_BIGENDIAN, [test x$is_bigendian = xyes])
 dnl For big Endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little Endian, put buffer may be used for byte swap in
 dnl place and hence must be declared as INTENT(INOUT).
-dnl This will configure/produce the file src/libf90/api.f90
+dnl This will configure/produce the file src/binding/f90/api.f90
 if test "x${ac_cv_c_bigendian}" = xyes  || (test "x${in_place_swap}" = xno) ; then
    INTENTV="IN"
 else
@@ -1259,8 +1259,8 @@ AC_SUBST(large_file_test)
 AM_CONDITIONAL(BUILD_LARGE_FILE_TEST, [test x$large_file_test = xyes])
 
 dnl PNETCDF_INC and PNETCDF_LIB are for benchmark programs use only
-PNETCDF_INC=${BUILDDIR}/src/libf90
-PNETCDF_LIB="-L${BUILDDIR}/src/lib"
+PNETCDF_INC=${BUILDDIR}/src/binding/f90
+PNETCDF_LIB="-L${BUILDDIR}/src/libs"
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
@@ -1304,19 +1304,23 @@ else
     AC_SUBST([CONFIG_DATE]) CONFIG_DATE="`date`"
 fi
 
-dnl AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
+dnl AC_CONFIG_HEADERS([src/binding/f77/nfconfig_inc])
 AC_CONFIG_FILES(Makefile \
                 libpnetcdf.pc \
                 src/Makefile \
-                src/lib/Makefile \
-                src/lib/pnetcdf.h \
-                src/libf/Makefile \
-                src/libf/pnetcdf.inc \
-                src/libcxx/Makefile \
-                src/libf90/Makefile \
-                src/libf90/pnetcdf.f90 \
-                src/libf90/api.f90 \
-                src/libf90/nfmpi_constants.f90 \
+                src/libs/Makefile \
+                src/include/Makefile \
+                src/include/pnetcdf.h \
+                src/drivers/Makefile \
+                src/drivers/ncmpi/Makefile \
+                src/binding/Makefile \
+                src/binding/cxx/Makefile \
+                src/binding/f77/Makefile \
+                src/binding/f77/pnetcdf.inc \
+                src/binding/f90/Makefile \
+                src/binding/f90/pnetcdf.f90 \
+                src/binding/f90/api.f90 \
+                src/binding/f90/nfmpi_constants.f90 \
                 src/utils/Makefile \
                 src/utils/ncoffsets/Makefile \
                 src/utils/pnetcdf_version/Makefile \

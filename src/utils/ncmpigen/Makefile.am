@@ -9,10 +9,11 @@
 SUFFIXES = .a .o .c .h
 
 AM_DEFAULT_SOURCE_EXT = .c
+AM_CPPFLAGS = -I$(top_builddir)/src/drivers/ncmpi
 
 bin_PROGRAMS = ncmpigen
 ncmpigen_SOURCES = main.c load.c escapes.c getfill.c init.c genlib.c ncmpigentab.c
-ncmpigen_LDADD = $(top_builddir)/src/lib/libpnetcdf.la
+ncmpigen_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 
 NCMPIDUMP = ../ncmpidump/ncmpidump
 dist_man_MANS = ncmpigen.1

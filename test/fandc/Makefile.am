@@ -10,10 +10,10 @@ SUFFIXES = .o .c .f .f90
 
 AM_DEFAULT_SOURCE_EXT = .c
 
-AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
-AM_FFLAGS = -I$(top_builddir)/src/libf
-AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf 
-LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
+AM_CPPFLAGS = -I$(srcdir)/../common
+AM_FFLAGS = -I$(top_builddir)/src/binding/f77
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/binding/f77 
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
@@ -31,11 +31,11 @@ TESTPROGRAMS += pnf_test pnctestf fixedform
 pnf_test_SOURCES = pnf_test.f
 pnctestf_SOURCES = pnctestf.f
 fixedform_SOURCES = fixedform.f90
-fixedform_FCFLAGS = $(FFIXEDFORMFLAG) $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf
+fixedform_FCFLAGS = $(FFIXEDFORMFLAG) $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/binding/f77
 if HAVE_F77_SUPPORT_FREEFORM
 TESTPROGRAMS += freeform
 freeform_SOURCES = freeform.f
-freeform_FFLAGS = $(FFREEFORMFLAG) -I$(top_builddir)/src/libf
+freeform_FFLAGS = $(FFREEFORMFLAG) -I$(top_builddir)/src/binding/f77
 endif
 endif
 

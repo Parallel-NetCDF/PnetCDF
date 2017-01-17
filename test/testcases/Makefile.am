@@ -10,10 +10,10 @@ SUFFIXES = .o .c .f .F .f90
 
 AM_DEFAULT_SOURCE_EXT = .c
 
-AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
-AM_FFLAGS = -I$(top_builddir)/src/libf
-AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/libf90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/libf 
-LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la -lm
+AM_CPPFLAGS = -I$(srcdir)/../common
+AM_FFLAGS = -I$(top_builddir)/src/binding/f77
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/binding/f77 
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
 if SIZEOF_MPI_AINT_IS_4
    AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4

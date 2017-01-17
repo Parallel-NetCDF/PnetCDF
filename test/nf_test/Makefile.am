@@ -9,9 +9,9 @@
 SUFFIXES = .o .f .F
 
 AM_DEFAULT_SOURCE_EXT = .f
-AM_CFLAGS = -I$(top_builddir)/src/libf -I$(top_srcdir)/src/libf
-AM_FFLAGS = -I$(top_builddir)/src/libf
-LDADD = ${top_builddir}/src/lib/libpnetcdf.la ../common/libtestutils.la
+AM_CFLAGS = -I$(top_builddir)/src/binding/f77 -I$(top_srcdir)/src/binding/f77
+AM_FFLAGS = -I$(top_builddir)/src/binding/f77
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 M4FLAGS += -I${top_srcdir}/m4
 

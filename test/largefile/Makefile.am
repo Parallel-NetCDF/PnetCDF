@@ -10,8 +10,8 @@ SUFFIXES = .o .c
 
 AM_DEFAULT_SOURCE_EXT = .c
 
-AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(srcdir)/../common
-LDADD = $(top_builddir)/src/lib/libpnetcdf.la ../common/libtestutils.la
+AM_CPPFLAGS = -I$(srcdir)/../common
+LDADD = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 AM_CFLAGS =
 if IS_BIGENDIAN

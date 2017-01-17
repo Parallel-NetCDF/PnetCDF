@@ -10,8 +10,8 @@
 SUFFIXES = .o .f .F90 .f90
 
 AM_DEFAULT_SOURCE_EXT = .f90
-AM_FCFLAGS = ${FC_MODINC}$(top_builddir)/src/libf90
-LDADD = ${top_builddir}/src/lib/libpnetcdf.la
+AM_FCFLAGS = ${FC_MODINC}$(top_builddir)/src/binding/f90
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la
 
 check_PROGRAMS = nonblocking_write \
                  column_wise \

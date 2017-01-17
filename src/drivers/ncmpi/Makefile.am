@@ -8,8 +8,7 @@
 
 SUFFIXES = .a .o .c .m4 .h
 
-lib_LTLIBRARIES  = libpnetcdf.la
-nodist_include_HEADERS = pnetcdf.h
+noinst_LTLIBRARIES = libpnetcdfc.la
 
 M4FLAGS += -I${top_srcdir}/m4
 if ENABLE_ERANGE_FILL
@@ -65,37 +64,19 @@ $(M4_SRCS:.m4=.c): Makefile
 ncx.h: ncx_h.m4 Makefile
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-libpnetcdf_la_SOURCES = $(C_SRCS) $(H_SRCS)
-nodist_libpnetcdf_la_SOURCES = ncx.h $(M4_SRCS:.m4=.c)
+libpnetcdfc_la_SOURCES = $(C_SRCS) $(H_SRCS)
+nodist_libpnetcdfc_la_SOURCES = ncx.h $(M4_SRCS:.m4=.c)
 
 BUILT_SOURCES = ncx.h $(M4_SRCS:.m4=.c)
 
 if ENABLE_SUBFILING
-libpnetcdf_la_SOURCES += subfile.c
-endif
-
-libpnetcdf_la_LIBADD =
-nodist_EXTRA_libpnetcdf_la_SOURCES =
-if HAS_MPICXX
-libpnetcdf_la_LIBADD += ../libcxx/libpnetcdfcxx.la
-# According Automake Manual, Section 8.3.5 Libtool Convenience Libraries,
-# using nodist_EXTRA to trick automake to use C++ compiler
-nodist_EXTRA_libpnetcdf_la_SOURCES += dummycxx.cxx
-endif
-if HAS_FORTRAN
-# According to Automake Manual, Section 8.14.3 Mixing Fortran 77 With C and
-# C++, adding $(FLIBS) is necessary
-libpnetcdf_la_LIBADD += ../libf/libpnetcdff.la ../libf90/libpnetcdff90.la $(FLIBS) $(FCLIBS)
-# nodist_EXTRA_libpnetcdf_la_SOURCES += dummyf90.f90
+libpnetcdfc_la_SOURCES += subfile.c
 endif
 
 CLEANFILES = $(M4_SRCS:.m4=.c) ncx.h
-# DISTCLEANFILES = ncconfig.h pnetcdf.h
 
 EXTRA_DIST = $(M4_HFILES) \
              $(M4_SRCS) \
-             pnetcdf.h.in \
-             ncconfig.h.in \
              subfile.c
 
 dist-hook:

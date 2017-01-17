@@ -9,8 +9,8 @@
 SUFFIXES = .o .f .F .F90
 
 AM_DEFAULT_SOURCE_EXT = .f
-AM_FFLAGS = -I$(top_builddir)/src/libf
-LDADD = ${top_builddir}/src/lib/libpnetcdf.la
+AM_FFLAGS = -I$(top_builddir)/src/binding/f77
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la
 
 check_PROGRAMS = nonblocking_write \
                  column_wise \
