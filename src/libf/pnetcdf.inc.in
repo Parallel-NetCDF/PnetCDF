@@ -169,10 +169,10 @@
       integer nf_max_name
       integer nf_max_var_dims
 
-      parameter (nf_max_dims = 512)
-      parameter (nf_max_attrs = 4092)
-      parameter (nf_max_vars = 4096)
-      parameter (nf_max_name = 128)
+      parameter (nf_max_dims = 1024)
+      parameter (nf_max_attrs = 8192)
+      parameter (nf_max_vars = 8192)
+      parameter (nf_max_name = 256)
       parameter (nf_max_var_dims = nf_max_dims)
 
 !
