@@ -2,6 +2,27 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
+version  1.8.1 (January 28, 2017)
+-------------------------------------
+
+  This release is mainly for fixing the following bug.
+
+  o Bug fixes:
+    * Fortran parameters NF_MAX_DIMS, NF_MAX_ATTRS, NF_MAX_VARS, and NF_MAX_NAME
+      defined in the Fortran header file, pnetcdf.inc, were set to obsolete
+      values and have been fixed in this release to conform with their
+      corresponding C constants. Because these four parameters were not used
+      by PnetCDF internally, the end users can safely skip this release and
+      1.8.1 should perform the same as 1.8.0. If your programs explicitly use
+      these four parameters, then updating to 1.8.1 is recommended.
+
+  o Other updates:
+    * To conform with GNU Coding Standards, the installation location for man
+      pages are changed to ${prefix}/share/man.
+    * Support of DESTDIR for Building Binary Packages has been added, as
+      suggested by sunpoet@FreeBSD.org. Ticket #25
+
+-------------------------------------
 version  1.8.0 (December 19, 2016)
 -------------------------------------
 

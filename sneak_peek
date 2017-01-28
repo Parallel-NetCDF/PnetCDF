@@ -42,12 +42,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
-    * To conform with GNU Coding Standards, the installation location for man
-      pages are changed to ${prefix}/share/man.
-    * Support of DESTDIR for Building Binary Packages has been added, as
-      suggested by sunpoet@FreeBSD.org. Ticket #25
+    * none
 
   o Bug fixes
-    * Update Fortran 77 constants nf_max_dims, nf_max_attrs, nf_max_vars, and
-      nf_max_name to conform with the values defined in netCDF library.
+    * none
 
