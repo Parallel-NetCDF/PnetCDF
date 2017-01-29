@@ -1308,6 +1308,7 @@ dnl AC_CONFIG_HEADERS([src/binding/f77/nfconfig_inc])
 AC_CONFIG_FILES(Makefile \
                 libpnetcdf.pc \
                 src/Makefile \
+                src/dispatchers/Makefile \
                 src/libs/Makefile \
                 src/include/Makefile \
                 src/include/pnetcdf.h \

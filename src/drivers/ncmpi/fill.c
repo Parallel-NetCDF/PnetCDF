@@ -301,23 +301,19 @@ err_check:
     return ncmpii_fill_var_rec(ncp, varp, recno);
 }
 
-/*----< ncmpi_set_fill() >---------------------------------------------------*/
+/*----< ncmpii_set_fill() >--------------------------------------------------*/
 /* this API is collective, must be called in define mode, contrary to netCDF
  * where nc_set_fill() can also be called in data mode. The reason of PnetCDF
  * enforcing this requirement is because PnetCDF only fills fixed-size
  * variables at ncmpi_enddef() and record variables in ncmpi_fill_var_rec().
  */
 int
-ncmpi_set_fill(int  ncid,
-               int  fill_mode,
-               int *old_fill_mode)
+ncmpii_set_fill(void *ncdp,
+                int   fill_mode,
+                int  *old_fill_mode)
 {
     int i, err, mpireturn, oldmode;
-    NC *ncp;
-
-    /* check whether ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp = (NC*)ncdp;
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {

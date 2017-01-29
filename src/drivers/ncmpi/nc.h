@@ -13,6 +13,7 @@
 #include <stddef.h>     /* size_t */
 #include <sys/types.h>  /* off_t */
 
+#include "ncmpi_dispatch.h"
 #include "ncio.h"       /* ncio */
 #include "fbits.h"
 
@@ -550,14 +551,11 @@ extern int
 ncmpii_read_NC(NC *ncp);
 
 extern int
-ncmpii_enddef(NC *ncp);
+ncmpiio_enddef(NC *ncp);
 
 extern int
-ncmpii__enddef(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
-               MPI_Offset v_minfree, MPI_Offset r_align);
-
-extern int
-ncmpii_close(NC *ncp);
+ncmpiio__enddef(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
+                MPI_Offset v_minfree, MPI_Offset r_align);
 
 /* End defined in nc.c */
 
@@ -636,6 +634,7 @@ ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
 extern int
 ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
              NC *ncp);
+
 extern int
 ncmpiio_sync(ncio *nciop);
 
@@ -799,7 +798,7 @@ extern nc_type
 ncmpii_mpi2nctype(MPI_Datatype itype);
 
 extern int
-ncmpii_end_indep_data(NC *ncp); 
+ncmpiio_end_indep_data(NC *ncp); 
 
 extern int                
 ncmpii_file_set_view(NC *ncp, MPI_File fh, MPI_Offset *offset, MPI_Datatype filetype);

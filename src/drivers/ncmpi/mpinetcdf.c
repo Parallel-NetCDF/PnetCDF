@@ -15,9 +15,6 @@
 #include <assert.h>
 #include <string.h>  /* strtok(), strcpy(), strchr() */
 #include <strings.h> /* strcasecmp() */
-#include <fcntl.h>   /* open() */
-#include <unistd.h>  /* read(), close() */
-#include <errno.h>   /* errno */
 
 #include <mpi.h>
 
@@ -73,7 +70,7 @@ ncmpi_inq_libvers(void) {
 
 /* Begin Of Dataset Functions */
 
-/*----< ncmpi_create() >-----------------------------------------------------*/
+/*----< ncmpii_create() >----------------------------------------------------*/
 /**  \ingroup datasets
 Create a new netCDF file.
 
@@ -201,11 +198,11 @@ be in the CDF-5 format.
 @endcode
 */
 int
-ncmpi_create(MPI_Comm    comm,
-             const char *path,
-             int         cmode,
-             MPI_Info    info,
-             int        *ncidp)
+ncmpii_create(MPI_Comm     comm,
+              const char  *path,
+              int          cmode,
+              MPI_Info     info,
+              void       **ncpp)
 {
     int i, err, status, safe_mode=0, mpireturn, default_format, root_cmode;
     char *env_str;
@@ -398,8 +395,10 @@ ncmpi_create(MPI_Comm    comm,
     ncp->put_list   = NULL;
 
     /* add to the linked list of opened files */
+/*
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
+*/
 
     if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
 
@@ -417,16 +416,18 @@ ncmpi_create(MPI_Comm    comm,
     }
 #endif
 
+    *ncpp = (void*)ncp;
+
     return status;
 }
 
-/*----< ncmpi_open() >-------------------------------------------------------*/
+/*----< ncmpii_open() >------------------------------------------------------*/
 int
-ncmpi_open(MPI_Comm    comm,
-           const char *path,
-           int         omode,
-           MPI_Info    info,
-           int        *ncidp)
+ncmpii_open(MPI_Comm    comm,
+            const char *path,
+            int         omode,
+            MPI_Info    info,
+            void       **ncpp)
 {
     int i, err, status, safe_mode=0, mpireturn, root_omode;
     char *env_str;
@@ -583,8 +584,10 @@ ncmpi_open(MPI_Comm    comm,
     ncp->put_list   = NULL;
 
     /* add NC object to the linked list of opened files */
+/*
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
+*/
 
 #ifdef ENABLE_SUBFILING
     if (ncp->subfile_mode) {
@@ -665,111 +668,9 @@ ncmpi_open(MPI_Comm    comm,
     }
 #endif
 
+    *ncpp = (void*)ncp;
+
     return status;
-}
-
-/*----< ncmpi_inq_format() >-------------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpi_inq_format(int  ncid,
-                 int *formatp) /* out */
-{
-    int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    if (ncp->format == 5) {
-        *formatp = NC_FORMAT_CDF5;
-    } else if (ncp->format == 2) {
-        *formatp = NC_FORMAT_CDF2;
-    } else if (ncp->format == 1) {
-        *formatp = NC_FORMAT_CLASSIC;
-    } else {
-        /* this should not happen, because if ncid is valid, checking whether
-         * the file is in a supported CDF format should have already been done
-         * at ncmpi_open or ncmpi_create
-         */
-        *formatp = NC_FORMAT_UNKNOWN;
-    }
-    return err;
-}
-
-/*----< ncmpi_inq_file_format() >--------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpi_inq_file_format(const char *filename,
-                      int        *formatp) /* out */
-{
-#ifdef _USE_NCMPI
-    int ncid, err;
-    NC *ncp;
-
-    /* open file for reading its header */
-    err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    if (err != NC_NOERR) {
-        if (err == NC_ENOTNC3)
-            DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_NETCDF4)
-        else if (err == NC_ENOTNC)
-            DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_UNKNOWN)
-        return err;
-    }
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    if (ncp->format == 5) {
-        *formatp = NC_FORMAT_CDF5;
-    } else if (ncp->format == 2) {
-        *formatp = NC_FORMAT_CDF2;
-    } else {  /* if (ncp->format == 1) */
-        *formatp = NC_FORMAT_CLASSIC;
-    }
-    err = ncmpi_close(ncid);
-
-    return err;
-#else
-    char *cdf_signature="CDF";
-    char *hdf5_signature="\211HDF\r\n\032\n";
-    char signature[8];
-    int fd;
-    ssize_t rlen;
-
-    *formatp = NC_FORMAT_UNKNOWN;
-
-    if ((fd = open(filename, O_RDONLY, 0700)) == -1) {
-             if (errno == ENOENT)       return NC_ENOENT;
-        else if (errno == EACCES)       return NC_EACCESS;
-        else if (errno == ENAMETOOLONG) return NC_EBAD_FILE;
-        else                            return NC_EFILE;
-    }
-    /* get first 8 bytes of file */
-    rlen = read(fd, signature, 8);
-    if (rlen != 8) {
-        close(fd); /* ignore error */
-        return NC_EFILE;
-    }
-    if (close(fd) == -1) {
-        return NC_EFILE;
-    }
-
-    if (memcmp(signature, hdf5_signature, 8) == 0) {
-        /* whether the file is NC_FORMAT_NETCDF4_CLASSIC is determined by HDF5
-         * attribute "_nc3_strict" which requires a call to H5Aget_name(). Here
-         * we do not distinquish NC_CLASSIC_MODEL, but simply return NETCDF4
-         * format.
-         */
-        *formatp = NC_FORMAT_NETCDF4;
-    }
-    else if (memcmp(signature, cdf_signature, 3) == 0) {
-             if (signature[3] == 5)  *formatp = NC_FORMAT_CDF5;
-        else if (signature[3] == 2)  *formatp = NC_FORMAT_CDF2;
-        else if (signature[3] == 1)  *formatp = NC_FORMAT_CLASSIC;
-    }
-
-    return NC_NOERR;
-#endif
 }
 
 /*----< ncmpi_inq_file_info() >-----------------------------------------------*/
@@ -826,15 +727,13 @@ ncmpi_get_file_info(int       ncid,
     return ncmpi_inq_file_info(ncid, info_used);
 }
 
-/*----< ncmpi_redef() >------------------------------------------------------*/
+/*----< ncmpii_redef() >-----------------------------------------------------*/
 /* This is a collective subroutine. */
 int
-ncmpi_redef(int ncid) {
+ncmpii_redef(void *ncdp)
+{
     int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp = (NC*)ncdp;
 
     if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
     /* if open mode is inconsistent, then this return might cause parallel
@@ -847,7 +746,7 @@ ncmpi_redef(int ncid) {
      * also ensure exiting define mode always entering collective data mode
      */
     if (NC_indep(ncp))
-        ncmpii_end_indep_data(ncp);
+        ncmpiio_end_indep_data(ncp);
 
     if (NC_doFsync(ncp)) { /* re-read the header from file */
         err = ncmpii_read_NC(ncp);
@@ -864,16 +763,13 @@ ncmpi_redef(int ncid) {
     return NC_NOERR;
 }
 
-/*----< ncmpi_begin_indep_data() >-------------------------------------------*/
+/*----< ncmpii_begin_indep_data() >------------------------------------------*/
 /* This is a collective subroutine. */
 int
-ncmpi_begin_indep_data(int ncid)
+ncmpii_begin_indep_data(void *ncdp)
 {
     int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp = (NC*)ncdp;
 
     if (NC_indef(ncp))  /* must not be in define mode */
         DEBUG_RETURN_ERROR(NC_EINDEFINE)
@@ -905,23 +801,20 @@ ncmpi_begin_indep_data(int ncid)
     return err;
 }
 
-/*----< ncmpi_end_indep_data() >---------------------------------------------*/
+/*----< ncmpii_end_indep_data() >--------------------------------------------*/
 /* This is a collective subroutine. */
 int
-ncmpi_end_indep_data(int ncid) {
-    int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+ncmpii_end_indep_data(void *ncdp)
+{
+    NC *ncp = (NC*)ncdp;
 
     if (!NC_indep(ncp)) /* must be in independent data mode */
         DEBUG_RETURN_ERROR(NC_ENOTINDEP)
 
-    return ncmpii_end_indep_data(ncp);
+    return ncmpiio_end_indep_data(ncp);
 }
 
-/*----< ncmpii_end_indep_data() >--------------------------------------------*/
+/*----< ncmpiio_end_indep_data() >-------------------------------------------*/
 /* this function is called when:
  * 1. ncmpi_end_indep_data()
  * 2. ncmpi_redef() from independent data mode entering to define more
@@ -929,7 +822,7 @@ ncmpi_end_indep_data(int ncid) {
  * This function is collective.
  */
 int
-ncmpii_end_indep_data(NC *ncp)
+ncmpiio_end_indep_data(NC *ncp)
 {
     int status=NC_NOERR;
 
@@ -965,38 +858,30 @@ ncmpii_end_indep_data(NC *ncp)
     return status;
 }
 
-/*----< ncmpi_enddef() >-----------------------------------------------------*/
+/*----< ncmpii_enddef() >----------------------------------------------------*/
 /* This is a collective subroutine. */
 int
-ncmpi_enddef(int ncid) {
-    int err;
-    NC *ncp;
-
-    /* check if file ID ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+ncmpii_enddef(void *ncdp)
+{
+    NC *ncp = (NC*)ncdp;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
         DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
-    return ncmpii_enddef(ncp);
+    return ncmpiio_enddef(ncp);
 }
 
-/*----< ncmpi__enddef() >-----------------------------------------------------*/
+/*----< ncmpii__enddef() >---------------------------------------------------*/
 /* This is a collective subroutine. */
 int
-ncmpi__enddef(int        ncid,
-              MPI_Offset h_minfree,
-              MPI_Offset v_align,
-              MPI_Offset v_minfree,
-              MPI_Offset r_align)
+ncmpii__enddef(void       *ncdp,
+               MPI_Offset  h_minfree,
+               MPI_Offset  v_align,
+               MPI_Offset  v_minfree,
+               MPI_Offset  r_align)
 {
     int err;
-    NC *ncp;
-
-    /* check if file ID ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp = (NC*)ncdp;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
         DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
@@ -1029,7 +914,7 @@ ncmpi__enddef(int        ncid,
         if (status != NC_NOERR) return status;
     }
 
-    return ncmpii__enddef(ncp, h_minfree, v_align, v_minfree, r_align);
+    return ncmpiio__enddef(ncp, h_minfree, v_align, v_minfree, r_align);
 }
 
 /*----< ncmpi_sync_numrecs() >------------------------------------------------*/
@@ -1080,17 +965,15 @@ ncmpi_sync_numrecs(int ncid) {
     return err;
 }
 
-/*----< ncmpi_sync() >--------------------------------------------------------*/
+/*----< ncmpii_sync() >------------------------------------------------------*/
 /* This API is a collective subroutine, and must be called in data mode, no
  * matter if it is in collective or independent data mode.
  */
 int
-ncmpi_sync(int ncid) {
+ncmpii_sync(void *ncdp)
+{
     int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp = (NC*)ncdp;
 
     /* cannot be in define mode */
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
@@ -1112,20 +995,18 @@ ncmpi_sync(int ncid) {
     return ncmpiio_sync(ncp->nciop);
 }
 
-/*----< ncmpi_abort() >------------------------------------------------------*/
+/*----< ncmpii_abort() >-----------------------------------------------------*/
 /* This API is a collective subroutine */
 int
-ncmpi_abort(int ncid) {
+ncmpii_abort(void *ncdp)
+{
    /*
     * In data mode, same as ncmpiio_close.
     * In define mode, descard new definition.
     * If file is just created, remove the file.
     */
-    int status, err, doUnlink = 0;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+    int status=NC_NOERR, err, doUnlink = 0;
+    NC *ncp = (NC*)ncdp;
 
     /* delete the file if it is newly created by ncmpi_create() */
     doUnlink = NC_IsNew(ncp);
@@ -1142,7 +1023,7 @@ ncmpi_abort(int ncid) {
     if (!doUnlink) {
         if (!NC_readonly(ncp) &&  /* file is open for write */
              NC_indep(ncp)) {     /* in independent data mode */
-            status = ncmpii_end_indep_data(ncp); /* sync header */
+            status = ncmpiio_end_indep_data(ncp); /* sync header */
         }
 
         if (NC_doFsync(ncp)) {
@@ -1168,6 +1049,7 @@ ncmpi_abort(int ncid) {
 
 /*----< ncmpi_close() >------------------------------------------------------*/
 /* This is a collective subroutine. */
+#if 0
 int
 ncmpi_close(int ncid) {
     int err;
@@ -1179,6 +1061,7 @@ ncmpi_close(int ncid) {
     /* calling the implementation of ncmpi_close() */
     return ncmpii_close(ncp);
 }
+#endif
 
 /*----< ncmpi_delete() >-----------------------------------------------------*/
 /* ncmpi_delete:

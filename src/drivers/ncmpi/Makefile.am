@@ -27,7 +27,8 @@ M4_SRCS   = getput.m4 \
             attr.m4 \
             convert_swap.m4
 
-H_SRCS = fbits.h \
+H_SRCS = ncmpi_dispatch.h \
+         fbits.h \
          nc.h \
          nctypes.h \
          ncio.h \
@@ -38,7 +39,8 @@ H_SRCS = fbits.h \
          utf8proc.h \
          subfile.h
 
-C_SRCS = mpinetcdf.c \
+C_SRCS = ncmpi_dispatch.c \
+         mpinetcdf.c \
          header.c \
          mpincio.c \
          dim.c \
