@@ -6,7 +6,7 @@
 #
 # @configure_input@
 
-SUBDIRS = include drivers binding libs utils
+SUBDIRS = include dispatchers drivers binding libs utils
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

@@ -45,14 +45,9 @@ This is essentially a placeholder for the next release note ...
 
   o Other updates:
     * Rename pkg-config file from pnetcdf.pc to libpnetcdf.pc
-    * To conform with GNU Coding Standards, the installation location for man
-      pages are changed to ${prefix}/share/man.
-    * Support of DESTDIR for Building Binary Packages has been added, as
-      suggested by sunpoet@FreeBSD.org. Ticket #25
     * Configure time variables TEST_SEQRUN, TEST_MPIRUN, and TEST_OUTDIR are
       renamed to TESTSEQRUN, TESTMPIRUN, and TESTOUTDIR, respectively, to
       avoid the variable name convention used by automake.
 
   o Bug fixes
     * none
-

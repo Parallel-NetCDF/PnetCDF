@@ -451,7 +451,7 @@ NC_begins(NC         *ncp,
         if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
     }
 
-    /* This function is called in ncmpi_enddef(), which can happen either when
+    /* This function is called in ncmpio_enddef(), which can happen either when
      * creating a new file or opening an existing file with metadata modified.
      * For the former case, ncp->begin_var == 0 here.
      * For the latter case, we set begin_var a new value only if the new header
@@ -564,7 +564,7 @@ NC_begins(NC         *ncp,
 
         /* A few attempts at aligning record variables have failed
          * (either with range error or 'value read not that expected',
-         * or with an error in ncmpi_redef )).  Not sufficient to align
+         * or with an error in ncmpi_redef()).  Not sufficient to align
          * 'begin', but haven't figured out what else to adjust */
         ncp->vars.value[i]->begin = end_var;
 
@@ -1325,9 +1325,9 @@ ncmpii_inq_env_align_hints(MPI_Offset *h_align,
     return 1;
 }
 
-/*----< ncmpii_enddef() >----------------------------------------------------*/
+/*----< ncmpiio_enddef() >---------------------------------------------------*/
 int
-ncmpii_enddef(NC *ncp)
+ncmpiio_enddef(NC *ncp)
 {
     int i, flag, striping_unit;
     char value[MPI_MAX_INFO_VAL];
@@ -1398,13 +1398,13 @@ ncmpii_enddef(NC *ncp)
     return ncmpii_NC_enddef(ncp, h_align, 0, v_align, 0, r_align);
 }
 
-/*----< ncmpii__enddef() >---------------------------------------------------*/
+/*----< ncmpiio__enddef() >--------------------------------------------------*/
 int
-ncmpii__enddef(NC         *ncp,
-               MPI_Offset  h_minfree,
-               MPI_Offset  v_align,
-               MPI_Offset  v_minfree,
-               MPI_Offset  r_align)
+ncmpiio__enddef(NC         *ncp,
+                MPI_Offset  h_minfree,
+                MPI_Offset  v_align,
+                MPI_Offset  v_minfree,
+                MPI_Offset  r_align)
 {
     int i, flag, striping_unit;
     char value[MPI_MAX_INFO_VAL];
@@ -1483,12 +1483,13 @@ ncmpii__enddef(NC         *ncp,
 /*----< ncmpii_close() >------------------------------------------------------*/
 /* This function is collective */
 int
-ncmpii_close(NC *ncp)
+ncmpii_close(void *ncdp)
 {
     int err, status=NC_NOERR;
+    NC *ncp = (NC*)ncdp;
 
     if (NC_indef(ncp)) { /* currently in define mode */
-        status = ncmpii_enddef(ncp); /* TODO: defaults */
+        status = ncmpiio_enddef(ncp); /* TODO: defaults */
         if (status != NC_NOERR ) {
             /* To do: Abort new definition, if any */
             if (ncp->old != NULL) {
@@ -1509,7 +1510,7 @@ ncmpii_close(NC *ncp)
      * update header in file, as file header is always up-to-date */
 
 #ifdef ENABLE_SUBFILING
-    /* ncmpii_enddef() will update nc_num_subfiles */
+    /* ncmpiio_enddef() will update nc_num_subfiles */
     /* TODO: should check ncid_sf? */
     /* if the file has subfiles, close them first */
     if (ncp->nc_num_subfiles > 1)
@@ -1552,8 +1553,10 @@ ncmpii_close(NC *ncp)
     ncmpiio_close(ncp->nciop, 0);
     ncp->nciop = NULL;
 
+#if 0
     /* remove this file from the list of opened files */
     ncmpii_del_from_NCList(ncp);
+#endif
 
     /* free up space occupied by the header metadata */
     ncmpii_free_NC(ncp);
@@ -1563,18 +1566,15 @@ ncmpii_close(NC *ncp)
 
 /* Public */
 
+/*----< ncmpii_inq() >--------------------------------------------------------*/
 int
-ncmpi_inq(int  ncid,
-          int *ndimsp,
-          int *nvarsp,
-          int *nattsp,
-          int *xtendimp)
+ncmpii_inq(void *ncdp,
+           int  *ndimsp,
+           int  *nvarsp,
+           int  *nattsp,
+           int  *xtendimp)
 {
-    int status;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+    NC *ncp = (NC*)ncdp;
 
     if (ndimsp != NULL)
         *ndimsp = (int) ncp->dims.ndefined;
@@ -1605,69 +1605,6 @@ ncmpi_inq_version(int ncid, int *nc_mode)
         *nc_mode = NC_64BIT_OFFSET;
     else
         *nc_mode = NC_CLASSIC_MODEL;
-
-    return NC_NOERR;
-}
-
-
-int
-ncmpi_inq_ndims(int ncid, int *ndimsp)
-{
-    int status;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    if (ndimsp != NULL)
-        *ndimsp = (int) ncp->dims.ndefined;
-
-    return NC_NOERR;
-}
-
-int
-ncmpi_inq_nvars(int ncid, int *nvarsp)
-{
-    int status;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    if (nvarsp != NULL)
-        *nvarsp = (int) ncp->vars.ndefined;
-
-    return NC_NOERR;
-}
-
-int
-ncmpi_inq_natts(int ncid, int *nattsp)
-{
-    int status;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    if (nattsp != NULL)
-        *nattsp = (int) ncp->attrs.ndefined;
-
-    return NC_NOERR;
-}
-
-int
-ncmpi_inq_unlimdim(int ncid, int *xtendimp)
-{
-    int status;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    /* TODO: it makes no sense xtendimp being NULL */
-    if (xtendimp != NULL)
-        /* *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL); */
-        *xtendimp = ncp->dims.unlimited_id;
 
     return NC_NOERR;
 }
