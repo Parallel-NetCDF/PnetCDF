@@ -142,17 +142,24 @@ ifdef(`PNETCDF', ``#'if 1', ``#'if 0')
     /* Try to open a nonexistent file */
     err = FileOpen("tooth-fairy.nc", NC_NOWRITE, &ncid); /* should fail */
 
-    /* on some systems, opening an nonexisting file will actually create the
-     * file. In this case, we print the error messages on screen and move on
-     * to the next test, instead of aborting the entire test.
+    /* on some systems (such as Lustre), opening an nonexisting file will
+     * actually create the file. In this case, we print the error messages on
+     * screen and move on to the next test, instead of aborting the entire test.
+     * The created file will be of zero-length and PnetCDF should complain it
+     * is not an NC file, i.e. NC_ENOTNC.
      */
-    IF (err == NC_NOERR)
+    if (err == NC_NOERR) {
         error("opening a nonexistent file expects to fail, but got NC_NOERR\n");
+    }
 ifdef(`PNETCDF',
-    `else IF (err != NC_ENOENT && err != NC_EFILE)
+    `else if (err == NC_ENOTNC) {
+        error("opening a nonexistent file actually creates the file, indicating an MPI-IO internal error\n");
+    }
+    else if (err != NC_ENOENT && err != NC_EFILE) {
         /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
          * MPI_ERR_NO_SUCH_FILE */
-        error("expecting NC_ENOENT or NC_EFILE but got %s", nc_err_code_name(err));
+        error("expecting NC_ENOENT or NC_EFILE but got %s, indicating an MPI-IO internal error", nc_err_code_name(err));
+    }
     else {
         nok++;
     }', `
