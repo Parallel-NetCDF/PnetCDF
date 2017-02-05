@@ -148,14 +148,14 @@ ifdef(`PNETCDF', ``#'if 1', ``#'if 0')
      * The created file will be of zero-length and PnetCDF should complain it
      * is not an NC file, i.e. NC_ENOTNC.
      */
-    if (err == NC_NOERR) {
+    IF (err == NC_NOERR) {
         error("opening a nonexistent file expects to fail, but got NC_NOERR\n");
     }
 ifdef(`PNETCDF',
-    `else if (err == NC_ENOTNC) {
+    `else IF (err == NC_ENOTNC) {
         error("opening a nonexistent file actually creates the file, indicating an MPI-IO internal error\n");
     }
-    else if (err != NC_ENOENT && err != NC_EFILE) {
+    else IF (err != NC_ENOENT && err != NC_EFILE) {
         /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
          * MPI_ERR_NO_SUCH_FILE */
         error("expecting NC_ENOENT or NC_EFILE but got %s, indicating an MPI-IO internal error", nc_err_code_name(err));
