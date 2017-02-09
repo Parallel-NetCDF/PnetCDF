@@ -78,40 +78,62 @@ int check_modes(char *filename)
     /* Collectively opening a non-existing file for read, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
-     * MPI_ERR_NO_SUCH_FILE */
-    EXPECT_ERR2(NC_ENOENT, NC_EFILE)
 
-    /* The file should not be created */
-    if (rank == 0) {
-        if (access(filename, F_OK) == 0) {
-            printf("Error at line %d: file (%s) should not be created\n",
-                   __LINE__, filename);
-            nerrs++;
-            /* delete the file and ignore error */
-            unlink(filename);
+    /* When using MVAPICH2 2.2, its Lustre driver adds O_CREAT to all open
+     * calls. This is considered a bug in an MPI-IO implementation. Due to this
+     * bug, the non-existing file will be created with zero-length and thus
+     * PnetCDF spews NC_ENOTNC */
+    if (err == NC_ENOTNC) {
+        /* ignore the error and delete the file */
+        if (rank == 0) unlink(filename);
+    }
+    else {
+        /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
+         * MPI_ERR_NO_SUCH_FILE */
+        EXPECT_ERR2(NC_ENOENT, NC_EFILE)
+
+        /* The file should not be created */
+        if (rank == 0) {
+            if (access(filename, F_OK) == 0) {
+                printf("Error at line %d: file (%s) should not be created\n",
+                       __LINE__, filename);
+                nerrs++;
+                /* delete the file and ignore error */
+                unlink(filename);
+            }
+            /* else : file does not exist */
         }
-        /* else : file does not exist */
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Collectively opening a non-existing file for write, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
-    /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
-     * MPI_ERR_NO_SUCH_FILE */
-    EXPECT_ERR2(NC_ENOENT, NC_EFILE)
 
-    /* The file should not be created */
-    if (rank == 0) {
-        if (access(filename, F_OK) == 0) {
-            printf("Error at line %d: file (%s) should not be created\n",
-                   __LINE__, filename);
-            nerrs++;
-            /* delete the file and ignore error */
-            unlink(filename);
+    /* When using MVAPICH2 2.2, its Lustre driver adds O_CREAT to all open
+     * calls. This is considered a bug in an MPI-IO implementation. Due to this
+     * bug, the non-existing file will be created with zero-length and thus
+     * PnetCDF spews NC_ENOTNC */
+    if (err == NC_ENOTNC) {
+        /* ignore the error and delete the file */
+        if (rank == 0) unlink(filename);
+    }
+    else {
+        /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
+         * MPI_ERR_NO_SUCH_FILE */
+        EXPECT_ERR2(NC_ENOENT, NC_EFILE)
+
+        /* The file should not be created */
+        if (rank == 0) {
+            if (access(filename, F_OK) == 0) {
+                printf("Error at line %d: file (%s) should not be created\n",
+                       __LINE__, filename);
+                nerrs++;
+                /* delete the file and ignore error */
+                unlink(filename);
+            }
+            /* else : file does not exist */
         }
-        /* else : file does not exist */
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
