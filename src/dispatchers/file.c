@@ -1,3 +1,8 @@
+/*
+ *  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
 
 #include <stdlib.h>
 #include <string.h>

@@ -17,6 +17,7 @@
 #include <mpi.h>
 
 #include <pnetcdf.h>
+#include <nc.h>
 
 /*----< ncmpii_handle_error() ------------------------------------------------*/
 /* translate MPI error codes to PnetCDF/netCDF error codes */
