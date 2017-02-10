@@ -45,21 +45,22 @@ int (*begin_indep_data)(void*);
 int (*end_indep_data)(void*);
 
 /* APIs manipulate dimensions */
+int (*def_dim)(void*,const char*,MPI_Offset,int*);
+int (*inq_dimid)(void*,const char*,int*);
+int (*inq_dim)(void*,int,char*,MPI_Offset*);
+int (*rename_dim)(void*, int, const char*);
+
 /* APIs read/write variables */
+
 /* APIs read/write attributes */
+int (*inq_att)(void*,int,const char*,nc_type*,MPI_Offset*);
+int (*inq_attid)(void*,int,const char*,int*);
+int (*inq_attname)(void*,int,int,char*);
+int (*copy_att)(void*,int,const char*,void*,int);
+int (*rename_att)(void*,int,const char*,const char*);
+int (*del_att)(void*,int,const char*);
 
 #ifdef NOT_YET
-int (*def_dim)(int, const char*, size_t, int*);
-int (*inq_dimid)(int, const char*, int*);
-int (*inq_dim)(int, int, char*, size_t*);
-int (*inq_unlimdim)(int ncid,  int *unlimdimidp);
-int (*rename_dim)(int, int, const char*);
-
-int (*inq_att)(int, int, const char*, nc_type*, size_t*);
-int (*inq_attid)(int, int, const char*, int*);
-int (*inq_attname)(int, int, int, char*);
-int (*rename_att)(int, int, const char*, const char*);
-int (*del_att)(int, int, const char*);
 int (*get_att)(int, int, const char*, void*, nc_type);
 int (*put_att)(int, int, const char*, nc_type, size_t, const void*, nc_type);
 

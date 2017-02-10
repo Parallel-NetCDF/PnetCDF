@@ -353,21 +353,17 @@ ncmpii_elem_NC_dimarray(const NC_dimarray *ncap,
 
 /* Public */
 
-/*----< ncmpi_def_dim() >----------------------------------------------------*/
+/*----< ncmpii_def_dim() >---------------------------------------------------*/
 int
-ncmpi_def_dim(int         ncid,    /* IN:  file ID */
-              const char *name,    /* IN:  name of dimension */
-              MPI_Offset  size,    /* IN:  dimension size */
-              int        *dimidp)  /* OUT: dimension ID */
+ncmpii_def_dim(void       *ncdp,    /* IN:  NC object */
+               const char *name,    /* IN:  name of dimension */
+               MPI_Offset  size,    /* IN:  dimension size */
+               int        *dimidp)  /* OUT: dimension ID */
 {
     int dimid, err;
     char *nname=NULL;  /* normalized name */
-    NC *ncp=NULL;
+    NC *ncp=(NC*)ncdp;
     NC_dim *dimp=NULL;
-
-    /* check if ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* must be called in define mode */
     if (!NC_indef(ncp)) {
@@ -519,18 +515,15 @@ err_check:
 }
 
 
-/*----< ncmpi_inq_dimid() >--------------------------------------------------*/
+/*----< ncmpii_inq_dimid() >-------------------------------------------------*/
 int
-ncmpi_inq_dimid(int         ncid,
-                const char *name,
-                int        *dimid)
+ncmpii_inq_dimid(void       *ncdp,
+                 const char *name,
+                 int        *dimid)
 {
     int err;
     char *nname=NULL; /* normalized name */
-    NC *ncp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp=(NC*)ncdp;
 
     if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
         DEBUG_RETURN_ERROR(NC_EBADNAME)
@@ -546,19 +539,15 @@ ncmpi_inq_dimid(int         ncid,
 }
 
 
-/*----< ncmpi_inq_dim() >----------------------------------------------------*/
+/*----< ncmpii_inq_dim() >---------------------------------------------------*/
 int
-ncmpi_inq_dim(int         ncid,
-              int         dimid,
-              char       *name,
-              MPI_Offset *sizep)
+ncmpii_inq_dim(void       *ncdp,
+               int         dimid,
+               char       *name,
+               MPI_Offset *sizep)
 {
-    int err;
-    NC *ncp=NULL;
+    NC *ncp=(NC*)ncdp;
     NC_dim *dimp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
     if (dimp == NULL) DEBUG_RETURN_ERROR(NC_EBADDIM)
@@ -577,45 +566,21 @@ ncmpi_inq_dim(int         ncid,
 }
 
 
-/*----< ncmpi_inq_dimname() >------------------------------------------------*/
-int
-ncmpi_inq_dimname(int   ncid,
-                  int   dimid,
-                  char *name)
-{
-    return ncmpi_inq_dim(ncid, dimid, name, NULL);
-}
-
-
-/*----< ncmpi_inq_dimlen() >-------------------------------------------------*/
-int
-ncmpi_inq_dimlen(int         ncid,
-                 int         dimid,
-                 MPI_Offset *lenp)
-{
-    return ncmpi_inq_dim(ncid, dimid, NULL, lenp);
-}
-
-
-/*----< ncmpi_rename_dim() >--------------------------------------------------*/
+/*----< ncmpii_rename_dim() >-------------------------------------------------*/
 /* This API is collective and can be called in either define or data mode..
  * If the new name is longer than the old name, the netCDF dataset must be in
  * the define mode.
  */
 int
-ncmpi_rename_dim(int         ncid,
-                 int         dimid,
-                 const char *newname)
+ncmpii_rename_dim(void       *ncdp,
+                  int         dimid,
+                  const char *newname)
 {
     int err;
     char *nnewname=NULL; /* normalized newname */
-    NC *ncp=NULL;
+    NC *ncp=(NC*)ncdp;
     NC_dim *dimp=NULL;
     NC_string *newStr=NULL;
-
-    /* check whether ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check file's write permission */
     if (NC_readonly(ncp)) {

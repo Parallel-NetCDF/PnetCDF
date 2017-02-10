@@ -342,21 +342,17 @@ NC_lookupattr(NC_attrarray  *ncap,
 
 /* Public */
 
-/*----< ncmpi_inq_attname() >------------------------------------------------*/
+/*----< ncmpii_inq_attname() >-----------------------------------------------*/
 /* This is an independent subroutine */
 int
-ncmpi_inq_attname(int   ncid,
-                  int   varid,
-                  int   attid,
-                  char *name)   /* out */
+ncmpii_inq_attname(void *ncdp,
+                   int   varid,
+                   int   attid,
+                   char *name)   /* out */
 {
-    int err;
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap;
     NC_attr *attrp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -373,21 +369,18 @@ ncmpi_inq_attname(int   ncid,
 }
 
 
-/*----< ncmpi_inq_attid() >--------------------------------------------------*/
+/*----< ncmpii_inq_attid() >-------------------------------------------------*/
 /* This is an independent subroutine */
 int
-ncmpi_inq_attid(int         ncid,
-                int         varid,
-                const char *name,
-                int        *attidp)  /* out */
+ncmpii_inq_attid(void       *ncdp,
+                 int         varid,
+                 const char *name,
+                 int        *attidp)  /* out */
 {
-    int indx, err;
+    int indx;
     char *nname=NULL; /* normalized name */
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -409,23 +402,20 @@ ncmpi_inq_attid(int         ncid,
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_att() >----------------------------------------------------*/
+/*----< ncmpii_inq_att() >---------------------------------------------------*/
 /* This is an independent subroutine */
 int
-ncmpi_inq_att(int         ncid,
-              int         varid,
-              const char *name, /* input, attribute name */
-              nc_type    *datatypep,
-              MPI_Offset *lenp)
+ncmpii_inq_att(void       *ncdp,
+               int         varid,
+               const char *name, /* input, attribute name */
+               nc_type    *datatypep,
+               MPI_Offset *lenp)
 {
     int err;
     char *nname=NULL;    /* normalized name */
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
     NC_attr *attrp;
     NC_attrarray *ncap;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -450,48 +440,21 @@ ncmpi_inq_att(int         ncid,
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_atttype() >------------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_atttype(int         ncid,
-                  int         varid,
-                  const char *name,
-                  nc_type    *datatypep)
-{
-    return ncmpi_inq_att(ncid, varid, name, datatypep, NULL);
-}
-
-/*----< ncmpi_inq_attlen() >-------------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_attlen(int         ncid,
-                 int         varid,
-                 const char *name,
-                 MPI_Offset *lenp)
-{
-    return ncmpi_inq_att(ncid, varid, name, NULL, lenp);
-}
-
-
-/*----< ncmpi_rename_att() >--------------------------------------------------*/
+/*----< ncmpii_rename_att() >-------------------------------------------------*/
 /* This API is collective if called in data mode */
 int
-ncmpi_rename_att(int         ncid,
-                 int         varid,
-                 const char *name,
-                 const char *newname)
+ncmpii_rename_att(void       *ncdp,
+                  int         varid,
+                  const char *name,
+                  const char *newname)
 {
     int indx, err;
     char *nname=NULL;    /* normalized name */
     char *nnewname=NULL; /* normalized newname */
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap=NULL;
     NC_attr *attrp=NULL;
     NC_string *newStr=NULL;
-
-    /* check whether ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {
@@ -633,32 +596,26 @@ err_check:
 }
 
 
-/*----< ncmpi_copy_att() >----------------------------------------------------*/
-/* This API is collective for processes that opened ncid_out.
- * If the attribute does not exist in ncid_out, then this API must be called
- * when ncid_out is in define mode.
- * If the attribute does exist in ncid_out and the attribute in ncid_in is
- * larger than the one in ncid_out, then this API must be called when ncid_out
+/*----< ncmpii_copy_att() >---------------------------------------------------*/
+/* This API is collective for processes that opened ncdp_out.
+ * If the attribute does not exist in ncdp_out, then this API must be called
+ * when ncdp_out is in define mode.
+ * If the attribute does exist in ncdp_out and the attribute in ncdp_in is
+ * larger than the one in ncdp_out, then this API must be called when ncdp_out
  * is in define mode.
  */
 int
-ncmpi_copy_att(int         ncid_in,
-               int         varid_in,
-               const char *name,
-               int         ncid_out,
-               int         varid_out)
+ncmpii_copy_att(void       *ncdp_in,
+                int         varid_in,
+                const char *name,
+                void       *ncdp_out,
+                int         varid_out)
 {
     int indx=0, err;
     char *nname=NULL;    /* normalized name */
-    NC *ncp_in, *ncp_out;
+    NC *ncp_in=(NC*)ncdp_in, *ncp_out=(NC*)ncdp_out;
     NC_attrarray *ncap_out=NULL, *ncap_in;
     NC_attr *iattrp=NULL, *attrp=NULL;
-
-    err = ncmpii_NC_check_id(ncid_in, &ncp_in);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    err = ncmpii_NC_check_id(ncid_out, &ncp_out);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp_out)) {
@@ -704,7 +661,7 @@ ncmpi_copy_att(int         ncid_in,
     indx = ncmpii_NC_findattr(ncap_out, nname);
 
     if (indx >= 0) { /* name in use in ncap_out */
-        if (ncid_in == ncid_out && varid_in == varid_out)
+        if (ncdp_in == ncdp_out && varid_in == varid_out)
             /* self copy is not considered an error */
             goto err_check;
 
@@ -714,7 +671,7 @@ ncmpi_copy_att(int         ncid_in,
             goto err_check;
         }
     }
-    else { /* attribute does not exit in ncid_out */
+    else { /* attribute does not exit in ncdp_out */
         if (!NC_indef(ncp_out)) {
             /* add new attribute is not allowed in data mode */
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
@@ -728,7 +685,7 @@ ncmpi_copy_att(int         ncid_in,
 
 err_check:
     if (ncp_out->safe_mode) {
-        int root_ids[3], status, mpireturn;
+        int root_ids[2], status, mpireturn;
         char root_name[NC_MAX_NAME];
 
         /* check if name is consistent among all processes */
@@ -744,18 +701,17 @@ err_check:
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
 
-        /* check if varid_in, ncid_out, varid_out, are consistent across all
+        /* check if varid_in, varid_out, are consistent across all
          * processes */
         root_ids[0] = varid_in;
-        root_ids[1] = ncid_out;
-        root_ids[2] = varid_out;
-        TRACE_COMM(MPI_Bcast)(&root_ids, 3, MPI_INT, 0, ncp_out->nciop->comm);
+        root_ids[1] = varid_out;
+        TRACE_COMM(MPI_Bcast)(&root_ids, 2, MPI_INT, 0, ncp_out->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         }
         if (err == NC_NOERR && (root_ids[0] != varid_in ||
-            root_ids[1] != ncid_out || root_ids[2] != varid_out))
+            root_ids[1] != varid_out))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* find min error code across processes */
@@ -775,8 +731,8 @@ err_check:
     assert(ncap_out != NULL);
     assert(nname != NULL);
 
-    if (indx >= 0) { /* name in use in ncid_out */
-        if (ncid_in == ncid_out && varid_in == varid_out) {
+    if (indx >= 0) { /* name in use in ncdp_out */
+        if (ncdp_in == ncdp_out && varid_in == varid_out) {
             /* self copy is not considered an error */
             free(nname);
             return NC_NOERR;
@@ -802,7 +758,7 @@ err_check:
             attrp->nelems = iattrp->nelems;
         }
     }
-    else { /* attribute does not exit in ncid_out */
+    else { /* attribute does not exit in ncdp_out */
         attrp = ncmpii_new_NC_attr(nname, iattrp->type, iattrp->nelems);
         free(nname);
         if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -827,20 +783,17 @@ err_check:
     return err;
 }
 
-/*----< ncmpi_del_att() >---------------------------------------------------*/
+/*----< ncmpii_del_att() >---------------------------------------------------*/
 /* This is a collective subroutine and must be called in define mode */
 int
-ncmpi_del_att(int         ncid,
-              int         varid,
-              const char *name)
+ncmpii_del_att(void       *ncdp,
+               int         varid,
+               const char *name)
 {
     int err, attrid=-1;
     char *nname=NULL; /* normalized name */
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {

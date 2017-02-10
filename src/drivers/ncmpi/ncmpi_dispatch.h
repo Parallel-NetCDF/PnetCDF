@@ -8,6 +8,7 @@
 #define _NCMPI_DISPATCH_H
 
 #include <mpi.h>
+#include <pnetcdf.h>
 
 extern int
 ncmpii_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, void **ncdp);
@@ -74,5 +75,36 @@ ncmpii_begin_indep_data(void *ncdp);
 
 extern int
 ncmpii_end_indep_data(void *ncdp);
+
+extern int
+ncmpii_def_dim(void *ncdp, const char *name, MPI_Offset size, int *dimidp);
+
+extern int
+ncmpii_inq_dimid(void *ncdp, const char *name, int *dimidp);
+
+extern int
+ncmpii_inq_dim(void *ncdp, int dimid, char *name, MPI_Offset *lengthp);
+
+extern int
+ncmpii_rename_dim(void *ncdp, int dimid, const char *newname);
+
+extern int
+ncmpii_inq_att(void *ncdp, int varid, const char *name, nc_type *xtypep, MPI_Offset *lenp);
+
+extern int
+ncmpii_inq_attid(void *ncdp, int varid, const char *name, int *idp); 
+
+extern int
+ncmpii_inq_attname(void *ncdp, int varid, int attnum, char *name);
+
+extern int
+ncmpii_copy_att(void *ncdp_in, int varid_in, const char *name, void *ncdp_out, int varid_out);
+
+extern int
+ncmpii_rename_att(void *ncdp, int varid, const char *name, const char *newname);
+
+extern int
+ncmpii_del_att(void *ncdp, int varid, const char *name);
+
 
 #endif
