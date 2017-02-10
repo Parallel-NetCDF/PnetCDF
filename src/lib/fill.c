@@ -17,7 +17,7 @@
 
 #include <mpi.h>
 
-#include "nc.h"
+#include "ncx.h"
 #include "macro.h"
 
 #define CHECK_ERROR(status) {                                                \
@@ -509,31 +509,47 @@ ncmpii_inq_var_fill(NC_var *varp,
                     void   *fill_value) /* OUT: user-defined or
                                                 default fill value */
 {
-    int i;
-    size_t nchars;
-    NC_attrarray *attrs;
+    int i, err;
+    const void *xp;
+    NC_attrarray *ncap=&varp->attrs;
 
     assert(varp != NULL); /* NC_GLOBAL varid is illegal in this context */
 
-    nchars = strlen("_FillValue");
-
     /* Check if _FillValue is defined for this variable */
-    attrs = &varp->attrs;
-    for (i=0; i<attrs->ndefined; i++) {
-        if (attrs->value[i]->name->nchars == (MPI_Offset)nchars &&
-            strncmp(attrs->value[i]->name->cp, "_FillValue", nchars) == 0) {
-            memcpy(fill_value, attrs->value[i]->xvalue, (size_t)varp->xsz);
-            return NC_NOERR;
+    for (i=0; i<ncap->ndefined; i++) {
+        if (ncap->value[i]->name->nchars == strlen(_FillValue) &&
+            strcmp(ncap->value[i]->name->cp, _FillValue) == 0) {
+            break;
         }
     }
+    if (i == ncap->ndefined) { /* attribute _FillValue is not set */
+        /* NetCDF 4.4.1 and prior does not use global attribute _FillValue if
+         * it is not defined for the variable. Default fill values are used.
+         * See fill_NC_var() in putget.m4.
+         */
+        err = ncmpii_inq_default_fill_value(varp->type, fill_value);
+        return err;
+    }
 
-    /* NetCDF 4.4.1 and prior does not use global attribute _FillValue if
-     * it is not defined for the variable. Default fill values are used.
-     * See fill_NC_var() in putget.m4.
-     */
+    /* retrieve user-defined attribute _FillValue */
+    xp = ncap->value[i]->xvalue;
 
-    /* return default _FillValue */
-    return ncmpii_inq_default_fill_value(varp->type, fill_value);
+    /* value stored in xvalue is in external representation, may need byte-swap */
+    switch(varp->type) {
+        case NC_CHAR:   return ncmpix_getn_text               (&xp, 1,               (char*)fill_value);
+        case NC_BYTE:   return ncmpix_getn_NC_BYTE_schar      (&xp, 1,        (signed char*)fill_value);
+        case NC_UBYTE:  return ncmpix_getn_NC_UBYTE_uchar     (&xp, 1,      (unsigned char*)fill_value);
+        case NC_SHORT:  return ncmpix_getn_NC_SHORT_short     (&xp, 1,              (short*)fill_value);
+        case NC_USHORT: return ncmpix_getn_NC_USHORT_ushort   (&xp, 1,     (unsigned short*)fill_value);
+        case NC_INT:    return ncmpix_getn_NC_INT_int         (&xp, 1,                (int*)fill_value);
+        case NC_UINT:   return ncmpix_getn_NC_UINT_uint       (&xp, 1,       (unsigned int*)fill_value);
+        case NC_FLOAT:  return ncmpix_getn_NC_FLOAT_float     (&xp, 1,              (float*)fill_value);
+        case NC_DOUBLE: return ncmpix_getn_NC_DOUBLE_double   (&xp, 1,             (double*)fill_value);
+        case NC_INT64:  return ncmpix_getn_NC_INT64_longlong  (&xp, 1,          (long long*)fill_value);
+        case NC_UINT64: return ncmpix_getn_NC_UINT64_ulonglong(&xp, 1, (unsigned long long*)fill_value);
+        default: return NC_EBADTYPE;
+    }
+    return NC_NOERR;
 }
 
 #ifdef FILL_ONE_VAR_AT_A_TIME
