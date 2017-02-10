@@ -45,13 +45,17 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Bug fixes
+    * Fix the missing byte-swap required for retrieving user-defined fill
+      values. See r2864. This fix is critical when PnetCDF is configured with
+      option erange-fill enabled (default mode) and the target platform is a
+      Little Endian.
     * Fix test program test/nc_test/test_read.m4 and test/testcases/modes.c for
-      testing whether the correct error codes can be returned when openning a
+      testing whether the correct error codes can be returned when opening a
       non-existing file. Thanks to Mark Dixon for testing various MPI
       implementations, compilers, and file systems, we found that when using
       MVAPICH2 2.2, its Lustre driver always adds O_CREAT flag to the open()
       calls. Because of this behavior, the non-existing file will be created
-      with zero length, whcih causes PnetCDF to spew NC_ENOTNC instead of
+      with zero length, which causes PnetCDF to spew NC_ENOTNC instead of
       NC_ENOENT. A bug report has been filed to MVAPICH. The fix shall come in
       the next release of MVAPICH. The bug report can be found in
       http://mailman.cse.ohio-state.edu/pipermail/mvapich-discuss/2017-February/006300.html
