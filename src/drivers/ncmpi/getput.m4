@@ -662,10 +662,10 @@ mpi_io:
                 }
             }
             else { /* COLL_IO: sync numrecs in memory and file */
-                /* In ncmpii_sync_numrecs(), new_numrecs is checked against
+                /* In ncmpiio_sync_numrecs(), new_numrecs is checked against
                  * ncp->numrecs.
                  */
-                err = ncmpii_sync_numrecs(ncp, new_numrecs);
+                err = ncmpiio_sync_numrecs(ncp, new_numrecs);
                 if (status == NC_NOERR) status = err;
             }
         }

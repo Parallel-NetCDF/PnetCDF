@@ -309,7 +309,7 @@ err_check:
                 }
             }
             else { /* COLL_IO: sync numrecs in memory and file */
-                err = ncmpii_sync_numrecs(ncp, new_numrecs);
+                err = ncmpiio_sync_numrecs(ncp, new_numrecs);
                 if (err != NC_NOERR && status == NC_NOERR) status = err;
             }
         }
