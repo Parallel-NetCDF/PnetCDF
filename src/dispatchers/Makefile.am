@@ -10,7 +10,7 @@ SUFFIXES = .o .c .h
 
 noinst_LTLIBRARIES = libdispatchers.la
 
-libdispatchers_la_SOURCES = file.c
+libdispatchers_la_SOURCES = file.c error.c
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

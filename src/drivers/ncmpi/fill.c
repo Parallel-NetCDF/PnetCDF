@@ -209,7 +209,7 @@ ncmpii_fill_var_rec(NC         *ncp,
         return ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
 
     if (IS_RECVAR(varp)) { /* update header's number of records in memory */
-        err = ncmpii_sync_numrecs(ncp, recno+1);
+        err = ncmpiio_sync_numrecs(ncp, recno+1);
         if (err == NC_NOERR) return err;
     }
 

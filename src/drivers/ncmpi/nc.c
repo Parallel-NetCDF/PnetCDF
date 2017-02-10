@@ -28,11 +28,6 @@
 /* list of opened netcdf file objects (not thread-safe) */
 static NC *NClist = NULL;
 
-/* This is the default create format for ncmpi_create and nc__create.
- * The use of this file scope variable is not thread-safe.
- */
-static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
-
 /* These have to do with version numbers. */
 #define MAGIC_NUM_LEN 4
 #define VER_CLASSIC 1
@@ -234,32 +229,6 @@ ncmpii_NC_check_id(int   ncid,
 }
 
 
-/*----< ncmpii_inq_files_opened() >------------------------------------------*/
-int
-ncmpii_inq_files_opened(int *num, int *ncids)
-{
-    NC *ncp;
-
-/*
-    for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
-        printf("still open %s\n",ncp->nciop->path);
-*/
-    if (num == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
-
-    *num = 0;
-    for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
-        (*num)++;
-
-    if (*num > 0 && ncids != NULL) {
-        /* when ncids is NULL, we skip getting the values */
-        int i=0;
-        for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
-            ncids[i] = ncp->nciop->fd;
-    }
-    return NC_NOERR;
-}
-
-
 /*----< ncmpii_free_NC() >----------------------------------------------------*/
 inline void
 ncmpii_free_NC(NC *ncp)
@@ -285,43 +254,6 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
     ncp->chunk = (chunkp != NULL) ? *chunkp : NC_SIZEHINT_DEFAULT;
 
     return ncp;
-}
-
-/*----< ncmpi_set_default_format() >-----------------------------------------*/
-/* This function sets a default create file format.
- * Valid formats are NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, and NC_FORMAT_CDF5
- * This API is NOT collective, as there is no way to check against an MPI
- * communicator. It should be called by all MPI processes that intend to
- * create a file later. Consistency check will have to be done in other APIs.
- */
-int
-ncmpi_set_default_format(int format, int *old_formatp)
-{
-    /* Return existing format if desired. */
-    if (old_formatp != NULL)
-        *old_formatp = ncmpi_default_create_format;
-
-    /* Make sure only valid format is set. */
-    if (format != NC_FORMAT_CLASSIC &&
-        format != NC_FORMAT_CDF2 &&
-        format != NC_FORMAT_CDF5) {
-        DEBUG_RETURN_ERROR(NC_EINVAL)
-    }
-    ncmpi_default_create_format = format;
-
-    return NC_NOERR;
-}
-
-/* returns a value suitable for a create flag.  Will return one or more of the
- * following values OR-ed together:
- * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
-int
-ncmpi_inq_default_format(int *formatp)
-{
-    if (formatp == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
-
-    *formatp = ncmpi_default_create_format;
-    return NC_NOERR;
 }
 
 /*----< ncmpii_dup_NC() >----------------------------------------------------*/
@@ -632,7 +564,7 @@ NC_begins(NC         *ncp,
 /*----< ncmpii_write_numrecs() >-----------------------------------------------*/
 /* root process writes the new record number into file.
  * This function is called by:
- * 1. ncmpii_sync_numrecs
+ * 1. ncmpiio_sync_numrecs
  * 2. collective nonblocking wait API, if the new number of records is bigger
  */
 int
@@ -689,7 +621,7 @@ ncmpii_write_numrecs(NC         *ncp,
     return NC_NOERR;
 }
 
-/*----< ncmpii_sync_numrecs() >-----------------------------------------------*/
+/*----< ncmpiio_sync_numrecs() >----------------------------------------------*/
 /* Synchronize the number of records in memory and write numrecs to file.
  * This function is called by:
  * 1. ncmpi_sync_numrecs(): by the user
@@ -701,8 +633,8 @@ ncmpii_write_numrecs(NC         *ncp,
  * This function is collective.
  */
 int
-ncmpii_sync_numrecs(NC         *ncp,
-                    MPI_Offset  new_numrecs)
+ncmpiio_sync_numrecs(NC         *ncp,
+                     MPI_Offset  new_numrecs)
 {
     int status=NC_NOERR, mpireturn;
     MPI_Offset max_numrecs;
@@ -1589,74 +1521,46 @@ ncmpii_inq(void *ncdp,
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_version() >-----------------------------------------------*/
+/*----< ncmpii_inq_num_rec_vars() >------------------------------------------*/
 int
-ncmpi_inq_version(int ncid, int *nc_mode)
+ncmpii_inq_num_rec_vars(void *ncdp, int *num_rec_varsp)
 {
-    int status;
-    NC *ncp;
+    int i;
+    NC *ncp = (NC*)ncdp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    if (ncp->format == 5)
-        *nc_mode = NC_64BIT_DATA;
-    else if (ncp->format == 2)
-        *nc_mode = NC_64BIT_OFFSET;
-    else
-        *nc_mode = NC_CLASSIC_MODEL;
-
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_num_rec_vars() >-------------------------------------------*/
-int
-ncmpi_inq_num_rec_vars(int ncid, int *nvarsp)
-{
-    int i, status;
-    NC *ncp;
-
-    /* get ncp object */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    if (nvarsp != NULL) {
+    if (num_rec_varsp != NULL) {
         if (NC_indef(ncp)) {
             /* if in define mode, recalculate the number of record variables */
-            *nvarsp = 0;
+            *num_rec_varsp = 0;
             for (i=0; i<ncp->vars.ndefined; i++)
-                *nvarsp += IS_RECVAR(ncp->vars.value[i]);
+                *num_rec_varsp += IS_RECVAR(ncp->vars.value[i]);
         }
         else
-            *nvarsp = ncp->vars.num_rec_vars;
+            *num_rec_varsp = ncp->vars.num_rec_vars;
     }
 
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_num_fix_vars() >-------------------------------------------*/
+/*----< ncmpii_inq_num_fix_vars() >------------------------------------------*/
 int
-ncmpi_inq_num_fix_vars(int ncid, int *nvarsp)
+ncmpii_inq_num_fix_vars(void *ncdp, int *num_fix_varsp)
 {
-    int i, status;
-    NC *ncp;
+    int i;
+    NC *ncp = (NC*)ncdp;
 
-    /* get ncp object */
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    if (nvarsp != NULL) {
+    if (num_fix_varsp != NULL) {
         if (NC_indef(ncp)) {
             /* if in define mode, recalculate the number of record variables */
-            *nvarsp = 0;
+            *num_fix_varsp = 0;
             for (i=0; i<ncp->vars.ndefined; i++)
-                *nvarsp += IS_RECVAR(ncp->vars.value[i]);
+                *num_fix_varsp += IS_RECVAR(ncp->vars.value[i]);
         }
         else
-            *nvarsp = ncp->vars.num_rec_vars;
+            *num_fix_varsp = ncp->vars.num_rec_vars;
 
         /* no. fixed-size == ndefined - no. record variables */
-        *nvarsp = ncp->vars.ndefined- *nvarsp;
+        *num_fix_varsp = ncp->vars.ndefined - *num_fix_varsp;
     }
 
     return NC_NOERR;

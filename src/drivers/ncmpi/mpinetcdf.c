@@ -25,49 +25,6 @@
 #include "subfile.h"
 #endif
 
-/* The const string below is for the RCS ident(1) command to find a string like
- * "\044Id: \100(#) PnetCDF library version 1.4.0 of 16 Nov 2013 $"
- * in the library file (libpnetcdf.a).
- *
- * This string must be made a global variable. Otherwise, it won't work
- * when compiled with optimization options, e.g. -O2
- */
-char const pnetcdf_libvers[] =
-        "\044Id: \100(#) PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE" $";
-
-/* a cleaner version for running command "strings", e.g.
- * % strings libpnetcdf.a | grep "PnetCDF library version"
- * or
- * % strings a.out | grep "PnetCDF library version"
- */
-char pnetcdf_lib_vers[] = "PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE;
-
-/* pnetcdf_libvers is slightly different from the one returned from
- * ncmpi_inq_libvers(). The string pnetcdf_libvers is for command "ident" to
- * use. People can run command ident libpnetcdf.a to obtain the version of a
- * library (or an executable built from that library). In PnetCDF case, the
- * command will print the string of pnetcdf_libvers. Command "ident' looks for
- * a specific keyword pattern and print it. See man page of ident.
- *
- * The API ncmpi_inq_libvers() below on the other hand returns a string to be
- * used by the utility tools like ncmpidump, ncmpigen, etc. Check the last line
- * of output from command "ncmpidump -v".
- */
-
-/*----< ncmpi_inq_libvers() >------------------------------------------------*/
-inline const char*
-ncmpi_inq_libvers(void) {
-
-    /* match the style used by netCDF API nc_inq_libvers()
-     * for example, "4.3.0 of Jun 16 2013 12:11:30 $" */
-    /* we need some silly operation so the compiler will emit the otherwise
-     * unused pnetcdf_libvers */
-    if ((void *)pnetcdf_libvers != (void *)ncmpi_inq_libvers) {
-	; /* do nothing */
-    }
-    return PNETCDF_VERSION " of " PNETCDF_RELEASE_DATE;
-}
-
 /* Begin Of Dataset Functions */
 
 /*----< ncmpii_create() >----------------------------------------------------*/
@@ -673,18 +630,15 @@ ncmpii_open(MPI_Comm    comm,
     return status;
 }
 
-/*----< ncmpi_inq_file_info() >-----------------------------------------------*/
+/*----< ncmpii_inq_file_info() >----------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_file_info(int       ncid,
-                    MPI_Info *info_used)
+ncmpii_inq_file_info(void     *ncdp,
+                     MPI_Info *info_used)
 {
-    int mpireturn, err;
+    int mpireturn;
     char value[MPI_MAX_INFO_VAL];
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp=(NC*)ncdp;
 
 #ifdef HAVE_MPI_INFO_DUP
     mpireturn = MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
@@ -716,15 +670,6 @@ ncmpi_inq_file_info(int       ncid,
 #endif
 
     return NC_NOERR;
-}
-
-/*----< ncmpi_get_file_info() >-----------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpi_get_file_info(int       ncid,
-                    MPI_Info *info_used)
-{
-    return ncmpi_inq_file_info(ncid, info_used);
 }
 
 /*----< ncmpii_redef() >-----------------------------------------------------*/
@@ -832,7 +777,7 @@ ncmpiio_end_indep_data(NC *ncp)
              * force sync in memory no matter if dirty or not.
              */
             set_NC_ndirty(ncp);
-            status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+            status = ncmpiio_sync_numrecs(ncp, ncp->numrecs);
             /* the only possible dirty part of the header is numrecs */
         }
 
@@ -917,18 +862,16 @@ ncmpii__enddef(void       *ncdp,
     return ncmpiio__enddef(ncp, h_minfree, v_align, v_minfree, r_align);
 }
 
-/*----< ncmpi_sync_numrecs() >------------------------------------------------*/
+/*----< ncmpii_sync_numrecs() >-----------------------------------------------*/
 /* this API is collective, but can be called in independent data mode.
  * Note numrecs is always sync-ed in memory and update in file in collective
  * data mode.
  */
 int
-ncmpi_sync_numrecs(int ncid) {
+ncmpii_sync_numrecs(void *ncdp)
+{
     int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp=(NC*)ncdp;
 
     /* cannot be in define mode */
     if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
@@ -942,7 +885,7 @@ ncmpi_sync_numrecs(int ncid) {
         set_NC_ndirty(ncp);
 
     /* sync numrecs in memory and file */
-    err = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+    err = ncmpiio_sync_numrecs(ncp, ncp->numrecs);
 
 #ifndef DISABLE_FILE_SYNC
     if (NC_doFsync(ncp)) { /* NC_SHARE is set */
@@ -987,7 +930,7 @@ ncmpii_sync(void *ncdp)
     if (ncp->vars.num_rec_vars > 0 && NC_indep(ncp)) {
         /* sync numrecs in memory among processes and in file */
         set_NC_ndirty(ncp);
-        err = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+        err = ncmpiio_sync_numrecs(ncp, ncp->numrecs);
         if (err != NC_NOERR) return err;
     }
 
@@ -1064,13 +1007,11 @@ ncmpi_close(int ncid) {
 #endif
 
 /*----< ncmpi_delete() >-----------------------------------------------------*/
-/* ncmpi_delete:
- * doesn't do anything to release resources, so call ncmpi_close before calling
+/* doesn't do anything to release resources, so call ncmpi_close before calling
  * this function.
  *
- * filename: the name of the
- * file we will remove.  info: mpi info, in case underlying file system needs
- * hints.
+ * filename: the name of the file we will remove.
+ * info: MPI info object, in case underlying file system needs hints.
  */
 int
 ncmpi_delete(const char *filename,
@@ -1121,56 +1062,45 @@ ncmpii_check_mpifh(NC  *ncp,
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_put_size() >------------------------------------------------*/
+/*----< ncmpii_inq_put_size() >-----------------------------------------------*/
 /* This is an independent subroutine. */
 /* returns the amount of writes, in bytes, committed to file system so far */
 int
-ncmpi_inq_put_size(int         ncid,
-                   MPI_Offset *size)
+ncmpii_inq_put_size(void       *ncdp,
+                    MPI_Offset *size)
 {
-    int err;
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
 
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    *size = ncp->nciop->put_size;
+    if (size != NULL) *size = ncp->nciop->put_size;
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_get_size() >------------------------------------------------*/
+/*----< ncmpii_inq_get_size() >-----------------------------------------------*/
 /* This is an independent subroutine. */
 /* returns the amount of reads, in bytes, obtained from file system so far */
 int
-ncmpi_inq_get_size(int         ncid,
-                   MPI_Offset *size)
+ncmpii_inq_get_size(void       *ncdp,
+                    MPI_Offset *size)
 {
-    int err;
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
 
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    *size = ncp->nciop->get_size;
+    if (size != NULL) *size = ncp->nciop->get_size;
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_striping() >------------------------------------------------*/
+/*----< ncmpii_inq_striping() >-----------------------------------------------*/
 /* This is an independent subroutine.
  * return file (system) striping settings, striping size and count, if they are
  * available from MPI-IO hint. Otherwise, 0s are returned.
  */
 int
-ncmpi_inq_striping(int  ncid,
-                   int *striping_size,
-                   int *striping_count)
+ncmpii_inq_striping(void *ncdp,
+                    int  *striping_size,
+                    int  *striping_count)
 {
-    int flag, err;
+    int flag;
     char value[MPI_MAX_INFO_VAL];
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp = (NC*)ncdp;
 
     if (striping_size != NULL) {
         MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
@@ -1227,61 +1157,39 @@ int ncmpi_inq_malloc_list(void)
 #endif
 }
 
-/*----< ncmpi_inq_files_opened() >-------------------------------------------*/
+/*----< ncmpii_inq_recsize() >-----------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_files_opened(int *num, int *ncids)
-{
-    return ncmpii_inq_files_opened(num, ncids);
-}
-
-/*----< ncmpi_inq_recsize() >------------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpi_inq_recsize(int         ncid,
+ncmpii_inq_recsize(void      *ncdp,
                   MPI_Offset *recsize)
 {
-    int err;
-    NC *ncp;
+    NC *ncp = (NC*)ncdp;
 
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    *recsize = ncp->recsize;
+    if (recsize != NULL) *recsize = ncp->recsize;
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_header_extent() >-------------------------------------------*/
+/*----< ncmpii_inq_header_size() >--------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_header_extent(int         ncid,
-                        MPI_Offset *extent)
+ncmpii_inq_header_size(void       *ncdp,
+                       MPI_Offset *size)
 {
-    int err;
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
 
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    *extent = ncp->begin_var;
-
+    if (size != NULL) *size = ncp->xsz;
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_header_size() >---------------------------------------------*/
+/*----< ncmpii_inq_header_extent() >------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_header_size(int         ncid,
-                      MPI_Offset *size)
+ncmpii_inq_header_extent(void       *ncdp,
+                         MPI_Offset *extent)
 {
-    int err;
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
 
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    *size = ncp->xsz;
-
+    if (extent != NULL) *extent = ncp->begin_var;
     return NC_NOERR;
 }
 

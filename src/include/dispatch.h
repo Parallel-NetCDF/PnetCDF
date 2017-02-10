@@ -20,6 +20,7 @@ struct PNC_Dispatch {
 
 // int model; /* one of the NC_FORMATX #'s */
 
+/* APIs manipulate files */
 int (*create)(MPI_Comm, const char*, int, MPI_Info, void**);
 int (*open)(MPI_Comm, const char*, int, MPI_Info, void**);
 int (*close)(void*);
@@ -30,16 +31,24 @@ int (*sync)(void*);
 int (*abort)(void*);
 int (*set_fill)(void*,int,int*);
 int (*inq)(void*,int*,int*,int*,int*);
-
+int (*inq_striping)(void*,int*,int*);
+int (*inq_num_rec_vars)(void*,int*);
+int (*inq_num_fix_vars)(void*,int*);
+int (*inq_recsize)(void*,MPI_Offset*);
+int (*inq_put_size)(void*,MPI_Offset*);
+int (*inq_get_size)(void*,MPI_Offset*);
+int (*inq_header_size)(void*,MPI_Offset*);
+int (*inq_header_extent)(void*,MPI_Offset*);
+int (*inq_file_info)(void*,MPI_Info*);
+int (*sync_numrecs)(void*);
 int (*begin_indep_data)(void*);
 int (*end_indep_data)(void*);
 
+/* APIs manipulate dimensions */
+/* APIs read/write variables */
+/* APIs read/write attributes */
+
 #ifdef NOT_YET
-int (*inq_format)(void*,int*);
-int (*inq_format_extended)(int,int*,int*);
-
-int (*inq_type)(int, nc_type, char*, size_t*);
-
 int (*def_dim)(int, const char*, size_t, int*);
 int (*inq_dimid)(int, const char*, int*);
 int (*inq_dim)(int, int, char*, size_t*);
