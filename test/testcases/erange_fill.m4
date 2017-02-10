@@ -168,8 +168,8 @@ define(`TEST_ERANGE_PUT',dnl
 `dnl
 static
 int test_erange_put_$1_$2(char* filename) {
-    int i, err, nerrs=0, ncid, dimid, omode, varid, cdf;
-    $1 buf[LEN];
+    int i, err, nerrs=0, ncid, dimid, omode, varid1, varid2, cdf;
+    $1 buf[LEN], fillv=99;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -177,7 +177,10 @@ int test_erange_put_$1_$2(char* filename) {
     err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); ERR
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); ERR
     err = ncmpi_def_dim(ncid, "X", LEN, &dimid); ERR
-    err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 1, &dimid, &varid); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_TYPE($1), 1, &dimid, &varid1); ERR
+    err = ncmpi_def_var(ncid, "var2", NC_TYPE($1), 1, &dimid, &varid2); ERR
+    /* use non-default fill value */
+    err = ncmpi_put_att(ncid, varid2, "_FillValue", NC_TYPE($1), 1, &fillv); ERR
     err = ncmpi_enddef(ncid); ERR
 
     err = ncmpi_inq_format(ncid, &cdf); ERR
@@ -185,7 +188,9 @@ int test_erange_put_$1_$2(char* filename) {
     /* put data with ERANGE values */
     $2 wbuf[LEN];
     for (i=0; i<LEN; i++) wbuf[i] = ($2) ifelse(index(`$1',`u'), 0, `-1', `XTYPE_MAX($2)');
-    err = PUT_VAR($2)(ncid, varid, wbuf);
+    err = PUT_VAR($2)(ncid, varid1, wbuf);
+    ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) ERR',`ERR_EXPECT(NC_ERANGE)')',`ERR_EXPECT(NC_ERANGE)')
+    err = PUT_VAR($2)(ncid, varid2, wbuf);
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) ERR',`ERR_EXPECT(NC_ERANGE)')',`ERR_EXPECT(NC_ERANGE)')
 
     err = ncmpi_close(ncid); ERR
@@ -193,10 +198,22 @@ int test_erange_put_$1_$2(char* filename) {
     /* reopen the file and check the contents of variable */
     omode = NC_NOWRITE;
     err = ncmpi_open(comm, filename, omode, info, &ncid); ERR
-    err = ncmpi_inq_varid(ncid, "var", &varid); ERR
-    err = GET_VAR($1)(ncid, varid, buf); ERR
+    err = ncmpi_inq_varid(ncid, "var1", &varid1); ERR
+    err = GET_VAR($1)(ncid, varid1, buf); ERR
     for (i=0; i<LEN; i++) {
         $1 expect = ($1)NC_FILL_VALUE($1);
+        ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf != NC_FORMAT_CDF5) expect = ($1)wbuf[i];')')
+        if (buf[i] != expect) {
+            printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
+                   __func__,__LINE__,i,expect,buf[i]);
+            nerrs++;
+        }
+    }
+    /* test non-default fill value */
+    err = ncmpi_inq_varid(ncid, "var2", &varid2); ERR
+    err = GET_VAR($1)(ncid, varid2, buf); ERR
+    for (i=0; i<LEN; i++) {
+        $1 expect = fillv;
         ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf != NC_FORMAT_CDF5) expect = ($1)wbuf[i];')')
         if (buf[i] != expect) {
             printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
