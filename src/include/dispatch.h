@@ -50,8 +50,6 @@ int (*inq_dimid)(void*,const char*,int*);
 int (*inq_dim)(void*,int,char*,MPI_Offset*);
 int (*rename_dim)(void*, int, const char*);
 
-/* APIs read/write variables */
-
 /* APIs read/write attributes */
 int (*inq_att)(void*,int,const char*,nc_type*,MPI_Offset*);
 int (*inq_attid)(void*,int,const char*,int*);
@@ -60,13 +58,16 @@ int (*copy_att)(void*,int,const char*,void*,int);
 int (*rename_att)(void*,int,const char*,const char*);
 int (*del_att)(void*,int,const char*);
 
+/* APIs read/write variables */
+int (*def_var)(void*,const char*,nc_type,int,const int*,int*);
+int (*inq_var)(void*,int,char*,nc_type*,int*,int*,int*,MPI_Offset*,int*,void*);
+int (*inq_varid)(void*,const char*,int*);
+int (*rename_var)(void*,int,const char*);
+
 #ifdef NOT_YET
 int (*get_att)(int, int, const char*, void*, nc_type);
 int (*put_att)(int, int, const char*, nc_type, size_t, const void*, nc_type);
 
-int (*def_var)(int, const char*, nc_type, int, const int*, int*);
-int (*inq_varid)(int, const char*, int*);
-int (*rename_var)(int, int, const char*);
 
 int (*get_vara)(int, int, const size_t*, const size_t*, void*, nc_type);
 int (*put_vara)(int, int, const size_t*, const size_t*, const void*, nc_type);

@@ -35,16 +35,23 @@ static PNC_Dispatch ncmpi_dispatcher = {
     ncmpii_sync_numrecs,
     ncmpii_begin_indep_data,
     ncmpii_end_indep_data,
+
     ncmpii_def_dim,
     ncmpii_inq_dimid,
     ncmpii_inq_dim,
     ncmpii_rename_dim,
+
     ncmpii_inq_att,
     ncmpii_inq_attid,
     ncmpii_inq_attname,
     ncmpii_copy_att,
     ncmpii_rename_att,
-    ncmpii_del_att
+    ncmpii_del_att,
+
+    ncmpii_def_var,
+    ncmpii_inq_var,
+    ncmpii_inq_varid,
+    ncmpii_rename_var
 };
 
 PNC_Dispatch* ncmpii_inq_dispatcher(void) {

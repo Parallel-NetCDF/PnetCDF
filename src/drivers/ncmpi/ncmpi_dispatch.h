@@ -106,5 +106,17 @@ ncmpii_rename_att(void *ncdp, int varid, const char *name, const char *newname);
 extern int
 ncmpii_del_att(void *ncdp, int varid, const char *name);
 
+extern int
+ncmpii_def_var(void *ncdp, const char *name, nc_type type, int ndims, const int *dimids, int *varidp);
+
+extern int
+ncmpii_inq_var(void *ncdp, int varid, char *name, nc_type *xtypep, int *ndimsp,
+               int *dimids, int *nattsp, MPI_Offset *offsetp, int *no_fill, void *fill_value);
+
+extern int
+ncmpii_inq_varid(void *ncdp, const char *name, int *varid);
+
+extern int
+ncmpii_rename_var(void *ncdp, int varid, const char *newname);
 
 #endif
