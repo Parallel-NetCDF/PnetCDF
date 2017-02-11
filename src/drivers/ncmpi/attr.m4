@@ -970,6 +970,7 @@ ncmpi_get_att_text(int         ncid,
 
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
+    /* must use xp, as ncmpix_pad_getn_text moves xp ahead */
     xp = attrp->xvalue;
     return ncmpix_pad_getn_text(&xp, attrp->nelems, (char*)buf);
 }

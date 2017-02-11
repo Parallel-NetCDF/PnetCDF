@@ -604,25 +604,19 @@ ncmpii_NC_lookupvar(NC      *ncp,
 }
 
 
-/* Public */
-
-/*----< ncmpi_def_var() >----------------------------------------------------*/
+/*----< ncmpii_def_var() >----------------------------------------------------*/
 int
-ncmpi_def_var(int         ncid,
-              const char *name,
-              nc_type     type,
-              int         ndims,
-              const int  *dimids,
-              int        *varidp)
+ncmpii_def_var(void       *ncdp,
+               const char *name,
+               nc_type     type,
+               int         ndims,
+               const int  *dimids,
+               int        *varidp)
 {
     int err;
     char *nname=NULL; /* normalized name */
-    NC *ncp=NULL;
+    NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
-
-    /* check if ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check if called in define mode */
     if (!NC_indef(ncp)) {
@@ -786,19 +780,16 @@ err_check:
 }
 
 
-/*----< ncmpi_inq_varid() >--------------------------------------------------*/
+/*----< ncmpii_inq_varid() >-------------------------------------------------*/
 /* This is an independent subroutine */
 int
-ncmpi_inq_varid(int         ncid,
-                const char *name,
-                int        *varid)
+ncmpii_inq_varid(void       *ncdp,
+                 const char *name,
+                 int        *varid)
 {
     int err;
     char *nname=NULL; /* normalized name */
-    NC *ncp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    NC *ncp=(NC*)ncdp;
 
     if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
         DEBUG_RETURN_ERROR(NC_EBADNAME)
@@ -814,28 +805,29 @@ ncmpi_inq_varid(int         ncid,
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_var() >----------------------------------------------------*/
+/*----< ncmpii_inq_var() >---------------------------------------------------*/
 /* This is an independent subroutine */
 int
-ncmpi_inq_var(int      ncid,
-              int      varid,
-              char    *name,
-              nc_type *typep,
-              int     *ndimsp,
-              int     *dimids,
-              int     *nattsp)
+ncmpii_inq_var(void       *ncdp,
+               int         varid,
+               char       *name,
+               nc_type    *xtypep,
+               int        *ndimsp,
+               int        *dimids,
+               int        *nattsp,
+               MPI_Offset *offsetp,
+               int        *no_fillp,    /* OUT: 1 not fill mode, 0 fill mode */
+               void       *fill_valuep) /* OUT: user-defined or default fill value */
 {
     int err;
-    NC *ncp=NULL;
+    NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
 
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* using NC_GLOBAL in varid is illegal for this API. See
+    /* using NC_GLOBAL in varid is illegal for this API, except inquiring natts. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
-     */
+     * Checking NC_GLOBAL has been done at the calling routines at top level.
     if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
+     */
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -844,10 +836,10 @@ ncmpi_inq_var(int      ncid,
         /* in PnetCDF, name->cp is always NULL character terminated */
         strcpy(name, varp->name->cp);
 
-    if (typep != 0)
-        *typep = varp->type;
+    if (xtypep != NULL)
+        *xtypep = varp->type;
 
-    if (ndimsp != 0) {
+    if (ndimsp != NULL) {
 #ifdef ENABLE_SUBFILING
         /* varp->num_subfiles is already set during open or enddef */
         if (varp->num_subfiles > 1)
@@ -856,7 +848,7 @@ ncmpi_inq_var(int      ncid,
 #endif
             *ndimsp = varp->ndims;
     }
-    if (dimids != 0) {
+    if (dimids != NULL) {
 #ifdef ENABLE_SUBFILING
         /* varp->dimids_org is already set during open or enddef */
         if (varp->num_subfiles > 1)
@@ -865,182 +857,37 @@ ncmpi_inq_var(int      ncid,
 #endif
             memcpy(dimids, varp->dimids, (size_t)varp->ndims * SIZEOF_INT);
     }
-    if (nattsp != 0)
-        *nattsp = (int) varp->attrs.ndefined;
-
-    return NC_NOERR;
-}
-
-
-/*----< ncmpi_inq_varname() >------------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_varname(int   ncid,
-                  int   varid,
-                  char *name)
-{
-    int err;
-    NC *ncp=NULL;
-    NC_var *varp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* using NC_GLOBAL in varid is illegal for this API. See
-     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
-     */
-    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
-
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
-
-    if (name != NULL)
-        /* in PnetCDF, name->cp is always NULL character terminated */
-        strcpy(name, varp->name->cp);
-
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_vartype() >------------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_vartype(int      ncid,
-                  int      varid,
-                  nc_type *typep)
-{
-    int err;
-    NC *ncp=NULL;
-    NC_var *varp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* using NC_GLOBAL in varid is illegal for this API. See
-     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
-     */
-    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
-
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
-
-    if (typep != NULL) *typep = varp->type;
-
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_varndims() >-----------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
-{
-    int err;
-    NC *ncp=NULL;
-    NC_var *varp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* using NC_GLOBAL in varid is illegal for this API. See
-     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
-     */
-    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
-
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
-
-    if (ndimsp != 0) {
-#ifdef ENABLE_SUBFILNIG
-        if (varp->num_subfiles > 1)
-            *ndimsp = varp->ndims_org;
-        else
-#endif
-            *ndimsp = varp->ndims;
-    }
-
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_vardimid() >-----------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
-{
-    int err;
-    NC *ncp=NULL;
-    NC_var *varp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* using NC_GLOBAL in varid is illegal for this API. See
-     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
-     */
-    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
-
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
-
-    if (dimids != 0) {
-#ifdef ENABLE_SUBFILING
-        if (varp->num_subfiles > 1)
-            memcpy(dimids, varp->dimids_org, (size_t)varp->ndims_org * SIZEOF_INT);
-        else
-#endif
-            memcpy(dimids, varp->dimids, (size_t)varp->ndims * SIZEOF_INT);
-    }
-
-    return NC_NOERR;
-}
-
-
-/*----< ncmpi_inq_varnatts() >------------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_varnatts(int  ncid,
-                   int  varid,
-                   int *nattsp)
-{
-    int err;
-    NC *ncp=NULL;
-    NC_var *varp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    if (varid == NC_GLOBAL) {
-        if (nattsp != NULL)
-            *nattsp = (int) ncp->attrs.ndefined;
-        return NC_NOERR;
-    }
-
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
-
     if (nattsp != NULL)
         *nattsp = (int) varp->attrs.ndefined;
 
+    if (offsetp != NULL) *offsetp = varp->begin;
+
+    if (no_fillp != NULL) *no_fillp = varp->no_fill;
+
+    if (fill_valuep != NULL) {
+        err = ncmpii_inq_var_fill(varp, fill_valuep);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    }
+
     return NC_NOERR;
 }
 
-/*----< ncmpi_rename_var() >--------------------------------------------------*/
+
+/*----< ncmpii_rename_var() >-------------------------------------------------*/
 /* This API is collective.
  * If the new name is longer than the old name, the netCDF file must be in
  * define mode. Otherwise, it can be called in either define or data mode.
  */
 int
-ncmpi_rename_var(int         ncid,
-                 int         varid,
-                 const char *newname)
+ncmpii_rename_var(void       *ncdp,
+                  int         varid,
+                  const char *newname)
 {
     int err;
     char *nnewname=NULL; /* normalized name */
-    NC *ncp=NULL;
+    NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
     NC_string *newStr=NULL;
-
-    /* check whether ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {
@@ -1159,36 +1006,6 @@ err_check:
     }
 
     return err;
-}
-
-/* some utility functions for debugging purpose */
-
-/*----< ncmpi_inq_varoffset() >-----------------------------------------------*/
-/* This is an independent subroutine */
-int
-ncmpi_inq_varoffset(int         ncid,
-                    int         varid,
-                    MPI_Offset *offset)
-{
-    int     err;
-    NC     *ncp=NULL;
-    NC_var *varp=NULL;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* using NC_GLOBAL in varid is illegal for this API. See
-     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
-     */
-    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
-
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
-
-    if (offset != NULL)
-        *offset = varp->begin;
-
-    return NC_NOERR;
 }
 
 #ifdef __DEBUG
