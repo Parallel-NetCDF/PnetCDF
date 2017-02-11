@@ -41,31 +41,11 @@ extern int
 ncmpii_inq(void *ncdp, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
 
 extern int
-ncmpii_inq_striping(void *ncdp, int *striping_size, int *striping_count);
-
-extern int
-ncmpii_inq_num_rec_vars(void *ncdp, int *num_rec_varsp);
-
-extern int
-ncmpii_inq_num_fix_vars(void *ncdp, int *num_fix_varsp);
-
-extern int
-ncmpii_inq_recsize(void *ncdp, MPI_Offset *recsize);
-
-extern int
-ncmpii_inq_put_size(void *ncdp, MPI_Offset *size);
-
-extern int
-ncmpii_inq_get_size(void *ncdp, MPI_Offset *size);
-
-extern int
-ncmpii_inq_header_size(void *ncdp, MPI_Offset *size);
-
-extern int
-ncmpii_inq_header_extent(void *ncdp, MPI_Offset *extent);
-
-extern int
-ncmpii_inq_file_info(void *ncdp, MPI_Info *info);
+ncmpii_inq_misc(void *ncdp, int *pathlen, char *path, int *num_fix_varsp,
+                int *num_rec_varsp, int *striping_size, int *striping_count,
+                MPI_Offset *header_size, MPI_Offset *header_extent,
+                MPI_Offset *recsize, MPI_Offset *put_size, MPI_Offset *get_size,
+                MPI_Info *info_used);
 
 extern int
 ncmpii_sync_numrecs(void *ncdp);

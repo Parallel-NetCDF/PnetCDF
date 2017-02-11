@@ -630,48 +630,6 @@ ncmpii_open(MPI_Comm    comm,
     return status;
 }
 
-/*----< ncmpii_inq_file_info() >----------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpii_inq_file_info(void     *ncdp,
-                     MPI_Info *info_used)
-{
-    int mpireturn;
-    char value[MPI_MAX_INFO_VAL];
-    NC *ncp=(NC*)ncdp;
-
-#ifdef HAVE_MPI_INFO_DUP
-    mpireturn = MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_Info_dup");
-#else
-    mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_File_get_info");
-#endif
-
-    sprintf(value, "%lld", ncp->nciop->hints.h_align);
-    MPI_Info_set(*info_used, "nc_header_align_size", value);
-
-    sprintf(value, "%lld", ncp->nciop->hints.v_align);
-    MPI_Info_set(*info_used, "nc_var_align_size", value);
-
-    sprintf(value, "%lld", ncp->nciop->hints.r_align);
-    MPI_Info_set(*info_used, "nc_record_align_size", value);
-
-    sprintf(value, "%lld", ncp->nciop->hints.header_read_chunk_size);
-    MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
-
-#ifdef ENABLE_SUBFILING
-    sprintf(value, "%d", ncp->nciop->hints.subfile_mode);
-    MPI_Info_set(*info_used, "pnetcdf_subfiling", value);
-    sprintf(value, "%d", ncp->nciop->hints.num_subfiles);
-    MPI_Info_set(*info_used, "nc_num_subfiles", value);
-#endif
-
-    return NC_NOERR;
-}
-
 /*----< ncmpii_redef() >-----------------------------------------------------*/
 /* This is a collective subroutine. */
 int
@@ -1062,46 +1020,67 @@ ncmpii_check_mpifh(NC  *ncp,
     return NC_NOERR;
 }
 
-/*----< ncmpii_inq_put_size() >-----------------------------------------------*/
+/*----< ncmpii_inq_misc() >--------------------------------------------------*/
 /* This is an independent subroutine. */
-/* returns the amount of writes, in bytes, committed to file system so far */
 int
-ncmpii_inq_put_size(void       *ncdp,
-                    MPI_Offset *size)
+ncmpii_inq_misc(void       *ncdp,
+                int        *pathlen,
+                char       *path,
+                int        *num_fix_varsp,
+                int        *num_rec_varsp,
+                int        *striping_size,
+                int        *striping_count,
+                MPI_Offset *header_size,
+                MPI_Offset *header_extent,
+                MPI_Offset *recsize,
+                MPI_Offset *put_size,
+                MPI_Offset *get_size,
+                MPI_Info   *info_used)
 {
-    NC *ncp=(NC*)ncdp;
-
-    if (size != NULL) *size = ncp->nciop->put_size;
-    return NC_NOERR;
-}
-
-/*----< ncmpii_inq_get_size() >-----------------------------------------------*/
-/* This is an independent subroutine. */
-/* returns the amount of reads, in bytes, obtained from file system so far */
-int
-ncmpii_inq_get_size(void       *ncdp,
-                    MPI_Offset *size)
-{
-    NC *ncp=(NC*)ncdp;
-
-    if (size != NULL) *size = ncp->nciop->get_size;
-    return NC_NOERR;
-}
-
-/*----< ncmpii_inq_striping() >-----------------------------------------------*/
-/* This is an independent subroutine.
- * return file (system) striping settings, striping size and count, if they are
- * available from MPI-IO hint. Otherwise, 0s are returned.
- */
-int
-ncmpii_inq_striping(void *ncdp,
-                    int  *striping_size,
-                    int  *striping_count)
-{
-    int flag;
+    int i, flag, mpireturn;
     char value[MPI_MAX_INFO_VAL];
-    NC *ncp = (NC*)ncdp;
+    NC *ncp=(NC*)ncdp;
 
+    /* Get the file pathname which was used to open/create the ncid's file.
+     * path must already be allocated. Ignored if NULL */
+    if (ncp->nciop->path == NULL) {
+        if (pathlen != NULL) *pathlen = 0;
+        if (path    != NULL) *path = '\0';
+    } else {
+        if (pathlen != NULL) *pathlen = (int)strlen(ncp->nciop->path);
+        if (path    != NULL) strcpy(path, ncp->nciop->path);
+    }
+
+    /* obtain the number of fixed-size variables */
+    if (num_fix_varsp != NULL) {
+        if (NC_indef(ncp)) {
+            /* if in define mode, recalculate the number of record variables */
+            *num_fix_varsp = 0;
+            for (i=0; i<ncp->vars.ndefined; i++)
+                *num_fix_varsp += IS_RECVAR(ncp->vars.value[i]);
+        }
+        else
+            *num_fix_varsp = ncp->vars.num_rec_vars;
+
+        /* no. fixed-size == ndefined - no. record variables */
+        *num_fix_varsp = ncp->vars.ndefined - *num_fix_varsp;
+    }
+
+    /* obtain the number of record variables */
+    if (num_rec_varsp != NULL) {
+        if (NC_indef(ncp)) {
+            /* if in define mode, recalculate the number of record variables */
+            *num_rec_varsp = 0;
+            for (i=0; i<ncp->vars.ndefined; i++)
+                *num_rec_varsp += IS_RECVAR(ncp->vars.value[i]);
+        }
+        else
+            *num_rec_varsp = ncp->vars.num_rec_vars;
+    }
+
+    /* obtain file (system) striping settings, striping size and count, if they
+     * are available from MPI-IO hint. Otherwise, 0s are returned.
+     */
     if (striping_size != NULL) {
         MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
                      value, &flag);
@@ -1115,6 +1094,50 @@ ncmpii_inq_striping(void *ncdp,
         *striping_count = 0;
         if (flag) *striping_count = (int)strtol(value,NULL,10);
     }
+
+    /* the amount of writes, in bytes, committed to file system so far */
+    if (put_size != NULL) *put_size = ncp->nciop->put_size;
+
+    /* the amount of reads, in bytes, obtained from file system so far */
+    if (get_size != NULL) *get_size = ncp->nciop->get_size;
+
+    if (recsize != NULL) *recsize = ncp->recsize;
+
+    if (header_size != NULL) *header_size = ncp->xsz;
+
+    if (header_extent != NULL) *header_extent = ncp->begin_var;
+
+    if (info_used != NULL) {
+#ifdef HAVE_MPI_INFO_DUP
+        mpireturn = MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Info_dup");
+#else
+        mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_File_get_info");
+#endif
+
+        sprintf(value, "%lld", ncp->nciop->hints.h_align);
+        MPI_Info_set(*info_used, "nc_header_align_size", value);
+
+        sprintf(value, "%lld", ncp->nciop->hints.v_align);
+        MPI_Info_set(*info_used, "nc_var_align_size", value);
+
+        sprintf(value, "%lld", ncp->nciop->hints.r_align);
+        MPI_Info_set(*info_used, "nc_record_align_size", value);
+
+        sprintf(value, "%lld", ncp->nciop->hints.header_read_chunk_size);
+        MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
+
+#ifdef ENABLE_SUBFILING
+        sprintf(value, "%d", ncp->nciop->hints.subfile_mode);
+        MPI_Info_set(*info_used, "pnetcdf_subfiling", value);
+        sprintf(value, "%d", ncp->nciop->hints.num_subfiles);
+        MPI_Info_set(*info_used, "nc_num_subfiles", value);
+#endif
+    }
+
     return NC_NOERR;
 }
 
@@ -1155,67 +1178,5 @@ int ncmpi_inq_malloc_list(void)
 #else
     DEBUG_RETURN_ERROR(NC_ENOTENABLED)
 #endif
-}
-
-/*----< ncmpii_inq_recsize() >-----------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpii_inq_recsize(void      *ncdp,
-                  MPI_Offset *recsize)
-{
-    NC *ncp = (NC*)ncdp;
-
-    if (recsize != NULL) *recsize = ncp->recsize;
-    return NC_NOERR;
-}
-
-/*----< ncmpii_inq_header_size() >--------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpii_inq_header_size(void       *ncdp,
-                       MPI_Offset *size)
-{
-    NC *ncp=(NC*)ncdp;
-
-    if (size != NULL) *size = ncp->xsz;
-    return NC_NOERR;
-}
-
-/*----< ncmpii_inq_header_extent() >------------------------------------------*/
-/* This is an independent subroutine. */
-int
-ncmpii_inq_header_extent(void       *ncdp,
-                         MPI_Offset *extent)
-{
-    NC *ncp=(NC*)ncdp;
-
-    if (extent != NULL) *extent = ncp->begin_var;
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_path() >----------------------------------------------------*/
-/* Get the file pathname which was used to open/create the ncid's file.
- * This is an independent subroutine.
- */
-int
-ncmpi_inq_path(int   ncid,
-               int  *pathlen,/* Ignored if NULL */
-               char *path)   /*  must already be allocated. Ignored if NULL */
-{        
-    int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    if (ncp->nciop->path == NULL) {
-        if (pathlen != NULL) *pathlen = 0;
-        if (path    != NULL) *path = '\0';
-    } else {
-        if (pathlen != NULL) *pathlen = (int)strlen(ncp->nciop->path);
-        if (path    != NULL) strcpy(path, ncp->nciop->path);
-    }
-
-    return NC_NOERR;
 }
 
