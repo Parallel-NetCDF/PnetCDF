@@ -158,16 +158,6 @@ dnl
 
 /* End ncmpix_len */
 
-#if defined(__CHAR_UNSIGNED__) && __CHAR_UNSIGNED__ != 0
-	/* 'char' is unsigned, declare ncbyte as 'signed char' */
-typedef signed char schar;
-
-#else
-	/* 'char' is signed */
-typedef signed char schar;
-
-#endif	/* __CHAR_UNSIGNED__ */
-
 /*
  * Primitive numeric conversion functions.
  * The ``put'' functions convert from native internal

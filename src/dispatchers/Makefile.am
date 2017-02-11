@@ -6,11 +6,33 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .c .h
+SUFFIXES = .o .c .h .m4
 
 noinst_LTLIBRARIES = libdispatchers.la
 
-libdispatchers_la_SOURCES = file.c dimension.c attribute.c variable.c error_codes.c
+M4FLAGS += -I${top_srcdir}/m4
+
+M4_SRCS  = attribute.m4
+
+C_SRCS = file.c \
+         dimension.c \
+         error_codes.c \
+         variable.c
+
+libdispatchers_la_SOURCES = $(C_SRCS)
+
+nodist_libdispatchers_la_SOURCES = $(M4_SRCS:.m4=.c)
+
+BUILT_SOURCES = $(M4_SRCS:.m4=.c)
+
+CLEANFILES = $(M4_SRCS:.m4=.c)
+
+EXTRA_DIST = $(M4_SRCS)
+
+$(M4_SRCS:.m4=.c): Makefile
+
+.m4.c:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

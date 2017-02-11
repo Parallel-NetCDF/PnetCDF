@@ -10,6 +10,7 @@
 #include <pnetcdf.h>
 
 /*----< ncmpi_def_var() >----------------------------------------------------*/
+/* this API is collective, and must be called in define mode */
 int
 ncmpi_def_var(int         ncid,    /* IN:  file ID */
               const char *name,    /* IN:  name of variable */
@@ -27,6 +28,28 @@ ncmpi_def_var(int         ncid,    /* IN:  file ID */
 
     /* calling the subroutine that implements ncmpi_def_var() */
     err = pncp->dispatch->def_var(pncp->ncp, name, type, ndims, dimids, varidp);
+    if (err != NC_NOERR) return err;
+
+    return NC_NOERR;
+}
+
+/*----< ncmpi_def_var_fill() >-----------------------------------------------*/
+/* this API is collective, and must be called in define mode */
+int
+ncmpi_def_var_fill(int         ncid,    /* IN:  file ID */
+                   int         varid,
+                   int         nofill,
+                   const void *fill_value)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_def_var_fill() */
+    err = pncp->dispatch->def_var_fill(pncp->ncp, varid, nofill, fill_value);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

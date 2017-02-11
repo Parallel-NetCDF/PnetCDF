@@ -930,7 +930,7 @@ AC_SUBST(INTENTV)
 
 AC_TYPE_SIZE_T
 AC_TYPE_OFF_T
-AC_CHECK_TYPES([ssize_t, ptrdiff_t, uchar, ushort, uint, longlong, ulonglong, int64, uint64])
+AC_CHECK_TYPES([ssize_t, ptrdiff_t, schar, uchar, ushort, uint, longlong, ulonglong, int64, uint64])
 
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)

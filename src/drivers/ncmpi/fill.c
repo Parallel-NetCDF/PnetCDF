@@ -368,21 +368,17 @@ err_check:
     return NC_NOERR;
 }
 
-/*----< ncmpi_def_var_fill() >------------------------------------------------*/
+/*----< ncmpii_def_var_fill() >-----------------------------------------------*/
 /* this API is collective, and must be called in define mode */
 int
-ncmpi_def_var_fill(int   ncid,
-                   int   varid,
-                   int   no_fill,    /* 1: no fill, 0: fill */
-                   void *fill_value) /* when NULL, use default fill value */
+ncmpii_def_var_fill(void       *ncdp,
+                    int         varid,
+                    int         no_fill,    /* 1: no fill, 0: fill */
+                    const void *fill_value) /* when NULL, use default fill value */
 {
     int err;
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
-
-    /* check whether ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check whether file's write permission */
     if (NC_readonly(ncp)) {
@@ -453,12 +449,12 @@ err_check:
     if (fill_value != NULL && !varp->no_fill) {
 
         /* If there's a _FillValue attribute, delete it. */
-        err = ncmpi_del_att(ncid, varid, _FillValue);
+        err = ncmpii_del_att(ncdp, varid, _FillValue);
         if (err != NC_NOERR && err != NC_ENOTATT)
             return err;
 
         /* Create a _FillValue attribute. */
-        err = ncmpi_put_att(ncid, varid, _FillValue, varp->type, 1, fill_value);
+        err = ncmpii_put_att(ncdp, varid, _FillValue, varp->type, 1, fill_value);
         if (err != NC_NOERR) return err;
     }
 
