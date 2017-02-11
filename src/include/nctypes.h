@@ -15,6 +15,10 @@ typedef int ptrdiff_t;
 typedef int ssize_t;
 #endif
 
+#ifndef HAVE_SCHAR
+typedef signed char schar;
+#endif
+
 #ifndef HAVE_UCHAR
 typedef unsigned char uchar;
 #endif

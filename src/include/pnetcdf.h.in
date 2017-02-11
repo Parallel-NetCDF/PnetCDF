@@ -684,7 +684,7 @@ extern int
 ncmpi_set_fill(int ncid, int fillmode, int *old_modep);
 
 extern int
-ncmpi_def_var_fill(int ncid, int varid, int no_fill, void *fill_value);
+ncmpi_def_var_fill(int ncid, int varid, int no_fill, const void *fill_value);
 
 extern int
 ncmpi_fill_var_rec(int ncid, int varid, MPI_Offset recno);
