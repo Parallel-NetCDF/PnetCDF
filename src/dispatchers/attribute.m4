@@ -197,15 +197,15 @@ ncmpi_get_att_$1(int             ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_get_att_$1() */
-    err = pncp->dispatch->get_att_$1(pncp->ncp, varid, name, buf);
+    err = pncp->dispatch->get_att(pncp->ncp, varid, name, buf, NC_TYPE($1));
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
 }
 ')dnl
 
-foreach(`itype', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
-        `GET_ATT(itype)
+foreach(`iType', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+        `GET_ATT(iType)
 ')
 
 /*----< ncmpi_get_att() >----------------------------------------------------*/
@@ -225,7 +225,7 @@ ncmpi_get_att(int         ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_get_att() */
-    err = pncp->dispatch->get_att(pncp->ncp, varid, name, buf);
+    err = pncp->dispatch->get_att(pncp->ncp, varid, name, buf, NC_NAT);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -257,27 +257,31 @@ ncmpi_put_att_$1(int         ncid,
 {
     int err;
     PNC *pncp;
+    nc_type itype=NC_TYPE($1);
 
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_put_att_$1() */
-    err = pncp->dispatch->put_att_$1(pncp->ncp, varid, name, nelems,
-                                     ifelse(`$1',`text',,`xtype,') buf);
+    err = pncp->dispatch->put_att(pncp->ncp, varid, name,
+                                  ifelse(`$1',`text',`NC_CHAR,',`xtype,')
+                                  nelems, buf, itype);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
 }
 ')dnl
 
-foreach(`itype', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
-        `PUT_ATT(itype)
+foreach(`iType', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+        `PUT_ATT(iType)
 ')
 
 /*----< ncmpi_put_att() >----------------------------------------------------*/
-/* This is an independent subroutine */
-/* user buffer data type matches the external type defined in file */
+/* This is a collective subroutine, all arguments should be consistent among
+ * all processes. This API is for when the user buffer data type matches the
+ * external type defined in file.
+ */
 int
 ncmpi_put_att(int         ncid,
               int         varid,
@@ -294,7 +298,7 @@ ncmpi_put_att(int         ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_put_att() */
-    err = pncp->dispatch->put_att(pncp->ncp, varid, name, xtype, nelems, buf);
+    err = pncp->dispatch->put_att(pncp->ncp, varid, name, xtype, nelems, buf, xtype);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

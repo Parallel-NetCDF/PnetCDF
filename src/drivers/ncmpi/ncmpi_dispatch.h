@@ -87,103 +87,10 @@ extern int
 ncmpii_del_att(void *ncdp, int varid, const char *name);
 
 extern int
-ncmpii_get_att(void *ncdp, int varid, const char *name, void *value);
+ncmpii_get_att(void *ncdp, int varid, const char *name, void *value, nc_type itype);
 
 extern int
-ncmpii_get_att_text(void *ncdp, int varid, const char *name, char *ip);
-
-extern int
-ncmpii_get_att_schar(void *ncdp, int varid, const char *name, signed char *ip);
-
-extern int
-ncmpii_get_att_short(void *ncdp, int varid, const char *name, short *ip);
-
-extern int
-ncmpii_get_att_int(void *ncdp, int varid, const char *name, int *ip);
-
-extern int
-ncmpii_get_att_float(void *ncdp, int varid, const char *name, float *ip);
-
-extern int
-ncmpii_get_att_double(void *ncdp, int varid, const char *name, double *ip);
-
-extern int
-ncmpii_get_att_longlong(void *ncdp, int varid, const char *name, long long *ip);
-
-extern int
-ncmpii_get_att_uchar(void *ncdp, int varid, const char *name, unsigned char *ip);
-
-extern int
-ncmpii_get_att_ubyte(void *ncdp, int varid, const char *name, unsigned char *ip);
-
-extern int
-ncmpii_get_att_ushort(void *ncdp, int varid, const char *name, unsigned short *ip);
-
-extern int
-ncmpii_get_att_uint(void *ncdp, int varid, const char *name, unsigned int *ip);
-
-extern int
-ncmpii_get_att_long(void *ncdp, int varid, const char *name, long *ip);
-
-extern int
-ncmpii_get_att_ulonglong(void *ncdp, int varid, const char *name,
-              unsigned long long *ip);
-
-extern int
-ncmpii_put_att(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset nelems, const void *value);
-
-extern int
-ncmpii_put_att_text(void *ncdp, int varid, const char *name, MPI_Offset len,
-              const char *op);
-
-extern int
-ncmpii_put_att_schar(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const signed char *op);
-
-extern int
-ncmpii_put_att_short(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const short *op);
-
-extern int
-ncmpii_put_att_int(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const int *op);
-
-extern int
-ncmpii_put_att_float(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const float *op);
-
-extern int
-ncmpii_put_att_double(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const double *op);
-
-extern int
-ncmpii_put_att_longlong(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const long long *op);
-
-extern int
-ncmpii_put_att_uchar(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const unsigned char *op);
-
-extern int
-ncmpii_put_att_ubyte(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const unsigned char *op);
-
-extern int
-ncmpii_put_att_ushort(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const unsigned short *op);
-
-extern int
-ncmpii_put_att_uint(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const unsigned int *op);
-
-extern int
-ncmpii_put_att_long(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const long *op);
-
-extern int
-ncmpii_put_att_ulonglong(void *ncdp, int varid, const char *name, nc_type xtype,
-              MPI_Offset len, const unsigned long long *op);
+ncmpii_put_att(void *ncdp, int varid, const char *name, nc_type xtype, MPI_Offset nelems, const void *value, nc_type itype);
 
 extern int
 ncmpii_def_var(void *ncdp, const char *name, nc_type type, int ndims, const int *dimids, int *varidp);
