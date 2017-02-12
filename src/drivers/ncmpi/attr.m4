@@ -899,7 +899,7 @@ include(`utils.m4')dnl
  * Note this API will never return NC_ERANGE error, as text is not convertible
  * to numerical types.
  */
-int
+static int
 ncmpii_get_att_text(void       *ncdp,
                     int         varid,
                     const char *name,
@@ -946,7 +946,7 @@ define(`GET_ATT',dnl
 `dnl
 /*----< ncmpii_get_att_$1() >------------------------------------------------*/
 /* This is an independent subroutine */
-int
+static int
 ncmpii_get_att_$1(void           *ncdp,
                   int             varid,
                   const char     *name,
@@ -1024,8 +1024,8 @@ ncmpii_get_att_$1(void           *ncdp,
 }
 ')dnl
 
-foreach(`itype', (schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
-        `GET_ATT(itype)
+foreach(`iType', (schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+        `GET_ATT(iType)
 ')
 
 /*----< ncmpii_get_att() >----------------------------------------------------*/
@@ -1035,27 +1035,31 @@ int
 ncmpii_get_att(void       *ncdp,
                int         varid,
                const char *name,
-               void       *buf)
+               void       *buf,
+               nc_type     itype)
 {
     int err;
-    nc_type xtype;  /* external NC data type */
 
-    /* obtain variable external data type */
-    err = ncmpii_inq_att(ncdp, varid, name, &xtype, NULL);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    if (itype == NC_NAT) {
+        /* this is for the API ncmpi_get_att() where the internal and external
+         * data types match (inquire attribute's external data type)
+         */
+        err = ncmpii_inq_att(ncdp, varid, name, &itype, NULL);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    }
 
-    switch(xtype) {
-        case NC_CHAR:   return ncmpii_get_att_text     (ncdp, varid, name, buf);
-        case NC_BYTE:   return ncmpii_get_att_schar    (ncdp, varid, name, buf);
-        case NC_UBYTE:  return ncmpii_get_att_uchar    (ncdp, varid, name, buf);
-        case NC_SHORT:  return ncmpii_get_att_short    (ncdp, varid, name, buf);
-        case NC_USHORT: return ncmpii_get_att_ushort   (ncdp, varid, name, buf);
-        case NC_INT:    return ncmpii_get_att_int      (ncdp, varid, name, buf);
-        case NC_UINT:   return ncmpii_get_att_uint     (ncdp, varid, name, buf);
-        case NC_FLOAT:  return ncmpii_get_att_float    (ncdp, varid, name, buf);
-        case NC_DOUBLE: return ncmpii_get_att_double   (ncdp, varid, name, buf);
-        case NC_INT64:  return ncmpii_get_att_longlong (ncdp, varid, name, buf);
-        case NC_UINT64: return ncmpii_get_att_ulonglong(ncdp, varid, name, buf);
+    switch(itype) {
+        case NC_CHAR:   return ncmpii_get_att_text     (ncdp, varid, name, (char*)buf);
+        case NC_BYTE:   return ncmpii_get_att_schar    (ncdp, varid, name, (signed char*)buf);
+        case NC_UBYTE:  return ncmpii_get_att_uchar    (ncdp, varid, name, (unsigned char*)buf);
+        case NC_SHORT:  return ncmpii_get_att_short    (ncdp, varid, name, (short*)buf);
+        case NC_USHORT: return ncmpii_get_att_ushort   (ncdp, varid, name, (unsigned short*)buf);
+        case NC_INT:    return ncmpii_get_att_int      (ncdp, varid, name, (int*)buf);
+        case NC_UINT:   return ncmpii_get_att_uint     (ncdp, varid, name, (unsigned int*)buf);
+        case NC_FLOAT:  return ncmpii_get_att_float    (ncdp, varid, name, (float*)buf);
+        case NC_DOUBLE: return ncmpii_get_att_double   (ncdp, varid, name, (double*)buf);
+        case NC_INT64:  return ncmpii_get_att_longlong (ncdp, varid, name, (long long*)buf);
+        case NC_UINT64: return ncmpii_get_att_ulonglong(ncdp, varid, name, (unsigned long long*)buf);
         default: return NC_EBADTYPE;
     }
 }
@@ -1103,8 +1107,8 @@ ncmpix_putn_$1(void       **xpp,    /* buffer to be written to file */
 }
 ')dnl
 
-foreach(`itype', (schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
-        `PUTN_ITYPE(itype)
+foreach(`iType', (schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+        `PUTN_ITYPE(iType)
 ')
 
 
@@ -1142,7 +1146,7 @@ define(`PUT_ATT',dnl
  * Note ncmpii_put_att_text will never return NC_ERANGE error, as text is not
  * convertible to numerical types.
  */
-int
+static int
 ncmpii_put_att_$1(void       *ncdp,
                   int         varid,
                   const char *name,     /* attribute name */
@@ -1455,26 +1459,24 @@ err_check:
 }
 ')dnl
 
-foreach(`itype', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
-        `PUT_ATT(itype)
+foreach(`iType', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+        `PUT_ATT(iType)
 ')
 
 /*----< ncmpii_put_att() >---------------------------------------------------*/
 /* This is a collective subroutine, all arguments should be consistent among
  * all processes.
- *
- * This API assumes user buffer data type matches the external type defined
- * in file
  */
 int
 ncmpii_put_att(void       *ncdp,
                int         varid,
                const char *name,
-               nc_type     xtype,
+               nc_type     xtype,  /* external (file/NC) data type */
                MPI_Offset  nelems,
-               const void *buf)
+               const void *buf,
+               nc_type     itype)  /* interanl (memory) data type */
 {
-    switch(xtype) {
+    switch(itype) {
         case NC_CHAR:   return ncmpii_put_att_text     (ncdp, varid, name,        nelems, buf);
         case NC_BYTE:   return ncmpii_put_att_schar    (ncdp, varid, name, xtype, nelems, buf);
         case NC_UBYTE:  return ncmpii_put_att_uchar    (ncdp, varid, name, xtype, nelems, buf);

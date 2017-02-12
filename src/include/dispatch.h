@@ -49,32 +49,8 @@ int (*inq_attname)(void*,int,int,char*);
 int (*copy_att)(void*,int,const char*,void*,int);
 int (*rename_att)(void*,int,const char*,const char*);
 int (*del_att)(void*,int,const char*);
-int (*get_att)(void*,int,const char*,void*);
-int (*get_att_text)(void*,int,const char*,char*);
-int (*get_att_schar)(void*,int,const char*,signed char*);
-int (*get_att_uchar)(void*,int,const char*,unsigned char*);
-int (*get_att_short)(void*,int,const char*,short*);
-int (*get_att_ushort)(void*,int,const char*,unsigned short*);
-int (*get_att_int)(void*,int,const char*,int*);
-int (*get_att_uint)(void*,int,const char*,unsigned int*);
-int (*get_att_long)(void*,int,const char*,long*);
-int (*get_att_float)(void*,int,const char*,float*);
-int (*get_att_double)(void*,int,const char*,double*);
-int (*get_att_longlong)(void*,int,const char*,long long*);
-int (*get_att_ulonglong)(void*,int,const char*,unsigned long long*);
-int (*put_att)(void*,int,const char*,nc_type,MPI_Offset,const void*);
-int (*put_att_text)(void*,int,const char*,MPI_Offset,const char*);
-int (*put_att_schar)(void*,int,const char*,nc_type,MPI_Offset,const signed char*);
-int (*put_att_uchar)(void*,int,const char*,nc_type,MPI_Offset,const unsigned char*);
-int (*put_att_short)(void*,int,const char*,nc_type,MPI_Offset,const short*);
-int (*put_att_ushort)(void*,int,const char*,nc_type,MPI_Offset,const unsigned short*);
-int (*put_att_int)(void*,int,const char*,nc_type,MPI_Offset,const int*);
-int (*put_att_uint)(void*,int,const char*,nc_type,MPI_Offset,const unsigned int*);
-int (*put_att_long)(void*,int,const char*,nc_type,MPI_Offset,const long*);
-int (*put_att_float)(void*,int,const char*,nc_type,MPI_Offset,const float*);
-int (*put_att_double)(void*,int,const char*,nc_type,MPI_Offset,const  double*);
-int (*put_att_longlong)(void*,int,const char*,nc_type,MPI_Offset,const long long*);
-int (*put_att_ulonglong)(void*,int,const char*,nc_type,MPI_Offset,const unsigned long long*);
+int (*get_att)(void*,int,const char*,void*,nc_type);
+int (*put_att)(void*,int,const char*,nc_type,MPI_Offset,const void*,nc_type);
 
 /* APIs read/write variables */
 int (*def_var)(void*,const char*,nc_type,int,const int*,int*);
@@ -84,8 +60,6 @@ int (*inq_varid)(void*,const char*,int*);
 int (*rename_var)(void*,int,const char*);
 
 #ifdef NOT_YET
-int (*get_att)(int, int, const char*, void*, nc_type);
-int (*put_att)(int, int, const char*, nc_type, size_t, const void*, nc_type);
 
 
 int (*get_vara)(int, int, const size_t*, const size_t*, void*, nc_type);

@@ -454,7 +454,8 @@ err_check:
             return err;
 
         /* Create a _FillValue attribute. */
-        err = ncmpii_put_att(ncdp, varid, _FillValue, varp->type, 1, fill_value);
+        err = ncmpii_put_att(ncdp, varid, _FillValue, varp->type,
+                             1, fill_value, varp->type);
         if (err != NC_NOERR) return err;
     }
 
