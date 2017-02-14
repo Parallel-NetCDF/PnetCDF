@@ -27,18 +27,14 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
-/*----< ncmpi_buffer_attach() >-----------------------------------------------*/
+/*----< ncmpii_buffer_attach() >----------------------------------------------*/
 int
-ncmpi_buffer_attach(int        ncid,
-                    MPI_Offset bufsize)
+ncmpii_buffer_attach(void       *ncdp,
+                     MPI_Offset  bufsize)
 {
-    int err;
-    NC *ncp;
+    NC *ncp=(NC*)ncdp;
 
     if (bufsize <= 0) DEBUG_RETURN_ERROR(NC_ENULLBUF)
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check if the buffer has been previously attached
      * note that in nc.c, the NC object is allocated with calloc, so
@@ -58,15 +54,12 @@ ncmpi_buffer_attach(int        ncid,
     return NC_NOERR;
 }
 
-/*----< ncmpi_buffer_detach() >-----------------------------------------------*/
+/*----< ncmpii_buffer_detach() >----------------------------------------------*/
 int
-ncmpi_buffer_detach(int ncid)
+ncmpii_buffer_detach(void *ncdp)
 {
-    int  i, err;
-    NC  *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    int  i;
+    NC  *ncp=(NC*)ncdp;
 
     /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
@@ -87,21 +80,18 @@ ncmpi_buffer_detach(int ncid)
 }
 
 #ifdef THIS_SEEMS_OVER_DONE_IT
-/*----< ncmpi_buffer_detach() >-----------------------------------------------*/
+/*----< ncmpii_buffer_detach() >----------------------------------------------*/
 /* mimic MPI_Buffer_detach()
  * Note from MPI: Even though the 'bufferptr' argument is declared as
  * 'void *', it is really the address of a void pointer.
  */
 int
-ncmpi_buffer_detach(int         ncid,
-                    void       *bufptr,
-                    MPI_Offset *bufsize)
+ncmpii_buffer_detach(void       *ncdp,
+                     void       *bufptr,
+                     MPI_Offset *bufsize)
 {
-    int  i, err;
-    NC  *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    int  i;
+    NC  *ncp=(NC*)ncdp;
 
     /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)

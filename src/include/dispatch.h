@@ -90,6 +90,8 @@ int (*iget_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,void*,MPI_O
 int (*iput_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,const void*,MPI_Offset,MPI_Datatype,int*,nc_type);
 int (*bput_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,const void*,MPI_Offset,MPI_Datatype,int*,nc_type);
 
+int (*buffer_attach)(void*,MPI_Offset);
+int (*buffer_detach)(void*);
 int (*wait)(void*,int,int*,int*,int);
 int (*cancel)(void*,int,int*,int*);
 

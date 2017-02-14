@@ -948,22 +948,6 @@ ncmpii_abort(void *ncdp)
     return status;
 }
 
-/*----< ncmpi_close() >------------------------------------------------------*/
-/* This is a collective subroutine. */
-#if 0
-int
-ncmpi_close(int ncid) {
-    int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* calling the implementation of ncmpi_close() */
-    return ncmpii_close(ncp);
-}
-#endif
-
 /*----< ncmpi_delete() >-----------------------------------------------------*/
 /* doesn't do anything to release resources, so call ncmpi_close before calling
  * this function.
