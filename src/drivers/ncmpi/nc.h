@@ -13,6 +13,7 @@
 #include <stddef.h>     /* size_t */
 #include <sys/types.h>  /* off_t */
 
+#include "dispatch.h"
 #include "ncmpi_dispatch.h"
 #include "ncio.h"       /* ncio */
 #include "fbits.h"
@@ -33,22 +34,8 @@
     #endif
 #endif
 
-enum API_KIND {
-    API_VARD, /* do not check start and count, no flexible APIs */
-    API_VARN, /* do not check start and count */
-    API_VAR,  /* do not check start and count */
-    API_VAR1, /* check start */
-    API_VARA, /* check start and count */
-    API_VARS, /* check start and count */
-    API_VARM  /* check start and count */
-};
-
 #define WRITE_REQ 0
 #define READ_REQ  1
-
-#define INDEP_IO 0
-#define COLL_IO  1
-#define NONBLOCKING_IO  -1
 
 /* C macros for TRACE MPI calls */
 #ifdef PNETCDF_TRACE_MPI_COMM
@@ -753,11 +740,8 @@ ncmpii_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 int isSameGroup);
 
 extern int
-ncmpii_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
+ncmpiio_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
                 int *statuses);
-
-extern int
-ncmpii_cancel(NC *ncp, int num_req, int *req_ids, int *statuses);
 
 extern int
 ncmpii_inq_malloc_size(MPI_Offset *size);
@@ -820,11 +804,11 @@ extern int
 ncmpii_fill_vars(NC *ncp);
 
 extern int
-ncmpii_sanity_check(int ncid, int varid, const MPI_Offset *start,
+ncmpii_sanity_check(NC *ncp, int varid, const MPI_Offset *start,
                     const MPI_Offset *count, const MPI_Offset *stride,
                     MPI_Offset bufcount, MPI_Datatype buftype,
                     enum API_KIND api, int isFlexibleAPI, int mustInDataMode,
-                    int rw_flag, int io_method, NC **ncp, NC_var **varp);
+                    int rw_flag, int io_method, NC_var **varp);
 
 extern char*
 ncmpii_err_code_name(int err);

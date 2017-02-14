@@ -38,6 +38,9 @@ extern int
 ncmpii_set_fill(void *ncdp, int fill_mode, int *old_fill_mode);
 
 extern int
+ncmpii_fill_var_rec(void *ncdp, int varid, MPI_Offset recno);
+
+extern int
 ncmpii_inq(void *ncdp, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
 
 extern int
@@ -45,7 +48,8 @@ ncmpii_inq_misc(void *ncdp, int *pathlen, char *path, int *num_fix_varsp,
                 int *num_rec_varsp, int *striping_size, int *striping_count,
                 MPI_Offset *header_size, MPI_Offset *header_extent,
                 MPI_Offset *recsize, MPI_Offset *put_size, MPI_Offset *get_size,
-                MPI_Info *info_used);
+                MPI_Info *info_used, int *nreqs, MPI_Offset *usage,
+                MPI_Offset *buf_size);
 
 extern int
 ncmpii_sync_numrecs(void *ncdp);
@@ -107,5 +111,47 @@ ncmpii_inq_varid(void *ncdp, const char *name, int *varid);
 
 extern int
 ncmpii_rename_var(void *ncdp, int varid, const char *newname);
+
+extern int
+ncmpii_get_var(void *ncdp, int varid, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int api_kind, nc_type itype, int io_method);
+
+extern int
+ncmpii_put_var(void *ncdp, int varid, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int api_kind, nc_type itype, int io_method);
+
+extern int
+ncmpii_get_varn(void *ncdp, int varid, int num, MPI_Offset* const *starts, MPI_Offset* const *counts, void *buf, MPI_Offset bufcount, MPI_Datatype buftype, nc_type itype, int io_method);
+
+extern int
+ncmpii_put_varn(void *ncdp, int varid, int num, MPI_Offset* const *starts, MPI_Offset* const *counts, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, nc_type itype, int io_method);
+
+extern int
+ncmpii_get_vard(void *ncdp, int varid, MPI_Datatype filetype, void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int io_method);
+
+extern int
+ncmpii_put_vard(void *ncdp, int varid, MPI_Datatype filetype, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int io_method);
+
+extern int
+ncmpii_iget_var(void *ncdp, int varid, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *req, int api_kind, nc_type itype);
+
+extern int
+ncmpii_iput_var(void *ncdp, int varid, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *req, int api_kind, nc_type itype);
+
+extern int
+ncmpii_bput_var(void *ncdp, int varid, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *req, int api_kind, nc_type itype);
+
+extern int
+ncmpii_iget_varn(void *ncdp, int varid, int num, MPI_Offset* const *starts, MPI_Offset* const *counts, void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *reqid, nc_type itype);
+
+extern int
+ncmpii_iput_varn(void *ncdp, int varid, int num, MPI_Offset* const *starts, MPI_Offset* const *counts, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *reqid, nc_type itype);
+
+extern int
+ncmpii_bput_varn(void *ncdp, int varid, int num, MPI_Offset* const *starts, MPI_Offset* const *counts, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *reqid, nc_type itype);
+
+extern int
+ncmpii_wait(void *ncdp, int num_reqs, int *req_ids, int *statuses, int io_method);
+
+extern int
+ncmpii_cancel(void *ncdp, int num_reqs, int *req_ids, int *statuses);
 
 #endif

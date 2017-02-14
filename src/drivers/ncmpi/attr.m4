@@ -1024,7 +1024,7 @@ ncmpii_get_att_$1(void           *ncdp,
 }
 ')dnl
 
-foreach(`iType', (schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+foreach(`iType', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong),
         `GET_ATT(iType)
 ')
 
@@ -1107,7 +1107,7 @@ ncmpix_putn_$1(void       **xpp,    /* buffer to be written to file */
 }
 ')dnl
 
-foreach(`iType', (schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+foreach(`iType', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong),
         `PUTN_ITYPE(iType)
 ')
 
@@ -1459,7 +1459,7 @@ err_check:
 }
 ')dnl
 
-foreach(`iType', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+foreach(`iType', (text,schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong),
         `PUT_ATT(iType)
 ')
 

@@ -191,13 +191,18 @@ ncmpi_get_att_$1(int             ncid,
 {
     int err;
     PNC *pncp;
+ifelse(`$1',`long',`#if SIZEOF_LONG == SIZEOF_INT
+    nc_type itype=NC_INT;
+#elif SIZEOF_LONG == SIZEOF_LONG_LONG
+    nc_type itype=NC_INT64;
+#endif',`    nc_type itype=NC_TYPE($1);')
 
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_get_att_$1() */
-    err = pncp->dispatch->get_att(pncp->ncp, varid, name, buf, NC_TYPE($1));
+    err = pncp->dispatch->get_att(pncp->ncp, varid, name, buf, itype);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -257,7 +262,11 @@ ncmpi_put_att_$1(int         ncid,
 {
     int err;
     PNC *pncp;
-    nc_type itype=NC_TYPE($1);
+ifelse(`$1',`long',`#if SIZEOF_LONG == SIZEOF_INT
+    nc_type itype=NC_INT;
+#elif SIZEOF_LONG == SIZEOF_LONG_LONG
+    nc_type itype=NC_INT64;
+#endif',`    nc_type itype=NC_TYPE($1);')
 
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);

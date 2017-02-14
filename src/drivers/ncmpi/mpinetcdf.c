@@ -1035,7 +1035,10 @@ ncmpii_inq_misc(void       *ncdp,
                 MPI_Offset *recsize,
                 MPI_Offset *put_size,
                 MPI_Offset *get_size,
-                MPI_Info   *info_used)
+                MPI_Info   *info_used,
+                int        *nreqs,
+                MPI_Offset *usage,
+                MPI_Offset *buf_size)
 {
     int i, flag, mpireturn;
     char value[MPI_MAX_INFO_VAL];
@@ -1136,6 +1139,38 @@ ncmpii_inq_misc(void       *ncdp,
         sprintf(value, "%d", ncp->nciop->hints.num_subfiles);
         MPI_Info_set(*info_used, "nc_num_subfiles", value);
 #endif
+    }
+
+    if (nreqs != NULL) {
+        /* cannot just use *nreqs = ncp->numGetReqs + ncp->numPutReqs;
+         * because some request IDs are repeated, such as record variables and
+         * varn requests
+         */
+        *nreqs = 0;
+        for (i=0; i<ncp->numGetReqs; i++) {
+            if (i > 0 && ncp->get_list[i].id == ncp->get_list[i-1].id)
+                continue;
+            (*nreqs)++;
+        }
+        for (i=0; i<ncp->numPutReqs; i++) {
+            if (i > 0 && ncp->put_list[i].id == ncp->put_list[i-1].id)
+                continue;
+            (*nreqs)++;
+        }
+    }
+
+    if (usage != NULL) {
+        /* check if the buffer has been previously attached */
+        if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
+        /* return the current usage in bytes */
+        *usage = ncp->abuf->size_used;
+    }
+
+    if (buf_size != NULL) {
+        /* check if the buffer has been previously attached */
+        if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
+        /* return the current usage in bytes */
+        *buf_size = ncp->abuf->size_allocated;
     }
 
     return NC_NOERR;

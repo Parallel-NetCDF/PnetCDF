@@ -543,7 +543,7 @@ ncmpi_inq_path(int   ncid,
     /* calling the subroutine that implements ncmpi_inq_path() */
     err = pncp->dispatch->inq_misc(pncp->ncp, pathlen, path, NULL, NULL,
                                    NULL, NULL, NULL, NULL, NULL, NULL,
-                                   NULL, NULL);
+                                   NULL, NULL, NULL, NULL, NULL);
     return NC_NOERR;
 }
 
@@ -562,7 +562,7 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
     /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, num_fix_varsp, NULL,
                                    NULL, NULL, NULL, NULL, NULL, NULL,
-                                   NULL, NULL);
+                                   NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -583,7 +583,7 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
     /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, num_rec_varsp,
                                    NULL, NULL, NULL, NULL, NULL, NULL,
-                                   NULL, NULL);
+                                   NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -603,8 +603,8 @@ ncmpi_inq_striping(int ncid, int *striping_size, int *striping_count)
 
     /* calling the subroutine that implements ncmpi_inq_striping() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
-                                   striping_size, striping_count,
-                                   NULL, NULL, NULL, NULL, NULL, NULL);
+                                   striping_size, striping_count, NULL, NULL,
+                                   NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -625,7 +625,7 @@ ncmpi_inq_header_size(int ncid, MPI_Offset *header_size)
     /* calling the subroutine that implements ncmpi_inq_header_size() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                    NULL, NULL, header_size, NULL, NULL, NULL,
-                                   NULL, NULL);
+                                   NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -646,7 +646,7 @@ ncmpi_inq_header_extent(int ncid, MPI_Offset *header_extent)
     /* calling the subroutine that implements ncmpi_inq_header_extent() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                    NULL, NULL, NULL, header_extent, NULL, NULL,
-                                   NULL, NULL);
+                                   NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -667,7 +667,7 @@ ncmpi_inq_recsize(int ncid, MPI_Offset *recsize)
     /* calling the subroutine that implements ncmpi_inq_recsize() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                    NULL, NULL, NULL, NULL, recsize, NULL,
-                                   NULL, NULL);
+                                   NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -688,7 +688,7 @@ ncmpi_inq_put_size(int ncid, MPI_Offset *put_size)
     /* calling the subroutine that implements ncmpi_inq_put_size() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                    NULL, NULL, NULL, NULL, NULL, put_size,
-                                   NULL, NULL);
+                                   NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -709,7 +709,7 @@ ncmpi_inq_get_size(int ncid, MPI_Offset *get_size)
     /* calling the subroutine that implements ncmpi_inq_get_size() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                    NULL, NULL, NULL, NULL, NULL, NULL,
-                                   get_size, NULL);
+                                   get_size, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -730,7 +730,7 @@ ncmpi_inq_file_info(int ncid, MPI_Info *info)
     /* calling the subroutine that implements ncmpi_end_indep_data() */
     err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                    NULL, NULL, NULL, NULL, NULL, NULL,
-                                   NULL, info);
+                                   NULL, info, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -907,3 +907,59 @@ ncmpi_inq_files_opened(int *num, int *ncids)
     return NC_NOERR;
 }
 
+/*----< ncmpi_inq_nreqs() >--------------------------------------------------*/
+/* This is an independent subroutine. */
+int
+ncmpi_inq_nreqs(int ncid, int *nreqs)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_inq_path() */
+    err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
+                                   NULL, NULL, NULL, NULL, NULL, NULL,
+                                   NULL, NULL, nreqs, NULL, NULL);
+    return NC_NOERR;
+}
+
+/*----< ncmpi_inq_buffer_usage() >-------------------------------------------*/
+/* This is an independent subroutine. */
+int
+ncmpi_inq_buffer_usage(int ncid, MPI_Offset *usage)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_inq_path() */
+    err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
+                                   NULL, NULL, NULL, NULL, NULL, NULL,
+                                   NULL, NULL, NULL, usage, NULL);
+    return NC_NOERR;
+}
+
+/*----< ncmpi_inq_buffer_size() >--------------------------------------------*/
+/* This is an independent subroutine. */
+int
+ncmpi_inq_buffer_size(int ncid, MPI_Offset *buf_size)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_inq_path() */
+    err = pncp->dispatch->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
+                                   NULL, NULL, NULL, NULL, NULL, NULL,
+                                   NULL, NULL, NULL, NULL, buf_size);
+    return NC_NOERR;
+}

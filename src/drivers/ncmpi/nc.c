@@ -1453,11 +1453,11 @@ ncmpii_close(void *ncdp)
      * For now, cancelling makes more sense. */
 #ifdef COMPLETE_NONBLOCKING_IO
     if (ncp->numGetReqs > 0) {
-        ncmpii_wait(ncp, INDEP_IO, NC_GET_REQ_ALL, NULL, NULL);
+        ncmpiio_wait(ncp, INDEP_IO, NC_GET_REQ_ALL, NULL, NULL);
         if (status == NC_NOERR ) status = NC_EPENDING;
     }
     if (ncp->numPutReqs > 0) {
-        ncmpii_wait(ncp, INDEP_IO, NC_PUT_REQ_ALL, NULL, NULL);
+        ncmpiio_wait(ncp, INDEP_IO, NC_PUT_REQ_ALL, NULL, NULL);
         if (status == NC_NOERR ) status = NC_EPENDING;
     }
 #else

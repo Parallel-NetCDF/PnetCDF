@@ -326,46 +326,26 @@ err_check:
     return status;
 }
 
-/*----< ncmpi_get_vard() >---------------------------------------------------*/
+/*----< ncmpii_get_vard() >--------------------------------------------------*/
 int
-ncmpi_get_vard(int           ncid,
-               int           varid,
-               MPI_Datatype  filetype,  /* access layout to the variable in file */
-               void         *buf,
-               MPI_Offset    bufcount,
-               MPI_Datatype  buftype)   /* data type of the buffer */
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
-                                 buftype, API_VARD, 1, 1, READ_REQ, INDEP_IO,
-                                 &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
-                              READ_REQ, INDEP_IO);
-}
-
-/*----< ncmpi_get_vard_all() >-----------------------------------------------*/
-int
-ncmpi_get_vard_all(int           ncid,
-                   int           varid,
-                   MPI_Datatype  filetype,  /* access layout to the variable in file */
-                   void         *buf,
-                   MPI_Offset    bufcount,
-                   MPI_Datatype  buftype)   /* data type of the buffer */
+ncmpii_get_vard(void         *ncdp,
+                int           varid,
+                MPI_Datatype  filetype,  /* access layout to the variable in file */
+                void         *buf,
+                MPI_Offset    bufcount,
+                MPI_Datatype  buftype,   /* data type of the buffer */
+                int           io_method) /* COLL_IO or INDEP_IO */
 {
     int     err, status;
-    NC     *ncp;
+    NC     *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
-                                 buftype, API_VARD, 1, 1, READ_REQ, COLL_IO,
-                                 &ncp, &varp);
+    status = ncmpii_sanity_check(ncp, varid, NULL, NULL, NULL, bufcount,
+                                 buftype, API_VARD, 1, 1, READ_REQ, io_method,
+                                 &varp);
     if (status != NC_NOERR) {
-        if (status == NC_EBADID    || status == NC_EPERM ||
+        if (io_method == INDEP_IO ||
+            status == NC_EBADID    || status == NC_EPERM ||
             status == NC_EINDEFINE || status == NC_EINDEP)
             return status; /* fatal error, cannot continue */
 
@@ -379,49 +359,29 @@ ncmpi_get_vard_all(int           ncid,
     }
 
     return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
-                              READ_REQ, COLL_IO);
+                              READ_REQ, io_method);
 }
 
-/*----< ncmpi_put_vard() >---------------------------------------------------*/
+/*----< ncmpii_put_vard() >--------------------------------------------------*/
 int
-ncmpi_put_vard(int           ncid,
-               int           varid,
-               MPI_Datatype  filetype,  /* access layout to the variable in file */
-               const void   *buf,
-               MPI_Offset    bufcount,
-               MPI_Datatype  buftype)   /* data type of the buffer */
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
-                                 buftype, API_VARD, 1, 1, WRITE_REQ, INDEP_IO,
-                                 &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,
-                              buftype, WRITE_REQ, INDEP_IO);
-}
-
-/*----< ncmpi_put_vard_all() >-----------------------------------------------*/
-int
-ncmpi_put_vard_all(int           ncid,
-                   int           varid,
-                   MPI_Datatype  filetype,  /* access layout to the variable in file */
-                   const void   *buf,
-                   MPI_Offset    bufcount,
-                   MPI_Datatype  buftype)   /* data type of the buffer */
+ncmpii_put_vard(void         *ncdp,
+                int           varid,
+                MPI_Datatype  filetype,  /* access layout to the variable in file */
+                const void   *buf,
+                MPI_Offset    bufcount,
+                MPI_Datatype  buftype,   /* data type of the buffer */
+                int           io_method) /* COLL_IO or INDEP_IO */
 {
     int     err, status;
-    NC     *ncp;
+    NC     *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
 
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
-                                 buftype, API_VARD, 1, 1, WRITE_REQ, COLL_IO,
-                                 &ncp, &varp);
+    status = ncmpii_sanity_check(ncp, varid, NULL, NULL, NULL, bufcount,
+                                 buftype, API_VARD, 1, 1, WRITE_REQ, io_method,
+                                 &varp);
     if (status != NC_NOERR) {
-        if (status == NC_EBADID    || status == NC_EPERM ||
+        if (io_method == INDEP_IO ||
+            status == NC_EBADID    || status == NC_EPERM ||
             status == NC_EINDEFINE || status == NC_EINDEP)
             return status; /* fatal error, cannot continue */
 
@@ -435,5 +395,5 @@ ncmpi_put_vard_all(int           ncid,
     }
 
     return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,
-                              buftype, WRITE_REQ, COLL_IO);
+                              buftype, WRITE_REQ, io_method);
 }
