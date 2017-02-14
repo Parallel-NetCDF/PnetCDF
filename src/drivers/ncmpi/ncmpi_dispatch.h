@@ -149,6 +149,12 @@ extern int
 ncmpii_bput_varn(void *ncdp, int varid, int num, MPI_Offset* const *starts, MPI_Offset* const *counts, const void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *reqid, nc_type itype);
 
 extern int
+ncmpii_buffer_attach(void *ncdp, MPI_Offset bufsize);
+
+extern int
+ncmpii_buffer_detach(void *ncdp);
+
+extern int
 ncmpii_wait(void *ncdp, int num_reqs, int *req_ids, int *statuses, int io_method);
 
 extern int

@@ -216,7 +216,7 @@ ncmpiio_fill_var_rec(NC         *ncp,
     return NC_NOERR;
 }
 
-/*----< ncmpi_fill_var() >---------------------------------------------------*/
+/*----< ncmpii_fill_var() >--------------------------------------------------*/
 /* fill an entire record of a record variable
  * this API is collective, must be called in data mode */
 int

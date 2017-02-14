@@ -963,3 +963,37 @@ ncmpi_inq_buffer_size(int ncid, MPI_Offset *buf_size)
                                    NULL, NULL, NULL, NULL, buf_size);
     return NC_NOERR;
 }
+
+/*----< ncmpi_buffer_attach() >-----------------------------------------------*/
+int
+ncmpi_buffer_attach(int        ncid,
+                    MPI_Offset bufsize)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_buffer_attach() */
+    err = pncp->dispatch->buffer_attach(pncp->ncp, bufsize);
+    return NC_NOERR;
+}
+
+/*----< ncmpi_buffer_detach() >-----------------------------------------------*/
+int
+ncmpi_buffer_detach(int ncid)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_buffer_detach() */
+    err = pncp->dispatch->buffer_detach(pncp->ncp);
+    return NC_NOERR;
+}
+

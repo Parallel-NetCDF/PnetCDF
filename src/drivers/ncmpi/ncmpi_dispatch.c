@@ -61,6 +61,8 @@ static PNC_Dispatch ncmpi_dispatcher = {
     ncmpii_iput_varn,
     ncmpii_bput_varn,
 
+    ncmpii_buffer_attach,
+    ncmpii_buffer_detach,
     ncmpii_wait,
     ncmpii_cancel
 };
