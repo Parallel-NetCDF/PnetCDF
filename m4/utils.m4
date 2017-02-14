@@ -64,11 +64,10 @@ define(`ReadWrite', `ifelse(`$1',  `get', `READ_REQ',
                             `$1', `iget', `READ_REQ',
                                           `WRITE_REQ')')dnl
 define(`BufArgs',   `ifelse(`$2', `',
-                            `ifelse($1, `put', `const void *buf,', `void *buf,')
-                             MPI_Offset   bufcount,
-                             MPI_Datatype buftype',
-                            `ifelse($1, `put', `const FUNC2ITYPE($2) *buf',
-                                                     `FUNC2ITYPE($2) *buf')')')
+                            `ifelse($1, `get', `void *buf,', `const void *buf,')
+                             MPI_Offset bufcount, MPI_Datatype buftype',
+                            `ifelse($1, `get',       `FUNC2ITYPE($2) *buf',
+                                               `const FUNC2ITYPE($2) *buf')')')
 dnl
 dnl index arguments for APIs of different kinds
 dnl
@@ -86,9 +85,16 @@ define(`ArgKind', `ifelse(
 dnl
 dnl arguments passed to a function for APIs of different kinds
 dnl
+define(`ArgStartCountStrideMap', `ifelse(
+       `$1', `',  `NULL,  NULL,  NULL,   NULL',
+       `$1', `1', `start, NULL,  NULL,   NULL',
+       `$1', `a', `start, count, NULL,   NULL',
+       `$1', `s', `start, count, stride, NULL',
+       `$1', `m', `start, count, stride, imap')')dnl
+dnl
 define(`ArgStartCountStride', `ifelse(
-       `$1', `',  `NULL,  NULL, NULL',
-       `$1', `1', `start, NULL, NULL',
+       `$1', `',  `NULL,  NULL,  NULL',
+       `$1', `1', `start, NULL,  NULL',
        `$1', `a', `start, count, NULL',
                   `start, count, stride')')dnl
 dnl

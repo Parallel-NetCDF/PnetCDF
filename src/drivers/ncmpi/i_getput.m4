@@ -458,57 +458,57 @@ ncmpii_igetput_varm(NC               *ncp,
     return ((warning != NC_NOERR) ? warning : status);
 }
 
-include(`foreach.m4')dnl
 include(`utils.m4')dnl
 dnl
-define(`APINAME',`ifelse(`$3',`',`ncmpi_i$1_var$2',`ncmpi_i$1_var$2_$3')')dnl
-dnl
-dnl IGETPUT_API(get/put, kind, itype)
+dnl IGETPUT_API(get/put)
 dnl
 define(`IGETPUT_API',dnl
 `dnl
-/*----< APINAME($1,$2,$3)() >------------------------------------------------*/
+/*----< ncmpii_i$1_var() >---------------------------------------------------*/
 int
-APINAME($1,$2,$3)(int ncid, int varid, ArgKind($2) BufArgs($1,$3), int *reqid)
+ncmpii_i$1_var(void             *ncdp,
+               int               varid,
+               const MPI_Offset *start,
+               const MPI_Offset *count,
+               const MPI_Offset *stride,
+               const MPI_Offset *imap,
+               ifelse(`$1',`put',`const') void *buf,
+               MPI_Offset        bufcount,
+               MPI_Datatype      buftype,
+               int              *reqid,
+               int               api_kind,
+               nc_type           itype)
 {
     int         status;
-    NC         *ncp;
+    NC         *ncp=(NC*)ncdp;
     NC_var     *varp=NULL;
-    ifelse(`$2', `',  `MPI_Offset *start, *count;',
-           `$2', `1', `MPI_Offset *count;')
+    MPI_Offset *_start, *_count;
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
-    status = ncmpii_sanity_check(ncid, varid, ArgStartCountStride($2),
-                                 ifelse(`$3', `', `bufcount', `0'),
-                                 ifelse(`$3', `', `buftype',  `ITYPE2MPI($3)'),
-                                 API_KIND($2), ifelse(`$2', `', `1', `0'),
-                                 0, ReadWrite($1),
-                                 NONBLOCKING_IO, &ncp, &varp);
+
+    status = ncmpii_sanity_check(ncp, varid, start, count, stride,
+                                 bufcount, buftype, api_kind,
+                                 (itype==NC_NAT), 0, ReadWrite($1),
+                                 NONBLOCKING_IO, &varp);
     if (status != NC_NOERR) return status;
 
-    ifelse(`$2', `',  `GET_FULL_DIMENSIONS(start, count)',
-           `$2', `1', `GET_ONE_COUNT(count)')
+    _start = (MPI_Offset*)start;
+    _count = (MPI_Offset*)count;
+         if (api_kind == API_VAR)  GET_FULL_DIMENSIONS(_start, _count)
+    else if (api_kind == API_VAR1) GET_ONE_COUNT(_count)
 
-    /* APINAME($1,$2,$3) is a special case of APINAME($1,m,$3) */
-    status = ncmpii_igetput_varm(ncp, varp, start, count, ArgStrideMap($2),
-                                 (void*)buf,
-                                 ifelse(`$3', `', `bufcount, buftype',
-                                                  `-1, ITYPE2MPI($3)'),
+    status = ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
+                                 (void*)buf, bufcount, buftype,
                                  reqid, ReadWrite($1), 0, 0);
-    ifelse(`$2', `', `NCI_Free(start);', `$2', `1', `NCI_Free(count);')
+
+         if (api_kind == API_VAR)  NCI_Free(_start);
+    else if (api_kind == API_VAR1) NCI_Free(_count);
+
     return status;
 }
 ')dnl
 dnl
-/*---- PnetCDF flexible APIs ------------------------------------------------*/
-foreach(`kind', (, 1, a, s, m),
-        `foreach(`putget', (put, get),
-                 `IGETPUT_API(putget,kind,)'
-)')
 
-/*---- PnetCDF high-level APIs ----------------------------------------------*/
-foreach(`kind', (, 1, a, s, m),
-        `foreach(`putget', (put, get),
-                 `foreach(`itype', (ITYPE_LIST),
-                          `IGETPUT_API(putget,kind,itype)'
-)')')
+IGETPUT_API(put)
+IGETPUT_API(get)
+

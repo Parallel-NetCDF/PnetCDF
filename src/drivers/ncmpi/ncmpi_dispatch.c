@@ -44,9 +44,25 @@ static PNC_Dispatch ncmpi_dispatcher = {
 
     ncmpii_def_var,
     ncmpii_def_var_fill,
+    ncmpii_fill_var_rec,
     ncmpii_inq_var,
     ncmpii_inq_varid,
-    ncmpii_rename_var
+    ncmpii_rename_var,
+    ncmpii_get_var,
+    ncmpii_put_var,
+    ncmpii_get_varn,
+    ncmpii_put_varn,
+    ncmpii_get_vard,
+    ncmpii_put_vard,
+    ncmpii_iget_var,
+    ncmpii_iput_var,
+    ncmpii_bput_var,
+    ncmpii_iget_varn,
+    ncmpii_iput_varn,
+    ncmpii_bput_varn,
+
+    ncmpii_wait,
+    ncmpii_cancel
 };
 
 PNC_Dispatch* ncmpii_inq_dispatcher(void) {

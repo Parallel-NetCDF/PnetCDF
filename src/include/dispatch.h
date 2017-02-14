@@ -10,6 +10,19 @@
 #include <pnetcdf.h>
 #include <mpi.h>
 
+#define INDEP_IO 0
+#define COLL_IO  1
+#define NONBLOCKING_IO  -1
+
+enum API_KIND {
+    API_VARD, /* do not check start and count, no flexible APIs */
+    API_VARN, /* do not check start and count */
+    API_VAR,  /* do not check start and count */
+    API_VAR1, /* check start */
+    API_VARA, /* check start and count */
+    API_VARS, /* check start and count */
+    API_VARM  /* check start and count */
+};
 
 typedef struct PNC_Dispatch PNC_Dispatch;
 
@@ -31,7 +44,7 @@ int (*sync)(void*);
 int (*abort)(void*);
 int (*set_fill)(void*,int,int*);
 int (*inq)(void*,int*,int*,int*,int*);
-int (*inq_misc)(void*,int*,char*,int*,int*,int*,int*,MPI_Offset*,MPI_Offset*,MPI_Offset*,MPI_Offset*,MPI_Offset*,MPI_Info*);
+int (*inq_misc)(void*,int*,char*,int*,int*,int*,int*,MPI_Offset*,MPI_Offset*,MPI_Offset*,MPI_Offset*,MPI_Offset*,MPI_Info*,int*,MPI_Offset*,MPI_Offset*);
 int (*sync_numrecs)(void*);
 int (*begin_indep_data)(void*);
 int (*end_indep_data)(void*);
@@ -55,33 +68,34 @@ int (*put_att)(void*,int,const char*,nc_type,MPI_Offset,const void*,nc_type);
 /* APIs read/write variables */
 int (*def_var)(void*,const char*,nc_type,int,const int*,int*);
 int (*def_var_fill)(void*,int,int,const void*);
+int (*fill_rec)(void*,int,MPI_Offset);
 int (*inq_var)(void*,int,char*,nc_type*,int*,int*,int*,MPI_Offset*,int*,void*);
 int (*inq_varid)(void*,const char*,int*);
 int (*rename_var)(void*,int,const char*);
 
-#ifdef NOT_YET
+int (*get_var)(void*,int,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,void*,MPI_Offset,MPI_Datatype,int,nc_type,int);
+int (*put_var)(void*,int,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const void*,MPI_Offset,MPI_Datatype,int,nc_type,int);
+
+int (*get_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,void*,MPI_Offset,MPI_Datatype,nc_type,int);
+int (*put_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,const void*,MPI_Offset,MPI_Datatype,nc_type,int);
+
+int (*get_vard)(void*,int,MPI_Datatype,void*,MPI_Offset,MPI_Datatype,int);
+int (*put_vard)(void*,int,MPI_Datatype,const void*,MPI_Offset,MPI_Datatype,int);
+
+int (*iget_var)(void*,int,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,void*,MPI_Offset,MPI_Datatype,int*,int,nc_type);
+int (*iput_var)(void*,int,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const void*,MPI_Offset,MPI_Datatype,int*,int,nc_type);
+int (*bput_var)(void*,int,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const MPI_Offset*,const void*,MPI_Offset,MPI_Datatype,int*,int,nc_type);
+
+int (*iget_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,void*,MPI_Offset,MPI_Datatype,int*,nc_type);
+int (*iput_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,const void*,MPI_Offset,MPI_Datatype,int*,nc_type);
+int (*bput_varn)(void*,int,int,MPI_Offset* const*,MPI_Offset* const*,const void*,MPI_Offset,MPI_Datatype,int*,nc_type);
+
+int (*wait)(void*,int,int*,int*,int);
+int (*cancel)(void*,int,int*,int*);
 
 
-int (*get_vara)(int, int, const size_t*, const size_t*, void*, nc_type);
-int (*put_vara)(int, int, const size_t*, const size_t*, const void*, nc_type);
 
-/* Added to solve Ferret performance problem with Opendap */
-int (*get_vars)(int, int, const size_t*, const size_t*, const ptrdiff_t*, void*, nc_type);
-int (*put_vars)(int, int, const size_t*, const size_t*, const ptrdiff_t*, const void*, nc_type);
 
-int (*get_varm)(int, int, const size_t*, const size_t*, const ptrdiff_t*, const ptrdiff_t*, void*, nc_type);
-int (*put_varm)(int, int, const size_t*, const size_t*, const ptrdiff_t*, const ptrdiff_t*, const void*, nc_type);
-
-int (*inq_var_all)(int ncid, int varid, char *name, nc_type *xtypep,
-               int *ndimsp, int *dimidsp, int *nattsp,
-               int *shufflep, int *deflatep, int *deflate_levelp,
-               int *fletcher32p, int *contiguousp, size_t *chunksizesp,
-               int *no_fill, void *fill_valuep, int *endiannessp,
-	       int *options_maskp, int *pixels_per_blockp);
-
-int (*var_par_access)(int, int, int);
-
-#endif
 };
 
 #ifdef NOT_YET

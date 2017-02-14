@@ -27,144 +27,6 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
-include(`foreach.m4')
-include(`utils.m4')
-
-/* ncmpi_get/put_varn_<type>_<mode> API:
- *    type:   data type of I/O buffer, buf
- *    mode:   independent (<nond>) or collective (_all)
- *
- * arguments:
- *    num:    number of start and count pairs
- *    starts: an 2D array of size [num][ndims]. Each starts[i][*] indicates
- *            the starting array indices for a subarray request. ndims is
- *            the number of dimensions of the defined netCDF variable.
- *    counts: an 2D array of size [num][ndims]. Each counts[i][*] indicates
- *            the number of array elements to be accessed. This argument
- *            can be NULL, equivalent to counts with all 1s.
- *    bufcount and buftype: these 2 arguments are only available for flexible
- *            APIs, indicating the I/O buffer memory layout. When buftype is
- *            MPI_DATATYPE_NULL, bufcount is ignored and the data type of buf
- *            is considered matched the variable data type defined in the file.
- */
-
-static int
-ncmpii_getput_varn(NC                *ncp,
-                   NC_var            *varp,
-                   int                num,
-                   MPI_Offset* const *starts,  /* [num][varp->ndims] */
-                   MPI_Offset* const *counts,  /* [num][varp->ndims] */
-                   void              *buf,
-                   MPI_Offset         bufcount,
-                   MPI_Datatype       buftype,   /* data type of the buffer */
-                   int                rw_flag,
-                   int                io_method);
-
-define(`BufConst',  `ifelse(`$1', `put', `const')')dnl
-
-dnl
-dnl VARN_FLEXIBLE(ncid, varid, num starts, counts, buf, bufcount, buftype)
-dnl
-define(`VARN_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_varn$2() >---------------------------------------------------*/
-int
-ncmpi_$1_varn$2(int                ncid,
-                int                varid,
-                int                num,
-                MPI_Offset* const *starts,
-                MPI_Offset* const *counts,
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int     err, status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
-                                 buftype, API_VARN, 1, 1, ReadWrite($1),
-                                 CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) {
-        if (CollIndep($2) == INDEP_IO ||
-            status == NC_EBADID ||
-            status == NC_EPERM ||
-            status == NC_EINDEFINE ||
-            status == NC_EINDEP ||
-            status == NC_ENOTINDEP)
-            return status;  /* fatal error, cannot continue */
-
-        /* for collective API, participate the collective I/O with zero-length
-         * request for this process */
-        err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
-        assert(err == NC_NOERR);
-
-        /* return the error code from sanity check */
-        return status;
-    }
-
-    return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,
-                              bufcount, buftype, ReadWrite($1), CollIndep($2));
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARN_FLEXIBLE(put)
-VARN_FLEXIBLE(put, _all)
-VARN_FLEXIBLE(get)
-VARN_FLEXIBLE(get, _all)
-
-dnl
-dnl VARN(ncid, varid, starts, counts, buf)
-dnl
-define(`VARN',dnl
-`dnl
-/*----< ncmpi_$1_varn_$3$2() >------------------------------------------------*/
-int
-ncmpi_$1_varn_$3$2(int                ncid,
-                   int                varid,
-                   int                num,
-                   MPI_Offset* const *starts,
-                   MPI_Offset* const *counts,
-                   BufConst($1) $4   *buf)
-{
-    int     err, status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, 0,
-                                 ITYPE2MPI($3), API_VARN, 0, 1, ReadWrite($1),
-                                 CollIndep($2), &ncp, &varp);
-    if (status != NC_NOERR) {
-        if (CollIndep($2) == INDEP_IO ||
-            status == NC_EBADID ||
-            status == NC_EPERM ||
-            status == NC_EINDEFINE ||
-            status == NC_EINDEP ||
-            status == NC_ENOTINDEP)
-            return status;  /* fatal error, cannot continue */
-
-        /* for collective API, participate the collective I/O with zero-length
-         * request for this process */
-        err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
-        assert(err == NC_NOERR);
-
-        /* return the error code from sanity check */
-        return status;
-    }
-
-    /* set bufcount to -1 indicating non-flexible API */
-    return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,
-                              -1, $5, ReadWrite($1), CollIndep($2));
-}
-')dnl
-dnl
-foreach(`putget', (put, get),
-        `foreach(`collindep', (, _all),
-                 `foreach(`itype', (ITYPE_LIST),
-                          `VARN(putget,collindep,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')')
-
 /*----< ncmpii_getput_varn() >------------------------------------------------*/
 static int
 ncmpii_getput_varn(NC                *ncp,
@@ -349,7 +211,7 @@ err_check:
            calls in wait_all */
         num = 0;
 
-    err = ncmpii_wait(ncp, io_method, num, &req_id, &st);
+    err = ncmpiio_wait(ncp, io_method, num, &req_id, &st);
 
     /* unpack to user buf, if buftype is noncontiguous */
     if (status == NC_NOERR && rw_flag == READ_REQ && free_cbuf) {
@@ -366,3 +228,55 @@ err_check:
 
     return status;
 }
+
+include(`utils.m4')
+
+dnl
+define(`VARN',dnl
+`dnl
+/*----< ncmpii_$1_varn() >--------------------------------------------------*/
+int
+ncmpii_$1_varn(void              *ncdp,
+               int                varid,
+               int                num,
+               MPI_Offset* const *starts,
+               MPI_Offset* const *counts,
+               ifelse(`$1',`put',`const') void *buf,
+               MPI_Offset         bufcount,
+               MPI_Datatype       buftype,
+               nc_type            itype,
+               int                io_method)
+{
+    int     err, status;
+    NC     *ncp=(NC*)ncdp;
+    NC_var *varp=NULL;
+
+    status = ncmpii_sanity_check(ncp, varid, NULL, NULL, NULL, bufcount,
+                                 buftype, API_VARN, (itype==NC_NAT), 1,
+                                 ReadWrite($1), io_method, &varp);
+    if (status != NC_NOERR) {
+        if (io_method == INDEP_IO ||
+            status == NC_EBADID ||
+            status == NC_EPERM ||
+            status == NC_EINDEFINE ||
+            status == NC_EINDEP ||
+            status == NC_ENOTINDEP)
+            return status;  /* fatal error, cannot continue */
+
+        /* for collective API, participate the collective I/O with zero-length
+         * request for this process */
+        err = ncmpii_getput_zero_req(ncp, ReadWrite($1));
+        assert(err == NC_NOERR);
+
+        /* return the error code from sanity check */
+        return status;
+    }
+
+    return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,
+                              bufcount, buftype, ReadWrite($1), io_method);
+}
+')dnl
+
+VARN(put)
+VARN(get)
+

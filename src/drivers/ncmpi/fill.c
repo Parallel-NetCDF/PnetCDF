@@ -138,9 +138,9 @@ ncmpii_fill_var_buf(const NC_var *varp,
  * variable with pre-defined/supplied fill value.
  */
 static int
-ncmpii_fill_var_rec(NC         *ncp,
-                    NC_var     *varp,
-                    MPI_Offset  recno) /* record number */
+ncmpiio_fill_var_rec(NC         *ncp,
+                     NC_var     *varp,
+                     MPI_Offset  recno) /* record number */
 {
     int err, mpireturn, rank, nprocs;
     void *buf;
@@ -220,17 +220,13 @@ ncmpii_fill_var_rec(NC         *ncp,
 /* fill an entire record of a record variable
  * this API is collective, must be called in data mode */
 int
-ncmpi_fill_var_rec(int        ncid,
-                   int        varid,
-                   MPI_Offset recno) /* record number, ignored if non-record var */
+ncmpii_fill_var_rec(void      *ncdp,
+                    int        varid,
+                    MPI_Offset recno) /* record number, ignored if non-record var */
 {
     int     indx, err;
-    NC     *ncp;
+    NC     *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
-
-    /* check if ncid is valid */
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     /* check file's write permission */
     if (NC_readonly(ncp)) {
@@ -298,7 +294,7 @@ err_check:
 
     assert(varp != NULL);
 
-    return ncmpii_fill_var_rec(ncp, varp, recno);
+    return ncmpiio_fill_var_rec(ncp, varp, recno);
 }
 
 /*----< ncmpii_set_fill() >--------------------------------------------------*/
@@ -535,7 +531,7 @@ fillerup(NC *ncp)
         if (ncp->vars.value[i]->no_fill && indx == -1) continue;
 
         /* collectively fill the entire variable */
-        err = ncmpii_fill_var_rec(ncp, ncp->vars.value[i], 0);
+        err = ncmpiio_fill_var_rec(ncp, ncp->vars.value[i], 0);
         if (err != NC_NOERR) break;
     }
     return err;
@@ -562,7 +558,7 @@ fill_added(NC *ncp, NC *old_ncp)
         if (ncp->vars.value[varid]->no_fill && indx == -1) continue;
 
         /* collectively fill the entire variable */
-        err = ncmpii_fill_var_rec(ncp, ncp->vars.value[varid], 0);
+        err = ncmpiio_fill_var_rec(ncp, ncp->vars.value[varid], 0);
         if (err != NC_NOERR) break;
     }
     return err;
@@ -591,7 +587,7 @@ fill_added_recs(NC *ncp, NC *old_ncp)
             if (ncp->vars.value[varid]->no_fill && indx == -1) continue;
 
             /* collectively fill the record */
-            err = ncmpii_fill_var_rec(ncp, ncp->vars.value[varid], recno);
+            err = ncmpiio_fill_var_rec(ncp, ncp->vars.value[varid], recno);
             if (err != NC_NOERR) return err;
         }
     }

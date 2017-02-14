@@ -122,40 +122,23 @@ ncmpii_abuf_coalesce(NC *ncp)
     NCI_Free(req.start);                                                      \
 }
 
-/*----< ncmpi_cancel() >------------------------------------------------------*/
-/* argument num_req can be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL, or
- * non-negative value */
-int
-ncmpi_cancel(int  ncid,
-             int  num_req,
-             int *req_ids,  /* [num_req] */
-             int *statuses) /* [num_req] */
-{
-    int status;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    /* 1.7.0 and after nonblocking APIs can be called in define mode.
-    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
-    */
-
-    return ncmpii_cancel(ncp, num_req, req_ids, statuses);
-}
-
 /*----< ncmpii_cancel() >-----------------------------------------------------*/
 /* argument num_req can be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL, or
  * non-negative value */
 int
-ncmpii_cancel(NC  *ncp,
-              int  num_req,
-              int *req_ids,  /* [num_req]: IN/OUT */
-              int *statuses) /* [num_req] can be NULL (ignore status) */
+ncmpii_cancel(void *ncdp,
+              int   num_req,
+              int  *req_ids,  /* [num_req]: IN/OUT */
+              int  *statuses) /* [num_req] can be NULL (ignore status) */
 {
     int i, j, first_non_null_get, first_non_null_put, status=NC_NOERR;
+    NC *ncp=(NC*)ncdp;
 
     if (num_req == 0) return NC_NOERR;
+
+    /* 1.7.0 and after nonblocking APIs can be called in define mode.
+    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
+    */
 
     if (num_req == NC_GET_REQ_ALL || num_req == NC_REQ_ALL) {
         /* cancel all pending read requests, ignore req_ids and statuses */
@@ -318,36 +301,6 @@ ncmpii_cancel(NC  *ncp,
     return status;
 }
 
-/*----< ncmpi_inq_nreqs() >---------------------------------------------------*/
-int
-ncmpi_inq_nreqs(int  ncid,
-                int *nreqs) /* OUT: number of pending requests */
-{
-    int  i, status;
-    NC  *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-
-    /* cannot just use *nreqs = ncp->numGetReqs + ncp->numPutReqs;
-     * because some request IDs are repeated, such as record variables and
-     * varn requests
-     */
-    *nreqs = 0;
-    for (i=0; i<ncp->numGetReqs; i++) {
-        if (i > 0 && ncp->get_list[i].id == ncp->get_list[i-1].id)
-            continue;
-        (*nreqs)++;
-    }
-    for (i=0; i<ncp->numPutReqs; i++) {
-        if (i > 0 && ncp->put_list[i].id == ncp->put_list[i-1].id)
-            continue;
-        (*nreqs)++;
-    }
-
-    return NC_NOERR;
-}
-
 #ifndef ENABLE_REQ_AGGREGATION
 /*----< extract_reqs() >-----------------------------------------------------*/
 /* based on the request type, construct an array of unique request IDs.
@@ -413,118 +366,104 @@ void extract_reqs(NC   *ncp,
 }
 #endif
 
-/*----< ncmpi_wait() >--------------------------------------------------------*/
-/* ncmpi_wait() is an independent call
- * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
- * nonblocking requests. In this case, arguments req_ids and statuses will be
- * ignored.
- * Argument num_reqs must either be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL,
- * or a non-negative value.
- * Argument statuses can be NULL, meaning the caller only cares about the
- * error code returned by this call, but not the statuses of individual
- * nonblocking requests.
- */
+/*----< ncmpii_wait() >-------------------------------------------------------*/
 int
-ncmpi_wait(int  ncid,
-           int  num_reqs,
-           int *req_ids,  /* [num_reqs]: IN/OUT */
-           int *statuses) /* [num_reqs] */
+ncmpii_wait(void *ncdp,
+            int   num_reqs,
+            int  *req_ids,   /* [num_reqs]: IN/OUT */
+            int  *statuses,  /* [num_reqs] */
+            int   io_method) /* COLL_IO or INDEP_IO */
 {
-    int  status;
-    NC  *ncp;
+    NC *ncp=(NC*)ncdp;
 
-    if (num_reqs == 0) return NC_NOERR;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+    if (io_method == INDEP_IO) {
+        /* ncmpi_wait() is an independent call
+	 * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
+	 * nonblocking requests. In this case, arguments req_ids and statuses
+	 * will be ignored.
+	 * Argument num_reqs must either be NC_REQ_ALL, NC_GET_REQ_ALL,
+	 * NC_PUT_REQ_ALL, or a non-negative value.
+	 * Argument statuses can be NULL, meaning the caller only cares about
+	 * the error code returned by this call, but not the statuses of
+	 * individual nonblocking requests.
+         */
+        if (num_reqs == 0) return NC_NOERR;
 
 #ifdef ENABLE_REQ_AGGREGATION
-    return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
+        return ncmpiio_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
-    int i, err, *reqids=NULL;
-    if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
-        /* in this case, arguments req_ids[] and statuses[] are ignored */
-        /* construct request ID array, reqids */
-        extract_reqs(ncp, &num_reqs, &reqids);
-    }
+        int i, status=NC_NOERR, err, *reqids=NULL;
+        if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
+            /* in this case, arguments req_ids[] and statuses[] are ignored.
+             * construct request ID array, reqids */
+            extract_reqs(ncp, &num_reqs, &reqids);
+        }
 
-    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        if (reqids == NULL)
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-        else
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
-        if (status == NC_NOERR) status = err;
-    }
-    if (reqids != NULL) NCI_Free(reqids);
+        for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+            if (reqids == NULL)
+                err = ncmpiio_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+            else
+                err = ncmpiio_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
+            if (status == NC_NOERR) status = err;
+        }
+        if (reqids != NULL) NCI_Free(reqids);
 
-    return status; /* return the first error encountered */
+        return status; /* return the first error encountered */
 #endif
-}
-
-/*----< ncmpi_wait_all() >----------------------------------------------------*/
-/* ncmpi_wait_all() is a collective call
- * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
- * nonblocking requests. In this case, arguments req_ids and statuses will be
- * ignored.
- * Argument num_reqs must either be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL,
- * or a non-negative value.
- * Argument statuses can be NULL, meaning the caller only cares about the
- * error code returned by this call, but not the statuses of individual
- * nonblocking requests.
- */
-int
-ncmpi_wait_all(int  ncid,
-               int  num_reqs, /* number of requests */
-               int *req_ids,  /* [num_reqs]: IN/OUT */
-               int *statuses) /* [num_reqs], can be NULL */
-{
-    int  status;
-    NC  *ncp;
-    /* the following line CANNOT be added, because ncmpi_wait_all() is a
-     * collective call, all processes must participate some MPI collective
-     * operations used later on.
-     */
-    /* if (num_reqs == 0) return NC_NOERR; */
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
-    /* must return the error now, parallel program might hang */
+    }
+    else {
+        /* ncmpi_wait_all() is a collective call
+         * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
+	 * nonblocking requests. In this case, arguments req_ids and statuses
+	 * will be ignored.
+	 * Argument num_reqs must either be NC_REQ_ALL, NC_GET_REQ_ALL,
+	 * NC_PUT_REQ_ALL, or a non-negative value.
+	 * Argument statuses can be NULL, meaning the caller only cares about
+	 * the error code returned by this call, but not the statuses of
+	 * individual nonblocking requests.
+         */
+        /* the following line CANNOT be added, because ncmpi_wait_all() is a
+         * collective call, all processes must participate some MPI collective
+         * operations used later on.
+         */
+        /* if (num_reqs == 0) return NC_NOERR; */
 
 #ifdef ENABLE_REQ_AGGREGATION
-    return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
+        return ncmpiio_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
-    int i, err, *reqids=NULL;
+        int i, status=NC_NOERR, err, *reqids=NULL;
 
-    /* This API is collective, so make it illegal in indep mode. This also
-       ensures the program will returns back to collective mode. */
-    if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP);
+        /* This API is collective, so make it illegal in indep mode. This also
+           ensures the program will returns back to collective mode. */
+        if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP);
 
-    /* must enter independent mode, as num_reqs may be different among
-       processes */
-    err = ncmpi_begin_indep_data(ncid);
-    if (status == NC_NOERR) status = err;
-
-    if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
-        /* in this case, arguments req_ids[] and statuses[] are ignored */
-        /* construct request ID array, reqids */
-        extract_reqs(ncp, &num_reqs, &reqids);
-    }
-
-    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        if (reqids == NULL)
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-        else
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
+        /* must enter independent mode, as num_reqs may be different among
+           processes */
+        err = ncmpi_begin_indep_data(ncid);
         if (status == NC_NOERR) status = err;
-    }
-    if (reqids != NULL) NCI_Free(reqids);
 
-    /* return to collective data mode */
-    err = ncmpi_end_indep_data(ncid);
-    if (status == NC_NOERR) status = err;
+        if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
+            /* in this case, arguments req_ids[] and statuses[] are ignored */
+            /* construct request ID array, reqids */
+            extract_reqs(ncp, &num_reqs, &reqids);
+        }
 
-    return status; /* return the first error encountered, if there is any */
+        for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+            if (reqids == NULL)
+                err = ncmpiio_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+            else
+                err = ncmpiio_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
+            if (status == NC_NOERR) status = err;
+        }
+        if (reqids != NULL) NCI_Free(reqids);
+
+        /* return to collective data mode */
+        err = ncmpi_end_indep_data(ncid);
+        if (status == NC_NOERR) status = err;
+
+        return status; /* return the first error encountered, if there is any */
 #endif
+    }
 }
 
 /*----< ncmpii_concatenate_datatypes() >--------------------------------------*/
@@ -735,7 +674,7 @@ ncmpii_construct_buffertypes(int           num_reqs,
     return status;
 }
 
-/*----< ncmpii_wait() >-------------------------------------------------------*/
+/*----< ncmpiio_wait() >-----------------------------------------------------*/
 /* The buffer management flow is described below. The wait side starts from
    the I/O step, i.e. step 5
 
@@ -760,11 +699,11 @@ ncmpii_construct_buffertypes(int           num_reqs,
      9. free up temp buffers, cbuf and xbuf if they were allocated separately
  */
 int
-ncmpii_wait(NC  *ncp,
-            int  io_method, /* COLL_IO or INDEP_IO */
-            int  num_reqs,  /* number of requests */
-            int *req_ids,   /* [num_reqs] */
-            int *statuses)  /* [num_reqs] */
+ncmpiio_wait(NC  *ncp,
+             int  io_method, /* COLL_IO or INDEP_IO */
+             int  num_reqs,  /* number of requests */
+             int *req_ids,   /* [num_reqs] */
+             int *statuses)  /* [num_reqs] */
 {
     int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;

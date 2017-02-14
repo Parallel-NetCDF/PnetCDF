@@ -125,96 +125,46 @@ ncmpi_buffer_detach(int         ncid,
 }
 #endif
 
-
-/*----< ncmpi_inq_buffer_usage() >--------------------------------------------*/
+/*----< ncmpii_bput_var() >--------------------------------------------------*/
 int
-ncmpi_inq_buffer_usage(int         ncid,
-                       MPI_Offset *usage) /* OUT: in bytes */
-{
-    int  err;
-    NC  *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* check if the buffer has been previously attached */
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    /* return the current usage in bytes */
-    *usage = ncp->abuf->size_used;
-
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_buffer_size() >---------------------------------------------*/
-int
-ncmpi_inq_buffer_size(int         ncid,
-                      MPI_Offset *buf_size) /* OUT: in bytes */
-{
-    int  err;
-    NC  *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
-    /* check if the buffer has been previously attached */
-    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
-
-    /* return the current usage in bytes */
-    *buf_size = ncp->abuf->size_allocated;
-
-    return NC_NOERR;
-}
-
-include(`foreach.m4')dnl
-include(`utils.m4')dnl
-dnl
-define(`APINAME',`ifelse(`$2',`',`ncmpi_bput_var$1',`ncmpi_bput_var$1_$2')')dnl
-dnl
-dnl BPUT_API(kind, itype)
-dnl
-define(`BPUT_API',dnl
-`dnl
-/*----< APINAME($1,$2)() >------------------------------------------------*/
-int
-APINAME($1,$2)(int ncid, int varid, ArgKind($1) BufArgs(`put',$2), int *reqid)
+ncmpii_bput_var(void             *ncdp,
+                int               varid,
+                const MPI_Offset *start,
+                const MPI_Offset *count,
+                const MPI_Offset *stride,
+                const MPI_Offset *imap,
+                const void       *buf,
+                MPI_Offset        bufcount,
+                MPI_Datatype      buftype,
+                int              *reqid,
+                int               api_kind,
+                nc_type           itype)
 {
     int         err;
-    NC         *ncp;
+    NC         *ncp=(NC*)ncdp;
     NC_var     *varp=NULL;
-    ifelse(`$1', `',  `MPI_Offset *start, *count;',
-           `$1', `1', `MPI_Offset *count;')
+    MPI_Offset *_start, *_count;
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
-    err = ncmpii_sanity_check(ncid, varid, ArgStartCountStride($1),
-                              ifelse(`$2', `', `bufcount', `0'),
-                              ifelse(`$2', `', `buftype',  `ITYPE2MPI($2)'),
-                              API_KIND($1), ifelse(`$2', `', `1', `0'),
-                              0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
+
+    err = ncmpii_sanity_check(ncp, varid, start, count, stride,
+                              bufcount, buftype, api_kind, (itype=NC_NAT),
+                              0, WRITE_REQ, NONBLOCKING_IO, &varp);
     if (err != NC_NOERR) return err;
 
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
-    ifelse(`$1', `',  `GET_FULL_DIMENSIONS(start, count)',
-           `$1', `1', `GET_ONE_COUNT(count)')
+    _start = (MPI_Offset*)start;
+    _count = (MPI_Offset*)count;
+         if (api_kind == API_VAR)  GET_FULL_DIMENSIONS(_start, _count)
+    else if (api_kind == API_VAR1) GET_ONE_COUNT(_count)
 
-    /* APINAME($1,$2) is a special case of APINAME(m,$2) */
-    err = ncmpii_igetput_varm(ncp, varp, start, count, ArgStrideMap($1),
-                              (void*)buf,
-                              ifelse(`$2', `', `bufcount, buftype',
-                                           `-1, ITYPE2MPI($2)'),
+    err = ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
+                              (void*)buf, bufcount, buftype,
                               reqid, WRITE_REQ, 1, 0);
-    ifelse(`$1', `', `NCI_Free(start);', `$1', `1', `NCI_Free(count);')
+
+         if (api_kind == API_VAR)  NCI_Free(_start);
+    else if (api_kind == API_VAR1) NCI_Free(_count);
+
     return err;
 }
-')dnl
-dnl
-/*---- PnetCDF flexible APIs ------------------------------------------------*/
-foreach(`kind', (, 1, a, s, m),`BPUT_API(kind,)
-')
-
-/*---- PnetCDF high-level APIs ----------------------------------------------*/
-foreach(`kind', (, 1, a, s, m),
-        `foreach(`itype', (ITYPE_LIST),
-                 `BPUT_API(kind,itype)'
-)')

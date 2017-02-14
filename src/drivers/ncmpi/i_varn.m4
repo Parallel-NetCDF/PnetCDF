@@ -27,126 +27,6 @@ dnl
 #include "ncmpidtype.h"
 #include "macro.h"
 
-include(`foreach.m4')
-include(`utils.m4')
-
-/* ncmpi_iget/iput_varn_<type>_<mode> API:
- *    type:   data type of I/O buffer, buf
- *    mode:   indpendent (<nond>) or collective (_all)
- *
- * arguments:
- *    num:    number of start and count pairs
- *    starts: an 2D array of size [num][ndims]. Each starts[i][*] indicates
- *            the starting array indices for a subarray request. ndims is
- *            the number of dimensions of the defined netCDF variable.
- *    counts: an 2D array of size [num][ndims]. Each counts[i][*] indicates
- *            the number of array elements to be accessed. This argument
- *            can be NULL, equivalent to counts with all 1s.
- *    bufcount and buftype: these 2 arguments are only available for flexible
- *            APIs, indicating the I/O buffer memory layout. When buftype is
- *            MPI_DATATYPE_NULL, bufcount is ignored and the data type of buf
- *            is considered matched the variable data type defined in the file.
- *    reqid:  request ID returned to user
- */
-
-static int
-ncmpii_igetput_varn(NC                *ncp,
-                    NC_var            *varp,
-                    int                num,
-                    MPI_Offset* const *starts,  /* [num][varp->ndims] */
-                    MPI_Offset* const *counts,  /* [num][varp->ndims] */
-                    void              *buf,
-                    MPI_Offset         bufcount,
-                    MPI_Datatype       buftype,   /* data type of the bufer */
-                    int               *reqid,
-                    int                rw_flag,
-                    int                use_abuf);
-
-dnl
-define(`IsBput',    `ifelse(`$1',`bput', `1', `0')')dnl
-define(`BufConst',  `ifelse(`$1',`iget', , `const')')dnl
-dnl
-dnl VARN_FLEXIBLE()
-dnl
-define(`VARN_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_varn() >-----------------------------------------------------*/
-int
-ncmpi_$1_varn(int                 ncid,
-              int                 varid,
-              int                 num,
-              MPI_Offset* const  *starts,
-              MPI_Offset* const  *counts,
-              BufConst($1) void  *buf,
-              MPI_Offset          bufcount,
-              MPI_Datatype        buftype,
-              int                *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-
-    /* check for zero-size request */
-    if (num == 0 || bufcount == 0) return NC_NOERR;
-
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, bufcount,
-                                 buftype, API_VARN, 1, 0, ReadWrite($1),
-                                 NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    return ncmpii_igetput_varn(ncp, varp, num, starts, counts, (void*)buf,
-                               bufcount, buftype, reqid, ReadWrite($1),
-                               IsBput($1));
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARN_FLEXIBLE(iput)
-VARN_FLEXIBLE(iget)
-VARN_FLEXIBLE(bput)
-
-dnl
-dnl VARN()
-dnl
-define(`VARN',dnl
-`dnl
-/*----< ncmpi_$1_varn_$2() >--------------------------------------------------*/
-int
-ncmpi_$1_varn_$2(int                ncid,
-                 int                varid,
-                 int                num,
-                 MPI_Offset* const *starts,
-                 MPI_Offset* const *counts,
-                 BufConst($1) $3   *buf,
-                 int               *reqid)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    if (reqid != NULL) *reqid = NC_REQ_NULL;
-
-    /* check for zero request */
-    if (num == 0) return NC_NOERR;
-
-    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, NULL, 0,
-                                 ITYPE2MPI($2), API_VARN, 0, 0, ReadWrite($1),
-                                 NONBLOCKING_IO, &ncp, &varp);
-    if (status != NC_NOERR) return status;
-
-    /* set bufcount to -1 indicating non-flexible API */
-    return ncmpii_igetput_varn(ncp, varp, num, starts, counts, (void*)buf,
-                               -1, $4, reqid, ReadWrite($1), IsBput($1));
-}
-')dnl
-dnl
-foreach(`putget', (iput, iget, bput),
-        `foreach(`itype', (ITYPE_LIST),
-                 `VARN(putget,itype,FUNC2ITYPE(itype),ITYPE2MPI(itype))
-')')
-
 /*----< ncmpii_igetput_varn() >-----------------------------------------------*/
 static int
 ncmpii_igetput_varn(NC                *ncp,
@@ -325,3 +205,53 @@ err_check:
 
     return status;
 }
+
+
+include(`utils.m4')
+
+dnl
+define(`IsBput',    `ifelse(`$1',`bput', `1', `0')')dnl
+define(`BufConst',  `ifelse(`$1',`get', , `const')')dnl
+dnl
+dnl VARN(iget/iput/bput)
+dnl
+define(`VARN',dnl
+`dnl
+/*----< ncmpii_$1_varn() >----------------------------------------------------*/
+int
+ncmpii_$1_varn(void               *ncdp,
+               int                 varid,
+               int                 num,
+               MPI_Offset* const  *starts,
+               MPI_Offset* const  *counts,
+               BufConst(substr($1,1)) void  *buf,
+               MPI_Offset          bufcount,
+               MPI_Datatype        buftype,
+               int                *reqid,
+               nc_type             itype)
+{
+    int     status;
+    NC     *ncp=(NC*)ncdp;
+    NC_var *varp=NULL;
+
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
+
+    /* check for zero-size request */
+    if (num == 0 || bufcount == 0) return NC_NOERR;
+
+    status = ncmpii_sanity_check(ncp, varid, NULL, NULL, NULL, bufcount,
+                                 buftype, API_VARN, (itype==NC_NAT), 0,
+                                 ReadWrite($1), NONBLOCKING_IO, &varp);
+    if (status != NC_NOERR) return status;
+
+    return ncmpii_igetput_varn(ncp, varp, num, starts, counts, (void*)buf,
+                               bufcount, buftype, reqid, ReadWrite($1),
+                               IsBput($1));
+}
+')dnl
+dnl
+
+VARN(iput)
+VARN(iget)
+VARN(bput)
+

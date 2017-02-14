@@ -21,7 +21,7 @@
  * NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_EINDEP/NC_ENOTINDEP, NC_ENOTVAR,
  * NC_ECHAR, NC_EINVALCOORDS, NC_EEDGE, NC_ESTRIDE, NC_EINVAL.
  */
-int ncmpii_sanity_check(int               ncid,
+int ncmpii_sanity_check(NC                *ncp,
                         int               varid,
                         const MPI_Offset *start,
                         const MPI_Offset *count,
@@ -33,29 +33,20 @@ int ncmpii_sanity_check(int               ncid,
                         int               mustInDataMode,
                         int               rw_flag,
                         int               io_method,
-                        NC              **ncp,   /* OUT */
                         NC_var          **varp)  /* OUT */
 {
     /* all errors detected here are fatal, must return immediately */
     int i, firstDim, err;
 
-    /* check if ncid is valid (check NC_EBADID) */
-    err = ncmpii_NC_check_id(ncid, ncp);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-    /* For invalid ncid, we must return error now, as there is no way to
-     * continue with invalid ncp. However, collective APIs might hang if this
-     * error occurs only on a subset of processes
-     */
-
     /* check file write permission if this is write request */
-    if (rw_flag == WRITE_REQ && NC_readonly(*ncp)) {
+    if (rw_flag == WRITE_REQ && NC_readonly(ncp)) {
         DEBUG_ASSIGN_ERROR(err, NC_EPERM)
         goto fn_exit;
     }
 
     /* if this call must be made in data mode, check if currently is in define
      * mode */
-    if (mustInDataMode && NC_indef(*ncp)) {
+    if (mustInDataMode && NC_indef(ncp)) {
         DEBUG_ASSIGN_ERROR(err, NC_EINDEFINE)
         goto fn_exit;
     }
@@ -63,12 +54,12 @@ int ncmpii_sanity_check(int               ncid,
     if (io_method != NONBLOCKING_IO) { /* for blocking APIs */
         /* check if in the right collective or independent mode and initialize
          * MPI file handlers */
-        err = ncmpii_check_mpifh(*ncp, io_method);
+        err = ncmpii_check_mpifh(ncp, io_method);
         if (err != NC_NOERR) goto fn_exit;
     }
 
     /* check if varid is valid (check NC_ENOTVAR) */
-    err = ncmpii_NC_lookupvar(*ncp, varid, varp);
+    err = ncmpii_NC_lookupvar(ncp, varid, varp);
     if (err != NC_NOERR) goto fn_exit;
 
     /* check NC_ECHAR */
@@ -128,7 +119,7 @@ int ncmpii_sanity_check(int               ncid,
             goto fn_exit;
         }
 
-        if ((*ncp)->format < 5 &&    /* not CDF-5 */
+        if (ncp->format < 5 &&    /* not CDF-5 */
             start[0] > X_UINT_MAX) { /* sanity check */
             DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
             goto fn_exit;
@@ -138,11 +129,11 @@ int ncmpii_sanity_check(int               ncid,
         if (rw_flag == READ_REQ) {
             /* read cannot go beyond current numrecs */
 #ifdef RELAX_COORD_BOUND
-            if (start[0] >  (*ncp)->numrecs) {
+            if (start[0] >  ncp->numrecs) {
                 DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
                 goto fn_exit;
             }
-            if (start[0] == (*ncp)->numrecs) {
+            if (start[0] == ncp->numrecs) {
                 if (api == API_VAR1) {
                     /* for var1 APIs, count[0] is considered of 1 */
                     DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
@@ -154,7 +145,7 @@ int ncmpii_sanity_check(int               ncid,
                 }
             }
 #else
-            if (start[0] >= (*ncp)->numrecs) {
+            if (start[0] >= ncp->numrecs) {
                 DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
                 goto fn_exit;
             }
@@ -169,7 +160,7 @@ int ncmpii_sanity_check(int               ncid,
             DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
             goto fn_exit;
         }
-        if (start[i] == (*ncp)->numrecs) {
+        if (start[i] == ncp->numrecs) {
             if (api == API_VAR1) {
                 /* for var1 APIs, count[0] is considered of 1 */
                 DEBUG_ASSIGN_ERROR(err, NC_EINVALCOORDS)
@@ -209,14 +200,14 @@ int ncmpii_sanity_check(int               ncid,
         /* for record variable, [0] is the NC_UNLIMITED dimension */
         if (rw_flag == READ_REQ) { /* read cannot go beyond current numrecs */
             if (stride == NULL) {  /* for vara APIs */
-                if (start[0] + count[0] > (*ncp)->numrecs) {
+                if (start[0] + count[0] > ncp->numrecs) {
                     DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
                     goto fn_exit;
                 }
             }
             else { /* for vars/varm APIs */
                 if (count[0] > 0 &&
-                    start[0] + (count[0]-1) * stride[0] >= (*ncp)->numrecs) {
+                    start[0] + (count[0]-1) * stride[0] >= ncp->numrecs) {
                     DEBUG_ASSIGN_ERROR(err, NC_EEDGE)
                     goto fn_exit;
                 }
@@ -266,9 +257,9 @@ int ncmpii_sanity_check(int               ncid,
     }
 
 fn_exit:
-    if ((*ncp)->safe_mode == 1 && io_method == COLL_IO) {
+    if (ncp->safe_mode == 1 && io_method == COLL_IO) {
         int min_st, mpireturn;
-        TRACE_COMM(MPI_Allreduce)(&err, &min_st, 1, MPI_INT, MPI_MIN, (*ncp)->nciop->comm);
+        TRACE_COMM(MPI_Allreduce)(&err, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         if (err == NC_NOERR) err = min_st;
