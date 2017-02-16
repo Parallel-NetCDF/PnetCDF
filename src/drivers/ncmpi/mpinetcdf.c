@@ -203,13 +203,14 @@ ncmpii_create(MPI_Comm     comm,
         DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
     }
 
-    if (safe_mode) { /* return now if cmode is inconsistent */
+    if (safe_mode) { /* sync status among all processes */
         err = status;
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
-        if (status != NC_NOERR) return status;
-    } /* otherwise, use root's cmode to create file */
+    }
+    /* continue to use root's cmode to create the file, but will report cmode
+     * inconsistency error, if there is any */
 
 #if SIZEOF_MPI_OFFSET <  8
     /* check cmode */
@@ -351,12 +352,6 @@ ncmpii_create(MPI_Comm     comm,
     ncp->get_list   = NULL;
     ncp->put_list   = NULL;
 
-    /* add to the linked list of opened files */
-/*
-    ncmpii_add_to_NCList(ncp);
-    *ncidp = ncp->nciop->fd;
-*/
-
     if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
 
     /* initialize unlimited_id as no unlimited dimension yet defined */
@@ -432,13 +427,14 @@ ncmpii_open(MPI_Comm    comm,
         DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
     }
 
-    if (safe_mode) { /* return now if omode is inconsistent */
+    if (safe_mode) { /* sync status among all processes */
         err = status;
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
-        if (status != NC_NOERR) return status;
-    } /* otherwise, use root's omode to open file */
+    }
+    /* continue to use root's omode to open the file, but will report omode
+     * inconsistency error, if there is any */
 
     /* NC_DISKLESS is not supported yet */
     if (omode & NC_DISKLESS) DEBUG_RETURN_ERROR(NC_EINVAL_OMODE)
@@ -519,7 +515,8 @@ ncmpii_open(MPI_Comm    comm,
     if (err != NC_NOERR) { /* fatal error */
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
-        DEBUG_RETURN_ERROR(err)
+        if (status == NC_NOERR) status = err;
+        DEBUG_RETURN_ERROR(status) /* return the 1st error encountered */
     }
 
     /* PnetCDF's default mode is no fill */
@@ -531,7 +528,8 @@ ncmpii_open(MPI_Comm    comm,
         ncmpiio_close(ncp->nciop, 0);
         if (env_info != MPI_INFO_NULL) MPI_Info_free(&env_info);
         ncmpii_free_NC(ncp);
-        DEBUG_RETURN_ERROR(err)
+        if (status == NC_NOERR) status = err;
+        DEBUG_RETURN_ERROR(status) /* return the 1st error encountered */
     }
 
     /* initialize arrays storing pending non-blocking requests */
@@ -540,27 +538,22 @@ ncmpii_open(MPI_Comm    comm,
     ncp->get_list   = NULL;
     ncp->put_list   = NULL;
 
-    /* add NC object to the linked list of opened files */
-/*
-    ncmpii_add_to_NCList(ncp);
-    *ncidp = ncp->nciop->fd;
-*/
-
 #ifdef ENABLE_SUBFILING
     if (ncp->subfile_mode) {
         /* check attr for subfiles */
-        err = ncmpi_get_att_int(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
-                                &ncp->nc_num_subfiles);
+        err = ncmpii_get_att(ncp, NC_GLOBAL, "num_subfiles",
+                             &ncp->nc_num_subfiles, NC_INT);
         if (err == NC_NOERR && ncp->nc_num_subfiles > 1) {
             /* ignore error NC_ENOTATT if this attribute is not defined */
             int nvars;
 
-            err = ncmpi_inq_nvars(ncp->nciop->fd, &nvars);
+            err = ncmpii_inq(ncp, NULL, &nvars, NULL, NULL);
+
             if (status == NC_NOERR) status = err;
 
             for (i=0; i<nvars; i++) {
-                err = ncmpi_get_att_int(ncp->nciop->fd, i, "num_subfiles",
-                                        &ncp->vars.value[i]->num_subfiles);
+                err = ncmpii_get_att(ncp, i, "num_subfiles",
+                                     &ncp->vars.value[i]->num_subfiles, NC_INT);
                 if (err == NC_ENOTATT) continue;
                 if (err != NC_NOERR && status == NC_NOERR) { /* other error */
                     status = err;
@@ -568,8 +561,8 @@ ncmpii_open(MPI_Comm    comm,
                 }
 
                 if (ncp->vars.value[i]->num_subfiles > 1) {
-                    err = ncmpi_get_att_int(ncp->nciop->fd, i, "ndims_org",
-                                            &ncp->vars.value[i]->ndims_org);
+                    err = ncmpii_get_att(ncp, i, "ndims_org",
+                                         &ncp->vars.value[i]->ndims_org, NC_INT);
                     if (status == NC_NOERR) status = err;
                 }
             }
@@ -635,7 +628,7 @@ ncmpii_open(MPI_Comm    comm,
 int
 ncmpii_redef(void *ncdp)
 {
-    int err;
+    int err=NC_NOERR;
     NC *ncp = (NC*)ncdp;
 
     if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
@@ -671,7 +664,7 @@ ncmpii_redef(void *ncdp)
 int
 ncmpii_begin_indep_data(void *ncdp)
 {
-    int err;
+    int err=NC_NOERR;
     NC *ncp = (NC*)ncdp;
 
     if (NC_indef(ncp))  /* must not be in define mode */
@@ -783,7 +776,7 @@ ncmpii__enddef(void       *ncdp,
                MPI_Offset  v_minfree,
                MPI_Offset  r_align)
 {
-    int err;
+    int err=NC_NOERR;
     NC *ncp = (NC*)ncdp;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
@@ -828,7 +821,7 @@ ncmpii__enddef(void       *ncdp,
 int
 ncmpii_sync_numrecs(void *ncdp)
 {
-    int err;
+    int err=NC_NOERR;
     NC *ncp=(NC*)ncdp;
 
     /* cannot be in define mode */
@@ -938,9 +931,6 @@ ncmpii_abort(void *ncdp)
     if (status == NC_NOERR ) status = err;
 
     ncp->nciop = NULL;
-
-    /* remove this file from the list of opened files */
-    ncmpii_del_from_NCList(ncp);
 
     /* free up space occupied by the header metadata */
     ncmpii_free_NC(ncp);

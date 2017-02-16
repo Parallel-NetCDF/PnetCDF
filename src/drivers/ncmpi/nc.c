@@ -25,58 +25,12 @@
 #include "subfile.h"
 #endif
 
-/* list of opened netcdf file objects (not thread-safe) */
-static NC *NClist = NULL;
-
 /* These have to do with version numbers. */
 #define MAGIC_NUM_LEN 4
 #define VER_CLASSIC 1
 #define VER_64BIT_OFFSET 2
 #define VER_HDF5 3
 #define VER_64BIT_DATA 5
-
-/* Prototypes for functions used only in this file */
-#if 0
-static int move_data_r(NC *ncp, NC *old);
-static int move_vars_r(NC *ncp, NC *old);
-static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
-#endif
-
-/*----< ncmpii_add_to_NCList() >---------------------------------------------*/
-void
-ncmpii_add_to_NCList(NC *ncp)
-{
-    assert(ncp != NULL);
-
-    /* add the newly created NC object to the head of linked list */
-    ncp->prev = NULL;
-    if (NClist != NULL)
-        NClist->prev = ncp;
-    ncp->next = NClist;
-    NClist = ncp;
-}
-
-/*----< ncmpii_del_from_NCList() >-------------------------------------------*/
-void
-ncmpii_del_from_NCList(NC *ncp)
-{
-    assert(ncp != NULL);
-
-    if (NClist == ncp) {
-        assert(ncp->prev == NULL);
-        NClist = ncp->next;
-    }
-    else {
-        assert(ncp->prev != NULL);
-        ncp->prev->next = ncp->next;
-    }
-
-    if (ncp->next != NULL)
-        ncp->next->prev = ncp->prev;
-
-    ncp->next = NULL;
-    ncp->prev = NULL;
-}
 
 #ifdef _CHECK_HEADER_IN_DETAIL
 /*----< NC_check_header() >--------------------------------------------------*/
@@ -207,27 +161,6 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   }
 }
 #endif
-
-/*----< ncmpii_NC_check_id() >-----------------------------------------------*/
-int
-ncmpii_NC_check_id(int   ncid,
-                   NC  **ncpp)
-{
-    NC *ncp;
-
-    if (ncid >= 0) {
-        for (ncp = NClist; ncp != NULL; ncp = ncp->next) {
-            if (ncp->nciop->fd == ncid) {
-                if (ncpp != NULL) *ncpp = ncp;
-                return NC_NOERR; /* normal return */
-            }
-        }
-    }
-
-    /* else, not found */
-    DEBUG_RETURN_ERROR(NC_EBADID)
-}
-
 
 /*----< ncmpii_free_NC() >----------------------------------------------------*/
 inline void
@@ -1117,8 +1050,10 @@ ncmpii_NC_enddef(NC         *ncp,
 #ifdef ENABLE_SUBFILING
     if (ncp->nc_num_subfiles > 1) {
         /* get ncp info for the subfile */
-        status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);
+        PNC *pncp;
+        status = PNC_check_id(ncp->ncid_sf, &pncp);
         if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
+        ncp_sf = (NC*)pncp->ncp;
 
         status = NC_begins(ncp_sf, h_align, h_minfree, v_align, v_minfree,
                            r_align);
@@ -1417,7 +1352,7 @@ ncmpiio__enddef(NC         *ncp,
 int
 ncmpii_close(void *ncdp)
 {
-    int err, status=NC_NOERR;
+    int err=NC_NOERR, status=NC_NOERR;
     NC *ncp = (NC*)ncdp;
 
     if (NC_indef(ncp)) { /* currently in define mode */
@@ -1484,11 +1419,6 @@ ncmpii_close(void *ncdp)
     /* calling MPI_File_close() */
     ncmpiio_close(ncp->nciop, 0);
     ncp->nciop = NULL;
-
-#if 0
-    /* remove this file from the list of opened files */
-    ncmpii_del_from_NCList(ncp);
-#endif
 
     /* free up space occupied by the header metadata */
     ncmpii_free_NC(ncp);

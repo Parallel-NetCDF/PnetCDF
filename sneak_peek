@@ -7,6 +7,10 @@ This is essentially a placeholder for the next release note ...
     * Building shared libraries is now supported. Note using shared libraries
       is not recommended due to the likely performance degradation.
 
+  o New Limitation
+    * The maximum number of files that can be simultaneously opened by an MPI
+      process is 1024.
+
   o New APIs
     * none
 
@@ -17,7 +21,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Semantics updates
-    * none
+    * When the file create/open modes are not consistent among processes, the
+      modes will be replaced by rank 0's mode and PnetCDF library will still
+      try to create/open the file. Error code NC_EMULTIDEFINE_CMODE or
+      NC_EMULTIDEFINE_OMODE will be returned on processes whose modes disagree
+      with rank 0's. If safe mode is on, then rank 0 will also get the error
+      code.
 
   o New utility program
     * none

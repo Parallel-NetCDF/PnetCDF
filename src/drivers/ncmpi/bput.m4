@@ -149,7 +149,7 @@ ncmpii_bput_var(void             *ncdp,
          if (api_kind == API_VAR)  GET_FULL_DIMENSIONS(_start, _count)
     else if (api_kind == API_VAR1) GET_ONE_COUNT(_count)
 
-    err = ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
+    err = ncmpii_igetput_varm(ncp, varp, _start, _count, stride, imap,
                               (void*)buf, bufcount, buftype,
                               reqid, WRITE_REQ, 1, 0);
 

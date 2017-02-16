@@ -360,7 +360,7 @@ ncmpii_def_dim(void       *ncdp,    /* IN:  NC object */
                MPI_Offset  size,    /* IN:  dimension size */
                int        *dimidp)  /* OUT: dimension ID */
 {
-    int dimid, err;
+    int dimid, err=NC_NOERR;
     char *nname=NULL;  /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_dim *dimp=NULL;
@@ -521,7 +521,7 @@ ncmpii_inq_dimid(void       *ncdp,
                  const char *name,
                  int        *dimid)
 {
-    int err;
+    int err=NC_NOERR;
     char *nname=NULL; /* normalized name */
     NC *ncp=(NC*)ncdp;
 
@@ -576,7 +576,7 @@ ncmpii_rename_dim(void       *ncdp,
                   int         dimid,
                   const char *newname)
 {
-    int err;
+    int err=NC_NOERR;
     char *nnewname=NULL; /* normalized newname */
     NC *ncp=(NC*)ncdp;
     NC_dim *dimp=NULL;

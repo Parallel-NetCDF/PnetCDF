@@ -88,7 +88,7 @@ int ncmpii_sanity_check(NC                *ncp,
     }
 
     /* for flexible APIs, bufcount cannot be negative */
-    if (bufcount < 0) {
+    if (isFlexibleAPI && bufcount < 0) {
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
         goto fn_exit;
     }

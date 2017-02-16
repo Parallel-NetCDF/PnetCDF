@@ -841,12 +841,15 @@ ncmpii_getput_varnm(int                ncid,
     MPI_Datatype ptype;
     NC *ncp=NULL;
     NC_var *varp;
+    PNC *pncp;
 
     /* check if ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp);
+    status = PNC_check_id(ncid, &pncp);
     if (status != NC_NOERR)
         /* must return the error now, parallel program might hang */
         return status;
+
+    ncp = (NC*)pncp->ncp;
 
     /* check if it is in define mode */
     if (NC_indef(ncp)) status = NC_EINDEFINE;

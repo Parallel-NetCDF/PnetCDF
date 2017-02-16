@@ -613,7 +613,7 @@ ncmpii_def_var(void       *ncdp,
                const int  *dimids,
                int        *varidp)
 {
-    int err;
+    int err=NC_NOERR;
     char *nname=NULL; /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
@@ -787,7 +787,7 @@ ncmpii_inq_varid(void       *ncdp,
                  const char *name,
                  int        *varid)
 {
-    int err;
+    int err=NC_NOERR;
     char *nname=NULL; /* normalized name */
     NC *ncp=(NC*)ncdp;
 
@@ -819,15 +819,23 @@ ncmpii_inq_var(void       *ncdp,
                int        *no_fillp,    /* OUT: 1 not fill mode, 0 fill mode */
                void       *fill_valuep) /* OUT: user-defined or default fill value */
 {
-    int err;
+    int err=NC_NOERR;
     NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
 
-    /* using NC_GLOBAL in varid is illegal for this API, except inquiring natts. See
+    /* using NC_GLOBAL in varid is illegal for this API, except for inquiring
+     * natts. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      * Checking NC_GLOBAL has been done at the calling routines at top level.
     if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
      */
+
+    if (varid == NC_GLOBAL) {
+        /* in this case, all other pointer arguments must be NULLs */
+        if (nattsp != NULL)
+            *nattsp = (int) ncp->attrs.ndefined;
+        return NC_NOERR;
+    }
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
@@ -883,7 +891,7 @@ ncmpii_rename_var(void       *ncdp,
                   int         varid,
                   const char *newname)
 {
-    int err;
+    int err=NC_NOERR;
     char *nnewname=NULL; /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
@@ -1017,9 +1025,11 @@ ncmpi_print_all_var_offsets(int ncid) {
     int i, err;
     NC_var **vpp=NULL;
     NC *ncp=NULL;
+    PNC *pncp;
 
-    err = ncmpii_NC_check_id(ncid, &ncp);
+    err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    ncp = (NC*)pncp->ncp;
 
     if (ncp->begin_var%1048576)
         printf("%s header size (ncp->begin_var)=%lld MB + %lld\n",

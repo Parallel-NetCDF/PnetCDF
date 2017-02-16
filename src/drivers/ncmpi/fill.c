@@ -224,7 +224,7 @@ ncmpii_fill_var_rec(void      *ncdp,
                     int        varid,
                     MPI_Offset recno) /* record number, ignored if non-record var */
 {
-    int     indx, err;
+    int     indx, err=NC_NOERR;
     NC     *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
 
@@ -308,7 +308,7 @@ ncmpii_set_fill(void *ncdp,
                 int   fill_mode,
                 int  *old_fill_mode)
 {
-    int i, err, mpireturn, oldmode;
+    int i, err=NC_NOERR, mpireturn, oldmode;
     NC *ncp = (NC*)ncdp;
 
     /* check whether file's write permission */
@@ -372,7 +372,7 @@ ncmpii_def_var_fill(void       *ncdp,
                     int         no_fill,    /* 1: no fill, 0: fill */
                     const void *fill_value) /* when NULL, use default fill value */
 {
-    int err;
+    int err=NC_NOERR;
     NC *ncp=(NC*)ncdp;
     NC_var *varp=NULL;
 
@@ -464,7 +464,7 @@ ncmpii_inq_var_fill(NC_var *varp,
                     void   *fill_value) /* OUT: user-defined or
                                                 default fill value */
 {
-    int i, err;
+    int i, err=NC_NOERR;
     const void *xp;
     NC_attrarray *ncap=&varp->attrs;
 
@@ -570,7 +570,7 @@ static int
 fill_added_recs(NC *ncp, NC *old_ncp)
 {
     MPI_Offset old_nrecs = NC_get_numrecs(old_ncp);
-    int indx, err, recno, varid;
+    int indx, err=NC_NOERR, recno, varid;
 
     /* loop thru all old records */
     for (recno=0; recno<old_nrecs; recno++) {
