@@ -12,11 +12,13 @@ noinst_LTLIBRARIES = libdispatchers.la
 
 M4FLAGS += -I${top_srcdir}/m4
 
-M4_SRCS  = attribute.m4 \
-           variable.m4
+M4_SRCS  = attr_getput.m4 \
+           var_getput.m4
 
 C_SRCS = file.c \
          dimension.c \
+         variable.c \
+         attribute.c \
          error_codes.c
 
 libdispatchers_la_SOURCES = $(C_SRCS)
