@@ -8,6 +8,10 @@
 
 SUFFIXES = .a .o .c .m4 .h
 
+if PNETCDF_DEBUG
+   AM_CPPFLAGS = -DPNETCDF_DEBUG
+endif
+
 noinst_LTLIBRARIES = libpnetcdfc.la
 
 M4FLAGS += -I${top_srcdir}/m4
@@ -21,7 +25,6 @@ M4_SRCS   = getput.m4 \
             i_getput.m4 \
             bput.m4 \
             ncx.m4 \
-            m_getput_varx.m4 \
             varn.m4 \
             i_varn.m4 \
             attr.m4 \

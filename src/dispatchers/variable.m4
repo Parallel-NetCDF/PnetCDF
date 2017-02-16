@@ -103,7 +103,9 @@ ncmpi_inq_var(int      ncid,    /* IN:  file ID */
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+    if (varid == NC_GLOBAL &&
+        (name != NULL || xtypep != NULL || ndimsp != NULL || dimids != NULL))
+        return NC_EGLOBAL;
 
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
@@ -385,7 +387,7 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
     /* calling the subroutine that implements APINAME($1,$2,$3,$4)() */
     err = pncp->dispatch->`$1'_var(pncp->ncp, varid, ArgStartCountStrideMap($2),
                                    buf, ifelse(`$3', `', `bufcount, buftype',
-                                                         `0, ITYPE2MPI($3)'),
+                                                         `-1, ITYPE2MPI($3)'),
                                    API_KIND($2), itype, CollIndep($4));
 
     if (err != NC_NOERR) return err;
@@ -464,7 +466,7 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
     /* calling the subroutine that implements NAPINAME($1,$2,$3)() */
     err = pncp->dispatch->`$1'_varn(pncp->ncp, varid, num, starts, counts,
                                     buf, ifelse(`$3', `', `bufcount, buftype',
-                                                          `0, ITYPE2MPI($3)'),
+                                                          `-1, ITYPE2MPI($3)'),
                                     itype, CollIndep($2));
 
     if (err != NC_NOERR) return err;
@@ -485,6 +487,96 @@ foreach(`putget', (put, get),
                  `foreach(`iType', (ITYPE_LIST),
                           `VARN(putget,collindep,iType)'
 )')')
+
+dnl
+define(`MAPINAME',`ifelse(`$3',`',`ncmpi_m$1_var$2$4',`ncmpi_m$1_var$2_$3$4')')dnl
+dnl
+define(`MArgStartCountStrideMap', `ifelse(
+       `$1', `',  `NULL,      NULL,      NULL,       NULL',
+       `$1', `1', `starts[i], NULL,      NULL,       NULL',
+       `$1', `a', `starts[i], counts[i], NULL,       NULL',
+       `$1', `s', `starts[i], counts[i], strides[i], NULL',
+       `$1', `m', `starts[i], counts[i], strides[i], imaps[i]')')dnl
+dnl
+dnl MVAR(putget,kind,iType,collindep)
+dnl
+define(`MVAR',dnl
+`dnl
+/*----< MAPINAME($1,$2,$3,$4)() >--------------------------------------------*/
+int
+MAPINAME($1,$2,$3,$4)(int                ncid,
+                      int                nvars,
+                      int               *varids,
+                      ifelse(`$2', `1', `MPI_Offset* const *starts,',
+                             `$2', `a', `MPI_Offset* const *starts,
+                                         MPI_Offset* const *counts,',
+                             `$2', `s', `MPI_Offset* const *starts,
+                                         MPI_Offset* const *counts,
+                                         MPI_Offset* const *strides,',
+                             `$2', `m', `MPI_Offset* const *starts,
+                                         MPI_Offset* const *counts,
+                                         MPI_Offset* const *strides,
+                                         MPI_Offset* const *imaps,')
+                      ifelse(`$3', `',
+                         `ifelse($1,`get',`void **bufs,',`void* const *bufs,')
+                         const MPI_Offset *bufcounts,
+                         const MPI_Datatype *buftypes',
+                         `ifelse($1,`get',`FUNC2ITYPE($3) **bufs',
+                                          `FUNC2ITYPE($3)* const *bufs')'))
+{
+    int i, status=NC_NOERR, err, *reqs;
+    PNC *pncp;
+
+    /* use NC_NAT to represent this is a flexible API */
+ifelse(`$3',`',`    nc_type itype=NC_NAT;',
+`$3',`long',`#if SIZEOF_LONG == SIZEOF_INT
+    nc_type itype=NC_INT;
+#elif SIZEOF_LONG == SIZEOF_LONG_LONG
+    nc_type itype=NC_INT64;
+#endif',`    nc_type itype=NC_TYPE($3);')
+
+    /* check if ncid is valid.
+     * For invalid ncid, we must return error now, as there is no way to
+     * continue with invalid ncp. However, collective APIs might hang if this
+     * error occurs only on a subset of processes
+     */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    reqs = (int*) malloc(nvars * sizeof(int));
+    for (i=0; i<nvars; i++) {
+        /* call the nonblocking subroutines */
+        err = pncp->dispatch->i`$1'_var(pncp->ncp, varids[i],
+                                        MArgStartCountStrideMap($2),
+                                        bufs[i],
+                                        ifelse(`$3',`',`bufcounts[i], buftypes[i]',
+                                                       `-1, ITYPE2MPI($3)'),
+                                        &reqs[i], API_KIND($2), itype);
+        if (status != NC_NOERR) status = err;
+    }
+
+    err = pncp->dispatch->wait(pncp->ncp, nvars, reqs, NULL, CollIndep($4));
+    if (status != NC_NOERR) status = err;
+    free(reqs);
+
+    return status;
+}
+')dnl
+dnl
+/*---- PnetCDF flexible APIs ------------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),
+        `foreach(`putget', (put, get),
+                 `foreach(`collindep', (, _all),
+                          `MVAR(putget,kind,,collindep)'
+)')')
+
+/*---- PnetCDF high-level APIs ----------------------------------------------*/
+foreach(`kind', (, 1, a, s, m),
+        `foreach(`putget', (put, get),
+                 `foreach(`collindep', (, _all),
+                          `foreach(`iType', (ITYPE_LIST),
+                                   `MVAR(putget,kind,iType,collindep)'
+)')')')
 
 dnl
 define(`IAPINAME',`ifelse(`$3',`',`ncmpi_$1_var$2',`ncmpi_$1_var$2_$3')')dnl
@@ -523,7 +615,7 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
     /* calling the subroutine that implements IAPINAME($1,$2,$3)() */
     err = pncp->dispatch->`$1'_var(pncp->ncp, varid, ArgStartCountStrideMap($2),
                                    buf, ifelse(`$3', `', `bufcount, buftype',
-                                                         `0, ITYPE2MPI($3)'),
+                                                         `-1, ITYPE2MPI($3)'),
                                    reqid, API_KIND($2), itype);
 
     if (err != NC_NOERR) return err;

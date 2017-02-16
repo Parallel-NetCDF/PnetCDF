@@ -776,6 +776,7 @@ if test "x${debug}" = xyes; then
    PNETCDF_DEBUG=1
 fi
 AC_SUBST(PNETCDF_DEBUG)
+AM_CONDITIONAL(PNETCDF_DEBUG, [test x"$PNETCDF_DEBUG" = x1])
 
 AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
 if test "x${ac_cv_type_MPI_Offset}" = xyes; then

@@ -3365,558 +3365,558 @@ ncmpi_bput_varn_ulonglong(int ncid, int varid, int num,
 /* skip all mput/mget APIs as Fortran cannot handle array of buffers */
 
 extern int
-ncmpi_mput_var(int ncid, int num, int *varids, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+ncmpi_mput_var(int ncid, int num, int *varids, void* const *buf,
+               const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
 extern int
-ncmpi_mput_var_all(int ncid, int num, int *varids, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+ncmpi_mput_var_all(int ncid, int num, int *varids, void* const *buf,
+               const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
 extern int
-ncmpi_mput_var_text(int ncid, int num, int *varids, char *bufs[]);
+ncmpi_mput_var_text(int ncid, int num, int *varids, char* const *buf);
 extern int
-ncmpi_mput_var_text_all(int ncid, int num, int *varids, char *bufs[]);
+ncmpi_mput_var_text_all(int ncid, int num, int *varids, char* const *buf);
 
 extern int
-ncmpi_mput_var_schar(int ncid, int num, int *varids, signed char *bufs[]);
+ncmpi_mput_var_schar(int ncid, int num, int *varids, signed char* const *buf);
 extern int
-ncmpi_mput_var_schar_all(int ncid, int num, int *varids, signed char *bufs[]);
+ncmpi_mput_var_schar_all(int ncid, int num, int *varids, signed char* const *buf);
 
 extern int
-ncmpi_mput_var_uchar(int ncid, int num, int *varids, unsigned char *bufs[]);
+ncmpi_mput_var_uchar(int ncid, int num, int *varids, unsigned char* const *buf);
 extern int
-ncmpi_mput_var_uchar_all(int ncid, int num, int *varids, unsigned char *bufs[]);
+ncmpi_mput_var_uchar_all(int ncid, int num, int *varids, unsigned char* const *buf);
 
 extern int
-ncmpi_mput_var_short(int ncid, int num, int *varids, short *bufs[]);
+ncmpi_mput_var_short(int ncid, int num, int *varids, short* const *buf);
 extern int
-ncmpi_mput_var_short_all(int ncid, int num, int *varids, short *bufs[]);
+ncmpi_mput_var_short_all(int ncid, int num, int *varids, short* const *buf);
 
 extern int
-ncmpi_mput_var_ushort(int ncid, int num, int *varids, unsigned short *bufs[]);
+ncmpi_mput_var_ushort(int ncid, int num, int *varids, unsigned short* const *buf);
 extern int
 ncmpi_mput_var_ushort_all(int ncid, int num, int *varids,
-               unsigned short *bufs[]);
+               unsigned short* const *buf);
 
 extern int
-ncmpi_mput_var_int(int ncid, int num, int *varids, int *bufs[]);
+ncmpi_mput_var_int(int ncid, int num, int *varids, int* const *buf);
 extern int
-ncmpi_mput_var_int_all(int ncid, int num, int *varids, int *bufs[]);
+ncmpi_mput_var_int_all(int ncid, int num, int *varids, int* const *buf);
 
 extern int
-ncmpi_mput_var_uint(int ncid, int num, int *varids, unsigned int *bufs[]);
+ncmpi_mput_var_uint(int ncid, int num, int *varids, unsigned int* const *buf);
 extern int
-ncmpi_mput_var_uint_all(int ncid, int num, int *varids, unsigned int *bufs[]);
+ncmpi_mput_var_uint_all(int ncid, int num, int *varids, unsigned int* const *buf);
 
 extern int
-ncmpi_mput_var_long(int ncid, int num, int *varids, long *bufs[]);
+ncmpi_mput_var_long(int ncid, int num, int *varids, long* const *buf);
 extern int
-ncmpi_mput_var_long_all(int ncid, int num, int *varids, long *bufs[]);
+ncmpi_mput_var_long_all(int ncid, int num, int *varids, long* const *buf);
 
 extern int
-ncmpi_mput_var_float(int ncid, int num, int *varids, float *bufs[]);
+ncmpi_mput_var_float(int ncid, int num, int *varids, float* const *buf);
 extern int
-ncmpi_mput_var_float_all(int ncid, int num, int *varids, float *bufs[]);
+ncmpi_mput_var_float_all(int ncid, int num, int *varids, float* const *buf);
 
 extern int
-ncmpi_mput_var_double(int ncid, int num, int *varids, double *bufs[]);
+ncmpi_mput_var_double(int ncid, int num, int *varids, double* const *buf);
 extern int
-ncmpi_mput_var_double_all(int ncid, int num, int *varids, double *bufs[]);
+ncmpi_mput_var_double_all(int ncid, int num, int *varids, double* const *buf);
 
 extern int
-ncmpi_mput_var_longlong(int ncid, int num, int *varids, long long *bufs[]);
+ncmpi_mput_var_longlong(int ncid, int num, int *varids, long long* const *buf);
 extern int
-ncmpi_mput_var_longlong_all(int ncid, int num, int *varids, long long *bufs[]);
+ncmpi_mput_var_longlong_all(int ncid, int num, int *varids, long long* const *buf);
 
 extern int
 ncmpi_mput_var_ulonglong(int ncid, int num, int *varids,
-               unsigned long long *bufs[]);
+               unsigned long long* const *buf);
 extern int
 ncmpi_mput_var_ulonglong_all(int ncid, int num, int *varids,
-               unsigned long long *bufs[]);
+               unsigned long long* const *buf);
 
 extern int
 ncmpi_mput_var1(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               MPI_Offset* const *starts, void* const *buf,
+               const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 extern int
 ncmpi_mput_var1_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               MPI_Offset* const *starts, void* const *buf,
+               const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
 extern int
 ncmpi_mput_var1_text(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, char *bufs[]);
+               MPI_Offset* const *starts, char* const *buf);
 extern int
 ncmpi_mput_var1_text_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, char *bufs[]);
+               MPI_Offset* const *starts, char* const *buf);
 
 extern int
 ncmpi_mput_var1_schar(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, signed char *bufs[]);
+               MPI_Offset* const *starts, signed char* const *buf);
 extern int
 ncmpi_mput_var1_schar_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, signed char *bufs[]);
+               MPI_Offset* const *starts, signed char* const *buf);
 
 extern int
 ncmpi_mput_var1_uchar(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned char *bufs[]);
+               MPI_Offset* const *starts, unsigned char* const *buf);
 extern int
 ncmpi_mput_var1_uchar_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned char *bufs[]);
+               MPI_Offset* const *starts, unsigned char* const *buf);
 
 extern int
 ncmpi_mput_var1_short(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, short *bufs[]);
+               MPI_Offset* const *starts, short* const *buf);
 extern int
 ncmpi_mput_var1_short_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, short *bufs[]);
+               MPI_Offset* const *starts, short* const *buf);
 
 extern int
 ncmpi_mput_var1_ushort(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned short *bufs[]);
+               MPI_Offset* const *starts, unsigned short* const *buf);
 extern int
 ncmpi_mput_var1_ushort_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned short *bufs[]);
+               MPI_Offset* const *starts, unsigned short* const *buf);
 
 extern int
 ncmpi_mput_var1_int(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, int *bufs[]);
+               MPI_Offset* const *starts, int* const *buf);
 extern int
 ncmpi_mput_var1_int_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, int *bufs[]);
+               MPI_Offset* const *starts, int* const *buf);
 
 extern int
 ncmpi_mput_var1_uint(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned int *bufs[]);
+               MPI_Offset* const *starts, unsigned int* const *buf);
 extern int
 ncmpi_mput_var1_uint_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned int *bufs[]);
+               MPI_Offset* const *starts, unsigned int* const *buf);
 
 extern int
 ncmpi_mput_var1_long(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, long *bufs[]);
+               MPI_Offset* const *starts, long* const *buf);
 extern int
 ncmpi_mput_var1_long_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, long *bufs[]);
+               MPI_Offset* const *starts, long* const *buf);
 
 extern int
 ncmpi_mput_var1_float(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, float *bufs[]);
+               MPI_Offset* const *starts, float* const *buf);
 extern int
 ncmpi_mput_var1_float_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, float *bufs[]);
+               MPI_Offset* const *starts, float* const *buf);
 
 extern int
 ncmpi_mput_var1_double(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, double *bufs[]);
+               MPI_Offset* const *starts, double* const *buf);
 extern int
 ncmpi_mput_var1_double_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, double *bufs[]);
+               MPI_Offset* const *starts, double* const *buf);
 
 extern int
 ncmpi_mput_var1_longlong(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, long long *bufs[]);
+               MPI_Offset* const *starts, long long* const *buf);
 extern int
 ncmpi_mput_var1_longlong_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, long long *bufs[]);
+               MPI_Offset* const *starts, long long* const *buf);
 
 extern int
 ncmpi_mput_var1_ulonglong(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned long long *bufs[]);
+               MPI_Offset* const *starts, unsigned long long* const *buf);
 extern int
 ncmpi_mput_var1_ulonglong_all(int ncid, int num, int *varids,
-               MPI_Offset* const *starts, unsigned long long *bufs[]);
+               MPI_Offset* const *starts, unsigned long long* const *buf);
 
 
 extern int
 ncmpi_mput_vara(int ncid, int num, int *varids, MPI_Offset* const *starts,
-               MPI_Offset* const *counts, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               MPI_Offset* const *counts, void* const *buf,
+               const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 extern int
 ncmpi_mput_vara_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               void *bufs[], MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               void* const *buf, const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
 extern int
 ncmpi_mput_vara_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               char *bufs[]);
+               char* const *buf);
 extern int
 ncmpi_mput_vara_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               char *bufs[]);
+               char* const *buf);
 
 extern int
 ncmpi_mput_vara_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               signed char *bufs[]);
+               signed char* const *buf);
 extern int
 ncmpi_mput_vara_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               signed char *bufs[]);
+               signed char* const *buf);
 
 extern int
 ncmpi_mput_vara_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned char *bufs[]);
+               unsigned char* const *buf);
 extern int
 ncmpi_mput_vara_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned char *bufs[]);
+               unsigned char* const *buf);
 
 extern int
 ncmpi_mput_vara_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               short *bufs[]);
+               short* const *buf);
 extern int
 ncmpi_mput_vara_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               short *bufs[]);
+               short* const *buf);
 
 extern int
 ncmpi_mput_vara_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned short *bufs[]);
+               unsigned short* const *buf);
 extern int
 ncmpi_mput_vara_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned short *bufs[]);
+               unsigned short* const *buf);
 
 extern int
 ncmpi_mput_vara_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               int *bufs[]);
+               int* const *buf);
 extern int
 ncmpi_mput_vara_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               int *bufs[]);
+               int* const *buf);
 
 extern int
 ncmpi_mput_vara_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned int *bufs[]);
+               unsigned int* const *buf);
 extern int
 ncmpi_mput_vara_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned int *bufs[]);
+               unsigned int* const *buf);
 
 extern int
 ncmpi_mput_vara_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               long *bufs[]);
+               long* const *buf);
 extern int
 ncmpi_mput_vara_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               long *bufs[]);
+               long* const *buf);
 
 extern int
 ncmpi_mput_vara_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               float *bufs[]);
+               float* const *buf);
 extern int
 ncmpi_mput_vara_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               float *bufs[]);
+               float* const *buf);
 
 extern int
 ncmpi_mput_vara_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               double *bufs[]);
+               double* const *buf);
 extern int
 ncmpi_mput_vara_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               double *bufs[]);
+               double* const *buf);
 
 extern int
 ncmpi_mput_vara_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               long long *bufs[]);
+               long long* const *buf);
 extern int
 ncmpi_mput_vara_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               long long *bufs[]);
+               long long* const *buf);
 
 extern int
 ncmpi_mput_vara_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned long long *bufs[]);
+               unsigned long long* const *buf);
 extern int
 ncmpi_mput_vara_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               unsigned long long *bufs[]);
+               unsigned long long* const *buf);
 
 
 extern int
 ncmpi_mput_vars(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               MPI_Offset* const *strides, void* const *buf,
+               const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
 extern int
 ncmpi_mput_vars_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               MPI_Offset* const *strides, void* const *buf,
+               const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
 extern int
 ncmpi_mput_vars_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, char *bufs[]);
+               MPI_Offset* const *strides, char* const *buf);
 extern int
 ncmpi_mput_vars_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, char *bufs[]);
+               MPI_Offset* const *strides, char* const *buf);
 
 extern int
 ncmpi_mput_vars_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, signed char *bufs[]);
+               MPI_Offset* const *strides, signed char* const *buf);
 extern int
 ncmpi_mput_vars_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, signed char *bufs[]);
+               MPI_Offset* const *strides, signed char* const *buf);
 
 extern int
 ncmpi_mput_vars_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned char *bufs[]);
+               MPI_Offset* const *strides, unsigned char* const *buf);
 extern int
 ncmpi_mput_vars_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned char *bufs[]);
+               MPI_Offset* const *strides, unsigned char* const *buf);
 
 extern int
 ncmpi_mput_vars_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, short *bufs[]);
+               MPI_Offset* const *strides, short* const *buf);
 extern int
 ncmpi_mput_vars_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, short *bufs[]);
+               MPI_Offset* const *strides, short* const *buf);
 
 extern int
 ncmpi_mput_vars_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned short *bufs[]);
+               MPI_Offset* const *strides, unsigned short* const *buf);
 extern int
 ncmpi_mput_vars_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned short *bufs[]);
+               MPI_Offset* const *strides, unsigned short* const *buf);
 
 extern int
 ncmpi_mput_vars_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, int *bufs[]);
+               MPI_Offset* const *strides, int* const *buf);
 extern int
 ncmpi_mput_vars_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, int *bufs[]);
+               MPI_Offset* const *strides, int* const *buf);
 
 extern int
 ncmpi_mput_vars_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned int *bufs[]);
+               MPI_Offset* const *strides, unsigned int* const *buf);
 extern int
 ncmpi_mput_vars_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned int *bufs[]);
+               MPI_Offset* const *strides, unsigned int* const *buf);
 
 extern int
 ncmpi_mput_vars_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, long *bufs[]);
+               MPI_Offset* const *strides, long* const *buf);
 extern int
 ncmpi_mput_vars_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, long *bufs[]);
+               MPI_Offset* const *strides, long* const *buf);
 
 extern int
 ncmpi_mput_vars_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, float *bufs[]);
+               MPI_Offset* const *strides, float* const *buf);
 extern int
 ncmpi_mput_vars_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, float *bufs[]);
+               MPI_Offset* const *strides, float* const *buf);
 
 extern int
 ncmpi_mput_vars_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, double *bufs[]);
+               MPI_Offset* const *strides, double* const *buf);
 extern int
 ncmpi_mput_vars_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, double *bufs[]);
+               MPI_Offset* const *strides, double* const *buf);
 
 extern int
 ncmpi_mput_vars_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, long long *bufs[]);
+               MPI_Offset* const *strides, long long* const *buf);
 extern int
 ncmpi_mput_vars_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, long long *bufs[]);
+               MPI_Offset* const *strides, long long* const *buf);
 
 extern int
 ncmpi_mput_vars_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned long long *bufs[]);
+               MPI_Offset* const *strides, unsigned long long* const *buf);
 extern int
 ncmpi_mput_vars_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               MPI_Offset* const *strides, unsigned long long *bufs[]);
+               MPI_Offset* const *strides, unsigned long long* const *buf);
 
 extern int
 ncmpi_mput_varm(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               void *bufs[], MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               void* const *buf, const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 extern int
 ncmpi_mput_varm_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               void *bufs[], MPI_Offset *bufcounts, MPI_Datatype datatypes[]);
+               void* const *buf, const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
 extern int
 ncmpi_mput_varm_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               char *bufs[]);
+               char* const *buf);
 extern int
 ncmpi_mput_varm_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               char *bufs[]);
+               char* const *buf);
 
 extern int
 ncmpi_mput_varm_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               signed char *bufs[]);
+               signed char* const *buf);
 extern int
 ncmpi_mput_varm_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               signed char *bufs[]);
+               signed char* const *buf);
 
 extern int
 ncmpi_mput_varm_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned char *bufs[]);
+               unsigned char* const *buf);
 extern int
 ncmpi_mput_varm_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned char *bufs[]);
+               unsigned char* const *buf);
 
 extern int
 ncmpi_mput_varm_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               short *bufs[]);
+               short* const *buf);
 extern int
 ncmpi_mput_varm_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               short *bufs[]);
+               short* const *buf);
 
 extern int
 ncmpi_mput_varm_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned short *bufs[]);
+               unsigned short* const *buf);
 extern int
 ncmpi_mput_varm_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned short *bufs[]);
+               unsigned short* const *buf);
 
 extern int
 ncmpi_mput_varm_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               int *bufs[]);
+               int* const *buf);
 extern int
 ncmpi_mput_varm_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               int *bufs[]);
+               int* const *buf);
 
 extern int
 ncmpi_mput_varm_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned int *bufs[]);
+               unsigned int* const *buf);
 extern int
 ncmpi_mput_varm_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned int *bufs[]);
+               unsigned int* const *buf);
 
 extern int
 ncmpi_mput_varm_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               long *bufs[]);
+               long* const *buf);
 extern int
 ncmpi_mput_varm_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               long *bufs[]);
+               long* const *buf);
 
 extern int
 ncmpi_mput_varm_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               float *bufs[]);
+               float* const *buf);
 extern int
 ncmpi_mput_varm_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               float *bufs[]);
+               float* const *buf);
 
 extern int
 ncmpi_mput_varm_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               double *bufs[]);
+               double* const *buf);
 extern int
 ncmpi_mput_varm_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               double *bufs[]);
+               double* const *buf);
 
 extern int
 ncmpi_mput_varm_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               long long *bufs[]);
+               long long* const *buf);
 extern int
 ncmpi_mput_varm_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               long long *bufs[]);
+               long long* const *buf);
 
 extern int
 ncmpi_mput_varm_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned long long *bufs[]);
+               unsigned long long* const *buf);
 extern int
 ncmpi_mput_varm_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               unsigned long long *bufs[]);
+               unsigned long long* const *buf);
 
 extern int
 ncmpi_mget_var(int ncid, int num, int *varids, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
 extern int
 ncmpi_mget_var_all(int ncid, int num, int *varids, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
 extern int
 ncmpi_mget_var_text(int ncid, int num, int *varids, char *bufs[]);
@@ -3984,11 +3984,11 @@ ncmpi_mget_var_ulonglong_all(int ncid, int num, int *varids,
 extern int
 ncmpi_mget_var1(int ncid, int num, int *varids,
                MPI_Offset* const *starts, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 extern int
 ncmpi_mget_var1_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
 extern int
 ncmpi_mget_var1_text(int ncid, int num, int *varids,
@@ -4078,11 +4078,11 @@ ncmpi_mget_var1_ulonglong_all(int ncid, int num, int *varids,
 extern int
 ncmpi_mget_vara(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               void *bufs[], MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 extern int
 ncmpi_mget_vara_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
-               void *bufs[], MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
 extern int
 ncmpi_mget_vara_text(int ncid, int num, int *varids,
@@ -4196,12 +4196,12 @@ extern int
 ncmpi_mget_vars(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 extern int
 ncmpi_mget_vars_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, void *bufs[],
-               MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
 extern int
 ncmpi_mget_vars_text(int ncid, int num, int *varids,
@@ -4315,13 +4315,13 @@ extern int
 ncmpi_mget_varm(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               void *bufs[], MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
 extern int
 ncmpi_mget_varm_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
-               void *bufs[], MPI_Offset *bufcounts, MPI_Datatype *datatypes);
+               void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
 extern int
 ncmpi_mget_varm_text(int ncid, int num, int *varids,

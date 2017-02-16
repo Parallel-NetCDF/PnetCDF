@@ -542,10 +542,10 @@ test_bput_varn_$1(char *filename, int cdf)
     }
 
     /* test error code: NC_ENULLABUF */
-    err = ncmpi_inq_buffer_usage(ncid, NULL);
+    err = ncmpi_inq_buffer_usage(ncid, &bufsize);
     if (err != NC_ENULLABUF) {
-        printf("expecting error code NC_ENULLABUF but got %s\n",
-               nc_err_code_name(err));
+        printf("Error at line %d: expecting error code NC_ENULLABUF but got %s\n",
+               __LINE__, nc_err_code_name(err));
         nerrs++;
     }
 

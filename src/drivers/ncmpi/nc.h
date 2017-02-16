@@ -511,9 +511,6 @@ struct NC {
 /* Begin defined in nc.c */
 
 extern int
-ncmpii_NC_check_id(int ncid, NC **ncpp);
-
-extern int
 ncmpii_cktype(int cdf_ver, nc_type datatype);
 
 extern MPI_Offset
@@ -527,12 +524,6 @@ ncmpii_write_header(NC *ncp);
 
 extern void
 ncmpii_free_NC(NC *ncp);
-
-extern void
-ncmpii_add_to_NCList(NC *ncp);
-
-extern void
-ncmpii_del_from_NCList(NC *ncp);
 
 extern int
 ncmpii_read_NC(NC *ncp);

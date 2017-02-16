@@ -52,22 +52,27 @@ int test_open_mode(char *filename, int safe_mode)
     if (rank == 0) cmode = NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid);
     if (safe_mode)
+        /* all processes got the same error code */
         ERR_EXP(err, NC_EMULTIDEFINE_CMODE)
-    else {
-        if (rank > 0) ERR_EXP(err, NC_EMULTIDEFINE_CMODE)
-        err = ncmpi_close(ncid); ERR
-    }
+    else if (rank > 0)
+        /* all processes except root got the same error code */
+        ERR_EXP(err, NC_EMULTIDEFINE_CMODE)
+    /* In either case, file is created with multi-defined-cmode error or not */
+    err = ncmpi_close(ncid); ERR
+
 
     /* Test inconsistent omode -----------------------------------------------*/
     omode = NC_WRITE;
     if (rank == 0) omode = NC_NOWRITE;
     err = ncmpi_open(comm, filename, omode, info, &ncid);
     if (safe_mode)
+        /* all processes got the same error code */
         ERR_EXP(err, NC_EMULTIDEFINE_OMODE)
-    else {
-        if (rank > 0) ERR_EXP(err, NC_EMULTIDEFINE_OMODE)
-        err = ncmpi_close(ncid); ERR
-    }
+    else if (rank > 0)
+        /* all processes except root got the same error code */
+        ERR_EXP(err, NC_EMULTIDEFINE_OMODE)
+    /* In either case, file is opened with multi-defined-omode error or not */
+    err = ncmpi_close(ncid); ERR
 
     return nerrs;
 }

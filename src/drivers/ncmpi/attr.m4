@@ -411,7 +411,7 @@ ncmpii_inq_att(void       *ncdp,
                nc_type    *datatypep,
                MPI_Offset *lenp)
 {
-    int err;
+    int err=NC_NOERR;
     char *nname=NULL;    /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_attr *attrp;
@@ -448,7 +448,7 @@ ncmpii_rename_att(void       *ncdp,
                   const char *name,
                   const char *newname)
 {
-    int indx, err;
+    int indx, err=NC_NOERR;
     char *nname=NULL;    /* normalized name */
     char *nnewname=NULL; /* normalized newname */
     NC *ncp=(NC*)ncdp;
@@ -611,7 +611,7 @@ ncmpii_copy_att(void       *ncdp_in,
                 void       *ncdp_out,
                 int         varid_out)
 {
-    int indx=0, err;
+    int indx=0, err=NC_NOERR;
     char *nname=NULL;    /* normalized name */
     NC *ncp_in=(NC*)ncdp_in, *ncp_out=(NC*)ncdp_out;
     NC_attrarray *ncap_out=NULL, *ncap_in;
@@ -790,7 +790,7 @@ ncmpii_del_att(void       *ncdp,
                int         varid,
                const char *name)
 {
-    int err, attrid=-1;
+    int err=NC_NOERR, attrid=-1;
     char *nname=NULL; /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap=NULL;
@@ -905,7 +905,7 @@ ncmpii_get_att_text(void       *ncdp,
                     const char *name,
                     char       *buf)
 {
-    int      err;
+    int      err=NC_NOERR;
     char    *nname=NULL; /* normalized name */
     NC      *ncp=(NC*)ncdp;
     NC_attr *attrp;
@@ -1038,7 +1038,7 @@ ncmpii_get_att(void       *ncdp,
                void       *buf,
                nc_type     itype)
 {
-    int err;
+    int err=NC_NOERR;
 
     if (itype == NC_NAT) {
         /* this is for the API ncmpi_get_att() where the internal and external
@@ -1154,7 +1154,7 @@ ncmpii_put_att_$1(void       *ncdp,
                   MPI_Offset  nelems,   /* number of elements in buf */
                   const FUNC2ITYPE($1) *buf) /* user write buffer */
 {
-    int indx=0, err;
+    int indx=0, err=NC_NOERR;
     char *nname=NULL; /* normalized name */
     MPI_Offset xsz=0;
     NC *ncp=(NC*)ncdp;
