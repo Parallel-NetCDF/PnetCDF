@@ -680,7 +680,6 @@ mpi_io:
     return ((warning != NC_NOERR) ? warning : status);
 }
 
-include(`foreach.m4')dnl
 include(`utils.m4')dnl
 dnl
 dnl GETPUT_API(get/put)
