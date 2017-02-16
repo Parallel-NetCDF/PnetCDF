@@ -23,7 +23,6 @@ M4_HFILES = ncx_h.m4
 
 M4_SRCS   = getput.m4 \
             i_getput.m4 \
-            bput.m4 \
             ncx.m4 \
             varn.m4 \
             i_varn.m4 \
@@ -50,6 +49,7 @@ C_SRCS = ncmpi_dispatch.c \
          nc.c \
          string.c \
          var.c \
+         bput.c \
          ncmpidtype.c \
          filetype.c \
          nonblocking.c   \
