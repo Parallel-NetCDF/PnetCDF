@@ -33,7 +33,6 @@ M4_SRCS   = getput.m4 \
 H_SRCS = ncmpi_dispatch.h \
          fbits.h \
          nc.h \
-         nctypes.h \
          ncio.h \
          rnd.h \
          ncmpidtype.h \
