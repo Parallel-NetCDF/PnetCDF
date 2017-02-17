@@ -8,8 +8,10 @@
 
 SUFFIXES = .a .o .c .m4 .h
 
+AM_CPPFLAGS = -I${top_srcdir}/src/include
+
 if PNETCDF_DEBUG
-   AM_CPPFLAGS = -DPNETCDF_DEBUG
+   AM_CPPFLAGS += -DPNETCDF_DEBUG
 endif
 
 noinst_LTLIBRARIES = libpnetcdfc.la
