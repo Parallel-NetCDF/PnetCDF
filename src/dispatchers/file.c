@@ -13,10 +13,18 @@
 #include <dispatch.h>
 #include <pnetcdf.h>
 
+/* TODO: the following 3 global variables make PnetCDF not thread safe */
+
 /* static variables are initialized to NULLs */
-static PNC *pnc_filelist[NC_MAX_FILES];
+static PNC *pnc_filelist[NC_MAX_NFILES];
 static int  pnc_numfiles;
 
+/* This is the default create format for ncmpi_create and nc__create.
+ * The use of this file scope variable is not thread-safe.
+ */
+static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
+
+/*----< add_to_PNCList() >---------------------------------------------------*/
 static int
 add_to_PNCList(PNC *pncp,
                int *new_id)
@@ -24,19 +32,20 @@ add_to_PNCList(PNC *pncp,
     int i;
 
     *new_id = -1;
-    for (i=0; i<NC_MAX_FILES; i++) {
+    for (i=0; i<NC_MAX_NFILES; i++) {
         if (pnc_filelist[i] == NULL) {
             *new_id = i;
             break;
         }
     }
-    if (*new_id == -1) return NC_ENOMEM; /* out of memory */
+    if (*new_id == -1) return NC_ENFILE; /* Too many netcdf files open */
 
     pnc_filelist[*new_id] = pncp;
     pnc_numfiles++;
     return NC_NOERR;
 }
 
+/*----< del_from_PNCList() >-------------------------------------------------*/
 static void
 del_from_PNCList(int ncid)
 {
@@ -51,7 +60,7 @@ find_in_PNCList_by_name(const char* path)
 {
     int i;
     PNC* pncp = NULL;
-    for (i=0; i<NC_MAX_FILES; i++) {
+    for (i=0; i<NC_MAX_NFILES; i++) {
          if (pnc_filelist[i] == NULL) continue;
          if (strcmp(pnc_filelist[i]->path, path) == 0) {
              pncp = pnc_filelist[i];
@@ -62,10 +71,11 @@ find_in_PNCList_by_name(const char* path)
 }
 #endif
 
+/*----< PNC_check_id() >-----------------------------------------------------*/
 int
 PNC_check_id(int ncid, PNC **pncp)
 {
-    if (pnc_numfiles == 0 || ncid < 0 || ncid > NC_MAX_FILES)
+    if (pnc_numfiles == 0 || ncid < 0 || ncid > NC_MAX_NFILES)
         return NC_EBADID;
 
     *pncp = pnc_filelist[ncid];
@@ -95,7 +105,7 @@ ncmpi_create(MPI_Comm    comm,
     if (pncp != NULL) return NC_ENFILE;
 #endif
 
-    /* Create a PNC object and insert its dispatcher */
+    /* Create a PNC object and save the pointer to its dispatcher */
     pncp = (PNC*) malloc(sizeof(PNC));
     if (pncp == NULL) return NC_ENOMEM;
     pncp->path = (char*) malloc(strlen(path)+1);
@@ -153,6 +163,7 @@ ncmpi_open(MPI_Comm    comm,
 {
     int format, status, err;
     PNC *pncp;
+    PNC_Dispatch *dispatcher;
 
     /* Check the file signature to tell the file format which is later used to
      * select the right dispatcher.
@@ -160,7 +171,13 @@ ncmpi_open(MPI_Comm    comm,
     err = ncmpi_inq_file_format(path, &format);
     if (err != NC_NOERR) return err;
 
-    PNC_Dispatch *dispatcher = ncmpii_inq_dispatcher();
+    if (format == NC_FORMAT_CLASSIC ||
+        format == NC_FORMAT_CDF2 ||
+        format == NC_FORMAT_CDF5) {
+        dispatcher = ncmpii_inq_dispatcher();
+    }
+    else {
+    }
 
     /* Create a PNC object and insert its dispatcher */
     pncp = (PNC*) malloc(sizeof(PNC));
@@ -768,54 +785,6 @@ ncmpi_sync_numrecs(int ncid)
     return pncp->dispatch->sync_numrecs(pncp->ncp);
 }
 
-/* The const string below is for the RCS ident(1) command to find a string like
- * "\044Id: \100(#) PnetCDF library version 1.4.0 of 16 Nov 2013 $"
- * in the library file (libpnetcdf.a).
- *
- * This string must be made a global variable. Otherwise, it won't work
- * when compiled with optimization options, e.g. -O2
- */
-char const pnetcdf_libvers[] =
-        "\044Id: \100(#) PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE" $";
-
-/* a cleaner version for running command "strings", e.g.
- * % strings libpnetcdf.a | grep "PnetCDF library version"
- * or
- * % strings a.out | grep "PnetCDF library version"
- */
-char pnetcdf_lib_vers[] = "PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE;
-
-/* pnetcdf_libvers is slightly different from the one returned from
- * ncmpi_inq_libvers(). The string pnetcdf_libvers is for command "ident" to
- * use. People can run command ident libpnetcdf.a to obtain the version of a
- * library (or an executable built from that library). In PnetCDF case, the
- * command will print the string of pnetcdf_libvers. Command "ident' looks for
- * a specific keyword pattern and print it. See man page of ident.
- *
- * The API ncmpi_inq_libvers() below on the other hand returns a string to be
- * used by the utility tools like ncmpidump, ncmpigen, etc. Check the last line
- * of output from command "ncmpidump -v".
- */
-
-/*----< ncmpi_inq_libvers() >------------------------------------------------*/
-const char*
-ncmpi_inq_libvers(void) {
-
-    /* match the style used by netCDF API nc_inq_libvers()
-     * for example, "4.3.0 of Jun 16 2013 12:11:30 $" */
-    /* we need some silly operation so the compiler will emit the otherwise
-     * unused pnetcdf_libvers */
-    if ((void *)pnetcdf_libvers != (void *)ncmpi_inq_libvers) {
-	; /* do nothing */
-    }
-    return PNETCDF_VERSION " of " PNETCDF_RELEASE_DATE;
-}
-
-/* This is the default create format for ncmpi_create and nc__create.
- * The use of this file scope variable is not thread-safe.
- */
-static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
-
 /*----< ncmpi_set_default_format() >-----------------------------------------*/
 /* This function sets a default create file format.
  * Valid formats are NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, and NC_FORMAT_CDF5
@@ -841,6 +810,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
     return NC_NOERR;
 }
 
+/*----< ncmpi_inq_default_format() >-----------------------------------------*/
 /* returns a value suitable for a create flag.  Will return one or more of the
  * following values OR-ed together:
  * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
@@ -863,7 +833,7 @@ ncmpi_inq_files_opened(int *num, int *ncids)
     if (num == NULL) return NC_EINVAL;
 
     *num = 0;
-    for (i=0; i<NC_MAX_FILES; i++) {
+    for (i=0; i<NC_MAX_NFILES; i++) {
         if (pnc_filelist[i] != NULL) {
             if (ncids != NULL) /* ncids can be NULL */
                 ncids[*num] = i;

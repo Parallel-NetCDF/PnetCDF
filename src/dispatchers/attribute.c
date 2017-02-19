@@ -10,9 +10,8 @@
 
 #include <stdlib.h>
 
-#include <dispatch.h>
 #include <pnetcdf.h>
-#include <nctypes.h>
+#include <dispatch.h>
 
 /*----< ncmpi_inq_att() >----------------------------------------------------*/
 int
@@ -77,7 +76,7 @@ ncmpi_inq_attid(int         ncid,
     return NC_NOERR;
 }
 
-/*----< ncmpi_inq_attname() >----------------------------------------------*/
+/*----< ncmpi_inq_attname() >------------------------------------------------*/
 int
 ncmpi_inq_attname(int   ncid,
                   int   varid,

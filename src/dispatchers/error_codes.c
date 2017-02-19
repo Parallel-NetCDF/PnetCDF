@@ -76,22 +76,14 @@ ncmpi_strerror(int err)
     sprintf(nc_unknown_err_msg,"Unknown Error: Unrecognized error code %5d\n",err);
 
 #ifdef vms
-    if(err == EVMSERR)
-    {
-        return vms_strerror(err);
-    }
-    /* else */
+    if (err == EVMSERR) return vms_strerror(err);
 #endif /* vms */
 
-    if(NC_ISSYSERR(err))
-    {
+    if (NC_ISSYSERR(err)) {
         const char *cp = (const char *) strerror(err);
-        if(cp == NULL)
-            return nc_unknown_err_msg;
-        /* else */
+        if (cp == NULL) return nc_unknown_err_msg;
         return cp;
     }
-    /* else */
 
     switch (err) {
         /* PnetCDF errors */
