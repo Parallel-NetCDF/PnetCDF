@@ -47,7 +47,7 @@ extern "C" {
 
 /* to make PnetCDF error codes compatible to netCDF, below we keep an exact
  * same copy of netcdf.h and re-use their defined values
- * Sync-ed with netcdf.h of version 4.4.0-rc5
+ * Sync-ed with netcdf.h of version 4.4.1.1
  */
 #ifndef _NETCDF_
 
@@ -498,7 +498,18 @@ by the desired type. */
 #endif
 /* end of #ifndef _NETCDF_ */
 
-/* now some definitions used in PnetCDF only */
+/* Below are some constants used in PnetCDF only */
+
+/* invalid nonblocking request ID and zero-length request */
+#define NC_REQ_NULL -1
+
+/* indicate to flush all pending non-blocking requests */
+#define NC_REQ_ALL     -1
+#define NC_GET_REQ_ALL -2
+#define NC_PUT_REQ_ALL -3
+
+/* max number of opened files allowed */
+#define NC_MAX_NFILES	1024
 
 #define NC_FORMAT_UNKNOWN -1
 
@@ -602,17 +613,6 @@ by the desired type. */
 #define NC_EVARS_LEN_MULTIDEFINE	NC_EMULTIDEFINE_VAR_LEN
 #define NC_ENUMRECS_MULTIDEFINE		NC_EMULTIDEFINE_NUMRECS
 #define NC_EVARS_BEGIN_MULTIDEFINE	NC_EMULTIDEFINE_VAR_BEGIN
-
-/* invalid nonblocking request ID and zero-length request */
-#define NC_REQ_NULL -1
-
-/* indicate to flush all pending non-blocking requests */
-#define NC_REQ_ALL     -1
-#define NC_GET_REQ_ALL -2
-#define NC_PUT_REQ_ALL -3
-
-/* max number of opened files allowed */
-#define NC_MAX_FILES	1024
 
 
 /*
