@@ -15,8 +15,8 @@ dnl
 
 #include <stdlib.h>
 
-#include <dispatch.h>
 #include <pnetcdf.h>
+#include <dispatch.h>
 #include <nctypes.h>
 
 dnl APINAME(/i/b,m, get/put, /1/a/s/m/n, itype, /_all)

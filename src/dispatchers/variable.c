@@ -10,9 +10,8 @@
 
 #include <stdlib.h>
 
-#include <dispatch.h>
 #include <pnetcdf.h>
-#include <nctypes.h>
+#include <dispatch.h>
 
 /*----< ncmpi_def_var() >----------------------------------------------------*/
 /* this API is collective, and must be called in define mode */

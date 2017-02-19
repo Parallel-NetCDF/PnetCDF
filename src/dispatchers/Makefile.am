@@ -17,7 +17,8 @@ M4FLAGS += -I${top_srcdir}/m4
 M4_SRCS  = attr_getput.m4 \
            var_getput.m4
 
-C_SRCS = file.c \
+C_SRCS = lib_version.c \
+         file.c \
          dimension.c \
          variable.c \
          attribute.c \

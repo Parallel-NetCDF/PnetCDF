@@ -15,8 +15,8 @@ dnl
 
 #include <stdlib.h>
 
-#include <dispatch.h>
 #include <pnetcdf.h>
+#include <dispatch.h>
 #include <nctypes.h>
 
 include(`foreach.m4')dnl
@@ -62,8 +62,9 @@ foreach(`iType', (text,schar,uchar,short,ushort,int,uint,long,float,double,longl
 ')
 
 /*----< ncmpi_get_att() >----------------------------------------------------*/
-/* This is an independent subroutine */
-/* user buffer data type matches the external type defined in file */
+/* This is an independent subroutine.
+ * The user buffer data type matches the external type defined in file.
+ */
 int
 ncmpi_get_att(int         ncid,
               int         varid,
@@ -143,7 +144,7 @@ int
 ncmpi_put_att(int         ncid,
               int         varid,
               const char *name,
-              nc_type     xtype,
+              nc_type     xtype,  /* external data type, i.e. NC_CHAR etc. */
               MPI_Offset  nelems,
               const void *buf)
 {
