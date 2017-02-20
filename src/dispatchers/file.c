@@ -4,6 +4,7 @@
  */
 /* $Id$ */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>   /* open() */
@@ -93,11 +94,12 @@ ncmpi_create(MPI_Comm    comm,
 {
     int default_format, status, err;
     PNC *pncp;
+    PNC_Dispatch *dispatcher;
 
-    /* Use comde to tell the file format which is later used to select the
+    /* Use cmode to tell the file format which is later used to select the
      * right dispatcher.
      */
-    PNC_Dispatch *dispatcher = ncmpii_inq_dispatcher();
+    dispatcher = ncmpii_inq_dispatcher();
 
 #if 0 /* refer to netCDF library's USE_REFCOUNT */
     /* check whether this path is already opened */
@@ -176,7 +178,12 @@ ncmpi_open(MPI_Comm    comm,
         format == NC_FORMAT_CDF5) {
         dispatcher = ncmpii_inq_dispatcher();
     }
-    else {
+    else if (format == NC_FORMAT_NETCDF4) {
+        fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
+        return NC_ENOTSUPPORT;
+    }
+    else { /* unrecognized file format */
+        return NC_ENOTNC;
     }
 
     /* Create a PNC object and insert its dispatcher */
@@ -456,7 +463,7 @@ ncmpi_inq_file_format(const char *filename,
     if (memcmp(signature, hdf5_signature, 8) == 0) {
         /* whether the file is NC_FORMAT_NETCDF4_CLASSIC is determined by HDF5
          * attribute "_nc3_strict" which requires a call to H5Aget_name(). Here
-         * we do not distinquish NC_CLASSIC_MODEL, but simply return NETCDF4
+         * we do not distinguish NC_CLASSIC_MODEL, but simply return NETCDF4
          * format.
          */
         *formatp = NC_FORMAT_NETCDF4;

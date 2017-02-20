@@ -22,17 +22,17 @@ int min_ndims = 1;
 int delegate_scheme = BALANCED; /* default: any proc can be delegate proc */
 static int is_partitioned = 0;
 
-#define check_err(fn_name_)                                                     \
-    if (mpireturn != MPI_SUCCESS) {                                             \
-        errs++;                                                                 \
-        if (DEBUG) {                                                            \
-            int _len;                                                           \
-            char err_str_[MPI_MAX_ERROR_STRING];                                \
-            MPI_Error_string(mpireturn, err_str_, &_len);                       \
-            fprintf(stderr, #fn_name_ " failed at line %d, mpireturn=%d: %s\n", \
-                    __LINE__, mpireturn, err_str_);                             \
-        }                                                                       \
-    }                                                                           \
+#define check_err(fn_name_)                                                    \
+    if (mpireturn != MPI_SUCCESS) {                                            \
+        errs++;                                                                \
+        if (DEBUG) {                                                           \
+            int _len;                                                          \
+            char err_str_[MPI_MAX_ERROR_STRING];                               \
+            MPI_Error_string(mpireturn, err_str_, &_len);                      \
+            fprintf(stderr, #fn_name_ " failed at line %d, mpireturn=%d: %s\n",\
+                    __LINE__, mpireturn, err_str_);                            \
+        }                                                                      \
+    }                                                                          \
 
 #if 0
 static int ncmpii_itoa(int val, char* buf)
