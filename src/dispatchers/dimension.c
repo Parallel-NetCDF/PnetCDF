@@ -10,6 +10,7 @@
 #include <pnetcdf.h>
 
 /*----< ncmpi_def_dim() >----------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_def_dim(int         ncid,    /* IN:  file ID */
               const char *name,    /* IN:  name of dimension */
@@ -24,13 +25,11 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_def_dim() */
-    err = pncp->dispatch->def_dim(pncp->ncp, name, size, dimidp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->def_dim(pncp->ncp, name, size, dimidp);
 }
 
 /*----< ncmpi_inq_dimid() >--------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_dimid(int         ncid,    /* IN:  file ID */
                 const char *name,    /* IN:  name of dimension */
@@ -44,13 +43,11 @@ ncmpi_inq_dimid(int         ncid,    /* IN:  file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_inq_dimid() */
-    err = pncp->dispatch->inq_dimid(pncp->ncp, name, dimidp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_dimid(pncp->ncp, name, dimidp);
 }
 
 /*----< ncmpi_inq_dim() >----------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_dim(int         ncid,    /* IN:  file ID */
               int         dimid,   /* IN:  dimension ID */
@@ -65,13 +62,11 @@ ncmpi_inq_dim(int         ncid,    /* IN:  file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_inq_dim() */
-    err = pncp->dispatch->inq_dim(pncp->ncp, dimid, name, lengthp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_dim(pncp->ncp, dimid, name, lengthp);
 }
 
 /*----< ncmpi_inq_dimname() >------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_dimname(int   ncid,    /* IN:  file ID */
                   int   dimid,   /* IN:  dimension ID */
@@ -81,6 +76,7 @@ ncmpi_inq_dimname(int   ncid,    /* IN:  file ID */
 }
 
 /*----< ncmpi_inq_dimlen() >-------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_dimlen(int         ncid,
                  int         dimid,
@@ -90,6 +86,7 @@ ncmpi_inq_dimlen(int         ncid,
 }
 
 /*----< ncmpi_rename_dim() >-------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_rename_dim(int         ncid,    /* IN: file ID */
                  int         dimid,   /* IN: dimension ID */
@@ -103,9 +100,6 @@ ncmpi_rename_dim(int         ncid,    /* IN: file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_rename_dim() */
-    err = pncp->dispatch->rename_dim(pncp->ncp, dimid, newname);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->rename_dim(pncp->ncp, dimid, newname);
 }
 
