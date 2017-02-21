@@ -19,21 +19,18 @@ dnl
 #include <dispatch.h>
 #include <nctypes.h>
 
-dnl APINAME(/i/b,m, get/put, /1/a/s/m/n, itype, /_all)
-define(`APINAME',`ifelse(`$4',`',`ncmpi_$1$2_var$3$5',dnl Flexible APIs
-                                 `ncmpi_$1$2_var$3_$4$5')')dnl High-level APIs
-
 include(`foreach.m4')dnl
 include(`utils.m4')dnl
 
 dnl
 define(`APINAME',`ifelse(`$3',`',`ncmpi_$1_var$2$4',`ncmpi_$1_var$2_$3$4')')dnl
 dnl
-dnl GETPUT_API(get/put, /1/a/s/m, itype, /_all)
+dnl GETPUT_API(get/put, `'/1/a/s/m, `'/itype, `'/_all)
 dnl
 define(`GETPUT_API',dnl
 `dnl
 /*----< APINAME($1,$2,$3,$4)() >---------------------------------------------*/
+/* This API is ifelse(`$4',`',`an independent',`a collective') subroutine. */
 int
 APINAME($1,$2,$3,$4)(int ncid,
                      int varid,
@@ -43,8 +40,8 @@ APINAME($1,$2,$3,$4)(int ncid,
     int err;
     PNC *pncp;
 
-    /* use NC_NAT to represent this is a flexible API */
-ifelse(`$3',`',`    nc_type itype=NC_NAT;',
+ifelse(`$3',`',`    /* use NC_NAT to represent this is a flexible API */
+    nc_type itype=NC_NAT;',
 `$3',`long',`#if SIZEOF_LONG == SIZEOF_INT
     nc_type itype=NC_INT;
 #elif SIZEOF_LONG == SIZEOF_LONG_LONG
@@ -60,29 +57,23 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements APINAME($1,$2,$3,$4)() */
-    err = pncp->dispatch->`$1'_var(pncp->ncp, varid, ArgStartCountStrideMap($2),
-                                   buf, ifelse(`$3', `', `bufcount, buftype',
-                                                         `-1, ITYPE2MPI($3)'),
-                                   API_KIND($2), itype, CollIndep($4));
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->`$1'_var(pncp->ncp,
+                                    varid,
+                                    ArgStartCountStrideMap($2),
+                                    buf,
+                                    ifelse(`$3',`',`bufcount, buftype',
+                                                   `-1, ITYPE2MPI($3)'),
+                                    API_KIND($2),
+                                    itype,
+                                    CollIndep($4));
 }
 ')dnl
 dnl
-/*---- PnetCDF flexible APIs ------------------------------------------------*/
-foreach(`kind', (, 1, a, s, m),
-        `foreach(`putget', (put, get),
-                 `foreach(`collindep', (, _all),
-                          `GETPUT_API(putget,kind,,collindep)'
-)')')
 
-/*---- PnetCDF high-level APIs ----------------------------------------------*/
 foreach(`kind', (, 1, a, s, m),
         `foreach(`putget', (put, get),
                  `foreach(`collindep', (, _all),
-                          `foreach(`iType', (ITYPE_LIST),
+                          `foreach(`iType', (`',ITYPE_LIST),
                                    `GETPUT_API(putget,kind,iType,collindep)'
 )')')')
 
@@ -106,11 +97,12 @@ foreach(`kind', (, 1, a, s, m),
 dnl
 define(`NAPINAME',`ifelse(`$3',`',`ncmpi_$1_varn$2',`ncmpi_$1_varn_$3$2')')dnl
 dnl
-dnl VARN(get/put, iType, /_all)
+dnl VARN(get/put, `'/iType, `'/_all)
 dnl
 define(`VARN',dnl
 `dnl
 /*----< NAPINAME($1,$2,$3)() >-----------------------------------------------*/
+/* This API is ifelse(`$3',`',`an independent',`a collective') subroutine. */
 int
 NAPINAME($1,$2,$3)(int                ncid,
                    int                varid,
@@ -122,8 +114,8 @@ NAPINAME($1,$2,$3)(int                ncid,
     int err;
     PNC *pncp;
 
-    /* use NC_NAT to represent this is a flexible API */
-ifelse(`$3',`',`    nc_type itype=NC_NAT;',
+ifelse(`$3',`',`    /* use NC_NAT to represent this is a flexible API */
+    nc_type itype=NC_NAT;',
 `$3',`long',`#if SIZEOF_LONG == SIZEOF_INT
     nc_type itype=NC_INT;
 #elif SIZEOF_LONG == SIZEOF_LONG_LONG
@@ -139,27 +131,23 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements NAPINAME($1,$2,$3)() */
-    err = pncp->dispatch->`$1'_varn(pncp->ncp, varid, num, starts, counts,
-                                    buf, ifelse(`$3', `', `bufcount, buftype',
-                                                          `-1, ITYPE2MPI($3)'),
-                                    itype, CollIndep($2));
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->`$1'_varn(pncp->ncp,
+                                     varid,
+                                     num,
+                                     starts,
+                                     counts,
+                                     buf,
+                                     ifelse(`$3',`',`bufcount, buftype',
+                                                    `-1, ITYPE2MPI($3)'),
+                                     itype,
+                                     CollIndep($2));
 }
 ')dnl
 dnl
-/*---- PnetCDF flexible APIs ------------------------------------------------*/
-foreach(`putget', (put, get),
-        `foreach(`collindep', (, _all),
-                 `VARN(putget,collindep)'
-)')
 
-/*---- PnetCDF high-level APIs ----------------------------------------------*/
 foreach(`putget', (put, get),
         `foreach(`collindep', (, _all),
-                 `foreach(`iType', (ITYPE_LIST),
+                 `foreach(`iType', (`',ITYPE_LIST),
                           `VARN(putget,collindep,iType)'
 )')')
 
@@ -173,11 +161,12 @@ define(`MArgStartCountStrideMap', `ifelse(
        `$1', `s', `starts[i], counts[i], strides[i], NULL',
        `$1', `m', `starts[i], counts[i], strides[i], imaps[i]')')dnl
 dnl
-dnl MVAR(put/get, /1/a/s/m, iType, /_all)
+dnl MVAR(put/get, `'/1/a/s/m, `'/iType, `'/_all)
 dnl
 define(`MVAR',dnl
 `dnl
 /*----< MAPINAME($1,$2,$3,$4)() >--------------------------------------------*/
+/* This API is ifelse(`$4',`',`an independent',`a collective') subroutine. */
 int
 MAPINAME($1,$2,$3,$4)(int                ncid,
                       int                nvars,
@@ -202,8 +191,8 @@ MAPINAME($1,$2,$3,$4)(int                ncid,
     int i, status=NC_NOERR, err, *reqs;
     PNC *pncp;
 
-    /* use NC_NAT to represent this is a flexible API */
-ifelse(`$3',`',`    nc_type itype=NC_NAT;',
+ifelse(`$3',`',`    /* use NC_NAT to represent this is a flexible API */
+    nc_type itype=NC_NAT;',
 `$3',`long',`#if SIZEOF_LONG == SIZEOF_INT
     nc_type itype=NC_INT;
 #elif SIZEOF_LONG == SIZEOF_LONG_LONG
@@ -221,12 +210,15 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
     reqs = (int*) malloc(nvars * sizeof(int));
     for (i=0; i<nvars; i++) {
         /* call the nonblocking subroutines */
-        err = pncp->dispatch->i`$1'_var(pncp->ncp, varids[i],
+        err = pncp->dispatch->i`$1'_var(pncp->ncp,
+                                        varids[i],
                                         MArgStartCountStrideMap($2),
                                         bufs[i],
                                         ifelse(`$3',`',`bufcounts[i], buftypes[i]',
                                                        `-1, ITYPE2MPI($3)'),
-                                        &reqs[i], API_KIND($2), itype);
+                                        &reqs[i],
+                                        API_KIND($2),
+                                        itype);
         if (status != NC_NOERR) status = err;
     }
 
@@ -238,29 +230,25 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
 }
 ')dnl
 dnl
-/*---- PnetCDF flexible APIs ------------------------------------------------*/
-foreach(`kind', (, 1, a, s, m),
-        `foreach(`putget', (put, get),
-                 `foreach(`collindep', (, _all),
-                          `MVAR(putget,kind,,collindep)'
-)')')
 
-/*---- PnetCDF high-level APIs ----------------------------------------------*/
 foreach(`kind', (, 1, a, s, m),
         `foreach(`putget', (put, get),
                  `foreach(`collindep', (, _all),
-                          `foreach(`iType', (ITYPE_LIST),
+                          `foreach(`iType', (`',ITYPE_LIST),
                                    `MVAR(putget,kind,iType,collindep)'
 )')')')
 
 dnl
 define(`IAPINAME',`ifelse(`$3',`',`ncmpi_$1_var$2',`ncmpi_$1_var$2_$3')')dnl
 dnl
-dnl IGETPUT_API(iget/iput/bput, /1/a/s/m, itype)
+dnl IGETPUT_API(iget/iput/bput, `'/1/a/s/m, `'/iType)
 dnl
 define(`IGETPUT_API',dnl
 `dnl
 /*----< IAPINAME($1,$2,$3)() >-----------------------------------------------*/
+/* This API is an independent subroutine, which can be called in either
+ * collective or independent data mode or even in define mode.
+ */
 int
 IAPINAME($1,$2,$3)(int ncid,
                    int varid,
@@ -271,8 +259,8 @@ IAPINAME($1,$2,$3)(int ncid,
     int err;
     PNC *pncp;
 
-    /* use NC_NAT to represent this is a flexible API */
-ifelse(`$3',`',`    nc_type itype=NC_NAT;',
+ifelse(`$3',`',`    /* use NC_NAT to represent this is a flexible API */
+    nc_type itype=NC_NAT;',
 `$3',`long',`#if SIZEOF_LONG == SIZEOF_INT
     nc_type itype=NC_INT;
 #elif SIZEOF_LONG == SIZEOF_LONG_LONG
@@ -288,27 +276,22 @@ ifelse(`$3',`',`    nc_type itype=NC_NAT;',
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements IAPINAME($1,$2,$3)() */
-    err = pncp->dispatch->`$1'_var(pncp->ncp, varid, ArgStartCountStrideMap($2),
-                                   buf, ifelse(`$3', `', `bufcount, buftype',
-                                                         `-1, ITYPE2MPI($3)'),
-                                   reqid, API_KIND($2), itype);
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->`$1'_var(pncp->ncp,
+                                    varid,
+                                    ArgStartCountStrideMap($2),
+                                    buf,
+                                    ifelse(`$3',`',`bufcount, buftype',
+                                                   `-1, ITYPE2MPI($3)'),
+                                    reqid,
+                                    API_KIND($2),
+                                    itype);
 }
 ')dnl
 dnl
-/*---- PnetCDF flexible APIs ------------------------------------------------*/
-foreach(`kind', (, 1, a, s, m),
-        `foreach(`putget', (iput, iget, bput),
-                 `IGETPUT_API(putget,kind,)'
-)')
 
-/*---- PnetCDF high-level APIs ----------------------------------------------*/
 foreach(`kind', (, 1, a, s, m),
         `foreach(`putget', (iput, iget, bput),
-                 `foreach(`iType', (ITYPE_LIST),
+                 `foreach(`iType', (`',ITYPE_LIST),
                           `IGETPUT_API(putget,kind,iType)'
 )')')
 
@@ -334,11 +317,14 @@ foreach(`kind', (, 1, a, s, m),
 dnl
 define(`INAPINAME',`ifelse(`$2',`',`ncmpi_$1_varn',`ncmpi_$1_varn_$2')')dnl
 dnl
-dnl IVARN(iget/iput/bput, iType)
+dnl IVARN(iget/iput/bput, `'/iType)
 dnl
 define(`IVARN',dnl
 `dnl
 /*----< ncmpi_$1_var$2() >---------------------------------------------------*/
+/* This API is an independent subroutine, which can be called in either
+ * collective or independent data mode or even in define mode.
+ */
 int
 INAPINAME($1,$2)(int                ncid,
                  int                varid,
@@ -351,8 +337,8 @@ INAPINAME($1,$2)(int                ncid,
     int err;
     PNC *pncp;
 
-    /* use NC_NAT to represent this is a flexible API */
-ifelse(`$2',`',`    nc_type itype=NC_NAT;',
+ifelse(`$2',`',`    /* use NC_NAT to represent this is a flexible API */
+    nc_type itype=NC_NAT;',
 `$2',`long',`#if SIZEOF_LONG == SIZEOF_INT
     nc_type itype=NC_INT;
 #elif SIZEOF_LONG == SIZEOF_LONG_LONG
@@ -368,37 +354,36 @@ ifelse(`$2',`',`    nc_type itype=NC_NAT;',
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements INAPINAME($1,$2)() */
-    err = pncp->dispatch->`$1'_varn(pncp->ncp, varid, num, starts, counts,
-                                    buf, ifelse(`$2', `', `bufcount, buftype',
-                                                          `-1, ITYPE2MPI($2)'),
-                                    reqid, itype);
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->`$1'_varn(pncp->ncp,
+                                     varid,
+                                     num,
+                                     starts,
+                                     counts,
+                                     buf,
+                                     ifelse(`$2',`',`bufcount, buftype',
+                                                    `-1, ITYPE2MPI($2)'),
+                                     reqid,
+                                     itype);
 }
 ')dnl
 dnl
-/*---- PnetCDF flexible APIs ------------------------------------------------*/
-foreach(`putget', (iget, iput, bput), `IVARN(putget)')
 
-/*---- PnetCDF high-level APIs ----------------------------------------------*/
 foreach(`putget', (iget, iput, bput),
-        `foreach(`iType', (ITYPE_LIST),
+        `foreach(`iType', (`',ITYPE_LIST),
                  `IVARN(putget,iType)'
 )')
 
 dnl
-dnl VARD(get/put, /_all)
+dnl VARD(get/put, `'/_all)
 dnl
 define(`VARD',dnl
 `dnl
 /*----< ncmpi_$1_vard$2() >--------------------------------------------------*/
+/* This API is ifelse(`$4',`',`an independent',`a collective') subroutine. */
 int
 ncmpi_$1_vard$2(int           ncid,
                 int           varid,
-                MPI_Datatype  filetype,  /* access layout to the variable in file
- */
+                MPI_Datatype  filetype,  /* access layout to the variable in file */
                 ifelse($1, `get', `void *buf', `const void *buf'),
                 MPI_Offset    bufcount,
                 MPI_Datatype  buftype)   /* data type of the buffer */
@@ -415,12 +400,13 @@ ncmpi_$1_vard$2(int           ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_$1_vard$2() */
-    err = pncp->dispatch->$1_vard(pncp->ncp, varid, filetype, buf, bufcount,
-                                  buftype, CollIndep($2));
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->$1_vard(pncp->ncp,
+                                   varid,
+                                   filetype,
+                                   buf,
+                                   bufcount,
+                                   buftype,
+                                   CollIndep($2));
 }
 ')
 dnl
@@ -435,6 +421,7 @@ dnl
 define(`WAIT',dnl
 `dnl
 /*----< ncmpi_wait$1() >-----------------------------------------------------*/
+/* This API is ifelse(`$4',`',`an independent',`a collective') subroutine. */
 int
 ncmpi_wait$1(int  ncid,
              int  num_reqs, /* number of requests */
@@ -453,12 +440,11 @@ ncmpi_wait$1(int  ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_wait$1() */
-    err = pncp->dispatch->wait(pncp->ncp, num_reqs, req_ids, statuses,
-                               CollIndep($1));
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->wait(pncp->ncp,
+                                num_reqs,
+                                req_ids,
+                                statuses,
+                                CollIndep($1));
 }
 ')
 WAIT()

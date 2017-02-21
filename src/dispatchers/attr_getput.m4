@@ -23,142 +23,59 @@ include(`foreach.m4')dnl
 include(`utils.m4')dnl
 
 dnl
-dnl GET_ATT(fntype)
+define(`APINAME',`ifelse(`$2',`',`ncmpi_$1_att$2',`ncmpi_$1_att_$2')')dnl
 dnl
-define(`GET_ATT',dnl
+dnl
+dnl GETPUT_ATT(get/put, iType)
+dnl
+define(`GETPUT_ATT',dnl
 `dnl
-/*----< ncmpi_get_att_$1() >-------------------------------------------------*/
-/* This is an independent subroutine.
-ifelse(`$1',`text',` * This API never returns NC_ERANGE error, as text is not convertible to numerical types')
- */
-int
-ncmpi_get_att_$1(int             ncid,
-                 int             varid,
-                 const char     *name,
-                 FUNC2ITYPE($1) *buf)
-{
-    int err;
-    PNC *pncp;
-ifelse(`$1',`long',`#if SIZEOF_LONG == SIZEOF_INT
-    nc_type itype=NC_INT;
-#elif SIZEOF_LONG == SIZEOF_LONG_LONG
-    nc_type itype=NC_INT64;
-#endif',`    nc_type itype=NC_TYPE($1);')
-
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
-    /* calling the subroutine that implements ncmpi_get_att_$1() */
-    err = pncp->dispatch->get_att(pncp->ncp, varid, name, buf, itype);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
-}
-')dnl
-
-foreach(`iType', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
-        `GET_ATT(iType)
-')
-
-/*----< ncmpi_get_att() >----------------------------------------------------*/
-/* This is an independent subroutine.
- * The user buffer data type matches the external type defined in file.
- */
-int
-ncmpi_get_att(int         ncid,
-              int         varid,
-              const char *name,
-              void       *buf)
-{
-    int err;
-    PNC *pncp;
-
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
-    /* calling the subroutine that implements ncmpi_get_att() */
-    err = pncp->dispatch->get_att(pncp->ncp, varid, name, buf, NC_NAT);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
-}
-
-dnl
-dnl PUT_ATT(fntype)
-dnl
-define(`PUT_ATT',dnl
-`dnl
-/*----< ncmpi_put_att_$1() >-------------------------------------------------*/
-/* This is a collective subroutine, all arguments should be consistent among
+/*----< APINAME($1,$2)() >---------------------------------------------------*/
+/* ifelse(`$1',`get',`This is an independent subroutine.',`
+ * This is a collective subroutine, all arguments should be consistent among
  * all processes.
  *
  * Note from netCDF user guide:
  * Attributes are always single values or one-dimensional arrays. This works
- * out well for a string, which is a one-dimensional array of ASCII characters
- *
- * Note ncmpii_put_att_text will never return NC_ERANGE error, as text is not
- * convertible to numerical types.
+ * out well for a string, which is a one-dimensional array of ASCII characters.
+ *')
+ifelse(`$2',`',` * The user buffer data type matches the external type defined in file.',
+`$2',`text',` * This API never returns NC_ERANGE error, as text is not convertible to numerical types',` *')
  */
 int
-ncmpi_put_att_$1(int         ncid,
-                 int         varid,
-                 const char *name,     /* attribute name */
-                 ifelse(`$1',`text',,`nc_type xtype,')
-                 MPI_Offset  nelems,   /* number of elements in buf */
-                 const FUNC2ITYPE($1) *buf) /* user write buffer */
+APINAME($1,$2)(int             ncid,
+               int             varid,
+               const char     *name,
+               ifelse(`$1',`put',`ifelse(`$2',`text',,`nc_type xtype,')
+               MPI_Offset  nelems,   /* number of elements in buf */')
+               ifelse(`$1',`put',`const') ifelse(`$2',`','void`, FUNC2ITYPE($2)) *buf)
 {
     int err;
     PNC *pncp;
-ifelse(`$1',`long',`#if SIZEOF_LONG == SIZEOF_INT
+
+ifelse(`$2',`',`
+    nc_type itype='ifelse(`$1',`get',`NC_NAT;',`xtype;'),
+`$2',`long',`#if SIZEOF_LONG == SIZEOF_INT
     nc_type itype=NC_INT;
 #elif SIZEOF_LONG == SIZEOF_LONG_LONG
     nc_type itype=NC_INT64;
-#endif',`    nc_type itype=NC_TYPE($1);')
+#endif',`    nc_type itype=NC_TYPE($2);')
 
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    /* calling the subroutine that implements ncmpi_put_att_$1() */
-    err = pncp->dispatch->put_att(pncp->ncp, varid, name,
-                                  ifelse(`$1',`text',`NC_CHAR,',`xtype,')
-                                  nelems, buf, itype);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    /* calling the subroutine that implements APINAME($1,$2)() */
+    return pncp->dispatch->`$1'_att(pncp->ncp,
+                                    varid, name,
+                                    ifelse(`$1',`put',`ifelse(`$2',`text',`NC_CHAR,',`xtype,') nelems,')
+                                    buf,
+                                    itype);
 }
 ')dnl
 
-foreach(`iType', (text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
-        `PUT_ATT(iType)
-')
-
-/*----< ncmpi_put_att() >----------------------------------------------------*/
-/* This is a collective subroutine, all arguments should be consistent among
- * all processes. This API is for when the user buffer data type matches the
- * external type defined in file.
- */
-int
-ncmpi_put_att(int         ncid,
-              int         varid,
-              const char *name,
-              nc_type     xtype,  /* external data type, i.e. NC_CHAR etc. */
-              MPI_Offset  nelems,
-              const void *buf)
-{
-    int err;
-    PNC *pncp;
-
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
-    /* calling the subroutine that implements ncmpi_put_att() */
-    err = pncp->dispatch->put_att(pncp->ncp, varid, name, xtype, nelems, buf, xtype);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
-}
+foreach(`putget', (get, put),
+        `foreach(`iType', (,text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong),
+                 `GETPUT_ATT(putget, iType)
+')')
 
