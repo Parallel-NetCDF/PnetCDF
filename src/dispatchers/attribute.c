@@ -14,6 +14,7 @@
 #include <dispatch.h>
 
 /*----< ncmpi_inq_att() >----------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_att(int         ncid,
               int         varid,
@@ -29,13 +30,11 @@ ncmpi_inq_att(int         ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_inq_att() */
-    err = pncp->dispatch->inq_att(pncp->ncp, varid, name, xtypep, lenp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_att(pncp->ncp, varid, name, xtypep, lenp);
 }
 
 /*----< ncmpi_inq_atttype() >------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_atttype(int         ncid,
                   int         varid,
@@ -46,6 +45,7 @@ ncmpi_inq_atttype(int         ncid,
 }
 
 /*----< ncmpi_inq_attlen() >-------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_attlen(int         ncid,
                  int         varid,
@@ -56,6 +56,7 @@ ncmpi_inq_attlen(int         ncid,
 }
 
 /*----< ncmpi_inq_attid() >--------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_attid(int         ncid,
                 int         varid,
@@ -70,13 +71,11 @@ ncmpi_inq_attid(int         ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_inq_attid() */
-    err = pncp->dispatch->inq_attid(pncp->ncp, varid, name, attnump);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_attid(pncp->ncp, varid, name, attnump);
 }
 
 /*----< ncmpi_inq_attname() >------------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_inq_attname(int   ncid,
                   int   varid,
@@ -91,13 +90,11 @@ ncmpi_inq_attname(int   ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_inq_attname() */
-    err = pncp->dispatch->inq_attname(pncp->ncp, varid, attnum, name);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_attname(pncp->ncp, varid, attnum, name);
 }
 
 /*----< ncmpi_copy_att() >---------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_copy_att(int         ncid_in,
                int         varid_in,
@@ -117,14 +114,12 @@ ncmpi_copy_att(int         ncid_in,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_copy_att() */
-    err = pncp_in->dispatch->copy_att(pncp_in->ncp,  varid_in, name,
-                                      pncp_out->ncp, varid_out);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp_in->dispatch->copy_att(pncp_in->ncp,  varid_in, name,
+                                       pncp_out->ncp, varid_out);
 }
 
 /*----< ncmpi_rename_att() >-------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_rename_att(int         ncid,
                  int         varid,
@@ -139,13 +134,11 @@ ncmpi_rename_att(int         ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_rename_att() */
-    err = pncp->dispatch->rename_att(pncp->ncp, varid, name, newname);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->rename_att(pncp->ncp, varid, name, newname);
 }
 
 /*----< ncmpi_del_att() >----------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_del_att(int         ncid,
               int         varid,
@@ -159,9 +152,6 @@ ncmpi_del_att(int         ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_del_att() */
-    err = pncp->dispatch->del_att(pncp->ncp, varid, name);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->del_att(pncp->ncp, varid, name);
 }
 
