@@ -14,6 +14,7 @@
 #define COLL_IO  1
 #define NONBLOCKING_IO  -1
 
+/* list of all API kinds */
 enum API_KIND {
     API_VARD,
     API_VARN,
@@ -23,11 +24,6 @@ enum API_KIND {
     API_VARS,
     API_VARM
 };
-
-typedef struct PNC_Dispatch PNC_Dispatch;
-
-// extern PNC_Dispatch* ncmpi_dispatcher;
-extern PNC_Dispatch* ncmpii_inq_dispatcher(void);
 
 struct PNC_Dispatch {
     /* APIs manipulate files */
@@ -93,15 +89,23 @@ struct PNC_Dispatch {
     int (*cancel)(void*,int,int*,int*);
 };
 
+typedef struct PNC_Dispatch PNC_Dispatch;
+
 /* Common Shared Structure for all Dispatched Objects */
-typedef struct PNC {
+struct PNC {
     int                  mode;   /* file _open/_create mode */
     int                  format; /* file format */
     char                *path;   /* path name */
     struct PNC_Dispatch *dispatch;
     void                *ncp;    /* pointer to dispatcher data object */
-} PNC;
+};
 
-int PNC_check_id(int ncid, PNC **pncp);
+typedef struct PNC PNC;
+
+/* subroutine prototypes */
+
+extern PNC_Dispatch* ncmpii_inq_dispatcher(void);
+
+extern int PNC_check_id(int ncid, PNC **pncp);
 
 #endif /* _PNC_DISPATCH_H_ */
