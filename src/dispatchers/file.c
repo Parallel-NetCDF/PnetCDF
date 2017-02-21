@@ -9,6 +9,7 @@
 #include <string.h>
 #include <fcntl.h>   /* open() */
 #include <unistd.h>  /* read(), close() */
+#include <assert.h>  /* assert() */
 #include <errno.h>   /* errno */
 
 #include <dispatch.h>
@@ -32,8 +33,10 @@ add_to_PNCList(PNC *pncp,
 {   
     int i;
 
+    assert(pncp != NULL);
+
     *new_id = -1;
-    for (i=0; i<NC_MAX_NFILES; i++) {
+    for (i=0; i<NC_MAX_NFILES; i++) { /* find the first unused element */
         if (pnc_filelist[i] == NULL) {
             *new_id = i;
             break;
@@ -41,8 +44,8 @@ add_to_PNCList(PNC *pncp,
     }
     if (*new_id == -1) return NC_ENFILE; /* Too many netcdf files open */
 
-    pnc_filelist[*new_id] = pncp;
-    pnc_numfiles++;
+    pnc_filelist[*new_id] = pncp;  /* store the pointer */
+    pnc_numfiles++;                /* increment number of files opened */
     return NC_NOERR;
 }
 
@@ -76,6 +79,8 @@ find_in_PNCList_by_name(const char* path)
 int
 PNC_check_id(int ncid, PNC **pncp)
 {
+    assert(pncp != NULL);
+
     if (pnc_numfiles == 0 || ncid < 0 || ncid > NC_MAX_NFILES)
         return NC_EBADID;
 
@@ -85,6 +90,7 @@ PNC_check_id(int ncid, PNC **pncp)
 }
 
 /*----< ncmpi_create() >-----------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_create(MPI_Comm    comm,
              const char *path,
@@ -107,7 +113,7 @@ ncmpi_create(MPI_Comm    comm,
     if (pncp != NULL) return NC_ENFILE;
 #endif
 
-    /* Create a PNC object and save the pointer to its dispatcher */
+    /* Create a PNC object and save the dispatcher pointer */
     pncp = (PNC*) malloc(sizeof(PNC));
     if (pncp == NULL) return NC_ENOMEM;
     pncp->path = (char*) malloc(strlen(path)+1);
@@ -156,6 +162,7 @@ ncmpi_create(MPI_Comm    comm,
 }
 
 /*----< ncmpi_open() >-------------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_open(MPI_Comm    comm,
            const char *path,
@@ -186,7 +193,7 @@ ncmpi_open(MPI_Comm    comm,
         return NC_ENOTNC;
     }
 
-    /* Create a PNC object and insert its dispatcher */
+    /* Create a PNC object and save its dispatcher pointer */
     pncp = (PNC*) malloc(sizeof(PNC));
     if (pncp == NULL) return NC_ENOMEM;
     pncp->path = (char*) malloc(strlen(path)+1);
@@ -198,7 +205,7 @@ ncmpi_open(MPI_Comm    comm,
     pncp->mode = omode;
     pncp->dispatch = dispatcher;
 
-    /* calling the create subroutine */
+    /* calling the open subroutine */
     status = dispatcher->open(comm, path, omode, info, &pncp->ncp);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE) {
         free(pncp->path);
@@ -222,6 +229,7 @@ ncmpi_open(MPI_Comm    comm,
 }
 
 /*----< ncmpi_close() >------------------------------------------------------*/
+/* This is a collective subroutine. */
 int
 ncmpi_close(int ncid)
 {
@@ -258,9 +266,6 @@ ncmpi_enddef(int ncid) {
 
     /* calling the subroutine that implements ncmpi_enddef() */
     return pncp->dispatch->enddef(pncp->ncp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
 }
 
 /*----< ncmpi__enddef() >----------------------------------------------------*/
@@ -280,10 +285,8 @@ ncmpi__enddef(int        ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi__enddef() */
-    return pncp->dispatch->_enddef(pncp->ncp, h_minfree, v_align, v_minfree, r_align);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->_enddef(pncp->ncp, h_minfree, v_align,
+                                              v_minfree, r_align);
 }
 
 /*----< ncmpi_redef() >------------------------------------------------------*/
@@ -300,9 +303,6 @@ ncmpi_redef(int ncid)
 
     /* calling the subroutine that implements ncmpi_redef() */
     return pncp->dispatch->redef(pncp->ncp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
 }
 
 /*----< ncmpi_sync() >-------------------------------------------------------*/
@@ -321,9 +321,6 @@ ncmpi_sync(int ncid)
 
     /* calling the subroutine that implements ncmpi_sync() */
     return pncp->dispatch->sync(pncp->ncp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
 }
 
 /*----< ncmpi_abort() >------------------------------------------------------*/
@@ -735,6 +732,7 @@ ncmpi_inq_file_info(int ncid, MPI_Info *info)
                                     NULL, info, NULL, NULL, NULL);
 }
 
+/* ncmpi_get_file_info() is now deprecated, replaced by ncmpi_inq_file_info() */
 int
 ncmpi_get_file_info(int ncid, MPI_Info *info)
 {
@@ -775,8 +773,8 @@ ncmpi_end_indep_data(int ncid)
 
 /*----< ncmpi_sync_numrecs() >-----------------------------------------------*/
 /* this API is collective, but can be called in independent data mode.
- * Note numrecs is always sync-ed in memory and update in file in collective
- * data mode.
+ * Note numrecs (number of records) is always sync-ed in memory and file in
+ * collective data mode.
  */
 int
 ncmpi_sync_numrecs(int ncid)
@@ -833,19 +831,24 @@ ncmpi_inq_default_format(int *formatp)
 /*----< ncmpi_inq_files_opened() >-------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_files_opened(int *num, int *ncids)
+ncmpi_inq_files_opened(int *num,    /* cannot be NULL */
+                       int *ncids)  /* can be NULL */
 {
     int i;
 
     if (num == NULL) return NC_EINVAL;
 
-    *num = 0;
-    for (i=0; i<NC_MAX_NFILES; i++) {
-        if (pnc_filelist[i] != NULL) {
-            if (ncids != NULL) /* ncids can be NULL */
-                ncids[*num] = i;
-            (*num)++;
+    *num = pnc_numfiles;
+
+    if (ncids != NULL) { /* ncids can be NULL */
+        *num = 0;
+        for (i=0; i<NC_MAX_NFILES; i++) {
+            if (pnc_filelist[i] != NULL) {
+                    ncids[*num] = i;
+                (*num)++;
+            }
         }
+        assert(*num == pnc_numfiles);
     }
     return NC_NOERR;
 }
@@ -853,7 +856,8 @@ ncmpi_inq_files_opened(int *num, int *ncids)
 /*----< ncmpi_inq_nreqs() >--------------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_nreqs(int ncid, int *nreqs)
+ncmpi_inq_nreqs(int  ncid,
+                int *nreqs) /* number of pending nonblocking requests */
 {
     int err;
     PNC *pncp;
@@ -873,7 +877,8 @@ ncmpi_inq_nreqs(int ncid, int *nreqs)
 /*----< ncmpi_inq_buffer_usage() >-------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_buffer_usage(int ncid, MPI_Offset *usage)
+ncmpi_inq_buffer_usage(int         ncid,
+                       MPI_Offset *usage) /* amount of space used so far */
 {
     int err;
     PNC *pncp;
@@ -893,7 +898,8 @@ ncmpi_inq_buffer_usage(int ncid, MPI_Offset *usage)
 /*----< ncmpi_inq_buffer_size() >--------------------------------------------*/
 /* This is an independent subroutine. */
 int
-ncmpi_inq_buffer_size(int ncid, MPI_Offset *buf_size)
+ncmpi_inq_buffer_size(int         ncid,
+                      MPI_Offset *buf_size) /* amount of space attached */
 {
     int err;
     PNC *pncp;
@@ -911,9 +917,12 @@ ncmpi_inq_buffer_size(int ncid, MPI_Offset *buf_size)
 }
 
 /*----< ncmpi_buffer_attach() >-----------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_buffer_attach(int        ncid,
-                    MPI_Offset bufsize)
+                    MPI_Offset bufsize) /* amount of memory space allowed for
+                                           PnetCDF library to buffer the
+                                           nonblocking requests */
 {
     int err;
     PNC *pncp;
@@ -927,6 +936,7 @@ ncmpi_buffer_attach(int        ncid,
 }
 
 /*----< ncmpi_buffer_detach() >-----------------------------------------------*/
+/* This is an independent subroutine. */
 int
 ncmpi_buffer_detach(int ncid)
 {
