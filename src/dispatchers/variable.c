@@ -31,10 +31,7 @@ ncmpi_def_var(int         ncid,    /* IN:  file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_def_var() */
-    err = pncp->dispatch->def_var(pncp->ncp, name, type, ndims, dimids, varidp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->def_var(pncp->ncp, name, type, ndims, dimids, varidp);
 }
 
 /*----< ncmpi_def_var_fill() >-----------------------------------------------*/
@@ -53,10 +50,7 @@ ncmpi_def_var_fill(int         ncid,    /* IN:  file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_def_var_fill() */
-    err = pncp->dispatch->def_var_fill(pncp->ncp, varid, nofill, fill_value);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->def_var_fill(pncp->ncp, varid, nofill, fill_value);
 }
 
 /*----< ncmpi_inq_varid() >--------------------------------------------------*/
@@ -74,10 +68,7 @@ ncmpi_inq_varid(int         ncid,    /* IN:  file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_inq_varid() */
-    err = pncp->dispatch->inq_varid(pncp->ncp, name, varidp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_varid(pncp->ncp, name, varidp);
 }
 
 /*----< ncmpi_inq_var() >----------------------------------------------------*/
@@ -94,6 +85,10 @@ ncmpi_inq_var(int      ncid,    /* IN:  file ID */
     int err;
     PNC *pncp;
 
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
@@ -101,16 +96,9 @@ ncmpi_inq_var(int      ncid,    /* IN:  file ID */
         (name != NULL || xtypep != NULL || ndimsp != NULL || dimids != NULL))
         return NC_EGLOBAL;
 
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
     /* calling the subroutine that implements ncmpi_inq_var() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, name, xtypep, ndimsp,
-                                  dimids, nattsp, NULL, NULL, NULL);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, name, xtypep, ndimsp,
+                                   dimids, nattsp, NULL, NULL, NULL);
 }
 
 /*----< ncmpi_inq_varname() >------------------------------------------------*/
@@ -123,21 +111,18 @@ ncmpi_inq_varname(int   ncid,    /* IN:  file ID */
     int err;
     PNC *pncp;
 
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
     if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
     /* calling the subroutine that implements ncmpi_inq_varname() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, name, NULL, NULL,
-                                  NULL, NULL, NULL, NULL, NULL);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, name, NULL, NULL,
+                                   NULL, NULL, NULL, NULL, NULL);
 }
 
 /*----< ncmpi_inq_vartype() >------------------------------------------------*/
@@ -150,21 +135,18 @@ ncmpi_inq_vartype(int      ncid,    /* IN:  file ID */
     int err;
     PNC *pncp;
 
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
     if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
     /* calling the subroutine that implements ncmpi_inq_vartype() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, NULL, xtypep, NULL,
-                                  NULL, NULL, NULL, NULL, NULL);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, NULL, xtypep, NULL,
+                                   NULL, NULL, NULL, NULL, NULL);
 }
 
 /*----< ncmpi_inq_varndims() >-----------------------------------------------*/
@@ -177,21 +159,18 @@ ncmpi_inq_varndims(int  ncid,    /* IN:  file ID */
     int err;
     PNC *pncp;
 
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
     if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
     /* calling the subroutine that implements ncmpi_inq_varndims() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, ndimsp,
-                                  NULL, NULL, NULL, NULL, NULL);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, ndimsp,
+                                   NULL, NULL, NULL, NULL, NULL);
 }
 
 /*----< ncmpi_inq_vardimid() >-----------------------------------------------*/
@@ -204,21 +183,18 @@ ncmpi_inq_vardimid(int  ncid,    /* IN:  file ID */
     int err;
     PNC *pncp;
 
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
     if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
     /* calling the subroutine that implements ncmpi_inq_vardimid() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
-                                  dimids, NULL, NULL, NULL, NULL);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
+                                   dimids, NULL, NULL, NULL, NULL);
 }
 
 /*----< ncmpi_inq_varnatts() >-----------------------------------------------*/
@@ -236,11 +212,8 @@ ncmpi_inq_varnatts(int  ncid,    /* IN:  file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_inq_varnatts() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
-                                  NULL, nattsp, NULL, NULL, NULL);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
+                                   NULL, nattsp, NULL, NULL, NULL);
 }
 
 /*----< ncmpi_inq_varoffset() >----------------------------------------------*/
@@ -253,21 +226,18 @@ ncmpi_inq_varoffset(int         ncid,   /* IN: file ID */
     int err;
     PNC *pncp;
 
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
     if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
     /* calling the subroutine that implements ncmpi_inq_varoffset() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
-                                  NULL, NULL, offset, NULL, NULL);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
+                                   NULL, NULL, offset, NULL, NULL);
 }
 
 /*----< ncmpi_inq_var_fill() >-----------------------------------------------*/
@@ -281,21 +251,18 @@ ncmpi_inq_var_fill(int   ncid,
     int err;
     PNC *pncp;
 
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
     if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
-    /* check if ncid is valid */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
     /* calling the subroutine that implements ncmpi_inq_var_fill() */
-    err = pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
-                                  NULL, NULL, NULL, no_fill, fill_value);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->inq_var(pncp->ncp, varid, NULL, NULL, NULL,
+                                   NULL, NULL, NULL, no_fill, fill_value);
 }
 
 /*----< ncmpi_fill_var_rec() >-----------------------------------------------*/
@@ -308,18 +275,15 @@ ncmpi_fill_var_rec(int        ncid,
     int err;
     PNC *pncp;
 
-    /* using NC_GLOBAL in varid is illegal for this API */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
-
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    /* calling the subroutine that implements ncmpi_fill_var_rec() */
-    err = pncp->dispatch->fill_rec(pncp->ncp, varid, recno);
-    if (err != NC_NOERR) return err;
+    /* using NC_GLOBAL in varid is illegal for this API */
+    if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
-    return NC_NOERR;
+    /* calling the subroutine that implements ncmpi_fill_var_rec() */
+    return pncp->dispatch->fill_rec(pncp->ncp, varid, recno);
 }
 
 /*----< ncmpi_rename_var() >-------------------------------------------------*/
@@ -337,13 +301,11 @@ ncmpi_rename_var(int         ncid,    /* IN: file ID */
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_rename_var() */
-    err = pncp->dispatch->rename_var(pncp->ncp, varid, newname);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->rename_var(pncp->ncp, varid, newname);
 }
 
 /*----< ncmpi_cancel() >-----------------------------------------------------*/
+/* This is an independent subroutine */
 int
 ncmpi_cancel(int  ncid,
              int  num_reqs, /* number of requests */
@@ -362,9 +324,5 @@ ncmpi_cancel(int  ncid,
     if (err != NC_NOERR) return err;
 
     /* calling the subroutine that implements ncmpi_cancel() */
-    err = pncp->dispatch->cancel(pncp->ncp, num_reqs, req_ids, statuses);
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return pncp->dispatch->cancel(pncp->ncp, num_reqs, req_ids, statuses);
 }
