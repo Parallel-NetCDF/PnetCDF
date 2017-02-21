@@ -21,7 +21,7 @@ char const pnetcdf_libvers[] =
  * or
  * % strings a.out | grep "PnetCDF library version"
  */
-char pnetcdf_lib_vers[] = "PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE;
+char const pnetcdf_lib_vers[] = "PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE;
 
 /* pnetcdf_libvers is slightly different from the one returned from
  * ncmpi_inq_libvers(). The string pnetcdf_libvers is for command "ident" to
@@ -40,9 +40,10 @@ const char*
 ncmpi_inq_libvers(void) {
 
     /* match the style used by netCDF API nc_inq_libvers()
-     * for example, "4.3.0 of Jun 16 2013 12:11:30 $" */
-    /* we need some silly operation so the compiler will emit the otherwise
-     * unused pnetcdf_libvers */
+     * for example, "4.3.0 of Jun 16 2013 12:11:30 $"
+     * we need some silly operation so the compiler will emit the otherwise
+     * unused pnetcdf_libvers
+     */
     if ((void *)pnetcdf_libvers != (void *)ncmpi_inq_libvers) {
 	; /* do nothing */
     }
