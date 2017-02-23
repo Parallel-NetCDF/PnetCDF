@@ -3,13 +3,15 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * The configure system has migrated to use automake.
-    * Building shared libraries is now supported. Note using shared libraries
-      is not recommended due to the likely performance degradation.
+    * The configure environment has been migrated to use automake.
+    * Building shared libraries is now supported with configure option
+      --enable-shared. The default is building static library only. Note linking
+      shared libraries is not recommended due to the likely performance
+      degradation.
 
   o New Limitation
     * The maximum number of files that can be simultaneously opened by an MPI
-      process is 1024.
+      process is 1024 (a constant NC_MAX_NFILES defined in pnetcdf.h).
 
   o New APIs
     * none

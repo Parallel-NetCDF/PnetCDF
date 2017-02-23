@@ -13,7 +13,7 @@ addons:
       description: "PnetCDF nightly build submitted via Travis CI"
     notification_email: wkliao@eecs.northwestern.edu
     build_command_prepend: "./configure ; make clean"
-    build_command:   "make ; make tests"
+    build_command:   "make -s LIBTOOLFLAGS=--silent ; make -s LIBTOOLFLAGS=--silent tests"
     branch_pattern: master
 
 before_install:
@@ -40,24 +40,23 @@ before_install:
 
 script:
   - ./configure
-  - make clean
-  - make
-  - make tests
-  - make check
-  - make distcheck
-  - make distclean
-  - ./configure --disable-shared
-  - make
-  - make tests
-  - make check
-  - make distcheck
-  - make distclean
-  - ./configure --disable-static
-  - make
-  - make tests
-  - make check
-  - make distcheck
-  - make distclean
+  - make -s LIBTOOLFLAGS=--silent
+  - make -s LIBTOOLFLAGS=--silent tests
+  - make -s LIBTOOLFLAGS=--silent check
+  - make -s LIBTOOLFLAGS=--silent distcheck
+  - make -s LIBTOOLFLAGS=--silent distclean
+  - ./configure --enable-shared
+  - make -s LIBTOOLFLAGS=--silent
+  - make -s LIBTOOLFLAGS=--silent tests
+  - make -s LIBTOOLFLAGS=--silent check
+  - make -s LIBTOOLFLAGS=--silent distcheck
+  - make -s LIBTOOLFLAGS=--silent distclean
+  - ./configure --enable-shared --disable-static
+  - make -s LIBTOOLFLAGS=--silent
+  - make -s LIBTOOLFLAGS=--silent tests
+  - make -s LIBTOOLFLAGS=--silent check
+  - make -s LIBTOOLFLAGS=--silent distcheck
+  - make -s LIBTOOLFLAGS=--silent distclean
   
 after_failure:
   - cat ./config.log
