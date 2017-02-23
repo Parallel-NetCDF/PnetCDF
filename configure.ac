@@ -658,7 +658,7 @@ dnl Travis CI only has v2.4.2
 LT_PREREQ([2.4.2])
 dnl LT_INIT([dlopen disable-shared])
 dnl LT_INIT([dlopen])
-LT_INIT
+LT_INIT([disable-shared])
 
 AC_PROG_INSTALL
 
