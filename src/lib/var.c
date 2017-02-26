@@ -720,7 +720,7 @@ err_check:
 
         /* check if dimids is consistent among all processes */
         if (root_ndims > 0) {
-            int root_dimids[NC_MAX_DIMS];
+            int *root_dimids = (int*)NCI_Malloc(root_ndims * sizeof(int));
             if (dimids != NULL)
                 memcpy(root_dimids, dimids, (size_t)root_ndims*sizeof(int));
             else
@@ -728,11 +728,13 @@ err_check:
             TRACE_COMM(MPI_Bcast)(root_dimids, root_ndims, MPI_INT, 0, ncp->nciop->comm);
             if (mpireturn != MPI_SUCCESS) {
                 if (nname != NULL) free(nname);
+                NCI_Free(root_dimids);
                 return ncmpii_handle_error(mpireturn, "MPI_Bcast");
             }
             if (err == NC_NOERR && dimids != NULL &&
                 memcmp(root_dimids, dimids, (size_t)root_ndims*sizeof(int)))
                 DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_DIMIDS)
+            NCI_Free(root_dimids);
         }
 
         /* find min error code across processes */
