@@ -757,7 +757,7 @@ ncmpi_inq_file_format(const char *filename,
     if (memcmp(signature, hdf5_signature, 8) == 0) {
         /* whether the file is NC_FORMAT_NETCDF4_CLASSIC is determined by HDF5
          * attribute "_nc3_strict" which requires a call to H5Aget_name(). Here
-         * we do not distinquish NC_CLASSIC_MODEL, but simply return NETCDF4
+         * we do not distinguish NC_CLASSIC_MODEL, but simply return NETCDF4
          * format.
          */
         *formatp = NC_FORMAT_NETCDF4;
