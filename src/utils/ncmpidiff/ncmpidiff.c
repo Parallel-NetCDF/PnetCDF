@@ -240,7 +240,7 @@ int main(int argc, char **argv)
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, *dimids1;
     int ncid2, ndims2, nvars2, natts2, unlimdimid2, *dimids2;
     char *name1, *name2;
-    MPI_Offset *shape, varsize, *start;
+    MPI_Offset *shape=NULL, varsize, *start=NULL;
     MPI_Offset attlen1, dimlen1, attlen2, dimlen2;
     nc_type type1, type2;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -295,18 +295,10 @@ int main(int argc, char **argv)
         check_header      = 1;
     }
 
-    dimids1 = (int*) malloc(NC_MAX_DIMS * sizeof(int));
-    if (!dimids1) OOM_ERROR
-    dimids2 = (int*) malloc(NC_MAX_DIMS * sizeof(int));
-    if (!dimids2) OOM_ERROR
     name1   = (char*) malloc(NC_MAX_NAME);
     if (!name1) OOM_ERROR
     name2   = (char*) malloc(NC_MAX_NAME);
     if (!name2) OOM_ERROR
-    shape   = (MPI_Offset*) malloc(NC_MAX_VAR_DIMS * sizeof(MPI_Offset));
-    if (!shape) OOM_ERROR
-    start   = (MPI_Offset*) malloc(NC_MAX_VAR_DIMS * sizeof(MPI_Offset));
-    if (!start) OOM_ERROR
 
     /* Nov. 18, 2014 -- disable subfiling as it does not correctly handle the
      * cases when  nprocs < num_subfiles */
@@ -454,6 +446,9 @@ int main(int argc, char **argv)
         /* Compare variables' metadata */
         for (i=0; i<nvars1; i++) {
             int varid;
+            err = ncmpi_inq_varndims(ncid1, i, &ndims1); HANDLE_ERROR
+            dimids1 = (int*) malloc(ndims1 * sizeof(int));
+            if (!dimids1) OOM_ERROR
             err = ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
             HANDLE_ERROR
             /* find the variable with the same name from ncid2 */
@@ -465,6 +460,9 @@ int main(int argc, char **argv)
                 numVarDIFF++;
                 continue;
             }
+            err = ncmpi_inq_varndims(ncid2, varid, &ndims2); HANDLE_ERROR
+            dimids2 = (int*) malloc(ndims2 * sizeof(int));
+            if (!dimids2) OOM_ERROR
             err = ncmpi_inq_var(ncid2, varid, name2, &type2, &ndims2, dimids2, &natts2);
             HANDLE_ERROR
 
@@ -582,6 +580,8 @@ int main(int argc, char **argv)
                     numHeadDIFF++;
                 }
             }
+            free(dimids1);
+            free(dimids2);
         }
         for (i=0; i<nvars2; i++) { /* check variables in file2 but not in file1 */
             int varid;
@@ -599,8 +599,6 @@ int main(int argc, char **argv)
     }
 
     /* compare variable contents */
-    for (i=0; i<NC_MAX_VAR_DIMS; i++) start[i] = 0;
-
     nvars = 0;
     if (check_variable_list) nvars = var_list.nvars;
 
@@ -640,8 +638,14 @@ int main(int argc, char **argv)
             }
             continue;
         }
+        err = ncmpi_inq_varndims(ncid1, varid1, &ndims1); HANDLE_ERROR
+        dimids1 = (int*) malloc(ndims1 * sizeof(int));
+        if (!dimids1) OOM_ERROR
         err = ncmpi_inq_var(ncid1, varid1, name1, &type1, &ndims1, dimids1, &natts1);
         HANDLE_ERROR
+        err = ncmpi_inq_varndims(ncid2, varid2, &ndims2); HANDLE_ERROR
+        dimids2 = (int*) malloc(ndims2 * sizeof(int));
+        if (!dimids2) OOM_ERROR
         err = ncmpi_inq_var(ncid2, varid2, name2, &type2, &ndims2, dimids2, &natts2);
         HANDLE_ERROR
 
@@ -674,6 +678,10 @@ int main(int argc, char **argv)
         }
         else if (!check_header && !rank && verbose)
             printf("\tSAME: number of dimensions (%d)\n",ndims1);
+
+        shape = (MPI_Offset*) calloc(ndims1 * 2, sizeof(MPI_Offset));
+        if (!shape) OOM_ERROR
+        start = shape + ndims1;
 
         /* check dimension length only */
         for (j=0; j<ndims1; j++) { /* check variable's dimensionality */
@@ -724,6 +732,9 @@ int main(int argc, char **argv)
             case NC_UINT64: CHECK_VAR_DIFF(uint64, ncmpi_get_vara_ulonglong_all, NC_UINT64)
             default: ; /* TODO: handle unexpected types */
         }
+        free(shape);
+        free(dimids1);
+        free(dimids2);
     }
 
     /* close files */
@@ -764,12 +775,8 @@ int main(int argc, char **argv)
             free(var_list.names[i]);
         free(var_list.names);
     }
-    free(dimids1);
-    free(dimids2);
     free(name1);
     free(name2);
-    free(shape);
-    free(start);
 
     if (rank == 0) numDIFF = varDIFF + numHeadDIFF;
     MPI_Bcast(&numDIFF, 1, MPI_LONG_LONG_INT, 0, comm);
