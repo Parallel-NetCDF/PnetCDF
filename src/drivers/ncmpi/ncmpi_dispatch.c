@@ -13,6 +13,7 @@
 #include <nc.h>
 
 static PNC_Dispatch ncmpi_dispatcher = {
+    /* FILE APIs */
     ncmpii_create,
     ncmpii_open,
     ncmpii_close,
@@ -28,11 +29,13 @@ static PNC_Dispatch ncmpi_dispatcher = {
     ncmpii_begin_indep_data,
     ncmpii_end_indep_data,
 
+    /* DIMENSION APIs */
     ncmpii_def_dim,
     ncmpii_inq_dimid,
     ncmpii_inq_dim,
     ncmpii_rename_dim,
 
+    /* ATTRIBUTE APIs */
     ncmpii_inq_att,
     ncmpii_inq_attid,
     ncmpii_inq_attname,
@@ -42,6 +45,7 @@ static PNC_Dispatch ncmpi_dispatcher = {
     ncmpii_get_att,
     ncmpii_put_att,
 
+    /* VARIABLE APIs */
     ncmpii_def_var,
     ncmpii_def_var_fill,
     ncmpii_fill_var_rec,

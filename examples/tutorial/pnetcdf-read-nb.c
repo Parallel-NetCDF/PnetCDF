@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     int i, j, rank, nprocs, ret;
     int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
     MPI_Offset *dim_sizes, var_size, *start, *count;
-    int *requests, *statuses, dimids[NC_MAX_VAR_DIMS], **data; 
+    int *requests, *statuses, *dimids=NULL, **data; 
     char filename[256], varname[NC_MAX_NAME+1];
     nc_type type;
 
@@ -76,7 +76,13 @@ int main(int argc, char **argv) {
 
     data = (int**) calloc(nvars, sizeof(int*));
 
-    for(i=0; i<nvars; i++) { 
+    for(i=0; i<nvars; i++) {
+        /* obtain the number of dimensions of variable i, so we can allocate
+         * the dimids array */
+        ret = ncmpi_inq_varndims(ncfile, i, &var_ndims);
+        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        dimids = (int*) malloc(var_ndims * sizeof(int));
+
         /* much less coordination in this case compared to rank 0 doing all
          * the i/o: everyone already has the necessary information */
         ret = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
@@ -121,6 +127,7 @@ int main(int argc, char **argv) {
 
         free(start);
         free(count);
+        free(dimids);
     }
 
     ret = ncmpi_wait_all(ncfile, nvars, requests, statuses);

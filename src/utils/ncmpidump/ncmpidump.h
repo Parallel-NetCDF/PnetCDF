@@ -27,7 +27,7 @@ struct ncvar {			/* variable */
     char name[NC_MAX_NAME];
     nc_type type;
     int ndims;
-    int dims[NC_MAX_VAR_DIMS];
+    int *dims;                  /* dimension IDs */
     int natts;
     boolean has_fillval;
     double fillval;
