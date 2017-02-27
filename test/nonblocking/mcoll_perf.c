@@ -102,11 +102,11 @@ static int nerrs;
 static
 int ncmpi_diff(char *filename1, char *filename2) {
     int i, j, status, rank, nprocs;
-    int ncid1, ndims1, nvars1, natts1, unlimdimid1, dimids1[NC_MAX_DIMS];
-    int ncid2, ndims2, nvars2, natts2, unlimdimid2, dimids2[NC_MAX_DIMS];
+    int ncid1, ndims1, nvars1, natts1, unlimdimid1, *dimids1;
+    int ncid2, ndims2, nvars2, natts2, unlimdimid2, *dimids2;
     char str[512], name1[NC_MAX_NAME], name2[NC_MAX_NAME], name[NC_MAX_NAME];
-    MPI_Offset shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
-    MPI_Offset attlen1, dimlen1, attlen2, dimlen2;
+    MPI_Offset *shape, *start;
+    MPI_Offset varsize, attlen1, dimlen1, attlen2, dimlen2;
     nc_type type1, type2;
     MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -180,6 +180,13 @@ int ncmpi_diff(char *filename1, char *filename2) {
 
     /* Inquire variables */
     for (i=0; i<nvars1; i++) {
+        status = ncmpi_inq_varndims(ncid1, i, &ndims1);
+        HANDLE_ERROR
+        status = ncmpi_inq_varndims(ncid2, i, &ndims2);
+        HANDLE_ERROR
+        dimids1 = (int*) malloc(ndims1 * sizeof(int));
+        dimids2 = (int*) malloc(ndims2 * sizeof(int));
+
         status = ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
         HANDLE_ERROR
         status = ncmpi_inq_var(ncid2, i, name2, &type2, &ndims2, dimids2, &natts2);
@@ -234,6 +241,8 @@ int ncmpi_diff(char *filename1, char *filename2) {
                 default: ; /* TODO: handle unexpected types */
             }
         }
+        free(dimids1);
+        free(dimids2);
     }
 
     /**
@@ -250,10 +259,13 @@ int ncmpi_diff(char *filename1, char *filename2) {
      *  Data Mode API: collective
      */
 
-    for (i=0; i<NC_MAX_VAR_DIMS; i++)
-        start[i] = 0;
-
     for (i=0; i<nvars1; i++) {
+        status = ncmpi_inq_varndims(ncid1, i, &ndims1);
+        HANDLE_ERROR
+        shape = (MPI_Offset*) calloc(ndims1 * 2, sizeof(MPI_Offset));
+        start = shape + ndims1;
+        dimids1 = (int*) malloc(ndims1 * sizeof(int));
+
         varsize = 1;
         status = ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
         HANDLE_ERROR
@@ -276,6 +288,8 @@ int ncmpi_diff(char *filename1, char *filename2) {
             case NC_DOUBLE: CHECK_VAR_DIFF(double, ncmpi_get_vara_double_all, NC_DOUBLE)
             default: ; /* TODO: handle unexpected types */
         }
+        free(shape);
+        free(dimids1);
     }
 
     status = ncmpi_close(ncid1);

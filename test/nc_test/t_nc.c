@@ -57,7 +57,7 @@ static struct {
 	char mnem[NC_MAX_NAME];
 	nc_type type;
 	int ndims;
-	int dims[NC_MAX_VAR_DIMS];
+	int *dims;
 	int num_attrs;
 } vdesc[1];
 
@@ -452,6 +452,9 @@ int t_nc(char *filename, int cmode)
 	for(ii = 0; ii < cdesc->num_vars; ii++, tvp++ ) 
 	{
 		int jj;
+		err = ncmpi_inq_varndims(id, ii, &vdesc->ndims); ERR
+                vdesc->dims = (int*) malloc(vdesc->ndims * sizeof(int));
+
 		err = ncmpi_inq_var(id, ii,
 			vdesc->mnem,
 			&(vdesc->type),
@@ -551,6 +554,7 @@ int t_nc(char *filename, int cmode)
 		buf[adesc->len] = 0;
 		assert( strcmp(tvp->fieldnam, buf) == 0);
 		}
+                free(vdesc->dims);
 	}
 
 	/* (void) printf("fill_seq "); */

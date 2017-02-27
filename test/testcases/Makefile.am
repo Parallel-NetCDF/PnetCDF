@@ -55,7 +55,8 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                last_large_var \
                check_type \
                test_erange \
-               scalar
+               scalar \
+               null_args
 
 M4_SRCS  = erange_fill.m4
 

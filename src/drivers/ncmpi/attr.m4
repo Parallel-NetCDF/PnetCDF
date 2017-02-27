@@ -29,12 +29,8 @@ dnl
 #include "macro.h"
 #include "utf8proc.h"
 
-/*----< ncmpii_free_NC_attr() >-----------------------------------------------*/
-/*
- * Free attr
- * Formerly
-NC_free_attr()
- */
+/*----< ncmpii_free_NC_attr() >----------------------------------------------*/
+/* Free NC_attr object. */
 inline void
 ncmpii_free_NC_attr(NC_attr *attrp)
 {
@@ -47,8 +43,7 @@ ncmpii_free_NC_attr(NC_attr *attrp)
 
 
 /*----< ncmpix_len_NC_attrV() >----------------------------------------------*/
-/*
- * How much space will 'nelems' of 'type' take in
+/* How much space will 'nelems' of 'type' take in
  * external representation (as the values of an attribute)?
  */
 inline static MPI_Offset
@@ -73,6 +68,7 @@ ncmpix_len_NC_attrV(nc_type    type,
 }
 
 
+/*----< ncmpii_new_x_NC_attr() >---------------------------------------------*/
 NC_attr *
 ncmpii_new_x_NC_attr(NC_string  *strp,
                      nc_type     type,
@@ -103,7 +99,7 @@ ncmpii_new_x_NC_attr(NC_string  *strp,
 }
 
 
-/*----< ncmpii_new_NC_attr() >------------------------------------------------*/
+/*----< ncmpii_new_NC_attr() >-----------------------------------------------*/
 /*
  * IN:  name is an already normalized attribute name (NULL terminated)
  * OUT: attrp->xvalue is malloc-ed with a space of an aligned size
@@ -131,7 +127,7 @@ ncmpii_new_NC_attr(const char *name,
 }
 
 
-/*----< dup_NC_attr() >-------------------------------------------------------*/
+/*----< dup_NC_attr() >------------------------------------------------------*/
 NC_attr *
 dup_NC_attr(const NC_attr *rattrp)
 {
@@ -145,12 +141,8 @@ dup_NC_attr(const NC_attr *rattrp)
 
 /* attrarray */
 
-/*----< ncmpii_free_NC_attrarray() >------------------------------------------*/
-/*
- * Free NC_attrarray values.
- * formerly
-NC_free_array()
- */
+/*----< ncmpii_free_NC_attrarray() >-----------------------------------------*/
+/* Free NC_attrarray values. */
 void
 ncmpii_free_NC_attrarray(NC_attrarray *ncap)
 {
@@ -171,7 +163,7 @@ ncmpii_free_NC_attrarray(NC_attrarray *ncap)
     ncap->ndefined = 0;
 }
 
-/*----< ncmpii_dup_NC_attrarray() >-------------------------------------------*/
+/*----< ncmpii_dup_NC_attrarray() >------------------------------------------*/
 int
 ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
 {
@@ -214,63 +206,57 @@ ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
 }
 
 
-/*
- * Add a new handle on the end of an array of handles
- * Formerly
-NC_incr_array(array, tail)
- */
+/*----< incr_NC_attrarray() >------------------------------------------------*/
+/* Add a new handle on the end of an array of handles */
 int
 incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 {
-	NC_attr **vp;
+    NC_attr **vp;
 
-	assert(ncap != NULL);
+    assert(ncap != NULL);
 
-	if (ncap->nalloc == 0)
-	{
-		assert(ncap->ndefined == 0);
-		vp = (NC_attr **) NCI_Malloc(sizeof(NC_attr*) * NC_ARRAY_GROWBY);
-		if(vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    if (ncap->nalloc == 0) {
+        assert(ncap->ndefined == 0);
+        vp = (NC_attr **) NCI_Malloc(sizeof(NC_attr*) * NC_ARRAY_GROWBY);
+        if(vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-		ncap->value = vp;
-		ncap->nalloc = NC_ARRAY_GROWBY;
-	}
-	else if (ncap->ndefined +1 > ncap->nalloc)
-	{
-		vp = (NC_attr **) NCI_Realloc(ncap->value,
-			(size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr*));
-		if(vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+        ncap->value = vp;
+        ncap->nalloc = NC_ARRAY_GROWBY;
+    }
+    else if (ncap->ndefined +1 > ncap->nalloc) {
+        vp = (NC_attr **) NCI_Realloc(ncap->value,
+             (size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr*));
+        if(vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-		ncap->value = vp;
-		ncap->nalloc += NC_ARRAY_GROWBY;
-	}
+        ncap->value = vp;
+        ncap->nalloc += NC_ARRAY_GROWBY;
+    }
 
-	if (newelemp != NULL)
-	{
-		ncap->value[ncap->ndefined] = newelemp;
-		ncap->ndefined++;
-	}
-	return NC_NOERR;
+    if (newelemp != NULL) {
+        ncap->value[ncap->ndefined] = newelemp;
+        ncap->ndefined++;
+    }
+    return NC_NOERR;
 }
 
 
+/*----< elem_NC_attrarray() >------------------------------------------------*/
 static NC_attr *
 elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem)
 {
-	assert(ncap != NULL);
-	if ((elem < 0) || ncap->ndefined == 0 || elem >= ncap->ndefined)
-		return NULL;
+    assert(ncap != NULL);
+    if ((elem < 0) || ncap->ndefined == 0 || elem >= ncap->ndefined)
+        return NULL;
 
-	assert(ncap->value != NULL);
+    assert(ncap->value != NULL);
 
-	return ncap->value[elem];
+    return ncap->value[elem];
 }
 
 /* End attrarray per se */
 
 /*----< NC_attrarray0() >----------------------------------------------------*/
-/*
- * Given ncp and varid, return ptr to array of attributes
+/* Given ncp and varid, return ptr to array of attributes
  * else NULL on error. This is equivalent to validate varid.
  */
 static NC_attrarray *
@@ -288,8 +274,7 @@ NC_attrarray0(NC  *ncp,
 
 
 /*----< ncmpii_NC_findattr() >------------------------------------------------*/
-/*
- * Step thru NC_ATTRIBUTE array, seeking match on name.
+/* Step thru NC_ATTRIBUTE array, seeking match on name.
  *  return match or -1 if Not Found.
  */
 int
@@ -319,9 +304,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
 
 
 /*----< NC_lookupattr() >----------------------------------------------------*/
-/*
- * Look up by ncid, ncap, and name
- */
+/* Look up by ncid, ncap, and name */
 static int
 NC_lookupattr(NC_attrarray  *ncap,
               const char    *name,   /* normalized attribute name */
@@ -1028,7 +1011,7 @@ foreach(`iType', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulongl
         `GET_ATT(iType)
 ')
 
-/*----< ncmpii_get_att() >----------------------------------------------------*/
+/*----< ncmpii_get_att() >---------------------------------------------------*/
 /* This is an independent subroutine */
 /* user buffer data type matches the external type defined in file */
 int

@@ -344,8 +344,8 @@ do_ncdump(const char *path, struct fspec* specp)
     int xdimid;           /* id of unlimited dimension */
     int dimid;            /* dimension id */
     int varid;            /* variable id */
-    struct ncdim dims[NC_MAX_DIMS]; /* dimensions */
-    size_t vdims[NC_MAX_DIMS];    /* dimension sizes for a single variable */
+    struct ncdim *dims;   /* dimensions */
+    size_t *vdims;        /* dimension sizes for a single variable */
     struct ncvar var;     /* variable */
     struct ncatt att;     /* attribute */
     int id;               /* dimension number per variable */
@@ -362,6 +362,8 @@ do_ncdump(const char *path, struct fspec* specp)
      * cases when  nprocs < num_subfiles */
     MPI_Info_create (&info);
     MPI_Info_set (info, "pnetcdf_subfiling", "disable");
+    var.dims = NULL;
+    dims = NULL;
 
     ncmpi_status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE,
                               info, &ncid);
@@ -418,6 +420,7 @@ do_ncdump(const char *path, struct fspec* specp)
         /* print dimension info */
         if (ndims > 0) Printf ("dimensions:\n");
 
+        dims = (struct ncdim*) malloc(ndims*sizeof(struct ncdim));
         for (dimid = 0; dimid < ndims; dimid++) {
             NC_CHECK(ncmpi_inq_dim(ncid, dimid, dims[dimid].name,
                                    &dims[dimid].size) );
@@ -433,6 +436,8 @@ do_ncdump(const char *path, struct fspec* specp)
 
         /* get variable info, with variable attributes */
         for (varid = 0; varid < nvars; varid++) {
+            NC_CHECK(ncmpi_inq_varndims(ncid, varid, &var.ndims));
+            var.dims = (int*) realloc(var.dims, var.ndims * sizeof(int));
             NC_CHECK(ncmpi_inq_var(ncid, varid, var.name, &var.type,
                                    &var.ndims, var.dims, &var.natts) );
             Printf ("\t%s %s", type_name(var.type), var.name);
@@ -462,6 +467,8 @@ do_ncdump(const char *path, struct fspec* specp)
                 /* if var list specified, test for membership */
                 if (specp->nlvars > 0 && ! varmember(vlist, varid))
                     continue;
+                NC_CHECK(ncmpi_inq_varndims(ncid, varid, &var.ndims));
+                var.dims = (int*) realloc(var.dims, var.ndims * sizeof(int));
                 NC_CHECK(ncmpi_inq_var(ncid, varid, var.name, &var.type,
                                        &var.ndims, var.dims, &var.natts));
                 if (specp->coord_vals) {
@@ -485,6 +492,7 @@ do_ncdump(const char *path, struct fspec* specp)
                 if (var.ndims == 0 || var.dims[0] != xdimid ||
                     dims[xdimid].size != 0) { 
                     /* Collect variable's dim sizes */
+                    vdims = (size_t*) malloc(var.ndims * sizeof(size_t));
                     for (id = 0; id < var.ndims; id++)
                          vdims[id] = dims[var.dims[id]].size;
 
@@ -549,13 +557,16 @@ do_ncdump(const char *path, struct fspec* specp)
                         if (vlist) free(vlist);
                         return;
                     }
+                    free(vdims);
                 }
             }
         }
         Printf ("}\n");
+        free(dims);
     }
     NC_CHECK(ncmpi_close(ncid));
     if (vlist) free(vlist);
+    free(var.dims);
 }
 
 

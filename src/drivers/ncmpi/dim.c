@@ -421,6 +421,8 @@ ncmpii_def_dim(void       *ncdp,    /* IN:  NC object */
         }
     }
 
+    /* TODO: We should not limit the number of dimensions, as CDF file formats 
+     * impose no such limit */
     /* check if number of dimensions exceeds the upper bound */
     if (ncp->dims.ndefined >= NC_MAX_DIMS) {
         DEBUG_ASSIGN_ERROR(err, NC_EMAXDIMS)

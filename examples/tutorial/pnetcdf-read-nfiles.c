@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     char filename[DSET_NAME_LEN];
     char basename[256];
     char varname[NC_MAX_NAME+1];
-    int dimids[NC_MAX_VAR_DIMS];
+    int *dimids=NULL;
     nc_type type;
     int *data=NULL;
 
@@ -94,7 +94,13 @@ int main(int argc, char **argv) {
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
     }
 
-    for (i=0; i<nvars; i++) { 
+    for (i=0; i<nvars; i++) {
+        /* obtain the number of dimensions of variable i, so we can allocate
+         * the dimids array */
+        ret = ncmpi_inq_varndims(ncfile, i, &var_ndims);
+        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        dimids = (int*) malloc(var_ndims * sizeof(int));
+
         /* much less coordination in this case compared to rank 0 doing all
          * the i/o: everyone already has the necessary information */
         ret = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
@@ -127,6 +133,7 @@ int main(int argc, char **argv) {
         }
 
         free(count);
+        free(dimids);
         if (data != NULL) free(data);
     }
 

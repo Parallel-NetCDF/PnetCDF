@@ -523,9 +523,9 @@ vardata(
      const struct fspec* fsp	/* formatting specs */
      )
 {
-    MPI_Offset cor[NC_MAX_DIMS];	/* corner coordinates */
-    MPI_Offset edg[NC_MAX_DIMS];	/* edges of hypercube */
-    size_t add[NC_MAX_DIMS];	/* "odometer" increment to next "row"  */
+    MPI_Offset *cor;	/* corner coordinates */
+    MPI_Offset *edg;	/* edges of hypercube */
+    size_t *add;	/* "odometer" increment to next "row"  */
  
     int id;
     int ir;
@@ -573,6 +573,10 @@ vardata(
 	init_epsilons();
 	initeps = 1;
     }
+
+    cor = (MPI_Offset*) malloc(vrank * sizeof (MPI_Offset));
+    edg = (MPI_Offset*) malloc(vrank * sizeof (MPI_Offset));
+    add = (size_t*) malloc(vrank * sizeof (size_t));
 
     nels = 1;
     for (id = 0; id < vrank; id++) {
@@ -733,6 +737,9 @@ vardata(
         if (vals) memset(vals, 0, VALBUFSIZ);
     }
     free(vals);
+    free(cor);
+    free(edg);
+    free(add);
 
     return 0;
 }

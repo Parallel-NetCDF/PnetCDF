@@ -66,17 +66,21 @@
     integer                                      :: nf90mpi_inquire_variable
 
     ! Local variables
-    character (len = nf90_max_name)       :: varName
-    integer                               :: externalType, numDimensions
-    integer, dimension(nf90_max_var_dims) :: dimensionIDs
-    integer                               :: numAttributes
+    character (len = nf90_max_name) :: varName
+    integer                         :: externalType, numDimensions
+    integer, allocatable            :: dimensionIDs(:)
+    integer                         :: numAttributes
+
+    nf90mpi_inquire_variable = nfmpi_inq_varndims(ncid, varid, numDimensions)
+    if (nf90mpi_inquire_variable .NE. NF_NOERR) return
+    allocate(dimensionIDs(numDimensions))
 
     nf90mpi_inquire_variable = nfmpi_inq_var(ncid, varid, varName, externalType, &
                                        numDimensions, dimensionIDs, numAttributes)
     if (nf90mpi_inquire_variable == nf90_noerr) then
-        if(present(name))   name                   = trim(varName)
-        if(present(xtype))  xtype                  = externalType
-        if(present(ndims))  ndims                  = numDimensions
+        if(present(name))   name  = trim(varName)
+        if(present(xtype))  xtype = externalType
+        if(present(ndims))  ndims = numDimensions
         if(present(dimids)) then
             if (size(dimids) .ge. numDimensions) then
                 dimids(:numDimensions) = dimensionIDs(:numDimensions)
@@ -84,8 +88,9 @@
                 nf90mpi_inquire_variable = nf90_einval
             endif
         endif
-        if(present(nAtts))  nAtts                  = numAttributes
+        if(present(nAtts))  nAtts = numAttributes
     endif
+    deallocate(dimensionIDs)
   end function nf90mpi_inquire_variable
   ! -----
   function nf90mpi_rename_var(ncid, varid, newname)
