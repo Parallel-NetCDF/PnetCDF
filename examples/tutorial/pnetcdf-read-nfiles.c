@@ -16,10 +16,11 @@
  * the contents of the netCDF files.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 static void handle_error(int status, int lineno)
 {
@@ -37,8 +38,9 @@ int main(int argc, char **argv) {
     MPI_Offset *dim_sizes, var_size;
     MPI_Offset *count;
     char filename[DSET_NAME_LEN];
+    char basename[256];
     char varname[NC_MAX_NAME+1];
-    int dimids[NC_MAX_VAR_DIMS];
+    int *dimids=NULL;
     nc_type type;
     int *data=NULL;
 
@@ -47,11 +49,13 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
-        if (rank == 0) printf("Usage: %s filename\n", argv[0]);
+    if (argc > 2) {
+        if (rank == 0) printf("Usage: %s file_base_name\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(basename, 256, "%s", argv[1]);
+    else          strcpy(basename, "testfile");
 
     /* the most significant challenge with the "one file per processor"
      * approach is the challenge in reading back on a different number of
@@ -60,7 +64,7 @@ int main(int argc, char **argv) {
      * Stitching together the many smaller files into a form usable by other
      * programs poses a challenge */
 
-    ret = snprintf(filename, DSET_NAME_LEN, "%s.%d-%d.nc", argv[1], rank, nprocs);
+    ret = snprintf(filename, DSET_NAME_LEN, "%s.%d-%d.nc", basename, rank, nprocs);
     if (ret >= DSET_NAME_LEN) {
         fprintf(stderr, "name too long \n");
         exit(-1);
@@ -90,7 +94,13 @@ int main(int argc, char **argv) {
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
     }
 
-    for (i=0; i<nvars; i++) { 
+    for (i=0; i<nvars; i++) {
+        /* obtain the number of dimensions of variable i, so we can allocate
+         * the dimids array */
+        ret = ncmpi_inq_varndims(ncfile, i, &var_ndims);
+        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        dimids = (int*) malloc(var_ndims * sizeof(int));
+
         /* much less coordination in this case compared to rank 0 doing all
          * the i/o: everyone already has the necessary information */
         ret = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
@@ -123,6 +133,7 @@ int main(int argc, char **argv) {
         }
 
         free(count);
+        free(dimids);
         if (data != NULL) free(data);
     }
 
