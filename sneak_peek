@@ -39,7 +39,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * none
+    * test/testcases/null_args.c - tests whether the correct error codes can
+      be returned when using NULL arguments for start, count, stride, or imap
 
   o Other updates:
     * none
