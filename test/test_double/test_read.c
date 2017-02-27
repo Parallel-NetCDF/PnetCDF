@@ -69,14 +69,11 @@ int main(int argc, char **argv) {
   int ncid1, ncid2;
   int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
-  nc_type type, vartypes[NC_MAX_VARS];
-  MPI_Offset attlen, dimlen;
-  MPI_Offset shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
-  MPI_Offset stride[NC_MAX_VAR_DIMS];
+  nc_type type, *vartypes;
+  MPI_Offset attlen, dimlen, varsize;
+  MPI_Offset *shape, *start, *stride;
   void *valuep;
-  int dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
-  int vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS/16]; /* divided by 16 due to my memory limitation */
-  int varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
+  int *dimids, *varids, **vardims, *varndims, *varnatts;
   int isRecvar;
   params opts;
 
@@ -178,6 +175,7 @@ int main(int argc, char **argv) {
   }
 
   /* Inquire dimension */
+  dimids = (int*) malloc(ndims * sizeof(int));
 
   for (i = 0; i < ndims; i++) {
     status = ncmpi_inq_dim(ncid1, i, name, &dimlen);
@@ -187,10 +185,21 @@ int main(int argc, char **argv) {
     status = ncmpi_def_dim(ncid2, name, dimlen, dimids+i);
     if (status != NC_NOERR) handle_error(status);
   }
+  free(dimids);
+
+  vartypes = (nc_type*) malloc(nvars * sizeof(nc_type));
+  varids = (int*) malloc(nvars * sizeof(int));
+  varndims = (int*) malloc(nvars * sizeof(int));
+  varnatts = (int*) malloc(nvars * sizeof(int));
+  vardims = (int**) malloc(nvars * sizeof(int*));
 
   /* Inquire variables */
 
   for (i = 0; i < nvars; i++) {
+    status = ncmpi_inq_varndims(ncid1, i, varndims+i);
+    if (status != NC_NOERR) handle_error(status);
+    vardims[i] = (int*) malloc(varndims[i] * sizeof(int));
+
     status = ncmpi_inq_var (ncid1, i, name, vartypes+i, varndims+i, vardims[i], varnatts+i);
     if (status != NC_NOERR) handle_error(status);
 
@@ -274,9 +283,11 @@ int main(int argc, char **argv) {
    *  Data Mode API: collective
    */
 
-  for (i = 0; i < NC_MAX_VAR_DIMS; i++)
-    start[i] = 0;
   for (i = 0; i < nvars; i++) {
+    shape = (MPI_Offset*) malloc(varndims[i] * 3 * sizeof(MPI_Offset));
+    start = shape + varndims[i];
+    stride = start + varndims[i];
+
     isRecvar = 0;
     varsize = 1;
     for (j = 0; j < varndims[i]; j++) {
@@ -296,6 +307,7 @@ int main(int argc, char **argv) {
       }
       varsize *= shape[j];
     }
+
     if (isRecvar) switch (vartypes[i]) {
 
       /* strided access for record variable */
@@ -387,8 +399,9 @@ int main(int argc, char **argv) {
       default:
 	;
 	/* Handle unexpected types */
-
     }
+    free(shape);
+    free(vardims[i]);
   }
 
   /**
@@ -400,6 +413,12 @@ int main(int argc, char **argv) {
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_close(ncid2);
   if (status != NC_NOERR) handle_error(status);
+
+  free(vartypes);
+  free(varids);
+  free(varndims);
+  free(varnatts);
+  free(vardims);
 
   /*******************  END OF NETCDF ACCESS  ****************/
 
