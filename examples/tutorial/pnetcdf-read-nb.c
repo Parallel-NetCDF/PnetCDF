@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -27,8 +28,8 @@ int main(int argc, char **argv) {
     int i, j, rank, nprocs, ret;
     int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
     MPI_Offset *dim_sizes, var_size, *start, *count;
-    int *requests, *statuses, dimids[NC_MAX_VAR_DIMS], **data; 
-    char varname[NC_MAX_NAME+1];
+    int *requests, *statuses, *dimids=NULL, **data; 
+    char filename[256], varname[NC_MAX_NAME+1];
     nc_type type;
 
     MPI_Init(&argc, &argv);
@@ -36,13 +37,15 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
-    ret = ncmpi_open(MPI_COMM_WORLD, argv[1], NC_NOWRITE, MPI_INFO_NULL,
+    ret = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                      &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
@@ -73,7 +76,13 @@ int main(int argc, char **argv) {
 
     data = (int**) calloc(nvars, sizeof(int*));
 
-    for(i=0; i<nvars; i++) { 
+    for(i=0; i<nvars; i++) {
+        /* obtain the number of dimensions of variable i, so we can allocate
+         * the dimids array */
+        ret = ncmpi_inq_varndims(ncfile, i, &var_ndims);
+        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        dimids = (int*) malloc(var_ndims * sizeof(int));
+
         /* much less coordination in this case compared to rank 0 doing all
          * the i/o: everyone already has the necessary information */
         ret = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
@@ -118,6 +127,7 @@ int main(int argc, char **argv) {
 
         free(start);
         free(count);
+        free(dimids);
     }
 
     ret = ncmpi_wait_all(ncfile, nvars, requests, statuses);

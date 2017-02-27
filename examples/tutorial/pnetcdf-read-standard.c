@@ -11,10 +11,11 @@
  *
  * This example demonstrates the standard read interface */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 static void handle_error(int status, int lineno)
 {
@@ -29,8 +30,8 @@ int main(int argc, char **argv) {
     int var_ndims, var_natts;;
     MPI_Offset *dim_sizes, var_size;
     MPI_Offset *start, *count;
-    char varname[NC_MAX_NAME+1];
-    int dimids[NC_MAX_VAR_DIMS];
+    char filename[256], varname[NC_MAX_NAME+1];
+    int *dimids=NULL;
     nc_type type;
     int *data=NULL;
 
@@ -39,13 +40,15 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
-    ret = ncmpi_open(MPI_COMM_WORLD, argv[1], NC_NOWRITE, MPI_INFO_NULL,
+    ret = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                      &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
@@ -71,7 +74,11 @@ int main(int argc, char **argv) {
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
     }
 
-    for(i=0; i<nvars; i++) { 
+    for(i=0; i<nvars; i++) {
+        ret = ncmpi_inq_varndims(ncfile, i, &var_ndims);
+        if (ret != NC_NOERR) handle_error(ret, __LINE__);
+        dimids = (int*) malloc(var_ndims * sizeof(int));
+
         /* much less coordination in this case compared to rank 0 doing all
          * the i/o: everyone already has the necessary information */
         ret = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
@@ -112,6 +119,7 @@ int main(int argc, char **argv) {
 
         free(start);
         free(count);
+        free(dimids);
         if (data != NULL) free(data);
     }
 

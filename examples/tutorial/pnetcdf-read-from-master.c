@@ -36,14 +36,11 @@
     }
 */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
-
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
 
 #define MPI_ERR(err) { \
     if (err != MPI_SUCCESS) { \
@@ -65,8 +62,8 @@ int main(int argc, char **argv) {
 
     int i, j=0, rank, nprocs, err;
     int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
-    int dimids[NC_MAX_VAR_DIMS];
-    char varname[NC_MAX_NAME+1];
+    int *dimids=NULL;
+    char filename[256], varname[NC_MAX_NAME+1];
     MPI_Offset *dim_sizes=NULL, var_size;
     nc_type type;
     int *data=NULL;
@@ -76,14 +73,16 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
     if (rank == 0) {
-        err = ncmpi_open(MPI_COMM_SELF, argv[1],
+        err = ncmpi_open(MPI_COMM_SELF, filename,
                          NC_NOWRITE, MPI_INFO_NULL, &ncfile);
         if (err != NC_NOERR) handle_error(err, __LINE__);
 
@@ -113,10 +112,16 @@ int main(int argc, char **argv) {
     err = MPI_Bcast(&nvars, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_ERR(err)
 
-    for(i=0; i<nvars; i++) { 
+    for(i=0; i<nvars; i++) {
         /* rank 0 will find out the size of each variable, read it, and
          * broadcast it to the rest of the processors */
         if (rank == 0) {
+            /* obtain the number of dimensions of variable i, so we can
+             * allocate the dimids array */
+            err = ncmpi_inq_varndims(ncfile, i, &var_ndims);
+            if (err != NC_NOERR) handle_error(err, __LINE__);
+            dimids = (int*) malloc(var_ndims * sizeof(int));
+
             err = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
                     &var_natts);
             if (err != NC_NOERR) handle_error(err, __LINE__);
@@ -124,6 +129,7 @@ int main(int argc, char **argv) {
             for (j=0, var_size=1; j<var_ndims; j++)  {
                 var_size *= dim_sizes[dimids[j]];
             }
+            free(dimids);
         }
         /* oddity: there's no predefined MPI_Offset type */
         err = MPI_Bcast(&var_size, 1, MPI_OFFSET, 0, MPI_COMM_WORLD);
@@ -158,7 +164,6 @@ int main(int argc, char **argv) {
 
         /* Here, every process can do computation on the local buffer, data,
            or copy the contents to somewhere else */
-
         free(data);
     }
 
