@@ -18,24 +18,46 @@ define(`TEXTVAR1',dnl
    function nf90mpi_$1_var_text$3(ncid, varid, values, start, count, stride, map)
      integer,                                                intent(in) :: ncid, varid
      character (len=*),                                      intent($2) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: count
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: stride
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: map
 
-     integer                                                            :: nf90mpi_$1_var_text$3
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride
+     integer                                     :: nf90mpi_$1_var_text$3
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
+     integer                                     :: numDims, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_text$3 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_text$3 .NE. NF_NOERR) return
+
+     nelms = numDims + 1
+     if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
+     if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
+     if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
+     allocate(localStart(nelms))
+     allocate(localCount(nelms))
+     allocate(localStride(nelms))
  
      ! Set local arguments to default values
-     localStart (:)  = 1
-     localCount (1)  = LEN(values); localCount (2:) = 1
-     localStride(:)  = 1
+     localStart (:) = 1
+     localCount (1) = LEN(values)
+     localCount (2:) = 1
+     localStride(:) = 1
 
-     if(present(start))  localStart (:size(start) ) = start(:)
-     if(present(count))  localCount (:size(count) ) = count(:)
-     if(present(stride)) localStride(:size(stride)) = stride(:)
-     if(present(map)) then
+     if (present(start))  localStart (:size(start) ) = start(:)
+     if (present(count))  localCount (:size(count) ) = count(:)
+     if (present(stride)) localStride(:size(stride)) = stride(:)
+     if (present(map)) then
        nf90mpi_$1_var_text$3 = nfmpi_$1_varm_text$3(ncid, varid, localStart, localCount, localStride, map, values)
      else
        nf90mpi_$1_var_text$3 = nfmpi_$1_vars_text$3(ncid, varid, localStart, localCount, localStride, values)
      end if
+     deallocate(localStart)
+     deallocate(localCount)
+     deallocate(localStride)
    end function nf90mpi_$1_var_text$3
 ')dnl
 
@@ -59,77 +81,99 @@ dnl TEXTVAR(ncid, varid, values, start, count, stride, map)
 dnl
 define(`TEXTVAR',dnl
 `dnl
-   function nf90mpi_$1_var_$2_text$6(ncid, varid, values, start, count, stride, map)
+   function nf90mpi_$1_var_$2D_text$6(ncid, varid, values, start, count, stride, map)
      integer,                                                intent(in) :: ncid, varid
      character (len=*), dimension($3),                       intent($5) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: count
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: stride
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: map
  
-     integer                                                            :: nf90mpi_$1_var_$2_text$6
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride, localMap
-     integer                                                            :: numDims, counter
+     integer                                     :: nf90mpi_$1_var_$2D_text$6
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
+     integer                                     :: numDims, counter, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_$2D_text$6 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2D_text$6 .NE. NF_NOERR) return
+
+     nelms = numDims + 1
+     if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
+     if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
+     if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
+     if (present(map)    .AND. nelms .LT. SIZE(map))    nelms = SIZE(map)
+     allocate(localStart(nelms))
+     allocate(localCount(nelms))
+     allocate(localStride(nelms))
+     allocate(localMap(nelms))
  
      ! Set local arguments to default values
-     numDims = substr(`$2', `0', `1')
-
-     localStart (:         ) = 1
-     localCount (:numDims+1) = (/ LEN(values($4)), shape(values) /)
-     localCount (numDims+2:) = 0
-     localStride(:         ) = 1
-     ! localMap   (:numDims  ) = (/ 1, (product(localCount(:counter)), counter = 1, numDims - 1) /)
+     localStart (:) = 1
+     localCount (:$2+1) = (/ LEN(values($4)), shape(values) /)
+     localCount ($2+2:) = 0
+     localStride(:) = 1
+     ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
-     do counter = 1, numDims - 1
+     do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
-     if(present(start))  localStart (:size(start))  = start(:)
-     if(present(count))  localCount (:size(count))  = count(:)
-     if(present(stride)) localStride(:size(stride)) = stride(:)
-     if(present(map))  then
-       localMap   (:size(map))    = map(:)
-       nf90mpi_$1_var_$2_text$6 = &
+
+     if (present(start))  localStart (:SIZE(start) ) =  start(:)
+     if (present(count))  localCount (:SIZE(count) ) =  count(:)
+     if (present(stride)) localStride(:SIZE(stride)) = stride(:)
+     if (present(map)) then
+       localMap(:SIZE(map)) = map(:)
+       nf90mpi_$1_var_$2D_text$6 = &
           nfmpi_$1_varm_text$6(ncid, varid, localStart, localCount, localStride, localMap, values($4))
      else
-       nf90mpi_$1_var_$2_text$6 = &
+       nf90mpi_$1_var_$2D_text$6 = &
           nfmpi_$1_vars_text$6(ncid, varid, localStart, localCount, localStride, values($4))
      end if
-   end function nf90mpi_$1_var_$2_text$6
+     deallocate(localStart)
+     deallocate(localCount)
+     deallocate(localStride)
+     deallocate(localMap)
+   end function nf90mpi_$1_var_$2D_text$6
 ')dnl
 
-TEXTVAR(put, 1D,  :,               1,              in)
-TEXTVAR(put, 2D, `:,:',           `1,1',           in)
-TEXTVAR(put, 3D, `:,:,:',         `1,1,1',         in)
-TEXTVAR(put, 4D, `:,:,:,:',       `1,1,1,1',       in)
-TEXTVAR(put, 5D, `:,:,:,:,:',     `1,1,1,1,1',     in)
-TEXTVAR(put, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
-TEXTVAR(put, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
+TEXTVAR(put, 1,  :,               1,              in)
+TEXTVAR(put, 2, `:,:',           `1,1',           in)
+TEXTVAR(put, 3, `:,:,:',         `1,1,1',         in)
+TEXTVAR(put, 4, `:,:,:,:',       `1,1,1,1',       in)
+TEXTVAR(put, 5, `:,:,:,:,:',     `1,1,1,1,1',     in)
+TEXTVAR(put, 6, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
+TEXTVAR(put, 7, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
 
-TEXTVAR(get, 1D,  :,               1,              out)
-TEXTVAR(get, 2D, `:,:',           `1,1',           out)
-TEXTVAR(get, 3D, `:,:,:',         `1,1,1',         out)
-TEXTVAR(get, 4D, `:,:,:,:',       `1,1,1,1',       out)
-TEXTVAR(get, 5D, `:,:,:,:,:',     `1,1,1,1,1',     out)
-TEXTVAR(get, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out)
-TEXTVAR(get, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out)
+TEXTVAR(get, 1,  :,               1,              out)
+TEXTVAR(get, 2, `:,:',           `1,1',           out)
+TEXTVAR(get, 3, `:,:,:',         `1,1,1',         out)
+TEXTVAR(get, 4, `:,:,:,:',       `1,1,1,1',       out)
+TEXTVAR(get, 5, `:,:,:,:,:',     `1,1,1,1,1',     out)
+TEXTVAR(get, 6, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out)
+TEXTVAR(get, 7, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out)
 
 !
 ! Collective APIs
 !
 
-TEXTVAR(put, 1D,  :,               1,              in, _all)
-TEXTVAR(put, 2D, `:,:',           `1,1',           in, _all)
-TEXTVAR(put, 3D, `:,:,:',         `1,1,1',         in, _all)
-TEXTVAR(put, 4D, `:,:,:,:',       `1,1,1,1',       in, _all)
-TEXTVAR(put, 5D, `:,:,:,:,:',     `1,1,1,1,1',     in, _all)
-TEXTVAR(put, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in, _all)
-TEXTVAR(put, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in, _all)
+TEXTVAR(put, 1,  :,               1,              in, _all)
+TEXTVAR(put, 2, `:,:',           `1,1',           in, _all)
+TEXTVAR(put, 3, `:,:,:',         `1,1,1',         in, _all)
+TEXTVAR(put, 4, `:,:,:,:',       `1,1,1,1',       in, _all)
+TEXTVAR(put, 5, `:,:,:,:,:',     `1,1,1,1,1',     in, _all)
+TEXTVAR(put, 6, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in, _all)
+TEXTVAR(put, 7, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in, _all)
 
-TEXTVAR(get, 1D,  :,               1,              out, _all)
-TEXTVAR(get, 2D, `:,:',           `1,1',           out, _all)
-TEXTVAR(get, 3D, `:,:,:',         `1,1,1',         out, _all)
-TEXTVAR(get, 4D, `:,:,:,:',       `1,1,1,1',       out, _all)
-TEXTVAR(get, 5D, `:,:,:,:,:',     `1,1,1,1,1',     out, _all)
-TEXTVAR(get, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out, _all)
-TEXTVAR(get, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out, _all)
+TEXTVAR(get, 1,  :,               1,              out, _all)
+TEXTVAR(get, 2, `:,:',           `1,1',           out, _all)
+TEXTVAR(get, 3, `:,:,:',         `1,1,1',         out, _all)
+TEXTVAR(get, 4, `:,:,:,:',       `1,1,1,1',       out, _all)
+TEXTVAR(get, 5, `:,:,:,:,:',     `1,1,1,1,1',     out, _all)
+TEXTVAR(get, 6, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out, _all)
+TEXTVAR(get, 7, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out, _all)
 
 !
 ! Nonblocking APIs
@@ -144,24 +188,46 @@ define(`NBTEXTVAR1',dnl
      integer,                                                intent( in) :: ncid, varid
      integer,                                                intent(out) :: req
      character (len=*),                                      intent( $2) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: count
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: stride
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: map
 
-     integer                                                             :: nf90mpi_$1_var_text
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride
+     integer                                     :: nf90mpi_$1_var_text
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
+     integer                                     :: numDims, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_text = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_text .NE. NF_NOERR) return
+
+     nelms = numDims + 1
+     if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
+     if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
+     if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
+     allocate(localStart(nelms))
+     allocate(localCount(nelms))
+     allocate(localStride(nelms))
  
      ! Set local arguments to default values
-     localStart (:)  = 1
-     localCount (1)  = LEN(values); localCount (2:) = 1
-     localStride(:)  = 1
-          
-     if(present(start))  localStart (:size(start) ) = start(:)
-     if(present(count))  localCount (:size(count) ) = count(:)
-     if(present(stride)) localStride(:size(stride)) = stride(:)
-     if(present(map)) then
+     localStart (:) = 1
+     localCount (1) = LEN(values)
+     localCount (2:) = 1
+     localStride(:) = 1
+
+     if (present(start))  localStart (:size(start) ) = start(:)
+     if (present(count))  localCount (:size(count) ) = count(:)
+     if (present(stride)) localStride(:size(stride)) = stride(:)
+     if (present(map)) then
        nf90mpi_$1_var_text = nfmpi_$1_varm_text(ncid, varid, localStart, localCount, localStride, map, values, req)
      else
        nf90mpi_$1_var_text = nfmpi_$1_vars_text(ncid, varid, localStart, localCount, localStride, values, req)
      end if
+     deallocate(localStart)
+     deallocate(localCount)
+     deallocate(localStride)
    end function nf90mpi_$1_var_text
 ')dnl
 
@@ -184,68 +250,90 @@ dnl NBTEXTVAR(ncid, varid, values, req, start, count, stride, map)
 dnl
 define(`NBTEXTVAR',dnl
 `dnl
-   function nf90mpi_$1_var_$2_text(ncid, varid, values, req, start, count, stride, map)
+   function nf90mpi_$1_var_$2D_text(ncid, varid, values, req, start, count, stride, map)
      integer,                                                intent( in) :: ncid, varid
      integer,                                                intent(out) :: req
      character (len=*), dimension($3),                       intent( $5) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: count
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: stride
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: map
  
-     integer                                                             :: nf90mpi_$1_var_$2_text
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
-     integer                                                             :: numDims, counter
+     integer                                     :: nf90mpi_$1_var_$2D_text
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
+     integer                                     :: numDims, counter, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_$2D_text = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2D_text .NE. NF_NOERR) return
+
+     nelms = numDims + 1
+     if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
+     if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
+     if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
+     if (present(map)    .AND. nelms .LT. SIZE(map))    nelms = SIZE(map)
+     allocate(localStart(nelms))
+     allocate(localCount(nelms))
+     allocate(localStride(nelms))
+     allocate(localMap(nelms))
  
      ! Set local arguments to default values
-     numDims = substr(`$2', `0', `1')
-
-     localStart (:         ) = 1
-     localCount ( :numDims+1) = (/ LEN(values($4)), shape(values) /)
-     localCount (numDims+2:) = 0
-     localStride(:         ) = 1
-     ! localMap   (:numDims  ) = (/ 1, (product(localCount(:counter)), counter = 1, numDims - 1) /)
+     localStart (:) = 1
+     localCount (:$2+1) = (/ LEN(values($4)), shape(values) /)
+     localCount ($2+2:) = 0
+     localStride(:) = 1
+     ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
-     do counter = 1, numDims - 1
+     do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
-     if(present(start))  localStart (:size(start))  = start(:)
-     if(present(count))  localCount (:size(count))  = count(:)
-     if(present(stride)) localStride(:size(stride)) = stride(:)
-     if(present(map))  then
-       localMap   (:size(map))    = map(:)
-       nf90mpi_$1_var_$2_text = &
+
+     if (present(start))  localStart (:SIZE(start) ) =  start(:)
+     if (present(count))  localCount (:SIZE(count) ) =  count(:)
+     if (present(stride)) localStride(:SIZE(stride)) = stride(:)
+     if (present(map)) then
+       localMap(:SIZE(map)) = map(:)
+       nf90mpi_$1_var_$2D_text = &
           nfmpi_$1_varm_text(ncid, varid, localStart, localCount, localStride, localMap, values($4), req)
      else
-       nf90mpi_$1_var_$2_text = &
+       nf90mpi_$1_var_$2D_text = &
           nfmpi_$1_vars_text(ncid, varid, localStart, localCount, localStride, values($4), req)
      end if
-   end function nf90mpi_$1_var_$2_text
+     deallocate(localStart)
+     deallocate(localCount)
+     deallocate(localStride)
+     deallocate(localMap)
+   end function nf90mpi_$1_var_$2D_text
 ')dnl
 
-NBTEXTVAR(iput, 1D,  :,               1,              in)
-NBTEXTVAR(iput, 2D, `:,:',           `1,1',           in)
-NBTEXTVAR(iput, 3D, `:,:,:',         `1,1,1',         in)
-NBTEXTVAR(iput, 4D, `:,:,:,:',       `1,1,1,1',       in)
-NBTEXTVAR(iput, 5D, `:,:,:,:,:',     `1,1,1,1,1',     in)
-NBTEXTVAR(iput, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
-NBTEXTVAR(iput, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
+NBTEXTVAR(iput, 1,  :,               1,              in)
+NBTEXTVAR(iput, 2, `:,:',           `1,1',           in)
+NBTEXTVAR(iput, 3, `:,:,:',         `1,1,1',         in)
+NBTEXTVAR(iput, 4, `:,:,:,:',       `1,1,1,1',       in)
+NBTEXTVAR(iput, 5, `:,:,:,:,:',     `1,1,1,1,1',     in)
+NBTEXTVAR(iput, 6, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
+NBTEXTVAR(iput, 7, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
 
-NBTEXTVAR(iget, 1D,  :,               1,              out)
-NBTEXTVAR(iget, 2D, `:,:',           `1,1',           out)
-NBTEXTVAR(iget, 3D, `:,:,:',         `1,1,1',         out)
-NBTEXTVAR(iget, 4D, `:,:,:,:',       `1,1,1,1',       out)
-NBTEXTVAR(iget, 5D, `:,:,:,:,:',     `1,1,1,1,1',     out)
-NBTEXTVAR(iget, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out)
-NBTEXTVAR(iget, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out)
+NBTEXTVAR(iget, 1,  :,               1,              out)
+NBTEXTVAR(iget, 2, `:,:',           `1,1',           out)
+NBTEXTVAR(iget, 3, `:,:,:',         `1,1,1',         out)
+NBTEXTVAR(iget, 4, `:,:,:,:',       `1,1,1,1',       out)
+NBTEXTVAR(iget, 5, `:,:,:,:,:',     `1,1,1,1,1',     out)
+NBTEXTVAR(iget, 6, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out)
+NBTEXTVAR(iget, 7, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out)
 
 !
 ! bput APIs
 !
 
-NBTEXTVAR(bput, 1D,  :,               1,              in)
-NBTEXTVAR(bput, 2D, `:,:',           `1,1',           in)
-NBTEXTVAR(bput, 3D, `:,:,:',         `1,1,1',         in)
-NBTEXTVAR(bput, 4D, `:,:,:,:',       `1,1,1,1',       in)
-NBTEXTVAR(bput, 5D, `:,:,:,:,:',     `1,1,1,1,1',     in)
-NBTEXTVAR(bput, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
-NBTEXTVAR(bput, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
+NBTEXTVAR(bput, 1,  :,               1,              in)
+NBTEXTVAR(bput, 2, `:,:',           `1,1',           in)
+NBTEXTVAR(bput, 3, `:,:,:',         `1,1,1',         in)
+NBTEXTVAR(bput, 4, `:,:,:,:',       `1,1,1,1',       in)
+NBTEXTVAR(bput, 5, `:,:,:,:,:',     `1,1,1,1,1',     in)
+NBTEXTVAR(bput, 6, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
+NBTEXTVAR(bput, 7, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
 
