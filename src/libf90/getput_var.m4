@@ -22,18 +22,28 @@ define(`VAR_SCALAR',dnl
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
 
-     integer                                                             :: nf90mpi_$1_var_$3$2
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localIndex
- 
+     integer                                     :: nf90mpi_$1_var_$3$2
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localIndex(:)
+     integer                                     :: numDims, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_$3$2 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$3$2 .NE. NF_NOERR) return
+
+     nelms = numDims
+     if (present(start) .AND. nelms .LT. SIZE(start)) nelms = SIZE(start)
+     allocate(localIndex(nelms))
+
      ! Set local arguments to default values
      localIndex(:) = 1
-     if (present(start)) localIndex(:size(start)) = start(:)
- 
+     if (present(start)) localIndex(:SIZE(start) ) = start(:)
+
      if (present(buftype)) then
          nf90mpi_$1_var_$3$2 = nfmpi_$1_var1$2(ncid, varid, localIndex, values, bufcount, buftype)
      else
          nf90mpi_$1_var_$3$2 = nfmpi_$1_var1_$5$2(ncid, varid, localIndex, values)
      endif
+     deallocate(localIndex)
    end function nf90mpi_$1_var_$3$2
 ')dnl
 
@@ -78,18 +88,28 @@ define(`NBVAR1',dnl
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
 
-     integer                                                             :: nf90mpi_$1_var_$2
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localIndex
- 
+     integer                                     :: nf90mpi_$1_var_$2
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localIndex(:)
+     integer                                     :: numDims, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_$2 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2 .NE. NF_NOERR) return
+
+     nelms = numDims
+     if (present(start) .AND. nelms .LT. SIZE(start)) nelms = SIZE(start)
+     allocate(localIndex(nelms))
+
      ! Set local arguments to default values
      localIndex(:) = 1
-     if (present(start)) localIndex(:size(start)) = start(:)
- 
+     if (present(start)) localIndex(:SIZE(start) ) = start(:)
+
      if (present(buftype)) then
          nf90mpi_$1_var_$2 = nfmpi_$1_var1(ncid, varid, localIndex, values, bufcount, buftype, req)
      else
          nf90mpi_$1_var_$2 = nfmpi_$1_var1_$4(ncid, varid, localIndex, values, req)
      endif
+     deallocate(localIndex)
    end function nf90mpi_$1_var_$2
 ')dnl
 
@@ -131,267 +151,290 @@ dnl VAR(ncid, varid, values, start, count, stride, map)
 dnl
 define(`VAR',dnl
 `dnl
-   function nf90mpi_$1_var_$2_$3$8(ncid, varid, values, start, count, stride, map, bufcount, buftype)
+   function nf90mpi_$1_var_$2D_$3$8(ncid, varid, values, start, count, stride, map, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
      $4 (kind=$3), dimension($6),                            intent( $7) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: count
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: stride
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: map
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
- 
-     integer                                                             :: nf90mpi_$1_var_$2_$3$8
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
-     integer                                                             :: numDims, counter
- 
+
+     integer                                     :: nf90mpi_$1_var_$2D_$3$8
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
+     integer                                     :: numDims, counter, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_$2D_$3$8 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2D_$3$8 .NE. NF_NOERR) return
+
+     nelms = numDims
+     if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
+     if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
+     if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
+     if (present(map)    .AND. nelms .LT. SIZE(map))    nelms = SIZE(map)
+     allocate(localStart(nelms))
+     allocate(localCount(nelms))
+     allocate(localStride(nelms))
+     allocate(localMap(nelms))
+
      ! Set local arguments to default values
-     numDims = substr(`$2', `0', `1')
-     localStart (:         ) = 1
-     localCount (:numDims  ) = shape(values)
-     localCount (numDims+1:) = 1
-     localStride(:         ) = 1
-     ! localMap   (:numDims  ) = (/ 1, (product(localCount(:counter)), counter = 1, numDims - 1) /)
+     localStart(:) = 1
+     localCount(:$2) = shape(values)
+     if (numDims .GT. $2) localCount($2+1:) = 1
+     localStride(:) = 1
+     ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
-     do counter = 1, numDims - 1
+     do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
-     if (present(start))  localStart (:size(start) )  = start(:)
-     if (present(count))  localCount (:size(count) )  = count(:)
-     if (present(stride)) localStride(:size(stride)) = stride(:)
-     if (present(map))  then
-         localMap   (:size(map))    = map(:)
+
+     if (present(start))  localStart (:SIZE(start) ) =  start(:)
+     if (present(count))  localCount (:SIZE(count) ) =  count(:)
+     if (present(stride)) localStride(:SIZE(stride)) = stride(:)
+     if (present(map)) then
+         localMap(:SIZE(map)) = map(:)
          if (present(buftype)) then
-             nf90mpi_$1_var_$2_$3$8 = &
+             nf90mpi_$1_var_$2D_$3$8 = &
                 nfmpi_$1_varm$8(ncid, varid, localStart, localCount, localStride, localMap, values, bufcount, buftype)
          else
-             nf90mpi_$1_var_$2_$3$8 = &
+             nf90mpi_$1_var_$2D_$3$8 = &
                 nfmpi_$1_varm_$5$8(ncid, varid, localStart, localCount, localStride, localMap, values)
          endif
      else if (present(stride)) then
          if (present(buftype)) then
-             nf90mpi_$1_var_$2_$3$8 = &
+             nf90mpi_$1_var_$2D_$3$8 = &
                 nfmpi_$1_vars$8(ncid, varid, localStart, localCount, localStride, values, bufcount, buftype)
          else
-             nf90mpi_$1_var_$2_$3$8 = &
+             nf90mpi_$1_var_$2D_$3$8 = &
                 nfmpi_$1_vars_$5$8(ncid, varid, localStart, localCount, localStride, values)
          endif
      else
          if (present(buftype)) then
-             nf90mpi_$1_var_$2_$3$8 = &
+             nf90mpi_$1_var_$2D_$3$8 = &
                 nfmpi_$1_vara$8(ncid, varid, localStart, localCount, values, bufcount, buftype)
          else
-             nf90mpi_$1_var_$2_$3$8 = &
+             nf90mpi_$1_var_$2D_$3$8 = &
                 nfmpi_$1_vara_$5$8(ncid, varid, localStart, localCount, values)
          endif
      end if
-   end function nf90mpi_$1_var_$2_$3$8
+     deallocate(localMap)
+     deallocate(localStride)
+     deallocate(localCount)
+     deallocate(localStart)
+   end function nf90mpi_$1_var_$2D_$3$8
 ')dnl
 
 !
 ! Independent put APIs
 !
 
-VAR(put, 1D, OneByteInt, integer, int1,  :,              in)
-VAR(put, 2D, OneByteInt, integer, int1, `:,:',           in)
-VAR(put, 3D, OneByteInt, integer, int1, `:,:,:',         in)
-VAR(put, 4D, OneByteInt, integer, int1, `:,:,:,:',       in)
-VAR(put, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     in)
-VAR(put, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
-VAR(put, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
+VAR(put, 1, OneByteInt, integer, int1,  :,              in)
+VAR(put, 2, OneByteInt, integer, int1, `:,:',           in)
+VAR(put, 3, OneByteInt, integer, int1, `:,:,:',         in)
+VAR(put, 4, OneByteInt, integer, int1, `:,:,:,:',       in)
+VAR(put, 5, OneByteInt, integer, int1, `:,:,:,:,:',     in)
+VAR(put, 6, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
+VAR(put, 7, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
 
-VAR(put, 1D, TwoByteInt, integer, int2,  :,              INTENTV)
-VAR(put, 2D, TwoByteInt, integer, int2, `:,:',           INTENTV)
-VAR(put, 3D, TwoByteInt, integer, int2, `:,:,:',         INTENTV)
-VAR(put, 4D, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV)
-VAR(put, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV)
-VAR(put, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV)
-VAR(put, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV)
+VAR(put, 1, TwoByteInt, integer, int2,  :,              INTENTV)
+VAR(put, 2, TwoByteInt, integer, int2, `:,:',           INTENTV)
+VAR(put, 3, TwoByteInt, integer, int2, `:,:,:',         INTENTV)
+VAR(put, 4, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV)
+VAR(put, 5, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV)
+VAR(put, 6, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV)
+VAR(put, 7, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV)
 
-VAR(put, 1D, FourByteInt, integer, int,  :,              INTENTV)
-VAR(put, 2D, FourByteInt, integer, int, `:,:',           INTENTV)
-VAR(put, 3D, FourByteInt, integer, int, `:,:,:',         INTENTV)
-VAR(put, 4D, FourByteInt, integer, int, `:,:,:,:',       INTENTV)
-VAR(put, 5D, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV)
-VAR(put, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV)
-VAR(put, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV)
+VAR(put, 1, FourByteInt, integer, int,  :,              INTENTV)
+VAR(put, 2, FourByteInt, integer, int, `:,:',           INTENTV)
+VAR(put, 3, FourByteInt, integer, int, `:,:,:',         INTENTV)
+VAR(put, 4, FourByteInt, integer, int, `:,:,:,:',       INTENTV)
+VAR(put, 5, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV)
+VAR(put, 6, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV)
+VAR(put, 7, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV)
 
-VAR(put, 1D, FourByteReal, real,   real,  :,              INTENTV)
-VAR(put, 2D, FourByteReal, real,   real, `:,:',           INTENTV)
-VAR(put, 3D, FourByteReal, real,   real, `:,:,:',         INTENTV)
-VAR(put, 4D, FourByteReal, real,   real, `:,:,:,:',       INTENTV)
-VAR(put, 5D, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV)
-VAR(put, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV)
-VAR(put, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV)
+VAR(put, 1, FourByteReal, real,   real,  :,              INTENTV)
+VAR(put, 2, FourByteReal, real,   real, `:,:',           INTENTV)
+VAR(put, 3, FourByteReal, real,   real, `:,:,:',         INTENTV)
+VAR(put, 4, FourByteReal, real,   real, `:,:,:,:',       INTENTV)
+VAR(put, 5, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV)
+VAR(put, 6, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV)
+VAR(put, 7, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV)
 
-VAR(put, 1D, EightByteReal, real, double,  :,              INTENTV)
-VAR(put, 2D, EightByteReal, real, double, `:,:',           INTENTV)
-VAR(put, 3D, EightByteReal, real, double, `:,:,:',         INTENTV)
-VAR(put, 4D, EightByteReal, real, double, `:,:,:,:',       INTENTV)
-VAR(put, 5D, EightByteReal, real, double, `:,:,:,:,:',     INTENTV)
-VAR(put, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV)
-VAR(put, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV)
+VAR(put, 1, EightByteReal, real, double,  :,              INTENTV)
+VAR(put, 2, EightByteReal, real, double, `:,:',           INTENTV)
+VAR(put, 3, EightByteReal, real, double, `:,:,:',         INTENTV)
+VAR(put, 4, EightByteReal, real, double, `:,:,:,:',       INTENTV)
+VAR(put, 5, EightByteReal, real, double, `:,:,:,:,:',     INTENTV)
+VAR(put, 6, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV)
+VAR(put, 7, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV)
 
-VAR(put, 1D, EightByteInt, integer, int8,  :,              INTENTV)
-VAR(put, 2D, EightByteInt, integer, int8, `:,:',           INTENTV)
-VAR(put, 3D, EightByteInt, integer, int8, `:,:,:',         INTENTV)
-VAR(put, 4D, EightByteInt, integer, int8, `:,:,:,:',       INTENTV)
-VAR(put, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV)
-VAR(put, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV)
-VAR(put, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
+VAR(put, 1, EightByteInt, integer, int8,  :,              INTENTV)
+VAR(put, 2, EightByteInt, integer, int8, `:,:',           INTENTV)
+VAR(put, 3, EightByteInt, integer, int8, `:,:,:',         INTENTV)
+VAR(put, 4, EightByteInt, integer, int8, `:,:,:,:',       INTENTV)
+VAR(put, 5, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV)
+VAR(put, 6, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV)
+VAR(put, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
 
 !
 ! Independent get APIs
 !
 
-VAR(get, 1D, OneByteInt, integer, int1,  :,              out)
-VAR(get, 2D, OneByteInt, integer, int1, `:,:',           out)
-VAR(get, 3D, OneByteInt, integer, int1, `:,:,:',         out)
-VAR(get, 4D, OneByteInt, integer, int1, `:,:,:,:',       out)
-VAR(get, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     out)
-VAR(get, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   out)
-VAR(get, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', out)
+VAR(get, 1, OneByteInt, integer, int1,  :,              out)
+VAR(get, 2, OneByteInt, integer, int1, `:,:',           out)
+VAR(get, 3, OneByteInt, integer, int1, `:,:,:',         out)
+VAR(get, 4, OneByteInt, integer, int1, `:,:,:,:',       out)
+VAR(get, 5, OneByteInt, integer, int1, `:,:,:,:,:',     out)
+VAR(get, 6, OneByteInt, integer, int1, `:,:,:,:,:,:',   out)
+VAR(get, 7, OneByteInt, integer, int1, `:,:,:,:,:,:,:', out)
 
-VAR(get, 1D, TwoByteInt, integer, int2,  :,              out)
-VAR(get, 2D, TwoByteInt, integer, int2, `:,:',           out)
-VAR(get, 3D, TwoByteInt, integer, int2, `:,:,:',         out)
-VAR(get, 4D, TwoByteInt, integer, int2, `:,:,:,:',       out)
-VAR(get, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     out)
-VAR(get, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   out)
-VAR(get, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', out)
+VAR(get, 1, TwoByteInt, integer, int2,  :,              out)
+VAR(get, 2, TwoByteInt, integer, int2, `:,:',           out)
+VAR(get, 3, TwoByteInt, integer, int2, `:,:,:',         out)
+VAR(get, 4, TwoByteInt, integer, int2, `:,:,:,:',       out)
+VAR(get, 5, TwoByteInt, integer, int2, `:,:,:,:,:',     out)
+VAR(get, 6, TwoByteInt, integer, int2, `:,:,:,:,:,:',   out)
+VAR(get, 7, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', out)
 
-VAR(get, 1D, FourByteInt, integer, int,  :,              out)
-VAR(get, 2D, FourByteInt, integer, int, `:,:',           out)
-VAR(get, 3D, FourByteInt, integer, int, `:,:,:',         out)
-VAR(get, 4D, FourByteInt, integer, int, `:,:,:,:',       out)
-VAR(get, 5D, FourByteInt, integer, int, `:,:,:,:,:',     out)
-VAR(get, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   out)
-VAR(get, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', out)
+VAR(get, 1, FourByteInt, integer, int,  :,              out)
+VAR(get, 2, FourByteInt, integer, int, `:,:',           out)
+VAR(get, 3, FourByteInt, integer, int, `:,:,:',         out)
+VAR(get, 4, FourByteInt, integer, int, `:,:,:,:',       out)
+VAR(get, 5, FourByteInt, integer, int, `:,:,:,:,:',     out)
+VAR(get, 6, FourByteInt, integer, int, `:,:,:,:,:,:',   out)
+VAR(get, 7, FourByteInt, integer, int, `:,:,:,:,:,:,:', out)
 
-VAR(get, 1D, FourByteReal, real,   real,  :,              out)
-VAR(get, 2D, FourByteReal, real,   real, `:,:',           out)
-VAR(get, 3D, FourByteReal, real,   real, `:,:,:',         out)
-VAR(get, 4D, FourByteReal, real,   real, `:,:,:,:',       out)
-VAR(get, 5D, FourByteReal, real,   real, `:,:,:,:,:',     out)
-VAR(get, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   out)
-VAR(get, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', out)
+VAR(get, 1, FourByteReal, real,   real,  :,              out)
+VAR(get, 2, FourByteReal, real,   real, `:,:',           out)
+VAR(get, 3, FourByteReal, real,   real, `:,:,:',         out)
+VAR(get, 4, FourByteReal, real,   real, `:,:,:,:',       out)
+VAR(get, 5, FourByteReal, real,   real, `:,:,:,:,:',     out)
+VAR(get, 6, FourByteReal, real,   real, `:,:,:,:,:,:',   out)
+VAR(get, 7, FourByteReal, real,   real, `:,:,:,:,:,:,:', out)
 
-VAR(get, 1D, EightByteReal, real, double,  :,              out)
-VAR(get, 2D, EightByteReal, real, double, `:,:',           out)
-VAR(get, 3D, EightByteReal, real, double, `:,:,:',         out)
-VAR(get, 4D, EightByteReal, real, double, `:,:,:,:',       out)
-VAR(get, 5D, EightByteReal, real, double, `:,:,:,:,:',     out)
-VAR(get, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   out)
-VAR(get, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', out)
+VAR(get, 1, EightByteReal, real, double,  :,              out)
+VAR(get, 2, EightByteReal, real, double, `:,:',           out)
+VAR(get, 3, EightByteReal, real, double, `:,:,:',         out)
+VAR(get, 4, EightByteReal, real, double, `:,:,:,:',       out)
+VAR(get, 5, EightByteReal, real, double, `:,:,:,:,:',     out)
+VAR(get, 6, EightByteReal, real, double, `:,:,:,:,:,:',   out)
+VAR(get, 7, EightByteReal, real, double, `:,:,:,:,:,:,:', out)
 
-VAR(get, 1D, EightByteInt, integer, int8,  :,              out)
-VAR(get, 2D, EightByteInt, integer, int8, `:,:',           out)
-VAR(get, 3D, EightByteInt, integer, int8, `:,:,:',         out)
-VAR(get, 4D, EightByteInt, integer, int8, `:,:,:,:',       out)
-VAR(get, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     out)
-VAR(get, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   out)
-VAR(get, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out)
+VAR(get, 1, EightByteInt, integer, int8,  :,              out)
+VAR(get, 2, EightByteInt, integer, int8, `:,:',           out)
+VAR(get, 3, EightByteInt, integer, int8, `:,:,:',         out)
+VAR(get, 4, EightByteInt, integer, int8, `:,:,:,:',       out)
+VAR(get, 5, EightByteInt, integer, int8, `:,:,:,:,:',     out)
+VAR(get, 6, EightByteInt, integer, int8, `:,:,:,:,:,:',   out)
+VAR(get, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out)
 
 !
 ! collective put APIs
 !
 
-VAR(put, 1D, OneByteInt, integer, int1,  :,              in, _all)
-VAR(put, 2D, OneByteInt, integer, int1, `:,:',           in, _all)
-VAR(put, 3D, OneByteInt, integer, int1, `:,:,:',         in, _all)
-VAR(put, 4D, OneByteInt, integer, int1, `:,:,:,:',       in, _all)
-VAR(put, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     in, _all)
-VAR(put, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   in, _all)
-VAR(put, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in, _all)
+VAR(put, 1, OneByteInt, integer, int1,  :,              in, _all)
+VAR(put, 2, OneByteInt, integer, int1, `:,:',           in, _all)
+VAR(put, 3, OneByteInt, integer, int1, `:,:,:',         in, _all)
+VAR(put, 4, OneByteInt, integer, int1, `:,:,:,:',       in, _all)
+VAR(put, 5, OneByteInt, integer, int1, `:,:,:,:,:',     in, _all)
+VAR(put, 6, OneByteInt, integer, int1, `:,:,:,:,:,:',   in, _all)
+VAR(put, 7, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in, _all)
 
-VAR(put, 1D, TwoByteInt, integer, int2,  :,              INTENTV, _all)
-VAR(put, 2D, TwoByteInt, integer, int2, `:,:',           INTENTV, _all)
-VAR(put, 3D, TwoByteInt, integer, int2, `:,:,:',         INTENTV, _all)
-VAR(put, 4D, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV, _all)
-VAR(put, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV, _all)
-VAR(put, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV, _all)
-VAR(put, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV, _all)
+VAR(put, 1, TwoByteInt, integer, int2,  :,              INTENTV, _all)
+VAR(put, 2, TwoByteInt, integer, int2, `:,:',           INTENTV, _all)
+VAR(put, 3, TwoByteInt, integer, int2, `:,:,:',         INTENTV, _all)
+VAR(put, 4, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV, _all)
+VAR(put, 5, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV, _all)
+VAR(put, 6, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV, _all)
+VAR(put, 7, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV, _all)
 
-VAR(put, 1D, FourByteInt, integer, int,  :,              INTENTV, _all)
-VAR(put, 2D, FourByteInt, integer, int, `:,:',           INTENTV, _all)
-VAR(put, 3D, FourByteInt, integer, int, `:,:,:',         INTENTV, _all)
-VAR(put, 4D, FourByteInt, integer, int, `:,:,:,:',       INTENTV, _all)
-VAR(put, 5D, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV, _all)
-VAR(put, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV, _all)
-VAR(put, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV, _all)
+VAR(put, 1, FourByteInt, integer, int,  :,              INTENTV, _all)
+VAR(put, 2, FourByteInt, integer, int, `:,:',           INTENTV, _all)
+VAR(put, 3, FourByteInt, integer, int, `:,:,:',         INTENTV, _all)
+VAR(put, 4, FourByteInt, integer, int, `:,:,:,:',       INTENTV, _all)
+VAR(put, 5, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV, _all)
+VAR(put, 6, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV, _all)
+VAR(put, 7, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV, _all)
 
-VAR(put, 1D, FourByteReal, real,   real,  :,              INTENTV, _all)
-VAR(put, 2D, FourByteReal, real,   real, `:,:',           INTENTV, _all)
-VAR(put, 3D, FourByteReal, real,   real, `:,:,:',         INTENTV, _all)
-VAR(put, 4D, FourByteReal, real,   real, `:,:,:,:',       INTENTV, _all)
-VAR(put, 5D, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV, _all)
-VAR(put, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV, _all)
-VAR(put, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV, _all)
+VAR(put, 1, FourByteReal, real,   real,  :,              INTENTV, _all)
+VAR(put, 2, FourByteReal, real,   real, `:,:',           INTENTV, _all)
+VAR(put, 3, FourByteReal, real,   real, `:,:,:',         INTENTV, _all)
+VAR(put, 4, FourByteReal, real,   real, `:,:,:,:',       INTENTV, _all)
+VAR(put, 5, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV, _all)
+VAR(put, 6, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV, _all)
+VAR(put, 7, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV, _all)
 
-VAR(put, 1D, EightByteReal, real, double,  :,              INTENTV, _all)
-VAR(put, 2D, EightByteReal, real, double, `:,:',           INTENTV, _all)
-VAR(put, 3D, EightByteReal, real, double, `:,:,:',         INTENTV, _all)
-VAR(put, 4D, EightByteReal, real, double, `:,:,:,:',       INTENTV, _all)
-VAR(put, 5D, EightByteReal, real, double, `:,:,:,:,:',     INTENTV, _all)
-VAR(put, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV, _all)
-VAR(put, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV, _all)
+VAR(put, 1, EightByteReal, real, double,  :,              INTENTV, _all)
+VAR(put, 2, EightByteReal, real, double, `:,:',           INTENTV, _all)
+VAR(put, 3, EightByteReal, real, double, `:,:,:',         INTENTV, _all)
+VAR(put, 4, EightByteReal, real, double, `:,:,:,:',       INTENTV, _all)
+VAR(put, 5, EightByteReal, real, double, `:,:,:,:,:',     INTENTV, _all)
+VAR(put, 6, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV, _all)
+VAR(put, 7, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV, _all)
 
-VAR(put, 1D, EightByteInt, integer, int8,  :,              INTENTV, _all)
-VAR(put, 2D, EightByteInt, integer, int8, `:,:',           INTENTV, _all)
-VAR(put, 3D, EightByteInt, integer, int8, `:,:,:',         INTENTV, _all)
-VAR(put, 4D, EightByteInt, integer, int8, `:,:,:,:',       INTENTV, _all)
-VAR(put, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV, _all)
-VAR(put, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV, _all)
-VAR(put, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV, _all)
+VAR(put, 1, EightByteInt, integer, int8,  :,              INTENTV, _all)
+VAR(put, 2, EightByteInt, integer, int8, `:,:',           INTENTV, _all)
+VAR(put, 3, EightByteInt, integer, int8, `:,:,:',         INTENTV, _all)
+VAR(put, 4, EightByteInt, integer, int8, `:,:,:,:',       INTENTV, _all)
+VAR(put, 5, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV, _all)
+VAR(put, 6, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV, _all)
+VAR(put, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV, _all)
 !
 ! collective get APIs
 !
 
-VAR(get, 1D, OneByteInt, integer, int1,  :,              out, _all)
-VAR(get, 2D, OneByteInt, integer, int1, `:,:',           out, _all)
-VAR(get, 3D, OneByteInt, integer, int1, `:,:,:',         out, _all)
-VAR(get, 4D, OneByteInt, integer, int1, `:,:,:,:',       out, _all)
-VAR(get, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     out, _all)
-VAR(get, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   out, _all)
-VAR(get, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', out, _all)
+VAR(get, 1, OneByteInt, integer, int1,  :,              out, _all)
+VAR(get, 2, OneByteInt, integer, int1, `:,:',           out, _all)
+VAR(get, 3, OneByteInt, integer, int1, `:,:,:',         out, _all)
+VAR(get, 4, OneByteInt, integer, int1, `:,:,:,:',       out, _all)
+VAR(get, 5, OneByteInt, integer, int1, `:,:,:,:,:',     out, _all)
+VAR(get, 6, OneByteInt, integer, int1, `:,:,:,:,:,:',   out, _all)
+VAR(get, 7, OneByteInt, integer, int1, `:,:,:,:,:,:,:', out, _all)
 
-VAR(get, 1D, TwoByteInt, integer, int2,  :,              out, _all)
-VAR(get, 2D, TwoByteInt, integer, int2, `:,:',           out, _all)
-VAR(get, 3D, TwoByteInt, integer, int2, `:,:,:',         out, _all)
-VAR(get, 4D, TwoByteInt, integer, int2, `:,:,:,:',       out, _all)
-VAR(get, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     out, _all)
-VAR(get, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   out, _all)
-VAR(get, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', out, _all)
+VAR(get, 1, TwoByteInt, integer, int2,  :,              out, _all)
+VAR(get, 2, TwoByteInt, integer, int2, `:,:',           out, _all)
+VAR(get, 3, TwoByteInt, integer, int2, `:,:,:',         out, _all)
+VAR(get, 4, TwoByteInt, integer, int2, `:,:,:,:',       out, _all)
+VAR(get, 5, TwoByteInt, integer, int2, `:,:,:,:,:',     out, _all)
+VAR(get, 6, TwoByteInt, integer, int2, `:,:,:,:,:,:',   out, _all)
+VAR(get, 7, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', out, _all)
 
-VAR(get, 1D, FourByteInt, integer, int,  :,              out, _all)
-VAR(get, 2D, FourByteInt, integer, int, `:,:',           out, _all)
-VAR(get, 3D, FourByteInt, integer, int, `:,:,:',         out, _all)
-VAR(get, 4D, FourByteInt, integer, int, `:,:,:,:',       out, _all)
-VAR(get, 5D, FourByteInt, integer, int, `:,:,:,:,:',     out, _all)
-VAR(get, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   out, _all)
-VAR(get, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', out, _all)
+VAR(get, 1, FourByteInt, integer, int,  :,              out, _all)
+VAR(get, 2, FourByteInt, integer, int, `:,:',           out, _all)
+VAR(get, 3, FourByteInt, integer, int, `:,:,:',         out, _all)
+VAR(get, 4, FourByteInt, integer, int, `:,:,:,:',       out, _all)
+VAR(get, 5, FourByteInt, integer, int, `:,:,:,:,:',     out, _all)
+VAR(get, 6, FourByteInt, integer, int, `:,:,:,:,:,:',   out, _all)
+VAR(get, 7, FourByteInt, integer, int, `:,:,:,:,:,:,:', out, _all)
 
-VAR(get, 1D, FourByteReal, real,   real,  :,              out, _all)
-VAR(get, 2D, FourByteReal, real,   real, `:,:',           out, _all)
-VAR(get, 3D, FourByteReal, real,   real, `:,:,:',         out, _all)
-VAR(get, 4D, FourByteReal, real,   real, `:,:,:,:',       out, _all)
-VAR(get, 5D, FourByteReal, real,   real, `:,:,:,:,:',     out, _all)
-VAR(get, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   out, _all)
-VAR(get, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', out, _all)
+VAR(get, 1, FourByteReal, real,   real,  :,              out, _all)
+VAR(get, 2, FourByteReal, real,   real, `:,:',           out, _all)
+VAR(get, 3, FourByteReal, real,   real, `:,:,:',         out, _all)
+VAR(get, 4, FourByteReal, real,   real, `:,:,:,:',       out, _all)
+VAR(get, 5, FourByteReal, real,   real, `:,:,:,:,:',     out, _all)
+VAR(get, 6, FourByteReal, real,   real, `:,:,:,:,:,:',   out, _all)
+VAR(get, 7, FourByteReal, real,   real, `:,:,:,:,:,:,:', out, _all)
 
-VAR(get, 1D, EightByteReal, real, double,  :,              out, _all)
-VAR(get, 2D, EightByteReal, real, double, `:,:',           out, _all)
-VAR(get, 3D, EightByteReal, real, double, `:,:,:',         out, _all)
-VAR(get, 4D, EightByteReal, real, double, `:,:,:,:',       out, _all)
-VAR(get, 5D, EightByteReal, real, double, `:,:,:,:,:',     out, _all)
-VAR(get, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   out, _all)
-VAR(get, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', out, _all)
+VAR(get, 1, EightByteReal, real, double,  :,              out, _all)
+VAR(get, 2, EightByteReal, real, double, `:,:',           out, _all)
+VAR(get, 3, EightByteReal, real, double, `:,:,:',         out, _all)
+VAR(get, 4, EightByteReal, real, double, `:,:,:,:',       out, _all)
+VAR(get, 5, EightByteReal, real, double, `:,:,:,:,:',     out, _all)
+VAR(get, 6, EightByteReal, real, double, `:,:,:,:,:,:',   out, _all)
+VAR(get, 7, EightByteReal, real, double, `:,:,:,:,:,:,:', out, _all)
 
-VAR(get, 1D, EightByteInt, integer, int8,  :,              out, _all)
-VAR(get, 2D, EightByteInt, integer, int8, `:,:',           out, _all)
-VAR(get, 3D, EightByteInt, integer, int8, `:,:,:',         out, _all)
-VAR(get, 4D, EightByteInt, integer, int8, `:,:,:,:',       out, _all)
-VAR(get, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     out, _all)
-VAR(get, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   out, _all)
-VAR(get, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out, _all)
+VAR(get, 1, EightByteInt, integer, int8,  :,              out, _all)
+VAR(get, 2, EightByteInt, integer, int8, `:,:',           out, _all)
+VAR(get, 3, EightByteInt, integer, int8, `:,:,:',         out, _all)
+VAR(get, 4, EightByteInt, integer, int8, `:,:,:,:',       out, _all)
+VAR(get, 5, EightByteInt, integer, int8, `:,:,:,:,:',     out, _all)
+VAR(get, 6, EightByteInt, integer, int8, `:,:,:,:,:,:',   out, _all)
+VAR(get, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out, _all)
 
 !
 ! Nonblocking APIs
@@ -402,217 +445,240 @@ dnl NBVAR(ncid, varid, values, start, count, stride, map, req)
 dnl
 define(`NBVAR',dnl
 `dnl
-   function nf90mpi_$1_var_$2_$3(ncid, varid, values, req, start, count, stride, map, bufcount, buftype)
+   function nf90mpi_$1_var_$2D_$3(ncid, varid, values, req, start, count, stride, map, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
      $4 (kind=$3), dimension($6),                            intent( $7) :: values
      integer,                                                intent(out) :: req
-     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: count
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: stride
+     integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: map
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
- 
-     integer                                                             :: nf90mpi_$1_var_$2_$3
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
-     integer                                                             :: numDims, counter
- 
+
+     integer                                     :: nf90mpi_$1_var_$2D_$3
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
+     integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
+     integer                                     :: numDims, counter, nelms
+
+     ! allocate local arrays
+     nf90mpi_$1_var_$2D_$3 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2D_$3 .NE. NF_NOERR) return
+
+     nelms = numDims
+     if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
+     if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
+     if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
+     if (present(map)    .AND. nelms .LT. SIZE(map))    nelms = SIZE(map)
+     allocate(localStart(nelms))
+     allocate(localCount(nelms))
+     allocate(localStride(nelms))
+     allocate(localMap(nelms))
+
      ! Set local arguments to default values
-     numDims = substr(`$2', `0', `1')
-     localStart (:         ) = 1
-     localCount (:numDims  ) = shape(values)
-     localCount (numDims+1:) = 1
-     localStride(:         ) = 1
-     ! localMap   (:numDims  ) = (/ 1, (product(localCount(:counter)), counter = 1, numDims - 1) /)
+     localStart (:) = 1
+     localCount (:$2) = shape(values)
+     if (numDims .GT. $2) localCount ($2+1:) = 1
+     localStride(:) = 1
+     ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
-     do counter = 1, numDims - 1
+     do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
      enddo
- 
-     if (present(start))  localStart (:size(start) )  = start(:)
-     if (present(count))  localCount (:size(count) )  = count(:)
-     if (present(stride)) localStride(:size(stride)) = stride(:)
-     if (present(map))  then
-         localMap   (:size(map))    = map(:)
+
+     if (present(start))  localStart (:SIZE(start) ) =  start(:)
+     if (present(count))  localCount (:SIZE(count) ) =  count(:)
+     if (present(stride)) localStride(:SIZE(stride)) = stride(:)
+     if (present(map)) then
+         localMap(:SIZE(map)) = map(:)
          if (present(buftype)) then
-             nf90mpi_$1_var_$2_$3 = &
+             nf90mpi_$1_var_$2D_$3 = &
                  nfmpi_$1_varm(ncid, varid, localStart, localCount, localStride, localMap, values, bufcount, buftype, req)
          else
-             nf90mpi_$1_var_$2_$3 = &
+             nf90mpi_$1_var_$2D_$3 = &
                  nfmpi_$1_varm_$5(ncid, varid, localStart, localCount, localStride, localMap, values, req)
          endif
      else if (present(stride)) then
          if (present(buftype)) then
-             nf90mpi_$1_var_$2_$3 = &
+             nf90mpi_$1_var_$2D_$3 = &
                  nfmpi_$1_vars(ncid, varid, localStart, localCount, localStride, values, bufcount, buftype, req)
          else
-             nf90mpi_$1_var_$2_$3 = &
+             nf90mpi_$1_var_$2D_$3 = &
                  nfmpi_$1_vars_$5(ncid, varid, localStart, localCount, localStride, values, req)
          endif
      else
          if (present(buftype)) then
-             nf90mpi_$1_var_$2_$3 = &
+             nf90mpi_$1_var_$2D_$3 = &
                  nfmpi_$1_vara(ncid, varid, localStart, localCount, values, bufcount, buftype, req)
          else
-             nf90mpi_$1_var_$2_$3 = &
+             nf90mpi_$1_var_$2D_$3 = &
                  nfmpi_$1_vara_$5(ncid, varid, localStart, localCount, values, req)
          endif
      end if
-   end function nf90mpi_$1_var_$2_$3
+     deallocate(localMap)
+     deallocate(localStride)
+     deallocate(localCount)
+     deallocate(localStart)
+   end function nf90mpi_$1_var_$2D_$3
 ')dnl
 
 !
 ! iput APIs
 !
 
-NBVAR(iput, 1D, OneByteInt, integer, int1,  :,              in)
-NBVAR(iput, 2D, OneByteInt, integer, int1, `:,:',           in)
-NBVAR(iput, 3D, OneByteInt, integer, int1, `:,:,:',         in)
-NBVAR(iput, 4D, OneByteInt, integer, int1, `:,:,:,:',       in)
-NBVAR(iput, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     in)
-NBVAR(iput, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
-NBVAR(iput, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
+NBVAR(iput, 1, OneByteInt, integer, int1,  :,              in)
+NBVAR(iput, 2, OneByteInt, integer, int1, `:,:',           in)
+NBVAR(iput, 3, OneByteInt, integer, int1, `:,:,:',         in)
+NBVAR(iput, 4, OneByteInt, integer, int1, `:,:,:,:',       in)
+NBVAR(iput, 5, OneByteInt, integer, int1, `:,:,:,:,:',     in)
+NBVAR(iput, 6, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
+NBVAR(iput, 7, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
 
-NBVAR(iput, 1D, TwoByteInt, integer, int2,  :,              INTENTV)
-NBVAR(iput, 2D, TwoByteInt, integer, int2, `:,:',           INTENTV)
-NBVAR(iput, 3D, TwoByteInt, integer, int2, `:,:,:',         INTENTV)
-NBVAR(iput, 4D, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV)
-NBVAR(iput, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV)
-NBVAR(iput, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV)
-NBVAR(iput, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(iput, 1, TwoByteInt, integer, int2,  :,              INTENTV)
+NBVAR(iput, 2, TwoByteInt, integer, int2, `:,:',           INTENTV)
+NBVAR(iput, 3, TwoByteInt, integer, int2, `:,:,:',         INTENTV)
+NBVAR(iput, 4, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV)
+NBVAR(iput, 5, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV)
+NBVAR(iput, 6, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV)
+NBVAR(iput, 7, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(iput, 1D, FourByteInt, integer, int,  :,              INTENTV)
-NBVAR(iput, 2D, FourByteInt, integer, int, `:,:',           INTENTV)
-NBVAR(iput, 3D, FourByteInt, integer, int, `:,:,:',         INTENTV)
-NBVAR(iput, 4D, FourByteInt, integer, int, `:,:,:,:',       INTENTV)
-NBVAR(iput, 5D, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV)
-NBVAR(iput, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV)
-NBVAR(iput, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(iput, 1, FourByteInt, integer, int,  :,              INTENTV)
+NBVAR(iput, 2, FourByteInt, integer, int, `:,:',           INTENTV)
+NBVAR(iput, 3, FourByteInt, integer, int, `:,:,:',         INTENTV)
+NBVAR(iput, 4, FourByteInt, integer, int, `:,:,:,:',       INTENTV)
+NBVAR(iput, 5, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV)
+NBVAR(iput, 6, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV)
+NBVAR(iput, 7, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(iput, 1D, FourByteReal, real,   real,  :,              INTENTV)
-NBVAR(iput, 2D, FourByteReal, real,   real, `:,:',           INTENTV)
-NBVAR(iput, 3D, FourByteReal, real,   real, `:,:,:',         INTENTV)
-NBVAR(iput, 4D, FourByteReal, real,   real, `:,:,:,:',       INTENTV)
-NBVAR(iput, 5D, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV)
-NBVAR(iput, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV)
-NBVAR(iput, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(iput, 1, FourByteReal, real,   real,  :,              INTENTV)
+NBVAR(iput, 2, FourByteReal, real,   real, `:,:',           INTENTV)
+NBVAR(iput, 3, FourByteReal, real,   real, `:,:,:',         INTENTV)
+NBVAR(iput, 4, FourByteReal, real,   real, `:,:,:,:',       INTENTV)
+NBVAR(iput, 5, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV)
+NBVAR(iput, 6, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV)
+NBVAR(iput, 7, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(iput, 1D, EightByteReal, real, double,  :,              INTENTV)
-NBVAR(iput, 2D, EightByteReal, real, double, `:,:',           INTENTV)
-NBVAR(iput, 3D, EightByteReal, real, double, `:,:,:',         INTENTV)
-NBVAR(iput, 4D, EightByteReal, real, double, `:,:,:,:',       INTENTV)
-NBVAR(iput, 5D, EightByteReal, real, double, `:,:,:,:,:',     INTENTV)
-NBVAR(iput, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV)
-NBVAR(iput, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(iput, 1, EightByteReal, real, double,  :,              INTENTV)
+NBVAR(iput, 2, EightByteReal, real, double, `:,:',           INTENTV)
+NBVAR(iput, 3, EightByteReal, real, double, `:,:,:',         INTENTV)
+NBVAR(iput, 4, EightByteReal, real, double, `:,:,:,:',       INTENTV)
+NBVAR(iput, 5, EightByteReal, real, double, `:,:,:,:,:',     INTENTV)
+NBVAR(iput, 6, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV)
+NBVAR(iput, 7, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(iput, 1D, EightByteInt, integer, int8,  :,              INTENTV)
-NBVAR(iput, 2D, EightByteInt, integer, int8, `:,:',           INTENTV)
-NBVAR(iput, 3D, EightByteInt, integer, int8, `:,:,:',         INTENTV)
-NBVAR(iput, 4D, EightByteInt, integer, int8, `:,:,:,:',       INTENTV)
-NBVAR(iput, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV)
-NBVAR(iput, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV)
-NBVAR(iput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(iput, 1, EightByteInt, integer, int8,  :,              INTENTV)
+NBVAR(iput, 2, EightByteInt, integer, int8, `:,:',           INTENTV)
+NBVAR(iput, 3, EightByteInt, integer, int8, `:,:,:',         INTENTV)
+NBVAR(iput, 4, EightByteInt, integer, int8, `:,:,:,:',       INTENTV)
+NBVAR(iput, 5, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV)
+NBVAR(iput, 6, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV)
+NBVAR(iput, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
 
 !
 ! iget APIs
 !
 
-NBVAR(iget, 1D, OneByteInt, integer, int1,  :,              out)
-NBVAR(iget, 2D, OneByteInt, integer, int1, `:,:',           out)
-NBVAR(iget, 3D, OneByteInt, integer, int1, `:,:,:',         out)
-NBVAR(iget, 4D, OneByteInt, integer, int1, `:,:,:,:',       out)
-NBVAR(iget, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     out)
-NBVAR(iget, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   out)
-NBVAR(iget, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', out)
+NBVAR(iget, 1, OneByteInt, integer, int1,  :,              out)
+NBVAR(iget, 2, OneByteInt, integer, int1, `:,:',           out)
+NBVAR(iget, 3, OneByteInt, integer, int1, `:,:,:',         out)
+NBVAR(iget, 4, OneByteInt, integer, int1, `:,:,:,:',       out)
+NBVAR(iget, 5, OneByteInt, integer, int1, `:,:,:,:,:',     out)
+NBVAR(iget, 6, OneByteInt, integer, int1, `:,:,:,:,:,:',   out)
+NBVAR(iget, 7, OneByteInt, integer, int1, `:,:,:,:,:,:,:', out)
 
-NBVAR(iget, 1D, TwoByteInt, integer, int2,  :,              out)
-NBVAR(iget, 2D, TwoByteInt, integer, int2, `:,:',           out)
-NBVAR(iget, 3D, TwoByteInt, integer, int2, `:,:,:',         out)
-NBVAR(iget, 4D, TwoByteInt, integer, int2, `:,:,:,:',       out)
-NBVAR(iget, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     out)
-NBVAR(iget, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   out)
-NBVAR(iget, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', out)
+NBVAR(iget, 1, TwoByteInt, integer, int2,  :,              out)
+NBVAR(iget, 2, TwoByteInt, integer, int2, `:,:',           out)
+NBVAR(iget, 3, TwoByteInt, integer, int2, `:,:,:',         out)
+NBVAR(iget, 4, TwoByteInt, integer, int2, `:,:,:,:',       out)
+NBVAR(iget, 5, TwoByteInt, integer, int2, `:,:,:,:,:',     out)
+NBVAR(iget, 6, TwoByteInt, integer, int2, `:,:,:,:,:,:',   out)
+NBVAR(iget, 7, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', out)
 
-NBVAR(iget, 1D, FourByteInt, integer, int,  :,              out)
-NBVAR(iget, 2D, FourByteInt, integer, int, `:,:',           out)
-NBVAR(iget, 3D, FourByteInt, integer, int, `:,:,:',         out)
-NBVAR(iget, 4D, FourByteInt, integer, int, `:,:,:,:',       out)
-NBVAR(iget, 5D, FourByteInt, integer, int, `:,:,:,:,:',     out)
-NBVAR(iget, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   out)
-NBVAR(iget, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', out)
+NBVAR(iget, 1, FourByteInt, integer, int,  :,              out)
+NBVAR(iget, 2, FourByteInt, integer, int, `:,:',           out)
+NBVAR(iget, 3, FourByteInt, integer, int, `:,:,:',         out)
+NBVAR(iget, 4, FourByteInt, integer, int, `:,:,:,:',       out)
+NBVAR(iget, 5, FourByteInt, integer, int, `:,:,:,:,:',     out)
+NBVAR(iget, 6, FourByteInt, integer, int, `:,:,:,:,:,:',   out)
+NBVAR(iget, 7, FourByteInt, integer, int, `:,:,:,:,:,:,:', out)
 
-NBVAR(iget, 1D, FourByteReal, real,   real,  :,              out)
-NBVAR(iget, 2D, FourByteReal, real,   real, `:,:',           out)
-NBVAR(iget, 3D, FourByteReal, real,   real, `:,:,:',         out)
-NBVAR(iget, 4D, FourByteReal, real,   real, `:,:,:,:',       out)
-NBVAR(iget, 5D, FourByteReal, real,   real, `:,:,:,:,:',     out)
-NBVAR(iget, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   out)
-NBVAR(iget, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', out)
+NBVAR(iget, 1, FourByteReal, real,   real,  :,              out)
+NBVAR(iget, 2, FourByteReal, real,   real, `:,:',           out)
+NBVAR(iget, 3, FourByteReal, real,   real, `:,:,:',         out)
+NBVAR(iget, 4, FourByteReal, real,   real, `:,:,:,:',       out)
+NBVAR(iget, 5, FourByteReal, real,   real, `:,:,:,:,:',     out)
+NBVAR(iget, 6, FourByteReal, real,   real, `:,:,:,:,:,:',   out)
+NBVAR(iget, 7, FourByteReal, real,   real, `:,:,:,:,:,:,:', out)
 
-NBVAR(iget, 1D, EightByteReal, real, double,  :,              out)
-NBVAR(iget, 2D, EightByteReal, real, double, `:,:',           out)
-NBVAR(iget, 3D, EightByteReal, real, double, `:,:,:',         out)
-NBVAR(iget, 4D, EightByteReal, real, double, `:,:,:,:',       out)
-NBVAR(iget, 5D, EightByteReal, real, double, `:,:,:,:,:',     out)
-NBVAR(iget, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   out)
-NBVAR(iget, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', out)
+NBVAR(iget, 1, EightByteReal, real, double,  :,              out)
+NBVAR(iget, 2, EightByteReal, real, double, `:,:',           out)
+NBVAR(iget, 3, EightByteReal, real, double, `:,:,:',         out)
+NBVAR(iget, 4, EightByteReal, real, double, `:,:,:,:',       out)
+NBVAR(iget, 5, EightByteReal, real, double, `:,:,:,:,:',     out)
+NBVAR(iget, 6, EightByteReal, real, double, `:,:,:,:,:,:',   out)
+NBVAR(iget, 7, EightByteReal, real, double, `:,:,:,:,:,:,:', out)
 
-NBVAR(iget, 1D, EightByteInt, integer, int8,  :,              out)
-NBVAR(iget, 2D, EightByteInt, integer, int8, `:,:',           out)
-NBVAR(iget, 3D, EightByteInt, integer, int8, `:,:,:',         out)
-NBVAR(iget, 4D, EightByteInt, integer, int8, `:,:,:,:',       out)
-NBVAR(iget, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     out)
-NBVAR(iget, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   out)
-NBVAR(iget, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out)
+NBVAR(iget, 1, EightByteInt, integer, int8,  :,              out)
+NBVAR(iget, 2, EightByteInt, integer, int8, `:,:',           out)
+NBVAR(iget, 3, EightByteInt, integer, int8, `:,:,:',         out)
+NBVAR(iget, 4, EightByteInt, integer, int8, `:,:,:,:',       out)
+NBVAR(iget, 5, EightByteInt, integer, int8, `:,:,:,:,:',     out)
+NBVAR(iget, 6, EightByteInt, integer, int8, `:,:,:,:,:,:',   out)
+NBVAR(iget, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out)
 
 !
 ! bput APIs
 !
 
-NBVAR(bput, 1D, OneByteInt, integer, int1,  :,              in)
-NBVAR(bput, 2D, OneByteInt, integer, int1, `:,:',           in)
-NBVAR(bput, 3D, OneByteInt, integer, int1, `:,:,:',         in)
-NBVAR(bput, 4D, OneByteInt, integer, int1, `:,:,:,:',       in)
-NBVAR(bput, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     in)
-NBVAR(bput, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
-NBVAR(bput, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
+NBVAR(bput, 1, OneByteInt, integer, int1,  :,              in)
+NBVAR(bput, 2, OneByteInt, integer, int1, `:,:',           in)
+NBVAR(bput, 3, OneByteInt, integer, int1, `:,:,:',         in)
+NBVAR(bput, 4, OneByteInt, integer, int1, `:,:,:,:',       in)
+NBVAR(bput, 5, OneByteInt, integer, int1, `:,:,:,:,:',     in)
+NBVAR(bput, 6, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
+NBVAR(bput, 7, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
 
-NBVAR(bput, 1D, TwoByteInt, integer, int2,  :,              INTENTV)
-NBVAR(bput, 2D, TwoByteInt, integer, int2, `:,:',           INTENTV)
-NBVAR(bput, 3D, TwoByteInt, integer, int2, `:,:,:',         INTENTV)
-NBVAR(bput, 4D, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV)
-NBVAR(bput, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV)
-NBVAR(bput, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV)
-NBVAR(bput, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(bput, 1, TwoByteInt, integer, int2,  :,              INTENTV)
+NBVAR(bput, 2, TwoByteInt, integer, int2, `:,:',           INTENTV)
+NBVAR(bput, 3, TwoByteInt, integer, int2, `:,:,:',         INTENTV)
+NBVAR(bput, 4, TwoByteInt, integer, int2, `:,:,:,:',       INTENTV)
+NBVAR(bput, 5, TwoByteInt, integer, int2, `:,:,:,:,:',     INTENTV)
+NBVAR(bput, 6, TwoByteInt, integer, int2, `:,:,:,:,:,:',   INTENTV)
+NBVAR(bput, 7, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(bput, 1D, FourByteInt, integer, int,  :,              INTENTV)
-NBVAR(bput, 2D, FourByteInt, integer, int, `:,:',           INTENTV)
-NBVAR(bput, 3D, FourByteInt, integer, int, `:,:,:',         INTENTV)
-NBVAR(bput, 4D, FourByteInt, integer, int, `:,:,:,:',       INTENTV)
-NBVAR(bput, 5D, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV)
-NBVAR(bput, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV)
-NBVAR(bput, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(bput, 1, FourByteInt, integer, int,  :,              INTENTV)
+NBVAR(bput, 2, FourByteInt, integer, int, `:,:',           INTENTV)
+NBVAR(bput, 3, FourByteInt, integer, int, `:,:,:',         INTENTV)
+NBVAR(bput, 4, FourByteInt, integer, int, `:,:,:,:',       INTENTV)
+NBVAR(bput, 5, FourByteInt, integer, int, `:,:,:,:,:',     INTENTV)
+NBVAR(bput, 6, FourByteInt, integer, int, `:,:,:,:,:,:',   INTENTV)
+NBVAR(bput, 7, FourByteInt, integer, int, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(bput, 1D, FourByteReal, real,   real,  :,              INTENTV)
-NBVAR(bput, 2D, FourByteReal, real,   real, `:,:',           INTENTV)
-NBVAR(bput, 3D, FourByteReal, real,   real, `:,:,:',         INTENTV)
-NBVAR(bput, 4D, FourByteReal, real,   real, `:,:,:,:',       INTENTV)
-NBVAR(bput, 5D, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV)
-NBVAR(bput, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV)
-NBVAR(bput, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(bput, 1, FourByteReal, real,   real,  :,              INTENTV)
+NBVAR(bput, 2, FourByteReal, real,   real, `:,:',           INTENTV)
+NBVAR(bput, 3, FourByteReal, real,   real, `:,:,:',         INTENTV)
+NBVAR(bput, 4, FourByteReal, real,   real, `:,:,:,:',       INTENTV)
+NBVAR(bput, 5, FourByteReal, real,   real, `:,:,:,:,:',     INTENTV)
+NBVAR(bput, 6, FourByteReal, real,   real, `:,:,:,:,:,:',   INTENTV)
+NBVAR(bput, 7, FourByteReal, real,   real, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(bput, 1D, EightByteReal, real, double,  :,              INTENTV)
-NBVAR(bput, 2D, EightByteReal, real, double, `:,:',           INTENTV)
-NBVAR(bput, 3D, EightByteReal, real, double, `:,:,:',         INTENTV)
-NBVAR(bput, 4D, EightByteReal, real, double, `:,:,:,:',       INTENTV)
-NBVAR(bput, 5D, EightByteReal, real, double, `:,:,:,:,:',     INTENTV)
-NBVAR(bput, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV)
-NBVAR(bput, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(bput, 1, EightByteReal, real, double,  :,              INTENTV)
+NBVAR(bput, 2, EightByteReal, real, double, `:,:',           INTENTV)
+NBVAR(bput, 3, EightByteReal, real, double, `:,:,:',         INTENTV)
+NBVAR(bput, 4, EightByteReal, real, double, `:,:,:,:',       INTENTV)
+NBVAR(bput, 5, EightByteReal, real, double, `:,:,:,:,:',     INTENTV)
+NBVAR(bput, 6, EightByteReal, real, double, `:,:,:,:,:,:',   INTENTV)
+NBVAR(bput, 7, EightByteReal, real, double, `:,:,:,:,:,:,:', INTENTV)
 
-NBVAR(bput, 1D, EightByteInt, integer, int8,  :,              INTENTV)
-NBVAR(bput, 2D, EightByteInt, integer, int8, `:,:',           INTENTV)
-NBVAR(bput, 3D, EightByteInt, integer, int8, `:,:,:',         INTENTV)
-NBVAR(bput, 4D, EightByteInt, integer, int8, `:,:,:,:',       INTENTV)
-NBVAR(bput, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV)
-NBVAR(bput, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV)
-NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
+NBVAR(bput, 1, EightByteInt, integer, int8,  :,              INTENTV)
+NBVAR(bput, 2, EightByteInt, integer, int8, `:,:',           INTENTV)
+NBVAR(bput, 3, EightByteInt, integer, int8, `:,:,:',         INTENTV)
+NBVAR(bput, 4, EightByteInt, integer, int8, `:,:,:,:',       INTENTV)
+NBVAR(bput, 5, EightByteInt, integer, int8, `:,:,:,:,:',     INTENTV)
+NBVAR(bput, 6, EightByteInt, integer, int8, `:,:,:,:,:,:',   INTENTV)
+NBVAR(bput, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
 
 !
 ! Other nonblocking control APIs
@@ -623,7 +689,7 @@ NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
      integer, dimension(:), intent(inout) :: req
      integer, dimension(:), intent(out)   :: st
      integer                              :: nf90mpi_wait
- 
+
      nf90mpi_wait = nfmpi_wait(ncid, num, req, st)
    end function nf90mpi_wait
 
@@ -632,7 +698,7 @@ NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
      integer, dimension(:), intent(inout) :: req
      integer, dimension(:), intent(out)   :: st
      integer                              :: nf90mpi_wait_all
- 
+
      nf90mpi_wait_all = nfmpi_wait_all(ncid, num, req, st)
    end function nf90mpi_wait_all
 
@@ -641,7 +707,7 @@ NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
      integer, dimension(:), intent(inout) :: req
      integer, dimension(:), intent(out)   :: st
      integer                              :: nf90mpi_cancel
- 
+
      nf90mpi_cancel = nfmpi_cancel(ncid, num, req, st)
    end function nf90mpi_cancel
 
