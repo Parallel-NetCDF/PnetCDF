@@ -5,6 +5,10 @@
  *  $Id$
  */
 
+/* This program tests whether the correct error codes can be returned when
+ * using NULL arguments for start, count, stride, or imap
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
