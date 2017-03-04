@@ -22,7 +22,7 @@ CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 dnl AM_INIT_AUTOMAKE([subdir-objects])
 AM_INIT_AUTOMAKE
 dnl enable silent rules by default 
-dnl AM_SILENT_RULES([yes])
+AM_SILENT_RULES([yes])
 
 dnl if maintainer mode is disabled, make will *never* attempt to rebuild configure,
 dnl Makefile.ins, etc.
