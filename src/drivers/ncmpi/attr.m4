@@ -514,30 +514,42 @@ err_check:
     if (nnewname != NULL) free(nnewname);
 
     if (ncp->safe_mode) {
-        int root_varid, status, mpireturn;
-        char root_name[NC_MAX_NAME];
-        
+        int root_name_len, root_varid, status, mpireturn;
+        char *root_name;
+
         /* check if name is consistent among all processes */
-        if (name == NULL || *name == 0)
-            root_name[0] = 0;
-        else
-            strncpy(root_name, name, NC_MAX_NAME);
-        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);         
+        root_name_len = strlen(name) + 1;
+        TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
+
+        root_name = (char*) NCI_Malloc(root_name_len);
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            NCI_Free(root_name);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+        NCI_Free(root_name);
 
         /* check if newname is consistent among all processes */
-        if (newname == NULL || *newname == 0)
-            root_name[0] = 0;
-        else
-            strncpy(root_name, newname, NC_MAX_NAME);
-        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);         
+        root_name_len = strlen(newname) + 1;
+        TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
+
+        root_name = (char*) NCI_Malloc(root_name_len);
+        strcpy(root_name, newname);
+        TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            NCI_Free(root_name);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && strcmp(root_name, newname))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+        NCI_Free(root_name);
 
         /* check if varid is consistent across all processes */
         root_varid = varid;
@@ -668,21 +680,28 @@ ncmpii_copy_att(void       *ncdp_in,
 
 err_check:
     if (ncp_out->safe_mode) {
-        int root_ids[2], status, mpireturn;
-        char root_name[NC_MAX_NAME];
+        int root_ids[2], root_name_len, status, mpireturn;
+        char *root_name;
 
         /* check if name is consistent among all processes */
-        if (name == NULL || *name == 0)
-            root_name[0] = 0;
-        else
-            strncpy(root_name, name, NC_MAX_NAME);
-        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp_out->nciop->comm);
+        root_name_len = strlen(name) + 1;
+        TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp_out->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
+        }
+
+        root_name = (char*) NCI_Malloc(root_name_len);
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp_out->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
+            NCI_Free(root_name);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+        NCI_Free(root_name);
 
         /* check if varid_in, varid_out, are consistent across all
          * processes */
@@ -829,19 +848,26 @@ ncmpii_del_att(void       *ncdp,
 
 err_check:
     if (ncp->safe_mode) {
-        int root_varid, status, mpireturn;
-        char root_name[NC_MAX_NAME];
+        int root_varid, root_name_len, status, mpireturn;
+        char *root_name;
 
         /* check if name is consistent among all processes */
-        if (name == NULL || *name == 0)
-            root_name[0] = 0;
-        else
-            strncpy(root_name, name, NC_MAX_NAME);
-        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
+        root_name_len = strlen(name) + 1;
+        TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
+        }
+
+        root_name = (char*) NCI_Malloc(root_name_len);
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            NCI_Free(root_name);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+        }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+        NCI_Free(root_name);
 
         /* check if varid is consistent across all processes */
         root_varid = varid;
@@ -1269,25 +1295,32 @@ ncmpii_put_att_$1(void       *ncdp,
 
 err_check:
     if (ncp->safe_mode) { /* consistency check */
-        int rank, root_varid, status, mpireturn;
-        char root_name[NC_MAX_NAME];
+        int rank, root_name_len, root_varid, status, mpireturn;
+        char *root_name;
         MPI_Offset root_nelems;
         size_t buf_size;
         void *root_buf;
         ifelse(`$1',`text',,`int root_xtype;')
 
         /* check if name is consistent among all processes */
-        if (name == NULL || *name == 0)
-            root_name[0] = 0;
-        else
-            strncpy(root_name, name, NC_MAX_NAME);
-        TRACE_COMM(MPI_Bcast)(root_name, NC_MAX_NAME, MPI_CHAR, 0, ncp->nciop->comm);
+        root_name_len = strlen(name) + 1;
+        TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
+        }
+
+        root_name = (char*) NCI_Malloc(root_name_len);
+        strcpy(root_name, name);
+        TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS) {
+            if (nname != NULL) free(nname);
+            NCI_Free(root_name);
             return ncmpii_handle_error(mpireturn, "MPI_Bcast");
         }
         if (err == NC_NOERR && strcmp(root_name, name))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
+        NCI_Free(root_name);
 
         /* check if varid is consistent across all processes */
         root_varid = varid;
