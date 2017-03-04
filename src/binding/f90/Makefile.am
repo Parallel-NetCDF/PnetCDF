@@ -45,6 +45,8 @@ SRCS = $(F90_SRCS) $(M4_SRCS:.m4=.f90) \
 .m4.f90:
 	$(M4) $(AM_M4FLAGS) $(M4FFLAGS) $< >$@
 
+pnetcdf.f90: $(SRCS)
+
 EXTRA_DIST = $(F90_SRCS) \
              $(M4_SRCS) \
              Makefile.in \
