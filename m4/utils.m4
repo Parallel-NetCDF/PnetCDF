@@ -4,6 +4,9 @@ dnl
 dnl
 define(`_CAT', `$1$2')dnl  concatenate two strings
 dnl
+dnl
+define(`NULL_CHAR', changequote([,])[changequote([,])'\0'changequote(`,')]changequote(`,'))
+dnl
 dnl dnl dnl
 dnl
 define(`FUNC2ITYPE', `ifelse(`$1', `text',      `char',

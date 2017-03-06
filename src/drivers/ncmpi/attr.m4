@@ -29,6 +29,9 @@ dnl
 #include "macro.h"
 #include "utf8proc.h"
 
+include(`foreach.m4')dnl
+include(`utils.m4')dnl
+
 /*----< ncmpii_free_NC_attr() >----------------------------------------------*/
 /* Free NC_attr object. */
 inline void
@@ -439,7 +442,7 @@ ncmpii_rename_att(void       *ncdp,
     NC_attr *attrp=NULL;
     NC_string *newStr=NULL;
 
-    /* check whether file's write permission */
+    /* check whether file write permission */
     if (NC_readonly(ncp)) {
         DEBUG_ASSIGN_ERROR(err, NC_EPERM)
         goto err_check;
@@ -518,13 +521,15 @@ err_check:
         char *root_name;
 
         /* check if name is consistent among all processes */
-        root_name_len = strlen(name) + 1;
+        root_name_len = 1;
+        if (name != NULL) root_name_len += strlen(name);
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
 
         root_name = (char*) NCI_Malloc(root_name_len);
-        strcpy(root_name, name);
+        root_name[0] = NULL_CHAR;
+        if (name != NULL) strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             NCI_Free(root_name);
@@ -535,13 +540,15 @@ err_check:
         NCI_Free(root_name);
 
         /* check if newname is consistent among all processes */
-        root_name_len = strlen(newname) + 1;
+        root_name_len = 1;
+        if (newname != NULL) root_name_len += strlen(newname);
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
 
         root_name = (char*) NCI_Malloc(root_name_len);
-        strcpy(root_name, newname);
+        root_name[0] = NULL_CHAR;
+        if (newname != NULL) strcpy(root_name, newname);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             NCI_Free(root_name);
@@ -612,7 +619,7 @@ ncmpii_copy_att(void       *ncdp_in,
     NC_attrarray *ncap_out=NULL, *ncap_in;
     NC_attr *iattrp=NULL, *attrp=NULL;
 
-    /* check whether file's write permission */
+    /* check whether file write permission */
     if (NC_readonly(ncp_out)) {
         DEBUG_ASSIGN_ERROR(err, NC_EPERM)
         goto err_check;
@@ -684,7 +691,8 @@ err_check:
         char *root_name;
 
         /* check if name is consistent among all processes */
-        root_name_len = strlen(name) + 1;
+        root_name_len = 1;
+        if (name != NULL) root_name_len += strlen(name);
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp_out->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
@@ -692,7 +700,8 @@ err_check:
         }
 
         root_name = (char*) NCI_Malloc(root_name_len);
-        strcpy(root_name, name);
+        root_name[0] = NULL_CHAR;
+        if (name != NULL) strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp_out->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
@@ -797,7 +806,7 @@ ncmpii_del_att(void       *ncdp,
     NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap=NULL;
 
-    /* check whether file's write permission */
+    /* check whether file write permission */
     if (NC_readonly(ncp)) {
         DEBUG_ASSIGN_ERROR(err, NC_EPERM)
         goto err_check;
@@ -852,14 +861,16 @@ err_check:
         char *root_name;
 
         /* check if name is consistent among all processes */
-        root_name_len = strlen(name) + 1;
+        root_name_len = 1;
+        if (name != NULL) root_name_len += strlen(name);
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
         }
 
         root_name = (char*) NCI_Malloc(root_name_len);
-        strcpy(root_name, name);
+        root_name[0] = NULL_CHAR;
+        if (name != NULL) strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             NCI_Free(root_name);
@@ -899,9 +910,6 @@ err_check:
 
     return NC_NOERR;
 }
-
-include(`foreach.m4')dnl
-include(`utils.m4')dnl
 
 /*----< ncmpii_get_att_text() >----------------------------------------------*/
 /* This is an independent subroutine.
@@ -1303,7 +1311,8 @@ err_check:
         ifelse(`$1',`text',,`int root_xtype;')
 
         /* check if name is consistent among all processes */
-        root_name_len = strlen(name) + 1;
+        root_name_len = 1;
+        if (name != NULL) root_name_len += strlen(name);
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
@@ -1311,7 +1320,8 @@ err_check:
         }
 
         root_name = (char*) NCI_Malloc(root_name_len);
-        strcpy(root_name, name);
+        root_name[0] = NULL_CHAR;
+        if (name != NULL) strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
