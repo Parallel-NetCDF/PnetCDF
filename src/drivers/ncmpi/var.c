@@ -680,7 +680,8 @@ err_check:
         char *root_name;
 
         /* check if name is consistent among all processes */
-        root_name_len = strlen(name) + 1;
+        root_name_len = 1;
+        if (name != NULL) root_name_len += strlen(name);
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
@@ -688,7 +689,8 @@ err_check:
         }
 
         root_name = (char*) NCI_Malloc(root_name_len);
-        strcpy(root_name, name);
+        root_name[0] = '\0';
+        if (name != NULL) strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) free(nname);
@@ -976,7 +978,8 @@ err_check:
         char *root_name;
 
         /* check if newname is consistent among all processes */
-        root_name_len = strlen(newname) + 1;
+        root_name_len = 1;
+        if (newname != NULL) root_name_len += strlen(newname);
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (newStr != NULL) ncmpii_free_NC_string(newStr);
@@ -984,7 +987,8 @@ err_check:
         }
 
         root_name = (char*) NCI_Malloc(root_name_len);
-        strcpy(root_name, newname);
+        root_name[0] = '\0';
+        if (newname != NULL) strcpy(root_name, newname);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (newStr != NULL) ncmpii_free_NC_string(newStr);
