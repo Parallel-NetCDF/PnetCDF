@@ -94,7 +94,8 @@ define(`TEXTVAR',dnl
      integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
-     integer                                     :: numDims, counter, nelms
+     integer                                     :: numDims, nelms
+     ifelse(`$2', `1', ,`integer :: counter')
 
      ! allocate local arrays
      nf90mpi_$1_var_$2D_text$6 = nfmpi_inq_varndims(ncid, varid, numDims)
@@ -117,9 +118,10 @@ define(`TEXTVAR',dnl
      localStride(:) = 1
      ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
+     ifelse(`$2', `1', ,`
      do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
+     enddo')
 
      if (present(start))  localStart (:SIZE(start) ) =  start(:)
      if (present(count))  localCount (:SIZE(count) ) =  count(:)
@@ -264,7 +266,8 @@ define(`NBTEXTVAR',dnl
      integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
-     integer                                     :: numDims, counter, nelms
+     integer                                     :: numDims, nelms
+     ifelse(`$2', `1', ,`integer :: counter')
 
      ! allocate local arrays
      nf90mpi_$1_var_$2D_text = nfmpi_inq_varndims(ncid, varid, numDims)
@@ -287,9 +290,10 @@ define(`NBTEXTVAR',dnl
      localStride(:) = 1
      ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
+     ifelse(`$2', `1', ,`
      do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
+     enddo')
 
      if (present(start))  localStart (:SIZE(start) ) =  start(:)
      if (present(count))  localCount (:SIZE(count) ) =  count(:)
