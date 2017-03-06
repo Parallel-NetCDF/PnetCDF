@@ -40,23 +40,23 @@ before_install:
 
 script:
   - ./configure
-  - make -s LIBTOOLFLAGS=--silent
-  - make -s LIBTOOLFLAGS=--silent tests
-  - make -s LIBTOOLFLAGS=--silent check
-  - make -s LIBTOOLFLAGS=--silent distcheck
-  - make -s LIBTOOLFLAGS=--silent distclean
+  - make -s V=1 LIBTOOLFLAGS=--silent
+  - make -s V=1 LIBTOOLFLAGS=--silent tests
+  - make -s V=1 LIBTOOLFLAGS=--silent check
+  - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS=--silent
+  - make -s V=1 LIBTOOLFLAGS=--silent distclean
   - ./configure --enable-shared
-  - make -s LIBTOOLFLAGS=--silent
-  - make -s LIBTOOLFLAGS=--silent tests
-  - make -s LIBTOOLFLAGS=--silent check
-  - make -s LIBTOOLFLAGS=--silent distcheck
-  - make -s LIBTOOLFLAGS=--silent distclean
+  - make -s V=1 LIBTOOLFLAGS=--silent
+  - make -s V=1 LIBTOOLFLAGS=--silent tests
+  - make -s V=1 LIBTOOLFLAGS=--silent check
+  - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS=--silent
+  - make -s V=1 LIBTOOLFLAGS=--silent distclean
   - ./configure --enable-shared --disable-static
-  - make -s LIBTOOLFLAGS=--silent
-  - make -s LIBTOOLFLAGS=--silent tests
-  - make -s LIBTOOLFLAGS=--silent check
-  - make -s LIBTOOLFLAGS=--silent distcheck
-  - make -s LIBTOOLFLAGS=--silent distclean
+  - make -s V=1 LIBTOOLFLAGS=--silent
+  - make -s V=1 LIBTOOLFLAGS=--silent tests
+  - make -s V=1 LIBTOOLFLAGS=--silent check
+  - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS=--silent
+  - make -s V=1 LIBTOOLFLAGS=--silent distclean
   
 after_failure:
   - cat ./config.log
