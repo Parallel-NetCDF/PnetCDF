@@ -40,7 +40,7 @@ define(`TEXTVAR1',dnl
      allocate(localStart(nelms))
      allocate(localCount(nelms))
      allocate(localStride(nelms))
- 
+
      ! Set local arguments to default values
      localStart (:) = 1
      localCount (1) = LEN(values)
@@ -88,13 +88,14 @@ define(`TEXTVAR',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: count
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: stride
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: map
- 
+
      integer                                     :: nf90mpi_$1_var_$2D_text$6
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
-     integer                                     :: numDims, counter, nelms
+     integer                                     :: numDims, nelms
+     ifelse(`$2', `1', ,`integer :: counter')
 
      ! allocate local arrays
      nf90mpi_$1_var_$2D_text$6 = nfmpi_inq_varndims(ncid, varid, numDims)
@@ -109,7 +110,7 @@ define(`TEXTVAR',dnl
      allocate(localCount(nelms))
      allocate(localStride(nelms))
      allocate(localMap(nelms))
- 
+
      ! Set local arguments to default values
      localStart (:) = 1
      localCount (:$2+1) = (/ LEN(values($4)), shape(values) /)
@@ -117,9 +118,10 @@ define(`TEXTVAR',dnl
      localStride(:) = 1
      ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
+     ifelse(`$2', `1', ,`
      do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
+     enddo')
 
      if (present(start))  localStart (:SIZE(start) ) =  start(:)
      if (present(count))  localCount (:SIZE(count) ) =  count(:)
@@ -210,7 +212,7 @@ define(`NBTEXTVAR1',dnl
      allocate(localStart(nelms))
      allocate(localCount(nelms))
      allocate(localStride(nelms))
- 
+
      ! Set local arguments to default values
      localStart (:) = 1
      localCount (1) = LEN(values)
@@ -258,13 +260,14 @@ define(`NBTEXTVAR',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: count
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: stride
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: map
- 
+
      integer                                     :: nf90mpi_$1_var_$2D_text
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStart(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
-     integer                                     :: numDims, counter, nelms
+     integer                                     :: numDims, nelms
+     ifelse(`$2', `1', ,`integer :: counter')
 
      ! allocate local arrays
      nf90mpi_$1_var_$2D_text = nfmpi_inq_varndims(ncid, varid, numDims)
@@ -279,7 +282,7 @@ define(`NBTEXTVAR',dnl
      allocate(localCount(nelms))
      allocate(localStride(nelms))
      allocate(localMap(nelms))
- 
+
      ! Set local arguments to default values
      localStart (:) = 1
      localCount (:$2+1) = (/ LEN(values($4)), shape(values) /)
@@ -287,9 +290,10 @@ define(`NBTEXTVAR',dnl
      localStride(:) = 1
      ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
+     ifelse(`$2', `1', ,`
      do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
+     enddo')
 
      if (present(start))  localStart (:SIZE(start) ) =  start(:)
      if (present(count))  localCount (:SIZE(count) ) =  count(:)
