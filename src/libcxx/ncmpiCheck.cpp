@@ -1,6 +1,8 @@
 #include <cstring>
 #include <pnetcdf.h>
 #include "ncmpiException.h"
+#include "ncmpiCheck.h"
+
 using namespace std;
 using namespace PnetCDF::exceptions;
 
