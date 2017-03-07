@@ -10,23 +10,23 @@
 
   ! Library version, error string
   public :: nf90mpi_inq_libvers, nf90mpi_strerror, nf90mpi_strerrno
-  
-  ! Control routines 
+
+  ! Control routines
   public :: nf90mpi_create,   nf90mpi_open, &
             nf90mpi_set_fill, nf90mpi_redef, &
             nf90mpi_enddef,   nf90mpi_sync, &
             nf90mpi_abort,    nf90mpi_close, &
             nf90mpi_delete,   nf90mpi_set_default_format
-            
+
   ! File level inquiry
   public :: nf90mpi_inquire,          nf90mpi_inq_striping, &
             nf90mpi_inq_num_rec_vars, nf90mpi_inq_num_fix_vars, &
             nf90mpi_inq_path,         nf90mpi_inq_default_format
-  
+
   ! Dimension routines
   public :: nf90mpi_def_dim,    nf90mpi_inq_dimid, &
             nf90mpi_rename_dim, nf90mpi_inquire_dimension
-  
+
   ! attribute routines
   public :: nf90mpi_copy_att,          nf90mpi_rename_att, &
             nf90mpi_del_att,           nf90mpi_inq_attname, &
@@ -34,10 +34,10 @@
 
   ! overloaded functions
   public :: nf90mpi_put_att, nf90mpi_get_att
-  
+
   ! Variable routines
   public :: nf90mpi_def_var,      nf90mpi_inq_varid, &
-            nf90mpi_rename_var,   nf90mpi_inquire_variable, & 
+            nf90mpi_rename_var,   nf90mpi_inquire_variable, &
             nf90mpi_def_var_fill, nf90mpi_inq_var_fill, &
             nf90mpi_fill_var_rec
 
@@ -134,8 +134,9 @@
 !
 ! attribute put/get subroutines:
 !
-    integer nfmpi_put_att, nfmpi_get_att
-    external nfmpi_put_att, nfmpi_get_att
+    ! Below two subroutines are of no use in nf90mpi subroutines
+    ! integer nfmpi_put_att, nfmpi_get_att
+    ! external nfmpi_put_att, nfmpi_get_att
 
     public :: &
         nfmpi_put_att_text, &
