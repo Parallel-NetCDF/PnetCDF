@@ -30,7 +30,7 @@ define(`VAR_SCALAR',dnl
      nf90mpi_$1_var_$3$2 = nfmpi_inq_varndims(ncid, varid, numDims)
      if (nf90mpi_$1_var_$3$2 .NE. NF_NOERR) return
 
-     nelms = numDims
+     nelms = numDims + 1
      if (present(start) .AND. nelms .LT. SIZE(start)) nelms = SIZE(start)
      allocate(localIndex(nelms))
 
@@ -96,7 +96,7 @@ define(`NBVAR1',dnl
      nf90mpi_$1_var_$2 = nfmpi_inq_varndims(ncid, varid, numDims)
      if (nf90mpi_$1_var_$2 .NE. NF_NOERR) return
 
-     nelms = numDims
+     nelms = numDims + 1
      if (present(start) .AND. nelms .LT. SIZE(start)) nelms = SIZE(start)
      allocate(localIndex(nelms))
 
@@ -166,13 +166,14 @@ define(`VAR',dnl
      integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
-     integer                                     :: numDims, counter, nelms
+     integer                                     :: numDims, nelms
+     ifelse(`$2', `1', ,`integer :: counter')
 
      ! allocate local arrays
      nf90mpi_$1_var_$2D_$3$8 = nfmpi_inq_varndims(ncid, varid, numDims)
      if (nf90mpi_$1_var_$2D_$3$8 .NE. NF_NOERR) return
 
-     nelms = numDims
+     nelms = numDims + 1
      if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
      if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
      if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
@@ -189,9 +190,10 @@ define(`VAR',dnl
      localStride(:) = 1
      ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
+     ifelse(`$2', `1', ,`
      do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
+     enddo')
 
      if (present(start))  localStart (:SIZE(start) ) =  start(:)
      if (present(count))  localCount (:SIZE(count) ) =  count(:)
@@ -461,13 +463,14 @@ define(`NBVAR',dnl
      integer (kind=MPI_OFFSET_KIND), allocatable :: localCount(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localStride(:)
      integer (kind=MPI_OFFSET_KIND), allocatable :: localMap(:)
-     integer                                     :: numDims, counter, nelms
+     integer                                     :: numDims, nelms
+     ifelse(`$2', `1', ,`integer :: counter')
 
      ! allocate local arrays
      nf90mpi_$1_var_$2D_$3 = nfmpi_inq_varndims(ncid, varid, numDims)
      if (nf90mpi_$1_var_$2D_$3 .NE. NF_NOERR) return
 
-     nelms = numDims
+     nelms = numDims + 1
      if (present(start)  .AND. nelms .LT. SIZE(start))  nelms = SIZE(start)
      if (present(count)  .AND. nelms .LT. SIZE(count))  nelms = SIZE(count)
      if (present(stride) .AND. nelms .LT. SIZE(stride)) nelms = SIZE(stride)
@@ -484,9 +487,10 @@ define(`NBVAR',dnl
      localStride(:) = 1
      ! localMap(:$2) = (/ 1, (product(localCount(:counter)), counter = 1, $2 - 1) /)
      localMap(1) = 1
+     ifelse(`$2', `1', ,`
      do counter = 1, $2 - 1
         localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
+     enddo')
 
      if (present(start))  localStart (:SIZE(start) ) =  start(:)
      if (present(count))  localCount (:SIZE(count) ) =  count(:)
