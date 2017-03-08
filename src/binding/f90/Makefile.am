@@ -33,7 +33,7 @@ F90_SRCS = nf90_constants.f90 \
            attributes.f90 \
            variables.f90
 
-nodist_include_HEADERS = pnetcdf.mod
+nodist_include_HEADERS = $(PNETCDF_MOD)
 noinst_LTLIBRARIES = libpnetcdff90.la
 nodist_libpnetcdff90_la_SOURCES = pnetcdf.f90
 
@@ -46,6 +46,8 @@ SRCS = $(F90_SRCS) $(M4_SRCS:.m4=.f90) \
 	$(M4) $(AM_M4FLAGS) $(M4FFLAGS) $< >$@
 
 pnetcdf.f90: $(SRCS)
+
+$(PNETCDF_MOD): pnetcdf.f90
 
 EXTRA_DIST = $(F90_SRCS) \
              $(M4_SRCS) \
