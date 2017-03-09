@@ -74,7 +74,7 @@ ptest8 ptest10:
 
 # build check targets but not invoke
 tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
+.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10 $(LDADD)
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

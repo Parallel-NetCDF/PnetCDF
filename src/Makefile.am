@@ -6,6 +6,9 @@
 #
 # @configure_input@
 
+# adding . to the list of SUBDIRS causes the directories built before .
+# This is useful for "make -j" option, as libs should be built after all
+# sub-libraries
 SUBDIRS = include dispatchers drivers binding . libs utils
 
 dist-hook:

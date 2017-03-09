@@ -49,6 +49,7 @@ EXTRA_DIST = COPYRIGHT \
 # 	$(MAKE) $(AM_MAKEFLAGS) check TESTS=
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
+# AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13.
 TESTS_SUBDIRS = test examples benchmarks
 TESTS_DIRS = $(TESTS_SUBDIRS:%=tests-%)
 tests: all $(TESTS_DIRS)
