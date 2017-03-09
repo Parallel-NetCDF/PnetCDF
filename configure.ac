@@ -217,7 +217,7 @@ fi
 CC=${MPICC}
 AC_SUBST(MPICC)
 
-dnl Now MPICC is configured, let's do some basic compiler tests
+dnl Now MPICC is configured, do some basic compiler tests
 AC_PROG_CC([${MPICC}])
 AM_PROG_CC_C_O
 
@@ -723,7 +723,7 @@ dnl UD_PROG_AR()
 dnl UD_PROG_NM()
 dnl We could use the PAC check for ranlib (it also makes sure that ranlib
 dnl works, which is not always true, particularly when GNU tools are
-dnl installed on a system that doesn't have (or need) ranlib
+dnl installed on a system that does not have (or need) ranlib
 dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
 dnl AC_PROG_RANLIB
 
@@ -786,7 +786,7 @@ else
 fi
 AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
 
-dnl Now we know how big MPI_Offset is.  If it's less than 8 bytes 
+dnl Now we know how big MPI_Offset is.  If it is less than 8 bytes 
 dnl we have to disable support for CDF-2 and CDF-5 file formats
 if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
    AC_MSG_WARN("Unable to support CDF-2 and CDF-5 formats");
@@ -1245,7 +1245,7 @@ fi
 AC_MSG_CHECKING([whether test should be built and run])
 AC_ARG_ENABLE([testsets],
               [AS_HELP_STRING([--disable-testsets],
-                              [don't build or run netCDF tests])])
+                              [do not build or run netCDF tests])])
 test "x$enable_testsets" = xno || enable_testsets=yes
 build_tests=$enable_testsets
 AC_MSG_RESULT($build_tests)
