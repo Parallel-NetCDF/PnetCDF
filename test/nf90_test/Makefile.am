@@ -45,8 +45,6 @@ M4FLAGS += -I${top_srcdir}/m4
 .m4.F90:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-BUILT_SOURCES = $(M4SRCS_F90)
-
 check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT

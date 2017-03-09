@@ -37,7 +37,7 @@ TESTPROGRAMS = nc_test \
                tst_nofill
 
 nc_test_SOURCES = nc_test.c error.c util.c
-nodist_nc_test_SOURCES = $(M4_SRCS:.m4=.c)
+nodist_nc_test_SOURCES = $(M4_SRCS:.m4=.c) tests.h
 
 $(M4_SRCS:.m4=.c): Makefile
 
@@ -48,8 +48,6 @@ M4FLAGS += -I${top_srcdir}/m4
 
 tests.h: tests.h.m4 Makefile
 	$(M4) $(M4FLAGS) $< >$@
-
-BUILT_SOURCES = tests.h $(M4_SRCS:.m4=.c)
 
 check_PROGRAMS = $(TESTPROGRAMS)
 

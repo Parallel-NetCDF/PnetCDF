@@ -64,8 +64,6 @@ TESTS = seq_runs.sh
 nf_test_SOURCES = $(F_SRCS) fortlib.c
 nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
 
-BUILT_SOURCES = $(M4SRCS:.m4=.F)
-
 $(M4SRCS:.m4=.F): Makefile
 
 CLEANFILES = $(M4SRCS:.m4=.F) scratch.nc test.nc core core.*
