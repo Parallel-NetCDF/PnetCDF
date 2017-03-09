@@ -68,3 +68,4 @@ CLEANFILES = c0.nc c1.cdl c1.nc c2.cdl f0.nc \
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
+.PHONY: $(ncmpigen_LDADD)

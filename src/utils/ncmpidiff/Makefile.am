@@ -15,3 +15,4 @@ dist_man_MANS = ncmpidiff.1
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
+.PHONY: $(ncmpidiff_LDADD)

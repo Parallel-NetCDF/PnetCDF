@@ -30,3 +30,4 @@ test: $(bin_PROGRAMS)
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
+.PHONY: $(ncmpidump_LDADD)

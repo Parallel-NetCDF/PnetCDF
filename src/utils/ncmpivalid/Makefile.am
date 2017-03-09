@@ -17,3 +17,4 @@ dist_man_MANS = ncmpivalid.1
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
+.PHONY: $(ncmpivalid_LDADD)
