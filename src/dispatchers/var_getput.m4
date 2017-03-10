@@ -207,7 +207,7 @@ ifelse(`$3',`',`    /* use NC_NAT to represent this is a flexible API */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    reqs = (int*) malloc(nvars * sizeof(int));
+    reqs = (int*) malloc((size_t)nvars * sizeof(int));
     for (i=0; i<nvars; i++) {
         /* call the nonblocking subroutines */
         err = pncp->dispatch->i`$1'_var(pncp->ncp,

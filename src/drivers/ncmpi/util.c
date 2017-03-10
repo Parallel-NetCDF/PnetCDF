@@ -28,7 +28,7 @@ int ncmpii_sanity_check(NC                *ncp,
                         const MPI_Offset *stride,
                         const MPI_Offset  bufcount,
                         MPI_Datatype      buftype,  /* internal datatype */
-                        enum API_KIND     api,
+                        api_kind          api,
                         int               isFlexibleAPI,
                         int               mustInDataMode,
                         int               rw_flag,
