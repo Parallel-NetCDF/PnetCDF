@@ -605,8 +605,7 @@ load_netcdf(void *rec_start)
 {
     int i, idim;
     int stat = NC_NOERR;
-    MPI_Offset start[NC_MAX_VAR_DIMS];
-    MPI_Offset count[NC_MAX_VAR_DIMS];
+    MPI_Offset *start, *count;
     char *charvalp = NULL;
     short *shortvalp = NULL;
     int *intvalp = NULL;
@@ -657,6 +656,10 @@ load_netcdf(void *rec_start)
 	derror("Unhandled type %d\n", vars[varnum].type);
 	break;
     }
+
+    start = (MPI_Offset*) malloc(vars[varnum].ndims * 2 * sizeof(MPI_Offset));
+    count = start + vars[varnum].ndims;
+
     if (vars[varnum].ndims > 0) {
 	/* initialize start to upper left corner (0,0,0,...) */
 	start[0] = 0;
@@ -833,4 +836,5 @@ load_netcdf(void *rec_start)
                 break;
         }
     }
+    free(start);
 }
