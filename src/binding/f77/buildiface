@@ -1830,7 +1830,7 @@ sub addnull_ftoc {
         while (*p == ' ' && p > v$count) p--; /* find the last non-blank */
         p++;
         p$count = (char *) $malloc((size_t)(p-v$count) + 1);
-        memcpy(p$count, v$count, p-v$count);
+        memcpy(p$count, v$count, (size_t)(p-v$count));
         p$count\[p-v$count\] = 0; 
     }
 ";

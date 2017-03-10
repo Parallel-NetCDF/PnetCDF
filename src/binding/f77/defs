@@ -2420,7 +2420,7 @@ sub ncfxstrerror {
     const char *p = ncmpi_strerror( *v1 );
     size_t len = strlen(p);
     /* d2 is the length of the string passed into the routine */
-    if (len > (size_t)d2) len = d2;  /* MIN(len, d2) */
+    if (len > (size_t)d2) len = (size_t)d2;  /* MIN(len, d2) */
     memcpy(v2, p, len);
     /* Blank pad */
     if (len < (size_t)d2) memset(v2+len, ' ', (size_t)d2-len);
@@ -2442,7 +2442,7 @@ sub ncfxstrerrno {
     const char *p = ncmpi_strerrno( *v1 );
     size_t len = strlen(p);
     /* d2 is the length of the string passed into the routine */
-    if (len > (size_t)d2) len = d2;  /* MIN(len, d2) */
+    if (len > (size_t)d2) len = (size_t)d2;  /* MIN(len, d2) */
     memcpy(v2, p, len);
     /* Blank pad */
     if (len < (size_t)d2) memset(v2+len, ' ', (size_t)d2-len);
@@ -2482,7 +2482,7 @@ sub ncfxinqlibvers {
     const char *p = ncmpi_inq_libvers();
     size_t len = strlen(p);
     /* d1 is the length of the string passed into the routine */
-    if (len > (size_t)d1) len = d1;  /* MIN(len, d1) */
+    if (len > (size_t)d1) len = (size_t)d1;  /* MIN(len, d1) */
     memcpy(v1, p, len);
     /* Blank pad */
     if (len < (size_t)d1) memset(v1+len, ' ', (size_t)d1-len);
