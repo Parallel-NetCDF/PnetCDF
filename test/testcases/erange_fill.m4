@@ -151,7 +151,7 @@ int test_user_fill_$1(char* filename, $1 fillv) {
     err = ncmpi_inq_varid(ncid, "var", &varid); ERR
     err = GET_VAR($1)(ncid, varid, buf); ERR
     for (i=0; i<LEN; i++) {
-        if (memcmp(&buf[i], &fillv, ITYPE_SIZE($1))) {
+        if (buf[i] !=  fillv) {
             printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
                    __func__,__LINE__,i,($1)fillv,buf[i]);
             nerrs++;
