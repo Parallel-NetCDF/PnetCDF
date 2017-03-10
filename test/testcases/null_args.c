@@ -70,6 +70,8 @@ int main(int argc, char **argv)
     stride[0] = stride[1] = 1;
       imap[0] =   imap[1] = 1;
 
+    memset(buf, 0, 100*sizeof(int));
+
     /*---- test put_var1 ---- */
     err = ncmpi_put_var1_int(ncid, varid, start, buf);
     ERR(NC_NOERR, "put_var1")
