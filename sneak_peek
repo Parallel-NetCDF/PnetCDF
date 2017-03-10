@@ -46,6 +46,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Bug fixes
+    * Fix nc_test when running on an ARMv7 architecture, a raspberry pi, where
+      char is unsigned and is little Endian, 32-bit machine. See r2922.
     * Fix the missing byte-swap required for retrieving user-defined fill
       values. See r2864. This fix is critical when PnetCDF is configured with
       option erange-fill enabled (default mode) and the target platform is a
