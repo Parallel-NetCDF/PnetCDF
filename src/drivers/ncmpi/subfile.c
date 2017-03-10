@@ -348,7 +348,7 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
                     double yy = x*(double)(color+1);
                     min = (int)xx+(color==0||(xx-(int)xx==0.0)?0:1);
                     max = (int)yy-(yy-(int)yy==0.0?1:0);
-                    if (max >= dim_sz0) max = dim_sz0-1;
+                    if ((MPI_Offset)max >= dim_sz0) max = dim_sz0-1;
                     dim_sz = max-min+1;
                 }
 
@@ -369,7 +369,7 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
                     min = (int)xx+(jj==0||(xx-(int)xx==0.0)?0:1);
                     yy = x*(double)(jj+1);
                     max = (int)yy-(yy-(int)yy==0.0?1:0);
-                    if (max >= dim_sz0) max = dim_sz0-1;
+                    if ((MPI_Offset)max >= dim_sz0) max = dim_sz0-1;
 #ifdef SUBFILE_DEBUG
                     if (myrank == 0) printf("subfile(%d): min=%d, max=%d\n", jj, min, max);
 #endif
@@ -551,7 +551,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             if (max >= nprocs) max = nprocs-1;
             /* scaled = (double)rand()/RAND_MAX; */
             scaled = (double)myrank/ratio-(double)color;
-            aproc = (i==color)?myrank:(min+(max-min+1)*scaled);
+            aproc = (i==color)?myrank:((int)(min+(max-min+1)*scaled));
         }
         else if (delegate_scheme == ONE)
         {
@@ -599,7 +599,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                jj: traverse subfile range, incrementing sequentially
                kk: count belong to my subfile range */
             ii=start[jx], jj=sf_range[0], kk=0;
-            stride_count = (stride == NULL?1:stride[jx]);
+            stride_count = (stride == NULL) ? 1 : stride[jx];
             /* printf("stride_count[%d]=%d\n", jx, stride_count); */
 
             /* TODO: if sf_range is 1, count[] value is incorrect

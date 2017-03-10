@@ -476,7 +476,7 @@ ncmpii_i$1_var(void             *ncdp,
                MPI_Offset        bufcount,
                MPI_Datatype      buftype,
                int              *reqid,
-               int               api_kind,
+               api_kind          api,
                nc_type           itype)
 {
     int         status;
@@ -487,22 +487,22 @@ ncmpii_i$1_var(void             *ncdp,
     if (reqid != NULL) *reqid = NC_REQ_NULL;
 
     status = ncmpii_sanity_check(ncp, varid, start, count, stride,
-                                 bufcount, buftype, api_kind,
+                                 bufcount, buftype, api,
                                  (itype==NC_NAT), 0, ReadWrite($1),
                                  NONBLOCKING_IO, &varp);
     if (status != NC_NOERR) return status;
 
     _start = (MPI_Offset*)start;
     _count = (MPI_Offset*)count;
-         if (api_kind == API_VAR)  GET_FULL_DIMENSIONS(_start, _count)
-    else if (api_kind == API_VAR1) GET_ONE_COUNT(_count)
+         if (api == API_VAR)  GET_FULL_DIMENSIONS(_start, _count)
+    else if (api == API_VAR1) GET_ONE_COUNT(_count)
 
     status = ncmpii_igetput_varm(ncp, varp, _start, _count, stride, imap,
                                  (void*)buf, bufcount, buftype,
                                  reqid, ReadWrite($1), 0, 0);
 
-         if (api_kind == API_VAR)  NCI_Free(_start);
-    else if (api_kind == API_VAR1) NCI_Free(_count);
+         if (api == API_VAR)  NCI_Free(_start);
+    else if (api == API_VAR1) NCI_Free(_count);
 
     return status;
 }

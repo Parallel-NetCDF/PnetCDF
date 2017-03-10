@@ -798,7 +798,7 @@ extern int
 ncmpii_sanity_check(NC *ncp, int varid, const MPI_Offset *start,
                     const MPI_Offset *count, const MPI_Offset *stride,
                     MPI_Offset bufcount, MPI_Datatype buftype,
-                    enum API_KIND api, int isFlexibleAPI, int mustInDataMode,
+                    api_kind api, int isFlexibleAPI, int mustInDataMode,
                     int rw_flag, int io_method, NC_var **varp);
 
 extern char*

@@ -688,7 +688,7 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
         }
 
-        root_name = (char*) NCI_Malloc(root_name_len);
+        root_name = (char*) NCI_Malloc((size_t)root_name_len);
         root_name[0] = '\0';
         if (name != NULL) strcpy(root_name, name);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
@@ -723,7 +723,7 @@ err_check:
 
         /* check if dimids is consistent among all processes */
         if (root_ndims > 0) {
-            int *root_dimids = (int*)NCI_Malloc(root_ndims * sizeof(int));
+            int *root_dimids = (int*)NCI_Malloc((size_t)root_ndims * sizeof(int));
             if (dimids != NULL)
                 memcpy(root_dimids, dimids, (size_t)root_ndims*sizeof(int));
             else
@@ -986,7 +986,7 @@ err_check:
             return ncmpii_handle_error(mpireturn, "MPI_Bcast root_name_len");
         }
 
-        root_name = (char*) NCI_Malloc(root_name_len);
+        root_name = (char*) NCI_Malloc((size_t)root_name_len);
         root_name[0] = '\0';
         if (newname != NULL) strcpy(root_name, newname);
         TRACE_COMM(MPI_Bcast)(root_name, root_name_len, MPI_CHAR, 0, ncp->nciop->comm);
