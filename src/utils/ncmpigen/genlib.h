@@ -29,8 +29,8 @@ extern const char* ncatype ( nc_type  type );
 extern const char* nfstype ( nc_type  type );
 extern const char* nfftype ( nc_type  type );
 extern char* fstring ( nc_type  type, void* valp, int num );
-extern char* cstrstr ( const char* valp, MPI_Offset len );
-extern char* fstrstr ( const char* str, MPI_Offset ilen );
+extern char* cstrstr ( const char* valp, size_t len );
+extern char* fstrstr ( const char* str, size_t ilen );
 extern MPI_Offset nctypesize( nc_type type );
 
 extern void	derror ( const char *fmt, ... )
