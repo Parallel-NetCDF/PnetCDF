@@ -61,7 +61,8 @@
 }
 
 #define CHECK_GLOBAL_ATT_DIFF(type, func, nctype) {                    \
-    int   pos, len = attlen1 * sizeof(type);                           \
+    int pos;                                                           \
+    size_t len = (size_t)attlen1 * sizeof(type);                       \
     type *b1 = (type *)malloc(len);                                    \
     if (!b1) OOM_ERROR                                                 \
     type *b2 = (type *)malloc(len);                                    \
@@ -83,7 +84,8 @@
 }
 
 #define CHECK_VAR_ATT_DIFF(type, func, nctype) {                              \
-    int   pos, len = attlen1 * sizeof(type);                                  \
+    int pos;                                                                  \
+    size_t len = (size_t)attlen1 * sizeof(type);                              \
     type *b1 = (type *)malloc(len);                                           \
     if (!b1) OOM_ERROR                                                        \
     type *b2 = (type *)malloc(len);                                           \
@@ -105,7 +107,8 @@
 }
 
 #define CHECK_VAR_DIFF(type, func, nctype) {                                 \
-    int   pos, isDiff, len = varsize * sizeof(type);                         \
+    int pos, isDiff;                                                         \
+    size_t len = (size_t)varsize * sizeof(type);                             \
     type *b1 = (type *)malloc(len);                                          \
     if (!b1) OOM_ERROR                                                       \
     type *b2 = (type *)malloc(len);                                          \
@@ -197,7 +200,7 @@ get_var_names(char *optarg, struct vspec* vspecp)
         if (*cp == ',')
             nvars++;
 
-    vspecp->names = (char **) malloc(nvars * sizeof(char*));
+    vspecp->names = (char **) malloc((size_t)nvars * sizeof(char*));
     if (!vspecp->names) OOM_ERROR
 
     cpp = vspecp->names;
@@ -370,12 +373,12 @@ int main(int argc, char **argv)
 
             if (attlen1 != attlen2) {
                 if (!quiet) printf("DIFF: global attribute \"%s\" length (%lld) != (%lld)\n",
-                       name1,(long long int)attlen1,(long long int)attlen2);
+                       name1,attlen1,attlen2);
                 numHeadDIFF++;
                 continue;
             }
             else if (verbose)
-                printf("\tSAME: length (%lld)\n",(long long int)attlen1);
+                printf("\tSAME: length (%lld)\n",attlen1);
 
             switch (type1) {
                 case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text,      NC_CHAR)
@@ -447,7 +450,7 @@ int main(int argc, char **argv)
         for (i=0; i<nvars1; i++) {
             int varid;
             err = ncmpi_inq_varndims(ncid1, i, &ndims1); HANDLE_ERROR
-            dimids1 = (int*) malloc(ndims1 * sizeof(int));
+            dimids1 = (int*) malloc((size_t)ndims1 * sizeof(int));
             if (!dimids1) OOM_ERROR
             err = ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
             HANDLE_ERROR
@@ -461,7 +464,7 @@ int main(int argc, char **argv)
                 continue;
             }
             err = ncmpi_inq_varndims(ncid2, varid, &ndims2); HANDLE_ERROR
-            dimids2 = (int*) malloc(ndims2 * sizeof(int));
+            dimids2 = (int*) malloc((size_t)ndims2 * sizeof(int));
             if (!dimids2) OOM_ERROR
             err = ncmpi_inq_var(ncid2, varid, name2, &type2, &ndims2, dimids2, &natts2);
             HANDLE_ERROR
@@ -605,7 +608,7 @@ int main(int argc, char **argv)
     if (check_entire_file) { /* header has been checked */
         ncmpi_inq_nvars(ncid1, &nvars);
         var_list.nvars = nvars;
-        var_list.names = (char**) malloc(nvars * sizeof(char*));
+        var_list.names = (char**) malloc((size_t)nvars * sizeof(char*));
         if (!var_list.names) OOM_ERROR
         /* get all the variable names from file1 */
         for (i=0; i<nvars; i++) {
@@ -639,12 +642,12 @@ int main(int argc, char **argv)
             continue;
         }
         err = ncmpi_inq_varndims(ncid1, varid1, &ndims1); HANDLE_ERROR
-        dimids1 = (int*) malloc(ndims1 * sizeof(int));
+        dimids1 = (int*) malloc((size_t)ndims1 * sizeof(int));
         if (!dimids1) OOM_ERROR
         err = ncmpi_inq_var(ncid1, varid1, name1, &type1, &ndims1, dimids1, &natts1);
         HANDLE_ERROR
         err = ncmpi_inq_varndims(ncid2, varid2, &ndims2); HANDLE_ERROR
-        dimids2 = (int*) malloc(ndims2 * sizeof(int));
+        dimids2 = (int*) malloc((size_t)ndims2 * sizeof(int));
         if (!dimids2) OOM_ERROR
         err = ncmpi_inq_var(ncid2, varid2, name2, &type2, &ndims2, dimids2, &natts2);
         HANDLE_ERROR
@@ -679,7 +682,7 @@ int main(int argc, char **argv)
         else if (!check_header && !rank && verbose)
             printf("\tSAME: number of dimensions (%d)\n",ndims1);
 
-        shape = (MPI_Offset*) calloc(ndims1 * 2, sizeof(MPI_Offset));
+        shape = (MPI_Offset*) calloc((size_t)ndims1 * 2, sizeof(MPI_Offset));
         if (!shape) OOM_ERROR
         start = shape + ndims1;
 
