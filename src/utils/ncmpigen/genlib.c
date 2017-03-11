@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <ctype.h>	/* for isprint() */
 #ifndef NO_STDARG
 #include	<stdarg.h>
@@ -458,7 +459,8 @@ gen_c(
 	cline("   /* assign attributes */");
 	for (iatt = 0; iatt < natts; iatt++) {
 	    if (atts[iatt].type == NC_CHAR) { /* string */
-		val_string = cstrstr((char *) atts[iatt].val, atts[iatt].len);
+		assert(atts[iatt].len == (size_t)atts[iatt].len);
+		val_string = cstrstr((char *) atts[iatt].val, (size_t)atts[iatt].len);
 		sprintf(stmnt,
 			"   stat = ncmpi_put_att_text(ncid, %s%s, \"%s\", %lu, %s);",
 			atts[iatt].var == -1 ? "NC_GLOBAL" : vars[atts[iatt].var].lname,
@@ -849,7 +851,8 @@ gen_fortran(
 	fline("* assign attributes");
 	for (iatt = 0; iatt < natts; iatt++) {
 	    if (atts[iatt].type == NC_CHAR) { /* string */
-		val_string = fstrstr((char *) atts[iatt].val, atts[iatt].len);
+		assert(atts[iatt].len == (size_t)atts[iatt].len);
+		val_string = fstrstr((char *) atts[iatt].val, (size_t)atts[iatt].len);
 		sprintf(stmnt, 
 			"iret = nfmpi_put_att_text(ncid, %s%s, \'%s\', %lu, %s)",
 			atts[iatt].var == -1 ? "NF_GLOBAL" : vars[atts[iatt].var].lname,
@@ -1173,7 +1176,7 @@ fstring(
 char *
 cstrstr(
      const char *valp,		/* pointer to vector of characters*/
-     MPI_Offset len)		/* number of characters in valp */
+     size_t len)		/* number of characters in valp */
 {
     static char *sp;
     char *cp;
@@ -1242,7 +1245,7 @@ cstrstr(
 char *
 fstrstr(
      const char *str,			/* pointer to vector of characters */
-     MPI_Offset ilen)			/* number of characters in istr */
+     size_t ilen)			/* number of characters in istr */
 {
     static char *ostr;
     char *cp, tstr[12];
@@ -1250,10 +1253,6 @@ fstrstr(
     char *istr, *istr0;		/* for null-terminated copy */
     int ii;
 
-    if(12*ilen != (MPI_Offset)(12*ilen)) {
-	derror("too much character data!");
-	exit(9);
-    }
     istr0 = istr = (char *) emalloc(ilen + 1);
     for(ii = 0; ii < ilen; ii++) {
 	istr[ii] = str[ii];
