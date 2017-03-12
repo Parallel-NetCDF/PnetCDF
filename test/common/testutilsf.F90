@@ -16,11 +16,21 @@
           implicit none
           integer iargc
 #endif
-          integer argc
+          integer argc, i
           character(len=*) cmd, filename
+          character(len=256) full_cmd
 
           get_args = 1
-          call getarg(0, cmd)
+          call getarg(0, full_cmd)
+
+          ! remove basename from executable name
+          i = INDEX(full_cmd, "/", .TRUE.)
+          if (i .EQ. 0) then
+              cmd(:) = full_cmd(:)
+          else
+              cmd(:) = full_cmd(i+1:)
+          endif
+
           argc = IARGC()
           if (argc .GT. 1) then
               print*,'Usage: ',trim(cmd),' [filename]'
