@@ -20,7 +20,7 @@ dnl as AM_INIT_AUTOMAKE modfies command line $*
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
 dnl AM_INIT_AUTOMAKE([subdir-objects])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([1.13])
 dnl enable silent rules by default 
 AM_SILENT_RULES([yes])
 
@@ -31,7 +31,7 @@ AM_MAINTAINER_MODE([enable])
 m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
 
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
-dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
+m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
 
 dnl parse the version numbers to 4 env variables
 PNETCDF_VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
@@ -1097,31 +1097,11 @@ dnl After all other tests, optionally enable coverage,  we do this last
 dnl because legend has it that sometimes on some compilers the coverage flags
 dnl mess up other checks
 dnl
-AC_ARG_ENABLE([coverage],
-   [AS_HELP_STRING([--enable-coverage],
-       [Compile with coverage support (gcc-based only). @<:@default: disabled@:>@])],
-   [enable_coverage=${enableval}], [enable_coverage=no]
-)
-if test "x${enable_coverage}" = xyes; then
-   if test "x${GCC}" = xyes; then
-       dnl it is GNU compiler
-       LCOV_FLAGS="-pg -fprofile-arcs -ftest-coverage --coverage -O0"
-       CFLAGS="${CFLAGS} ${LCOV_FLAGS}"
-       if test "x${has_mpicxx}" = xyes ; then
-          CXXFLAGS="${CXXFLAGS} ${LCOV_FLAGS}"
-       fi
-       if test "x${enable_fortran}" = xyes ; then
-            FFLAGS="${FFLAGS}   ${LCOV_FLAGS}"
-           FCFLAGS="${FCFLAGS}  ${LCOV_FLAGS}"
-       fi
-       LCOV_LIB=-lgcov
-       AC_SUBST(LCOV_LIB)
-   else
-      AC_MSG_WARN([--enable-coverage is for GNU compiler only])
-      enable_coverage=no
-   fi
+if test "x${enable_fortran}" = xyes ; then
+   enable_f77=yes
+   enable_fc=yes
 fi
-AM_CONDITIONAL(ENABLE_COVERAGE, [test x$enable_coverage = xyes])
+PAC_ENABLE_COVERAGE
 
 if test "x${has_mpicxx}" = xyes ; then
    UD_CXX_MACRO_FUNC
@@ -1466,8 +1446,9 @@ echo "\
    Now type 'make' to build the library and utility tools and then
    type 'make @<:@<target>@:>@' for testing and installation,
        where the optional <target> is:
-           check            - test PnetCDF build for sequential run
-           ptest            - test PnetCDF build for parallel run
+           check            - run sequential test programs
+           tests            - build all test programs
+           ptest            - run parallel test programs on 4 MPI processes
            install          - install PnetCDF
 ------------------------------------------------------------------------------"
 
