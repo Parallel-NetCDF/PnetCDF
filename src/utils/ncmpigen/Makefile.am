@@ -65,7 +65,8 @@ CLEANFILES = c0.nc c1.cdl c1.nc c2.cdl f0.nc \
 # 	@echo 1>&2 "It must be recreated via POSIX lex(1) on a VMS system"
 # 	false
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
-.PHONY: $(ncmpigen_LDADD)

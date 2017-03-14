@@ -42,7 +42,7 @@ fill_mode_SOURCES = fill_mode.f90 utils.F90
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
-CLEANFILES = *.nc core core.*
+CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | sed -e 's/NP/4/g'`
 TESTMPIRUN8  = `echo $(TESTMPIRUN) | sed -e 's/NP/8/g'`
@@ -82,8 +82,9 @@ ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:
 
 # build check targets but not invoke
-tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10 $(LDADD)
+tests-local: all $(check_PROGRAMS)
+
+.PHONY: ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

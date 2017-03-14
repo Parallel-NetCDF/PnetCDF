@@ -27,7 +27,9 @@ test: $(bin_PROGRAMS)
 	./$(bin_PROGRAMS) test1.nc > test2.cdl
 	@cmp test1.cdl test2.cdl && \
 	     echo "*** $(bin_PROGRAMS) test successful ***"
+
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
-.PHONY: $(ncmpidump_LDADD)

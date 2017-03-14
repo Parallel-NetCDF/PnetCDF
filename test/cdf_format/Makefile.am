@@ -9,6 +9,7 @@
 SUFFIXES = .o .c
 
 AM_CPPFLAGS = -I$(srcdir)/../common
+
 LDADD = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 if DECL_MPI_OFFSET
@@ -35,7 +36,7 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = seq_runs.sh
 
-CLEANFILES = testfile.nc core core.*
+CLEANFILES = testfile.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = seq_runs.sh test_cdf1.nc test_cdf2.nc test_cdf5.nc
 
@@ -50,8 +51,9 @@ ptest ptests ptest4: $(TESTPROGRAMS)
 ptest2 ptest6 ptest8 ptest10:
 
 # build check targets but not invoke
-tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10 $(LDADD)
+tests-local: all $(check_PROGRAMS)
+
+.PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

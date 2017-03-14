@@ -80,11 +80,11 @@ if HAS_FORTRAN
                    put_parameter \
                    test_vardf
 
-   varn_intf_SOURCES = varn_intf.f
-   attrf_SOURCES = attrf.f
+       varn_intf_SOURCES = varn_intf.f
+           attrf_SOURCES = attrf.f
    buftype_freef_SOURCES = buftype_freef.f
    put_parameter_SOURCES = put_parameter.f
-   test_vardf_SOURCES = test_vardf.F
+      test_vardf_SOURCES = test_vardf.F
 if HAVE_MPI_MOD
    TESTPROGRAMS += inq_num_varsf \
                    inq_recsizef \
@@ -92,9 +92,9 @@ if HAVE_MPI_MOD
                    varn_real
 
    inq_num_varsf_SOURCES = inq_num_varsf.f90
-   inq_recsizef_SOURCES = inq_recsizef.f90
-   test_vardf90_SOURCES = test_vardf90.f90
-   varn_real_SOURCES = varn_real.f90
+    inq_recsizef_SOURCES = inq_recsizef.f90
+    test_vardf90_SOURCES = test_vardf90.f90
+       varn_real_SOURCES = varn_real.f90
 endif
 if BUILD_LARGE_FILE_TEST
    TESTPROGRAMS += bigrecords
@@ -115,7 +115,7 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = seq_runs.sh
 
-CLEANFILES = $(M4_SRCS:.m4=.c) *.nc core core.*
+CLEANFILES = $(M4_SRCS:.m4=.c) *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump
 
@@ -146,8 +146,9 @@ ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:
 
 # build check targets but not invoke
-tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10 $(LDADD)
+tests-local: all $(check_PROGRAMS)
+
+.PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

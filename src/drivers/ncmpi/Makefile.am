@@ -85,6 +85,8 @@ EXTRA_DIST = $(M4_HFILES) \
              $(M4_SRCS) \
              subfile.c
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 

@@ -39,5 +39,7 @@ mpifnetcdf.h: defs buildiface $(PNETCDF_HEADER)
 	$(srcdir)/buildiface -infile=$(PNETCDF_HEADER) -deffile=$(srcdir)/defs > allf.c
 	@touch $(C2F_SRCS)
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

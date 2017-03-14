@@ -28,6 +28,8 @@ pnetcdf_version$(EXEEXT): pnetcdf_version.c
 
 dist_man_MANS = pnetcdf_version.1
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 

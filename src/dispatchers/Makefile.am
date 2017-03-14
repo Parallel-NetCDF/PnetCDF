@@ -39,6 +39,8 @@ $(M4_SRCS:.m4=.c): Makefile
 .m4.c:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 

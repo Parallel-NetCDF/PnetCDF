@@ -57,5 +57,7 @@ $(CXX_HEADER): $(HPP_FILES) Makefile
 	sed -e '/#ifndef/d' -e '/#define/d' -e '/#endif/d' -e '/#include/d' $(srcdir)/$$i >> $@ ; \
 	) ; done
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

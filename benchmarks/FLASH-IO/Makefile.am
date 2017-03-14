@@ -58,8 +58,9 @@ ptests ptest ptest4: $(check_PROGRAMS)
 ptest2 ptest6 ptest8 ptest10:
 
 # build check targets but not invoke
-tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
+tests-local: all $(check_PROGRAMS)
+
+.PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

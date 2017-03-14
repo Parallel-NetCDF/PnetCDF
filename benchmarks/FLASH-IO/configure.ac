@@ -10,6 +10,9 @@ AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
 AC_CONFIG_MACRO_DIRS([m4])
 
+dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
+m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
+
 dnl line below indicates this is not built as part of PnetCDF testsets
 AM_CONDITIONAL(BUILD_TESTSETS, [false])
 
@@ -212,9 +215,6 @@ fi
 TESTMPIRUN4="${TESTMPIRUN} -n 4"
 AC_SUBST(TESTMPIRUN4)
 AC_SUBST(TESTOUTDIR)
-
-LCOV_LIB=
-AC_SUBST(LCOV_LIB)
 
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT
