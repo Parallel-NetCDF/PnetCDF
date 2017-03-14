@@ -27,7 +27,7 @@ check_PROGRAMS = $(TESTPROGRAMS)
 
 TESTS = seq_runs.sh
 
-CLEANFILES = *.nc core core.*
+CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = README seq_runs.sh
 
@@ -48,8 +48,9 @@ ptests: ptest2 ptest4
 ptest6 ptest8 ptest10:
 
 # build check targets but not invoke
-tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10 $(LDADD)
+tests-local: all $(check_PROGRAMS)
+
+.PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

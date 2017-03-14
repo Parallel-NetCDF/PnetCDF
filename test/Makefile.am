@@ -36,12 +36,12 @@ SUBDIRS += subfile
 endif
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
-TESTS_DIRS = $(SUBDIRS:%=tests-%)
-tests: $(TESTS_DIRS)
-$(TESTS_DIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
+# TESTS_DIRS = $(SUBDIRS:%=tests-%)
+# tests: $(TESTS_DIRS)
+# $(TESTS_DIRS): 
+# 	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
 
-if ENABLE_COVERAGE
+if BUILD_COVERAGE
    PTEST_SUBDIRS =
 else
    PTEST_SUBDIRS = $(SUBDIRS)
@@ -65,7 +65,7 @@ ptests:
 	  done ) ; \
 	done ;
 
-.PHONY: tests ptest ptests
+.PHONY: ptest ptests
 
 .NOTPARALLEL:
 

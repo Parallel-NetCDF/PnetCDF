@@ -14,6 +14,8 @@ ncoffsets$(EXEEXT): ncoffsets.c
 
 dist_man_MANS = ncoffsets.1
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 

@@ -50,13 +50,13 @@ EXTRA_DIST = COPYRIGHT \
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
 # AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13.
-TESTS_SUBDIRS = test examples benchmarks
-TESTS_DIRS = $(TESTS_SUBDIRS:%=tests-%)
-tests: all $(TESTS_DIRS)
-$(TESTS_DIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
+# TESTS_SUBDIRS = test examples benchmarks
+# TESTS_DIRS = $(TESTS_SUBDIRS:%=tests-%)
+# tests: all $(TESTS_DIRS)
+# $(TESTS_DIRS): 
+# 	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
 
-if ENABLE_COVERAGE
+if BUILD_COVERAGE
    PTEST_SUBDIRS =
 else
    PTEST_SUBDIRS = test examples benchmarks

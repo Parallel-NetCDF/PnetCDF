@@ -6,53 +6,54 @@
 #
 # @configure_input@
 
-srcdir  = @srcdir@
-VPATH   = @srcdir@
+SUFFIXES = .o .c
 
-include ../../macros.make
+AM_DEFAULT_SOURCE_EXT = .c
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-LDFLAGS  := $(LDFLAGS) -L../common
-LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+AM_CPPFLAGS = -I$(srcdir)/../common
+LDADD = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 
-SRCS      = test_read.c \
-            test_read_indep.c \
-            test_write.c \
-            test_write_indep.c
+if DECL_MPI_OFFSET
+   AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
+endif
 
-OBJS      = $(SRCS:.c=.o)
-PROGS     = $(SRCS:.c=)
+TESTPROGRAMS = test_read \
+               test_read_indep \
+               test_write \
+               test_write_indep
 
-GARBAGE      = $(PROGS)
-PACKING_LIST = $(SRCS) Makefile.in README
+check_PROGRAMS = $(TESTPROGRAMS)
 
-all: $(PROGS)
-	set -e; cd ../data && $(MAKE) $(MFLAGS) all
+# autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
+# For newer versions, we can use AM_TESTS_ENVIRONMENT instead
+# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+# AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+# AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-$(OBJS): $(srcdir)/../common/testutils.h
+# TESTS = seq_runs.sh
+# EXTRA_DIST = seq_runs.sh
+EXTRA_DIST = README
 
-$(PROGS): ../common/libtestutils.a
+CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
-../common/libtestutils.a:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) all
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-test_read: test_read.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+ptest ptests ptest4: $(TESTPROGRAMS)
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	) ; done
 
-test_read_indep: test_read_indep.o  $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+ptest2 ptest6 ptest8 ptest10:
 
-test_write: test_write.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+# build check targets but not invoke
+tests-local: all $(check_PROGRAMS)
 
-test_write_indep: test_write_indep.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+.PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
-testing check verbose_testing:
-
-ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
-
-include $(srcdir)/../../rules.make
-
-$(LIBRARY): ;
+dist-hook:
+	-rm -rf `find $(distdir) -name .svn`
 

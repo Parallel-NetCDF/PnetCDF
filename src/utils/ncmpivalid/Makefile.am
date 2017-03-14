@@ -14,7 +14,8 @@ ncmpivalid_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 
 dist_man_MANS = ncmpivalid.1
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
-.PHONY: $(ncmpivalid_LDADD)

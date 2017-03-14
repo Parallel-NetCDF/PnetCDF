@@ -22,7 +22,7 @@ tests: $(TESTS_DIRS)
 $(TESTS_DIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
 
-if ENABLE_COVERAGE
+if BUILD_COVERAGE
    PTEST_SUBDIRS =
 else
    PTEST_SUBDIRS = $(SUBDIRS)

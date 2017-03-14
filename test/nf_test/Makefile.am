@@ -66,7 +66,8 @@ nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
 
 $(M4SRCS:.m4=.F): Makefile
 
-CLEANFILES = $(M4SRCS:.m4=.F) scratch.nc test.nc core core.*
+CLEANFILES = $(M4SRCS:.m4=.F) scratch.nc test.nc core core.* \
+             *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = $(M4SRCS) $(HFILES) README seq_runs.sh
 
@@ -77,8 +78,9 @@ EXTRA_DIST = $(M4SRCS) $(HFILES) README seq_runs.sh
 ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
 # build check targets but not invoke
-tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10 $(LDADD)
+tests-local: all $(check_PROGRAMS)
+
+.PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

@@ -6,7 +6,7 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .c
+SUFFIXES = .o .c .h .m4
 
 AM_DEFAULT_SOURCE_EXT = .c
 
@@ -66,7 +66,8 @@ TESTS = seq_runs.sh
 
 CLEANFILES = tests.h $(M4_SRCS:.m4=.c) \
              test.nc testfile.nc scratch.nc testfile.nc.2 \
-             testfile.nc.nofill testfile.nc.fill core core.*
+             testfile.nc.nofill testfile.nc.fill core core.* \
+             *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = error.h $(M4_SRCS) $(M4_HFILES) README seq_runs.sh
 
@@ -77,8 +78,9 @@ EXTRA_DIST = error.h $(M4_SRCS) $(M4_HFILES) README seq_runs.sh
 ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
 # build check targets but not invoke
-tests: $(check_PROGRAMS)
-.PHONY: tests ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10 $(LDADD)
+tests-local: all $(check_PROGRAMS)
+
+.PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`

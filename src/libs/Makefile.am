@@ -24,7 +24,8 @@ libpnetcdf_la_LIBADD += ../binding/f77/libpnetcdff.la ../binding/f90/libpnetcdff
 # nodist_EXTRA_libpnetcdf_la_SOURCES += dummyf90.f90
 endif
 
+tests-local: all
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
-.PHONY: $(libpnetcdf_la_LIBADD)
