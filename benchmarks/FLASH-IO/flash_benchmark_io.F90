@@ -54,7 +54,7 @@
             basenm = "flash_io_test_"
             if (argc .EQ. 1) then
                call getarg(1, basenm)
-            else
+            else if (argc .EQ. 2) then
                verbose = .FALSE.
                call getarg(2, basenm)
             endif
