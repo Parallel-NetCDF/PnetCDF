@@ -6,7 +6,7 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .c .f .f90
+SUFFIXES = .o .c .f .f90 .F90
 
 AM_DEFAULT_SOURCE_EXT = .c
 
@@ -38,11 +38,16 @@ check_PROGRAMS = pnetcdf-write-from-master \
 if HAS_FORTRAN
 check_PROGRAMS += pnetcdf-write-bufferedf77
 pnetcdf_write_bufferedf77_SOURCES = pnetcdf-write-bufferedf77.f
+pnetcdf_write_bufferedf77_LDADD = $(LDADD) ../F77/utils.o
 if HAVE_MPI_MOD
 check_PROGRAMS += pnetcdf-write-bufferedf
 pnetcdf_write_bufferedf_SOURCES = pnetcdf-write-bufferedf.f90
+pnetcdf_write_bufferedf_LDADD = $(LDADD) ../F77/utils.o
 endif
 endif
+
+../F77/utils.o:
+	set -e; cd ../F77 && $(MAKE) $(MFLAGS) utils.o
 
 # parallel runs only
 # TESTS = $(check_PROGRAMS)

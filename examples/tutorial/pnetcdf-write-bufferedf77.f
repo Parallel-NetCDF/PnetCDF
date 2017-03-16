@@ -11,45 +11,53 @@
       include "pnetcdf.inc"
 
       integer i, j, ncid, varid, cmode, err, rank, nprocs
+      integer ierr, dummy, get_args
       integer dimid(2), req(2), status(2)
-      integer*8 start(2)
-      integer*8 count(2)
-      integer*8 stride(2)
-      integer*8 imap(2)
-      integer*8 bufsize
-      integer*8 put_size, dim_size
+      integer*8 start(2), count(2), stride(2), imap(2)
+      integer*8 bufsize, put_size, dim_size
       real  var(6,4)
-      character*256 filename
+      character*256 filename, cmd
+      logical verbose
 
       call MPI_INIT(err)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
 
-      filename = "testfile.nc"
+      ! take filename from command-line argument if there is any
+      if (rank .EQ. 0) then
+          filename = "testfile.nc"
+          ierr = get_args(2, cmd, filename, verbose, dummy)
+      endif
+      call MPI_Bcast(ierr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+      if (ierr .EQ. 0) goto 999
+
+      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+     +               err)
+
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
      +                   MPI_INFO_NULL, ncid)
       if (err .NE. NF_NOERR) print*,'Error at nfmpi_create ',
-     +                           nfmpi_strerror(err)
+     +                              nfmpi_strerror(err)
 
       ! define a variable of a (4*nprocs) x 6 integer array in the nc file
       dim_size = 4
       err = nfmpi_def_dim(ncid, 'X', dim_size*nprocs, dimid(1))
       if (err .NE. NF_NOERR) print*,'Error at nfmpi_def_dim ',
-     +                           nfmpi_strerror(err)
+     +                              nfmpi_strerror(err)
 
       dim_size = 6
       err = nfmpi_def_dim(ncid, 'Y', dim_size, dimid(2))
       if (err .NE. NF_NOERR) print*,'Error at nfmpi_def_dim ',
-     +                           nfmpi_strerror(err)
+     +                              nfmpi_strerror(err)
 
       err = nfmpi_def_var(ncid, 'var', NF_INT64, 2, dimid, varid)
       if (err .NE. NF_NOERR) print*,'Error at nfmpi_def_var ',
-     +                           nfmpi_strerror(err)
+     +                              nfmpi_strerror(err)
 
       err = nfmpi_enddef(ncid)
       if (err .NE. NF_NOERR) print*,'Error at nfmpi_enddef ',
-     +                           nfmpi_strerror(err)
+     +                              nfmpi_strerror(err)
 
       ! set the contents of the local write buffer var, a 4 x 6 real array
       ! for example, for rank == 2, var(4,6) =
@@ -144,6 +152,6 @@
       if (err .NE. NF_NOERR) print*,'Error at nfmpi_close ',
      +                           nfmpi_strerror(err)
 
-      CALL MPI_Finalize(err)
+ 999  CALL MPI_Finalize(err)
       end ! program
 

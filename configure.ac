@@ -1443,12 +1443,12 @@ if test "x${LIBS}" != x ; then
 fi
 echo "\
 
-   Now type 'make' to build the library and utility tools and then
-   type 'make @<:@<target>@:>@' for testing and installation,
-       where the optional <target> is:
-           check            - run sequential test programs
-           tests            - build all test programs
-           ptest            - run parallel test programs on 4 MPI processes
-           install          - install PnetCDF
+   Now run 'make' to build the library and utility tools.
+   Then run 'make @<:@<target>@:>@' for testing and installation, where the
+   optional <target> can be:
+        check     - build and run sequential test programs
+        ptest     - build and run parallel test programs on 4 MPI processes
+        tests     - build all test programs (build only, no run)
+        install   - install PnetCDF library in ${prefix}
 ------------------------------------------------------------------------------"
 

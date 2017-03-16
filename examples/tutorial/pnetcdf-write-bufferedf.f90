@@ -11,6 +11,7 @@
       implicit none
 
       integer i, j, ncid, varid, cmode, err, rank, nprocs
+      integer ierr, get_args, dummy
       integer dimid(2), req(2), status(2)
       integer(kind=MPI_OFFSET_KIND) start(2)
       integer(kind=MPI_OFFSET_KIND) count(2)
@@ -19,13 +20,23 @@
       integer(kind=MPI_OFFSET_KIND) bufsize
       integer(kind=MPI_OFFSET_KIND) put_size
       real  var(6,4)
-      character(len=256) filename
+      character(len=256) filename, cmd
+      logical verbose
 
       call MPI_INIT(err)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
 
-      filename = "testfile.nc"
+      ! take filename from command-line argument if there is any
+      if (rank .EQ. 0) then
+          filename = "testfile.nc"
+          ierr = get_args(2, cmd, filename, verbose, dummy)
+      endif
+      call MPI_Bcast(ierr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+      if (ierr .EQ. 0) goto 999
+
+      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, err)
+
       cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
       err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
                          MPI_INFO_NULL, ncid)
@@ -142,6 +153,6 @@
       if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &
                                    nf90mpi_strerror(err)
 
-      CALL MPI_Finalize(err)
+ 999  CALL MPI_Finalize(err)
       end program
 
