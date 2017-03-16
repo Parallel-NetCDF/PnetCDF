@@ -43,7 +43,7 @@
       ! root process reads command-line arguments
       if (MyPE .EQ. MasterPE) then
          isArgvRight = .TRUE.
-         argc = IARGC()
+         argc = IARGC()   ! IARGC() does not count the executable name
          call getarg(0, executable)
          if (argc .GT. 2) then
             print *, &
