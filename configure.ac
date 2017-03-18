@@ -778,36 +778,33 @@ fi
 AC_SUBST(PNETCDF_DEBUG)
 AM_CONDITIONAL(PNETCDF_DEBUG, [test x"$PNETCDF_DEBUG" = x1])
 
+dnl check the size of MPI_Offset. PnetCDF requires it be 8 bytes.
 AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
 if test "x${ac_cv_type_MPI_Offset}" = xyes; then
    AC_CHECK_SIZEOF([MPI_Offset], [], [#include <mpi.h>])
 else
    AC_MSG_ERROR([Unable to find type MPI_Offset in mpi.h])
 fi
-AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
-
-dnl Now we know how big MPI_Offset is.  If it is less than 8 bytes 
-dnl we have to disable support for CDF-2 and CDF-5 file formats
 if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
-   AC_MSG_WARN("Unable to support CDF-2 and CDF-5 formats");
-   enable_cdf_2_n_5=no
-else
-   AC_DEFINE(ENABLE_CDF5,,[Define if able to support CDF-5 file format])
-   enable_cdf_2_n_5=yes
+   AC_MSG_ERROR([
+         ------------------------------------------------------------
+           Building of Parallel NetCDF cannot continue due to the
+           size of MPI_Offset being less than 8 bytes. Please use
+           an MPI library that supports large files.
+         ------------------------------------------------------------])
 fi
 
-SIZEOF_MPI_AINT_IS_4=no
-if test "x$ac_cv_sizeof_MPI_Aint" = x4; then
-   SIZEOF_MPI_AINT_IS_4=yes
-fi
-AC_SUBST(SIZEOF_MPI_AINT_IS_4)
-AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$SIZEOF_MPI_AINT_IS_4 = xyes])
+AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
+AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$ac_cv_sizeof_MPI_Aint = x4])
 
 dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
 dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
 dnl get mangled. 
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
-   AC_MSG_WARN(MPI_Offset and MPI_Aint are detected of different sizes: the request aggregation in non-blocking APIs is thus disabled)
+   AC_MSG_WARN([
+           MPI_Offset and MPI_Aint are detected of different sizes.
+           The request aggregation feature in non-blocking APIs is
+           thus disabled.])
    enable_aggregation=no
 else
    AC_DEFINE(ENABLE_REQ_AGGREGATION,,[Define if able to support request aggregation in nonblocking routines])
@@ -1371,8 +1368,7 @@ echo \
               Build static libraries                            - ${enable_static}
               Build shared libraries                            - ${enable_shared}
               Build Fortran APIs                                - ${enable_fortran}
-              Build C++ APIs                                    - ${has_mpicxx}
-              Build CDF-2 and CDF-5 support                     - ${enable_cdf_2_n_5}"
+              Build C++ APIs                                    - ${has_mpicxx}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
               Request aggregation in nonblocking APIs           - $no"

@@ -12,6 +12,10 @@ AM_DEFAULT_SOURCE_EXT = .f
 AM_FFLAGS = -I$(top_builddir)/src/binding/f77
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la
 
+if SIZEOF_MPI_AINT_IS_4
+   AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
+endif
+
 check_PROGRAMS = nonblocking_write \
                  column_wise \
                  block_cyclic \
