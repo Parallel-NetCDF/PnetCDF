@@ -401,7 +401,8 @@ ncmpii_wait(void *ncdp,
 
         for (i=0; i<num_reqs; i++) { /* serve one request at a time */
             if (reqids == NULL)
-                err = ncmpiio_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+                err = ncmpiio_wait(ncp, INDEP_IO, 1, &req_ids[i],
+                      (statuses == NULL) ? NULL : &statuses[i]);
             else
                 err = ncmpiio_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
             if (status == NC_NOERR) status = err;
@@ -439,7 +440,7 @@ ncmpii_wait(void *ncdp,
 
         /* must enter independent mode, as num_reqs may be different among
            processes */
-        err = ncmpi_begin_indep_data(ncid);
+        err = ncmpii_begin_indep_data(ncp);
         if (status == NC_NOERR) status = err;
 
         if (num_reqs <= NC_REQ_ALL) { /* flush all pending requests */
@@ -450,7 +451,8 @@ ncmpii_wait(void *ncdp,
 
         for (i=0; i<num_reqs; i++) { /* serve one request at a time */
             if (reqids == NULL)
-                err = ncmpiio_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+                err = ncmpiio_wait(ncp, INDEP_IO, 1, &req_ids[i],
+                      (statuses == NULL) ? NULL : &statuses[i]);
             else
                 err = ncmpiio_wait(ncp, INDEP_IO, 1, &reqids[i], NULL);
             if (status == NC_NOERR) status = err;
@@ -458,7 +460,7 @@ ncmpii_wait(void *ncdp,
         if (reqids != NULL) NCI_Free(reqids);
 
         /* return to collective data mode */
-        err = ncmpi_end_indep_data(ncid);
+        err = ncmpii_end_indep_data(ncp);
         if (status == NC_NOERR) status = err;
 
         return status; /* return the first error encountered, if there is any */
