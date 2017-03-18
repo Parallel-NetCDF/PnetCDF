@@ -10,6 +10,12 @@ This is essentially a placeholder for the next release note ...
       degradation.
 
   o New Limitation
+    * PnetCDF now requires the size of MPI_Offset be 8 bytes. Building PnetCDF
+      will be aborted if MPI_Offset is detected to be of size 4 bytes. See
+      revision r2944.  It was recently found that OpenMPI versions 2.0.2 and
+      1.10.6 on 32-bit machines configure MPI_Offset as a 4-byte integer, even
+      if the 32-bit machines support large files. See the discussion thread in
+      OpenMPI: https://github.com/open-mpi/ompi/issues/3195
     * The maximum number of files that can be simultaneously opened by an MPI
       process is 1024 (a constant NC_MAX_NFILES defined in pnetcdf.h).
 
