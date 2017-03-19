@@ -18,7 +18,7 @@ HFILES = ncmpidump.h vardata.h dumplib.h
 
 EXTRA_DIST = $(HFILES) $(MANUAL) test0.cdl
 
-CLEANFILES = test0.nc test1.nc test1.cdl test2.cdl
+CLEANFILES = test0.nc test1.nc test1.cdl test2.cdl *.gcno
 
 test: $(bin_PROGRAMS)
 	$(NCGEN) -b -o `pwd`/test0.nc $(srcdir)/test0.cdl

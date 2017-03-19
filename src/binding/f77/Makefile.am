@@ -28,7 +28,7 @@ EXTRA_DIST = buildiface \
 	     defs \
 	     createffiles
 
-CLEANFILES = mpifnetcdf.h $(C2F_SRCS)
+CLEANFILES = mpifnetcdf.h $(C2F_SRCS) *.gcno
 
 $(C2F_SRCS): mpifnetcdf.h
 

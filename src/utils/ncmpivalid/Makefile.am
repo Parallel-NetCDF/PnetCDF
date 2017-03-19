@@ -14,6 +14,8 @@ ncmpivalid_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 
 dist_man_MANS = ncmpivalid.1
 
+CLEANFILES = *.gcno
+
 tests-local: all
 
 dist-hook:

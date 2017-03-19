@@ -79,7 +79,7 @@ if ENABLE_SUBFILING
 libpnetcdfc_la_SOURCES += subfile.c
 endif
 
-CLEANFILES = $(M4_SRCS:.m4=.c) ncx.h
+CLEANFILES = $(M4_SRCS:.m4=.c) ncx.h *.gcno
 
 EXTRA_DIST = $(M4_HFILES) \
              $(M4_SRCS) \
