@@ -12,6 +12,11 @@ SUFFIXES = .o .F90
 
 FC          = $(MPIF90)
 
+if BUILD_BENCHMARKS_IN_PNETCDF
+PNETCDF_INC=${top_builddir}/src/binding/f90
+PNETCDF_LIB="-L${top_builddir}/src/libs"
+endif
+
 AM_FCFLAGS  = $(FC_MODINC)$(PNETCDF_INC) -I$(srcdir) $(NAGf90FPPFLAGS)
 AM_FCFLAGS += $(NAG_FCFLAGS)
 

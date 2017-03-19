@@ -20,10 +20,13 @@ includedir="@includedir@"
 FC_DEFINE="@FC_DEFINE@"
 CPP="@CPP@"
 
+CPPFLAGS="@CPPFLAGS@"
 if test "x@PNETCDF_DEBUG@" = x1 ; then
-  CPPFLAGS="@CPPFLAGS@ -DPNETCDF_DEBUG"
-else
-  CPPFLAGS="@CPPFLAGS@"
+   if test "x$CPPFLAGS" = x ; then
+      CPPFLAGS="-DPNETCDF_DEBUG"
+   else
+      CPPFLAGS="$CPPFLAGS -DPNETCDF_DEBUG"
+   fi
 fi
 
 # Compilation:
@@ -122,7 +125,7 @@ if test "x$has_fortran" = xyes ; then
 #        echo "  --fclibs            -> $FCLIBS"
 fi
         echo
-if test "x${enable_erange_fill}" = xno; then
+if test "x@ENABLE_ERANGE_FILL@" = x0; then
         echo "  --erange-fill       -> disabled"
 else
         echo "  --erange-fill       -> enabled"
@@ -132,7 +135,7 @@ if test "x@ENABLE_SUBFILING@" = x1; then
 else
         echo "  --subfiling         -> disabled"
 fi
-if test "x@RELAX_COORD_BOUND@" = xyes; then
+if test "x@RELAX_COORD_BOUND@" = x1; then
         echo "  --relax-coord-bound -> enabled"
 else
         echo "  --relax-coord-bound -> disabled"
@@ -252,7 +255,7 @@ while test $# -gt 0; do
 #        ;;
 
     --relax-coord-bound)
-if test "x@RELAX_COORD_BOUND@" = xyes; then
+if test "x@RELAX_COORD_BOUND@" = x1; then
         echo "enabled"
 else
         echo "disabled"

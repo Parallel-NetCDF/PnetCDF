@@ -385,6 +385,7 @@ fi
 UD_MSG_DEBUG(enable_fortran=${enable_fortran})
 
 dnl Check if MPIF90 is a valid MPI compiler
+mpi_mod=no
 if test "x${MPIF90}" != x ; then
    FC=${MPIF90}
    AC_PROG_FC
@@ -453,13 +454,12 @@ if test "x${MPIF90}" != x ; then
          USE_MPIF_HEADER="include \"mpif.h\""
       fi
       AC_SUBST(USE_MPIF_HEADER)
-      AC_SUBST(mpi_mod)
    fi
 fi
 AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])
 
 dnl Check if MPIF77 is a valid MPI compiler
-F77_SUPPORT_FREEFORM=no
+ac_f77_support_freeform=no
 if test "x${enable_fortran}" != xno && test "x${MPIF77}" != xno ; then
    F77=${MPIF77}
    AC_PROG_F77
@@ -475,7 +475,7 @@ if test "x${enable_fortran}" != xno && test "x${MPIF77}" != xno ; then
    dnl we use this flag only in testing programs
    UD_FC_FREEFORM
    if test "x${ac_cv_fc_freeform}" != xunknown ; then
-      F77_SUPPORT_FREEFORM=yes
+      ac_f77_support_freeform=yes
       FFREEFORMFLAG=${ac_cv_fc_freeform}
    fi
    UD_MSG_DEBUG([FC=$FC FFREEFORMFLAG=$FFREEFORMFLAG])
@@ -509,8 +509,7 @@ if test "x${enable_fortran}" != xno && test "x${MPIF77}" != xno ; then
       enable_fortran=no
    fi
 fi
-AC_SUBST(F77_SUPPORT_FREEFORM)
-AM_CONDITIONAL(HAVE_F77_SUPPORT_FREEFORM, [test x$F77_SUPPORT_FREEFORM = xyes])
+AM_CONDITIONAL(HAVE_F77_SUPPORT_FREEFORM, [test x$ac_f77_support_freeform = xyes])
 
 if test "x${enable_fortran}" = xauto ; then
    if test "x${valid_mpif77}" = xyes && test "x${valid_mpif90}" = xyes ; then
@@ -683,7 +682,6 @@ dnl if (test "x$LEX" != xflex) && (test "x$LEX" != xlex) ; then
 dnl    dnl cannot find flex or lex required to build ncmpigenyy.c
 dnl    have_yacc_lex=no
 dnl fi
-AC_SUBST(have_yacc_lex)
 AM_CONDITIONAL(HAVE_YACC_LEX, [test x$have_yacc_lex = xyes])
 
 dnl AC_PROG_AWK
@@ -1051,14 +1049,10 @@ dnl Below is to check if a Fortran compiler produces module files with upper
 dnl case file name, e.g. PNETCDF.mod. However, this does not work for Mac OSX
 dnl file system which is case insensitive
 dnl
+ac_cv_prog_f90_uppercase_mod=no
 if test "x${enable_fortran}" = xyes ; then
    UD_PROG_FC_UPPERCASE_MOD
 fi
-UPPER_CASE_MOD=no
-if test "x$ac_cv_prog_f90_uppercase_mod" = xyes ; then
-   UPPER_CASE_MOD=yes
-fi
-AC_SUBST(UPPER_CASE_MOD)
 AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
 if test "x${enable_fortran}" = xyes ; then
@@ -1151,7 +1145,6 @@ AC_ARG_ENABLE([subfiling],
                    [Enable subfiling support. @<:@default: disabled@:>@])],
    [enable_subfiling=${enableval}], [enable_subfiling=no]
 )
-AC_SUBST(enable_subfiling)
 
 ENABLE_SUBFILING=0
 if test "x$enable_subfiling" = "xyes" ; then
@@ -1167,14 +1160,12 @@ AC_ARG_ENABLE([erange-fill],
                     conversion causes NC_ERANGE error. @<:@default: enabled@:>@])],
    [enable_erange_fill=${enableval}], [enable_erange_fill=yes]
 )
-AC_SUBST(enable_erange_fill)
-AM_CONDITIONAL(ENABLE_ERANGE_FILL, [test x$enable_erange_fill = xyes])
-
 ENABLE_ERANGE_FILL=0
 if test "x$enable_erange_fill" = "xyes" ; then
    ENABLE_ERANGE_FILL=1
 fi
 AC_SUBST(ENABLE_ERANGE_FILL)
+AM_CONDITIONAL(ENABLE_ERANGE_FILL, [test x$enable_erange_fill = xyes])
 
 AC_ARG_ENABLE([relax-coord-bound],
    [AS_HELP_STRING([--enable-relax-coord-bound],
@@ -1207,9 +1198,6 @@ AC_SUBST(LATEX)
 AC_SUBST(DVIPDF)
 AM_CONDITIONAL([HAS_LATEX], [test "x$has_latex" = xyes])
 
-BUILDDIR=`pwd`
-AC_SUBST(BUILDDIR)
-
 AC_ARG_ENABLE([file-sync],
     [AS_HELP_STRING([--disable-file-sync],
                     [Disable MPI file sync if you know your file system can
@@ -1235,14 +1223,10 @@ AC_ARG_ENABLE([large-file-test],
                      "make testing" can run very slow. @<:@default: disabled@:>@])],
     [large_file_test=${enableval}], [large_file_test=no]
 )
-AC_SUBST(large_file_test)
 AM_CONDITIONAL(BUILD_LARGE_FILE_TEST, [test x$large_file_test = xyes])
 
-dnl PNETCDF_INC and PNETCDF_LIB are for benchmark programs use only
-PNETCDF_INC=${BUILDDIR}/src/binding/f90
-PNETCDF_LIB="-L${BUILDDIR}/src/libs"
-AC_SUBST(PNETCDF_INC)
-AC_SUBST(PNETCDF_LIB)
+dnl build benchmark programs from within PnetCDF
+AM_CONDITIONAL(BUILD_BENCHMARKS_IN_PNETCDF, [test yes = yes])
 
 AC_ARG_VAR(TESTSEQRUN, [Run command (on one MPI process) for "make check" on cross-compile environment. Example: "aprun -n 1". @<:@default: none@:>@])
 AC_SUBST(TESTSEQRUN)
@@ -1392,7 +1376,7 @@ if test "x${debug}" = xyes; then
    echo "\
               PnetCDF internal debug mode             - ON"
 fi
-if test "x${enable_fortran}" = xyes && (test "x${F77_SUPPORT_FREEFORM}" = xno) ; then
+if test "x${enable_fortran}" = xyes && (test "x${ac_f77_support_freeform}" = xno) ; then
    echo "\
               Support free form in Fortran 77         - OFF"
 fi
