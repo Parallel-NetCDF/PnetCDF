@@ -405,7 +405,7 @@ if test "x${MPIF90}" != x ; then
    dnl replace FLIBS and F90LIBS with FCLIBS
    UD_MSG_DEBUG([after FCLIBS=$FCLIBS])
    FLIBS="$FCLIBS"
-   F90LIBS="$FCLIBS"
+   dnl F90LIBS="$FCLIBS"
 
    AC_LANG_PUSH([Fortran])
    AC_MSG_CHECKING([if mpi.mod is available])
@@ -894,6 +894,11 @@ if test "x${enable_fortran}" = xyes ; then
     UD_CHECK_MPI_DATATYPE(MPI_COMPLEX32)
 fi
 
+AC_C_CHAR_UNSIGNED
+AC_C_BIGENDIAN
+AM_CONDITIONAL(IS_BIGENDIAN, [test x$ac_cv_c_bigendian = xyes])
+AC_SUBST(ac_cv_c_bigendian)
+
 in_place_swap=yes
 AC_ARG_ENABLE([in-place-swap],
     [AS_HELP_STRING([--disable-in-place-swap],
@@ -902,18 +907,14 @@ AC_ARG_ENABLE([in-place-swap],
     [in_place_swap=${enableval}], [in_place_swap=yes]
 )
 if test "x${in_place_swap}" = xno ; then
-    AC_DEFINE(DISABLE_IN_PLACE_SWAP)
+   if test "x${ac_cv_c_bigendian}" = xyes ; then
+      AC_MSG_WARN([--disable-in-place-swap takes no effect on Big Endian])
+      in_place_swap=yes
+   else
+      AC_DEFINE(DISABLE_IN_PLACE_SWAP)
+   fi
 fi
 AC_SUBST(in_place_swap)
-
-AC_C_CHAR_UNSIGNED
-AC_C_BIGENDIAN
-is_bigendian=no
-if test "x${ac_cv_c_bigendian}" = xyes ; then
-   is_bigendian=yes
-fi
-AC_SUBST(is_bigendian)
-AM_CONDITIONAL(IS_BIGENDIAN, [test x$is_bigendian = xyes])
 
 dnl For big Endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little Endian, put buffer may be used for byte swap in
@@ -1068,9 +1069,9 @@ if test "x${enable_fortran}" = xyes ; then
    fi
    AC_SUBST(FLIBS)
    AC_SUBST(FCLIBS)
-   AC_SUBST(F90LIBS)
+   dnl AC_SUBST(F90LIBS)
    AC_SUBST(FLDFLAGS)
-   AC_SUBST(F90LDFLAGS)
+   dnl AC_SUBST(F90LDFLAGS)
 fi
 
 has_fortran=${enable_fortran}
@@ -1355,96 +1356,90 @@ if test "x${enable_mpi_io_test}" = xno ; then
        Please make sure you know what you are doing])
 fi
 
-msg_large_files=no
-if test "$ac_cv_sizeof_off_t" -gt 4 ; then
-   msg_large_files=yes
-fi
-
 echo \
 "
    ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
-   Features:  Support for large files (> 4 GB)                  - ${msg_large_files}
-              Build static libraries                            - ${enable_static}
-              Build shared libraries                            - ${enable_shared}
-              Build Fortran APIs                                - ${enable_fortran}
-              Build C++ APIs                                    - ${has_mpicxx}"
+   Features:  Build static libraries                  - ${enable_static}
+              Build shared libraries                  - ${enable_shared}
+              Build Fortran APIs                      - ${enable_fortran}
+              Build C++ APIs                          - ${has_mpicxx}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
-              Request aggregation in nonblocking APIs           - $no"
+              Request aggregation in nonblocking APIs - OFF"
 fi
 if test "x${enable_erange_fill}" = xno; then
    echo "\
-              Fill variables when NC_ERANGE occurs              - no"
+              Fill variables when NC_ERANGE occurs    - OFF"
 fi
 if test "x${enable_subfiling}" = xyes; then
    echo "\
-              Build subfiling support                           - yes"
+              Build subfiling support                 - ON"
 fi
 if test "x${enable_relax_coord_bound}" = xyes; then
    echo "\
-              Relax start coordinate bound check                - enabled"
+              Relax start coordinate bound check      - ON"
 fi
 if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
    echo "\
-              Memory in-place byte swap                         - disabled"
+              Memory in-place byte swap               - OFF"
 fi
 if test "x${large_file_test}" = xyes; then
    echo "\
-              Testing large file/variable I/O                   - enabled"
+              Testing large file/variable I/O         - ON"
 fi
 if test "x${debug}" = xyes; then
    echo "\
-              PnetCDF internal debug mode                       - enabled"
+              PnetCDF internal debug mode             - ON"
 fi
 if test "x${enable_fortran}" = xyes && (test "x${F77_SUPPORT_FREEFORM}" = xno) ; then
    echo "\
-              Support free form in Fortran 77                   - no"
+              Support free form in Fortran 77         - OFF"
 fi
 
 echo "\
 
-   Compilers: MPICC       = ${MPICC}"
+   Compilers: MPICC    = ${MPICC}"
 if test "${has_mpicxx}" = yes ; then
    echo "\
-              MPICXX      = ${MPICXX}"
+              MPICXX   = ${MPICXX}"
 fi
 if test "${enable_fortran}" = yes ; then
    echo "\
-              MPIF77      = ${MPIF77}
-              MPIF90      = ${MPIF90}"
+              MPIF77   = ${MPIF77}
+              MPIF90   = ${MPIF90}"
 fi
 echo "\
-              CFLAGS      = ${CFLAGS}"
+              CFLAGS   = ${CFLAGS}"
 if test "x${CPPFLAGS}" != x ; then
    echo "\
-              CPPFLAGS    = ${CPPFLAGS}"
+              CPPFLAGS = ${CPPFLAGS}"
 fi
 if test "${has_mpicxx}" = yes ; then
    echo "\
-              CXXFLAGS    = ${CXXFLAGS}"
+              CXXFLAGS = ${CXXFLAGS}"
 fi
 if test "${enable_fortran}" = yes ; then
    echo "\
-              FFLAGS      = ${FFLAGS}
-              FCFLAGS     = ${FCFLAGS}"
+              FFLAGS   = ${FFLAGS}
+              FCFLAGS  = ${FCFLAGS}"
 fi
 if test "x${LDFLAGS}" != x ; then
    echo "\
-              LDFLAGS     = ${LDFLAGS}"
+              LDFLAGS  = ${LDFLAGS}"
 fi
 if test "x${LIBS}" != x ; then
    echo "\
-              LIBS        = ${LIBS}"
+              LIBS     = ${LIBS}"
 fi
 echo "\
 
    Now run 'make' to build the library and utility tools.
    Then run 'make @<:@<target>@:>@' for testing and installation, where the
    optional <target> can be:
-        check     - build and run sequential test programs
-        ptest     - build and run parallel test programs on 4 MPI processes
-        tests     - build all test programs (build only, no run)
-        install   - install PnetCDF library in ${prefix}
+              check    - build and run sequential test programs
+              ptest    - build and run parallel test programs on 4 MPI processes
+              tests    - build all test programs (build only, no run)
+              install  - install PnetCDF library in ${prefix}
 ------------------------------------------------------------------------------"
 
