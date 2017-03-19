@@ -30,7 +30,7 @@ nodist_libdispatchers_la_SOURCES = $(M4_SRCS:.m4=.c)
 
 BUILT_SOURCES = $(M4_SRCS:.m4=.c)
 
-CLEANFILES = $(M4_SRCS:.m4=.c)
+CLEANFILES = $(M4_SRCS:.m4=.c) *.gcno
 
 EXTRA_DIST = $(M4_SRCS)
 

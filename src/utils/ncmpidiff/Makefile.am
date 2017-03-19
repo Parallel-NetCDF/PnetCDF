@@ -12,6 +12,8 @@ ncmpidiff_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 
 dist_man_MANS = ncmpidiff.1
 
+CLEANFILES = *.gcno
+
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 

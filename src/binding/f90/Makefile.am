@@ -55,7 +55,7 @@ EXTRA_DIST = $(F90_SRCS) \
              api.f90.in \
              nfmpi_constants.f90.in
 
-CLEANFILES = $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90)
+CLEANFILES = $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90) *.gcno
 DISTCLEANFILES = pnetcdf.f90 api.f90 nfmpi_constants.f90
 
 tests-local: all
