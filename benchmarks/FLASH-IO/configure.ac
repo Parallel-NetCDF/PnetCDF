@@ -216,6 +216,8 @@ TESTMPIRUN4="${TESTMPIRUN} -n 4"
 AC_SUBST(TESTMPIRUN4)
 AC_SUBST(TESTOUTDIR)
 
+AM_CONDITIONAL(BUILD_BENCHMARKS_IN_PNETCDF, [test yes = no])
+
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT
 echo "--------------------------------------------------------------------"
