@@ -6,8 +6,6 @@
 #
 # @configure_input@
 
-SUFFIXES = .a .o .c .m4 .h
-
 nodist_include_HEADERS = pnetcdf.h
 
 EXTRA_DIST = pnetcdf.h.in ncconfig.h.in nctypes.h dispatch.h
