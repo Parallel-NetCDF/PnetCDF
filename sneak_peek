@@ -71,6 +71,12 @@ This is essentially a placeholder for the next release note ...
       avoid the variable name convention used by automake.
 
   o Bug fixes
+    * From the releases of 1.6.1 through 1.8.1, putting attribute _FillValue
+      automatically turns on the fill mode for the variable. Similarly,
+      deleting attribute _FillValue turns off the fill mode. However, this
+      behavior does not conform with netCDF library. This release fixes this
+      bug, so putting or deleting attribute _FillValue does not affect a
+      variable's fill mode. See r2951.
     * Fix nc_test when running on an ARMv7 architecture, a raspberry pi, where
       char is unsigned and is little Endian, 32-bit machine. See r2922.
     * Fix the missing byte-swap required for retrieving user-defined fill

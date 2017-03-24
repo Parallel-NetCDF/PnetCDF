@@ -844,17 +844,6 @@ ncmpii_del_att(void       *ncdp,
         goto err_check;
     }
 
-    /* deleting attribute _FillValue means disabling fill mode */
-    if (varid != NC_GLOBAL && !strcmp(name, _FillValue)) {
-        NC_var *varp;
-        err = ncmpii_NC_lookupvar(ncp, varid, &varp);
-        if (err != NC_NOERR) {
-            DEBUG_TRACE_ERROR
-            goto err_check;
-        }
-        varp->no_fill = 1;
-    }
-
 err_check:
     if (ncp->safe_mode) {
         int root_varid, root_name_len, status, mpireturn;
@@ -1234,7 +1223,7 @@ ncmpii_put_att_$1(void       *ncdp,
     /* If this is the _FillValue attribute, then let PnetCDF return the
      * same error codes as netCDF
      */
-    if (varid != NC_GLOBAL && !strcmp(name, "_FillValue")) {
+    if (varid != NC_GLOBAL && !strcmp(name, _FillValue)) {
         NC_var *varp;
         err = ncmpii_NC_lookupvar(ncp, varid, &varp);
         if (err != NC_NOERR) {
@@ -1252,9 +1241,6 @@ ncmpii_put_att_$1(void       *ncdp,
             DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
             goto err_check;
         }
-
-        /* enable the fill mode for this variable */
-        varp->no_fill = 0;
     }
 
     if (nelems < 0 || (nelems > X_INT_MAX && ncp->format <= 2)) {
