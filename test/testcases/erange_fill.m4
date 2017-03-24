@@ -142,7 +142,10 @@ int test_user_fill_$1(char* filename, $1 fillv) {
     err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); ERR
     err = ncmpi_def_dim(ncid, "X", LEN, &dimid); ERR
     err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 1, &dimid, &varid); ERR
+    /* put attribute _FillValue does not automatically enable file mode */
     err = ncmpi_put_att(ncid, varid, "_FillValue", NC_TYPE($1), 1, &fillv); ERR
+    /* err = ncmpi_def_var_fill(ncid, varid, 0, &fillv); ERR */
+    err = ncmpi_def_var_fill(ncid, varid, 0, NULL); ERR
     err = ncmpi_close(ncid); ERR
 
     /* reopen the file and check the contents of variable */
