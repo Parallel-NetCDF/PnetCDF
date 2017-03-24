@@ -28,7 +28,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Syntax changes
-    * none
+    * Add C type qualifier const to argument fill_value of ncmpi_def_var_fill
+      to indicate the contents pointed by fill_value is immutable.
 
   o Semantics updates
     * When the file create/open modes are not consistent among processes, the
