@@ -1231,12 +1231,13 @@ ncmpii_put_att_$1(void       *ncdp,
             goto err_check;
         }
 
-        /* Fill value must be same type and have exactly one value */
+        /* Fill value must be of the same data type */
         if (xtype != varp->type) {
             DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE)
             goto err_check;
         }
 
+        /* Fill value must have exactly one value */
         if (nelems != 1) {
             DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
             goto err_check;
