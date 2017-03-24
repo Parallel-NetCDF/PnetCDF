@@ -1242,6 +1242,12 @@ ncmpii_put_att_$1(void       *ncdp,
             DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
             goto err_check;
         }
+
+        /* Only allow for variables defined in initial define mode */
+        if (ncp->old != NULL && varid < ncp->old->vars.ndefined) {
+            DEBUG_ASSIGN_ERROR(err, NC_ELATEFILL)
+            goto err_check;
+        }
     }
 
     if (nelems < 0 || (nelems > X_INT_MAX && ncp->format <= 2)) {
