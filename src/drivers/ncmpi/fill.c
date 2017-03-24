@@ -444,12 +444,7 @@ err_check:
     /* Are we setting a fill value? */
     if (fill_value != NULL && !varp->no_fill) {
 
-        /* If there's a _FillValue attribute, delete it. */
-        err = ncmpii_del_att(ncdp, varid, _FillValue);
-        if (err != NC_NOERR && err != NC_ENOTATT)
-            return err;
-
-        /* Create a _FillValue attribute. */
+        /* create/overwrite attribute _FillValue */
         err = ncmpii_put_att(ncdp, varid, _FillValue, varp->type,
                              1, fill_value, varp->type);
         if (err != NC_NOERR) return err;
