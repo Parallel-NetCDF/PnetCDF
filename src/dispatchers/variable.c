@@ -49,6 +49,9 @@ ncmpi_def_var_fill(int         ncid,    /* IN:  file ID */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
+    /* setting global _FillValue is not allowed */
+    if(varid == NC_GLOBAL) return NC_EGLOBAL;
+
     /* calling the subroutine that implements ncmpi_def_var_fill() */
     return pncp->dispatch->def_var_fill(pncp->ncp, varid, nofill, fill_value);
 }
