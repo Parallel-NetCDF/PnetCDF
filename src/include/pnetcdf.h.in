@@ -345,7 +345,7 @@ open netCDF dataset. */
 #define	NC_EBADID	(-33)
 #define	NC_ENFILE	(-34)	   /**< Too many netcdfs open */
 #define	NC_EEXIST	(-35)	   /**< netcdf file exists && NC_NOCLOBBER */
-#define	NC_EINVAL	(-36)	   /**< Invalid Argument */
+#define	NC_EINVAL	(-36)	   /**< Invalid Argument or file format violates CDF specification */
 #define	NC_EPERM	(-37)	   /**< Write to read only */
 
 /** Operation not allowed in data mode. This is returned for netCDF

@@ -1174,6 +1174,12 @@ ncmpii_put_att_$1(void       *ncdp,
         goto err_check;
     }
 
+    /* NC_EINVAL for trying to set global _FillValue */
+    if (varid == NC_GLOBAL && name != NULL && !strcmp(name, _FillValue)) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+        goto err_check;
+    }
+
     /* check if varid is valid and get the pointer to the attribute array */
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) {

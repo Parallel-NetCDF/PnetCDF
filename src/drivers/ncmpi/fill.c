@@ -355,7 +355,7 @@ err_check:
 
     /* loop thru all variables defined so far to set/overwrite its fill mode */
     for (i=0; i<ncp->vars.ndefined; i++)
-        ncp->vars.value[i]->no_fill = (char)((fill_mode == NC_NOFILL) ? 1 : 0);
+        ncp->vars.value[i]->no_fill = (fill_mode == NC_NOFILL);
 
     /* once the file's fill mode is set, any new variables defined after this
      * call will check NC_dofill(ncp) and set their no_fill accordingly. See
@@ -630,9 +630,9 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
      * Note ncp->vars.ndefined is already made consistent by this point.
      */
     for (i=start_vid; i<ncp->vars.ndefined; i++)
-        noFill[i-start_vid] = ncp->vars.value[i]->no_fill;
-    TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid), MPI_BYTE, 0,
-                          ncp->nciop->comm);
+        noFill[i-start_vid] = (char)(ncp->vars.value[i]->no_fill);
+        TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid),
+                              MPI_BYTE, 0, ncp->nciop->comm);
     for (i=start_vid; i<ncp->vars.ndefined; i++) {
         /* overwrite local's mode */
         ncp->vars.value[i]->no_fill = noFill[i-start_vid];
