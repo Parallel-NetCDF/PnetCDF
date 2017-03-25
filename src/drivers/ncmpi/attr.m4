@@ -566,8 +566,8 @@ err_check:
         if (err == NC_NOERR && root_varid != varid)
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FNC_ARGS)
 
-        /* find min error code across processes */ 
-        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);  
+        /* find min error code across processes */
+        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
         if (err == NC_NOERR) err = status;
@@ -576,7 +576,7 @@ err_check:
     if (err != NC_NOERR) {
         if (newStr != NULL) ncmpii_free_NC_string(newStr);
         return err;
-    }   
+    }
 
     assert(attrp != NULL);
 
@@ -1174,12 +1174,6 @@ ncmpii_put_att_$1(void       *ncdp,
         goto err_check;
     }
 
-    /* NC_EINVAL for trying to set global _FillValue */
-    if (varid == NC_GLOBAL && name != NULL && !strcmp(name, _FillValue)) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
-        goto err_check;
-    }
-
     /* check if varid is valid and get the pointer to the attribute array */
     ncap = NC_attrarray0(ncp, varid);
     if (ncap == NULL) {
@@ -1447,7 +1441,7 @@ err_check:
             err = ncmpix_putn_$1(&xp, nelems, buf, xtype, &fill);',
         `err = ncmpix_putn_$1(&xp, nelems, buf, xtype, &fill);')
 
-        /* no immediately return error code here? Strange ... 
+        /* no immediately return error code here? Strange ...
          * Instead, we continue and call incr_NC_attrarray() to add
          * this attribute (for create case) as it is legal. But if
          * we return error and reject this attribute, then nc_test will
@@ -1460,7 +1454,7 @@ err_check:
          * NC_ERANGE, meaning one or more elements are type overflow.
          * Should we reject the entire attribute array if only part of
          * the array overflow? For netCDF4, the answer is NO.
-         */ 
+         */
 /*
         if (err != NC_NOERR) {
             ncmpii_free_NC_attr(attrp);
@@ -1472,8 +1466,8 @@ err_check:
     if (!NC_indef(ncp)) { /* called in data mode */
         /* Let root write the entire header to the file. Note that we
          * cannot just update the attribute in its space occupied in the
-         * file header, because if the file space occupied by the attribute 
-         * shrinks, all the metadata following it must be moved ahead. 
+         * file header, because if the file space occupied by the attribute
+         * shrinks, all the metadata following it must be moved ahead.
          */
         int status;
         status = ncmpii_write_header(ncp); /* update file header */
