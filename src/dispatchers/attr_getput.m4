@@ -14,6 +14,7 @@ dnl
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <pnetcdf.h>
 #include <dispatch.h>
@@ -64,6 +65,11 @@ ifelse(`$2',`',`
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
+
+ifelse(`$1',`put',`
+    /* set global _FillValue is not allowed */
+    if (varid == NC_GLOBAL && name != NULL && !strcmp(name, _FillValue))
+        return NC_EINVAL;')
 
     /* calling the subroutine that implements APINAME($1,$2)() */
     return pncp->dispatch->`$1'_att(pncp->ncp,
