@@ -69,7 +69,7 @@ ifelse(`$2',`',`
 ifelse(`$1',`put',`
     /* set global _FillValue is not allowed */
     if (varid == NC_GLOBAL && name != NULL && !strcmp(name, _FillValue))
-        return NC_EINVAL;')
+        return NC_EGLOBAL;')
 
     /* calling the subroutine that implements APINAME($1,$2)() */
     return pncp->dispatch->`$1'_att(pncp->ncp,
