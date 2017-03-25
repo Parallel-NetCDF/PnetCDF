@@ -72,6 +72,8 @@ This is essentially a placeholder for the next release note ...
       avoid the variable name convention used by automake.
 
   o Bug fixes
+    * When trying to set attribute _FillValue for global variable NC_GLOBAL,
+      the error code NC_EINVAL is returned. See r2954.
     * From the releases of 1.6.1 through 1.8.1, putting attribute _FillValue
       automatically turns on the fill mode for the variable. Similarly,
       deleting attribute _FillValue turns off the fill mode. However, this
