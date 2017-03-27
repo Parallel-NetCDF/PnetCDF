@@ -870,7 +870,7 @@ move_vars_r(NC *ncp, NC *old) {
  * sizes. This function returns NC_EVARSIZE if any variable has a bad len
  * (product of non-rec dim sizes too large), else return NC_NOERR.
  */
-static int
+int
 ncmpii_NC_check_vlens(NC *ncp)
 {
     NC_var **vpp;
