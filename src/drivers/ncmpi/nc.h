@@ -832,4 +832,7 @@ ncmpii_inq_default_fill_value(int type, void *fill_value);
 extern int
 ncmpii_getput_zero_req(NC *ncp, int rw_flag);
 
+extern int
+ncmpii_NC_check_vlens(NC *ncp);
+
 #endif /* _NC_H_ */

@@ -1812,8 +1812,7 @@ ncmpii_hdr_get_NC(NC *ncp)
         }
         else
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
-        NCI_Free(getbuf.base);
-        return status;
+        goto fn_exit;
     }
 
     /* check version number in last byte of magic */
@@ -1846,10 +1845,7 @@ ncmpii_hdr_get_NC(NC *ncp)
 
     /** Ensure that 'nextread' bytes (numrecs) are available. */
     status = hdr_check_buffer(&getbuf, (getbuf.version < 5) ? 4 : 8);
-    if(status != NC_NOERR) {
-        NCI_Free(getbuf.base);
-        return status;
-    }
+    if (status != NC_NOERR) goto fn_exit;
 
     /* get numrecs from getbuf into ncp */
     if (getbuf.version < 5) {
@@ -1862,10 +1858,7 @@ ncmpii_hdr_get_NC(NC *ncp)
         status = ncmpix_get_uint64((const void **)(&getbuf.pos), &tmp);
         nrecs = (MPI_Offset)tmp;
     }
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf.base);
-        return status;
-    }
+    if (status != NC_NOERR) goto fn_exit;
 
     if (getbuf.version < 5)
         getbuf.index += X_SIZEOF_SIZE_T;
@@ -1885,24 +1878,15 @@ ncmpii_hdr_get_NC(NC *ncp)
 
     /* get dim_list from getbuf into ncp */
     status = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf.base);
-        return status;
-    }
+    if (status != NC_NOERR) goto fn_exit;
 
     /* get gatt_list from getbuf into ncp */
     status = hdr_get_NC_attrarray(&getbuf, &ncp->attrs);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf.base);
-        return status;
-    }
+    if (status != NC_NOERR) goto fn_exit;
 
     /* get var_list from getbuf into ncp */
     status = hdr_get_NC_vararray(&getbuf, &ncp->vars);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf.base);
-        return status;
-    }
+    if (status != NC_NOERR) goto fn_exit;
 
     /* get the un-aligned size occupied by the file header */
     ncp->xsz = ncmpii_hdr_len_NC(ncp);
@@ -1912,7 +1896,12 @@ ncmpii_hdr_get_NC(NC *ncp)
      * Sets ncp->begin_rec to start of first record variable.
      */
     status = ncmpii_NC_computeshapes(ncp);
+    if (status != NC_NOERR) goto fn_exit;
 
+    status = ncmpii_NC_check_vlens(ncp);
+    if (status != NC_NOERR) goto fn_exit;
+
+fn_exit:
     NCI_Free(getbuf.base);
 
     return status;
