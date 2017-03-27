@@ -719,9 +719,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
     /* in CDF-1 and CDF-2, a variable's size in the header is a 32-bit integer
      * in CDF-5, it is a 64-bit integer
      */
-    if (pbp->version == 5)
-        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)varp->len);
-    else {
+    if (pbp->version < 5) {
         /* Special case, when there is no record variable, the last fixed-size
          * variable can be larger than 2 GiB if its file starting offset is
          * less than 2 GiB. This checking has already been done in the call
@@ -729,7 +727,17 @@ hdr_put_NC_var(bufferinfo   *pbp,
          *
          * if (varp->len != (int)varp->len) DEBUG_RETURN_ERROR(NC_EVARSIZE)
          */
-        status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->len);
+        uint vsize = (uint)varp->len;
+        if (varp->len > 4294967292) { /* 2^32 - 4 bytes */
+            /* CDF-2 specification: use 2^32-1 for vsize when the variable
+             * size is larger than 2^32-4 bytes
+             */
+            vsize = 4294967295;
+        }
+        status = ncmpix_put_uint32((void**)(&pbp->pos), vsize);
+    }
+    else {
+        status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)varp->len);
     }
     if (status != NC_NOERR) return status;
 
