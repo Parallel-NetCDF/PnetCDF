@@ -18,7 +18,7 @@ This is essentially a placeholder for the next release note ...
       32-bit machines support large files. See the discussion thread in
       OpenMPI: https://github.com/open-mpi/ompi/issues/3195
     * The maximum number of files that can be simultaneously opened by an MPI
-      process is now limted to 1024 (a constant NC_MAX_NFILES defined in
+      process is now limited to 1024 (a constant NC_MAX_NFILES defined in
       pnetcdf.h).
 
   o New APIs
@@ -78,6 +78,8 @@ This is essentially a placeholder for the next release note ...
   o Bug fixes
     * When trying to set attribute _FillValue for global variable NC_GLOBAL,
       the error code NC_EGLOBAL is returned. See r2954, r2955, r2956.
+    * Conform with CDF-2 file format specification on using 2^32-1 for vsize
+      when the variable size is larger than 23^2-4 bytes. See r2957.
     * From the releases of 1.6.1 through 1.8.1, putting attribute _FillValue
       automatically turns on the fill mode for the variable. Similarly,
       deleting attribute _FillValue turns off the fill mode. However, this
