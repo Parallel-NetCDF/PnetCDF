@@ -2389,6 +2389,31 @@ ifdef(`PNETCDF', `
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
+
+    /* test NC_ELATEFILL for the case of re-opening the file */
+    err = FileOpen(scratch, NC_WRITE, &ncid);
+    IF (err != NC_NOERR)
+        error("open: %s", APIFunc(strerror)(err));
+
+    err = APIFunc(redef)(ncid);
+    IF (err != NC_NOERR)
+        error("redef: %s", APIFunc(strerror)(err));
+
+    for (i = 0; i < numVars; i++) {
+        if (var_type[i] == NC_CHAR) {
+            err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
+            IF (err != NC_ELATEFILL)
+                error("put_att_text: expect NC_ELATEFILL but got %d", APIFunc(strerrno)(err));
+        } else {
+            err = APIFunc(put_att_double)(ncid, i, "_FillValue",var_type[i],1,&fill);
+            IF (err != NC_ELATEFILL)
+                error("put_att_double: expect NC_ELATEFILL but got %d", APIFunc(strerrno)(err));
+        }
+    }
+    err = APIFunc(close)(ncid);
+    IF (err != NC_NOERR)
+        error("close: %s", APIFunc(strerror)(err));
+
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
