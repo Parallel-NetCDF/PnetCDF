@@ -69,7 +69,8 @@ This is essentially a placeholder for the next release note ...
       for CDF-1 and CDF-2 files. See r2961. For the information about the
       number of large variables allowed in the classic formats can be found
       in http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations
-    * Add checking for error code NC_ELATEFILL.
+    * Add checking for error code NC_ELATEFILL. Setting a variable's attribute
+      _FillValue must be done in the variable's initial define mode.
     * Rename pkg-config file from pnetcdf.pc to libpnetcdf.pc
     * Configure time variables TEST_SEQRUN, TEST_MPIRUN, and TEST_OUTDIR are
       renamed to TESTSEQRUN, TESTMPIRUN, and TESTOUTDIR, respectively, to
