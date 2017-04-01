@@ -147,7 +147,7 @@ AC_ARG_VAR(MPICC,  MPI C compiler)
 AC_ARG_VAR(MPICXX, MPI C++ compiler)
 AC_ARG_VAR(MPIF77, MPI Fortran 77 compiler)
 AC_ARG_VAR(MPIF90, MPI Fortran 90 compiler)
-AC_ARG_VAR(CC,     Overwritten by MPICC  if MPICC is set)
+AC_ARG_VAR(CC,     Overwritten by MPICC  if MPICC  is set)
 AC_ARG_VAR(CXX,    Overwritten by MPICXX if MPICXX is set)
 AC_ARG_VAR(F77,    Overwritten by MPIF77 if MPIF77 is set)
 AC_ARG_VAR(FC,     Overwritten by MPIF90 if MPIF90 is set)
@@ -1303,6 +1303,7 @@ AC_CONFIG_FILES(Makefile \
                 benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
                 doc/Makefile \
+                doc/pnetcdf-api/Makefile \
                 man/Makefile \
                 test/Makefile \
                 test/common/Makefile \
@@ -1328,8 +1329,8 @@ AC_CONFIG_FILES(Makefile \
 # AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 
 dnl add executable permission to pnetcdf-config and check_install
-AC_CONFIG_FILES([pnetcdf-config], [chmod u+x pnetcdf-config])
-AC_CONFIG_FILES([check_install],  [chmod u+x check_install])
+AC_CONFIG_FILES([src/utils/pnetcdf-config], [chmod u+x src/utils/pnetcdf-config])
+AC_CONFIG_FILES([src/utils/check_install],  [chmod u+x src/utils/check_install])
 
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
