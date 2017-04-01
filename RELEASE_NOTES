@@ -768,7 +768,7 @@ version  1.5.0 (July 8, 2014)
       processes used to run the tests. The testing uses up to 8 MPI processes.
 
     * A sample PBS script file is provided to test "make ptest" on machines
-      with a batch queue system: pbs.script. This example script can be
+      with a batch queue system: doc/pbs.script. This example script can be
       submitted from the build root directory (where you run "make" command to
       build PnetCDF library).
 

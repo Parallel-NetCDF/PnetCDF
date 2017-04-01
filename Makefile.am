@@ -18,28 +18,11 @@ if BUILD_DOCS
 SUBDIRS += doc
 endif
 
-CLEANFILES = pnetcdf_pc
-
-DISTCLEANFILES = pnetcdf.pc
-
 EXTRA_DIST = COPYRIGHT \
              CREDITS \
              INSTALL \
              README \
-             README.CRAY \
-             README.Fujitsu \
-             README.INTEL \
-             README.IBM \
-             README.K-Computer \
-             README.LINUX \
-             README.SGI \
-             README.SX \
-             README.consistency \
-             README.large_files \
              RELEASE_NOTES \
-             pbs.script \
-             cobalt.script \
-             check_install.in \
              m4/foreach.m4 \
              m4/foreachq.m4 \
              m4/utils.m4
@@ -74,9 +57,6 @@ ptests:
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libpnetcdf.pc
-
-# The script shows the end users how pnetcdf is built
-bin_SCRIPTS = pnetcdf-config
 
 install-data-hook:
 	@echo '+----------------------------------------------------------------------------+'
