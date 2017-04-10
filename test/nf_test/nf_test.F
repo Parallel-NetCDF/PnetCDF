@@ -90,7 +90,7 @@
             print *, '  ### ', nfails, ' FAILURES TESTING ', name, 
      +               '! Stop ... ###'
             call report_test
-            stop
+            stop 2
         end if
         end
 
