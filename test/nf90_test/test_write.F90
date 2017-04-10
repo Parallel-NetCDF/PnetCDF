@@ -1586,6 +1586,13 @@
             call errore('nf90mpi_create: ', err)
             return
         end if
+
+!       enable fill mode for the entire file. Putting _FillValue does
+!       not automatically enable or disable the fill mode.
+        err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
+        if (err .ne. NF90_NOERR) &
+            call errore('nf90mpi_set_fill: ', err)
+
         call def_dims(ncid)
         call def_vars(ncid)
 
