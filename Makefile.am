@@ -55,9 +55,6 @@ ptests:
 		$(MAKE) $(MFLAGS) -C $$d ptests $$* ; \
 	done ) ;
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libpnetcdf.pc
-
 install-data-hook:
 	@echo '+----------------------------------------------------------------------------+'
 	@echo '|'

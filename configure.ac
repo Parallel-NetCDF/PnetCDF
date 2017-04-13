@@ -1270,7 +1270,6 @@ fi
 
 dnl AC_CONFIG_HEADERS([src/binding/f77/nfconfig_inc])
 AC_CONFIG_FILES(Makefile \
-                libpnetcdf.pc \
                 src/Makefile \
                 src/dispatchers/Makefile \
                 src/libs/Makefile \
@@ -1293,6 +1292,8 @@ AC_CONFIG_FILES(Makefile \
                 src/utils/ncmpidiff/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpigen/Makefile \
+                src/packaging/Makefile \
+                src/packaging/libpnetcdf.pc \
                 examples/Makefile \
                 examples/C/Makefile \
                 examples/tutorial/Makefile \
