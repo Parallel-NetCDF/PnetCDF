@@ -29,3 +29,4 @@ tests-local: all
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
+.PHONY: $(libpnetcdf_la_LIBADD)

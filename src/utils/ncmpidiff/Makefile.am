@@ -19,3 +19,4 @@ dist-hook:
 
 tests-local: all
 
+.PHONY: $(top_builddir)/src/libs/libpnetcdf.la

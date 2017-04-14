@@ -21,3 +21,4 @@ tests-local: all
 dist-hook:
 	-rm -rf `find $(distdir) -name .svn`
 
+.PHONY: $(top_builddir)/src/libs/libpnetcdf.la
