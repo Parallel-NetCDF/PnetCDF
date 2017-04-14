@@ -7,5 +7,11 @@
 # @configure_input@
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libpnetcdf.pc
+nodist_pkgconfig_DATA = pnetcdf.pc
 
+pnetcdf.pc: pnetcdf_pc
+	$(SED) -e "s%INSTALL_PREFIX%${prefix}%g" $< > $@
+
+CLEANFILES = pnetcdf.pc
+
+.PHONY: pnetcdf.pc

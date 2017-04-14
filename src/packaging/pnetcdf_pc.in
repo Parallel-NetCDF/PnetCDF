@@ -33,7 +33,7 @@
 #               but not exposed to applications. The same rule as Cflags
 #               applies here.
 
-prefix=INSTALL_PREFIX   # prefix can be changed by "make install prefix=/path"
+prefix=@prefix@   # prefix can be changed by "make install prefix=/path"
 exec_prefix=@exec_prefix@
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
