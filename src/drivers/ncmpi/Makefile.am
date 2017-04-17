@@ -73,6 +73,9 @@ ncx.h: ncx_h.m4 Makefile
 libpnetcdfc_la_SOURCES = $(C_SRCS) $(H_SRCS)
 nodist_libpnetcdfc_la_SOURCES = ncx.h $(M4_SRCS:.m4=.c)
 
+# automake says "... BUILT_SOURCES is honored only by 'make all', 'make check',
+# and 'make install'. This means you cannot build a specific target (e.g.,
+# 'make foo') in a clean tree if it depends on a built source."
 BUILT_SOURCES = ncx.h $(M4_SRCS:.m4=.c)
 
 if ENABLE_SUBFILING
