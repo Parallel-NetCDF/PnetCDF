@@ -46,14 +46,8 @@ dnl Do not change the following line, It is set by SVN automatically.
 dnl It defines PNETCDF_RELEASE_DATE, a string that will be used in
 dnl ncmpi_inq_libvers() to generate release date
 SVN_DATE="$LastChangedDate$"
-if test "x${SVN_DATE}" == "x$" ; then
-   dnl Use git command to get the last modify date of configure.ac
-   PNETCDF_RELEASE_DATE=`git log -1 --format="%aD" -- $(top_srcdir)configure.ac | cut -d' ' -f2,3,4`
-   PNETCDF_RELEASE_DATE2=`git log -1 --format="%ai" -- $(top_srcdir)configure.ac | cut -d' ' -f1`
-else
-   PNETCDF_RELEASE_DATE2=`echo $SVN_DATE | cut -d' ' -f2`
-   PNETCDF_RELEASE_DATE=`echo $SVN_DATE | cut -d' ' -f6,7,8 | cut -d')' -f1`
-fi
+PNETCDF_RELEASE_DATE2=`echo $SVN_DATE | cut -d' ' -f2`
+PNETCDF_RELEASE_DATE=`echo $SVN_DATE | cut -d' ' -f6,7,8 | cut -d')' -f1`
 
 dnl user defined macro for printing messages for debugging
 _DEBUG=no
