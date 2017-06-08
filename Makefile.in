@@ -28,13 +28,14 @@ SUBDIRS		= src \
 		  benchmarks \
 		  examples
 
-GARBAGE		= pnetcdf_pc
+GARBAGE		=
 
 DIST_GARBAGE	= config.cache \
 		  config.status \
 		  config.log \
 		  macros.make \
 		  stamp-h \
+                  pnetcdf_pc \
                   pnetcdf.pc \
                   pnetcdf-config \
                   check_install
