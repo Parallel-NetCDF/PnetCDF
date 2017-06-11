@@ -1197,8 +1197,9 @@ AC_ARG_VAR(TEST_SEQRUN, [Run command (on one process) for make target check on c
 AC_ARG_VAR(TEST_MPIRUN, [MPI run command for make target ptest, @<:@default: mpiexec -n NP@:>@])
 AC_ARG_VAR(TEST_OUTDIR, [Output file directory for make target ptest, @<:@default: ./@:>@])
 if test "x${TEST_MPIRUN}" = x ; then
-    dnl set default to mpiexec
-    TEST_MPIRUN="mpiexec -n NP"
+   dnl set default to "mpiexec -n NP"
+   UD_MPI_PATH_PROGS([TEST_MPIRUN], [mpiexec mpirun srun])
+   TEST_MPIRUN+=" -n NP"
 fi
 if test "x${TEST_OUTDIR}" = x ; then
     dnl set default to current directory
