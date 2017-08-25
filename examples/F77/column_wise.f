@@ -180,6 +180,7 @@
              if (sts(i) .NE. NF_NOERR) then
                  print*, "Error: nonblocking write fails on request",
      +                   i, ' ', nfmpi_strerror(sts(i))
+                 stop 2
              endif
           enddo
 

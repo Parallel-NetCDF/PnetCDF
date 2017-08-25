@@ -69,6 +69,4 @@
 
  10   format(" No Errors")
 
-      Stop
-
       end ! program Pnf_Test

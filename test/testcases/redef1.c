@@ -25,13 +25,6 @@
 
 #include <testutils.h>
 
-#define PNCDF_Error(err, msg) \
-    if (err != NC_NOERR) { \
-        printf("Error: %s (%s)\n", msg, ncmpi_strerror(err)); \
-        nerrs++; \
-        goto fn_exit; \
-    }  
-
 int main(int argc, char** argv)
 {
     char filename[256];
@@ -51,7 +44,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "redef2.nc");
@@ -70,37 +63,37 @@ int main(int argc, char** argv)
   
     err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
                           MPI_INFO_NULL, &ncid);
-    PNCDF_Error(err, "create")
+    CHECK_ERR
   
     err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
-    PNCDF_Error(err, "def_dim0")
+    CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim1", len1, &dim1id);
-    PNCDF_Error(err, "def_dim1")
+    CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim5", len5, &dim5id);
-    PNCDF_Error(err, "def_dim5")
+    CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim9", len9, &dim9id);
-    PNCDF_Error(err, "def_dim9")
+    CHECK_ERR
   
     dimsid[0] = dim0id;
     dimsid[1] = dim1id;
     err = ncmpi_def_var(ncid, "xyz", NC_INT, 2, dimsid, &varid);
-    PNCDF_Error(err, "def_var")
+    CHECK_ERR
  
     dimsid[0] = dim0id;
     dimsid[1] = dim5id;
     err = ncmpi_def_var(ncid, "connect", NC_INT, 2, dimsid, &var3id);
-    PNCDF_Error(err, "def_var3")
+    CHECK_ERR
 
     dimsid[0] = dim0id;
     dimsid[1] = dim9id;
     err = ncmpi_def_var(ncid, "connect_exterior", NC_INT, 2, dimsid, &var4id);
-    PNCDF_Error(err, "def_var4")
+    CHECK_ERR
 
     err = ncmpi_enddef(ncid);
-    PNCDF_Error(err, "enddef")
+    CHECK_ERR
 
     /* put data */
     start[0] = 0;
@@ -115,7 +108,7 @@ int main(int argc, char** argv)
             data[i*len1+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
     err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
-    PNCDF_Error(err, "put1")
+    CHECK_ERR
     free(data);
     
     count[0] = len0;
@@ -127,7 +120,7 @@ int main(int argc, char** argv)
             data[i*len5+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
     err = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
-    PNCDF_Error(err, "put3")
+    CHECK_ERR
     free(data);
 
     count[0] = len0;
@@ -139,28 +132,28 @@ int main(int argc, char** argv)
             data[i*len9+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
     err = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
-    PNCDF_Error(err, "put4")
+    CHECK_ERR
     free(data);
 
     err = ncmpi_close(ncid);
-    PNCDF_Error(err, "close")
+    CHECK_ERR
 
     err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
-    PNCDF_Error(err, "ncmpi_open")
+    CHECK_ERR
 
     err = ncmpi_redef(ncid);
-    PNCDF_Error(err, "redef")
+    CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim2", len2, &dim2id);
-    PNCDF_Error(err, "def_dim")
+    CHECK_ERR
   
     dims2id[0] = dim0id;
     dims2id[1] = dim2id;
     err = ncmpi_def_var(ncid, "xyz_r", NC_DOUBLE, 2, dims2id, &var2id);
-    PNCDF_Error(err, "def_var")
+    CHECK_ERR
 
     err = ncmpi_enddef(ncid);
-    PNCDF_Error(err, "enddef")
+    CHECK_ERR
 
     start[0] = 0;
     start[1] = 0;
@@ -175,11 +168,11 @@ int main(int argc, char** argv)
         }
     if (rank > 0) count[0] = count[1] = 0;
     err = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
-    PNCDF_Error(err, "put2")
+    CHECK_ERR
     free(dbl_data);
 
     err = ncmpi_close(ncid);
-    PNCDF_Error(err, "close")
+    CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -191,7 +184,6 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
@@ -199,5 +191,5 @@ fn_exit:
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }

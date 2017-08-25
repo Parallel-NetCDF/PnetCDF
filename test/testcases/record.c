@@ -33,8 +33,6 @@
 
 #include <testutils.h>
 
-#define ERR {if(err!=NC_NOERR) {nerrs++; printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
-
 static
 int test_only_record_var_1D(char *filename)
 {
@@ -44,50 +42,51 @@ int test_only_record_var_1D(char *filename)
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
-    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid); ERR
-    err = ncmpi_def_var(ncid, "REC_VAR_1D", NC_INT, 1, &dimid, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid); CHECK_ERR
+    err = ncmpi_def_var(ncid, "REC_VAR_1D", NC_INT, 1, &dimid, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* write the 2nd record first */
     buf[0] = 91;
     start[0] = 1; count[0] = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
 
     /* write the 1st record now */
     buf[0] = 90;
     start[0] = 0; count[0] = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
 
-    err = ncmpi_inq_dimlen(ncid, dimid, &length); ERR
+    err = ncmpi_inq_dimlen(ncid, dimid, &length); CHECK_ERR
     if (length != 2) {
-        printf("Error: expecting 2 records, but got %lld record(s)\n",length);
+        printf("Error at line %d in %s: expecting 2 records, but got %lld record(s)\n",
+        __LINE__,__FILE__,length);
         nerrs++;
     }
 
     if (nerrs == 0) { /* test independent data mode */
-        err = ncmpi_begin_indep_data(ncid); ERR
+        err = ncmpi_begin_indep_data(ncid); CHECK_ERR
         /* write the 4th record */
         buf[0] = 93;
         start[0] = 3; count[0] = 1;
-        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); CHECK_ERR
 
         /* write the 3rd record */
         buf[0] = 92; buf[1] = 93;
         start[0] = 2; count[0] = 2;
-        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); CHECK_ERR
 
-        err = ncmpi_inq_dimlen(ncid, dimid, &length); ERR
+        err = ncmpi_inq_dimlen(ncid, dimid, &length); CHECK_ERR
         if (length != 4) {
-            printf("Error: expecting 4 records, but got %lld record(s)\n",
-                   length);
+            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+                   __LINE__,__FILE__,length);
             nerrs++;
         }
-        err = ncmpi_end_indep_data(ncid); ERR
+        err = ncmpi_end_indep_data(ncid); CHECK_ERR
     }
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }
 
@@ -100,54 +99,55 @@ int test_only_record_var_3D(char *filename)
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
-    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "FIX_DIM_Y", 2,          &dimid[1]); ERR
-    err = ncmpi_def_dim(ncid, "FIX_DIM_X", 10,         &dimid[2]); ERR
-    err = ncmpi_def_var(ncid, "REC_VAR_3D", NC_INT, 3, dimid, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "FIX_DIM_Y", 2,          &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "FIX_DIM_X", 10,         &dimid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "REC_VAR_3D", NC_INT, 3, dimid, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     start[1] = 0; start[2] = 0; count[0] = 1; count[1] = 2; count[2] = 5;
 
     /* write the 2nd record first */
     for (i=0; i<20; i++) buf[i] = 91;
     start[0] = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
 
     /* write the 1st record now */
     for (i=0; i<20; i++) buf[i] = 90;
     start[0] = 0;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
 
-    err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
+    err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 2) {
-        printf("Error: expecting 2 records, but got %lld record(s)\n",length);
+        printf("Error at line %d in %s: expecting 2 records, but got %lld record(s)\n",
+        __LINE__,__FILE__,length);
         nerrs++;
     }
 
     if (nerrs == 0) { /* test independent data mode */
-        err = ncmpi_begin_indep_data(ncid); ERR
+        err = ncmpi_begin_indep_data(ncid); CHECK_ERR
         /* write the 4th record */
         for (i=0; i<20; i++) buf[i] = 93;
         start[0] = 3;
-        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); CHECK_ERR
 
         /* write the 3rd record */
         for (i=0; i<20; i++) buf[i] = 92;
         start[0] = 2;
-        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid, start, count, buf); CHECK_ERR
 
-        err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
+        err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error: expecting 4 records, but got %lld record(s)\n",
-                   length);
+            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+                   __LINE__,__FILE__,length);
             nerrs++;
         }
-        err = ncmpi_end_indep_data(ncid); ERR
+        err = ncmpi_end_indep_data(ncid); CHECK_ERR
     }
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }
 
@@ -160,51 +160,52 @@ int test_two_record_var(char *filename)
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
-    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "FIX_DIM_Y", 2,          &dimid[1]); ERR
-    err = ncmpi_def_dim(ncid, "FIX_DIM_X", 10,         &dimid[2]); ERR
-    err = ncmpi_def_var(ncid, "REC_VAR_1D", NC_INT, 1, dimid, &varid[0]); ERR
-    err = ncmpi_def_var(ncid, "REC_VAR_3D", NC_INT, 3, dimid, &varid[1]); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "FIX_DIM_Y", 2,          &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "FIX_DIM_X", 10,         &dimid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "REC_VAR_1D", NC_INT, 1, dimid, &varid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "REC_VAR_3D", NC_INT, 3, dimid, &varid[1]); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* REC_VAR_1D: write the 2nd record first */
     buf[0] = 91;
     start[0] = 1; count[0] = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
 
     /* write the 1st record now */
     buf[0] = 90;
     start[0] = 0; count[0] = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
 
-    err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
+    err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 2) {
-        printf("Error: expecting 2 records, but got %lld record(s)\n",length);
+        printf("Error at line %d in %s: expecting 2 records, but got %lld record(s)\n",
+        __LINE__,__FILE__,length);
         nerrs++;
     }
 
     if (nerrs == 0) { /* test independent data mode */
-        err = ncmpi_begin_indep_data(ncid); ERR
+        err = ncmpi_begin_indep_data(ncid); CHECK_ERR
         /* write the 4th record */
         buf[0] = 93;
         start[0] = 3; count[0] = 1;
-        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); CHECK_ERR
 
         /* write the 3rd and 4th records */
         buf[0] = 92; buf[1] = 93;
         start[0] = 2; count[0] = 2;
-        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); CHECK_ERR
 
-        err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
+        err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error: expecting 4 records, but got %lld record(s)\n",
-                   length);
+            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+                   __LINE__,__FILE__,length);
             nerrs++;
         }
-        err = ncmpi_end_indep_data(ncid); ERR
+        err = ncmpi_end_indep_data(ncid); CHECK_ERR
     }
 
     /* REC_VAR_3D: write the 2nd record first */
@@ -212,40 +213,41 @@ int test_two_record_var(char *filename)
 
     for (i=0; i<20; i++) buf[i] = 91;
     start[0] = 1;
-    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
 
     /* write the 1st record now */
     for (i=0; i<20; i++) buf[i] = 90;
     start[0] = 0;
-    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
 
-    err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
+    err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 4) {
-        printf("Error: expecting 4 records, but got %lld record(s)\n",length);
+        printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+        __LINE__,__FILE__,length);
         nerrs++;
     }
 
     if (nerrs == 0) { /* test independent data mode */
-        err = ncmpi_begin_indep_data(ncid); ERR
+        err = ncmpi_begin_indep_data(ncid); CHECK_ERR
         /* write the 4th record */
         for (i=0; i<20; i++) buf[i] = 93;
         start[0] = 3;
-        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); CHECK_ERR
 
         /* write the 3rd record */
         for (i=0; i<20; i++) buf[i] = 92;
         start[0] = 2;
-        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); ERR
+        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); CHECK_ERR
 
-        err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
+        err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error: expecting 4 records, but got %lld record(s)\n",
-                   length);
+            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+                   __LINE__,__FILE__,length);
             nerrs++;
         }
-        err = ncmpi_end_indep_data(ncid); ERR
+        err = ncmpi_end_indep_data(ncid); CHECK_ERR
     }
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }
 
@@ -297,6 +299,6 @@ fn_exit:
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

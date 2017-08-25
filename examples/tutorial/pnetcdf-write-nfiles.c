@@ -24,10 +24,11 @@ There will be 4 files created.
 The contents of files are shown at the bottom of this files.
 */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 
 static void handle_error(int status, int lineno)
@@ -43,23 +44,25 @@ int main(int argc, char **argv) {
     int ret, ncfile, nprocs, rank, dimid, varid1, varid2, ndims=1;
     char buf[13] = "Hello World\n";
     int data;
-    char filename[DSET_NAME_LEN];
+    char filename[DSET_NAME_LEN], basename[256];
 
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(basename, 256, "%s", argv[1]);
+    else          strcpy(basename, "testfile");
 
     /* Many applications find "one file per process" easy, but there are
      * several deficiencies with that approach:
      * - here we need to construct a unique file name for each processor */
-    ret = snprintf(filename, DSET_NAME_LEN, "%s.%d-%d.nc", argv[1], rank, nprocs);
+    ret = snprintf(filename, DSET_NAME_LEN, "%s.%d-%d.nc", basename, rank, nprocs);
     if (ret >= DSET_NAME_LEN) {
         fprintf(stderr, "name too long \n");
         exit(-1);

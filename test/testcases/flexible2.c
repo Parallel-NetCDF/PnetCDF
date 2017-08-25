@@ -86,8 +86,6 @@
 #define NY 5
 #define NX 5
 
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
-
 int main(int argc, char** argv)
 {
     char filename[256];
@@ -105,7 +103,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -121,18 +119,18 @@ int main(int argc, char** argv)
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    ERR
+    CHECK_ERR
 
     /* define 3 dimensions */
-    err = ncmpi_def_dim(ncid, "Z", NZ*nprocs, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "Y", NY,        &dimid[1]); ERR
-    err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[2]); ERR
+    err = ncmpi_def_dim(ncid, "Z", NZ*nprocs, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y", NY,        &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[2]); CHECK_ERR
 
     /* define a variable of size (NZ * nprocs) * NY */
-    err = ncmpi_def_var(ncid, "var_zy", NC_INT,   2, &dimid[0], &varid0); ERR
+    err = ncmpi_def_var(ncid, "var_zy", NC_INT,   2, &dimid[0], &varid0); CHECK_ERR
     /* define a variable of size NY * (NX * nprocs) */
-    err = ncmpi_def_var(ncid, "var_yx", NC_FLOAT, 2, &dimid[1], &varid1); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_var(ncid, "var_yx", NC_FLOAT, 2, &dimid[1], &varid1); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* var_zy is partitioned along Z dimension */
     array_of_sizes[0]    = NZ + 2*ghost_len;
@@ -153,12 +151,12 @@ int main(int argc, char** argv)
     count[0] = NZ;        count[1] = NY;
     /* calling a blocking flexible API */
     err = ncmpi_put_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
-    ERR
+    CHECK_ERR
 
     /* check the contents of put buffer */
     for (i=0; i<buffer_len; i++) {
         if (buf_zy[i] != rank+10) {
-            printf("Error put buffer[%d] is altered\n",i);
+            printf("Error at line %d in %s: put buffer[%d] is altered\n",__LINE__,__FILE__,i);
             nerrs++;
         }
     }
@@ -166,7 +164,7 @@ int main(int argc, char** argv)
     for (i=0; i<buffer_len; i++) buf_zy[i] = -1;
     /* calling a blocking flexible API */
     err = ncmpi_get_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
-    ERR
+    CHECK_ERR
 
     /* check the contents of get buffer */
     for (i=0; i<array_of_sizes[0]; i++) {
@@ -213,14 +211,14 @@ int main(int argc, char** argv)
 
     /* calling a non-blocking flexible API */
     err = ncmpi_iput_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
-    ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
-    err = status; ERR
+    CHECK_ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of put buffer */
     for (i=0; i<buffer_len; i++) {
         if (buf_yx[i] != rank+10) {
-            printf("Error iput buffer[%d]=%f is altered\n",i,buf_yx[i]);
+            printf("Error at line %d in %s: iput buffer[%d]=%f is altered\n",__LINE__,__FILE__,i,buf_yx[i]);
             nerrs++;
         }
     }
@@ -229,9 +227,9 @@ int main(int argc, char** argv)
 
     /* calling a non-blocking flexible API */
     err = ncmpi_iget_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
-    ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
-    err = status; ERR
+    CHECK_ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of iget buffer */
     for (i=0; i<array_of_sizes[0]; i++) {
@@ -257,7 +255,7 @@ int main(int argc, char** argv)
     free(buf_yx);
     MPI_Type_free(&subarray);
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -276,6 +274,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

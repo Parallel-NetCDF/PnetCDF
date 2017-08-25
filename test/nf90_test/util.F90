@@ -861,12 +861,13 @@
         double precision hash
         logical inrange
 
-        integer(kind=MPI_OFFSET_KIND)                 start(MAX_RANK)
-        integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
-        integer                 err             !/* netCDF status */
+        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer                 err   !/* netCDF status */
         integer                 i
         integer                 j
         doubleprecision         value(MAX_NELS)
+        doubleprecision         value1
         character*(MAX_NELS+2)  text
         logical                 allInRange
 
@@ -903,14 +904,23 @@
 !                */
                 text(var_nels(i)+1:var_nels(i)+1) = char(1)
                 text(var_nels(i)+2:var_nels(i)+2) = char(0)
-                err = nf90mpi_put_var(ncid, i, text, start, &
+                if (var_rank(i) .EQ. 0) then  ! scalar
+                    err = nf90mpi_put_var(ncid, i, text(1:1))
+                else
+                    err = nf90mpi_put_var(ncid, i, text, start, &
                                           var_shape(:,i))
+                endif
                 if (err .ne. NF90_NOERR) then
                     call errore('nf90mpi_put_var: ', err)
                 end if
             else
-                err = nf90mpi_put_var(ncid, i, value, start, &
-                                            var_shape(:,i))
+                if (var_rank(i) .EQ. 0) then  ! scalar
+                    value1 = value(1)
+                    err = nf90mpi_put_var(ncid, i, value1)
+                else
+                    err = nf90mpi_put_var(ncid, i, value, start, &
+                                          var_shape(:,i))
+                endif
                 if (allInRange) then
                     if (err .ne. NF90_NOERR) then
                         call errore('nf90mpi_put_var: ', err)

@@ -5,8 +5,8 @@
  *********************************************************************/
 /* $Id$ */
 
-#if HAVE_CONFIG_H
-# include <ncconfig.h>
+#ifdef HAVE_CONFIG_H
+# include <config.h>
 #endif
 #include <stdio.h>
 #include <ctype.h>
@@ -298,14 +298,14 @@ annotate(
       case LANG_C:
 	/* C variable indices */
 	for (id = 0; id < vrank-1; id++)
-	  Printf("%lu,", (unsigned long) cor[id]);
-	Printf("%lu", (unsigned long) cor[id] + iel);
+	  Printf("%lld,", cor[id]);
+	Printf("%lld", cor[id] + iel);
 	break;
       case LANG_F:
 	/* Fortran variable indices */
-	Printf("%lu", (unsigned long) cor[vrank-1] + iel + 1);
+	Printf("%lld", cor[vrank-1] + iel + 1);
 	for (id = vrank-2; id >=0 ; id--) {
-	    Printf(",%lu", 1 + (unsigned long) cor[id]);
+	    Printf(",%lld", 1 + cor[id]);
 	}
 	break;
     }

@@ -22,7 +22,6 @@
 
 #define NY 4
 #define NX 4
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
@@ -41,7 +40,7 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -54,16 +53,16 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define a 2D array */
-    err = ncmpi_def_dim(ncid, "Y", NY*nprocs, &dimids[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", NX,        &dimids[1]); ERR
-    err = ncmpi_def_var(ncid, "var0", NC_INT, 2, dimids, &varid[0]); ERR
-    err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimids, &varid[1]); ERR
-    err = ncmpi_def_var(ncid, "var2", NC_INT, 2, dimids, &varid[2]); ERR
-    err = ncmpi_def_var(ncid, "var3", NC_INT, 2, dimids, &varid[3]); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", NY*nprocs, &dimids[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX,        &dimids[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var0", NC_INT, 2, dimids, &varid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimids, &varid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var2", NC_INT, 2, dimids, &varid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var3", NC_INT, 2, dimids, &varid[3]); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* initialize the contents of the array */
     for (i=0; i<4; i++) for (j=0; j<(NY+4)*(NX+4); j++) buf[i][j] = rank+10;
@@ -71,17 +70,17 @@ int main(int argc, char **argv) {
     start[0] = NY*rank; start[1] = 0;
     count[0] = NY;      count[1] = NX;
 
-    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf[0]); ERR
-    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf[1]); ERR
-    err = ncmpi_put_vara_int_all(ncid, varid[2], start, count, buf[2]); ERR
-    err = ncmpi_put_vara_int_all(ncid, varid[3], start, count, buf[3]); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf[0]); CHECK_ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf[1]); CHECK_ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[2], start, count, buf[2]); CHECK_ERR
+    err = ncmpi_put_vara_int_all(ncid, varid[3], start, count, buf[3]); CHECK_ERR
 
     /* check if user write buffer contents altered */
     for (i=0; i<4; i++) {
         for (j=0; j<(NY+4)*(NX+4); j++) {
             if (buf[i][j] != rank+10) {
-                printf("Error: user put buffer[%d][%d] altered from %d to %d\n",
-                       i,j, rank+10, buf[i][j]);
+                printf("Error at line %d in %s: user put buffer[%d][%d] altered from %d to %d\n",
+                       __LINE__,__FILE__,i,j, rank+10, buf[i][j]);
                 nerrs++;
             }
         }
@@ -102,19 +101,19 @@ int main(int argc, char **argv) {
         MPI_Type_create_subarray(2, gsize, subsize, a_start, MPI_ORDER_C, MPI_INT, &buftype[i]);
         MPI_Type_commit(&buftype[i]);
 
-        err = ncmpi_iget_vara(ncid, varid[i], start, count, buf[i], 1, buftype[i], &req[i]); ERR
+        err = ncmpi_iget_vara(ncid, varid[i], start, count, buf[i], 1, buftype[i], &req[i]); CHECK_ERR
         MPI_Type_free(&buftype[i]);
     }
 
-    err = ncmpi_wait_all(ncid, 4, req, st); ERR
+    err = ncmpi_wait_all(ncid, 4, req, st); CHECK_ERR
     for (i=0; i<4; i++) {
         if (st[i] != NC_NOERR) {
-            printf("Error: ncmpi_wait_all st[%d] %s\n",i, ncmpi_strerror(st[i]));
-            nerrs++;
+            err = st[i];
+            CHECK_ERR
         }
     }
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -133,6 +132,6 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

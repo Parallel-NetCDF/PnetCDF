@@ -50,7 +50,7 @@
 #define DEGREES_NORTH "degrees_north"
 
 /* These are used to calculate the values we expect to find. */
-#define SAMPLE_PRESSURE 900
+#define SAMPLE_PRESSURE 900.0
 #define SAMPLE_TEMP 9.0
 #define START_LAT 25.0
 #define START_LON -125.0
@@ -62,14 +62,6 @@
 #define LAT_UNITS "degrees_north"
 #define LON_UNITS "degrees_east"
 #define MAX_ATT_LEN 80
-
-/* Handle errors by printing an error message and exiting with a
- * non-zero status. */
-#define CHECK_ERR { \
-    if (err != NC_NOERR) { \
-        nerrs++; \
-        printf("Error: %s at line %d (%s)\n", __FILE__,__LINE__,ncmpi_strerror(err)); } }
-
 
 int
 main(int argc, char **argv)
@@ -83,8 +75,8 @@ main(int argc, char **argv)
 
    /* Program variables to hold the data we will read. We will only
       need enough space to hold one timestep of data; one record. */
-   float **pres_in; /* [NLVL/nprocs][NLAT][NLON] */
-   float **temp_in; /* [NLVL/nprocs][NLAT][NLON] */
+   float **pres_in=NULL; /* [NLVL/nprocs][NLAT][NLON] */
+   float **temp_in=NULL; /* [NLVL/nprocs][NLAT][NLON] */
 
    /* These program variables hold the latitudes and longitudes. */
    float lats[NLAT], lons[NLON];
@@ -104,7 +96,7 @@ main(int argc, char **argv)
    if (argc > 2) {
        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
        MPI_Finalize();
-       return 0;
+       return 1;
    }
    if (argc == 2) filename = argv[1];
 
@@ -127,6 +119,8 @@ main(int argc, char **argv)
    CHECK_ERR
 
    /* Read the coordinate variable data. */
+   memset(lats, 0, sizeof(float)*NLAT);
+   memset(lons, 0, sizeof(float)*NLON);
    err = ncmpi_get_var_float_all(ncid, lat_varid, &lats[0]);
    CHECK_ERR
    err = ncmpi_get_var_float_all(ncid, lon_varid, &lons[0]);
@@ -134,11 +128,17 @@ main(int argc, char **argv)
 
    /* Check the coordinate variable data. */
    for (lat = 0; lat < NLAT; lat++)
-      if (lats[lat] != START_LAT + 5.*lat)
-	 return 2;
+      if (lats[lat] != START_LAT + 5.*lat) {
+          printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, START_LAT+5.*lat,lats[lat]);
+	  nerrs++;
+          goto fn_exit;
+      }
    for (lon = 0; lon < NLON; lon++)
-      if (lons[lon] != START_LON + 5.*lon)
-	 return 2;
+      if (lons[lon] != START_LON + 5.*lon) {
+          printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, START_LON+5.*lon,lons[lon]);
+	  nerrs++;
+          goto fn_exit;
+      }
 
    /* Get the varids of the pressure and temperature netCDF
     * variables. */
@@ -193,23 +193,31 @@ main(int argc, char **argv)
       i = (int)start[1] * NLAT * NLON;
       for (lvl=0; lvl<count[1]; lvl++)
 	 for (lat = 0; lat < NLAT; lat++)
-	    for (lon = 0; lon < NLON; lon++)
-	    {
-	       if (pres_in[lvl][lat*NLON+lon] != SAMPLE_PRESSURE + i) 
+	    for (lon = 0; lon < NLON; lon++) {
+	       if (pres_in[lvl][lat*NLON+lon] != SAMPLE_PRESSURE + i) {
+                  printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, SAMPLE_PRESSURE+i,pres_in[lvl][lat*NLON+lon]);
 		  nerrs++;
-	       if (temp_in[lvl][lat*NLON+lon] != SAMPLE_TEMP + i) 
+		  goto fn_exit;
+               }
+	       if (temp_in[lvl][lat*NLON+lon] != SAMPLE_TEMP + i) {
+                  printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, SAMPLE_TEMP+i,temp_in[lvl][lat*NLON+lon]);
 		  nerrs++;
+		  goto fn_exit;
+               }
 	       i++;
 	    }
 
    } /* next record */
 
-   /* Close the file. */
-   err = ncmpi_close(ncid);
-   CHECK_ERR
+fn_exit:
+    /* Close the file. */
+    err = ncmpi_close(ncid);
+    CHECK_ERR
 
-   if (count[1] > 0) free(pres_in[0]);
-   free(pres_in);
+    if (pres_in != NULL) {
+       if (pres_in[0] != NULL) free(pres_in[0]);
+       free(pres_in);
+    }
 
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
@@ -228,5 +236,5 @@ main(int argc, char **argv)
     }
 
    MPI_Finalize();
-   return (nerrs) ? 2 : 0;
+   return (nerrs > 0);
 }

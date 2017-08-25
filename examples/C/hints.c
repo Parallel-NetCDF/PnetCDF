@@ -35,15 +35,11 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 #define NZ 5
 #define NY 5
 #define NX 5
 
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -133,7 +129,7 @@ int main(int argc, char** argv)
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -196,6 +192,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return nerrs;
+    return (nerrs > 0);
 }
 

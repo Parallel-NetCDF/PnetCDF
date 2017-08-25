@@ -28,8 +28,6 @@
 
 #include <testutils.h>
 
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
-
 int main(int argc, char** argv) {
     char filename[256], var_name[NC_MAX_NAME];
     int i, nvars, rank, nprocs, err, nerrs=0;
@@ -43,7 +41,7 @@ int main(int argc, char** argv) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -56,45 +54,45 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define dimensions */
-    err = ncmpi_def_dim(ncid, "dim_1", 5, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "dim_2", 4, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "dim_1", 5, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "dim_2", 4, &dimid[1]); CHECK_ERR
 
     /* define a bunch of variables */
     for (i=0; i<10; i++) {
         sprintf(var_name, "var_%d", i);
-        err = ncmpi_def_var(ncid, var_name, NC_INT, 2, dimid, &varid); ERR
+        err = ncmpi_def_var(ncid, var_name, NC_INT, 2, dimid, &varid); CHECK_ERR
     }
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* re-enter define mode */
-    err = ncmpi_redef(ncid); ERR
+    err = ncmpi_redef(ncid); CHECK_ERR
 
     /* add 2 new dimensions */
-    err = ncmpi_def_dim(ncid, "new_dim_1", 5, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "new_dim_2", 4, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "new_dim_1", 5, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "new_dim_2", 4, &dimid[1]); CHECK_ERR
 
     /* add 2 new variables */
-    err = ncmpi_def_var(ncid, "new_var1", NC_INT,   2, dimid, &varid); ERR
-    err = ncmpi_def_var(ncid, "new_var2", NC_FLOAT, 2, dimid, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_var(ncid, "new_var1", NC_INT,   2, dimid, &varid); CHECK_ERR
+    err = ncmpi_def_var(ncid, "new_var2", NC_FLOAT, 2, dimid, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
-    err = ncmpi_inq_nvars(ncid, &nvars); ERR
-    err = ncmpi_inq_varoffset(ncid, 0, &prev_off); ERR
+    err = ncmpi_inq_nvars(ncid, &nvars); CHECK_ERR
+    err = ncmpi_inq_varoffset(ncid, 0, &prev_off); CHECK_ERR
     for (i=1; i<nvars; i++) {
-        err = ncmpi_inq_varoffset(ncid, i, &off); ERR
+        err = ncmpi_inq_varoffset(ncid, i, &off); CHECK_ERR
         if (off < prev_off + 5*4*4) { /* each variable is of size 5*4*4 bytes */
-            err = ncmpi_inq_varname(ncid, i, var_name); ERR
-            printf("Error in %s line %d: variable %s offset is set incorrectly\n",
-                   __FILE__,__LINE__,var_name);
+            err = ncmpi_inq_varname(ncid, i, var_name); CHECK_ERR
+            printf("Error at line %d in %s: variable %s offset is set incorrectly\n",
+                   __LINE__,__FILE__,var_name);
             nerrs++;
         }
         prev_off = off;
     }
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -113,6 +111,6 @@ int main(int argc, char** argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

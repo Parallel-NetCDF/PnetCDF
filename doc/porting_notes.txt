@@ -1,5 +1,11 @@
+$id$
  
- these are some rough notes for porting code from the serial netcdf api to
+----------------------------------------------
+Notes in this file are for PnetCDF developers
+----------------------------------------------
+
+
+ These are some rough notes for porting code from the serial netcdf api to
  the pnetcdf API.  Pnetcdf is very similar but there are some changes that
  have to be made:
 

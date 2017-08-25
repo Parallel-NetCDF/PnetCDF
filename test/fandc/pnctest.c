@@ -11,8 +11,6 @@
 
 /* Test program thanks to From: John Tannahill <tannahill1@llnl.gov> */
 
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); nerrs++;}
-
 int main (int argc, char *argv[])
 {
   int dim_id[3], isperiodic[3] = { 0, 0, 0 };
@@ -32,21 +30,21 @@ int main (int argc, char *argv[])
   MPI_Cart_create (MPI_COMM_WORLD, 3, numpes, isperiodic, reorder, &comm_cart);
 
   err = ncmpi_create (comm_cart, "testfile.nc", NC_CLOBBER, MPI_INFO_NULL,
-                       &ncid); ERR
+                       &ncid); CHECK_ERR
 
-  err = ncmpi_def_dim (ncid, "level",     TOTSIZ_3D[0], &lev_id); ERR
-  err = ncmpi_def_dim (ncid, "latitude",  TOTSIZ_3D[1], &lat_id); ERR
-  err = ncmpi_def_dim (ncid, "longitude", TOTSIZ_3D[2], &lon_id); ERR
+  err = ncmpi_def_dim (ncid, "level",     TOTSIZ_3D[0], &lev_id); CHECK_ERR
+  err = ncmpi_def_dim (ncid, "latitude",  TOTSIZ_3D[1], &lat_id); CHECK_ERR
+  err = ncmpi_def_dim (ncid, "longitude", TOTSIZ_3D[2], &lon_id); CHECK_ERR
 
   dim_id[0] = lev_id;
   dim_id[1] = lat_id;
   dim_id[2] = lon_id;
 
-  err = ncmpi_def_var (ncid, "tt", NC_FLOAT, 3, dim_id, &tt_id); ERR
+  err = ncmpi_def_var (ncid, "tt", NC_FLOAT, 3, dim_id, &tt_id); CHECK_ERR
 
-  err = ncmpi_enddef (ncid); ERR
+  err = ncmpi_enddef (ncid); CHECK_ERR
 
-  err = ncmpi_close (ncid); ERR
+  err = ncmpi_close (ncid); CHECK_ERR
 
   MPI_Comm_free (&comm_cart);
 
@@ -65,6 +63,6 @@ int main (int argc, char *argv[])
         else       printf(PASS_STR);
     }
 
-  MPI_Finalize ( );
-  return 0;
+    MPI_Finalize();
+    return (nerrs > 0);
 }

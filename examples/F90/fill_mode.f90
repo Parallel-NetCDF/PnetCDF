@@ -172,11 +172,15 @@
           call check(err, 'In nf90mpi_put_var_all: ')
 
           err = nf90mpi_inq_var_fill(ncid, fix_varid, no_fill, fill_value)
-          if (no_fill .NE. 0) &
+          if (no_fill .NE. 0) then
               print*,"Error: expecting no_fill to be 0"
-          if (fill_value .NE. NF90_FILL_INT) &
+              stop 2
+          endif
+          if (fill_value .NE. NF90_FILL_INT) then
               print*,"Error: expecting no_fill to be ",NF90_FILL_INT, &
                      " but got ", fill_value
+              stop 2
+          endif
 
           ! fill the 1st record of the record variable
           starts(2) = 1

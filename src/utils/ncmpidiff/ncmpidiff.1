@@ -2,7 +2,7 @@
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH NCMPIDIFF 1 2013-11-17 "Printed: \n(yr-\n(mo-\n(dy" "UTILITIES"
+.TH ncmpidiff 1 "PnetCDF PNETCDF_RELEASE_VERSION" "Printed: \n(yr-\n(mo-\n(dy" "PnetCDF utilities"
 .SH NAME
 ncmpidiff \- compares two netCDF files in parallel
 .SH SYNOPSIS
@@ -27,18 +27,20 @@ files are compared.
 .IP "\fB-b\fP"
 Verbose mode - print results (same or different) for all components (file, header, or variables) in comparison
 .IP "\fB-q\fP"
-Quiet mode - print nothing when two components in comparison are the same
+Quiet mode - print nothing on the command-line output. This also disables verbose mode. When in quiet mode, users should check exit status. See below in "EXIT STATUS".
 .IP "\fB-h\fP"
 Compare file header only
 .IP "\fB-v\fP \fIvar1,...,varn\fP"
 Compare only the given list of variables
-
+.SH EXIT STATUS
+An exit status of 0 means no differences were found, and
+1 means some differences were found.
+Note on VMS-based system, the exit status values are reversed.
 .SH "SEE ALSO"
 .LP
 .BR ncmpidump (1),
 .BR pnetcdf (3)
 .SH DATE
-$Date$
+PNETCDF_RELEASE_DATE
 .LP
-
 

@@ -56,11 +56,10 @@
 #include <pnetcdf.h>
 #include "testutils.h"
 
-#define ERR {if(status!=NC_NOERR)printf("Error at line %d: %s\n",__LINE__,ncmpi_strerror(status));}
 
 int main(int argc, char **argv) {
   MPI_Offset i, j, k;
-  int status;
+  int err, nerrs=0;
   int ncid;
   int dimid1, dimid2, dimid3, udimid;
   int square_dim[2], cube_dim[3], xytime_dim[3], time_dim[1];
@@ -98,8 +97,8 @@ int main(int argc, char **argv) {
    *   Dataset API: Collective
    */
 
-  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
-  ERR
+  err = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
+  CHECK_ERR
 
 
   /**
@@ -110,9 +109,9 @@ int main(int argc, char **argv) {
    * PnetCDF to return an NC error code */
   sprintf(title, "%s:%d of %d", title, rank, nprocs);
   printf("title:%s\n", title);
-  status = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
+  err = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
                           strlen(title), title);
-  ERR
+  CHECK_ERR
   
    
   /**
@@ -123,16 +122,16 @@ int main(int argc, char **argv) {
   /* this will cause inconsistent header, PnetCDF should return an NC error
    * code, considered a fatal one so that the program should not continue. */
   if (rank == 0) /* make it inconsistent on purpose (a fatal error) */
-      status = ncmpi_def_dim(ncid, "x", 100, &dimid1);
+      err = ncmpi_def_dim(ncid, "x", 100, &dimid1);
   else 
-      status = ncmpi_def_dim(ncid, "x", 99, &dimid1);
-  ERR
-  status = ncmpi_def_dim(ncid, "y", 100, &dimid2);
-  ERR
-  status = ncmpi_def_dim(ncid, "z", 100, &dimid3);
-  ERR
-  status = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
-  ERR
+      err = ncmpi_def_dim(ncid, "x", 99, &dimid1);
+  CHECK_ERR
+  err = ncmpi_def_dim(ncid, "y", 100, &dimid2);
+  CHECK_ERR
+  err = ncmpi_def_dim(ncid, "z", 100, &dimid3);
+  CHECK_ERR
+  err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
+  CHECK_ERR
 
   /**
    * Define the dimensionality and then add 4 variables:
@@ -144,14 +143,14 @@ int main(int argc, char **argv) {
   cube_dim[2] = dimid3;
   xytime_dim[0] = udimid;
   time_dim[0] = udimid;
-  status = ncmpi_def_var (ncid, "square", NC_INT, 2, square_dim, &square_id);
-  ERR
-  status = ncmpi_def_var (ncid, "cube", NC_INT, 3, cube_dim, &cube_id);
-  ERR
-  status = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
-  ERR
-  status = ncmpi_def_var (ncid, "xytime", NC_INT, 3, xytime_dim, &xytime_id);
-  ERR
+  err = ncmpi_def_var (ncid, "square", NC_INT, 2, square_dim, &square_id);
+  CHECK_ERR
+  err = ncmpi_def_var (ncid, "cube", NC_INT, 3, cube_dim, &cube_id);
+  CHECK_ERR
+  err = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
+  CHECK_ERR
+  err = ncmpi_def_var (ncid, "xytime", NC_INT, 3, xytime_dim, &xytime_id);
+  CHECK_ERR
 
   /**
    * Add an attribute for variable: 
@@ -162,21 +161,21 @@ int main(int argc, char **argv) {
   /* this will cause inconsistent header, but not serious enough to make
    * PnetCDF to return an NC error code */
 
-  status = ncmpi_put_att_text (ncid, square_id, "description",
+  err = ncmpi_put_att_text (ncid, square_id, "description",
                           strlen(description), description);
-  ERR
+  CHECK_ERR
 
   /**
    * End Define Mode (switch to data mode)
    *   Dataset API: Collective
    */
 
-  status = ncmpi_enddef(ncid);
-  if ((rank == 0 && status != NC_EMULTIDEFINE) ||
-      (rank  > 0 && status != NC_EDIMS_SIZE_MULTIDEFINE)) {  
-      fprintf(stderr, "%d: Unexpected Error code %s: %s!\n",rank, nc_err_code_name(status),ncmpi_strerror(status));
-      status = ncmpi_close(ncid);
-      ERR
+  err = ncmpi_enddef(ncid);
+  if ((rank == 0 && err != NC_EMULTIDEFINE) ||
+      (rank  > 0 && err != NC_EDIMS_SIZE_MULTIDEFINE)) {  
+      fprintf(stderr, "Error at line %d in %s unexpected code %s!\n",__LINE__,__FILE__, ncmpi_strerrno(err));
+      err = ncmpi_close(ncid);
+      CHECK_ERR
   }
 
 #ifdef NOT_YET
@@ -217,32 +216,32 @@ int main(int argc, char **argv) {
       ncmpi_inq_dimlen(ncid, dimid1, &dimlen);
       printf("dimid1 len = %lld\n",dimlen);
 
-      status = ncmpi_put_vara_int_all(ncid, square_id,
+      err = ncmpi_put_vara_int_all(ncid, square_id,
                     square_start, square_count,
                     &data[0][0][0]);
-      ERR
-      status = ncmpi_put_vara_int_all(ncid, cube_id,
+      CHECK_ERR
+      err = ncmpi_put_vara_int_all(ncid, cube_id,
                     cube_start, cube_count,
                     &data[0][0][0]);
-      ERR
-      status = ncmpi_put_vara_int_all(ncid, time_id,
+      CHECK_ERR
+      err = ncmpi_put_vara_int_all(ncid, time_id,
                     time_start, time_count,
                     (void *)buffer);
-      ERR
-      status = ncmpi_put_vara_int_all(ncid, xytime_id,
+      CHECK_ERR
+      err = ncmpi_put_vara_int_all(ncid, xytime_id,
                     xytime_start, xytime_count,
                     &data[0][0][0]);
-      ERR
+      CHECK_ERR
 
 /*
-status = ncmpi_sync(ncid);
-ERR
-status = ncmpi_redef(ncid);
-ERR
-status = ncmpi_del_att(ncid, square_id, "description");
-ERR
-status = ncmpi_enddef(ncid);
-ERR
+err = ncmpi_sync(ncid);
+CHECK_ERR
+err = ncmpi_redef(ncid);
+CHECK_ERR
+err = ncmpi_del_att(ncid, square_id, "description");
+CHECK_ERR
+err = ncmpi_enddef(ncid);
+CHECK_ERR
 */
 
   /**
@@ -250,8 +249,8 @@ ERR
    *   Dataset API:  collective
    */
 
-      status = ncmpi_close(ncid);
-      ERR
+      err = ncmpi_close(ncid);
+      CHECK_ERR
   /*******************  END OF NETCDF ACCESS  ****************/
 
     MPI_Barrier(MPI_COMM_WORLD); 
@@ -265,6 +264,6 @@ ERR
 #endif
 
   MPI_Finalize();
-  return 0;
+  return (nerrs > 0);
 }
 

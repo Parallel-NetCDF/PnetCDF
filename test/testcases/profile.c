@@ -22,7 +22,6 @@
 
 #define NY 2
 #define NX 5
-#define ERR {if (err!=NC_NOERR) {nerrs++; printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err));}}
 #define TRC(x) if(verbose) printf("%d: ---- before %s() ----\n",rank,#x);err=x
 
 static int verbose;
@@ -37,19 +36,19 @@ static int test_vara(int ncid, int *varid)
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
 
-    TRC(ncmpi_put_vara_int_all)(ncid, varid[1], start, count, &buf[0][0]); ERR
-    TRC(ncmpi_rename_att)(ncid, varid[0], "att_name", "att_NAME"); ERR
-    TRC(ncmpi_put_vara_int_all)(ncid, varid[0], start, count, &buf[0][0]); ERR
-    TRC(ncmpi_get_vara_int_all)(ncid, varid[1], start, count, &buf[0][0]); ERR
-    TRC(ncmpi_get_vara_int_all)(ncid, varid[0], start, count, &buf[0][0]); ERR
+    TRC(ncmpi_put_vara_int_all)(ncid, varid[1], start, count, &buf[0][0]); CHECK_ERR
+    TRC(ncmpi_rename_att)(ncid, varid[0], "att_name", "att_NAME"); CHECK_ERR
+    TRC(ncmpi_put_vara_int_all)(ncid, varid[0], start, count, &buf[0][0]); CHECK_ERR
+    TRC(ncmpi_get_vara_int_all)(ncid, varid[1], start, count, &buf[0][0]); CHECK_ERR
+    TRC(ncmpi_get_vara_int_all)(ncid, varid[0], start, count, &buf[0][0]); CHECK_ERR
 
-    TRC(ncmpi_begin_indep_data)(ncid); ERR
-    TRC(ncmpi_put_vara_int)(ncid, varid[1], start, count, &buf[0][0]); ERR
-    TRC(ncmpi_put_vara_int)(ncid, varid[0], start, count, &buf[0][0]); ERR
-    TRC(ncmpi_rename_att)(ncid, varid[0], "att_NAME", "att_name"); ERR
-    TRC(ncmpi_get_vara_int)(ncid, varid[1], start, count, &buf[0][0]); ERR
-    TRC(ncmpi_get_vara_int)(ncid, varid[0], start, count, &buf[0][0]); ERR
-    TRC(ncmpi_end_indep_data)(ncid); ERR
+    TRC(ncmpi_begin_indep_data)(ncid); CHECK_ERR
+    TRC(ncmpi_put_vara_int)(ncid, varid[1], start, count, &buf[0][0]); CHECK_ERR
+    TRC(ncmpi_put_vara_int)(ncid, varid[0], start, count, &buf[0][0]); CHECK_ERR
+    TRC(ncmpi_rename_att)(ncid, varid[0], "att_NAME", "att_name"); CHECK_ERR
+    TRC(ncmpi_get_vara_int)(ncid, varid[1], start, count, &buf[0][0]); CHECK_ERR
+    TRC(ncmpi_get_vara_int)(ncid, varid[0], start, count, &buf[0][0]); CHECK_ERR
+    TRC(ncmpi_end_indep_data)(ncid); CHECK_ERR
 
     return nerrs;
 }
@@ -64,22 +63,22 @@ static int test_ivara(int ncid, int *varid)
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
 
-    TRC(ncmpi_iput_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); ERR
-    TRC(ncmpi_wait_all)(ncid, 1, req, st); ERR
-    TRC(ncmpi_iput_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); ERR
-    TRC(ncmpi_wait_all)(ncid, 1, req, st); ERR
-    TRC(ncmpi_iget_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); ERR
-    TRC(ncmpi_iget_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); ERR
-    TRC(ncmpi_wait_all)(ncid, 2, req, st); ERR
+    TRC(ncmpi_iput_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); CHECK_ERR
+    TRC(ncmpi_wait_all)(ncid, 1, req, st); CHECK_ERR
+    TRC(ncmpi_iput_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); CHECK_ERR
+    TRC(ncmpi_wait_all)(ncid, 1, req, st); CHECK_ERR
+    TRC(ncmpi_iget_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); CHECK_ERR
+    TRC(ncmpi_iget_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); CHECK_ERR
+    TRC(ncmpi_wait_all)(ncid, 2, req, st); CHECK_ERR
 
-    TRC(ncmpi_begin_indep_data)(ncid); ERR
-    TRC(ncmpi_iput_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); ERR
-    TRC(ncmpi_iput_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); ERR
-    TRC(ncmpi_wait)(ncid, 2, req, st); ERR
-    TRC(ncmpi_iget_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); ERR
-    TRC(ncmpi_iget_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); ERR
-    TRC(ncmpi_wait)(ncid, 2, req, st); ERR
-    TRC(ncmpi_end_indep_data)(ncid); ERR
+    TRC(ncmpi_begin_indep_data)(ncid); CHECK_ERR
+    TRC(ncmpi_iput_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); CHECK_ERR
+    TRC(ncmpi_iput_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); CHECK_ERR
+    TRC(ncmpi_wait)(ncid, 2, req, st); CHECK_ERR
+    TRC(ncmpi_iget_vara_int)(ncid, varid[1], start, count, &buf1[0][0], &req[0]); CHECK_ERR
+    TRC(ncmpi_iget_vara_int)(ncid, varid[0], start, count, &buf2[0][0], &req[1]); CHECK_ERR
+    TRC(ncmpi_wait)(ncid, 2, req, st); CHECK_ERR
+    TRC(ncmpi_end_indep_data)(ncid); CHECK_ERR
 
     return nerrs;
 }
@@ -136,17 +135,17 @@ static int test_vard(int ncid, int *varid)
     free(array_of_blocklengths);
     free(array_of_displacements);
 
-    TRC(ncmpi_put_vard_all)(ncid, varid[0], rec_filetype, &buf[0][0], 1, buftype); ERR
-    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_VAR"); ERR
-    TRC(ncmpi_put_vard_all)(ncid, varid[1], fix_filetype, &buf[0][0], 1, buftype); ERR
-    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_var"); ERR
+    TRC(ncmpi_put_vard_all)(ncid, varid[0], rec_filetype, &buf[0][0], 1, buftype); CHECK_ERR
+    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_VAR"); CHECK_ERR
+    TRC(ncmpi_put_vard_all)(ncid, varid[1], fix_filetype, &buf[0][0], 1, buftype); CHECK_ERR
+    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_var"); CHECK_ERR
 
-    TRC(ncmpi_begin_indep_data)(ncid); ERR
-    TRC(ncmpi_put_vard)(ncid, varid[0], rec_filetype, &buf[0][0], 1, buftype); ERR
-    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_VAR"); ERR
-    TRC(ncmpi_put_vard)(ncid, varid[1], fix_filetype, &buf[0][0], 1, buftype); ERR
-    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_var"); ERR
-    TRC(ncmpi_end_indep_data)(ncid); ERR
+    TRC(ncmpi_begin_indep_data)(ncid); CHECK_ERR
+    TRC(ncmpi_put_vard)(ncid, varid[0], rec_filetype, &buf[0][0], 1, buftype); CHECK_ERR
+    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_VAR"); CHECK_ERR
+    TRC(ncmpi_put_vard)(ncid, varid[1], fix_filetype, &buf[0][0], 1, buftype); CHECK_ERR
+    TRC(ncmpi_rename_var)(ncid, varid[0], "rec_var"); CHECK_ERR
+    TRC(ncmpi_end_indep_data)(ncid); CHECK_ERR
 
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
@@ -230,19 +229,19 @@ static int test_varn(int ncid)
     }
     buffer = (int*) malloc(4*10 * sizeof(int));
 
-    TRC(ncmpi_redef)(ncid); ERR
-    err = ncmpi_def_dim(ncid, "M",  4, &dimids[0]); ERR
-    err = ncmpi_def_dim(ncid, "N", 10, &dimids[1]); ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); ERR
-    TRC(ncmpi_enddef)(ncid); ERR
+    TRC(ncmpi_redef)(ncid); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "M",  4, &dimids[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "N", 10, &dimids[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); CHECK_ERR
+    TRC(ncmpi_enddef)(ncid); CHECK_ERR
 
-    TRC(ncmpi_begin_indep_data)(ncid); ERR
-    TRC(ncmpi_put_varn_int)(ncid, varid, num_reqs, starts, counts, buffer); ERR
-    TRC(ncmpi_get_varn_int)(ncid, varid, num_reqs, starts, counts, buffer); ERR
-    TRC(ncmpi_end_indep_data)(ncid); ERR
+    TRC(ncmpi_begin_indep_data)(ncid); CHECK_ERR
+    TRC(ncmpi_put_varn_int)(ncid, varid, num_reqs, starts, counts, buffer); CHECK_ERR
+    TRC(ncmpi_get_varn_int)(ncid, varid, num_reqs, starts, counts, buffer); CHECK_ERR
+    TRC(ncmpi_end_indep_data)(ncid); CHECK_ERR
 
-    TRC(ncmpi_put_varn_int_all)(ncid, varid, num_reqs, starts, counts, buffer); ERR
-    TRC(ncmpi_get_varn_int_all)(ncid, varid, num_reqs, starts, counts, buffer); ERR
+    TRC(ncmpi_put_varn_int_all)(ncid, varid, num_reqs, starts, counts, buffer); CHECK_ERR
+    TRC(ncmpi_get_varn_int_all)(ncid, varid, num_reqs, starts, counts, buffer); CHECK_ERR
 
     free(buffer);
     free(starts[0]);
@@ -308,28 +307,36 @@ static int test_ivarn(int ncid)
         for (j=0; j<4*10; j++) buffer[i][j] = rank+100;
     }
 
-    TRC(ncmpi_redef)(ncid); ERR
-    err = ncmpi_def_dim(ncid, "M",  4, &dimids[0]); ERR
-    err = ncmpi_def_dim(ncid, "N", 10, &dimids[1]); ERR
-    err = ncmpi_def_var(ncid, "var0", NC_INT, 2, dimids, &varid[0]); ERR
-    err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimids, &varid[1]); ERR
-    err = ncmpi_def_var(ncid, "var2", NC_INT, 2, dimids, &varid[2]); ERR
-    err = ncmpi_def_var(ncid, "var3", NC_INT, 2, dimids, &varid[3]); ERR
-    TRC(ncmpi_enddef)(ncid); ERR
+    TRC(ncmpi_redef)(ncid); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "M",  4, &dimids[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "N", 10, &dimids[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var0", NC_INT, 2, dimids, &varid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimids, &varid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var2", NC_INT, 2, dimids, &varid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var3", NC_INT, 2, dimids, &varid[3]); CHECK_ERR
+    TRC(ncmpi_enddef)(ncid); CHECK_ERR
 
     for (i=0; i<3; i++) {
         j = (nprocs > 1) ? (i + rank) % nprocs : i;
-        TRC(ncmpi_iput_varn_int)(ncid, varid[j], num_reqs[j], starts[j], counts[j], buffer[j], &req[i]); ERR
+        TRC(ncmpi_iput_varn_int)(ncid, varid[j], num_reqs[j], starts[j], counts[j], buffer[j], &req[i]); CHECK_ERR
     }
-    TRC(ncmpi_wait_all)(ncid, 3, req, st); ERR
+    TRC(ncmpi_wait_all)(ncid, 3, req, st); CHECK_ERR
 
     j = (nprocs > 1) ? (3 + rank) % nprocs : 3;
-    TRC(ncmpi_iput_varn_int)(ncid, varid[j], num_reqs[j], starts[j], counts[j], buffer[j], &req[4]); ERR
+    TRC(ncmpi_iput_varn_int)(ncid, varid[j], num_reqs[j], starts[j], counts[j], buffer[j], &req[3]); CHECK_ERR
     for (i=0; i<3; i++) {
         j = (nprocs > 1) ? (i + rank) % nprocs : i;
-        TRC(ncmpi_iget_varn_int)(ncid, varid[j], num_reqs[j], starts[j], counts[j], buffer[j], &req[i]); ERR
+        TRC(ncmpi_iget_varn_int)(ncid, varid[j], num_reqs[j], starts[j], counts[j], buffer[j], &req[i]); CHECK_ERR
     }
-    TRC(ncmpi_wait_all)(ncid, 4, req, st); ERR
+    TRC(ncmpi_wait_all)(ncid, 4, req, st); CHECK_ERR
+    if (err != NC_NOERR) {
+        for (i=0; i<4; i++) {
+            if (st[i] != NC_NOERR) {
+                printf("Error at line %d in %s: st[%d] %s\n",
+                __FILE__,__LINE__,i,ncmpi_strerror(st[i]));
+            }
+        }
+    }
 
     for (i=0; i<4; i++) {
         free(buffer[i]);
@@ -346,7 +353,7 @@ int main(int argc, char **argv) {
 
     extern int optind;
     char   filename[256];
-    int    i, err, rank, nprocs, ncid, varid[2], dimids[2];
+    int    i, nerrs=0, err, rank, nprocs, ncid, varid[2], dimids[2];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -379,25 +386,25 @@ int main(int argc, char **argv) {
     MPI_Bcast(&err, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (err == 1) {
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     MPI_Bcast(&verbose, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* create a new file for write */
-    TRC(ncmpi_create)(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); ERR
+    TRC(ncmpi_create)(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
     if (verbose) printf("%d: ---- after ncmpi_create\n",rank);
 
     /* define a 2D array */
-    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimids[0]); ERR
-    err = ncmpi_def_dim(ncid, "X",       NX*nprocs,    &dimids[1]); ERR
-    err = ncmpi_def_var(ncid, "rec_var", NC_INT, 2, dimids, &varid[0]); ERR
-    err = ncmpi_def_dim(ncid, "Y",       2,            &dimids[0]); ERR
-    err = ncmpi_def_var(ncid, "fix_var", NC_INT, 2, dimids, &varid[1]); ERR
+    err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimids[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X",       NX*nprocs,    &dimids[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "rec_var", NC_INT, 2, dimids, &varid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y",       2,            &dimids[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "fix_var", NC_INT, 2, dimids, &varid[1]); CHECK_ERR
 
     /* add attributes to the variable */
-    err = ncmpi_put_att_text(ncid, varid[0], "att_name", 14, "attribute text"); ERR
-    TRC(ncmpi_enddef)(ncid); ERR
+    err = ncmpi_put_att_text(ncid, varid[0], "att_name", 14, "attribute text"); CHECK_ERR
+    TRC(ncmpi_enddef)(ncid); CHECK_ERR
 
     // nerrs += test_vara(ncid, varid);
     // nerrs += test_ivara(ncid, varid);
@@ -405,7 +412,7 @@ int main(int argc, char **argv) {
     // nerrs += test_varn(ncid);
     nerrs += test_ivarn(ncid);
 
-    TRC(ncmpi_close)(ncid); ERR
+    TRC(ncmpi_close)(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -424,6 +431,6 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

@@ -1,0 +1,18 @@
+#PBS -q debug
+#PBS -l walltime=00:10:00
+#PBS -l mppwidth=8
+#PBS -N pnetcdf_test
+#PBS -j oe
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+set OUT_DIR = /output/file/directory
+
+# test seqential programs
+make check TESTMPIRUN="aprun -n NP" TESTOUTDIR=$OUT_DIR TESTSEQRUN="aprun -n 1"
+
+# test parallel programs
+make ptest TESTMPIRUN="aprun -n NP" TESTOUTDIR=$OUT_DIR TESTSEQRUN="aprun -n 1"
+
+

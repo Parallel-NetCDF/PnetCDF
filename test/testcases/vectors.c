@@ -14,11 +14,10 @@
 
 #include <testutils.h>
 
-#define HANDLE_ERR(err) { if (err!=NC_NOERR) {nerrs++; fprintf(stderr, "Error at line %d: %s\n",__LINE__,ncmpi_strerror(err));}}
-
 #define VECCOUNT 4
 #define BLOCKLEN  3
 #define STRIDE   5
+
 int main(int argc, char ** argv)
 {
     int ncid, dimid, varid, rank, nprocs;
@@ -37,7 +36,7 @@ int main(int argc, char ** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -55,14 +54,14 @@ int main(int argc, char ** argv)
 #endif
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
-    HANDLE_ERR(err)
+    CHECK_ERR
     err = ncmpi_def_dim(ncid, "50k", 1024*50, &dimid);
-    HANDLE_ERR(err)
+    CHECK_ERR
     err = ncmpi_def_var(ncid, "vector", NC_DOUBLE, 1, &dimid, &varid);
-    HANDLE_ERR(err)
+    CHECK_ERR
 
     err = ncmpi_enddef(ncid);
-    HANDLE_ERR(err)
+    CHECK_ERR
 
     MPI_Type_vector(VECCOUNT, BLOCKLEN, STRIDE, MPI_INT, &vtype);
     MPI_Type_create_resized(vtype, 0, STRIDE*VECCOUNT*sizeof(int), &rtype);
@@ -81,25 +80,25 @@ int main(int argc, char ** argv)
 
     start = 10; acount = count*12;
     err = ncmpi_begin_indep_data(ncid);
-    HANDLE_ERR(err)
+    CHECK_ERR
     if (rank == 0) {
         err = ncmpi_put_vara(ncid, varid, &start, &acount, userbuf, 1, usertype);
-        HANDLE_ERR(err)
+        CHECK_ERR
     }
 
     err = ncmpi_close(ncid);
-    HANDLE_ERR(err)
+    CHECK_ERR
 
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    HANDLE_ERR(err)
+    CHECK_ERR
     err = ncmpi_begin_indep_data(ncid);
-    HANDLE_ERR(err)
+    CHECK_ERR
     err = ncmpi_inq_varid(ncid, "vector", &varid);
-    HANDLE_ERR(err)
+    CHECK_ERR
     err = ncmpi_get_vara(ncid, varid, &start, &acount, cmpbuf, 1, usertype);
-    HANDLE_ERR(err)
+    CHECK_ERR
     err = ncmpi_close(ncid);
-    HANDLE_ERR(err)
+    CHECK_ERR
 
     for (i=0; errs < 10 &&  i < acount; i++) {
         /* vector of 4,3,5, so skip 4th and 5th items of every block */
@@ -132,6 +131,5 @@ int main(int argc, char ** argv)
     }
 
     MPI_Finalize();
-
-    return 0;
+    return (nerrs > 0);
 }

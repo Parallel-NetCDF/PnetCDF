@@ -1,0 +1,91 @@
+#! /bin/sh
+#
+# Copyright (C) 2016, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+prefix="@prefix@"
+
+if test $# -eq 1 ; then
+   prefix=$1
+elif test $# -eq 0 ; then
+   if test "x$prefix" = "x" ; then
+      echo "This utility checks the PnetCDF install files" >& 2
+      echo "Usage: $0 install_path" >&2
+      exit 1
+   fi
+fi
+
+installdir=$prefix
+nerrs=0
+
+headerfiles="pnetcdf pnetcdf.h pnetcdf.inc pnetcdf.mod"
+for f in $headerfiles
+do
+   installfile=$installdir/include/$f
+   if ! test -e $installfile ; then
+       echo "Error: file NOT found: $installfile" >& 2
+       nerrs=`expr $nerrs + 1`
+   fi
+done
+
+libfiles="libpnetcdf.a"
+for f in $libfiles
+do
+   installfile=$installdir/lib/$f
+   if ! test -e $installfile ; then
+       echo "Error: file NOT found: $installfile" >& 2
+       nerrs=`expr $nerrs + 1`
+   fi
+done
+
+pkgfiles="libpnetcdf.pc"
+for f in $pkgfiles
+do
+   installfile=$installdir/lib/pkgconfig/$f
+   if ! test -e $installfile ; then
+       echo "Error: file NOT found: $installfile" >& 2
+       nerrs=`expr $nerrs + 1`
+   fi
+done
+
+binfiles="ncmpidiff ncmpidump ncmpigen ncmpivalid ncoffsets pnetcdf-config pnetcdf_version"
+for f in $binfiles
+do
+   installfile=$installdir/bin/$f
+   if ! test -e $installfile ; then
+       echo "Error: file NOT found: $installfile" >& 2
+       nerrs=`expr $nerrs + 1`
+   fi
+done
+
+man1files="ncmpidiff.1 ncmpigen.1 ncoffsets.1 ncmpidump.1 ncmpivalid.1 pnetcdf_version.1"
+for f in $man1files
+do
+   installfile=$installdir/share/man/man1/$f
+   if ! test -e $installfile ; then
+       echo "Error: file NOT found: $installfile" >& 2
+       nerrs=`expr $nerrs + 1`
+   fi
+done
+
+man3files="pnetcdf.3 pnetcdf_f77.3 pnetcdf_f90.3"
+for f in $man3files
+do
+   installfile=$installdir/share/man/man3/$f
+   if ! test -e $installfile ; then
+       echo "Error: file NOT found: $installfile" >& 2
+       nerrs=`expr $nerrs + 1`
+   fi
+done
+
+if test $nerrs = 0 ; then
+   echo "PASS -- all PnetCDF files appear in $installdir"
+else
+   echo "FAIL -- $nerrs error(s) found" >& 2
+   exit 1
+fi
+

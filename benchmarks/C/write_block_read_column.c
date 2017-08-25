@@ -40,13 +40,9 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 #define NVARS 4
 
-#define ERR(e) {if((e)!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));}
+#define ERR(e) {if((e)!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));nerrs++;}}
 
 /*----< print_info() >------------------------------------------------------*/
 static
@@ -75,7 +71,7 @@ int benchmark_write(char       *filename,
                     MPI_Info   *w_info_used,
                     double     *timing)  /* [6] */
 {
-    int i, j, rank, nprocs, err;
+    int i, j, rank, nprocs, nerrs=0, err;
     int ncid, cmode, varid[NVARS], dimid[2], psizes[2];
     void *buf[NVARS];
     double start_t, end_t;
@@ -204,7 +200,7 @@ int benchmark_write(char       *filename,
 
     for (i=0; i<NVARS; i++) free(buf[i]);
 
-    return 1;
+    return nerrs;
 }
 
 /*----< benchmark_read() >---------------------------------------------------*/
@@ -215,7 +211,7 @@ int benchmark_read(char       *filename,
                    MPI_Info   *r_info_used,
                    double     *timing)  /* [5] */
 {
-    int i, rank, nprocs, err;
+    int i, rank, nprocs, nerrs=0, err;
     int ncid, omode, nvars, dimid[2], *varid;
     void **buf;
     double start_t, end_t;
@@ -317,7 +313,7 @@ int benchmark_read(char       *filename,
     free(buf);
     free(varid);
 
-    return 1;
+    return nerrs;
 }
 
 static void
@@ -336,7 +332,7 @@ usage(char *argv0)
 int main(int argc, char** argv) {
     extern int optind;
     char filename[256];
-    int i, rank, nprocs, verbose=1;;
+    int i, rank, nprocs, verbose=1, nerrs=0;
     double timing[10], max_t[10];
     MPI_Offset len, w_size, r_size, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -354,7 +350,7 @@ int main(int argc, char** argv) {
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -365,17 +361,12 @@ int main(int argc, char** argv) {
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
 
-    benchmark_write(filename, len, &w_size, &w_info_used, timing);
-    benchmark_read (filename, len, &r_size, &r_info_used, timing+5);
+    nerrs += benchmark_write(filename, len, &w_size, &w_info_used, timing);
+    nerrs += benchmark_read (filename, len, &r_size, &r_info_used, timing+5);
 
     MPI_Reduce(&timing, &max_t,     10, MPI_DOUBLE, MPI_MAX, 0, comm);
-#ifdef MPI_OFFSET
     MPI_Reduce(&w_size, &sum_w_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
     MPI_Reduce(&r_size, &sum_r_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
-#else
-    MPI_Reduce(&w_size, &sum_w_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
-    MPI_Reduce(&r_size, &sum_r_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
-#endif
     if (verbose && rank == 0) {
         double bw = sum_w_size;
         bw /= 1048576.0;
@@ -427,6 +418,6 @@ int main(int argc, char** argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

@@ -75,7 +75,7 @@ gen_load_c(
     long long *int64valp = NULL;
     unsigned long long *uint64valp = NULL;
     char stmnt[C_MAX_STMNT];
-    MPI_Offset stmnt_len;
+    size_t stmnt_len;
     char s2[C_MAX_STMNT];
 
     if (!vars[varnum].has_data)
@@ -144,7 +144,7 @@ gen_load_c(
 		break;
 	      default:
 		derror("Unhandled type %d\n", vars[varnum].type);
-		break;
+		return;
 	    }
             for (ival = 0; ival < var_len-1; ival++) {
 		switch (vars[varnum].type) {
@@ -182,7 +182,7 @@ gen_load_c(
 		    break;
 		  default:
 		    derror("Unhandled type %d\n", vars[varnum].type);
-		    break;
+		    return;
 
 		}
 		stmnt_len += strlen(s2);
@@ -374,7 +374,7 @@ static void
 fstrcat(
     char *s,			/* source string of stement being built */
     const char *t,		/* string to be appended to source */
-    MPI_Offset *slenp			/* pointer to length of source string */
+    size_t *slenp		/* pointer to length of source string */
     )
 {
     *slenp += strlen(t);
@@ -410,7 +410,7 @@ f_var_init(
     long long *int64valp;
     unsigned long long *uint64valp;
     char stmnt[FORT_MAX_STMNT];
-    MPI_Offset stmnt_len;
+    size_t stmnt_len;
     char s2[FORT_MAX_STMNT];
     int ival;
     

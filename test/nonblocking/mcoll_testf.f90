@@ -151,7 +151,7 @@
                       TOTSIZ_3D, wrt_l)
       if (ierr .NE. NF90_NOERR) then
           write(6,*) trim(nf90mpi_strerror(ierr))
-          goto 999
+          stop 2
       endif
 !!!   Write (6,*) wrt_l(1), wrt_l(2)
 

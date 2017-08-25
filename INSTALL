@@ -43,13 +43,13 @@ default configuration of PnetCDF up and running.
     different command syntax. Command "echo $SHELL" prints out the current
     shell used by your terminal program.
 
-(b) Unpack the tar file and go to the top level directory:
+(b) Unpack the tar file and go to the top level directory, for example:
 
-      gunzip parallel-netcdf-1.6.0.tar.gz
-      tar xf parallel-netcdf-1.6.0.tar
-      cd parallel-netcdf-1.6.0
+      gunzip parallel-netcdf-1.8.0.tar.gz
+      tar xf parallel-netcdf-1.8.0.tar
+      cd parallel-netcdf-1.8.0
 
-(c) Choose an installation directory, say $HOME/PnetCDF
+(c) Choose an installation directory, for example $HOME/PnetCDF
 
 (d) Configure PnetCDF specifying the installation directory:
 
@@ -71,8 +71,9 @@ default configuration of PnetCDF up and running.
 
       make install prefix=/OTHER/INSTALL/DIRECTORY
 
-(g) Add the bin subdirectory of the installation directory to your path in your
-    startup script (.bashrc for bash, .cshrc for csh, etc.):
+(g) Add the bin subdirectory of the installation directory to your path
+    environment variable in your startup script (.bashrc for bash, .cshrc for
+    csh, etc.):
 
     for csh and tcsh:
 
@@ -105,25 +106,16 @@ options can be found using:
 
 Here lists a few important options:
 
-  --prefix=PREFIX         install PnetCDF files in PREFIX [/usr/local]
-  --enable-echo           Turn on strong echoing. [default: disabled]
-  --disable-largefile     omit support for large files
-  --disable-mpi-io-test   Disable check for MPI-IO support in MPI
-                          implementation, if you know your MPI implementation
-                          has MPI-IO support but the configure test fails to
-                          find it. [default: enabled]
   --disable-cxx           Turn off support for the C++ interface, if you only
                           need the C interface. [default: enabled]
-  --enable-strict         Turn on strict debugging with gcc. [default:
-                          disabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
                           only need the C interface. [default: enabled]
+  --enable-shared[=PKGS]  build shared libraries [default=yes]
+  --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-debug          Enable PnetCDF internal debug mode. This also
                           enables safe mode. [default: disabled]
   --disable-in-place-swap Disable memory in-place byte swap on Little Endian
                           machines. [default: enabled]
-  --enable-coverage       Compile with coverage support (gcc-based only).
-                          [default: disabled]
   --enable-subfiling      Enable subfiling support. [default: disabled]
   --disable-erange-fill   Disable use of fill value when out-of-range type
                           conversion causes NC_ERANGE error. [default:
@@ -132,42 +124,51 @@ Here lists a few important options:
                           Enable relaxed error NC_EINVALCOORDS to allow
                           coordinate start argument equal to dimension size
                           when argument count is zero. [default: disabled]
+  --enable-doxygen        Enable generation of documentation. [default:
+                          disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
                           can provide data consistency. [default: enabled]
   --enable-large-file-test
                           Enable testing for large (>4GB) file/variable I/O.
-                          Note "make testing" can run very slow. [default:
+                          Note "make check" can run very slow. [default:
                           disabled]
+  --disable-versioning    Disable library versioning. [default: enabled]
+
+Optional Packages:
 
   --with-mpi=/path/to/implementation
-                          installation prefix for MPI implementation
+                          The installation prefix path for MPI implementation.
 
 Some influential environment variables:
-  RM          Command for deleting files or directories. default: rm
-  MPICC       MPI C compiler
-  MPICXX      MPI C++ compiler
-  MPIF77      MPI Fortran 77 compiler
-  MPIF90      MPI Fortran 90 compiler
-  CC          Overwritten by MPICC if MPICC is set
-  CXX         Overwritten by MPICXX if MPICXX is set
-  F77         Overwritten by MPIF77 if MPIF77 is set
-  FC          Overwritten by MPIF90 if MPIF90 is set
-  CFLAGS      Debugging and optimization options for the C compiler
-  CPPFLAGS    Preprocessor options for C and C++ compilers, e.g. -I<include
-              dir> if you have headers in a nonstandard directory <include dir>
-  CXXFLAGS    Debugging and optimization options for the C compiler
-  FFLAGS      Debugging and optimization options for the Fortran 77 compiler
-  FCFLAGS     Debugging and optimization options for the Fortran 90 compiler
-  FPPFLAGS    Preprocessor options for Fortran compilers, e.g. -I<include dir>
+  RM          Command for deleting files or directories. [default: rm]
+  MPICC       MPI C compiler, [default: CC]
+  MPICXX      MPI C++ compiler, [default: CXX]
+  MPIF77      MPI Fortran 77 compiler, [default: F77]
+  MPIF90      MPI Fortran 90 compiler, [default: FC]
+  CC          C compiler command
+  CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
   LIBS        libraries to pass to the linker, e.g. -l<library>
+  CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
+              you have headers in a nonstandard directory <include dir>
+  CXX         C++ compiler command
+  CXXFLAGS    C++ compiler flags
+  LT_SYS_LIBRARY_PATH
+              User-defined run-time library search path.
   CPP         C preprocessor
-  TEST_SEQRUN Run command (on one process) for make target check on
+  CXXCPP      C++ preprocessor
+  FC          Fortran compiler command
+  FCFLAGS     Fortran compiler flags
+  F77         Fortran 77 compiler command
+  FFLAGS      Fortran 77 compiler flags
+  GCOV        name/path for the gcov utility
+  TESTSEQRUN  Run command (on one MPI process) for "make check" on
               cross-compile environment. Example: "aprun -n 1". [default:
               none]
-  TEST_MPIRUN MPI run command for make target ptest, [default: mpiexec -n NP]
-  TEST_OUTDIR Output file directory for make target ptest, [default: ./]
+  TESTMPIRUN  MPI run command for "make ptest", [default: mpiexec -n NP]
+  TESTOUTDIR  Output file directory for "make check" and "make ptest",
+              [default: ./]
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -183,8 +184,8 @@ Some influential environment variables:
 
     MPICC, MPICXX, MPIF77, MPIF90
     Setting these variables would result in the PnetCDF library being built
-    with these compilers. CC, CXX, F77, and F90 will be ignored if these MPI
-    variables are present.
+    with these compilers. CC, CXX, F77, FC, and F90 will be overwritten by
+    their corresponding MPI compiler variables.
 
     Note the compile flags, such as -O2 or -g, should be given in CFLAGS and
     other flag environment variables. Please do not set them in compiler
@@ -192,7 +193,7 @@ Some influential environment variables:
     of compiler not found.
 
  - For platform-specific build instructions, see one of the README.<ARCH>
-   files.  
+   files in directory doc/.  
 
 
 ----
@@ -218,6 +219,41 @@ Note on configure option "--disable-in-place-swap"
    allocate additional memory space, due to performance concern. Users are
    discouraged to use Fortran PARAMETER buffers in put APIs.
 
+----
+Note on configure option "--disable-erange-fill"
+----
+   Prior to 1.8.0, data type conversion for out-of-bound elements proceeds
+   even if the out-of-bound error is detected, and the contents (in both files
+   and read buffers) are left up to the user to handle. This behavior conforms
+   with NetCDF. See the URL below for details.
+   http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
+
+   Starting from 1.8.0, when the out-of-bound error is detected, instead of
+   proceeding the type conversion, PnetCDF fills the out-of-bound data elements
+   with their "fill values", as specified by the variable's attribute
+   "_FillValue" or default CDF fill values if the attribute is not defined.
+   Specifically, for PnetCDF put APIs, the value of attribute _FillValue, if
+   defined, will be used when writing to files. For get APIs, the default CDF
+   _FillValue corresponding to the internal data type will be used to fill the
+   read buffer. This feature can be disabled by adding option
+   "--disable-erange-fill" to the configure command line. In this case, the
+   conventional NetCDF method described above is used.
+
+----
+Note on configure option "--enable-relax-coord-bound"
+----
+   Starting from version 1.8.0, a new configure option
+   --enable-relax-coord-bound is added to provide a more relaxed boundary check
+   for argument start. Traditionally, both NetCDF and PnetCDF detect the error
+   code NC_EINVALCOORDS when the value of start is larger than or equal to the
+   defined dimension size. This can be inconvenient for some applications that
+   make a zero-length request with start being the dimension size, usually the
+   last process. The new configure option relaxes the boundary check by
+   allowing the above exception, i.e. start[i] can be the size of dimension i
+   only when count[i] is zero. The default of this feature is disabled. For
+   more detailed information, see discussion in:
+   http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
+
 -------------------------------------------------------------------------
 
 3. Testing the PnetCDF installation
@@ -236,25 +272,26 @@ executables built before submitting a batch job could save a lot of time.
 
 There are three environment variables that can be used to run make check/ptest
 on a cross compile platform.
- - TEST_MPIRUN : command to launch MPI jobs. default: mpiexec
- - TEST_SEQRUN : command to run MPI executable sequentially. default: ./
- - TEST_OUTDIR : output directory. default: ./
+ - TESTMPIRUN : command to launch MPI jobs. default: mpiexec -n NP
+ - TESTSEQRUN : command to run MPI executable sequentially. default: none
+ - TESTOUTDIR : output directory. default: ./
 
 Examples:
-    make check TEST_OUTDIR=/scratch
-    make ptest TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=/scratch
+    make check TESTOUTDIR=/scratch
+    make ptest TESTMPIRUN="aprun -n NP" TESTOUTDIR=/scratch
 
-Note the keyword "NP" used in the environment variable string TEST_MPIRUN.  It
+Note the keyword "NP" used in the environment variable string TESTMPIRUN.  It
 will be replaced with the different numbers of MPI processes used in testing.
 Currently, the testing uses up to 8 processes. Hence, please make sure the
 process allocation at least contains 8 processes.
 
 One can also run "make ptest" on batch queue systems. One example PBS script is
-provide "pbs.script". It is recommended to build all the testing executables
-before submitting the batch job. This can be done by running the below command.
-    cd test ; make ; cd ../examples ; make ; cd ..
+provide "pbs.script" in directory doc/. It is recommended to build all the
+testing executables before submitting the batch job. This can be done by
+running the below command.
+    make tests
 
-Note on setting TEST_OUTDIR. In order to run parallel test correctly, the
+Note on setting TESTOUTDIR. In order to run parallel test correctly, the
 output directory must be on a file system accessible to all MPI processes.  We
 recommend to use parallel file systems or POSIX compliant file systems (Using
 NFS will most likely fail the parallel test.)
@@ -273,84 +310,3 @@ Issue with older MPI-IO implementation.
 
 Please send an email to parallel-netcdf@mcs.anl.gov
 
-
-
------------------------------------------------------------------------------
-Notes from previous releases
------------------------------------------------------------------------------
-
-To INSTALL parallel netCDF library:
-
-    1. 'autoreconf' (only necessary if you make changes to configure.in or
-        other configure-related files)
-
-    2. ./configure --prefix=<install dir> --with-mpi=/path/to/implementation
-	the --with-mpi argument should specify the prefix of where the mpi
-	implementation was installed.  If your mpicc is in
-	/usr/local/mpich-1.2.3/bin/mpicc then use the prefix
-	--with-mpi=/usr/local/mpich-1.2.3
-
-    NOTE: If configure cannot find your MPI implementation's C and/or
-	  Fortran compilers, define MPICC, MPICXX, MPIF77 and MPIF90
-	  environment variables to be the name of those compilers.  The
-	  configure script will then use those values instead of trying
-	  to guess.
-
-    3. make 
-
-       We have tried to make the Makefiles platform-independent.
-       However, each platform has its own make quirks:  if you run into
-       problems, please send a report to the developers at
-       parallel-netcdf@mcs.anl.gov.  If you have GNU Make, try using
-       that.
-
-    4. make install
-
-IF THIS DOESN'T WORK:
-
-Autoconf should do the right thing: using the system compiler to perform
-autoconf tests and then use the MPI compilers to build parallel-netcdf.
-If you need to set specific flags for a platform, and autoconf does not
-set them for you, then you will have to set some environment variables
-to help out the configure script.   Here are some suggested settings:
-
-       For Solaris
-            MPICC=mpicc
-
-       For SGI Origin2000
-            MPICC = mpicc
-            ------------ OR -------------
-            CC='/bin/cc -64 -mips4 -lmpi'
-            CPPFLAGS=-DNDEBUG
-            CFLAGS=-O
-            FC='/bin/f90 -64'
-            FFLAGS=-O
-            F90='/bin/f90 -64'
-            CXX='/bin/CC -64'
-            CXXFLAGS=-O
-
-       For Linux
-            MPICC=mpicc
-            CPPFLAGS='-DNDEBUG -Df2cFortran'
-            CFLAGS=-O
-            CXX=g++
-            FFLAGS='-O -W'
-
-       For IBM SP-2
-            MPICC mpcc_r
-            MPIF77 /bin/mpxlf_r
-            F90 /bin/mpxlf90_r
-            F90FLAGS -qsuffix=f=f90
-            CXX /bin/mpxlC_r
-            ------------- OR -------------
-            CC xlc
-            FC /bin/xlf
-            F90 /bin/xlf90
-            F90FLAGS -qsuffix=f=f90
-            CXX /bin/xlC
-                then manually edit macros.make:
-            CC = mpcc_r
-            FC = mpxlf_r
-            F90 = mpxlf90_r
-            F90FLAGS = -qsuffix=f=f90
-            CXX = mpxlC_r

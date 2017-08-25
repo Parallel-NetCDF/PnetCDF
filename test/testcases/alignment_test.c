@@ -33,8 +33,6 @@
 #define NVARS 8
 #define NX 5
 
-#define ERR {if(err!=NC_NOERR){nerrs++;printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
-
 int main(int argc, char** argv) {
     char filename[256];
     int i, j, rank, nprocs, err, verbose=0, nerrs=0;
@@ -52,7 +50,7 @@ int main(int argc, char** argv) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "redef1.nc");
@@ -66,11 +64,11 @@ int main(int argc, char** argv) {
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension */
-    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[1]); CHECK_ERR
 
 #define TEST_FIXED_VAR
 #define TEST_RECORD_VAR
@@ -79,17 +77,17 @@ int main(int argc, char** argv) {
 #ifdef TEST_FIXED_VAR
         if (i%2) {
             sprintf(str,"fixed_var_%d",i);
-            err = ncmpi_def_var(ncid, str, NC_INT, 1, dimid+1, &varid[i]); ERR
+            err = ncmpi_def_var(ncid, str, NC_INT, 1, dimid+1, &varid[i]); CHECK_ERR
         }
 #endif
 #ifdef TEST_RECORD_VAR
         if (i%2 == 0) {
             sprintf(str,"record_var_%d",i);
-            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &varid[i]); ERR
+            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &varid[i]); CHECK_ERR
         }
 #endif
     }
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* write all variables */
     buf = (int*) malloc(NX * sizeof(int));
@@ -99,12 +97,12 @@ int main(int argc, char** argv) {
         if (i%2) {
             start[0] = NX*rank;
             count[0] = NX;
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
                 if (buf[j] != rank*1000 + i*10 + j) {
-                    printf("Error: user put buffer[%d] altered from %d to %d\n",
-                           j, rank*1000 + i*10 + j, buf[j]);
+                    printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
+                           __LINE__,__FILE__,j, rank*1000 + i*10 + j, buf[j]);
                     nerrs++;
                 }
             }
@@ -114,22 +112,22 @@ int main(int argc, char** argv) {
         if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
             for (j=0; j<NX; j++) buf[j] = rank*1000 + 100 + i*10 + j;
             start[0] = 1; /* write 2nd record */
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
                 if (buf[j] != rank*1000 + 100 + i*10 + j) {
-                    printf("Error: user put buffer[%d] altered from %d to %d\n",
-                           j, rank*1000 + 100 + i*10 + j, buf[j]);
+                    printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
+                           __LINE__,__FILE__,j, rank*1000 + 100 + i*10 + j, buf[j]);
                     nerrs++;
                 }
             }
         }
 #endif
     }
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* Now, reopen the file and grow the header and read data back */
 
@@ -139,11 +137,11 @@ int main(int argc, char** argv) {
     MPI_Info_set(info, "nc_var_align_size",    "197"); /* size in bytes */
 
     /* open the file for adding more metadata */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid); ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid); CHECK_ERR
 
     /* get header size and extent, and offsets of all variables */
-    err = ncmpi_inq_header_size(ncid, &header_size[0]); ERR
-    err = ncmpi_inq_header_extent(ncid, &header_extent[0]); ERR
+    err = ncmpi_inq_header_size(ncid, &header_size[0]); CHECK_ERR
+    err = ncmpi_inq_header_extent(ncid, &header_extent[0]); CHECK_ERR
     for (i=0; i<NVARS; i++) {
 #ifdef TEST_FIXED_VAR
         if (i%2)
@@ -153,11 +151,11 @@ int main(int argc, char** argv) {
         if (i%2==0)
             err = ncmpi_inq_varoffset(ncid, varid[i], &old_var_off[i]);
 #endif
-        ERR
+        CHECK_ERR
     }
 
     /* enter redef mode */
-    err = ncmpi_redef(ncid); ERR
+    err = ncmpi_redef(ncid); CHECK_ERR
 
     /* add attributes to make header grow */
     for (i=0; i<NVARS; i++) {
@@ -170,14 +168,14 @@ int main(int argc, char** argv) {
         if (i%2==0)
             err = ncmpi_put_att_text(ncid, varid[i], "text_attr", strlen(str), str);
 #endif
-        ERR
+        CHECK_ERR
     }
 
     /* add new dimensions */
     int new_dimid[3];
-    err = ncmpi_def_dim(ncid, "new_dim_a", 5,         &new_dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "new_dim_b", 4,         &new_dimid[1]); ERR
-    err = ncmpi_def_dim(ncid, "new_dim_c", NX*nprocs, &new_dimid[2]); ERR
+    err = ncmpi_def_dim(ncid, "new_dim_a", 5,         &new_dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "new_dim_b", 4,         &new_dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "new_dim_c", NX*nprocs, &new_dimid[2]); CHECK_ERR
 
     /* add new variables */
     int new_varid[NVARS];
@@ -185,22 +183,22 @@ int main(int argc, char** argv) {
 #ifdef TEST_FIXED_VAR
         if (i%2 == 0) {
             sprintf(str,"fixed_var_%d",i+NVARS);
-            err = ncmpi_def_var(ncid, str, NC_INT, 1, new_dimid+2, &new_varid[i]); ERR
+            err = ncmpi_def_var(ncid, str, NC_INT, 1, new_dimid+2, &new_varid[i]); CHECK_ERR
         }
 #endif
 #ifdef TEST_RECORD_VAR
         if (i%2 == 1) {
             sprintf(str,"record_var_%d",i+NVARS);
-            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &new_varid[i]); ERR
+            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &new_varid[i]); CHECK_ERR
         }
 #endif
     }
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* get the new header size and extent, also all variables' starting
        file offsets */
-    err = ncmpi_inq_header_size(ncid, &header_size[1]); ERR
-    err = ncmpi_inq_header_extent(ncid, &header_extent[1]); ERR
+    err = ncmpi_inq_header_size(ncid, &header_size[1]); CHECK_ERR
+    err = ncmpi_inq_header_extent(ncid, &header_extent[1]); CHECK_ERR
     if (rank == 0 && verbose) {
         printf("NX = %d (integer type)\n",NX);
         printf("old header_size  =%lld new header_size  =%lld\n",header_size[0],header_size[1]);
@@ -208,24 +206,24 @@ int main(int argc, char** argv) {
 
 #ifdef TEST_FIXED_VAR
         for (i=1; i<NVARS; i+=2) {
-            err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); ERR
+            err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); CHECK_ERR
             printf("old fixed  var[%2d] old offset=%4lld new offset=%4lld\n",i,old_var_off[i],new_var_off[i]);
         }
         for (i=NVARS; i<2*NVARS; i++) {
             if (i%2 == 0) {
-                err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); ERR
+                err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); CHECK_ERR
                 printf("new fixed  var[%2d]                 new offset=%4lld\n",i,new_var_off[i]);
             }
         }
 #endif
 #ifdef TEST_RECORD_VAR
         for (i=0; i<NVARS; i+=2) {
-            err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); ERR
+            err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); CHECK_ERR
             printf("old record var[%2d] old offset=%4lld new offset=%4lld\n",i,old_var_off[i],new_var_off[i]);
         }
         for (i=NVARS; i<2*NVARS; i++) {
             if (i%2) {
-                err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); ERR
+                err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); CHECK_ERR
                 printf("new record var[%2d]                 new offset=%4lld\n",i,new_var_off[i]);
             }
         }
@@ -239,12 +237,12 @@ int main(int argc, char** argv) {
         if (i%2 == 0) {
             start[0] = NX*rank;
             count[0] = NX;
-            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
+            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); CHECK_ERR
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
                 if (buf[j] != -1 * (i*10 + j)) {
-                    printf("Error: user put buffer[%d] altered from %d to %d\n",
-                           j, -1 * (i*10 + j), buf[j]);
+                    printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
+                           __LINE__,__FILE__,j, -1 * (i*10 + j), buf[j]);
                     nerrs++;
                 }
             }
@@ -254,15 +252,15 @@ int main(int argc, char** argv) {
         if (i%2 == 1) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
+            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); CHECK_ERR
             for (j=0; j<NX; j++) buf[j] = -1 * (100 + i*10 + j);
             start[0] = 1; /* write 2nd record */
-            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
+            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); CHECK_ERR
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
                 if (buf[j] != -1 * (100 + i*10 + j)) {
-                    printf("Error: user put buffer[%d] altered from %d to %d\n",
-                           j, -1 * (100 + i*10 + j), buf[j]);
+                    printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
+                           __LINE__,__FILE__,j, -1 * (100 + i*10 + j), buf[j]);
                     nerrs++;
                 }
             }
@@ -276,7 +274,7 @@ int main(int argc, char** argv) {
         if (i%2) {
             start[0] = NX*rank;
             count[0] = NX;
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000 + i*10 + j) {
                     printf("read error i=%d buf[j=%d]=%d != %d\n",i,j,buf[j],rank*1000+i*10+j);
@@ -288,14 +286,14 @@ int main(int argc, char** argv) {
         if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000+i*10+j) {
                     printf("read error i=%d buf[j=%d]=%d != %d\n",i,j,buf[j],rank*1000+i*10+j);
                     nerrs++;
                 }
             start[0] = 1;
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); ERR
+            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000 + 100 + i*10 + j) {
                     printf("read error i=%d buf[j=%d]=%d != %d\n",i,j,buf[j],rank*1000+100+i*10+j);
@@ -304,7 +302,7 @@ int main(int argc, char** argv) {
         }
 #endif
     }
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
     MPI_Info_free(&info);
     free(buf);
 
@@ -325,6 +323,6 @@ int main(int argc, char** argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

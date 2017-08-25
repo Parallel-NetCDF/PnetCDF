@@ -4,13 +4,27 @@
 !
 ! $Id$
 
-      program main
+      subroutine check(err, message)
+          use mpi
+          use pnetcdf
+          implicit none
+          integer err
+          character(len=*) message
 
+          ! It is a good idea to check returned value for possible error
+          if (err .NE. NF90_NOERR) then
+              write(6,*) trim(message), trim(nf90mpi_strerror(err))
+              call MPI_Abort(MPI_COMM_WORLD, -1, err)
+          end if
+      end subroutine check
+
+      program main
       use mpi
       use pnetcdf
       implicit none
 
       integer i, j, ncid, varid, cmode, err, rank, nprocs
+      integer ierr, get_args, dummy
       integer dimid(2), req(2), status(2)
       integer(kind=MPI_OFFSET_KIND) start(2)
       integer(kind=MPI_OFFSET_KIND) count(2)
@@ -19,35 +33,40 @@
       integer(kind=MPI_OFFSET_KIND) bufsize
       integer(kind=MPI_OFFSET_KIND) put_size
       real  var(6,4)
-      character(len=256) filename
+      character(len=256) filename, cmd
+      logical verbose
 
       call MPI_INIT(err)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
 
-      filename = "testfile.nc"
+      ! take filename from command-line argument if there is any
+      if (rank .EQ. 0) then
+          filename = "testfile.nc"
+          ierr = get_args(2, cmd, filename, verbose, dummy)
+      endif
+      call MPI_Bcast(ierr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+      if (ierr .EQ. 0) goto 999
+
+      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, err)
+
       cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
       err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
                          MPI_INFO_NULL, ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_create ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_create ')
 
       ! define a variable of a (4*nprocs) x 6 integer array in the nc file
       err = nf90mpi_def_dim(ncid, 'X', 4_MPI_OFFSET_KIND*nprocs, dimid(1))
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_dim ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_def_dim ')
 
       err = nf90mpi_def_dim(ncid, 'Y', 6_MPI_OFFSET_KIND, dimid(2))
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_dim ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_def_dim ')
 
       err = nf90mpi_def_var(ncid, 'var', NF90_INT64, dimid, varid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_var ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_def_var ')
 
       err = nf90mpi_enddef(ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_enddef ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_enddef ')
 
       ! set the contents of the local write buffer var, a 4 x 6 real array
       ! for example, for rank == 2, var(4,6) =
@@ -66,8 +85,7 @@
       ! bufsize must be max of data type converted before and after
       bufsize = 4*6*8
       err = nf90mpi_buffer_attach(ncid, bufsize)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_buffer_attach ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_buffer_attach ')
 
       ! write var to the NC variable in the matrix transposed way
       count(1)  = 2
@@ -84,32 +102,29 @@
       start(2)  = 1
       err = nf90mpi_bput_var(ncid, varid, var(1:,1:), req(1), &
                              start, count, stride, imap)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_bput_varm_real ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_bput_var ')
 
       ! write to the 2nd two columns of the variable in transposed way
       start(1)  = 3 + rank*4
       start(2)  = 1
       err = nf90mpi_bput_var(ncid, varid, var(1:,3:), req(2), &
                              start, count, stride, imap)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_bput_varm_real ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_bput_var ')
 
       err = nf90mpi_wait_all(ncid, 2, req, status)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_wait_all ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_wait_all ')
 
       ! check each bput status
       do i = 1, 2
           if (status(i) .ne. NF90_NOERR) then
               print*,'Error at bput status ', &
                      nf90mpi_strerror(status(i))
+              stop 2
           endif
       enddo
 
       err = nf90mpi_buffer_detach(ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_buffer_detach ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_buffer_detach ')
 
       ! The output from command "ncmpidump test.nc" is shown below if run
       ! this example on 4 processes.
@@ -134,14 +149,12 @@
       ! note that the display of ncmpidump is in C array dimensional order
 
       err = nf90mpi_inq_put_size(ncid, put_size)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_inq_put_size ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_inq_put_size ')
       ! print*,'pnetcdf reports total put size by this proc =', put_size
 
       err = nf90mpi_close(ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_close ')
 
-      CALL MPI_Finalize(err)
+ 999  CALL MPI_Finalize(err)
       end program
 

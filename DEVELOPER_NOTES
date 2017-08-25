@@ -15,20 +15,25 @@ Tasks immediately before a new release (must run in the following order)
                                               CPPFLAGS=-funsigned-char
                    and their combinations)
 
-      - run make check with valgrind by adding the following lines to configure
-        command line. As of PnetCDF 1.8.0, make check and make ptest pass
-        without any warning and error from valgrind. (See note below.)
-            TEST_SEQRUN="valgrind --quiet --leak-check=full"
-            TEST_MPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
-
       - make check
+      - run make check with valgrind by adding the following lines to command
+        "make check". As of PnetCDF 1.8.0, "make check" passes without any
+        warning and error from valgrind.  (See note below.)
+        * when built with --enable-shared, use commands:
+            make check \
+            TESTSEQRUN="libtool --mode=execute valgrind --quiet --leak-check=full" \
+            TESTMPIRUN="mpiexec -n NP libtool --mode=execute valgrind --quiet --leak-check=full"
+
+        * when built without shared libraries, use commands:
+            make check \
+            TESTSEQRUN="valgrind --quiet --leak-check=full" \
+            TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
+
       - make ptests
-      - make install
-      - ./check_install (check if all files are installed under $prefix)
-      - make uninstall (check all installed files are deleted from $prefix)
-      - make clean (and make sure all object files are deleted)
-      - make distclean (and make sure all non-source files are deleted)
-    * build and test under a different directory (VPATH build)
+      - run make ptests with valgrind.
+        * For using valgrind, set TESTSEQRUN and TESTMPIRUN as above.
+      - make checkdist
+
     * build and test on different platforms with various compilers:
       - login.mcs.anl.gov : Intel, NAG Fortran, PGI, Solaris Studio compilers
       - edison.nersc.gov : Cray, Intel compilers
@@ -38,12 +43,13 @@ Tasks immediately before a new release (must run in the following order)
       script, i.e. configure.in)
     * build netCDF latest release against PnetCDF
 
- 2. Set the release version.
+ 2. Set the release version (for 1.8.1 and prior).
+    Skip this step for 1.9.0 and later.
     In file "configure.in", variable $PNETCDF_VERSION indicates the version.
     It is automatically generated from the 2nd argument of AC_INIT call.
     Revise that string to the right release version.  For example,
 
-    AC_INIT([parallel-netcdf], [1.6.1], [parallel-netcdf@mcs.anl.gov])
+    AC_INIT([parallel-netcdf], [1.8.1], [parallel-netcdf@mcs.anl.gov])
                                 ^^^^^
 
  3. Update file "RELEASE_NOTES".
@@ -51,7 +57,9 @@ Tasks immediately before a new release (must run in the following order)
     Add the release version and date at the top of file "RELEASE_NOTES".
     Clear up file "sneak_peek" (reset all items to none)
 
- 4. Update the release date.
+ 4. Update the release date (for 1.8.1 and prior).
+    Skip this step for 1.9.0 and later.
+    (See below "Setting PnetCDF software release date")
     Run command "svn commit" to get the svn property \$LastChangedDate\$
     updated in file "configure.in". That string will be used as the official
     release date.
@@ -62,18 +70,18 @@ Tasks immediately before a new release (must run in the following order)
     Run command below to duplicate the current trunk to the new tag:
 
     svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-6-1 \
-             -m "Tagging release version 1.6.1"
+             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
+             -m "Tagging release version 1.8.1"
 
- 6. Generate a new "configure" file with the release date.
-    Run command "autoreconf" to generate file "configure"  which will be
-    included in the release (but not to be saved in the SVN repo).
-    Must use the bug-fixed autotools of version 2.69 or higher to run
-    "autoreconf". See README.Fujitsu for the bug in autoconf 2.69 and patch.
+ 6. Generate a new "configure" file with the release date by running command
+    "autoreconf" which will generate file "configure"  to be included in the
+    release (but not to be saved in the SVN repo).
+    * Must use the bug-fixed autotools of version 2.69 or higher to run
+      "autoreconf". See README.Fujitsu for the bug in autoconf 2.69 and patch.
 
  7. Create all Makefiles.
-    Run command "./configure" to create all Makefiles, so we can run command
-    "make dist" to create the tar balls.
+    Run command "./configure" to create all Makefiles, so in the next step we
+    can run command "make dist" to create the tar balls.
 
  8. Create tar balls.
     Run command "make dist" to produce two tar balls for PnetCDF release:
@@ -118,7 +126,16 @@ Note on adding new MPI compiler candidates
 =====================================================
 Note on autotools version
 =====================================================
- - configure.in is developed based on autotools v2.59
+ - Starting from 1.9.0, in order to support building shared libraries,
+   the following minimum versions are required.
+   * autoconf 2.69
+   * automake 1.15
+   * libtool  2.4.6
+   Even these fairly recent versions can still fail to build on some platforms.
+   See the Section "Hacking autoconf and automake" below for patches to
+   customize autoconf and automake.
+
+ - Prior to 1.8.1, configure.in is developed based on autotools v2.59
    I, Wei-keng, tend to test it using v2.59, in case PnetCDF users have
    autotools as old as 2.59.
 
@@ -131,7 +148,7 @@ Note on autotools version
    bug in autoconf 2.69 and patch.
 
 =====================================================
-Working on configure.in
+Working on configure.in or configure.ac
 =====================================================
  - Debugging: change the value of variable _DEBUG to yes
    This will print some messages for debugging purpose.
@@ -145,13 +162,13 @@ Conform with netCDF
        error codes
        (in principle, all constants should conform with netCDF)
 
- - Make sure file src/lib/pnetcdf.h.in is updated with the latest netCDF
-   header, by building the latest netCDF with --enable-pnetcdf option.
+ - Make sure file pnetcdf.h.in is updated with the latest netCDF header, by
+   building the latest netCDF with --enable-pnetcdf option.
 
  - Similarly, check Fortran error codes defined as parameters in
-       src/libf/pnetcdf.inc.in
-       src/libf90/nf90_constants.f90
-       src/libf90/nfmpi_constants.f90.in
+     src/libf/pnetcdf.inc.in           or src/binding/f77/pnetcdf.inc.in
+     src/libf90/nf90_constants.f90     or src/binding/f90/nf90_constants.f90
+     src/libf90/nfmpi_constants.f90.in or src/binding/f90/nfmpi_constants.f90.in
 
  - PnetCDF error codes start from -201
  - PnetCDF error codes for inconsistent header data start from -250
@@ -160,9 +177,9 @@ Conform with netCDF
    netCDF release.
    1. Error codes (pnetcdf.h v.s. netcdf.h)
    2. Error strings (error.c v.s. netcdf-c/libdispatch/derror.c)
-   3. trunk/src/lib/utf8proc.h v.s. netcdf-c/include/utf8proc.h
-   4. trunk/src/lib/utf8proc.c v.s. netcdf-c/libdispatch/dutf8proc.c
-   5. trunk/src/lib/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h
+   3. src/drivers/include/utf8proc.h     v.s. netcdf-c/include/utf8proc.h
+   4. src/drivers/common/utf8proc.c      v.s. netcdf-c/libdispatch/utf8proc.c
+   5. src/drivers/common/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h
 
 ===============================================================
 Note on netCDF text APIs and variables in external data type NC_CHAR
@@ -225,18 +242,18 @@ Extra files used for idea development, not for release
 ===============================================================
 This file "DEVELOPER_NOTES".
 
-src/lib:
+src/lib (1.8.1 and prior) src/drivers/ncmpio (1.9.0 and later):
     varnx.m4
     varnx_api_header.m4
     varn_api_header.m4
     swap.c
 
-src/libf:
+src/libf (1.8.1 and prior) src/binding/f77 (1.9.0 and later):
     varn_external.m4
     varnx_external.m4
     createffiles
 
-src/libf90:
+src/libf90 (1.8.1 and prior) src/binding/f90 (1.9.0 and later):
     varn_interface.m4
     varnx_interface.m4
 
@@ -244,7 +261,7 @@ src/libf90:
 Note on creating new PnetCDF APIs
 =====================================================
 If a new PnetCDF API is created, please check and do the followings.
-1. In src/lib
+1. In src/lib (1.8.1 and prior) src/include (1.9.0 and later)
    * add the declaration of new APIs in "pnetcdf.h.in"
      For example,
      int ncmpi_inq_num_rec_vars(int ncid, int *nump);
@@ -256,7 +273,7 @@ If a new PnetCDF API is created, please check and do the followings.
      /* End Skip Prototypes for Fortran binding */
      Otherwise, their declarations should be inside of the block.
 
-2. In src/libf
+2. In src/libf (1.8.1 and prior) src/binding/f77 (1.9.0 and later)
    * The new APIs should be declared in "pnetcdf.inc.in"
    * add their C-to-Fortran file name in "Makefile.in"
      For example, API nfmpi_put_att() corresponds to file put_attf.c
@@ -266,7 +283,7 @@ If a new PnetCDF API is created, please check and do the followings.
         'put_vard' => '2',
                 'put_vard-2'            => 'in:OffsetIndexIn',
 
-3. In src/libf90
+3. In src/libf90 (1.8.1 and prior) src/binding/f90 (1.9.0 and later)
    * The new APIs should be declared in "visibility.f90" and/or "api.f90.in"
    * their definition should be added in the right files. For example,
      nfmpi_inq_striping() is declared in api.f90.in
@@ -274,7 +291,7 @@ If a new PnetCDF API is created, please check and do the followings.
      The definition of nf90mpi_inq_striping() is defined in file.f90 by
      calling nfmpi_inq_striping().
 
-4. In src/libcxx
+4. In src/libcxx (1.8.1 and prior) src/binding/cxx (1.9.0 and later)
    * The new APIs should be declared and added to the right files. For example,
      getRecVarCount() is declared in ncmpiGroup.h and defined in ncmpiGroup.cpp.
 
@@ -290,15 +307,18 @@ Note on PnetCDF internal function and variable name convention
   long long, and unsigned long long. Their corresponding function name
   substrings are "text", "schar", "uchar", "short", "ushort", "int", "uint",
   "long" (deprecated), "float", "double", "longlong", and "ulonglong".
+
 * External data types are of nc_type. For CDF-1 and 2, they are NC_CHAR,
   NC_BYTE, NC_SHORT, NC_INT, NC_FLOAT, and NC_DOUBLE. For CDF-5, additional
   types are NC_UBYTE, NC_USHORT, NC_UINT, NC_INT64, and NC_UINT64.
+
 * When creating an internal functions, after 1.7.0, we start to use names of
   nc_type to represent the external data types and the above convention for
   internal ones. For example, ncmpix_getn_NC_SHORT_longlong(). In this case,
   we can clearly see that this function is to read n elements of a netCDF
   variable of NC_SHORT external data type from a file to a user buffer of
   internal long long type.
+
 * Function argument name convention: we use "xtype" for the argument of
   external data type and "itype" for internal data types. Thus, xtype must be
   of nc_type defined in pnetcdf.h and itype be either of an internal data type,
@@ -339,9 +359,9 @@ inconsistency of any kind start at -250.
    and NC_EMULTIDEFINE_LAST in pnetcdf.h.in. Update NC_EMULTIDEFINE_LAST if
    necessary.
 3. Again, check Fortran error codes defined as parameters in
-       src/libf/pnetcdf.inc.in
-       src/libf90/nf90_constants.f90
-       src/libf90/nfmpi_constants.f90.in
+     src/libf/pnetcdf.inc.in            or src/binding/f77/pnetcdf.inc.in
+     src/libf90/nf90_constants.f90      or src/binding/f90/nf90_constants.f90
+     src/libf90/nfmpi_constants.f90.in  or src/binding/f90/nfmpi_constants.f90.in
 4. The error message should be kept less than 80 characters, because this is
    the string length used in Fortran API nfmpi_strerror().
 
@@ -387,6 +407,10 @@ Add the following C define macros to the end of DEFS variable in macros.make
 to enable tracing.
     -DPNETCDF_TRACE_MPI_COMM
     -DPNETCDF_TRACE_MPI_IO
+
+For 1.9.0 and later, run the following commands to enable this feature.
+    make clean
+    make CFLAGS="-DPNETCDF_TRACE_MPI_COMM -DPNETCDF_TRACE_MPI_IO"
 
 Example outputs from stdout:
 TRACE-MPI-COMM: FILE mpincio.c FUNC ncmpiio_create() LINE 244 calling MPI_Bcast()
@@ -448,7 +472,7 @@ Commands for mirror setting are:
   cd parallel-netcdf
   git svn fetch >& fetch.log &     # this will take long to get all commits
 
-Login to your github account and create a new repo, named "parallel-netcdf"
+Log into your github account and create a new repo, named "parallel-netcdf"
 Set the remote repo URL @ Github
   git remote add origin https://github.com/wkliao/parallel-netcdf.git
   git push -u origin master
@@ -474,7 +498,9 @@ Click (Your Name) -> Accounts -> Sync account
 (This should show a new repo just created.)
 Click the repo to enable Travis CI and configure "settings" tab
 
-(Travis only runs a build on the commits you push after adding the repository to Travis. Note: If your project already has a .travis.yml file, you need to push another commit to trigger a build.)
+(Travis only runs a build on the commits you push after adding the repository
+to Travis. Note: If your project already has a .travis.yml file, you need to
+push another commit to trigger a build.)
 
 ==============================================================================
 Coverity Scan + Travis CI Integration
@@ -483,6 +509,9 @@ Following the instructions in https://scan.coverity.com/travis_ci
 
 The modeling file ./coverity_model.c is for Coverity Scan used in the Analysis
 Setting.
+
+Change the branch for scan:
+Under "coverity_scan:". change "branch_pattern:" to the branch name
 
 ==============================================================================
 Testing with valgrind
@@ -507,7 +536,8 @@ fails to initialize the MPI_Status object. Therefore, the solution can be
 either to explicitly initialize the status object to zeros, or to just use the
 same read request amount for write. Note that the latter will write the
 variables that have not been written before. For now we adopt the former
-option. See comments in function ncmpiio_move() of src/lib/mpincio.c
+option. See comments about MPI_Get_count() in function move_file_block() of
+src/drivers/ncmpio/mpincio.c
 
 When data sieving is enabled in MPI-IO (default in ROMIO), its
 read-modify-write operation can also cause valgrind to complain uninitialized
@@ -543,17 +573,17 @@ However, when compiled with -g -O0 -pg, programs receive no error.
 Workaround: use "-pg -mno-omit-leaf-frame-pointer -fno-omit-frame-pointer"
 
 ==============================================================================
-Note on including ncconfig.h
+Note on including config.h
 ==============================================================================
 
 When doing VPATH build, remember to pass the C compiler a -I. option. Even if
-you use #include "ncconfig.h", the preprocessor searches only the source
-directory, not the build directory. Thus, we should use #include <ncconfig.h>
-instead of #include "ncconfig.h". In addition, use -I. -I$(srcdir) in
+you use #include "config.h", the preprocessor searches only the source
+directory, not the build directory. Thus, we should use #include <config.h>
+instead of #include "config.h". In addition, use -I. -I$(srcdir) in
 Makefile.in.
 
 Autoconf manual suggests it is a good habit to use angle brackets, because in
-the rare case when the source directory contains another ncconfig.h, the build
+the rare case when the source directory contains another config.h, the build
 directory should be searched first.
 
 ==============================================================================
@@ -598,4 +628,85 @@ For get att APIs:
 For put/get variable APIs:
     NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_ENOTVAR, NC_ECHAR, NC_EINVALCOORDS,
     NC_EEDGE, NC_ESTRIDE, NC_EINVAL, NC_ERANGE
+
+==============================================================================
+Setting PnetCDF software release date
+==============================================================================
+Prior to version 1.8.1, the release date was obtained from the SVN keyword
+LastChangedDate set in file configure.in. It is used to produce two variables:
+PNETCDF_RELEASE_DATE and PNETCDF_RELEASE_DATE2.  These two variables are used
+by all man pages, pnetcdf.h, pnetcdf_version, and pnetcdf-config.  We used the
+keyword value set by SVN as the release date. The assumption is that updating
+PACKAGE_VERSION in configure.in is the last step before making a release, i.e.
+the last modification date of file configure.in is the latest among all files.
+This approach can cause a problem when using git-svn to clone the source codes,
+as one must set git smudge/clean filter to produce the effect of SVN keywords.
+In addition, it makes more sense to use the date when running command "make
+dist" to create the tar ball.
+
+Staring from 1.9.0, the release date will be set when running "make dist". See
+the makefile target "dist-hook" in ./src/include/Makefile.am for an approach
+using command sed to do string substitution for DIST_DATE.
+
+==============================================================================
+Hacking autoconf and automake
+==============================================================================
+Autoconf 2.69 has a problem of checking the version of the Fujitsu Fortran
+compiler, which causes errors for building PnetCDF at the configure time.
+
+The fix and patch have been discussed and provided in the link below. PnetCDF
+users/developers are encouraged to apply to patch to their autoconf utility.
+
+Subject: Support Fujitsu in _AC_PROG_FC_V
+https://lists.gnu.org/archive/html/autoconf-patches/2013-11/msg00001.html
+
+diff -r autoconf-2.69/lib/autoconf/fortran.m4 Origin/autoconf-2.69/lib/autoconf/fortran.m4
+581,582d580
+< # Fujitsu accepts --verbose and passes it to the linker, which doesn't yield
+< # the desired result. Therefore test for -### before testing for --verbose.
+590c588
+< for ac_verb in -v -verbose -V -\#\#\# --verbose; do
+---
+> for ac_verb in -v -verbose --verbose -V -\#\#\#; do
+
+
+On some systems, the Fortran preprocessor flag is not "-D". For example, IBM
+XL fortran compilers use flag "-WF,-D". However, autoconf 2.69 hard-codes
+"-DHAVE_CONFIG_H" into pre-defined variable "DEFS" which is used in C, C++,
+F77, and F90 compile commands. The hack below adds a pre-define variable,
+FC_DEFS, and replaces DEFS with it for Fortran-based compile commands.
+
+diff -r autoconf-2.69/lib/autoconf/general.m4 Origin/autoconf-2.69/lib/autoconf/general.m4
+1411d1410
+< AC_SUBST([FC_DEFS])dnl
+
+diff -r autoconf-2.69/lib/autoconf/status.m4 Origin/autoconf-2.69/lib/autoconf/status.m4
+1269,1274d1268
+< if test "x$FC_DEFINE" != "x-D" ; then
+<    ac_fc_define_sed_str="s/-D/${FC_DEFINE}/g"
+<    FC_DEFS=`echo $DEFS | sed $ac_fc_define_sed_str`
+< else
+<    FC_DEFS=$DEFS
+< fi
+
+diff -r automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
+625,633d624
+< my @fpplike_flags =
+<   qw{
+<     $(FC_DEFS)
+<     $(DEFAULT_INCLUDES)
+<     $(INCLUDES)
+<     $(AM_CPPFLAGS)
+<     $(CPPFLAGS)
+<   };
+< 
+888c879
+< 		   'compile' => "\$(FC) @fpplike_flags \$(AM_FCFLAGS) \$(FCFLAGS)",
+---
+> 		   'compile' => "\$(FC) @cpplike_flags \$(AM_FCFLAGS) \$(FCFLAGS)",
+920c911
+< 		   'compile' => "\$(F77) @fpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
+---
+> 		   'compile' => "\$(F77) @cpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
+
 

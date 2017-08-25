@@ -171,6 +171,7 @@
              if (sts(i) .NE. NF90_NOERR) then
                  print*, "Error: nonblocking write fails on request", &
                          i, ' ', nf90mpi_strerror(sts(i))
+                 stop 2
              endif
           enddo
 

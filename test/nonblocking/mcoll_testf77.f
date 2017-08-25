@@ -174,7 +174,7 @@
      +                TOTSIZ_3D, wrt_l)
       if (ierr .NE. NF_NOERR) then
           write(6,*) nfmpi_strerror(ierr)
-          goto 999
+          stop 2
       endif
 !!!   Write (6,*) wrt_l(1), wrt_l(2)
 
@@ -265,7 +265,7 @@
 
       if (locsiz .gt. MAX_LOC_SIZE) then
          print *, 'locsiz = ', locsiz, ' larger than MAX_LOC_SIZE'
-         stop
+         stop 2
       endif
 !     ----------------
 !     Begin execution.

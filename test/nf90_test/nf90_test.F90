@@ -47,7 +47,7 @@
 
         subroutine report_test
         implicit        none
-        character*128   msg
+        character*1024  msg
 #include "tests.inc"
 
         write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
@@ -82,7 +82,7 @@
             print *, '  ### ', nfails, ' FAILURES TESTING ', name,  &
                      '! Stop ... ###'
             call report_test
-            stop
+            stop 2
         end if
         end
 
@@ -108,7 +108,7 @@
 !       DIGITAL Visual Fortran needs DFPORT for iargc
         USE DFPORT
         implicit        none
-#elif defined(NAGf90Fortran)
+#elif defined(NAGFortran)
         USE F90_UNIX_ENV, only : iargc, getarg
         implicit none
 #else

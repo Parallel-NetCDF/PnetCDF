@@ -65,14 +65,10 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 #define NY 10
 #define NX 4
 
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -106,7 +102,7 @@ int main(int argc, char** argv)
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -178,10 +174,16 @@ int main(int argc, char** argv)
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
         if (sts[i] != NC_NOERR)
-            printf("Error: nonblocking write fails on request %d (%s)\n",
-                   i, ncmpi_strerror(sts[i]));
+            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+                   __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
+
+    err = ncmpi_close(ncid); ERR
 
     /* read back using the same access pattern */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid); ERR
+
+    err = ncmpi_inq_varid(ncid, "var", &varid); ERR
+
     for (i=0; i<myNX; i++)
         for (j=0; j<NY; j++) buf[i][j] = -1;
 
@@ -202,13 +204,14 @@ int main(int argc, char** argv)
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
         if (sts[i] != NC_NOERR)
-            printf("Error: nonblocking write fails on request %d (%s)\n",
-                   i, ncmpi_strerror(sts[i]));
+            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+                   __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
 
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++)
             if (buf[i][j] != rank)
-                printf("Error: expect buf[%d][%d]=%d but got %d\n",i,j,rank,buf[i][j]);
+                printf("Error at line %d in %s: expect buf[%d][%d]=%d but got %d\n",
+                __LINE__,__FILE__,i,j,rank,buf[i][j]);
     }
 
     err = ncmpi_close(ncid);
@@ -230,6 +233,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return nerrs;
+    return (nerrs > 0);
 }
 

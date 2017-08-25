@@ -181,6 +181,7 @@
              if (sts(i) .NE. NF90_NOERR) then
                  print*, "Error: nonblocking write fails on request", &
                          i, ' ', nf90mpi_strerror(sts(i))
+                 stop 2
              endif
           enddo
 
@@ -248,6 +249,7 @@
              if (sts(i) .NE. NF90_NOERR) then
                  print*, "Error: nonblocking write fails on request", &
                          i, ' ', nf90mpi_strerror(sts(i))
+                 stop 2
              endif
           enddo
 
@@ -261,6 +263,7 @@
                       print*, 'Read contents mismatch at buf i=', i, &
                               ' j=',j,' =', buf(i,j),' (should be ', &
                               rank+10, ')\n'
+                      stop 2
                   endif
              enddo
           enddo

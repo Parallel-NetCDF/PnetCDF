@@ -41,20 +41,10 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 #define NDIMS    3
 #define NUM_VARS 10
 
-#define HANDLE_ERROR {                                \
-    if (err != NC_NOERR) {                            \
-        printf("Error at line %d (%s)\n", __LINE__,   \
-               ncmpi_strerror(err));                  \
-        nerrs++;                                      \
-    }                                                 \
-}
+#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -116,7 +106,7 @@ int main(int argc, char **argv)
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -156,7 +146,8 @@ int main(int argc, char **argv)
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
                        MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error: ncmpi_create() file %s (%s)\n",filename,ncmpi_strerror(err));
+        printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
+               __LINE__,__FILE__,filename,ncmpi_strerror(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
     }
@@ -165,33 +156,33 @@ int main(int argc, char **argv)
     for (i=0; i<NDIMS; i++) {
         sprintf(str, "%c", 'x'+i);
         err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i]);
-        HANDLE_ERROR
+        ERR
     }
 
     /* define variables */
     for (i=0; i<NUM_VARS; i++) {
         sprintf(str, "var%d", i);
         err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids, &varids[i]);
-        HANDLE_ERROR
+        ERR
     }
 
     /* exit the define mode */
     err = ncmpi_enddef(ncid);
-    HANDLE_ERROR
+    ERR
 
     /* get all the hints used */
     err = ncmpi_inq_file_info(ncid, &info_used);
-    HANDLE_ERROR
+    ERR
 
     /* write one variable at a time */
     for (i=0; i<NUM_VARS; i++) {
         err = ncmpi_put_vara_int_all(ncid, varids[i], starts, counts, buf[i]);
-        HANDLE_ERROR
+        ERR
     }
 
     /* close the file */
     err = ncmpi_close(ncid);
-    HANDLE_ERROR
+    ERR
 
     write_timing = MPI_Wtime() - write_timing;
 
@@ -235,6 +226,6 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-    return nerrs;
+    return (nerrs > 0);
 }
 

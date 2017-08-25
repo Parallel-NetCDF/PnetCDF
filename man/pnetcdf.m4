@@ -429,7 +429,7 @@ divert(0)dnl
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH PNETCDF 3 RELEASE_DATE "Printed: \n(yr-\n(mo-\n(dy" "LIBRARY FUNCTIONS"
+.TH PnetCDF 3<<>>ifelse(API,C,,f) "PnetCDF PNETCDF_VERSION" "Printed: \n(yr-\n(mo-\n(dy" "LIBRARY FUNCTIONS"
 .SH N<<>>AME
 PnetCDF \- Parallel library for accessing files in Network Common Data Form (CDF, CDF-2 and CDF-5 formats)
 .SH SYNOPSIS
@@ -460,13 +460,13 @@ DECL(RETSTR(), inq_libvers, (VOID_ARG))
 FOLD(inq_libvers)
 .sp
 Returns a string identifying the version of the PnetCDF library, and
-when it was built, like: "RELEASE_STR".
+when it was built, like: "PNETCDF_VERSION of PNETCDF_RELEASE_DATE2".
 .LP
 The RCS \fBident(1)\fP command will find a string like
 "$\|Id: @\|(#) PnetCDF library version 
-RELEASE_STR $"
+PNETCDF_VERSION of PNETCDF_RELEASE_DATE2 $"
 in the library. The SCCS \fBwhat(1)\fP command will find a string like
-"PnetCDF library version RELEASE_STR".
+"PnetCDF library version PNETCDF_VERSION of PNETCDF_RELEASE_DATE2".
 .SH "RETURN VALUES"
 .LP
 All PnetCDF functions (except
@@ -1237,7 +1237,29 @@ ifelse(API,C,<<A NULL() pointer means the memory-resident values have
 the same structure as the associated netCDF variable.>>)
 .SH "VARIABLE PREFILLING"
 .LP
-PnetCDF does not support data filling.
+Prior to version 1.6.1, PnetCDF does not support data filling.
+The default fill mode in PnetCDF is MACRO(NOFILL)
+This contrary to netCDF library whose default is MACRO(FILL)
+When fill mode is enabled, PnetCDF sets the values of
+all newly-defined variables of finite length (i.e. those that do not have
+an unlimited, dimension) to the type-dependent fill-value associated with each
+variable.  This is done when FREF(enddef) is called.  The
+fill-value for a variable may be changed from the default value by
+defining the attribute `\fB_FillValue\fR' for the variable.  This
+attribute must have the same type as the variable and be of length one.
+.LP
+Variables with an unlimited dimension are not prefilled in PnetCDF.
+This is also contrary to netCDF, which does prefill record variables.
+In PnetCDF, filling a record variable must be done by calling
+FREF(fill_var_rec). Note this fills only one record of
+a variable.
+.LP 
+The fill mode for the entire file can be set by FREF(set_fill).
+Per-variable fill mode setting is also available through
+FREF(def_var_fill).
+In PnetCDF, changing fill mode must be done in define mode.
+In netCDF, it is true only for fix-sized variables.
+For record variables, changing fill mode can be made at any time in netCDF.
 .SH "ENVIRONMENT VARIABLES"
 .TP 4
 .B PNETCDF_SAFE_MODE
@@ -1258,6 +1280,8 @@ visit https://lists.mcs.anl.gov/mailman/listinfo/parallel-netcdf
 .BR ncmpidiff (1),
 .BR ncmpivalid (1),
 .BR pnetcdf (3<<>>ifelse(API,C,,f)).
+.SH DATE
+PNETCDF_RELEASE_DATE
 .LP
 \fIPnetCDF User's Guide\fP, published
 by Northwestern University and Argonne National Laboratory.

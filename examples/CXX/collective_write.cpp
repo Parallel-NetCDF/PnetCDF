@@ -46,10 +46,6 @@ using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 #define NDIMS    3
 #define NUM_VARS 10
 
@@ -114,7 +110,7 @@ int main(int argc, char **argv)
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;

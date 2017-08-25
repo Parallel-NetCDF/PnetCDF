@@ -22,7 +22,11 @@ dnl
 #include <sys/types.h>  /* open() */
 #include <sys/stat.h>   /* open() */
 #include <fcntl.h>      /* open() */
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <unistd.h>     /* read() */
+#endif
 
 #include "tests.h"
 #include "math.h"
@@ -1594,7 +1598,7 @@ TestFunc(rename_var)(VarArgs)
             error("expecting NC_ENAMEINUSE but got %s", nc_err_code_name(err));
         ELSE_NOK
         strcpy(name, "new_");
-        strcat(name, var_name[i]);
+        strncat(name, var_name[i], sizeof(name) - strlen(name) - 1);
         err = APIFunc(rename_var)(ncid, i, name);
         IF (err != NC_NOERR)
             error("rename_var: %s", APIFunc(strerror)(err));
@@ -1613,7 +1617,7 @@ TestFunc(rename_var)(VarArgs)
         error("enddef: %s", APIFunc(strerror)(err));
     for (i = 0; i < numVars; i++) {
         strcpy(name, "even_longer_");
-        strcat(name, var_name[i]);
+        strncat(name, var_name[i], sizeof(name) - strlen(name) - 1);
         err = APIFunc(rename_var)(ncid, i, name);
         IF (err != NC_ENOTINDEFINE)
             error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
@@ -1930,7 +1934,7 @@ TestFunc(rename_att)(AttVarArgs)
                 error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
             ELSE_NOK
             strcpy(newname, "new_");
-            strcat(newname, attname);
+            strncat(newname, attname, sizeof(newname) - strlen(newname) - 1);
             err = APIFunc(rename_att)(ncid, varid, attname, newname);
             IF (err != NC_NOERR)
                 error("rename_att: %s", APIFunc(strerror)(err));
@@ -1958,7 +1962,7 @@ TestFunc(rename_att)(AttVarArgs)
             atttype = ATT_TYPE(i,j);
             attlength = ATT_LEN(i,j);
             strcpy(newname, "new_");
-            strcat(newname, attname);
+            strncat(newname, attname, sizeof(newname) - strlen(newname) - 1);
             err = APIFunc(inq_attname)(ncid, varid, j, name);
             IF (err != NC_NOERR)
                 error("inq_attname: %s", APIFunc(strerror)(err));
@@ -2005,9 +2009,9 @@ TestFunc(rename_att)(AttVarArgs)
         for (j = 0; j < NATTS(i); j++) {
             attname = ATT_NAME(i,j);
             strcpy(oldname, "new_");
-            strcat(oldname, attname);
+            strncat(oldname, attname, sizeof(oldname) - strlen(oldname) - 1);
             strcpy(newname, "even_longer_");
-            strcat(newname, attname);
+            strncat(newname, attname, sizeof(newname) - strlen(newname) - 1);
             err = APIFunc(rename_att)(ncid, varid, oldname, newname);
             IF (err != NC_ENOTINDEFINE)
                 error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
@@ -2230,10 +2234,12 @@ TestFunc(set_fill)(VarArgs)
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     err = APIFunc(set_fill)(ncid, NC_FILL, &old_fillmode);
-ifdef(`PNETCDF',
-    `IF (err != NC_ENOTINDEFINE)
-        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));',
-    `IF (err)
+ifdef(`PNETCDF',`
+    IF (err != NC_ENOTINDEFINE)
+        error("expecting NC_ENOTINDEFINE but got %s", nc_err_code_name(err));
+    IF (old_fillmode != NC_NOFILL)
+        error("Unexpected old fill mode: %d", old_fillmode);',`
+    IF (err)
         error("nc_set_fill: %s", nc_strerror(err));
     IF (old_fillmode != NC_FILL)
         error("Unexpected old fill mode: %d", old_fillmode);')dnl
@@ -2302,6 +2308,11 @@ ifdef(`PNETCDF', `
     def_dims(ncid);
     Def_Vars(ncid, numVars);
 
+    /* expect NC_EGLOBAL when try to put _FillValue to NC_GLOBAL */
+    err = APIFunc(put_att_int)(ncid, NC_GLOBAL, _FillValue, NC_INT, 1, &i);
+    IF (err != NC_EGLOBAL)
+        error("redef: expect NC_EGLOBAL but got %s", nc_err_code_name(err));
+
     /* set _FillValue = 42 for all vars */
     fill = 42;
     text = 42;
@@ -2316,6 +2327,13 @@ ifdef(`PNETCDF', `
                 error("put_att_double: %s", APIFunc(strerror)(err));
         }
     }
+
+ifdef(`PNETCDF',`
+    err = APIFunc(set_fill)(ncid, NC_FILL, &old_fillmode);
+    IF (err)
+        error("set_fill: %s", APIFunc(strerror)(err));
+    IF (old_fillmode != NC_NOFILL)
+        error("Unexpected old fill mode: %d", old_fillmode);')dnl
 
     /* data mode. write records */
     err = APIFunc(enddef)(ncid);
@@ -2352,9 +2370,50 @@ ifdef(`PNETCDF', `
             ELSE_NOK
         }
     }
+    /* enter redef mode and add a new variable, check NC_ELATEFILL */
+    err = APIFunc(redef)(ncid);
+    IF (err != NC_NOERR)
+        error("redef: %s", APIFunc(strerror)(err));
+
+    /* it is not allowed to define fill value when variable already exists */
+    err = APIFunc(def_var_fill)(ncid, 0, 0, &value);
+    IF (err != NC_ELATEFILL)
+        error("redef: expect NC_ELATEFILL but got %s", nc_err_code_name(err));
+    err = APIFunc(def_var)(ncid, "new_var", NC_INT, 0, NULL, &varid);
+    IF (err != NC_NOERR)
+        error("redef: %s", APIFunc(strerror)(err));
+    err = APIFunc(def_var_fill)(ncid, varid, 0, &value);
+    IF (err != NC_NOERR)
+        error("def_var_fill: %s", APIFunc(strerror)(err));
+
     err = APIFunc(close)(ncid);
     IF (err != NC_NOERR)
         error("close: %s", APIFunc(strerror)(err));
+
+    /* test NC_ELATEFILL for the case of re-opening the file */
+    err = FileOpen(scratch, NC_WRITE, &ncid);
+    IF (err != NC_NOERR)
+        error("open: %s", APIFunc(strerror)(err));
+
+    err = APIFunc(redef)(ncid);
+    IF (err != NC_NOERR)
+        error("redef: %s", APIFunc(strerror)(err));
+
+    for (i = 0; i < numVars; i++) {
+        if (var_type[i] == NC_CHAR) {
+            err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
+            IF (err != NC_ELATEFILL)
+                error("put_att_text: expect NC_ELATEFILL but got %d", APIFunc(strerrno)(err));
+        } else {
+            err = APIFunc(put_att_double)(ncid, i, "_FillValue",var_type[i],1,&fill);
+            IF (err != NC_ELATEFILL)
+                error("put_att_double: expect NC_ELATEFILL but got %d", APIFunc(strerrno)(err));
+        }
+    }
+    err = APIFunc(close)(ncid);
+    IF (err != NC_NOERR)
+        error("close: %s", APIFunc(strerror)(err));
+
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
@@ -2392,7 +2451,7 @@ APIFunc(get_file_version)(char *path, int *version)
 
    if (read_len != MAGIC_NUM_LEN) {
        printf("Error: reading NC magic string unexpected short read\n");
-       return 0;
+       return NC_ENOTNC;
    }
 
    if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0) {

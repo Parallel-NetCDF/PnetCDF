@@ -65,8 +65,6 @@
 #define NY 8
 #define NX 2
 
-#define ERR {if(err!=NC_NOERR) {printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
-
 int main(int argc, char** argv)
 {
     char filename[256];
@@ -83,7 +81,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -98,7 +96,7 @@ int main(int argc, char** argv)
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* the global array is NY * (NX * nprocs) */
     global_ny = NY;
@@ -111,17 +109,17 @@ int main(int argc, char** argv)
         }
 
     /* define dimensions x and y */
-    err = ncmpi_def_dim(ncid, "Y", global_ny, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", global_nx, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "Y", global_ny, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", global_nx, &dimid[1]); CHECK_ERR
 
     /* define a 2D variable of integer type */
-    err = ncmpi_def_var(ncid, "var_int", NC_INT, 2, dimid, &varid[0]); ERR
+    err = ncmpi_def_var(ncid, "var_int", NC_INT, 2, dimid, &varid[0]); CHECK_ERR
 
     /* define a 2D variable of float type */
-    err = ncmpi_def_var(ncid, "var_flt", NC_FLOAT, 2, dimid, &varid[1]); ERR
+    err = ncmpi_def_var(ncid, "var_flt", NC_FLOAT, 2, dimid, &varid[1]); CHECK_ERR
 
     /* do not forget to exit define mode */
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* now we are in data mode */
     start[0] = 0;
@@ -129,28 +127,28 @@ int main(int argc, char** argv)
     count[0] = NY;
     count[1] = NX;
 
-    err = ncmpi_iput_vara_int(ncid, varid[0], start, count, &buf_int[0][0], NULL); ERR
-    err = ncmpi_iput_vara_float(ncid, varid[1], start, count, &buf_flt[0][0], NULL); ERR
+    err = ncmpi_iput_vara_int(ncid, varid[0], start, count, &buf_int[0][0], NULL); CHECK_ERR
+    err = ncmpi_iput_vara_float(ncid, varid[1], start, count, &buf_flt[0][0], NULL); CHECK_ERR
 
-    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); ERR
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
 
     /* check if write buffer contents have been altered */
     for (i=0; i<NY; i++)
         for (j=0; j<NX; j++) {
              if (buf_int[i][j] != rank+10) {
-                 printf("Error at line %d: expecting buffer[%d][%d]=%d but got %d\n",
-                       __LINE__,i,j,rank+10,buf_int[i][j]);
+                 printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %d\n",
+                       __LINE__,__FILE__,i,j,rank+10,buf_int[i][j]);
                  nerrs++;
              }
              if (buf_flt[i][j] != 10.5 + rank) {
-                 printf("Error at line %d: expecting buffer[%d][%d]=%f but got %f\n",
-                       __LINE__,i,j,10.5+rank,buf_flt[i][j]);
+                 printf("Error at line %d in %s: expecting buffer[%d][%d]=%f but got %f\n",
+                       __LINE__,__FILE__,i,j,10.5+rank,buf_flt[i][j]);
                  nerrs++;
              }
         }
 
     err = ncmpi_close(ncid);
-    ERR
+    CHECK_ERR
 
     /* check if there is any PnetCDF internal malloc residue */
     MPI_Offset malloc_size, sum_size;
@@ -169,6 +167,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

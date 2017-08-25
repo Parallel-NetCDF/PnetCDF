@@ -148,7 +148,7 @@ main(int argc, char *argv[])
     strcpy(testfile, "test.nc");    /* read-only testfile */
     strcpy(scratch, "scratch.nc");  /* writable scratch file */
 
-    while ((c = getopt(argc, argv, "c25hrvn:d:")) != EOF)
+    while ((c = getopt(argc, argv, "c25hrn:d:v")) != -1)
       switch(c) {
 	case 'c':		/* Create file test.nc */
 	  create_file = 1;
@@ -159,7 +159,7 @@ main(int argc, char *argv[])
 	case 'v':		/* verbose mode */
 	  verbose = 1;
 	  break;
-	case 'n':		/* verbose mode */
+	case 'n':		/* max. number of messages per test */
 	  max_nmpt = (int)strtol(optarg,NULL,10);
 	  break;
 	case '2':
@@ -167,6 +167,7 @@ main(int argc, char *argv[])
 	  break;
 	case '5':
 	  cdf_format = 5;
+	  break;
 	case 'd':
           sprintf(testfile, "%s/test.nc", optarg);
           sprintf(scratch, "%s/scratch.nc", optarg);

@@ -36,10 +36,11 @@
     }
 */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 static void handle_error(int status, int lineno)
 {
@@ -51,7 +52,7 @@ int main(int argc, char **argv) {
 
     int ret, ncfile, nprocs, rank, dimid, varid1, varid2, ndims=1;
     MPI_Offset start, count=1;
-    char buf[13] = "Hello World\n";
+    char filename[256], buf[13] = "Hello World\n";
     int data;
 
     MPI_Init(&argc, &argv);
@@ -59,13 +60,15 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
+    if (argc > 2) {
         if (rank == 0) printf("Usage: %s filename\n", argv[0]);
         MPI_Finalize();
         exit(-1);
     }
+    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
+    else          strcpy(filename, "testfile.nc");
 
-    ret = ncmpi_create(MPI_COMM_WORLD, argv[1],
+    ret = ncmpi_create(MPI_COMM_WORLD, filename,
                        NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 

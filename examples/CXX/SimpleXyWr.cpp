@@ -30,10 +30,6 @@ using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 // We are writing 2D data, a 6 x 12 grid. 
 static const int NX = 6;
 static const int NY = 12;
@@ -68,7 +64,7 @@ int main(int argc, char *argv[])
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -117,6 +113,7 @@ int main(int argc, char *argv[])
     }
     catch(NcmpiException& e) {
         cout << e.what() << " error code=" << e.errorCode() << " Error!\n";
+        return 1;
     }
 
     /* check if there is any PnetCDF internal malloc residue */

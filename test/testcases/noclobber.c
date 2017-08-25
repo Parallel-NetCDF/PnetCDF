@@ -19,8 +19,6 @@
 
 #include <testutils.h>
 
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
-
 int main(int argc, char **argv) {
     char filename[256];
     int  err, nerrs=0, ncid, cmode, rank, nprocs;
@@ -32,7 +30,7 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -48,14 +46,13 @@ int main(int argc, char **argv) {
     /* create a file if it does not exist */
     cmode = NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    ERR
-    err = ncmpi_close(ncid); ERR
+    CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* now the file exists, test if PnetCDF can return correct error code */
     cmode = NC_NOCLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    if (err != NC_EEXIST) /* err == NC_EOFILE */
-        nerrs++;
+    EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -74,5 +71,5 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }

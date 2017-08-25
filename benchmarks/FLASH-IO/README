@@ -36,7 +36,7 @@ please refer to the following paper.
 
 To compile:
     run configure command first, eg.
-    autoreconf
+    autoreconf -i
     ./configure --with-pnetcdf=/path/PnetCDF MPIF90=/path/mpi/F90/compiler
     make
 

@@ -37,7 +37,7 @@
               write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 buftype_freef.f for flexible API '
               call pass_fail(1, msg)
-              call MPI_Abort(MPI_COMM_WORLD, -1, err)
+              STOP 2
           end if
       end ! subroutine check
 
@@ -174,5 +174,7 @@
           endif
 
  999      call MPI_Finalize(ierr)
+          if (nerrs .GT. 0) stop 2
+
       end ! program main
 

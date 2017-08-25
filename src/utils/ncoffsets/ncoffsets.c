@@ -228,7 +228,7 @@ swap4b(void *val)
 }
 
 static void
-swap8b(long long *val)
+swap8b(unsigned long long *val)
 {
     uint64_t *op = (uint64_t*)val;
     *op = SWAP8B(*op);
@@ -240,7 +240,7 @@ get_uint64(bufferinfo *gbp) {
     unsigned long long tmp;
     memcpy(&tmp, gbp->pos, 8);
     if (is_little_endian) swap8b(&tmp);
-    gbp->pos += 8;
+    gbp->pos = (char*)gbp->pos + 8;
     return tmp;
 }
 
@@ -250,7 +250,7 @@ get_uint32(bufferinfo *gbp) {
     unsigned int tmp;
     memcpy(&tmp, gbp->pos, 4);
     if (is_little_endian) swap4b(&tmp);
-    gbp->pos += 4;
+    gbp->pos = (char*)gbp->pos + 4;
     return tmp;
 }
 
@@ -781,7 +781,7 @@ hdr_fetch(bufferinfo *gbp) {
 
     assert(gbp->base != NULL);
 
-    slack = gbp->size - (gbp->pos - gbp->base);
+    slack = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
     /* if gbp->pos and gbp->base are the same, there is no leftover buffer
      * data to worry about.
      * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then
@@ -809,7 +809,7 @@ static int
 hdr_check_buffer(bufferinfo *gbp,
                  size_t      nextread)
 {
-    if (gbp->pos + nextread <= gbp->base + gbp->size)
+    if ((char*)gbp->pos + nextread <= (char*)gbp->base + gbp->size)
         return NC_NOERR;
 
     /* read the next chunk from file */
@@ -894,7 +894,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
 
     nbytes = nchars;
     padding = _RNDUP(ncstrp->nchars, X_ALIGN) - ncstrp->nchars;
-    bufremain = gbp->size - (gbp->pos - gbp->base);
+    bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
     cpos = ncstrp->cp;
 
     /* get namestring with padding */
@@ -1084,7 +1084,7 @@ hdr_get_NC_attrV(bufferinfo *gbp,
 
     nbytes = attrp->nelems * ncmpix_len_nctype(attrp->type);
     padding = attrp->xsz - nbytes;
-    bufremain = gbp->size - (gbp->pos - gbp->base);
+    bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
 
     /* get values */
     while (nbytes > 0) {
@@ -1548,7 +1548,7 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
 
     /* First get the file format information, magic */
     magic = getbuf.base;
-    getbuf.pos += 4;
+    getbuf.pos = (char*)getbuf.pos + 4;
 
     /* don't need to worry about CDF-1 or CDF-2
      * if the first bits are not 'CDF'
@@ -1625,6 +1625,7 @@ ncmpii_free_NC(NC *ncp)
     free(ncp->path);
 }
 
+#if 0
 const char *
 ncmpi_strerror(int err)
 {
@@ -1647,6 +1648,7 @@ ncmpi_strerror(int err)
          return "Unknown error code";
    }
 }
+#endif
 
 const char *
 ncmpii_err_code_name(int err)
@@ -1764,7 +1766,7 @@ usage(char *cmd)
 "       [-x]            Check gaps in fixed-size variables, output 1 if gaps\n"
 "                       are found, 0 for otherwise.\n"
 "       file            Input netCDF file name\n"
-"*Parallel netCDF library version 1.7.0\n";
+"*Parallel netCDF library version PNETCDF_RELEASE_VERSION\n";
     fprintf(stderr, help, cmd);
 }
 
@@ -1773,7 +1775,7 @@ int main(int argc, char *argv[])
 {
     extern int optind;
     char *filename, *cmd, *env_str;
-    int i, j, err, opt, nvars;
+    int i, j, err, opt;
     int print_var_size=0, print_gap=0, check_gap=0, print_all_rec=0;
     NC *ncp;
     struct fspec *fspecp=NULL;

@@ -192,4 +192,6 @@
 
  999      call MPI_Finalize(ierr)
 
+          if (nerrs .GT. 0) STOP 2
+
       end ! program main

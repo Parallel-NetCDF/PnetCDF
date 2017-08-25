@@ -12,6 +12,13 @@ dnl
  */
 /* $Id$ */
 
+#ifndef TESTS_H
+#define TESTS_H
+
+#ifdef HAVE_CONFIG_H
+#include <config.h> /* output of 'configure' */
+#endif
+
 define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
 define(`TestFunc',`ifdef(`PNETCDF',`test_ncmpi_put_$1',`test_nc_put_$1')')dnl
 define(`APIFunc',` ifdef(`PNETCDF',`ncmpi_$1',`nc_$1')')dnl
@@ -29,8 +36,6 @@ define(`APIFunc',` ifdef(`PNETCDF',`ncmpi_$1',`nc_$1')')dnl
 #include <pnetcdf.h>
 #include <testutils.h>
 #include "error.h"
-
-#include <ncconfig.h> /* output of 'configure' */
 
 #if defined(_CRAY) && !defined(_CRAYIEEE)
 #define CRAYFLOAT 1 /* CRAY Floating point */
@@ -240,38 +245,9 @@ nv=1*11+5*11+5*4+5*4*4=11+55+20+80 = 166 (if NTYPES==11)
 extern "C" {
 #endif
 
-
     /* Non-standard internal types */
 
-#ifdef HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif
-
 typedef char text;
-typedef signed char schar;
-#if !defined(HAVE_UCHAR) && !defined(__osf__) && !defined(_AIX)
-typedef unsigned char uchar;
-#endif
-
-#ifndef HAVE_USHORT
-typedef unsigned short int  ushort;
-#endif
-
-#ifndef HAVE_UINT
-typedef unsigned int  uint;
-#endif
-
-#ifndef HAVE_INT64
-typedef long long  int64;
-#endif
-
-#ifndef HAVE_UINT64
-typedef unsigned long long  uint64;
-#endif
-
-typedef long long longlong;
-typedef unsigned long long ulonglong;
-
 
     /* Global variables - filenames */
 
@@ -517,4 +493,6 @@ foreach(`itype',(ITYPE_LIST),`CHECK_ATTS(itype)
 
 #ifdef __cplusplus
 }
+#endif
+#
 #endif

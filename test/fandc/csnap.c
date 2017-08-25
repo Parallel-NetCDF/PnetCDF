@@ -22,7 +22,7 @@
  *****************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h> /* srand(), rand() */
+#include <stdlib.h> /* srandom(), random() */
 #include <string.h> /* strcpy() */
 #include <unistd.h>
 #include <math.h>  /* sqrt() */
@@ -31,8 +31,6 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 #include <testutils.h>
-
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
 
 /*** Field parameters ***/
 static int verbose, nerrs;
@@ -89,7 +87,7 @@ int main(int argc, char *argv[]) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -100,6 +98,12 @@ int main(int argc, char *argv[]) {
         sprintf(cmd_str, "*** TESTING C   %s for 3D array write/read ", argv[0]);
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
+    }
+    if (filename[0] == '\0') {
+        printf(PASS_STR);
+        fprintf(stderr,"Error: invalid filename, Exiting ...\n");
+        MPI_Finalize();
+        return 1;
     }
 
   verbose = 0;
@@ -197,8 +201,8 @@ int main(int argc, char *argv[]) {
         else       printf(PASS_STR);
     }
 
-  MPI_Finalize();
-  return 0;
+    MPI_Finalize();
+    return (nerrs > 0);
 }
 
 
@@ -245,39 +249,39 @@ void write_file(char *filename, double *t) {
     t1 = MPI_Wtime();
 
     err = ncmpi_create(comm_cart, filename, NC_CLOBBER, MPI_INFO_NULL,
-                        &file_id); ERR
+                        &file_id); CHECK_ERR
 
-/*  err = nc_set_fill(file_id,fillmode,&old_fillmode); ERR */
+/*  err = nc_set_fill(file_id,fillmode,&old_fillmode); CHECK_ERR */
 
-    err = ncmpi_def_dim(file_id,"level",    (MPI_Offset) totsiz_3d[0],&lev_id); ERR
-    err = ncmpi_def_dim(file_id,"latitude", (MPI_Offset) totsiz_3d[1],&lat_id); ERR
-    err = ncmpi_def_dim(file_id,"longitude",(MPI_Offset) totsiz_3d[2],&lon_id); ERR
+    err = ncmpi_def_dim(file_id,"level",    (MPI_Offset) totsiz_3d[0],&lev_id); CHECK_ERR
+    err = ncmpi_def_dim(file_id,"latitude", (MPI_Offset) totsiz_3d[1],&lat_id); CHECK_ERR
+    err = ncmpi_def_dim(file_id,"longitude",(MPI_Offset) totsiz_3d[2],&lon_id); CHECK_ERR
 
     dim_id[0] = lev_id; dim_id[1] = lat_id; dim_id[2] = lon_id;
 
-    err = ncmpi_def_var(file_id,"t",NC_DOUBLE,3,dim_id,&t_id); ERR
+    err = ncmpi_def_var(file_id,"t",NC_DOUBLE,3,dim_id,&t_id); CHECK_ERR
 
     if (! only_3d) {
-      err = ncmpi_def_var(file_id,"smf",NC_DOUBLE,2,&dim_id[1],&smf_id); ERR
+      err = ncmpi_def_var(file_id,"smf",NC_DOUBLE,2,&dim_id[1],&smf_id); CHECK_ERR
     }
 
-    err = ncmpi_enddef(file_id); ERR
+    err = ncmpi_enddef(file_id); CHECK_ERR
 
     t2 = MPI_Wtime();
 
-    err = ncmpi_put_vara_double_all(file_id,t_id,start_3d,count_3d,tt); ERR
+    err = ncmpi_put_vara_double_all(file_id,t_id,start_3d,count_3d,tt); CHECK_ERR
 
     if (! only_3d) {
-      err = ncmpi_begin_indep_data(file_id); ERR
+      err = ncmpi_begin_indep_data(file_id); CHECK_ERR
 
       if (has_2d) {
-        err = ncmpi_put_vara_double(file_id,smf_id,start_2d,count_2d,smf); ERR
+        err = ncmpi_put_vara_double(file_id,smf_id,start_2d,count_2d,smf); CHECK_ERR
       }
 
-      err = ncmpi_end_indep_data(file_id); ERR
+      err = ncmpi_end_indep_data(file_id); CHECK_ERR
     }
 
-    err = ncmpi_close(file_id); ERR
+    err = ncmpi_close(file_id); CHECK_ERR
 
     MPI_Barrier(comm_cart);
     t3 = MPI_Wtime();
@@ -340,36 +344,36 @@ void read_file(char *filename, double *t) {
     MPI_Barrier(comm_cart);
     t1 = MPI_Wtime();
 
-    err = ncmpi_open(comm_cart, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_open(comm_cart, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
 
-    err = ncmpi_inq_varid(ncid,"t",&vid_t); ERR
+    err = ncmpi_inq_varid(ncid,"t",&vid_t); CHECK_ERR
     if (! only_3d) {
-        err = ncmpi_inq_varid(ncid,"smf",&vid_smf); ERR
+        err = ncmpi_inq_varid(ncid,"smf",&vid_smf); CHECK_ERR
     }
 
     t2 = MPI_Wtime();
 
-    err = ncmpi_get_vara_double_all(ncid,vid_t,start_3d,count_3d,buf); ERR
+    err = ncmpi_get_vara_double_all(ncid,vid_t,start_3d,count_3d,buf); CHECK_ERR
 
     dt1 = MPI_Wtime();
     if (ii == 1) compare_vec(tt,buf,3,locsiz_3d,1);
     dt1 = MPI_Wtime() - dt1;
 
     if (! only_3d) {
-      err = ncmpi_begin_indep_data(ncid); ERR
+      err = ncmpi_begin_indep_data(ncid); CHECK_ERR
 
       if (has_2d) {
-          err = ncmpi_get_vara_double(ncid,vid_smf,start_2d,count_2d,buf); ERR
+          err = ncmpi_get_vara_double(ncid,vid_smf,start_2d,count_2d,buf); CHECK_ERR
       }
 
       dt2 = MPI_Wtime();
       if (ii == 1) compare_vec(smf,buf,2,locsiz_2d,has_2d);
       dt2 = MPI_Wtime() - dt2;
 
-      err = ncmpi_end_indep_data(ncid); ERR
+      err = ncmpi_end_indep_data(ncid); CHECK_ERR
     }
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     MPI_Barrier(comm_cart);
     t3 = MPI_Wtime();
@@ -402,19 +406,19 @@ void get_fields(double *tt, double *smf) {
 
   if (random_fields) {
     unsigned int seed = (INT_MAX / totpes) * mype;
-    srand(seed);
+    srandom(seed);
 
     for (k = 0; k < locsiz_3d[0]; k++)
       for (j = 0; j < locsiz_3d[1]; j++)
         for (i = 0; i < locsiz_3d[2]; i++) {
-            double tmp = rand();
+            double tmp = random();
             *tt++ = tmp / (RAND_MAX + 1.);
         }
 
     if (has_2d)
       for (j = 0; j < locsiz_2d[0]; j++)
         for (i = 0; i < locsiz_2d[1]; i++) {
-            double tmp = rand();
+            double tmp = random();
             *smf++ = tmp / (RAND_MAX + 1.);
         }
   }

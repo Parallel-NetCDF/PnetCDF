@@ -167,6 +167,7 @@
           if (len .NE. 2) then
               print*, 'Error: number of records should be 2 but got ', &
                        len
+              stop 2
           endif
 
           ! write the fixed-size variable

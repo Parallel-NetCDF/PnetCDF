@@ -17,8 +17,6 @@
 
 #define FILE_NAME "testfile.nc"
 
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: err=%d %s\n", __LINE__, err, ncmpi_strerror(err)); nerrs++;}
-
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
     int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs;
@@ -40,7 +38,7 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -55,14 +53,14 @@ int main(int argc, char **argv) {
     MPI_Info_create(&info);
     /* MPI_Info_set(info, "romio_pvfs2_posix_write","enable"); */
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA, info, &ncid); CHECK_ERR
     MPI_Info_free(&info);
 
     /* define a variable of a 6 x 4 integer array in the nc file */
-    err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", 4, &dimid[1]); ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT64, 2, dimid, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", 4, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT64, 2, dimid, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* set the contents of the write buffer var, a 4 x 6 float array
           50, 51, 52, 53, 54, 55,
@@ -74,7 +72,7 @@ int main(int argc, char **argv) {
 
     /* bufsize must be max of data type converted before and after */
     bufsize = 4*6*sizeof(long long);
-    err = ncmpi_buffer_attach(ncid, bufsize); ERR
+    err = ncmpi_buffer_attach(ncid, bufsize); CHECK_ERR
 
     /* write var to the NC variable in the matrix transposed way */
     count[0]  = 6; count[1]  = 2;
@@ -86,42 +84,41 @@ int main(int argc, char **argv) {
 
     /* write the first two columns of the NC variable in the matrix transposed way */
     start[0]  = 0; start[1]  = 0;
-    err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[0][0], &req[0]); ERR
+    err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[0][0], &req[0]); CHECK_ERR
 
     /* check if write buffer contents have been altered */
     for (j=0; j<4; j++)
         for (i=0; i<6; i++) {
             if (var[j][i] != 50.5 + j*6+i) {
-                printf("Error: put buffer[%d][%d]=%f altered, should be %f\n",
-                       j,i,var[j][i],50.5+j*6+i);
+                printf("Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
+                       __LINE__,__FILE__,j,i,var[j][i],50.5+j*6+i);
                 nerrs++;
             }
         }
 
     /* write the second two columns of the NC variable in the matrix transposed way */
     start[0]  = 0; start[1]  = 2;
-    err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[2][0], &req[1]); ERR
+    err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[2][0], &req[1]); CHECK_ERR
 
     /* check if write buffer contents have been altered */
     for (j=0; j<4; j++)
         for (i=0; i<6; i++) {
             if (var[j][i] != 50.5 + j*6+i) {
-                printf("Error: put buffer[%d][%d]=%f altered, should be %f\n",
-                       j,i,var[j][i],50.5+j*6+i);
+                printf("Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
+                       __LINE__,__FILE__,j,i,var[j][i],50.5+j*6+i);
                 nerrs++;
             }
         }
 
-    err = ncmpi_wait_all(ncid, 2, req, status); ERR
+    err = ncmpi_wait_all(ncid, 2, req, status); CHECK_ERR
 
     /* check each bput status */
-    for (i=0; i<2; i++)
-        if (status[i] != NC_NOERR) {
-            printf("Error at line %d: err=%d %s\n", __LINE__, status[i], ncmpi_strerror(err));
-            nerrs++;
-        }
+    for (i=0; i<2; i++) {
+        err = status[i];
+        CHECK_ERR
+    }
 
-    err = ncmpi_buffer_detach(ncid); ERR
+    err = ncmpi_buffer_detach(ncid); CHECK_ERR
 
     /* the output from command "ncmpidump -v var test.nc" should be:
            var =
@@ -138,14 +135,14 @@ int main(int argc, char **argv) {
         for (i=0; i<6; i++) {
             if (var[j][i] != 50.5+j*6+i) {
                 /* this error is a pntecdf internal error, if occurs */
-                printf("Error: put buffer[%d][%d]=%f altered, should be %f\n",
-                       j,i,var[j][i],50.5+j*6+i);
+                printf("Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
+                       __LINE__,__FILE__,j,i,var[j][i],50.5+j*6+i);
                 nerrs++;
                 break;
             }
         }
     }
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -164,7 +161,6 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-
-    return nerrs;
+    return (nerrs > 0);
 }
 

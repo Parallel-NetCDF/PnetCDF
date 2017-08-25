@@ -11,32 +11,52 @@ addons:
     project:
       name: "wkliao/parallel-netcdf"
       description: "PnetCDF nightly build submitted via Travis CI"
+    build_command_prepend: ./configure
     notification_email: wkliao@eecs.northwestern.edu
-    build_command_prepend: "./configure; make clean"
-    build_command:   "make all tests"
-    branch_pattern: master
+    build_command: make -s V=1 LIBTOOLFLAGS=--silent tests
+    branch_pattern: am
 
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - test -n $CC && unset CC
+  # apt-package-whitelist can be found in
+  # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+  - sudo add-apt-repository ppa:dns/gnu -y
   - sudo apt-get update -qq
   - sudo apt-get install -y gfortran
   - sudo apt-get install -y mpich2
-  - autoreconf
-  # string substritute for SVN keyword LastChangedDate
+  - sudo apt-get install --only-upgrade autoconf
+  - sudo apt-get install --only-upgrade automake
+  - sudo apt-get install --only-upgrade libtool
+  - autoconf --version
+  - automake --version
+  - libtool --version
+  - autoreconf -i
+  # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
-  # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.in` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
+  # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
   # Below is for Ubuntu
-  - DateStr=`date -r configure.in +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
+  # - DateStr=`date -r configure.ac +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
 
 script:
-  - ./configure
-  - make clean
-  - make
-  - make tests
-  - make check
-  
+  # dump the Coverity Scan SCM log file
+  # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/scm_log.txt
+  # continue the above "build_command" for static library only (default)
+  - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS=--silent
+  - make -s distclean
+  # build both static and shared libraries
+  - ./configure --silent --enable-shared LDFLAGS="-Wl,--allow-shlib-undefined"
+  - make -s V=1 LIBTOOLFLAGS=--silent tests
+  - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared LDFLAGS='-Wl,--allow-shlib-undefined'"
+  - make -s distclean
+  # build shared library only
+  # - ./configure --silent --enable-shared --disable-static LDFLAGS="-Wl,--allow-shlib-undefined"
+  # - make -s V=1 LIBTOOLFLAGS=--silent tests
+  # - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared --disable-static LDFLAGS='-Wl,--allow-shlib-undefined'"
+  # - make -s distclean
+
 after_failure:
+  - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/build-log.txt
   - cat ./config.log
 
 notifications:

@@ -222,7 +222,6 @@
 
       call MPI_Finalize  (ierr)
 
-
       Stop
 
       end ! program Pnf_Test
@@ -643,7 +642,7 @@
       integer ierr
       integer ii
               
-      real*4  delmax, delmin, delta
+      real*4  delmax(1), delmin(1), delta
       real*4  diff
               
       real*4  wr(5)
@@ -657,8 +656,8 @@
       ws(1) = 0.0d0      ! diff
       ws(2) = 0.0d0      ! sumsq
       ws(3) = int(locsiz)     ! locsiz
-      ws(4) = 0.0d0      ! delmax
-      ws(5) = 1.0d38     ! Huge (ws)  ! delmin
+      ws(4) = 0.0d0      ! delmax(1)
+      ws(5) = 1.0d38     ! Huge (ws)  ! delmin(1)
 
 
       do ii = 1, int(locsiz)
@@ -673,17 +672,17 @@
       call MPI_Allreduce
      &  (ws,    wr,     3, MPI_REAL, MPI_SUM, comm_cart, ierr)
       call MPI_Allreduce
-     &  (ws(4), delmax, 1, MPI_REAL, MPI_MAX, comm_cart, ierr)
+     &  (ws(4), delmax(1), 1, MPI_REAL, MPI_MAX, comm_cart, ierr)
       call MPI_Allreduce
-     &  (ws(5), delmin, 1, MPI_REAL, MPI_MIN, comm_cart, ierr)
+     &  (ws(5), delmin(1), 1, MPI_REAL, MPI_MIN, comm_cart, ierr)
 
 
       diff   = Sqrt (wr(1) / wr(2))         ! normalized error
-      delmax = Sqrt (wr(3) * delmax/wr(2))  ! normalized max difference
-      delmin = Sqrt (wr(3) * delmin/wr(2))  ! normalized min difference
+      delmax(1) = Sqrt (wr(3) * delmax(1)/wr(2))  ! normalized max difference
+      delmin(1) = Sqrt (wr(3) * delmin(1)/wr(2))  ! normalized min difference
 
 
-      if (mype .EQ. 0) Write (6,990) diff, delmax, delmin
+      if (mype .EQ. 0) Write (6,990) diff, delmax(1), delmin(1)
 
  990  format ("diff, delmax, delmin = ",
      &        e10.3, 1x, e10.3, 1x, e10.3)

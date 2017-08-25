@@ -25,20 +25,11 @@
 
 #include <testutils.h>
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
-
-#define EXPECT_ERR(err_no) \
-    if (err != err_no) { \
-        nerrs++; \
-        printf("Error at line %d: expect error code %s but got %s\n", \
-               __LINE__,nc_err_code_name(err_no),nc_err_code_name(err)); \
-    }
-
 #define EXPECT_ERR2(err_no1, err_no2) \
     if (err != err_no1 && err != err_no2) { \
         nerrs++; \
-        printf("Error at line %d: expect error code %s but got %s\n", \
-               __LINE__,nc_err_code_name(err_no1),nc_err_code_name(err)); \
+        printf("Error at line %d in %s: expect error code %s or %s but got %s\n", \
+               __LINE__,__FILE__,ncmpi_strerrno(err_no1),ncmpi_strerrno(err_no2),ncmpi_strerrno(err)); \
     }
 
 static
@@ -50,7 +41,7 @@ int check_modes(char *filename)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* delete the file and ignore error */
-    unlink(filename);
+    if (rank == 0) unlink(filename);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* create a new file and test various cmodes ----------------------------*/
@@ -60,13 +51,13 @@ int check_modes(char *filename)
     cmode |= NC_64BIT_OFFSET | NC_64BIT_DATA;
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    EXPECT_ERR(NC_EINVAL_CMODE)
+    EXP_ERR(NC_EINVAL_CMODE)
 
     /* The file should not be created */
     if (rank == 0) {
         if (access(filename, F_OK) == 0) {
-            printf("Error at line %d: file (%s) should not be created\n",
-                   __LINE__, filename);
+            printf("Error at line %d in %s: file (%s) should not be created\n",
+                   __LINE__,__FILE__, filename);
             nerrs++;
             /* delete the file and ignore error */
             unlink(filename);
@@ -95,8 +86,8 @@ int check_modes(char *filename)
         /* The file should not be created */
         if (rank == 0) {
             if (access(filename, F_OK) == 0) {
-                printf("Error at line %d: file (%s) should not be created\n",
-                       __LINE__, filename);
+                printf("Error at line %d in %s: file (%s) should not be created\n",
+                       __LINE__,__FILE__, filename);
                 nerrs++;
                 /* delete the file and ignore error */
                 unlink(filename);
@@ -126,8 +117,8 @@ int check_modes(char *filename)
         /* The file should not be created */
         if (rank == 0) {
             if (access(filename, F_OK) == 0) {
-                printf("Error at line %d: file (%s) should not be created\n",
-                       __LINE__, filename);
+                printf("Error at line %d in %s: file (%s) should not be created\n",
+                       __LINE__,__FILE__, filename);
                 nerrs++;
                 /* delete the file and ignore error */
                 unlink(filename);
@@ -151,11 +142,11 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]); 
+    else           strcpy(filename, "testfile.nc"); 
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD); 
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
@@ -189,6 +180,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

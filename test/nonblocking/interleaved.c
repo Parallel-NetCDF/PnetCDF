@@ -54,11 +54,10 @@
 #define NY 10
 #define NX 20
 
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
-
 #define CHECK_CONTENTS(exp) { \
     if (buf[i] != (exp)) { \
-        printf("Error: put buffer[%d] altered to %d, expect %d\n",i,buf[i],(exp)); \
+        printf("Error at line %d in %s: put buffer[%d] altered to %d, expect %d\n", \
+        __LINE__,__FILE__,i,buf[i],(exp)); \
         nerrs++; \
     } \
 }
@@ -81,7 +80,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -102,30 +101,30 @@ int main(int argc, char** argv)
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid);
-    ERR
+    CHECK_ERR
 
     MPI_Info_free(&info);
 
     /* define dimensions Y and X */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]);
-    ERR
+    CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]);
-    ERR
+    CHECK_ERR
 
     /* define a 2D variable of integer type */
     err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid);
-    ERR
+    CHECK_ERR
 
     /* do not forget to exit define mode */
     err = ncmpi_enddef(ncid);
-    ERR
+    CHECK_ERR
 
     /* now we are in data mode */
     buf = (int*) malloc(NY*NX * sizeof(int));
     for (i=0; i<NY*NX; i++) buf[i] = -1;
 
     /* fill the entire array with -1s */
-    err = ncmpi_put_var_int_all(ncid, varid, buf); ERR
+    err = ncmpi_put_var_int_all(ncid, varid, buf); CHECK_ERR
 
     /* rearrange buffer contents, as buf is 2D */
     for (i=0;  i<5;  i++) buf[i] = 10 + i;
@@ -134,23 +133,23 @@ int main(int argc, char** argv)
     start[0] = 6; start[1] = 8;
     count[0] = 3; count[1] = 5;
     err = ncmpi_iput_vara_int(ncid, varid, start, count, buf, &req[0]);
-    ERR
+    CHECK_ERR
 
     for (i=15; i<20; i++) buf[i] = 10 + i - 10;
     for (i=20; i<25; i++) buf[i] = 10 + i -  5;
     start[0] = 6; start[1] = 13;
     count[0] = 2; count[1] = 5;
     err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+15, &req[1]);
-    ERR
+    CHECK_ERR
 
     for (i=25; i<30; i++) buf[i] = 10 + i;
     start[0] = 8; start[1] = 13;
     count[0] = 1; count[1] = 5;
     err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+25, &req[2]);
-    ERR
+    CHECK_ERR
 
     err = ncmpi_wait_all(ncid, 3, req, st);
-    ERR
+    CHECK_ERR
 
     /* check if write buffer contents have been altered */
     for (i=0;  i<5;  i++) CHECK_CONTENTS(10 + i)
@@ -161,19 +160,19 @@ int main(int argc, char** argv)
     for (i=25; i<30; i++) CHECK_CONTENTS(10 + i)
 
     err = ncmpi_close(ncid);
-    ERR
+    CHECK_ERR
 
     /* open the same file and read back for validate */
     err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid); ERR
+                     &ncid); CHECK_ERR
 
-    err = ncmpi_inq_varid(ncid, "var", &varid); ERR
+    err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* initialize the contents of the array to a different value */
     for (i=0; i<NY*NX; i++) buf[i] = -1;
 
     /* read the entire array */
-    err = ncmpi_get_var_int_all(ncid, varid, buf); ERR
+    err = ncmpi_get_var_int_all(ncid, varid, buf); CHECK_ERR
 
     /* check if the contents of buf are expected */
     expected = 10;
@@ -188,7 +187,7 @@ int main(int argc, char** argv)
         }
     }
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     free(buf);
 
@@ -206,6 +205,6 @@ fn_exit:
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 
