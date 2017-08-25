@@ -1574,6 +1574,13 @@ C       /* close scratch & create again for test using attribute _FillValue */
             call errore('nfmpi_create: ', err)
             return
         end if
+
+C       enable fill mode for the entire file. Putting _FillValue does
+C       not automatically enable or disable the fill mode.
+        err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
+        if (err .ne. NF_NOERR)
+     +      call errore('nfmpi_set_fill: ', err)
+
         call def_dims(ncid)
         call def_vars(ncid)
 

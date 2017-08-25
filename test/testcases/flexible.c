@@ -43,7 +43,6 @@
 
 #define NY 2
 #define NX 5
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); nerrs++;}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
@@ -64,7 +63,7 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -78,13 +77,13 @@ int main(int argc, char **argv) {
     }
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
-                       &ncid); ERR
+                       &ncid); CHECK_ERR
 
     /* define a 2D array */
-    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimids[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", NX*nprocs,    &dimids[1]); ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimids[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX*nprocs,    &dimids[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* initialize the contents of the array */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j+10;
@@ -105,7 +104,7 @@ int main(int argc, char **argv) {
     if (debug) printf("put start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
 
     /* call flexible API */
-    err = ncmpi_put_vara_all(ncid, varid, start, count, bufptr, 1, buftype); ERR
+    err = ncmpi_put_vara_all(ncid, varid, start, count, bufptr, 1, buftype); CHECK_ERR
     MPI_Type_free(&buftype);
 
     /* check if the contents of buf are altered */
@@ -115,15 +114,15 @@ int main(int argc, char **argv) {
                 printf("buf[%d][%d] != %d\n",j,i,buf[j][i]);
  
     /* check if root process can write to file header in data mode */
-    err = ncmpi_rename_var(ncid, varid, "VAR"); ERR
+    err = ncmpi_rename_var(ncid, varid, "VAR"); CHECK_ERR
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validate */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid); ERR
+                     &ncid); CHECK_ERR
 
-    err = ncmpi_inq_varid(ncid, "VAR", &varid); ERR
+    err = ncmpi_inq_varid(ncid, "VAR", &varid); CHECK_ERR
 
     /* initialize the contents of the array to a different value */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
@@ -133,7 +132,7 @@ int main(int argc, char **argv) {
     count[0] = 2; count[1] = NX;
     if (debug) printf("get start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
 
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); ERR
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); CHECK_ERR
 
     /* check if the contents of buf are expected */
     for (j=0; j<2; j++) {
@@ -157,26 +156,26 @@ int main(int argc, char **argv) {
                              array_of_starts, MPI_ORDER_C,
                              MPI_INT, &buftype);
     MPI_Type_commit(&buftype);
-    err = ncmpi_get_vara_all(ncid, varid, start, count, ncbuf, 1, buftype); ERR
+    err = ncmpi_get_vara_all(ncid, varid, start, count, ncbuf, 1, buftype); CHECK_ERR
 
     for (j=0; j<count[0]; j++) {
         for (i=0; i<count[1]; i++)
             if (buf[j][i] != ncbuf[(j+2)*(count[1]+4)+(i+2)]) {
-                printf("Error: expecting ncbuf[%d][%d]=%d but got %d\n",
-                       j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
+                printf("Error at line %d in %s: expecting ncbuf[%d][%d]=%d but got %d\n",
+                       __LINE__,__FILE__,j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
                 nerrs++;
             }
     }
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
 
-    err = ncmpi_iget_vara(ncid, varid, start, count, ncbuf, 1, buftype, &req); ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &st); ERR
+    err = ncmpi_iget_vara(ncid, varid, start, count, ncbuf, 1, buftype, &req); CHECK_ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &st); CHECK_ERR
 
     for (j=0; j<count[0]; j++) {
         for (i=0; i<count[1]; i++)
             if (buf[j][i] != ncbuf[(j+2)*(count[1]+4)+(i+2)]) {
-                printf("Error: expecting ncbuf[%d][%d]=%d but got %d\n",
-                       j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
+                printf("Error at line %d in %s: expecting ncbuf[%d][%d]=%d but got %d\n",
+                       __LINE__,__FILE__,j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
                 nerrs++;
             }
     }
@@ -184,7 +183,7 @@ int main(int argc, char **argv) {
     MPI_Type_free(&buftype);
     free(ncbuf);
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -203,5 +202,5 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }

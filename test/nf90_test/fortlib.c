@@ -83,9 +83,8 @@ FORTRAN_API void FORT_CALL ud_abort_(int *v1) {
 * environments define it (e.g. gcc(1) under SunOS 4.1.3).
 */
 FORTRAN_API double FORT_CALL ud_rand_(int *seed) {
-	if (*seed != 0)
-		srand(*seed);
-	return (rand() % 32768 )/ 32767.0;
+	if (*seed != 0) srandom(*seed);
+	return (double)(random() % 32768 ) / 32767.0;
 }
 
 #ifdef F77_NAME_UPPER

@@ -1,0 +1,312 @@
+#! /bin/sh
+#
+# Copyright (C) 2016, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# This forms the basis for the pnetcdf-config utility, which tells you
+# various things about the PnetCDF installation. This code was based on
+# file nc-config.in from netCDF distribution.
+#
+# $Id$
+#
+# @configure_input@
+
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+libdir="@libdir@"
+includedir="@includedir@"
+
+# Preprocessing:
+FC_DEFINE="@FC_DEFINE@"
+CPP="@CPP@"
+
+CPPFLAGS="@CPPFLAGS@"
+if test "x@PNETCDF_DEBUG@" = x1 ; then
+   if test "x$CPPFLAGS" = x ; then
+      CPPFLAGS="-DPNETCDF_DEBUG"
+   else
+      CPPFLAGS="$CPPFLAGS -DPNETCDF_DEBUG"
+   fi
+fi
+
+# Compilation:
+MPICC="@MPICC@"
+MPICXX="@MPICXX@"
+MPIF77="@MPIF77@"
+MPIF90="@MPIF90@"
+
+# debugging and optimization options for compiling and linking
+CFLAGS="@CFLAGS@"
+CXXFLAGS="@CXXFLAGS@"
+FFLAGS="@FFLAGS@"
+FCFLAGS="@FCFLAGS@"
+
+# Linking:
+FLIBS="@FLIBS@"
+FCLIBS="@FCLIBS@"
+FLDFLAGS="@FLDFLAGS@"
+LDFLAGS="@LDFLAGS@"
+LIBS="@LIBS@"
+
+version="@PACKAGE_NAME@ @PNETCDF_VERSION@"
+CC=${MPICC}
+F77=${MPIF77}
+F90=${MPIF90}
+
+has_fortran="@has_fortran@"
+has_cxx="@has_mpicxx@"
+
+config_date="@CONFIG_DATE@"
+release_date="PNETCDF_RELEASE_DATE"
+
+usage()
+{
+    cat <<EOF
+Usage: pnetcdf-config [OPTION]
+
+Available values for OPTION include:
+
+  --help               display this help message and exit
+  --all                display all options
+  --cc                 C compiler
+  --cflags             C compiler flags
+  --cppflags           C pre-processor flags
+  --has-c++            whether C++ API is installed
+  --c++                C++ compiler
+  --cxxflags           C++ compiler flags
+  --has-fortran        whether Fortran API is installed
+  --f77                Fortran 77 compiler
+  --fflags             Fortran 77 compiler flags
+  --fppflags           Fortran pre-processor flags
+  --fc                 Fortran 9x compiler
+  --fcflags            Fortran 9x compiler flags
+  --ldflags            Linker options
+  --libs               Libraries used to build PnetCDF
+  --relax-coord-bound  Whether using a relaxed coordinate boundary check
+  --in-place-swap      Whether using buffer in-place Endianness byte swap
+  --erange-fill        Whether using fill values for NC_ERANGE error
+  --subfiling          Whether subfiling is enabled or disabled
+  --debug              Whether PnetCDF is built with debug mode
+  --prefix             Install prefix
+  --includedir         Include directory
+  --libdir             Library directory
+  --version            Library version
+  --release-date       Date of PnetCDF source was released
+  --config-date        Date of PnetCDF library was configured
+EOF
+    exit $1
+}
+
+all()
+{
+        echo
+        echo "This $version has been built with the following features: "
+        echo
+        echo "  --cc                -> $MPICC"
+        echo "  --cflags            -> $CFLAGS"
+        echo "  --cppflags          -> $CPPFLAGS"
+        echo "  --ldflags           -> $LDFLAGS"
+        echo "  --libs              -> $LIBS"
+        echo
+        echo "  --has-c++           -> $has_cxx"
+if test "x$has_cxx" = xyes ; then
+        echo "  --cxx               -> $MPICXX"
+        echo "  --cxxflags          -> $CXXFLAGS"
+fi
+        echo
+        echo "  --has-fortran       -> $has_fortran"
+if test "x$has_fortran" = xyes ; then
+        echo "  --f77               -> $MPIF77"
+        echo "  --fflags            -> $FFLAGS"
+        echo
+        echo "  --fc                -> $MPIF90"
+        echo "  --fcflags           -> $FCFLAGS"
+#        echo "  --fclibs            -> $FCLIBS"
+fi
+        echo
+if test "x@ENABLE_ERANGE_FILL@" = x0; then
+        echo "  --erange-fill       -> disabled"
+else
+        echo "  --erange-fill       -> enabled"
+fi
+if test "x@ENABLE_SUBFILING@" = x1; then
+        echo "  --subfiling         -> enabled"
+else
+        echo "  --subfiling         -> disabled"
+fi
+if test "x@RELAX_COORD_BOUND@" = x1; then
+        echo "  --relax-coord-bound -> enabled"
+else
+        echo "  --relax-coord-bound -> disabled"
+fi
+if test "x@ac_cv_c_bigendian@" = xno  && (test "x@in_place_swap@" = xno) ; then
+        echo "  --in-place-swap     -> disabled"
+else
+        echo "  --in-place-swap     -> enabled"
+fi
+if test "x@PNETCDF_DEBUG@" = x1; then
+        echo "  --debug             -> enabled"
+else
+        echo "  --debug             -> disabled"
+fi
+        echo
+        echo "  --prefix            -> $prefix"
+        echo "  --includedir        -> $includedir"
+        echo "  --libdir            -> $libdir"
+        echo "  --version           -> $version"
+        echo "  --release-date      -> $release_date"
+        echo "  --config-date       -> $config_date"
+}
+
+if test $# -eq 0; then
+    usage 1
+fi
+
+while test $# -gt 0; do
+    case "$1" in
+    # this deals with options in the style
+    # --option=value and extracts the value part
+    # [not currently used]
+    -*=*) value=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    *) value= ;;
+    esac
+
+    case "$1" in
+
+    --help)
+        usage 0
+        ;;
+
+    --all)
+        all
+        ;;
+
+    --cc)
+        echo "$MPICC" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --cflags)
+        echo "$CFLAGS" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --cppflags)
+        echo "$CPPFLAGS" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --prefix)
+       echo "$prefix" | sed -e 's/^[ \t]*//'
+       ;;
+
+    --includedir)
+       echo "$includedir" | sed -e 's/^[ \t]*//'
+       ;;
+
+    --libdir)
+       echo "$libdir" | sed -e 's/^[ \t]*//'
+       ;;
+
+    --ldflags)
+       echo "$LDFLAGS" | sed -e 's/^[ \t]*//'
+       ;;
+
+    --libs)
+       echo "$LIBS" | sed -e 's/^[ \t]*//'
+       ;;
+
+    --version)
+        echo "$version" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --has-c++)
+        echo "$has_cxx" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --cxx)
+        echo "$MPICXX" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --cxxflags)
+        echo "$CXXFLAGS" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --has-fortran)
+        echo "$has_fortran" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --f77)
+        echo "$MPIF77" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --fflags)
+        echo "$FFLAGS" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --fc)
+        echo "$MPIF90" | sed -e 's/^[ \t]*//'
+        ;;
+
+    --fcflags)
+        echo "$FCFLAGS" | sed -e 's/^[ \t]*//'
+        ;;
+
+#    --fclibs)
+#        echo "$FCLIBS" | sed -e 's/^[ \t]*//'
+#        ;;
+
+    --relax-coord-bound)
+if test "x@RELAX_COORD_BOUND@" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --in-place-swap)
+if test "x@ac_cv_c_bigendian@" = xno  && (test "x@in_place_swap@" = xno) ; then
+        echo "disabled"
+else
+        echo "enabled"
+fi
+        ;;
+
+    --erange-fill)
+if test "x${enable_erange_fill}" = xno; then
+        echo "disabled"
+else
+        echo "enabled"
+fi
+        ;;
+
+    --subfiling)
+if test "x@ENABLE_SUBFILING@" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --debug)
+if test "x@PNETCDF_DEBUG@" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --release-date)
+        echo "$release_date"
+        ;;
+
+    --config-date)
+        echo "$config_date"
+        ;;
+
+    *)
+        echo "unknown option: $1"
+        usage 1
+        ;;
+    esac
+    shift
+done
+
+exit 0

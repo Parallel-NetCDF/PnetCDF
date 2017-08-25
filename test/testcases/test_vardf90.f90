@@ -370,5 +370,7 @@
           endif
 
  999      call MPI_Finalize(ierr)
+          if (nerrs .GT. 0) stop 2
+
       end program main
 

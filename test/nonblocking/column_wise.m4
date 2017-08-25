@@ -59,7 +59,10 @@
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <ncconfig.h> /* output of 'configure' */
+#ifdef HAVE_CONFIG_H
+#include <config.h> /* output of 'configure' */
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* strcpy() */
@@ -73,32 +76,10 @@
 #define NY 10
 #define NX 4
 
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h> /* ushort, uint */
-#endif
-
 typedef char text;
-typedef signed char schar;
-#ifndef HAVE_UCHAR
-typedef unsigned char uchar;
-#endif
-#ifndef HAVE_USHORT
-typedef unsigned short ushort;
-#endif
-#ifndef HAVE_UINT
-typedef unsigned int uint;
-#endif
-#ifndef HAVE_LONGLONG
-typedef long long longlong;
-#endif
-#ifndef HAVE_ULONGLONG
-typedef unsigned long long ulonglong;
-#endif
 
 include(`foreach.m4')dnl
 include(`utils.m4')dnl
-
-#define ERR {if(err!=NC_NOERR){nerrs++; printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
 define(`TEST_COLUMN_WISE',`dnl
 static
@@ -118,17 +99,17 @@ int test_column_wise_$1(char *filename, int cdf)
     else if (cdf == NC_FORMAT_CDF5)
         cmode |= NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    ERR
+    CHECK_ERR
 
     /* the global array is NY * (NX * nprocs) */
     G_NX  = NX * nprocs;
     myOff = NX * rank;
     myNX  = NX;
 
-    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", G_NX, &dimid[1]); ERR
-    err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 2, dimid, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", G_NX, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 2, dimid, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* First, fill the entire array with zeros, using a blocking I/O.
        Every process writes a subarray of size NY * myNX */
@@ -156,7 +137,7 @@ int test_column_wise_$1(char *filename, int cdf)
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
         err = ncmpi_iput_vara_$1(ncid, varid, start, count, buf[i],
-                                 &reqs[num_reqs++]); ERR
+                                 &reqs[num_reqs++]); CHECK_ERR
         start[1] += nprocs;
     }
 
@@ -172,14 +153,14 @@ int test_column_wise_$1(char *filename, int cdf)
      * changed to use a number > NC_BYTE_SWAP_BUFFER_SIZE/sizeof(int), say
      * 1025
      */
-    err = ncmpi_cancel(ncid, num_reqs, reqs, sts); ERR
+    err = ncmpi_cancel(ncid, num_reqs, reqs, sts); CHECK_ERR
 
     /* check if write buffer contents have been altered after cancelling */
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++) {
             if (buf[i][j] != ($1)rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=IFMT($1)\n",
-                       i,j,buf[i][j]);
+                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                       __LINE__,__FILE__,i,j,buf[i][j]);
                 nerrs++;
             }
         }
@@ -190,7 +171,7 @@ int test_column_wise_$1(char *filename, int cdf)
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
         err = ncmpi_iput_vara_$1(ncid, varid, start, count, buf[i],
-                                 &reqs[num_reqs++]); ERR
+                                 &reqs[num_reqs++]); CHECK_ERR
         start[1] += nprocs;
     }
 
@@ -201,14 +182,14 @@ int test_column_wise_$1(char *filename, int cdf)
         reqs[2*i+1] = tmp;
     }
 
-    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); ERR
+    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); CHECK_ERR
 
     /* check if write buffer contents have been altered after wait */
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++) {
             if (buf[i][j] != ($1)rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=IFMT($1)\n",
-                       i,j,buf[i][j]);
+                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                       __LINE__,__FILE__,i,j,buf[i][j]);
                 nerrs++;
             }
         }
@@ -217,15 +198,22 @@ int test_column_wise_$1(char *filename, int cdf)
     /* check status of all requests */
     for (i=0; i<num_reqs; i++) {
         if (reqs[i] != NC_REQ_NULL) { /* add in PnetCDF v1.7.0 */
-            printf("Error: request ID %d fails to be set to NC_REQ_NULL\n",i);
+            printf("Error at line %d in %s: request ID %d fails to be set to NC_REQ_NULL\n",__LINE__,__FILE__,i);
             nerrs++;
         }
         if (sts[i] != NC_NOERR) {
-            printf("Error: nonblocking write fails on request %d (%s)\n",
-                   i, ncmpi_strerror(sts[i]));
+            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+                   __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
             nerrs++;
         }
     }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* read back using the same access pattern */
     for (i=0; i<myNX; i++)
@@ -238,27 +226,27 @@ int test_column_wise_$1(char *filename, int cdf)
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
         err = ncmpi_iget_vara_$1(ncid, varid, start, count, buf[i],
-                                 &reqs[num_reqs++]); ERR
+                                 &reqs[num_reqs++]); CHECK_ERR
         start[1] += nprocs;
     }
     /* this test is to see if cancelling free up all the internal malloc */
-    err = ncmpi_cancel(ncid, num_reqs, reqs, sts); ERR
+    err = ncmpi_cancel(ncid, num_reqs, reqs, sts); CHECK_ERR
 
     /* post iget requests again */
     start[1] = rank;
     num_reqs = 0;
     for (i=0; i<myNX; i++) {
         err = ncmpi_iget_vara_$1(ncid, varid, start, count, buf[i],
-                                 &reqs[num_reqs++]); ERR
+                                 &reqs[num_reqs++]); CHECK_ERR
         start[1] += nprocs;
     }
-    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); ERR
+    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); CHECK_ERR
 
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
         if (sts[i] != NC_NOERR) {
-            printf("Error: nonblocking write fails on request %d (%s)\n",
-                   i, ncmpi_strerror(sts[i]));
+            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+                   __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
             nerrs++;
         }
 
@@ -266,14 +254,14 @@ int test_column_wise_$1(char *filename, int cdf)
         for (j=0; j<NY; j++) {
             $1 expected = ($1)rank+10;
             if (buf[i][j] != expected) {
-                printf("Error: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
-                       i,j,expected,buf[i][j]);
+                printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                       __LINE__,__FILE__,i,j,expected,buf[i][j]);
                 nerrs++;
             }
         }
     }
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     free(sts);
     free(reqs);
@@ -309,7 +297,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -355,6 +343,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

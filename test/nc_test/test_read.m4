@@ -587,7 +587,7 @@ TestFunc(inq_dimid)(void)
         ELSE_NOK
         err = APIFunc(inq_dimid)(ncid, dim_name[i], &dimid);
         IF (err != NC_NOERR)
-            error("inq_dimid: %s", APIFunc(strerror)(err));
+            error("inq_dimid for dim_name[%d]=%s : %s",i,dim_name[i], APIFunc(strerror)(err));
         else IF (dimid != i)
             error("expected %d, got %d", i, dimid);
         ELSE_NOK

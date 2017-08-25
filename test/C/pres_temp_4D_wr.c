@@ -51,7 +51,7 @@
 #define DEGREES_NORTH "degrees_north"
 
 /* These are used to construct some example data. */
-#define SAMPLE_PRESSURE 900
+#define SAMPLE_PRESSURE 900.0
 #define SAMPLE_TEMP 9.0
 #define START_LAT 25.0
 #define START_LON -125.0
@@ -63,18 +63,6 @@
 #define LAT_UNITS "degrees_north"
 #define LON_UNITS "degrees_east"
 #define MAX_ATT_LEN 80
-
-/* Handle errors by printing an error message and exiting with a
- * non-zero status. */
-#define ERR(e) {printf("Error: %s\n", nc_strerror(e)); return 2;}
-
-#define CHECK_ERR { \
-    if (err != NC_NOERR) { \
-        nerrs++; \
-        printf("Error: %s at line %d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err)); \
-    } \
-}
-
 
 int
 main(int argc, char ** argv)
@@ -113,7 +101,7 @@ main(int argc, char ** argv)
    if (argc > 2) {
        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
        MPI_Finalize();
-       return 0;
+       return 1;
    }
    if (argc == 2) filename = argv[1];
 
@@ -134,7 +122,6 @@ main(int argc, char ** argv)
 
    /* Create the file. */
    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
-
    CHECK_ERR
 
    /* Define the dimensions. The record dimension is defined to have
@@ -290,5 +277,5 @@ main(int argc, char ** argv)
 
     MPI_Finalize();
 
-    return nerrs;
+    return (nerrs > 0);
 }

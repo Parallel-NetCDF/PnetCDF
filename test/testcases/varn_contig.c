@@ -47,8 +47,6 @@
 #define NX 10
 #define NDIMS 2
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s line=%d: %s\n", __FILE__,__LINE__, ncmpi_strerror(err)); nerrs++;}}
-
 static
 int check_contents_for_fail(int *buffer)
 {
@@ -86,7 +84,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -107,17 +105,17 @@ int main(int argc, char** argv)
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    ERR
+    CHECK_ERR
 
     /* create a global array of size NY * NX */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]);
-    ERR
+    CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]);
-    ERR
+    CHECK_ERR
     err = ncmpi_def_var(ncid, "var", NC_INT, NDIMS, dimid, &varid[0]);
-    ERR
+    CHECK_ERR
     err = ncmpi_enddef(ncid);
-    ERR
+    CHECK_ERR
 
     /* pick arbitrary numbers of requests for 4 processes */
     num_reqs = 0;
@@ -202,18 +200,18 @@ int main(int argc, char** argv)
 
     /* write using varn API */
     err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
-    ERR
+    CHECK_ERR
 
     if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
 
     /* read back and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);
-    ERR
+    CHECK_ERR
     nerrs += check_contents_for_fail(r_buffer);
 
     err = ncmpi_close(ncid);
-    ERR
+    CHECK_ERR
 
     free(buffer);
     free(r_buffer);
@@ -239,6 +237,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

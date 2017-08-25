@@ -74,11 +74,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -115,7 +111,7 @@ int main(int argc, char **argv)
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -167,7 +163,8 @@ int main(int argc, char **argv)
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
                        MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error: ncmpi_create() file %s (%s)\n",filename,ncmpi_strerror(err));
+        printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
+        __LINE__,__FILE__,filename,ncmpi_strerror(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
     }
@@ -198,6 +195,6 @@ int main(int argc, char **argv)
     free(buf);
 
     MPI_Finalize();
-    return nerrs;
+    return (nerrs > 0);
 }
 

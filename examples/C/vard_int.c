@@ -49,13 +49,9 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 #define NY 2
 #define NX 3
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -92,7 +88,7 @@ int main(int argc, char **argv) {
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -154,7 +150,8 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_unlimdim(ncid, &dimids[0]); ERR
     err = ncmpi_inq_dimlen(ncid, dimids[0], &len); ERR
     if (len != 2)
-        printf("Error: number of records should be 2 but got %lld\n", len);
+        printf("Error at line %d in %s: number of records should be 2 but got %lld\n",
+        __LINE__,__FILE__,len);
 
     /* write the fixed-size variable */
     err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, buf, bufcount,buftype);
@@ -192,5 +189,5 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return nerrs;
+    return (nerrs > 0);
 }

@@ -24,7 +24,8 @@ int
 inRange(const double value, const nc_type xtype)
 {
     switch (xtype) {
-        case NC_CHAR:   return value >= X_CHAR_MIN   && value <= X_CHAR_MAX;
+        /* for NC_CHAR, no type conversion will happen. Thus no NC_ERANGE */
+        case NC_CHAR:   return value >= CHAR_MIN     && value <= CHAR_MAX;
         case NC_BYTE:   return value >= X_BYTE_MIN   && value <= X_BYTE_MAX;
         case NC_SHORT:  return value >= X_SHORT_MIN  && value <= X_SHORT_MAX;
         case NC_INT:    return value >= X_INT_MIN    && value <= X_INT_MAX;
@@ -66,7 +67,8 @@ inRange_float(const double value, const nc_type xtype)
     double min, max;
 
     switch (xtype) {
-        case NC_CHAR:   min = X_CHAR_MIN;   max = X_CHAR_MAX;  break;
+        /* for NC_CHAR, no type conversion will happen. Thus no NC_ERANGE */
+        case NC_CHAR:   min = CHAR_MIN;     max = CHAR_MAX;    break;
         case NC_BYTE:   min = X_BYTE_MIN;   max = X_BYTE_MAX;  break;
         case NC_SHORT:  min = X_SHORT_MIN;  max = X_SHORT_MAX; break;
         case NC_INT:    min = X_INT_MIN;    max = X_INT_MAX;   break;
@@ -231,7 +233,7 @@ MPI_Offset roll( MPI_Offset n )
      * We don't use RAND_MAX here because not all compilation
      * environments define it (e.g. gcc(1) under SunOS 4.1.4).
      */
-    r = (MPI_Offset)(((rand() % 32768) / 32767.0) * (n - 1) + 0.5);
+    r = (MPI_Offset)(((random() % 32768) / 32767.0) * (n - 1) + 0.5);
     while (r >= n);
 
     return r;
@@ -341,6 +343,9 @@ int dbl2nc ( const double d, const nc_type xtype, void *p)
     if (p == NULL) return 1;
     switch (xtype) {
         case NC_CHAR:
+#if 1
+            *((char*)p) = (char)d;
+#else
             r = floor(0.5+d);
             /* d is obtained from hash() which may be set to X_CHAR_MIN (0)
              * or X_CHAR_MAX (255). When in-memory data type char is signed
@@ -353,6 +358,7 @@ int dbl2nc ( const double d, const nc_type xtype, void *p)
             *((signed char*) p) = (signed char)r;
 #else
             *((char   *) p) = (char)r;
+#endif
 #endif
             break;
         case NC_BYTE:
@@ -429,12 +435,14 @@ hash(const nc_type     xtype,
     double result = 0.0;
 
     /* If vector then elements 0 & 1 are min & max. Elements 2 & 3 are */
-    /* just < min & > max (except for NC_CHAR & NC_DOUBLE) */
+    /* just < min & > max (except for NC_DOUBLE) */
     if (abs(rank) == 1 && *index <= 3) {
         switch (*index) {
             case 0:
                 switch (xtype) {  /* test if can get/put MIN value */
-                    case NC_CHAR:   return X_CHAR_MIN;
+                    /* for NC_CHAR, no type conversion will happen. Thus the
+                     * any value between CHAR_MIN to CHAR_MAX is fine. */
+                    case NC_CHAR:   return CHAR_MIN;
                     case NC_BYTE:   return X_BYTE_MIN;
                     case NC_SHORT:  return X_SHORT_MIN;
                     case NC_INT:    return X_INT_MIN;
@@ -450,7 +458,9 @@ hash(const nc_type     xtype,
                 }
             case 1:
                 switch (xtype) {  /* test if can get/put MAX value */
-                    case NC_CHAR:   return X_CHAR_MAX;
+                    /* for NC_CHAR, no type conversion will happen. Thus the
+                     * any value between CHAR_MIN to CHAR_MAX is fine. */
+                    case NC_CHAR:   return CHAR_MAX;
                     case NC_BYTE:   return X_BYTE_MAX;
                     case NC_SHORT:  return X_SHORT_MAX;
                     case NC_INT:    return X_INT_MAX;
@@ -467,6 +477,8 @@ hash(const nc_type     xtype,
                 }
             case 2:
                 switch (xtype) {  /* test if can detect out-of-boundary value */
+                    /* for NC_CHAR, no type conversion will happen. Thus the
+                     * any value between CHAR_MIN to CHAR_MAX is fine. */
                     case NC_CHAR:   return 'A';
                     case NC_BYTE:   return X_BYTE_MIN-1.0;
                     case NC_SHORT:  return X_SHORT_MIN-1.0;
@@ -482,6 +494,8 @@ hash(const nc_type     xtype,
                 }
             case 3:
                 switch (xtype) {  /* test if can detect out-of-boundary value */
+                    /* for NC_CHAR, no type conversion will happen. Thus the
+                     * any value between CHAR_MIN to CHAR_MAX is fine. */
                     case NC_CHAR:   return 'Z';
                     case NC_BYTE:   return X_BYTE_MAX  +1.0;
                     case NC_SHORT:  return X_SHORT_MAX +1.0;
@@ -793,6 +807,7 @@ put_vars(int ncid, int numVars)
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR) error("toMixedBase");
             if (var_name[i][0] == 'c') { /* var_type[i] is NC_CHAR */
+                assert(var_type[i] == NC_CHAR);
                 text[j] = hash(var_type[i], var_rank[i], index);
             } else {
                 value[j] = hash(var_type[i], var_rank[i], index);
@@ -920,8 +935,8 @@ check_vars(int ncid, int numVars)
                 IF (err != NC_NOERR)
                     error("ncmpi_get_var1_text_all: %s", ncmpi_strerror(err));
                 IF (text != (char)expect) {
-                    error("Var %s (varid=%d) value read 0x%02x not that expected 0x%02x ",
-                          var_name[i], i, text, (char)expect);
+                    error("Var %s (varid=%d) value[%d] read %d not that expected %d ",
+                          var_name[i], i, j, text, (char)expect);
                     print_n_size_t(var_rank[i], index);
                 } else {
                     nok++;

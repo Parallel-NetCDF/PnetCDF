@@ -8,9 +8,29 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h> /* output of 'configure' */
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+
+#define CHECK_ERR { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+    } \
+}
+
+#define EXP_ERR(exp) { \
+    if (err != exp) { \
+        nerrs++; \
+        printf("Error at line %d in %s: expecting %s but got %s\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
+    } \
+}
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -42,7 +62,7 @@ void parse_write_args(int argc, char **argv, int rank, params *p);
 
 extern char* nc_err_code_name(int err);
 
-#ifndef MPI_OFFSET
+#ifndef HAVE_DECL_MPI_OFFSET
 #define MPI_OFFSET MPI_LONG_LONG_INT
 #endif
 

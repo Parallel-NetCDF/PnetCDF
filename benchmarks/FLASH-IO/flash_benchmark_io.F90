@@ -9,7 +9,7 @@
 ! #define MPI_OFFSET MPI_INTEGER8
 ! #endif
 
-#ifdef NAGf90Fortran
+#ifdef NAGFortran
       USE F90_UNIX_ENV, only : iargc, getarg
 #endif
 
@@ -18,7 +18,7 @@
 
 #include "common.fh"
 
-#ifndef NAGf90Fortran
+#ifndef NAGFortran
       integer iargc
 #endif
       integer i, argc, ierr
@@ -43,7 +43,7 @@
       ! root process reads command-line arguments
       if (MyPE .EQ. MasterPE) then
          isArgvRight = .TRUE.
-         argc = IARGC()
+         argc = IARGC()   ! IARGC() does not count the executable name
          call getarg(0, executable)
          if (argc .GT. 2) then
             print *, &
@@ -54,7 +54,7 @@
             basenm = "flash_io_test_"
             if (argc .EQ. 1) then
                call getarg(1, basenm)
-            else
+            else if (argc .EQ. 2) then
                verbose = .FALSE.
                call getarg(2, basenm)
             endif
@@ -159,6 +159,35 @@
           enddo
       end subroutine get_file_striping
 
+! ---------------------------------------------------------------------------
+! get all MPI-IO hints used
+! ---------------------------------------------------------------------------
+      subroutine print_info(info_used)
+          use mpi
+          use pnetcdf
+          implicit none
+
+          integer, intent(in) :: info_used
+
+          ! local variables
+          character*(MPI_MAX_INFO_VAL) key, value
+          integer nkeys, i, err
+          logical flag
+
+          call MPI_Info_get_nkeys(info_used, nkeys, err)
+          print *, 'MPI File Info: nkeys =', nkeys
+          do i=0, nkeys-1
+              call MPI_Info_get_nthkey(info_used, i, key, err)
+              call MPI_Info_get(info_used, key, MPI_MAX_INFO_VAL, &
+                                value, flag, err)
+ 123          format('MPI File Info: [',I2,'] key = ',A25, &
+                     ', value =',A)
+              print 123, i, trim(key), trim(value)
+          enddo
+          print *, ''
+
+          return
+      end subroutine print_info
 
 !---------------------------------------------------------------------------
 ! print I/O performance numbers
@@ -253,6 +282,7 @@
           print 1006, NumPEs, nxb, nyb, nzb, time_total, bw
           print *
 
+          call print_info(info_used)
       endif
       call MPI_Info_free(info_used, ierr)
 

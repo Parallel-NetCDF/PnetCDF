@@ -22,8 +22,9 @@
 
 #define NO_NETCDF_2 1
 
-#include "nfconfig.inc"
-
+#define NF_INT1_T @NF_INT1_T@
+#define NF_INT2_T @NF_INT2_T@
+#define NF_INT8_T @NF_INT8_T@
 
 !/* Parameters of test data */
 

@@ -62,15 +62,11 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#ifndef MPI_OFFSET
-#define MPI_OFFSET MPI_LONG_LONG_INT
-#endif
-
 #define NY 3
 #define NX 4
 
 
-#define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -104,7 +100,7 @@ int main(int argc, char** argv)
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
-                      return 0;
+                      return 1;
         }
     argc -= optind;
     argv += optind;
@@ -171,9 +167,11 @@ int main(int argc, char** argv)
 
     err = ncmpi_inq_var_fill(ncid, fix_varid, &no_fill, &fill_value); ERR
     if (no_fill != 0)
-        printf("Error at line %d: expecting no_fill to be 0\n", __LINE__);
+        printf("Error at line %d in %s: expecting no_fill to be 0\n",
+        __LINE__,__FILE__);
     if (fill_value != NC_FILL_INT)
-        printf("Error at line %d: expecting no_fill to be %ld but got %d\n", __LINE__,NC_FILL_INT,fill_value);
+        printf("Error at line %d in %s: expecting no_fill to be %ld but got %d\n",
+        __LINE__,__FILE__,NC_FILL_INT,fill_value);
 
     /* fill the 1st record of the record variable */
     start[0] = 0;
@@ -204,6 +202,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return nerrs;
+    return (nerrs > 0);
 }
 

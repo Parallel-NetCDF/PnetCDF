@@ -72,31 +72,25 @@
 
 #define FATAL_ERR \
     if (err != NC_NOERR) { \
-        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
+        printf("Error at line %d in %s: %s\n", __LINE__, __FILE__, ncmpi_strerrno(err)); \
         exit(1); \
-    }
-
-#define ERR \
-    if (err != NC_NOERR) { \
-        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
-        nerrs++; \
     }
 
 #define ERRS(n,a) { \
     int _i; \
     for (_i=0; _i<(n); _i++) { \
         if ((a)[_i] != NC_NOERR) { \
-            printf("Error at line=%d: err[%d] %s\n", __LINE__, _i, \
-                   ncmpi_strerror((a)[_i])); \
+            printf("Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
+                   ncmpi_strerrno((a)[_i])); \
             nerrs++; \
         } \
     } \
 }
 
 static
-void clear_file_contents(int ncid, int *varid)
+int clear_file_contents(int ncid, int *varid)
 {
-    int i, err, rank;
+    int i, err, rank, nerrs=0;
     long long *w_buffer = (long long*) malloc(NY*NX * sizeof(long long));
     for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
 
@@ -104,16 +98,17 @@ void clear_file_contents(int ncid, int *varid)
 
     for (i=0; i<4; i++) {
         err = ncmpi_put_var_longlong_all(ncid, varid[i], w_buffer);
-        if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+        CHECK_ERR
     }
     free(w_buffer);
+    return nerrs;
 }
 
 static
 int check_contents_for_fail(int ncid, int *varid)
 {
     /* all processes read entire variables back and check contents */
-    int i, j, err, nprocs;
+    int i, j, nerrs=0, err, nprocs;
     long long expected[4][NY*NX] = {{13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
                                      10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
                                      11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
@@ -139,36 +134,35 @@ int check_contents_for_fail(int ncid, int *varid)
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
         err = ncmpi_get_var_longlong_all(ncid, varid[i], r_buffer);
-        if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+        CHECK_ERR
 
         /* check if the contents of buf are expected */
         for (j=0; j<NY*NX; j++) {
             if (expected[i][j] >= nprocs) continue;
             if (r_buffer[j] != expected[i][j]) {
-                printf("Expected read buf[%d][%d]=%lld, but got %lld\n",
-                       i,j,expected[i][j],r_buffer[j]);
-                free(r_buffer);
-                return 1;
+                printf("Error at line %d in %s: xxpect read buf[%d][%d]=%lld, but got %lld\n",
+                       __LINE__,__FILE__,i,j,expected[i][j],r_buffer[j]);
+                nerrs++;
             }
         }
     }
     free(r_buffer);
-    return 0;
+    return nerrs;
 }
 
 static int
 check_num_pending_reqs(int ncid, int expected, int lineno)
 /* check if PnetCDF can reports expected number of pending requests */
 {
-    int err, n_pendings;
+    int err, nerrs=0, n_pendings;
     err = ncmpi_inq_nreqs(ncid, &n_pendings);
-    if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+    CHECK_ERR
     if (n_pendings != expected) {
-        printf("Error at line %d: expect %d pending requests but got %d\n",
-               lineno, expected, n_pendings);
-        return 1;
+        printf("Error at line %d in %s: expect %d pending requests but got %d\n",
+               lineno, __FILE__, expected, n_pendings);
+        nerrs++;
     }
-    return 0;
+    return nerrs;
 }
 
 /* swap two rows, a and b, of a 2D array */
@@ -228,7 +222,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -252,13 +246,13 @@ int main(int argc, char** argv)
     FATAL_ERR
 
     /* create a global array of size NY * NX */
-    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); ERR
-    err = ncmpi_def_var(ncid, "var0", NC_INT64, NDIMS, dimid, &varid[0]); ERR
-    err = ncmpi_def_var(ncid, "var1", NC_INT64, NDIMS, dimid, &varid[1]); ERR
-    err = ncmpi_def_var(ncid, "var2", NC_INT64, NDIMS, dimid, &varid[2]); ERR
-    err = ncmpi_def_var(ncid, "var3", NC_INT64, NDIMS, dimid, &varid[3]); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var0", NC_INT64, NDIMS, dimid, &varid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT64, NDIMS, dimid, &varid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var2", NC_INT64, NDIMS, dimid, &varid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var3", NC_INT64, NDIMS, dimid, &varid[3]); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* allocate space for starts and counts */
     starts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
@@ -320,21 +314,23 @@ int main(int argc, char** argv)
     }
 
     /* write using varn API */
-    clear_file_contents(ncid, varid);
+    nerrs += clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         err = ncmpi_iput_varn_longlong(ncid, varid[i], my_nsegs[i], starts[i],
                                        counts[i], buffer[i], &reqs[i]);
-        ERR
+        CHECK_ERR
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    CHECK_ERR
     ERRS(nreqs, sts)
 
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=%lld\n", i,j,buffer[i][j]);
+                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
             }
         }
@@ -352,21 +348,23 @@ int main(int argc, char** argv)
     }
 
     /* write usning varn API */
-    clear_file_contents(ncid, varid);
+    nerrs += clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         err = ncmpi_iput_varn_longlong(ncid, varid[i], my_nsegs[i], starts[i],
                                        counts[i], cbuffer[i], &reqs[i]);
-        ERR
+        CHECK_ERR
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    CHECK_ERR
     ERRS(nreqs, sts)
 
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (cbuffer[i][j] != rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=%lld\n", i,j,cbuffer[i][j]);
+                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                __LINE__,__FILE__,i,j,cbuffer[i][j]);
                 nerrs++;
             }
         }
@@ -384,21 +382,23 @@ int main(int argc, char** argv)
     }
 
     /* write usning varn API */
-    clear_file_contents(ncid, varid);
+    nerrs += clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         err = ncmpi_iput_varn_longlong(ncid, varid[i], my_nsegs[i], starts[i],
                                        counts[i], buffer[i], &reqs[i]);
-        ERR
+        CHECK_ERR
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    CHECK_ERR
     ERRS(nreqs, sts)
 
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=%lld\n", i,j,buffer[i][j]);
+                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
             }
         }
@@ -412,18 +412,19 @@ int main(int argc, char** argv)
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = -1;
         err = ncmpi_iget_varn_longlong(ncid, varid[i], my_nsegs[i], starts[i],
                                        counts[i], buffer[i], &reqs[i]);
-        ERR
+        CHECK_ERR
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    CHECK_ERR
     ERRS(nreqs, sts)
 
     /* check if read buffer contents are expected */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error at line %d: expecting buffer[%d][%d]=%d but got %lld\n",
-                       __LINE__,i,j,rank+10,buffer[i][j]);
+                printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
+                       __LINE__,__FILE__,i,j,rank+10,buffer[i][j]);
                 nerrs++;
             }
         }
@@ -432,7 +433,7 @@ int main(int argc, char** argv)
     for (i=0; i<nreqs; i++) free(buffer[i]);
 
     /* test flexible put API, using a noncontiguous buftype */
-    clear_file_contents(ncid, varid);
+    nerrs += clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, MPI_LONG_LONG, &buftype);
@@ -442,18 +443,20 @@ int main(int argc, char** argv)
 
         err = ncmpi_iput_varn(ncid, varid[i], my_nsegs[i], starts[i],
                               counts[i], buffer[i], 1, buftype, &reqs[i]);
-        ERR
+        CHECK_ERR
         MPI_Type_free(&buftype);
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    CHECK_ERR
     ERRS(nreqs, sts)
 
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error: put buffer altered buffer[%d][%d]=%lld\n", i,j,buffer[i][j]);
+                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
             }
         }
@@ -470,24 +473,25 @@ int main(int argc, char** argv)
         for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = -1;
         err = ncmpi_iget_varn(ncid, varid[i], my_nsegs[i], starts[i],
                               counts[i], buffer[i], 1, buftype, &reqs[i]);
-        ERR
+        CHECK_ERR
         MPI_Type_free(&buftype);
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    CHECK_ERR
     ERRS(nreqs, sts)
 
     /* check if read buffer contents are expected */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (j%2 && buffer[i][j] != -1) {
-                printf("Error at line %d: expecting buffer[%d][%d]=-1 but got %lld\n",
-                       __LINE__,i,j,buffer[i][j]);
+                printf("Error at line %d in %s: expecting buffer[%d][%d]=-1 but got %lld\n",
+                       __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
             }
             if (j%2 == 0 && buffer[i][j] != rank+10) {
-                printf("Error at line %d: expecting buffer[%d][%d]=%d but got %lld\n",
-                       __LINE__,i,j,rank+10,buffer[i][j]);
+                printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
+                       __LINE__,__FILE__,i,j,rank+10,buffer[i][j]);
                 nerrs++;
             }
         }
@@ -506,25 +510,26 @@ int main(int argc, char** argv)
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = -1;
         err = ncmpi_iget_varn_longlong(ncid, varid[i], my_nsegs[i], starts[i],
                                        counts[i], cbuffer[i], &reqs[i]);
-        ERR
+        CHECK_ERR
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    CHECK_ERR
     ERRS(nreqs, sts)
 
     /* check if read buffer contents are expected */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (cbuffer[i][j] != rank+10) {
-                printf("Error at line %d: expecting buffer[%d][%d]=%d but got %lld\n",
-                       __LINE__,i,j,rank+10,cbuffer[i][j]);
+                printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
+                       __LINE__,__FILE__,i,j,rank+10,cbuffer[i][j]);
                 nerrs++;
             }
         }
     }
 
     err = ncmpi_close(ncid);
-    ERR
+    CHECK_ERR
 
     if (bufsize>0) free(cbuffer[0]);
     for (i=0; i<nreqs; i++) free(buffer[i]);
@@ -550,6 +555,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

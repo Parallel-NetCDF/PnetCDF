@@ -17,11 +17,6 @@
 
 #include <testutils.h>
 
-#define PRINT_ERR_ON_SCREEN
-
-#define ERRCODE 2
-#define ERR {if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
-
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
@@ -37,7 +32,7 @@ int main(int argc, char **argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -55,11 +50,11 @@ int main(int argc, char **argv)
 #endif
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA,
-                       MPI_INFO_NULL, &ncid); ERR
+                       MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define a scalar variable of integer type */
-    err = ncmpi_def_var(ncid, "scalar_var", NC_INT, 0, NULL, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_var(ncid, "scalar_var", NC_INT, 0, NULL, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     buf = 1;
     start[0] = 1;
@@ -68,42 +63,48 @@ int main(int argc, char **argv)
     imap[0] = 2;
 
     /* put */
-    err = ncmpi_put_var1_int_all(ncid, varid, NULL,  &buf); ERR
-    err = ncmpi_put_var1_int_all(ncid, varid, start, &buf); ERR
+    err = ncmpi_put_var1_int_all(ncid, varid, NULL,  &buf); CHECK_ERR
+    err = ncmpi_put_var1_int_all(ncid, varid, start, &buf); CHECK_ERR
 
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &buf); ERR
-    err = ncmpi_put_vara_int_all(ncid, varid, NULL, count, &buf); ERR
-    err = ncmpi_put_vara_int_all(ncid, varid, start, NULL, &buf); ERR
-    err = ncmpi_put_vara_int_all(ncid, varid, NULL, NULL, &buf); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &buf); CHECK_ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, NULL, count, &buf); CHECK_ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, NULL, &buf); CHECK_ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, NULL, NULL, &buf); CHECK_ERR
 
-    err = ncmpi_put_vars_int_all(ncid, varid, start, count, stride, &buf); ERR
-    err = ncmpi_put_vars_int_all(ncid, varid, NULL, count, stride, &buf); ERR
-    err = ncmpi_put_vars_int_all(ncid, varid, start, NULL, stride, &buf); ERR
-    err = ncmpi_put_vars_int_all(ncid, varid, start, count, NULL, &buf); ERR
-    err = ncmpi_put_vars_int_all(ncid, varid, NULL, NULL, NULL, &buf); ERR
+    err = ncmpi_put_vars_int_all(ncid, varid, start, count, stride, &buf); CHECK_ERR
+    err = ncmpi_put_vars_int_all(ncid, varid, NULL, count, stride, &buf); CHECK_ERR
+    err = ncmpi_put_vars_int_all(ncid, varid, start, NULL, stride, &buf); CHECK_ERR
+    err = ncmpi_put_vars_int_all(ncid, varid, start, count, NULL, &buf); CHECK_ERR
+    err = ncmpi_put_vars_int_all(ncid, varid, NULL, NULL, NULL, &buf); CHECK_ERR
 
-    err = ncmpi_put_varm_int_all(ncid, varid, start, count, stride, imap, &buf); ERR
-    err = ncmpi_put_varm_int_all(ncid, varid, NULL, NULL, NULL, NULL, &buf); ERR
+    err = ncmpi_put_varm_int_all(ncid, varid, start, count, stride, imap, &buf); CHECK_ERR
+    err = ncmpi_put_varm_int_all(ncid, varid, NULL, NULL, NULL, NULL, &buf); CHECK_ERR
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+
+    err = ncmpi_inq_varid(ncid, "scalar_var", &varid); CHECK_ERR
 
     /* get */
-    err = ncmpi_get_var1_int_all(ncid, varid, NULL,  &buf); ERR
-    err = ncmpi_get_var1_int_all(ncid, varid, start, &buf); ERR
+    err = ncmpi_get_var1_int_all(ncid, varid, NULL,  &buf); CHECK_ERR
+    err = ncmpi_get_var1_int_all(ncid, varid, start, &buf); CHECK_ERR
 
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, &buf); ERR
-    err = ncmpi_get_vara_int_all(ncid, varid, NULL, count, &buf); ERR
-    err = ncmpi_get_vara_int_all(ncid, varid, start, NULL, &buf); ERR
-    err = ncmpi_get_vara_int_all(ncid, varid, NULL, NULL, &buf); ERR
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, &buf); CHECK_ERR
+    err = ncmpi_get_vara_int_all(ncid, varid, NULL, count, &buf); CHECK_ERR
+    err = ncmpi_get_vara_int_all(ncid, varid, start, NULL, &buf); CHECK_ERR
+    err = ncmpi_get_vara_int_all(ncid, varid, NULL, NULL, &buf); CHECK_ERR
 
-    err = ncmpi_get_vars_int_all(ncid, varid, start, count, stride, &buf); ERR
-    err = ncmpi_get_vars_int_all(ncid, varid, NULL, count, stride, &buf); ERR
-    err = ncmpi_get_vars_int_all(ncid, varid, start, NULL, stride, &buf); ERR
-    err = ncmpi_get_vars_int_all(ncid, varid, start, count, NULL, &buf); ERR
-    err = ncmpi_get_vars_int_all(ncid, varid, NULL, NULL, NULL, &buf); ERR
+    err = ncmpi_get_vars_int_all(ncid, varid, start, count, stride, &buf); CHECK_ERR
+    err = ncmpi_get_vars_int_all(ncid, varid, NULL, count, stride, &buf); CHECK_ERR
+    err = ncmpi_get_vars_int_all(ncid, varid, start, NULL, stride, &buf); CHECK_ERR
+    err = ncmpi_get_vars_int_all(ncid, varid, start, count, NULL, &buf); CHECK_ERR
+    err = ncmpi_get_vars_int_all(ncid, varid, NULL, NULL, NULL, &buf); CHECK_ERR
 
-    err = ncmpi_get_varm_int_all(ncid, varid, start, count, stride, imap, &buf); ERR
-    err = ncmpi_get_varm_int_all(ncid, varid, NULL, NULL, NULL, NULL, &buf); ERR
+    err = ncmpi_get_varm_int_all(ncid, varid, start, count, stride, imap, &buf); CHECK_ERR
+    err = ncmpi_get_varm_int_all(ncid, varid, NULL, NULL, NULL, NULL, &buf); CHECK_ERR
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -122,7 +123,6 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-
-    return (nerrs == 0) ? 0 : 1;
+    return (nerrs > 0);
 }
 

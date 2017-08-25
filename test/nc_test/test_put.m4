@@ -450,8 +450,9 @@ ifdef(`PNETCDF',`dnl
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != 0) error("error in toMixedBase");
-            value[0] = hash_$1(cdf_format, var_type[i], var_rank[i], index,
-                               NCT_ITYPE($1));
+            if (canConvert)
+                value[0] = hash_$1(cdf_format, var_type[i], var_rank[i], index,
+                                   NCT_ITYPE($1));
             err = PutVar1($1)(ncid, i, index, value);
             if (canConvert) {
                 if (CheckRange3($1, value[0], var_type[i])) {
@@ -553,14 +554,16 @@ TestFunc(var)_$1(VarArgs)
 
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
 
-        for (allInExtRange = 1, j = 0; j < var_nels[i]; j++) {
-            err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != 0) error("error in toMixedBase");
-            value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
-                              NCT_ITYPE($1));
-            IfCheckTextChar($1, var_type[i])
-                allInExtRange &= inRange3(cdf_format, (double)value[j],
-                                          var_type[i], NCT_ITYPE($1));
+        if (canConvert) {
+            for (allInExtRange = 1, j = 0; j < var_nels[i]; j++) {
+                err = toMixedBase(j, var_rank[i], var_shape[i], index);
+                IF (err != 0) error("error in toMixedBase");
+                value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
+                                  NCT_ITYPE($1));
+                IfCheckTextChar($1, var_type[i])
+                    allInExtRange &= inRange3(cdf_format, (double)value[j],
+                                              var_type[i], NCT_ITYPE($1));
+            }
         }
         err = PutVar($1)(ncid, i, value);
         if (canConvert) {
@@ -595,14 +598,16 @@ TestFunc(var)_$1(VarArgs)
 
         canConvert = (var_type[i] == NC_CHAR) CheckText($1);
 
-        for (allInExtRange = 1, j = 0; j < var_nels[i]; j++) {
-            err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != 0) error("error in toMixedBase");
-            value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
-                              NCT_ITYPE($1));
-            IfCheckTextChar($1, var_type[i])
-                allInExtRange &= inRange3(cdf_format, (double)value[j],
-                                          var_type[i], NCT_ITYPE($1));
+        if (canConvert) {
+            for (allInExtRange = 1, j = 0; j < var_nels[i]; j++) {
+                err = toMixedBase(j, var_rank[i], var_shape[i], index);
+                IF (err != 0) error("error in toMixedBase");
+                value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
+                                  NCT_ITYPE($1));
+                IfCheckTextChar($1, var_type[i])
+                    allInExtRange &= inRange3(cdf_format, (double)value[j],
+                                              var_type[i], NCT_ITYPE($1));
+            }
         }
         err = PutVar($1)(ncid, i, value);
         if (canConvert) {
@@ -816,16 +821,18 @@ ifdef(`PNETCDF',`dnl
                 nels *= edge[j];
             }
 
-            for (allInExtRange = 1, j = 0; j < nels; j++) {
-                err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err != 0) error("error in toMixedBase");
-                for (d = 0; d < var_rank[i]; d++)
-                    index[d] += start[d];
-                value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
-                                  NCT_ITYPE($1));
-                IfCheckTextChar($1, var_type[i])
-                    allInExtRange &= inRange3(cdf_format, (double)value[j],
-                                              var_type[i], NCT_ITYPE($1));
+            if (canConvert) {
+                for (allInExtRange = 1, j = 0; j < nels; j++) {
+                    err = toMixedBase(j, var_rank[i], edge, index);
+                    IF (err != 0) error("error in toMixedBase");
+                    for (d = 0; d < var_rank[i]; d++)
+                        index[d] += start[d];
+                    value[j]= hash_$1(cdf_format,var_type[i], var_rank[i], index,
+                                      NCT_ITYPE($1));
+                    IfCheckTextChar($1, var_type[i])
+                        allInExtRange &= inRange3(cdf_format, (double)value[j],
+                                                  var_type[i], NCT_ITYPE($1));
+                }
             }
             err = PutVara($1)(ncid, i, start, edge, value);
             if (canConvert) {
@@ -1065,16 +1072,18 @@ ifdef(`PNETCDF',`dnl
                     }
                 }
 */
-                for (allInExtRange = 1, j = 0; j < nels; j++) {
-                    err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != 0) error("error in toMixedBase");
-                    for (d = 0; d < var_rank[i]; d++)
-                        index2[d] = index[d] + index2[d] * (IntType)stride[d];
-                    value[j] = hash_$1(cdf_format,var_type[i], var_rank[i],
-                                       index2, NCT_ITYPE($1));
-                    IfCheckTextChar($1, var_type[i])
-                        allInExtRange &= inRange3(cdf_format, (double)value[j],
-                                                  var_type[i], NCT_ITYPE($1));
+                if (canConvert) {
+                    for (allInExtRange = 1, j = 0; j < nels; j++) {
+                        err = toMixedBase(j, var_rank[i], count, index2);
+                        IF (err != 0) error("error in toMixedBase");
+                        for (d = 0; d < var_rank[i]; d++)
+                            index2[d] = index[d] + index2[d] * (IntType)stride[d];
+                        value[j] = hash_$1(cdf_format,var_type[i], var_rank[i],
+                                           index2, NCT_ITYPE($1));
+                        IfCheckTextChar($1, var_type[i])
+                            allInExtRange &= inRange3(cdf_format, (double)value[j],
+                                                      var_type[i], NCT_ITYPE($1));
+                    }
                 }
                 err = PutVars($1)(ncid, i, index, count, stride, value);
                 if (canConvert) {
@@ -1323,16 +1332,18 @@ ifdef(`PNETCDF',`dnl
                     for (; jj > 0; jj--)
                         imap[jj-1] = imap[jj] * (PTRDType)count[jj];
                 }
-                for (allInExtRange = 1, j = 0; j < nels; j++) {
-                    err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err != 0) error("error in toMixedBase");
-                    for (d = 0; d < var_rank[i]; d++)
-                        index2[d] = index[d] + index2[d] * (IntType)stride[d];
-                    value[j] = hash_$1(cdf_format,var_type[i], var_rank[i],
-                                       index2, NCT_ITYPE($1));
-                    IfCheckTextChar($1, var_type[i])
-                        allInExtRange &= inRange3(cdf_format, (double)value[j],
-                                                  var_type[i], NCT_ITYPE($1));
+                if (canConvert) {
+                    for (allInExtRange = 1, j = 0; j < nels; j++) {
+                        err = toMixedBase(j, var_rank[i], count, index2);
+                        IF (err != 0) error("error in toMixedBase");
+                        for (d = 0; d < var_rank[i]; d++)
+                            index2[d] = index[d] + index2[d] * (IntType)stride[d];
+                        value[j] = hash_$1(cdf_format,var_type[i], var_rank[i],
+                                           index2, NCT_ITYPE($1));
+                        IfCheckTextChar($1, var_type[i])
+                            allInExtRange &= inRange3(cdf_format, (double)value[j],
+                                                      var_type[i], NCT_ITYPE($1));
+                    }
                 }
                 err = PutVarm($1)(ncid,i,index,count,stride,imap,value);
                 if (canConvert) {

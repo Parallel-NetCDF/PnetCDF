@@ -4,8 +4,21 @@
 !
 !   $Id$
 
-      program main
+      subroutine check(err, message)
+          use mpi
+          use pnetcdf
+          implicit none
+          integer err
+          character(len=*) message
 
+          ! It is a good idea to check returned value for possible error
+          if (err .NE. NF90_NOERR) then
+              write(6,*) trim(message), trim(nf90mpi_strerror(err))
+              call MPI_Abort(MPI_COMM_WORLD, -1, err)
+          end if
+      end subroutine check
+
+      program main
       use mpi
       use pnetcdf
       implicit none
@@ -47,27 +60,22 @@
       cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
       err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode,  &
                            info, ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_create ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_create ')
 
       call MPI_Info_free(info, ierr)
 
       ! define a variable of a 4 x 6 integer array in the nc file
       err = nf90mpi_def_dim(ncid, 'X', 4_MPI_OFFSET_KIND, dimid(1))
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_dim ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_def_dim ')
 
       err = nf90mpi_def_dim(ncid, 'Y', 6_MPI_OFFSET_KIND, dimid(2))
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_dim ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_def_dim ')
 
       err = nf90mpi_def_var(ncid, 'var', NF90_INT64, dimid, varid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_var ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_def_var ')
 
       err = nf90mpi_enddef(ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_enddef ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_enddef ')
 
       ! set the contents of write buffer var, a 6 x 4 real array
       !     50, 56, 62, 68,
@@ -85,8 +93,7 @@
       ! bufsize must be max of data type converted before and after
       bufsize = 4*6*8
       err = nf90mpi_buffer_attach(ncid, bufsize)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_buffer_attach ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_buffer_attach ')
 
       ! write var to the NC variable in the matrix transposed way
       count(1)  = 2
@@ -106,20 +113,17 @@
       start(2)  = 1
       err = nf90mpi_bput_var(ncid, varid, var(1:,1:), req(1), start, count, &
                              stride, imap)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_bput_var', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_bput_var ')
 
       ! write the second two columns of the NC variable in the matrix transposed way
       start(1)  = 3
       start(2)  = 1
       err = nf90mpi_bput_var(ncid, varid, var(1:,3:), req(2), start, count, &
                              stride, imap)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_bput_var', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_bput_var ')
 
       err = nf90mpi_wait_all(ncid, 2, req, status)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_wait_all ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_wait_all ')
 
       ! check each bput status
       do i = 1, 2
@@ -129,8 +133,7 @@
       enddo
 
       err = nf90mpi_buffer_detach(ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_buffer_detach ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_buffer_detach ')
 
       ! the output from command "ncmpidump -v var test.nc" should be:
       !      var =
@@ -161,8 +164,7 @@
       endif
 
       err = nf90mpi_close(ncid)
-      if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &
-                                   nf90mpi_strerror(err)
+      call check(err, 'Error at nf90mpi_close ')
 
       if (rank .EQ. 0) then
           msg = '*** TESTING F90 '//trim(cmd)//' for bput_var'

@@ -1,0 +1,15 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id: Makefile.am 2815 2017-01-01 23:06:33Z wkliao $
+#
+# @configure_input@
+
+nodist_include_HEADERS = pnetcdf.h
+
+EXTRA_DIST = nctypes.h dispatch.h pnc_debug.h
+
+dist-hook:
+	$(SED) -i "s/DIST_DATE/`date '+%e %b %Y'`/" $(distdir)/pnetcdf.h.in
+

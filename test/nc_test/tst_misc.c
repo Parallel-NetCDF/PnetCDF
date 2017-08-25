@@ -37,7 +37,7 @@ main(int argc, char **argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (rank > 0) goto fn_exit;
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
@@ -101,5 +101,5 @@ fn_exit:
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }

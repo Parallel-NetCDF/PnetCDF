@@ -55,16 +55,9 @@
 #include <string.h>
 #include "testutils.h"
 
-/* Prototype for functions used only in this file */
-static void handle_error(int status);
-
-static void handle_error(int status) {
-  fprintf(stderr, "%s\n", ncmpi_strerror(status));
-}
-
 int main(int argc, char **argv) {
   MPI_Offset i, j, k;
-  int status;
+  int err, nerrs=0;
   int ncid;
   int dimid1, dimid2, dimid3, udimid;
   int square_dim[2], cube_dim[3], xytime_dim[3], time_dim[1];
@@ -102,8 +95,8 @@ int main(int argc, char **argv) {
    *   Dataset API: Collective
    */
 
-  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
+  CHECK_ERR
 
 
   /**
@@ -112,23 +105,22 @@ int main(int argc, char **argv) {
    */
   sprintf(title, "%s:%d of %d", title, rank, nprocs);
   printf("title:%s\n", title);
-  status = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
-                          strlen(title), title);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_put_att_text (ncid, NC_GLOBAL, "title", strlen(title), title);
+  CHECK_ERR
   
    
   /**
    * Add 4 pre-defined dimensions:
    *   x = 100, y = 100, z = 100, time = NC_UNLIMITED
    */
-  status = ncmpi_def_dim(ncid, "x", 100L, &dimid1);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "y", 100L, &dimid2);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "z", 100L, &dimid3);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_def_dim(ncid, "x", 100L, &dimid1);
+  CHECK_ERR
+  err = ncmpi_def_dim(ncid, "y", 100L, &dimid2);
+  CHECK_ERR
+  err = ncmpi_def_dim(ncid, "z", 100L, &dimid3);
+  CHECK_ERR
+  err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
+  CHECK_ERR
 
   /**
    * Define the dimensionality and then add 4 variables:
@@ -140,39 +132,33 @@ int main(int argc, char **argv) {
   cube_dim[2] = dimid3;
   xytime_dim[0] = udimid;
   time_dim[0] = udimid;
-  status = ncmpi_def_var (ncid, "square", NC_INT, 2, square_dim, &square_id);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_var (ncid, "cube", NC_INT, 3, cube_dim, &cube_id);
-  if (status != NC_NOERR) handle_error(status);
- // status = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
-  status = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_var (ncid, "xytime", NC_INT, 3, xytime_dim, &xytime_id);
-  if (status != NC_NOERR) handle_error(status);
+  err = ncmpi_def_var (ncid, "square", NC_INT, 2, square_dim, &square_id);
+  CHECK_ERR
+  err = ncmpi_def_var (ncid, "cube", NC_INT, 3, cube_dim, &cube_id);
+  CHECK_ERR
+ // err = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
+  err = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
+  CHECK_ERR
+  err = ncmpi_def_var (ncid, "xytime", NC_INT, 3, xytime_dim, &xytime_id);
+  CHECK_ERR
 
   /**
    * Add an attribute for variable: 
    *    square: decsription = "2-D integer array"
    */
 
-  status = ncmpi_put_att_text (ncid, square_id, "description",
+  err = ncmpi_put_att_text (ncid, square_id, "description",
                           strlen(description), description);
-  if (status != NC_NOERR) handle_error(status);
+  CHECK_ERR
 
   /**
    * End Define Mode (switch to data mode)
    *   Dataset API: Collective
    */
   
-  status = ncmpi_enddef(ncid);
-  if (status != NC_NOERR){  
-	handle_error(status);
-  	status = ncmpi_close(ncid);
- 	if (status != NC_NOERR) handle_error(status);
-	if (rank == 0) {
-	  fprintf(stderr, "Fatal Error: file header is inconsistent!\n");
-	}
- }
+  err = ncmpi_enddef(ncid);
+  CHECK_ERR
+
   /**
    * Data Partition (Assume 4 processors):
    *   square: 2-D, (Block, Block), 50*50 from 100*100 
@@ -206,32 +192,32 @@ int main(int argc, char **argv) {
    *   Data Mode API: collective
    */ 
   
-	  status = ncmpi_put_vara_int_all(ncid, square_id,
+	  err = ncmpi_put_vara_int_all(ncid, square_id,
                     square_start, square_count,
                     &data[0][0][0]);
-	  if (status != NC_NOERR) handle_error(status);
-	  status = ncmpi_put_vara_int_all(ncid, cube_id,
+	  CHECK_ERR
+	  err = ncmpi_put_vara_int_all(ncid, cube_id,
                     cube_start, cube_count,
                     &data[0][0][0]);
-	  if (status != NC_NOERR) handle_error(status);
-	  status = ncmpi_put_vara_int_all(ncid, time_id,
+	  CHECK_ERR
+	  err = ncmpi_put_vara_int_all(ncid, time_id,
                     time_start, time_count,
                     (void *)buffer);
-	  if (status != NC_NOERR) handle_error(status);
-	  status = ncmpi_put_vara_int_all(ncid, xytime_id,
+	  CHECK_ERR
+	  err = ncmpi_put_vara_int_all(ncid, xytime_id,
                     xytime_start, xytime_count,
                     &data[0][0][0]);
-	  if (status != NC_NOERR) handle_error(status);
+	  CHECK_ERR
 
 /*
-status = ncmpi_sync(ncid);
-if (status != NC_NOERR) handle_error(status); 
-status = ncmpi_redef(ncid);
-if (status != NC_NOERR) handle_error(status);
-status = ncmpi_del_att(ncid, square_id, "description");
-if (status != NC_NOERR) handle_error(status); 
-status = ncmpi_enddef(ncid);
-if (status != NC_NOERR) handle_error(status);
+err = ncmpi_sync(ncid);
+CHECK_ERR
+err = ncmpi_redef(ncid);
+CHECK_ERR
+err = ncmpi_del_att(ncid, square_id, "description");
+CHECK_ERR
+err = ncmpi_enddef(ncid);
+CHECK_ERR
 */
 
   /**
@@ -239,8 +225,8 @@ if (status != NC_NOERR) handle_error(status);
    *   Dataset API:  collective
    */
 
-	  status = ncmpi_close(ncid);
-	  if (status != NC_NOERR) handle_error(status);
+	  err = ncmpi_close(ncid);
+	  CHECK_ERR
   /*******************  END OF NETCDF ACCESS  ****************/
 
 	MPI_Barrier(MPI_COMM_WORLD); 
@@ -252,6 +238,6 @@ if (status != NC_NOERR) handle_error(status);
 	}
   }
   MPI_Finalize();
-  return 0;
+  return (nerrs > 0);
 }
 

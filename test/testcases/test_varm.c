@@ -13,11 +13,6 @@
 
 #include <testutils.h>
 
-#define PRINT_ERR_ON_SCREEN
-
-#define ERRCODE 2
-#define ERR {if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
-
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
@@ -26,7 +21,7 @@ int main(int argc, char **argv)
 
     MPI_Offset start[2], count[2], stride[2], imap[2];
     int   var[6][4];
-    float rh[4][6];
+    float k, rh[4][6];
     signed char  varT[4][6];
     char filename[256];
 
@@ -37,7 +32,7 @@ int main(int argc, char **argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -55,13 +50,13 @@ int main(int argc, char **argv)
 #endif
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA,
-                       MPI_INFO_NULL, &ncid); ERR
+                       MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define a variable of a 6 x 4 integer array in the nc file */
-    err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", 4, &dimid[1]); ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", 4, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* create a 6 x 4 integer variable in the file with contents:
            0,  1,  2,  3,
@@ -76,32 +71,36 @@ int main(int argc, char **argv)
     start[0] = 0; start[1] = 0;
     count[0] = 6; count[1] = 4;
     if (rank > 0) count[0] = count[1] = 0;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); CHECK_ERR
 
     if (nprocs > 1) MPI_Barrier(MPI_COMM_WORLD);
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+
+    err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* read the variable back in the matrix transposed way, rh is 4 x 6 */
      count[0] = 6;  count[1] = 4;
     stride[0] = 1; stride[1] = 1;
       imap[0] = 1;   imap[1] = 6;   /* would be {4, 1} if not transposing */
-#define TEST_NON_BLOCKING_API
-#ifdef TEST_NON_BLOCKING_API
-    err = ncmpi_iget_varm_float(ncid, varid, start, count, stride, imap, &rh[0][0], &req); ERR
 
-    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
+    for (i=0; i<6; i++) for (j=0; j<4; j++) rh[j][i] = -1.0;
 
-    if (status != NC_NOERR) ERR
-#else
-    err = ncmpi_get_varm_float_all(ncid, varid, start, count, stride, imap, &rh[0][0]); ERR
-#endif
+    err = ncmpi_iget_varm_float(ncid, varid, start, count, stride, imap, &rh[0][0], &req); CHECK_ERR
+
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of read */
-    float k = 0.0;
+    k = 0.0;
     for (i=0; i<6; i++) {
         for (j=0; j<4; j++) {
             if (rh[j][i] != k) {
 #ifdef PRINT_ERR_ON_SCREEN
-                printf("Error: expecting rh[%d][%d]=%f but got %f\n",j,i,k,rh[j][i]);
+                printf("Error at line %d in %s: expecting rh[%d][%d]=%f but got %f\n",
+                __LINE__,__FILE__,j,i,k,rh[j][i]);
 #endif
                 nerrs++;
                 break;
@@ -126,12 +125,55 @@ int main(int argc, char **argv)
            [ 3]:   3.0  7.0 11.0 15.0 19.0 23.0
      */
 
+    for (i=0; i<6; i++) for (j=0; j<4; j++) rh[j][i] = -1.0;
+
+    err = ncmpi_get_varm_float_all(ncid, varid, start, count, stride, imap, &rh[0][0]); CHECK_ERR
+
+    /* check the contents of read */
+    k = 0.0;
+    for (i=0; i<6; i++) {
+        for (j=0; j<4; j++) {
+            if (rh[j][i] != k) {
+#ifdef PRINT_ERR_ON_SCREEN
+                printf("Error at line %d in %s: expecting rh[%d][%d]=%f but got %f\n",
+                __LINE__,__FILE__,j,i,k,rh[j][i]);
+#endif
+                nerrs++;
+                break;
+            }
+            k += 1.0;
+        }
+    }
+#ifdef PRINT_ON_SCREEN
+    /* print the contents of read */
+    for (j=0; j<4; j++) {
+        printf("[%2d]: ",j);
+        for (i=0; i<6; i++) {
+            printf("%5.1f",rh[j][i]);
+        }
+        printf("\n");
+    }
+#endif
+    /* the stdout should be:
+           [ 0]:   0.0  4.0  8.0 12.0 16.0 20.0
+           [ 1]:   1.0  5.0  9.0 13.0 17.0 21.0
+           [ 2]:   2.0  6.0 10.0 14.0 18.0 22.0
+           [ 3]:   3.0  7.0 11.0 15.0 19.0 23.0
+     */
+
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+
+    err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
+
     /* testing get_varm(), first zero-out the variable in the file */
     memset(&var[0][0], 0, 6*4*sizeof(int));
     start[0] = 0; start[1] = 0;
     count[0] = 6; count[1] = 4;
     if (rank > 0) count[0] = count[1] = 0;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); CHECK_ERR
 
     /* set the contents of the write buffer varT, a 4 x 6 char array
           50, 51, 52, 53, 54, 55,
@@ -147,15 +189,11 @@ int main(int argc, char **argv)
     stride[0] = 1; stride[1] = 1;
     imap[0]   = 1; imap[1]   = 6;   /* would be {4, 1} if not transposing */
     if (rank > 0) count[0] = count[1] = 0;
-#ifdef TEST_NON_BLOCKING_API
-    err = ncmpi_iput_varm_schar(ncid, varid, start, count, stride, imap, &varT[0][0], &req); ERR
 
-    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
+    err = ncmpi_iput_varm_schar(ncid, varid, start, count, stride, imap, &varT[0][0], &req); CHECK_ERR
 
-    if (status != NC_NOERR) ERR
-#else
-    err = ncmpi_put_varm_schar_all(ncid, varid, start, count, stride, imap, &varT[0][0]); ERR
-#endif
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* the output from command "ncmpidump -v var test.nc" should be:
            var =
@@ -173,14 +211,32 @@ int main(int argc, char **argv)
             if (varT[j][i] != j*6+i + 50) {
 #ifdef PRINT_ERR_ON_SCREEN
                 /* this error is a pntecdf internal error, if occurs */
-                printf("Error: expecting varT[%d][%d]=%d but got %d\n",j,i,j*6+i + 50,varT[j][i]);
+                printf("Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
+                __LINE__,__FILE__,j,i,j*6+i + 50,varT[j][i]);
 #endif
                 nerrs++;
                 break;
             }
         }
     }
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_put_varm_schar_all(ncid, varid, start, count, stride, imap, &varT[0][0]); CHECK_ERR
+
+    /* check if the contents of write buffer have been altered */
+    for (j=0; j<4; j++) {
+        for (i=0; i<6; i++) {
+            if (varT[j][i] != j*6+i + 50) {
+#ifdef PRINT_ERR_ON_SCREEN
+                /* this error is a pntecdf internal error, if occurs */
+                printf("Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
+                __LINE__,__FILE__,j,i,j*6+i + 50,varT[j][i]);
+#endif
+                nerrs++;
+                break;
+            }
+        }
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -199,7 +255,6 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-
-    return (nerrs == 0) ? 0 : 1;
+    return (nerrs > 0);
 }
 

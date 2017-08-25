@@ -1,3 +1,9 @@
+# $Id$
+
+----------------------------------------------
+Notes in this file are for PnetCDF developers
+----------------------------------------------
+
 #
 # We want apps to be able to link with both serial NetCDF and Parallel-NetCDF,
 # so we had to alter some symbols in the library.  The following list is a

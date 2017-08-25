@@ -65,7 +65,6 @@
 #include <testutils.h>
 
 #define LEN 16
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 static
 int check_int_buf(int *buffer)
@@ -173,7 +172,7 @@ int main(int argc, char** argv)
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -193,17 +192,17 @@ int main(int argc, char** argv)
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
 
-    err = ncmpi_def_dim(ncid, "dim000001", LEN, &dimid[1]); ERR
-    err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); ERR
-    err = ncmpi_def_var(ncid, "vari0001", NC_INT, 2, dimid, &vari0001); ERR
-    err = ncmpi_def_var(ncid, "varr0001", NC_FLOAT, 2, dimid, &varr0001); ERR
-    err = ncmpi_def_var(ncid, "vard0001", NC_DOUBLE, 2, dimid, &vard0001); ERR
-    err = ncmpi_def_var(ncid, "vari0002", NC_INT, 2, dimid, &vari0002); ERR
-    err = ncmpi_def_var(ncid, "varr0002", NC_FLOAT, 2, dimid, &varr0002); ERR
-    err = ncmpi_def_var(ncid, "vard0002", NC_DOUBLE, 2, dimid, &vard0002); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim000001", LEN, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "vari0001", NC_INT, 2, dimid, &vari0001); CHECK_ERR
+    err = ncmpi_def_var(ncid, "varr0001", NC_FLOAT, 2, dimid, &varr0001); CHECK_ERR
+    err = ncmpi_def_var(ncid, "vard0001", NC_DOUBLE, 2, dimid, &vard0001); CHECK_ERR
+    err = ncmpi_def_var(ncid, "vari0002", NC_INT, 2, dimid, &vari0002); CHECK_ERR
+    err = ncmpi_def_var(ncid, "varr0002", NC_FLOAT, 2, dimid, &varr0002); CHECK_ERR
+    err = ncmpi_def_var(ncid, "vard0002", NC_DOUBLE, 2, dimid, &vard0002); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     starts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));
     counts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));
@@ -219,44 +218,44 @@ int main(int argc, char** argv)
         /* vari0001 and vari0002 */
         starts[0][0] = 0; starts[0][1] = 1; counts[0][0] = 1; counts[0][1] = 1;
         ibuf1[0] = NC_FILL_INT;
-        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[1]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[1]); CHECK_ERR
         ibuf2[0] = NC_FILL_INT;
-        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[7]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[7]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 0; counts[0][0] = 1; counts[0][1] = 1;
         starts[1][0] = 0; starts[1][1] = 2; counts[1][0] = 1; counts[1][1] = 2;
         ibuf1[1] = 1; ibuf1[2] = 3; ibuf1[3] = 4;
-        err = ncmpi_iput_varn_int(ncid, vari0001, 2, starts, counts, ibuf1+1, &req[0]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0001, 2, starts, counts, ibuf1+1, &req[0]); CHECK_ERR
         ibuf2[1] = 1; ibuf2[2] = 3; ibuf2[3] = 4;
-        err = ncmpi_iput_varn_int(ncid, vari0002, 2, starts, counts, ibuf2+1, &req[6]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0002, 2, starts, counts, ibuf2+1, &req[6]); CHECK_ERR
 
         /* varr0001 and varr0002 */
         starts[0][0] = 0; starts[0][1] = 1; counts[0][0] = 1; counts[0][1] = 1;
         rbuf1[0] = NC_FILL_FLOAT;
-        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[3]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[3]); CHECK_ERR
         rbuf2[0] = NC_FILL_FLOAT;
-        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[9]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[9]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 0; counts[0][0] = 1; counts[0][1] = 1;
         starts[1][0] = 0; starts[1][1] = 2; counts[1][0] = 1; counts[1][1] = 2;
         rbuf1[1] = 1.1; rbuf1[2] = 3.1; rbuf1[3] = 4.1;
-        err = ncmpi_iput_varn_float(ncid, varr0001, 2, starts, counts, rbuf1+1, &req[2]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0001, 2, starts, counts, rbuf1+1, &req[2]); CHECK_ERR
         rbuf2[1] = 1.2; rbuf2[2] = 3.2; rbuf2[3] = 4.2;
-        err = ncmpi_iput_varn_float(ncid, varr0002, 2, starts, counts, rbuf2+1, &req[8]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0002, 2, starts, counts, rbuf2+1, &req[8]); CHECK_ERR
 
         /* vard0001 and vard0002 */
         starts[0][0] = 0; starts[0][1] = 1; counts[0][0] = 1; counts[0][1] = 1;
         dbuf1[0] = NC_FILL_DOUBLE;
-        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[5]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[5]); CHECK_ERR
         dbuf2[0] = NC_FILL_DOUBLE;
-        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[11]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[11]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 0; counts[0][0] = 1; counts[0][1] = 1;
         starts[1][0] = 0; starts[1][1] = 2; counts[1][0] = 1; counts[1][1] = 2;
         dbuf1[1] = 1.3; dbuf1[2] = 3.3; dbuf1[3] = 4.3;
-        err = ncmpi_iput_varn_double(ncid, vard0001, 2, starts, counts, dbuf1+1, &req[4]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0001, 2, starts, counts, dbuf1+1, &req[4]); CHECK_ERR
         dbuf2[1] = 1.4; dbuf2[2] = 3.4; dbuf2[3] = 4.4;
-        err = ncmpi_iput_varn_double(ncid, vard0002, 2, starts, counts, dbuf2+1, &req[10]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0002, 2, starts, counts, dbuf2+1, &req[10]); CHECK_ERR
 
         num_reqs = 12;
         /* rank 0 is writing the followings: ("x" means skip, "-" means fill value)
@@ -266,41 +265,41 @@ int main(int argc, char** argv)
         /* vari0001 and vari0002 */
         starts[0][0] = 0; starts[0][1] = 7; counts[0][0] = 1; counts[0][1] = 1;
         ibuf1[0] = NC_FILL_INT;
-        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[1]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[1]); CHECK_ERR
         ibuf2[0] = NC_FILL_INT;
-        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[7]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[7]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 8; counts[0][0] = 1; counts[0][1] = 4;
         ibuf1[1] = 9; ibuf1[2] = 10; ibuf1[3] = 11; ibuf1[4] = 12;
-        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1+1, &req[0]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1+1, &req[0]); CHECK_ERR
         ibuf2[1] = 9; ibuf2[2] = 10; ibuf2[3] = 11; ibuf2[4] = 12;
-        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2+1, &req[6]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2+1, &req[6]); CHECK_ERR
 
         /* varr0001 and varr0002 */
         starts[0][0] = 0; starts[0][1] = 7; counts[0][0] = 1; counts[0][1] = 1;
         rbuf1[0] = NC_FILL_FLOAT;
-        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[3]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[3]); CHECK_ERR
         rbuf2[0] = NC_FILL_FLOAT;
-        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[9]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[9]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 8; counts[0][0] = 1; counts[0][1] = 4;
         rbuf1[1] = 9.1; rbuf1[2] = 10.1; rbuf1[3] = 11.1; rbuf1[4] = 12.1;
-        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1+1, &req[2]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1+1, &req[2]); CHECK_ERR
         rbuf2[1] = 9.2; rbuf2[2] = 10.2; rbuf2[3] = 11.2; rbuf2[4] = 12.2;
-        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2+1, &req[8]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2+1, &req[8]); CHECK_ERR
 
         /* vard0001 and vard0002 */
         starts[0][0] = 0; starts[0][1] = 7; counts[0][0] = 1; counts[0][1] = 1;
         dbuf1[0] = NC_FILL_DOUBLE;
-        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[5]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[5]); CHECK_ERR
         dbuf2[0] = NC_FILL_DOUBLE;
-        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[11]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[11]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 8; counts[0][0] = 1; counts[0][1] = 4;
         dbuf1[1] = 9.3; dbuf1[2] = 10.3; dbuf1[3] = 11.3; dbuf1[4] = 12.3;
-        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1+1, &req[4]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1+1, &req[4]); CHECK_ERR
         dbuf2[1] = 9.4; dbuf2[2] = 10.4; dbuf2[3] = 11.4; dbuf2[4] = 12.4;
-        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2+1, &req[10]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2+1, &req[10]); CHECK_ERR
 
         num_reqs = 12;
         /* rank 1 is writing the followings: ("x" means skip, "-" means fill value)
@@ -311,21 +310,21 @@ int main(int argc, char** argv)
         /* vari0001 and vari0002 */
         starts[0][0] = 0; starts[0][1] = 4; counts[0][0] = 1; counts[0][1] = 3;
         ibuf1[0] = 5; ibuf1[1] = 6; ibuf1[2] = 7;
-        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[0]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[0]); CHECK_ERR
         ibuf2[0] = 5; ibuf2[1] = 6; ibuf2[2] = 7;
-        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[1]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[1]); CHECK_ERR
 
         /* varr0001 and varr0002 */
         rbuf1[0] = 5.1; rbuf1[1] = 6.1; rbuf1[2] = 7.1;
-        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[2]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[2]); CHECK_ERR
         rbuf2[0] = 5.2; rbuf2[1] = 6.2; rbuf2[2] = 7.2;
-        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[3]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[3]); CHECK_ERR
 
         /* vard0001 and vard0002 */
         dbuf1[0] = 5.3; dbuf1[1] = 6.3; dbuf1[2] = 7.3;
-        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[4]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[4]); CHECK_ERR
         dbuf2[0] = 5.4; dbuf2[1] = 6.4; dbuf2[2] = 7.4;
-        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[5]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[5]); CHECK_ERR
 
         num_reqs = 6;
         /* rank 2 is writing the followings: ("x" means skip, "-" means fill value)
@@ -336,44 +335,44 @@ int main(int argc, char** argv)
         /* vari0001 and vari0002 */
         starts[0][0] = 0; starts[0][1] = 14; counts[0][0] = 1; counts[0][1] = 1;
         ibuf1[0] = NC_FILL_INT;
-        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[0]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0001, 1, starts, counts, ibuf1, &req[0]); CHECK_ERR
         ibuf2[0] = NC_FILL_INT;
-        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[1]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0002, 1, starts, counts, ibuf2, &req[1]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 12; counts[0][0] = 1; counts[0][1] = 2;
         starts[1][0] = 0; starts[1][1] = 15; counts[1][0] = 1; counts[1][1] = 1;
         ibuf1[1] = 13; ibuf1[2] = 14; ibuf1[3] = 16;
-        err = ncmpi_iput_varn_int(ncid, vari0001, 2, starts, counts, ibuf1+1, &req[2]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0001, 2, starts, counts, ibuf1+1, &req[2]); CHECK_ERR
         ibuf2[1] = 13; ibuf2[2] = 14; ibuf2[3] = 16;
-        err = ncmpi_iput_varn_int(ncid, vari0002, 2, starts, counts, ibuf2+1, &req[3]); ERR
+        err = ncmpi_iput_varn_int(ncid, vari0002, 2, starts, counts, ibuf2+1, &req[3]); CHECK_ERR
 
         /* varr0001 and varr0002 */
         starts[0][0] = 0; starts[0][1] = 14; counts[0][0] = 1; counts[0][1] = 1;
         rbuf1[0] = NC_FILL_FLOAT;
-        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[4]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0001, 1, starts, counts, rbuf1, &req[4]); CHECK_ERR
         rbuf2[0] = NC_FILL_FLOAT;
-        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[5]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0002, 1, starts, counts, rbuf2, &req[5]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 12; counts[0][0] = 1; counts[0][1] = 2;
         starts[1][0] = 0; starts[1][1] = 15; counts[1][0] = 1; counts[1][1] = 1;
         rbuf1[1] = 13.1; rbuf1[2] = 14.1; rbuf1[3] = 16.1;
-        err = ncmpi_iput_varn_float(ncid, varr0001, 2, starts, counts, rbuf1+1, &req[6]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0001, 2, starts, counts, rbuf1+1, &req[6]); CHECK_ERR
         rbuf2[1] = 13.2; rbuf2[2] = 14.2; rbuf2[3] = 16.2;
-        err = ncmpi_iput_varn_float(ncid, varr0002, 2, starts, counts, rbuf2+1, &req[7]); ERR
+        err = ncmpi_iput_varn_float(ncid, varr0002, 2, starts, counts, rbuf2+1, &req[7]); CHECK_ERR
 
         /* vard0001 and vard0002 */
         starts[0][0] = 0; starts[0][1] = 14; counts[0][0] = 1; counts[0][1] = 1;
         dbuf1[0] = NC_FILL_DOUBLE;
-        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[8]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0001, 1, starts, counts, dbuf1, &req[8]); CHECK_ERR
         dbuf2[0] = NC_FILL_DOUBLE;
-        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[9]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0002, 1, starts, counts, dbuf2, &req[9]); CHECK_ERR
 
         starts[0][0] = 0; starts[0][1] = 12; counts[0][0] = 1; counts[0][1] = 2;
         starts[1][0] = 0; starts[1][1] = 15; counts[1][0] = 1; counts[1][1] = 1;
         dbuf1[1] = 13.3; dbuf1[2] = 14.3; dbuf1[3] = 16.3;
-        err = ncmpi_iput_varn_double(ncid, vard0001, 2, starts, counts, dbuf1+1, &req[10]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0001, 2, starts, counts, dbuf1+1, &req[10]); CHECK_ERR
         dbuf2[1] = 13.4; dbuf2[2] = 14.4; dbuf2[3] = 16.4;
-        err = ncmpi_iput_varn_double(ncid, vard0002, 2, starts, counts, dbuf2+1, &req[11]); ERR
+        err = ncmpi_iput_varn_double(ncid, vard0002, 2, starts, counts, dbuf2+1, &req[11]); CHECK_ERR
 
         num_reqs = 12;
         /* rank 3 is writing the followings: ("x" means skip, "-" means fill value)
@@ -382,52 +381,52 @@ int main(int argc, char** argv)
          */
     }
 
-    err = ncmpi_wait_all(ncid, num_reqs, req, st); ERR
+    err = ncmpi_wait_all(ncid, num_reqs, req, st); CHECK_ERR
     for (i=0; i<num_reqs; i++) {
-        err = st[i]; ERR
+        err = st[i]; CHECK_ERR
     }
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     free(starts[0]);
     free(counts[0]);
     free(starts);
     free(counts);
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
 
-    err = ncmpi_inq_varid(ncid, "vari0001", &vari0001); ERR
-    err = ncmpi_inq_varid(ncid, "varr0001", &varr0001); ERR
-    err = ncmpi_inq_varid(ncid, "vard0001", &vard0001); ERR
-    err = ncmpi_inq_varid(ncid, "vari0002", &vari0002); ERR
-    err = ncmpi_inq_varid(ncid, "varr0002", &varr0002); ERR
-    err = ncmpi_inq_varid(ncid, "vard0002", &vard0002); ERR
+    err = ncmpi_inq_varid(ncid, "vari0001", &vari0001); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "varr0001", &varr0001); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "vard0001", &vard0001); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "vari0002", &vari0002); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "varr0002", &varr0002); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "vard0002", &vard0002); CHECK_ERR
 
     for (i=0; i<LEN; i++) ibuf1[i] = -1;
-    err = ncmpi_get_var_int_all(ncid, vari0001, ibuf1); ERR
+    err = ncmpi_get_var_int_all(ncid, vari0001, ibuf1); CHECK_ERR
     nerrs += check_int_buf(ibuf1);
 
     for (i=0; i<LEN; i++) ibuf2[i] = -1;
-    err = ncmpi_get_var_int_all(ncid, vari0002, ibuf2); ERR
+    err = ncmpi_get_var_int_all(ncid, vari0002, ibuf2); CHECK_ERR
     nerrs += check_int_buf(ibuf2);
 
     for (i=0; i<LEN; i++) rbuf1[i] = -1;
-    err = ncmpi_get_var_float_all(ncid, varr0001, rbuf1); ERR
+    err = ncmpi_get_var_float_all(ncid, varr0001, rbuf1); CHECK_ERR
     nerrs += check_flt_buf(rbuf1, 0.1);
 
     for (i=0; i<LEN; i++) rbuf2[i] = -1;
-    err = ncmpi_get_var_float_all(ncid, varr0002, rbuf2); ERR
+    err = ncmpi_get_var_float_all(ncid, varr0002, rbuf2); CHECK_ERR
     nerrs += check_flt_buf(rbuf2, 0.2);
 
     for (i=0; i<LEN; i++) dbuf1[i] = -1;
-    err = ncmpi_get_var_double_all(ncid, vard0001, dbuf1); ERR
+    err = ncmpi_get_var_double_all(ncid, vard0001, dbuf1); CHECK_ERR
     nerrs += check_dbl_buf(dbuf1, 0.3);
 
     for (i=0; i<LEN; i++) dbuf2[i] = -1;
-    err = ncmpi_get_var_double_all(ncid, vard0002, dbuf2); ERR
+    err = ncmpi_get_var_double_all(ncid, vard0002, dbuf2); CHECK_ERR
     nerrs += check_dbl_buf(dbuf2, 0.4);
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -446,6 +445,6 @@ int main(int argc, char** argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }
 

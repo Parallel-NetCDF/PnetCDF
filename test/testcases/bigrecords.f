@@ -335,6 +335,6 @@
           msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
      +          ' for NF_64BIT_DATA'
           call pass_fail(1, msg)
-          stop
+          stop 2
       endif
       end ! subroutine check_err

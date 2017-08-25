@@ -2,7 +2,7 @@
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH NCMPIDUMP 1 "2013-11-17" "Printed: \n(yr-\n(mo-\n(dy" "UTILITIES"
+.TH ncmpidump 1 "PnetCDF PNETCDF_RELEASE_VERSION" "Printed: \n(yr-\n(mo-\n(dy" "PnetCDF utilities"
 .SH NAME
 ncmpidump \- Convert netCDF files to ASCII form (CDL)
 .SH SYNOPSIS
@@ -130,7 +130,7 @@ significant digits.  In the absence of any
 \fB-p\fP specifications, floating-point and double-precision data are
 displayed with 7 and 15 significant digits respectively.  CDL files can be
 made smaller if less precision is required.  If both floating-point and
-double-presision precisions are specified, the two values must appear
+double-precision precisions are specified, the two values must appear
 separated by a comma (no blanks) as a single argument to the command.
 If you really want every last bit of precision from the netCDF file
 represented in the CDL file for all possible floating-point values, you will
@@ -185,7 +185,7 @@ Goldberg, \fBACM Computing Surveys, Vol. 23, No. 1\fP, March 1991, pp. 5-48.
 .BR ncmpigen (1),
 .BR pnetcdf (3)
 .SH DATE
-$Date$
+PNETCDF_RELEASE_DATE
 .SH BUGS
 .LP
 Character arrays that contain a null-byte are treated like C strings, so no

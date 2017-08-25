@@ -42,7 +42,6 @@
 
 #define NY 4
 #define NX 5
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
@@ -60,7 +59,7 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
-        return 0;
+        return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, "testfile.nc");
@@ -80,14 +79,14 @@ int main(int argc, char **argv) {
      * Fix: Add ROMIO hint to force ADIO driever to use POSIX I/O */
     /* MPI_Info_set(info, "romio_pvfs2_posix_write", "enable"); */
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
     MPI_Info_free(&info);
 
     /* define a 2D array */
-    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimids[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", NX,    &dimids[1]); ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); ERR
-    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimids[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX,    &dimids[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* initialize the contents of the array */
     for (j=0; j<NY+1; j++) for (i=0; i<NX; i++) buf[j][i] = j;
@@ -96,32 +95,33 @@ int main(int argc, char **argv) {
     count[0] = 1;      count[1] = NX;
 
     /* call nonblocking API */
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[1], &req[0]); ERR
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[1], &req[0]); CHECK_ERR
 
     start[0] += 1;
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[0], &req[1]); ERR
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[0], &req[1]); CHECK_ERR
 
     st[0] = st[1] = NC_NOERR;
-    err = ncmpi_wait_all(ncid, 2, req, st); ERR
-    err = st[0]; ERR
-    err = st[1]; ERR
+    err = ncmpi_wait_all(ncid, 2, req, st); CHECK_ERR
+    err = st[0]; CHECK_ERR
+    err = st[1]; CHECK_ERR
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++)
         for (i=0; i<NX; i++)
             if (buf[j][i] != j)
-                printf("Error: buf[%d][%d]=%d != %d\n",j,i,buf[j][i],j);
+                printf("Error at line %d in %s: buf[%d][%d]=%d != %d\n",
+                __LINE__,__FILE__,j,i,buf[j][i],j);
  
     /* check if root process can write to file header in data mode */
-    err = ncmpi_rename_var(ncid, varid, "VAR"); ERR
+    err = ncmpi_rename_var(ncid, varid, "VAR"); CHECK_ERR
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validate */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid); ERR
+                     &ncid); CHECK_ERR
 
-    err = ncmpi_inq_varid(ncid, "VAR", &varid); ERR
+    err = ncmpi_inq_varid(ncid, "VAR", &varid); CHECK_ERR
 
     /* initialize the contents of the array to a different value */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
@@ -129,9 +129,9 @@ int main(int argc, char **argv) {
     /* read back variable */
     start[0] = 2*rank; start[1] = 0;
     count[0] = 2;      count[1] = NX;
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); ERR
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); CHECK_ERR
 
-    err = ncmpi_close(ncid); ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if the contents of buf are expected */
     for (j=0; j<2; j++) {
@@ -161,5 +161,5 @@ int main(int argc, char **argv) {
     }
 
     MPI_Finalize();
-    return 0;
+    return (nerrs > 0);
 }

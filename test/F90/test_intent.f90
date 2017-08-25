@@ -22,7 +22,7 @@
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_intent.f90 '
               call pass_fail(1, msg)
-              call MPI_Abort(MPI_COMM_WORLD, -1, err)
+              STOP 2
           end if
       end subroutine check
 
