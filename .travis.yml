@@ -14,7 +14,7 @@ addons:
     build_command_prepend: ./configure
     notification_email: wkliao@eecs.northwestern.edu
     build_command: make -s V=1 LIBTOOLFLAGS=--silent tests
-    branch_pattern: am
+    branch_pattern: master
 
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
