@@ -16,8 +16,11 @@ endif
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
+	if [ -d ncfoo ] ; then \
+	   cd ncfoo && $(MAKE) $(AM_MAKEFLAGS) distclean ; \
+	fi
 	if [ "$(abs_builddir)" != "$(abs_srcdir)" ] ; then \
-	   for d in $(DIST_SUBDIRS) ; do \
+	   for d in $(SUBDIRS) ; do \
 	       rmdir $$d || true ; \
 	   done ; \
 	fi
