@@ -92,22 +92,28 @@ TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
 ptest ptest4: $(TESTPROGRAMS)
-	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc
+	for j in 0 1 ; do { \
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc ; \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest2 : $(TESTPROGRAMS)
-	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc
+	for j in 0 1 ; do { \
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc ; \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest6 : $(TESTPROGRAMS)
-	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc
+	for j in 0 1 ; do { \
+	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc ; \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

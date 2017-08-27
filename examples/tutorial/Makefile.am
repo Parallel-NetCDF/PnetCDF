@@ -50,6 +50,8 @@ CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
 ptest ptest4: $(check_PROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	@for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
@@ -57,7 +59,7 @@ ptest ptest4: $(check_PROGRAMS)
         else \
            echo "FAILED:     parallel run on 4 processes ------------- $$i"; \
            exit 1; \
-        fi ; } ; done
+        fi ; } ; done ; } ; done
 
 ptests: ptest4
 ptest2 ptest3 ptest6 ptest8 ptest10:

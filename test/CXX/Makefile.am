@@ -46,9 +46,11 @@ CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
 ptest ptests ptest4: $(TESTPROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest2 ptest6 ptest8 ptest10:
 

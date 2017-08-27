@@ -63,24 +63,32 @@ TESTMPIRUN10 = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/10/g'`
 
 
 ptest ptest4: $(PARALLEL_PROGS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest2: $(PARALLEL_PROGS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest8: $(PARALLEL_PROGS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest10: $(PARALLEL_PROGS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest8 ptest10
 ptest6:

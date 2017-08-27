@@ -48,9 +48,12 @@ EXTRA_DIST = seq_runs.sh test_cdf1.nc test_cdf2.nc test_cdf5.nc
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
 ptest ptests ptest4: $(TESTPROGRAMS)
-	$(TESTMPIRUN4) ./test_inq_format $(srcdir)
-	$(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/testfile.nc
-	$(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/testfile.nc
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./test_inq_format $(srcdir)
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/testfile.nc
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/testfile.nc
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./test_inq_format $(srcdir)
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/testfile.nc
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/testfile.nc
 
 ptest2 ptest6 ptest8 ptest10:
 
