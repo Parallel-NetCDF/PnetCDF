@@ -16,7 +16,7 @@ Tasks immediately before a new release (must run in the following order)
                    and their combinations)
 
       - make check
-      - run make check with valgrind by adding the following lines to command
+      - run "make check" with valgrind by adding the following lines to command
         "make check". As of PnetCDF 1.8.0, "make check" passes without any
         warning and error from valgrind.  (See note below.)
         * when built with --enable-shared, use commands:
@@ -30,9 +30,10 @@ Tasks immediately before a new release (must run in the following order)
             TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
 
       - make ptests
-      - run make ptests with valgrind.
-        * For using valgrind, set TESTSEQRUN and TESTMPIRUN as above.
-      - make checkdist
+      - run "make ptests" with valgrind.
+        * For using valgrind, set TESTSEQRUN and TESTMPIRUN as described above.
+      - make distcheck
+      - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared"
 
     * build and test on different platforms with various compilers:
       - login.mcs.anl.gov : Intel, NAG Fortran, PGI, Solaris Studio compilers
@@ -40,34 +41,31 @@ Tasks immediately before a new release (must run in the following order)
       - cetus.alcf.anl.gov : IBM BGQ, XL compilers, cross-compiling, Big Endian
       - k.aics.riken.jp : Fujitsu compilers, cross-compiling, Big Endian
     * build benchmarks/FLASH-IO separately from PnetCDF (it has its own build
-      script, i.e. configure.in)
+      script, i.e. configure.ac)
     * build netCDF latest release against PnetCDF
 
- 2. Set the release version (for 1.8.1 and prior).
-    Skip this step for 1.9.0 and later.
-    In file "configure.in", variable $PNETCDF_VERSION indicates the version.
+ 2. Set the release version
+    In file "configure.ac", variable $PNETCDF_VERSION indicates the version.
     It is automatically generated from the 2nd argument of AC_INIT call.
-    Revise that string to the right release version.  For example,
-
-    AC_INIT([parallel-netcdf], [1.8.1], [parallel-netcdf@mcs.anl.gov])
-                                ^^^^^
+    Revise that string to the right release version. For example,
+      AC_INIT([parallel-netcdf],[1.8.1],[parallel-netcdf@mcs.anl.gov])
+                                 ^^^^^
 
  3. Update file "RELEASE_NOTES".
-    Copy the contents of file "sneak_peek" into file "RELEASE_NOTES"
+    Copy the contents of file "sneak_peek" into file "RELEASE_NOTES".
     Add the release version and date at the top of file "RELEASE_NOTES".
     Clear up file "sneak_peek" (reset all items to none)
 
- 4. Update the release date (for 1.8.1 and prior).
-    Skip this step for 1.9.0 and later.
-    (See below "Setting PnetCDF software release date")
+ 4. Update the release date (skip this step for 1.9.0 and later)
+    Below describe how to set the release date for 1.8.1 and prior.
+    For more info, see below section "Setting PnetCDF software release date".
     Run command "svn commit" to get the svn property \$LastChangedDate\$
     updated in file "configure.in". That string will be used as the official
     release date.
-
     svn commit -m "set release date of version 1.6.1 to today"
 
  5. Create an SVN tag.
-    Run command below to duplicate the current trunk to the new tag:
+    Run command below to duplicate the current trunk to a new tag:
 
     svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
              https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
@@ -114,13 +112,13 @@ http://semver.org/
 =====================================================
 Note on adding new MPI compiler candidates
 =====================================================
- - In configure.in, check the following variables
+ - In configure.ac, check the following variables
       CANDIDATE_MPICC
       CANDIDATE_MPICXX
       CANDIDATE_MPIF77
       CANDIDATE_MPIF90
    To make configure command automatically detect MPI compilers,
-   add any new MPI compiler names to the list of the above variables.
+   add new MPI compiler names to the list of the above variables.
 
 
 =====================================================
@@ -141,9 +139,9 @@ Note on autotools version
 
    However, 2.59 could generate a buggy configure file and failed on processing
    libraries from linker command line, for example when running on Carver
-   @nersc
+   @NERSC
 
-   For official release of PnetCDF, use autotools 2.69 with the patch for
+   For official release of PnetCDF, I use autotools 2.69 with the patch for
    Fujitsu compilers to generate file "configure". See README.Fujitsu for the
    bug in autoconf 2.69 and patch.
 
@@ -181,9 +179,9 @@ Conform with netCDF
    4. src/drivers/common/utf8proc.c      v.s. netcdf-c/libdispatch/utf8proc.c
    5. src/drivers/common/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h
 
-===============================================================
-Note on netCDF text APIs and variables in external data type NC_CHAR
-===============================================================
+==========================================================================
+Note on netCDF text APIs and variables of external data type NC_CHAR
+==========================================================================
 All netCDF external data types are considered numerical data types, except for
 NC_CHAR. Numerical data types can be converted to different numerical data
 types. However, no numerical datatype is allowed to converted to NC_CHAR and
@@ -242,7 +240,7 @@ Extra files used for idea development, not for release
 ===============================================================
 This file "DEVELOPER_NOTES".
 
-src/lib (1.8.1 and prior) src/drivers/ncmpio (1.9.0 and later):
+src/lib (1.8.1 and prior) src/drivers/ncmpio/Legacy (1.9.0 and later):
     varnx.m4
     varnx_api_header.m4
     varn_api_header.m4
@@ -301,16 +299,19 @@ Note on PnetCDF internal function and variable name convention
 * internal vs. external data type
   Internal data types refer to the data types of user's I/O buffers in memory.
   External data types refer to the NC data type, i.e. nc_type, netCDF
-  variable's data type stored in the netCDF files.
+  variable's data type stored in the netCDF files. External types are fixed,
+  independent from the system platforms.
+
 * Internal data types used in PnetCDF are: char, signed char, unsigned char,
-  short, unsigned short, int, unsigned int, long (deprecated), float, double,
-  long long, and unsigned long long. Their corresponding function name
-  substrings are "text", "schar", "uchar", "short", "ushort", "int", "uint",
-  "long" (deprecated), "float", "double", "longlong", and "ulonglong".
+  short, unsigned short, int, unsigned int, long, float, double, long long, and
+  unsigned long long. Their corresponding function name substrings are "text",
+  "schar", "uchar", "short", "ushort", "int", "uint", "long", "float",
+  "double", "longlong", and "ulonglong".
 
 * External data types are of nc_type. For CDF-1 and 2, they are NC_CHAR,
-  NC_BYTE, NC_SHORT, NC_INT, NC_FLOAT, and NC_DOUBLE. For CDF-5, additional
-  types are NC_UBYTE, NC_USHORT, NC_UINT, NC_INT64, and NC_UINT64.
+  NC_BYTE, NC_SHORT, NC_INT, NC_LONG (is aliased to NC_INT), NC_FLOAT, and
+  NC_DOUBLE. For CDF-5, additional types are NC_UBYTE, NC_USHORT, NC_UINT,
+  NC_INT64, and NC_UINT64.
 
 * When creating an internal functions, after 1.7.0, we start to use names of
   nc_type to represent the external data types and the above convention for
@@ -461,12 +462,11 @@ TRACE-MPI-IO:   FILE mpincio.c FUNC ncmpiio_close() LINE 410 calling MPI_File_cl
 ==============================================================================
 Mirror SVN repo to Github
 ==============================================================================
-PnetCDF svn repo is currently mirrored to Wei-keng's Github account:
-https://github.com/wkliao/parallel-netcdf
-This will be changed in the future, once PnetCDF's own Gitlab server is
-built. The sync operation is done nightly.
+PnetCDF svn repo is currently mirrored to GitHub daily under the project named
+Parallel NetCDF: https://github.com/Parallel-NetCDF/PnetCDF
+built.
 
-Commands for mirror setting are:
+Below are Commands for creating a mirror on GitHub:
   cd /path/to/your/git/clone/of/parallel-netcdf
   git svn init -s https://svn.mcs.anl.gov/repos/parallel-netcdf parallel-netcdf
   cd parallel-netcdf
@@ -644,9 +644,10 @@ as one must set git smudge/clean filter to produce the effect of SVN keywords.
 In addition, it makes more sense to use the date when running command "make
 dist" to create the tar ball.
 
-Staring from 1.9.0, the release date will be set when running "make dist". See
-the makefile target "dist-hook" in ./src/include/Makefile.am for an approach
-using command sed to do string substitution for DIST_DATE.
+Staring from 1.9.0, the release date will be set to the date when running
+command "make dist". See the makefile target "dist-hook" in
+./src/include/Makefile.am for an approach using command sed to do string
+substitution for DIST_DATE.
 
 ==============================================================================
 Hacking autoconf and automake

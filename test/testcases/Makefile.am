@@ -145,19 +145,25 @@ TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
 ptest ptest4: $(TESTPROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptest6: $(TESTPROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/testfile.nc ; \
-	) ; done
+	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

@@ -38,6 +38,8 @@ TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 TESTMPIRUN8  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/8/g'`
 
 ptest ptest4: $(check_PROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	@for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
@@ -45,9 +47,11 @@ ptest ptest4: $(check_PROGRAMS)
         else \
            echo "FAILED: C++ parallel run on 4 processes ------------- $$i"; \
            exit 1; \
-        fi ; } ; done
+        fi ; } ; done ; } ; done
 
 ptest8: $(check_PROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	@for i in $(check_PROGRAMS) ; do { \
         $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
@@ -55,9 +59,11 @@ ptest8: $(check_PROGRAMS)
         else \
            echo "FAILED: C++ parallel run on 8 processes ------------- $$i"; \
            exit 1; \
-        fi ; } ; done
+        fi ; } ; done ; } ; done
 
 ptest3: $(check_PROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
 	@for i in $(check_PROGRAMS) ; do { \
         $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
@@ -65,7 +71,7 @@ ptest3: $(check_PROGRAMS)
         else \
            echo "FAILED: C++ parallel run on 3 processes ------------- $$i"; \
            exit 1; \
-        fi ; } ; done
+        fi ; } ; done ; } ; done
 
 ptests: ptest3 ptest4 ptest8 
 ptest2 ptest6 ptest10:
