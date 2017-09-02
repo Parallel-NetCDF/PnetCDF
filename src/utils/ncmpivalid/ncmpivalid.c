@@ -1211,17 +1211,32 @@ int main(int argc, char **argv)
         status = NC_EFILE;
         goto prog_exit;
     }
-    if ( ncp->begin_rec + ncp->recsize * ncp->numrecs < ncfilestat.st_size ) {
-        printf("Error: file size is larger than defined!\n");
-        status = NC_EFILE;
-        goto prog_exit;
+    if (ncp->numrecs > 0) {
+        MPI_Offset expect_fsize;
+        expect_fsize = ncp->begin_rec + ncp->recsize * ncp->numrecs;
+        if (expect_fsize < ncfilestat.st_size)
+            printf("Error: file size (%ld) is larger than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+        else if (expect_fsize > ncfilestat.st_size)
+            printf("Error: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+        if (expect_fsize != ncfilestat.st_size) {
+            printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
+            status = NC_EFILE;
+            goto prog_exit;
+        }
     }
-    else if ( ncp->numrecs > 0 &&
-              ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) > ncfilestat.st_size ) {
-        printf("Error: file size is less than expected!\n");
-        printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
-        status = NC_EFILE;
-        goto prog_exit;
+    else {
+        MPI_Offset expect_fsize;
+        /* find the size of last fix-sized varable */
+        NC_var *varp = ncp->vars.value[ncp->vars.ndefined-1];
+        expect_fsize = varp->begin + varp->len;
+        if (expect_fsize < ncfilestat.st_size)
+            printf("Error: file size (%ld) is larger than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+        if (expect_fsize > ncfilestat.st_size)
+            printf("Error: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+        if (expect_fsize != ncfilestat.st_size) {
+            status = NC_EFILE;
+            goto prog_exit;
+        }
     }
 
 prog_exit:
