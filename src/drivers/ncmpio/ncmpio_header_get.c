@@ -517,6 +517,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     MPI_Aint pos_addr, base_addr;
     MPI_Offset nchars, nbytes, padding, bufremain, strcount;
 
+    *namep = NULL;
     /* get nelems */
     if (gbp->version < 5) {
         uint tmp;
@@ -535,9 +536,12 @@ hdr_get_NC_name(bufferinfo  *gbp,
      */
     *namep = (char*)NCI_Malloc((size_t)nchars + 1);
     if (*namep == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    (*namep)[nchars] = '\0'; /* add terminal character */
 
-    nbytes = nchars * X_SIZEOF_CHAR;
+    /* X_SIZEOF_CHAR is defined as 1 in classical CDF formats
     padding = _RNDUP(X_SIZEOF_CHAR * nchars, X_ALIGN) - X_SIZEOF_CHAR * nchars;
+    */
+    padding = _RNDUP(nchars, X_ALIGN) - nchars;
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
@@ -550,13 +554,13 @@ hdr_get_NC_name(bufferinfo  *gbp,
 
     /* get namestring with padding (the space in file allocated for string
      * namestring is upward aligned with 4 bytes */
-    while (nbytes > 0) {
+    while (nchars > 0) {
         if (bufremain > 0) {
-            strcount = MIN(bufremain, nbytes);
+            strcount = MIN(bufremain, nchars);
             if (strcount != (size_t)strcount)
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             memcpy(cpos, gbp->pos, (size_t)strcount);
-            nbytes -= strcount;
+            nchars -= strcount;
             gbp->pos = (void *)((char *)gbp->pos + strcount);
             cpos += strcount;
             bufremain -= strcount;
@@ -586,7 +590,6 @@ hdr_get_NC_name(bufferinfo  *gbp,
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
-    (*namep)[nchars] = '\0'; /* add terminal character */
 
     return NC_NOERR;
 }
