@@ -259,6 +259,7 @@ val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
 
     *namep = (char*) malloc((size_t)nchars + 1);
     if (*namep == NULL) DEBUG_RETURN(NC_ENOMEM)
+    (*namep)[nchars] = '\0'; /* add terminal character */
 
     padding = _RNDUP(nchars, X_ALIGN) - nchars;
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -307,7 +308,7 @@ val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
-  
+
     return NC_NOERR;  
 }
 
@@ -778,6 +779,12 @@ val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
     }
 
     status = val_get_nc_type(fd, gbp, &varp->xtype);
+    if (status != NC_NOERR) {
+        printf("\"%s\" - ", name);
+        ncmpio_free_NC_var(varp);
+        return status;
+    } 
+    status = ncmpii_xlen_nc_type(varp->xtype, &varp->xsz);
     if (status != NC_NOERR) {
         printf("\"%s\" - ", name);
         ncmpio_free_NC_var(varp);
