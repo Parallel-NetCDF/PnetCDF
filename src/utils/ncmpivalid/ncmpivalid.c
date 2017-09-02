@@ -1214,29 +1214,33 @@ int main(int argc, char **argv)
     if (ncp->numrecs > 0) {
         MPI_Offset expect_fsize;
         expect_fsize = ncp->begin_rec + ncp->recsize * ncp->numrecs;
-        if (expect_fsize < ncfilestat.st_size)
+        if (expect_fsize < ncfilestat.st_size) {
             printf("Error: file size (%ld) is larger than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
-        else if (expect_fsize > ncfilestat.st_size)
-            printf("Error: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
-        if (expect_fsize != ncfilestat.st_size) {
             printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
             status = NC_EFILE;
             goto prog_exit;
         }
+        else if (expect_fsize > ncfilestat.st_size)
+            /* if file header are valid and the only error is the file size
+             * less than expected, then this is due to partial data written
+             * to the variable while the file is in no fill mode */
+            printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
     }
     else {
         MPI_Offset expect_fsize;
         /* find the size of last fix-sized varable */
         NC_var *varp = ncp->vars.value[ncp->vars.ndefined-1];
         expect_fsize = varp->begin + varp->len;
-        if (expect_fsize < ncfilestat.st_size)
+        if (expect_fsize < ncfilestat.st_size) {
             printf("Error: file size (%ld) is larger than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
-        if (expect_fsize > ncfilestat.st_size)
-            printf("Error: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
-        if (expect_fsize != ncfilestat.st_size) {
             status = NC_EFILE;
             goto prog_exit;
         }
+        else if (expect_fsize > ncfilestat.st_size)
+            /* if file header are valid and the only error is the file size
+             * less than expected, then this is due to partial data written
+             * to the variable while the file is in no fill mode */
+            printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
     }
 
 prog_exit:
