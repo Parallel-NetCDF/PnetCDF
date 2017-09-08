@@ -446,6 +446,12 @@ hdr_get_uint64(bufferinfo *gbp,
 }
 
 /*----< hdr_get_NC_tag() >----------------------------------------------------*/
+/* tag is 32-bit integer and can be the followings:
+ * ZERO (NC_UNSPECIFIED)
+ * NC_DIMENSION
+ * NC_ATTRIBUTE
+ * NC_VARIABLE
+ */
 inline static int
 hdr_get_NC_tag(bufferinfo *gbp,
                NC_tag     *tagp)
@@ -515,7 +521,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     int err;
     char *cpos;
     MPI_Aint pos_addr, base_addr;
-    MPI_Offset nchars, nbytes, padding, bufremain, strcount;
+    MPI_Offset nchars, padding, bufremain, strcount;
 
     *namep = NULL;
     /* get nelems */
@@ -877,7 +883,7 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     int i, status;
     size_t alloc_size;
     NC_tag tag = NC_UNSPECIFIED;
-    MPI_Offset ndefined;
+    MPI_Offset ndefined; /* nelems */
 
     assert(gbp != NULL && gbp->pos != NULL);
     assert(ncap != NULL);
@@ -1156,12 +1162,12 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         /* get [var ...] */
         for (i=0; i<ndefined; i++) {
             status = hdr_get_NC_var(gbp, ncap->value + i);
-            ncap->value[i]->varid = i;
             if (status != NC_NOERR) { /* Error: fail to get the next var */
                 ncap->ndefined = i; /* update to no. successful defined */
                 ncmpio_free_NC_vararray(ncap);
                 return status;
             }
+            ncap->value[i]->varid = i;
         }
     }
 
