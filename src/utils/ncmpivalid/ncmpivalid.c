@@ -42,9 +42,9 @@
 
 #define DEBUG
 #ifdef DEBUG
-#define DEBUG_RETURN(e) {                            \
-    printf("Error at line %d (%s)\n",__LINE__,#e);   \
-    return e;                                        \
+#define DEBUG_RETURN(e) {                      \
+    printf("(%s at line %d)\n",#e,__LINE__);   \
+    return e;                                  \
 }
 #else
 #define DEBUG_RETURN(e) return e;
@@ -386,8 +386,8 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
     }
     ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
 
-    err_addr = ((size_t)gbp->pos - (size_t)gbp->base) + (gbp->offset - gbp->size) -
-                (X_SIZEOF_INT + x_sizeof_NON_NEG); 
+    err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
+               (X_SIZEOF_INT + x_sizeof_NON_NEG); 
 
     if (ncap->ndefined == 0) {
         /* no dimension defined */
@@ -644,8 +644,8 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
     }
     ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
 
-    err_addr = ((size_t)gbp->pos - (size_t)gbp->base) + (gbp->offset - gbp->size) -
-                (X_SIZEOF_INT + x_sizeof_NON_NEG); 
+    err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
+               (X_SIZEOF_INT + x_sizeof_NON_NEG); 
 
     if (ncap->ndefined == 0) {
         /* no attribute defined */
@@ -864,8 +864,8 @@ val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
     }
     ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
  
-    err_addr = ((size_t)gbp->pos - (size_t)gbp->base) + (gbp->offset - gbp->size) -
-                (X_SIZEOF_INT + x_sizeof_NON_NEG);
+    err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
+               (X_SIZEOF_INT + x_sizeof_NON_NEG);
 
     if(ncap->ndefined == 0) {
         if (tag != ABSENT) {
