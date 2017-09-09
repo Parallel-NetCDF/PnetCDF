@@ -52,7 +52,7 @@
 #define MIN_NC_XSZ 32
 
 typedef enum {
-    NC_UNSPECIFIED =  0,
+    NC_UNSPECIFIED =  0,  /* ABSENT */
     NC_DIMENSION   = 10,  /* \x00 \x00 \x00 \x0A */
     NC_VARIABLE    = 11,  /* \x00 \x00 \x00 \x0B */
     NC_ATTRIBUTE   = 12   /* \x00 \x00 \x00 \x0C */

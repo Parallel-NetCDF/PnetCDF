@@ -446,17 +446,16 @@ hdr_get_uint64(bufferinfo *gbp,
 }
 
 /*----< hdr_get_NC_tag() >----------------------------------------------------*/
-/* tag is 32-bit integer and can be the followings:
- * ZERO (NC_UNSPECIFIED)
- * NC_DIMENSION
- * NC_ATTRIBUTE
- * NC_VARIABLE
+/* NC_tag is 32-bit integer and can be the followings:
+ *     ZERO (NC_UNSPECIFIED)
+ *     NC_DIMENSION
+ *     NC_ATTRIBUTE
+ *     NC_VARIABLE
  */
 inline static int
 hdr_get_NC_tag(bufferinfo *gbp,
                NC_tag     *tagp)
 {
-    /* NC_tag is 4-byte integer: NC_DIMENSION, NC_VARIABLE, NC_ATTRIBUTE */
     uint type = 0;
     int status = hdr_check_buffer(gbp, 4);
     if (status != NC_NOERR) return status;
@@ -699,16 +698,16 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     ncap->unlimited_id = -1;
 
     if (ndefined == 0) {
-        if (tag != NC_DIMENSION && tag != NC_UNSPECIFIED) {
+        if (tag != NC_UNSPECIFIED) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_DIMENSION\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
         }
     } else {
         if (tag != NC_DIMENSION) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_DIMENSION\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag NC_DIMENSION but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
         }
@@ -909,16 +908,16 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     ncap->ndefined = (size_t)ndefined;
 
     if (ndefined == 0) {
-        if (tag != NC_ATTRIBUTE && tag != NC_UNSPECIFIED) {
+        if (tag != NC_UNSPECIFIED) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_ATTRIBUTE\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
         }
     } else {
         if (tag != NC_ATTRIBUTE) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_ATTRIBUTE\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag NC_ATTRIBUTE but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
         }
@@ -1141,16 +1140,16 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
      * of ndefined from int to MPI_Offset */
 
     if (ndefined == 0) { /* no variable defined */
-        if (tag != NC_VARIABLE && tag != NC_UNSPECIFIED) {
+        if (tag != NC_UNSPECIFIED) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_VARIABLE\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
         }
     } else {
         if (tag != NC_VARIABLE) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for NC_VARIABLE\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag NC_VARIABLE but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
             DEBUG_RETURN_ERROR(NC_EINVAL)
         }
