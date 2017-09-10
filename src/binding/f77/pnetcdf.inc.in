@@ -253,7 +253,7 @@
       PARAMETER (NF_EMAXVARS     = -48)   ! NF_MAX_VARS exceeded
       PARAMETER (NF_ENOTVAR      = -49)   ! Variable not found
       PARAMETER (NF_EGLOBAL      = -50)   ! Action prohibited on NF_GLOBAL varid
-      PARAMETER (NF_ENOTNC       = -51)   ! Not a netcdf file
+      PARAMETER (NF_ENOTNC       = -51)   ! Not a netcdf file (file format violates CDF specification)
       PARAMETER (NF_ESTS         = -52)   ! In Fortran, string too short
       PARAMETER (NF_EMAXNAME     = -53)   ! NF_MAX_NAME exceeded
       PARAMETER (NF_EUNLIMIT     = -54)   ! NFMPI_UNLIMITED size already in use

@@ -587,11 +587,11 @@ hdr_get_NC_name(bufferinfo  *gbp,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header non-zero padding found\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
             NCI_Free(*namep);
             *namep = NULL;
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
@@ -700,16 +700,16 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     if (ndefined == 0) {
         if (tag != NC_UNSPECIFIED) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
     } else {
         if (tag != NC_DIMENSION) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag NC_DIMENSION but got %d\n",__FILE__,__func__,__LINE__,tag);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_DIMENSION but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 
         alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
@@ -793,9 +793,9 @@ hdr_get_NC_attrV(bufferinfo *gbp,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header non-zero padding found\n",__FILE__,__func__,__LINE__);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
@@ -910,16 +910,16 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     if (ndefined == 0) {
         if (tag != NC_UNSPECIFIED) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
     } else {
         if (tag != NC_ATTRIBUTE) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag NC_ATTRIBUTE but got %d\n",__FILE__,__func__,__LINE__,tag);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_ATTRIBUTE but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 
         alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
@@ -1142,16 +1142,16 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     if (ndefined == 0) { /* no variable defined */
         if (tag != NC_UNSPECIFIED) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
     } else {
         if (tag != NC_VARIABLE) {
 #ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header format for expecting tag NC_VARIABLE but got %d\n",__FILE__,__func__,__LINE__,tag);
+            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_VARIABLE but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
-            DEBUG_RETURN_ERROR(NC_EINVAL)
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 
         alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);

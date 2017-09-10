@@ -83,7 +83,7 @@ TestFunc(strerror)(void)
         {NC_EMAXVARS, "NetCDF: NC_MAX_VARS exceeded"},
         {NC_ENOTVAR, "NetCDF: Variable not found"},
         {NC_EGLOBAL, "NetCDF: Action prohibited on NC_GLOBAL varid"},
-        {NC_ENOTNC, "NetCDF: Unknown file format"},
+        {NC_ENOTNC, "NetCDF: Unknown file format (file format violates CDF specification)"},
         {NC_ESTS, "NetCDF: In Fortran, string too short"},
         {NC_EMAXNAME, "NetCDF: NC_MAX_NAME exceeded"},
         {NC_EUNLIMIT, "NetCDF: NC_UNLIMITED size already in use"},
@@ -109,7 +109,7 @@ TestFunc(strerror)(void)
     for (i=0; i<LEN_OF(ncerrs); i++) {
         const char *message = APIFunc(strerror)(ncerrs[i].status);
         IF (strcmp(message, ncerrs[i].msg) != 0)
-            error("APIFunc(strerror)(%d) should return `%s', not `%s'",
+            error("APIFunc(strerror)(%d) should return \"%s\", not \"%s\"",
                   ncerrs[i].status, ncerrs[i].msg, message);
         ELSE_NOK
     }

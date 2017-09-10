@@ -341,7 +341,7 @@ open netCDF dataset. */
 #define	NC_EBADID	(-33)
 #define	NC_ENFILE	(-34)	   /**< Too many netcdfs open */
 #define	NC_EEXIST	(-35)	   /**< netcdf file exists && NC_NOCLOBBER */
-#define	NC_EINVAL	(-36)	   /**< Invalid Argument or file format violates CDF specification */
+#define	NC_EINVAL	(-36)	   /**< Invalid Argument */
 #define	NC_EPERM	(-37)	   /**< Write to read only */
 
 /** Operation not allowed in data mode. This is returned for netCDF
@@ -387,7 +387,7 @@ classic or 64-bit offset file, or an netCDF-4 file with
 The variable ID is invalid for the specified netCDF dataset. */
 #define NC_ENOTVAR	(-49)
 #define NC_EGLOBAL	(-50)	   /**< Action prohibited on NC_GLOBAL varid */
-#define NC_ENOTNC	(-51)	   /**< Not a netcdf file */
+#define NC_ENOTNC	(-51)	   /**< Not a netcdf file (file format violates CDF specification) */
 #define NC_ESTS        	(-52)	   /**< In Fortran, string too short */
 #define NC_EMAXNAME    	(-53)	   /**< NC_MAX_NAME exceeded */
 #define NC_EUNLIMIT    	(-54)	   /**< NC_UNLIMITED size already in use */

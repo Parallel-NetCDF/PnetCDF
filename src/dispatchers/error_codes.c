@@ -409,7 +409,7 @@ nc_strerror(int ncerr1)
       case NC_EGLOBAL:
 	 return "NetCDF: Action prohibited on NC_GLOBAL varid";
       case NC_ENOTNC:
-	 return "NetCDF: Unknown file format";
+	 return "NetCDF: Unknown file format (file format violates CDF specification)";
       case NC_ESTS:
 	 return "NetCDF: In Fortran, string too short";
       case NC_EMAXNAME:
