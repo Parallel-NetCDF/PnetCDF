@@ -43,7 +43,7 @@ TESTMPIRUN8  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/8/g'`
 ptest ptest4: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	@for i in $(check_PROGRAMS); do { \
+	for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F90 parallel run on 4 processes --------------- $$i"; \
@@ -55,7 +55,7 @@ ptest ptest4: $(check_PROGRAMS)
 ptest8: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	@for i in $(check_PROGRAMS); do { \
+	for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F90 parallel run on 8 processes --------------- $$i"; \
@@ -67,7 +67,7 @@ ptest8: $(check_PROGRAMS)
 ptest3: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	@for i in $(check_PROGRAMS); do { \
+	for i in $(check_PROGRAMS); do { \
         $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F90 parallel run on 3 processes --------------- $$i"; \

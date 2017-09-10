@@ -48,7 +48,7 @@ ptests:
 	(echo "    Parallel testing on $$i MPI processes")  && \
 	(echo "=============================================")  && \
 	( for d in $(PTEST_SUBDIRS) ; do \
-	$(MAKE) $(MFLAGS) -C $$d ptest$$i $$* ; \
+		$(MAKE) $(MFLAGS) -C $$d ptest$$i $$* ; \
 	done ) ; \
 	done ;
 
