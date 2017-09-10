@@ -712,13 +712,31 @@ int main(int argc, char **argv)
         if (j != ndims1)
             continue; /* skip this variable */
 
-        varsize  = 1;
+        if (dimids1[0] == unlimdimid1) { /* record variable */
+            err = ncmpi_inq_dimlen(ncid1, unlimdimid1, &shape[0]);
+            HANDLE_ERROR
+        }
+
+        for (j=0; j<ndims1; j++) {
+            if (shape[j] >= nprocs) { /* partition along dimension j among processes */
+                MPI_Offset dimLen = shape[j];
+                shape[j] = dimLen / nprocs;
+                start[j] = shape[j] * rank;
+                if (rank < dimLen % nprocs) {
+                    start[j] += rank;
+                    shape[j]++;
+                }
+                else
+                    start[j] += dimLen % nprocs;
+                break;
+            }
+        }
+        /* if none of shape[*] >= nprocs, then let all processes compare the
+         * whole variable */
+
+        varsize = 1;
         /* block partition the variable along the 1st dimension */
         for (j=0; j<ndims1; j++) {
-            if (j == 0) {
-                shape[j] /= nprocs;
-                start[j] = shape[j] * rank;
-            }
             varsize *= shape[j];
         }
  
