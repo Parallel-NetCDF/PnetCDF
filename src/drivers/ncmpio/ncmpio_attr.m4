@@ -828,33 +828,35 @@ ncmpio_get_att(void         *ncdp,
     xtype  = attrp->xtype;
     nelems = attrp->nelems;
 
-    switch(itype) {
-        case MPI_CHAR:
-             return ncmpix_pad_getn_text    (&xp, nelems,      (char*)buf);
-        case MPI_SIGNED_CHAR:
-             return get_att_schar    (xtype, &xp, nelems,     (schar*)buf);
-        case MPI_UNSIGNED_CHAR:
-             if (xtype == NC_BYTE && ncp->format < NC_FORMAT_CDF5)
-                 xtype = NC_UBYTE; /* special case: no NC_ERANGE check */
-             return get_att_uchar    (xtype, &xp, nelems,     (uchar*)buf);
-        case MPI_SHORT:
-             return get_att_short    (xtype, &xp, nelems,     (short*)buf);
-        case MPI_UNSIGNED_SHORT:
-             return get_att_ushort   (xtype, &xp, nelems,    (ushort*)buf);
-        case MPI_INT:
-             return get_att_int      (xtype, &xp, nelems,       (int*)buf);
-        case MPI_UNSIGNED:
-             return get_att_uint     (xtype, &xp, nelems,      (uint*)buf);
-        case MPI_FLOAT:
-             return get_att_float    (xtype, &xp, nelems,     (float*)buf);
-        case MPI_DOUBLE:
-             return get_att_double   (xtype, &xp, nelems,    (double*)buf);
-        case MPI_LONG_LONG_INT:
-             return get_att_longlong (xtype, &xp, nelems,  (longlong*)buf);
-        case MPI_UNSIGNED_LONG_LONG:
-             return get_att_ulonglong(xtype, &xp, nelems, (ulonglong*)buf);
-        default: return NC_EBADTYPE;
+    /* cannot use switch statement, as MPI_Datatype may not be int,
+     * for instance, it is a C struct in OpenMPI
+     */
+    if (itype == MPI_CHAR)
+        return ncmpix_pad_getn_text    (&xp, nelems,      (char*)buf);
+    else if (itype == MPI_SIGNED_CHAR)
+        return get_att_schar    (xtype, &xp, nelems,     (schar*)buf);
+    else if (itype == MPI_UNSIGNED_CHAR) {
+        if (xtype == NC_BYTE && ncp->format < NC_FORMAT_CDF5)
+            xtype = NC_UBYTE; /* special case: no NC_ERANGE check */
+        return get_att_uchar    (xtype, &xp, nelems,     (uchar*)buf);
     }
+    else if (itype == MPI_SHORT)
+        return get_att_short    (xtype, &xp, nelems,     (short*)buf);
+    else if (itype == MPI_UNSIGNED_SHORT)
+        return get_att_ushort   (xtype, &xp, nelems,    (ushort*)buf);
+    else if (itype == MPI_INT)
+        return get_att_int      (xtype, &xp, nelems,       (int*)buf);
+    else if (itype == MPI_UNSIGNED)
+        return get_att_uint     (xtype, &xp, nelems,      (uint*)buf);
+    else if (itype == MPI_FLOAT)
+        return get_att_float    (xtype, &xp, nelems,     (float*)buf);
+    else if (itype == MPI_DOUBLE)
+        return get_att_double   (xtype, &xp, nelems,    (double*)buf);
+    else if (itype == MPI_LONG_LONG_INT)
+        return get_att_longlong (xtype, &xp, nelems,  (longlong*)buf);
+    else if (itype == MPI_UNSIGNED_LONG_LONG)
+        return get_att_ulonglong(xtype, &xp, nelems, (ulonglong*)buf);
+    return NC_EBADTYPE;
 }
 
 dnl
@@ -1103,43 +1105,32 @@ err_check:
             /* find the fill value */
             err = ncmpio_inq_default_fill_value(xtype, &fill);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-            switch(itype) {
-                /*
-                case MPI_CHAR: _text API has been handled above
-                     break;
-                */
-                case MPI_SIGNED_CHAR:
-                     err = putn_schar    (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_UNSIGNED_CHAR:
-                     err = putn_uchar    (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_SHORT:
-                     err = putn_short    (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_UNSIGNED_SHORT:
-                     err = putn_ushort   (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_INT:
-                     err = putn_int      (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_UNSIGNED:
-                     err = putn_uint     (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_FLOAT:
-                     err = putn_float    (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_DOUBLE:
-                     err = putn_double   (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_LONG_LONG_INT:
-                     err = putn_longlong (&xp, nelems, buf, xtype, &fill);
-                     break;
-                case MPI_UNSIGNED_LONG_LONG:
-                     err = putn_ulonglong(&xp, nelems, buf, xtype, &fill);
-                     break;
-                default: err = NC_EBADTYPE;
-            }
+
+            /* cannot use switch statement, as MPI_Datatype may not be int,
+             * for instance, it is a C struct in OpenMPI
+             */
+            /* MPI_CHAR: _text API has been handled above */
+            if (itype == MPI_SIGNED_CHAR)
+                err = putn_schar    (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_UNSIGNED_CHAR)
+                err = putn_uchar    (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_SHORT)
+                err = putn_short    (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_UNSIGNED_SHORT)
+                err = putn_ushort   (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_INT)
+                err = putn_int      (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_UNSIGNED)
+                err = putn_uint     (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_FLOAT)
+                err = putn_float    (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_DOUBLE)
+                err = putn_double   (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_LONG_LONG_INT)
+                err = putn_longlong (&xp, nelems, buf, xtype, &fill);
+            else if (itype == MPI_UNSIGNED_LONG_LONG)
+                err = putn_ulonglong(&xp, nelems, buf, xtype, &fill);
+            else err = NC_EBADTYPE;
         }
 
         /* no immediately return error code here? Strange ...
