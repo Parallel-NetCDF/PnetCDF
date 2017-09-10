@@ -50,7 +50,7 @@ static int verbose_debug;
 #define	NC_EINVAL	(-36)	/**< Invalid Argument */
 #define NC_EBADDIM	(-46)	/**< Invalid dimension id or name */
 #define NC_EUNLIMPOS	(-47)	/**< NC_UNLIMITED in the wrong index */
-#define NC_ENOTNC	(-51)	/**< Not a netcdf file */
+#define NC_ENOTNC	(-51)	/**< Not a netcdf file (file format violates CDF specification) */
 #define NC_EVARSIZE     (-62)   /**< One or more variable sizes violate format constraints */
 
 #define NC_UNLIMITED 0L
@@ -856,7 +856,7 @@ hdr_get_nc_type(bufferinfo *gbp,
         type != NC_INT64   &&
         type != NC_UINT64
        )
-        DEBUG_RETURN_ERROR(NC_EINVAL);
+        DEBUG_RETURN_ERROR(NC_ENOTNC);
 
     *typep = (nc_type) type;
     return NC_NOERR;
@@ -921,7 +921,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             free(ncstrp);
-            DEBUG_RETURN_ERROR(NC_EINVAL);
+            DEBUG_RETURN_ERROR(NC_ENOTNC);
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
@@ -1037,10 +1037,10 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
-        if (type != NC_DIMENSION && type != NC_UNSPECIFIED)
-            DEBUG_RETURN_ERROR(NC_EINVAL);
+        if (type != NC_UNSPECIFIED)
+            DEBUG_RETURN_ERROR(NC_ENOTNC);
     } else {
-        if (type != NC_DIMENSION) DEBUG_RETURN_ERROR(NC_EINVAL);
+        if (type != NC_DIMENSION) DEBUG_RETURN_ERROR(NC_ENOTNC);
 
         ncap->value = (NC_dim **) malloc(ndefined * sizeof(NC_dim*));
         MALLOC_CHECK(ncap->value)
@@ -1106,7 +1106,7 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     if (padding > 0) {
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0)
-            DEBUG_RETURN_ERROR(NC_EINVAL);
+            DEBUG_RETURN_ERROR(NC_ENOTNC);
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
 
@@ -1275,11 +1275,11 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
-        if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED)
-            DEBUG_RETURN_ERROR(NC_EINVAL);
+        if (type != NC_UNSPECIFIED)
+            DEBUG_RETURN_ERROR(NC_ENOTNC);
     } else {
         if (type != NC_ATTRIBUTE)
-            DEBUG_RETURN_ERROR(NC_EINVAL);
+            DEBUG_RETURN_ERROR(NC_ENOTNC);
 
         ncap->value = (NC_attr **)malloc((size_t)ndefined * sizeof(NC_attr*));
         MALLOC_CHECK(ncap->value)
@@ -1487,11 +1487,11 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) { /* no variable defined */
-        if (type != NC_VARIABLE && type != NC_UNSPECIFIED)
-            DEBUG_RETURN_ERROR(NC_EINVAL);
+        if (type != NC_UNSPECIFIED)
+            DEBUG_RETURN_ERROR(NC_ENOTNC);
     } else {
         if (type != NC_VARIABLE)
-            DEBUG_RETURN_ERROR(NC_EINVAL);
+            DEBUG_RETURN_ERROR(NC_ENOTNC);
 
         ncap->value = (NC_var **) malloc((size_t)ndefined * sizeof(NC_var*));
         MALLOC_CHECK(ncap->value)

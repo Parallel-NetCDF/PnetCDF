@@ -153,7 +153,7 @@
     NF90_EMAXVARS       = NF_EMAXVARS      , & ! NF_MAX_VARS exceeded
     NF90_ENOTVAR        = NF_ENOTVAR       , & ! Variable not found
     NF90_EGLOBAL        = NF_EGLOBAL       , & ! Action prohibited on NF_GLOBAL varid
-    NF90_ENOTNC         = NF_ENOTNC        , & ! Not a netcdf file
+    NF90_ENOTNC         = NF_ENOTNC        , & ! Not a netcdf file (file format violates CDF specification)
     NF90_ESTS           = NF_ESTS          , & ! In Fortran, string too short
     NF90_EMAXNAME       = NF_EMAXNAME      , & ! NF_MAX_NAME exceeded
     NF90_EUNLIMIT       = NF_EUNLIMIT      , & ! NFMPI_UNLIMITED size already in use

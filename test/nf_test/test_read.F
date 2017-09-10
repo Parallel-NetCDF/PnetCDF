@@ -70,7 +70,12 @@ C
         data msg(16) / 'NetCDF: NC_MAX_VARS exceeded' /
         data msg(17) / 'NetCDF: Variable not found' /
         data msg(18) / 'NetCDF: Action prohibited on NC_GLOBAL varid' /
-        data msg(19) / 'NetCDF: Unknown file format' /
+
+        character*68 ENOTNC_str
+        parameter(ENOTNC_str='NetCDF: Unknown file format (file '//
+     +                       'format violates CDF specification)')
+        data msg(19) / ENOTNC_str /
+
         data msg(20) / 'NetCDF: In Fortran, string too short' /
         data msg(21) / 'NetCDF: NC_MAX_NAME exceeded' /
         data msg(22) / 'NetCDF: NC_UNLIMITED size already in use' /

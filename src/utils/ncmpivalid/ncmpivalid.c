@@ -304,7 +304,7 @@ val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
 	           (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size));
             free(*namep);
             *namep = NULL;
-            DEBUG_RETURN(NC_EINVAL)
+            DEBUG_RETURN(NC_ENOTNC)
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
@@ -446,7 +446,7 @@ val_get_nc_type(int fd, bufferinfo *gbp, nc_type *xtypep) {
       && xtype != NC_UINT64) {
     printf("Error @ [0x%8.8Lx]: \n\tUnknown data xtype for the values of ",
 	   (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - X_SIZEOF_INT));
-    DEBUG_RETURN(NC_EINVAL) 
+    DEBUG_RETURN(NC_ENOTNC) 
   }
  
   *xtypep = (nc_type) xtype;
@@ -499,7 +499,7 @@ val_get_NC_attrV(int fd, bufferinfo *gbp, NC_attr *attrp) {
         if (memcmp(gbp->pos, pad, padding) != 0) {
             printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the values alignment of ",
                    (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size)); 
-            DEBUG_RETURN(NC_EINVAL)
+            DEBUG_RETURN(NC_ENOTNC)
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }

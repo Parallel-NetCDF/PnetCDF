@@ -151,7 +151,7 @@
       NF_EMAXVARS       = -48, & ! NF_MAX_VARS exceeded
       NF_ENOTVAR        = -49, & ! Variable not found
       NF_EGLOBAL        = -50, & ! Action prohibited on NF_GLOBAL varid
-      NF_ENOTNC         = -51, & ! Not a netcdf file
+      NF_ENOTNC         = -51, & ! Not a netcdf file (file format violates CDF specification)
       NF_ESTS           = -52, & ! In Fortran, string too short
       NF_EMAXNAME       = -53, & ! NF_MAX_NAME exceeded
       NF_EUNLIMIT       = -54, & ! NFMPI_UNLIMITED size already in use
