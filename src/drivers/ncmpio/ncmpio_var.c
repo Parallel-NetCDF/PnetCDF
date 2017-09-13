@@ -198,18 +198,20 @@ incr_NC_vararray(NC_vararray *ncap,
                  NC_var      *newvarp)
 {
     assert(ncap != NULL);
+    assert(newvarp != NULL);
 
     if (ncap->ndefined % NC_ARRAY_GROWBY == 0) {
-        NC_var **vp;
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
-
-        vp = (NC_var **) NCI_Realloc(ncap->value, alloc_size*sizeof(NC_var*));
-        if (vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-        ncap->value = vp;
+        ncap->value = (NC_var **) NCI_Realloc(ncap->value,
+                                              alloc_size * sizeof(NC_var*));
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
-    if (newvarp != NULL) ncap->value[ncap->ndefined++] = newvarp;
+    newvarp->varid = (int)ncap->ndefined; /* varid */
+
+    ncap->value[ncap->ndefined] = newvarp;
+
+    ncap->ndefined++;
 
     return NC_NOERR;
 }
@@ -344,6 +346,9 @@ ncmpio_NC_var_shape64(NC_var            *varp,
     }
 
 out :
+    /* No variable size can be > X_INT64_MAX - 3 */
+    if (0 == ncmpio_NC_check_vlen(varp, X_INT64_MAX-3)) return NC_EVARSIZE;
+
     /*
      * For CDF-1 and CDF-2 formats, the total number of array elements
      * cannot exceed 2^32, unless this variable is the last fixed-size
@@ -407,6 +412,36 @@ ncmpio_def_var(void       *ncdp,
         goto err_check;
     }
 
+    /* allocate a new NC_var object */
+    varp = ncmpio_new_NC_var(nname, ndims);
+    if (varp == NULL ) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+        goto err_check;
+    }
+    /* sanity check for xtype has been done at dispatchers */
+    varp->xtype = xtype;
+    ncmpii_xlen_nc_type(xtype, &varp->xsz);
+
+    /* copy dimids[] */
+    if (ndims != 0 && dimids != NULL)
+        memcpy(varp->dimids, dimids, (size_t)ndims * SIZEOF_INT);
+
+    /* set up array dimensional structures */
+    err = ncmpio_NC_var_shape64(varp, &ncp->dims);
+    if (err != NC_NOERR) {
+        ncmpio_free_NC_var(varp);
+        nname = NULL; /* already freed in ncmpio_free_NC_var() */
+        goto err_check;
+    }
+
+    /* Add a new handle to the end of an array of handles */
+    err = incr_NC_vararray(&ncp->vars, varp);
+    if (err != NC_NOERR) {
+        ncmpio_free_NC_var(varp);
+        nname = NULL; /* already freed in ncmpio_free_NC_var() */
+        goto err_check;
+    }
+
 err_check:
     if (ncp->safe_mode) {
         int minE, mpireturn;
@@ -430,41 +465,10 @@ err_check:
 
     assert(nname != NULL);
 
-    /* allocate a new NC_var object */
-    varp = ncmpio_new_NC_var(nname, ndims);
-    if (varp == NULL ) {
-        NCI_Free(nname);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    /* sanity check for xtype has been done at dispatchers */
-    varp->xtype = xtype;
-    ncmpii_xlen_nc_type(xtype, &varp->xsz);
-
-    /* copy dimids[] */
-    if (ndims != 0 && dimids != NULL)
-        memcpy(varp->dimids, dimids, (size_t)ndims * SIZEOF_INT);
-
 #ifndef SEARCH_NAME_LINEARLY
     /* insert nname to the lookup table */
-    ncmpio_hash_insert(ncp->vars.nameT, nname, ncp->vars.ndefined);
+    ncmpio_hash_insert(ncp->vars.nameT, nname, varp->varid);
 #endif
-
-    /* set up array dimensional structures */
-    err = ncmpio_NC_var_shape64(varp, &ncp->dims);
-    if (err != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        DEBUG_RETURN_ERROR(err)
-    }
-
-    /* Add a new handle to the end of an array of handles */
-    err = incr_NC_vararray(&ncp->vars, varp);
-    if (err != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        DEBUG_RETURN_ERROR(err)
-    }
-
-    /* ncp->vars.ndefined has been increased in incr_NC_vararray() */
-    varp->varid = (int)ncp->vars.ndefined - 1; /* varid */
 
     if (varidp != NULL) *varidp = varp->varid;
 

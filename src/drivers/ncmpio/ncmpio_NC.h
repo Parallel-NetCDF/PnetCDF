@@ -370,6 +370,9 @@ extern void
 ncmpio_free_NC(NC *ncp);
 
 extern int
+ncmpio_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);
+
+extern int
 ncmpio_NC_check_vlens(NC *ncp);
 
 /* Begin defined in ncmpio_header_get.c -------------------------------------*/
