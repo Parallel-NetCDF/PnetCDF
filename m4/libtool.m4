@@ -120,13 +120,13 @@ func_cc_basename ()
            #   func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
            #   ${RM} -f conftest.ver
            func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1 | xargs basename`
-echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            return
            ;;
         mpifccpx | mpiFCCpx | mpifrtpx | *[[\\/]]mpifccpx | *[[\\/]]mpiFCCpx | *[[\\/]]mpifrtpx )
            # Fujitsu compilers: fccpx, FCCpx, frtpx
            func_cc_basename_result=`$cc_temp -showme | cut -d' ' -f1 | xargs basename`
-echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            return
            ;;
         cc | CC | ftn | *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
@@ -143,7 +143,7 @@ echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               test "x${func_cc_basename_result}" = xg++ ||
               test "x${func_cc_basename_result}" = xgfortran ||
               test "x${func_cc_basename_result}" = xGNU ; then
-echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               return
            fi
            # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
@@ -153,21 +153,21 @@ echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
            if test "x${func_cc_basename_result}" = xCray ; then
-echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               return
            fi
            return
            ;;
         mpixlc | mpixlcxx | mpixlf77 | mpixlf90 | *[[\\/]]mpixlc | *[[\\/]]mpixlcxx | *[[\\/]]mpixlf77 | *[[\\/]]mpixlf90 )
            func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1 | xargs basename`
-echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            return
            ;;
         *) break;;
       esac
     done
     func_cc_basename_result=`$ECHO "$cc_temp" | $SED "s%.*/%%; s%^$host_alias-%%"`
-echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+    # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
 }
 ])# _LT_PREPARE_CC_BASENAME
 
