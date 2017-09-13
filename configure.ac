@@ -5,7 +5,7 @@ dnl
 
 dnl autoconf v2.69 was released in 2012-04-24
 AC_PREREQ([2.69])
-AC_INIT([parallel-netcdf],[1.8.0],[parallel-netcdf@mcs.anl.gov])
+AC_INIT([parallel-netcdf],[1.9.0,pre1],[parallel-netcdf@mcs.anl.gov])
 
 dnl config.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
@@ -16,7 +16,7 @@ AC_CONFIG_SRCDIR([src/include/pnetcdf.h.in])
 AC_CONFIG_AUX_DIR([./scripts])
 
 dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
-dnl as AM_INIT_AUTOMAKE modfies command line $*
+dnl as AM_INIT_AUTOMAKE modifies command line $*
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
 dnl AM_INIT_AUTOMAKE([subdir-objects])
@@ -83,7 +83,6 @@ dnl AC_SUBST(PNETCDF_RELEASE_DATE2)
 AC_SUBST(PACKAGE_VERSION)
 AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
-dnl these used to live in acconfig.h
 dnl autoheader only adds these templates to the first invocation of AC_CONFIG_HEADERS
 AH_TEMPLATE([NCBYTE_T],                 [Type of NC_BYTE])
 AH_TEMPLATE([NCSHORT_T],                [Type of NC_SHORT])
@@ -103,7 +102,7 @@ AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
-AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coord check is enabled])
+AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([BUILD_DRIVER_FOO],         [Define if build driver foo (development test only)])
 
 AH_TOP([#ifndef _CONFIG_H
@@ -1541,5 +1540,6 @@ echo "\
               ptest    - run parallel test programs on 4 MPI processes
               ptests   - run parallel test programs on 3,4,6,8 MPI processes
               install  - install PnetCDF library in ${prefix}
+
 ------------------------------------------------------------------------------"
 
