@@ -178,7 +178,9 @@
     NF90_EDAPSVC        = NF_EDAPSVC       , & ! DAP server error
     NF90_EDAS           = NF_EDAS          , & ! Malformed or inaccessible DAS
     NF90_EDDS           = NF_EDDS          , & ! Malformed or inaccessible DDS
+    NF90_EDMR           = NF_EDDS          , & ! Dap4 alias
     NF90_EDATADDS       = NF_EDATADDS      , & ! Malformed or inaccessible DATADDS
+    NF90_EDATADAP       = NF_EDATADDS      , & ! Dap4 alias
     NF90_EDAPURL        = NF_EDAPURL       , & ! Malformed DAP URL
     NF90_EDAPCONSTRAINT = NF_EDAPCONSTRAINT, & ! Malformed DAP Constraint
     NF90_ETRANSLATION   = NF_ETRANSLATION  , & ! Untranslatable construct

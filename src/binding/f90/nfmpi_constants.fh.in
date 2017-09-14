@@ -176,7 +176,9 @@
       NF_EDAPSVC        = -70, & ! DAP server error
       NF_EDAS           = -71, & ! Malformed or inaccessible DAS
       NF_EDDS           = -72, & ! Malformed or inaccessible DDS
+      NF_EDMR           = -72, & ! Dap4 alias
       NF_EDATADDS       = -73, & ! Malformed or inaccessible DATADDS
+      NF_EDATADAP       = -73, & ! Dap4 alias
       NF_EDAPURL        = -74, & ! Malformed DAP URL
       NF_EDAPCONSTRAINT = -75, & ! Malformed DAP Constraint
       NF_ETRANSLATION   = -76, & ! Untranslatable construct
