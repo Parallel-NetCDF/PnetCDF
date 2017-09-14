@@ -737,6 +737,56 @@ ncmpio_NC_check_vlens(NC *ncp)
     return NC_NOERR;
 }
 
+/*----< ncmpio_NC_check_voffs() >--------------------------------------------*/
+/*
+ * Given a valid ncp, check whether the file starting offsets (begin) of all
+ * variables are in an increasing order.
+ */
+int
+ncmpio_NC_check_voffs(NC *ncp)
+{
+    NC_var *varp;
+    MPI_Offset i, prev_off;
+
+    if (ncp->vars.ndefined == 0) return NC_NOERR;
+
+    /* Loop through vars, first pass is for non-record variables */
+    prev_off = ncp->begin_var;
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        varp = ncp->vars.value[i];
+        if (IS_RECVAR(varp)) continue;
+
+        if (varp->begin < prev_off) {
+            if (ncp->safe_mode)
+                printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n", varp->name, varp->begin, prev_off);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
+        }
+        prev_off = varp->begin + varp->len;
+    }
+
+    if (ncp->begin_rec < prev_off) {
+        if (ncp->safe_mode)
+            printf("Record variable section begin offset (%lld) is less than fix-sized variable section end offset (%lld)\n", varp->begin, prev_off);
+        DEBUG_RETURN_ERROR(NC_ENOTNC)
+    }
+
+    /* Loop through vars, second pass is for record variables */
+    prev_off = ncp->begin_rec;
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        varp = ncp->vars.value[i];
+        if (!IS_RECVAR(varp)) continue;
+
+        if (varp->begin < prev_off) {
+            if (ncp->safe_mode)
+                printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n", varp->name, varp->begin, prev_off);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
+        }
+        prev_off = varp->begin + varp->len;
+    }
+
+    return NC_NOERR;
+}
+
 /*----< ncmpio__enddef() >---------------------------------------------------*/
 /* This is a collective subroutine. */
 int
@@ -853,10 +903,18 @@ ncmpio__enddef(void       *ncdp,
     err = NC_begins(ncp);
     CHECK_ERROR(err)
 
+    /* check variable begins are in increasing order */
+    err = ncmpio_NC_check_voffs(ncp);
+    CHECK_ERROR(err)
+
 #ifdef ENABLE_SUBFILING
     if (ncp->num_subfiles > 1) {
         /* get ncp info for the subfile */
         err = NC_begins(ncp->ncp_sf);
+        CHECK_ERROR(err)
+
+        /* check variable begins are in increasing order */
+        err = ncmpio_NC_check_voffs(ncp->ncp_sf);
         CHECK_ERROR(err)
     }
 #endif
