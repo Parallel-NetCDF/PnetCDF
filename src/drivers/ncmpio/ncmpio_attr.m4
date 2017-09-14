@@ -203,13 +203,11 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *new_attr)
 
     if (ncap->ndefined % NC_ARRAY_GROWBY == 0) {
         /* grow the array to accommodate the new handle */
-        NC_attr **vp;
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
 
-        vp = (NC_attr **) NCI_Realloc(ncap->value, alloc_size*sizeof(NC_attr*));
-        if (vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-        ncap->value = vp;
+        ncap->value = (NC_attr **) NCI_Realloc(ncap->value,
+                                   alloc_size * sizeof(NC_attr*));
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
     ncap->value[ncap->ndefined++] = new_attr;
