@@ -191,31 +191,6 @@ ncmpio_dup_NC_vararray(NC_vararray       *ncap,
     return NC_NOERR;
 }
 
-/*----< incr_NC_vararray() >-------------------------------------------------*/
-/* Add a new handle on the end of an array of handles */
-static int
-incr_NC_vararray(NC_vararray *ncap,
-                 NC_var      *newvarp)
-{
-    assert(ncap != NULL);
-    assert(newvarp != NULL);
-
-    if (ncap->ndefined % NC_ARRAY_GROWBY == 0) {
-        size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
-        ncap->value = (NC_var **) NCI_Realloc(ncap->value,
-                                              alloc_size * sizeof(NC_var*));
-        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-
-    newvarp->varid = (int)ncap->ndefined; /* varid */
-
-    ncap->value[ncap->ndefined] = newvarp;
-
-    ncap->ndefined++;
-
-    return NC_NOERR;
-}
-
 #if 0
 /*----< elem_NC_vararray() >-------------------------------------------------*/
 inline static NC_var *
@@ -434,13 +409,25 @@ ncmpio_def_var(void       *ncdp,
         goto err_check;
     }
 
-    /* Add a new handle to the end of an array of handles */
-    err = incr_NC_vararray(&ncp->vars, varp);
-    if (err != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        nname = NULL; /* already freed in ncmpio_free_NC_var() */
-        goto err_check;
+    /* allocate/expand ncp->vars.value array */
+    if (ncp->vars.ndefined % NC_ARRAY_GROWBY == 0) {
+        size_t alloc_size = (size_t)ncp->vars.ndefined + NC_ARRAY_GROWBY;
+        ncp->vars.value = (NC_var **) NCI_Realloc(ncp->vars.value,
+                                      alloc_size * sizeof(NC_var*));
+        if (ncp->vars.value == NULL) {
+            ncmpio_free_NC_var(varp);
+            nname = NULL; /* already freed in ncmpio_free_NC_var() */
+            err = NC_ENOMEM;
+            goto err_check;
+        }
     }
+
+    varp->varid = (int)ncp->vars.ndefined; /* varid */
+
+    /* Add a new handle to the end of an array of handles */
+    ncp->vars.value[ncp->vars.ndefined] = varp;
+
+    ncp->vars.ndefined++;
 
 err_check:
     if (ncp->safe_mode) {

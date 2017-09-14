@@ -179,31 +179,6 @@ ncmpio_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
     return NC_NOERR;
 }
 
-/*----< incr_NC_dimarray() >-------------------------------------------------*/
-/*
- * Add a new NC_dim handle to the end of an array of handles
- */
-static int
-incr_NC_dimarray(NC_dimarray *ncap,
-                 NC_dim      *newdimp)
-{
-    assert(ncap != NULL);
-
-    if (ncap->ndefined % NC_ARRAY_GROWBY == 0) {
-        NC_dim **vp;
-        size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
-
-        vp = (NC_dim **) NCI_Realloc(ncap->value, alloc_size*sizeof(NC_dim*));
-        if (vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-        ncap->value = vp;
-    }
-
-    if (newdimp != NULL) ncap->value[ncap->ndefined++] = newdimp;
-
-    return NC_NOERR;
-}
-
 /*----< ncmpio_def_dim() >---------------------------------------------------*/
 int
 ncmpio_def_dim(void       *ncdp,    /* IN:  NC object */
@@ -230,22 +205,31 @@ ncmpio_def_dim(void       *ncdp,    /* IN:  NC object */
     dimp->name     = nname;
     dimp->name_len = strlen(nname);
 
-#ifndef SEARCH_NAME_LINEARLY
-    ncmpio_hash_insert(ncp->dims.nameT, nname, ncp->dims.ndefined);
-#endif
+    /* allocate/expand ncp->dims.value array */
+    if (ncp->dims.ndefined % NC_ARRAY_GROWBY == 0) {
+        size_t alloc_size = (size_t)ncp->dims.ndefined + NC_ARRAY_GROWBY;
 
-    /* Add a new dim handle to the end of handle array */
-    err = incr_NC_dimarray(&ncp->dims, dimp);
-    if (err != NC_NOERR) {
-        NCI_Free(dimp->name);
-        NCI_Free(dimp);
-        DEBUG_RETURN_ERROR(err)
+        ncp->dims.value = (NC_dim **) NCI_Realloc(ncp->dims.value,
+                                      alloc_size * sizeof(NC_dim*));
+        if (ncp->dims.value == NULL) {
+            NCI_Free(nname);
+            NCI_Free(dimp);
+            DEBUG_RETURN_ERROR(NC_ENOMEM)
+        }
     }
 
-    /* ncp->dims.ndefined has been increased in incr_NC_dimarray() */
-    dimid = (int)ncp->dims.ndefined - 1;
+    dimid = (int)ncp->dims.ndefined;
+
+    /* Add a new dim handle to the end of handle array */
+    ncp->dims.value[dimid] = dimp;
 
     if (size == NC_UNLIMITED) ncp->dims.unlimited_id = dimid;
+
+    ncp->dims.ndefined++;
+
+#ifndef SEARCH_NAME_LINEARLY
+    ncmpio_hash_insert(ncp->dims.nameT, nname, dimid);
+#endif
 
     if (dimidp != NULL) *dimidp = dimid;
 
