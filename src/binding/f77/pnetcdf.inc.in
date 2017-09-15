@@ -224,7 +224,9 @@
       integer NF_EDAPSVC
       integer NF_EDAS
       integer NF_EDDS
+      integer NF_EDMR
       integer NF_EDATADDS
+      integer NF_EDATADAP
       integer NF_EDAPURL
       integer NF_EDAPCONSTRAINT
       integer NF_ETRANSLATION
@@ -277,9 +279,9 @@
       PARAMETER (NF_EDAPSVC      = -70)   ! DAP server error
       PARAMETER (NF_EDAS         = -71)   ! Malformed or inaccessible DAS
       PARAMETER (NF_EDDS         = -72)   ! Malformed or inaccessible DDS
-      PARAMETER (NC_EDMR         = -72)   ! Dap4 alias
+      PARAMETER (NF_EDMR         = -72)   ! Dap4 alias
       PARAMETER (NF_EDATADDS     = -73)   ! Malformed or inaccessible DATADDS
-      PARAMETER (NC_EDATADAP     = -73)   ! Dap4 alias
+      PARAMETER (NF_EDATADAP     = -73)   ! Dap4 alias
       PARAMETER (NF_EDAPURL      = -74)   ! Malformed DAP URL
       PARAMETER (NF_EDAPCONSTRAINT = -75) ! Malformed DAP Constraint
       PARAMETER (NF_ETRANSLATION = -76)   ! Untranslatable construct
