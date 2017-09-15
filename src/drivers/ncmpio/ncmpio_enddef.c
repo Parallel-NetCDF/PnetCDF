@@ -800,7 +800,7 @@ ncmpio__enddef(void       *ncdp,
 {
     int i, flag, striping_unit, mpireturn, err=NC_NOERR, status=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
-    MPI_Offset all_var_size;
+    MPI_Offset all_fix_var_size;
     NC *ncp = (NC*)ncdp;
 
     /* sanity check for NC_ENOTINDEFINE, NC_EINVAL, NC_EMULTIDEFINE_FNC_ARGS
@@ -824,16 +824,18 @@ ncmpio__enddef(void       *ncdp,
     }
     ncp->striping_unit = striping_unit;
 
-    all_var_size = 0;  /* sum of all defined variables */
-    for (i=0; i<ncp->vars.ndefined; i++)
-        all_var_size += ncp->vars.value[i]->len;
+    all_fix_var_size = 0;  /* sum of all defined fix-sized variables */
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        if (IS_RECVAR(ncp->vars.value[i])) continue;
+        all_fix_var_size += ncp->vars.value[i]->len;
+    }
 
     /* ncp->h_align, ncp->v_align, ncp->r_align, and ncp->chunk have been
      * set during file create/open */
 
     if (ncp->h_align == 0) { /* user info does not set nc_header_align_size */
         if (striping_unit &&
-            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+            all_fix_var_size > FILE_ALIGNMENT_LB * striping_unit)
             /* if striping_unit is available and file size sufficiently large */
             ncp->h_align = striping_unit;
         else
@@ -845,7 +847,7 @@ ncmpio__enddef(void       *ncdp,
         if (v_align > 0) /* else respect user hint */
             ncp->v_align = v_align;
         else if (striping_unit &&
-                 all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+                 all_fix_var_size > FILE_ALIGNMENT_LB * striping_unit)
             /* if striping_unit is available and file size sufficiently large */
             ncp->v_align = striping_unit;
         else
@@ -905,7 +907,8 @@ ncmpio__enddef(void       *ncdp,
     err = NC_begins(ncp);
     CHECK_ERROR(err)
 
-    /* check whether variable begins are in an increasing order */
+    /* check whether variable begins are in an increasing order.
+     * This check is for debugging purpose. */
     err = ncmpio_NC_check_voffs(ncp);
     CHECK_ERROR(err)
 
@@ -915,7 +918,8 @@ ncmpio__enddef(void       *ncdp,
         err = NC_begins(ncp->ncp_sf);
         CHECK_ERROR(err)
 
-        /* check variable begins are in increasing order */
+        /* check whether variable begins are in an increasing order.
+         * This check is for debugging purpose. */
         err = ncmpio_NC_check_voffs(ncp->ncp_sf);
         CHECK_ERROR(err)
     }
