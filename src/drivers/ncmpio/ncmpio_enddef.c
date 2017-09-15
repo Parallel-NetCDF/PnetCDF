@@ -650,16 +650,17 @@ ncmpio_NC_check_vlen(NC_var     *varp,
 int
 ncmpio_NC_check_vlens(NC *ncp)
 {
-    NC_var **vpp;
-    /* maximum permitted variable size (or size of one record's worth
-       of a record variable) in bytes.  This is different for format 1
-       and format 2. */
-    MPI_Offset ii, vlen_max, rec_vars_count;
-    MPI_Offset large_fix_vars_count, large_rec_vars_count;
     int last = 0;
+    MPI_Offset i, vlen_max, rec_vars_count;
+    MPI_Offset large_fix_vars_count, large_rec_vars_count;
+    NC_var *varp;
 
     if (ncp->vars.ndefined == 0) /* no variable defined */
         return NC_NOERR;
+
+    /* maximum permitted variable size (or size of one record's worth
+       of a record variable) in bytes. It is different between format 1
+       2 and 5. */
 
     if (ncp->format >= 5) /* CDF-5 format max */
         vlen_max = X_INT64_MAX - 3; /* "- 3" handles rounded-up size */
@@ -671,21 +672,22 @@ ncmpio_NC_check_vlens(NC *ncp)
     /* Loop through vars, first pass is for non-record variables */
     large_fix_vars_count = 0;
     rec_vars_count = 0;
-    vpp = ncp->vars.value;
-    for (ii = 0; ii < ncp->vars.ndefined; ii++, vpp++) {
-        if (!IS_RECVAR(*vpp)) {
-            last = 0;
-            if (ncmpio_NC_check_vlen(*vpp, vlen_max) == 0) {
-                /* check this variable's shape product against vlen_max */
-
-                if (ncp->format >= 5) /* variable too big for CDF-5 */
-                    DEBUG_RETURN_ERROR(NC_EVARSIZE)
-
-                large_fix_vars_count++;
-                last = 1;
-            }
-        } else {
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        varp = ncp->vars.value[i];
+        if (IS_RECVAR(varp)) {
             rec_vars_count++;
+            continue;
+        }
+
+        last = 0;
+        if (ncmpio_NC_check_vlen(varp, vlen_max) == 0) {
+            /* check this variable's shape product against vlen_max */
+
+            if (ncp->format >= 5) /* variable too big for CDF-5 */
+                DEBUG_RETURN_ERROR(NC_EVARSIZE)
+
+            large_fix_vars_count++;
+            last = 1;
         }
     }
     /* OK if last non-record variable size too large, since not used to
@@ -706,19 +708,19 @@ ncmpio_NC_check_vlens(NC *ncp)
 
     /* Loop through vars, second pass is for record variables.   */
     large_rec_vars_count = 0;
-    vpp = ncp->vars.value;
-    for (ii = 0; ii < ncp->vars.ndefined; ii++, vpp++) {
-        if (IS_RECVAR(*vpp)) {
-            last = 0;
-            if (ncmpio_NC_check_vlen(*vpp, vlen_max) == 0) {
-                /* check this variable's shape product against vlen_max */
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        varp = ncp->vars.value[i];
+        if (!IS_RECVAR(varp)) continue;
 
-                if (ncp->format >= 5) /* variable too big for CDF-5 */
-                    DEBUG_RETURN_ERROR(NC_EVARSIZE)
+        last = 0;
+        if (ncmpio_NC_check_vlen(varp, vlen_max) == 0) {
+            /* check this variable's shape product against vlen_max */
 
-                large_rec_vars_count++;
-                last = 1;
-            }
+            if (ncp->format >= 5) /* variable too big for CDF-5 */
+                DEBUG_RETURN_ERROR(NC_EVARSIZE)
+
+            large_rec_vars_count++;
+            last = 1;
         }
     }
 
@@ -903,7 +905,7 @@ ncmpio__enddef(void       *ncdp,
     err = NC_begins(ncp);
     CHECK_ERROR(err)
 
-    /* check variable begins are in increasing order */
+    /* check whether variable begins are in an increasing order */
     err = ncmpio_NC_check_voffs(ncp);
     CHECK_ERROR(err)
 
