@@ -18,7 +18,7 @@
 #include "ncmpio_driver.h"
 
 #define FILE_ALIGNMENT_DEFAULT 512
-#define HEADER_ALIGNMENT_LB    4
+#define FILE_ALIGNMENT_LB      4
 
 /* define MPI_OFFSET if not defined */
 #ifndef HAVE_DECL_MPI_OFFSET

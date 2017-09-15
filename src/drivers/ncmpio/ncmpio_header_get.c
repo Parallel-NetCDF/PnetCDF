@@ -1351,6 +1351,8 @@ ncmpio_hdr_get_NC(NC *ncp)
     status = ncmpio_NC_check_vlens(ncp);
     if (status != NC_NOERR) goto fn_exit;
 
+    /* Check whether variable begins are in an increasing order.
+     * This check is necessary for detecting corrupted metadata. */
     status = ncmpio_NC_check_voffs(ncp);
     if (status != NC_NOERR) goto fn_exit;
 
