@@ -101,7 +101,11 @@ int main(int argc, char** argv)
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[2]);
     CHECK_ERR
 
-    /* define a 3D variable of integer type */
+    /* define a big 1D variable of ubyte type, so there are 2 big vriables */
+    err = ncmpi_def_var(ncid, "big_1D", NC_UBYTE, 1, &dimid[2], &varid);
+    CHECK_ERR
+
+    /* define a big 3D variable of integer type */
     err = ncmpi_def_var(ncid, "var", NC_INT, 3, dimid, &varid);
     CHECK_ERR
 
