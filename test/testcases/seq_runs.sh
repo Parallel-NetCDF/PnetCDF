@@ -4,8 +4,8 @@ set -e
 
 for j in 0 1 ; do { \
     export PNETCDF_SAFE_MODE=$$j ; \
-    for i in $TESTPROGRAMS; do { \
-        $TESTSEQRUN ./$i $TESTOUTDIR/testfile.nc ; \
+    for i in ${TESTPROGRAMS}; do { \
+        ${TESTSEQRUN} ./$i ${TESTOUTDIR}/testfile.nc ; \
 } ; done ; } ; done
 
 NCMPIGEN=../../src/utils/ncmpigen/ncmpigen
@@ -17,3 +17,7 @@ ${TESTSEQRUN} ./redef1 ${TESTOUTDIR}/testfile.nc
 ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/testfile.nc ${TESTOUTDIR}/redef1.nc
 diff -q ${TESTOUTDIR}/testfile.nc ${TESTOUTDIR}/redef1.nc
 
+for j in 0 1 ; do { \
+    export PNETCDF_SAFE_MODE=$$j ; \
+    ${TESTSEQRUN} ./tst_open_cdf5 ${srcdir}/bad_begin.nc5 ; \
+} ; done
