@@ -295,9 +295,9 @@ NC_begins(NC *ncp)
        loop thru vars, first pass is for the 'non-record' vars */
     end_var = ncp->begin_var;
     for (j=0, i=0; i<ncp->vars.ndefined; i++) {
-        if (IS_RECVAR(ncp->vars.value[i]))
-            /* skip record variables on this pass */
-            continue;
+        /* skip record variables on this pass */
+        if (IS_RECVAR(ncp->vars.value[i])) continue;
+
         if (first_var == NULL) first_var = ncp->vars.value[i];
 
         /* for CDF-1 check if over the file size limit 32-bit integer */
@@ -460,8 +460,8 @@ write_NC(NC *ncp)
     assert(!NC_readonly(ncp));
 
     /* In NC_begins(), root's ncp->xsz, root's header size, has been
-     * broadcasted, so ncp->xsz is now root's header size. To check any
-     * inconsistency in file header, we need to calculate local's header
+     * broadcast, so ncp->xsz is now root's header size. To check any
+     * inconsistency in file header, we need to calculate local header
      * size by calling ncmpio_hdr_len_NC()./
      */
     local_xsz = ncmpio_hdr_len_NC(ncp);
@@ -742,7 +742,7 @@ ncmpio_NC_check_vlens(NC *ncp)
 /*----< ncmpio_NC_check_voffs() >--------------------------------------------*/
 /*
  * Given a valid ncp, check whether the file starting offsets (begin) of all
- * variables are in an increasing order.
+ * variables follows the same increasing order as they were defined.
  */
 int
 ncmpio_NC_check_voffs(NC *ncp)
@@ -907,10 +907,12 @@ ncmpio__enddef(void       *ncdp,
     err = NC_begins(ncp);
     CHECK_ERROR(err)
 
-    /* check whether variable begins are in an increasing order.
-     * This check is for debugging purpose. */
-    err = ncmpio_NC_check_voffs(ncp);
-    CHECK_ERROR(err)
+    if (ncp->safe_mode) {
+        /* check whether variable begins are in an increasing order.
+         * This check is for debugging purpose. */
+        err = ncmpio_NC_check_voffs(ncp);
+        CHECK_ERROR(err)
+    }
 
 #ifdef ENABLE_SUBFILING
     if (ncp->num_subfiles > 1) {
@@ -918,10 +920,12 @@ ncmpio__enddef(void       *ncdp,
         err = NC_begins(ncp->ncp_sf);
         CHECK_ERROR(err)
 
-        /* check whether variable begins are in an increasing order.
-         * This check is for debugging purpose. */
-        err = ncmpio_NC_check_voffs(ncp->ncp_sf);
-        CHECK_ERROR(err)
+        if (ncp->safe_mode) {
+            /* check whether variable begins are in an increasing order.
+             * This check is for debugging purpose. */
+            err = ncmpio_NC_check_voffs(ncp->ncp_sf);
+            CHECK_ERROR(err)
+        }
     }
 #endif
 

@@ -25,7 +25,7 @@
 #define NC_MAGIC_LEN 4
 
 /*----< compute_var_shape() >------------------------------------------------*/
-/* Recompute the shapes of all variables
+/* Recompute the shapes of all variables: shape, xsz, and len
  * Sets ncp->begin_var to start of first variable.
  * Sets ncp->begin_rec to start of first record variable.
  * Returns -1 on error. The only possible error is an reference to a non
@@ -1341,18 +1341,19 @@ ncmpio_hdr_get_NC(NC *ncp)
     /* get the un-aligned size occupied by the file header */
     ncp->xsz = ncmpio_hdr_len_NC(ncp);
 
-    /* Recompute the shapes of all variables
+    /* Recompute the shapes of all variables (shape, xsz, len)
      * Sets ncp->begin_var to start of first variable.
      * Sets ncp->begin_rec to start of first record variable.
      */
     status = compute_var_shape(ncp);
     if (status != NC_NOERR) goto fn_exit;
 
+    /* Check whether variable sizes are legal for the given file format */
     status = ncmpio_NC_check_vlens(ncp);
     if (status != NC_NOERR) goto fn_exit;
 
     /* Check whether variable begins are in an increasing order.
-     * This check is necessary for detecting corrupted metadata. */
+     * Adding this check here is necessary for detecting corrupted metadata. */
     status = ncmpio_NC_check_voffs(ncp);
     if (status != NC_NOERR) goto fn_exit;
 
