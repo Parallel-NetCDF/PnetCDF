@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 
     for (i=0; i<LARGE_NUM-1; i++) {
         sprintf(str, "var%d", i);
-        err = ncmpi_def_var(ncid, str, NC_INT, 1, NULL, &varid);
+        err = ncmpi_def_var(ncid, str, NC_INT, 1, dimids, &varid);
         CHECK_ERR
     }
 
