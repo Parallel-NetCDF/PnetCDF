@@ -32,7 +32,8 @@ endif
 TESTPROGRAMS = large_files \
                large_var \
                large_dims_vars_attrs \
-               high_dim_var
+               high_dim_var \
+               tst_cdf5_begin
 
 check_PROGRAMS = $(TESTPROGRAMS)
 
