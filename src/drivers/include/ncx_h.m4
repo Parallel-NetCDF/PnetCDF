@@ -37,7 +37,7 @@ dnl
 
 #if defined(_CRAY) && !defined(_CRAYIEEE) && !defined(__crayx1)
 #define CRAYFLOAT 1 /* CRAY Floating point */
-#elif defined(_SX) && defined(_FLOAT2)	/* NEC SUPER-UX in CRAY mode */
+#elif defined(_SX) && defined(_FLOAT2) /* NEC SUPER-UX in CRAY mode */
 #define CRAYFLOAT 1 /* CRAY Floating point */
 #endif
 
@@ -70,7 +70,7 @@ dnl
  * using 64 bit offsets.
  *  see also X_SIZE_MAX, X_OFF_MAX below
  */
-/* #define X_SIZEOF_OFF_T		(sizeof(off_t)) */
+/* #define X_SIZEOF_OFF_T	(sizeof(off_t)) */
 #define X_SIZEOF_OFF_T		SIZEOF_OFF_T
 #define X_SIZEOF_SIZE_T		X_SIZEOF_INT
 
@@ -97,7 +97,7 @@ dnl
 #define X_FLT_MAX	X_FLOAT_MAX	/* alias compatible with limits.h */
 #if defined(CRAYFLOAT) && CRAYFLOAT != 0
 /* ldexp(1. - ldexp(.5 , -46), 1024) */
-#define X_DOUBLE_MAX    1.79769313486230e+308
+#define X_DOUBLE_MAX	1.79769313486230e+308
 #else
 /* scalb(1. - scalb(.5 , -52), 1024) */
 #define X_DOUBLE_MAX	1.7976931348623157e+308
@@ -116,7 +116,7 @@ dnl
  * These give the length of an array of nelems of the type.
  * N.B. The 'char' and 'short' interfaces give the X_ALIGNED length.
  */
-#define X_ALIGN			4	/* a.k.a. BYTES_PER_XDR_UNIT */
+#define X_ALIGN		4	/* a.k.a. BYTES_PER_XDR_UNIT */
 
 #define ncmpix_len_char(nelems) \
 	_RNDUP((nelems), X_ALIGN)
@@ -187,6 +187,7 @@ dnl
  *      	uchar
  *      	short
  *      	int
+ *      	long
  *      	float
  *      	double
  *      	ushort
@@ -205,10 +206,10 @@ dnl
  *
  * Storage for a single element of internal type is at ``ip'' argument.
  *
- * These functions return NC_NOERR when no error occured,
+ * These functions return NC_NOERR when no error occurred,
  * or NC_ERANGE when the value being converted is too large.
  * When NC_ERANGE occurs, an undefined (implementation dependent)
- * conversion may have occured.
+ * conversion may have occurred.
  *
  * Note that loss of precision may occur silently.
  *
