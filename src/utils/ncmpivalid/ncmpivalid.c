@@ -8,16 +8,14 @@
 # include <config.h>
 #endif
 
-#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>  /* open() */
 #include <sys/stat.h>   /* open() */
 #include <fcntl.h>      /* open() */
-#include <unistd.h>     /* read() */
-#include <string.h>
-#include <stdio.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+#include <unistd.h>     /* read() getopt() */
+#include <string.h>     /* strcpy(), strncpy() */
+#include <assert.h>
 #include <errno.h>
 
 #include <mpi.h>
@@ -813,7 +811,7 @@ val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
         return status;
     }
 
-    status = val_check_buffer(fd, gbp, (gbp->version < 5 ? 4 : 8));
+    status = val_check_buffer(fd, gbp, (gbp->version == 1 ? 4 : 8));
     if (status != NC_NOERR) {
         printf("offset is expected for the data of \"%s\" - ", name);
         ncmpio_free_NC_var(varp);
@@ -1219,6 +1217,7 @@ val_get_NC(int fd, NC *ncp)
     }
 
     ncp->xsz = ncmpio_hdr_len_NC(ncp);
+
     status = compute_var_shape(ncp);
     if (status != NC_NOERR) goto fn_exit;
 
@@ -1236,25 +1235,52 @@ fn_exit:
 
 /* End Of get NC */
 
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] file_name\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (exit 1 when fail, 0 success)\n"
+    "       filename: input netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
 int main(int argc, char **argv)
 {
-    char *filename;
-    int fd, status=NC_NOERR;
+    extern int optind;
+    char filename[512];
+    int i, rank, nprocs, verbose=1, fd, status=NC_NOERR;
     NC *ncp=NULL;
     struct stat ncfilestat;
 
     MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
-        printf("Usage: %s <filename>\n", argv[0]);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc != 1) {
+        if (rank==0) usage(argv[0]);
         MPI_Finalize();
         return 1;
-    } 
-    filename = argv[1];
+    }
+    snprintf(filename, 512, "%s", argv[0]);
 
     fd = open(filename, O_RDONLY);
     if (fd == -1) {
-        fprintf(stderr, "Error on open file %s: %s\n", filename,strerror(errno));
+        fprintf(stderr, "Error on open file %s (%s)\n",
+                filename,strerror(errno));
         MPI_Finalize();
         return 1;
     }
@@ -1286,27 +1312,34 @@ int main(int argc, char **argv)
             status = NC_EFILE;
             goto prog_exit;
         }
-        else if (expect_fsize > ncfilestat.st_size)
+        else if (expect_fsize > ncfilestat.st_size) {
             /* if file header are valid and the only error is the file size
              * less than expected, then this is due to partial data written
              * to the variable while the file is in no fill mode */
-            printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+            if (verbose)
+                printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+        }
     }
     else {
         MPI_Offset expect_fsize;
-        /* find the size of last fix-sized variable */
-        NC_var *varp = ncp->vars.value[ncp->vars.ndefined-1];
-        expect_fsize = varp->begin + varp->len;
+        if (ncp->vars.ndefined == 0)
+            expect_fsize = ncp->xsz;
+        else
+            /* find the size of last fix-sized variable */
+            expect_fsize = ncp->vars.value[ncp->vars.ndefined-1]->begin +
+                           ncp->vars.value[ncp->vars.ndefined-1]->len;
         if (expect_fsize < ncfilestat.st_size) {
             printf("Error: file size (%ld) is larger than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
             status = NC_EFILE;
             goto prog_exit;
         }
-        else if (expect_fsize > ncfilestat.st_size)
+        else if (expect_fsize > ncfilestat.st_size) {
             /* if file header are valid and the only error is the file size
              * less than expected, then this is due to partial data written
              * to the variable while the file is in no fill mode */
-            printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+            if (verbose)
+                printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+        }
     }
 
 prog_exit:
@@ -1318,8 +1351,10 @@ prog_exit:
     }
     close(fd);
 
-    if (status == NC_NOERR)
-        printf("File \"%s\" is a valid NetCDF file.\n",filename);
+    if (status == NC_NOERR) {
+        if (verbose)
+            printf("File \"%s\" is a valid NetCDF file.\n",filename);
+    }
     else
         printf("Error: %s\n",ncmpi_strerror(status));
 
