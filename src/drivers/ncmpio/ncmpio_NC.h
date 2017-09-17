@@ -458,8 +458,8 @@ extern int
 ncmpio_hash_delete(NC_nametable *nameT, const char *name, int id);
 
 extern int
-ncmpio_hash_replace(NC_nametable *nameT, const char *old_name, const char *new_name,
-                    int id);
+ncmpio_hash_replace(NC_nametable *nameT, const char *old_name,
+                    const char *new_name, int id);
 
 extern void
 ncmpio_hash_table_copy(NC_nametable *dest, const NC_nametable *src);
