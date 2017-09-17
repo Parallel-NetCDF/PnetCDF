@@ -109,21 +109,21 @@ ncmpi_strerror(int err)
              * accompany with additional MPI error messages
              */
         case NC_EREAD:
-            return "Unknow error occurs in reading file";
+            return "Unknown error occurs in reading file";
             /* this error is caused by an unsuccessful call to MPI_File_read or
              * MPI_File_read_all and usually accompany with additional MPI
              * error messages
              */
         case NC_EWRITE:
-            return "Unknow error occurs in writting file";
+            return "Unknown error occurs in writing file";
             /* this error is caused by an unsuccessful call to MPI_File_write or
              * MPI_File_write_all and usually accompany with additional MPI
              * error messages
              */
         case NC_EOFILE:
-            return "Can not open/create file";
+            return "Fail to open/create file";
         case NC_EMULTITYPES:
-            return "Multiple types used in memory data";
+            return "Multiple etypes used in MPI datatype";
             /* when using flexible APIs, the argument MPI derived datatype is
              * not allowed to contain more than one basic data type
              */
@@ -140,7 +140,7 @@ ncmpi_strerror(int err)
              * error code.
              */
         case NC_EUNSPTETYPE:
-            return "Unsupported etype is used in MPI datatype for memory data";
+            return "Unsupported etype in the MPI datatype describing the I/O buffer";
             /* when using flexible APIs, the argument MPI derived datatype is
              * only allowed to be constructed from the MPI basic data types
              * known to PnetCDF
@@ -156,7 +156,7 @@ ncmpi_strerror(int err)
         case NC_ENOTSUPPORT:
             return "Feature is not yet supported.";
         case NC_ENULLBUF:
-            return "Trying to attach a NULL buffer or the buffer size is <= 0.";
+            return "Trying to attach a NULL buffer or the buffer size is negative.";
             /* an error returned from ncmpi_buffer_attach()
              */
         case NC_EPREVATTACHBUF:
@@ -169,7 +169,7 @@ ncmpi_strerror(int err)
             /* an error when calling bput APIs and no buffer has been attached
              */
         case NC_EPENDINGBPUT:
-            return "Cannot detach buffer as a pending bput request is found.";
+            return "Cannot detach buffer due to pending bput request is found.";
             /* an error returned from ncmpi_buffer_detach()
              */
         case NC_EINSUFFBUF:
@@ -177,19 +177,19 @@ ncmpi_strerror(int err)
             /* an error when calling bput APIs
              */
         case NC_ENOENT:
-            return "The specified netCDF file does not exist.";
+            return "Specified netCDF file does not exist.";
             /* this error code corresponds to MPI error class
              * MPI_ERR_NO_SUCH_FILE, an error generated from MPI_File_open(),
              * MPI_File_delete() or others
              */
         case NC_EINTOVERFLOW:
-            return "Overflow when type cast to 4-byte integer.";
+            return "Integer type casting overflow.";
             /* this usually happens on 32-bit machines where MPI_Offset is a
              * 4-byte integer and when the I/O request amount or accessing
              * file offset is > 2GB.
              */
         case NC_ENOTENABLED:
-            return "feature is not enabled at configure time.";
+            return "Feature is not enabled at configure time.";
             /* Some APIs require a specific feature enabled at the configure
              * time, for example, ncmpi_inq_malloc_size() works only
              * --enable-debug is used when configuring PnetCDF
@@ -210,29 +210,29 @@ ncmpi_strerror(int err)
              * MPI_ERR_QUOTA, an error generated from MPI_File_open()
              */
         case NC_ENULLSTART:
-            return "argument start is a NULL pointer";
+            return "Argument start is a NULL pointer";
             /* Some APIs require argument start not be a NULL pointer
              */
         case NC_ENULLCOUNT:
-            return "argument count is a NULL pointer";
+            return "Argument count is a NULL pointer";
             /* Some APIs require argument count cannot be a NULL pointer
              */
         case NC_EINVAL_CMODE:
             return "Invalid file create mode";
         case NC_ETYPESIZE:
-            return "MPI derived data type size error (bigger than the variable size)";
+            return "MPI datatype size error (bigger than the variable size)";
         case NC_ETYPE_MISMATCH:
-            return "element type of the MPI derived data type mismatches the variable data type";
+            return "etype of the MPI datatype mismatches the variable data type";
         case NC_ETYPESIZE_MISMATCH:
-            return "filetype's size mismatches buftype's size * bufcount";
+            return "MPI filetype size mismatches buftype size * bufcount";
         case NC_ESTRICTCDF2:
             return "Attempting CDF-5 operation on strict CDF or CDF-2 file";
         case NC_ENOTRECVAR:
             return "Attempting operation only for record variables";
         case NC_ENOTFILL:
-            return "Attempting to fill a variable when its fill mode is off";
+            return "Attempting to fill a record when its variable fill mode is off";
         case NC_EINVAL_OMODE:
-            return "Invalid file open mode";
+            return "Invalid or unsupported file open mode";
         case NC_EPENDING:
             return "Pending nonblocking request is found at file close";
         case NC_EMULTIDEFINE:
@@ -278,13 +278,13 @@ ncmpi_strerror(int err)
         case NC_EMULTIDEFINE_ATTR_VAL:
             return "Attribute value is inconsistent among processes.";
         case NC_EMULTIDEFINE_FNC_ARGS:
-            return "inconsistent function arguments used in collective API.";
+            return "Arguments in collective API are inconsistent among processes.";
         case NC_EMULTIDEFINE_FILL_MODE:
-            return "Dataset's file mode is inconsistent among processes.";
+            return "File fill mode is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_FILL_MODE:
-            return "Variable's fill mode is inconsistent among processes.";
+            return "Variable fill mode is inconsistent among processes.";
         case NC_EMULTIDEFINE_VAR_FILL_VALUE:
-            return "Variable's fill value is inconsistent among processes.";
+            return "Variable fill value is inconsistent among processes.";
         case NC_EMULTIDEFINE_CMODE:
             return "File create mode is inconsistent among processes.";
 
@@ -517,7 +517,7 @@ nc_strerror(int ncerr1)
       case NC_ELATEDEF:
 	 return "NetCDF: Attempt to define var properties, like deflate, after enddef.";
       case NC_EDIMSCALE:
-	 return "NetCDF: Probem with HDF5 dimscales.";
+	 return "NetCDF: Problem with HDF5 dimscales.";
       case NC_ENOGRP:
 	 return "NetCDF: No group found.";
       case NC_ESTORAGE:
