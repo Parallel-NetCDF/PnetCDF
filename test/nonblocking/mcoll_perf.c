@@ -461,7 +461,7 @@ int main(int argc, char **argv)
             strcpy(filename3, filename);
 
         err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_OFFSET,
-                              info, &ncid);
+                           info, &ncid);
         CHECK_ERR
         /* define dimensions */
         for (i=0; i<ndims; i++){

@@ -13,34 +13,37 @@ AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 $(FC_MODINC)$(top_builddir)/src/b
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 TESTPROGRAMS = tst_f90 \
-               tst_io \
                f90tst_vars \
                tst_types2 \
                tst_f90_cdf5 \
                f90tst_vars2 \
                f90tst_vars3 \
                f90tst_vars4 \
-               tst_flarge \
-               f90tst_parallel \
-               f90tst_parallel2 \
-               f90tst_parallel3 \
-               f90tst_parallel4 \
                test_intent
 
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = $(TESTPROGRAMS) \
+                 tst_io \
+                 tst_flarge \
+                 f90tst_parallel \
+                 f90tst_parallel2 \
+                 f90tst_parallel3 \
+                 f90tst_parallel4
+
+TESTS_ENVIRONMENT =
+
+if RUN_LARGE_FILE_TEST
+   TESTPROGRAMS += tst_flarge
+   TESTS_ENVIRONMENT += RUN_LARGE_FILE_TEST="yes" ; export RUN_LARGE_FILE_TEST;
+endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
 # AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 # AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 # AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+TESTS_ENVIRONMENT += TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-
-if RUN_LARGE_FILE_TEST
-   TESTS_ENVIRONMENT += RUN_LARGE_FILE_TEST="yes" ; export RUN_LARGE_FILE_TEST;
-endif
 
 TESTS = seq_runs.sh
 

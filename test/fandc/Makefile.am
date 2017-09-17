@@ -58,6 +58,8 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 # not for running
 # TESTS = $(TESTPROGRAMS)
 
+EXTRA_DIST = README
+
 CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:

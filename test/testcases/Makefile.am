@@ -63,8 +63,7 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                null_args \
                tst_dimsizes \
                mix_collectives \
-               large_var_cdf5 \
-               redef1
+               large_var_cdf5
 
 M4_SRCS  = put_all_kinds.m4 erange_fill.m4
 
@@ -117,7 +116,7 @@ else
    check_PROGRAMS = $(TESTPROGRAMS)
 endif
 
-check_PROGRAMS += tst_open_cdf5
+check_PROGRAMS += redef1 tst_open_cdf5
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead

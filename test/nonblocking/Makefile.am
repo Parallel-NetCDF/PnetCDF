@@ -27,8 +27,7 @@ if DECL_MPI_OFFSET
    AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = mcoll_perf \
-               test_bput \
+TESTPROGRAMS = test_bput \
                interleaved \
                i_varn_int64 \
                flexible_bput \
@@ -62,7 +61,7 @@ if HAVE_MPI_MOD
 endif
 endif
 
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = $(TESTPROGRAMS) mcoll_perf
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
