@@ -50,7 +50,6 @@ static void handle_error(int status, int lineno)
 
 int main(int argc, char **argv) {
     int ret, ncid=0, nprocs, rank, dimid, varid1=0, varid2=0, ndims=1;
-    MPI_Offset start, count=1;
     char filename[256], buf[13] = "Hello World\n";
     int *data=NULL;
 
@@ -102,11 +101,12 @@ int main(int argc, char **argv) {
          * happens from a single processor.  This approach can be ok if the
          * amount of data is quite small, but almost always the underlying
          * MPI-IO library can do a better job */
-        start=0, count=nprocs;
-        ret = ncmpi_put_vara_int_all(ncid, varid1, &start, &count, data);
+        MPI_Offset start[1], count[1];
+        start[0]=0, count[0]=nprocs;
+        ret = ncmpi_put_vara_int_all(ncid, varid1, start, count, data);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        ret = ncmpi_put_vara_int_all(ncid, varid2, &start, &count, data);
+        ret = ncmpi_put_vara_int_all(ncid, varid2, start, count, data);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
         ret = ncmpi_close(ncid);

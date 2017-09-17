@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     char filename[256];
     int i, err, rank, nprocs, nerrs=0, ncid, dimid[2], varid[2];
     short buf[10];
-    MPI_Offset start, count;
+    MPI_Offset start[1], count[1];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -70,10 +70,10 @@ int main(int argc, char** argv) {
 
     /* write to var_big in location overlapping with var_small when using
      * netCDF 4.4.x or prior */
-    start = NC_MAX_UINT/sizeof(short);
-    count = 10;
+    start[0] = NC_MAX_UINT/sizeof(short);
+    count[0] = 10;
     for (i=0; i<10; i++) buf[i] = i;
-    err = ncmpi_put_vara_short_all(ncid, varid[0], &start, &count, buf); CHECK_ERR
+    err = ncmpi_put_vara_short_all(ncid, varid[0], start, count, buf); CHECK_ERR
 
     /* write var_small */
     for (i=0; i<10; i++) buf[i] = -1;
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 
     /* read back var_big and check contents */
     for (i=0; i<10; i++) buf[i] = -1;
-    err = ncmpi_get_vara_short_all(ncid, varid[0], &start, &count,buf); CHECK_ERR
+    err = ncmpi_get_vara_short_all(ncid, varid[0], start, count,buf); CHECK_ERR
     for (i=0; i<10; i++) {
         if (buf[i] != i) {
             printf("Error at buf[%d] expect %d but got %hd\n",i,i,buf[i]);
