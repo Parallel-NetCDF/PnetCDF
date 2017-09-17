@@ -28,8 +28,7 @@ M4_SRCS   = test_get.m4 \
             test_read.m4 \
             test_write.m4
 
-TESTPROGRAMS = nc_test \
-               t_nc \
+TESTPROGRAMS = t_nc \
                tst_misc \
                tst_norm \
                tst_small \
@@ -53,7 +52,7 @@ M4FLAGS += -I${top_srcdir}/m4
 tests.h: tests.h.m4 Makefile
 	$(M4) $(M4FLAGS) $< > $@
 
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = $(TESTPROGRAMS) nc_test
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead

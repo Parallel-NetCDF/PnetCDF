@@ -128,6 +128,10 @@ int check_modes(char *filename)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
+
     return nerrs;
 }
 

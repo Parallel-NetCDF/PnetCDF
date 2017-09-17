@@ -81,9 +81,16 @@ int main(int argc, char **argv)
 	}
 	if (fbasename == NULL) {
 	    fprintf(stderr, "\n*#  Usage: test_subfile -f pathname -s num_sf -p par_dim_id \n\n");
-	    MPI_Abort(MPI_COMM_WORLD, 1);
+	    nerrs++;
 	}
-
+    }
+    MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (nerrs > 0) {
+        MPI_Finalize();
+        return 1;
+    }
+        
+    if (!rank) {
 	len = strlen(fbasename);
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(fbasename, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -94,6 +101,7 @@ int main(int argc, char **argv)
         MPI_Bcast(&length, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     else {
+	MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	fbasename = (char *) malloc(len+1);
 	MPI_Bcast(fbasename, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);

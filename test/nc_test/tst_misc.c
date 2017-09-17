@@ -28,7 +28,7 @@ int
 main(int argc, char **argv) 
 {
     char *cmd_str, filename[256];
-    int rank, nprocs, err, nerrs=0;
+    int rank, nprocs, err, nerrs=0, ncid;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -53,10 +53,9 @@ main(int argc, char **argv)
 */
    {
 #define DATA_LEN 32    
-     int ncid,openstat;
       char dummy_data[DATA_LEN];
+      int i, openstat;
       FILE *file;
-      int i, nerrs=0;
 
       /* Appease valgrind by initializing our data. */
       for (i = 0; i < DATA_LEN; i++)
@@ -82,6 +81,10 @@ main(int argc, char **argv)
          }
       }
    }
+
+   err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
+                      &ncid); CHECK_ERR
+   err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
