@@ -131,7 +131,7 @@ TESTS = seq_runs.sh
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              testfile.nc testfile.nc.cdf1 testfile.nc.cdf2 testfile.nc.cdf5 \
-             redef1.nc
+             redef1.nc redef2.nc
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump bad_begin.nc5
 
