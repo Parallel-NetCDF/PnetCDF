@@ -87,7 +87,8 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
 }
 
 /*----< ncmpio_last_offset() >-----------------------------------------------*/
-/* Returns the file offset of the last byte + 1 accessed by this request.
+/* Returns the file offset of the last variable element accessed by this
+ * request.
  * If count is NULL, this is equivalent to find the starting offset of this
  * request. Note zero-length request should never call this subroutine.
  */
