@@ -1249,7 +1249,7 @@ usage(char *argv0)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char filename[512];
+    char filename[512], *cmd;
     int i, rank, nprocs, verbose=1, fd, status=NC_NOERR;
     NC *ncp=NULL;
     struct stat ncfilestat;
@@ -1258,23 +1258,29 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    cmd = (char*) malloc(strlen(argv[0])+1);
+    strcpy(cmd,argv[0]);
+
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
             case 'h':
-            default:  if (rank==0) usage(argv[0]);
+            default:  if (rank==0) usage(cmd);
+                      free(cmd);
                       MPI_Finalize();
                       return 1;
         }
     argc -= optind;
     argv += optind;
     if (argc != 1) {
-        if (rank==0) usage(argv[0]);
+        if (rank==0) usage(cmd);
         MPI_Finalize();
+        free(cmd);
         return 1;
     }
+    free(cmd);
     snprintf(filename, 512, "%s", argv[0]);
 
     fd = open(filename, O_RDONLY);
