@@ -1506,7 +1506,7 @@ req_aggregation(NC     *ncp,
                 int     coll_indep,  /* NC_REQ_COLL or NC_REQ_INDEP */
                 int     interleaved) /* interleaved in reqs[] */
 {
-    int i, type, err, status=NC_NOERR, ngroups, mpireturn, buf_len;
+    int i, gtype, err, status=NC_NOERR, ngroups, mpireturn, buf_len;
     int *group_index, *group_type, buf_type_size=0;
     int *f_blocklengths, *b_blocklengths;
     void *buf; /* point to starting buffer, used by MPI-IO call */
@@ -1514,6 +1514,7 @@ req_aggregation(NC     *ncp,
     MPI_Datatype  filetype, buf_type, *ftypes, *btypes;
     MPI_File fh;
     MPI_Status mpistatus;
+    MPI_Offset max_end;
 
     if (num_reqs == 0) { /* only NC_REQ_COLL can reach here for 0 request */
         assert(coll_indep == NC_REQ_COLL);
@@ -1544,18 +1545,37 @@ req_aggregation(NC     *ncp,
        be malloc-ed. Group type: 0 for non-interleaved group and 1 for
        interleaved group.
      */
+#define INTERLEAVED    1
+#define NONINTERLEAVED 0
+
+    assert(num_reqs > 1);
     ngroups = 1;
-    type    = (reqs[0].offset_end > reqs[1].offset_start) ? 1 : 0;
+    gtype   = (reqs[0].offset_end > reqs[1].offset_start) ?
+              INTERLEAVED : NONINTERLEAVED;
+    max_end = MAX(reqs[0].offset_end, reqs[1].offset_end);
     for (i=1; i<num_reqs-1; i++) {
-        if (type == 0 && reqs[i].offset_end > reqs[i+1].offset_start) {
+        if (gtype == NONINTERLEAVED &&
+            reqs[i].offset_end > reqs[i+1].offset_start) {
+            /* Done with this NONINTERLEAVED group. Continue to construct
+             * next group, starting from reqs[i], which will be INTERLEAVED. */
             ngroups++;
-            type = 1;
+            gtype = INTERLEAVED;
+            max_end = MAX(reqs[i].offset_end, reqs[i+1].offset_end);
         }
-        else if (type == 1 && reqs[i].offset_end <= reqs[i+1].offset_start) {
-            type = 0;
-            if (i+2 < num_reqs && reqs[i+1].offset_end > reqs[i+2].offset_start)
-                type = 1; /* next group is also interleaved */
-            ngroups++;
+        else if (gtype == INTERLEAVED) {
+            if (max_end <= reqs[i+1].offset_start) {
+                /* Done with this INTERLEAVED group. Continue to construct
+                 * next group. First check whether the next group is
+                 * INTERLEAVED or NONINTERLEAVED. */
+                gtype = NONINTERLEAVED;
+                if (i+2 < num_reqs &&
+                    reqs[i+1].offset_end > reqs[i+2].offset_start)
+                    gtype = INTERLEAVED; /* next group is also interleaved */
+                ngroups++;
+                max_end = reqs[i+1].offset_end;
+            }
+            else
+                max_end = MAX(max_end, reqs[i+1].offset_end);
         }
     }
 
@@ -1564,27 +1584,40 @@ req_aggregation(NC     *ncp,
 
     /* calculate the starting index of each group and determine group type */
     ngroups        = 1;
-    type           = (reqs[0].offset_end > reqs[1].offset_start) ? 1 : 0;
+    gtype          = (reqs[0].offset_end > reqs[1].offset_start) ?
+                     INTERLEAVED : NONINTERLEAVED;
+    max_end        = MAX(reqs[0].offset_end, reqs[1].offset_end);
     group_index[0] = 0;
-    group_type[0]  = type;
+    group_type[0]  = gtype;
     for (i=1; i<num_reqs-1; i++) {
-        if (type == 0 &&
+        if (gtype == NONINTERLEAVED &&
             reqs[i].offset_end > reqs[i+1].offset_start) {
-            /* reqs[i] starts an interleaved group */
+            /* Done with this NONINTERLEAVED group. Continue to construct
+             * next group, which will be INTERLEAVED. */
+            /* reqs[i] starts a new interleaved group */
             group_index[ngroups] = i;
-            type = 1;
-            group_type[ngroups] = type;
+            gtype = INTERLEAVED;
+            group_type[ngroups] = gtype;
             ngroups++;
+            max_end = MAX(reqs[i].offset_end, reqs[i+1].offset_end);
         }
-        else if (type == 1 &&
-                 reqs[i].offset_end <= reqs[i+1].offset_start) {
-            /* the interleaved group ends with reqs[i] */
-            group_index[ngroups] = i+1;
-            type = 0;
-            if (i+2 < num_reqs && reqs[i+1].offset_end > reqs[i+2].offset_start)
-                type = 1; /* next group is also interleaved */
-            group_type[ngroups] = type;
-            ngroups++;
+        else if (gtype == INTERLEAVED) {
+            if (max_end <= reqs[i+1].offset_start) {
+                /* Done with this INTERLEAVED group. Continue to construct
+                 * next group. First check whether the next group is
+                 * INTERLEAVED or NONINTERLEAVED. */
+                gtype = NONINTERLEAVED;
+                if (i+2 < num_reqs &&
+                    reqs[i+1].offset_end > reqs[i+2].offset_start)
+                    gtype = INTERLEAVED; /* next group is also interleaved */
+                /* the interleaved group ends with reqs[i] */
+                group_index[ngroups] = i+1;
+                group_type[ngroups] = gtype;
+                ngroups++;
+                max_end = reqs[i+1].offset_end;
+            }
+            else
+                max_end = MAX(max_end, reqs[i+1].offset_end);
         }
     }
     group_index[ngroups] = num_reqs; /* to indicate end of groups */
@@ -1618,7 +1651,7 @@ req_aggregation(NC     *ncp,
         int     g_num_reqs = group_index[i+1] - group_index[i];
         f_disps[i] = 0;  /* file displacements always to the file offset 0 */
 
-        if (group_type[i] == 0) {
+        if (group_type[i] == NONINTERLEAVED) {
             /* This group contains no interleaved filetypes, so we can
              * simply concatenate filetypes of this group into a single one
              */
@@ -1889,7 +1922,7 @@ wait_getput(NC         *ncp,
         /* get the ending file offset for this request */
         ncmpio_last_offset(ncp, reqs[i].varp, reqs[i].start, reqs[i].count,
                            reqs[i].stride, rw_flag, &reqs[i].offset_end);
-        reqs[i].offset_end += reqs[i].varp->xsz - 1;
+        reqs[i].offset_end += reqs[i].varp->xsz;
     }
 
     /* check if reqs[].offset_start are in an increasing order */
