@@ -96,13 +96,15 @@ int main(int argc, char** argv) {
         }
     }
 
-    for (i=0; i<nelms; i++) buffer[i] = rank+10;
+    for (i=0; i<nelms; i++) buffer[i] = i % 32768;
 
     for (i=0; i<NDIMS; i++) {
         start[i]  = 0;
         count[i]  = 2;
         stride[i] = 2;
     }
+    /* only process 0 writes */
+    if (rank > 0) for (i=0; i<NDIMS; i++) count[i] = 0;
 
     for (i=0; i<NVARS; i++) {
         start[0] = 0;
@@ -113,16 +115,19 @@ int main(int argc, char** argv) {
                                        buffer); CHECK_ERR
     }
 
+    /* all processes read and verify */
+    if (rank > 0) for (i=0; i<NDIMS; i++) count[i]  = 2;
     for (nelms=1,i=0; i<NDIMS; i++) nelms *= count[i];
+
     for (i=0; i<NVARS; i++) {
         for (j=0; j<nelms; j++) buffer[j] = -2;
         start[0] = 0;
         err = ncmpi_get_vars_short_all(ncid, fvarid[i], start, count, stride,
                                        buffer); CHECK_ERR
         for (j=0; j<nelms; j++) {
-            if (buffer[j] != rank+10) {
-                printf("Error at line %d: expect buffer[%d][%d]=%d but got %d\n",
-                       __LINE__, i, j, rank+10, buffer[j]);
+            if (buffer[j] != j%32768) {
+                printf("Error at line %d: expect buffer[%d][%d]=%d but got %hd\n",
+                       __LINE__, i, j, j%32768, buffer[j]);
                 nerrs++;
                 break;
             }
@@ -132,9 +137,9 @@ int main(int argc, char** argv) {
         err = ncmpi_get_vars_short_all(ncid, rvarid[i], start, count, stride,
                                        buffer); CHECK_ERR
         for (j=0; j<nelms; j++) {
-            if (buffer[j] != rank+10) {
-                printf("Error at line %d: expect buffer[%d][%d]=%d but got %d\n",
-                       __LINE__, i, j, rank+10, buffer[j]);
+            if (buffer[j] != j%32768) {
+                printf("Error at line %d: expect buffer[%d][%d]=%d but got %hd\n",
+                       __LINE__, i, j, j%32768, buffer[j]);
                 nerrs++;
                 break;
             }
