@@ -10,6 +10,8 @@ ncmpivalid \- validates a netCDF file in parallel
 .HP
 mpiexec -n 4 ncmpivalid
 .nh
+\%[-q]
+\%[-h]
 \%\fIfile\fP
 .hy
 .ft
@@ -19,7 +21,15 @@ If the input file is a valid NetCDF file, then a message of successful validatio
 is printed on command-line output, for example,
 File "testfile.nc" is a valid NetCDF file.
 Otherwise, a NetCDF error message is printed.
-
+.SH OPTIONS
+.IP "\fB-q\fP"
+Quiet mode - print nothing on the command-line output. When in quiet mode, users should check exit status. See below in "EXIT STATUS".
+.IP "\fB-h\fP"
+Print the available command-line options
+.SH EXIT STATUS
+An exit status of 0 means no differences were found, and
+1 means some differences were found.
+Note on VMS-based system, the exit status values are reversed.
 .SH "SEE ALSO"
 .LP
 .BR ncmpidump (1),
