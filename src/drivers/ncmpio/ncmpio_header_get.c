@@ -648,7 +648,13 @@ hdr_get_NC_dim(bufferinfo  *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_NC_dimarray() >-----------------------------------------------*/
+/*----< hdr_get_NC_dimarray() >----------------------------------------------*/
+/* For CDF-5 format, nelems (number of dimensions) is of type non-negative
+ * INT64. However, argument ndims/dimid in all PnetCDF/NetCDF APIs are of type
+ * int. Thus, we only need to use type int for internal metadata, ndefined. If
+ * nelems in the input file is more than NC_MAX_DIMS, then it violates the
+ * format specifications (NC_ENOTNC).
+ */
 static int
 hdr_get_NC_dimarray(bufferinfo  *gbp,
                     NC_dimarray *ncap)
@@ -665,36 +671,41 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
      * NON_NEG      = <non-negative INT> |        // CDF-1 and CDF-2
      *                <non-negative INT64>        // CDF-5
      */
-    int i, status;
+    int i, status, ndefined=0;
     size_t alloc_size;
     NC_tag tag = NC_UNSPECIFIED;
-    MPI_Offset ndefined;
 
     assert(gbp != NULL && gbp->pos != NULL);
     assert(ncap != NULL);
     assert(ncap->value == NULL);
 
-    /* get NC_tag (NC_DIMENSION) */
+    /* read NC_tag (NC_DIMENSION or ZERO) from gbp buffer */
     status = hdr_get_NC_tag(gbp, &tag);
     if (status != NC_NOERR) return status;
 
-    /* get nelems */
-    if (gbp->version < 5) {
+    /* read nelems (number of dimensions) from gbp buffer */
+    if (gbp->version < 5) { /* nelems is <non-negative INT> */
         uint tmp;
         status = hdr_get_uint32(gbp, &tmp);
-        ndefined = (MPI_Offset)tmp;
+        if (status == NC_NOERR && tmp > NC_MAX_DIMS)
+            /* cannot be more than max number of dimensions */
+            status = NC_ENOTNC;
+        else
+            ndefined = (int)tmp;
     }
-    else {
+    else { /* nelems is <non-negative INT64> */
         uint64 tmp;
         status = hdr_get_uint64(gbp, &tmp);
-        ndefined = (MPI_Offset)tmp;
+        if (status == NC_NOERR && tmp > NC_MAX_DIMS)
+            /* cannot be more than max number of dimensions */
+            status = NC_ENOTNC;
+        else
+            ndefined = (int)tmp;
     }
     if (status != NC_NOERR) return status;
 
-    if (ndefined != (size_t)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    ncap->ndefined = (size_t)ndefined;
-    /* TODO: we should allow ndefined > 2^32, considering change the data type
-     * of ndefined from int to MPI_Offset */
+    /* Now ndefined is in between 0 and NC_MAX_DIMS */
+    ncap->ndefined = ndefined;
 
     ncap->unlimited_id = -1;
 
@@ -715,8 +726,6 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
     ncap->value = (NC_dim**) NCI_Malloc(alloc_size * sizeof(NC_dim*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-    /* TODO: we should allow ndefined > 2^32, considering change the data
-     * type of ndefined from size_t to MPI_Offset */
 
     for (i=0; i<ndefined; i++) {
         status = hdr_get_NC_dim(gbp, ncap->value + i);
@@ -862,7 +871,13 @@ hdr_get_NC_attr(bufferinfo  *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_NC_attrarray() >----------------------------------------------*/
+/*----< hdr_get_NC_attrarray() >---------------------------------------------*/
+/* For CDF-5 format, nelems (number of attributes) is of type non-negative
+ * INT64. However, argument nattrs in all PnetCDF/NetCDF APIs are of type int.
+ * Thus, we only need to use type int for internal metadata, ndefined. If
+ * nelems in the input file is more than NC_MAX_ATTRS, then it violates the
+ * format specifications (NC_ENOTNC).
+ */
 static int
 hdr_get_NC_attrarray(bufferinfo   *gbp,
                      NC_attrarray *ncap)
@@ -879,34 +894,41 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
      * NON_NEG      = <non-negative INT> |        // CDF-1 and CDF-2
      *                <non-negative INT64>        // CDF-5
      */
-    int i, status;
+    int i, status, ndefined=0;
     size_t alloc_size;
     NC_tag tag = NC_UNSPECIFIED;
-    MPI_Offset ndefined; /* nelems */
 
     assert(gbp != NULL && gbp->pos != NULL);
     assert(ncap != NULL);
     assert(ncap->value == NULL);
 
-    /* get NC_tag (NC_ATTRIBUTE) */
+    /* read NC_tag (NC_ATTRIBUTE or ZERO) from gbp buffer */
     status = hdr_get_NC_tag(gbp, &tag);
     if (status != NC_NOERR) return status;
 
-    /* get nelems */
-    if (gbp->version < 5) {
+    /* read nelems (number of attributes) from gbp buffer */
+    if (gbp->version < 5) { /* nelems is <non-negative INT> */
         uint tmp;
         status = hdr_get_uint32(gbp, &tmp);
-        ndefined = (MPI_Offset)tmp;
+        if (status == NC_NOERR && tmp > NC_MAX_ATTRS)
+            /* cannot be more than max number of attributes */
+            status = NC_ENOTNC;
+        else
+            ndefined = (int)tmp;
     }
-    else {
+    else { /* nelems is <non-negative INT64> */
         uint64 tmp;
         status = hdr_get_uint64(gbp, &tmp);
-        ndefined = (MPI_Offset)tmp;
+        if (status == NC_NOERR && tmp > NC_MAX_ATTRS)
+            /* cannot be more than max number of attributes */
+            status = NC_ENOTNC;
+        else
+            ndefined = (int)tmp;
     }
     if (status != NC_NOERR) return status;
 
-    if (ndefined != (size_t)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    ncap->ndefined = (size_t)ndefined;
+    /* Now ndefined is in between 0 and NC_MAX_ATTRS */
+    ncap->ndefined = ndefined;
 
     /* From the CDF file format specification, the tag is either NC_ATTRIBUTE
      * or ABSENT (ZERO), but we follow NetCDF library to skip checking the tag
@@ -1091,6 +1113,12 @@ hdr_get_NC_var(bufferinfo  *gbp,
 }
 
 /*----< hdr_get_NC_vararray() >----------------------------------------------*/
+/* For CDF-5 format, nelems (number of variables) is of type non-negative
+ * INT64. However, argument nvars/varid in all PnetCDF/NetCDF APIs are of type
+ * int. Thus, we only need to use type int for internal metadata, ndefined. If
+ * nelems in the input file is more than NC_MAX_VARS, then it violates the
+ * format specifications (NC_ENOTNC).
+ */
 static int
 hdr_get_NC_vararray(bufferinfo  *gbp,
                     NC_vararray *ncap)
@@ -1109,36 +1137,41 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
      * NON_NEG     = <non-negative INT> |        // CDF-1 and CDF-2
      *               <non-negative INT64>        // CDF-5
      */
-    int i, status;
+    int i, status, ndefined=0;
     size_t alloc_size;
     NC_tag tag = NC_UNSPECIFIED;
-    MPI_Offset ndefined;
 
     assert(gbp != NULL && gbp->pos != NULL);
     assert(ncap != NULL);
     assert(ncap->value == NULL);
 
-    /* get NC_tag (NC_VARIABLE) from gbp buffer */
+    /* read NC_tag (NC_VARIABLE or ZERO) from gbp buffer */
     status = hdr_get_NC_tag(gbp, &tag);
     if (status != NC_NOERR) return status;
 
-    /* get nelems (number of variables) from gbp buffer */
-    if (gbp->version < 5) {
+    /* read nelems (number of variables) from gbp buffer */
+    if (gbp->version < 5) { /* nelems is <non-negative INT> */
         uint tmp;
         status = hdr_get_uint32(gbp, &tmp);
-        ndefined = (MPI_Offset)tmp;
+        if (status == NC_NOERR && tmp > NC_MAX_VARS)
+            /* cannot be more than max number of attributes */
+            status = NC_ENOTNC;
+        else
+            ndefined = (int)tmp;
     }
-    else {
+    else { /* nelems is <non-negative INT64> */
         uint64 tmp;
         status = hdr_get_uint64(gbp, &tmp);
-        ndefined = (MPI_Offset)tmp;
+        if (status == NC_NOERR && tmp > NC_MAX_VARS)
+            /* cannot be more than max number of attributes */
+            status = NC_ENOTNC;
+        else
+            ndefined = (int)tmp;
     }
     if (status != NC_NOERR) return status;
 
-    if (ndefined != (size_t)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    ncap->ndefined = (size_t)ndefined;
-    /* TODO: we should allow ndefined > 2^32, considering change the data type
-     * of ndefined from int to MPI_Offset */
+    /* Now ndefined is in between 0 and NC_MAX_ATTRS */
+    ncap->ndefined = ndefined;
 
     /* From the CDF file format specification, the tag is either NC_VARIABLE
      * or ABSENT (ZERO), but we follow NetCDF library to skip checking the tag

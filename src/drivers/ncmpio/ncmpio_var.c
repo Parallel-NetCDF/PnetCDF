@@ -422,7 +422,7 @@ ncmpio_def_var(void       *ncdp,
         }
     }
 
-    varp->varid = (int)ncp->vars.ndefined; /* varid */
+    varp->varid = ncp->vars.ndefined; /* varid */
 
     /* Add a new handle to the end of an array of handles */
     ncp->vars.value[ncp->vars.ndefined] = varp;
@@ -519,7 +519,7 @@ ncmpio_inq_var(void       *ncdp,
     if (varid == NC_GLOBAL) {
         /* in this case, all other pointer arguments must be NULLs */
         if (nattsp != NULL)
-            *nattsp = (int) ncp->attrs.ndefined;
+            *nattsp = ncp->attrs.ndefined;
         return NC_NOERR;
     }
 
@@ -555,7 +555,7 @@ ncmpio_inq_var(void       *ncdp,
 #endif
             memcpy(dimids, varp->dimids, (size_t)varp->ndims * SIZEOF_INT);
     }
-    if (nattsp != NULL) *nattsp = (int) varp->attrs.ndefined;
+    if (nattsp != NULL) *nattsp = varp->attrs.ndefined;
 
     if (offsetp != NULL) *offsetp = varp->begin;
 

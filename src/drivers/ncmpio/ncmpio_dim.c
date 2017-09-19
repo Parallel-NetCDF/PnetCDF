@@ -218,7 +218,7 @@ ncmpio_def_dim(void       *ncdp,    /* IN:  NC object */
         }
     }
 
-    dimid = (int)ncp->dims.ndefined;
+    dimid = ncp->dims.ndefined;
 
     /* Add a new dim handle to the end of handle array */
     ncp->dims.value[dimid] = dimp;
