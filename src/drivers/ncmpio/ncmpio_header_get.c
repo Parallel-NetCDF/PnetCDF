@@ -690,6 +690,7 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
+
     if (ndefined != (size_t)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     ncap->ndefined = (size_t)ndefined;
     /* TODO: we should allow ndefined > 2^32, considering change the data type
@@ -697,38 +698,37 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
 
     ncap->unlimited_id = -1;
 
-    if (ndefined == 0) {
-        if (tag != NC_UNSPECIFIED) {
-#ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
-#endif
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
-        }
-    } else {
-        if (tag != NC_DIMENSION) {
-#ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_DIMENSION but got %d\n",__FILE__,__func__,__LINE__,tag);
-#endif
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
-        }
+    /* From the CDF file format specification, the tag is either NC_DIMENSION
+     * or ABSENT (ZERO), but we follow NetCDF library to skip checking the tag
+     * when ndefined is zero.
+     */
+    if (ndefined == 0) return NC_NOERR;
 
-        alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
-        ncap->value = (NC_dim**) NCI_Malloc(alloc_size * sizeof(NC_dim*));
-        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-        /* TODO: we should allow ndefined > 2^32, considering change the data
-         * type of ndefined from size_t to MPI_Offset */
-
-        for (i=0; i<ndefined; i++) {
-            status = hdr_get_NC_dim(gbp, ncap->value + i);
-            if (status != NC_NOERR) { /* error: fail to get the next dim */
-                ncap->ndefined = i; /* update to no. successful defined */
-                ncmpio_free_NC_dimarray(ncap);
-                return status;
-            }
-            if (ncap->value[i]->size == NC_UNLIMITED)
-                ncap->unlimited_id = i; /* ID of unlimited dimension */
-        }
+    /* Now, ndefined > 0, tag must be NC_DIMENSION */
+    if (tag != NC_DIMENSION) {
+#ifdef PNETCDF_DEBUG
+        fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_DIMENSION but got %d\n",__FILE__,__func__,__LINE__,tag);
+#endif
+        DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
+
+    alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
+    ncap->value = (NC_dim**) NCI_Malloc(alloc_size * sizeof(NC_dim*));
+    if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    /* TODO: we should allow ndefined > 2^32, considering change the data
+     * type of ndefined from size_t to MPI_Offset */
+
+    for (i=0; i<ndefined; i++) {
+        status = hdr_get_NC_dim(gbp, ncap->value + i);
+        if (status != NC_NOERR) { /* error: fail to get the next dim */
+            ncap->ndefined = i; /* update to no. successful defined */
+            ncmpio_free_NC_dimarray(ncap);
+            return status;
+        }
+        if (ncap->value[i]->size == NC_UNLIMITED)
+            ncap->unlimited_id = i; /* ID of unlimited dimension */
+    }
+
     return NC_NOERR;
 }
 
@@ -904,38 +904,38 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
+
     if (ndefined != (size_t)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     ncap->ndefined = (size_t)ndefined;
 
-    if (ndefined == 0) {
-        if (tag != NC_UNSPECIFIED) {
-#ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
-#endif
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
-        }
-    } else {
-        if (tag != NC_ATTRIBUTE) {
-#ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_ATTRIBUTE but got %d\n",__FILE__,__func__,__LINE__,tag);
-#endif
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
-        }
+    /* From the CDF file format specification, the tag is either NC_ATTRIBUTE
+     * or ABSENT (ZERO), but we follow NetCDF library to skip checking the tag
+     * when ndefined is zero.
+     */
+    if (ndefined == 0) return NC_NOERR;
 
-        alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
-        ncap->value = (NC_attr**)NCI_Malloc(alloc_size * sizeof(NC_attr*));
-        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    /* Now, ndefined > 0, tag must be NC_ATTRIBUTE */
+    if (tag != NC_ATTRIBUTE) {
+#ifdef PNETCDF_DEBUG
+        fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_ATTRIBUTE but got %d\n",__FILE__,__func__,__LINE__,tag);
+#endif
+        DEBUG_RETURN_ERROR(NC_ENOTNC)
+    }
 
-        /* get [attr ...] */
-        for (i=0; i<ndefined; i++) {
-            status = hdr_get_NC_attr(gbp, ncap->value + i);
-            if (status != NC_NOERR) { /* Error: fail to get the next att */
-                ncap->ndefined = i; /* update to no. successful defined */
-                ncmpio_free_NC_attrarray(ncap);
-                return status;
-            }
+    alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
+    ncap->value = (NC_attr**)NCI_Malloc(alloc_size * sizeof(NC_attr*));
+    if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+    /* get [attr ...] */
+    for (i=0; i<ndefined; i++) {
+        status = hdr_get_NC_attr(gbp, ncap->value + i);
+        if (status != NC_NOERR) { /* Error: fail to get the next att */
+            ncap->ndefined = i; /* update to no. successful defined */
+            ncmpio_free_NC_attrarray(ncap);
+            return status;
         }
     }
+
     return NC_NOERR;
 }
 
@@ -1134,40 +1134,39 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
+
     if (ndefined != (size_t)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     ncap->ndefined = (size_t)ndefined;
     /* TODO: we should allow ndefined > 2^32, considering change the data type
      * of ndefined from int to MPI_Offset */
 
-    if (ndefined == 0) { /* no variable defined */
-        if (tag != NC_UNSPECIFIED) {
-#ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag ABSENT but got %d\n",__FILE__,__func__,__LINE__,tag);
-#endif
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
-        }
-    } else {
-        if (tag != NC_VARIABLE) {
-#ifdef PNETCDF_DEBUG
-            fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_VARIABLE but got %d\n",__FILE__,__func__,__LINE__,tag);
-#endif
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
-        }
+    /* From the CDF file format specification, the tag is either NC_VARIABLE
+     * or ABSENT (ZERO), but we follow NetCDF library to skip checking the tag
+     * when ndefined is zero.
+     */
+    if (ndefined == 0) return NC_NOERR;
 
-        alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
-        ncap->value = (NC_var**) NCI_Malloc(alloc_size * sizeof(NC_var*));
-        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    /* Now, ndefined > 0, tag must be NC_VARIABLE */
+    if (tag != NC_VARIABLE) {
+#ifdef PNETCDF_DEBUG
+        fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_VARIABLE but got %d\n",__FILE__,__func__,__LINE__,tag);
+#endif
+        DEBUG_RETURN_ERROR(NC_ENOTNC)
+    }
 
-        /* get [var ...] */
-        for (i=0; i<ndefined; i++) {
-            status = hdr_get_NC_var(gbp, ncap->value + i);
-            if (status != NC_NOERR) { /* Error: fail to get the next var */
-                ncap->ndefined = i; /* update to no. successful defined */
-                ncmpio_free_NC_vararray(ncap);
-                return status;
-            }
-            ncap->value[i]->varid = i;
+    alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
+    ncap->value = (NC_var**) NCI_Malloc(alloc_size * sizeof(NC_var*));
+    if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+    /* get [var ...] */
+    for (i=0; i<ndefined; i++) {
+        status = hdr_get_NC_var(gbp, ncap->value + i);
+        if (status != NC_NOERR) { /* Error: fail to get the next var */
+            ncap->ndefined = i; /* update to no. successful defined */
+            ncmpio_free_NC_vararray(ncap);
+            return status;
         }
+        ncap->value[i]->varid = i;
     }
 
     return NC_NOERR;
