@@ -1813,6 +1813,7 @@ int main(int argc, char *argv[])
             free(fspecp->lvars[i]);
         if (fspecp->lvars != NULL) free(fspecp->lvars);
         free(fspecp);
+        free(cmd);
         return 1;
     }
     free(cmd);

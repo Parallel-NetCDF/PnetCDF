@@ -376,19 +376,32 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
     assert(ncap != NULL);
     assert(ncap->value == NULL);
 
+    /* read NC_tag (NC_DIMENSION or ZERO) from gbp buffer */
     status = val_get_NC_tag(fd, gbp, &tag);
     if (status != NC_NOERR) {
         printf("preamble of \n");
         return status; 
     }
 
-    /* get nelems */
+    /* read nelems (number of dimensions) from gbp buffer */
     status = val_get_size_t(fd, gbp, &tmp);
     if (status != NC_NOERR) {
         printf("the length of ");
         return status;
     }
-    ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
+    if (gbp->version < 5) { /* nelems is <non-negative INT> */
+        if (tmp > NC_MAX_DIMS) { /* cannot be more than max number of dimensions */
+            printf("the length of ");
+            return NC_ENOTNC;
+        }
+    }
+    else { /* nelems is <non-negative INT64> */
+        if (tmp > NC_MAX_DIMS) { /* cannot be more than max number of dimensions */
+            printf("the length of ");
+            return NC_ENOTNC;
+        }
+    }
+    ncap->ndefined = (int)tmp; /* number of allowable defined dimensions NC_MAX_DIMS */
 
     err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
                (X_SIZEOF_INT + x_sizeof_NON_NEG); 
@@ -403,7 +416,7 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
     } else {
         if (tag != NC_DIMENSION) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while NC_DIMENSION is expected as number of dimensions is %zu for ", ncap->ndefined);
+            printf("\tInvalid NC component tag, while NC_DIMENSION is expected as number of dimensions is %d for ", ncap->ndefined);
             DEBUG_RETURN(NC_ENOTNC)
         }
 
@@ -634,19 +647,32 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
     assert(ncap != NULL);
     assert(ncap->value == NULL);
 
+    /* read NC_tag (NC_ATTRIBUTE or ZERO) from gbp buffer */
     status = val_get_NC_tag(fd, gbp, &tag);
     if (status != NC_NOERR) {
         printf("preamble of ");
         return status; 
     }
 
-    /* get nelems */
+    /* read nelems (number of attributes) from gbp buffer */
     status = val_get_size_t(fd, gbp, &tmp);
     if (status != NC_NOERR) {
         printf("the length of ");
         return status;
     }
-    ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
+    if (gbp->version < 5) { /* nelems is <non-negative INT> */
+        if (tmp > NC_MAX_ATTRS) { /* cannot be more than max number of attributes */
+            printf("the length of ");
+            return NC_ENOTNC;
+        }
+    }
+    else { /* nelems is <non-negative INT64> */
+        if (tmp > NC_MAX_ATTRS) { /* cannot be more than max number of attributes */
+            printf("the length of ");
+            return NC_ENOTNC;
+        }
+    }
+    ncap->ndefined = (int)tmp; /* number of allowable defined attributes NC_MAX_ATTRS */
 
     err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
                (X_SIZEOF_INT + x_sizeof_NON_NEG); 
@@ -661,7 +687,7 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
     } else {
         if (tag != NC_ATTRIBUTE) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while NC_ATTRIBUTE is expected as number of dimensions is %zu for ", ncap->ndefined);
+            printf("\tInvalid NC component tag, while NC_ATTRIBUTE is expected as number of dimensions is %d for ", ncap->ndefined);
             DEBUG_RETURN(NC_ENOTNC)
         }
 
@@ -865,19 +891,33 @@ val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
     assert(ncap != NULL);
     assert(ncap->value == NULL); 
 
+    /* read NC_tag (NC_VARIABLE or ZERO) from gbp buffer */
     status = val_get_NC_tag(fd, gbp, &tag);
     if (status != NC_NOERR) {
         printf("preamble of ");
         return status;
     }
  
+    /* read nelems (number of variables) from gbp buffer */
     status = val_get_size_t(fd, gbp, &tmp);
-    if(status != NC_NOERR) {
+    if (status != NC_NOERR) {
         printf("the length of ");
         return status;
     }
-    ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
- 
+    if (gbp->version < 5) { /* nelems is <non-negative INT> */
+        if (tmp > NC_MAX_VARS) { /* cannot be more than max number of variables */
+            printf("the length of ");
+            return NC_ENOTNC;
+        }
+    }
+    else { /* nelems is <non-negative INT64> */
+        if (tmp > NC_MAX_VARS) { /* cannot be more than max number of variables */
+            printf("the length of ");
+            return NC_ENOTNC;
+        }
+    }
+    ncap->ndefined = (int)tmp; /* number of allowable defined variables NC_MAX_VARS */
+
     err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
                (X_SIZEOF_INT + x_sizeof_NON_NEG);
 
@@ -890,7 +930,7 @@ val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
     } else {
         if (tag != NC_VARIABLE) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while NC_VARIABLE is expected as number of dimensions is %zu for ", ncap->ndefined);
+            printf("\tInvalid NC component tag, while NC_VARIABLE is expected as number of dimensions is %d for ", ncap->ndefined);
             DEBUG_RETURN(NC_ENOTNC)
         }
  

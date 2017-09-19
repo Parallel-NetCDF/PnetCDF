@@ -115,12 +115,18 @@ typedef struct {
     char       *name;
 } NC_dim;
 
-/* the dimension ID returned from ncmpi_def_dim() is an integer pointer
+/* The dimension ID returned from ncmpi_def_dim() is a pointer to type "int"
  * which means the total number of defined dimension allowed in a file
  * is up to 2^31-1. Thus, the member ndefined below should be of type int.
+ * In fact, the value of ndefined should be between 0 and NC_MAX_DIMS.
+ *
+ * We use name ndefined for number of defined dimensions, instead of "nelems"
+ * used in the CDF format specifications because the number can only be of
+ * data type int (signed 4-byte integer). Other "nelems" in the format
+ * specifications can be of type 8-byte integers.
  */
 typedef struct NC_dimarray {
-    size_t         ndefined;      /* number of defined dimensions */
+    int            ndefined;      /* number of defined dimensions */
     int            unlimited_id;  /* -1 for not defined, otherwise >= 0 */
     NC_dim       **value;
     NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup.
@@ -140,10 +146,6 @@ ncmpio_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref);
 
 /*
  * NC attribute
- *
- * Number of attributes is limited by 2^31-1 because the argument attnump in
- *  int nc_inq_attid(int ncid, int varid, const char *name, int *attnump);
- * is a signed 4-byte integer.
  */
 typedef struct {
     MPI_Offset nelems;   /* number of attribute elements */
@@ -154,8 +156,18 @@ typedef struct {
     void      *xvalue;   /* the actual data, in external representation */
 } NC_attr;
 
+/* Number of attributes is limited by 2^31-1 because the argument ngattsp in
+ * API ncmpi_inq()/nc_inq() is a signed 4-byte integer. Similarly for argument
+ * ngattsp in API ncmpi_inq_natts()/nc_inq_natts(). In fact, the value of
+ * ndefined should be between 0 and NC_MAX_ATTRS.
+ *
+ * We use name ndefined for number of defined attributes, instead of "nelems"
+ * used in the CDF format specifications, because the number can only be of
+ * data type int (signed 4-byte integer). Other "nelems" in the format
+ * specifications can be of type 8-byte integers.
+ */
 typedef struct NC_attrarray {
-    size_t         ndefined;  /* number of defined attributes */
+    int            ndefined;  /* number of defined attributes */
     NC_attr      **value;
     NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup.
                     * indices 0, 1, ... HASH_TABLE_SIZE-1 are the hash keys.
@@ -205,9 +217,20 @@ typedef struct {
 #endif
 } NC_var;
 
+/*
+ * Number of variables is limited by 2^31-1 because the argument nvarsp in
+ * API ncmpi_inq()/nc_inq() is a signed 4-byte integer and argument varid in
+ * API ncmpi_def_var()/nc_def_var() is also a signed 4-byte int. In fact,
+ * the value of ndefined should be between 0 and NC_MAX_VARS.
+ *
+ * We use name ndefined for number of defined variables, instead of "nelems"
+ * used in the CDF format specifications, because the number can only be of
+ * data type int (signed 4-byte integer). Other "nelems" in the format
+ * specifications can be of type 8-byte integers.
+ */
 /* note: we only allow less than 2^31-1 variables defined in a file */
 typedef struct NC_vararray {
-    size_t         ndefined;    /* number of defined variables */
+    int            ndefined;    /* number of defined variables */
     int            num_rec_vars;/* number of defined record variables */
     NC_var       **value;
     NC_nametable   nameT[HASH_TABLE_SIZE]; /* table for quick name lookup.
