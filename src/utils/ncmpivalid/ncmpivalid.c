@@ -40,9 +40,9 @@
 
 #define DEBUG
 #ifdef DEBUG
-#define DEBUG_RETURN(e) {                      \
-    printf("(%s at line %d)\n",#e,__LINE__);   \
-    return e;                                  \
+#define DEBUG_RETURN(e) {                                             \
+    printf("(Error %s at line %d in file %s)\n",#e,__LINE__,__FILE__);\
+    return e;                                                         \
 }
 #else
 #define DEBUG_RETURN(e) return e;
@@ -389,19 +389,12 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
         printf("the length of ");
         return status;
     }
-    if (gbp->version < 5) { /* nelems is <non-negative INT> */
-        if (tmp > NC_MAX_DIMS) { /* cannot be more than max number of dimensions */
-            printf("the length of ");
-            return NC_ENOTNC;
-        }
+    if (tmp > NC_MAX_DIMS) {
+        /* number of allowable defined dimensions NC_MAX_DIMS */
+        printf("the length of ");
+        return NC_ENOTNC;
     }
-    else { /* nelems is <non-negative INT64> */
-        if (tmp > NC_MAX_DIMS) { /* cannot be more than max number of dimensions */
-            printf("the length of ");
-            return NC_ENOTNC;
-        }
-    }
-    ncap->ndefined = (int)tmp; /* number of allowable defined dimensions NC_MAX_DIMS */
+    ncap->ndefined = (int)tmp;
 
     err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
                (X_SIZEOF_INT + x_sizeof_NON_NEG); 
@@ -660,19 +653,12 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
         printf("the length of ");
         return status;
     }
-    if (gbp->version < 5) { /* nelems is <non-negative INT> */
-        if (tmp > NC_MAX_ATTRS) { /* cannot be more than max number of attributes */
-            printf("the length of ");
-            return NC_ENOTNC;
-        }
+    if (tmp > NC_MAX_ATTRS) {
+        /* number of allowable defined attributes NC_MAX_ATTRS */
+        printf("the length of ");
+        return NC_ENOTNC;
     }
-    else { /* nelems is <non-negative INT64> */
-        if (tmp > NC_MAX_ATTRS) { /* cannot be more than max number of attributes */
-            printf("the length of ");
-            return NC_ENOTNC;
-        }
-    }
-    ncap->ndefined = (int)tmp; /* number of allowable defined attributes NC_MAX_ATTRS */
+    ncap->ndefined = (int)tmp;
 
     err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
                (X_SIZEOF_INT + x_sizeof_NON_NEG); 
@@ -904,19 +890,12 @@ val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
         printf("the length of ");
         return status;
     }
-    if (gbp->version < 5) { /* nelems is <non-negative INT> */
-        if (tmp > NC_MAX_VARS) { /* cannot be more than max number of variables */
-            printf("the length of ");
-            return NC_ENOTNC;
-        }
+    if (tmp > NC_MAX_VARS) {
+        /* number of allowable defined variables NC_MAX_VARS */
+        printf("the length of ");
+        return NC_ENOTNC;
     }
-    else { /* nelems is <non-negative INT64> */
-        if (tmp > NC_MAX_VARS) { /* cannot be more than max number of variables */
-            printf("the length of ");
-            return NC_ENOTNC;
-        }
-    }
-    ncap->ndefined = (int)tmp; /* number of allowable defined variables NC_MAX_VARS */
+    ncap->ndefined = (int)tmp;
 
     err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
                (X_SIZEOF_INT + x_sizeof_NON_NEG);
@@ -1085,21 +1064,26 @@ static int
 val_NC_check_voff(NC *ncp)
 {
     NC_var *varp;
-    MPI_Offset i, prev_off;
+    MPI_Offset i, prev, prev_off;
 
     if (ncp->vars.ndefined == 0) return NC_NOERR;
 
     /* Loop through vars, first pass is for non-record variables */
     prev_off = ncp->begin_var;
+    prev     = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
         varp = ncp->vars.value[i];
         if (IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n", varp->name, varp->begin, prev_off);
+            if (i == 0)
+                printf("Variable \"%s\" begin offset (%lld) is less than header extent (%lld)\n", varp->name, varp->begin, prev_off);
+            else
+                printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             DEBUG_RETURN(NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
+        prev = i;
     }
 
     if (ncp->begin_rec < prev_off) {
@@ -1109,15 +1093,20 @@ val_NC_check_voff(NC *ncp)
 
     /* Loop through vars, second pass is for record variables */
     prev_off = ncp->begin_rec;
+    prev     = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
         varp = ncp->vars.value[i];
         if (!IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n", varp->name, varp->begin, prev_off);
+            if (i == 0)
+                printf("Variable \"%s\" begin offset (%lld) is less than record variable section begin offset (%lld)\n", varp->name, varp->begin, prev_off);
+            else
+                printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             DEBUG_RETURN(NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
+        prev = i;
     }
 
     return NC_NOERR;
