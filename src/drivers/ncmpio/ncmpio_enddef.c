@@ -748,22 +748,31 @@ int
 ncmpio_NC_check_voffs(NC *ncp)
 {
     NC_var *varp;
-    MPI_Offset i, prev_off;
+    int i, prev;
+    MPI_Offset prev_off;
 
     if (ncp->vars.ndefined == 0) return NC_NOERR;
 
     /* Loop through vars, first pass is for non-record variables */
     prev_off = ncp->begin_var;
+    prev     = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
         varp = ncp->vars.value[i];
         if (IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            if (ncp->safe_mode)
-                printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n", varp->name, varp->begin, prev_off);
+            if (ncp->safe_mode) {
+                if (i == 0)
+                    printf("Variable \"%s\" begin offset (%lld) is less than header extent (%lld)\n",
+                           varp->name, varp->begin, prev_off);
+                else
+                    printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n",
+                           varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
+            }
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
+        prev     = i;
     }
 
     if (ncp->begin_rec < prev_off) {
@@ -774,16 +783,26 @@ ncmpio_NC_check_voffs(NC *ncp)
 
     /* Loop through vars, second pass is for record variables */
     prev_off = ncp->begin_rec;
+    prev     = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
         varp = ncp->vars.value[i];
         if (!IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            if (ncp->safe_mode)
-                printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n", varp->name, varp->begin, prev_off);
+            if (ncp->safe_mode) {
+                printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n",
+                           varp->name, varp->begin, prev_off);
+                if (i == 0)
+                    printf("Variable \"%s\" begin offset (%lld) is less than record variable section begin offset (%lld)\n",
+                           varp->name, varp->begin, prev_off);
+                else
+                    printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n",
+                           varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
+            }
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
+        prev     = i;
     }
 
     return NC_NOERR;
