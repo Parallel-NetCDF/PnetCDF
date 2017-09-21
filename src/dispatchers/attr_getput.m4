@@ -37,7 +37,7 @@ sanity_check_get(PNC        *pncp,
 
     /* sanity check for name */
     if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
- 
+
     if (strlen(name) > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
 
     return NC_NOERR;
@@ -58,15 +58,17 @@ sanity_check_put(PNC        *pncp,
     if (pncp->flag & NC_MODE_RDONLY)
         DEBUG_RETURN_ERROR(NC_EPERM)
 
-    if (varid == NC_GLOBAL && name != NULL && !strcmp(name, _FillValue))
-        DEBUG_RETURN_ERROR(NC_EGLOBAL) /* global _FillValue is not allowed */
-
     /* check whether variable ID is valid */
     if (varid != NC_GLOBAL && (varid < 0 || varid >= pncp->nvars))
         DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (name == NULL || *name == 0) /* name cannot be NULL or NULL string */
         DEBUG_RETURN_ERROR(NC_EBADNAME)
+
+#ifdef NO_NC_GLOBAL_FILLVALUE
+    if (varid == NC_GLOBAL && !strcmp(name, _FillValue))
+        DEBUG_RETURN_ERROR(NC_EGLOBAL) /* global _FillValue is not allowed */
+#endif
 
     if (strlen(name) > NC_MAX_NAME) /* name length */
         DEBUG_RETURN_ERROR(NC_EMAXNAME)
