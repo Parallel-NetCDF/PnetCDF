@@ -14,7 +14,7 @@
  *    the second and third writes and its access region covers both of the
  *    two writes. The 2nd and 3rd writes do not interleave with each other.
  *
- * In the seconf case,
+ * In the second case,
  *    It first defines a netCDF variable of size 10 x 18.
  *    4 calls to ncmpi_iput_vara_int(),
  *    First  write: a subarray of size 8 x 2 at the start offsets of 0 x 3
@@ -187,8 +187,8 @@ int main(int argc, char** argv)
     for (i=0; i<NY*NX; i++) buf[i] = -1;
     err = ncmpi_put_var_int_all(ncid, varid[1], buf); CHECK_ERR
 
-    /* write 8 x 2 elements so this only interleaves the next two
-     * iput requests */
+    /* write 8 x 2 elements so this only interleaves the next two iput
+     * requests */
     start[0] = 0; start[1] = 3;
     count[0] = 8; count[1] = 2;
     len = (size_t)(count[0] * count[1]);
