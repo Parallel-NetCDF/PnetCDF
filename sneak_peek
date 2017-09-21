@@ -46,6 +46,8 @@ This is essentially a placeholder for the next release note ...
       to indicate the contents pointed by fill_value is immutable.
 
   o Semantics updates
+    * For CDF-5 files, the maximum size of a variable or a variable's record
+      is NC_MAX_INT64-3.
     * When the file create/open modes are not consistent among processes, the
       modes will be replaced by rank 0's mode and PnetCDF library will still
       try to create/open the file. Error code NC_EMULTIDEFINE_CMODE or
@@ -78,19 +80,51 @@ This is essentially a placeholder for the next release note ...
     * doc/README.Ubuntu provides build instructions for Ubuntu Linux OS.
 
   o New test program
+    * test/largefile/tst_cdf5_begin.c - to test whether a CDF-5 file header is
+      corrupted.
+    * test/testcases/tst_open_cdf5.c - to test whether NC_ENOTNC is thrown
+      when opening a CDF-5 (bad_begin.nc5) file with corrupted header.
+    * test/testcases/large_var_cdf5.c - to test whether NC_EVARSIZE is thrown
+      when a variable or a record is larger than NC_MAX_INT64-3.
     * test/testcases/mix_collectives.c - to test collective get/put APIs that
       allow different processes to call different kinds of APIs (i.e. var1,
-      vara, vars, varm, etc.) and use different var IDs.
+      vara, vars, varm, etc.) and use different var IDs. In other words, the
+      API kinds can be different among processes in a collective call.
     * test/largefile/high_dim_var.c - tests blocking vars APIs for high-
       dimensional variables. This is to test r3164.
     * test/largefile/large_dims_vars_attrs.c - tests large values of number of
       dimensions, large number of variables, and large number of attributes.
     * test/testcases/put_all_kinds.m4 - tests various blocking put APIs.
-    * test/testcases/tst_dimsizes.c - borrowed from netCDF library to test
+    * test/testcases/tst_dimsizes.c - borrowed from NetCDF library to test
       define/inquire the maximum allowable dimension sizes. This test program
       is similar to (or a subset of) test/cdf_format/dim_cdf12.c
     * test/testcases/null_args.c - tests whether the correct error codes can
       be returned when using NULL arguments for start, count, stride, or imap
+
+  o Conformity with NetCDF library
+    * API ncmpi_open now checks the number of large variables that is legal
+      for CDF-1 and CDF-2 files. See r2961. For the information about the
+      number of large variables allowed in the classic formats can be found in
+      http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations
+    * Add checking for error code NC_ELATEFILL. Setting a variable's attribute
+      _FillValue must be done in the variable's initial define mode.
+    * NetCDF-4 documents in 4.4.1 and prior state that setting attribute
+      _FillValue for global variable NC_GLOBAL is not allowed and error code
+      NC_EINVAL will be thrown. Revisions r2954, r2955, and r2956 enforce this
+      rule. However, because the rule has never been implemented in any NetCDF
+      official release, NetCDF developers have decided to abandon this rule
+      by revising the NetCDF document starting from v4.5. See discussion in
+      NetCDF GitHub pull request 458. To be consistent with NetCDF, PnetCDF
+      follows the same decision by wrapping the checking with preprocessor
+      conditional #ifdef NO_NC_GLOBAL_FILLVALUE (see r3403). Note NC_EGLOBAL
+      will be thrown when using NC_GLOBAL in ncmpi_def_var_fill(). This is
+      due to no data type information for the fill value can be passed.
+    * From the releases of 1.6.1 through 1.8.1, putting attribute _FillValue
+      automatically turns on the fill mode for the variable. Similarly,
+      deleting attribute _FillValue turns off the fill mode. However, this
+      behavior does not conform with NetCDF library. This release fixes this
+      inconsistency, so putting or deleting attribute _FillValue does not
+      affect a variable's fill mode. See r2951.
 
   o Issues related to MPI library vendors:
     * When using OpenMPI 2.1.1 and priors built with Intel compilers 17.0.0,
@@ -114,15 +148,12 @@ This is essentially a placeholder for the next release note ...
       http://mailman.cse.ohio-state.edu/pipermail/mvapich-discuss/2017-February/006300.html
 
   o Other updates:
+    * Add quiet mode command-line option "-q" to utility program ncmpivalid.
+    * Add an internal check for whether the file starting offsets of all
+      variables are in an increasing order as the variables defines. See r3369.
     * All build recipes (README files) have been moved to folder doc. Most of
       the recipes have been updated with instructions for building shared
       libraries.
-    * API ncmpi_open now checks the number of large variables that is legal
-      for CDF-1 and CDF-2 files. See r2961. For the information about the
-      number of large variables allowed in the classic formats can be found in
-      http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations
-    * Add checking for error code NC_ELATEFILL. Setting a variable's attribute
-      _FillValue must be done in the variable's initial define mode.
     * Rename configure-time variables TEST_SEQRUN, TEST_MPIRUN, and TEST_OUTDIR
       to TESTSEQRUN, TESTMPIRUN, and TESTOUTDIR, respectively. This change
       avoids conflict to the name convention reserved by automake.
@@ -130,22 +161,18 @@ This is essentially a placeholder for the next release note ...
       configure command line
 
   o Bug fixes
+    * Fix the bug of nonblocking APIs for the case one request whose access
+      region covers more than one other non-interleaved requests. The bug fails
+      to identify them a single group of interleaved requests. See r3389 and
+      revised test program test/nonblocking/interleaved.c to test the fix.
     * Fix the bug of string parsing the environment variable PNETCDF_HINTS and
       print warning messages for ill-formed hint strings. See r3284.
     * Fix F90 APIs for reading and writing scalar variables, i.e. number of
       dimensions is zero. The bugs appear only when using Intel Fortran
       compiler which does not allow checking presence of an argument and
       its contents in the same if condition. See r3009, r3012, r3013.
-    * When trying to set attribute _FillValue for global variable NC_GLOBAL,
-      error code NC_EGLOBAL will be returned. See r2954, r2955, r2956.
     * Conform with CDF-2 file format specification on using 2^32-1 for vsize
       when the variable size is larger than 23^2-4 bytes. See r2957.
-    * From the releases of 1.6.1 through 1.8.1, putting attribute _FillValue
-      automatically turns on the fill mode for the variable. Similarly,
-      deleting attribute _FillValue turns off the fill mode. However, this
-      behavior does not conform with netCDF library. This release fixes this
-      bug, so putting or deleting attribute _FillValue does not affect a
-      variable's fill mode. See r2951.
     * Fix nc_test when running on an ARMv7 architecture, a raspberry pi, where
       char is unsigned and which is little Endian, 32-bit machine. See r2922.
     * Fix the missing byte-swap required for retrieving user-defined fill
