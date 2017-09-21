@@ -175,8 +175,9 @@ ncmpi_inq_dimid(int         ncid,    /* IN:  file ID */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
-        DEBUG_RETURN_ERROR(NC_EBADNAME)
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+
+    if (strlen(name) > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
 
     /* calling the subroutine that implements ncmpi_inq_dimid() */
     return pncp->driver->inq_dimid(pncp->ncp, name, dimidp);
