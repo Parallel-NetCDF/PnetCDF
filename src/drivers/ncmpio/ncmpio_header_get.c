@@ -353,7 +353,10 @@ hdr_fetch(bufferinfo *gbp) {
 
     if (gbp->size != (int)gbp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
+    /* No need to zero out the buffer */
+    /*
     memset(gbp->base, 0, (size_t)gbp->size);
+    */
     gbp->pos = gbp->base;
 
     MPI_Comm_rank(gbp->comm, &rank);
@@ -422,11 +425,11 @@ hdr_get_uint32(bufferinfo *gbp,
      * in CDF-2 format, only variable begin (starting file offset) is 64-bit
      * in CDF-5 format, both variable's begin and size are 64-bit
      */
-    int status = hdr_check_buffer(gbp, 4); /* size of int32 == 4 */
-    if (status != NC_NOERR) return status;
+    int err = hdr_check_buffer(gbp, 4); /* size of int32 == 4 */
+    if (err != NC_NOERR) return err;
 
-    status = ncmpix_get_uint32((const void **)(&gbp->pos), xp);
-    return status;
+    err = ncmpix_get_uint32((const void **)(&gbp->pos), xp);
+    return err;
 }
 
 /*----< hdr_get_uint64() >---------------------------------------------------*/
@@ -438,11 +441,11 @@ hdr_get_uint64(bufferinfo *gbp,
      * in CDF-2 format, only variable begin (starting file offset) is 64-bit
      * in CDF-5 format, both variable's begin and size are 64-bit
      */
-    int status = hdr_check_buffer(gbp, 8); /* size of int64 == 8 */
-    if (status != NC_NOERR) return status;
+    int err = hdr_check_buffer(gbp, 8); /* size of int64 == 8 */
+    if (err != NC_NOERR) return err;
 
-    status = ncmpix_get_uint64((const void **)(&gbp->pos), xp);
-    return status;
+    err = ncmpix_get_uint64((const void **)(&gbp->pos), xp);
+    return err;
 }
 
 /*----< hdr_get_NC_tag() >----------------------------------------------------*/
@@ -457,12 +460,12 @@ hdr_get_NC_tag(bufferinfo *gbp,
                NC_tag     *tagp)
 {
     uint type = 0;
-    int status = hdr_check_buffer(gbp, 4);
-    if (status != NC_NOERR) return status;
+    int err = hdr_check_buffer(gbp, 4);
+    if (err != NC_NOERR) return err;
 
     /* get an external unsigned 4-byte integer from the file */
-    status = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
-    if (status != NC_NOERR) return status;
+    err = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
+    if (err != NC_NOERR) return err;
 
     *tagp = (NC_tag) type;
     return NC_NOERR;
@@ -474,14 +477,14 @@ hdr_get_nc_type(bufferinfo *gbp,
                 nc_type    *xtypep)
 {
     /* nc_type is 4-byte integer, X_SIZEOF_INT */
-    int status;
+    int err;
     uint xtype;
 
-    status = hdr_check_buffer(gbp, X_SIZEOF_INT);
-    if (status != NC_NOERR) return status;
+    err = hdr_check_buffer(gbp, X_SIZEOF_INT);
+    if (err != NC_NOERR) return err;
 
-    status = ncmpix_get_uint32((const void**)(&gbp->pos), &xtype);
-    if (status != NC_NOERR) return status;
+    err = ncmpix_get_uint32((const void**)(&gbp->pos), &xtype);
+    if (err != NC_NOERR) return err;
 
     if (xtype != NC_CHAR    &&
         xtype != NC_BYTE    &&
@@ -523,18 +526,22 @@ hdr_get_NC_name(bufferinfo  *gbp,
     MPI_Offset nchars, padding, bufremain, strcount;
 
     *namep = NULL;
-    /* get nelems */
+
+    /* get nelems (string length of name) */
     if (gbp->version < 5) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        if (tmp > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
         nchars = (MPI_Offset)tmp;
     }
     else {
         uint64 tmp;
         err = hdr_get_uint64(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        if (tmp > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
         nchars = (MPI_Offset)tmp;
     }
-    if (err != NC_NOERR) return err;
 
     /* Allocate a NC_string structure large enough to hold nchars characters.
      * Note nchars is strlen(namestring) without terminal character.
@@ -611,38 +618,39 @@ hdr_get_NC_dim(bufferinfo  *gbp,
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    int status;
+    int err;
     char *name;
     NC_dim *dimp;
+    MPI_Offset dim_length;
 
     *dimpp = NULL;
 
     /* get name */
-    status = hdr_get_NC_name(gbp, &name);
-    if (status != NC_NOERR) return status;
+    err = hdr_get_NC_name(gbp, &name);
+    if (err != NC_NOERR) return err;
+
+    /* get dim_length */
+    if (gbp->version < 5) {
+        uint tmp;
+        err = hdr_get_uint32(gbp, &tmp);
+        dim_length = (MPI_Offset)tmp;
+    }
+    else {
+        uint64 tmp;
+        err = hdr_get_uint64(gbp, &tmp);
+        dim_length = (MPI_Offset)tmp;
+    }
+    if (err != NC_NOERR) { /* frees dim */
+        NCI_Free(name);
+        return err;
+    }
 
     /* allocate and initialize NC_dim object */
     dimp = (NC_dim*) NCI_Malloc(sizeof(NC_dim));
     if (dimp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     dimp->name     = name;
     dimp->name_len = strlen(name);
-
-    /* get dim_length */
-    if (gbp->version < 5) {
-        uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
-        dimp->size = (MPI_Offset)tmp;
-    }
-    else {
-        uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
-        dimp->size = (MPI_Offset)tmp;
-    }
-    if (status != NC_NOERR) { /* frees dim */
-        NCI_Free(dimp->name);
-        NCI_Free(dimp);
-        return status;
-    }
+    dimp->size     = dim_length;
 
     *dimpp = dimp;
     return NC_NOERR;
@@ -653,7 +661,7 @@ hdr_get_NC_dim(bufferinfo  *gbp,
  * INT64. However, argument ndims/dimid in all PnetCDF/NetCDF APIs are of type
  * int. Thus, we only need to use type int for internal metadata, ndefined. If
  * nelems in the input file is more than NC_MAX_DIMS, then it violates the
- * format specifications (NC_ENOTNC).
+ * format specifications (NC_EMAXDIMS).
  */
 static int
 hdr_get_NC_dimarray(bufferinfo  *gbp,
@@ -671,7 +679,7 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
      * NON_NEG      = <non-negative INT> |        // CDF-1 and CDF-2
      *                <non-negative INT64>        // CDF-5
      */
-    int i, status, ndefined=0;
+    int i, err, ndefined=0;
     size_t alloc_size;
     NC_tag tag = NC_UNSPECIFIED;
 
@@ -680,29 +688,26 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     assert(ncap->value == NULL);
 
     /* read NC_tag (NC_DIMENSION or ZERO) from gbp buffer */
-    status = hdr_get_NC_tag(gbp, &tag);
-    if (status != NC_NOERR) return status;
+    err = hdr_get_NC_tag(gbp, &tag);
+    if (err != NC_NOERR) return err;
 
     /* read nelems (number of dimensions) from gbp buffer */
     if (gbp->version < 5) { /* nelems is <non-negative INT> */
         uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
-        if (status == NC_NOERR && tmp > NC_MAX_DIMS)
-            /* cannot be more than max number of dimensions */
-            status = NC_ENOTNC;
-        else
-            ndefined = (int)tmp;
+        err = hdr_get_uint32(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than max number of dimensions */
+        if (tmp > NC_MAX_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        ndefined = (int)tmp;
     }
     else { /* nelems is <non-negative INT64> */
         uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
-        if (status == NC_NOERR && tmp > NC_MAX_DIMS)
-            /* cannot be more than max number of dimensions */
-            status = NC_ENOTNC;
-        else
-            ndefined = (int)tmp;
+        err = hdr_get_uint64(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than max number of dimensions */
+        if (tmp > NC_MAX_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        ndefined = (int)tmp;
     }
-    if (status != NC_NOERR) return status;
 
     /* Now ndefined is in between 0 and NC_MAX_DIMS */
     ncap->ndefined = ndefined;
@@ -728,11 +733,11 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     for (i=0; i<ndefined; i++) {
-        status = hdr_get_NC_dim(gbp, ncap->value + i);
-        if (status != NC_NOERR) { /* error: fail to get the next dim */
+        err = hdr_get_NC_dim(gbp, ncap->value + i);
+        if (err != NC_NOERR) { /* error: fail to get the next dim */
             ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_dimarray(ncap);
-            return status;
+            return err;
         }
         if (ncap->value[i]->size == NC_UNLIMITED)
             ncap->unlimited_id = i; /* ID of unlimited dimension */
@@ -824,47 +829,47 @@ hdr_get_NC_attr(bufferinfo  *gbp,
      * NON_NEG = <non-negative INT> |  // CDF-1 and CDF-2
      *           <non-negative INT64>  // CDF-5
      */
-    int status;
+    int err;
     char *name;
     nc_type type;
     MPI_Offset nelems;
     NC_attr *attrp;
 
     /* get name */
-    status = hdr_get_NC_name(gbp, &name);
-    if (status != NC_NOERR) return status;
+    err = hdr_get_NC_name(gbp, &name);
+    if (err != NC_NOERR) return err;
 
     /* get nc_type */
-    status = hdr_get_nc_type(gbp, &type);
-    if (status != NC_NOERR) return status;
+    err = hdr_get_nc_type(gbp, &type);
+    if (err != NC_NOERR) return err;
 
     /* get nelems */
     if (gbp->version < 5) {
         uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
+        err = hdr_get_uint32(gbp, &tmp);
         nelems = (MPI_Offset)tmp;
     }
     else {
         uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
+        err = hdr_get_uint64(gbp, &tmp);
         nelems = (MPI_Offset)tmp;
     }
-    if (status != NC_NOERR) return status;
+    if (err != NC_NOERR) return err;
 
     /* allocate space for attribute object */
-    status = ncmpio_new_NC_attr(name, type, nelems, &attrp);
-    if (status != NC_NOERR) {
+    err = ncmpio_new_NC_attr(name, type, nelems, &attrp);
+    if (err != NC_NOERR) {
         NCI_Free(name);
-        return status;
+        return err;
     }
 
     /* get [values ...] */
-    status = hdr_get_NC_attrV(gbp, attrp);
-    if (status != NC_NOERR) {
+    err = hdr_get_NC_attrV(gbp, attrp);
+    if (err != NC_NOERR) {
         if (attrp->xvalue != NULL) NCI_Free(attrp->xvalue);
         NCI_Free(attrp->name);
         NCI_Free(attrp);
-        return status;
+        return err;
     }
 
     *attrpp = attrp;
@@ -876,7 +881,7 @@ hdr_get_NC_attr(bufferinfo  *gbp,
  * INT64. However, argument nattrs in all PnetCDF/NetCDF APIs are of type int.
  * Thus, we only need to use type int for internal metadata, ndefined. If
  * nelems in the input file is more than NC_MAX_ATTRS, then it violates the
- * format specifications (NC_ENOTNC).
+ * format specifications (NC_EMAXATTS).
  */
 static int
 hdr_get_NC_attrarray(bufferinfo   *gbp,
@@ -894,7 +899,7 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
      * NON_NEG      = <non-negative INT> |        // CDF-1 and CDF-2
      *                <non-negative INT64>        // CDF-5
      */
-    int i, status, ndefined=0;
+    int i, err, ndefined=0;
     size_t alloc_size;
     NC_tag tag = NC_UNSPECIFIED;
 
@@ -903,29 +908,26 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     assert(ncap->value == NULL);
 
     /* read NC_tag (NC_ATTRIBUTE or ZERO) from gbp buffer */
-    status = hdr_get_NC_tag(gbp, &tag);
-    if (status != NC_NOERR) return status;
+    err = hdr_get_NC_tag(gbp, &tag);
+    if (err != NC_NOERR) return err;
 
     /* read nelems (number of attributes) from gbp buffer */
     if (gbp->version < 5) { /* nelems is <non-negative INT> */
         uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
-        if (status == NC_NOERR && tmp > NC_MAX_ATTRS)
-            /* cannot be more than max number of attributes */
-            status = NC_ENOTNC;
-        else
-            ndefined = (int)tmp;
+        err = hdr_get_uint32(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than max number of attributes */
+        if (tmp > NC_MAX_ATTRS) DEBUG_RETURN_ERROR(NC_EMAXATTS)
+        ndefined = (int)tmp;
     }
     else { /* nelems is <non-negative INT64> */
         uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
-        if (status == NC_NOERR && tmp > NC_MAX_ATTRS)
-            /* cannot be more than max number of attributes */
-            status = NC_ENOTNC;
-        else
-            ndefined = (int)tmp;
+        err = hdr_get_uint64(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than max number of attributes */
+        if (tmp > NC_MAX_ATTRS) DEBUG_RETURN_ERROR(NC_EMAXATTS)
+        ndefined = (int)tmp;
     }
-    if (status != NC_NOERR) return status;
 
     /* Now ndefined is in between 0 and NC_MAX_ATTRS */
     ncap->ndefined = ndefined;
@@ -950,11 +952,11 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
 
     /* get [attr ...] */
     for (i=0; i<ndefined; i++) {
-        status = hdr_get_NC_attr(gbp, ncap->value + i);
-        if (status != NC_NOERR) { /* Error: fail to get the next att */
+        err = hdr_get_NC_attr(gbp, ncap->value + i);
+        if (err != NC_NOERR) { /* Error: fail to get the next att */
             ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_attrarray(ncap);
-            return status;
+            return err;
         }
     }
 
@@ -982,33 +984,34 @@ hdr_get_NC_var(bufferinfo  *gbp,
      * NON_NEG     = <non-negative INT> |  // CDF-1 and CDF-2
      *               <non-negative INT64>  // CDF-5
      */
-    int status;
+    int dim, ndims, err;
     char *name;
-    MPI_Offset ndims=0, dim;
-    MPI_Offset tmp_dimids=0;
     NC_var *varp;
 
     /* get name */
-    status = hdr_get_NC_name(gbp, &name);
-    if (status != NC_NOERR) return status;
+    err = hdr_get_NC_name(gbp, &name);
+    if (err != NC_NOERR) return err;
 
-    /* nelems */
+    /* nelems (number of dimensions) */
     if (gbp->version < 5) {
         uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
-        ndims = (MPI_Offset)tmp;
+        err = hdr_get_uint32(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than NC_MAX_VAR_DIMS */
+        if (tmp > NC_MAX_VAR_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        ndims = (int)tmp;
     }
     else {
         uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
-        ndims = (MPI_Offset)tmp;
+        err = hdr_get_uint64(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than NC_MAX_VAR_DIMS */
+        if (tmp > NC_MAX_VAR_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        ndims = (int)tmp;
     }
-    if (status != NC_NOERR) return status;
-
-    if (ndims != (int)ndims) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* allocate space for var object */
-    varp = ncmpio_new_NC_var(name, (int)ndims);
+    varp = ncmpio_new_NC_var(name, ndims);
     if (varp == NULL) {
         NCI_Free(name);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -1016,59 +1019,54 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get [dimid ...] */
     for (dim=0; dim<ndims; dim++) {
-        status = hdr_check_buffer(gbp, (gbp->version < 5 ? 4 : 8));
-        if (status != NC_NOERR) {
-            ncmpio_free_NC_var(varp);
-            return status;
-        }
         if (gbp->version < 5) {
             uint tmp;
-            status = hdr_get_uint32(gbp, &tmp);
-            tmp_dimids = (MPI_Offset)tmp;
+            err = hdr_get_uint32(gbp, &tmp);
+            if (err != NC_NOERR) break;
+            /* cannot be more than NC_MAX_DIMS */
+            if (tmp > NC_MAX_DIMS) {
+                DEBUG_ASSIGN_ERROR(err, NC_EMAXDIMS)
+                break;
+            }
+            varp->dimids[dim] = (int)tmp;
         }
         else {
             uint64 tmp;
-            status = hdr_get_uint64(gbp, &tmp);
-            tmp_dimids = (MPI_Offset)tmp;
-        }
-        /* TODO: consider change the data type of dimids from int to
-         * MPI_Offset */
-        varp->dimids[dim] = (int)tmp_dimids;
-        if (status != NC_NOERR) {
-           return status;
+            err = hdr_get_uint64(gbp, &tmp);
+            if (err != NC_NOERR) break;
+            /* cannot be more than NC_MAX_DIMS */
+            if (tmp > NC_MAX_DIMS) {
+                DEBUG_ASSIGN_ERROR(err, NC_EMAXDIMS)
+                break;
+            }
+            varp->dimids[dim] = (int)tmp;
         }
     }
+    if (err != NC_NOERR) goto fn_exit;
 
     /* get vatt_list */
-    status = hdr_get_NC_attrarray(gbp, &varp->attrs);
-    if (status != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        return status;
-    }
+    err = hdr_get_NC_attrarray(gbp, &varp->attrs);
+    if (err != NC_NOERR) goto fn_exit;
 
     /* get nc_type */
-    status = hdr_get_nc_type(gbp, &varp->xtype);
-    if (status != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        return status;
-    }
+    err = hdr_get_nc_type(gbp, &varp->xtype);
+    if (err != NC_NOERR) goto fn_exit;
+
     ncmpii_xlen_nc_type(varp->xtype, &varp->xsz);
 
     /* get vsize */
     if (gbp->version < 5) {
         uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
+        err = hdr_get_uint32(gbp, &tmp);
         varp->len = (MPI_Offset)tmp;
     }
     else {
         uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
+        err = hdr_get_uint64(gbp, &tmp);
         varp->len = (MPI_Offset)tmp;
     }
-    if (status != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        return status;
-    }
+    if (err != NC_NOERR) goto fn_exit;
+
     /* As described in CDF-2 format specification, vsize is redundant.
        Its value may be computed from the product of dimension lengths.
        In CDF-2, vsize is a 4-byte integer. So, if we define a variable of
@@ -1085,31 +1083,25 @@ hdr_get_NC_var(bufferinfo  *gbp,
        header.
      */
 
-    /* next element is 'begin' */
-    status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
-    if (status != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        return status;
-    }
-
     /* get begin */
     if (gbp->version == 1) {
-        uint tmp=0;
-        status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
+        uint tmp;
+        err = hdr_get_uint32(gbp, &tmp);
         varp->begin = (MPI_Offset)tmp;
     }
     else {
-        uint64 tmp=0;
-        status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
+        uint64 tmp;
+        err = hdr_get_uint64(gbp, &tmp);
         varp->begin = (MPI_Offset)tmp;
     }
-    if (status != NC_NOERR) {
-        ncmpio_free_NC_var(varp);
-        return status;
-    }
 
-    *varpp = varp;
-    return NC_NOERR;
+fn_exit:
+    if (err != NC_NOERR)
+        ncmpio_free_NC_var(varp);
+    else
+        *varpp = varp;
+
+    return err;
 }
 
 /*----< hdr_get_NC_vararray() >----------------------------------------------*/
@@ -1117,7 +1109,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
  * INT64. However, argument nvars/varid in all PnetCDF/NetCDF APIs are of type
  * int. Thus, we only need to use type int for internal metadata, ndefined. If
  * nelems in the input file is more than NC_MAX_VARS, then it violates the
- * format specifications (NC_ENOTNC).
+ * format specifications (NC_EMAXVARS).
  */
 static int
 hdr_get_NC_vararray(bufferinfo  *gbp,
@@ -1137,7 +1129,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
      * NON_NEG     = <non-negative INT> |        // CDF-1 and CDF-2
      *               <non-negative INT64>        // CDF-5
      */
-    int i, status, ndefined=0;
+    int i, err, ndefined=0;
     size_t alloc_size;
     NC_tag tag = NC_UNSPECIFIED;
 
@@ -1146,29 +1138,26 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     assert(ncap->value == NULL);
 
     /* read NC_tag (NC_VARIABLE or ZERO) from gbp buffer */
-    status = hdr_get_NC_tag(gbp, &tag);
-    if (status != NC_NOERR) return status;
+    err = hdr_get_NC_tag(gbp, &tag);
+    if (err != NC_NOERR) return err;
 
     /* read nelems (number of variables) from gbp buffer */
     if (gbp->version < 5) { /* nelems is <non-negative INT> */
         uint tmp;
-        status = hdr_get_uint32(gbp, &tmp);
-        if (status == NC_NOERR && tmp > NC_MAX_VARS)
-            /* cannot be more than max number of attributes */
-            status = NC_ENOTNC;
-        else
-            ndefined = (int)tmp;
+        err = hdr_get_uint32(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than max number of attributes */
+        if (tmp > NC_MAX_VARS) DEBUG_RETURN_ERROR(NC_EMAXVARS)
+        ndefined = (int)tmp;
     }
     else { /* nelems is <non-negative INT64> */
         uint64 tmp;
-        status = hdr_get_uint64(gbp, &tmp);
-        if (status == NC_NOERR && tmp > NC_MAX_VARS)
-            /* cannot be more than max number of attributes */
-            status = NC_ENOTNC;
-        else
-            ndefined = (int)tmp;
+        err = hdr_get_uint64(gbp, &tmp);
+        if (err != NC_NOERR) return err;
+        /* cannot be more than max number of attributes */
+        if (tmp > NC_MAX_VARS) DEBUG_RETURN_ERROR(NC_EMAXVARS)
+        ndefined = (int)tmp;
     }
-    if (status != NC_NOERR) return status;
 
     /* Now ndefined is in between 0 and NC_MAX_ATTRS */
     ncap->ndefined = ndefined;
@@ -1193,11 +1182,11 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
 
     /* get [var ...] */
     for (i=0; i<ndefined; i++) {
-        status = hdr_get_NC_var(gbp, ncap->value + i);
-        if (status != NC_NOERR) { /* Error: fail to get the next var */
+        err = hdr_get_NC_var(gbp, ncap->value + i);
+        if (err != NC_NOERR) { /* Error: fail to get the next var */
             ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_vararray(ncap);
-            return status;
+            return err;
         }
         ncap->value[i]->varid = i;
     }
@@ -1262,10 +1251,9 @@ ncmpio_hdr_len_NC(const NC *ncp)
 int
 ncmpio_hdr_get_NC(NC *ncp)
 {
-    int status;
+    int err;
     bufferinfo getbuf;
     char magic[NC_MAGIC_LEN];
-    MPI_Offset nrecs = 0;
     MPI_Aint pos_addr, base_addr;
 
     assert(ncp != NULL);
@@ -1284,14 +1272,14 @@ ncmpio_hdr_get_NC(NC *ncp)
     getbuf.pos = getbuf.base = (void *)NCI_Malloc((size_t)getbuf.size);
 
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
-    status = hdr_fetch(&getbuf);
-    if (status != NC_NOERR) return status;
+    err = hdr_fetch(&getbuf);
+    if (err != NC_NOERR) return err;
 
     /* processing the header from getbuf, the get buffer */
 
     /* First get the file format information, magic */
-    status = ncmpix_getn_text((const void**)(&getbuf.pos), NC_MAGIC_LEN, magic);
-    if (status != NC_NOERR) return status;
+    err = ncmpix_getn_text((const void**)(&getbuf.pos), NC_MAGIC_LEN, magic);
+    if (err != NC_NOERR) return err;
 
     /* check if the first three bytes are 'C','D','F' */
     if (memcmp(magic, "CDF", 3) != 0) {
@@ -1299,12 +1287,12 @@ ncmpio_hdr_get_NC(NC *ncp)
         char signature[8], *hdf5_signature="\211HDF\r\n\032\n";
         ncmpix_getn_text((const void**)(&getbuf.pos), 8, signature);
         if (memcmp(signature, hdf5_signature, 8) == 0) {
-            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC3)
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTNC3)
             if (ncp->safe_mode)
                 fprintf(stderr,"Error: file %s is HDF5 format\n",ncp->path);
         }
         else
-            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTNC)
         goto fn_exit;
     }
 
@@ -1330,24 +1318,19 @@ ncmpio_hdr_get_NC(NC *ncp)
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file */
     }
 
-    /** Ensure that 'nextread' bytes (numrecs) are available. */
-    status = hdr_check_buffer(&getbuf, (getbuf.version < 5) ? 4 : 8);
-    if (status != NC_NOERR) goto fn_exit;
-
     /* get numrecs from getbuf into ncp */
     if (getbuf.version < 5) {
         uint tmp=0;
-        status = ncmpix_get_uint32((const void **)(&getbuf.pos), &tmp);
-        nrecs = (MPI_Offset)tmp;
+        err = hdr_get_uint32(&getbuf, &tmp);
+        if (err != NC_NOERR) goto fn_exit;
+        ncp->numrecs = (MPI_Offset)tmp;
     }
     else {
         uint64 tmp=0;
-        status = ncmpix_get_uint64((const void **)(&getbuf.pos), &tmp);
-        nrecs = (MPI_Offset)tmp;
+        err = hdr_get_uint64(&getbuf, &tmp);
+        if (err != NC_NOERR) goto fn_exit;
+        ncp->numrecs = (MPI_Offset)tmp;
     }
-    if (status != NC_NOERR) goto fn_exit;
-
-    ncp->numrecs = nrecs;
 
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(getbuf.pos,  &pos_addr);
@@ -1359,16 +1342,16 @@ ncmpio_hdr_get_NC(NC *ncp)
     assert(pos_addr < base_addr + getbuf.size);
 
     /* get dim_list from getbuf into ncp */
-    status = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
-    if (status != NC_NOERR) goto fn_exit;
+    err = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
+    if (err != NC_NOERR) goto fn_exit;
 
     /* get gatt_list from getbuf into ncp */
-    status = hdr_get_NC_attrarray(&getbuf, &ncp->attrs);
-    if (status != NC_NOERR) goto fn_exit;
+    err = hdr_get_NC_attrarray(&getbuf, &ncp->attrs);
+    if (err != NC_NOERR) goto fn_exit;
 
     /* get var_list from getbuf into ncp */
-    status = hdr_get_NC_vararray(&getbuf, &ncp->vars);
-    if (status != NC_NOERR) goto fn_exit;
+    err = hdr_get_NC_vararray(&getbuf, &ncp->vars);
+    if (err != NC_NOERR) goto fn_exit;
 
     /* get the un-aligned size occupied by the file header */
     ncp->xsz = ncmpio_hdr_len_NC(ncp);
@@ -1377,22 +1360,22 @@ ncmpio_hdr_get_NC(NC *ncp)
      * Sets ncp->begin_var to start of first variable.
      * Sets ncp->begin_rec to start of first record variable.
      */
-    status = compute_var_shape(ncp);
-    if (status != NC_NOERR) goto fn_exit;
+    err = compute_var_shape(ncp);
+    if (err != NC_NOERR) goto fn_exit;
 
     /* Check whether variable sizes are legal for the given file format */
-    status = ncmpio_NC_check_vlens(ncp);
-    if (status != NC_NOERR) goto fn_exit;
+    err = ncmpio_NC_check_vlens(ncp);
+    if (err != NC_NOERR) goto fn_exit;
 
     /* Check whether variable begins are in an increasing order.
      * Adding this check here is necessary for detecting corrupted metadata. */
-    status = ncmpio_NC_check_voffs(ncp);
-    if (status != NC_NOERR) goto fn_exit;
+    err = ncmpio_NC_check_voffs(ncp);
+    if (err != NC_NOERR) goto fn_exit;
 
 fn_exit:
     ncp->get_size += getbuf.get_size;
     NCI_Free(getbuf.base);
 
-    return status;
+    return err;
 }
 
