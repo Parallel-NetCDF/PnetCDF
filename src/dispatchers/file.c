@@ -480,8 +480,8 @@ ncmpi_open(MPI_Comm    comm,
     else
 #endif
         if (format == NC_FORMAT_CLASSIC ||
-             format == NC_FORMAT_CDF2 ||
-             format == NC_FORMAT_CDF5) {
+            format == NC_FORMAT_CDF2 ||
+            format == NC_FORMAT_CDF5) {
         driver = ncmpio_inq_driver();
     }
     else if (format == NC_FORMAT_NETCDF4_CLASSIC) {
@@ -559,6 +559,7 @@ ncmpi_open(MPI_Comm    comm,
         goto fn_exit;
     }
 
+    /* construct array of PNC_var for all variables */
     for (i=0; i<pncp->nvars; i++) {
         nc_type xtype;
         int ndims;
