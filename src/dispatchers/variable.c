@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h> /* INT_MAX */
 
 #include <pnetcdf.h>
 #include <dispatch.h>
@@ -68,12 +69,20 @@ ncmpi_def_var(int         ncid,    /* IN:  file ID */
         goto err_check;
     }
 
-    /* TODO: make ndims of type MPI_Offset so ndims can be > 2^31-1 in CDF-5
+    /* Argument ndims is of type "int". Its max value will be less than
+     * INT_MAX. Thus if NC_MAX_VAR_DIMS == INT_MAX, then there is no need to
+     * check whether or not ndims > NC_MAX_VAR_DIMS.
      *
-     * When checking against max number of dimensions per variable,
-     * because there is no error code for this, thus we use NC_EINVAL
+     * When checking against NC_MAX_VAR_DIMS, because there is no error code
+     * corresponding to this, we use NC_EMAXDIMS
      */
-    if (ndims < 0 || ndims == NC_MAX_VAR_DIMS) {
+#if NC_MAX_VAR_DIMS < INT_MAX
+    if (ndims > NC_MAX_VAR_DIMS) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAXDIMS)
+        goto err_check;
+    }
+#endif
+    if (ndims < 0) {
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
         goto err_check;
     }
@@ -279,8 +288,9 @@ ncmpi_inq_varid(int         ncid,    /* IN:  file ID */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
-        DEBUG_RETURN_ERROR(NC_EBADNAME)
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+
+    if (strlen(name) > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
 
     /* calling the subroutine that implements ncmpi_inq_varid() */
     return pncp->driver->inq_varid(pncp->ncp, name, varidp);
