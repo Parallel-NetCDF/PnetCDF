@@ -37,8 +37,9 @@ ncmpi_inq_att(int         ncid,
     if (varid != NC_GLOBAL && (varid < 0 || varid >= pncp->nvars))
         DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
-        DEBUG_RETURN_ERROR(NC_EBADNAME)
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+
+    if (strlen(name) > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
 
     /* calling the subroutine that implements ncmpi_inq_att() */
     return pncp->driver->inq_att(pncp->ncp, varid, name, xtypep, lenp);
@@ -85,8 +86,9 @@ ncmpi_inq_attid(int         ncid,
     if (varid != NC_GLOBAL && (varid < 0 || varid >= pncp->nvars))
         DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
-        DEBUG_RETURN_ERROR(NC_EBADNAME)
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+
+    if (strlen(name) > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
 
     /* calling the subroutine that implements ncmpi_inq_attid() */
     return pncp->driver->inq_attid(pncp->ncp, varid, name, attnump);
@@ -159,8 +161,13 @@ ncmpi_copy_att(int         ncid_in,
         goto err_check;
     }
 
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME) {
+    if (name == NULL || *name == 0) {
         DEBUG_ASSIGN_ERROR(err, NC_EBADNAME)
+        goto err_check;
+    }
+
+    if (strlen(name) > NC_MAX_NAME) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAXNAME)
         goto err_check;
     }
 
@@ -251,8 +258,13 @@ ncmpi_rename_att(int         ncid,
         goto err_check;
     }
 
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME) {
+    if (name == NULL || *name == 0) {
         DEBUG_ASSIGN_ERROR(err, NC_EBADNAME)
+        goto err_check;
+    }
+
+    if (strlen(name) > NC_MAX_NAME) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAXNAME)
         goto err_check;
     }
 
@@ -373,8 +385,13 @@ ncmpi_del_att(int         ncid,
     if (varid != NC_GLOBAL && (varid < 0 || varid >= pncp->nvars))
         DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME) {
+    if (name == NULL || *name == 0) {
         DEBUG_ASSIGN_ERROR(err, NC_EBADNAME)
+        goto err_check;
+    }
+
+    if (strlen(name) > NC_MAX_NAME) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAXNAME)
         goto err_check;
     }
 
