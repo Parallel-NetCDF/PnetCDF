@@ -2308,10 +2308,12 @@ ifdef(`PNETCDF', `
     def_dims(ncid);
     Def_Vars(ncid, numVars);
 
+#ifdef NO_NC_GLOBAL_FILLVALUE
     /* expect NC_EGLOBAL when try to put _FillValue to NC_GLOBAL */
     err = APIFunc(put_att_int)(ncid, NC_GLOBAL, _FillValue, NC_INT, 1, &i);
     IF (err != NC_EGLOBAL)
         error("redef: expect NC_EGLOBAL but got %s", nc_err_code_name(err));
+#endif
 
     /* set _FillValue = 42 for all vars */
     fill = 42;
