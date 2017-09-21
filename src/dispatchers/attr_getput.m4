@@ -36,8 +36,9 @@ sanity_check_get(PNC        *pncp,
         DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     /* sanity check for name */
-    if (name == NULL || *name == 0 || strlen(name) > NC_MAX_NAME)
-        DEBUG_RETURN_ERROR(NC_EBADNAME)
+    if (name == NULL || *name == 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
+ 
+    if (strlen(name) > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
 
     return NC_NOERR;
 }
