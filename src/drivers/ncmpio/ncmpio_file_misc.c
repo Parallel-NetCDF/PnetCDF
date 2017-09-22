@@ -381,7 +381,7 @@ ncmpio_inq_misc(void       *ncdp,
         sprintf(value, "%lld", ncp->r_align);
         MPI_Info_set(*info_used, "nc_record_align_size", value);
 
-        sprintf(value, "%lld", ncp->chunk);
+        sprintf(value, "%d", ncp->chunk);
         MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
 
 #ifdef ENABLE_SUBFILING

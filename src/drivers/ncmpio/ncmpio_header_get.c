@@ -327,7 +327,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 static int
 hdr_fetch(bufferinfo *gbp) {
     int rank, err=NC_NOERR, mpireturn;
-    MPI_Offset slack;        /* any leftover data in the buffer */
+    int slack; /* any leftover data in the buffer */
 
     assert(gbp->base != NULL);
 

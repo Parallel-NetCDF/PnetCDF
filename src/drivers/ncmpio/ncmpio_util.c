@@ -65,7 +65,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
                  &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
-        ncp->chunk = strtoll(value,NULL,10);
+        ncp->chunk = (int) strtol(value,NULL,10);
         if (errno != 0) ncp->chunk = 0;
         else if (ncp->chunk < 0) ncp->chunk = 0;
     }
