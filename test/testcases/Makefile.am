@@ -63,7 +63,8 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                null_args \
                tst_dimsizes \
                mix_collectives \
-               large_var_cdf5
+               large_var_cdf5 \
+               tst_max_var_dims
 
 M4_SRCS  = put_all_kinds.m4 erange_fill.m4
 
