@@ -338,7 +338,7 @@ struct NC {
     struct NC    *ncp_sf;       /* ncp of subfile */
 #endif
     int           striping_unit; /* file stripe size of the file */
-    MPI_Offset    chunk;       /* chunk size for reading header */
+    int           chunk;       /* chunk size for reading header */
     MPI_Offset    h_align;     /* file alignment for header */
     MPI_Offset    v_align;     /* file alignment for each fixed variable */
     MPI_Offset    r_align;     /* file alignment for record variable section */
@@ -405,9 +405,9 @@ ncmpio_NC_check_voffs(NC *ncp);
 typedef struct bufferinfo {
     MPI_Comm    comm;
     MPI_File    collective_fh;
-    MPI_Offset  get_size; /* amount of reads  committed so far in bytes */
+    MPI_Offset  get_size; /* amount of file read n bytes so far */
     MPI_Offset  offset;   /* current read/write offset in the file */
-    MPI_Offset  size;     /* size of the buffer */
+    int         size;     /* allocated size of the buffer */
     int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
     int         safe_mode;/* 0: disabled, 1: enabled */
     void       *base;     /* beginning of read/write buffer */
