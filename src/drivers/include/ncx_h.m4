@@ -244,6 +244,15 @@ ncmpix_put_uint32(void **xpp, const unsigned int ip);
 extern int
 ncmpix_put_uint64(void **xpp, const unsigned long long ip);
 
+extern int
+ncmpix_getn_uint32(const void **xpp, unsigned int *ip, int nelems);
+extern int
+ncmpix_getn_uint64(const void **xpp, unsigned long long *ip, int nelems);
+extern int
+ncmpix_putn_uint32(void **xpp, const unsigned int *ip, int nelems);
+extern int
+ncmpix_putn_uint64(void **xpp, const unsigned long long *ip, int nelems);
+
 
 /*
  * Aggregate numeric conversion functions.

@@ -2345,7 +2345,7 @@ APIPrefix`x_get_uint32'(const void **xpp, uint *ip)
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
      * some system, such as HPUX */
-    (void) memcpy(ip, *xpp, SIZEOF_UINT);
+    (void) memcpy(ip, *xpp, 4);
 #else
     const uchar *cp = (const uchar *) *xpp;
 
@@ -2360,6 +2360,23 @@ APIPrefix`x_get_uint32'(const void **xpp, uint *ip)
     return NC_NOERR;
 }
 
+/*----< APIPrefix`x_getn_uint32'() >-----------------------------------------*/
+int
+APIPrefix`x_getn_uint32'(const void **xpp, uint *ip, int nelems)
+{
+#ifdef WORDS_BIGENDIAN
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(ip, *xpp, (size_t)4 * nelems);
+#else
+    swapn4b(ip, *xpp, nelems);
+#endif
+    /* advance 4*nelems bytes for *xpp */
+    *xpp = (void *)((const char *)(*xpp) + 4 * nelems);
+
+    return NC_NOERR;
+}
+
 /*----< APIPrefix`x_get_uint64'() >------------------------------------------*/
 int
 APIPrefix`x_get_uint64'(const void **xpp, unsigned long long *ullp)
@@ -2367,7 +2384,7 @@ APIPrefix`x_get_uint64'(const void **xpp, unsigned long long *ullp)
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
      * some system, such as HPUX */
-    (void) memcpy(ullp, *xpp, SIZEOF_UINT64);
+    (void) memcpy(ullp, *xpp, 8);
 #else
     const uchar *cp = (const uchar *) *xpp;
 
@@ -2383,6 +2400,23 @@ APIPrefix`x_get_uint64'(const void **xpp, unsigned long long *ullp)
 #endif
     /* advance *xpp 8 bytes */
     *xpp = (void *)((const char *)(*xpp) + 8);
+
+    return NC_NOERR;
+}
+
+/*----< APIPrefix`x_getn_uint64'() >-----------------------------------------*/
+int
+APIPrefix`x_getn_uint64'(const void **xpp, unsigned long long *ullp, int nelems)
+{
+#ifdef WORDS_BIGENDIAN
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(ullp, *xpp, (size_t)8 * nelems);
+#else
+    swapn8b(ullp, *xpp, nelems);
+#endif
+    /* advance 8*nelems bytes for *xpp */
+    *xpp = (void *)((const char *)(*xpp) + 8 * nelems);
 
     return NC_NOERR;
 }
@@ -2412,6 +2446,26 @@ APIPrefix`x_put_uint32'(void **xpp, const unsigned int ip)
     return NC_NOERR;
 }
 
+/*---< APIPrefix`x_putn_uint32'() >------------------------------------------*/
+/* copy the contents of ip (nelems unsigned 32-bit integers) to xpp in Big
+ * Endian form and advance (4*nelems) bytes for pointer *xpp
+ */
+int
+APIPrefix`x_putn_uint32'(void **xpp, const unsigned int *ip, int nelems)
+{
+#ifdef WORDS_BIGENDIAN
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(*xpp, ip, (size_t)4 * nelems);
+#else
+    swapn4b(*xpp, ip, nelems);
+#endif
+    /* advance 4*nelems bytes for *xpp */
+    *xpp  = (void *)((char *)(*xpp) + 4*nelems);
+
+    return NC_NOERR;
+}
+
 /*---< APIPrefix`x_put_uint64'() >-------------------------------------------*/
 /* copy the contents of ip (an unsigned 64-bit integer) to xpp in Big Endian
  * form and advance *xpp 8 bytes
@@ -2437,6 +2491,26 @@ APIPrefix`x_put_uint64'(void **xpp, const unsigned long long ip)
 #endif
     /* advance *xpp 8 bytes */
     *xpp  = (void *)((char *)(*xpp) + 8);
+
+    return NC_NOERR;
+}
+
+/*---< APIPrefix`x_putn_uint64'() >------------------------------------------*/
+/* copy the contents of ip (nelems unsigned 64-bit integers) to xpp in Big
+ * Endian form and advance 8*nelems bytes for pointer *xpp
+ */
+int
+APIPrefix`x_putn_uint64'(void **xpp, const unsigned long long *ip, int nelems)
+{
+#ifdef WORDS_BIGENDIAN
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(*xpp, ip, (size_t)8 * nelems);
+#else
+    swapn8b(*xpp, ip, nelems);
+#endif
+    /* advance 8*nelems bytes for *xpp */
+    *xpp  = (void *)((char *)(*xpp) + 8*nelems);
 
     return NC_NOERR;
 }
