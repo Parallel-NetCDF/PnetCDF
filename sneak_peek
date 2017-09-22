@@ -80,6 +80,8 @@ This is essentially a placeholder for the next release note ...
     * doc/README.Ubuntu provides build instructions for Ubuntu Linux OS.
 
   o New test program
+    * test/testcases/tst_max_var_dims.c - to test number of dimensions against
+      NC_MAX_VAR_DIMS when calling ncmpi_def_var API.
     * test/largefile/tst_cdf5_begin.c - to test whether a CDF-5 file header is
       corrupted.
     * test/testcases/tst_open_cdf5.c - to test whether NC_ENOTNC is thrown
