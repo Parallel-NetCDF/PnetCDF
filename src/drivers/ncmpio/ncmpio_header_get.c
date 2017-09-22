@@ -95,8 +95,7 @@ compute_var_shape(NC *ncp)
 #if 0
 /*----< hdr_len_NC_name() >--------------------------------------------------*/
 inline static MPI_Offset
-hdr_len_NC_name(const NC_string *ncstrp,
-                int              sizeof_NON_NEG)     /* NON_NEG */
+hdr_len_NC_name(const NC_string *ncstrp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
      * name       = nelems namestring
@@ -121,8 +120,7 @@ hdr_len_NC_name(const NC_string *ncstrp,
 
 /*----< hdr_len_NC_dim() >---------------------------------------------------*/
 inline static MPI_Offset
-hdr_len_NC_dim(const NC_dim *dimp,
-               int           sizeof_NON_NEG)     /* NON_NEG */
+hdr_len_NC_dim(const NC_dim *dimp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
      *  ...
@@ -143,8 +141,7 @@ hdr_len_NC_dim(const NC_dim *dimp,
 
 /*----< hdr_len_NC_dimarray() >----------------------------------------------*/
 inline static MPI_Offset
-hdr_len_NC_dimarray(const NC_dimarray *ncap,
-                    int                sizeof_NON_NEG)     /* NON_NEG */
+hdr_len_NC_dimarray(const NC_dimarray *ncap, int sizeof_NON_NEG)
 {
     /* netCDF file format:
      *  ...
@@ -176,8 +173,7 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap,
 
 /*----< hdr_len_NC_attr() >--------------------------------------------------*/
 inline static MPI_Offset
-hdr_len_NC_attr(const NC_attr *attrp,
-                int            sizeof_NON_NEG)     /* NON_NEG */
+hdr_len_NC_attr(const NC_attr *attrp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
      *  ...
@@ -209,8 +205,7 @@ hdr_len_NC_attr(const NC_attr *attrp,
 
 /*----< hdr_len_NC_attrarray() >---------------------------------------------*/
 inline static MPI_Offset
-hdr_len_NC_attrarray(const NC_attrarray *ncap,
-                     int                 sizeof_NON_NEG)     /* NON_NEG */
+hdr_len_NC_attrarray(const NC_attrarray *ncap, int sizeof_NON_NEG)
 {
     /* netCDF file format:
      *  ...
@@ -242,8 +237,8 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap,
 /*----< hdr_len_NC_var() >---------------------------------------------------*/
 inline static MPI_Offset
 hdr_len_NC_var(const NC_var *varp,
-               int           sizeof_off_t, /* OFFSET */
-               int           sizeof_NON_NEG)     /* NON_NEG */
+               int           sizeof_off_t,    /* OFFSET */
+               int           sizeof_NON_NEG)  /* NON_NEG */
 {
     /* netCDF file format:
      * netcdf_file = header data
@@ -283,8 +278,8 @@ hdr_len_NC_var(const NC_var *varp,
 /*----< hdr_len_NC_vararray() >----------------------------------------------*/
 inline static MPI_Offset
 hdr_len_NC_vararray(const NC_vararray *ncap,
-                    int                sizeof_NON_NEG,     /* NON_NEG */
-                    int                sizeof_off_t) /* OFFSET */
+                    int                sizeof_NON_NEG, /* NON_NEG */
+                    int                sizeof_off_t)   /* OFFSET */
 {
     /* netCDF file format:
      * netcdf_file = header  data
@@ -333,10 +328,11 @@ static int
 hdr_fetch(bufferinfo *gbp) {
     int rank, err=NC_NOERR, mpireturn;
     MPI_Offset slack;        /* any leftover data in the buffer */
-    MPI_Aint pos_addr, base_addr;
 
     assert(gbp->base != NULL);
 
+#if 0
+    MPI_Aint pos_addr, base_addr;
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
@@ -345,15 +341,19 @@ hdr_fetch(bufferinfo *gbp) {
     MPI_Address(gbp->base, &base_addr);
 #endif
     slack = gbp->size - (pos_addr - base_addr);
-    /* . if gbp->pos and gbp->base are the same, there is no leftover buffer
-     *   data to worry about.
+#endif
+    slack = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
+
+    /* If gbp->pos and gbp->base are the same, there is no leftover buffer
+     * data to worry about.
      * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then
-     * all data in the buffer has been consumed */
+     * all data in the buffer has been consumed
+     * If slack is neither, then we re-read slack + additional header into a
+     * contiguous buffer, gbp->base.
+     */
     if (slack == gbp->size) slack = 0;
 
-    if (gbp->size != (int)gbp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-
-    /* No need to zero out the buffer */
+    /* No need to zero out the buffer, as it will be filled with read */
     /*
     memset(gbp->base, 0, (size_t)gbp->size);
     */
@@ -366,7 +366,7 @@ hdr_fetch(bufferinfo *gbp) {
            not change the file pointer */
         TRACE_IO(MPI_File_read_at)(gbp->collective_fh,
                                    (gbp->offset)-slack, gbp->base,
-                                   (int)gbp->size, MPI_BYTE, &mpistatus);
+                                   gbp->size, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
@@ -390,16 +390,16 @@ hdr_fetch(bufferinfo *gbp) {
     }
 
     /* broadcast root's read (full or partial header) to other processes */
-    TRACE_COMM(MPI_Bcast)(gbp->base, (int)gbp->size, MPI_BYTE, 0, gbp->comm);
+    TRACE_COMM(MPI_Bcast)(gbp->base, gbp->size, MPI_BYTE, 0, gbp->comm);
 
     return err;
 }
 
+#if 0
 /*----< hdr_check_buffer() >-------------------------------------------------*/
 /* Ensure that 'nextread' bytes are available.  */
 inline static int
-hdr_check_buffer(bufferinfo *gbp,
-                 MPI_Offset  nextread)
+hdr_check_buffer(bufferinfo *gbp, MPI_Offset nextread)
 {
     MPI_Aint pos_addr, base_addr;
 
@@ -415,40 +415,47 @@ hdr_check_buffer(bufferinfo *gbp,
 
     return hdr_fetch(gbp);
 }
+#endif
 
 /*----< hdr_get_uint32() >---------------------------------------------------*/
+/* in CDF-1 format, all integers are 32-bit
+ * in CDF-2 format, only variable begin (starting file offset) is 64-bit
+ * in CDF-5 format, both variable's begin and size are 64-bit
+ */
 inline static int
-hdr_get_uint32(bufferinfo *gbp,
-               uint        *xp)
+hdr_get_uint32(bufferinfo *gbp, uint *xp)
 {
-    /* in CDF-1 format, all integers are 32-bit
-     * in CDF-2 format, only variable begin (starting file offset) is 64-bit
-     * in CDF-5 format, both variable's begin and size are 64-bit
-     */
-    int err = hdr_check_buffer(gbp, 4); /* size of int32 == 4 */
-    if (err != NC_NOERR) return err;
+    int err;
+
+    if ((char*)gbp->pos + 4 > (char*)gbp->base + gbp->size) {
+        err = hdr_fetch(gbp);
+        if (err != NC_NOERR) return err;
+    }
 
     err = ncmpix_get_uint32((const void **)(&gbp->pos), xp);
     return err;
 }
 
 /*----< hdr_get_uint64() >---------------------------------------------------*/
+/* in CDF-1 format, all integers are 32-bit
+ * in CDF-2 format, only variable begin (starting file offset) is 64-bit
+ * in CDF-5 format, both variable's begin and size are 64-bit
+ */
 inline static int
-hdr_get_uint64(bufferinfo *gbp,
-               uint64     *xp)
+hdr_get_uint64(bufferinfo *gbp, uint64 *xp)
 {
-    /* in CDF-1 format, all integers are 32-bit
-     * in CDF-2 format, only variable begin (starting file offset) is 64-bit
-     * in CDF-5 format, both variable's begin and size are 64-bit
-     */
-    int err = hdr_check_buffer(gbp, 8); /* size of int64 == 8 */
-    if (err != NC_NOERR) return err;
+    int err;
+
+    if ((char*)gbp->pos + 8 > (char*)gbp->base + gbp->size) {
+        err = hdr_fetch(gbp);
+        if (err != NC_NOERR) return err;
+    }
 
     err = ncmpix_get_uint64((const void **)(&gbp->pos), xp);
     return err;
 }
 
-/*----< hdr_get_NC_tag() >----------------------------------------------------*/
+/*----< hdr_get_NC_tag() >---------------------------------------------------*/
 /* NC_tag is 32-bit integer and can be the followings:
  *     ZERO (NC_UNSPECIFIED)
  *     NC_DIMENSION
@@ -456,12 +463,15 @@ hdr_get_uint64(bufferinfo *gbp,
  *     NC_VARIABLE
  */
 inline static int
-hdr_get_NC_tag(bufferinfo *gbp,
-               NC_tag     *tagp)
+hdr_get_NC_tag(bufferinfo *gbp, NC_tag *tagp)
 {
+    int err;
     uint type = 0;
-    int err = hdr_check_buffer(gbp, 4);
-    if (err != NC_NOERR) return err;
+
+    if ((char*)gbp->pos + 4 > (char*)gbp->base + gbp->size) {
+        err = hdr_fetch(gbp);
+        if (err != NC_NOERR) return err;
+    }
 
     /* get an external unsigned 4-byte integer from the file */
     err = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
@@ -471,17 +481,18 @@ hdr_get_NC_tag(bufferinfo *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_nc_type() >---------------------------------------------------*/
+/*----< hdr_get_nc_type() >--------------------------------------------------*/
 inline static int
-hdr_get_nc_type(bufferinfo *gbp,
-                nc_type    *xtypep)
+hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
 {
     /* nc_type is 4-byte integer, X_SIZEOF_INT */
     int err;
     uint xtype;
 
-    err = hdr_check_buffer(gbp, X_SIZEOF_INT);
-    if (err != NC_NOERR) return err;
+    if ((char*)gbp->pos + 4 > (char*)gbp->base + gbp->size) {
+        err = hdr_fetch(gbp);
+        if (err != NC_NOERR) return err;
+    }
 
     err = ncmpix_get_uint32((const void**)(&gbp->pos), &xtype);
     if (err != NC_NOERR) return err;
@@ -504,10 +515,9 @@ hdr_get_nc_type(bufferinfo *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_NC_name() >---------------------------------------------------*/
+/*----< hdr_get_NC_name() >--------------------------------------------------*/
 static int
-hdr_get_NC_name(bufferinfo  *gbp,
-                char       **namep)
+hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 {
     /* netCDF file format:
      *  ...
@@ -520,10 +530,8 @@ hdr_get_NC_name(bufferinfo  *gbp,
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    int err;
+    int err, nchars, padding, bufremain, strcount;
     char *cpos;
-    MPI_Aint pos_addr, base_addr;
-    MPI_Offset nchars, padding, bufremain, strcount;
 
     *namep = NULL;
 
@@ -533,14 +541,14 @@ hdr_get_NC_name(bufferinfo  *gbp,
         err = hdr_get_uint32(gbp, &tmp);
         if (err != NC_NOERR) return err;
         if (tmp > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
-        nchars = (MPI_Offset)tmp;
+        nchars = (int)tmp;
     }
     else {
         uint64 tmp;
         err = hdr_get_uint64(gbp, &tmp);
         if (err != NC_NOERR) return err;
         if (tmp > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
-        nchars = (MPI_Offset)tmp;
+        nchars = (int)tmp;
     }
 
     /* Allocate a NC_string structure large enough to hold nchars characters.
@@ -554,6 +562,9 @@ hdr_get_NC_name(bufferinfo  *gbp,
     padding = _RNDUP(X_SIZEOF_CHAR * nchars, X_ALIGN) - X_SIZEOF_CHAR * nchars;
     */
     padding = _RNDUP(nchars, X_ALIGN) - nchars;
+
+#if 0
+    MPI_Aint pos_addr, base_addr;
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
@@ -562,6 +573,9 @@ hdr_get_NC_name(bufferinfo  *gbp,
     MPI_Address(gbp->base, &base_addr);
 #endif
     bufremain = gbp->size - (pos_addr - base_addr);
+#endif
+    bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
+
     cpos = *namep;
 
     /* get namestring with padding (the space in file allocated for string
@@ -569,8 +583,6 @@ hdr_get_NC_name(bufferinfo  *gbp,
     while (nchars > 0) {
         if (bufremain > 0) {
             strcount = MIN(bufremain, nchars);
-            if (strcount != (size_t)strcount)
-                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             memcpy(cpos, gbp->pos, (size_t)strcount);
             nchars -= strcount;
             gbp->pos = (void *)((char *)gbp->pos + strcount);
@@ -606,10 +618,9 @@ hdr_get_NC_name(bufferinfo  *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_NC_dim() >----------------------------------------------------*/
+/*----< hdr_get_NC_dim() >---------------------------------------------------*/
 inline static int
-hdr_get_NC_dim(bufferinfo  *gbp,
-               NC_dim     **dimpp)
+hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp)
 {
     /* netCDF file format:
      *  ...
@@ -664,8 +675,7 @@ hdr_get_NC_dim(bufferinfo  *gbp,
  * format specifications (NC_EMAXDIMS).
  */
 static int
-hdr_get_NC_dimarray(bufferinfo  *gbp,
-                    NC_dimarray *ncap)
+hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
 {
     /* netCDF file format:
      *  ...
@@ -746,10 +756,9 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_NC_attrV() >--------------------------------------------------*/
+/*----< hdr_get_NC_attrV() >-------------------------------------------------*/
 static int
-hdr_get_NC_attrV(bufferinfo *gbp,
-                 NC_attr    *attrp)
+hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
 {
     /* netCDF file format:
      *  ...
@@ -767,11 +776,13 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     int xsz;
     void *value = attrp->xvalue;
     MPI_Offset nbytes, padding, bufremain, attcount;
-    MPI_Aint pos_addr, base_addr;
 
     ncmpii_xlen_nc_type(attrp->xtype, &xsz);
     nbytes = attrp->nelems * xsz;
     padding = attrp->xsz - nbytes;
+
+#if 0
+    MPI_Aint pos_addr, base_addr;
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
@@ -780,11 +791,13 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     MPI_Address(gbp->base, &base_addr);
 #endif
     bufremain = gbp->size - (pos_addr - base_addr);
+#endif
+    bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
 
     /* get values */
     while (nbytes > 0) {
         if (bufremain > 0) {
-            attcount = MIN(bufremain, nbytes);
+            attcount = MIN(nbytes, bufremain);
             if (attcount != (size_t)attcount)
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             memcpy(value, gbp->pos, (size_t)attcount);
@@ -816,10 +829,9 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     return NC_NOERR;
 }
 
-/*----< hdr_get_NC_attr() >---------------------------------------------------*/
+/*----< hdr_get_NC_attr() >--------------------------------------------------*/
 static int
-hdr_get_NC_attr(bufferinfo  *gbp,
-                NC_attr    **attrpp)
+hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp)
 {
     /* netCDF file format:
      *  ...
@@ -884,8 +896,7 @@ hdr_get_NC_attr(bufferinfo  *gbp,
  * format specifications (NC_EMAXATTS).
  */
 static int
-hdr_get_NC_attrarray(bufferinfo   *gbp,
-                     NC_attrarray *ncap)
+hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
 {
     /* netCDF file format:
      *  ...
@@ -965,8 +976,7 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
 
 /*----< hdr_get_NC_var() >---------------------------------------------------*/
 static int
-hdr_get_NC_var(bufferinfo  *gbp,
-               NC_var     **varpp)
+hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp)
 {
     /* netCDF file format:
      * netcdf_file = header data
@@ -1112,8 +1122,7 @@ fn_exit:
  * format specifications (NC_EMAXVARS).
  */
 static int
-hdr_get_NC_vararray(bufferinfo  *gbp,
-                    NC_vararray *ncap)
+hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap)
 {
     /* netCDF file format:
      * netcdf_file = header  data
@@ -1254,7 +1263,6 @@ ncmpio_hdr_get_NC(NC *ncp)
     int err;
     bufferinfo getbuf;
     char magic[NC_MAGIC_LEN];
-    MPI_Aint pos_addr, base_addr;
 
     assert(ncp != NULL);
 
@@ -1268,8 +1276,8 @@ ncmpio_hdr_get_NC(NC *ncp)
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
     getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
 
-    if (getbuf.size != (size_t)getbuf.size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    getbuf.pos = getbuf.base = (void *)NCI_Malloc((size_t)getbuf.size);
+    getbuf.base = (void *)NCI_Malloc((size_t)getbuf.size);
+    getbuf.pos  = getbuf.base;
 
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
     err = hdr_fetch(&getbuf);
@@ -1332,6 +1340,8 @@ ncmpio_hdr_get_NC(NC *ncp)
         ncp->numrecs = (MPI_Offset)tmp;
     }
 
+#if 0
+    MPI_Aint pos_addr, base_addr;
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(getbuf.pos,  &pos_addr);
     MPI_Get_address(getbuf.base, &base_addr);
@@ -1340,6 +1350,8 @@ ncmpio_hdr_get_NC(NC *ncp)
     MPI_Address(getbuf.base, &base_addr);
 #endif
     assert(pos_addr < base_addr + getbuf.size);
+#endif
+    assert((char*)getbuf.pos < (char*)getbuf.base + getbuf.size);
 
     /* get dim_list from getbuf into ncp */
     err = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
