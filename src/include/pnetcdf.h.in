@@ -368,7 +368,7 @@ larger than the corresponding dimension length will cause an error. */
 /** NC_MAX_DIMS exceeded. Max number of dimensions exceeded in a
 classic or 64-bit offset file, or an netCDF-4 file with
 ::NC_CLASSIC_MODEL on. */
-#define	NC_EMAXDIMS	(-41)
+#define	NC_EMAXDIMS	(-41)      /**< NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeds */
 
 #define	NC_ENAMEINUSE	(-42)	   /**< String match to name in use */
 #define NC_ENOTATT	(-43)	   /**< Attribute not found */

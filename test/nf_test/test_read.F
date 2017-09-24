@@ -59,7 +59,8 @@ C
         data msg(6)  / 'NetCDF: Operation not allowed in data mode' /
         data msg(7)  / 'NetCDF: Operation not allowed in define mode' /
         data msg(8)  / 'NetCDF: Index exceeds dimension bound' /
-        data msg(9)  / 'NetCDF: NC_MAX_DIMS exceeded' /
+        data msg(9)
+     +  / 'NetCDF: NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeded' /
         data msg(10) / 'NetCDF: String match to name in use' /
         data msg(11) / 'NetCDF: Attribute not found' /
         data msg(12) / 'NetCDF: NC_MAX_ATTRS exceeded' /

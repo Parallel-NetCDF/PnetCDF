@@ -61,6 +61,10 @@ This is essentially a placeholder for the next release note ...
   o New error code precedence
     * none
 
+  o Updated error string
+    * The error string corresponding to NC_EMAXDIMS is changed to cover the
+      case when NC_MAX_DIMS or NC_MAX_VAR_DIMS is exceeded.
+
   o New error code
     * none
 

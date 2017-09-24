@@ -73,7 +73,7 @@ TestFunc(strerror)(void)
         {NC_ENOTINDEFINE, "NetCDF: Operation not allowed in data mode"},
         {NC_EINDEFINE, "NetCDF: Operation not allowed in define mode"},
         {NC_EINVALCOORDS, "NetCDF: Index exceeds dimension bound"},
-        {NC_EMAXDIMS, "NetCDF: NC_MAX_DIMS exceeded"},
+        {NC_EMAXDIMS, "NetCDF: NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeded"},
         {NC_ENAMEINUSE, "NetCDF: String match to name in use"},
         {NC_ENOTATT, "NetCDF: Attribute not found"},
         {NC_EMAXATTS, "NetCDF: NC_MAX_ATTRS exceeded"},
