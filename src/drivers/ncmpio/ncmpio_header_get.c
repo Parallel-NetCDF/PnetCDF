@@ -739,7 +739,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
     }
 
     alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
-    ncap->value = (NC_dim**) NCI_Malloc(alloc_size * sizeof(NC_dim*));
+    ncap->value = (NC_dim**) NCI_Calloc(alloc_size, sizeof(NC_dim*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     for (i=0; i<ndefined; i++) {
@@ -958,7 +958,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
     }
 
     alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
-    ncap->value = (NC_attr**)NCI_Malloc(alloc_size * sizeof(NC_attr*));
+    ncap->value = (NC_attr**)NCI_Calloc(alloc_size, sizeof(NC_attr*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* get [attr ...] */
@@ -1022,7 +1022,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
         ndims = (int)tmp;
     }
 
-    /* allocate space for var object */
+    /* allocate space for NC_var object */
     varp = ncmpio_new_NC_var(name, ndims);
     if (varp == NULL) {
         NCI_Free(name);
@@ -1035,7 +1035,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
             uint tmp;
             err = hdr_get_uint32(gbp, &tmp);
             if (err != NC_NOERR) break;
-            /* dimid should be < f_ndims (no. dimensions defined in file) */
+            /* dimid should be < f_ndims (num of dimensions defined in file) */
             if (tmp >= f_ndims) {
                 DEBUG_ASSIGN_ERROR(err, NC_EBADDIM)
                 goto fn_exit;
@@ -1046,7 +1046,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
             uint64 tmp;
             err = hdr_get_uint64(gbp, &tmp);
             if (err != NC_NOERR) break;
-            /* dimid should be < f_ndims (no. dimensions defined in file) */
+            /* dimid should be < f_ndims (num of dimensions defined in file) */
             if (tmp >= f_ndims) {
                 DEBUG_ASSIGN_ERROR(err, NC_EBADDIM)
                 goto fn_exit;
@@ -1091,7 +1091,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
        overwrites the value read from file above.
 
        In summary, PnetCDF now ignores the value of vsize stored in the file
-       header.
+       header. Its value will be recalculated immediately after read from file.
      */
 
     /* get begin */
@@ -1189,7 +1189,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     }
 
     alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
-    ncap->value = (NC_var**) NCI_Malloc(alloc_size * sizeof(NC_var*));
+    ncap->value = (NC_var**) NCI_Calloc(alloc_size, sizeof(NC_var*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* get [var ...] */
