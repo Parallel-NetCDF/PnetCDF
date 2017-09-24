@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     for (i=1; i<NDIMS; i++) nelms *= DIMLEN;
     buffer = (short*) malloc(nelms * sizeof(short));
     if (buffer == NULL) {
-        printf("Error %s at line %d: fail to allocate buffer of size %ld\n",
+        printf("Error %s at line %d: fail to allocate buffer of size %zu\n",
                argv[0], __LINE__, nelms * sizeof(int));
         goto fn_exit;
     }
