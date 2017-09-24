@@ -976,7 +976,9 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
 
 /*----< hdr_get_NC_var() >---------------------------------------------------*/
 static int
-hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp)
+hdr_get_NC_var(bufferinfo  *gbp,
+               NC_var     **varpp,
+               int          f_ndims) /* no. dimensions defined in file */
 {
     /* netCDF file format:
      * netcdf_file = header data
@@ -1033,10 +1035,10 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp)
             uint tmp;
             err = hdr_get_uint32(gbp, &tmp);
             if (err != NC_NOERR) break;
-            /* cannot be more than NC_MAX_DIMS */
-            if (tmp > NC_MAX_DIMS) {
-                DEBUG_ASSIGN_ERROR(err, NC_EMAXDIMS)
-                break;
+            /* dimid should be < f_ndims (no. dimensions defined in file) */
+            if (tmp >= f_ndims) {
+                DEBUG_ASSIGN_ERROR(err, NC_EBADDIM)
+                goto fn_exit;
             }
             varp->dimids[dim] = (int)tmp;
         }
@@ -1044,15 +1046,14 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp)
             uint64 tmp;
             err = hdr_get_uint64(gbp, &tmp);
             if (err != NC_NOERR) break;
-            /* cannot be more than NC_MAX_DIMS */
-            if (tmp > NC_MAX_DIMS) {
-                DEBUG_ASSIGN_ERROR(err, NC_EMAXDIMS)
-                break;
+            /* dimid should be < f_ndims (no. dimensions defined in file) */
+            if (tmp >= f_ndims) {
+                DEBUG_ASSIGN_ERROR(err, NC_EBADDIM)
+                goto fn_exit;
             }
             varp->dimids[dim] = (int)tmp;
         }
     }
-    if (err != NC_NOERR) goto fn_exit;
 
     /* get vatt_list */
     err = hdr_get_NC_attrarray(gbp, &varp->attrs);
@@ -1122,7 +1123,9 @@ fn_exit:
  * format specifications (NC_EMAXVARS).
  */
 static int
-hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap)
+hdr_get_NC_vararray(bufferinfo  *gbp,
+                    NC_vararray *ncap,
+                    int          f_ndims) /* no. dimensions defined in file */
 {
     /* netCDF file format:
      * netcdf_file = header  data
@@ -1191,7 +1194,7 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap)
 
     /* get [var ...] */
     for (i=0; i<ndefined; i++) {
-        err = hdr_get_NC_var(gbp, ncap->value + i);
+        err = hdr_get_NC_var(gbp, ncap->value + i, f_ndims);
         if (err != NC_NOERR) { /* Error: fail to get the next var */
             ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_vararray(ncap);
@@ -1362,7 +1365,7 @@ ncmpio_hdr_get_NC(NC *ncp)
     if (err != NC_NOERR) goto fn_exit;
 
     /* get var_list from getbuf into ncp */
-    err = hdr_get_NC_vararray(&getbuf, &ncp->vars);
+    err = hdr_get_NC_vararray(&getbuf, &ncp->vars, ncp->dims.ndefined);
     if (err != NC_NOERR) goto fn_exit;
 
     /* get the un-aligned size occupied by the file header */
