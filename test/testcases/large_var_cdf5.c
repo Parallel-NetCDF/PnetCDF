@@ -7,8 +7,8 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program tests whether NC_EVARSIZE is thrown when defining large variables
- * of size > NC_MAX_INT64 - 3.
+ * This program tests whether NC_EVARSIZE is thrown when defining large
+ * variables of size > NC_MAX_INT64 - 3.
  *
  *    To compile:
  *        mpicc -O2 large_var_cdf5.c -o large_var_cdf5 -lpnetcdf
