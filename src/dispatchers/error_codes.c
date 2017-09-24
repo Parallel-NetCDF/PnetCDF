@@ -389,7 +389,7 @@ nc_strerror(int ncerr1)
       case NC_EINVALCOORDS:
 	 return "NetCDF: Index exceeds dimension bound";
       case NC_EMAXDIMS:
-	 return "NetCDF: NC_MAX_DIMS exceeded";
+	 return "NetCDF: NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeded";
       case NC_ENAMEINUSE:
 	 return "NetCDF: String match to name in use";
       case NC_ENOTATT:
