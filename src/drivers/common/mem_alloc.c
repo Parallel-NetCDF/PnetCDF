@@ -112,7 +112,7 @@ void ncmpii_add_mem_entry(void       *buf,
     ncmpii_max_mem_alloc = MAX(ncmpii_max_mem_alloc, ncmpii_mem_alloc);
 }
 
-/*----< ncmpii_del_mem_entry() >----------------------------------------------*/
+/*----< ncmpii_del_mem_entry() >---------------------------------------------*/
 /* delete a malloc entry from the table */
 static
 void ncmpii_del_mem_entry(void *buf)
@@ -124,7 +124,8 @@ void ncmpii_del_mem_entry(void *buf)
         void *ret = tfind(&node, &ncmpii_mem_root, ncmpii_cmp);
         ncmpii_mem_entry **found = (ncmpii_mem_entry**) ret;
         if (ret == NULL) {
-            printf("Error: tfind() buf=%p\n", buf);
+            printf("Error at line %d file %s: tfind() buf=%p\n",
+                   __LINE__,__FILE__,buf);
             return;
         }
         /* free space for func and filename */
@@ -136,7 +137,8 @@ void ncmpii_del_mem_entry(void *buf)
         void *tmp = (*found)->self;
         ret = tdelete(&node, &ncmpii_mem_root, ncmpii_cmp);
         if (ret == NULL) {
-            printf("Error: tdelete() buf=%p\n", buf);
+            printf("Error at line %d file %s: tdelete() buf=%p\n",
+                   __LINE__,__FILE__,buf);
             return;
         }
         free(tmp);
