@@ -117,7 +117,7 @@ else
    check_PROGRAMS = $(TESTPROGRAMS)
 endif
 
-check_PROGRAMS += redef1 tst_open_cdf5 tst_EMAXDIMS tst_EMAXATTS tst_EBADDIM
+check_PROGRAMS += redef1 tst_open_cdf5 tst_corrupt
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
