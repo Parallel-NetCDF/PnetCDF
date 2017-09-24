@@ -267,7 +267,7 @@ val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
         return status;
     }
 
-    *namep = (char*) malloc((size_t)nchars + 1);
+    *namep = (char*) NCI_Malloc((size_t)nchars + 1);
     if (*namep == NULL) DEBUG_RETURN(NC_ENOMEM)
     (*namep)[nchars] = '\0'; /* add terminal character */
 
@@ -294,7 +294,7 @@ val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
             status = val_fetch(fd, gbp);
             if (status != NC_NOERR) {
                 printf("fetching the name string of ");
-                free(*namep);
+                NCI_Free(*namep);
                 *namep = NULL;
                 return status;
             } 
@@ -312,7 +312,7 @@ val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
         if (memcmp(gbp->pos, pad, padding) != 0) {
             printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the name string alignment of ", (long long unsigned)
 	           (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size));
-            free(*namep);
+            NCI_Free(*namep);
             *namep = NULL;
             DEBUG_RETURN(NC_ENOTNC)
         }
@@ -332,7 +332,7 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp) {
 
     status = val_get_NC_string(fd, gbp, &name);
     if (status != NC_NOERR) {
-        if (name != NULL) free(name);
+        if (name != NULL) NCI_Free(name);
         return status;
     }
 
@@ -347,8 +347,8 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp) {
     status = val_get_size_t(fd, gbp, &dimp->size);
     if (status != NC_NOERR) { /* frees dimp */
         printf("\"%s\" - ", name);
-        free(dimp->name);
-        free(dimp);
+        NCI_Free(dimp->name);
+        NCI_Free(dimp);
         return status;
     }
 
@@ -398,7 +398,7 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
     if (tmp > NC_MAX_DIMS) {
         /* number of allowable defined dimensions NC_MAX_DIMS */
         printf("the length of ");
-        return NC_ENOTNC;
+        return NC_EMAXDIMS;
     }
     ncap->ndefined = (int)tmp;
 
@@ -421,7 +421,7 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
 
         /* check each dimension */
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
-        ncap->value = (NC_dim **) calloc(alloc_size, sizeof(NC_dim *));
+        ncap->value = (NC_dim **) NCI_Calloc(alloc_size, sizeof(NC_dim *));
         if (ncap->value == NULL) DEBUG_RETURN(NC_ENOMEM)
 
         for (dim=0; dim<ncap->ndefined; dim++) {
@@ -583,36 +583,36 @@ val_get_NC_attr(int fd, bufferinfo *gbp, NC_attr **attrpp) {
 
   status = val_get_NC_string(fd, gbp, &name);
   if (status != NC_NOERR) {
-      if (name != NULL) free(name);
+      if (name != NULL) NCI_Free(name);
       return status;
   }
 
   status = val_get_nc_type(fd, gbp, &xtype);
   if(status != NC_NOERR) {
     printf("\"%s\" - ", name);
-    if (name != NULL) free(name);
+    if (name != NULL) NCI_Free(name);
     return status;
   }
 
   status = val_get_size_t(fd, gbp, &nelems); 
   if(status != NC_NOERR) {
     printf("the values of \"%s\" - ", name);
-    if (name != NULL) free(name);
+    if (name != NULL) NCI_Free(name);
     return status;
   }
 
   status = new_NC_attr(name, xtype, nelems, &attrp);
   if(status != NC_NOERR) {
-    if (name != NULL) free(name);
+    if (name != NULL) NCI_Free(name);
     return status;
   }
 
   status = val_get_NC_attrV(fd, gbp, attrp);
   if(status != NC_NOERR) {
     printf("\"%s\" - ", name);
-    free(attrp->name);
-    free(attrp->xvalue);
-    free(attrp);
+    NCI_Free(attrp->name);
+    NCI_Free(attrp->xvalue);
+    NCI_Free(attrp);
     return status;
   }
 
@@ -662,7 +662,7 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
     if (tmp > NC_MAX_ATTRS) {
         /* number of allowable defined attributes NC_MAX_ATTRS */
         printf("the length of ");
-        return NC_ENOTNC;
+        return NC_EMAXATTS;
     }
     ncap->ndefined = (int)tmp;
 
@@ -684,7 +684,7 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
         }
 
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
-        ncap->value = (NC_attr **) calloc(alloc_size, sizeof(NC_attr *));
+        ncap->value = (NC_attr **) NCI_Calloc(alloc_size, sizeof(NC_attr *));
         if (ncap->value == NULL) DEBUG_RETURN(NC_ENOMEM)
 
         for (att=0; att<ncap->ndefined; att++) {
@@ -752,20 +752,20 @@ val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
 
     status = val_get_NC_string(fd, gbp, &name);
     if (status != NC_NOERR) {
-        if (name != NULL) free(name);
+        if (name != NULL) NCI_Free(name);
         return status;
     }
 
     status = val_get_size_t(fd, gbp, &ndims);
     if (status != NC_NOERR) {
         printf("the dimid list of \"%s\" - ", name);
-        if (name != NULL) free(name);
+        if (name != NULL) NCI_Free(name);
         return status;
     }
 
     varp = val_new_NC_var(name, ndims);
     if (varp == NULL) {
-        if (name != NULL) free(name);
+        if (name != NULL) NCI_Free(name);
         DEBUG_RETURN(NC_ENOMEM)
     }
 
@@ -920,7 +920,7 @@ val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
         }
  
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
-        ncap->value = (NC_var **) calloc(alloc_size, sizeof(NC_var *));
+        ncap->value = (NC_var **) NCI_Calloc(alloc_size, sizeof(NC_var *));
         if (ncap->value == NULL) DEBUG_RETURN(NC_ENOMEM) 
 
         for (var=0; var<ncap->ndefined; var++) {
@@ -1135,7 +1135,7 @@ val_get_NC(int fd, NC *ncp)
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
     getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
 
-    getbuf.pos = getbuf.base = (void *)malloc(getbuf.size);
+    getbuf.pos = getbuf.base = (void *)NCI_Malloc(getbuf.size);
 
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big
      * netcdf_file = header data
@@ -1263,7 +1263,7 @@ val_get_NC(int fd, NC *ncp)
     if (status != NC_NOERR) goto fn_exit;
 
 fn_exit:
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
 
     return status;
 }
@@ -1327,7 +1327,7 @@ int main(int argc, char **argv)
     }
 
     /* Allocate NC object */
-    ncp = (NC*) calloc(1, sizeof(NC));
+    ncp = (NC*) NCI_Calloc(1, sizeof(NC));
     if (ncp == NULL) {
         status = NC_ENOMEM;
         printf("Error at line %d when calling ncmpio_new_NC()\n",__LINE__);
@@ -1385,10 +1385,10 @@ int main(int argc, char **argv)
 
 prog_exit:
     if (ncp != NULL) {
-        if (ncp->dims.value  != NULL) free(ncp->dims.value);
-        if (ncp->attrs.value != NULL) free(ncp->attrs.value);
-        if (ncp->vars.value  != NULL) free(ncp->vars.value);
-        free(ncp);
+        if (ncp->dims.value  != NULL) NCI_Free(ncp->dims.value);
+        if (ncp->attrs.value != NULL) NCI_Free(ncp->attrs.value);
+        if (ncp->vars.value  != NULL) NCI_Free(ncp->vars.value);
+        NCI_Free(ncp);
     }
     close(fd);
 
