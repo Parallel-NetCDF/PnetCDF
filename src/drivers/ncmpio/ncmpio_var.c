@@ -288,7 +288,8 @@ ncmpio_NC_var_shape64(NC_var            *varp,
 
     /* determine shape[] of the variable */
     for (i=0; i<varp->ndims; i++) {
-        /* varp->dimids[i] has been checked */
+        /* for file create, varp->dimids[i] has been checked in dispatcher
+         * for file open, it has been checked in hdr_get_NC_var */
 
         varp->shape[i] = dims->value[varp->dimids[i]]->size;
 
