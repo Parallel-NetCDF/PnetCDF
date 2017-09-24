@@ -745,7 +745,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
     for (i=0; i<ndefined; i++) {
         err = hdr_get_NC_dim(gbp, ncap->value + i);
         if (err != NC_NOERR) { /* error: fail to get the next dim */
-            ncap->ndefined = i; /* update to no. successful defined */
+            // ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_dimarray(ncap);
             return err;
         }
@@ -965,7 +965,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
     for (i=0; i<ndefined; i++) {
         err = hdr_get_NC_attr(gbp, ncap->value + i);
         if (err != NC_NOERR) { /* Error: fail to get the next att */
-            ncap->ndefined = i; /* update to no. successful defined */
+            // ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_attrarray(ncap);
             return err;
         }
@@ -1196,7 +1196,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     for (i=0; i<ndefined; i++) {
         err = hdr_get_NC_var(gbp, ncap->value + i, f_ndims);
         if (err != NC_NOERR) { /* Error: fail to get the next var */
-            ncap->ndefined = i; /* update to no. successful defined */
+            // ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_vararray(ncap);
             return err;
         }
