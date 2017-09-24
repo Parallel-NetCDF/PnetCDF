@@ -24,3 +24,16 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
 ${TESTSEQRUN} ./tst_open_cdf5 ${srcdir}/bad_begin.nc5
 
+${TESTSEQRUN} ./tst_EMAXDIMS ${srcdir}/bad_ndims.nc1
+${TESTSEQRUN} ./tst_EMAXDIMS ${srcdir}/bad_ndims.nc2
+${TESTSEQRUN} ./tst_EMAXDIMS ${srcdir}/bad_ndims.nc5
+
+${TESTSEQRUN} ./tst_EMAXATTS ${srcdir}/bad_nattrs.nc1
+${TESTSEQRUN} ./tst_EMAXATTS ${srcdir}/bad_nattrs.nc2
+${TESTSEQRUN} ./tst_EMAXATTS ${srcdir}/bad_nattrs.nc5
+
+${TESTSEQRUN} ./tst_EBADDIM ${srcdir}/bad_dimid.nc1
+${TESTSEQRUN} ./tst_EBADDIM ${srcdir}/bad_dimid.nc2
+${TESTSEQRUN} ./tst_EBADDIM ${srcdir}/bad_dimid.nc5
+
+
