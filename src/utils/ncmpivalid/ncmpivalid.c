@@ -87,7 +87,7 @@ xlen_nc_type(nc_type xtype) {
 static int
 compute_var_shape(NC *ncp)
 {
-    int i, err;
+    int i, j, err;
     NC_var *first_var = NULL;       /* first "non-record" var */
     NC_var *first_rec = NULL;       /* first "record" var */
 
@@ -98,6 +98,12 @@ compute_var_shape(NC *ncp)
     ncp->recsize   = 0;
 
     for (i=0; i<ncp->vars.ndefined; i++) {
+        /* check if dimids are valid */
+        for (j=0; j<ncp->vars.value[i]->ndims; j++) {
+            if (ncp->vars.value[i]->dimids[j] < 0 ||
+                ncp->vars.value[i]->dimids[j] >= ncp->dims.ndefined)
+                DEBUG_RETURN(NC_EBADDIM) /* dimid is not defined */
+        }
         /* ncp->vars.value[i]->len will be recomputed from dimensions in
          * ncmpio_NC_var_shape64() */
         err = ncmpio_NC_var_shape64(ncp->vars.value[i], &ncp->dims);
@@ -1342,7 +1348,7 @@ int main(int argc, char **argv)
         MPI_Offset expect_fsize;
         expect_fsize = ncp->begin_rec + ncp->recsize * ncp->numrecs;
         if (expect_fsize < ncfilestat.st_size) {
-            printf("Error: file size (%ld) is larger than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+            printf("Error: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
             printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
             status = NC_EFILE;
             goto prog_exit;
@@ -1352,7 +1358,7 @@ int main(int argc, char **argv)
              * less than expected, then this is due to partial data written
              * to the variable while the file is in no fill mode */
             if (verbose)
-                printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+                printf("Warning: file size (%lld) is less than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
         }
     }
     else {
@@ -1364,7 +1370,7 @@ int main(int argc, char **argv)
             expect_fsize = ncp->vars.value[ncp->vars.ndefined-1]->begin +
                            ncp->vars.value[ncp->vars.ndefined-1]->len;
         if (expect_fsize < ncfilestat.st_size) {
-            printf("Error: file size (%ld) is larger than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+            printf("Error: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
             status = NC_EFILE;
             goto prog_exit;
         }
@@ -1373,7 +1379,7 @@ int main(int argc, char **argv)
              * less than expected, then this is due to partial data written
              * to the variable while the file is in no fill mode */
             if (verbose)
-                printf("Warning: file size (%ld) is less than expected (%lld)!\n",ncfilestat.st_size, expect_fsize);
+                printf("Warning: file size (%lld) is less than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
         }
     }
 
