@@ -71,9 +71,11 @@ ncmpio_new_NC_var(char *name, int ndims)
     varp->name     = name;         /* name has been malloc-ed */
     varp->name_len = strlen(name); /* name has been NULL checked */
     varp->ndims    = ndims;
+#if 0
     varp->xsz      = 0;
     varp->len      = 0;
     varp->begin    = 0;
+#endif
 
     return varp;
 }
