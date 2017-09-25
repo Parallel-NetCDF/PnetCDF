@@ -148,7 +148,7 @@ combine_env_hints(MPI_Info  user_info,
                 if (NULL != strtok(hint, " \t"))
                     printf("%s: '%s'\n", warn_str, hint_saved);
                 /* else case: ignore white-spaced hints */
-                free(hint_saved);
+                NCI_Free(hint_saved);
                 hint = strtok_r(NULL, ";", &env_str_saved); /* get next hint */
                 continue;
             }
@@ -163,9 +163,9 @@ combine_env_hints(MPI_Info  user_info,
             }
             /* printf("env hint: key=%s val=%s\n",key,val); */
             hint = strtok_r(NULL, ";", &env_str_saved);
-            free(hint_saved);
+            NCI_Free(hint_saved);
         }
-        free(env_str_cpy);
+        NCI_Free(env_str_cpy);
 #else
         char *env_str_cpy, *hint, *next_hint, *key, *val, *deli;
         char *hint_saved=NULL;
@@ -181,13 +181,13 @@ combine_env_hints(MPI_Info  user_info,
                 next_hint = deli + 1;
             }
             else next_hint = "\0";
-            if (hint_saved != NULL) free(hint_saved);
+            if (hint_saved != NULL) NCI_Free(hint_saved);
 
             /* skip all-blank hint */
             hint_saved = strdup(hint);
             if (strtok(hint, " \t") == NULL) continue;
 
-            free(hint_saved);
+            NCI_Free(hint_saved);
             hint_saved = strdup(hint); /* save hint for error message */
 
             deli = strchr(hint, '=');
@@ -217,8 +217,8 @@ combine_env_hints(MPI_Info  user_info,
 
         } while (*next_hint != '\0');
 
-        if (hint_saved != NULL) free(hint_saved);
-        free(env_str_cpy);
+        if (hint_saved != NULL) NCI_Free(hint_saved);
+        NCI_Free(env_str_cpy);
 #endif
     }
     /* return no error as all hints are advisory */
@@ -236,7 +236,7 @@ ncmpi_create(MPI_Comm    comm,
     int default_format, rank, status=NC_NOERR, err;
     int safe_mode=0, mpireturn, root_cmode, enable_foo_driver=0;
     char *env_str;
-    MPI_Info combined_info=MPI_INFO_NULL;
+    MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
@@ -328,17 +328,17 @@ ncmpi_create(MPI_Comm    comm,
     }
 
     /* Create a PNC object and save the driver pointer */
-    pncp = (PNC*) malloc(sizeof(PNC));
+    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
     if (pncp == NULL) {
         driver->close(ncp); /* close file and ignore error */
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
-    pncp->path = (char*) malloc(strlen(path)+1);
+    pncp->path = (char*) NCI_Malloc(strlen(path)+1);
     if (pncp->path == NULL) {
         driver->close(ncp); /* close file and ignore error */
         *ncidp = -1;
-        free(pncp);
+        NCI_Free(pncp);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(pncp->path, path);
@@ -371,8 +371,8 @@ ncmpi_create(MPI_Comm    comm,
         driver->close(ncp); /* close file and ignore error */
         *ncidp = -1;
         MPI_Comm_free(&pncp->comm);
-        free(pncp->path);
-        free(pncp);
+        NCI_Free(pncp->path);
+        NCI_Free(pncp);
         return err;
     }
     return status;
@@ -390,7 +390,7 @@ ncmpi_open(MPI_Comm    comm,
     int i, nalloc, rank, format, msg[2], status=NC_NOERR, err;
     int safe_mode=0, mpireturn, root_omode, enable_foo_driver=0;
     char *env_str;
-    MPI_Info combined_info=MPI_INFO_NULL;
+    MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
@@ -510,17 +510,17 @@ ncmpi_open(MPI_Comm    comm,
     }
 
     /* Create a PNC object and save its driver pointer */
-    pncp = (PNC*) malloc(sizeof(PNC));
+    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
     if (pncp == NULL) {
         driver->close(ncp); /* close file and ignore error */
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
-    pncp->path = (char*) malloc(strlen(path)+1);
+    pncp->path = (char*) NCI_Malloc(strlen(path)+1);
     if (pncp->path == NULL) {
         driver->close(ncp); /* close file and ignore error */
         *ncidp = -1;
-        free(pncp);
+        NCI_Free(pncp);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(pncp->path, path);
@@ -595,8 +595,8 @@ fn_exit:
         driver->close(ncp); /* close file and ignore error */
         *ncidp = -1;
         MPI_Comm_free(&pncp->comm);
-        free(pncp->path);
-        free(pncp);
+        NCI_Free(pncp->path);
+        NCI_Free(pncp);
         if (status == NC_NOERR) status = err;
     }
 
@@ -623,13 +623,13 @@ ncmpi_close(int ncid)
 
     /* free the PNC object */
     MPI_Comm_free(&pncp->comm);
-    free(pncp->path);
+    NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
         if (pncp->vars[i].shape != NULL)
             NCI_Free(pncp->vars[i].shape);
     if (pncp->vars != NULL)
         NCI_Free(pncp->vars);
-    free(pncp);
+    NCI_Free(pncp);
 
     return err;
 }
@@ -803,13 +803,13 @@ ncmpi_abort(int ncid)
 
     /* free the PNC object */
     MPI_Comm_free(&pncp->comm);
-    free(pncp->path);
+    NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
         if (pncp->vars[i].shape != NULL)
             NCI_Free(pncp->vars[i].shape);
     if (pncp->vars != NULL)
         NCI_Free(pncp->vars);
-    free(pncp);
+    NCI_Free(pncp);
 
     return err;
 }
