@@ -10,7 +10,7 @@
  * This example tests using calls to ncmpi_iput_varn_int(),
  * ncmpi_iput_varn_float(), ncmpi_iput_varn_double() to write a sequence of
  * requests with arbitrary array indices and lengths. Note that the request IDs
- * in the argument array_of_requests[] of ncmpi_wait_all() are in an arbitray
+ * in the argument array_of_requests[] of ncmpi_wait_all() are in an arbitrary
  * order (instead in an increasing order).
  *
  * The compile and run commands are given below, together with an ncmpidump of

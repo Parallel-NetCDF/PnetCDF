@@ -11,7 +11,7 @@
 !    global_nx == 5 and
 !    global_ny == (4 * number of MPI processes).
 ! The data partitioning pattern is a column-wise partitioning across all
-! proceses. Each process writes a subarray of size nx * ny.
+! processes. Each process writes a subarray of size nx * ny.
 ! The local buffer has a ghost cell of length 3 surrounding the 2D array
 !    integer buf(nx+2*ghost_len, ny+2*ghost_len)
 ! Note the description above follows the Fortran array index order.

@@ -6,9 +6,9 @@
 !
 !     $Id$
 
-    ! This function gets the executable name and output file name from the
-    ! command line.
-    integer function get_args(max_argc, cmd, filename, verbose, len)
+! This function gets the executable name and output file name from the
+! command line.
+        integer function get_args(max_argc, cmd, filename, verbose, len)
 #ifdef NAGFortran
         USE F90_UNIX_ENV, only : iargc, getarg
         implicit none
@@ -60,4 +60,4 @@
                 read (str,'(I10)') len
             endif
         endif
-    end function get_args
+        end function get_args

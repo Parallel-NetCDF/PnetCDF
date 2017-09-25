@@ -210,7 +210,7 @@ int main(int argc, char **argv)
         for (i=0; i<6; i++) {
             if (varT[j][i] != j*6+i + 50) {
 #ifdef PRINT_ERR_ON_SCREEN
-                /* this error is a pntecdf internal error, if occurs */
+                /* this error is a pnetcdf internal error, if occurs */
                 printf("Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
                 __LINE__,__FILE__,j,i,j*6+i + 50,varT[j][i]);
 #endif
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
         for (i=0; i<6; i++) {
             if (varT[j][i] != j*6+i + 50) {
 #ifdef PRINT_ERR_ON_SCREEN
-                /* this error is a pntecdf internal error, if occurs */
+                /* this error is a pnetcdf internal error, if occurs */
                 printf("Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
                 __LINE__,__FILE__,j,i,j*6+i + 50,varT[j][i]);
 #endif

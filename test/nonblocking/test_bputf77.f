@@ -166,7 +166,7 @@
             do i = 1, 6
                if (var(i,j) .NE. (j-1)*6+(i-1) + 50) then
 ! #ifdef PRINT_ERR_ON_SCREEN
-!                  ! this error is a pntecdf internal error, if occurs */
+!                  ! this error is a pnetcdf internal error, if occurs */
 !                  print*, &
 !                  'Error: bput_varm write buffer has been altered at j=', &
 !                  j,' i=',i,' var=',var(i,j)

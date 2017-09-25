@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>  /* memset() */
+#include <string.h> /* memset() */
 #include <libgen.h> /* basename() */
 #include <mpi.h>
 #include <pnetcdf.h>

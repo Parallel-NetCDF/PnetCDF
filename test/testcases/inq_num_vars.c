@@ -11,7 +11,7 @@
  * sized variables correctly. It first defines some number of fixed-size and
  * record variables and then calls the APIs
  *     ncmpi_inq_num_rec_vars() and ncmpi_inq_num_fix_vars()
- * to varify if the numbers are correct.
+ * to verify if the numbers are correct.
  *
  * The compile and run commands are given below. This program is to be run on
  * one MPI process.

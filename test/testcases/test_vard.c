@@ -9,12 +9,12 @@
  * This program tests the vard API.
  * The write buffer is a 2D array of size NY x NX
  * The MPI data type for the buffer is defined by swapping the 1st and 2nd
- * rows of the array using a butype constructed by MPI_Type_create_hindex().
+ * rows of the array using a buftype constructed by MPI_Type_create_hindex().
  * It also writes a fixed-size variable using a buftype constructed by
  * MPI_Type_create_subarray(). Both record and foxed-size variables are read
  * back using various filetypes and buftypes and check the contents.
  *
- * The expected reults from the output file contents are:
+ * The expected results from the output file contents are:
  * (when running on 1 MPI process)
  *
  *  % ncmpidump testfile.nc

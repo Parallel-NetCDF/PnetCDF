@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[2]);
     CHECK_ERR
 
-    /* define a big 1D variable of ubyte type, so there are 2 big vriables */
+    /* define a big 1D variable of ubyte type, so there are 2 big variables */
     err = ncmpi_def_var(ncid, "big_1D", NC_UBYTE, 1, &dimid[2], &varid);
     CHECK_ERR
 
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
     err = ncmpi_enddef(ncid);
     CHECK_ERR
 
-    /* get the beginning of file offset for the varaiable */
+    /* get the beginning of file offset for the variable */
     err = ncmpi_inq_varoffset(ncid, varid, &var_offset);
     CHECK_ERR
 

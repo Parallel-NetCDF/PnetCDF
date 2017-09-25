@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
 
   /**
    * Add an attribute for variable: 
-   *    square: decsription = "2-D integer array"
+   *    square: description = "2-D integer array"
    */
 
   err = ncmpi_put_att_text (ncid, square_id, "description",

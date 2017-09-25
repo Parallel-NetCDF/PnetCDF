@@ -8,7 +8,7 @@
 ! This program tests if one can get the size of record block correctly.
 ! The record block size is the sum of individual record of all record
 ! variables. It first defines some number of record and fixed-size
-! variables and then calls the API ncmpi_inq_recsize() and varify if
+! variables and then calls the API ncmpi_inq_recsize() and verify if
 ! the numbers are ! correct.
 !
 ! The compile and run commands are given below. This program is to be

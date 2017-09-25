@@ -11,9 +11,9 @@
  * The MPI data type for the buffer is defined by swapping the 1st and 2nd
  * rows of the array. It uses MPI_Type_create_hindex(). After the write, this
  * test reads back the array using regular and flexible get APIs (blocking and
- * nonblokcing) and check the contents.
+ * nonblocking) and check the contents.
  *
- * The expected reults from the output file contents are:
+ * The expected results from the output file contents are:
  * (when running on 1 MPI process)
  *
  *  % ncmpidump testfile.nc
