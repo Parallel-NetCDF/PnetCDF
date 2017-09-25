@@ -17,7 +17,7 @@
  *       variables:  // variable types, names, shapes, attributes
  *
  *            int   square(x, y);
- *                     squre: description = "2-D integer array";
+ *                     square: description = "2-D integer array";
  *
  *            int   cube(x,y,z);
  *
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
 
   /**
    * Add an attribute for variable: 
-   *    square: decsription = "2-D integer array"
+   *    square: description = "2-D integer array"
    */
 
   if (rank == 1) description = "Some different value on rank 1";

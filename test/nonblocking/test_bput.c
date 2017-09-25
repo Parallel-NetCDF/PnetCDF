@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
     for (j=0; j<4; j++) {
         for (i=0; i<6; i++) {
             if (var[j][i] != 50.5+j*6+i) {
-                /* this error is a pntecdf internal error, if occurs */
+                /* this error is a pnetcdf internal error, if occurs */
                 printf("Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
                        __LINE__,__FILE__,j,i,var[j][i],50.5+j*6+i);
                 nerrs++;
