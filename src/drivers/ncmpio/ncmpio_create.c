@@ -39,7 +39,7 @@ ncmpio_create(MPI_Comm     comm,
               void       **ncpp)
 {
     char *env_str;
-    int i, rank, mpiomode, err, mpireturn, default_format;
+    int rank, mpiomode, err, mpireturn, default_format;
     MPI_File fh;
     MPI_Comm dup_comm;
     MPI_Info info_used;
@@ -194,42 +194,43 @@ ncmpio_create(MPI_Comm     comm,
         else                                       ncp->format = 1;
     }
 
-    fClr(ncp->flags, NC_MODE_RDONLY); /* create automatically enter write mode */
     fSet(ncp->flags, NC_MODE_CREATE);
-    fSet(ncp->flags, NC_MODE_DEF);    /* create automatically enter define mode */
-    fClr(ncp->flags, NC_MODE_FILL);   /* PnetCDF default mode is no fill */
+    /* create automatically enter write mode */
+    fClr(ncp->flags, NC_MODE_RDONLY);
+    /* create automatically enter define mode */
+    fSet(ncp->flags, NC_MODE_DEF);
+    /* PnetCDF default mode is no fill */
+    fClr(ncp->flags, NC_MODE_FILL);
 
-    ncp->ncid         = ncid;
+    ncp->ncid = ncid;
+
+    /* chunk size for reading header, set to default before check hints */
+    ncp->chunk = NC_DEFAULT_CHUNKSIZE;
+
+    /* calculate the true header size (not-yet aligned) */
+    ncp->xsz = ncmpio_hdr_len_NC(ncp);
+
+    /* initialize unlimited_id as no unlimited dimension yet defined */
+    ncp->dims.unlimited_id = -1;
+
+    /* extract I/O hints from user info */
+    ncmpio_set_pnetcdf_hints(ncp, info);
+
+#if 0
     ncp->safe_mode    = 0;
-    /* initialize arrays storing pending non-blocking requests */
-    ncp->numGetReqs   = 0;
-    ncp->numPutReqs   = 0;
-#ifdef ENABLE_SUBFILING
-    ncp->subfile_mode = 0;
-    ncp->num_subfiles = 0;
-    ncp->ncp_sf       = NULL; /* pointer to subfile NC object */
-#endif
-
-    ncp->chunk        = NC_DEFAULT_CHUNKSIZE;
+    ncp->numGetReqs   = 0; /* number of pending non-blocking get requests */
+    ncp->numPutReqs   = 0; /* number of pending non-blocking put requests */
     ncp->h_align      = 0; /* value 0 indicates the hint is not set */
     ncp->v_align      = 0;
     ncp->r_align      = 0;
     ncp->h_minfree    = 0;
     ncp->v_minfree    = 0;
-
-    /* extract I/O hints from user info */
-    ncmpio_set_pnetcdf_hints(ncp, info);
-
-    /* find the true header size (not-yet aligned) */
-    ncp->xsz          = ncmpio_hdr_len_NC(ncp);
-
     ncp->get_list     = NULL;
     ncp->put_list     = NULL;
     ncp->abuf         = NULL;
     ncp->old          = NULL;
-
-    /* initialize unlimited_id as no unlimited dimension yet defined */
-    ncp->dims.unlimited_id = -1;
+    ncp->put_size     = 0;    /* bytes written so far */
+    ncp->get_size     = 0;    /* bytes read    so far */
 
 #ifndef SEARCH_NAME_LINEARLY
     for (i=0; i<HASH_TABLE_SIZE; i++) {
@@ -242,13 +243,18 @@ ncmpio_create(MPI_Comm     comm,
     }
 #endif
 
+#ifdef ENABLE_SUBFILING
+    ncp->subfile_mode = 0;
+    ncp->num_subfiles = 0;
+    ncp->ncp_sf       = NULL; /* pointer to subfile NC object */
+#endif
+#endif
+
     /* For file create, ignore if NC_NOWRITE set in cmode by user */
     ncp->iomode         = cmode | NC_WRITE;
     ncp->comm           = dup_comm;
     ncp->mpiinfo        = info_used;
     ncp->mpiomode       = mpiomode;
-    ncp->put_size       = 0;
-    ncp->get_size       = 0;
     ncp->collective_fh  = fh;
     ncp->independent_fh = MPI_FILE_NULL;
     ncp->path = (char*) NCI_Malloc(strlen(path) + 1);

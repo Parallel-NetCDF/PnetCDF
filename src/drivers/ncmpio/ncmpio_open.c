@@ -104,37 +104,40 @@ ncmpio_open(MPI_Comm     comm,
     fClr(ncp->flags, NC_MODE_FILL);
     if (!fIsSet(omode, NC_WRITE)) fSet(ncp->flags, NC_MODE_RDONLY);
 
-    ncp->ncid         = ncid;
-    ncp->safe_mode    = 0;
-    ncp->numGetReqs   = 0;
-    ncp->numPutReqs   = 0;
-#ifdef ENABLE_SUBFILING
-    ncp->subfile_mode = 0;
-    ncp->num_subfiles = 0;
-    ncp->ncp_sf       = NULL; /* pointer to subfile NC object */
-#endif
+    ncp->ncid = ncid;
 
-    ncp->chunk        = NC_DEFAULT_CHUNKSIZE;
+    /* chunk size for reading header (set default before check hints) */
+    ncp->chunk = NC_DEFAULT_CHUNKSIZE;
+    /* extract I/O hints from user info */
+    ncmpio_set_pnetcdf_hints(ncp, info);
+
+#if 0
+    ncp->safe_mode    = 0;
+    ncp->numGetReqs   = 0; /* number of pending non-blocking get requests */
+    ncp->numPutReqs   = 0; /* number of pending non-blocking put requests */
     ncp->h_align      = 0; /* value 0 indicates the hint is not set */
     ncp->v_align      = 0;
     ncp->r_align      = 0;
     ncp->h_minfree    = 0;
     ncp->v_minfree    = 0;
-
-    /* extract I/O hints from user info */
-    ncmpio_set_pnetcdf_hints(ncp, info);
-
     ncp->get_list     = NULL;
     ncp->put_list     = NULL;
     ncp->abuf         = NULL;
     ncp->old          = NULL;
+    ncp->put_size     = 0;    /* bytes written so far */
+    ncp->get_size     = 0;    /* bytes read    so far */
+
+#ifdef ENABLE_SUBFILING
+    ncp->subfile_mode = 0;
+    ncp->num_subfiles = 0;
+    ncp->ncp_sf       = NULL; /* pointer to subfile NC object */
+#endif
+#endif
 
     ncp->iomode         = omode;
     ncp->comm           = dup_comm;
     ncp->mpiinfo        = info_used;
     ncp->mpiomode       = mpiomode;
-    ncp->put_size       = 0;
-    ncp->get_size       = 0;
     ncp->collective_fh  = fh;
     ncp->independent_fh = MPI_FILE_NULL;
     ncp->path = (char*) NCI_Malloc(strlen(path) + 1);
