@@ -42,10 +42,10 @@ CLEANFILES = testfile.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = seq_runs.sh test_cdf1.nc test_cdf2.nc test_cdf5.nc \
              bad_begin.nc5 \
+             bad_xtype.nc1 bad_xtype.nc2 bad_xtype.nc5 \
              bad_ndims.nc1 bad_ndims.nc2 bad_ndims.nc5 \
              bad_dimid.nc1 bad_dimid.nc2 bad_dimid.nc5 \
              bad_nattrs.nc1 bad_nattrs.nc2 bad_nattrs.nc5
-
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests

@@ -92,6 +92,9 @@ This is essentially a placeholder for the next release note ...
       3. test whether NC_EBADDIM can be thrown when opening a corrupted file
          with header entry dimension ID of a variable is beyond what the
          number of dimensions has been defined in the file.
+      4. test whether NC_EBADTYPE can be thrown when opening a corrupted file
+         with header entry nc_type of a variable is beyond the maximum NC data
+         type allowed by the file format.
     * test/testcases/tst_max_var_dims.c - to test number of dimensions against
       NC_MAX_VAR_DIMS when calling ncmpi_def_var API.
     * test/largefile/tst_cdf5_begin.c - to test whether a CDF-5 file header is
