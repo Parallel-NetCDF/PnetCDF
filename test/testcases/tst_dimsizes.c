@@ -5,9 +5,9 @@
  *  $Id$
  */
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program (borrowed from netCDF library)tests defining and inquiring the
+ * This program (borrowed from netCDF library) tests defining and inquiring the
  * maximum allowable dimension size for CDF-1, 2, and 5 formats.
  *
  * The compile and run commands are given below.
