@@ -26,6 +26,7 @@
 #include <testutils.h>
 
 int main(int argc, char** argv) {
+    char *bad_xtype[3] ={"bad_xtype.nc1",  "bad_xtype.nc2",  "bad_xtype.nc5"};
     char *bad_ndims[3] ={"bad_ndims.nc1",  "bad_ndims.nc2",  "bad_ndims.nc5"};
     char *bad_dimid[3] ={"bad_dimid.nc1",  "bad_dimid.nc2",  "bad_dimid.nc5"};
     char *bad_nattrs[3]={"bad_nattrs.nc1", "bad_nattrs.nc2", "bad_nattrs.nc5"};
@@ -52,6 +53,24 @@ int main(int argc, char** argv) {
         basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
+    }
+
+    /* The 3 CDF files in bad_xtype[3] have been created on purpose to contain
+     * a corrupted header entry "nc_type" with an invalid value larger than
+     * the maximum allowed atomic data type. For CDF-1 and CDF-2, the maximum
+     * atomic data type is NC_DOUBLE and for CDF-5, the maximum is NC_UINT64.
+     * The corrupted entry is indicated below.
+     *
+     * CDF format specification:
+     *     var = name nelems [dimid ...] vatt_list nc_type vsize begin
+     *                                             ^^^^^^^
+     *                                             corrupted
+     */
+    for (i=0; i<3; i++) {
+        sprintf(filename, "%s/%s", dirname, bad_xtype[i]);
+        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+                         &ncid);
+        EXP_ERR(NC_EBADTYPE)
     }
 
     /* The 3 CDF files in bad_ndims[3] have been created on purpose to contain
