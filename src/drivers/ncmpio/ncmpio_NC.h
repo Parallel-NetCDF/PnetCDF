@@ -185,6 +185,9 @@ extern int
 ncmpio_NC_findattr(const NC_attrarray *ncap, const char *uname);
 
 extern void
+ncmpio_free_NC_attr(NC_attr *attrp);
+
+extern void
 ncmpio_free_NC_attrarray(NC_attrarray *ncap);
 
 extern int
