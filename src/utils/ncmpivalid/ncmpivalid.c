@@ -407,11 +407,18 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
 
     if (ncap->ndefined == 0) {
         /* no dimension defined */
+        /* From the CDF file format specification, the tag is either
+         * NC_DIMENSION or ABSENT (ZERO), but we follow NetCDF library to skip
+         * checking the tag when ndefined is zero.
+         */
+        return NC_NOERR;
+#if 0
         if (tag != ABSENT) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
             printf("\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN(NC_ENOTNC)
         }
+#endif
     } else {
         if (tag != NC_DIMENSION) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
@@ -462,6 +469,7 @@ val_get_nc_type(int fd, bufferinfo *gbp, nc_type *xtypep) {
       && xtype != NC_UINT64) {
     printf("Error @ [0x%8.8Lx]: \n\tUnknown NC data xtype for the values of ",
 	   (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - X_SIZEOF_INT));
+printf("bad xtype=%u\n",xtype);
     DEBUG_RETURN(NC_ENOTNC) 
   }
  
@@ -671,11 +679,18 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
 
     if (ncap->ndefined == 0) {
         /* no attribute defined */
+        /* From the CDF file format specification, the tag is either
+         * NC_ATTRIBUTE or ABSENT (ZERO), but we follow NetCDF library to skip
+         * checking the tag when ndefined is zero.
+         */
+        return NC_NOERR;
+#if 0
         if (tag != ABSENT) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
             printf("\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN(NC_ENOTNC)
         }
+#endif
     } else {
         if (tag != NC_ATTRIBUTE) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
@@ -727,7 +742,11 @@ val_new_NC_var(char *name, int ndims)
 }
 
 static int
-val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
+val_get_NC_var(int          fd,
+               bufferinfo  *gbp,
+               NC_var     **varpp,
+               int          f_ndims) /* no. dimensions defined in file */
+
 {
     /* netCDF file format:
      * netcdf_file = header data
@@ -746,8 +765,8 @@ val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
      *               <non-negative INT64>  // CDF-5
      */
     char *name=NULL;
-    int dim, status;
-    MPI_Offset ndims, dimid;
+    int dim, dimid, status;
+    MPI_Offset ndims;
     NC_var *varp;
 
     status = val_get_NC_string(fd, gbp, &name);
@@ -761,6 +780,11 @@ val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
         printf("the dimid list of \"%s\" - ", name);
         if (name != NULL) NCI_Free(name);
         return status;
+    }
+    /* cannot be more than NC_MAX_VAR_DIMS */
+    if (ndims > NC_MAX_VAR_DIMS) {
+        if (name != NULL) NCI_Free(name);
+        DEBUG_RETURN(NC_EMAXDIMS)
     }
 
     varp = val_new_NC_var(name, ndims);
@@ -786,11 +810,16 @@ val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
             status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
             dimid = (int)tmp;
         }
-        varp->dimids[dim] = dimid;
         if (status != NC_NOERR) {
             ncmpio_free_NC_var(varp);
             return status;
         }
+        /* dimid should be < f_ndims (num of dimensions defined in file) */
+        if (dimid >= f_ndims) {
+            ncmpio_free_NC_var(varp);
+            DEBUG_RETURN(NC_EBADDIM)
+        }
+        varp->dimids[dim] = dimid;
     }
 
     /* var = name nelems [dimid ...] vatt_list nc_type vsize begin
@@ -857,7 +886,11 @@ val_get_NC_var(int fd, bufferinfo *gbp, NC_var **varpp)
 }
 
 static int
-val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
+val_get_NC_vararray(int          fd,
+                    bufferinfo  *gbp,
+                    NC_vararray *ncap,
+                    int          f_ndims) /* no. dimensions defined in file */
+
 {
     /* netCDF file format:
      * netcdf_file = header  data
@@ -899,19 +932,26 @@ val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
     if (tmp > NC_MAX_VARS) {
         /* number of allowable defined variables NC_MAX_VARS */
         printf("the length of ");
-        return NC_ENOTNC;
+        return NC_EMAXVARS;
     }
     ncap->ndefined = (int)tmp;
 
     err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
                (X_SIZEOF_INT + x_sizeof_NON_NEG);
 
-    if(ncap->ndefined == 0) {
+    if (ncap->ndefined == 0) {
+        /* From the CDF file format specification, the tag is either
+         * NC_VARIABLE or ABSENT (ZERO), but we follow NetCDF library to skip
+         * checking the tag when ndefined is zero.
+         */
+        return NC_NOERR;
+#if 0
         if (tag != ABSENT) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
             printf("\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN(NC_ENOTNC)
         }
+#endif
     } else {
         if (tag != NC_VARIABLE) {
             printf("Error @ [0x%8.8Lx]:\n", err_addr);
@@ -924,7 +964,7 @@ val_get_NC_vararray(int fd, bufferinfo *gbp, NC_vararray *ncap)
         if (ncap->value == NULL) DEBUG_RETURN(NC_ENOMEM) 
 
         for (var=0; var<ncap->ndefined; var++) {
-            status = val_get_NC_var(fd, gbp, &ncap->value[var]);
+            status = val_get_NC_var(fd, gbp, &ncap->value[var], f_ndims);
             if (status != NC_NOERR) {
                 printf("variable[%d] in ", var);
                 ncap->ndefined = var;
@@ -1245,7 +1285,7 @@ val_get_NC(int fd, NC *ncp)
      * var_list    = ABSENT | NC_VARIABLE   nelems  [var ...]
      * Check var_list
      */
-    status = val_get_NC_vararray(fd, &getbuf, &ncp->vars);
+    status = val_get_NC_vararray(fd, &getbuf, &ncp->vars, ncp->dims.ndefined);
     if (status != NC_NOERR) {
         printf("VARIABLE list!\n");
         goto fn_exit;
