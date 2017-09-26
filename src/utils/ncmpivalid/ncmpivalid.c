@@ -456,26 +456,21 @@ val_get_nc_type(int fd, bufferinfo *gbp, nc_type *xtypep) {
     status = ncmpix_get_uint32((const void**)(&gbp->pos), &xtype);
     if (status != NC_NOERR) return status;
 
-  if (   xtype != NC_BYTE
-      && xtype != NC_UBYTE
-      && xtype != NC_CHAR
-      && xtype != NC_SHORT
-      && xtype != NC_USHORT
-      && xtype != NC_INT
-      && xtype != NC_UINT
-      && xtype != NC_FLOAT
-      && xtype != NC_DOUBLE
-      && xtype != NC_INT64
-      && xtype != NC_UINT64) {
+    if (xtype < NC_BYTE) goto err_exit;
+
+    if (gbp->version < 5) {
+        if (xtype > NC_DOUBLE) goto err_exit;
+    }
+    else if (xtype > NC_UINT64) goto err_exit;
+
+    *xtypep = (nc_type) xtype;
+
+    return NC_NOERR;
+
+err_exit:
     printf("Error @ [0x%8.8Lx]: \n\tUnknown NC data xtype for the values of ",
 	   (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - X_SIZEOF_INT));
-printf("bad xtype=%u\n",xtype);
-    DEBUG_RETURN(NC_ENOTNC) 
-  }
- 
-  *xtypep = (nc_type) xtype;
-
-  return NC_NOERR;
+    DEBUG_RETURN(NC_EBADTYPE)
 }
 
 /*

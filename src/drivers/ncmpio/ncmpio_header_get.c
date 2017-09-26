@@ -497,18 +497,14 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
     err = ncmpix_get_uint32((const void**)(&gbp->pos), &xtype);
     if (err != NC_NOERR) return err;
 
-    if (xtype != NC_CHAR    &&
-        xtype != NC_BYTE    &&
-        xtype != NC_UBYTE   &&
-        xtype != NC_SHORT   &&
-        xtype != NC_USHORT  &&
-        xtype != NC_INT     &&
-        xtype != NC_UINT    &&
-        xtype != NC_FLOAT   &&
-        xtype != NC_DOUBLE  &&
-        xtype != NC_INT64   &&
-        xtype != NC_UINT64
-       )
+    if (xtype < NC_BYTE)
+        DEBUG_RETURN_ERROR(NC_EBADTYPE)
+
+    if (gbp->version < 5) {
+        if (xtype > NC_DOUBLE)
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+    }
+    else if (xtype > NC_UINT64)
         DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
     *xtypep = (nc_type) xtype;
