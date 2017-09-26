@@ -2,13 +2,13 @@
 Parallel netCDF (PnetCDF) is a library providing high-performance parallel I/O
 while still maintaining file-format compatibility with Unidata's NetCDF,
 specifically the classic CDF 1, 2, and 5 formats. Although NetCDF supports
-parallel I/O starting from version 4, it is built on top of HDF5 and thus the
-files must be in HDF5 format. PnetCDF is currently the only option for carrying
-out parallel I/O on files that are in classic formats.  
+parallel I/O starting from version 4, it is built on top of HDF5 and thus its
+parallel feature requires files in HDF5 format. PnetCDF is currently the only
+option for parallel I/O on files in classic formats.  
 
 Starting from version 1.1.0, PnetCDF supports the CDF-5 file format, an
-extension of CDF-2, that supports more data types and allows users to define
-large dimensions, attributes, and variables (>2B array elements).
+extension of CDF-2, that supports more atomic data types and allows users to
+define large dimensions, attributes, and variables (>2B array elements).
 
 NetCDF gives scientific programmers a space-efficient and portable means for
 storing data.  By making some small changes to the NetCDF APIs, PnetCDF can use
@@ -36,14 +36,18 @@ Requirements:
       
     - To build parallel-netcdf, you will need the following additional programs:
         - autotools (autoconfig, automake, libtool, m4, etc.)
-        - Optional:
+        - Optional: (for PnetCDF developers)
              - either yacc or bison
 	     - either lex or flex
       These are usually part of your operating system's development tools.
 
 
 Build recipes:
-    Several machine- and platform-specific build recipes are available under
+    The process of building and installation of PnetCDF library is usually
+    simple: by just running commands "./configure" and "make install". Several
+    configure options are also available to customize it.
+
+    Several machine- and compiler-specific build recipes are available under
     the directory of doc.
     - README.IBM        (BlueGene systems)
     - README.SX         (NEC SX systems)
@@ -57,15 +61,26 @@ Build recipes:
 
 Note on supporting large files and large variables.
 
-    - Fortran routines will pass in a 64 bit integer for some parameters (those
-      corresponding to MPI_Offset type in the C routines).  Declare those
-      parameters as 'integer(kind=MPI_OFFSET_KIND)'
+    - Some Fortran APIs contain arguments of 64-bit integer data type, which
+      corresponds to MPI_Offset data type in their peer C APIs. Declare those
+      arguments as 'integer(kind=MPI_OFFSET_KIND)'.
 
     - In places where you might use NF_UNLIMITED to define an unlimited 
       dimension in one of the nfmpi_ routines, use NFMPI_UNLIMITED. 
-      NFMPI_UNLIMITED has been defined as the proper type for nfmpi_def_dim, 
-      whereas NF_UNLIMITED might be too small. Similarly, for Fortran 90,
-      use NF90MPI_UNLIMITED instead of NF90_UNLIMITED.
+      NFMPI_UNLIMITED has been defined as the proper 64-bit integer type for
+      nfmpi_def_dim, whereas NF_UNLIMITED might be too small. Similarly, for
+      Fortran 90, use NF90MPI_UNLIMITED instead of NF90_UNLIMITED.
 
-Please send an email to parallel-netcdf@mcs.anl.gov
+
+Mailing List
+
+    PnetCDF user community discusses the design and use of the library on the
+    parallel-netcdf@mcs.anl.gov mailing list. Anyone interested in developing
+    or using PnetCDF is encouraged to join. Visit the list information page
+    https://lists.mcs.anl.gov/mailman/listinfo/parallel-netcdf
+    for subscription instructions. This mailing list is also for announcements,
+    bug reports, and questions about PnetCDF software.
+
+    The past discussions in the mailing list are available in the follow URL:
+    http://lists.mcs.anl.gov/pipermail/parallel-netcdf/.
 

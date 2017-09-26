@@ -17,7 +17,7 @@ default configuration of PnetCDF up and running.
 
 (a) You will need the following prerequisites.
 
-    - REQUIRED: This tar file
+    - REQUIRED: This compressed tar file
 
     - REQUIRED: An MPI C compiler
 
