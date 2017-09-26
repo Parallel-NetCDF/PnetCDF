@@ -84,21 +84,19 @@ This is essentially a placeholder for the next release note ...
     * doc/README.Ubuntu provides build instructions for Ubuntu Linux OS.
 
   o New test program
-    * test/testcases/tst_EMAXDIMS.c - test whether NC_EMAXDIMS can be thrown
-      when opening a corrupted file with header entry number of dimensions
-      being larger than NC_MAX_DIMS.
-    * test/testcases/tst_EMAXATTS.c - test whether NC_EMAXATTS can be thrown
-      when opening a corrupted file with header entry number of attributes
-      being larger than NC_MAX_ATTRS.
-    * test/testcases/tst_EBADDIM.c - test whether NC_EBADDIM can be thrown
-      when opening a corrupted file with header entry dimension ID of a
-      variable is beyond what the number of dimensions has been defined in
-      the file.
+    * test/cdf_format/tst_corrupt.c -
+      1. test whether NC_EMAXDIMS can be thrown when opening a corrupted file
+         with header entry number of dimensions being larger than NC_MAX_DIMS.
+      2. test whether NC_EMAXATTS can be thrown when opening a corrupted file
+         with header entry number of attributes being larger than NC_MAX_ATTRS.
+      3. test whether NC_EBADDIM can be thrown when opening a corrupted file
+         with header entry dimension ID of a variable is beyond what the
+         number of dimensions has been defined in the file.
     * test/testcases/tst_max_var_dims.c - to test number of dimensions against
       NC_MAX_VAR_DIMS when calling ncmpi_def_var API.
     * test/largefile/tst_cdf5_begin.c - to test whether a CDF-5 file header is
       corrupted.
-    * test/testcases/tst_open_cdf5.c - to test whether NC_ENOTNC is thrown
+    * test/cdf_format/tst_open_cdf5.c - to test whether NC_ENOTNC is thrown
       when opening a CDF-5 (bad_begin.nc5) file with corrupted header.
     * test/testcases/large_var_cdf5.c - to test whether NC_EVARSIZE is thrown
       when a variable or a record is larger than NC_MAX_INT64-3.
