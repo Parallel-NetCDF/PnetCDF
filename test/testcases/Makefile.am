@@ -117,7 +117,7 @@ else
    check_PROGRAMS = $(TESTPROGRAMS)
 endif
 
-check_PROGRAMS += redef1 tst_open_cdf5 tst_corrupt
+check_PROGRAMS += redef1
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -134,10 +134,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              testfile.nc testfile.nc.cdf1 testfile.nc.cdf2 testfile.nc.cdf5 \
              redef1.nc redef2.nc
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump bad_begin.nc5 \
-             bad_ndims.nc1 bad_ndims.nc2 bad_ndims.nc5 \
-             bad_dimid.nc1 bad_dimid.nc2 bad_dimid.nc5 \
-             bad_nattrs.nc1 bad_nattrs.nc2 bad_nattrs.nc5  
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
