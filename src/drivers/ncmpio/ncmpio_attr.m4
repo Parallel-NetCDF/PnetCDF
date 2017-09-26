@@ -105,6 +105,17 @@ ncmpio_new_NC_attr(char        *name,
     return NC_NOERR;
 }
 
+/*----< ncmpio_free_NC_attr() >----------------------------------------------*/
+void
+ncmpio_free_NC_attr(NC_attr *attrp)
+{
+    assert(attrp != NULL);
+
+    if (attrp->xvalue != NULL)
+        NCI_Free(attrp->xvalue);
+    NCI_Free(attrp->name);
+}
+
 /*----< dup_NC_attr() >------------------------------------------------------*/
 /* duplicate an NC_attr object */
 static int
@@ -132,9 +143,7 @@ ncmpio_free_NC_attrarray(NC_attrarray *ncap)
     assert(ncap != NULL);
 
     for (i=0; i<ncap->ndefined; i++) {
-        if (ncap->value[i]->xvalue != NULL)
-            NCI_Free(ncap->value[i]->xvalue);
-        NCI_Free(ncap->value[i]->name);
+        ncmpio_free_NC_attr(ncap->value[i]);
         NCI_Free(ncap->value[i]);
     }
 

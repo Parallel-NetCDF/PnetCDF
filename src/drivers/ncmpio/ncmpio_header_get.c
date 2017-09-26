@@ -94,7 +94,7 @@ compute_var_shape(NC *ncp)
 
 #if 0
 /*----< hdr_len_NC_name() >--------------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_name(const NC_string *ncstrp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
@@ -140,7 +140,7 @@ hdr_len_NC_dim(const NC_dim *dimp, int sizeof_NON_NEG)
 }
 
 /*----< hdr_len_NC_dimarray() >----------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_dimarray(const NC_dimarray *ncap, int sizeof_NON_NEG)
 {
     /* netCDF file format:
@@ -204,7 +204,7 @@ hdr_len_NC_attr(const NC_attr *attrp, int sizeof_NON_NEG)
 }
 
 /*----< hdr_len_NC_attrarray() >---------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_attrarray(const NC_attrarray *ncap, int sizeof_NON_NEG)
 {
     /* netCDF file format:
@@ -235,7 +235,7 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap, int sizeof_NON_NEG)
 }
 
 /*----< hdr_len_NC_var() >---------------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_var(const NC_var *varp,
                int           sizeof_off_t,    /* OFFSET */
                int           sizeof_NON_NEG)  /* NON_NEG */
@@ -276,7 +276,7 @@ hdr_len_NC_var(const NC_var *varp,
 }
 
 /*----< hdr_len_NC_vararray() >----------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_vararray(const NC_vararray *ncap,
                     int                sizeof_NON_NEG, /* NON_NEG */
                     int                sizeof_off_t)   /* OFFSET */
@@ -398,7 +398,7 @@ hdr_fetch(bufferinfo *gbp) {
 #if 0
 /*----< hdr_check_buffer() >-------------------------------------------------*/
 /* Ensure that 'nextread' bytes are available.  */
-inline static int
+static int
 hdr_check_buffer(bufferinfo *gbp, MPI_Offset nextread)
 {
     MPI_Aint pos_addr, base_addr;
@@ -422,7 +422,7 @@ hdr_check_buffer(bufferinfo *gbp, MPI_Offset nextread)
  * in CDF-2 format, only variable begin (starting file offset) is 64-bit
  * in CDF-5 format, both variable's begin and size are 64-bit
  */
-inline static int
+static int
 hdr_get_uint32(bufferinfo *gbp, uint *xp)
 {
     int err;
@@ -441,7 +441,7 @@ hdr_get_uint32(bufferinfo *gbp, uint *xp)
  * in CDF-2 format, only variable begin (starting file offset) is 64-bit
  * in CDF-5 format, both variable's begin and size are 64-bit
  */
-inline static int
+static int
 hdr_get_uint64(bufferinfo *gbp, uint64 *xp)
 {
     int err;
@@ -462,7 +462,7 @@ hdr_get_uint64(bufferinfo *gbp, uint64 *xp)
  *     NC_ATTRIBUTE
  *     NC_VARIABLE
  */
-inline static int
+static int
 hdr_get_NC_tag(bufferinfo *gbp, NC_tag *tagp)
 {
     int err;
@@ -482,10 +482,10 @@ hdr_get_NC_tag(bufferinfo *gbp, NC_tag *tagp)
 }
 
 /*----< hdr_get_nc_type() >--------------------------------------------------*/
-inline static int
+static int
 hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
 {
-    /* nc_type is 4-byte integer, X_SIZEOF_INT */
+    /* nc_type is 4-byte integer */
     int err;
     uint xtype;
 
@@ -497,6 +497,7 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
     err = ncmpix_get_uint32((const void**)(&gbp->pos), &xtype);
     if (err != NC_NOERR) return err;
 
+    /* check if xtype is within legal ranges of CDF-1/2/5 formats */
     if (xtype < NC_BYTE)
         DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
@@ -615,7 +616,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 }
 
 /*----< hdr_get_NC_dim() >---------------------------------------------------*/
-inline static int
+static int
 hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp)
 {
     /* netCDF file format:
@@ -741,7 +742,6 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
     for (i=0; i<ndefined; i++) {
         err = hdr_get_NC_dim(gbp, ncap->value + i);
         if (err != NC_NOERR) { /* error: fail to get the next dim */
-            // ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_dimarray(ncap);
             return err;
         }
@@ -874,8 +874,7 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp)
     /* get [values ...] */
     err = hdr_get_NC_attrV(gbp, attrp);
     if (err != NC_NOERR) {
-        if (attrp->xvalue != NULL) NCI_Free(attrp->xvalue);
-        NCI_Free(attrp->name);
+        ncmpio_free_NC_attr(attrp);
         NCI_Free(attrp);
         return err;
     }
@@ -961,7 +960,6 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
     for (i=0; i<ndefined; i++) {
         err = hdr_get_NC_attr(gbp, ncap->value + i);
         if (err != NC_NOERR) { /* Error: fail to get the next att */
-            // ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_attrarray(ncap);
             return err;
         }
@@ -1167,7 +1165,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         ndefined = (int)tmp;
     }
 
-    /* Now ndefined is in between 0 and NC_MAX_ATTRS */
+    /* Now ndefined is in between 0 and NC_MAX_VARS */
     ncap->ndefined = ndefined;
 
     /* From the CDF file format specification, the tag is either NC_VARIABLE
@@ -1192,7 +1190,6 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     for (i=0; i<ndefined; i++) {
         err = hdr_get_NC_var(gbp, ncap->value + i, f_ndims);
         if (err != NC_NOERR) { /* Error: fail to get the next var */
-            // ncap->ndefined = i; /* update to no. successful defined */
             ncmpio_free_NC_vararray(ncap);
             return err;
         }
