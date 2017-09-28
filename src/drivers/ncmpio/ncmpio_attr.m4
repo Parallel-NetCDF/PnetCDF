@@ -53,6 +53,7 @@ inline static MPI_Offset
 x_len_NC_attrV(nc_type    xtype,
                MPI_Offset nelems)
 {
+#if 0
     switch(xtype) {
         case NC_BYTE:
         case NC_CHAR:
@@ -67,6 +68,17 @@ x_len_NC_attrV(nc_type    xtype,
         case NC_UINT64: return (nelems * 8);
         default: fprintf(stderr, "Error: bad type(%d) in %s\n",xtype,__func__);
     }
+    return 0;
+#endif
+
+         if (xtype <  NC_BYTE)   goto fn_exit;
+    else if (xtype <= NC_UBYTE)  return _RNDUP(nelems, 4);
+    else if (xtype <= NC_USHORT) return ((nelems + nelems%2) * 2);
+    else if (xtype <= NC_FLOAT)  return (nelems * 4);
+    else if (xtype <= NC_UINT64) return (nelems * 8);
+
+fn_exit:
+    fprintf(stderr, "Error: bad type(%d) in %s\n",xtype,__func__);
     return 0;
 }
 
