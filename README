@@ -59,6 +59,12 @@ Build recipes:
     - README.SGI        (SGI systems, such as Endeavour @NASA)
 
 
+PnetCDF User Documents	
+    C API References
+      http://cucis.ece.northwestern.edu/projects/PnetCDF/doc/pnetcdf-c
+    Questions & Answers
+      http://cucis.ece.northwestern.edu/projects/PnetCDF/faq.html
+
 Note on supporting large files and large variables.
 
     - Some Fortran APIs contain arguments of 64-bit integer data type, which
