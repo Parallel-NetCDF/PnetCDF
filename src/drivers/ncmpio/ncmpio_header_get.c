@@ -769,9 +769,9 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
      * doubles = [DOUBLE ...]
      * padding = <0, 1, 2, or 3 bytes to next 4-byte boundary>
      */
-    int xsz;
+    int xsz, padding, bufremain;
     void *value = attrp->xvalue;
-    MPI_Offset nbytes, padding, bufremain, attcount;
+    MPI_Offset nbytes;
 
     ncmpii_xlen_nc_type(attrp->xtype, &xsz);
     nbytes = attrp->nelems * xsz;
@@ -789,14 +789,14 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
     bufremain = gbp->size - (pos_addr - base_addr);
 #endif
     bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
+    /* gbp->size is the read chunk size, which is of type 4-byte int.
+     * thus bufremain should be less than INT_MAX */
 
     /* get values */
     while (nbytes > 0) {
         if (bufremain > 0) {
-            attcount = MIN(nbytes, bufremain);
-            if (attcount != (size_t)attcount)
-                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-            memcpy(value, gbp->pos, (size_t)attcount);
+            int attcount = MIN(nbytes, bufremain);
+            memcpy(value, gbp->pos, attcount);
             nbytes -= attcount;
             gbp->pos = (void *)((char *)gbp->pos + attcount);
             value = (void *)((char *)value + attcount);
