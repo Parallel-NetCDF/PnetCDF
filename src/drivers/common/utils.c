@@ -44,7 +44,6 @@ ncmpii_nc2mpitype(nc_type xtype)
 int
 ncmpii_xlen_nc_type(nc_type xtype, int *size)
 {
-#if 0
     switch(xtype) {
         case NC_BYTE:
         case NC_CHAR:
@@ -59,14 +58,4 @@ ncmpii_xlen_nc_type(nc_type xtype, int *size)
         case NC_UINT64: *size = 8; return NC_NOERR;
         default: DEBUG_RETURN_ERROR(NC_EBADTYPE);
     }
-#endif
-    if (xtype < NC_BYTE) DEBUG_RETURN_ERROR(NC_EBADTYPE);
-
-         if (xtype <= NC_UBYTE)  *size = 1;
-    else if (xtype <= NC_USHORT) *size = 2;
-    else if (xtype <= NC_FLOAT)  *size = 4;
-    else if (xtype <= NC_UINT64) *size = 8;
-    else DEBUG_RETURN_ERROR(NC_EBADTYPE);
-
-    return NC_NOERR;
 }
