@@ -1,4 +1,14 @@
-AC_REVISION($Id$)dnl
+dnl
+dnl Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+dnl See COPYRIGHT notice in top-level directory.
+dnl
+
+AC_REVISION([$Revision$])dnl
+dnl The above uses SVN keyword Revision to copy the unique revision number as
+dnl a stamp into configure script. When using git, use the following line
+dnl instead.
+dnl AC_REVISION([m4_esyscmd_s([git describe --always])])
+
 dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl

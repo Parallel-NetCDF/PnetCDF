@@ -2,7 +2,7 @@
 # Copyright (C) 2012, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
-# $Id: Makefile.am -1   $
+# $Id$
 #
 # @configure_input@
 

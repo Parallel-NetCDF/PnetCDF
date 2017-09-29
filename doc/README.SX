@@ -1,3 +1,9 @@
+#
+# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
 # Current notes for NEC SX; based on pnetcdf version 1.0.0; 28 July, 2005
 
 . SX Cross compiler environment is not supported yet (the check for a working
