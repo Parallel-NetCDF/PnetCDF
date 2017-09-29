@@ -1,4 +1,8 @@
-$id$
+#
+# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
 
 When using old versions of Intel MPI compilers (4.x), you might encounter the
 following error message.

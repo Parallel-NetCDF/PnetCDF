@@ -1,4 +1,8 @@
-$Id$
+#
+# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
 
 For latest information of large-file support, please visit:
 http://trac.mcs.anl.gov/projects/parallel-netcdf

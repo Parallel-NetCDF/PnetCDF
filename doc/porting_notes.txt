@@ -1,4 +1,8 @@
-$id$
+#
+# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
  
 ----------------------------------------------
 Notes in this file are for PnetCDF developers

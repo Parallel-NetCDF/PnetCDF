@@ -1,3 +1,9 @@
+#
+# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+
 ---------------------------------------------
 Note on parallel I/O data consistency
 ---------------------------------------------
