@@ -4,7 +4,7 @@ while still maintaining file-format compatibility with Unidata's NetCDF,
 specifically the classic CDF 1, 2, and 5 formats. Although NetCDF supports
 parallel I/O starting from version 4, it is built on top of HDF5 and thus its
 parallel feature requires files in HDF5 format. PnetCDF is currently the only
-option for parallel I/O on files in classic formats.  
+option for parallel I/O on files in classic formats.
 
 Starting from version 1.1.0, PnetCDF supports the CDF-5 file format, an
 extension of CDF-2, that supports more atomic data types and allows users to
@@ -16,15 +16,13 @@ MPI-IO to achieve high-performance parallel I/O.
 
 More extensive installation guides can be found in file INSTALL.  Additional
 information regarding the contents of the release can be found in the
-RELEASE_NOTES file in the top-level directory.  Finally, the PnetCDF web
-sites:
+RELEASE_NOTES file in the top-level directory.  Finally, the PnetCDF project
+web sites below contain information on bug fixes and software releases.
     http://trac.mcs.anl.gov/projects/parallel-netcdf
     http://cucis.ece.northwestern.edu/projects/PnetCDF
-contain information on bug fixes and software releases.
 
 
 Requirements:
-
     - PnetCDF relies on MPI-IO.  ROMIO, the most common MPI-IO implementation,
       can make use of a prefix in front of the file name to specify the
       underlying file system and override ROMIO's auto detection. A typical
@@ -32,8 +30,7 @@ Requirements:
       a file name with ':' characters.  In some cases, ROMIO might think you
       are passing in a prefix and will complain about an unsupported file
       system type.  If that happens, add a file-system prefix to your file
-      name.   
-      
+      name.
     - To build parallel-netcdf, you will need the following additional programs:
         - autotools (autoconfig, automake, libtool, m4, etc.)
         - Optional: (for PnetCDF developers)
@@ -59,27 +56,25 @@ Build recipes:
     - README.SGI        (SGI systems, such as Endeavour @NASA)
 
 
-PnetCDF User Documents	
+PnetCDF User Documents:
     C API References
       http://cucis.ece.northwestern.edu/projects/PnetCDF/doc/pnetcdf-c
     Questions & Answers
       http://cucis.ece.northwestern.edu/projects/PnetCDF/faq.html
 
 Note on supporting large files and large variables.
-
     - Some Fortran APIs contain arguments of 64-bit integer data type, which
       corresponds to MPI_Offset data type in their peer C APIs. Declare those
       arguments as 'integer(kind=MPI_OFFSET_KIND)'.
 
-    - In places where you might use NF_UNLIMITED to define an unlimited 
-      dimension in one of the nfmpi_ routines, use NFMPI_UNLIMITED. 
+    - In places where you might use NF_UNLIMITED to define an unlimited
+      dimension in one of the nfmpi_ routines, use NFMPI_UNLIMITED.
       NFMPI_UNLIMITED has been defined as the proper 64-bit integer type for
       nfmpi_def_dim, whereas NF_UNLIMITED might be too small. Similarly, for
       Fortran 90, use NF90MPI_UNLIMITED instead of NF90_UNLIMITED.
 
 
 Mailing List
-
     PnetCDF user community discusses the design and use of the library on the
     parallel-netcdf@mcs.anl.gov mailing list. Anyone interested in developing
     or using PnetCDF is encouraged to join. Visit the list information page

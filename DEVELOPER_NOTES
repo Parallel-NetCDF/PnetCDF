@@ -126,7 +126,7 @@ http://semver.org/
    5. If any interfaces have been added since the last public release, then
       increment age.
    6. If any interfaces have been removed or changed since the last public
-      release, then set age to 0.  
+      release, then set age to 0.
 
 =====================================================
 Note on adding new MPI compiler candidates
@@ -719,7 +719,7 @@ diff -r automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
 <     $(AM_CPPFLAGS)
 <     $(CPPFLAGS)
 <   };
-< 
+<
 888c879
 < 		   'compile' => "\$(FC) @fpplike_flags \$(AM_FCFLAGS) \$(FCFLAGS)",
 ---

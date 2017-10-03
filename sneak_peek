@@ -12,19 +12,19 @@ This is essentially a placeholder for the next release note ...
 
   o New Limitations
     * PnetCDF now requires the underlying MPI library define data type
-      MPI_Offset to be an 8-byte integer. Configuring process of PnetCDF will
-      be aborted if MPI_Offset is detected to be of size 4 bytes. See r2944.
+      MPI_Offset an 8-byte integer. Configuration process will be aborted if
+      MPI_Offset is detected to be of size 4 bytes. See r2944.
     * The maximum number of files that can be simultaneously opened by an MPI
       process is now limited to 1024 (a new constant NC_MAX_NFILES defined in
       pnetcdf.h). When this limit is reached, error code NC_ENFILE will be
       thrown.
-    * NC_MAX_VAR_DIMS, the maximum number of dimensions per variable is lifted
+    * NC_MAX_VAR_DIMS, the maximum number of dimensions per variable is raised
       to 2147483647, i.e. NC_MAX_INT
-    * NC_MAX_DIMS, the maximum number of dimensions per file is lifted to
+    * NC_MAX_DIMS, the maximum number of dimensions per file is raised to
       2147483647, i.e. NC_MAX_INT
-    * NC_MAX_ATTRS, the maximum number of attributes per file is lifted to
+    * NC_MAX_ATTRS, the maximum number of attributes per file is raised to
       2147483647, i.e. NC_MAX_INT
-    * NC_MAX_VARS, the maximum number of variables per file is lifted to
+    * NC_MAX_VARS, the maximum number of variables per file is raised to
       2147483647, i.e. NC_MAX_INT
 
   o New constants
@@ -41,19 +41,19 @@ This is essentially a placeholder for the next release note ...
   o New optimization
     * Use hash function for faster attribute name lookup. See r3335.
 
-  o Syntax changes
+  o API syntax changes
     * Add C type qualifier "const" to argument fill_value of ncmpi_def_var_fill
       to indicate the contents pointed by fill_value is immutable.
 
   o Semantics updates
     * For CDF-5 files, the maximum size of a variable or a variable's record
-      is NC_MAX_INT64-3.
+      is NC_MAX_INT64-3 (i.e. 2^64-4).
     * When the file create/open modes are not consistent among processes, the
-      modes will be replaced by rank 0's mode and PnetCDF library will still
-      try to create/open the file. Error code NC_EMULTIDEFINE_CMODE or
-      NC_EMULTIDEFINE_OMODE will be returned on processes whose modes disagree
-      with rank 0's. If safe mode is on, then rank 0 will also get the error
-      code.
+      modes on all processes will be replaced by rank 0's mode and PnetCDF
+      library will still try to create/open the file. Error code
+      NC_EMULTIDEFINE_CMODE or NC_EMULTIDEFINE_OMODE will be returned on
+      processes whose modes disagree with rank 0's. If safe mode is on, then
+      all processes will also get the same error code.
 
   o New utility program
     * none
@@ -61,9 +61,9 @@ This is essentially a placeholder for the next release note ...
   o New error code precedence
     * none
 
-  o Updated error string
-    * The error string corresponding to NC_EMAXDIMS is changed to cover the
-      case when NC_MAX_DIMS or NC_MAX_VAR_DIMS is exceeded.
+  o Updated error strings
+    * The error string corresponding to error code NC_EMAXDIMS is changed to
+      cover the case when NC_MAX_DIMS or NC_MAX_VAR_DIMS is exceeded.
 
   o New error code
     * none
@@ -84,32 +84,35 @@ This is essentially a placeholder for the next release note ...
     * doc/README.Ubuntu provides build instructions for Ubuntu Linux OS.
 
   o New test program
-    * test/cdf_format/tst_corrupt.c -
-      1. test whether NC_EMAXDIMS can be thrown when opening a corrupted file
-         with header entry number of dimensions being larger than NC_MAX_DIMS.
-      2. test whether NC_EMAXATTS can be thrown when opening a corrupted file
-         with header entry number of attributes being larger than NC_MAX_ATTRS.
-      3. test whether NC_EBADDIM can be thrown when opening a corrupted file
-         with header entry dimension ID of a variable is beyond what the
-         number of dimensions has been defined in the file.
-      4. test whether NC_EBADTYPE can be thrown when opening a corrupted file
-         with header entry nc_type of a variable is beyond the maximum NC data
-         type allowed by the file format.
-    * test/testcases/tst_max_var_dims.c - to test number of dimensions against
-      NC_MAX_VAR_DIMS when calling ncmpi_def_var API.
-    * test/largefile/tst_cdf5_begin.c - to test whether a CDF-5 file header is
-      corrupted.
-    * test/cdf_format/tst_open_cdf5.c - to test whether NC_ENOTNC is thrown
-      when opening a CDF-5 (bad_begin.nc5) file with corrupted header.
-    * test/testcases/large_var_cdf5.c - to test whether NC_EVARSIZE is thrown
-      when a variable or a record is larger than NC_MAX_INT64-3.
-    * test/testcases/mix_collectives.c - to test collective get/put APIs that
+    * test/cdf_format/tst_corrupt.c
+      1. tests whether NC_EMAXDIMS can be thrown when opening a corrupted file
+         with header field number of dimensions being larger than NC_MAX_DIMS.
+      2. tests whether NC_EMAXATTS can be thrown when opening a corrupted file
+         with header field number of attributes being larger than NC_MAX_ATTRS.
+      3. tests whether NC_EBADDIM can be thrown when opening a corrupted file
+         with header field dimension ID of a variable is beyond the number of
+         dimensions defined in the file.
+      4. tests whether NC_EBADTYPE can be thrown when opening a corrupted file
+         with header field nc_type of a variable is not within the legal NC
+         atomic data type allowed by the file format.
+    * test/testcases/tst_max_var_dims.c - tests the number of dimensions
+      against NC_MAX_VAR_DIMS when calling ncmpi_def_var API.
+    * test/largefile/tst_cdf5_begin.c - tests whether a CDF-5 file header is
+      corrupted on the starting file offsets of variables that are not in the
+      increasing order as they defined.
+    * test/cdf_format/tst_open_cdf5.c - tests whether NC_ENOTNC can be
+      correctly thrown when opening a CDF-5 (bad_begin.nc5) file with corrupted
+      header.
+    * test/testcases/large_var_cdf5.c - tests whether NC_EVARSIZE can be
+      correctly thrown when a variable or a record is larger than
+      NC_MAX_INT64-3.
+    * test/testcases/mix_collectives.c - tests collective get/put APIs that
       allow different processes to call different kinds of APIs (i.e. var1,
       vara, vars, varm, etc.) and use different var IDs. In other words, the
       API kinds can be different among processes in a collective call.
     * test/largefile/high_dim_var.c - tests blocking vars APIs for high-
-      dimensional variables. This is to test r3164.
-    * test/largefile/large_dims_vars_attrs.c - tests large values of number of
+      dimensional variables. See r3164.
+    * test/largefile/large_dims_vars_attrs.c - tests large number of
       dimensions, large number of variables, and large number of attributes.
     * test/testcases/put_all_kinds.m4 - tests various blocking put APIs.
     * test/testcases/tst_dimsizes.c - borrowed from NetCDF library to test
