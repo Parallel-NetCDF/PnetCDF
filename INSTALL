@@ -80,7 +80,7 @@ default configuration of PnetCDF up and running.
       setenv PATH $HOME/PnetCDF/bin:$PATH
 
     for bash and sh:
-  
+
       PATH=$HOME/PnetCDF/bin:$PATH ; export PATH
 
     Check that everything is in order at this point by doing:
@@ -193,7 +193,7 @@ Some influential environment variables:
     of compiler not found.
 
  - For platform-specific build instructions, see one of the README.<ARCH>
-   files in directory doc/.  
+   files in directory doc/.
 
 
 ----

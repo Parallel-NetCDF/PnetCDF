@@ -2,7 +2,7 @@
 PnetCDF naming conventions
 --------------------------
 PnetCDF uses the following naming conventions for folders, files, and functions
-under this directory.
+under this directory, src/drivers.
 
 Folder common/
        * Functions implemented in this folder are shared by all drivers, and

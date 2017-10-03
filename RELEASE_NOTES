@@ -374,7 +374,7 @@ version  1.6.1 (June 1, 2015)
   o New features
     * PnetCDF now supports fill mode. ncmpi_set_fill() can be used to set the
       fill mode for the entire data set. Note the differences from netCDF:
-      1. The default mode in PnetCDF is NC_NOFILL. 
+      1. The default mode in PnetCDF is NC_NOFILL.
       2. Setting fill mode for the entire file or individual variables must be
          done in define mode.
       3. For non-record variables, they are filled at the time ncmpi_enddef()
@@ -1211,11 +1211,11 @@ version  1.0.0 (July 27, 2005)
 
     - The Parallel-NetCDF developers are quite happy to announce our 1.0.0
       release.  This release reflects the culmination of several years of
-      work and lots of community feedback.  
+      work and lots of community feedback.
 
       A brief list of the major changes since 0.9.4:
 
-    - Has both the high level and flexible data mode interfaces 
+    - Has both the high level and flexible data mode interfaces
     - Improved support for many more platforms
     - Support for all serial NetCDF access patterns (var, vara, vars,
       varm) and types (text, char, uchar, schar, short, int, float, long,
