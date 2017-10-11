@@ -85,6 +85,7 @@ Tasks immediately before a new release (must run in the following order)
     Run command "make dist" to produce two tar balls for PnetCDF release:
       parallel-netcdf-$(PNETCDF_VERSION).tar.gz
       parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
+    (Version 1.9.0 and later will only create .gz file.)
 
  9. Generate SHA1 checksums
     Run command:
@@ -109,6 +110,7 @@ http://semver.org/
    Additional labels for pre-release and build metadata are available as
    extensions to the MAJOR.MINOR.PATCH format.
 
+   (For shared library versioning)
    For libtool ABI versioning rules see:
    http://www.gnu.org/software/libtool/manual/libtool.html#Updating-version-info
    Update the version information only immediately before a public release.
