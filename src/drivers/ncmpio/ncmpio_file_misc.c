@@ -169,6 +169,9 @@ ncmpio_end_indep_data(void *ncdp)
     int status=NC_NOERR;
     NC *ncp = (NC*)ncdp;
 
+    if (NC_indef(ncp))  /* must not be in define mode */
+        DEBUG_RETURN_ERROR(NC_EINDEFINE)
+
     if (!NC_indep(ncp)) /* must be in independent data mode */
         DEBUG_RETURN_ERROR(NC_ENOTINDEP)
 

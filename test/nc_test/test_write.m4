@@ -212,8 +212,8 @@ ifdef(`PNETCDF', `
 
 ifdef(`PNETCDF', `
     err = ncmpi_end_indep_data(ncid);
-    IF (err != NC_ENOTINDEP)
-        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));')dnl
+    IF (err != NC_EINDEFINE)
+        error("expecting NC_EINDEFINE but got %s", nc_err_code_name(err));')dnl
 
     err = APIFunc(redef)(ncid);
     IF (err != NC_EINDEFINE)
@@ -2309,6 +2309,7 @@ ifdef(`PNETCDF', `
     Def_Vars(ncid, numVars);
 
 #ifdef NO_NC_GLOBAL_FILLVALUE
+    /* See r3403 and RELEASE_NOTES 1.9.0 */
     /* expect NC_EGLOBAL when try to put _FillValue to NC_GLOBAL */
     err = APIFunc(put_att_int)(ncid, NC_GLOBAL, _FillValue, NC_INT, 1, &i);
     IF (err != NC_EGLOBAL)
