@@ -54,6 +54,7 @@ Build recipes:
     - README.Fujitsu    (Fujitsu systems)
     - README.K-Computer (the K computer @RIKEN)
     - README.SGI        (SGI systems, such as Endeavour @NASA)
+    - README.Ubuntu     (Ubuntu)
 
 
 PnetCDF User Documents:

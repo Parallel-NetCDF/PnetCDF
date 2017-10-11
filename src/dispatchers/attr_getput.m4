@@ -66,6 +66,7 @@ sanity_check_put(PNC        *pncp,
         DEBUG_RETURN_ERROR(NC_EBADNAME)
 
 #ifdef NO_NC_GLOBAL_FILLVALUE
+    /* See r3403 and RELEASE_NOTES 1.9.0 */
     if (varid == NC_GLOBAL && !strcmp(name, _FillValue))
         DEBUG_RETURN_ERROR(NC_EGLOBAL) /* global _FillValue is not allowed */
 #endif
