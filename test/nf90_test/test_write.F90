@@ -182,8 +182,8 @@
         if (err .ne. NF90_EINDEFINE) &
             call errore('nf90mpi_put_var... in define mode: ', err)
         err = nf90mpi_end_indep_data(ncid)
-        if (err .ne. NF90_ENOTINDEP) &
-          call errore('nf90mpi_end_indep_data... not in indep mode: ', err)
+        if (err .ne. NF90_EINDEFINE) &
+          call errore('nf90mpi_end_indep_data... in define mode: ', err)
         err = nf90mpi_redef(ncid)
         if (err .ne. NF90_EINDEFINE) then
             call errore('nf90mpi_redef in define mode: ', err)
