@@ -7,7 +7,9 @@
 # @configure_input@
 
 lib_LTLIBRARIES = libpnetcdf.la
-libpnetcdf_la_LDFLAGS = $(ABIVERSIONFLAGS)
+
+# does seem to work if using libpnetcdf_la_LDFLAGS = $(ABIVERSIONFLAGS)
+AM_LDFLAGS = $(ABIVERSIONFLAGS)
 
 libpnetcdf_la_SOURCES =
 libpnetcdf_la_LIBADD  = ../dispatchers/libdispatchers.la
