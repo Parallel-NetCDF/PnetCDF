@@ -39,7 +39,6 @@ dnl
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncx.h>
-#include <utf8proc.h>
 #include "ncmpio_NC.h"
 
 include(`foreach.m4')dnl
@@ -347,7 +346,7 @@ ncmpio_inq_attid(void       *ncdp,
                  const char *name,
                  int        *attidp)  /* out */
 {
-    int indx;
+    int indx, err;
     char *nname=NULL; /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap;
@@ -356,8 +355,8 @@ ncmpio_inq_attid(void       *ncdp,
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) return err;
 
     indx = ncmpio_NC_findattr(ncap, nname);
     NCI_Free(nname);
@@ -377,7 +376,7 @@ ncmpio_inq_att(void       *ncdp,
                nc_type    *datatypep,
                MPI_Offset *lenp)
 {
-    int err=NC_NOERR;
+    int err;
     char *nname=NULL;    /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_attr *attrp;
@@ -387,8 +386,8 @@ ncmpio_inq_att(void       *ncdp,
     if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) return err;
 
     err = NC_lookupattr(ncap, nname, &attrp);
     NCI_Free(nname);
@@ -411,7 +410,7 @@ ncmpio_rename_att(void       *ncdp,
                   const char *name,
                   const char *newname)
 {
-    int attr_id, err=NC_NOERR;
+    int attr_id, err;
     char *nname=NULL;    /* normalized name */
     char *nnewname=NULL; /* normalized newname */
     size_t nnewname_len=0;
@@ -426,11 +425,8 @@ ncmpio_rename_att(void       *ncdp,
     }
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) goto err_check;
 
     attr_id = ncmpio_NC_findattr(ncap, nname);
     if (attr_id < 0) {
@@ -441,11 +437,9 @@ ncmpio_rename_att(void       *ncdp,
     attrp = ncap->value[attr_id];
 
     /* create a normalized character string */
-    nnewname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)newname);
-    if (nnewname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(newname, &nnewname);
+    if (err != NC_NOERR) goto err_check;
+
     nnewname_len = strlen(nnewname);
 
     if (ncmpio_NC_findattr(ncap, nnewname) >= 0) {
@@ -522,7 +516,7 @@ ncmpio_copy_att(void       *ncdp_in,
                 void       *ncdp_out,
                 int         varid_out)
 {
-    int indx=0, err=NC_NOERR;
+    int indx=0, err;
     char *nname=NULL;    /* normalized name */
     NC *ncp_in=(NC*)ncdp_in, *ncp_out=(NC*)ncdp_out;
     NC_attrarray *ncap_out=NULL, *ncap_in;
@@ -541,11 +535,8 @@ ncmpio_copy_att(void       *ncdp_in,
     }
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) goto err_check;
 
     err = NC_lookupattr(ncap_in, nname, &iattrp);
     if (err != NC_NOERR) {
@@ -667,7 +658,7 @@ ncmpio_del_att(void       *ncdp,
                int         varid,
                const char *name)
 {
-    int err=NC_NOERR, attrid=-1;
+    int err, attrid=-1;
     char *nname=NULL; /* normalized name */
     NC *ncp=(NC*)ncdp;
     NC_attrarray *ncap=NULL;
@@ -680,11 +671,8 @@ ncmpio_del_att(void       *ncdp,
     }
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) goto err_check;
 
     attrid = ncmpio_NC_findattr(ncap, nname);
     if (attrid == -1) {
@@ -792,7 +780,7 @@ ncmpio_get_att(void         *ncdp,
                void         *buf,
                MPI_Datatype  itype)
 {
-    int           err=NC_NOERR;
+    int           err;
     char         *nname=NULL; /* normalized name */
     NC           *ncp=(NC*)ncdp;
     NC_attr      *attrp;
@@ -808,8 +796,8 @@ ncmpio_get_att(void         *ncdp,
     else                    ncap = &ncp->vars.value[varid]->attrs;
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) return err;
 
     /* whether the attr exists (check NC_ENOTATT) */
     err = NC_lookupattr(ncap, nname, &attrp);
@@ -961,7 +949,7 @@ ncmpio_put_att(void         *ncdp,
                const void   *buf,
                MPI_Datatype  itype)  /* internal (memory) data type */
 {
-    int indx=0, err=NC_NOERR;
+    int indx=0, err;
     char *nname=NULL; /* normalized name */
     MPI_Offset xsz=0;
     NC *ncp=(NC*)ncdp;
@@ -1002,11 +990,8 @@ ncmpio_put_att(void         *ncdp,
     }
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) goto err_check;
 
     /* obtain NC_attrarray object pointer, ncap */
     if (varid == NC_GLOBAL) ncap = &ncp->attrs;

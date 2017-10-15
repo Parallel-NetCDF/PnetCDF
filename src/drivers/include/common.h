@@ -197,5 +197,11 @@ extern int
 ncmpii_getn_NC_UINT64(const void *xbuf, void *buf, MPI_Offset nelems,
                       MPI_Datatype datatype);
 
+extern int
+ncmpii_utf8_normalize(const char *str, char **normalp);
+
+extern int
+ncmpii_utf8_validate(const char* name);
+
 #endif
 

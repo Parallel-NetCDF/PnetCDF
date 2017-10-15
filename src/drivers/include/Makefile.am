@@ -18,7 +18,7 @@ ncx.h: ncx_h.m4 Makefile
 # 'make foo') in a clean tree if it depends on a built source."
 BUILT_SOURCES = ncx.h
 
-EXTRA_DIST = utf8proc.h common.h $(M4_HFILES)
+EXTRA_DIST = common.h $(M4_HFILES)
 
 CLEANFILES = ncx.h
 

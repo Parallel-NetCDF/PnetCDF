@@ -21,8 +21,6 @@
 #include <pnc_debug.h>
 #include <common.h>
 
-#include "utf8proc.h"
-
 /* There are 3 levels of UTF8 checking: 1=> (exact)validating 2=>relaxed
    and 3=>very relaxed
 */
@@ -197,10 +195,8 @@ check_name_CDF1(const char *name)
 static int
 check_name_CDF2(const char *name)
 {
-	int skip;
-	int ch;
+	int skip, ch, err;
 	const char *cp = name;
-	ssize_t utf8_stat;
 
 	assert(name != NULL);
 
@@ -209,9 +205,8 @@ check_name_CDF2(const char *name)
 		DEBUG_RETURN_ERROR(NC_EBADNAME)
 
 	/* check validity of any UTF-8 */
-	utf8_stat = ncmpii_utf8proc_check((const unsigned char *)name);
-	if (utf8_stat < 0)
-	    DEBUG_RETURN_ERROR(NC_EBADNAME)
+        err = ncmpii_utf8_validate(name);
+	if (err != NC_NOERR) return err;
 
 	/* First char must be [a-z][A-Z][0-9]_ | UTF8 */
 	ch = (uchar)*cp;
