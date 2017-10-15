@@ -168,6 +168,8 @@ This is essentially a placeholder for the next release note ...
       http://mailman.cse.ohio-state.edu/pipermail/mvapich-discuss/2017-February/006300.html
 
   o Other updates:
+    * Update UTF8 encoding utility to use utf8proc library version 2.1.0 from
+      the Julia Language project, https://github.com/JuliaLang/utf8proc
     * Add quiet mode command-line option "-q" to utility program ncmpivalid.
     * Add an internal check for whether the file starting offsets of all
       variables are in an increasing order as the variables defines. See r3369.

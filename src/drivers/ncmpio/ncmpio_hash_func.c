@@ -17,7 +17,6 @@
 
 #include <pnc_debug.h>
 #include <common.h>
-#include <utf8proc.h>
 #include "ncmpio_NC.h"
 
 /*----< ncmpio_jenkins_one_at_a_time_hash() >--------------------------------*/
@@ -131,7 +130,7 @@ ncmpio_update_name_lookup_table(NC_nametable *nameT,
                                 const char   *oldname,  /*    normalized */
                                 const char   *unewname) /* un-normalized */
 {
-    int i, key;
+    int i, key, err;
     char *name; /* normalized name string */
 
     /* remove the old name from the lookup table
@@ -155,8 +154,8 @@ ncmpio_update_name_lookup_table(NC_nametable *nameT,
     }
 
     /* normalized version of uname */
-    name = (char *)ncmpii_utf8proc_NFC((const unsigned char *)unewname);
-    if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    err = ncmpii_utf8_normalize(unewname, &name);
+    if (err != NC_NOERR) return err;
 
     /* hash the var name into a key for name lookup */
     key = HASH_FUNC(name);

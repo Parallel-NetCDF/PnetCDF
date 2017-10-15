@@ -31,7 +31,6 @@
 #include <common.h>
 #include "ncmpio_NC.h"
 #include <ncx.h>
-#include <utf8proc.h>
 
 /*----< dup_NC_dim() >-------------------------------------------------------*/
 static int
@@ -192,8 +191,8 @@ ncmpio_def_dim(void       *ncdp,    /* IN:  NC object */
     NC_dim *dimp=NULL;
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) return err;
 
     /* create a new dimension object (dimp->name points to nname) */
     dimp = (NC_dim*) NCI_Malloc(sizeof(NC_dim));
@@ -247,8 +246,8 @@ ncmpio_inq_dimid(void       *ncdp,
     NC *ncp=(NC*)ncdp;
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) return err;
 
     err = NC_finddim(&ncp->dims, nname, dimid);
     NCI_Free(nname);
@@ -299,11 +298,9 @@ ncmpio_rename_dim(void       *ncdp,
     NC_dim *dimp=NULL;
 
     /* create a normalized character string */
-    nnewname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)newname);
-    if (nnewname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(newname, &nnewname);
+    if (err != NC_NOERR) goto err_check;
+
     nnewname_len = strlen(nnewname);
 
     /* sanity check for dimid has been done at dispatchers */

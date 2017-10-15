@@ -30,7 +30,6 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncx.h>
-#include <utf8proc.h>
 #include "ncmpio_NC.h"
 
 /*----< ncmpio_free_NC_var() >-----------------------------------------------*/
@@ -385,15 +384,12 @@ ncmpio_def_var(void       *ncdp,
     NC_var *varp=NULL;
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) goto err_check;
 
     /* allocate a new NC_var object */
     varp = ncmpio_new_NC_var(nname, ndims);
-    if (varp == NULL ) {
+    if (varp == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
         goto err_check;
     }
@@ -485,8 +481,8 @@ ncmpio_inq_varid(void       *ncdp,
     NC *ncp=(NC*)ncdp;
 
     /* create a normalized character string */
-    nname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)name);
-    if (nname == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    err = ncmpii_utf8_normalize(name, &nname);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
     err = NC_findvar(&ncp->vars, nname, varid);
     NCI_Free(nname);
@@ -595,11 +591,9 @@ ncmpio_rename_var(void       *ncdp,
     varp = ncp->vars.value[varid];
 
     /* create a normalized character string */ 
-    nnewname = (char *)ncmpii_utf8proc_NFC((const unsigned char *)newname);
-    if (nnewname == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto err_check;
-    }
+    err = ncmpii_utf8_normalize(newname, &nnewname);
+    if (err != NC_NOERR) goto err_check;
+
     nnewname_len = strlen(nnewname);
 
     if (! NC_indef(ncp) && varp->name_len < nnewname_len) {
