@@ -111,6 +111,8 @@ int main(int argc, char** argv)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
+    free(dimids);
+
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
