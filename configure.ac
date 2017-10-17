@@ -156,7 +156,8 @@ AC_ARG_WITH(mpi,
 if test "x${MPI_INSTALL}" != x && (! test -d "${MPI_INSTALL}") ; then
    AC_MSG_ERROR(Directory '${MPI_INSTALL}' specified in --with-mpi does not exist)
 fi
-dnl MPI_INSTALL will be referred in UD_MPI_PATH_PROGS defined in acinclude.m4
+dnl MPI_INSTALL will be referred in UD_MPI_PATH_PROGS and UD_MPI_PATH_PROG
+dnl defined in acinclude.m4
 
 AC_ARG_VAR(MPICC,  [MPI C compiler, @<:@default: CC@:>@])
 AC_ARG_VAR(MPICXX, [MPI C++ compiler, @<:@default: CXX@:>@])
@@ -220,7 +221,8 @@ dnl find the full path of MPICC from CANDIDATE_MPICC and MPI_INSTALL
 if test "x${ac_user_MPICC}" = x ; then
    UD_MPI_PATH_PROGS([MPICC], [$CANDIDATE_MPICC])
 else
-   UD_MPI_PATH_PROGS([MPICC], [$ac_user_MPICC])
+   dnl check whether user specified MPICC is valid
+   UD_MPI_PATH_PROG([MPICC], [$ac_user_MPICC])
 fi
 
 if test "x${MPICC}" = x ; then
@@ -296,7 +298,8 @@ if test "x${enable_cxx}" != xno ; then
    if test "x${ac_user_MPICXX}" = x ; then
       UD_MPI_PATH_PROGS([MPICXX], [$CANDIDATE_MPICXX])
    else
-      UD_MPI_PATH_PROGS([MPICXX], [$ac_user_MPICXX])
+      dnl check whether user specified MPICXX is valid
+      UD_MPI_PATH_PROG([MPICXX], [$ac_user_MPICXX])
    fi
    UD_MSG_DEBUG([MPICXX=$MPICXX])
 
@@ -431,7 +434,8 @@ else
       dnl CANDIDATE_MPIF77, and find the full path of MPIF77
       UD_MPI_PATH_PROGS([MPIF77], [$CANDIDATE_MPIF77])
    else
-      UD_MPI_PATH_PROGS([MPIF77], [$ac_user_MPIF77])
+      dnl check whether user specified MPIF77 is valid
+      UD_MPI_PATH_PROG([MPIF77], [$ac_user_MPIF77])
    fi
 
    if test "x${MPIF77}" = x ; then
@@ -471,7 +475,8 @@ if test "x${has_fortran}" = xyes ; then
       dnl CANDIDATE_MPIF90, and find the full path of MPIF90
       UD_MPI_PATH_PROGS([MPIF90], [$CANDIDATE_MPIF90])
    else
-      UD_MPI_PATH_PROGS([MPIF90], [$ac_user_MPIF90])
+      dnl check whether user specified MPIF90 is valid
+      UD_MPI_PATH_PROG([MPIF90], [$ac_user_MPIF90])
    fi
 
    if test "x${MPIF90}" = x ; then
