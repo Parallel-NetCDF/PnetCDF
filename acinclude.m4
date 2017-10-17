@@ -1648,8 +1648,57 @@ rm -f conftest.$ac_ext
 AC_LANG_PUSH([C])
 ])
 
+dnl check the availability of one MPI executable
+AC_DEFUN([UD_MPI_PATH_PROG], [
+   dnl 1st token in $2 must be the program name, rests are command-line options
+   ac_first_token=`echo $2 | cut -d" " -f1`
+   ac_rest_tokens=`echo $2 | cut -d" " -f2-`
+   UD_MSG_DEBUG(ac_first_token=$ac_first_token)
+   UD_MSG_DEBUG(ac_rest_tokens=$ac_rest_tokens)
 
-dnl check the availability of MPI executables
+   ac_mpi_prog_$1=
+   if test "x$MPI_INSTALL" != x ; then
+      dnl Check if MPI_INSTALL is a substring of first_token
+      if test "$ac_first_token" != "${ac_first_token%$MPI_INSTALL*}" ; then
+         UD_MSG_DEBUG("MPI_INSTALL is a substring of ac_first_token")
+         ac_prog=`echo $ac_first_token | rev | cut -d"/" -f1 |rev`
+      else
+         ac_prog=$ac_first_token
+      fi
+      UD_MSG_DEBUG(ac_prog=$ac_prog)
+      UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
+      if test -d "${MPI_INSTALL}/bin" ; then
+         UD_MSG_DEBUG(search $ac_prog under $MPI_INSTALL/bin)
+         AC_PATH_PROG([ac_mpi_prog_$1], [$ac_prog], [], [$MPI_INSTALL/bin])
+      else
+         dnl ${MPI_INSTALL}/bin does not exist, search $MPI_INSTALL
+         UD_MSG_DEBUG(search $ac_prog under $MPI_INSTALL)
+         AC_PATH_PROG([ac_mpi_prog_$1], [$ac_prog], [], [$MPI_INSTALL])
+      fi
+   else
+      UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is NOT used)
+      UD_MSG_DEBUG(search $ac_first_token under $PATH)
+      AC_PATH_PROG([ac_mpi_prog_$1], [$ac_first_token])
+   fi
+   UD_MSG_DEBUG([ac_mpi_prog_$1=${ac_mpi_prog_$1}])
+   if test "x${ac_mpi_prog_$1}" = x ; then
+      AC_CHECK_FILE([$ac_first_token], [ac_mpi_prog_$1=$2])
+      dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
+      dnl ac_first_token=`echo $2 | cut -d" " -f1`
+      dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)
+      dnl if test -f $ac_first_token ; then
+         dnl UD_MSG_DEBUG(use file $ac_first_token as it exits)
+         dnl ac_mpi_prog_$1=$2
+      dnl fi
+   else
+      if test "x$ac_rest_tokens" != x ; then
+         ac_mpi_prog_$1="$ac_mpi_prog_$1 $ac_rest_tokens"
+      fi
+   fi
+   $1=${ac_mpi_prog_$1}
+])
+
+dnl check the availability of a list of MPI executables
 AC_DEFUN([UD_MPI_PATH_PROGS], [
    ac_mpi_prog_$1=
    if test "x$MPI_INSTALL" != x ; then
@@ -1671,10 +1720,10 @@ AC_DEFUN([UD_MPI_PATH_PROGS], [
    if test "x${ac_mpi_prog_$1}" = x ; then
       AC_CHECK_FILE([$2], [ac_mpi_prog_$1=$2])
       dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
-      dnl first_token=`echo $2 | cut -d" " -f1`
-      dnl UD_MSG_DEBUG(check first token $first_token of $2)
-      dnl if test -f $first_token ; then
-         dnl UD_MSG_DEBUG(use file $first_token as it exits)
+      dnl ac_first_token=`echo $2 | cut -d" " -f1`
+      dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)
+      dnl if test -f $ac_first_token ; then
+         dnl UD_MSG_DEBUG(use file $ac_first_token as it exits)
          dnl ac_mpi_prog_$1=$2
       dnl fi
    fi
