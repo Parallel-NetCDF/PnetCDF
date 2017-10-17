@@ -146,6 +146,25 @@ extern "C" {
 #  define UINT16_MAX 65535U
 #endif
 
+#ifdef _PNETCDF_H
+/* silence Fujitsu compiler warning: enumerated type mixed with another type */
+#define UTF8PROC_NULLTERM   (1<<0)
+#define UTF8PROC_STABLE     (1<<1)
+#define UTF8PROC_COMPAT     (1<<2)
+#define UTF8PROC_COMPOSE    (1<<3)
+#define UTF8PROC_DECOMPOSE  (1<<4)
+#define UTF8PROC_IGNORE     (1<<5)
+#define UTF8PROC_REJECTNA   (1<<6)
+#define UTF8PROC_NLF2LS     (1<<7)
+#define UTF8PROC_NLF2PS     (1<<8)
+#define UTF8PROC_NLF2LF     (UTF8PROC_NLF2LS | UTF8PROC_NLF2PS)
+#define UTF8PROC_STRIPCC    (1<<9)
+#define UTF8PROC_CASEFOLD   (1<<10)
+#define UTF8PROC_CHARBOUND  (1<<11)
+#define UTF8PROC_LUMP       (1<<12)
+#define UTF8PROC_STRIPMARK  (1<<13)
+typedef unsigned int utf8proc_option_t;
+#else
 /**
  * Option flags used by several functions in the library.
  */
@@ -212,6 +231,7 @@ typedef enum {
    */
   UTF8PROC_STRIPMARK = (1<<13)
 } utf8proc_option_t;
+#endif
 
 /** @name Error codes
  * Error codes being returned by almost all functions.
