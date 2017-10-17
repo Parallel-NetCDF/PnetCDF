@@ -210,7 +210,7 @@ typedef enum {
    * @note This option works only with @ref UTF8PROC_COMPOSE or
    *       @ref UTF8PROC_DECOMPOSE
    */
-  UTF8PROC_STRIPMARK = (1<<13),
+  UTF8PROC_STRIPMARK = (1<<13)
 } utf8proc_option_t;
 
 /** @name Error codes
