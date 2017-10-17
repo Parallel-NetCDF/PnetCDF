@@ -319,6 +319,7 @@ int main(int argc, char **argv)
     int *reqs;
     int *sts;
     int *buf_var;
+    int nvars2;
 /*
     int buf_var[32] ={1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2,
                       3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4};
@@ -436,7 +437,7 @@ int main(int argc, char **argv)
     for (i=0; i<bufcount*nprocs; i++)
         buf_var[i] = rank + 1;  
 
-    int nvars2 = (nvars > nprocs) ? nvars : nprocs;
+    nvars2 = (nvars > nprocs) ? nvars : nprocs;
     varid = (int *)malloc(nvars2*sizeof(int));
     if (varid == NULL){
         printf("varid malloc error\n");

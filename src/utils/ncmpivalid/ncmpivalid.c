@@ -75,7 +75,6 @@ xlen_nc_type(nc_type xtype) {
         case NC_UINT64: return 8;
         default: DEBUG_RETURN(NC_EBADTYPE)
     }
-    return NC_NOERR;
 }
 
 /* calculate the followings
