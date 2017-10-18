@@ -1353,7 +1353,9 @@ AC_ARG_VAR(TESTMPIRUN, [MPI run command for "make ptest", @<:@default: mpiexec -
 if test "x${TESTMPIRUN}" = x ; then
    dnl set default to "mpiexec -n NP"
    UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun srun])
-   TESTMPIRUN+=" -n NP"
+   if test "x${TESTMPIRUN}" != x ; then
+      TESTMPIRUN+=" -n NP"
+   fi
 fi
 
 AC_ARG_VAR(TESTOUTDIR, [Output file directory for "make check" and "make ptest", @<:@default: ./@:>@])
