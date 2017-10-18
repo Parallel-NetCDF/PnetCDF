@@ -1652,7 +1652,7 @@ dnl check the availability of one MPI executable
 AC_DEFUN([UD_MPI_PATH_PROG], [
    dnl 1st token in $2 must be the program name, rests are command-line options
    ac_first_token=`echo $2 | cut -d" " -f1`
-   ac_rest_tokens=`echo $2 | cut -d" " -f2-`
+   ac_rest_tokens=`echo $2 | cut -d" " -s -f2-`
    UD_MSG_DEBUG(ac_first_token=$ac_first_token)
    UD_MSG_DEBUG(ac_rest_tokens=$ac_rest_tokens)
 
@@ -1682,7 +1682,9 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
    fi
    UD_MSG_DEBUG([ac_mpi_prog_$1=${ac_mpi_prog_$1}])
    if test "x${ac_mpi_prog_$1}" = x ; then
-      AC_CHECK_FILE([$ac_first_token], [ac_mpi_prog_$1=$2])
+      dnl AC_CHECK_FILE fails when $ac_first_token is not found in cross compile
+      dnl AC_CHECK_FILE([$ac_first_token], [ac_mpi_prog_$1=$2])
+      AC_CHECK_PROG([ac_mpi_prog_$1], [$ac_first_token])
       dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
       dnl ac_first_token=`echo $2 | cut -d" " -f1`
       dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)
@@ -1718,7 +1720,9 @@ AC_DEFUN([UD_MPI_PATH_PROGS], [
    fi
    UD_MSG_DEBUG([ac_mpi_prog_$1=${ac_mpi_prog_$1}])
    if test "x${ac_mpi_prog_$1}" = x ; then
-      AC_CHECK_FILE([$2], [ac_mpi_prog_$1=$2])
+      dnl AC_CHECK_FILES fails when $2 is not found in cross compile
+      dnl AC_CHECK_FILES([$2], [ac_mpi_prog_$1=$2])
+      AC_CHECK_PROGS([ac_mpi_prog_$1], [$2])
       dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
       dnl ac_first_token=`echo $2 | cut -d" " -f1`
       dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)
