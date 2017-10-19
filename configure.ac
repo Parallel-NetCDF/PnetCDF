@@ -1422,7 +1422,7 @@ AC_CONFIG_FILES(Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpigen/Makefile \
                 src/packaging/Makefile \
-                src/packaging/pnetcdf_pc \
+                src/packaging/pnetcdf.pc \
                 examples/Makefile \
                 examples/C/Makefile \
                 examples/tutorial/Makefile \
