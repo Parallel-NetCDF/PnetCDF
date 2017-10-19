@@ -6,9 +6,13 @@ This is essentially a placeholder for the next release note ...
     * The configure environment has been migrated to use GNU automake and
       libtool.
     * Building shared libraries is now supported with configure option
-      --enable-shared. The default is building static library only. Note
-      linking shared libraries is not recommended due to the likely performance
-      degradation.
+      --enable-shared. However, the default configuration is to build static
+      library only. Note linking shared libraries is not recommended due to
+      the likely performance degradation.
+
+  o New optimization
+    * Use hash function for faster variable/dimension/attribute name lookup.
+      See r3335.
 
   o New Limitations
     * PnetCDF now requires the underlying MPI library define data type
@@ -37,9 +41,6 @@ This is essentially a placeholder for the next release note ...
 
   o New APIs
     * none
-
-  o New optimization
-    * Use hash function for faster attribute name lookup. See r3335.
 
   o API syntax changes
     * Add C type qualifier "const" to argument fill_value of ncmpi_def_var_fill
@@ -86,25 +87,26 @@ This is essentially a placeholder for the next release note ...
   o New test program
     * test/cdf_format/tst_corrupt.c
       1. tests whether NC_EMAXDIMS can be thrown when opening a corrupted file
-         with header field number of dimensions being larger than NC_MAX_DIMS.
+         header with number of dimensions being larger than NC_MAX_DIMS.
       2. tests whether NC_EMAXATTS can be thrown when opening a corrupted file
-         with header field number of attributes being larger than NC_MAX_ATTRS.
+         header with number of attributes being larger than NC_MAX_ATTRS.
       3. tests whether NC_EBADDIM can be thrown when opening a corrupted file
-         with header field dimension ID of a variable is beyond the number of
+         header with dimension ID of a variable is beyond the number of
          dimensions defined in the file.
       4. tests whether NC_EBADTYPE can be thrown when opening a corrupted file
-         with header field nc_type of a variable is not within the legal NC
-         atomic data type allowed by the file format.
+         header with nc_type of a variable is not within the legal NC atomic
+         data type allowed by the file format.
     * test/testcases/tst_max_var_dims.c - tests the number of dimensions
       against NC_MAX_VAR_DIMS when calling ncmpi_def_var API.
-    * test/largefile/tst_cdf5_begin.c - tests whether a CDF-5 file header is
-      corrupted on the starting file offsets of variables that are not in the
+    * test/largefile/tst_cdf5_begin.c - tests CDF-5 file header corruption for
+      the case when the starting file offsets of variables are not in an
       increasing order as they defined.
     * test/cdf_format/tst_open_cdf5.c - tests whether NC_ENOTNC can be
-      correctly thrown when opening a CDF-5 (bad_begin.nc5) file with corrupted
-      header.
+      correctly thrown when opening a corrupted CDF-5 (bad_begin.nc5) which
+      contains two variables and the second variable's starting file offset is
+      less than the first variable's end offset.
     * test/testcases/large_var_cdf5.c - tests whether NC_EVARSIZE can be
-      correctly thrown when a variable or a record is larger than
+      correctly thrown when a variable or a variable record is larger than
       NC_MAX_INT64-3.
     * test/testcases/mix_collectives.c - tests collective get/put APIs that
       allow different processes to call different kinds of APIs (i.e. var1,
@@ -116,8 +118,8 @@ This is essentially a placeholder for the next release note ...
       dimensions, large number of variables, and large number of attributes.
     * test/testcases/put_all_kinds.m4 - tests various blocking put APIs.
     * test/testcases/tst_dimsizes.c - borrowed from NetCDF library to test
-      define/inquire the maximum allowable dimension sizes. This test program
-      is similar to (or a subset of) test/cdf_format/dim_cdf12.c
+      define/inquire APIs for the maximum allowable dimension sizes. This test
+      program is similar to (or a subset of) test/cdf_format/dim_cdf12.c
     * test/testcases/null_args.c - tests whether the correct error codes can
       be returned when using NULL arguments for start, count, stride, or imap
 
@@ -151,15 +153,17 @@ This is essentially a placeholder for the next release note ...
       the test program nonblocking/mcoll_testf.f90 fails with segmentation
       fault. This is due to a bug in OpenMPI. See discussion in
       https://github.com/open-mpi/ompi/issues/3695
-    * OpenMPI versions 2.0.2 and 1.10.6 on 32-bit machines configure data type
-      MPI_Offset as a 4-byte integer, even if the 32-bit machines support large
-      files. See the discussion thread in OpenMPI:
+    * PnetCDF can no longer be built on 32-bit machines if using OpenMPI
+      versions 2.0.2 and 1.10.6 and earlier versions. This is because OpenMPI
+      configures type MPI_Offset as a 4-byte integer on all 32-bit machines,
+      even if the machines allow 64-bit file offsets, known as large-file
+      support. We suggest to use other MPI libraries to build PnetCDF on 32-bit
+      machines. See the discussion thread in OpenMPI:
       https://github.com/open-mpi/ompi/issues/3195
-      We suggest to use other MPI libraries to build PnetCDF on 32-bit machines.
-    * Fix test program test/nc_test/test_read.m4 and test/testcases/modes.c for
-      testing whether the correct error codes can be returned when opening a
+    * Fix test/nc_test/test_read.m4 and test/testcases/modes.c which test
+      whether the correct error codes can be returned when opening a
       non-existing file. Thanks to Mark Dixon for testing various MPI
-      implementations, compilers, and file systems, we found that when using
+      libraries, C compilers, and file systems, we found that when using
       MVAPICH2 2.2, its Lustre driver always adds O_CREAT flag to the open()
       calls. Because of this behavior, the non-existing file will be created
       with zero length, which causes PnetCDF to spew NC_ENOTNC instead of
@@ -183,21 +187,23 @@ This is essentially a placeholder for the next release note ...
       configure command line
 
   o Bug fixes
-    * Fix the bug of nonblocking APIs for the case one request whose access
-      region covers more than one other non-interleaved requests. The bug fails
-      to identify them a single group of interleaved requests. See r3389 and
-      revised test program test/nonblocking/interleaved.c to test the fix.
-    * Fix the bug of string parsing the environment variable PNETCDF_HINTS and
-      print warning messages for ill-formed hint strings. See r3284.
-    * Fix F90 APIs for reading and writing scalar variables, i.e. number of
-      dimensions is zero. The bugs appear only when using Intel Fortran
-      compiler which does not allow checking presence of an argument and
-      its contents in the same if condition. See r3009, r3012, r3013.
+    * Fix a bug in nonblocking APIs when one request's access region covers
+      more than one other non-interleaved requests. PnetCDF fails to identify
+      them as a single group of interleaved requests. Test program
+      test/nonblocking/interleaved.c has been revised to test the fix.
+      See r3389.
+    * Fix a bug in string parsing the environment variable PNETCDF_HINTS and
+      print warning messages when hint strings are ill-formed. See r3284.
+    * Fix a bug in F90 APIs for reading and writing scalar variables, i.e.
+      number of dimensions is zero. The bugs appear only when using Intel
+      Fortran compiler which does not allow checking presence of an argument
+      and its contents in the same if condition. See r3009, r3012, r3013.
     * Conform with CDF-2 file format specification on using 2^32-1 for vsize
       when the variable size is larger than 23^2-4 bytes. See r2957.
-    * Fix nc_test when running on an ARMv7 architecture, a raspberry pi, where
-      char is unsigned and which is little Endian, 32-bit machine. See r2922.
-    * Fix the missing byte-swap required for retrieving user-defined fill
+    * Fix a bug in nc_test when running on an ARMv7 architecture, a raspberry
+      pi, where char is unsigned and which is little Endian, 32-bit machine.
+      See r2922.
+    * Fix a bug that fails to do byte-swap when retrieving user-defined fill
       values. See r2864. This fix is critical when PnetCDF is configured with
       option erange-fill enabled (default mode) and the target platform is a
       Little Endian.
