@@ -25,3 +25,6 @@ distclean-local:
 dist-hook:
 	$(SED) -i "s/PNETCDF_RELEASE_DATE/`date '+%e %b %Y'`/" $(distdir)/pnetcdf-config.in
 
+install-data-hook:
+	$(SED) -i -e "s%INSTALL_PREFIX%$(prefix)%g ; s%INSTALL_EXEC_PREFIX%$(exec_prefix)%g" $(DESTDIR)$(bindir)/pnetcdf-config
+

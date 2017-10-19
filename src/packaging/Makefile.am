@@ -7,11 +7,8 @@
 # @configure_input@
 
 pkgconfigdir = $(libdir)/pkgconfig
-nodist_pkgconfig_DATA = pnetcdf.pc
+pkgconfig_DATA = pnetcdf.pc
 
-pnetcdf.pc: pnetcdf_pc
-	$(SED) -e "s%INSTALL_PREFIX%${prefix}%g" $< > $@
+install-data-hook:
+	$(SED) -i -e "s%INSTALL_PREFIX%$(prefix)%g ; s%INSTALL_EXEC_PREFIX%$(exec_prefix)%g" $(DESTDIR)$(libdir)/pkgconfig/pnetcdf.pc
 
-CLEANFILES = pnetcdf.pc
-
-.PHONY: pnetcdf.pc
