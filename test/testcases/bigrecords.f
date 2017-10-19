@@ -107,6 +107,8 @@
 
       call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
      +               ierr)
+      call MPI_Bcast(cmd,      256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+     +               ierr)
 
       iret = nfmpi_create( MPI_COMM_WORLD, filename,
      +                       IOR(NF_CLOBBER,NF_64BIT_DATA), 
