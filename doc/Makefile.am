@@ -17,6 +17,7 @@ EXTRA_DIST = README.CRAY \
              README.LINUX \
              README.SGI \
              README.SX \
+             README.Ubuntu \
              README.consistency \
              README.large_files \
              pbs.script
