@@ -234,12 +234,15 @@ ncmpi_create(MPI_Comm    comm,
              int        *ncidp)
 {
     int default_format, rank, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, root_cmode, enable_foo_driver=0;
+    int safe_mode=0, mpireturn, root_cmode;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
+#ifdef BUILD_DRIVER_FOO
+    int enable_foo_driver=0;
+#endif
 
     MPI_Comm_rank(comm, &rank);
 
@@ -285,6 +288,7 @@ ncmpi_create(MPI_Comm    comm,
     /* combine user's info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
+#ifdef BUILD_DRIVER_FOO
     /* check if nc_foo_driver is enabled */
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
@@ -296,16 +300,14 @@ ncmpi_create(MPI_Comm    comm,
             enable_foo_driver = 1;
     }
 
-    /* TODO: Use environment variable and cmode to tell the file format which
-     * is later used to select the right driver. For now, we have only one
-     * driver, ncmpio.
-     */
-#ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
         driver = ncfoo_inq_driver();
     else
 #endif
-        /* default is ncmpio driver */
+        /* TODO: Use environment variable and cmode to tell the file format
+         * which is later used to select the right driver. For now, we have
+         * only one driver, ncmpio.
+         */
         driver = ncmpio_inq_driver();
 
 #if 0 /* refer to netCDF library's USE_REFCOUNT */
@@ -388,12 +390,15 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, nalloc, rank, format, msg[2], status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, root_omode, enable_foo_driver=0;
+    int safe_mode=0, mpireturn, root_omode;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
+#ifdef BUILD_DRIVER_FOO
+    int enable_foo_driver=0;
+#endif
 
     MPI_Comm_rank(comm, &rank);
 
@@ -460,6 +465,7 @@ ncmpi_open(MPI_Comm    comm,
     /* combine user's info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
+#ifdef BUILD_DRIVER_FOO
     /* check if nc_foo_driver is enabled */
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
@@ -471,14 +477,13 @@ ncmpi_open(MPI_Comm    comm,
             enable_foo_driver = 1;
     }
 
-    /* TODO: currently we only have ncmpio driver. Need to add other
-     * drivers once they are available
-     */
-#ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
         driver = ncfoo_inq_driver();
     else
 #endif
+        /* TODO: currently we only have ncmpio driver. Need to add other
+         * drivers once they are available
+         */
         if (format == NC_FORMAT_CLASSIC ||
             format == NC_FORMAT_CDF2 ||
             format == NC_FORMAT_CDF5) {
