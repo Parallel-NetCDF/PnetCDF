@@ -48,7 +48,9 @@ EXTRA_DIST = block_boundary_data.fh \
              numfluids.fh \
              physicaldata.fh \
              tree.fh \
-             README
+             README \
+             acinclude.m4 \
+             configure.ac
 
 CLEANFILES = *.nc core core.*
 
