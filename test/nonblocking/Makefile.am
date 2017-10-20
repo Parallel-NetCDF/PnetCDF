@@ -47,6 +47,14 @@ $(M4_SRCS:.m4=.c): Makefile
 
 M4FLAGS += -I${top_srcdir}/m4
 
+# automake says "... BUILT_SOURCES is honored only by 'make all', 'make check',
+# # and 'make install'. This means you cannot build a specific target (e.g.,
+# # 'make foo') in a clean tree if it depends on a built source."
+BUILT_SOURCES = $(M4_SRCS:.m4=.c)
+
+nodist_bput_varn_SOURCES = bput_varn.c
+nodist_column_wise_SOURCES = column_wise.c
+
 if HAS_FORTRAN
    TESTPROGRAMS += mcoll_testf77 \
                    test_bputf77
