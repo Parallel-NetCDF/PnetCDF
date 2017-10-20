@@ -34,9 +34,6 @@ using namespace PnetCDF::exceptions;
 static const int NX = 6;
 static const int NY = 12;
 
-// Return this in event of a problem.
-static const int NC_ERR = 2;
-
 static void
 usage(char *argv0)
 {
