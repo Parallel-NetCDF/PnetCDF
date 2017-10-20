@@ -26,7 +26,8 @@ check_PROGRAMS = collective_write \
                  get_vara \
                  transpose \
                  vard_int \
-                 fill_mode
+                 fill_mode \
+                 SimpleXyWr
 
 # parallel runs only
 # TESTS = $(check_PROGRAMS)

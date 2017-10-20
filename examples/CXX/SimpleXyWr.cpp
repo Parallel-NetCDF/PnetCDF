@@ -52,9 +52,11 @@ int main(int argc, char *argv[])
 {
     extern int optind;
     char filename[256];
-    int i, err=0, verbose=1;
+    int i, rank, nprocs, verbose=1;
 
     MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
@@ -109,7 +111,8 @@ int main(int argc, char *argv[])
         // out of scope. This frees up any internal netCDF resources
         // associated with the file, and flushes any buffers.
       
-        cout << "*** SUCCESS writing example file simple_xy.nc!" << endl;
+        if (verbose)
+            cout << "*** SUCCESS writing example file simple_xy.nc!" << endl;
     }
     catch(NcmpiException& e) {
         cout << e.what() << " error code=" << e.errorCode() << " Error!\n";
@@ -127,5 +130,5 @@ int main(int argc, char *argv[])
     }
 
     MPI_Finalize();
-    return err;
+    return 0;
 }
