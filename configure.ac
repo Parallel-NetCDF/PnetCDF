@@ -113,7 +113,6 @@ AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
-AH_TEMPLATE([BUILD_DRIVER_FOO],         [Define if build driver foo (development test only)])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])
@@ -1408,6 +1407,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/common/Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
+                src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
                 src/binding/cxx/Makefile \
                 src/binding/f77/Makefile \
@@ -1464,15 +1464,8 @@ dnl add executable permission to pnetcdf-config and check_install
 AC_CONFIG_FILES([src/utils/pnetcdf-config], [chmod u+x src/utils/pnetcdf-config])
 dnl AC_CONFIG_FILES([src/utils/check_install],  [chmod u+x src/utils/check_install])
 
-dnl AC_CHECK_FILE fails when cross-compile
-dnl AC_CHECK_FILE([${srcdir}/src/drivers/ncfoo/Makefile.am], [build_foo=yes], [build_foo=no])
-build_foo=no
-if test -r "${srcdir}/src/drivers/ncfoo/Makefile.am" ; then
-    AC_CONFIG_FILES(src/drivers/ncfoo/Makefile)
-    AC_DEFINE(BUILD_DRIVER_FOO)
-    build_foo=yes
-fi
-AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${build_foo} = xyes])
+dnl build ncfoo driver only in debug mode
+AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"

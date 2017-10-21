@@ -6,19 +6,16 @@
 #
 # @configure_input@
 
-DIST_SUBDIRS = include common ncmpio
-
-SUBDIRS = $(DIST_SUBDIRS)
+SUBDIRS = include common ncmpio
 
 if BUILD_DRIVER_FOO
    SUBDIRS += ncfoo
 endif
 
+DIST_SUBDIRS = include common ncmpio ncfoo
+
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
-	if [ -d ncfoo ] ; then \
-	   cd ncfoo && $(MAKE) $(AM_MAKEFLAGS) distclean ; \
-	fi
 	if [ "$(abs_builddir)" != "$(abs_srcdir)" ] ; then \
 	   for d in $(SUBDIRS) ; do \
 	       rmdir $$d || true ; \
