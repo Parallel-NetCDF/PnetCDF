@@ -17,7 +17,7 @@ DIST_SUBDIRS = include common ncmpio ncfoo
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
 	if [ "$(abs_builddir)" != "$(abs_srcdir)" ] ; then \
-	   for d in $(SUBDIRS) ; do \
+	   for d in $(DIST_SUBDIRS) ; do \
 	       rmdir $$d || true ; \
 	   done ; \
 	fi
