@@ -865,19 +865,28 @@ int
 ncmpi_inq_file_format(const char *filename,
                       int        *formatp) /* out */
 {
-    char *cdf_signature="CDF";
-    char *hdf5_signature="\211HDF\r\n\032\n";
+    const char *cdf_signature="CDF";
+    const char *hdf5_signature="\211HDF\r\n\032\n";
+    const char *path;
     char signature[8];
     int fd;
     ssize_t rlen;
 
     *formatp = NC_FORMAT_UNKNOWN;
 
+    /* remove the file system type prefix name if there is any.
+     * For example, path=="lustre:/home/foo/testfile.nc",
+     * use "/home/foo/testfile.nc" when calling open() below
+     */
+    path = strchr(filename, ':');
+    if (path == NULL) path = filename; /* no prefix */
+    else              path++;
+
     /* must include config.h on 32-bit machines, as AC_SYS_LARGEFILE is called
      * at the configure time and it defines _FILE_OFFSET_BITS to 64 if large
      * file feature is supported.
      */
-    if ((fd = open(filename, O_RDONLY, 00400)) == -1) {
+    if ((fd = open(path, O_RDONLY, 00400)) == -1) {
              if (errno == ENOENT)       DEBUG_RETURN_ERROR(NC_ENOENT)
         else if (errno == EACCES)       DEBUG_RETURN_ERROR(NC_EACCESS)
         else if (errno == ENAMETOOLONG) DEBUG_RETURN_ERROR(NC_EBAD_FILE)
