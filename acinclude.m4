@@ -1877,3 +1877,28 @@ AC_DEFUN([UD_CHECK_F77_INT8],
     AC_MSG_RESULT([$ac_cv_f77_int8])
 ])
 
+dnl
+dnl Check how sed command handling in-place option -i and define SED_I
+dnl
+AC_DEFUN([UD_PROG_SED_I],
+[
+   AC_REQUIRE([AC_PROG_SED])
+   AC_CACHE_CHECK([for sed handling option -i ], ac_cv_SED_I,[
+   cat > conftest.sed_i <<EOF
+   test str1
+EOF
+   ac_cv_err=`$SED -i '' -e 's|str1|str2|g' conftest.sed_i 2>&1`
+   if test "x$ac_cv_err" = x ; then
+      ac_cv_SED_I="$SED -i ''"
+   else
+      ac_cv_err=`sed -i'' -e 's|str1|str2|g' conftest.sed_i 2>&1`
+      if test "x$ac_cv_err" = x ; then
+         ac_cv_SED_I="$SED -i''"
+      fi
+   fi
+   AS_UNSET(ac_cv_err)])
+   SED_I="$ac_cv_SED_I"
+   AC_SUBST(SED_I)
+   ${RM} -f conftest.sed_i
+])
+
