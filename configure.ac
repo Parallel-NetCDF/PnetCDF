@@ -1423,6 +1423,7 @@ AC_CONFIG_FILES(Makefile \
                 src/utils/ncmpidiff/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpigen/Makefile \
+                src/utils/pnetcdf-config \
                 src/packaging/Makefile \
                 src/packaging/pnetcdf.pc \
                 examples/Makefile \
@@ -1459,10 +1460,6 @@ AC_CONFIG_FILES(Makefile \
 dnl The following dependency is for configure.in and configure
 dnl See autoconf manual 2.69, Section 4.8.5 Automatic Remaking
 dnl AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
-
-dnl add executable permission to pnetcdf-config and check_install
-AC_CONFIG_FILES([src/utils/pnetcdf-config], [chmod u+x src/utils/pnetcdf-config])
-dnl AC_CONFIG_FILES([src/utils/check_install],  [chmod u+x src/utils/check_install])
 
 dnl build ncfoo driver only in debug mode
 AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
