@@ -849,6 +849,8 @@ AC_PROG_EGREP
 
 dnl AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
 AC_PROG_SED
+dnl check sed command option -i and set SED_I
+UD_PROG_SED_I
 AC_PROG_GREP
 
 dnl YACC and LEX are required to build PnetCDF utility tool ncmpigen
