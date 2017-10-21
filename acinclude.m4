@@ -1894,6 +1894,8 @@ EOF
       ac_cv_err=`sed -i'' -e 's|str1|str2|g' conftest.sed_i 2>&1`
       if test "x$ac_cv_err" = x ; then
          ac_cv_SED_I="$SED -i''"
+      else
+         AC_MSG_ERROR("No proper sed -i option found")
       fi
    fi
    AS_UNSET(ac_cv_err)])
