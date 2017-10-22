@@ -875,8 +875,8 @@ ncmpi_inq_file_format(const char *filename,
     *formatp = NC_FORMAT_UNKNOWN;
 
     /* remove the file system type prefix name if there is any.
-     * For example, path=="lustre:/home/foo/testfile.nc",
-     * use "/home/foo/testfile.nc" when calling open() below
+     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
+     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
      */
     path = strchr(filename, ':');
     if (path == NULL) path = filename; /* no prefix */
