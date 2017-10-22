@@ -11,8 +11,7 @@ This is essentially a placeholder for the next release note ...
       the likely performance degradation.
 
   o New optimization
-    * Use hash function for faster variable/dimension/attribute name lookup.
-      See r3335.
+    * Use hash function for faster attribute name lookup. See r3335.
 
   o New Limitations
     * PnetCDF now requires the underlying MPI library define data type
