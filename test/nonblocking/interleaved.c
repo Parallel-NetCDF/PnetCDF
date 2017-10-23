@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 {
     char filename[256];
     int i, j, rank, nprocs, err, nerrs=0, expected;
-    int ncid, cmode, varid[2], dimid[2], req[4], st[3], *buf;
+    int ncid, cmode, varid[2], dimid[2], req[4], st[4], *buf;
     int *buf0, *buf1, *buf2;
     size_t len;
     MPI_Offset start[2], count[2];
