@@ -130,7 +130,7 @@ AC_COMPILE_IFELSE([AC_LANG_CALL([],[MPI_Comm_rank])],
                   [valid_mpif90=yes],[valid_mpif90=no]
 )
 AC_LANG_POP([Fortran])
-if test "x${valid_mpif90}" = xno && test "x${enable_fortran}" = xyes ; then
+if test "x${valid_mpif90}" = xno ; then
    AC_MSG_ERROR([
       ------------------------------------------------------------
         Invalid MPI Fortran 90 compiler specified: "${MPIF90}"
@@ -178,7 +178,7 @@ LIBS="-lpnetcdf ${LIBS}"
 AC_LINK_IFELSE([AC_LANG_CALL([], [nfmpi_create])],
    [AC_MSG_RESULT(works)
     have_pnetcdf=yes],
-   [AC_MSG_RESULT(failed to compile test program)
+   [AC_MSG_RESULT(failed to compile a PnetCDF Fortran program)
     unset FC
    ]
 )
@@ -191,8 +191,8 @@ AC_SUBST(PNETCDF_LIB)
 if test "x${have_pnetcdf}" = xno ; then
     AC_MSG_ERROR([
     ------------------------------------------------------------
-     The PnetCDF library and header file are required to build
-     the FLASH I/O kernel. Use option
+     Valid PnetCDF Fortran library and header include file are required
+     to build the FLASH I/O kernel. Use option
          --with-pnetcdf=/path/to/implementation
      to specify the location of PnetCDF build.  Stopping ...
      Check 'config.log' for more information.
