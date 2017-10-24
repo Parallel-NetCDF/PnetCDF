@@ -13,11 +13,14 @@ SUFFIXES = .o .F90
 FC          = $(MPIF90)
 
 if BUILD_BENCHMARKS_IN_PNETCDF
-PNETCDF_INC=${top_builddir}/src/binding/f90
-PNETCDF_LIB="-L${top_builddir}/src/libs"
+AM_FCFLAGS = $(FC_MODINC)${top_builddir}/src/binding/f90
+AM_LDFLAGS = -L${top_builddir}/src/libs
+else
+AM_FCFLAGS = $(FC_MODINC)$(PNETCDF_INC)
+AM_LDFLAGS = $(PNETCDF_LIB)
 endif
 
-AM_FCFLAGS  = $(FC_MODINC)$(PNETCDF_INC) -I$(srcdir) $(NAGf90FPPFLAGS)
+AM_FCFLAGS += -I$(srcdir) $(NAGf90FPPFLAGS)
 AM_FCFLAGS += $(NAG_FCFLAGS)
 
 AM_FCFLAGS += $(FC_DEFINE)N_DIM=3
@@ -39,7 +42,7 @@ flash_benchmark_io_SOURCES = get_mfluid_property.F90 \
                              checkpoint_ncmpi_parallel.F90 \
                              plotfile_ncmpi_parallel.F90
 
-flash_benchmark_io_LDFLAGS = $(PNETCDF_LIB)
+# flash_benchmark_io_LDFLAGS = $(PNETCDF_LIB)
 flash_benchmark_io_LDADD   = -lpnetcdf
 
 EXTRA_DIST = block_boundary_data.fh \
