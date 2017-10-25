@@ -886,7 +886,7 @@ ncmpi_inq_file_format(const char *filename,
      * at the configure time and it defines _FILE_OFFSET_BITS to 64 if large
      * file feature is supported.
      */
-    if ((fd = open(path, O_RDONLY, 00400)) == -1) {
+    if ((fd = open(path, O_RDONLY, 00400)) == -1) { /* open for read */
              if (errno == ENOENT)       DEBUG_RETURN_ERROR(NC_ENOENT)
         else if (errno == EACCES)       DEBUG_RETURN_ERROR(NC_EACCESS)
         else if (errno == ENAMETOOLONG) DEBUG_RETURN_ERROR(NC_EBAD_FILE)
