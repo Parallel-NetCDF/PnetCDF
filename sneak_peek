@@ -55,9 +55,6 @@ This is essentially a placeholder for the next release note ...
       processes whose modes disagree with rank 0's. If safe mode is on, then
       all processes will also get the same error code.
 
-  o New utility program
-    * none
-
   o New error code precedence
     * none
 
@@ -72,12 +69,6 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New run-time environment variables
-    * none
-
-  o New example programs
-    * none
-
-  o New programs for I/O benchmarks
     * none
 
   o New build recipe
@@ -207,4 +198,61 @@ This is essentially a placeholder for the next release note ...
       values. See r2864. This fix is critical when PnetCDF is configured with
       option erange-fill enabled (default mode) and the target platform is a
       Little Endian.
+
+  o Clarifications
+    * The NetCDF CDF formats define a set of external NC data types and
+      describe their intents of use, shown below.
+
+      External type  No. Bits  Intent of use
+      -------------  --------  ---------------------------------
+      NC_CHAR         8        text data (the only non-numerical type in NetCDF)
+      NC_BYTE         8        1-byte integer
+      NC_SHORT       16        2-byte signed integer
+      NC_INT         32        4-byte signed integer
+      NC_FLOAT       32        4-byte floating point number
+      NC_DOUBLE      64        8-byte real number in double precision
+      NC_UBYTE        8        unsigned 1-byte integer
+      NC_USHORT      16        unsigned 2-byte integer
+      NC_UINT        32        unsigned 4-byte integer
+      NC_INT64       64        signed 8-byte integer
+      NC_UINT64      64        unsigned 8-byte integer
+
+      Note NC_CHAR is the only non-numerical data type available in NetCDF
+      realm.  All other external types are considered numerical, which are
+      illegal to be converted (type-casted) to and from a NetCDF variable
+      defined in NC_CHAR type (error code NC_ECHAR will be thrown). The only
+      legal APIs to read/write a variable of type NC_CHAR are the "_text" APIs.
+
+    * Starting from 1.7.0, PnetCDF translates internal data types (i.e. data
+      types of the I/O buffer and also used in the API name such as text,
+      schar, uchar, short, int, etc.) to MPI data types based on the table
+      below. Note MPI_BYTE does no correspond to any internal data type used
+      in NetCDF/PnetCDF APIs. Thus, when MPI_BYTE is used to construct an MPI
+      derived data type which is later used as argument buftype in a flexible
+      API, the error code NC_EBADTYPE will be thrown (Not a valid data type).
+
+      Data type of                                  Corresponding
+      internal I/O buffer   Example API             MPI datatype
+      -------------         ----------------------  -----------------
+      text                  ncmpi_put_var_text      MPI_CHAR
+      schar                 ncmpi_put_var_schar     MPI_SIGNED_CHAR
+      uchar                 ncmpi_put_var_uchar     MPI_UNSIGNED_CHAR
+      short                 ncmpi_put_var_short     MPI_SHORT
+      ushort                ncmpi_put_var_ushort    MPI_UNSIGNED_SHORT
+      int                   ncmpi_put_var_int       MPI_INT
+      uint                  ncmpi_put_var_uint      MPI_UNSIGNED
+      long                  ncmpi_put_var_long      MPI_LONG
+      float                 ncmpi_put_var_float     MPI_FLOAT
+      double                ncmpi_put_var_double    MPI_DOUBLE
+      longlong              ncmpi_put_var_longlong  MPI_LONG_LONG_INT
+      ulonglong             ncmpi_put_var_ulonglong MPI_UNSIGNED_LONG_LONG
+
+  o New utility program
+    * none
+
+  o New example programs
+    * none
+
+  o New programs for I/O benchmarks
+    * none
 
