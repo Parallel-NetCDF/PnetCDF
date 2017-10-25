@@ -85,7 +85,7 @@ ncmpio_create(MPI_Comm     comm,
     mpiomode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
     if (fIsSet(cmode, NC_NOCLOBBER)) {
-        /* check if file exists: NC_EEXIST is returned if the file * already
+        /* check if file exists: NC_EEXIST is returned if the file already
          * exists and NC_NOCLOBBER mode is used in ncmpi_create */
 #ifdef HAVE_ACCESS
         int file_exist;
@@ -108,6 +108,7 @@ ncmpio_create(MPI_Comm     comm,
 #else
         /* add MPI_MODE_EXCL mode for MPI_File_open to check file existence */
         fSet(mpiomode, MPI_MODE_EXCL);
+        errno = 0; /* reset errno, as MPI_File_open may change it */
 #endif
     }
     else { /* NC_CLOBBER is the default mode in create */
@@ -135,6 +136,7 @@ ncmpio_create(MPI_Comm     comm,
                     err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
             }
 #endif
+            if (errno == ENOENT) errno = 0; /* reset errno */
         }
         /* all processes must wait here until file deletion is completed */
         TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, comm);
@@ -166,6 +168,9 @@ ncmpio_create(MPI_Comm     comm,
          * inside of ncmpii_error_mpi2nc()
          */
     }
+    else
+        /* reset errno, as MPI_File_open may change it, even for MPI_SUCCESS */
+        errno = 0;
 
     /* duplicate communicator as user may free it later */
     mpireturn = MPI_Comm_dup(comm, &dup_comm);
