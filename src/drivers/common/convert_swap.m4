@@ -36,7 +36,7 @@ dnl
  * The NetCDF CDF formats define external NC data types and describe their
  * intents of use, also shown below.
  *
- *   external type   No. Bits   Intent of use
+ *   External type   No. Bits   Intent of use
  *   -------------   --------   ---------------------------------
  *   NC_CHAR          8         text data (only non-numerical type in NetCDF)
  *   NC_BYTE          8         1-byte integer
@@ -53,8 +53,8 @@ dnl
  *
  * Datatype Mapping between in-memory types and MPI datatypes:
  *
- *   internal type of
- *   I/O buffer argument   example API              MPI datatype
+ *   Internal type of
+ *   I/O buffer argument   Example API              MPI datatype
  *   -------------------   ----------------------   -----------------
  *   char*                 ncmpi_put_var_text       MPI_CHAR
  *   signed char*          ncmpi_put_var_schar      MPI_SIGNED_CHAR
