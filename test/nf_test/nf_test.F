@@ -1,30 +1,17 @@
-#if 0
-/*********************************************************************
- *   Copyright 1996, UCAR/Unidata
- *   See netcdf/COPYRIGHT file for copying and redistribution conditions.
- *   $Id$
- *********************************************************************/
+!  Copyright (C) 2003, Northwestern University and Argonne National
+!  Laboratory
+!  See COPYRIGHT notice in top-level directory.
+!
+! $Id$
 
-/*
- * Test driver for netCDF-3 interface.  This program performs tests against
- * the netCDF-3 specification for all user-level functions in an
- * implementation of the netCDF library.
- *
- * Unless invoked with "-r" (readonly) option, must be invoked from a
- * directory in which the invoker has write permission.
- *
- * Files:
- * The read-only tests read files:
- *     test.nc (see below)
- *     test_get.F (used merely as an example of a non-netCDF file)
- * 
- * The write tests 
- *     read test.nc (see below) 
- *     write scratch.nc (deleted after each test)
- * 
- * The file test.nc is created by running nc_test with the -c (create) option.
- */
-#endif
+C Copyright 1996-2006, UCAR/Unidata
+C See COPYRIGHT file for copying and redistribution conditions.
+
+C Test driver for netCDF-3 interface.  This program performs tests
+C against
+C the netCDF-3 specification for all user-level functions in an
+C implementation of the netCDF library.
+
 
         subroutine usage()
         implicit        none
