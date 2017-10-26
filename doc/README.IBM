@@ -45,6 +45,11 @@ it is safe to ignore. This is due to Automake adds -DHAVE_CONFIG_H to Fortran
 compile command line, in addition to C. However, xlf compiler uses -WF,-D
 instead of -D for command-line macro definition.
 
+If you encounter error messages related to Darshan when running "make check",
+"make ptest", or "make tests", such as
+/soft/perftools/darshan/darshan-2.3.0/lib/libdarshan-mpi-io.a(darshan-pnetcdf.o): In function `__wrap_ncmpi_close':
+try disable Darshan by setting the environment variable DARSHAN_DISABLE to 1.
+
 ---- To build shared library with XL based compilers ----
 
     PnetCDF's default is to build static libraries only. To build shared
