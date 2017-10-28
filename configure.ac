@@ -742,8 +742,16 @@ if test "x${has_fortran}" = xyes ; then
    dnl Check if the Fortran compiler is an NAG
    UD_CHECK_FC_NAG
    if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
-       FFLAGS+=" -DNAGFortran -mismatch"
-      FCFLAGS+=" -DNAGFortran -mismatch"
+      dnl Add -mismatch if they are not set by users
+      if ! echo "${FFLAGS}" | ${EGREP} -q -- "-mismatch" ; then
+         FFLAGS+=" -mismatch"
+      fi
+      if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-mismatch" ; then
+         FCFLAGS+=" -mismatch"
+      fi
+      dnl Add -DNAGFortran
+       FFLAGS+=" -DNAGFortran"
+      FCFLAGS+=" -DNAGFortran"
    fi
 
    dnl check Fortran parameter modifier for 8-byte integer type
