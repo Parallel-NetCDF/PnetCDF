@@ -1569,7 +1569,11 @@ AC_DEFUN([UD_CHECK_PGF77],[
 ])
 
 dnl Check if Fortran compiler is NAG
-dnl According to nagfor manual the command-line option to should version is -V
+dnl According to nagfor manual the command-line option to get version is -V
+dnl % nagfor -V
+dnl NAG Fortran Compiler Release 6.1(Tozai) Build 6106
+dnl Product NPL6A61NA for x86-64 Linux
+dnl Copyright 1990-2016 The Numerical Algorithms Group Ltd., Oxford, U.K.
 dnl
 AC_DEFUN([UD_CHECK_FC_NAG],[
     AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
