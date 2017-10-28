@@ -139,13 +139,14 @@ This is essentially a placeholder for the next release note ...
       affect a variable's fill mode. See r2951.
 
   o Issues related to MPI library vendors:
-    * When using OpenMPI 2.x.x to build PnetCDF 1.8.1 and prior, the following
-      error message may appear when running make check:
+    * When using OpenMPI 2.0.0 through the latest 2.1.2 to build PnetCDF 1.8.1
+      and prior, the following message may appear when running make check:
           "MPI error (MPI_File_open) : MPI_ERR_FILE: invalid file"
       but the test programs report "pass". This message can be safely ignored.
-      Its cause is due to OpenMPI fails to translate system error code ENOENT
-      into MPI_ERR_NO_SUCH_FILE, but returns MPI_ERR_FILE instead. To silence
-      the messages, add the following to the command line of make check:
+      It is due to OpenMPI failing to translate system error code ENOENT into
+      MPI_ERR_NO_SUCH_FILE, but returns MPI_ERR_FILE instead. Thanks to Edgar
+      Gabriel, a trick to silence the messages is to add the following to the
+      command line of make check:
         TEST_SEQRUN="/path/to/OpenMPI/2.x.x/bin/mpirun --mca io romio314 -n 1"
       See discussion thread in OpenMPI:
       https://github.com/open-mpi/ompi/issues/4412
