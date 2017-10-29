@@ -63,6 +63,12 @@ Note on running "make check" or "make ptest".
     #SBATCH -C haswell
     make ptest
 
+Note on using Cray compilers
+    libtool does not work well with Cray compilers. See discussion in
+    https://trac.mpich.org/projects/mpich/ticket/1909 and
+    http://lists.gnu.org/archive/html/libtool/2015-04/msg00003.html
+    Before libtool fixes this, PnetCDF 1.9.0 does not support Cray compilers.
+
 ===============================================================================
     Cray XC30
 ===============================================================================
