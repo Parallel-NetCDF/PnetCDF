@@ -20,6 +20,10 @@ AM_FCFLAGS = $(FC_MODINC)$(PNETCDF_INC)
 AM_LDFLAGS = $(PNETCDF_LIB)
 endif
 
+if ALL_STATIC
+   AM_LDFLAGS += -all-static -static
+endif
+
 AM_FCFLAGS += -I$(srcdir) $(NAGf90FPPFLAGS)
 AM_FCFLAGS += $(NAG_FCFLAGS)
 

@@ -13,6 +13,10 @@ AM_CPPFLAGS += -I$(top_builddir)/src/drivers/ncmpio
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/drivers/include
 
+if ALL_STATIC
+   AM_LDFLAGS = -all-static -static
+endif
+
 bin_PROGRAMS = ncmpivalid
 ncmpivalid_SOURCES = ncmpivalid.c
 ncmpivalid_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
