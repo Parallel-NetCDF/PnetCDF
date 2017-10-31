@@ -19,6 +19,10 @@ if DECL_MPI_OFFSET
    AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
 endif
 
+if ALL_STATIC
+   AM_LDFLAGS = -all-static -static
+endif
+
 TESTPROGRAMS = pres_temp_4D_wr \
                pres_temp_4D_rd
 

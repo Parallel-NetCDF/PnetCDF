@@ -64,21 +64,20 @@ Note on running "make check" or "make ptest".
     make ptest
 
 Note on using GNU compilers
-    libtool does not work well with GNU-based compiler wrappers, e.g. cc, CC,
-    and ftn for static-library-only build. If you must use GNU compilers,
-    please add "--enable-shared LDFLAGS=-dynamic" to the configure command
-    line to build both static and shared libraries.
+    To swap to the GNU programming environment from default, run command below
+    first:
+        module swap PrgEnv-intel PrgEnv-gnu
 
-    When building static libraries (default of PnetCDF), you will encounter
-    the following error messages.
-    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libgfortran.la' seems to be moved
-    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libquadmath.la' seems to be moved
-    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libstdc++.la' seems to be moved
-    /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/6.3.0/snos/lib/../lib64/libgfortran.so'
-    collect2: error: ld returned 1 exit status
+    Then run configure command:
+        ./configure --prefix=/path/to/install \
+                    cross_compiling="yes" \
+                    CFLAGS="-O2" CXXFLAGS="-O2" \
+                    FFLAGS="-O2"  FCFLAGS="-O2"
 
+    Similarly, add the following to build shared libraries.
+                    --enable-shared LDFLAGS=-dynamic
 
-Note on using Cray compilers
+Note on using Cray compilers (i.e. craycc, crayCC, crayftn)
     libtool does not work well with Cray compilers. See discussion in
     https://trac.mpich.org/projects/mpich/ticket/1909 and
     http://lists.gnu.org/archive/html/libtool/2015-04/msg00003.html

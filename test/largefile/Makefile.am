@@ -16,6 +16,10 @@ AM_CPPFLAGS += -I$(top_builddir)/src/include
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
 LDADD += ../common/libtestutils.la
 
+if ALL_STATIC
+   AM_LDFLAGS = -all-static -static
+endif
+
 AM_CFLAGS =
 if IS_BIGENDIAN
    AM_CFLAGS += -DWORDS_BIGENDIAN

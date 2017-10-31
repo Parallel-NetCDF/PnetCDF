@@ -12,6 +12,10 @@ AM_DEFAULT_SOURCE_EXT = .f
 AM_FFLAGS = -I$(top_builddir)/src/binding/f77
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la utils.o
 
+if ALL_STATIC
+   AM_LDFLAGS = -all-static -static
+endif
+
 if SIZEOF_MPI_AINT_IS_4
    AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
 endif
