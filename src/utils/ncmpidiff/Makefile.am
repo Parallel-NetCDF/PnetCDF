@@ -9,10 +9,6 @@
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 bin_PROGRAMS = ncmpidiff
 ncmpidiff_SOURCES = ncmpidiff.c
 ncmpidiff_LDADD = $(top_builddir)/src/libs/libpnetcdf.la

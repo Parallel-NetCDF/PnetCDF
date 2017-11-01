@@ -19,10 +19,6 @@ AM_FCFLAGS  += $(FC_MODINC)$(srcdir)/../common
 AM_FCFLAGS  += -I$(top_builddir)/src/binding/f77 
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
    # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET

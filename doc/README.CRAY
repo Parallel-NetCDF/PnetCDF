@@ -68,20 +68,45 @@ Note on using GNU compilers
     first:
         module swap PrgEnv-intel PrgEnv-gnu
 
-    Then run configure command:
-        ./configure --prefix=/path/to/install \
-                    cross_compiling="yes" \
-                    CFLAGS="-O2" CXXFLAGS="-O2" \
-                    FFLAGS="-O2"  FCFLAGS="-O2"
+    We found that libtool does not work well with Cray's GNU-based compiler
+    wrappers, e.g. cc, CC, and ftn when building static-only library. If you
+    must use GNU compilers, please add "LDFLAGS=-all-static" to the make
+    command line, i.e.
 
-    Similarly, add the following to build shared libraries.
-                    --enable-shared LDFLAGS=-dynamic
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                CFLAGS="-O2" CXXFLAGS="-O2" \
+                FFLAGS="-O2"  FCFLAGS="-O2"
+
+    and then run
+
+                make LDFLAGS=-all-static
+
+    Without adding LDFLAGS, you may encounter the following error messages. 
+    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libgfortran.la' seems to be moved 
+    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libquadmath.la' seems to be moved 
+    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libstdc++.la' seems to be moved 
+    /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/6.3.0/snos/lib/../lib64/libgfortran.so' 
+    collect2: error: ld returned 1 exit status 
+
+    Building shared libraries has no such problem. Simply use command below.
+
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                CFLAGS="-O2" CXXFLAGS="-O2" \
+                FFLAGS="-O2"  FCFLAGS="-O2" \
+                --enable-shared LDFLAGS=-dynamic
+
+    and then run
+
+                make
 
 Note on using Cray compilers (i.e. craycc, crayCC, crayftn)
-    libtool does not work well with Cray compilers. See discussion in
+    libtool fails to work with Cray compiler based wrappers. See discussion in
     https://trac.mpich.org/projects/mpich/ticket/1909 and
     http://lists.gnu.org/archive/html/libtool/2015-04/msg00003.html
-    Before libtool fixes this, PnetCDF 1.9.0 does not support Cray compilers.
+    Before libtool fixes this, PnetCDF 1.9.0 does not support Cray-based
+    compilers.
 
 ===============================================================================
     Cray XC30

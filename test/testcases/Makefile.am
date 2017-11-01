@@ -19,10 +19,6 @@ AM_FCFLAGS  += $(FC_MODINC)$(srcdir)/../common
 AM_FCFLAGS  += -I$(top_builddir)/src/binding/f77 
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 if SIZEOF_MPI_AINT_IS_4
    AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
 endif

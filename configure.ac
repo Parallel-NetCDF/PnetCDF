@@ -1472,12 +1472,6 @@ dnl AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 dnl build ncfoo driver only in debug mode
 AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 
-dnl a trick to build static-only library on Cray machines
-dnl Note GNU-based MPI compilers on Cray are wrappers and do not work well with
-dnl libtool. See doc/README.CRAY
-AM_CONDITIONAL([ALL_STATIC],
-               [test "x$enable_static" = xyes && test "x$enable_shared" = xno])
-
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
 echo \
