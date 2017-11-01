@@ -1472,6 +1472,9 @@ dnl AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 dnl build ncfoo driver only in debug mode
 AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 
+AC_SUBST(enable_static)
+AC_SUBST(enable_shared)
+
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
 echo \
