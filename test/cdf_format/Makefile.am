@@ -12,10 +12,6 @@ AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 LDADD = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 if DECL_MPI_OFFSET

@@ -13,10 +13,6 @@ AM_DEFAULT_SOURCE_EXT = .cpp
 AM_CPPFLAGS = -I$(top_builddir)/src/binding/cxx -I$(top_builddir)/src/include
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 check_PROGRAMS = collective_write \
                  nonblocking_write \
                  column_wise \

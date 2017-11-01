@@ -15,10 +15,6 @@ AM_CFLAGS = -I$(top_builddir)/src/binding/f77 -I$(top_srcdir)/src/binding/f77
 AM_FFLAGS = -I$(top_builddir)/src/binding/f77
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 M4FLAGS += -I${top_srcdir}/m4
 
 if HAVE_F77_GNU_INT

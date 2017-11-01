@@ -15,10 +15,6 @@ AM_FFLAGS = -I$(top_builddir)/src/binding/f77
 AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 check_PROGRAMS = pnetcdf-write-from-master \
                  pnetcdf-read-from-master \
                  pnetcdf-write-nfiles \

@@ -15,10 +15,6 @@ AM_CFLAGS = -I$(top_srcdir)/src/binding/f77 -I$(top_builddir)/src/binding/f77
 AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)../common
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
-if ALL_STATIC
-   AM_LDFLAGS = -all-static -static
-endif
-
 if RELAX_COORD_BOUND
    AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
 endif
