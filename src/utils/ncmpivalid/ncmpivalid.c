@@ -1313,6 +1313,7 @@ usage(char *argv0)
     "       [-q] Quiet mode (exit 1 when fail, 0 success)\n"
     "       filename: input netCDF file name\n";
     fprintf(stderr, help, argv0);
+    fprintf(stderr,"       PnetCDF library version %s\n", ncmpi_inq_libvers());
 }
 
 int main(int argc, char **argv)

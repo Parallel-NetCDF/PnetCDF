@@ -26,8 +26,8 @@ CLEANFILES = *.gcno
 
 dist-hook:
 	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncmpidiff.1
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%e %b %Y'`|g"    $(distdir)/ncmpidiff.1
 	$(SED_I) -e "s|PNETCDF_RELEASE_DATE2|`date '+%Y-%m-%d'`|g"   $(distdir)/ncmpidiff.1
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%e %b %Y'`|g"    $(distdir)/ncmpidiff.1
 
 tests-local: all
 
