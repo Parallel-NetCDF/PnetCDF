@@ -54,7 +54,8 @@ this, configure command may fail.
 To build shared library, add configure command-line option "--enable-shared"
 and set the MPICC and MPICXX environment variables to the followings.
             MPICC="mpifccpx -Xg" \
-            MPICXX="mpiFCCpx -Xg"
+            MPICXX="mpiFCCpx -Xg" \
+            LDFLAGS="--shared"
 
 ----------------
 Testing PnetCDF:
