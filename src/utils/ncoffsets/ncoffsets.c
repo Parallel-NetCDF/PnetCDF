@@ -1766,7 +1766,7 @@ usage(char *cmd)
 "       [-x]            Check gaps in fixed-size variables, output 1 if gaps\n"
 "                       are found, 0 for otherwise.\n"
 "       file            Input netCDF file name\n"
-"*Parallel netCDF library version PNETCDF_RELEASE_VERSION\n";
+"*Parallel netCDF library version PNETCDF_RELEASE_VERSION of PNETCDF_RELEASE_DATE\n";
     fprintf(stderr, help, cmd);
 }
 
