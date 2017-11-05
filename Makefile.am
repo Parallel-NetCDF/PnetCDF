@@ -51,6 +51,16 @@ ptests:
 		$(MAKE) $(MFLAGS) -C $$d ptests $$* ; \
 	done ) ;
 
+tests-local:
+	@echo '|'
+	@echo '|  All test programs have been successfully built.'
+	@echo '|'
+
+check-local:
+	@echo '|'
+	@echo '|  All sequential test programs have run successfully.'
+	@echo '|'
+
 install-data-hook:
 	@echo '+----------------------------------------------------------------------------+'
 	@echo '|'
