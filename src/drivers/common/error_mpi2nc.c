@@ -30,7 +30,7 @@ int ncmpii_error_mpi2nc(int   mpi_errorcode, /* returned value from MPI call */
 
     /* When NC_NOCLOBBER is used in ioflags(cmode) for open to create,
      * netCDF requires NC_EEXIST returned if the file already exists.
-     * In MPI 2.1, if MPI_File_open uses MPI_MODE_EXCL and the file has
+     * In MPI standard 2.1, if MPI_File_open uses MPI_MODE_EXCL and the file has
      * already existed, the error class MPI_ERR_FILE_EXISTS should be returned.
      * For opening an existing file but the file does not exist, MPI 2.1
      * will return MPI_ERR_NO_SUCH_FILE
