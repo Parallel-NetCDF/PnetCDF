@@ -1,6 +1,8 @@
 #!/bin/sh
 
 # "set -x" expands variables and prints a little + sign before the line
+
+# Exit immediately if a command exits with a non-zero status.
 set -e
 
 VALIDATOR=../../src/utils/ncmpivalid/ncmpivalid
