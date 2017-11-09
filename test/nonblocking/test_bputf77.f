@@ -70,7 +70,7 @@
       ! call MPI_Info_set(info, "romio_pvfs2_posix_write","enable",ierr)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
-      err = nfmpi_create(MPI_COMM_WORLD, 'testfile.nc', cmode,
+      err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
      +                   info, ncid)
       call check(err, 'Error at nfmpi_create ')
 
