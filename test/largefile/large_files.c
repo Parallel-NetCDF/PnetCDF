@@ -16,10 +16,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* memset() */
 #include <mpi.h>
 #include <pnetcdf.h>
-
-#define FILE_NAME "./testfile.nc"
 
 static
 void check_err(const int stat, const int line, const char *file) {
@@ -36,6 +35,7 @@ main(int argc, char **argv) {
    int  ncid;			/* netCDF id */
    int rec, i, j, k, rank, nprocs, nerrs=0;
    signed char x[] = {42, 21};
+   char filename[256];
 
    /* dimension ids */
    int rec_dim;
@@ -72,13 +72,23 @@ main(int argc, char **argv) {
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-   if (rank > 0) goto fn_exit;
 
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    memset(filename, 0, 256);
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+   if (rank > 0) goto fn_exit;
    printf("\n*** Testing large files, slowly.\n");
-   printf("*** Creating large file %s...", FILE_NAME);
+   printf("*** Creating large file %s...", filename);
 
    /* enter define mode */
-   stat = ncmpi_create(MPI_COMM_SELF, FILE_NAME, NC_CLOBBER|NC_64BIT_DATA, 
+   stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_64BIT_DATA, 
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
  
@@ -144,9 +154,9 @@ main(int argc, char **argv) {
    check_err(stat,__LINE__,__FILE__);
 
    printf("ok\n");
-   printf("*** Reading large file %s...", FILE_NAME);
+   printf("*** Reading large file %s...", filename);
 
-   stat = ncmpi_open(MPI_COMM_SELF, FILE_NAME, NC_NOWRITE, 
+   stat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, 
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
 
