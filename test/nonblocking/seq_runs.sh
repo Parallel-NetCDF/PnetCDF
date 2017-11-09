@@ -1,4 +1,8 @@
 #!/bin/sh
+#
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
 
 # "set -x" expands variables and prints a little + sign before the line
 
