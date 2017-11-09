@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Exit immediately if a command exits with a non-zero status.
 set -e
 
 for j in 0 1 ; do { \
