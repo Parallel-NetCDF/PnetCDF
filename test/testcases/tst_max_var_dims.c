@@ -29,8 +29,9 @@
 int main(int argc, char** argv) {
     char filename[256];
     int rank, nprocs, nerrs=0;
+    int err, ncid;
 #if NC_MAX_VAR_DIMS < INT_MAX
-    int i, err, ncid, varid, *dimid;
+    int i, varid, *dimid;
 #endif
 
     MPI_Init(&argc, &argv);
@@ -90,6 +91,8 @@ int main(int argc, char** argv) {
         else       printf(PASS_STR);
     }
 #else
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
     if (rank == 0) printf(SKIP_STR);
 #endif
 
