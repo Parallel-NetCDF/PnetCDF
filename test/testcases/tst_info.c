@@ -36,7 +36,7 @@
 
 int main(int argc, char** argv) {
     char filename[256], value[MPI_MAX_INFO_VAL], stderr_buf[BUFSIZ];
-    int ncid1, ncid2, rank, err, verbose=0, nerrs=0, len, flag;
+    int ncid1, ncid2, rank, err, nerrs=0, len, flag;
     MPI_Offset header_size, header_extent, expect;
     MPI_Info info, info_used;
 
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
                  "romio_ds_write=disable;pnetcdf_subfiling=enable", 1);
     if (err != 0) {
         fprintf(stderr,"Error at line %d of %s calling setenv(): %s\n",
-                __LINE__,__FILE__,strerror(err));
+                __LINE__,__FILE__,strerror(errno));
     }
 
     /* create some PnetCDF-level I/O hints */
@@ -105,12 +105,12 @@ int main(int argc, char** argv) {
         err = ncmpi_delete("dummy", MPI_INFO_NULL); CHECK_ERR
     }
 
-    if (rank == 0 && verbose) {
-        printf("\n");
-        printf("header_size = %lld\n",header_size);
-        printf("header_extent=%lld\n",header_extent);
-        printf("\n");
+#ifdef VERBOSE
+    if (rank == 0) {
+        printf("\nheader_size = %lld\n",header_size);
+        printf("header_extent=%lld\n\n",header_extent);
     }
+#endif
 
     MPI_Info_get_valuelen(info_used, "nc_header_align_size", &len, &flag);
     if (flag) {
