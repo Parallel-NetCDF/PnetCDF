@@ -55,7 +55,10 @@ EXTRA_DIST = block_boundary_data.fh \
              acinclude.m4 \
              configure.ac
 
-CLEANFILES = *.nc core core.*
+CLEANFILES = core core.* \
+             $(TESTOUTDIR)/flash_io_test_ncmpi_chk_0000.nc \
+             $(TESTOUTDIR)/flash_io_test_ncmpi_plt_crn_0000.nc \
+             $(TESTOUTDIR)/flash_io_test_ncmpi_plt_cnt_0000.nc
 
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 

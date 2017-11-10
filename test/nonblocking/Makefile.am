@@ -82,7 +82,10 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = seq_runs.sh
 
-CLEANFILES = $(M4_SRCS:.m4=.c) *.nc core core.* *.gcda *.gcno *.gcov gmon.out
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
+CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
+             $(TESTOUTDIR)/testfile*.nc $(NC_FILES)
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh
 
@@ -100,26 +103,26 @@ TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
 ptest ptest4: $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
-	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc ; \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest2 : $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
-	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc ; \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest6 : $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
-	$(RM) -f $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc ; \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6

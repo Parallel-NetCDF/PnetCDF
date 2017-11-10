@@ -39,7 +39,10 @@ utils.o: $(srcdir)/utils.F90
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
-CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
+             $(NC_FILES)
 
 TESTMPIRUN3  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/3/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
@@ -49,7 +52,7 @@ ptest ptest4: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
+        $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F77 parallel run on 4 processes --------------- $$i"; \
         else \
@@ -61,7 +64,7 @@ ptest8: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
+        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F77 parallel run on 8 processes --------------- $$i"; \
         else \
@@ -73,7 +76,7 @@ ptest3: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
+        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: F77 parallel run on 3 processes --------------- $$i"; \
         else \

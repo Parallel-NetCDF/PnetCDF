@@ -21,13 +21,15 @@ TESTPROGRAMS = tst_f90 \
                f90tst_vars4 \
                test_intent
 
-check_PROGRAMS = $(TESTPROGRAMS) \
-                 tst_io \
-                 tst_flarge \
-                 f90tst_parallel \
+PARALLEL_PROGS = f90tst_parallel \
                  f90tst_parallel2 \
                  f90tst_parallel3 \
                  f90tst_parallel4
+
+check_PROGRAMS = $(TESTPROGRAMS) \
+                 $(PARALLEL_PROGS) \
+                 tst_io \
+                 tst_flarge
 
 TESTS_ENVIRONMENT =
 
@@ -49,15 +51,13 @@ TESTS = seq_runs.sh
 
 EXTRA_DIST = seq_runs.sh
 
-CLEANFILES  = *.nc *.$(FC_MODEXT) core core.* *.gcda *.gcno *.gcov gmon.out
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
+CLEANFILES = *.$(FC_MODEXT) core core.* *.gcda *.gcno *.gcov gmon.out \
+             $(TESTOUTDIR)/tst_io1.nc $(NC_FILES)
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
-
-PARALLEL_PROGS = f90tst_parallel \
-                 f90tst_parallel2 \
-                 f90tst_parallel3 \
-                 f90tst_parallel4
 
 TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
@@ -69,28 +69,28 @@ ptest ptest4: $(PARALLEL_PROGS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest2: $(PARALLEL_PROGS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest8: $(PARALLEL_PROGS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
-	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest10: $(PARALLEL_PROGS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
-	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest8 ptest10

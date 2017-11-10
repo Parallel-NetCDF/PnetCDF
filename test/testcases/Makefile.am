@@ -68,7 +68,6 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
 
 M4_SRCS  = put_all_kinds.m4 erange_fill.m4
 
-TESTPROGRAMS += put_all_kinds
 nodist_put_all_kinds_SOURCES = put_all_kinds.c
 nodist_erange_fill_SOURCES = erange_fill.c
 
@@ -117,7 +116,7 @@ else
    check_PROGRAMS = $(TESTPROGRAMS)
 endif
 
-check_PROGRAMS += redef1
+check_PROGRAMS += put_all_kinds redef1
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -130,9 +129,14 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = seq_runs.sh
 
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
-             testfile.nc testfile.nc.cdf1 testfile.nc.cdf2 testfile.nc.cdf5 \
-             redef1.nc redef2.nc
+             $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc \
+             $(TESTOUTDIR)/put_all_kinds.nc.cdf1 \
+             $(TESTOUTDIR)/put_all_kinds.nc.cdf2 \
+             $(TESTOUTDIR)/put_all_kinds.nc.cdf5 \
+             $(NC_FILES)
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump
 
