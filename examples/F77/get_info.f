@@ -63,9 +63,9 @@
         call MPI_Bcast(filename, 256, MPI_CHARACTER, 0,
      +                 MPI_COMM_WORLD, err)
 
-        omode = NF_NOWRITE + NF_64BIT_OFFSET
-        err = nfmpi_open(MPI_COMM_WORLD, filename, omode,
-     +                    MPI_INFO_NULL, ncid)
+        omode = NF_CLOBBER + NF_64BIT_OFFSET
+        err = nfmpi_create(MPI_COMM_WORLD, filename, omode,
+     +                     MPI_INFO_NULL, ncid)
         if (err .ne. NF_NOERR) call handle_err('nfmpi_open',err)
 
 
