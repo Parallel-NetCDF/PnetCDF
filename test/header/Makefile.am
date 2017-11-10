@@ -39,7 +39,7 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 EXTRA_DIST = seq_runs.sh
 
-CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = header_consistency.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
@@ -51,14 +51,14 @@ ptest ptest4: $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4

@@ -45,7 +45,11 @@ endif
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
-CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
+             $(TESTOUTDIR)/pnetcdf-write-nfiles.*.nc \
+             $(NC_FILES)
 
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
@@ -53,7 +57,19 @@ ptest ptest4: $(check_PROGRAMS)
 	@for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+        if [ $$i = "pnetcdf-read-from-master" ] ; then \
+           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-from-master.nc ; \
+        elif [ $$i = "pnetcdf-read-nfiles" ] ; then \
+           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nfiles.nc ; \
+        elif [ $$i = "pnetcdf-read-standard" ] ; then \
+           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-standard.nc ; \
+        elif [ $$i = "pnetcdf-read-flexible" ] ; then \
+           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-flexible.nc ; \
+        elif [ $$i = "pnetcdf-read-nb" ] ; then \
+           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nb.nc ; \
+        else \
+           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+        fi ; \
         if [ $$? = 0 ] ; then \
            echo "PASS:     parallel run on 4 processes --------------- $$i"; \
         else \

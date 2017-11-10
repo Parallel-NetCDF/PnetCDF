@@ -33,7 +33,10 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = seq_runs.sh
 
-CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
+             $(TESTOUTDIR)/test_subfile.nc \
+             $(TESTOUTDIR)/test_subfile.nc.subfile_0.nc \
+             $(TESTOUTDIR)/test_subfile.nc.subfile_1.nc
 
 EXTRA_DIST = README seq_runs.sh
 
@@ -47,14 +50,14 @@ ptest ptest4: $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/testfile.nc -s 2 ; \
+	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/testfile.nc -s 2 ; \
+	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4

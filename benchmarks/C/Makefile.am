@@ -17,13 +17,16 @@ check_PROGRAMS = aggregation \
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
-CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
+             $(NC_FILES)
 
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
 ptest ptests ptest4: $(check_PROGRAMS)
 	for i in $(check_PROGRAMS); do { \
-	$(TESTMPIRUN4) ./$$i -q 10 $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN4) ./$$i -q 10 $(TESTOUTDIR)/$$i.nc ; \
 	if [ $$? = 0 ] ; then \
 	    echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
 	else \

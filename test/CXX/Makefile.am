@@ -38,7 +38,8 @@ TESTS = seq_runs.sh
 
 EXTRA_DIST = seq_runs.sh
 
-CLEANFILES = testfile.nc core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = nctst.nc test_classic.nc \
+             core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
@@ -49,7 +50,7 @@ ptest ptests ptest4: $(TESTPROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/testfile.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest2 ptest6 ptest8 ptest10:

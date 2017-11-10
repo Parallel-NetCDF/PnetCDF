@@ -32,7 +32,9 @@ check_PROGRAMS = collective_write \
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
-CLEANFILES = *.nc core core.*
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
+CLEANFILES = core core.* $(NC_FILES)
 
 TESTMPIRUN3  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/3/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
@@ -42,7 +44,11 @@ ptest ptest4: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
+        if [ $$i = "get_vara" ] ; then \
+           $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
+        else \
+           $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
+        fi ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: C++ parallel run on 4 processes --------------- $$i"; \
         else \
@@ -54,7 +60,11 @@ ptest8: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	for i in $(check_PROGRAMS) ; do { \
-        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
+        if [ $$i = "get_vara" ] ; then \
+           $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
+        else \
+           $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
+        fi ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: C++ parallel run on 8 processes --------------- $$i"; \
         else \
@@ -66,7 +76,11 @@ ptest3: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	for i in $(check_PROGRAMS) ; do { \
-        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/testfile.nc ; \
+        if [ $$i = "get_vara" ] ; then \
+           $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
+        else \
+           $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
+        fi ; \
         if [ $$? = 0 ] ; then \
            echo "PASS: C++ parallel run on 3 processes --------------- $$i"; \
         else \
