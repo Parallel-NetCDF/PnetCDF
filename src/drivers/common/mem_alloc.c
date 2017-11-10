@@ -77,7 +77,7 @@ void walker(const void *node, const VISIT which, const int depth) {
     ncmpii_mem_entry *f;
     f = *(ncmpii_mem_entry **)node;
     if (which == preorder || which == leaf)
-        printf("Warning: malloc yet to be freed (buf=%p size=%zd filename=%s func=%s line=%d)\n", f->buf, f->size, f->filename, f->func, f->lineno);
+        fprintf(stdout, "Warning: malloc yet to be freed (buf=%p size=%zd filename=%s func=%s line=%d)\n", f->buf, f->size, f->filename, f->func, f->lineno);
 }
 
 /*----< ncmpii_add_mem_entry() >----------------------------------------------*/
@@ -105,7 +105,8 @@ void ncmpii_add_mem_entry(void       *buf,
     /* search and add a new item */
     void *ret = tsearch(node, &ncmpii_mem_root, ncmpii_cmp);
     if (ret == NULL) {
-        printf("Error: tsearch()\n");
+        fprintf(stderr, "Error at line %d file %s: tsearch()\n",
+                __LINE__,__FILE__);
         return;
     }
     ncmpii_mem_alloc += size;
@@ -124,8 +125,8 @@ void ncmpii_del_mem_entry(void *buf)
         void *ret = tfind(&node, &ncmpii_mem_root, ncmpii_cmp);
         ncmpii_mem_entry **found = (ncmpii_mem_entry**) ret;
         if (ret == NULL) {
-            printf("Error at line %d file %s: tfind() buf=%p\n",
-                   __LINE__,__FILE__,buf);
+            fprintf(stderr, "Error at line %d file %s: tfind() buf=%p\n",
+                    __LINE__,__FILE__,buf);
             return;
         }
         /* free space for func and filename */
@@ -137,12 +138,15 @@ void ncmpii_del_mem_entry(void *buf)
         void *tmp = (*found)->self;
         ret = tdelete(&node, &ncmpii_mem_root, ncmpii_cmp);
         if (ret == NULL) {
-            printf("Error at line %d file %s: tdelete() buf=%p\n",
-                   __LINE__,__FILE__,buf);
+            fprintf(stderr, "Error at line %d file %s: tdelete() buf=%p\n",
+                    __LINE__,__FILE__,buf);
             return;
         }
         free(tmp);
     }
+    else
+        fprintf(stderr, "Error at line %d file %s: ncmpii_mem_root is NULL\n",
+                __LINE__,__FILE__);
 }
 #endif
 

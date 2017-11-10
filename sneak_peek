@@ -75,6 +75,8 @@ This is essentially a placeholder for the next release note ...
     * doc/README.Ubuntu provides build instructions for Ubuntu Linux OS.
 
   o New test program
+    * test/testcases/tst_info.c - tests an internal bug in heap memory
+      allocation trace mechanism. See r3514.
     * test/cdf_format/tst_corrupt.c
       1. tests whether NC_EMAXDIMS can be thrown when opening a corrupted file
          header with number of dimensions being larger than NC_MAX_DIMS.
