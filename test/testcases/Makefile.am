@@ -107,17 +107,9 @@ if HAVE_MPI_MOD
     test_vardf90_SOURCES = test_vardf90.f90
        varn_real_SOURCES = varn_real.f90
 endif
-   check_PROGRAMS = $(TESTPROGRAMS)
-   check_PROGRAMS += bigrecords
-if RUN_LARGE_FILE_TEST
-   TESTPROGRAMS += bigrecords
-endif
-   bigrecords_SOURCES = bigrecords.f
-else
-   check_PROGRAMS = $(TESTPROGRAMS)
 endif
 
-check_PROGRAMS += put_all_kinds redef1
+check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead

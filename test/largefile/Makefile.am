@@ -6,7 +6,7 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .c
+SUFFIXES = .o .c .f
 
 AM_DEFAULT_SOURCE_EXT = .c
 
@@ -34,6 +34,12 @@ TESTPROGRAMS = large_files \
                large_dims_vars_attrs \
                high_dim_var \
                tst_cdf5_begin
+
+if HAS_FORTRAN
+   TESTPROGRAMS += bigrecords
+   AM_FFLAGS = -I$(top_builddir)/src/binding/f77
+   bigrecords_SOURCES = bigrecords.f
+endif
 
 check_PROGRAMS = $(TESTPROGRAMS)
 
