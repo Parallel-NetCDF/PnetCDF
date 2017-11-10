@@ -44,7 +44,7 @@
 
 static void handle_error(int status, int lineno)
 {
-    fprintf(stderr, "Error at line %d: %s\n", lineno, ncmpi_strerror(status));
+    fprintf(stderr, "Error at line %d of %s: %s\n", lineno, __FILE__, ncmpi_strerror(status));
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 

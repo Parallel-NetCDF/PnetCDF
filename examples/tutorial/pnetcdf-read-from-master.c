@@ -53,7 +53,7 @@
 
 static void handle_error(int err, int lineno)
 {
-    fprintf(stderr, "Error at line %d: %s\n", lineno, ncmpi_strerror(err));
+    fprintf(stderr, "Error at line %d of %s: %s\n", lineno, __FILE__, ncmpi_strerror(err));
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
