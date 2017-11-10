@@ -173,6 +173,20 @@ This is essentially a placeholder for the next release note ...
       the next release of MVAPICH. The bug report can be found in
       http://mailman.cse.ohio-state.edu/pipermail/mvapich-discuss/2017-February/006300.html
 
+  o Issues related to Darshan library:
+    * When using Darshan in conjunction with PnetCDF, if you encounter
+      link-time or run-time errors with messages shown below, then we recommend
+      to use Darshan library version 3.1.5 and later.
+
+      During compile/link time:
+      /soft/perftools/darshan/lib/libdarshan-mpi-io.a(darshan-pnetcdf.o):
+      In function `__wrap_ncmpi_create': darshan-pnetcdf.c:62: undefined
+      reference to `ncmpi_create'
+
+      During run time:
+      WARNING: Darshan ncmpi_create() stub called; this is probably the result
+      of a link-time problem.
+
   o Other updates:
     * Update UTF8 encoding utility to use utf8proc library version 2.1.0 from
       the Julia Language project, https://github.com/JuliaLang/utf8proc
