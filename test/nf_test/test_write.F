@@ -213,9 +213,11 @@ c       should not enter indep mode in define mode
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         var = 1.0
-        err = nfmpi_end_indep_data(ncid)
-        if (err .ne. NF_ENOTINDEP)
-     +     call errore('nfmpi_end_indep_data: in collective mode: ',err)
+C        calling end_indep_data in collective mode is no longer illegal
+C        since 1.9.0
+C        err = nfmpi_end_indep_data(ncid)
+C        if (err .ne. NF_ENOTINDEP)
+C     +     call errore('nfmpi_end_indep_data: in collective mode: ',err)
         err = nfmpi_begin_indep_data(ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_begin_indep_data: ', err)
