@@ -219,9 +219,11 @@
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         var = 1.0
-        err = nf90mpi_end_indep_data(ncid)
-        if (err .ne. NF90_ENOTINDEP) &
-          call errore('nf90mpi_end_indep_data: in collective mode: ',err)
+!       calling end_indep_data in collective mode is no longer illegal since
+!       1.9.0
+!        err = nf90mpi_end_indep_data(ncid)
+!        if (err .ne. NF90_ENOTINDEP) &
+!          call errore('nf90mpi_end_indep_data: in collective mode: ',err)
         err = nf90mpi_begin_indep_data(ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_begin_indep_data: ', err)

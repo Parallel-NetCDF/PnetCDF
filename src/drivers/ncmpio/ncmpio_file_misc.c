@@ -117,6 +117,10 @@ ncmpio_begin_indep_data(void *ncdp)
 
     if (NC_indep(ncp))  /* already in indep data mode */
         return NC_NOERR;
+        /* starting from 1.2.0, calling begin_indep_data() in independent data
+         * mode is no longer considered illegal
+        DEBUG_RETURN_ERROR(NC_EINDEP)
+        */
 
     /* we need no MPI_File_sync() here. If users want a stronger data
      * consistency, they can call ncmpi_sync()
@@ -172,8 +176,12 @@ ncmpio_end_indep_data(void *ncdp)
     if (NC_indef(ncp))  /* must not be in define mode */
         DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
-    if (!NC_indep(ncp)) /* must be in independent data mode */
+    if (!NC_indep(ncp)) /* already in collective ata mode */
+        return NC_NOERR;
+        /* starting from 1.9.0, calling end_indep_data() in collective data
+         * mode is no longer considered illegal
         DEBUG_RETURN_ERROR(NC_ENOTINDEP)
+        */
 
     if (!NC_readonly(ncp)) {
         if (ncp->vars.num_rec_vars > 0) {

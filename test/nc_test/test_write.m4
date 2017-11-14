@@ -263,10 +263,12 @@ ifdef(`PNETCDF', `
     ELSE_NOK
     var = 1.0;
 
-ifdef(`PNETCDF', `
-    err = ncmpi_end_indep_data(ncid);
-    IF (err != NC_ENOTINDEP)
-        error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));')dnl
+dnl calling ncmpi_end_indep_data() in collective data mode is no longer
+dnl considered illegal since 1.9.0
+dnl ifdef(`PNETCDF', `
+dnl     err = ncmpi_end_indep_data(ncid);
+dnl     IF (err != NC_ENOTINDEP)
+dnl         error("expecting NC_ENOTINDEP but got %s", nc_err_code_name(err));')dnl
 
     err = PutVar1TYPE(double)(ncid, varid, NULL, &var);
     IF (err != NC_NOERR)

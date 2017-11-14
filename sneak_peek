@@ -46,6 +46,10 @@ This is essentially a placeholder for the next release note ...
       to indicate the contents pointed by fill_value is immutable.
 
   o Semantics updates
+    * Calling ncmpi_end_indep_data() in collective data mode is no longer
+      considered illegal, starting from this release 1.9.0. In this case, the
+      API simply returns NC_NOERR. Note calling ncmpi_begin_indep_data() in
+      independent data mode has been allowed since PnetCDF 1.2.0.
     * For CDF-5 files, the maximum size of a variable or a variable's record
       is NC_MAX_INT64-3 (i.e. 2^64-4).
     * When the file create/open modes are not consistent among processes, the
