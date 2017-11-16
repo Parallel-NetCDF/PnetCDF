@@ -38,7 +38,7 @@ TESTS = seq_runs.sh
 
 EXTRA_DIST = seq_runs.sh
 
-CLEANFILES = nctst.nc test_classic.nc \
+CLEANFILES = $(TESTOUTDIR)/nctst.nc $(TESTOUTDIR)/test_classic.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:

@@ -37,7 +37,8 @@ TESTS = seq_runs.sh
 
 EXTRA_DIST = seq_runs.sh
 
-CLEANFILES = pres_temp_4D.nc core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
+             core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
