@@ -142,6 +142,7 @@ ncmpio_free_NC_attrarray(NC_attrarray *ncap)
     assert(ncap != NULL);
 
     for (i=0; i<ncap->ndefined; i++) {
+        if (ncap->value[i] == NULL) continue;
         ncmpio_free_NC_attr(ncap->value[i]);
         NCI_Free(ncap->value[i]);
     }
