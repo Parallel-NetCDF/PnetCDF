@@ -13,6 +13,10 @@ AM_CPPFLAGS += -I$(top_builddir)/src/drivers/ncmpio
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/drivers/include
 
+if PNETCDF_DEBUG
+   AM_CPPFLAGS += -DPNETCDF_DEBUG
+endif
+
 bin_PROGRAMS = ncmpivalid
 ncmpivalid_SOURCES = ncmpivalid.c
 ncmpivalid_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
@@ -21,6 +25,45 @@ $(top_builddir)/src/libs/libpnetcdf.la:
 	set -e; cd $(top_builddir)/src/libs && $(MAKE) $(MFLAGS)
 
 dist_man_MANS = ncmpivalid.1
+
+check_PROGRAMS = $(bin_PROGRAMS)
+
+BAD_FILES = bad_magic.nc \
+            bad_nvars.nc1 \
+            bad_nvars.nc2 \
+            bad_nvars.nc5 \
+            bad_padding_name_dim.nc1 \
+            bad_padding_name_dim.nc2 \
+            bad_padding_name_dim.nc5 \
+            bad_padding_name_gattr.nc1 \
+            bad_padding_name_gattr.nc2 \
+            bad_padding_name_gattr.nc5 \
+            bad_padding_name_var.nc1 \
+            bad_padding_name_var.nc2 \
+            bad_padding_name_var.nc5 \
+            bad_padding_name_vattr.nc1 \
+            bad_padding_name_vattr.nc2 \
+            bad_padding_name_vattr.nc5 \
+            bad_padding_value_gattr.nc1 \
+            bad_padding_value_gattr.nc2 \
+            bad_padding_value_gattr.nc5 \
+            bad_padding_value_vattr.nc1 \
+            bad_padding_value_vattr.nc2 \
+            bad_padding_value_vattr.nc5
+
+# autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
+# For newer versions, we can use AM_TESTS_ENVIRONMENT instead
+# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+# AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+# AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
+TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+TESTS_ENVIRONMENT += BAD_FILES="$(BAD_FILES)" ; export BAD_FILES;
+
+TESTS = seq_runs.sh
+
+EXTRA_DIST = seq_runs.sh $(BAD_FILES)
 
 CLEANFILES = *.gcno
 

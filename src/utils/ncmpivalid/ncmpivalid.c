@@ -38,14 +38,26 @@
 #endif
 #endif
 
-#define DEBUG
-#ifdef DEBUG
-#define DEBUG_RETURN(e) {                                             \
-    printf("(Error %s at line %d in file %s)\n",#e,__LINE__,__FILE__);\
-    return e;                                                         \
+#define NC_EBADPAD -1000
+
+static int verbose;
+
+#define ERR_ADDR (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size)
+
+#ifdef PNETCDF_DEBUG
+#define DEBUG_RETURN_ERROR(err) {                                       \
+    if (verbose) fprintf(stderr,"\t(Error %s at line %d in file %s)\n", \
+            #err,__LINE__,__FILE__);                                    \
+    return err;                                                         \
+}
+#define DEBUG_ASSIGN_ERROR(status, err) {                               \
+    if (verbose) fprintf(stderr,"\t(Error %s at line %d in file %s)\n", \
+            #err,__LINE__,__FILE__);                                    \
+    status = err;                                                       \
 }
 #else
-#define DEBUG_RETURN(e) return e;
+#define DEBUG_RETURN_ERROR(err) return err;
+#define DEBUG_ASSIGN_ERROR(status, err) { status = err; }
 #endif
 
 /*
@@ -73,7 +85,7 @@ xlen_nc_type(nc_type xtype) {
         case NC_DOUBLE:
         case NC_INT64:
         case NC_UINT64: return 8;
-        default: DEBUG_RETURN(NC_EBADTYPE)
+        default: DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 
@@ -101,7 +113,7 @@ compute_var_shape(NC *ncp)
         for (j=0; j<ncp->vars.value[i]->ndims; j++) {
             if (ncp->vars.value[i]->dimids[j] < 0 ||
                 ncp->vars.value[i]->dimids[j] >= ncp->dims.ndefined)
-                DEBUG_RETURN(NC_EBADDIM) /* dimid is not defined */
+                DEBUG_RETURN_ERROR(NC_EBADDIM) /* dimid is not defined */
         }
         /* ncp->vars.value[i]->len will be recomputed from dimensions in
          * ncmpio_NC_var_shape64() */
@@ -121,7 +133,7 @@ compute_var_shape(NC *ncp)
 
     if (first_rec != NULL) {
         if (ncp->begin_rec > first_rec->begin)
-            DEBUG_RETURN(NC_ENOTNC) /* not a netCDF file or corrupted */
+            DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
 
         ncp->begin_rec = first_rec->begin;
         /*
@@ -138,7 +150,7 @@ compute_var_shape(NC *ncp)
 
     if (ncp->begin_var <= 0 || ncp->xsz > ncp->begin_var ||
         ncp->begin_rec <= 0 || ncp->begin_var > ncp->begin_rec)
-        DEBUG_RETURN(NC_ENOTNC) /* not a netCDF file or corrupted */
+        DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
 
     return NC_NOERR;
 }
@@ -172,19 +184,19 @@ val_fetch(int fd, bufferinfo *gbp) {
     gbp->pos = gbp->base;
 
     if (-1 == lseek(fd, gbp->offset-slack, SEEK_SET)) {
-        printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
+        if (verbose) printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
         return -1;
     }
     nn = read(fd, gbp->base, gbp->size);
     if (nn == -1) {
-        printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
+        if (verbose) printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
         return -1;
     }
 /*
     if (nn < gbp->size) {
-        printf("Error: file header size is less than expected\n");
-printf("Error: pos_addr=%ld base_addr=%ld gbp->size=%lld nn=%zd\n",pos_addr,base_addr,gbp->size,nn);
-        DEBUG_RETURN(NC_ENOTNC)
+        if (verbose) printf("Error: file header size is less than expected\n");
+        if (verbose) printf("Error: pos_addr=%ld base_addr=%ld gbp->size=%lld nn=%zd\n",pos_addr,base_addr,gbp->size,nn);
+        DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 */
     gbp->offset += (gbp->size - slack);
@@ -221,7 +233,7 @@ val_get_NC_tag(int fd, bufferinfo *gbp, NC_tag *tagp)
     unsigned int tag = 0;
     int status = val_check_buffer(fd, gbp, x_sizeof_NON_NEG);
     if (status != NC_NOERR) {
-        printf("NC component tag is expected for ");
+        if (verbose) printf("NC component tag is expected for ");
         return status;
     }
 
@@ -232,42 +244,68 @@ val_get_NC_tag(int fd, bufferinfo *gbp, NC_tag *tagp)
 }
 
 static int
-val_get_size_t(int fd, bufferinfo *gbp, MPI_Offset *sp) {
-  int sizeof_t = (gbp->version < 5) ? 4 : 8; 
-  int status = val_check_buffer(fd, gbp, sizeof_t);
-  if (status != NC_NOERR) {
-    printf("size is expected for ");
-    return status; 
-  }
-  if (gbp->version < 5) {
-      unsigned int tmp=0;
-      status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
-      *sp = (MPI_Offset)tmp;
-  }
-  else {
-      unsigned long long tmp=0;
-      status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
-      *sp = (MPI_Offset)tmp;
-  }
-  return status;
+get_header_NON_NEG(int fd, bufferinfo *gbp, MPI_Offset *sp)
+{
+    /* netCDF file format:
+     *  ...
+     * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
+     *              <non-negative INT64>  // CDF-5
+     */
+    int sizeof_NON_NEG, status;
+
+    sizeof_NON_NEG = (gbp->version < 5) ? 4 : 8; 
+    status = val_check_buffer(fd, gbp, sizeof_NON_NEG);
+    if (status != NC_NOERR) {
+        if (verbose) printf("%d-byte size is expected for ", sizeof_NON_NEG);
+        return status; 
+    }
+    if (gbp->version < 5) {
+        unsigned int tmp=0;
+        status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
+        *sp = (MPI_Offset)tmp;
+    }
+    else {
+        unsigned long long tmp=0;
+        status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
+        *sp = (MPI_Offset)tmp;
+    }
+    return status;
 }
 
 static int
-val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
-    int status;
+get_header_name(int          fd,
+                bufferinfo  *gbp,
+                char       **namep,
+                const char  *loc)
+{
+    /* netCDF file format:
+     *  ...
+     * name       = nelems  namestring
+     * nelems     = NON_NEG
+     * namestring = ID1 [IDN ...] padding
+     * ID1        = alphanumeric | '_'
+     * IDN        = alphanumeric | special1 | special2
+     * padding    = <0, 1, 2, or 3 bytes to next 4-byte boundary>
+     * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
+     *              <non-negative INT64>  // CDF-5
+     */
+    int err=NC_NOERR;
     char *cpos, pad[X_ALIGN-1];
     MPI_Offset nchars=0, padding, bufremain, strcount;
     MPI_Aint pos_addr, base_addr;
 
     *namep = NULL;
-    status = val_get_size_t(fd, gbp, &nchars);
-    if (status != NC_NOERR) {
-        printf("the name string of ");
-        return status;
+
+    /* read nelems, string length */
+    err = get_header_NON_NEG(fd, gbp, &nchars);
+    if (err != NC_NOERR) {
+        if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+        if (verbose) printf("\t%s - name length\n", loc);
+        return err;
     }
 
     *namep = (char*) NCI_Malloc((size_t)nchars + 1);
-    if (*namep == NULL) DEBUG_RETURN(NC_ENOMEM)
+    if (*namep == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     (*namep)[nchars] = '\0'; /* add terminal character */
 
     padding = _RNDUP(nchars, X_ALIGN) - nchars;
@@ -290,47 +328,53 @@ val_get_NC_string(int fd, bufferinfo *gbp, char **namep) {
             cpos += strcount; 
             bufremain -= strcount;
         } else {
-            status = val_fetch(fd, gbp);
-            if (status != NC_NOERR) {
-                printf("fetching the name string of ");
+            err = val_fetch(fd, gbp);
+            if (err != NC_NOERR) {
+                if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+                if (verbose) printf("\t%s - fetching name string\n", loc);
                 NCI_Free(*namep);
                 *namep = NULL;
-                return status;
+                return err;
             } 
             bufremain = gbp->size;
         }
     }
 
     if (padding > 0) {
-        memset(pad, 0, X_ALIGN-1);
-        status = val_check_buffer(fd, gbp, padding);
-        if (status != NC_NOERR) {
-            printf("fetching padding for the name string of ");
-            return status;
+        err = val_check_buffer(fd, gbp, padding);
+        if (err != NC_NOERR) {
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+            if (verbose) printf("\t%s - fetching name string padding\n", loc);
+            return err;
         } 
+        memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
-            printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the name string alignment of ", (long long unsigned)
-	           (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size));
-            NCI_Free(*namep);
-            *namep = NULL;
-            DEBUG_RETURN(NC_ENOTNC)
+            /* This is considered not a fatal error, we continue to validate */
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+            if (verbose) printf("\t%s \"%s\": name padding is non-null byte\n",
+                   loc, *namep);
+            // NCI_Free(*namep);
+            // *namep = NULL;
+            DEBUG_ASSIGN_ERROR(err, NC_EBADPAD)
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
 
-    return NC_NOERR;  
+    return err;
 }
 
 static int
 val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp) {
-    int status;
+    int err, status=NC_NOERR;
     char *name=NULL;
     NC_dim *dimp;
 
     *dimpp = NULL;
 
-    status = val_get_NC_string(fd, gbp, &name);
-    if (status != NC_NOERR) {
+    status = get_header_name(fd, gbp, &name, "dim");
+    if (status == NC_EBADPAD) {
+    }
+    else if (status != NC_NOERR && status != NC_EBADPAD) {
         if (name != NULL) NCI_Free(name);
         return status;
     }
@@ -338,22 +382,22 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp) {
     dimp = (NC_dim*) NCI_Malloc(sizeof(NC_dim));
     if (dimp == NULL) {
         if (name != NULL) NCI_Free(name);
-        DEBUG_RETURN(NC_ENOMEM)
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     dimp->name     = name;
     dimp->name_len = strlen(name);
 
-    status = val_get_size_t(fd, gbp, &dimp->size);
-    if (status != NC_NOERR) { /* frees dimp */
-        printf("\"%s\" - ", name);
+    /* read dimension size */
+    err = get_header_NON_NEG(fd, gbp, &dimp->size);
+    if (err != NC_NOERR) { /* frees dimp */
         NCI_Free(dimp->name);
         NCI_Free(dimp);
-        return status;
+        return err;
     }
 
     *dimpp = dimp;
 
-    return NC_NOERR;
+    return status;
 }
 
 static int
@@ -371,7 +415,7 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
      * NON_NEG      = <non-negative INT> |        // CDF-1 and CDF-2
      *                <non-negative INT64>        // CDF-5
      */
-    int status;
+    int err, status=NC_NOERR;
     NC_tag tag = NC_UNSPECIFIED; 
     int dim;
     unsigned long long err_addr;
@@ -382,27 +426,27 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
     assert(ncap->value == NULL);
 
     /* read NC_tag (NC_DIMENSION or ZERO) from gbp buffer */
-    status = val_get_NC_tag(fd, gbp, &tag);
-    if (status != NC_NOERR) {
-        printf("preamble of \n");
-        return status; 
+    err = val_get_NC_tag(fd, gbp, &tag);
+    if (err != NC_NOERR) {
+        if (verbose) printf("preamble of \n");
+        return err; 
     }
 
     /* read nelems (number of dimensions) from gbp buffer */
-    status = val_get_size_t(fd, gbp, &tmp);
-    if (status != NC_NOERR) {
-        printf("the length of ");
-        return status;
+    err = get_header_NON_NEG(fd, gbp, &tmp);
+    if (err != NC_NOERR) {
+        if (verbose) printf("the length of ");
+        return err;
     }
     if (tmp > NC_MAX_DIMS) {
         /* number of allowable defined dimensions NC_MAX_DIMS */
-        printf("the length of ");
+        if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+        if (verbose) printf("\tnumber of dimensions (%lld) defined in file exceeds NC_MAX_DIMS (%d)\n",tmp,NC_MAX_DIMS);
         return NC_EMAXDIMS;
     }
     ncap->ndefined = (int)tmp;
 
-    err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
-               (X_SIZEOF_INT + x_sizeof_NON_NEG); 
+    err_addr = ERR_ADDR - (X_SIZEOF_INT + x_sizeof_NON_NEG); 
 
     if (ncap->ndefined == 0) {
         /* no dimension defined */
@@ -413,39 +457,43 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while ABSENT is expected for ");
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 #endif
     } else {
         if (tag != NC_DIMENSION) {
-            printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while NC_DIMENSION is expected as number of dimensions is %d for ", ncap->ndefined);
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("\tInvalid NC component tag, while NC_DIMENSION is expected as number of dimensions is %d for ", ncap->ndefined);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 
         /* check each dimension */
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
         ncap->value = (NC_dim **) NCI_Calloc(alloc_size, sizeof(NC_dim *));
-        if (ncap->value == NULL) DEBUG_RETURN(NC_ENOMEM)
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         for (dim=0; dim<ncap->ndefined; dim++) {
-            status = val_get_NC_dim(fd, gbp, &ncap->value[dim]);
-            if (status != NC_NOERR) {
-	        printf("dimension[%d] in ", dim);
+            err = val_get_NC_dim(fd, gbp, &ncap->value[dim]);
+            if (err != NC_NOERR && err != NC_EBADPAD) {
                 ncap->ndefined = dim;
                 ncmpio_free_NC_dimarray(ncap);
-                return status;
+                return err;
             }
+            if (status == NC_NOERR) status = err;
         }
     }
 
-    return NC_NOERR;
+    return status;
 }
 
 static int
-val_get_nc_type(int fd, bufferinfo *gbp, nc_type *xtypep) {
+val_get_nc_type(int         fd,
+                bufferinfo *gbp,
+                nc_type    *xtypep,
+                const char *loc)
+{
     /* nc_type is 4-byte integer */
     unsigned int xtype = 0;
     int status = val_check_buffer(fd, gbp, 4);
@@ -467,17 +515,21 @@ val_get_nc_type(int fd, bufferinfo *gbp, nc_type *xtypep) {
     return NC_NOERR;
 
 err_exit:
-    printf("Error @ [0x%8.8Lx]: \n\tUnknown NC data xtype for the values of ",
-	   (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - X_SIZEOF_INT));
-    DEBUG_RETURN(NC_EBADTYPE)
+    if (verbose) printf("Error @ [0x%8.8Lx]:\n", (long long unsigned)(ERR_ADDR-X_SIZEOF_INT));
+    if (verbose) printf("\t%s: Unknown NC data type (%u)\n",loc, xtype);
+    DEBUG_RETURN_ERROR(NC_EBADTYPE)
 }
 
 /*
- * Get the values of an attribute  
+ * Get the values of an attribute 
  */
 static int
-val_get_NC_attrV(int fd, bufferinfo *gbp, NC_attr *attrp) {
-    int status;
+val_get_NC_attrV(int         fd,
+                 bufferinfo *gbp,
+                 NC_attr    *attrp,
+                 const char *loc)
+{
+    int status=NC_NOERR;
     void *value = attrp->xvalue;
     char pad[X_ALIGN-1]; 
     MPI_Offset nvalues, padding, bufremain, attcount;
@@ -505,7 +557,7 @@ val_get_NC_attrV(int fd, bufferinfo *gbp, NC_attr *attrp) {
         } else {
             status = val_fetch(fd, gbp);
             if(status != NC_NOERR) {
-	        printf("fetching the values of ");
+	        if (verbose) printf("fetching the values of ");
                 return status;
             }
             bufremain = gbp->size;
@@ -515,14 +567,15 @@ val_get_NC_attrV(int fd, bufferinfo *gbp, NC_attr *attrp) {
     if (padding > 0) {
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
-            printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the values alignment of ",
-                   (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size)); 
-            DEBUG_RETURN(NC_ENOTNC)
+            /* This is considered not a fatal error, we continue to validate */
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+            if (verbose) printf("\t%s: value padding is non-null byte\n", loc);
+            DEBUG_ASSIGN_ERROR(status, NC_EBADPAD)
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
 
-    return NC_NOERR;
+    return status;
 }
 
 static MPI_Offset
@@ -541,7 +594,7 @@ x_len_NC_attrV(nc_type    xtype,
         case NC_DOUBLE: return (nelems * 8);
         case NC_INT64:  return (nelems * 8);
         case NC_UINT64: return (nelems * 8);
-        default: fprintf(stderr, "Error: bad xtype(%d) in %s\n",xtype,__func__);
+        default: if (verbose) fprintf(stderr, "Error: bad xtype(%d) in %s\n",xtype,__func__);
     }
     return 0;
 }
@@ -553,7 +606,7 @@ new_NC_attr(char        *name,
             NC_attr    **attrp)
 {
     *attrp = (NC_attr*) NCI_Malloc(sizeof(NC_attr));
-    if (*attrp == NULL ) DEBUG_RETURN(NC_ENOMEM)
+    if (*attrp == NULL ) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     (*attrp)->xtype    = xtype;
     (*attrp)->xsz      = 0;
@@ -569,62 +622,71 @@ new_NC_attr(char        *name,
         if ((*attrp)->xvalue == NULL) {
             NCI_Free(*attrp);
             *attrp = NULL;
-            DEBUG_RETURN(NC_ENOMEM)
+            DEBUG_RETURN_ERROR(NC_ENOMEM)
         }
     }
     return NC_NOERR;
 }
 
 static int
-val_get_NC_attr(int fd, bufferinfo *gbp, NC_attr **attrpp) {
-  char *name=NULL;
-  int status;
-  nc_type xtype; 
-  MPI_Offset nelems;
-  NC_attr *attrp;
+val_get_NC_attr(int          fd, 
+                bufferinfo  *gbp, 
+                NC_attr    **attrpp,
+                const char  *loc)
+{
+    char *name=NULL, xloc[1024];
+    int err, status=NC_NOERR;
+    nc_type xtype; 
+    MPI_Offset nelems;
+    NC_attr *attrp;
 
-  status = val_get_NC_string(fd, gbp, &name);
-  if (status != NC_NOERR) {
-      if (name != NULL) NCI_Free(name);
-      return status;
-  }
+    status = get_header_name(fd, gbp, &name, loc);
+    if (status == NC_EBADPAD) {
+    }
+    else if (status != NC_NOERR) {
+        if (name != NULL) NCI_Free(name);
+        return status;
+    }
 
-  status = val_get_nc_type(fd, gbp, &xtype);
-  if(status != NC_NOERR) {
-    printf("\"%s\" - ", name);
-    if (name != NULL) NCI_Free(name);
-    return status;
-  }
+    sprintf(xloc,"%s \"%s\"",loc,name);
+    err = val_get_nc_type(fd, gbp, &xtype, xloc);
+    if (err != NC_NOERR) {
+        if (name != NULL) NCI_Free(name);
+        return err;
+    }
 
-  status = val_get_size_t(fd, gbp, &nelems); 
-  if(status != NC_NOERR) {
-    printf("the values of \"%s\" - ", name);
-    if (name != NULL) NCI_Free(name);
-    return status;
-  }
+    err = get_header_NON_NEG(fd, gbp, &nelems); 
+    if(err != NC_NOERR) {
+        if (verbose) printf("the values of \"%s\" - ", name);
+        if (name != NULL) NCI_Free(name);
+        return err;
+    }
 
-  status = new_NC_attr(name, xtype, nelems, &attrp);
-  if(status != NC_NOERR) {
-    if (name != NULL) NCI_Free(name);
-    return status;
-  }
+    err = new_NC_attr(name, xtype, nelems, &attrp);
+    if(err != NC_NOERR) {
+        if (name != NULL) NCI_Free(name);
+        return err;
+    }
 
-  status = val_get_NC_attrV(fd, gbp, attrp);
-  if(status != NC_NOERR) {
-    printf("\"%s\" - ", name);
-    NCI_Free(attrp->name);
-    NCI_Free(attrp->xvalue);
-    NCI_Free(attrp);
-    return status;
-  }
+    err = val_get_NC_attrV(fd, gbp, attrp, xloc);
+    if (err != NC_NOERR && err != NC_EBADPAD) {
+        NCI_Free(attrp->name);
+        NCI_Free(attrp->xvalue);
+        NCI_Free(attrp);
+        return err;
+    }
+    if (status == NC_NOERR) status = err;
 
-  *attrpp = attrp; 
+    *attrpp = attrp; 
   
-  return NC_NOERR; 
+    return status; 
 }
 
 static int
-val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
+val_get_NC_attrarray(int           fd,
+                     bufferinfo   *gbp,
+                     NC_attrarray *ncap,
+                     const char   *loc)
 {
     /* netCDF file format:
      *  ...
@@ -638,9 +700,9 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
      * NON_NEG      = <non-negative INT> |        // CDF-1 and CDF-2
      *                <non-negative INT64>        // CDF-5
      */
-    int status;
+    char xloc[1024];
+    int i, err, status=NC_NOERR;
     NC_tag tag = NC_UNSPECIFIED;
-    int att;
     MPI_Offset tmp;
     unsigned long long err_addr;
 
@@ -651,25 +713,25 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
     /* read NC_tag (NC_ATTRIBUTE or ZERO) from gbp buffer */
     status = val_get_NC_tag(fd, gbp, &tag);
     if (status != NC_NOERR) {
-        printf("preamble of ");
+        if (verbose) printf("preamble of ");
         return status; 
     }
 
     /* read nelems (number of attributes) from gbp buffer */
-    status = val_get_size_t(fd, gbp, &tmp);
+    status = get_header_NON_NEG(fd, gbp, &tmp);
     if (status != NC_NOERR) {
-        printf("the length of ");
+        if (verbose) printf("the length of ");
         return status;
     }
     if (tmp > NC_MAX_ATTRS) {
         /* number of allowable defined attributes NC_MAX_ATTRS */
-        printf("the length of ");
+        if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+        if (verbose) printf("\t%s attributes: number of attributes (%lld) exceeds NC_MAX_ATTRS (%d)\n",loc,tmp,NC_MAX_ATTRS);
         return NC_EMAXATTS;
     }
     ncap->ndefined = (int)tmp;
 
-    err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
-               (X_SIZEOF_INT + x_sizeof_NON_NEG); 
+    err_addr = ERR_ADDR - (X_SIZEOF_INT + x_sizeof_NON_NEG); 
 
     if (ncap->ndefined == 0) {
         /* no attribute defined */
@@ -680,34 +742,35 @@ val_get_NC_attrarray(int fd, bufferinfo *gbp, NC_attrarray *ncap)
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while ABSENT is expected for ");
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 #endif
     } else {
         if (tag != NC_ATTRIBUTE) {
-            printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while NC_ATTRIBUTE is expected as number of dimensions is %d for ", ncap->ndefined);
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("\tInvalid NC component tag, while NC_ATTRIBUTE is expected as number of dimensions is %d for ", ncap->ndefined);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
         ncap->value = (NC_attr **) NCI_Calloc(alloc_size, sizeof(NC_attr *));
-        if (ncap->value == NULL) DEBUG_RETURN(NC_ENOMEM)
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-        for (att=0; att<ncap->ndefined; att++) {
-            status = val_get_NC_attr(fd, gbp, &ncap->value[att]);
-            if (status != NC_NOERR) {
-	        printf("attribute[%d] of ", att);
-                ncap->ndefined = att;
+        for (i=0; i<ncap->ndefined; i++) {
+            sprintf(xloc, "%s attribute", loc);
+            err = val_get_NC_attr(fd, gbp, &ncap->value[i], xloc);
+            if (err != NC_NOERR && err != NC_EBADPAD) {
+                ncap->ndefined = i;
                 ncmpio_free_NC_attrarray(ncap);
-                return status;
+                return err;
             }
+            if (status == NC_NOERR) status = err;
         }
     }
   
-    return NC_NOERR;
+    return status;
 }
 
 /*----< ncmpio_new_NC_var() >------------------------------------------------*/
@@ -739,8 +802,8 @@ static int
 val_get_NC_var(int          fd,
                bufferinfo  *gbp,
                NC_var     **varpp,
-               int          f_ndims) /* no. dimensions defined in file */
-
+               int          f_ndims, /* no. dimensions defined in file */
+               const char  *loc)
 {
     /* netCDF file format:
      * netcdf_file = header data
@@ -758,125 +821,134 @@ val_get_NC_var(int          fd,
      * NON_NEG     = <non-negative INT> |  // CDF-1 and CDF-2
      *               <non-negative INT64>  // CDF-5
      */
-    char *name=NULL;
-    int dim, dimid, status;
+    char *name=NULL, xloc[1024];
+    int dim, dimid, err, status=NC_NOERR;
     MPI_Offset ndims;
     NC_var *varp;
 
-    status = val_get_NC_string(fd, gbp, &name);
-    if (status != NC_NOERR) {
+    /* read variable name */
+    err = get_header_name(fd, gbp, &name, loc);
+    if (err != NC_NOERR && err != NC_EBADPAD) {
         if (name != NULL) NCI_Free(name);
-        return status;
+        return err;
     }
+    status = err;
 
-    status = val_get_size_t(fd, gbp, &ndims);
-    if (status != NC_NOERR) {
-        printf("the dimid list of \"%s\" - ", name);
+    /* read number of dimensions */
+    err = get_header_NON_NEG(fd, gbp, &ndims);
+    if (err != NC_NOERR) {
+        if (verbose) printf("the dimid list of \"%s\" - ", name);
         if (name != NULL) NCI_Free(name);
-        return status;
+        return err;
     }
+    if (status == NC_NOERR) status = err;
+
     /* cannot be more than NC_MAX_VAR_DIMS */
     if (ndims > NC_MAX_VAR_DIMS) {
         if (name != NULL) NCI_Free(name);
-        DEBUG_RETURN(NC_EMAXDIMS)
+        DEBUG_RETURN_ERROR(NC_EMAXDIMS)
     }
 
+    /* allocate variable object */
     varp = val_new_NC_var(name, ndims);
     if (varp == NULL) {
         if (name != NULL) NCI_Free(name);
-        DEBUG_RETURN(NC_ENOMEM)
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
+    /* read dimension IDs and check dimensions */
     for (dim=0; dim<ndims; dim++) {
-        status = val_check_buffer(fd, gbp, (gbp->version < 5 ? 4 : 8));
-        if (status != NC_NOERR) {
-            printf("the dimid[%d] is expected for \"%s\" - ", dim, name);
+        err = val_check_buffer(fd, gbp, (gbp->version < 5 ? 4 : 8));
+        if (err != NC_NOERR) {
+            if (verbose) printf("the dimid[%d] is expected for \"%s\" - ", dim, name);
             ncmpio_free_NC_var(varp);
-            return status;
+            return err;
         }
         if (gbp->version < 5) {
             unsigned int tmp=0;
-            status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
+            err = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
             dimid = (int)tmp;
         }
         else {
             unsigned long long tmp=0;
-            status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
+            err = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
             dimid = (int)tmp;
         }
-        if (status != NC_NOERR) {
+        if (err != NC_NOERR) {
             ncmpio_free_NC_var(varp);
-            return status;
+            return err;
         }
         /* dimid should be < f_ndims (num of dimensions defined in file) */
         if (dimid >= f_ndims) {
+            if (verbose) printf("Error - dimension ID\n");
+            if (verbose) printf("\t%s \"%s\": dimid[%d]=%d is larger than the number of dimensions defined in file (%d)\n",loc,name,dim,dimid,f_ndims);
             ncmpio_free_NC_var(varp);
-            DEBUG_RETURN(NC_EBADDIM)
+            DEBUG_RETURN_ERROR(NC_EBADDIM)
         }
         varp->dimids[dim] = dimid;
     }
 
     /* var = name nelems [dimid ...] vatt_list nc_type vsize begin
      *                               ^^^^^^^^^                     */
-    status = val_get_NC_attrarray(fd, gbp, &varp->attrs);
-    if (status != NC_NOERR) {
-        printf("ATTRIBUTE list of \"%s\" - ", name);
+    sprintf(xloc,"%s \"%s\"",loc,name);
+    err = val_get_NC_attrarray(fd, gbp, &varp->attrs, xloc);
+    if (err != NC_NOERR && err != NC_EBADPAD) {
         ncmpio_free_NC_var(varp);
-        return status;
+        return err;
     }
+    if (status == NC_NOERR) status = err;
 
     /* var = name nelems [dimid ...] vatt_list nc_type vsize begin
      *                                         ^^^^^^^             */
-    status = val_get_nc_type(fd, gbp, &varp->xtype);
-    if (status != NC_NOERR) {
-        printf("\"%s\" - ", name);
+    err = val_get_nc_type(fd, gbp, &varp->xtype, xloc);
+    if (err != NC_NOERR) {
         ncmpio_free_NC_var(varp);
-        return status;
+        return err;
     } 
 
-    status = ncmpii_xlen_nc_type(varp->xtype, &varp->xsz);
-    if (status != NC_NOERR) {
-        printf("\"%s\" - ", name);
+    err = ncmpii_xlen_nc_type(varp->xtype, &varp->xsz);
+    if (err != NC_NOERR) {
+        if (verbose) printf("\"%s\" - ", name);
         ncmpio_free_NC_var(varp);
-        return status;
+        return err;
     } 
 
     /* var = name nelems [dimid ...] vatt_list nc_type vsize begin
      *                                                 ^^^^^      
      * instead of use vsize from file, we recalculate it in
      * compute_var_shape() */
-    status = val_get_size_t(fd, gbp, &varp->len);
-    if (status != NC_NOERR) {
-        printf("the data of  \"%s\" - ", name);
+    err = get_header_NON_NEG(fd, gbp, &varp->len);
+    if (err != NC_NOERR) {
+        if (verbose) printf("the data of  \"%s\" - ", name);
         ncmpio_free_NC_var(varp);
-        return status;
+        return err;
     }
 
-    status = val_check_buffer(fd, gbp, (gbp->version == 1 ? 4 : 8));
-    if (status != NC_NOERR) {
-        printf("offset is expected for the data of \"%s\" - ", name);
+    err = val_check_buffer(fd, gbp, (gbp->version == 1 ? 4 : 8));
+    if (err != NC_NOERR) {
+        if (verbose) printf("offset is expected for the data of \"%s\" - ", name);
         ncmpio_free_NC_var(varp);
-        return status;
+        return err;
     }
     /* var = name nelems [dimid ...] vatt_list nc_type vsize begin
      *                                                       ^^^^^ */
     if (gbp->version == 1) {
         unsigned int tmp=0;
-        status = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
+        err = ncmpix_get_uint32((const void **)(&gbp->pos), &tmp);
         varp->begin = (MPI_Offset)tmp;
     }
     else {
         unsigned long long tmp=0;
-        status = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
+        err = ncmpix_get_uint64((const void **)(&gbp->pos), &tmp);
         varp->begin = (MPI_Offset)tmp;
     }
-    if (status != NC_NOERR) {
+    if (err != NC_NOERR) {
         ncmpio_free_NC_var(varp);
-        return status;
+        return err;
     }
 
     *varpp = varp;
-    return NC_NOERR;
+    return status;
 }
 
 static int
@@ -900,7 +972,7 @@ val_get_NC_vararray(int          fd,
      * NON_NEG     = <non-negative INT> |        // CDF-1 and CDF-2
      *               <non-negative INT64>        // CDF-5
      */
-    int status;
+    int err, status=NC_NOERR;
     NC_tag tag = NC_UNSPECIFIED;
     int var;
     MPI_Offset tmp;
@@ -911,27 +983,27 @@ val_get_NC_vararray(int          fd,
     assert(ncap->value == NULL); 
 
     /* read NC_tag (NC_VARIABLE or ZERO) from gbp buffer */
-    status = val_get_NC_tag(fd, gbp, &tag);
-    if (status != NC_NOERR) {
-        printf("preamble of ");
-        return status;
+    err = val_get_NC_tag(fd, gbp, &tag);
+    if (err != NC_NOERR) {
+        if (verbose) printf("preamble of ");
+        return err;
     }
  
     /* read nelems (number of variables) from gbp buffer */
-    status = val_get_size_t(fd, gbp, &tmp);
-    if (status != NC_NOERR) {
-        printf("the length of ");
-        return status;
+    err = get_header_NON_NEG(fd, gbp, &tmp);
+    if (err != NC_NOERR) {
+        if (verbose) printf("the length of ");
+        return err;
     }
     if (tmp > NC_MAX_VARS) {
         /* number of allowable defined variables NC_MAX_VARS */
-        printf("the length of ");
-        return NC_EMAXVARS;
+        if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+        if (verbose) printf("\tnumber of variables (%lld) exceeds NC_MAX_VARS (%d)\n",tmp,NC_MAX_VARS);
+        DEBUG_RETURN_ERROR(NC_EMAXVARS);
     }
     ncap->ndefined = (int)tmp;
 
-    err_addr = (size_t)gbp->pos - (size_t)gbp->base + gbp->offset - gbp->size -
-               (X_SIZEOF_INT + x_sizeof_NON_NEG);
+    err_addr = ERR_ADDR - (X_SIZEOF_INT + x_sizeof_NON_NEG); 
 
     if (ncap->ndefined == 0) {
         /* From the CDF file format specification, the tag is either
@@ -941,34 +1013,34 @@ val_get_NC_vararray(int          fd,
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while ABSENT is expected for ");
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 #endif
     } else {
         if (tag != NC_VARIABLE) {
-            printf("Error @ [0x%8.8Lx]:\n", err_addr);
-            printf("\tInvalid NC component tag, while NC_VARIABLE is expected as number of dimensions is %d for ", ncap->ndefined);
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("\tInvalid NC component tag, while NC_VARIABLE is expected as number of dimensions is %d for ", ncap->ndefined);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
  
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
         ncap->value = (NC_var **) NCI_Calloc(alloc_size, sizeof(NC_var *));
-        if (ncap->value == NULL) DEBUG_RETURN(NC_ENOMEM) 
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM) 
 
         for (var=0; var<ncap->ndefined; var++) {
-            status = val_get_NC_var(fd, gbp, &ncap->value[var], f_ndims);
-            if (status != NC_NOERR) {
-                printf("variable[%d] in ", var);
+            err = val_get_NC_var(fd, gbp, &ncap->value[var], f_ndims, "var");
+            if (err != NC_NOERR && err != NC_EBADPAD) {
                 ncap->ndefined = var;
                 ncmpio_free_NC_vararray(ncap);
-                return status;
+                return err;
             }
+            if (status == NC_NOERR) status = err;
         }
     }
 
-    return NC_NOERR;
+    return status;
 }
 
 /*----< NC_check_vlen() >----------------------------------------------------*/
@@ -1031,7 +1103,7 @@ val_NC_check_vlens(NC *ncp)
             if (NC_check_vlen(*vpp, vlen_max) == 0) {
                 /* check this variable's shape product against vlen_max */
                 if (ncp->format >= 5) /* CDF-5 */
-                    DEBUG_RETURN(NC_EVARSIZE)
+                    DEBUG_RETURN_ERROR(NC_EVARSIZE)
                 large_fix_vars_count++;
                 last = 1;
             }
@@ -1042,14 +1114,14 @@ val_NC_check_vlens(NC *ncp)
     /* OK if last non-record variable size too large, since not used to
        compute an offset */
     if (large_fix_vars_count > 1) {  /* only one "too-large" variable allowed */
-        printf("CDF-%d format allows only one large fixed-size variable\n",ncp->format);
-        DEBUG_RETURN(NC_EVARSIZE)
+        if (verbose) printf("CDF-%d format allows only one large fixed-size variable\n",ncp->format);
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
     /* The only "too-large" variable must be the last one defined */
     if (large_fix_vars_count == 1 && last == 0) {
-        printf("CDF-%d format allows only one large fixed-size variable and it must be the last one defined\n",ncp->format);
-        DEBUG_RETURN(NC_EVARSIZE)
+        if (verbose) printf("CDF-%d format allows only one large fixed-size variable and it must be the last one defined\n",ncp->format);
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
     if (rec_vars_count == 0) return NC_NOERR;
@@ -1057,8 +1129,8 @@ val_NC_check_vlens(NC *ncp)
     /* if there is a "too-large" fixed-size variable, no record variable is
      * allowed */
     if (large_fix_vars_count == 1) {
-        printf("CDF-%d format allows only one large fixed-size variable when there is no record variable defined\n",ncp->format);
-        DEBUG_RETURN(NC_EVARSIZE)
+        if (verbose) printf("CDF-%d format allows only one large fixed-size variable when there is no record variable defined\n",ncp->format);
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
     /* Loop through vars, second pass is for record variables.   */
@@ -1070,7 +1142,7 @@ val_NC_check_vlens(NC *ncp)
             if (NC_check_vlen(*vpp, vlen_max) == 0) {
                 /* check this variable's shape product against vlen_max */
                 if (ncp->format >= 5) /* CDF-5 */
-                    DEBUG_RETURN(NC_EVARSIZE)
+                    DEBUG_RETURN_ERROR(NC_EVARSIZE)
                 large_rec_vars_count++;
                 last = 1;
             }
@@ -1083,14 +1155,14 @@ val_NC_check_vlens(NC *ncp)
      * http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations
      */
     if (large_rec_vars_count > 1) { /* only one "too-large" variable allowed */
-        printf("CDF-%d format allows only one large record variable\n",ncp->format);
-        DEBUG_RETURN(NC_EVARSIZE)
+        if (verbose) printf("CDF-%d format allows only one large record variable\n",ncp->format);
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
     /* and it has to be the last one */
     if (large_rec_vars_count == 1 && last == 0) {
-        printf("CDF-%d format allows only one large record variable and it must be the last one defined\n",ncp->format);
-        DEBUG_RETURN(NC_EVARSIZE)
+        if (verbose) printf("CDF-%d format allows only one large record variable and it must be the last one defined\n",ncp->format);
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
     return NC_NOERR;
@@ -1103,6 +1175,7 @@ val_NC_check_vlens(NC *ncp)
 static int
 val_NC_check_voff(NC *ncp)
 {
+    int nerrs=0, status=NC_NOERR;
     NC_var *varp;
     MPI_Offset i, prev, prev_off;
 
@@ -1116,19 +1189,24 @@ val_NC_check_voff(NC *ncp)
         if (IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            if (i == 0)
-                printf("Variable \"%s\" begin offset (%lld) is less than header extent (%lld)\n", varp->name, varp->begin, prev_off);
-            else
-                printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) {
+                printf("Error - variable begin offset orders:\n");
+                if (i == 0)
+                    printf("\tvar \"%s\" begin offset (%lld) is less than header extent (%lld)\n", varp->name, varp->begin, prev_off);
+                else
+                    printf("\tvar \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
+            }
+            nerrs++;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
         prev = i;
     }
 
     if (ncp->begin_rec < prev_off) {
-        printf("Record variable section begin offset (%lld) is less than fix-sized variable section end offset (%lld)\n", varp->begin, prev_off);
-        DEBUG_RETURN(NC_ENOTNC)
+        if (verbose) printf("Record variable section begin offset (%lld) is less than fix-sized variable section end offset (%lld)\n", varp->begin, prev_off);
+        nerrs++;
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
     }
 
     /* Loop through vars, second pass is for record variables */
@@ -1139,23 +1217,26 @@ val_NC_check_voff(NC *ncp)
         if (!IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            if (i == 0)
-                printf("Variable \"%s\" begin offset (%lld) is less than record variable section begin offset (%lld)\n", varp->name, varp->begin, prev_off);
-            else
-                printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
-            DEBUG_RETURN(NC_ENOTNC)
+            if (verbose) {
+                if (i == 0)
+                    printf("Variable \"%s\" begin offset (%lld) is less than record variable section begin offset (%lld)\n", varp->name, varp->begin, prev_off);
+                else
+                    printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
+            }
+            nerrs++;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
         prev = i;
     }
 
-    return NC_NOERR;
+    return status;
 }
 
 static int
 val_get_NC(int fd, NC *ncp)
 {
-    int status;
+    int err, status=NC_NOERR;
     bufferinfo getbuf;
     char magic[sizeof(ncmagic)];
     MPI_Offset nrecs = 0;
@@ -1183,7 +1264,8 @@ val_get_NC(int fd, NC *ncp)
     status = ncmpix_getn_text((const void **)(&getbuf.pos), sizeof(magic), magic);
 
     if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
-        printf("Error: Unknow file signature, (C D F \\001, \\002, or \\005) is expected!\n");
+        if (verbose) printf("Error: Unknow file signature\n");
+        if (verbose) printf("\texpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
         status = NC_ENOTNC;
         goto fn_exit;
     }
@@ -1221,7 +1303,7 @@ val_get_NC(int fd, NC *ncp)
      */
     status = val_check_buffer(fd, &getbuf, (getbuf.version < 5) ? 4 : 8);
     if (status != NC_NOERR) {
-        printf("Error: number of records is expected!\n");
+        if (verbose) printf("Error: number of records is expected!\n");
         status = NC_ENOTNC;
         goto fn_exit;
     }
@@ -1259,42 +1341,57 @@ val_get_NC(int fd, NC *ncp)
      * dim_list = ABSENT | NC_DIMENSION  nelems  [dim ...]
      * Check dim_list
      */
-    status = val_get_NC_dimarray(fd, &getbuf, &ncp->dims);
-    if (status != NC_NOERR) {
-        printf("DIMENSION list!\n");
+    err = val_get_NC_dimarray(fd, &getbuf, &ncp->dims);
+    if (err != NC_NOERR && err != NC_EBADPAD) {
+        if (verbose) printf("DIMENSION list!\n");
+        status = err;
         goto fn_exit;
     }
+    if (status == NC_NOERR) status = err;
 
     /* header = magic numrecs dim_list gatt_list var_list
      * att_list = ABSENT | NC_ATTRIBUTE  nelems  [attr ...]
      * Check att_list
      */
-    status = val_get_NC_attrarray(fd, &getbuf, &ncp->attrs); 
-    if (status != NC_NOERR) {
-        printf("GLOBAL ATTRIBUTE list!\n");
+    err = val_get_NC_attrarray(fd, &getbuf, &ncp->attrs, "global"); 
+    if (err != NC_NOERR && err != NC_EBADPAD) {
+        if (verbose) printf("GLOBAL ATTRIBUTE list!\n");
+        status = err;
         goto fn_exit;
     }
+    if (status == NC_NOERR) status = err;
 
     /* header = magic numrecs dim_list gatt_list var_list
      * var_list    = ABSENT | NC_VARIABLE   nelems  [var ...]
      * Check var_list
      */
-    status = val_get_NC_vararray(fd, &getbuf, &ncp->vars, ncp->dims.ndefined);
-    if (status != NC_NOERR) {
-        printf("VARIABLE list!\n");
+    err = val_get_NC_vararray(fd, &getbuf, &ncp->vars, ncp->dims.ndefined);
+    if (err != NC_NOERR && err != NC_EBADPAD) {
+        if (verbose) printf("VARIABLE list!\n");
+        status = err;
         goto fn_exit;
     }
+    if (status == NC_NOERR) status = err;
 
     ncp->xsz = ncmpio_hdr_len_NC(ncp);
 
-    status = compute_var_shape(ncp);
-    if (status != NC_NOERR) goto fn_exit;
+    err = compute_var_shape(ncp);
+    if (err != NC_NOERR) {
+        status = err;
+        goto fn_exit;
+    }
 
-    status = val_NC_check_vlens(ncp);
-    if (status != NC_NOERR) goto fn_exit;
+    err = val_NC_check_vlens(ncp);
+    if (err != NC_NOERR) {
+        status = err;
+        goto fn_exit;
+    }
 
-    status = val_NC_check_voff(ncp);
-    if (status != NC_NOERR) goto fn_exit;
+    err = val_NC_check_voff(ncp);
+    if (err != NC_NOERR) {
+        status = err;
+        goto fn_exit;
+    }
 
 fn_exit:
     NCI_Free(getbuf.base);
@@ -1320,7 +1417,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[512], *cmd;
-    int i, rank, nprocs, verbose=1, fd, status=NC_NOERR;
+    int i, rank, nprocs, fd, status=NC_NOERR;
     NC *ncp=NULL;
     struct stat ncfilestat;
 
@@ -1332,6 +1429,7 @@ int main(int argc, char **argv)
     strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
+    verbose = 1;
     while ((i = getopt(argc, argv, "hq")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
@@ -1365,17 +1463,18 @@ int main(int argc, char **argv)
     ncp = (NC*) NCI_Calloc(1, sizeof(NC));
     if (ncp == NULL) {
         status = NC_ENOMEM;
-        printf("Error at line %d when calling ncmpio_new_NC()\n",__LINE__);
+        if (verbose) printf("Error at line %d when calling ncmpio_new_NC()\n",__LINE__);
         goto prog_exit;
     }
 
     /* read and validate the header */
     status = val_get_NC(fd, ncp);
-    if (status != NC_NOERR && status != -1) goto prog_exit;
+    if (status != NC_NOERR && status != NC_EBADPAD && status != -1)
+        goto prog_exit;
 
     /* check data size */
     if (-1 == fstat(fd, &ncfilestat)) {
-        printf("Error at line %d fstat (%s)\n",__LINE__,strerror(errno));
+        if (verbose) printf("Error at line %d fstat (%s)\n",__LINE__,strerror(errno));
         status = NC_EFILE;
         goto prog_exit;
     }
@@ -1383,8 +1482,8 @@ int main(int argc, char **argv)
         MPI_Offset expect_fsize;
         expect_fsize = ncp->begin_rec + ncp->recsize * ncp->numrecs;
         if (expect_fsize < ncfilestat.st_size) {
-            printf("Error: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
-            printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
+            if (verbose) printf("Error: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
+            if (verbose) printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
             status = NC_EFILE;
             goto prog_exit;
         }
@@ -1405,7 +1504,7 @@ int main(int argc, char **argv)
             expect_fsize = ncp->vars.value[ncp->vars.ndefined-1]->begin +
                            ncp->vars.value[ncp->vars.ndefined-1]->len;
         if (expect_fsize < ncfilestat.st_size) {
-            printf("Error: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
+            if (verbose) printf("Error: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
             status = NC_EFILE;
             goto prog_exit;
         }
@@ -1427,12 +1526,14 @@ prog_exit:
     }
     close(fd);
 
-    if (status == NC_NOERR) {
-        if (verbose)
+    if (verbose) {
+        if (status == NC_NOERR)
             printf("File \"%s\" is a valid NetCDF file.\n",filename);
+        else if (status == NC_EBADPAD)
+            printf("Error: padding fails to conform with CDF file specification\n");
+        else
+            printf("Error: %s\n",ncmpi_strerror(status));
     }
-    else
-        printf("Error: %s\n",ncmpi_strerror(status));
 
     MPI_Finalize();
 
