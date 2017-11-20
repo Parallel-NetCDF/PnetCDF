@@ -19,8 +19,8 @@ if [ ! -f ${VALIDATOR} ]; then
 fi
 
 for i in ${BAD_FILES} ; do
-    if [ ! -f $i ]; then
-       echo "Failed: input test file $i does not exit"
+    if [ ! -f ${srcdir}/$i ]; then
+       echo "Failed: input test file ${srcdir}/$i does not exit"
        exit 1
     fi
     ${TESTSEQRUN} ./${VALIDATOR} -q ${srcdir}/$i
