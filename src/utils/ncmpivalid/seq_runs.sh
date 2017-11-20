@@ -18,20 +18,17 @@ if [ ! -f ${VALIDATOR} ]; then
    exit 1
 fi
 
-for j in 0 1 ; do
-    export PNETCDF_SAFE_MODE=$j
-    for i in ${BAD_FILES} ; do
-        if [ ! -f $i ]; then
-           echo "Failed: input test file $i does not exit"
-           exit 1
-        fi
-        ${TESTSEQRUN} ./${VALIDATOR} -q $i
-        # capture exit status of VALIDATOR command
-        if [ $? -eq 0 ]; then
-           echo "Failed: ${VALIDATOR} -q $i"
-           exit 1
-        fi
-    done
+for i in ${BAD_FILES} ; do
+    if [ ! -f $i ]; then
+       echo "Failed: input test file $i does not exit"
+       exit 1
+    fi
+    ${TESTSEQRUN} ./${VALIDATOR} -q ${srcdir}/$i
+    # capture exit status of VALIDATOR command
+    if [ $? -eq 0 ]; then
+       echo "Failed: ${VALIDATOR} -q ${srcdir}/$i"
+       exit 1
+    fi
 done
 echo "SUCCESS: ${VALIDATOR} to detect files failing to conform CDF formats"
 
