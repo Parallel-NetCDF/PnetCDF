@@ -261,6 +261,12 @@ define(`FillDefaultValue', `ifelse(
 #endif
 #endif /* _SX */
 
+/* Note nada[] is used to fill the padding. However, CDF file format
+ * specifications require different contents between header and data sections.
+ * It says "Header padding uses null (\x00) bytes. In data, padding uses
+ * variable's fill value." Please be warned that PnetCDF has not implemented
+ * this for data section and still uses nadap[] for padding.
+ */
 static const char nada[X_ALIGN] = {0, 0, 0, 0};
 
 #ifndef WORDS_BIGENDIAN
