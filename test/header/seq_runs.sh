@@ -7,8 +7,10 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-for j in 0 1 ; do { \
-    export PNETCDF_SAFE_MODE=$$j ; \
-    for i in $TESTPROGRAMS; do ( \
-        $TESTSEQRUN ./$i $TESTOUTDIR/$i.nc ; \
-) ; done ; } ; done
+# header consistency tests are designed to run on more than one MPI process
+for j in 0 1 ; do
+    export PNETCDF_SAFE_MODE=$j
+    for i in ${TESTPROGRAMS} ; do
+        ${TESTSEQRUN} ./$i ${TESTOUTDIR}/$i.nc
+    done
+done
