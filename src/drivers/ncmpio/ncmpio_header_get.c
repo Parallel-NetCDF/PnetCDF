@@ -598,7 +598,29 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 
     /* handle the padding */
     if (padding > 0) {
-        /* CDF specification: Header padding uses null (\x00) bytes. */
+        /* CDF specification: Header padding uses null (\x00) bytes.
+	 * However, prior to version 4.5.0, NetCDF did not implement this
+	 * specification entirely. In particular, it has never enforced the
+	 * null-byte padding for attribute values (it has for others, such as
+	 * names of dimension, variables, and attributes.) It also appears that
+	 * files created by SciPy NetCDF module or NetCDF Java module, both
+	 * developed independent from NetCDF-C, also fail to respect this
+	 * padding specification.  This becomes a problem for PnetCDF to read
+	 * such netCDF files, because PnetCDF enforces the header padding from
+	 * its very first release.  The files violating the padding
+	 * specification will not be readable by PnetCDF of all releases prior
+	 * to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
+	 * opening such files.  Note if the sizes of all attribute values of
+	 * your files are aligned with 4-byte boundaries, then the files are
+	 * readable by PnetCDF.  In order to keep the files in question
+	 * readable by PnetCDF, checking for null-byte padding has been
+	 * disabled in 1.9.0. But, we keep this checking in ncmpivalid, a
+	 * utility program that can report whether a CDF file violates the file
+	 * format specification, including this null-byte padding. See r3516
+	 * and discussion in NetCDF Github issue
+	 * https://github.com/Unidata/netcdf-c/issues/657.
+         */
+#ifdef STRICT_FILE_FORMAT_COMPLIANCE
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
@@ -609,6 +631,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
             *namep = NULL;
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
+#endif
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
 
@@ -811,7 +834,29 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
 
     /* handle the padding */
     if (padding > 0) {
-        /* CDF specification: Header padding uses null (\x00) bytes. */
+        /* CDF specification: Header padding uses null (\x00) bytes.
+	 * However, prior to version 4.5.0, NetCDF did not implement this
+	 * specification entirely. In particular, it has never enforced the
+	 * null-byte padding for attribute values (it has for others, such as
+	 * names of dimension, variables, and attributes.) It also appears that
+	 * files created by SciPy NetCDF module or NetCDF Java module, both
+	 * developed independent from NetCDF-C, also fail to respect this
+	 * padding specification.  This becomes a problem for PnetCDF to read
+	 * such netCDF files, because PnetCDF enforces the header padding from
+	 * its very first release.  The files violating the padding
+	 * specification will not be readable by PnetCDF of all releases prior
+	 * to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
+	 * opening such files.  Note if the sizes of all attribute values of
+	 * your files are aligned with 4-byte boundaries, then the files are
+	 * readable by PnetCDF.  In order to keep the files in question
+	 * readable by PnetCDF, checking for null-byte padding has been
+	 * disabled in 1.9.0. But, we keep this checking in ncmpivalid, a
+	 * utility program that can report whether a CDF file violates the file
+	 * format specification, including this null-byte padding. See r3516
+	 * and discussion in NetCDF Github issue
+	 * https://github.com/Unidata/netcdf-c/issues/657.
+         */
+#ifdef STRICT_FILE_FORMAT_COMPLIANCE
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
@@ -820,6 +865,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
 #endif
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
+#endif
         gbp->pos = (void *)((char *)gbp->pos + padding);
     }
     return NC_NOERR;

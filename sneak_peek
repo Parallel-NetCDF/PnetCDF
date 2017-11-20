@@ -146,6 +146,28 @@ This is essentially a placeholder for the next release note ...
       inconsistency, so putting or deleting attribute _FillValue does not
       affect a variable's fill mode. See r2951.
 
+  o Conflict with NetCDF library
+    * Null-byte padding for attribute values in file header -- The classic CDF
+      specifications require header padding uses null (\x00) bytes. However,
+      prior to version 4.5.0, NetCDF did not implement this specification
+      entirely. In particular, it has never enforced the null-byte padding for
+      attribute values (it has for others, such as names of dimension,
+      variables, and attributes.) It also appears that files created by SciPy
+      NetCDF module or NetCDF Java module, both developed independent from
+      NetCDF-C, also fail to respect this padding specification.  This becomes
+      a problem for PnetCDF to read such netCDF files, because PnetCDF enforces
+      the header padding from its very first release.  The files violating the
+      padding specification will not be readable by PnetCDF of all releases
+      prior to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
+      opening such files.  Note if the sizes of all attribute values of your
+      files are aligned with 4-byte boundaries, then the files are readable by
+      PnetCDF.  In order to keep the files in question readable by PnetCDF,
+      checking for null-byte padding has been disabled in 1.9.0. But, we keep
+      this checking in ncmpivalid, a utility program that can report whether a
+      CDF file violates the file format specification, including this null-byte
+      padding. See r3528 for source codes changed and discussion in NetCDF
+      Github issue https://github.com/Unidata/netcdf-c/issues/657.
+
   o Issues related to MPI library vendors:
     * When using OpenMPI 2.0.0 through the latest 2.1.2 to build PnetCDF 1.8.1
       and prior, the following message may appear when running make check:
