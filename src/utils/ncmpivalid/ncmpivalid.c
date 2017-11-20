@@ -1518,16 +1518,8 @@ int main(int argc, char **argv)
     }
     snprintf(filename, 512, "%s", argv[0]);
 
-    /* check file write permission */
-    if (0 == access(filename, W_OK))
-        omode = O_RDWR;
-    else if (0 == access(filename, R_OK)) {
-        if (repair)
-            printf("Warning: repair is disabled as file %s is read-only\n",
-                   filename);
-        repair = 0;
-        omode = O_RDONLY;
-    }
+    if (repair) omode = O_RDWR;
+    else        omode = O_RDONLY;
 
     fd = open(filename, omode);
     if (fd == -1) {
