@@ -62,9 +62,10 @@ TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 TESTS_ENVIRONMENT += BAD_FILES="$(BAD_FILES)" ; export BAD_FILES;
 
-TESTS = seq_runs.sh
+TESTS = xfail_runs.sh
+XFAIL_TESTS = xfail_runs.sh
 
-EXTRA_DIST = seq_runs.sh $(BAD_FILES)
+EXTRA_DIST = xfail_runs.sh $(BAD_FILES)
 
 CLEANFILES = *.gcno
 
