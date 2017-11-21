@@ -530,7 +530,11 @@ nc_strerror(int ncerr1)
       case NC_EDISKLESS:
 	 return "NetCDF: Error in using diskless access";
       case NC_EMPI:
-         return "MPI operation failed";
+	 return "MPI operation failed";
+      case NC_ERCFILE:
+	 return "NetCDF: RC File Failure.";
+      case NC_ENULLPAD:
+	 return "NetCDF: File fails strict Null-Byte Header check.";
       default:
          return nc_unknown_err_msg;
    }
