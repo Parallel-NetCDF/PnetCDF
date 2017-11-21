@@ -6,23 +6,12 @@
 #
 # @configure_input@
 
-AM_CPPFLAGS  = -I${top_srcdir}/src/include
-AM_CPPFLAGS += -I$(top_srcdir)/src/drivers/ncmpio
-AM_CPPFLAGS += -I$(top_srcdir)/src/drivers/include
-AM_CPPFLAGS += -I$(top_builddir)/src/drivers/ncmpio
-AM_CPPFLAGS += -I$(top_builddir)/src/include
-AM_CPPFLAGS += -I$(top_builddir)/src/drivers/include
-
 if PNETCDF_DEBUG
-   AM_CPPFLAGS += -DPNETCDF_DEBUG
+   AM_CPPFLAGS = -DPNETCDF_DEBUG
 endif
 
 bin_PROGRAMS = ncmpivalid
 ncmpivalid_SOURCES = ncmpivalid.c
-ncmpivalid_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
-
-$(top_builddir)/src/libs/libpnetcdf.la:
-	set -e; cd $(top_builddir)/src/libs && $(MAKE) $(MFLAGS)
 
 dist_man_MANS = ncmpivalid.1
 
@@ -49,7 +38,19 @@ BAD_FILES = bad_magic.nc \
             bad_padding_value_gattr.nc5 \
             bad_padding_value_vattr.nc1 \
             bad_padding_value_vattr.nc2 \
-            bad_padding_value_vattr.nc5
+            bad_padding_value_vattr.nc5 \
+            bad_tag_dimension.nc1 \
+            bad_tag_dimension.nc2 \
+            bad_tag_dimension.nc5 \
+            bad_tag_gattr.nc1 \
+            bad_tag_gattr.nc2 \
+            bad_tag_gattr.nc5 \
+            bad_tag_vattr.nc1 \
+            bad_tag_vattr.nc2 \
+            bad_tag_vattr.nc5 \
+            bad_tag_variable.nc1 \
+            bad_tag_variable.nc2 \
+            bad_tag_variable.nc5
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -70,6 +71,7 @@ CLEANFILES = *.gcno
 tests-local: all
 
 dist-hook:
+	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncmpivalid.c
 	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncmpivalid.1
 	$(SED_I) -e "s|PNETCDF_RELEASE_DATE2|`date '+%Y-%m-%d'`|g"   $(distdir)/ncmpivalid.1
 	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%e %b %Y'`|g"    $(distdir)/ncmpivalid.1
