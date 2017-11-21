@@ -393,8 +393,8 @@ inconsistency of any kind start at -250.
    necessary.
 3. Again, check Fortran error codes defined as parameters in
      src/libf/pnetcdf.inc.in            or src/binding/f77/pnetcdf.inc.in
-     src/libf90/nf90_constants.f90      or src/binding/f90/nf90_constants.f90
-     src/libf90/nfmpi_constants.f90.in  or src/binding/f90/nfmpi_constants.f90.in
+     src/libf90/nf90_constants.f90      or src/binding/f90/nf90_constants.fh
+     src/libf90/nfmpi_constants.f90.in  or src/binding/f90/nfmpi_constants.fh.in
 4. The error message should be kept less than 80 characters, because this is
    the string length used in Fortran API nfmpi_strerror().
 
