@@ -222,8 +222,10 @@
       NF_ENOTBUILT      = -128, & ! Attempt to use feature that was not turned on when netCDF was built.
       NF_EDISKLESS      = -129, & ! Error in using diskless  access.
       NF_ECANTEXTEND    = -130, & ! Attempt to extend dataset during ind. I/O operation.
-      NF_EMPI           = -131    ! MPI operation failed.
-
+      NF_EMPI           = -131, & ! MPI operation failed.
+      NF_EFILTER        = -132, & ! Filter operation failed.
+      NF_ERCFILE        = -133, & ! RC file failure
+      NF_ENULLPAD       = -134    ! Header Bytes not Null-Byte padded
 
 ! PnetCDF error codes start here
       integer, parameter, public :: &

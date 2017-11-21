@@ -326,6 +326,9 @@
       integer NF_EDISKLESS
       integer NF_ECANTEXTEND
       integer NF_EMPI
+      integer NF_EFILTER
+      integer NF_ERCFILE
+      integer NF_ENULLPAD
 
       PARAMETER (NF_EHDFERR      = -101)  ! Error at HDF5 layer. 
       PARAMETER (NF_ECANTREAD    = -102)  ! Can't read. 
@@ -358,6 +361,9 @@
       PARAMETER (NF_EDISKLESS    = -129)  ! Error in using diskless  access.
       PARAMETER (NF_ECANTEXTEND  = -130)  ! Attempt to extend dataset during ind. I/O operation.
       PARAMETER (NF_EMPI         = -131)  ! MPI operation failed.
+      PARAMETER (NF_EFILTER      = -132)  ! Filter operation failed.
+      PARAMETER (NF_ERCFILE      = -133)  ! RC file failure
+      PARAMETER (NF_ENULLPAD     = -134)  ! Header Bytes not Null-Byte padded
 
 !
 ! PnetCDF error codes start here

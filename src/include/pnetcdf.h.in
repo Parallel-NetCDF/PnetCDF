@@ -478,7 +478,10 @@ by the desired type. */
 #define NC_ECANTEXTEND   (-130)    /**< Attempt to extend dataset during ind. I/O operation. */
 #define NC_EMPI          (-131)    /**< MPI operation failed. */
 
-#define NC4_LAST_ERROR   (-131)
+#define NC_EFILTER       (-132)    /**< Filter operation failed. */
+#define NC_ERCFILE       (-133)    /**< RC file failure */
+#define NC_ENULLPAD      (-134)    /**< Header Bytes not Null-Byte padded */
+#define NC4_LAST_ERROR   (-135)
 
 /* This is used in netCDF-4 files for dimensions without coordinate
  * vars. */
@@ -528,6 +531,10 @@ by the desired type. */
 /* CDF-5 format, with NC_64BIT_DATA. */
 #ifndef NC_FORMAT_CDF5
 #define NC_FORMAT_CDF5  5
+#endif
+
+#ifndef NC_ENULLPAD
+#define NC_ENULLPAD      (-134)    /**< Header Bytes not Null-Byte padded */
 #endif
 
 /* PnetCDF Error Codes: */
