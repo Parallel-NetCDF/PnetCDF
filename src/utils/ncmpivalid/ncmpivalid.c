@@ -108,7 +108,6 @@ typedef struct {
 } NC_dim;
 
 typedef struct NC_dimarray {
-    int      nalloc;    /* number allocated >= ndefined */
     int      ndefined;  /* number of defined dimensions */
     NC_dim **value;
 } NC_dimarray;
@@ -123,7 +122,6 @@ typedef struct {
 } NC_attr;
 
 typedef struct NC_attrarray {
-    int       nalloc;    /* number allocated >= ndefined */
     int       ndefined;  /* number of defined attributes */
     NC_attr **value;
 } NC_attrarray;
@@ -145,7 +143,6 @@ typedef struct {
 } NC_var;
 
 typedef struct NC_vararray {
-    int      nalloc;      /* number allocated >= ndefined */
     int      ndefined;    /* number of defined variables */
     int      num_rec_vars;/* number of defined record variables */
     NC_var **value;
@@ -263,15 +260,15 @@ free_NC_dimarray(NC_dimarray *ncap)
     int i;
 
     assert(ncap != NULL);
-    if (ncap->nalloc == 0) return;
 
-    assert(ncap->value != NULL);
+    if (ncap->value == NULL) return;
+
     for (i=0; i<ncap->ndefined; i++)
-        free_NC_dim(ncap->value[i]);
+        if (ncap->value[i] != NULL)
+            free_NC_dim(ncap->value[i]);
 
     free(ncap->value);
     ncap->value    = NULL;
-    ncap->nalloc   = 0;
     ncap->ndefined = 0;
 }
 
@@ -280,6 +277,7 @@ free_NC_attr(NC_attr *attrp)
 {
     if (attrp == NULL) return;
     free(attrp->name);
+    if (attrp->xvalue != NULL) free(attrp->xvalue);
     free(attrp);
 }
 
@@ -289,14 +287,13 @@ free_NC_attrarray(NC_attrarray *ncap)
     int i;
 
     assert(ncap != NULL);
-    if (ncap->nalloc == 0) return;
-    assert(ncap->value != NULL);
+    if (ncap->value == NULL) return;
+
     for (i=0; i<ncap->ndefined; i++)
         free_NC_attr(ncap->value[i]);
 
     free(ncap->value);
     ncap->value    = NULL;
-    ncap->nalloc   = 0;
     ncap->ndefined = 0;
 }
 
@@ -315,9 +312,8 @@ free_NC_vararray(NC_vararray *ncap)
     int i;
 
     assert(ncap != NULL);
-    if (ncap->nalloc == 0) return;
+    if (ncap->value == NULL) return;
 
-    assert(ncap->value != NULL);
     for (i=0; i<ncap->ndefined; i++) {
         if (ncap->value[i] != NULL)
             free_NC_var(ncap->value[i]);
@@ -325,7 +321,6 @@ free_NC_vararray(NC_vararray *ncap)
 
     free(ncap->value);
     ncap->value    = NULL;
-    ncap->nalloc   = 0;
     ncap->ndefined = 0;
 }
 
@@ -1940,7 +1935,7 @@ val_get_NC(int fd, NC *ncp)
 {
     int err, status=NC_NOERR;
     bufferinfo getbuf;
-    char magic[sizeof(ncmagic)];
+    char magic[5];
     size_t err_addr, pos_addr, base_addr;
 
     /* Initialize the get buffer that stores the header read from the file */
@@ -1958,10 +1953,11 @@ val_get_NC(int fd, NC *ncp)
     if (status != NC_NOERR) goto fn_exit;
   
     /* First get the file format information, magic */
+    magic[4] = '\0';
     memcpy(magic, getbuf.base, 4);
     getbuf.pos = (char*)getbuf.pos + 4;
 
-    if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
+    if (memcmp(magic, ncmagic, 3) != 0) {
         if (verbose) printf("Error: Unknow file signature\n");
         if (verbose) printf("\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
         status = NC_ENOTNC;
@@ -1969,13 +1965,13 @@ val_get_NC(int fd, NC *ncp)
     }
 
     /* check version number in last byte of magic */
-    if (magic[sizeof(ncmagic)-1] == 0x1) {
+    if (magic[3] == 0x1) {
         getbuf.version = 1;
         ncp->format = 1;
-    } else if (magic[sizeof(ncmagic)-1] == 0x2) {
+    } else if (magic[3] == 0x2) {
         getbuf.version = 2;
         ncp->format = 2;
-    } else if (magic[sizeof(ncmagic)-1] == 0x5) {
+    } else if (magic[3] == 0x5) {
         getbuf.version = 5;
         ncp->format = 5;
     } else {
@@ -2193,9 +2189,9 @@ int main(int argc, char **argv)
 
 prog_exit:
     if (ncp != NULL) {
-        if (ncp->dims.value  != NULL) free(ncp->dims.value);
-        if (ncp->attrs.value != NULL) free(ncp->attrs.value);
-        if (ncp->vars.value  != NULL) free(ncp->vars.value);
+        free_NC_dimarray(&ncp->dims);
+        free_NC_attrarray(&ncp->attrs);
+        free_NC_vararray(&ncp->vars);
         free(ncp);
     }
     close(fd);
