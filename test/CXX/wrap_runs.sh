@@ -11,8 +11,7 @@ VALIDATOR=../../src/utils/ncmpivalid/ncmpivalid
 
 for j in 0 1 ; do
     export PNETCDF_SAFE_MODE=$j
-    for i in ${TESTPROGRAMS} ; do
-        ${TESTSEQRUN} ./$i            ${TESTOUTDIR}/$i.nc
-        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
-    done
+    echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+    ${TESTSEQRUN} ./$1            ${TESTOUTDIR}/$i.nc
+    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
 done
