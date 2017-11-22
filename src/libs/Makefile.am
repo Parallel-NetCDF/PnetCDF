@@ -66,5 +66,7 @@ endif
 ../binding/f90/libf90.la:
 	set -e; cd ../binding/f90 && $(MAKE) $(MFLAGS)
 
+CLEANFILES = a.out
+
 tests-local: all
 

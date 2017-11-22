@@ -34,7 +34,7 @@ check_PROGRAMS = collective_write \
 
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
-CLEANFILES = core core.* $(NC_FILES)
+CLEANFILES = core core.* $(NC_FILES) a.out
 
 TESTMPIRUN3  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/3/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
