@@ -629,7 +629,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 #endif
             NCI_Free(*namep);
             *namep = NULL;
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
+            DEBUG_RETURN_ERROR(NC_ENULLPAD)
         }
 #endif
         gbp->pos = (void *)((char *)gbp->pos + padding);
@@ -863,7 +863,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
 #ifdef PNETCDF_DEBUG
             fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
+            DEBUG_RETURN_ERROR(NC_ENULLPAD)
         }
 #endif
         gbp->pos = (void *)((char *)gbp->pos + padding);
