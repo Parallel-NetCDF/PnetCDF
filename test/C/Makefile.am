@@ -30,7 +30,7 @@ TESTS_ENVIRONMENT  = TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = $(check_PROGRAMS)
-LOG_COMPILER = wrap_runs.sh
+LOG_COMPILER = $(srcdir)/wrap_runs.sh
 
 # Dependency: pres_temp_4D_rd reads the output file from pres_temp_4D_wr.
 # To support parallel "make -jN check", we add dependencies below and automake

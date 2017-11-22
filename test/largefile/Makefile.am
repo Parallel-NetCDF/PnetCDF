@@ -54,7 +54,7 @@ CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 
 TESTS =
 TEST_EXTENSIONS = .sh
-LOG_COMPILER = wrap_runs.sh
+LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
 if RUN_LARGE_FILE_TEST
