@@ -232,7 +232,7 @@ get_uint64(bufferinfo *gbp) {
     unsigned long long tmp;
     memcpy(&tmp, gbp->pos, 8);
     if (is_little_endian) swap8b(&tmp);
-    gbp->pos = (char*)gbp->pos + 8;
+    gbp->pos = (char*)gbp->pos + 8;  /* advance gbp->pos 8 bytes */
     return tmp;
 }
 
@@ -242,7 +242,7 @@ get_uint32(bufferinfo *gbp) {
     unsigned int tmp;
     memcpy(&tmp, gbp->pos, 4);
     if (is_little_endian) swap4b(&tmp);
-    gbp->pos = (char*)gbp->pos + 4;
+    gbp->pos = (char*)gbp->pos + 4;  /* advance gbp->pos 4 bytes */
     return tmp;
 }
 

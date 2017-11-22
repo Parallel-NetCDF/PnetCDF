@@ -306,10 +306,10 @@ This is essentially a placeholder for the next release note ...
   o New utility program
     * Utility program ncmpivalid has been renamed to ncvalidator. It is now
       running in serial and thus no longer requires an MPI compiler to build.
-      This utility program can be used to validate a classic CDF files, report
-      the locations that fail to comply with CDF formats, and repair a file
-      whose header fails to use null bytes for paddings, when the command-line
-      option "-x" is used.
+      This utility program can be used to validate a classic CDF file, and
+      report the locations that fail to comply with CDF formats. It also
+      repairs a file whose header fails to use null bytes for paddings, when
+      the command-line option "-x" is used.
 
   o New example programs
     * none
