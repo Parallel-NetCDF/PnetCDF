@@ -38,6 +38,11 @@ int check_num_vars(int  ncid,
 {
     int err, nerrs=0, nvars, num_rec_vars, num_fix_vars;
 
+    /* NULL argument test */
+    err = ncmpi_inq_nvars(ncid, NULL); CHECK_ERR
+    err = ncmpi_inq_num_rec_vars(ncid, NULL); CHECK_ERR
+    err = ncmpi_inq_num_fix_vars(ncid, NULL); CHECK_ERR
+
     err = ncmpi_inq_nvars(ncid, &nvars); CHECK_ERR
     err = ncmpi_inq_num_rec_vars(ncid, &num_rec_vars); CHECK_ERR
     err = ncmpi_inq_num_fix_vars(ncid, &num_fix_vars); CHECK_ERR
@@ -111,6 +116,12 @@ int main(int argc, char** argv) {
     nerrs += check_num_vars(ncid, 7, 4, 3);
 
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    /* NULL argument test */
+    err = ncmpi_inq_ndims(ncid, NULL); CHECK_ERR
+    err = ncmpi_inq_nvars(ncid, NULL); CHECK_ERR
+    err = ncmpi_inq_natts(ncid, NULL); CHECK_ERR
+    err = ncmpi_inq_unlimdim(ncid, NULL); CHECK_ERR
 
     nerrs += check_num_vars(ncid, 7, 4, 3);
 

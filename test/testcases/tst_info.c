@@ -90,6 +90,11 @@ int main(int argc, char** argv) {
     /* calling ncmpi_enddef() to actually create the file */
     err = ncmpi_enddef(ncid2); CHECK_ERR
 
+    /* NULL argument test */
+    err = ncmpi_inq_header_size(ncid2, NULL); CHECK_ERR
+    err = ncmpi_inq_header_extent(ncid2, NULL); CHECK_ERR
+    err = ncmpi_inq_file_info(ncid2, NULL); CHECK_ERR
+
     err = ncmpi_inq_header_size(ncid2, &header_size); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid2, &header_extent); CHECK_ERR
 

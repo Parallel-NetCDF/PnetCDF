@@ -101,8 +101,11 @@ check_num_pending_reqs(int ncid, int expected, int lineno)
 /* check if PnetCDF can reports expected number of pending requests */
 {
     int err, nerrs=0, n_pendings;
-    err = ncmpi_inq_nreqs(ncid, &n_pendings);
-    CHECK_ERR
+
+    /* NULL argument test */
+    err = ncmpi_inq_nreqs(ncid, NULL); EXP_ERR(NC_EINVAL)
+
+    err = ncmpi_inq_nreqs(ncid, &n_pendings); CHECK_ERR
     if (n_pendings != expected) {
         printf("Error at line %d in %s: expect %d pending requests but got %d\n",
                lineno, __FILE__, expected, n_pendings);
@@ -124,6 +127,10 @@ int check_attached_buffer_usage(int ncid,
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank >= 4) return nerrs;
 
+    /* NULL argument test */
+    err = ncmpi_inq_buffer_size(ncid, NULL); EXP_ERR(NC_EINVAL)
+    err = ncmpi_inq_buffer_usage(ncid, NULL); EXP_ERR(NC_EINVAL)
+
     err = ncmpi_inq_buffer_size(ncid, &buf_size);
     CHECK_ERR
     if (expected_size != buf_size) {
@@ -132,8 +139,7 @@ int check_attached_buffer_usage(int ncid,
         nerrs++;
     }
 
-    err = ncmpi_inq_buffer_usage(ncid, &usage);
-    CHECK_ERR
+    err = ncmpi_inq_buffer_usage(ncid, &usage); CHECK_ERR
     if (expected_usage != usage) {
         printf("Error at line %d in %s: expect buffer usage %lld but got %lld\n",
                lineno, __FILE__,expected_usage, usage);
