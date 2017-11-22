@@ -36,7 +36,7 @@ LOG_COMPILER = $(srcdir)/wrap_runs.sh
 EXTRA_DIST = wrap_runs.sh
 
 CLEANFILES = $(TESTOUTDIR)/nctst.nc $(TESTOUTDIR)/test_classic.nc \
-             core core.* *.gcda *.gcno *.gcov gmon.out
+             core core.* *.gcda *.gcno *.gcov gmon.out a.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
