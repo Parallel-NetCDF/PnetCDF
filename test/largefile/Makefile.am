@@ -43,7 +43,7 @@ endif
 
 check_PROGRAMS = $(TESTPROGRAMS)
 
-EXTRA_DIST = seq_runs.sh
+EXTRA_DIST = wrap_runs.sh
 
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
@@ -53,9 +53,12 @@ CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 TESTS =
+TEST_EXTENSIONS = .sh
+LOG_COMPILER = wrap_runs.sh
+SH_LOG_COMPILER =
 
 if RUN_LARGE_FILE_TEST
-TESTS += seq_runs.sh
+TESTS += $(check_PROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
