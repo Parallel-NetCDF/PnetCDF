@@ -7,7 +7,7 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-VALIDATOR=../../src/utils/ncmpivalid/ncmpivalid
+VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
 rm -f ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
 ${TESTSEQRUN} ./nf_test -c    -d ${TESTOUTDIR}

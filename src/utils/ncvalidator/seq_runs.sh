@@ -8,7 +8,7 @@
 # set -e
 # Cannot use "set -e" here, as the tests here all return errors.
 
-VALIDATOR=ncmpivalid
+VALIDATOR=ncvalidator
 if [ -z "${VALIDATOR}" ]; then
    echo "Failed: variable VALIDATOR id not defined"
    exit 1

@@ -4,7 +4,7 @@
 # See COPYRIGHT notice in top-level directory.
 #
 
-VALIDATOR=../../src/utils/ncmpivalid/ncmpivalid
+VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
 for i in ${BAD_FILES} ; do
     ${TESTSEQRUN} ./${VALIDATOR} -q ${srcdir}/$i
