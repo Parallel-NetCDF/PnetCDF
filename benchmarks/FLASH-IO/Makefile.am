@@ -34,7 +34,7 @@ RUN_QUIETLY = -q
 endif
 check_PROGRAMS = flash_benchmark_io
 
-TESTS = $(check_PROGRAMS)
+TESTS =
 
 flash_benchmark_io_SOURCES = get_mfluid_property.F90 \
                              flash_release.F90 \
