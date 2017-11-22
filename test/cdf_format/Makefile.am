@@ -39,7 +39,7 @@ TESTS_ENVIRONMENT += BAD_FILES="$(BAD_FILES)" ; export BAD_FILES;
 
 TESTS = cdf_type dim_cdf12 seq_runs.sh xfail_runs.sh
 TEST_EXTENSIONS = .sh
-LOG_COMPILER = wrap_runs.sh
+LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
 BAD_FILES = bad_begin.nc5 \
