@@ -52,7 +52,7 @@ do
    fi
 done
 
-binfiles="ncmpidiff ncmpidump ncmpigen ncmpivalid ncoffsets pnetcdf-config pnetcdf_version"
+binfiles="ncmpidiff ncmpidump ncmpigen ncvalidator ncoffsets pnetcdf-config pnetcdf_version"
 for f in $binfiles
 do
    installfile=$installdir/bin/$f
@@ -62,7 +62,7 @@ do
    fi
 done
 
-man1files="ncmpidiff.1 ncmpigen.1 ncoffsets.1 ncmpidump.1 ncmpivalid.1 pnetcdf_version.1"
+man1files="ncmpidiff.1 ncmpigen.1 ncoffsets.1 ncmpidump.1 ncvalidator.1 pnetcdf_version.1"
 for f in $man1files
 do
    installfile=$installdir/share/man/man1/$f
