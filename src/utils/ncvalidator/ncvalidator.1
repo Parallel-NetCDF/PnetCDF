@@ -2,13 +2,13 @@
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH ncmpivalid 1 "PnetCDF PNETCDF_RELEASE_VERSION" "Printed: \n(yr-\n(mo-\n(dy" "PnetCDF utilities"
+.TH ncvalidator 1 "PnetCDF PNETCDF_RELEASE_VERSION" "Printed: \n(yr-\n(mo-\n(dy" "PnetCDF utilities"
 .SH NAME
-ncmpivalid \- validates a netCDF file in parallel
+ncvalidator \- validates a classic netCDF file against CDF file formats
 .SH SYNOPSIS
 .ft B
 .HP
-mpiexec -n 4 ncmpivalid
+ncvalidator
 .nh
 \%[-q]
 \%[-h]
@@ -16,7 +16,7 @@ mpiexec -n 4 ncmpivalid
 .hy
 .ft
 .SH DESCRIPTION
-\fBncmpivalid\fP checks a netCDF file whether it conforms the CDF file format.
+\fBncvalidator\fP checks a netCDF file whether it conforms the classic CDF file formats.
 If the input file is a valid NetCDF file, then a message of successful validation
 is printed on command-line output, for example,
 File "testfile.nc" is a valid NetCDF file.

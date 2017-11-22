@@ -778,7 +778,7 @@ visit https://lists.mcs.anl.gov/mailman/listinfo/parallel-netcdf
 .BR ncmpidump (1),
 .BR ncmpigen (1),
 .BR ncmpidiff (1),
-.BR ncmpivalid (1),
+.BR ncvalidator (1),
 .BR pnetcdf (3f90).
 .SH DATE
 PNETCDF_RELEASE_DATE

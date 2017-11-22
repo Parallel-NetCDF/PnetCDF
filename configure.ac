@@ -1427,7 +1427,7 @@ AC_CONFIG_FILES(Makefile \
                 src/utils/Makefile \
                 src/utils/ncoffsets/Makefile \
                 src/utils/pnetcdf_version/Makefile \
-                src/utils/ncmpivalid/Makefile \
+                src/utils/ncvalidator/Makefile \
                 src/utils/ncmpidiff/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpigen/Makefile \

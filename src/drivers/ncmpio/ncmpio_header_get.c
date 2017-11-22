@@ -614,7 +614,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 	 * your files are aligned with 4-byte boundaries, then the files are
 	 * readable by PnetCDF.  In order to keep the files in question
 	 * readable by PnetCDF, checking for null-byte padding has been
-	 * disabled in 1.9.0. But, we keep this checking in ncmpivalid, a
+	 * disabled in 1.9.0. But, we keep this checking in ncvalidator, a
 	 * utility program that can report whether a CDF file violates the file
 	 * format specification, including this null-byte padding. See r3516
 	 * and discussion in NetCDF Github issue
@@ -850,7 +850,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
 	 * your files are aligned with 4-byte boundaries, then the files are
 	 * readable by PnetCDF.  In order to keep the files in question
 	 * readable by PnetCDF, checking for null-byte padding has been
-	 * disabled in 1.9.0. But, we keep this checking in ncmpivalid, a
+	 * disabled in 1.9.0. But, we keep this checking in ncvalidator, a
 	 * utility program that can report whether a CDF file violates the file
 	 * format specification, including this null-byte padding. See r3516
 	 * and discussion in NetCDF Github issue
