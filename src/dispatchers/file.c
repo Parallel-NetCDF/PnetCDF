@@ -854,7 +854,7 @@ ncmpi_inq_format(int  ncid,
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    *formatp = pncp->format;
+    if (formatp != NULL) *formatp = pncp->format;
 
     return NC_NOERR;
 }
@@ -871,6 +871,8 @@ ncmpi_inq_file_format(const char *filename,
     char signature[8];
     int fd;
     ssize_t rlen;
+
+    if (formatp == NULL) return NC_NOERR;
 
     *formatp = NC_FORMAT_UNKNOWN;
 
@@ -933,6 +935,8 @@ ncmpi_inq_version(int ncid, int *nc_mode)
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
+
+    if (nc_mode == NULL) return NC_NOERR;
 
     if (pncp->format == 5) {
         *nc_mode = NC_64BIT_DATA;
@@ -1003,7 +1007,7 @@ ncmpi_inq_unlimdim(int  ncid,
 int
 ncmpi_inq_path(int   ncid,
                int  *pathlen,/* Ignored if NULL */
-               char *path)   /*  must already be allocated. Ignored if NULL */
+               char *path)   /* must have already been allocated. Ignored if NULL */
 {        
     int err;
     PNC *pncp;
@@ -1042,6 +1046,8 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
+    if (num_fix_varsp == NULL) return NC_NOERR;
+
     /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, num_fix_varsp, NULL,
                                   NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1059,6 +1065,8 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
+
+    if (num_rec_varsp == NULL) return NC_NOERR;
 
     /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, num_rec_varsp,
@@ -1096,6 +1104,8 @@ ncmpi_inq_header_size(int ncid, MPI_Offset *header_size)
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
+    if (header_size == NULL) return NC_NOERR;
+
     /* calling the subroutine that implements ncmpi_inq_header_size() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                   NULL, NULL, header_size, NULL, NULL, NULL,
@@ -1113,6 +1123,8 @@ ncmpi_inq_header_extent(int ncid, MPI_Offset *header_extent)
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
+
+    if (header_extent == NULL) return NC_NOERR;
 
     /* calling the subroutine that implements ncmpi_inq_header_extent() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
@@ -1132,6 +1144,8 @@ ncmpi_inq_recsize(int ncid, MPI_Offset *recsize)
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
+    if (recsize == NULL) return NC_NOERR;
+
     /* calling the subroutine that implements ncmpi_inq_recsize() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                   NULL, NULL, NULL, NULL, recsize, NULL,
@@ -1149,6 +1163,8 @@ ncmpi_inq_put_size(int ncid, MPI_Offset *put_size)
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
+
+    if (put_size == NULL) return NC_NOERR;
 
     /* calling the subroutine that implements ncmpi_inq_put_size() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
@@ -1168,6 +1184,8 @@ ncmpi_inq_get_size(int ncid, MPI_Offset *get_size)
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
+    if (get_size == NULL) return NC_NOERR;
+
     /* calling the subroutine that implements ncmpi_inq_get_size() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
                                   NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1185,6 +1203,8 @@ ncmpi_inq_file_info(int ncid, MPI_Info *info)
     /* check if ncid is valid */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
+
+    if (info == NULL) return NC_NOERR;
 
     /* calling the subroutine that implements ncmpi_inq_file_info() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
@@ -1293,6 +1313,7 @@ ncmpi_inq_default_format(int *formatp)
     if (formatp == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     *formatp = ncmpi_default_create_format;
+
     return NC_NOERR;
 }
 
