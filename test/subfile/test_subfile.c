@@ -388,6 +388,10 @@ end:
     MPI_Offset malloc_size, sum_size;
     int nfiles, ncids[10];
 
+    /* NULL argument test */
+    err = ncmpi_inq_files_opened(NULL, NULL);
+    EXP_ERR(NC_EINVAL)
+
     /* check if there are files still left opened */
     err = ncmpi_inq_files_opened(&nfiles, ncids);
     CHECK_ERR

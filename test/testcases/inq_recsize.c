@@ -85,6 +85,9 @@ int main(int argc, char** argv) {
 
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    /* NULL argument test */
+    err = ncmpi_inq_recsize(ncid, NULL); CHECK_ERR
+
     err = ncmpi_inq_recsize(ncid, &recsize); CHECK_ERR
     if (expected_recsize != recsize) {
         printf("Error at line %d in %s: expecting record size %lld but got %lld\n",

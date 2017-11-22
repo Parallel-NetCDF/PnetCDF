@@ -254,6 +254,10 @@ int main(int argc, char **argv) {
     /* initialize the contents of the array */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = rank*100 + j*10 + i;
 
+    /* NULL argument test */
+    err = ncmpi_inq_put_size(ncid, NULL); CHECK_ERR
+    err = ncmpi_inq_get_size(ncid, NULL); CHECK_ERR
+
     /* get header size and put size by far */
     err = ncmpi_inq_header_size(ncid, &header_size); CHECK_ERR
     err = ncmpi_inq_put_size(ncid, &put_size); CHECK_ERR
