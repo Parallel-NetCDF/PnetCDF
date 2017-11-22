@@ -9,14 +9,6 @@ set -e
 
 VALIDATOR=../../src/utils/ncmpivalid/ncmpivalid
 
-for j in 0 1 ; do
-    export PNETCDF_SAFE_MODE=$j
-    for i in ${TESTPROGRAMS}; do
-        ${TESTSEQRUN} ./$i            ${TESTOUTDIR}/$i.nc
-        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
-    done
-done
-
 ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf1
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf2

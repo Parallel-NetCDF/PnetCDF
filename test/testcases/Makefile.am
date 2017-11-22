@@ -120,7 +120,10 @@ TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-TESTS = seq_runs.sh
+TESTS = $(TESTPROGRAMS) seq_runs.sh
+TEST_EXTENSIONS = .sh
+LOG_COMPILER = wrap_runs.sh
+SH_LOG_COMPILER =
 
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
@@ -131,7 +134,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/put_all_kinds.nc.cdf5 \
              $(NC_FILES)
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump wrap_runs.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
