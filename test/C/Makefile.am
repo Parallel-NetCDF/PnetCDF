@@ -30,7 +30,7 @@ TESTS_ENVIRONMENT  = TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = $(check_PROGRAMS)
-LOG_COMPILER = seq_runs.sh
+LOG_COMPILER = wrap_runs.sh
 
 # Dependency: pres_temp_4D_rd reads the output file from pres_temp_4D_wr.
 # To support parallel "make -jN check", we add dependencies below and automake
@@ -38,7 +38,7 @@ LOG_COMPILER = seq_runs.sh
 # listed in TEST_EXTENSIONS. $(EXEEXT) are appended to work around.
 pres_temp_4D_rd$(EXEEXT).log: pres_temp_4D_wr$(EXEEXT).log
 
-EXTRA_DIST = seq_runs.sh
+EXTRA_DIST = wrap_runs.sh
 
 CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
