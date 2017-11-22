@@ -9,7 +9,7 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-VALIDATOR=../../src/utils/ncmpivalid/ncmpivalid
+VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
 ${TESTSEQRUN} ./mcoll_perf ${TESTOUTDIR}/testfile
 # seq is not available on FreeBSD otherwise we can use: for j in `seq 0 9`

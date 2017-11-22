@@ -10,10 +10,10 @@ if PNETCDF_DEBUG
    AM_CPPFLAGS = -DPNETCDF_DEBUG
 endif
 
-bin_PROGRAMS = ncmpivalid
-ncmpivalid_SOURCES = ncmpivalid.c
+bin_PROGRAMS = ncvalidator
+ncvalidator_SOURCES = ncvalidator.c
 
-dist_man_MANS = ncmpivalid.1
+dist_man_MANS = ncvalidator.1
 
 check_PROGRAMS = $(bin_PROGRAMS)
 
@@ -72,8 +72,8 @@ CLEANFILES = *.gcno
 tests-local: all
 
 dist-hook:
-	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncmpivalid.c
-	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncmpivalid.1
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE2|`date '+%Y-%m-%d'`|g"   $(distdir)/ncmpivalid.1
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%e %b %Y'`|g"    $(distdir)/ncmpivalid.1
+	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncvalidator.c
+	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncvalidator.1
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE2|`date '+%Y-%m-%d'`|g"   $(distdir)/ncvalidator.1
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%e %b %Y'`|g"    $(distdir)/ncvalidator.1
 

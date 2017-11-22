@@ -8,7 +8,7 @@
 # set -e
 # Cannot use "set -e" here, as the tests here all return errors.
 
-VALIDATOR=ncmpivalid
+VALIDATOR=ncvalidator
 
 for i in ${BAD_FILES} ; do
     ${TESTSEQRUN} ./${VALIDATOR} -q ${srcdir}/$i

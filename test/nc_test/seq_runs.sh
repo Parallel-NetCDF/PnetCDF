@@ -7,7 +7,7 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-VALIDATOR=../../src/utils/ncmpivalid/ncmpivalid
+VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
 # tst_nofill.c creates two files: tst_nofill.nc.fill and tst_nofill.nc.nofill
 ${TESTSEQRUN} ./tst_nofill    ${TESTOUTDIR}/tst_nofill.nc

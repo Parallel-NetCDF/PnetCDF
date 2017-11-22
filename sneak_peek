@@ -163,7 +163,7 @@ This is essentially a placeholder for the next release note ...
       files are aligned with 4-byte boundaries, then the files are readable by
       PnetCDF.  In order to keep the files in question readable by PnetCDF,
       checking for null-byte padding has been disabled in 1.9.0. But, we keep
-      this checking in ncmpivalid, a utility program that can report whether a
+      this checking in ncvalidator, a utility program that can report whether a
       CDF file violates the file format specification, including this null-byte
       padding. See r3528 for source codes changed and discussion in NetCDF
       Github issue https://github.com/Unidata/netcdf-c/issues/657.
@@ -221,7 +221,7 @@ This is essentially a placeholder for the next release note ...
     * Update UTF8 encoding utility to use utf8proc library version 2.1.0 from
       the Julia Language project, https://github.com/JuliaLang/utf8proc
       License https://github.com/JuliaLang/utf8proc/blob/master/LICENSE.md
-    * Add quiet mode command-line option "-q" to utility program ncmpivalid.
+    * Add quiet mode command-line option "-q" to utility program ncvalidator.
     * Add an internal check for whether the file starting offsets of all
       variables are in an increasing order as the variables defines. See r3369.
     * All build recipes (README files) have been moved to folder doc. Most of
@@ -304,7 +304,12 @@ This is essentially a placeholder for the next release note ...
       ulonglong             ncmpi_put_var_ulonglong MPI_UNSIGNED_LONG_LONG
 
   o New utility program
-    * none
+    * Utility program ncmpivalid has been renamed to ncvalidator. It is now
+      running in serial and thus no longer requires an MPI compiler to build.
+      This utility program can be used to validate a classic CDF files, report
+      the locations that fail to comply with CDF formats, and repair a file
+      whose header fails to use null bytes for paddings, when the command-line
+      option "-x" is used.
 
   o New example programs
     * none
