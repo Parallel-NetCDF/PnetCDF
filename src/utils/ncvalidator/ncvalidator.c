@@ -31,7 +31,6 @@
 #endif
 #endif
 
-static int is_little_endian;
 static int verbose;
 static int repair;
 static const char nada[4] = {0, 0, 0, 0};
@@ -164,6 +163,7 @@ typedef struct NC {
 } NC;
 
 typedef struct bufferinfo {
+    int        is_little_endian;
     int        fd;
     off_t      offset;   /* current read/write offset in the file */
     int        version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
@@ -231,7 +231,7 @@ get_uint64(bufferinfo *gbp) {
     /* retrieve a 64bit unisgned integer and return it as unsigned long long */
     unsigned long long tmp;
     memcpy(&tmp, gbp->pos, 8);
-    if (is_little_endian) swap8b(&tmp);
+    if (gbp->is_little_endian) swap8b(&tmp);
     gbp->pos = (char*)gbp->pos + 8;  /* advance gbp->pos 8 bytes */
     return tmp;
 }
@@ -241,7 +241,7 @@ get_uint32(bufferinfo *gbp) {
     /* retrieve a 32bit unisgned integer and return it as unsigned int */
     unsigned int tmp;
     memcpy(&tmp, gbp->pos, 4);
-    if (is_little_endian) swap4b(&tmp);
+    if (gbp->is_little_endian) swap4b(&tmp);
     gbp->pos = (char*)gbp->pos + 4;  /* advance gbp->pos 4 bytes */
     return tmp;
 }
@@ -1938,6 +1938,9 @@ val_get_NC(int fd, NC *ncp)
     char magic[5];
     size_t err_addr, pos_addr, base_addr;
 
+    /* find Endianness of the running machine */
+    getbuf.is_little_endian = check_little_endian();
+
     /* Initialize the get buffer that stores the header read from the file */
     getbuf.offset = 0;     /* read from start of the file */
 
@@ -2112,9 +2115,6 @@ int main(int argc, char **argv)
         return 1;
     }
     snprintf(filename, 512, "%s", argv[0]);
-
-    /* find Endianness of the running machine */
-    is_little_endian = check_little_endian();
 
     if (repair) omode = O_RDWR;
     else        omode = O_RDONLY;
