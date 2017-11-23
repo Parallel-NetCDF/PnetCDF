@@ -170,7 +170,6 @@
 
 !    /* Global variables - command-line arguments */
 
-      LOGICAL   CREATE_FILE
       LOGICAL   READONLY
       LOGICAL   VERBOSE
       INTEGER   NFAILS
@@ -206,8 +205,7 @@
       COMMON    /OFFSETCOM/     DIM_LEN, VAR_SHAPE, GATT_LEN 
 
       COMMON    /MPICOM/        COMM
-      COMMON    /LOGCOM/        CREATE_FILE,
-     *                          READONLY, !/* don't change files */
+      COMMON    /LOGCOM/        READONLY, !/* don't change files */
      *                          VERBOSE   !/* print details of tests */
 
       COMMON    /TXTCOM/        TESTFILE,

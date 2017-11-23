@@ -53,7 +53,6 @@ MPI_Offset gatt_len[NGATTS];
 /* 
  * command-line options
  */
-static int  create_file;	/* if 1, create file test.nc */
 int  read_only;		/* if 1, don't try to change files */
 int  verbose;		/* if 1, print details of tests */
 int  max_nmpt;		/* max. number of messages per test */
@@ -62,8 +61,8 @@ int  max_nmpt;		/* max. number of messages per test */
  * Misc. global variables
  */
 int  nfails;		/* number of failures in specific test */
-char testfile[128];
-char scratch[128];
+char testfile[256];
+char scratch[256];
 MPI_Comm comm = MPI_COMM_WORLD; /* mpi communicator for parallel-netcdf */
 MPI_Info info;
 
@@ -141,18 +140,14 @@ main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
 
     cdf_format = 1; 	/* 1: CDF-1, 2: CDF-2 5: CDF-5 */
-    create_file = 0;            /* file test.nc will normally already exist */
     read_only = 0;               /* assume may write in test dir as default */
     verbose = 0;
     max_nmpt = 8;
     strcpy(testfile, "test.nc");    /* read-only testfile */
     strcpy(scratch, "scratch.nc");  /* writable scratch file */
 
-    while ((c = getopt(argc, argv, "c25hrn:d:v")) != -1)
+    while ((c = getopt(argc, argv, "25hrn:d:v")) != -1)
       switch(c) {
-	case 'c':		/* Create file test.nc */
-	  create_file = 1;
-	  break;
 	case 'r':		/* just perform read-only tests */
 	  read_only = 1;
 	  break;
@@ -200,12 +195,9 @@ main(int argc, char *argv[])
     /* Initialize global variables defining test file */
     init_gvars(numGatts, numTypes, numVars);
 
-    if ( create_file ) {
-	write_file(testfile, numGatts, numVars);
-        MPI_Info_free(&info);
-	MPI_Finalize();
-	return nfailsTotal > 0;
-    }
+    /* create file test.nc for testing read operations */
+    write_file(testfile, numGatts, numVars);
+    if (nfailsTotal > 0) goto fn_exit;
 
     /* delete any existing scratch netCDF file */
     if ( ! read_only ) {
