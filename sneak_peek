@@ -60,6 +60,15 @@ This is essentially a placeholder for the next release note ...
       NC_EMULTIDEFINE_CMODE or NC_EMULTIDEFINE_OMODE will be returned on
       processes whose modes disagree with rank 0's. If safe mode is on, then
       all processes will also get the same error code.
+    * API ncmpi_inq_nreqs() - allows argument nreqs to be NULL. In this case,
+      the API is equivalent to checking the validity of argument ncid. In
+      previous releases, NC_EINVAL is returned when argument nreqs is NULL.
+    * API ncmpi_inq_buffer_usage() - allows argument usage to be NULL. In this
+      case, the API is equivalent to checking the validity of argument ncid. In
+      previous releases, NC_EINVAL is returned when argument usage is NULL.
+    * API ncmpi_inq_buffer_size() - allows argument usage to be NULL. In this
+      case, the API is equivalent to checking the validity of argument ncid. In
+      previous releases, NC_EINVAL is returned when argument buf_size is NULL.
 
   o New error code precedence
     * none
