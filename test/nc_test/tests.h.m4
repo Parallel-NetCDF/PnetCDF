@@ -251,8 +251,8 @@ typedef char text;
 
     /* Global variables - filenames */
 
-extern char testfile[128];		/* netCDF read-only test data */
-extern char scratch[128];		/* netCDF test file for writing */
+extern char testfile[256];		/* netCDF read-only test data */
+extern char scratch[256];		/* netCDF test file for writing */
 
     /* Global variables - command-line arguments */
 

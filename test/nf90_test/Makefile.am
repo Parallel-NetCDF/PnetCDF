@@ -60,7 +60,10 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = seq_runs.sh
 
-CLEANFILES = $(M4SRCS_F90) $(TESTOUTDIR)/scratch.nc $(TESTOUTDIR)/test.nc \
+CLEANFILES = $(M4SRCS_F90) \
+             $(TESTOUTDIR)/scratch.nc \
+             $(TESTOUTDIR)/test.nc \
+             $(TESTOUTDIR)/tooth-fairy.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = $(M4SRCS) README seq_runs.sh

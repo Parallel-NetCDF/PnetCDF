@@ -128,7 +128,8 @@ SH_LOG_COMPILER =
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/testfile.nc $(TESTOUTDIR)/redef1.nc \
+             $(TESTOUTDIR)/testfile.nc \
+             $(TESTOUTDIR)/redef1.nc \
              $(TESTOUTDIR)/put_all_kinds.nc.cdf1 \
              $(TESTOUTDIR)/put_all_kinds.nc.cdf2 \
              $(TESTOUTDIR)/put_all_kinds.nc.cdf5 \

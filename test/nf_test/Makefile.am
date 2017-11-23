@@ -68,7 +68,10 @@ nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
 
 $(M4SRCS:.m4=.F): Makefile
 
-CLEANFILES = $(M4SRCS:.m4=.F) $(TESTOUTDIR)/scratch.nc $(TESTOUTDIR)/test.nc \
+CLEANFILES = $(M4SRCS:.m4=.F) \
+             $(TESTOUTDIR)/scratch.nc \
+             $(TESTOUTDIR)/test.nc \
+             $(TESTOUTDIR)/tooth-fairy.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = $(M4SRCS) $(HFILES) README seq_runs.sh

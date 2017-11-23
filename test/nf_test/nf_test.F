@@ -20,10 +20,8 @@ C implementation of the netCDF library.
 
         integer MY_LEN_TRIM
         call error('Usage: '//TRIM(progname)//
-     +             ' [-c | -hrv -n <MAX_NMPT>]')
-        call error('       nf_test [-c]')
-        call error('   [-h] Print help' )
-        call error('   [-c] Create file test.nc (Do not do tests)' )
+     +             ' [-hrv -n <MAX_NMPT>]')
+        call error('       nf_test [-h] Print help' )
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
@@ -426,7 +424,6 @@ C implementation of the netCDF library.
 
         nfailsTotal = 0
         call getarg(0, progname)
-        create_file = .false.   !/* file test.nc will normally already exist */
         readonly = .false.      !/* assume may write in test dir as default */
         verbose = .false.
         max_nmpt = 20
@@ -450,9 +447,7 @@ C implementation of the netCDF library.
                     lastopt = index(arg, ' ') - 1
                     do 2, iopt = 2, lastopt
                         opt = arg(iopt:iopt)
-                        if (opt .eq. 'c') then
-                            create_file = .true.
-                        else if (opt .eq. 'r') then
+                        if (opt .eq. 'r') then
                             readonly = .true.
                         else if (opt .eq. 'v') then
                             verbose = .true.
@@ -509,11 +504,10 @@ C       call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",err)
 C       /* Initialize global variables defining test file */
         call init_gvars
 
-        if ( create_file ) then
-            call write_file(testfile)
+C       create file test.nc for testing read operations */
+        call write_file(testfile)
+        if (nfailsTotal .GT. 0) then
             call MPI_Info_free(info, err)
-            if (nfailsTotal .eq. 0)
-     +           call ud_exit(0)
             call ud_exit(1)
         end if
 
