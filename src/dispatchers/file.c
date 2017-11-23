@@ -1355,7 +1355,7 @@ ncmpi_inq_nreqs(int  ncid,
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (nreqs == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
+    if (nreqs == NULL) return NC_NOERR;
 
     /* calling the subroutine that implements ncmpi_inq_nreqs() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
@@ -1376,7 +1376,7 @@ ncmpi_inq_buffer_usage(int         ncid,
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (usage == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
+    if (usage == NULL) return NC_NOERR;
 
     /* calling the subroutine that implements ncmpi_inq_buffer_usage() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
@@ -1397,7 +1397,7 @@ ncmpi_inq_buffer_size(int         ncid,
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (buf_size == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
+    if (buf_size == NULL) return NC_NOERR;
 
     /* calling the subroutine that implements ncmpi_inq_buffer_size() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
