@@ -192,6 +192,8 @@ dtype_filter(MPI_Datatype type)
     if (type == MPI_UNSIGNED_LONG_LONG)
         return  MPI_UNSIGNED_LONG_LONG;
 
+/* MPI_LB and MPI_UB are deprecated since MPI-2.0 */
+#if !defined(MPI_VERSION) || (MPI_VERSION < 2)
 /* HP-MPI for example needs to handle MPI_LB and MPI_UB */
 #ifdef HAVE_DECL_MPI_LB
     if (type == MPI_LB) {
@@ -210,6 +212,7 @@ dtype_filter(MPI_Datatype type)
         return MPI_DOUBLE;
 #endif
     }
+#endif
 #endif
 
 /* default */
