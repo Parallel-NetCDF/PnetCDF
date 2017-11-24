@@ -303,6 +303,9 @@ free_NC_var(NC_var *varp)
     if (varp == NULL) return;
     free_NC_attrarray(&varp->attrs);
     free(varp->name);
+    free(varp->shape);
+    free(varp->dsizes);
+    free(varp->dimids);
     free(varp);
 }
 
