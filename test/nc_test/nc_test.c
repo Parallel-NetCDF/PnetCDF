@@ -195,15 +195,12 @@ main(int argc, char *argv[])
     /* Initialize global variables defining test file */
     init_gvars(numGatts, numTypes, numVars);
 
+    /* delete testfile file and ignore the error if not exist */
+    unlink(testfile);
+
     /* create file test.nc for testing read operations */
     write_file(testfile, numGatts, numVars);
     if (nfailsTotal > 0) goto fn_exit;
-
-    /* delete any existing scratch netCDF file */
-    if ( ! read_only ) {
-        if (access(scratch, F_OK) == 0)
-            unlink(scratch);
-    }
 
     char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
@@ -382,6 +379,9 @@ main(int argc, char *argv[])
 
 	/* Test write functions */
     if (! read_only) {
+        /* delete scratch file and ignore the error if not exist */
+        unlink(scratch);
+
 	NC_TEST(ncmpi_create);
 	NC_TEST2(ncmpi_redef, numGatts, numVars);
 	/* NC_TEST(ncmpi_enddef);  redundant, as it calls test_ncmpi_redef() */
