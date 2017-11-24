@@ -32,8 +32,4 @@ autoreconf -fi
             TESTSEQRUN="valgrind --quiet --leak-check=full" \
             TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
 
-make -s clean
-make -s
-make -s check
-make -s ptest
-make -s distclean
+make -s clean && make -s && make -s check && make -s ptest && make -s distclean
