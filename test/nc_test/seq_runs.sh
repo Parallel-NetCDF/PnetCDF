@@ -14,6 +14,10 @@ ${TESTSEQRUN} ./tst_nofill    ${TESTOUTDIR}/tst_nofill.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_nofill.nc.fill
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_nofill.nc.nofill
 
+
+# disable safe mode, as nc_test already runs slow
+export PNETCDF_SAFE_MODE=0
+
 rm -f ${TESTOUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nc_test    -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
