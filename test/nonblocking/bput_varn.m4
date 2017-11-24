@@ -103,7 +103,7 @@ check_num_pending_reqs(int ncid, int expected, int lineno)
     int err, nerrs=0, n_pendings;
 
     /* NULL argument test */
-    err = ncmpi_inq_nreqs(ncid, NULL); EXP_ERR(NC_EINVAL)
+    err = ncmpi_inq_nreqs(ncid, NULL); CHECK_ERR
 
     err = ncmpi_inq_nreqs(ncid, &n_pendings); CHECK_ERR
     if (n_pendings != expected) {
@@ -128,8 +128,8 @@ int check_attached_buffer_usage(int ncid,
     if (rank >= 4) return nerrs;
 
     /* NULL argument test */
-    err = ncmpi_inq_buffer_size(ncid, NULL); EXP_ERR(NC_EINVAL)
-    err = ncmpi_inq_buffer_usage(ncid, NULL); EXP_ERR(NC_EINVAL)
+    err = ncmpi_inq_buffer_size(ncid, NULL); CHECK_ERR
+    err = ncmpi_inq_buffer_usage(ncid, NULL); CHECK_ERR
 
     err = ncmpi_inq_buffer_size(ncid, &buf_size);
     CHECK_ERR
