@@ -70,7 +70,8 @@ SH_LOG_COMPILER =
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = tests.h $(M4_SRCS:.m4=.c) \
-             $(TESTOUTDIR)/test.nc $(TESTOUTDIR)/scratch.nc \
+             $(TESTOUTDIR)/test.nc \
+             $(TESTOUTDIR)/scratch.nc \
              $(TESTOUTDIR)/tooth-fairy.nc \
              $(TESTOUTDIR)/tst_nofill.nc.fill \
              $(TESTOUTDIR)/tst_nofill.nc.nofill \
