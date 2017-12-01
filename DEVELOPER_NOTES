@@ -3,7 +3,8 @@ $Id$
 ==============================================================================
 Tasks immediately before a new release (must run in the following order)
 ==============================================================================
- 0. Match NetCDF error codes. See "Conform with netCDF" below.
+ 0. Match NetCDF header file, netcdf.h, for defined constants and error codes.
+    See "Conform with netCDF" below.
 
  1. Make sure build is successful
     * build and test under the same directory as source
@@ -75,30 +76,37 @@ Tasks immediately before a new release (must run in the following order)
     release date.
     svn commit -m "set release date of version 1.6.1 to today"
 
- 5. Create an SVN tag.
+ 5. Run svn commit to commit the above changes to trunk branch.
+
+ 6. Create a new SVN tag on svn repo.
     Run command below to duplicate the current trunk to a new tag:
 
     svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
              https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
              -m "Tagging release version 1.8.1"
 
- 6. Generate a new "configure" file with the release date by running command
-    "autoreconf" which will generate file "configure"  to be included in the
-    release (but not to be saved in the SVN repo).
-    * Must use the bug-fixed autotools of version 2.69 or higher to run
-      "autoreconf". See README.Fujitsu for the bug in autoconf 2.69 and patch.
+ 7. Generate release tar balls
+    a. Generate a new "configure" file
+       * Run command "autoreconf" to generate file "configure" to be included
+         in the release (but ignored by the SVN repo).
+       * Must use the bug-fixed autotools of version 2.69 or higher to run
+         "autoreconf". See README.Fujitsu for the bug in autoconf 2.69 and
+         patch.
 
- 7. Create all Makefiles.
-    Run command "./configure" to create all Makefiles, so in the next step we
-    can run command "make dist" to create the tar balls.
+    b. Create all Makefiles.
+       Run command "./configure" to create all Makefiles, so in the next step
+       we can run command "make dist" to create the tar balls.
 
- 8. Create tar balls.
-    Run command "make dist" to produce two tar balls for PnetCDF release:
-      parallel-netcdf-$(PNETCDF_VERSION).tar.gz
-      parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
-    (Version 1.9.0 and later will only create .gz file.)
+    c. Create tar balls.
+       Run command "make dist" to produce two tar balls for PnetCDF release:
+         parallel-netcdf-$(PNETCDF_VERSION).tar.gz
+         parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
+       (Version 1.9.0 and later will only create .gz file.)
+       Starting from 1.9.0, the release date will be the date running command
+       "make dist". This setting will be done automatically, unlike step 4
+       above that manually update the release date.
 
- 9. Generate SHA1 checksums
+ 8. Generate SHA1 checksums
     Run command:
     openssl sha1 parallel-netcdf-1.6.1.tar.gz
     openssl sha1 parallel-netcdf-1.6.1.tar.bz2

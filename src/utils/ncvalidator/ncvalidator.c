@@ -206,9 +206,10 @@ static const char ncmagic[] = {'C', 'D', 'F', 0x01};
                     (((a) & 0x00FF000000000000ULL) >> 40) | \
                     (((a) & 0xFF00000000000000ULL) >> 56) )
 
-static int check_little_endian(void) {
-    volatile uint32_t i=0x01234567;
+static int check_little_endian(void)
+{
     // return 0 for big endian, 1 for little endian.
+    volatile uint32_t i=0x01234567;
     return (*((uint8_t*)(&i))) == 0x67;
 }
 
@@ -227,7 +228,8 @@ swap8b(unsigned long long *val)
 }
 
 static unsigned long long
-get_uint64(bufferinfo *gbp) {
+get_uint64(bufferinfo *gbp)
+{
     /* retrieve a 64bit unisgned integer and return it as unsigned long long */
     unsigned long long tmp;
     memcpy(&tmp, gbp->pos, 8);
@@ -237,7 +239,8 @@ get_uint64(bufferinfo *gbp) {
 }
 
 static unsigned int
-get_uint32(bufferinfo *gbp) {
+get_uint32(bufferinfo *gbp)
+{
     /* retrieve a 32bit unisgned integer and return it as unsigned int */
     unsigned int tmp;
     memcpy(&tmp, gbp->pos, 4);
@@ -260,7 +263,6 @@ free_NC_dimarray(NC_dimarray *ncap)
     int i;
 
     assert(ncap != NULL);
-
     if (ncap->value == NULL) return;
 
     for (i=0; i<ncap->ndefined; i++)
