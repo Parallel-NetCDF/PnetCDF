@@ -89,6 +89,61 @@ This is essentially a placeholder for the next release note ...
   o New build recipe
     * doc/README.Ubuntu provides build instructions for Ubuntu Linux OS.
 
+  o New/updated utility program
+    * Utility program ncmpivalid is renamed to ncvalidator to reflect its
+      purpose. It is now running in serial and thus no longer requires an MPI
+      compiler to build it. In fact, its source codes are all in a single file,
+      ncvalidator.c, which can be compiled using gcc, i.e. command "gcc -o
+      ncvalidator ncvalidator.c".  This utility program can be used to validate
+      a classic CDF file, and report the locations that fail to comply with CDF
+      formats. It can also repair a file whose header fails to use null bytes
+      for paddings, when the command-line option "-x" is used. See its man page
+      for further description of usage.
+
+  o Other updates:
+    * Update UTF8 encoding utility to use utf8proc library version 2.1.0 from
+      the Julia Language project, https://github.com/JuliaLang/utf8proc
+      License https://github.com/JuliaLang/utf8proc/blob/master/LICENSE.md
+    * Add quiet mode command-line option "-q" to utility program ncvalidator.
+    * Add an internal check for whether the file starting offsets of all
+      variables are in an increasing order as the variables defines. See r3369.
+    * All build recipes (README files) have been moved to folder doc. Most of
+      the recipes have been updated with instructions for building shared
+      libraries.
+    * Rename configure-time variables TEST_SEQRUN, TEST_MPIRUN, and TEST_OUTDIR
+      to TESTSEQRUN, TESTMPIRUN, and TESTOUTDIR, respectively. This change
+      avoids conflict to the name convention reserved by automake.
+    * Fix TESTMPIRUN default value to use full path specified in --with-mpi at
+      configure command line
+
+  o Bug fixes
+    * Fix a bug in nonblocking APIs when one request's access region covers
+      more than one other non-interleaved requests. PnetCDF fails to identify
+      them as a single group of interleaved requests. Test program
+      test/nonblocking/interleaved.c has been revised to test the fix.
+      See r3389.
+    * Fix a bug in string parsing the environment variable PNETCDF_HINTS and
+      print warning messages when hint strings are ill-formed. See r3284.
+    * Fix a bug in F90 APIs for reading and writing scalar variables, i.e.
+      number of dimensions is zero. The bugs appear only when using Intel
+      Fortran compiler which does not allow checking presence of an argument
+      and its contents in the same if condition. See r3009, r3012, r3013.
+    * Conform with CDF-2 file format specification on using 2^32-1 for vsize
+      when the variable size is larger than 23^2-4 bytes. See r2957.
+    * Fix a bug in nc_test when running on an ARMv7 architecture, a raspberry
+      pi, where char is unsigned and which is little Endian, 32-bit machine.
+      See r2922.
+    * Fix a bug that fails to do byte-swap when retrieving user-defined fill
+      values. See r2864. This fix is critical when PnetCDF is configured with
+      option erange-fill enabled (default mode) and the target platform is a
+      Little Endian.
+
+  o New example programs
+    * none
+
+  o New programs for I/O benchmarks
+    * none
+
   o New test program
     * test/testcases/tst_info.c - tests an internal bug in heap memory
       allocation trace mechanism. See r3514.
@@ -226,44 +281,6 @@ This is essentially a placeholder for the next release note ...
       WARNING: Darshan ncmpi_create() stub called; this is probably the result
       of a link-time problem.
 
-  o Other updates:
-    * Update UTF8 encoding utility to use utf8proc library version 2.1.0 from
-      the Julia Language project, https://github.com/JuliaLang/utf8proc
-      License https://github.com/JuliaLang/utf8proc/blob/master/LICENSE.md
-    * Add quiet mode command-line option "-q" to utility program ncvalidator.
-    * Add an internal check for whether the file starting offsets of all
-      variables are in an increasing order as the variables defines. See r3369.
-    * All build recipes (README files) have been moved to folder doc. Most of
-      the recipes have been updated with instructions for building shared
-      libraries.
-    * Rename configure-time variables TEST_SEQRUN, TEST_MPIRUN, and TEST_OUTDIR
-      to TESTSEQRUN, TESTMPIRUN, and TESTOUTDIR, respectively. This change
-      avoids conflict to the name convention reserved by automake.
-    * Fix TESTMPIRUN default value to use full path specified in --with-mpi at
-      configure command line
-
-  o Bug fixes
-    * Fix a bug in nonblocking APIs when one request's access region covers
-      more than one other non-interleaved requests. PnetCDF fails to identify
-      them as a single group of interleaved requests. Test program
-      test/nonblocking/interleaved.c has been revised to test the fix.
-      See r3389.
-    * Fix a bug in string parsing the environment variable PNETCDF_HINTS and
-      print warning messages when hint strings are ill-formed. See r3284.
-    * Fix a bug in F90 APIs for reading and writing scalar variables, i.e.
-      number of dimensions is zero. The bugs appear only when using Intel
-      Fortran compiler which does not allow checking presence of an argument
-      and its contents in the same if condition. See r3009, r3012, r3013.
-    * Conform with CDF-2 file format specification on using 2^32-1 for vsize
-      when the variable size is larger than 23^2-4 bytes. See r2957.
-    * Fix a bug in nc_test when running on an ARMv7 architecture, a raspberry
-      pi, where char is unsigned and which is little Endian, 32-bit machine.
-      See r2922.
-    * Fix a bug that fails to do byte-swap when retrieving user-defined fill
-      values. See r2864. This fix is critical when PnetCDF is configured with
-      option erange-fill enabled (default mode) and the target platform is a
-      Little Endian.
-
   o Clarifications
     * The NetCDF CDF formats define a set of external NC data types and
       describe their intents of use, shown below.
@@ -311,18 +328,4 @@ This is essentially a placeholder for the next release note ...
       double                ncmpi_put_var_double    MPI_DOUBLE
       longlong              ncmpi_put_var_longlong  MPI_LONG_LONG_INT
       ulonglong             ncmpi_put_var_ulonglong MPI_UNSIGNED_LONG_LONG
-
-  o New utility program
-    * Utility program ncmpivalid has been renamed to ncvalidator. It is now
-      running in serial and thus no longer requires an MPI compiler to build.
-      This utility program can be used to validate a classic CDF file, and
-      report the locations that fail to comply with CDF formats. It also
-      repairs a file whose header fails to use null bytes for paddings, when
-      the command-line option "-x" is used.
-
-  o New example programs
-    * none
-
-  o New programs for I/O benchmarks
-    * none
 
