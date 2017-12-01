@@ -20,8 +20,10 @@ includedir="@includedir@"
 FC_DEFINE="@FC_DEFINE@"
 CPP="@CPP@"
 
+debug_mode="@PNETCDF_DEBUG@"
+
 CPPFLAGS="@CPPFLAGS@"
-if test "x@PNETCDF_DEBUG@" = x1 ; then
+if test "x$debug_mode@" = x1 ; then
    if test "x$CPPFLAGS" = x ; then
       CPPFLAGS="-DPNETCDF_DEBUG"
    else
@@ -55,6 +57,11 @@ F90=${MPIF90}
 
 has_fortran="@has_fortran@"
 has_cxx="@has_mpicxx@"
+enable_erange_fill="@ENABLE_ERANGE_FILL@"
+enable_subfiling="@ENABLE_SUBFILING@"
+enable_relax_coord_bound="@RELAX_COORD_BOUND@"
+is_bigendian="@ac_cv_c_bigendian@"
+enable_in_place_swap="@in_place_swap@"
 
 config_date="@CONFIG_DATE@"
 release_date="PNETCDF_RELEASE_DATE"
@@ -124,27 +131,27 @@ if test "x$has_fortran" = xyes ; then
 #        echo "  --fclibs            -> $FCLIBS"
 fi
         echo
-if test "x@ENABLE_ERANGE_FILL@" = x0; then
+if test "x$enable_erange_fill" = x0; then
         echo "  --erange-fill       -> disabled"
 else
         echo "  --erange-fill       -> enabled"
 fi
-if test "x@ENABLE_SUBFILING@" = x1; then
+if test "x$enable_subfiling" = x1; then
         echo "  --subfiling         -> enabled"
 else
         echo "  --subfiling         -> disabled"
 fi
-if test "x@RELAX_COORD_BOUND@" = x1; then
+if test "x$enable_relax_coord_bound" = x1; then
         echo "  --relax-coord-bound -> enabled"
 else
         echo "  --relax-coord-bound -> disabled"
 fi
-if test "x@ac_cv_c_bigendian@" = xno  && (test "x@in_place_swap@" = xno) ; then
+if test "x$is_bigendian" = xno  && (test "x$enable_in_place_swap" = xno) ; then
         echo "  --in-place-swap     -> disabled"
 else
         echo "  --in-place-swap     -> enabled"
 fi
-if test "x@PNETCDF_DEBUG@" = x1; then
+if test "x$debug_mode" = x1; then
         echo "  --debug             -> enabled"
 else
         echo "  --debug             -> disabled"
@@ -254,7 +261,7 @@ while test $# -gt 0; do
 #        ;;
 
     --relax-coord-bound)
-if test "x@RELAX_COORD_BOUND@" = x1; then
+if test "x$enable_relax_coord_bound" = x1; then
         echo "enabled"
 else
         echo "disabled"
@@ -262,7 +269,7 @@ fi
         ;;
 
     --in-place-swap)
-if test "x@ac_cv_c_bigendian@" = xno  && (test "x@in_place_swap@" = xno) ; then
+if test "x$is_bigendian" = xno  && (test "x$enable_in_place_swap" = xno) ; then
         echo "disabled"
 else
         echo "enabled"
@@ -278,7 +285,7 @@ fi
         ;;
 
     --subfiling)
-if test "x@ENABLE_SUBFILING@" = x1; then
+if test "x$enable_subfiling" = x1; then
         echo "enabled"
 else
         echo "disabled"
@@ -286,7 +293,7 @@ fi
         ;;
 
     --debug)
-if test "x@PNETCDF_DEBUG@" = x1; then
+if test "x$debug_mode" = x1; then
         echo "enabled"
 else
         echo "disabled"
