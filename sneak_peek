@@ -117,6 +117,13 @@ This is essentially a placeholder for the next release note ...
       configure command line
 
   o Bug fixes
+    * Fix a bug in nonblocking APIs when two separate nonblocking requests that
+      can be coalesced into a contiguous MPI fileview or buffer type but the
+      coalesced length becomes too big and overflows a 4-byte integer, data
+      type of argument blocklengths of MPI_Type_create_hindexed, coalescing
+      should be skipped. I.e. such two requests should be treated as two
+      separate blocks in MPI_Type_create_hindexed.  Thanks Jim Edwards for
+      reporting. See r3565.
     * Fix a bug in nonblocking APIs when one request's access region covers
       more than one other non-interleaved requests. PnetCDF fails to identify
       them as a single group of interleaved requests. Test program
@@ -145,6 +152,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/largefile/large_coalesce.c - tests a bug fixed in r3565 when two
+      separate nonblocking requests that can be coalesced into a contiguous MPI
+      fileview or buffer type but the coalesced length becomes too big and
+      overflows a 4-byte integer.
     * test/testcases/tst_info.c - tests an internal bug in heap memory
       allocation trace mechanism. See r3514.
     * test/cdf_format/tst_corrupt.c

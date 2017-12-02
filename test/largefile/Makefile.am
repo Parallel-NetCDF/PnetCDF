@@ -33,7 +33,8 @@ TESTPROGRAMS = large_files \
                large_var \
                large_dims_vars_attrs \
                high_dim_var \
-               tst_cdf5_begin
+               tst_cdf5_begin \
+               large_coalesce
 
 if HAS_FORTRAN
    TESTPROGRAMS += bigrecords
@@ -77,7 +78,7 @@ TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
 ptest ptest4: $(TESTPROGRAMS)
-	for j in 0 1 ; do { \
+	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS) ; do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
@@ -85,7 +86,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
-	for j in 0 1 ; do { \
+	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
@@ -93,7 +94,7 @@ ptest2: $(TESTPROGRAMS)
 	) ; done ; } ; done
 
 ptest6: $(TESTPROGRAMS)
-	for j in 0 1 ; do { \
+	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \

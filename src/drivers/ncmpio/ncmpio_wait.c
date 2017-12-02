@@ -477,10 +477,13 @@ construct_filetypes(NC           *ncp,
         }
 
         if (is_filetype_contig) {
-            if (last_contig_req >= 0 &&
+            MPI_Offset int8 = blocklens[last_contig_req];
+            int8 += blocklens[j];
+            /* if int8 overflows 4-byte int, then skip coalescing */
+            if (int8 == (int)int8 && last_contig_req >= 0 &&
                 displacements[j] - displacements[last_contig_req] ==
                 blocklens[last_contig_req]) {
-                blocklens[last_contig_req] += blocklens[j];
+                blocklens[last_contig_req] = int8;
                 j--;
             }
             else last_contig_req = j;
@@ -538,11 +541,13 @@ construct_buffertypes(int           num_reqs,
     for (i=0, j=0; i<num_reqs; i++) {
         /* check int overflow */
         MPI_Offset int8 = reqs[i].bnelems * reqs[i].varp->xsz;
-        blocklengths[j] = (int)int8;
-        if (int8 != blocklengths[j]) { /* skip this request */
+        if (int8 != (int)int8) { /* skip this request */
+            blocklengths[j] = 0;
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             continue;
         }
+        else
+            blocklengths[j] = (int)int8;
 #ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(reqs[i].xbuf, &ai);
 #else
@@ -2016,7 +2021,7 @@ mgetput(NC     *ncp,
     MPI_Status mpistatus;
     MPI_Datatype filetype, buf_type=MPI_BYTE;
     MPI_File fh;
-    MPI_Offset offset=0;
+    MPI_Offset int8, offset=0;
 
     if (coll_indep == NC_REQ_COLL)
         fh = ncp->collective_fh;
@@ -2052,12 +2057,13 @@ mgetput(NC     *ncp,
         len = 0;
     }
     else if (num_reqs == 1) {
-        MPI_Offset int8 = reqs[0].bnelems * reqs[0].varp->xsz;
-        len = (int)int8;
-        if (int8 != len) {
+        int8 = reqs[0].bnelems * reqs[0].varp->xsz;
+        if (int8 != (int)int8) { /* skip this request */
             if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             len = 0; /* skip this request */
         }
+        else
+            len = (int)int8;
         buf = reqs[0].xbuf;
     }
     else if (num_reqs > 1) { /* create the I/O buffer derived data type */
@@ -2072,14 +2078,15 @@ mgetput(NC     *ncp,
         /* process only valid requests */
         for (i=0, j=0; i<num_reqs; i++) {
             /* check int overflow */
-            MPI_Offset int8 = reqs[i].bnelems * reqs[i].varp->xsz;
-            blocklengths[j] = (int)int8;
-            if (int8 != blocklengths[j]) { /* int overflow */
+            int8 = reqs[i].bnelems * reqs[i].varp->xsz;
+            if (int8 != (int)int8) { /* int overflows, skip this request */
                 if (status == NC_NOERR) /* keep the 1st encountered error */
                     DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
                 blocklengths[j] = 0;
                 continue; /* skip this request */
             }
+            else
+                blocklengths[j] = (int)int8;
 #ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(reqs[i].xbuf, &ai);
 #else
@@ -2091,10 +2098,15 @@ mgetput(NC     *ncp,
             }
             disps[j] = ai - a0;
 
-            if (ai - a_last_contig == blocklengths[last_contig_req])
+            int8 = blocklengths[last_contig_req];
+            int8 += blocklengths[j];
+            /* if int8 overflows 4-byte int, then skip coalescing */
+            if (int8 == (int)int8 &&
+                ai - a_last_contig == blocklengths[last_contig_req]) {
                 /* user buffer of request j is contiguous from j-1
                  * we coalesce j to j-1 */
                 blocklengths[last_contig_req] += blocklengths[j];
+            }
             else if (j > 0) {
                 /* not contiguous from request last_contig_req */
                 last_contig_req++;
