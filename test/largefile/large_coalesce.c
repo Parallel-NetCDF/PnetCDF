@@ -34,6 +34,7 @@ int main(int argc, char** argv)
     int rank, nprocs, err, nerrs=0;
     int ncid, cmode, varid, dimid[2], req[2], st[2];
     MPI_Offset start[2], count[2];
+    MPI_Info info;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -56,10 +57,14 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "romio_cb_write", "enable");
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
+    MPI_Info_free(&info);
 
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "NPROCS", nprocs, &dimid[0]);
