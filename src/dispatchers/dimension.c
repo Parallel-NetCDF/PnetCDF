@@ -25,7 +25,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
               MPI_Offset  size,    /* IN:  dimension size */
               int        *dimidp)  /* OUT: dimension ID */
 {
-    int err=NC_NOERR;
+    int err=NC_NOERR, dimid;
     PNC *pncp;
 
     /* check if ncid is valid */
@@ -150,13 +150,15 @@ err_check:
     if (err != NC_NOERR) return err;
     
     /* calling the subroutine that implements ncmpi_def_dim() */
-    err = pncp->driver->def_dim(pncp->ncp, name, size, dimidp);
+    err = pncp->driver->def_dim(pncp->ncp, name, size, &dimid);
     if (err != NC_NOERR) return err;
 
     if (size == NC_UNLIMITED && pncp->unlimdimid == -1)
-        pncp->unlimdimid = *dimidp;
+        pncp->unlimdimid = dimid;
 
     pncp->ndims++;
+
+    if (dimidp != NULL) *dimidp = dimid;
 
     return NC_NOERR;
 }
