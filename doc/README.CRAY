@@ -8,105 +8,107 @@
     Cray XC40
 ===============================================================================
 
-Building PnetCDF on the Cray XC40 (tested on Cori @ NERSC)
-http://www.nersc.gov/systems/cori/
+* Building PnetCDF on the Cray XC40 (tested on Cori @ NERSC and Theta @ ALCF)
+  http://www.nersc.gov/systems/cori/
+  https://www.alcf.anl.gov/theta
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
-                CFLAGS="-fast -no-ipo" CXXFLAGS="-fast -no-ipo" \
-                FFLAGS="-fast -no-ipo"  FCFLAGS="-fast -no-ipo"
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
 
-(The default is to build static libraries only.)
+  On Cori, when using Intel-based compilers are used, NERSC recommends no
+  optimization arguments for compilation. See "Recommended flags" for Intel
+  compilers at
+  http://www.nersc.gov/users/computational-systems/cori/programming/compiling-codes-on-cori/
 
-To also build shared libraries, add "--enable-shared LDFLAGS=-dynamic" to the
-configure command and change the compile flags to "-O2".
+
+* Note that the default setting of PnetCDF is to build static libraries only.
+  To also build shared libraries, add "--enable-shared LDFLAGS=-dynamic" to the
+  configure command and change the compile flags to "-O2".
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
-                CFLAGS="-O2" CXXFLAGS="-O2" \
-                FFLAGS="-O2"  FCFLAGS="-O2" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
                 --enable-shared LDFLAGS=-dynamic
 
-See further information about Shared and Dynamic Libraries from the following
-NERSC web site:
-http://www.nersc.gov/users/computational-systems/edison/running-jobs/shared-and-dynamic-libraries/
+  See further information about "Shared and Dynamic Libraries" from the
+  following NERSC web site:
+  http://www.nersc.gov/users/computational-systems/edison/running-jobs/shared-and-dynamic-libraries/
 
-Note on using command-line option "-fast".
-    According to the NERSC URL below, the flag "-no-ipo" must be used together
-    with flag "-fast" to build an application.
-    http://www.nersc.gov/users/software/compilers/intel-fortran-c-and-c/
 
-    In addition, option "-fast" implies "-static". Thus please use "-O2" flags
-    when building PnetCDF shared libraries.
+* Note on using compile command-line option "-fast".
+  According to the NERSC URL below, the flag "-no-ipo" must be used together
+  with flag "-fast" to build an application.
+  http://www.nersc.gov/users/software/compilers/intel-fortran-c-and-c/
 
-Note on running "make check" or "make ptest".
-    Cori is a cross-compile environment. Jobs must be run through a batch
-    scheduler. At the time of this writing, the schedule is Slurm. Below
-    configure command line adds 3 variables in preparation for job submission.
+  In addition, option "-fast" implies "-static". Thus please use "-O2" flags
+  when building PnetCDF shared libraries.
+
+* Note on running "make check" or "make ptest".
+  Cori is a cross-compile environment. Jobs must be run through a batch
+  scheduler. At the time of this writing, the schedule is Slurm. Below
+  configure command line adds 3 variables in preparation for job submission.
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
-                CFLAGS="-fast -no-ipo" CXXFLAGS="-fast -no-ipo" \
-                FFLAGS="-fast -no-ipo"  FCFLAGS="-fast -no-ipo" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
                 TESTMPIRUN="srun -n NP" TESTSEQRUN="srun -n 1" \
                 TESTOUTDIR="$SCRATCH"
 
-    A sample batch script shown below allocates 4 compute nodes. "make ptest"
-    requires at least 4 MPI processes. The number can be changed to use less
-    number of nodes. Variable TESTOUTDIR should be set to the file directory
-    for storing the test output files.
-    #!/bin/bash -l
-    #SBATCH -p debug
-    #SBATCH -N 4
-    #SBATCH -t 00:20:00
-    #SBATCH -L SCRATCH
-    #SBATCH -C haswell
-    make ptest
+  A sample batch script shown below allocates 4 compute nodes. "make ptest"
+  requires at least 4 MPI processes. The number can be changed to use less
+  number of nodes. Variable TESTOUTDIR should be set to the file directory
+  for storing the test output files.
+  #!/bin/bash -l
+  #SBATCH -p debug
+  #SBATCH -N 4
+  #SBATCH -t 00:20:00
+  #SBATCH -L SCRATCH
+  #SBATCH -C haswell
+  make ptest
 
-Note on using GNU compilers
-    To swap to the GNU programming environment from default, run command below
-    first:
+* Note on using GNU compilers
+  To swap to the GNU programming environment from default, run command below
+  first:
         module swap PrgEnv-intel PrgEnv-gnu
 
-    We found that libtool does not work well with Cray's GNU-based compiler
-    wrappers, e.g. cc, CC, and ftn when building static-only library. If you
-    must use GNU compilers, please add "LDFLAGS=-all-static" to the make
-    command line, i.e.
+  We found that libtool does not work well with Cray's GNU-based compiler
+  wrappers, e.g. cc, CC, and ftn when building static-only library. If you
+  must use GNU compilers, please add "LDFLAGS=-all-static" to the make
+  command line, i.e.
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
-                CFLAGS="-O2" CXXFLAGS="-O2" \
-                FFLAGS="-O2"  FCFLAGS="-O2"
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
 
-    and then run
+  and then run
 
                 make LDFLAGS=-all-static
 
-    Without adding LDFLAGS, you may encounter the following error messages. 
+  Without adding LDFLAGS, you may encounter the following error messages. 
     libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libgfortran.la' seems to be moved 
     libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libquadmath.la' seems to be moved 
     libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libstdc++.la' seems to be moved 
     /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/6.3.0/snos/lib/../lib64/libgfortran.so' 
     collect2: error: ld returned 1 exit status 
 
-    Building shared libraries has no such problem. Simply use command below.
+  Building shared libraries has no such problem. Simply use command below.
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
-                CFLAGS="-O2" CXXFLAGS="-O2" \
-                FFLAGS="-O2"  FCFLAGS="-O2" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
                 --enable-shared LDFLAGS=-dynamic
 
-    and then run
+  and then run
 
                 make
 
-Note on using Cray compilers (i.e. craycc, crayCC, crayftn)
-    libtool fails to work with Cray compiler based wrappers. See discussion in
-    https://trac.mpich.org/projects/mpich/ticket/1909 and
-    http://lists.gnu.org/archive/html/libtool/2015-04/msg00003.html
-    Before libtool fixes this, PnetCDF 1.9.0 does not support Cray-based
-    compilers.
+* Note on using Cray compilers (i.e. craycc, crayCC, crayftn)
+  libtool fails to work with Cray compiler based wrappers. See discussion in
+  https://trac.mpich.org/projects/mpich/ticket/1909 and
+  http://lists.gnu.org/archive/html/libtool/2015-04/msg00003.html
+  Before libtool fixes this, PnetCDF 1.9.0 does not support Cray-based
+  compilers.
 
 ===============================================================================
     Cray XC30
