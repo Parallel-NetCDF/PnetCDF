@@ -33,6 +33,7 @@ dnl
 #include <stdlib.h>
 #endif
 #include <string.h> /* memcpy() */
+#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -189,8 +190,8 @@ put_varm(NC               *ncp,
 
     /* because nbytes will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */
-    if (nbytes != (int)nbytes) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+    if (nbytes > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
         goto err_check;
     }
 

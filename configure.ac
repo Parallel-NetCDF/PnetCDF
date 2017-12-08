@@ -113,6 +113,7 @@ AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
+AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])
@@ -986,7 +987,8 @@ AC_CHECK_FUNCS([MPI_Info_dup \
                 MPI_Type_create_hindexed \
                 MPI_Type_create_struct \
                 MPI_Type_create_resized \
-                MPI_Type_get_extent])
+                MPI_Type_get_extent \
+                MPI_Type_size_x])
 
 if test "$ac_cv_func_MPI_Info_dup" = no ; then
    AC_MSG_ERROR([
@@ -1344,6 +1346,18 @@ if test "x${file_sync}" = xno ; then
     AC_DEFINE(DISABLE_FILE_SYNC)
 fi
 
+AC_ARG_ENABLE([large-req],
+    [AS_HELP_STRING([--enable-large-req],
+                    [Enable large (> 2 GiB) request in a single MPI-IO call.
+                     Note some MPI-IO libraries may not support this.
+                     @<:@default: disabled@:>@])],
+    [large_req=${enableval}], [large_req=no]
+)
+if test "x${large_req}" = xyes ; then
+    AC_DEFINE(ENABLE_LARGE_REQ)
+fi
+AM_CONDITIONAL(ENABLE_LARGE_REQ, [test x$large_req = xyes])
+
 AC_ARG_ENABLE([large-file-test],
     [AS_HELP_STRING([--enable-large-file-test],
                     [Enable testing for large (>4GB) file/variable I/O. Note
@@ -1516,6 +1530,10 @@ fi
 if test "x${has_fortran}" = xyes && (test "x${ac_f77_support_freeform}" = xno) ; then
    echo "\
               Support free form in Fortran 77         - OFF"
+fi
+if test "x${large_req}" = xyes ; then
+   echo "\
+              Allow single large (> 2GiB) requests    - ON"
 fi
 
 echo "\

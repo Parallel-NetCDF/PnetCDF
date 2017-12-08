@@ -29,6 +29,11 @@ This is essentially a placeholder for the next release note ...
       2147483647, i.e. NC_MAX_INT
     * NC_MAX_VARS, the maximum number of variables per file is raised to
       2147483647, i.e. NC_MAX_INT
+    * NC_EMAX_REQ error code will be thrown when a single request of a get/put
+      API call or the aggregated size of nonblocking requests in a wait API
+      call exceeds INT_MAX (max of 4-byte integer).  Note the size limit is per
+      MPI process, not across all processes. This is due to MPI-IO may not
+      support a single MPI-IO request of size larger then INT_MAX.
 
   o New constants
     * NC_FORMAT_UNKNOWN, NF_FORMAT_UNKNOWN, and NF90_FORMAT_UNKNOWN are new
@@ -78,7 +83,13 @@ This is essentially a placeholder for the next release note ...
       cover the case when NC_MAX_DIMS or NC_MAX_VAR_DIMS is exceeded.
 
   o New error code
-    * none
+    * NC_EMAX_REQ - indicates a single request of a get/put API call or the
+      aggregated size of nonblocking requests in a wait API call exceeds
+      INT_MAX (max of 4-byte integer). The corresponding F77 and F90 error
+      codes are NF_EMAX_REQ and NF90_EMAX_REQ, respectively.
+    * NC_ENULLPAD - indicates the file fails strict null-byte header check. The
+      corresponding F77 and F90 error codes are NF_ENULPAD and NF90_ENULPAD,
+      respectively. This has also been defined in NetCDF since 4.5.1.
 
   o New PnetCDF hint
     * none

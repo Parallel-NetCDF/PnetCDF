@@ -574,6 +574,7 @@ by the desired type. */
 #define NC_ENOTFILL			(-234) /**< Attempting to fill a variable when its fill mode is off */
 #define NC_EINVAL_OMODE			(-235) /**< Invalid file open mode */
 #define NC_EPENDING			(-236) /**< Pending nonblocking request is found at file close */
+#define NC_EMAX_REQ			(-237) /**< Size of I/O request exceeds INT_MAX */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */

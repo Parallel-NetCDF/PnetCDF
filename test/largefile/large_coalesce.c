@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     unsigned char *buf;
     size_t i;
     int rank, nprocs, err, nerrs=0;
-    int ncid, cmode, varid, dimid[2], req[2], st[2];
+    int ncid, cmode, varid, dimid[2], req[3], st[3];
     MPI_Offset start[2], count[2];
     MPI_Info info;
 
@@ -60,6 +60,11 @@ int main(int argc, char** argv)
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_cb_write", "enable");
 
+#ifndef ENABLE_LARGE_REQ
+    /* silence iternal debug messages */
+    setenv("PNETCDF_SAFE_MODE", "0", 1);
+#endif
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
@@ -85,26 +90,37 @@ int main(int argc, char** argv)
     buf = (unsigned char*) calloc(TWO_G+1024,1);
     if (buf == NULL) printf("malloc falled for size %lld\n", TWO_G+1024);
 
+#ifdef ENABLE_LARGE_REQ
     for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
     for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
+#endif
 
     start[0] = rank;
     count[0] = 1;
 
     start[1] = 0;
-    count[1] = ONE_G;
+    count[1] = 10;
     err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf, &req[0]);
     CHECK_ERR
 
-    /* make file access and write buffer of 2nd request contiguous from the 1st
+    /* 2nd request is not contiguous from the first */
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+1024, &req[1]);
+    CHECK_ERR
+
+    /* make file access and write buffer of 3rd request contiguous from the 2nd
      * request to check whether the internal fileview and buftype coalescing
      * are skipped */
     start[1] = ONE_G;
     count[1] = ONE_G+1024;
-    err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[1]);
+    err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[2]);
     CHECK_ERR
 
-    err = ncmpi_wait_all(ncid, 2, req, st);
+    err = ncmpi_wait_all(ncid, 3, req, st);
+#ifndef ENABLE_LARGE_REQ
+    EXP_ERR(NC_EMAX_REQ)
+#else
     CHECK_ERR
 
     /* read back to check contents */
@@ -135,21 +151,27 @@ int main(int argc, char** argv)
 
     /* test the same pattern but for iget */
     for (i=0; i<TWO_G+1024; i++) buf[i] = 0;
+#endif
 
     start[1] = 0;
-    count[1] = ONE_G;
+    count[1] = 10;
     err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf, &req[0]);
     CHECK_ERR
 
-    /* make file access and read buffer of 2nd request contiguous from the 1st
-     * request to check whether the internal fileview and buftype coalescing
-     * are skipped */
-    start[1] = ONE_G;
-    count[1] = ONE_G+1024;
-    err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[1]);
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf+1024, &req[1]);
     CHECK_ERR
 
-    err = ncmpi_wait_all(ncid, 2, req, st);
+    start[1] = ONE_G;
+    count[1] = ONE_G+1024;
+    err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[2]);
+    CHECK_ERR
+
+    err = ncmpi_wait_all(ncid, 3, req, st);
+#ifndef ENABLE_LARGE_REQ
+    EXP_ERR(NC_EMAX_REQ)
+#else
     CHECK_ERR
 
     for (i=0; i<20; i++) {
@@ -167,6 +189,7 @@ int main(int argc, char** argv)
             nerrs++;
         }
     }
+#endif
 
     err = ncmpi_close(ncid);
     CHECK_ERR

@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* memset() */
+#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -2016,12 +2017,17 @@ mgetput(NC     *ncp,
         int     rw_flag,     /* NC_REQ_WR or NC_REQ_RD */
         int     coll_indep)  /* NC_REQ_COLL or NC_REQ_INDEP */
 {
-    int i, j, len=0, status=NC_NOERR, mpireturn, err, buf_type_size=0;
+    int i, j, len=0, status=NC_NOERR, mpireturn, err;
     void *buf=NULL;
     MPI_Status mpistatus;
     MPI_Datatype filetype, buf_type=MPI_BYTE;
     MPI_File fh;
     MPI_Offset int8, offset=0;
+#ifdef HAVE_MPI_TYPE_SIZE_X
+    MPI_Count buf_type_size=0;
+#else
+    int buf_type_size=0;
+#endif
 
     if (coll_indep == NC_REQ_COLL)
         fh = ncp->collective_fh;
@@ -2157,11 +2163,43 @@ mgetput(NC     *ncp,
     }
     /* if (buf_type == MPI_BYTE) then the whole buf is contiguous */
 
+#ifdef HAVE_MPI_TYPE_SIZE_X
+    MPI_Type_size_x(buf_type, &buf_type_size);
+#ifndef ENABLE_LARGE_REQ
+    if (buf_type_size > INT_MAX) {
+        /* aggregated request size > 2 GiB, ROMIO currently does not support
+         * a single request with amount > 2 GiB
+         */
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
+        if (ncp->safe_mode)
+            printf("Error at line %d file %s: size of aggregated nonblocking requests (%lld) > INT_MAX\n", __LINE__,__FILE__,(long long)buf_type_size);
+        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
+        if (coll_indep == NC_REQ_INDEP) return status;
+        buf_type = MPI_BYTE;
+        len = 0; /* allow this process to participate collective call */
+    }
+#endif
+#else
     MPI_Type_size(buf_type, &buf_type_size);
+#ifndef ENABLE_LARGE_REQ
+    if (buf_type_size == MPI_UNDEFINED) {
+        /* aggregated request size > 2 GiB, ROMIO currently does not support
+         * a single request with amount > 2 GiB
+         */
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
+        if (ncp->safe_mode)
+            printf("Error at line %d file %s: size of aggregated nonblocking requests > INT_MAX\n", __LINE__,__FILE__);
+        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
+        if (coll_indep == NC_REQ_INDEP) return status;
+        buf_type = MPI_BYTE;
+        len = 0; /* allow this process to participate collective call */
+    }
+#endif
+#endif
 
 #ifdef _USE_MPI_GET_COUNT
-        /* explicitly initialize mpistatus object to 0, see comments below */
-        memset(&mpistatus, 0, sizeof(MPI_Status));
+    /* explicitly initialize mpistatus object to 0, see comments below */
+    memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
 
     if (rw_flag == NC_REQ_RD) {
