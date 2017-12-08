@@ -18,31 +18,28 @@ LDADD += ../common/libtestutils.la
 
 AM_CFLAGS =
 if IS_BIGENDIAN
-   AM_CFLAGS += -DWORDS_BIGENDIAN
-endif
-
-if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
-   # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
-   AM_CFLAGS += -DHAVE_DECL_MPI_OFFSET
-   # AM_FFLAGS  += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
-   # AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   AM_CFLAGS += -DWORDS_BIGENDIAN
+   # AM_FFLAGS  += $(FC_DEFINE)WORDS_BIGENDIAN
+   # AM_FCFLAGS += $(FC_DEFINE)WORDS_BIGENDIAN
 endif
 
-TESTPROGRAMS = large_files \
-               large_var \
-               large_dims_vars_attrs \
-               high_dim_var \
-               tst_cdf5_begin \
-               large_coalesce
+if ENABLE_LARGE_REQ
+   AM_CFLAGS += -DENABLE_LARGE_REQ
+endif
+
+check_PROGRAMS = large_files \
+                 large_var \
+                 large_dims_vars_attrs \
+                 high_dim_var \
+                 tst_cdf5_begin \
+                 large_coalesce
 
 if HAS_FORTRAN
-   TESTPROGRAMS += bigrecords
+   check_PROGRAMS += bigrecords
    AM_FFLAGS = -I$(top_builddir)/src/binding/f77
    bigrecords_SOURCES = bigrecords.f
 endif
-
-check_PROGRAMS = $(TESTPROGRAMS)
 
 EXTRA_DIST = wrap_runs.sh
 
@@ -53,13 +50,11 @@ CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-TESTS =
-TEST_EXTENSIONS = .sh
-LOG_COMPILER = $(srcdir)/wrap_runs.sh
-SH_LOG_COMPILER =
-
 if RUN_LARGE_FILE_TEST
-TESTS += $(check_PROGRAMS)
+TESTPROGRAMS = $(check_PROGRAMS)
+else
+TESTPROGRAMS = large_coalesce
+endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -69,6 +64,12 @@ TESTS += $(check_PROGRAMS)
 TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+
+TEST_EXTENSIONS = .sh
+LOG_COMPILER = $(srcdir)/wrap_runs.sh
+SH_LOG_COMPILER =
+
+TESTS = $(TESTPROGRAMS)
 
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well
@@ -83,6 +84,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS) ; do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
@@ -91,6 +93,7 @@ ptest2: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest6: $(TESTPROGRAMS)
@@ -99,12 +102,10 @@ ptest6: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6
-else
-ptest ptest2 ptest4 ptest6 ptests:
-endif
 ptest8 ptest10:
 
 # build check targets but not invoke

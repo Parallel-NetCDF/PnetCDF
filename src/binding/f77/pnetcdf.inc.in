@@ -404,6 +404,7 @@
       integer NF_ENOTFILL
       integer NF_EINVAL_OMODE
       integer NF_EPENDING
+      integer NF_EMAX_REQ
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -469,6 +470,7 @@
       PARAMETER (NF_ENOTFILL                = -234)   ! Attempting to fill a variable when its fill mode is off
       PARAMETER (NF_EINVAL_OMODE            = -235)   ! Invalid file open mode
       PARAMETER (NF_EPENDING                = -236)   ! Pending nonblocking request is found at file close
+      PARAMETER (NC_EMAX_REQ                = -237)   ! Size of I/O request exceeds INT_MAX
 
 !
 ! PnetCDF header inconsistency errors start from -250

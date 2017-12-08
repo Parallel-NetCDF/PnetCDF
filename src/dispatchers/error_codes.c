@@ -235,6 +235,8 @@ ncmpi_strerror(int err)
             return "Invalid or unsupported file open mode";
         case NC_EPENDING:
             return "Pending nonblocking request is found at file close";
+        case NC_EMAX_REQ:
+            return "Size of I/O request exceeds INT_MAX";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
             /* this error means the metadata (dimension names, variable names,
@@ -670,6 +672,7 @@ ncmpi_strerrno(int err)
         case (NC_EINVAL_CMODE):			return "NC_EINVAL_CMODE";
         case (NC_EINVAL_OMODE):			return "NC_EINVAL_OMODE";
         case (NC_EPENDING):			return "NC_EPENDING";
+        case (NC_EMAX_REQ):			return "NC_EMAX_REQ";
         case (NC_ETYPESIZE):			return "NC_ETYPESIZE";
         case (NC_ETYPE_MISMATCH):		return "NC_ETYPE_MISMATCH";
         case (NC_ETYPESIZE_MISMATCH):		return "NC_ETYPESIZE_MISMATCH";

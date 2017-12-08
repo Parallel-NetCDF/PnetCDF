@@ -264,7 +264,8 @@
       NF_ENOTRECVAR               = -233, & ! Attempting operation only for record variables */
       NF_ENOTFILL                 = -234, & ! Attempting to fill a variable when its fill mode is off */
       NF_EINVAL_OMODE             = -235, & ! Invalid file open mode
-      NF_EPENDING                 = -236    ! Pending nonblocking request is found at file close
+      NF_EPENDING                 = -236, & ! Pending nonblocking request is found at file close
+      NF_EMAX_REQ                 = -237    ! Size of I/O request exceeds INT_MAX
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &
