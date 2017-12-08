@@ -15,5 +15,6 @@ for j in 0 ; do
     # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
     ${TESTSEQRUN} $1              ${TESTOUTDIR}/$1.nc
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$1.nc
+    rm -f ${TESTOUTDIR}/$1.nc
 done
 
