@@ -163,6 +163,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/tst_vars_fill.m4 - tests strided put (vars) APIs with
+      fill mode on.
     * test/largefile/large_coalesce.c - tests a bug fixed in r3565 when two
       separate nonblocking requests that can be coalesced into a contiguous MPI
       fileview or buffer type but the coalesced length becomes too big and

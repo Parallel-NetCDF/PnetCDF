@@ -65,12 +65,14 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                mix_collectives \
                large_var_cdf5 \
                tst_max_var_dims \
-               tst_info
+               tst_info \
+               tst_vars_fill
 
-M4_SRCS  = put_all_kinds.m4 erange_fill.m4
+M4_SRCS  = put_all_kinds.m4 erange_fill.m4 tst_vars_fill.m4
 
 nodist_put_all_kinds_SOURCES = put_all_kinds.c
 nodist_erange_fill_SOURCES = erange_fill.c
+nodist_tst_vars_fill_SOURCES = tst_vars_fill.c
 
 if ENABLE_ERANGE_FILL
    M4FLAGS += -DERANGE_FILL
@@ -109,7 +111,7 @@ if HAVE_MPI_MOD
 endif
 endif
 
-check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1
+check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1 tst_vars_fill
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
