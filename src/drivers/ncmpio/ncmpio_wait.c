@@ -1513,7 +1513,7 @@ req_aggregation(NC     *ncp,
                 int     interleaved) /* interleaved in reqs[] */
 {
     int i, gtype, err, status=NC_NOERR, ngroups, mpireturn, buf_len;
-    int *group_index, *group_type, buf_type_size=0;
+    int *group_index, *group_type;
     int *f_blocklengths, *b_blocklengths;
     void *buf; /* point to starting buffer, used by MPI-IO call */
     MPI_Aint      b_begin, b_addr, *f_disps, *b_disps;
@@ -1521,6 +1521,11 @@ req_aggregation(NC     *ncp,
     MPI_File fh;
     MPI_Status mpistatus;
     MPI_Offset max_end;
+#ifdef HAVE_MPI_TYPE_SIZE_X
+    MPI_Count buf_type_size=0;
+#else
+    int buf_type_size=0;
+#endif
 
     if (num_reqs == 0) { /* only NC_REQ_COLL can reach here for 0 request */
         assert(coll_indep == NC_REQ_COLL);
@@ -1800,7 +1805,43 @@ req_aggregation(NC     *ncp,
         }
     }
 
+#ifdef HAVE_MPI_TYPE_SIZE_X
+    MPI_Type_size_x(buf_type, &buf_type_size);
+#ifndef ENABLE_LARGE_REQ
+    if (buf_type_size > INT_MAX) {
+        /* aggregated request size > 2 GiB, ROMIO currently does not support
+         * a single request with amount > 2 GiB
+         */
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
+        if (ncp->safe_mode)
+            printf("Error at line %d file %s: size of aggregated nonblocking requests (%lld) > INT_MAX\n", __LINE__,__FILE__,(long long)buf_type_size);
+        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
+        if (coll_indep == NC_REQ_INDEP) return status;
+        buf_type = MPI_BYTE;
+        buf_len = 0; /* allow this process to participate collective call */
+    }
+#endif
+#else
     MPI_Type_size(buf_type, &buf_type_size);
+#ifndef ENABLE_LARGE_REQ
+    if (buf_type_size == MPI_UNDEFINED /* MPI 3.0 and later only */
+#if MPI_VERSION < 3
+        || buf_type_size < 0
+#endif
+       ) {
+        /* aggregated request size > 2 GiB, ROMIO currently does not support
+         * a single request with amount > 2 GiB
+         */
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
+        if (ncp->safe_mode)
+            printf("Error at line %d file %s: size of aggregated nonblocking requests > INT_MAX\n", __LINE__,__FILE__);
+        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
+        if (coll_indep == NC_REQ_INDEP) return status;
+        buf_type = MPI_BYTE;
+        buf_len = 0; /* allow this process to participate collective call */
+    }
+#endif
+#endif
 
     if (coll_indep == NC_REQ_COLL)
         fh = ncp->collective_fh;
@@ -2182,7 +2223,11 @@ mgetput(NC     *ncp,
 #else
     MPI_Type_size(buf_type, &buf_type_size);
 #ifndef ENABLE_LARGE_REQ
-    if (buf_type_size == MPI_UNDEFINED) {
+    if (buf_type_size == MPI_UNDEFINED /* MPI 3.0 and later only */
+#if MPI_VERSION < 3
+        || buf_type_size < 0
+#endif
+       ) {
         /* aggregated request size > 2 GiB, ROMIO currently does not support
          * a single request with amount > 2 GiB
          */
