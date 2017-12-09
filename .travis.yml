@@ -59,7 +59,7 @@ script:
 after_failure:
   - cat ./test/*/*.log
   - cat ./config.log
-  - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/build-log.txt
+  # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/build-log.txt
 
 notifications:
   email: false
