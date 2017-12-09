@@ -57,6 +57,13 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
+    buf = (unsigned char*) calloc(TWO_G+1024,1);
+    if (buf == NULL) {
+        printf("malloc falled for size %lld\n", TWO_G+1024);
+        MPI_Finalize();
+        return 1;
+    }
+
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_cb_write", "enable");
 
@@ -87,9 +94,6 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* now we are in data mode */
-    buf = (unsigned char*) calloc(TWO_G+1024,1);
-    if (buf == NULL) printf("malloc falled for size %lld\n", TWO_G+1024);
-
 #ifdef ENABLE_LARGE_REQ
     for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
     for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
