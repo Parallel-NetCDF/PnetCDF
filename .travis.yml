@@ -32,6 +32,7 @@ before_install:
   - automake --version
   - libtool --version
   - autoreconf -i
+  - mpirun --version
   # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
   # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
@@ -43,6 +44,7 @@ script:
   # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/scm_log.txt
   # continue the above "build_command" for static library only (default)
   - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS=--silent
+  - cat test/largefile/test-suite.log
   - make -s distclean
   # build both static and shared libraries
   - ./configure --silent --enable-shared LDFLAGS="-Wl,--allow-shlib-undefined"
