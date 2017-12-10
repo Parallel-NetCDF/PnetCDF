@@ -426,20 +426,22 @@ ncmpio_igetput_varm(NC               *ncp,
     if (isSameGroup && reqid != NULL)
         req->id = *reqid;
 
-    req->varp               = varp;
-    req->buf                = buf;
-    req->xbuf               = xbuf;
-    req->bnelems            = bnelems;
-    req->bufcount           = bufcount;
-    req->ptype              = ptype;
-    req->buftype_is_contig  = buftype_is_contig;
-    req->need_swap_back_buf = need_swap_back_buf;
-    req->imaptype           = imaptype;
-    req->abuf_index         = abuf_index;
-    req->tmpBuf             = NULL;
-    req->userBuf            = NULL;
-    req->status             = NULL;
-    req->num_recs           = 1;   /* For record variable, this will be set to
+    req->flag = 0;
+    if (buftype_is_contig)  fSet(req->flag, NC_BUFTYPE_IS_CONTIG);
+    if (need_swap_back_buf) fSet(req->flag, NC_NEED_SWAP_BACK_BUF);
+
+    req->varp        = varp;
+    req->buf         = buf;
+    req->xbuf        = xbuf;
+    req->bnelems     = bnelems;
+    req->bufcount    = bufcount;
+    req->ptype       = ptype;
+    req->imaptype    = imaptype;
+    req->abuf_index  = abuf_index;
+    req->tmpBuf      = NULL;
+    req->userBuf     = NULL;
+    req->status      = NULL;
+    req->num_recs    = 1;   /* For record variable, this will be set to
                                     * the number of records requested. For
                                     * fixed-size variable, this will be 1.
                                     */

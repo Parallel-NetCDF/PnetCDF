@@ -154,7 +154,7 @@ ncmpio_cancel(void *ncdp,
             if (ncp->get_list[i].num_recs > 0) {
                 if (ncp->get_list[i].imaptype != MPI_DATATYPE_NULL)
                     MPI_Type_free(&ncp->get_list[i].imaptype);
-                if (!ncp->get_list[i].buftype_is_contig)
+                if (!fIsSet(ncp->get_list[i].flag, NC_BUFTYPE_IS_CONTIG))
                     MPI_Type_free(&ncp->get_list[i].buftype);
                 if (ncp->get_list[i].tmpBuf != NULL)
                     MPI_Type_free(&ncp->get_list[i].buftype);
@@ -170,7 +170,7 @@ ncmpio_cancel(void *ncdp,
         /* cancel all pending write requests, ignore req_ids and statuses */
         NC_req *put_list = ncp->put_list;
         for (i=0; i<ncp->numPutReqs; i++) {
-            if (put_list[i].num_recs != 0 && put_list[i].need_swap_back_buf)
+            if (put_list[i].num_recs != 0 && fIsSet(put_list[i].flag, NC_NEED_SWAP_BACK_BUF))
                 /* if user buffer is in-place byte-swapped, swap it back */
                 ncmpii_in_swapn(put_list[i].buf,
                                 put_list[i].bnelems * put_list[i].num_recs,
@@ -211,7 +211,7 @@ ncmpio_cancel(void *ncdp,
                     if (get_list[j].num_recs > 0) {
                         if (get_list[j].imaptype != MPI_DATATYPE_NULL)
                             MPI_Type_free(&get_list[j].imaptype);
-                        if (!get_list[j].buftype_is_contig)
+                        if (!fIsSet(get_list[j].flag, NC_BUFTYPE_IS_CONTIG))
                             MPI_Type_free(&get_list[j].buftype);
                         if (get_list[j].tmpBuf != NULL) {
                             NCI_Free(get_list[j].tmpBuf);
@@ -246,7 +246,7 @@ ncmpio_cancel(void *ncdp,
                     if (last_index < 0) {
                         last_index = j;
                         /* put_list[j].num_recs should be >= 1 */
-                        if (put_list[j].need_swap_back_buf)
+                        if (fIsSet(put_list[j].flag, NC_NEED_SWAP_BACK_BUF))
                             /* if user buffer is in-place byte-swapped, swap it back */
                             ncmpii_in_swapn(put_list[j].buf,
                                    put_list[j].bnelems * put_list[j].num_recs,
@@ -823,7 +823,7 @@ req_commit(NC  *ncp,
 	 * record, only the request containing the lead record does this (it
 	 * does swap for the entire request)
          */
-        if (put_list[i].num_recs > 0 && put_list[i].need_swap_back_buf)
+        if (put_list[i].num_recs > 0 && fIsSet(put_list[i].flag, NC_NEED_SWAP_BACK_BUF))
             ncmpii_in_swapn(put_list[i].buf,
                             put_list[i].bnelems * put_list[i].num_recs,
                             put_list[i].varp->xsz);
@@ -867,7 +867,7 @@ req_commit(NC  *ncp,
         err = ncmpio_unpack_xbuf(ncp->format, get_list[i].varp,
                                  get_list[i].bufcount,
                                  get_list[i].buftype,
-                                 get_list[i].buftype_is_contig,
+                                 fIsSet(get_list[i].flag, NC_BUFTYPE_IS_CONTIG),
                                  get_list[i].bnelems * get_list[i].num_recs,
                                  get_list[i].ptype,
                                  get_list[i].imaptype,
@@ -877,7 +877,7 @@ req_commit(NC  *ncp,
             *get_list[i].status = err;
         if (status == NC_NOERR) status = err;
 
-        if (!get_list[i].buftype_is_contig)
+        if (!fIsSet(get_list[i].flag, NC_BUFTYPE_IS_CONTIG))
             MPI_Type_free(&get_list[i].buftype);
 #if 0
         void *cbuf, *lbuf;
@@ -896,7 +896,7 @@ req_commit(NC  *ncp,
             /* need type conversion from the external type to user buffer
                type */
             if (get_list[i].imaptype != MPI_DATATYPE_NULL ||
-                !get_list[i].buftype_is_contig)
+                !fIsSet(get_list[i].flag, NC_BUFTYPE_IS_CONTIG))
                 cbuf = NCI_Malloc((size_t)insize);
             else
                 cbuf = get_list[i].buf;
@@ -917,7 +917,7 @@ req_commit(NC  *ncp,
 
         if (get_list[i].imaptype != MPI_DATATYPE_NULL) {
             /* handle the case for a true get_varm */
-            if (get_list[i].buftype_is_contig)
+            if (fIsSet(get_list[i].flag, NC_BUFTYPE_IS_CONTIG))
                 lbuf = get_list[i].buf;
             else
                 lbuf = NCI_Malloc((size_t)insize);
@@ -936,7 +936,7 @@ req_commit(NC  *ncp,
             lbuf = cbuf;
         }
 
-        if (!get_list[i].buftype_is_contig) {
+        if (!fIsSet(get_list[i].flag, NC_BUFTYPE_IS_CONTIG)) {
             /* unpack lbuf to buf based on buftype */
             position = 0;
             if (get_list[i].bufcount != (int)get_list[i].bufcount &&
