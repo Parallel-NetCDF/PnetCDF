@@ -269,10 +269,11 @@ ncmpio_NC_lookupvar(NC *ncp, int varid, NC_var **varp);
 /*
  *  The PnetCDF non-blocking I/O request type
  */
+#define NC_BUFTYPE_IS_CONTIG  0x00000001
+#define NC_NEED_SWAP_BACK_BUF 0x00000002
 typedef struct NC_req {
+    int            flag;        /* BUFTYPE_IS_CONTIG | NEED_SWAP_BACK_BUF */
     int            id;          /* even number for write, odd for read */
-    int            buftype_is_contig;
-    int            need_swap_back_buf;
     int            abuf_index;  /* index in the abuf occupy_table
                                    -1 means not using attached buffer */
     MPI_Offset     num_recs;    /* number of records requested (1 for
