@@ -43,7 +43,6 @@ script:
   # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/scm_log.txt
   # continue the above "build_command" for static library only (default)
   - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS=--silent
-  - test/largefile/large_coalesce
   - make -s distclean
   # build both static and shared libraries
   - ./configure --silent --enable-shared LDFLAGS="-Wl,--allow-shlib-undefined"
