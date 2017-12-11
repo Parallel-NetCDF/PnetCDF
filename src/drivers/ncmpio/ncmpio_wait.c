@@ -478,8 +478,8 @@ construct_filetypes(NC           *ncp,
         }
 
         if (is_filetype_contig) {
-            MPI_Offset int8 = blocklens[last_contig_req];
-            int8 += blocklens[j];
+            MPI_Offset int8 = blocklens[j];
+            if (last_contig_req >= 0) int8 += blocklens[last_contig_req];
             /* if int8 overflows 4-byte int, then skip coalescing */
             if (int8 == (int)int8 && last_contig_req >= 0 &&
                 displacements[j] - displacements[last_contig_req] ==
