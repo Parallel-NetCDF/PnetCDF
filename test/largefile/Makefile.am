@@ -53,7 +53,7 @@ CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 if RUN_LARGE_FILE_TEST
 TESTPROGRAMS = $(check_PROGRAMS)
 else
-TESTPROGRAMS = large_coalesce
+TESTPROGRAMS =
 endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
