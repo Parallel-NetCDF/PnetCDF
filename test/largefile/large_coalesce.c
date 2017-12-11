@@ -30,11 +30,13 @@ int main(int argc, char** argv)
 {
     char filename[256];
     unsigned char *buf;
-    size_t i;
     int rank, nprocs, err, nerrs=0;
     int ncid, cmode, varid, dimid[2], req[3], st[3];
     MPI_Offset start[2], count[2];
     MPI_Info info;
+#ifdef ENABLE_LARGE_REQ
+    size_t i;
+#endif
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
