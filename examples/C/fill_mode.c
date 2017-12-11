@@ -170,7 +170,7 @@ int main(int argc, char** argv)
         printf("Error at line %d in %s: expecting no_fill to be 0\n",
         __LINE__,__FILE__);
     if (fill_value != NC_FILL_INT)
-        printf("Error at line %d in %s: expecting no_fill to be %ld but got %d\n",
+        printf("Error at line %d in %s: expecting no_fill to be %d but got %d\n",
         __LINE__,__FILE__,NC_FILL_INT,fill_value);
 
     /* fill the 1st record of the record variable */
