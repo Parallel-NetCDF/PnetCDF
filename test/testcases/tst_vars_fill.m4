@@ -103,7 +103,7 @@ test_vars_$1(char *filename)
                     else {
                         if (buf[i][j] != NC_FILL_VALUE($1)) {
                             printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
-                                   __LINE__,__FILE__, i,j, NC_FILL_VALUE($1), buf[i][j]);
+                                   __LINE__,__FILE__, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                             nerrs++;
                         }
                     }
@@ -113,7 +113,7 @@ test_vars_$1(char *filename)
                 for (j=0; j<NX; j++) {
                     if (buf[i][j] != NC_FILL_VALUE($1)) {
                         printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
-                               __LINE__,__FILE__, i,j, NC_FILL_VALUE($1), buf[i][j]);
+                               __LINE__,__FILE__, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                         nerrs++;
                     }
                 }
@@ -130,17 +130,11 @@ foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulongl
 
 int main(int argc, char **argv)
 {
-    char filename[256], var_name[32];
-    int err, nerrs=0, ncid, dimid[2], varid[NVARS];
-    int i, j, k, nprocs, rank, req;
-    int buf[NY][NX];
-    MPI_Offset start[2];
-    MPI_Offset count[2];
-    MPI_Offset stride[2];
+    char filename[256];
+    int err, nerrs=0, rank;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
