@@ -509,7 +509,10 @@ ncmpi_open(MPI_Comm    comm,
     err = driver->open(comm, path, omode, *ncidp, combined_info, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
-    if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE) {
+    if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE &&
+        status != NC_ENULLPAD) {
+        /* NC_EMULTIDEFINE_OMODE and NC_ENULLPAD are not fatal error. We
+         * continue the rest open procedure */
         *ncidp = -1;
         return status;
     }
