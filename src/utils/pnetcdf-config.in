@@ -59,6 +59,8 @@ has_fortran="@has_fortran@"
 has_cxx="@has_mpicxx@"
 enable_erange_fill="@ENABLE_ERANGE_FILL@"
 enable_subfiling="@ENABLE_SUBFILING@"
+enable_large_req="@ENABLE_LARGE_REQ@"
+enable_null_byte_header_padding="@ENABLE_NULL_BYTE_HEADER_PADDING@"
 enable_relax_coord_bound="@RELAX_COORD_BOUND@"
 is_bigendian="@ac_cv_c_bigendian@"
 enable_in_place_swap="@in_place_swap@"
@@ -73,33 +75,35 @@ Usage: pnetcdf-config [OPTION]
 
 Available values for OPTION include:
 
-  --help               display this help message and exit
-  --all                display all options
-  --cc                 C compiler
-  --cflags             C compiler flags
-  --cppflags           C pre-processor flags
-  --has-c++            whether C++ API is installed
-  --c++                C++ compiler
-  --cxxflags           C++ compiler flags
-  --has-fortran        whether Fortran API is installed
-  --f77                Fortran 77 compiler
-  --fflags             Fortran 77 compiler flags
-  --fppflags           Fortran pre-processor flags
-  --fc                 Fortran 9x compiler
-  --fcflags            Fortran 9x compiler flags
-  --ldflags            Linker options
-  --libs               Libraries used to build PnetCDF
-  --relax-coord-bound  Whether using a relaxed coordinate boundary check
-  --in-place-swap      Whether using buffer in-place Endianness byte swap
-  --erange-fill        Whether using fill values for NC_ERANGE error
-  --subfiling          Whether subfiling is enabled or disabled
-  --debug              Whether PnetCDF is built with debug mode
-  --prefix             Install prefix
-  --includedir         Include directory
-  --libdir             Library directory
-  --version            Library version
-  --release-date       Date of PnetCDF source was released
-  --config-date        Date of PnetCDF library was configured
+  --help                      display this help message and exit
+  --all                       display all options
+  --cc                        C compiler
+  --cflags                    C compiler flags
+  --cppflags                  C pre-processor flags
+  --has-c++                   whether C++ API is installed
+  --c++                       C++ compiler
+  --cxxflags                  C++ compiler flags
+  --has-fortran               whether Fortran API is installed
+  --f77                       Fortran 77 compiler
+  --fflags                    Fortran 77 compiler flags
+  --fppflags                  Fortran pre-processor flags
+  --fc                        Fortran 9x compiler
+  --fcflags                   Fortran 9x compiler flags
+  --ldflags                   Linker options
+  --libs                      Libraries used to build PnetCDF
+  --relax-coord-bound         Whether using a relaxed coordinate boundary check
+  --in-place-swap             Whether using buffer in-place Endianness byte swap
+  --erange-fill               Whether using fill values for NC_ERANGE error
+  --subfiling                 Whether subfiling is enabled or disabled
+  --large-req                 Whether to allow single large (>2GiB) MPI-IO requests
+  --null-byte-header-padding  Whether to check null-byte padding in header
+  --debug                     Whether PnetCDF is built with debug mode
+  --prefix                    Install prefix
+  --includedir                Include directory
+  --libdir                    Library directory
+  --version                   Library version
+  --release-date              Date of PnetCDF source was released
+  --config-date               Date of PnetCDF library was configured
 EOF
     exit $1
 }
@@ -109,60 +113,70 @@ all()
         echo
         echo "This $version has been built with the following features: "
         echo
-        echo "  --cc                -> $MPICC"
-        echo "  --cflags            -> $CFLAGS"
-        echo "  --cppflags          -> $CPPFLAGS"
-        echo "  --ldflags           -> $LDFLAGS"
-        echo "  --libs              -> $LIBS"
+        echo "  --cc                        -> $MPICC"
+        echo "  --cflags                    -> $CFLAGS"
+        echo "  --cppflags                  -> $CPPFLAGS"
+        echo "  --ldflags                   -> $LDFLAGS"
+        echo "  --libs                      -> $LIBS"
         echo
-        echo "  --has-c++           -> $has_cxx"
+        echo "  --has-c++                   -> $has_cxx"
 if test "x$has_cxx" = xyes ; then
-        echo "  --cxx               -> $MPICXX"
-        echo "  --cxxflags          -> $CXXFLAGS"
+        echo "  --cxx                       -> $MPICXX"
+        echo "  --cxxflags                  -> $CXXFLAGS"
 fi
         echo
-        echo "  --has-fortran       -> $has_fortran"
+        echo "  --has-fortran               -> $has_fortran"
 if test "x$has_fortran" = xyes ; then
-        echo "  --f77               -> $MPIF77"
-        echo "  --fflags            -> $FFLAGS"
+        echo "  --f77                       -> $MPIF77"
+        echo "  --fflags                    -> $FFLAGS"
         echo
-        echo "  --fc                -> $MPIF90"
-        echo "  --fcflags           -> $FCFLAGS"
-#        echo "  --fclibs            -> $FCLIBS"
+        echo "  --fc                        -> $MPIF90"
+        echo "  --fcflags                   -> $FCFLAGS"
+#        echo "  --fclibs                    -> $FCLIBS"
 fi
         echo
-if test "x$enable_erange_fill" = x0; then
-        echo "  --erange-fill       -> disabled"
-else
-        echo "  --erange-fill       -> enabled"
-fi
-if test "x$enable_subfiling" = x1; then
-        echo "  --subfiling         -> enabled"
-else
-        echo "  --subfiling         -> disabled"
-fi
 if test "x$enable_relax_coord_bound" = x1; then
-        echo "  --relax-coord-bound -> enabled"
+        echo "  --relax-coord-bound         -> enabled"
 else
-        echo "  --relax-coord-bound -> disabled"
+        echo "  --relax-coord-bound         -> disabled"
 fi
 if test "x$is_bigendian" = xno  && (test "x$enable_in_place_swap" = xno) ; then
-        echo "  --in-place-swap     -> disabled"
+        echo "  --in-place-swap             -> disabled"
 else
-        echo "  --in-place-swap     -> enabled"
+        echo "  --in-place-swap             -> enabled"
+fi
+if test "x$enable_erange_fill" = x0; then
+        echo "  --erange-fill               -> disabled"
+else
+        echo "  --erange-fill               -> enabled"
+fi
+if test "x$enable_subfiling" = x1; then
+        echo "  --subfiling                 -> enabled"
+else
+        echo "  --subfiling                 -> disabled"
+fi
+if test "x$enable_large_req" = x1; then
+        echo "  --large-req                 -> enabled"
+else
+        echo "  --large-req                 -> disabled"
+fi
+if test "x$enable_null_byte_header_padding" = x1; then
+        echo "  --null-byte-header-padding  -> enabled"
+else
+        echo "  --null-byte-header-padding  -> disabled"
 fi
 if test "x$debug_mode" = x1; then
-        echo "  --debug             -> enabled"
+        echo "  --debug                     -> enabled"
 else
-        echo "  --debug             -> disabled"
+        echo "  --debug                     -> disabled"
 fi
         echo
-        echo "  --prefix            -> $prefix"
-        echo "  --includedir        -> $includedir"
-        echo "  --libdir            -> $libdir"
-        echo "  --version           -> $version"
-        echo "  --release-date      -> $release_date"
-        echo "  --config-date       -> $config_date"
+        echo "  --prefix                    -> $prefix"
+        echo "  --includedir                -> $includedir"
+        echo "  --libdir                    -> $libdir"
+        echo "  --version                   -> $version"
+        echo "  --release-date              -> $release_date"
+        echo "  --config-date               -> $config_date"
 }
 
 if test $# -eq 0; then
@@ -286,6 +300,22 @@ fi
 
     --subfiling)
 if test "x$enable_subfiling" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --large-req)
+if test "x$enable_large_req" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --null-byte-header-padding)
+if test "x$enable_null_byte_header_padding" = x1; then
         echo "enabled"
 else
         echo "disabled"

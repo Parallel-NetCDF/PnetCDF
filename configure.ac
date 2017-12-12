@@ -114,6 +114,7 @@ AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
+AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])
@@ -1354,9 +1355,11 @@ AC_ARG_ENABLE([large-req],
     [large_req=${enableval}], [large_req=no]
 )
 if test "x${large_req}" = xyes ; then
+    ENABLE_LARGE_REQ=1
     AC_DEFINE(ENABLE_LARGE_REQ)
 fi
 AM_CONDITIONAL(ENABLE_LARGE_REQ, [test x$large_req = xyes])
+AC_SUBST(ENABLE_LARGE_REQ)
 
 AC_ARG_ENABLE([large-file-test],
     [AS_HELP_STRING([--enable-large-file-test],
@@ -1365,6 +1368,20 @@ AC_ARG_ENABLE([large-file-test],
     [large_file_test=${enableval}], [large_file_test=no]
 )
 AM_CONDITIONAL(RUN_LARGE_FILE_TEST, [test x$large_file_test = xyes])
+
+# Check whether to enable strict null byte header padding.
+# See https://github.com/Unidata/netcdf-c/issues/657 for more information.
+AC_ARG_ENABLE([null-byte-header-padding],
+    [AS_HELP_STRING([--enable-null-byte-header-padding],
+                    [Enable check for null-byte header padding when reading
+                     files in classic formats. @<:@default: disabled@:>@])],
+    [null_byte_header_padding=${enableval}], [null_byte_header_padding=no]
+)
+if test "x${null_byte_header_padding}" = xyes ; then
+    ENABLE_NULL_BYTE_HEADER_PADDING=1
+    AC_DEFINE(ENABLE_NULL_BYTE_HEADER_PADDING)
+fi
+AC_SUBST(ENABLE_NULL_BYTE_HEADER_PADDING)
 
 dnl build test programs and benchmark programs
 AM_CONDITIONAL(BUILD_TESTSETS, [true])
@@ -1495,45 +1512,49 @@ echo \
 "
    ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
-   Features:  Build static libraries                  - ${enable_static}
-              Build shared libraries                  - ${enable_shared}
-              Build Fortran APIs                      - ${has_fortran}
-              Build C++ APIs                          - ${has_mpicxx}"
+   Features:  Build static libraries                      - ${enable_static}
+              Build shared libraries                      - ${enable_shared}
+              Build Fortran APIs                          - ${has_fortran}
+              Build C++ APIs                              - ${has_mpicxx}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
-              Request aggregation in nonblocking APIs - OFF"
+              Request aggregation in nonblocking APIs     - OFF"
 fi
 if test "x${enable_erange_fill}" = xno; then
    echo "\
-              Fill variables when NC_ERANGE occurs    - OFF"
+              Fill variables when NC_ERANGE occurs        - OFF"
 fi
 if test "x${enable_subfiling}" = xyes; then
    echo "\
-              Build subfiling support                 - ON"
+              Build subfiling support                     - ON"
 fi
 if test "x${enable_relax_coord_bound}" = xyes; then
    echo "\
-              Relax start coordinate bound check      - ON"
+              Relax start coordinate bound check          - ON"
 fi
 if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
    echo "\
-              Memory in-place byte swap               - OFF"
+              Memory in-place byte swap                   - OFF"
 fi
 if test "x${large_file_test}" = xyes; then
    echo "\
-              Testing large file/variable I/O         - ON"
+              Testing large file/variable I/O             - ON"
 fi
 if test "x${debug}" = xyes; then
    echo "\
-              PnetCDF internal debug mode             - ON"
+              PnetCDF internal debug mode                 - ON"
 fi
 if test "x${has_fortran}" = xyes && (test "x${ac_f77_support_freeform}" = xno) ; then
    echo "\
-              Support free form in Fortran 77         - OFF"
+              Support free form in Fortran 77             - OFF"
 fi
 if test "x${large_req}" = xyes ; then
    echo "\
-              Allow single large (> 2GiB) requests    - ON"
+              Allow single large (> 2GiB) MPI-IO requests - ON"
+fi
+if test "x${null_byte_header_padding}" = xyes ; then
+   echo "\
+              Check null-byte header padding for reads    - ON"
 fi
 
 echo "\

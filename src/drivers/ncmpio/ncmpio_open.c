@@ -40,7 +40,7 @@ ncmpio_open(MPI_Comm     comm,
             void       **ncpp)
 {
     char *env_str;
-    int i, mpiomode, err, mpireturn;
+    int i, mpiomode, err, status=NC_NOERR, mpireturn;
     MPI_File fh;
     MPI_Comm dup_comm;
     MPI_Info info_used;
@@ -160,7 +160,8 @@ ncmpio_open(MPI_Comm     comm,
 
     /* read header from file into NC object pointed by ncp -------------------*/
     err = ncmpio_hdr_get_NC(ncp);
-    if (err != NC_NOERR) { /* fatal error */
+    if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
+    else if (err != NC_NOERR) { /* fatal error */
         ncmpio_close_files(ncp, 0);
         ncmpio_free_NC(ncp);
         return err;
@@ -215,6 +216,6 @@ ncmpio_open(MPI_Comm     comm,
 
     *ncpp = (void*)ncp;
 
-    return NC_NOERR;
+    return status;
 }
 
