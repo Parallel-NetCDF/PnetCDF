@@ -33,7 +33,10 @@ This is essentially a placeholder for the next release note ...
       API call or the aggregated size of nonblocking requests in a wait API
       call exceeds INT_MAX (max of 4-byte integer).  Note the size limit is per
       MPI process, not across all processes. This is due to MPI-IO may not
-      support a single MPI-IO request of size larger then INT_MAX.
+      support a single MPI-IO request of size larger then INT_MAX. A new
+      configure command-line option "--enable-large-req" has been added
+      available to disable the checking. Use this option is recommended only
+      when the underneath MPI-IO library supports large single requests.
 
   o New constants
     * NC_FORMAT_UNKNOWN, NF_FORMAT_UNKNOWN, and NF90_FORMAT_UNKNOWN are new
@@ -89,7 +92,12 @@ This is essentially a placeholder for the next release note ...
       codes are NF_EMAX_REQ and NF90_EMAX_REQ, respectively.
     * NC_ENULLPAD - indicates the file fails strict null-byte header check. The
       corresponding F77 and F90 error codes are NF_ENULPAD and NF90_ENULPAD,
-      respectively. This has also been defined in NetCDF since 4.5.1.
+      respectively. The same error code has also been defined in NetCDF since
+      4.5.1. Note this error is not considered fatal. PnetCDF will continue
+      the file open procedure if there is no other error found. Therefore, when
+      encountering this error code returned from the file open API, ncmpi_open,
+      user can safely ignore it. See section "Conflict with NetCDF library"
+      below for further discussion.
 
   o New PnetCDF hint
     * none
@@ -250,11 +258,16 @@ This is essentially a placeholder for the next release note ...
       opening such files.  Note if the sizes of all attribute values of your
       files are aligned with 4-byte boundaries, then the files are readable by
       PnetCDF.  In order to keep the files in question readable by PnetCDF,
-      checking for null-byte padding has been disabled in 1.9.0. But, we keep
-      this checking in ncvalidator, a utility program that can report whether a
-      CDF file violates the file format specification, including this null-byte
-      padding. See r3528 for source codes changed and discussion in NetCDF
-      Github issue https://github.com/Unidata/netcdf-c/issues/657.
+      checking for null-byte padding has been disabled in 1.9.0 by default. A
+      new configure command-line option "--enable-null-byte-header-padding" has
+      been made available to enable the checking and error code NC_ENULLPAD
+      will be thrown when opening files. Note NC_ENULLPAD is not considered a
+      fatal error. Users can safely ignore it. However, we keep this checking
+      in ncvalidator no matter the new configure option is set or not.
+      ncvalidator is a utility program reports whether a CDF file violates the
+      file format specification, including this null-byte padding. See r3528
+      for source codes changed and discussion in NetCDF Github issue
+      https://github.com/Unidata/netcdf-c/issues/657.
 
   o Issues related to MPI library vendors:
     * When using OpenMPI 2.0.0 through the latest 2.1.2 to build PnetCDF 1.8.1
