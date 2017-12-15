@@ -14,7 +14,8 @@
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
-                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS=""
 
   On Cori, when using Intel-based compilers are used, NERSC recommends no
   optimization arguments for compilation. See "Recommended flags" for Intel
@@ -29,6 +30,7 @@
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
                 MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS="" \
                 --enable-shared LDFLAGS=-dynamic
 
   See further information about "Shared and Dynamic Libraries" from the
@@ -52,6 +54,7 @@
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
                 MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS="" \
                 TESTMPIRUN="srun -n NP" TESTSEQRUN="srun -n 1" \
                 TESTOUTDIR="$SCRATCH"
 
@@ -79,7 +82,8 @@
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
-                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS=""
 
   and then run
 
@@ -97,6 +101,7 @@
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
                 MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS="" \
                 --enable-shared LDFLAGS=-dynamic
 
   and then run
