@@ -125,6 +125,7 @@ int
 main(int argc, char *argv[])
 {
     extern char *optarg;
+    char *cmd_str;
     int cdf_format, c;
     int numGatts, numTypes, numVars;
     int nfailsTotal = 0;        /* total number of failures */
@@ -202,7 +203,7 @@ main(int argc, char *argv[])
     write_file(testfile, numGatts, numVars);
     if (nfailsTotal > 0) goto fn_exit;
 
-    char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+    cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
     printf("%-66s ------ ",cmd_str);
     free(cmd_str);
