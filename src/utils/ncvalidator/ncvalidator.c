@@ -94,6 +94,7 @@ typedef int nc_type;
 #define NC_DEFAULT_CHUNKSIZE 1048576
 
 typedef enum {
+    NC_INVALID     = -1,  /* invalid */
     NC_UNSPECIFIED =  0,  /* ABSENT */
     NC_DIMENSION   = 10,  /* \x00 \x00 \x00 \x0A */
     NC_VARIABLE    = 11,  /* \x00 \x00 \x00 \x0B */
@@ -914,11 +915,12 @@ val_get_NC_tag(int fd, bufferinfo *gbp, NC_tag *tagp, const char *loc)
 
     tag = get_uint32(gbp);
     switch(tag) {
+        case  0: *tagp = NC_UNSPECIFIED; break;
         case 10: *tagp = NC_DIMENSION;   break;
         case 11: *tagp = NC_VARIABLE;    break;
         case 12: *tagp = NC_ATTRIBUTE;   break;
         default:
-            *tagp = NC_UNSPECIFIED;
+            *tagp = NC_INVALID;
             if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
             if (verbose) printf("\tInvalid NC component tag (%d)\n",tag);
             return NC_ENOTNC;
