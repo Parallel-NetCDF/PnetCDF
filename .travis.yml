@@ -52,7 +52,7 @@ after_success:
   - make -s distclean
 
 after_failure:
-  - cat ./test/*/*.log
+  - cat ./*/_build/sub/test/*/*.log
   - cat ./config.log
   - make -s distclean
   # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/build-log.txt
