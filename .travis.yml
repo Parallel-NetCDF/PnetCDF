@@ -37,27 +37,30 @@ before_install:
   # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
   # Below is for Ubuntu
   # - DateStr=`date -r configure.ac +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
-
-script:
   # dump the Coverity Scan SCM log file
   # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/scm_log.txt
+
+script: build_static_lib && build_static_shared_lib && build_shared_lib
+
+build_static_lib:
   # continue the above "build_command" for static library only (default)
-  - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS=--silent
-  - make -s distclean
+  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS=--silent
+
+build_static_shared_lib:
   # build both static and shared libraries
-  - ./configure --silent --enable-shared LDFLAGS="-Wl,--allow-shlib-undefined"
-  - make -s V=1 LIBTOOLFLAGS=--silent tests
-  - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared LDFLAGS='-Wl,--allow-shlib-undefined'"
-  - make -s distclean
+  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared LDFLAGS='-Wl,--allow-shlib-undefined'"
+
+build_shared_lib:
   # build shared library only
-  # - ./configure --silent --enable-shared --disable-static LDFLAGS="-Wl,--allow-shlib-undefined"
-  # - make -s V=1 LIBTOOLFLAGS=--silent tests
-  # - make -s V=1 LIBTOOLFLAGS=--silent distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared --disable-static LDFLAGS='-Wl,--allow-shlib-undefined'"
-  # - make -s distclean
+  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared --disable-static LDFLAGS='-Wl,--allow-shlib-undefined'"
+
+after_success:
+  - make -s distclean
 
 after_failure:
   - cat ./test/*/*.log
   - cat ./config.log
+  - make -s distclean
   # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/build-log.txt
 
 notifications:
