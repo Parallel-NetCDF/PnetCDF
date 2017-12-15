@@ -40,19 +40,13 @@ before_install:
   # dump the Coverity Scan SCM log file
   # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/scm_log.txt
 
-script: build_static_lib && build_static_shared_lib && build_shared_lib
-
-build_static_lib:
+script: ./travis-run-tests.sh
   # continue the above "build_command" for static library only (default)
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS=--silent
-
-build_static_shared_lib:
+  # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS=--silent
   # build both static and shared libraries
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared LDFLAGS='-Wl,--allow-shlib-undefined'"
-
-build_shared_lib:
+  # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared LDFLAGS='-Wl,--allow-shlib-undefined'"
   # build shared library only
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared --disable-static LDFLAGS='-Wl,--allow-shlib-undefined'"
+  # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared --disable-static LDFLAGS='-Wl,--allow-shlib-undefined'"
 
 after_success:
   - make -s distclean
