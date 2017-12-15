@@ -821,7 +821,7 @@ compute_var_shape(NC *ncp)
 static int
 val_repair(int fd, off_t offset, size_t len, void *buf)
 {
-    size_t nn;
+    ssize_t nn;
 
     if (-1 == lseek(fd, offset, SEEK_SET)) {
         if (verbose)
@@ -914,12 +914,11 @@ val_get_NC_tag(int fd, bufferinfo *gbp, NC_tag *tagp, const char *loc)
 
     tag = get_uint32(gbp);
     switch(tag) {
-        case  0: *tagp = NC_UNSPECIFIED; break;
         case 10: *tagp = NC_DIMENSION;   break;
         case 11: *tagp = NC_VARIABLE;    break;
         case 12: *tagp = NC_ATTRIBUTE;   break;
         default:
-            *tagp = -1;
+            *tagp = NC_UNSPECIFIED;
             if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
             if (verbose) printf("\tInvalid NC component tag (%d)\n",tag);
             return NC_ENOTNC;
