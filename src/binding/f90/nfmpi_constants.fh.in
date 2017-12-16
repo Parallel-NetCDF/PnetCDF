@@ -269,7 +269,7 @@
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &
-      NF_EMULTIDEFINE             = -250, & ! NC definitions on multiprocesses conflict
+      NF_EMULTIDEFINE             = -250, & ! NC definitions inconsistent among processes
       NF_EMULTIDEFINE_OMODE       = -251, & ! inconsistent file open modes
       NF_EMULTIDEFINE_DIM_NUM     = -252, & ! inconsistent number of dimensions
       NF_EMULTIDEFINE_DIM_SIZE    = -253, & ! inconsistent size of dimension
@@ -277,7 +277,7 @@
       NF_EMULTIDEFINE_VAR_NUM     = -255, & ! inconsistent number of variables
       NF_EMULTIDEFINE_VAR_NAME    = -256, & ! inconsistent variable name
       NF_EMULTIDEFINE_VAR_NDIMS   = -257, & ! inconsistent variable's number of dimensions
-      NF_EMULTIDEFINE_VAR_DIMIDS  = -258, & ! inconsistent variable's dimid
+      NF_EMULTIDEFINE_VAR_DIMIDS  = -258, & ! inconsistent variable's dimension IDs
       NF_EMULTIDEFINE_VAR_TYPE    = -259, & ! inconsistent variable's data type
       NF_EMULTIDEFINE_VAR_LEN     = -260, & ! inconsistent variable's size
       NF_EMULTIDEFINE_NUMRECS     = -261, & ! inconsistent number of records
