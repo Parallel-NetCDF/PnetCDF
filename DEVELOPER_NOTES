@@ -45,7 +45,8 @@ Tasks immediately before a new release (must run in the following order)
         This creates a folder under $HOME/inst with name equal to $prefix.
       - test if file system type prefix added to file name is acceptable.
         For example, "ufs:" added to file name. Note this ROMIO convention may
-        not be portable, so it is not added to the regular test programs.
+        not be portable, so it is not added to the regular test programs. Try
+        make check TESTOUTDIR="ufs:."
 
     * build and test on different platforms with various compilers:
       - login.mcs.anl.gov : Intel, NAG Fortran, PGI, Solaris Studio compilers

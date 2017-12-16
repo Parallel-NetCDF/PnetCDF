@@ -2102,7 +2102,7 @@ usage(char *argv0)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char filename[512], *cmd;
+    char filename[512], *cmd, *path;
     int i, omode, fd, status=NC_NOERR;
     NC *ncp=NULL;
     struct stat ncfilestat;
@@ -2133,10 +2133,18 @@ int main(int argc, char **argv)
     }
     snprintf(filename, 512, "%s", argv[0]);
 
+    /* remove the file system type prefix name if there is any.
+     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
+     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+     */
+    path = strchr(filename, ':');
+    if (path == NULL) path = filename; /* no prefix */
+    else              path++;
+
     if (repair) omode = O_RDWR;
     else        omode = O_RDONLY;
 
-    fd = open(filename, omode);
+    fd = open(path, omode);
     if (fd == -1) {
         fprintf(stderr, "Error on open file %s (%s)\n",
                 filename,strerror(errno));
