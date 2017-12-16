@@ -1657,7 +1657,6 @@ C           /* get all variables & check all values equal 42 */
         call print_nok(nok)
         end
 
-#if 0
 C * Test nc_set_default_format
 C *    try with bad default format
 C *    try with NULL old_formatp
@@ -1675,41 +1674,45 @@ C *    close file & create again for test using attribute _FillValue
       integer i
       integer version
       integer old_format
+      integer*8 length  !/* of att */
+      integer formats(3)
       integer nfmpi_get_file_version
       
 C     /* bad format */
       err = nfmpi_set_default_format(3, old_format)
       if (err .ne. NF_EINVAL)
-     +     call errore("bad default format: status = %d", err)
-     
+     +     call errore("bad default format: ", err)
+      formats(1) = nf_format_classic
+      formats(2) = nf_format_cdf2
+      formats(3) = nf_format_cdf5
 C    /* Cycle through available formats. */
-      do 1 i=1, 2
-         err = nfmpi_set_default_format(i, old_format)
+      do 1 i=1, 3
+         err = nfmpi_set_default_format(formats(i), old_format)
          if (err .ne. NF_NOERR) 
-     +       call errore("setting classic format: status = %d", err)
-         flags = IOR(NF_CLOBBER, extra_flags)
+     +       call errore("setting classic format: ", err)
+         flags = NF_CLOBBER
          err = nfmpi_create(comm, scratch, flags, info, ncid)
          if (err .ne. NF_NOERR) 
-     +       call errore("bad nfmpi_create: status = %d", err)
-         err = nfmpi_put_att_text(ncid, NF_GLOBAL, "testatt", 
-     +       4, "blah")
+     +       call errore("bad nfmpi_create: ", err)
+         length = 4
+         err = nfmpi_put_att_text(ncid, NF_GLOBAL, 'testatt', 
+     +       length, 'blah')
          if (err .ne. NF_NOERR)
-     +       call errore("bad put_att: status = %d", err)
+     +       call errore("bad put_att_text: ", err)
          err = nfmpi_close(ncid)
          if (err .ne. NF_NOERR)
-     +       call errore("bad close: status = %d", err)
+     +       call errore("bad close: ", err)
          err = nfmpi_get_file_version(scratch, version)
-         if (err .ne. NF_NOERR) call errore("bad file version = %d",err)
-         if (version .ne. i)
-     +       call errore("bad file version = %d", err)
+         if (err .ne. NF_NOERR)
+     +       call errore("bad nfmpi_get_file_version: ",err)
+         if (version .ne. formats(i))
+     +       call errori("bad file version: ", version)
  1    continue
 
 C    /* Remove the left-over file. */
-      err = nfmpi_delete(scratch)
+      err = nfmpi_delete(scratch, info)
       if (err .ne. NF_NOERR) call errore("remove failed", err)
       end
-
-#endif
 
 C     This function looks in a file for the netCDF magic number.
       integer function nfmpi_get_file_version(path, version)
@@ -1721,10 +1724,14 @@ C     This function looks in a file for the netCDF magic number.
       integer version
       character magic*4
       integer ver
-      integer f
+      integer f, i
       parameter (f = 10)
 
-      open(f, file=path, status='OLD', form='UNFORMATTED',
+C     remove the file system type prefix name if there is any.
+C     For example, when path = "lustre:/home/foo/testfile.nc", remove
+C     "lustre:" to make it "/home/foo/testfile.nc" in open() below
+      i = index(path, ':')
+      open(f, file=path(i+1:), status='OLD', form='UNFORMATTED',
      +     access='DIRECT', recl=4)
 
 C     Assume this is not a netcdf file.
@@ -1738,10 +1745,13 @@ C     If the first three characters are not "CDF" we're done.
       if (index(magic, 'CDF') .eq. 1) then
          ver = ichar(magic(4:4))
          if (ver .eq. 1) then
-            version = 1
+            version = nf_format_classic
             nfmpi_get_file_version = NF_NOERR
          elseif (ver .eq. 2) then
-            version = 2
+            version = nf_format_cdf2
+            nfmpi_get_file_version = NF_NOERR
+         elseif (ver .eq. 5) then
+            version = nf_format_cdf5
             nfmpi_get_file_version = NF_NOERR
          endif
       endif

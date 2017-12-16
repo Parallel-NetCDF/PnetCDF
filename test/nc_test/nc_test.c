@@ -541,6 +541,7 @@ main(int argc, char *argv[])
 	NC_TEST1(ncmpi_iput_varm_longlong, numVars);
 	NC_TEST1(ncmpi_iput_varm_ulonglong, numVars);
 	NC_TEST1(ncmpi_iput_varm, numVars);
+        NC_TEST(ncmpi_set_default_format);
     }
 
 fn_exit:
