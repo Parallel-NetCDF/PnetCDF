@@ -415,9 +415,7 @@
         external        test_nf90mpi_rename_att
         external        test_nf90mpi_del_att
         external        test_nf90mpi_set_fill
-#if 0
         external        test_nf90mpi_set_default_format
-#endif
         external        nc_ignorefpe
 
         call MPI_INIT(err)                        
@@ -828,10 +826,8 @@
             call test('nf90mpi_rename_att', test_nf90mpi_rename_att)
             call test('nf90mpi_del_att', test_nf90mpi_del_att)
             call test('nf90mpi_set_fill', test_nf90mpi_set_fill)
-#if 0
             call test('nf90mpi_set_default_format', &
-                      test_nf90mpi_set_default_format);
-#endif
+                      test_nf90mpi_set_default_format)
         end if
 
         call MPI_Info_free(info, err)

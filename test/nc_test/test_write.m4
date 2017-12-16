@@ -2434,15 +2434,23 @@ ifdef(`PNETCDF', `
 #define MAGIC_NUM_LEN 4
 static
 int
-APIFunc(get_file_version)(char *path, int *version)
+APIFunc(get_file_version)(char *filename, int *version)
 {
    int fd;
    ssize_t read_len;
-   char magic[MAGIC_NUM_LEN];
+   char magic[MAGIC_NUM_LEN], *path;
 
    /* Need two valid pointers - check for NULL. */
-   if (!version || !path)
+   if (!version || !filename)
       return NC_EINVAL;
+
+    /* remove the file system type prefix name if there is any.
+     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
+     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+     */
+    path = strchr(filename, ':');
+    if (path == NULL) path = filename; /* no prefix */
+    else              path++;
 
    /* Figure out if this is a netcdf or hdf5 file. */
    fd = open(path, O_RDONLY, 0600);
@@ -2509,21 +2517,25 @@ TestFunc(set_default_format)(void)
     {
        if (i == NC_FORMAT_NETCDF4 || i == NC_FORMAT_NETCDF4_CLASSIC)
            continue; /* test classic formats only */
-       if ((err = APIFunc(set_default_format)(i, NULL)))
+       IF ((err = APIFunc(set_default_format)(i, NULL)))
            error("setting classic format: status = %d", err);
        ELSE_NOK
        err = FileCreate(scratch, NC_CLOBBER, &ncid);
-       if (err != NC_NOERR)
+       IF (err != NC_NOERR)
            error("bad nc_create: status = %d", err);
+       ELSE_NOK
        err = APIFunc(put_att_text)(ncid, NC_GLOBAL, "testatt", sizeof("blah"), "blah");
-       if (err != NC_NOERR)
+       IF (err != NC_NOERR)
            error("bad put_att: status = %d", err);
+       ELSE_NOK
        err = APIFunc(close)(ncid);
-       if (err != NC_NOERR)
+       IF (err != NC_NOERR)
            error("bad close: status = %d", err);
+       ELSE_NOK
        err = APIFunc(get_file_version)(scratch, &version);
-       if (err != NC_NOERR)
+       IF (err != NC_NOERR)
            error("bad file version = %d", err);
+       ELSE_NOK
        if (version != i) {
 #if 0
           if (i == 4) {
@@ -2541,6 +2553,7 @@ TestFunc(set_default_format)(void)
     err = FileDelete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    ELSE_NOK
 
     return nok;
 }
