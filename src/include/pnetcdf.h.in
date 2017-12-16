@@ -1,7 +1,7 @@
 /*
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- * 
+ *
  * $Id$
  *
  * @configure_input@
@@ -401,7 +401,7 @@ referenced data out of range for the rank of the specified
 variable. For example, an edge length that is larger than the
 corresponding dimension length minus the corner index will cause an
 error. */
-#define NC_EEDGE	(-57)
+#define NC_EEDGE	(-57)      /**< Start+count exceeds dimension bound */
 #define NC_ESTRIDE	(-58)	   /**< Illegal stride */
 #define NC_EBADNAME	(-59)	   /**< Attribute or variable name contains illegal characters */
 /* N.B. following must match value in ncx.h */
@@ -443,8 +443,7 @@ by the desired type. */
    needed. */
 #define NC4_FIRST_ERROR  (-100)
 
-/** Error at HDF5 layer. */
-#define NC_EHDFERR       (-101)
+#define NC_EHDFERR       (-101)    /**< Error at HDF5 layer. */
 #define NC_ECANTREAD     (-102)    /**< Can't read. */
 #define NC_ECANTWRITE    (-103)    /**< Can't write. */
 #define NC_ECANTCREATE   (-104)    /**< Can't create. */
@@ -456,8 +455,7 @@ by the desired type. */
 #define NC_EATTEXISTS    (-110)    /**< Attribute already exists. */
 #define NC_ENOTNC4       (-111)    /**< Attempting netcdf-4 operation on netcdf-3 file. */
 
-/** Attempting netcdf-4 operation on strict nc3 netcdf-4 file. */
-#define NC_ESTRICTNC3    (-112)
+#define NC_ESTRICTNC3    (-112)    /** Attempting netcdf-4 operation on strict nc3 netcdf-4 file. */
 #define NC_ENOTNC3       (-113)    /**< Attempting netcdf-3 operation on netcdf-4 file. */
 #define NC_ENOPAR        (-114)    /**< Parallel operation on file opened for non-parallel access. */
 #define NC_EPARINIT      (-115)    /**< Error initializing for parallel access. */
@@ -578,7 +576,7 @@ by the desired type. */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
-#define NC_EMULTIDEFINE			(-250) /**< NC definitions on multiprocesses conflict */
+#define NC_EMULTIDEFINE			(-250) /**< NC definitions inconsistent among processes */
 #define NC_EMULTIDEFINE_OMODE		(-251) /**< inconsistent file open modes among processes */
 #define NC_EMULTIDEFINE_DIM_NUM		(-252) /**< inconsistent number of dimensions */
 #define NC_EMULTIDEFINE_DIM_SIZE	(-253) /**< inconsistent size of dimension */
@@ -586,7 +584,7 @@ by the desired type. */
 #define NC_EMULTIDEFINE_VAR_NUM		(-255) /**< inconsistent number of variables */
 #define NC_EMULTIDEFINE_VAR_NAME	(-256) /**< inconsistent variable name */
 #define NC_EMULTIDEFINE_VAR_NDIMS	(-257) /**< inconsistent variable's number of dimensions */
-#define NC_EMULTIDEFINE_VAR_DIMIDS	(-258) /**< inconsistent variable's dimid */
+#define NC_EMULTIDEFINE_VAR_DIMIDS	(-258) /**< inconsistent variable's dimension IDs */
 #define NC_EMULTIDEFINE_VAR_TYPE	(-259) /**< inconsistent variable's data type */
 #define NC_EMULTIDEFINE_VAR_LEN		(-260) /**< inconsistent variable's size */
 #define NC_EMULTIDEFINE_NUMRECS		(-261) /**< inconsistent number of records */

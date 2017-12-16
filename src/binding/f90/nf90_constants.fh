@@ -276,7 +276,7 @@
       NF90_EINVAL_OMODE             = NF_EINVAL_OMODE             , & ! Invalid file open mode
       NF90_EPENDING                 = NF_EPENDING                 , & ! Pending nonblocking request is found at file close
       NF90_EMAX_REQ                 = NF_EMAX_REQ                 , & ! Size of I/O request exceeds INT_MAX
-      NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
+      NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions inconsistent among processes
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! inconsistent file open modes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
       NF90_EMULTIDEFINE_DIM_SIZE    = NF_EMULTIDEFINE_DIM_SIZE    , & ! inconsistent size of dimension
@@ -284,7 +284,7 @@
       NF90_EMULTIDEFINE_VAR_NUM     = NF_EMULTIDEFINE_VAR_NUM     , & ! inconsistent number of variables
       NF90_EMULTIDEFINE_VAR_NAME    = NF_EMULTIDEFINE_VAR_NAME    , & ! inconsistent variable name
       NF90_EMULTIDEFINE_VAR_NDIMS   = NF_EMULTIDEFINE_VAR_NDIMS   , & ! inconsistent variable's number of dimensions
-      NF90_EMULTIDEFINE_VAR_DIMIDS  = NF_EMULTIDEFINE_VAR_DIMIDS  , & ! inconsistent variable's dimid
+      NF90_EMULTIDEFINE_VAR_DIMIDS  = NF_EMULTIDEFINE_VAR_DIMIDS  , & ! inconsistent variable's dimension IDs
       NF90_EMULTIDEFINE_VAR_TYPE    = NF_EMULTIDEFINE_VAR_TYPE    , & ! inconsistent variable's data type
       NF90_EMULTIDEFINE_VAR_LEN     = NF_EMULTIDEFINE_VAR_LEN     , & ! inconsistent variable's size
       NF90_EMULTIDEFINE_NUMRECS     = NF_EMULTIDEFINE_NUMRECS     , & ! inconsistent number of records
