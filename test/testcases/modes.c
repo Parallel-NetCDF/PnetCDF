@@ -35,13 +35,21 @@
 static
 int check_modes(char *filename)
 {
-    int rank, err, nerrs=0;
-    int ncid, cmode;
+    int rank, err, nerrs=0, ncid, cmode;
+    char *path;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* delete the file and ignore error */
-    if (rank == 0) unlink(filename);
+    /* remove the file system type prefix name if there is any.
+     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
+     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+     */
+    path = strchr(filename, ':');
+    if (path == NULL) path = filename; /* no prefix */
+    else              path++;
+
+    if (rank == 0) unlink(path);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* create a new file and test various cmodes ----------------------------*/
@@ -55,12 +63,12 @@ int check_modes(char *filename)
 
     /* The file should not be created */
     if (rank == 0) {
-        if (access(filename, F_OK) == 0) {
+        if (access(path, F_OK) == 0) {
             printf("Error at line %d in %s: file (%s) should not be created\n",
                    __LINE__,__FILE__, filename);
             nerrs++;
             /* delete the file and ignore error */
-            unlink(filename);
+            unlink(path);
         }
         /* else : file does not exist */
     }
@@ -76,7 +84,7 @@ int check_modes(char *filename)
      * PnetCDF spews NC_ENOTNC */
     if (err == NC_ENOTNC) {
         /* ignore the error and delete the file */
-        if (rank == 0) unlink(filename);
+        if (rank == 0) unlink(path);
     }
     else {
         /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
@@ -85,12 +93,12 @@ int check_modes(char *filename)
 
         /* The file should not be created */
         if (rank == 0) {
-            if (access(filename, F_OK) == 0) {
+            if (access(path, F_OK) == 0) {
                 printf("Error at line %d in %s: file (%s) should not be created\n",
                        __LINE__,__FILE__, filename);
                 nerrs++;
                 /* delete the file and ignore error */
-                unlink(filename);
+                unlink(path);
             }
             /* else : file does not exist */
         }
@@ -107,7 +115,7 @@ int check_modes(char *filename)
      * PnetCDF spews NC_ENOTNC */
     if (err == NC_ENOTNC) {
         /* ignore the error and delete the file */
-        if (rank == 0) unlink(filename);
+        if (rank == 0) unlink(path);
     }
     else {
         /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
@@ -116,12 +124,12 @@ int check_modes(char *filename)
 
         /* The file should not be created */
         if (rank == 0) {
-            if (access(filename, F_OK) == 0) {
+            if (access(path, F_OK) == 0) {
                 printf("Error at line %d in %s: file (%s) should not be created\n",
                        __LINE__,__FILE__, filename);
                 nerrs++;
                 /* delete the file and ignore error */
-                unlink(filename);
+                unlink(path);
             }
             /* else : file does not exist */
         }

@@ -51,7 +51,7 @@ main(int argc, char **argv)
    printf("\n*** Testing some extra stuff.\n");
    printf("*** Trying to open non-netCDF files of tiny length...");
 */
-   {
+    {
 #define DATA_LEN 32    
       char dummy_data[DATA_LEN];
       int i, openstat;
@@ -63,8 +63,16 @@ main(int argc, char **argv)
 
       for (i = DATA_LEN; i >= 0; i--)
       {
-	 /* Create a small file which is not a netCDF file. */
-	 if (!(file = fopen(filename, "w+"))) nerrs++;
+	 /* Create a small file which is not a netCDF file.
+          * remove the file system type prefix name if there is any.
+          * For example, when filename = "lustre:/home/foo/testfile.nc", remove
+          * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+          */
+         char *path = strchr(filename, ':');
+         if (path == NULL) path = filename; /* no prefix */
+         else              path++;
+
+	 if (!(file = fopen(path, "w+"))) nerrs++;
          else {
 	     if (fwrite(dummy_data, 1, i, file) != i) nerrs++;
 	     if (fclose(file)) nerrs++;
