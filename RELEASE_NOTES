@@ -2,6 +2,374 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
+version  1.9.0 (December 18, 2017)
+-------------------------------------
+
+  o New features
+    * The configure environment has been migrated to use GNU automake and
+      libtool.
+    * Building shared libraries is now supported with configure option
+      --enable-shared. However, the default configuration is to build static
+      library only. Note linking shared libraries is not recommended due to
+      the likely performance degradation.
+
+  o New optimization
+    * Use hash function for faster attribute name lookup. See r3335.
+
+  o New Limitations
+    * PnetCDF now requires the underlying MPI library define data type
+      MPI_Offset an 8-byte integer. Configuration process will be aborted if
+      MPI_Offset is detected to be of size 4 bytes. See r2944.
+    * The maximum number of files that can be simultaneously opened by an MPI
+      process is now limited to 1024 (a new constant NC_MAX_NFILES defined in
+      pnetcdf.h). When this limit is reached, error code NC_ENFILE will be
+      thrown.
+    * NC_MAX_VAR_DIMS, the maximum number of dimensions per variable is raised
+      to 2147483647, i.e. NC_MAX_INT
+    * NC_MAX_DIMS, the maximum number of dimensions per file is raised to
+      2147483647, i.e. NC_MAX_INT
+    * NC_MAX_ATTRS, the maximum number of attributes per file is raised to
+      2147483647, i.e. NC_MAX_INT
+    * NC_MAX_VARS, the maximum number of variables per file is raised to
+      2147483647, i.e. NC_MAX_INT
+    * NC_EMAX_REQ error code will be thrown when a single request of a get/put
+      API call or the aggregated size of nonblocking requests in a wait API
+      call exceeds INT_MAX (max of 4-byte integer).  Note the size limit is per
+      MPI process, not across all processes. This is due to MPI-IO may not
+      support a single MPI-IO request of size larger then INT_MAX. A new
+      configure command-line option "--enable-large-req" has been added
+      available to disable the checking. Use this option is recommended only
+      when the underneath MPI-IO library supports large single requests.
+
+  o New constants
+    * NC_FORMAT_UNKNOWN, NF_FORMAT_UNKNOWN, and NF90_FORMAT_UNKNOWN are new
+      constants that are one of the returned values of argument formatp in the
+      API ncmpi_inq_file_format when the file under inquiry is unrecognizable
+      by PnetCDF library.
+    * NC_MAX_NFILES, NF_MAX_NFILES, and NF90_MAX_NFILES define the maximum
+      number of files that can be kept opened by an MPI process.
+
+  o New APIs
+    * none
+
+  o API syntax changes
+    * Add C type qualifier "const" to argument fill_value of ncmpi_def_var_fill
+      to indicate the contents pointed by fill_value is immutable.
+
+  o Semantics updates
+    * Calling ncmpi_end_indep_data() in collective data mode is no longer
+      considered illegal, starting from this release 1.9.0. In this case, the
+      API simply returns NC_NOERR. Note calling ncmpi_begin_indep_data() in
+      independent data mode has been allowed since PnetCDF 1.2.0. Thanks to
+      Gregory Sjaardema for pointing out the asymmetry between the two APIs.
+      See r3517.
+    * For CDF-5 files, the maximum size of a variable or a variable's record
+      is NC_MAX_INT64-3 (i.e. 2^64-4).
+    * When the file create/open modes are not consistent among processes, the
+      modes on all processes will be replaced by rank 0's mode and PnetCDF
+      library will still try to create/open the file. Error code
+      NC_EMULTIDEFINE_CMODE or NC_EMULTIDEFINE_OMODE will be returned on
+      processes whose modes disagree with rank 0's. If safe mode is on, then
+      all processes will also get the same error code.
+    * API ncmpi_inq_nreqs() - allows argument nreqs to be NULL. In this case,
+      the API is equivalent to checking the validity of argument ncid. In
+      previous releases, NC_EINVAL is returned when argument nreqs is NULL.
+    * API ncmpi_inq_buffer_usage() - allows argument usage to be NULL. In this
+      case, the API is equivalent to checking the validity of argument ncid. In
+      previous releases, NC_EINVAL is returned when argument usage is NULL.
+    * API ncmpi_inq_buffer_size() - allows argument usage to be NULL. In this
+      case, the API is equivalent to checking the validity of argument ncid. In
+      previous releases, NC_EINVAL is returned when argument buf_size is NULL.
+
+  o New error code precedence
+    * none
+
+  o Updated error strings
+    * The error string corresponding to error code NC_EMAXDIMS is changed to
+      cover the case when NC_MAX_DIMS or NC_MAX_VAR_DIMS is exceeded.
+
+  o New error code
+    * NC_EMAX_REQ - indicates a single request of a get/put API call or the
+      aggregated size of nonblocking requests in a wait API call exceeds
+      INT_MAX (max of 4-byte integer). The corresponding F77 and F90 error
+      codes are NF_EMAX_REQ and NF90_EMAX_REQ, respectively.
+    * NC_ENULLPAD - indicates the file fails strict null-byte header check. The
+      corresponding F77 and F90 error codes are NF_ENULPAD and NF90_ENULPAD,
+      respectively. The same error code has also been defined in NetCDF since
+      4.5.1. Note this error is not considered fatal. PnetCDF will continue
+      the file open procedure if there is no other error found. Therefore, when
+      encountering this error code returned from the file open API, ncmpi_open,
+      user can safely ignore it. See section "Conflict with NetCDF library"
+      below for further discussion.
+
+  o New PnetCDF hint
+    * none
+
+  o New run-time environment variables
+    * none
+
+  o New build recipe
+    * doc/README.Ubuntu provides build instructions for Ubuntu Linux OS.
+
+  o New/updated utility program
+    * Utility program ncmpivalid is renamed to ncvalidator to reflect its
+      purpose. It is now running in serial and thus no longer requires an MPI
+      compiler to build it. In fact, its source codes are all in a single file,
+      ncvalidator.c, which can be compiled using gcc, i.e. command "gcc -o
+      ncvalidator ncvalidator.c".  This utility program can be used to validate
+      a classic CDF file, and report the locations that fail to comply with CDF
+      formats. It can also repair a file whose header fails to use null bytes
+      for paddings, when the command-line option "-x" is used. See its man page
+      for further description of usage.
+
+  o Other updates:
+    * Update UTF8 encoding utility to use utf8proc library version 2.1.0 from
+      the Julia Language project, https://github.com/JuliaLang/utf8proc
+      License https://github.com/JuliaLang/utf8proc/blob/master/LICENSE.md
+    * Add quiet mode command-line option "-q" to utility program ncvalidator.
+    * Add an internal check for whether the file starting offsets of all
+      variables are in an increasing order as the variables defines. See r3369.
+    * All build recipes (README files) have been moved to folder doc. Most of
+      the recipes have been updated with instructions for building shared
+      libraries.
+    * Rename configure-time variables TEST_SEQRUN, TEST_MPIRUN, and TEST_OUTDIR
+      to TESTSEQRUN, TESTMPIRUN, and TESTOUTDIR, respectively. This change
+      avoids conflict to the name convention reserved by automake.
+    * Fix TESTMPIRUN default value to use full path specified in --with-mpi at
+      configure command line
+
+  o Bug fixes
+    * Fix a bug in nonblocking APIs when two separate nonblocking requests that
+      can be coalesced into a contiguous MPI fileview or buffer type but the
+      coalesced length becomes too big and overflows a 4-byte integer, data
+      type of argument blocklengths of MPI_Type_create_hindexed, coalescing
+      should be skipped. I.e. such two requests should be treated as two
+      separate blocks in MPI_Type_create_hindexed.  Thanks Jim Edwards for
+      reporting. See r3565.
+    * Fix a bug in nonblocking APIs when one request's access region covers
+      more than one other non-interleaved requests. PnetCDF fails to identify
+      them as a single group of interleaved requests. Test program
+      test/nonblocking/interleaved.c has been revised to test the fix.
+      See r3389.
+    * Fix a bug in string parsing the environment variable PNETCDF_HINTS and
+      print warning messages when hint strings are ill-formed. See r3284.
+    * Fix a bug in F90 APIs for reading and writing scalar variables, i.e.
+      number of dimensions is zero. The bugs appear only when using Intel
+      Fortran compiler which does not allow checking presence of an argument
+      and its contents in the same if condition. See r3009, r3012, r3013.
+    * Conform with CDF-2 file format specification on using 2^32-1 for vsize
+      when the variable size is larger than 23^2-4 bytes. See r2957.
+    * Fix a bug in nc_test when running on an ARMv7 architecture, a raspberry
+      pi, where char is unsigned and which is little Endian, 32-bit machine.
+      See r2922.
+    * Fix a bug that fails to do byte-swap when retrieving user-defined fill
+      values. See r2864. This fix is critical when PnetCDF is configured with
+      option erange-fill enabled (default mode) and the target platform is a
+      Little Endian.
+
+  o New example programs
+    * none
+
+  o New programs for I/O benchmarks
+    * none
+
+  o New test program
+    * test/testcases/tst_vars_fill.m4 - tests strided put (vars) APIs with
+      fill mode on.
+    * test/largefile/large_coalesce.c - tests a bug fixed in r3565 when two
+      separate nonblocking requests that can be coalesced into a contiguous MPI
+      fileview or buffer type but the coalesced length becomes too big and
+      overflows a 4-byte integer.
+    * test/testcases/tst_info.c - tests an internal bug in heap memory
+      allocation trace mechanism. See r3514.
+    * test/cdf_format/tst_corrupt.c
+      1. tests whether NC_EMAXDIMS can be thrown when opening a corrupted file
+         header with number of dimensions being larger than NC_MAX_DIMS.
+      2. tests whether NC_EMAXATTS can be thrown when opening a corrupted file
+         header with number of attributes being larger than NC_MAX_ATTRS.
+      3. tests whether NC_EBADDIM can be thrown when opening a corrupted file
+         header with dimension ID of a variable is beyond the number of
+         dimensions defined in the file.
+      4. tests whether NC_EBADTYPE can be thrown when opening a corrupted file
+         header with nc_type of a variable is not within the legal NC atomic
+         data type allowed by the file format.
+    * test/testcases/tst_max_var_dims.c - tests the number of dimensions
+      against NC_MAX_VAR_DIMS when calling ncmpi_def_var API.
+    * test/largefile/tst_cdf5_begin.c - tests CDF-5 file header corruption for
+      the case when the starting file offsets of variables are not in an
+      increasing order as they defined.
+    * test/cdf_format/tst_open_cdf5.c - tests whether NC_ENOTNC can be
+      correctly thrown when opening a corrupted CDF-5 (bad_begin.nc5) which
+      contains two variables and the second variable's starting file offset is
+      less than the first variable's end offset.
+    * test/testcases/large_var_cdf5.c - tests whether NC_EVARSIZE can be
+      correctly thrown when a variable or a variable record is larger than
+      NC_MAX_INT64-3.
+    * test/testcases/mix_collectives.c - tests collective get/put APIs that
+      allow different processes to call different kinds of APIs (i.e. var1,
+      vara, vars, varm, etc.) and use different var IDs. In other words, the
+      API kinds can be different among processes in a collective call.
+    * test/largefile/high_dim_var.c - tests blocking vars APIs for high-
+      dimensional variables. See r3164.
+    * test/largefile/large_dims_vars_attrs.c - tests large number of
+      dimensions, large number of variables, and large number of attributes.
+    * test/testcases/put_all_kinds.m4 - tests various blocking put APIs.
+    * test/testcases/tst_dimsizes.c - borrowed from NetCDF library to test
+      define/inquire APIs for the maximum allowable dimension sizes. This test
+      program is similar to (or a subset of) test/cdf_format/dim_cdf12.c
+    * test/testcases/null_args.c - tests whether the correct error codes can
+      be returned when using NULL arguments for start, count, stride, or imap
+
+  o Conformity with NetCDF library
+    * API ncmpi_open now checks the number of large variables that is legal
+      for CDF-1 and CDF-2 files. See r2961. For the information about the
+      number of large variables allowed in the classic formats can be found in
+      http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations
+    * Add checking for error code NC_ELATEFILL. Setting a variable's attribute
+      _FillValue must be done in the variable's initial define mode.
+    * NetCDF-4 documents in 4.4.1 and prior state that setting attribute
+      _FillValue for global variable NC_GLOBAL is not allowed and error code
+      NC_EINVAL will be thrown. Revisions r2954, r2955, and r2956 enforce this
+      rule. However, because the rule has never been implemented in any NetCDF
+      official release, NetCDF developers have decided to abandon this rule
+      by revising the NetCDF document starting from v4.5. See discussion in
+      NetCDF GitHub pull request 458. To be consistent with NetCDF, PnetCDF
+      follows the same decision by wrapping the checking with preprocessor
+      conditional #ifdef NO_NC_GLOBAL_FILLVALUE (see r3403). Note NC_EGLOBAL
+      will be thrown when using NC_GLOBAL in ncmpi_def_var_fill(). This is
+      due to no data type information for the fill value can be passed.
+    * From the releases of 1.6.1 through 1.8.1, putting attribute _FillValue
+      automatically turns on the fill mode for the variable. Similarly,
+      deleting attribute _FillValue turns off the fill mode. However, this
+      behavior does not conform with NetCDF library. This release fixes this
+      inconsistency, so putting or deleting attribute _FillValue does not
+      affect a variable's fill mode. See r2951.
+
+  o Conflict with NetCDF library
+    * Null-byte padding for attribute values in file header -- The classic CDF
+      specifications require header padding uses null (\x00) bytes. However,
+      prior to version 4.5.0, NetCDF did not implement this specification
+      entirely. In particular, it has never enforced the null-byte padding for
+      attribute values (it has for others, such as names of dimension,
+      variables, and attributes.) It also appears that files created by SciPy
+      NetCDF module or NetCDF Java module, both developed independent from
+      NetCDF-C, also fail to respect this padding specification.  This becomes
+      a problem for PnetCDF to read such netCDF files, because PnetCDF enforces
+      the header padding from its very first release.  The files violating the
+      padding specification will not be readable by PnetCDF of all releases
+      prior to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
+      opening such files.  Note if the sizes of all attribute values of your
+      files are aligned with 4-byte boundaries, then the files are readable by
+      PnetCDF.  In order to keep the files in question readable by PnetCDF,
+      checking for null-byte padding has been disabled in 1.9.0 by default. A
+      new configure command-line option "--enable-null-byte-header-padding" has
+      been made available to enable the checking and error code NC_ENULLPAD
+      will be thrown when opening files. Note NC_ENULLPAD is not considered a
+      fatal error. Users can safely ignore it. However, we keep this checking
+      in ncvalidator no matter the new configure option is set or not.
+      ncvalidator is a utility program reports whether a CDF file violates the
+      file format specification, including this null-byte padding. See r3528
+      for source codes changed and discussion in NetCDF Github issue
+      https://github.com/Unidata/netcdf-c/issues/657.
+
+  o Issues related to MPI library vendors:
+    * When using OpenMPI 2.0.0 through the latest 2.1.2 to build PnetCDF 1.8.1
+      and prior, the following message may appear when running make check:
+          "MPI error (MPI_File_open) : MPI_ERR_FILE: invalid file"
+      but the test programs report "pass". This message can be safely ignored.
+      It is due to OpenMPI failing to translate system error code ENOENT into
+      MPI_ERR_NO_SUCH_FILE, but returns MPI_ERR_FILE instead. Thanks to Edgar
+      Gabriel, a trick to silence the messages is to add the following to the
+      command line of make check:
+        TEST_SEQRUN="/path/to/OpenMPI/2.x.x/bin/mpirun --mca io romio314 -n 1"
+      See discussion thread in OpenMPI:
+      https://github.com/open-mpi/ompi/issues/4412
+      Note this error message does not appear in PnetCDF 1.9.0 and after.
+    * When using OpenMPI 2.1.1 and priors built with Intel compilers 17.0.0,
+      the test program nonblocking/mcoll_testf.f90 fails with segmentation
+      fault. This is due to a bug in OpenMPI. See discussion thread in OpenMPI:
+      https://github.com/open-mpi/ompi/issues/3695
+    * PnetCDF can no longer be built on 32-bit machines if using OpenMPI
+      versions 2.0.2 and 1.10.6 and earlier versions. This is because OpenMPI
+      configures type MPI_Offset as a 4-byte integer on all 32-bit machines,
+      even if the machines allow 64-bit file offsets, known as large-file
+      support. We suggest to use other MPI libraries to build PnetCDF on 32-bit
+      machines. See the discussion thread in OpenMPI:
+      https://github.com/open-mpi/ompi/issues/3195
+    * Fix test/nc_test/test_read.m4 and test/testcases/modes.c which test
+      whether the correct error codes can be returned when opening a
+      non-existing file. Thanks to Mark Dixon for testing various MPI
+      libraries, C compilers, and file systems, we found that when using
+      MVAPICH2 2.2, its Lustre driver always adds O_CREAT flag to the open()
+      calls. Because of this behavior, the non-existing file will be created
+      with zero length, which causes PnetCDF to spew NC_ENOTNC instead of
+      NC_ENOENT. A bug report has been filed to MVAPICH. The fix shall come in
+      the next release of MVAPICH. The bug report can be found in
+      http://mailman.cse.ohio-state.edu/pipermail/mvapich-discuss/2017-February/006300.html
+
+  o Issues related to Darshan library:
+    * When using Darshan in conjunction with PnetCDF, if you encounter
+      link-time or run-time errors with messages shown below, then we recommend
+      to use Darshan library version 3.1.5 and later.
+
+      During compile/link time:
+      /soft/perftools/darshan/lib/libdarshan-mpi-io.a(darshan-pnetcdf.o):
+      In function `__wrap_ncmpi_create': darshan-pnetcdf.c:62: undefined
+      reference to `ncmpi_create'
+
+      During run time:
+      WARNING: Darshan ncmpi_create() stub called; this is probably the result
+      of a link-time problem.
+
+  o Clarifications
+    * The NetCDF CDF formats define a set of external NC data types and
+      describe their intents of use, shown below.
+
+      External type  No. Bits  Intent of use
+      -------------  --------  ---------------------------------
+      NC_CHAR         8        text data (the only non-numerical type in NetCDF)
+      NC_BYTE         8        1-byte integer
+      NC_SHORT       16        2-byte signed integer
+      NC_INT         32        4-byte signed integer
+      NC_FLOAT       32        4-byte floating point number
+      NC_DOUBLE      64        8-byte real number in double precision
+      NC_UBYTE        8        unsigned 1-byte integer
+      NC_USHORT      16        unsigned 2-byte integer
+      NC_UINT        32        unsigned 4-byte integer
+      NC_INT64       64        signed 8-byte integer
+      NC_UINT64      64        unsigned 8-byte integer
+
+      Note NC_CHAR is the only non-numerical data type available in NetCDF
+      realm.  All other external types are considered numerical, which are
+      illegal to be converted (type-casted) to and from a NetCDF variable
+      defined in NC_CHAR type (error code NC_ECHAR will be thrown). The only
+      legal APIs to read/write a variable of type NC_CHAR are the "_text" APIs.
+
+    * Starting from 1.7.0, PnetCDF translates internal data types (i.e. data
+      types of the I/O buffer and also used in the API name such as text,
+      schar, uchar, short, int, etc.) to MPI data types based on the table
+      below. Note MPI_BYTE does no correspond to any internal data type used
+      in NetCDF/PnetCDF APIs. Thus, when MPI_BYTE is used to construct an MPI
+      derived data type which is later used as argument buftype in a flexible
+      API, the error code NC_EBADTYPE will be thrown (Not a valid data type).
+
+      Data type of                                  Corresponding
+      internal I/O buffer   Example API             MPI datatype
+      -------------         ----------------------  -----------------
+      text                  ncmpi_put_var_text      MPI_CHAR
+      schar                 ncmpi_put_var_schar     MPI_SIGNED_CHAR
+      uchar                 ncmpi_put_var_uchar     MPI_UNSIGNED_CHAR
+      short                 ncmpi_put_var_short     MPI_SHORT
+      ushort                ncmpi_put_var_ushort    MPI_UNSIGNED_SHORT
+      int                   ncmpi_put_var_int       MPI_INT
+      uint                  ncmpi_put_var_uint      MPI_UNSIGNED
+      long                  ncmpi_put_var_long      MPI_LONG
+      float                 ncmpi_put_var_float     MPI_FLOAT
+      double                ncmpi_put_var_double    MPI_DOUBLE
+      longlong              ncmpi_put_var_longlong  MPI_LONG_LONG_INT
+      ulonglong             ncmpi_put_var_ulonglong MPI_UNSIGNED_LONG_LONG
+
+-------------------------------------
 version  1.8.1 (January 28, 2017)
 -------------------------------------
 
