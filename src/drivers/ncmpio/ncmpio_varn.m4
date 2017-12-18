@@ -27,6 +27,7 @@ dnl
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -104,6 +105,14 @@ getput_varn(NC                *ncp,
         }
         /* assign buftype match with the variable's data type */
         buftype = ncmpii_nc2mpitype(varp->xtype);
+
+#ifndef ENABLE_LARGE_REQ
+        if (bufcount * varp->xsz > INT_MAX) {
+            /* this request is larger than INT_MAX */
+            DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
+            goto err_check;
+        }
+#endif
     }
 
     cbuf = buf;
@@ -121,16 +130,23 @@ getput_varn(NC                *ncp,
 
         if (status != NC_NOERR) goto err_check;
 
-        if (bufcount != (int)bufcount) {
-            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+#ifndef ENABLE_LARGE_REQ
+        if (bufcount * bnelems * varp->xsz > INT_MAX) {
+            /* this request is larger than INT_MAX */
+            DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
             goto err_check;
         }
+#endif
 
         /* check if buftype is contiguous, if not, pack to one, cbuf */
         if (! iscontig_of_ptypes && bnelems > 0) {
             position = 0;
             packsize  = bnelems*el_size;
-            if (packsize != (int)packsize) {
+            if (packsize > INT_MAX) {
+                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+                goto err_check;
+            }
+            if (bufcount > INT_MAX) {
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
                 goto err_check;
             }
@@ -148,6 +164,10 @@ getput_varn(NC                *ncp,
 
         ptype = buftype;
         el_size = varp->xsz;
+
+#ifndef ENABLE_LARGE_REQ
+        /* TODO: sum up all request sizes and check against INT_MAX */
+#endif
     }
 
     /* We allow counts == NULL and treat this the same as all 1s */
@@ -231,6 +251,7 @@ err_check:
 
     /* unpack cbuf to user buf, if buftype is noncontiguous */
     if (status == NC_NOERR && fIsSet(reqMode, NC_REQ_RD) && free_cbuf) {
+        /* possible bufcount integer overflow has been checked above */
         position = 0;
         MPI_Unpack(cbuf, (int)packsize, &position, buf, (int)bufcount, buftype,
                    MPI_COMM_SELF);
