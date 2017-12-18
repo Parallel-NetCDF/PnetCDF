@@ -15,7 +15,7 @@ dnl
 
 dnl autoconf v2.69 was released in 2012-04-24
 AC_PREREQ([2.69])
-AC_INIT([parallel-netcdf],[1.9.0.pre1],[parallel-netcdf@mcs.anl.gov])
+AC_INIT([parallel-netcdf],[1.9.0],[parallel-netcdf@mcs.anl.gov])
 
 dnl config.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
