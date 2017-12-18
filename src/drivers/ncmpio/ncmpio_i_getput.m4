@@ -28,6 +28,7 @@ dnl
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <string.h> /* memcpy() */
@@ -172,8 +173,6 @@ ncmpio_igetput_varm(NC               *ncp,
     MPI_Datatype ptype, imaptype;
     NC_req *req;
 
-    if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-
     /* decode buftype to obtain the followings:
      * ptype:    element data type (MPI primitive type) in buftype
      * bufcount: If it is -1, then this is called from a high-level API and in
@@ -189,6 +188,10 @@ ncmpio_igetput_varm(NC               *ncp,
                                 buftype, &ptype, &el_size, &bnelems,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) return err;
+
+#ifndef ENABLE_LARGE_REQ
+    if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
+#endif
 
     if (bnelems == 0) {
         /* zero-length request, mark this as a NULL request */
@@ -299,6 +302,7 @@ ncmpio_igetput_varm(NC               *ncp,
             }
 
             /* pack buf into lbuf based on buftype */
+            if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             position = 0;
             MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibufsize,
                      &position, MPI_COMM_SELF);
