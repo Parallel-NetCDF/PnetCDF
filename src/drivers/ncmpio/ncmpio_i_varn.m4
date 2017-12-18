@@ -27,6 +27,7 @@ dnl
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -115,13 +116,17 @@ igetput_varn(NC                *ncp,
 
         if (status != NC_NOERR) return status;
 
-        if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+#ifndef ENABLE_LARGE_REQ
+        if (bufcount * bnelems * el_size > INT_MAX)
+            DEBUG_RETURN_ERROR(NC_EMAX_REQ)
+#endif
 
         /* check if buftype is contiguous, if not, pack to one, cbuf */
         if (! iscontig_of_ptypes && bnelems > 0) {
             int position = 0;
             MPI_Offset packsize = bnelems*el_size;
-            if (packsize != (int)packsize) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (packsize > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             cbuf = NCI_Malloc((size_t)packsize);
             free_cbuf = 1;
@@ -180,9 +185,10 @@ igetput_varn(NC                *ncp,
             for (i=ncp->numGetReqs-1; i>=0; i--)
                 if (ncp->get_list[i].num_recs > 0)
                     break;
+            if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            ncp->get_list[i].bufcount = (int)bufcount;
             ncp->get_list[i].tmpBuf   = cbuf;
             ncp->get_list[i].userBuf  = buf;
-            ncp->get_list[i].bufcount = (int)bufcount;
             MPI_Type_dup(buftype, &ncp->get_list[i].buftype);
         }
         else { /* write request */
