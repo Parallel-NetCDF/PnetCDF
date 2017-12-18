@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>  /* strcasecmp() */
+#include <limits.h>   /* INT_MAX */
 #include <assert.h>
 #include <errno.h>
 #include <mpi.h>
@@ -277,6 +278,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         }
 
         /* pack buf into lbuf based on buftype */
+        if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         position = 0;
         MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibuf_size,
                  &position, MPI_COMM_SELF);
@@ -429,7 +431,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* check byte size of buf (internal representation) */
     MPI_Type_size(etype, &el_size);
     ibuf_size = nelems * el_size;
-    if (ibuf_size != (int)ibuf_size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (ibuf_size != INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* Step 1: type-convert and byte-swap xbuf to cbuf, and xbuf contains data
      * read from file
@@ -525,11 +527,17 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 
     /* unpacked lbuf into buf based on buftype -----------------------------*/
     if (!buftype_is_contig) {
-        position = 0;
-        MPI_Unpack(lbuf, (int)ibuf_size, &position, buf, (int)bufcount,
-                   buftype, MPI_COMM_SELF);
-        /* done with lbuf */
-        if (lbuf != buf && lbuf != xbuf) NCI_Free(lbuf);
+        if (bufcount > INT_MAX) {
+            if (err == NC_NOERR)
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        }
+        else {
+            position = 0;
+            MPI_Unpack(lbuf, (int)ibuf_size, &position, buf, (int)bufcount,
+                       buftype, MPI_COMM_SELF);
+            /* done with lbuf */
+            if (lbuf != buf && lbuf != xbuf) NCI_Free(lbuf);
+        }
     }
 
     return err;
