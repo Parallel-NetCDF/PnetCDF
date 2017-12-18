@@ -32,6 +32,7 @@ dnl
 #include <stdlib.h>
 #endif
 #include <string.h>
+#include <limits.h>  /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -985,10 +986,12 @@ ncmpio_put_att(void         *ncdp,
     xsz = x_len_NC_attrV(xtype, nelems);
     /* xsz is the total aligned size of this attribute */
 
-    if (xsz != (int)xsz) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+#ifndef ENABLE_LARGE_REQ
+    if (xsz > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
         goto err_check;
     }
+#endif
 
     /* create a normalized character string */
     err = ncmpii_utf8_normalize(name, &nname);
