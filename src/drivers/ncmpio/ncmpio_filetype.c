@@ -12,6 +12,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <limits.h>  /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -453,12 +454,12 @@ filetype_create_vara(const NC         *ncp,
 {
     int          dim, status, err;
     MPI_Offset   nbytes, offset;
-    MPI_Datatype filetype;
+    MPI_Datatype filetype, xtype;
 
     /* calculate the request size */
     nbytes = varp->xsz;
     for (dim=0; dim<varp->ndims; dim++) nbytes *= count[dim];
-    if (nbytes != (int)nbytes) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     if (blocklen != NULL) *blocklen = (int)nbytes;
 
     /* when nbytes == 0 or varp is a scalar, i.e. varp->ndims == 0, no need to
@@ -489,6 +490,7 @@ filetype_create_vara(const NC         *ncp,
     if (blocklen           != NULL) *blocklen           = 1;
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
     offset = varp->begin;
+    xtype = ncmpii_nc2mpitype(varp->xtype);
 
     /* previously, request size has been checked and it must > 0 */
     if (IS_RECVAR(varp)) {
@@ -523,13 +525,9 @@ filetype_create_vara(const NC         *ncp,
                 subcount64[dim] = count[dim];
                 substart64[dim] = start[dim];
             }
-            shape64[varp->ndims-1]    *= varp->xsz;
-            subcount64[varp->ndims-1] *= varp->xsz;
-            substart64[varp->ndims-1] *= varp->xsz;
-
             status = type_create_subarray64(varp->ndims-1, shape64+1,
                                  subcount64+1, substart64+1, MPI_ORDER_C,
-                                 MPI_BYTE, &rectype);
+                                 xtype, &rectype);
             NCI_Free(shape64);
             if (status != NC_NOERR) return status;
 
@@ -564,13 +562,9 @@ filetype_create_vara(const NC         *ncp,
             subcount64[dim] = count[dim];
             substart64[dim] = start[dim];
         }
-        shape64[varp->ndims-1]    *= varp->xsz;
-        subcount64[varp->ndims-1] *= varp->xsz;
-        substart64[varp->ndims-1] *= varp->xsz;
-
         status = type_create_subarray64(varp->ndims, shape64, subcount64,
                                         substart64, MPI_ORDER_C,
-                                        MPI_BYTE, &filetype);
+                                        xtype, &filetype);
         NCI_Free(shape64);
         if (status != NC_NOERR) return status;
     }
@@ -601,39 +595,31 @@ stride_flatten(int               isRecVar, /* whether record variable */
     int i, j, k, seg_len;
     MPI_Offset nstride, array_len, off, subarray_len;
 
-    *nblocks = 0;
-    if (ndim < 0) return 1;
-
-    if (ndim == 0) { /* scalar variable */
-        *nblocks = 1;
-        disps[0]     = 0;
-        blocklens[0] = el_size;
-        return 1;
-    }
+    /* scalar variables have been handled before this subroutine is called */
+    assert (ndim > 0);
 
     /* calculate the number of offset-length pairs */
     *nblocks = (stride[ndim-1] == 1) ? 1 : count[ndim-1];
     for (i=0; i<ndim-1; i++) *nblocks *= count[i];
     if (*nblocks == 0) return 1;
 
-    /* the length of all segments are of the same size */
+    /* the length of all contiguous segments are of the same size */
     seg_len  = (stride[ndim-1] == 1) ? count[ndim-1] : 1;
     seg_len *= el_size;
     nstride  = (stride[ndim-1] == 1) ? 1 : count[ndim-1];
 
+    for (i=0; i<*nblocks; i++) blocklens[i] = seg_len;
+
     /* set the offset-length pairs for the lowest dimension */
-    k = 0;
-    off = start[ndim-1] * el_size;
-    for (i=0; i<nstride; i++) {
-        disps[k]      = off;
-        blocklens[k]  = seg_len;
-        off          += stride[ndim-1] * el_size;
-        k++;
-    }
+    disps[0] = start[ndim-1] * el_size;
+    for (k=1; k<nstride; k++)
+        disps[k] = disps[k-1] + stride[ndim-1] * el_size;
+
+    /* done with the lowest dimension */
     ndim--;
 
     subarray_len = nstride;
-    array_len = 1;
+    array_len = el_size;
     /* for higher dimensions */
     while (ndim > 0) {
         /* array_len is global array size from lowest up to ndim */
@@ -643,7 +629,7 @@ stride_flatten(int               isRecVar, /* whether record variable */
          * For record variable, dimlen[0] is the sum of single record sizes
          */
         if (ndim == 1 && isRecVar) off = start[0] * dimlen[0];
-        else off = start[ndim-1] * array_len * el_size;
+        else off = start[ndim-1] * array_len;
 
         /* update all offsets from lowest up to dimension ndim-1 */
         for (j=0; j<subarray_len; j++) disps[j] += off;
@@ -652,16 +638,14 @@ stride_flatten(int               isRecVar, /* whether record variable */
          * For record variable, dimlen[0] is the sum of single record sizes
          */
         if (ndim == 1 && isRecVar) off = stride[0] * dimlen[0];
-        else off = stride[ndim-1] * array_len * el_size;
+        else off = stride[ndim-1] * array_len;
 
         for (i=1; i<count[ndim-1]; i++) {
-            for (j=0; j<subarray_len; j++) {
-                disps[k]     = disps[j] + off;
-                blocklens[k] = seg_len;
-                k++;
-            }
+            for (j=0; j<subarray_len; j++)
+                disps[k++] = disps[j] + off;
+
             if (ndim == 1 && isRecVar) off += stride[0] * dimlen[0];
-            else off += stride[ndim-1] * array_len * el_size;
+            else off += stride[ndim-1] * array_len;
         }
         ndim--;  /* move to next higher dimension */
         subarray_len *= count[ndim];
@@ -742,7 +726,10 @@ ncmpio_filetype_create_vars(const NC         *ncp,
                    count, stride, &nblocks, blocklens, disps);
     NCI_Free(shape);
 
-    /* the flattened list allows one single call to hindexed constructor */
+    /* the flattened list allows one single call to hindexed constructor.
+     * We cannot use MPI_Type_indexed because displacement for the record
+     * dimension may not be a multiple of varp->xtype
+     */
     err = MPI_Type_create_hindexed(nblocks, blocklens, disps, MPI_BYTE,
                                    &filetype);
     NCI_Free(disps);
