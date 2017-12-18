@@ -2,7 +2,7 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
-version  1.9.0 (December 18, 2017)
+version  _PNETCDF_VERSION_  (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
   o New features
