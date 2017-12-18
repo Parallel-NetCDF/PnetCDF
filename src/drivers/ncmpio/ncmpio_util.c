@@ -261,7 +261,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* check byte size of buf (internal representation) */
     MPI_Type_size(etype, &el_size);
     ibuf_size = nelems * el_size;
-    if (ibuf_size != (int)ibuf_size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* Step 1: if buftype is not contiguous, i.e. a noncontiguous MPI
      * derived datatype, pack buf into a contiguous buffer, lbuf,
@@ -431,7 +431,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* check byte size of buf (internal representation) */
     MPI_Type_size(etype, &el_size);
     ibuf_size = nelems * el_size;
-    if (ibuf_size != INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* Step 1: type-convert and byte-swap xbuf to cbuf, and xbuf contains data
      * read from file
