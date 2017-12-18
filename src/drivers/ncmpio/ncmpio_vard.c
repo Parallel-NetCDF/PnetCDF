@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #endif
 #include <string.h> /* memcpy() */
+#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -122,11 +123,6 @@ getput_vard(NC               *ncp,
         goto err_check;
     }
 
-    if (bufcount != (int)bufcount) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-        goto err_check;
-    }
-
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and will be set to the size of
          * filetype. Note buf's data type must match the data type of variable
@@ -166,6 +162,14 @@ getput_vard(NC               *ncp,
 
         /* if buf is not contiguous, we need to pack it to one, cbuf */
         if (!buftype_is_contig && bnelems > 0) {
+            if (outsize > INT_MAX) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+                goto err_check;
+            }
+            if (bufcount > INT_MAX) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+                goto err_check;
+            }
             cbuf = NCI_Malloc((size_t)outsize);
 
             if (fIsSet(reqMode, NC_REQ_WR)) {
@@ -235,6 +239,12 @@ err_check:
     if (err != NC_NOERR) {
         bufcount = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
+    }
+
+    /* bufcount is used as int in MPI_File_read/write */
+    if (bufcount > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
+        goto err_check;
     }
 
 #ifdef _USE_MPI_GET_COUNT
