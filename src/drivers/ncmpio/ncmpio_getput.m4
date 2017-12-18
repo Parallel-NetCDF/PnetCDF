@@ -143,14 +143,22 @@ put_varm(NC               *ncp,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) goto err_check;
 
-    /* because nbytes will be used as the argument "count" in MPI-IO
+    /* because nelems will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */
+    if (nelems > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        goto err_check;
+    }
+#ifndef ENABLE_LARGE_REQ
+    /* Not all MPI-IO libraries support single requests larger than 2 GiB */
     if (nbytes > INT_MAX) {
         DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
         goto err_check;
     }
+#endif
 
-    if (nbytes == 0) goto err_check;
+    if (nbytes == 0) /* this process has nothing to write */
+        goto err_check;
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
@@ -382,12 +390,19 @@ get_varm(NC               *ncp,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) goto err_check;
 
-    /* because nbytes will be used as the argument "count" in MPI-IO
-     * read calls and the argument "count" is of type int */
-    if (nbytes > INT_MAX) { 
+    /* because nelems will be used as the argument "count" in MPI-IO
+     * write calls and the argument "count" is of type int */
+    if (nelems > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        goto err_check;
+    }
+#ifndef ENABLE_LARGE_REQ
+    /* Not all MPI-IO libraries support single requests larger than 2 GiB */
+    if (nbytes > INT_MAX) {
         DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
         goto err_check;
     }
+#endif
 
     if (nbytes == 0) /* this process has nothing to read */
         goto err_check;
