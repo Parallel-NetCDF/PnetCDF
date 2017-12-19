@@ -119,6 +119,7 @@ distclean-local:
 dist-hook:
 	$(SED_I) -e "1,10s|_PNETCDF_RELEASE_DATE_|`date '+%B %e %Y'`|" $(distdir)/RELEASE_NOTES
 	$(SED_I) -e "1,10s|_PNETCDF_VERSION_|$(PNETCDF_VERSION)|" $(distdir)/RELEASE_NOTES
+	$(SED_I) -e "s|_PNETCDF_VERSION_|$(PNETCDF_VERSION)|" $(distdir)/INSTALL
 	-rm -rf `find $(distdir) -type d -name .svn`
 
 

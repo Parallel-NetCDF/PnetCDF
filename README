@@ -31,7 +31,7 @@ Requirements:
       are passing in a prefix and will complain about an unsupported file
       system type.  If that happens, add a file-system prefix to your file
       name.
-    - To build parallel-netcdf, you will need the following additional programs:
+    - To build PnetCDF, you will need the following additional programs:
         - autotools (autoconfig, automake, libtool, m4, etc.)
         - Optional: (for PnetCDF developers)
              - either yacc or bison
