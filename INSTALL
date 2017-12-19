@@ -45,9 +45,9 @@ default configuration of PnetCDF up and running.
 
 (b) Unpack the tar file and go to the top level directory, for example:
 
-      gunzip parallel-netcdf-1.8.0.tar.gz
-      tar xf parallel-netcdf-1.8.0.tar
-      cd parallel-netcdf-1.8.0
+      gunzip parallel-netcdf-_PNETCDF_VERSION_.tar.gz
+      tar xf parallel-netcdf-_PNETCDF_VERSION_.tar
+      cd parallel-netcdf-_PNETCDF_VERSION_
 
 (c) Choose an installation directory, for example $HOME/PnetCDF
 
