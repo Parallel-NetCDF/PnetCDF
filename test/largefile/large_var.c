@@ -119,40 +119,39 @@ int main(int argc, char** argv)
 
     /* now we are in data mode */
     start[0] = 1;
-    start[1] = NY - 2;
+    start[1] = 8;
     start[2] = TWO_G + 10 * rank;
     count[0] = 1;
     count[1] = 2;
     count[2] = 10;
 
-    bufsize = count[0]*count[1]*count[2];
-    buf = (int*) malloc(bufsize * sizeof(int));
-    for (i=0; i<bufsize; i++) buf[i] = rank*100 + i;
+    buf = (int*) malloc(40 * sizeof(int));
+    for (i=0; i<40; i++) buf[i] = rank*100 + i;
 
     err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf);
     CHECK_ERR
 
     /* now test nonblocking put */
-    /* rearrange buffer contents */
-    for (i=5;  i<10; i++) buf[i] = rank*100 + i + 5;
-    for (i=10; i<15; i++) buf[i] = rank*100 + i - 5;
-
-    start[0] = NZ-1;
+    start[0] = 3;
     count[2] = 5;
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf, &req[0]);
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+20, &req[0]);
     CHECK_ERR
 
     start[2] += 5;
     count[1]  = 1;
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+10, &req[1]);
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+30, &req[1]);
     CHECK_ERR
 
-    start[1]++;
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+15, &req[2]);
+    start[1] = 9;
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+35, &req[2]);
     CHECK_ERR
 
     err = ncmpi_wait_all(ncid, 3, req, st);
     CHECK_ERR
+    for (i=0; i<3; i++) {
+        err = st[i];
+        CHECK_ERR
+    }
 
     err = ncmpi_close(ncid);
     CHECK_ERR
@@ -163,42 +162,86 @@ int main(int argc, char** argv)
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
-    /* initialize the contents of the array to a different value */
-    for (i=0; i<bufsize; i++) buf[i] = -1;
-
     /* read back subarray written by the process (rank+1)%nprocs */
     start[0] = 1;
-    start[1] = NY - 2;
+    start[1] = 8;
     start[2] = TWO_G + ((rank == nprocs - 1) ? 0 : 10 * (rank + 1));
     count[0] = 1;
     count[1] = 2;
     count[2] = 10;
 
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
-
-    /* check if the contents of buf are expected */
-    for (i=0; i<bufsize; i++) {
-        int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
-        if (buf[i] != expected) {
-            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
-                   rank, __LINE__, i, buf[i], expected);
-            nerrs++;
-        }
-    }
-
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
     for (i=0; i<bufsize; i++) buf[i] = -1;
 
-    start[0] = NZ-1;
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    int expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    start[0] = 3;
+    count[2] = 5;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
     err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
 
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
-        int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
         if (buf[i] != expected) {
-            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
-                   rank, __LINE__, i, buf[i], expected);
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
+        expected++;
+    }
+
+    start[2] += 5;
+    count[1] = 1;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    start[1] = 9;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
@@ -212,42 +255,47 @@ int main(int argc, char** argv)
         printf("MPI error MPI_File_open : %s\n", errorString);
     }
 
-    /* initialize the contents of the array to a different value */
-    for (i=0; i<bufsize; i++) buf[i] = -1;
-
     /* read back subarray written by the process (rank+1)%nprocs */
     start[0] = 1;
-    start[1] = NY - 2;
+    start[1] = 8;
     start[2] = TWO_G + ((rank == nprocs - 1) ? 0 : 10 * (rank + 1));
     count[0] = 1;
     count[1] = 2;
     count[2] = 10;
 
-    buf_ptr = buf;
-    for (i=0; i<count[0]; i++) {
-        for (j=0; j<count[1]; j++) {
-            offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
-            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
-#ifndef WORDS_BIGENDIAN
-            swapn(buf_ptr, count[2]);
-#endif
-            buf_ptr += count[2];
-        }
-    }
-
-    /* check if the contents of buf are expected */
-    for (i=0; i<bufsize; i++) {
-        int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
-        if (buf[i] != expected) {
-            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
-                   rank, __LINE__, i, buf[i], expected);
-            nerrs++;
-        }
-    }
-
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
     for (i=0; i<bufsize; i++) buf[i] = -1;
 
-    start[0] = NZ-1;
+    buf_ptr = buf;
+    for (i=0; i<count[0]; i++) {
+        for (j=0; j<count[1]; j++) {
+            offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
+            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+#ifndef WORDS_BIGENDIAN
+            swapn(buf_ptr, count[2]);
+#endif
+            buf_ptr += count[2];
+        }
+    }
+
+    expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    start[0] = 3;
+    count[2] = 5;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
 
     buf_ptr = buf;
     for (i=0; i<count[0]; i++) {
@@ -263,12 +311,69 @@ int main(int argc, char** argv)
 
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
-        int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
         if (buf[i] != expected) {
-            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
-                   rank, __LINE__, i, buf[i], expected);
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
+        expected++;
+    }
+
+    start[2] += 5;
+    count[1]  = 1;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    buf_ptr = buf;
+    for (i=0; i<count[0]; i++) {
+        for (j=0; j<count[1]; j++) {
+            offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
+            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+#ifndef WORDS_BIGENDIAN
+            swapn(buf_ptr, count[2]);
+#endif
+            buf_ptr += count[2];
+        }
+    }
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    start[1] = 9;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    buf_ptr = buf;
+    for (i=0; i<count[0]; i++) {
+        for (j=0; j<count[1]; j++) {
+            offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
+            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+#ifndef WORDS_BIGENDIAN
+            swapn(buf_ptr, count[2]);
+#endif
+            buf_ptr += count[2];
+        }
+    }
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
     }
 
     MPI_File_close(&fh);
