@@ -454,7 +454,7 @@ filetype_create_vara(const NC         *ncp,
 {
     int          dim, status, err;
     MPI_Offset   nbytes, offset;
-    MPI_Datatype filetype, xtype;
+    MPI_Datatype filetype;
 
     /* calculate the request size */
     nbytes = varp->xsz;
@@ -490,7 +490,6 @@ filetype_create_vara(const NC         *ncp,
     if (blocklen           != NULL) *blocklen           = 1;
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
     offset = varp->begin;
-    xtype = ncmpii_nc2mpitype(varp->xtype);
 
     /* previously, request size has been checked and it must > 0 */
     if (IS_RECVAR(varp)) {
@@ -525,9 +524,13 @@ filetype_create_vara(const NC         *ncp,
                 subcount64[dim] = count[dim];
                 substart64[dim] = start[dim];
             }
+            shape64[varp->ndims-1]    *= varp->xsz; 
+            subcount64[varp->ndims-1] *= varp->xsz; 
+            substart64[varp->ndims-1] *= varp->xsz; 
+
             status = type_create_subarray64(varp->ndims-1, shape64+1,
                                  subcount64+1, substart64+1, MPI_ORDER_C,
-                                 xtype, &rectype);
+                                 MPI_BYTE, &rectype);
             NCI_Free(shape64);
             if (status != NC_NOERR) return status;
 
@@ -562,9 +565,13 @@ filetype_create_vara(const NC         *ncp,
             subcount64[dim] = count[dim];
             substart64[dim] = start[dim];
         }
+        shape64[varp->ndims-1]    *= varp->xsz; 
+        subcount64[varp->ndims-1] *= varp->xsz; 
+        substart64[varp->ndims-1] *= varp->xsz; 
+
         status = type_create_subarray64(varp->ndims, shape64, subcount64,
                                         substart64, MPI_ORDER_C,
-                                        xtype, &filetype);
+                                        MPI_BYTE, &filetype);
         NCI_Free(shape64);
         if (status != NC_NOERR) return status;
     }
