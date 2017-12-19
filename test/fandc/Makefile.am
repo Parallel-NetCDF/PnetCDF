@@ -60,7 +60,7 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 EXTRA_DIST = README
 
-CLEANFILES = *.nc core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests

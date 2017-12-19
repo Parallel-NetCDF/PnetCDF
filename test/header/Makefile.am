@@ -39,7 +39,8 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 EXTRA_DIST = seq_runs.sh
 
-CLEANFILES = header_consistency.nc core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = $(TESTOUTDIR)/header_consistency.nc \
+             core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
