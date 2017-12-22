@@ -1528,7 +1528,7 @@ val_get_NC_attrarray(int           fd,
             if (status == NC_NOERR) status = err;
             if (trace) {
                 if (strcmp(loc, "Global")) printf("\t");
-                printf("\tattribute \"%s\" of type %s, length %d\n",
+                printf("\tattribute \"%s\" of type %s, length %lld\n",
                        ncap->value[i]->name, str_NC_type(ncap->value[i]->xtype),
                        ncap->value[i]->nelems);
             }
@@ -1643,7 +1643,7 @@ val_get_NC_var(int          fd,
         DEBUG_RETURN_ERROR(NC_EMAXDIMS)
     }
 
-    if (trace) printf("\tnumber of dimensions = %d\n", ndims);
+    if (trace) printf("\tnumber of dimensions = %lld\n", ndims);
 
     /* allocate variable object */
     varp = val_new_NC_var(name, ndims);
