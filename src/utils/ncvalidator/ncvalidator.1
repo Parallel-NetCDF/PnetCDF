@@ -11,6 +11,7 @@ ncvalidator \- validates a classic netCDF file against CDF file formats
 ncvalidator
 .nh
 \%[-x]
+\%[-t]
 \%[-q]
 \%[-h]
 \%\fIfile\fP
@@ -25,13 +26,15 @@ Otherwise, a NetCDF error message is printed.
 .SH OPTIONS
 .IP "\fB-x\fP"
 Repair null-byte padding in file header.
+.IP "\fB-t\fP"
+Turn on tracing mode, printing the progress of all successful metadata validation. When an error is detected, the tracing stops at the location of the error found.
 .IP "\fB-q\fP"
 Quiet mode - print nothing on the command-line output. When in quiet mode, users should check exit status. See below in "EXIT STATUS".
 .IP "\fB-h\fP"
 Print the available command-line options
 .SH EXIT STATUS
-An exit status of 0 means no differences were found, and
-1 means some differences were found.
+An exit status of 0 means the file is conform with the classic CDF file format, and
+1 means otherwise.
 Note on VMS-based system, the exit status values are reversed.
 .SH "SEE ALSO"
 .LP
