@@ -42,10 +42,14 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New/updated utility program
-    * none
+    * ncvalidator adds a new option -t to turn tracing mode that prints all
+      successful metadata.
+    * ncvalidator adds a check for error NC_EUNLIMIT, when more than one
+      unlimited dimension found in the file.
 
   o Other updates:
-    * none
+    * ncmpi_open adds a check for error NC_EUNLIMIT, when more than one
+      unlimited dimension found in the file.
 
   o Bug fixes
     * none
@@ -57,7 +61,7 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * none
+    * test/testcases/tst_def_var_fill.c - tests API ncmpi_inq_var_fill
 
   o Conformity with NetCDF library
     * none

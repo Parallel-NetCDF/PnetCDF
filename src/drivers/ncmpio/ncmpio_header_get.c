@@ -640,7 +640,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 
 /*----< hdr_get_NC_dim() >---------------------------------------------------*/
 static int
-hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp)
+hdr_get_NC_dim(bufferinfo *gbp, NC_dimarray *ncap, NC_dim **dimpp)
 {
     /* netCDF file format:
      *  ...
@@ -675,6 +675,12 @@ hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp)
     if (err != NC_NOERR) { /* frees dim */
         NCI_Free(name);
         return err;
+    }
+
+    /* check if unlimited_id already set */
+    if (ncap->unlimited_id != -1 && dim_length == 0) {
+        NCI_Free(name);
+        return NC_EUNLIMIT;
     }
 
     /* allocate and initialize NC_dim object */
@@ -765,7 +771,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     for (i=0; i<ndefined; i++) {
-        err = hdr_get_NC_dim(gbp, ncap->value + i);
+        err = hdr_get_NC_dim(gbp, ncap, ncap->value + i);
         if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
         else if (err != NC_NOERR) { /* error: fail to get the next dim */
             ncmpio_free_NC_dimarray(ncap);

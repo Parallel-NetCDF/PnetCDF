@@ -31,7 +31,7 @@
 #endif
 #endif
 
-static int verbose;
+static int verbose, trace;
 static int repair;
 static const char nada[4] = {0, 0, 0, 0};
 
@@ -108,7 +108,8 @@ typedef struct {
 } NC_dim;
 
 typedef struct NC_dimarray {
-    int      ndefined;  /* number of defined dimensions */
+    int      ndefined;     /* number of defined dimensions */
+    int      unlimited_id; /* ID of unlimited dimension */
     NC_dim **value;
 } NC_dimarray;
 
@@ -181,6 +182,7 @@ typedef struct bufferinfo {
 #define NC_EUNLIMPOS    (-47)   /**< NC_UNLIMITED in the wrong index */
 #define NC_EMAXVARS     (-48)
 #define NC_ENOTNC       (-51)   /**< Not a netcdf file (file format violates CDF specification) */
+#define NC_EUNLIMIT     (-54)   /**< NC_UNLIMITED size already in use */
 #define NC_ENOMEM       (-61)   /**< Memory allocation (malloc) failure */
 #define NC_EVARSIZE     (-62)   /**< One or more variable sizes violate format constraints */
 #define NC_EFILE        (-204)  /**< Unknown error in file operation */
@@ -1051,7 +1053,7 @@ hdr_get_name(int          fd,
 }
 
 static int
-val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp) {
+val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp, NC_dimarray *ncap) {
     int err, status=NC_NOERR;
     char *name=NULL;
     size_t err_addr;
@@ -1082,6 +1084,15 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp) {
         free(dimp->name);
         free(dimp);
         return err;
+    }
+
+    /* check if unlimited_id already set */
+    if (ncap->unlimited_id != -1 && dimp->size == 0) {
+        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) printf("\tDimension \"%s\": NC_UNLIMITED dimension already found (\"%s\")\n",name,ncap->value[ncap->unlimited_id]->name);
+        free(dimp->name);
+        free(dimp);
+        return NC_EUNLIMIT;
     }
 
     *dimpp = dimp;
@@ -1133,6 +1144,9 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
         DEBUG_RETURN_ERROR(NC_EMAXDIMS)
     }
     ncap->ndefined = (int)tmp;
+    if (trace) printf("Number of defined dimensions = %d\n", ncap->ndefined);
+
+    ncap->unlimited_id = -1;
 
     if (ncap->ndefined == 0) {
         /* no dimension defined */
@@ -1161,13 +1175,24 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap)
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         for (dim=0; dim<ncap->ndefined; dim++) {
-            err = val_get_NC_dim(fd, gbp, &ncap->value[dim]);
+            err = val_get_NC_dim(fd, gbp, &ncap->value[dim], ncap);
             if (err != NC_NOERR && err != NC_ENULLPAD) {
                 ncap->ndefined = dim;
                 free_NC_dimarray(ncap);
                 return err;
             }
             if (status == NC_NOERR) status = err;
+            if (ncap->value[dim]->size == NC_UNLIMITED)
+                ncap->unlimited_id = dim; /* ID of unlimited dimension */
+
+            if (trace) {
+                if (ncap->unlimited_id == dim)
+                    printf("Dimension ID %2d: name \"%s\", length = UNLIMITED\n",
+                           dim,ncap->value[dim]->name);
+                else
+                    printf("Dimension ID %2d: name \"%s\", length = %lld\n",
+                           dim,ncap->value[dim]->name,ncap->value[dim]->size);
+            }
         }
     }
 
@@ -1273,6 +1298,25 @@ val_get_NC_attrV(int         fd,
     }
 
     return status;
+}
+
+static char*
+str_NC_type(nc_type xtype)
+{
+    switch(xtype) {
+        case NC_BYTE:   return "NC_BYTE";
+        case NC_CHAR:   return "NC_CHAR";
+        case NC_UBYTE:  return "NC_UBYTE";
+        case NC_SHORT:  return "NC_SHORT";
+        case NC_USHORT: return "NC_USHORT";
+        case NC_INT:    return "NC_INT";
+        case NC_UINT:   return "NC_UINT";
+        case NC_FLOAT:  return "NC_FLOAT";
+        case NC_DOUBLE: return "NC_DOUBLE";
+        case NC_INT64:  return "NC_INT64";
+        case NC_UINT64: return "NC_UINT64";
+        default: return "";
+    }
 }
 
 static long long
@@ -1429,6 +1473,13 @@ val_get_NC_attrarray(int           fd,
     }
     ncap->ndefined = (int)tmp;
 
+    if (trace) {
+        if (!strcmp(loc, "Global"))
+            printf("Number of global attributes = %d\n", ncap->ndefined);
+        else
+            printf("\tnumber of attributes = %d\n", ncap->ndefined);
+    }
+
     if (ncap->ndefined == 0) {
         /* no attribute defined */
         /* From the CDF file format specification, the tag is either
@@ -1463,6 +1514,12 @@ val_get_NC_attrarray(int           fd,
                 return err;
             }
             if (status == NC_NOERR) status = err;
+            if (trace) {
+                if (strcmp(loc, "Global")) printf("\t");
+                printf("\tattribute \"%s\" of type %s, length %d\n",
+                       ncap->value[i]->name, str_NC_type(ncap->value[i]->xtype),
+                       ncap->value[i]->nelems);
+            }
         }
     }
   
@@ -1552,6 +1609,8 @@ val_get_NC_var(int          fd,
     }
     status = err;
 
+    if (trace) printf("Variable \"%s\"\n", name);
+
     /* read number of dimensions */
     sprintf(xloc,"%s \"%s\"",loc,name);
     err_addr = ERR_ADDR;
@@ -1572,12 +1631,16 @@ val_get_NC_var(int          fd,
         DEBUG_RETURN_ERROR(NC_EMAXDIMS)
     }
 
+    if (trace) printf("\tnumber of dimensions = %d\n", ndims);
+
     /* allocate variable object */
     varp = val_new_NC_var(name, ndims);
     if (varp == NULL) {
         if (name != NULL) free(name);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
+
+    if (trace && ndims > 0) printf("\t\tdimension IDs:");
 
     /* read dimension IDs and check dimensions */
     for (dim=0; dim<ndims; dim++) {
@@ -1594,6 +1657,8 @@ val_get_NC_var(int          fd,
         else
             dimid = (int) get_uint64(gbp);
 
+        if (trace) printf(" %d", dimid);
+
         /* dimid should be < f_ndims (num of dimensions defined in file) */
         if (dimid >= f_ndims) {
             if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
@@ -1603,6 +1668,7 @@ val_get_NC_var(int          fd,
         }
         varp->dimids[dim] = dimid;
     }
+    if (trace && ndims > 0) printf("\n");
 
     /* var = name nelems [dimid ...] vatt_list nc_type vsize begin
      *                               ^^^^^^^^^                     */
@@ -1620,7 +1686,8 @@ val_get_NC_var(int          fd,
     if (err != NC_NOERR) {
         free_NC_var(varp);
         return err;
-    } 
+    }
+    if (trace) printf("\tvariable data type: %s\n", str_NC_type(varp->xtype));
 
     varp->xsz = len_nctype(varp->xtype);
 
@@ -1636,6 +1703,7 @@ val_get_NC_var(int          fd,
         free_NC_var(varp);
         return err;
     }
+    if (trace) printf("\tvariable size (vsize): %lld\n", varp->len);
 
     err = val_check_buffer(fd, gbp, (gbp->version == 1 ? 4 : 8));
     if (err != NC_NOERR) {
@@ -1650,6 +1718,8 @@ val_get_NC_var(int          fd,
         varp->begin = (long long) get_uint32(gbp);
     else
         varp->begin = (long long) get_uint64(gbp);
+
+    if (trace) printf("\tstarting file offset (begin): %lld\n", varp->begin);
 
     *varpp = varp;
     return status;
@@ -1705,6 +1775,8 @@ val_get_NC_vararray(int          fd,
         DEBUG_RETURN_ERROR(NC_EMAXVARS);
     }
     ncap->ndefined = (int)tmp;
+
+    if (trace) printf("Number of variables = %d\n", ncap->ndefined);
 
     if (ncap->ndefined == 0) {
         /* From the CDF file format specification, the tag is either
@@ -1988,12 +2060,15 @@ val_get_NC(int fd, NC *ncp)
     if (magic[3] == 0x1) {
         getbuf.version = 1;
         ncp->format = 1;
+        if (trace) printf("File format: CDF-1\n");
     } else if (magic[3] == 0x2) {
         getbuf.version = 2;
         ncp->format = 2;
+        if (trace) printf("File format: CDF-2\n");
     } else if (magic[3] == 0x5) {
         getbuf.version = 5;
         ncp->format = 5;
+        if (trace) printf("File format: CDF-5\n");
     } else {
         if (verbose) printf("Error: Unknow file signature\n");
         if (verbose) printf("\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
@@ -2018,6 +2093,8 @@ val_get_NC(int fd, NC *ncp)
         ncp->numrecs = (long long) get_uint32(&getbuf);
     else
         ncp->numrecs = (long long) get_uint64(&getbuf);
+
+    if (trace) printf("Number of records = %lld\n", ncp->numrecs);
 
     pos_addr  = (size_t) getbuf.pos;
     base_addr = (size_t) getbuf.base;
@@ -2092,6 +2169,7 @@ usage(char *argv0)
     char *help =
     "Usage: %s [-h] | [-q] file_name\n"
     "       [-h] Print help\n"
+    "       [-t] turn on tracing mode, printing all successful metadata\n"
     "       [-x] repair null-byte padding in file header\n"
     "       [-q] Quiet mode (exit 1 when fail, 0 success)\n"
     "       filename: input netCDF file name\n";
@@ -2112,10 +2190,13 @@ int main(int argc, char **argv)
 
     /* get command-line arguments */
     verbose = 1;
+    trace = 0;
     repair  = 0;
-    while ((i = getopt(argc, argv, "xhq")) != EOF)
+    while ((i = getopt(argc, argv, "xthq")) != EOF)
         switch(i) {
             case 'x': repair = 1;
+                      break;
+            case 't': trace = 1;
                       break;
             case 'q': verbose = 0;
                       break;

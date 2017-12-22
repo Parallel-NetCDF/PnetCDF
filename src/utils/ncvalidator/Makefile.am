@@ -50,7 +50,10 @@ BAD_FILES = bad_magic.nc \
             bad_tag_vattr.nc5 \
             bad_tag_variable.nc1 \
             bad_tag_variable.nc2 \
-            bad_tag_variable.nc5
+            bad_tag_variable.nc5 \
+            bad_unlimited.nc1 \
+            bad_unlimited.nc2 \
+            bad_unlimited.nc5
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
