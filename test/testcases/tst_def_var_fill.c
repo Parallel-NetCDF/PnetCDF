@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     for (i=0; i<NY*NX; i++) {
         if (buf[i] != rank+5) {
             printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
-                   __FILE__,__LINE__, i, rank+5, buf[j]);
+                   __FILE__,__LINE__, i, rank+5, buf[i]);
             nerrs++;
         }
     }
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     for (i=0; i<NY*NX; i++) {
         if (buf[i] != rank+5) {
             printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
-                   __FILE__,__LINE__, i, rank+5, buf[j]);
+                   __FILE__,__LINE__, i, rank+5, buf[i]);
             nerrs++;
         }
     }
