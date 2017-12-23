@@ -31,8 +31,9 @@
 
 int main(int argc, char** argv) {
     char filename[256];
-    int i, j, rank, nprocs, err, verbose=0, nerrs=0;
-    int ncid, cmode, varid[2], dimid[2], expect, *buf;
+    int i, j, k, rank, nprocs, err, nerrs=0;
+    int ncid, cmode, format, varid[2], dimid[2], expect, *buf;
+    int formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_CDF5};
     MPI_Comm comm=MPI_COMM_WORLD;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Offset start[2], count[2];
@@ -56,99 +57,111 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-    /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
-    err = ncmpi_create(comm, filename, cmode, info, &ncid); CHECK_ERR
+    for (k=0; k<3; k++) {
+        ncmpi_set_default_format(formats[k], NULL);
 
-    /* define dimension */
-    err = ncmpi_def_dim(ncid, "Y", NY,        &dimid[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[1]); CHECK_ERR
+        /* create a new file for writing ------------------------------------*/
+        cmode = NC_CLOBBER;
+        err = ncmpi_create(comm, filename, cmode, info, &ncid); CHECK_ERR
 
-    /* define 2 variables of size NY x NX */
-    err = ncmpi_def_var(ncid, "var_nofill", NC_INT, 2, dimid, &varid[0]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var_fill",   NC_INT, 2, dimid, &varid[1]); CHECK_ERR
-    /* set fill modes for the variables */
-    err = ncmpi_def_var_fill(ncid, varid[0], 1, NULL); CHECK_ERR
-    err = ncmpi_def_var_fill(ncid, varid[1], 0, NULL); CHECK_ERR
+        /* define dimension */
+        err = ncmpi_def_dim(ncid, "Y", NY,        &dimid[0]); CHECK_ERR
+        err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[1]); CHECK_ERR
 
-    err = ncmpi_enddef(ncid); CHECK_ERR
+        /* define 2 variables of size NY x NX */
+        err = ncmpi_def_var(ncid, "var_nofill", NC_INT, 2, dimid, &varid[0]); CHECK_ERR
+        err = ncmpi_def_var(ncid, "var_fill",   NC_INT, 2, dimid, &varid[1]); CHECK_ERR
+        /* set fill modes for the variables */
+        err = ncmpi_def_var_fill(ncid, NC_GLOBAL,1, NULL); EXP_ERR(NC_EGLOBAL)
+        err = ncmpi_def_var_fill(ncid, varid[0], 1, NULL); CHECK_ERR
+        err = ncmpi_def_var_fill(ncid, varid[1], 0, NULL); CHECK_ERR
 
-    /* allocate I/O buffer */
-    buf = (int*) malloc(NY*NX * sizeof(int));
-    for (i=0; i<NY*NX; i++) buf[i] = rank+5;
+        err = ncmpi_enddef(ncid); CHECK_ERR
 
-    /* write a subarray to each variable */
-    start[0] = 0;
-    start[1] = NX*rank+2;
-    count[0] = NY;
-    count[1] = 2;
-    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
-    /* check if user put buffer contents altered */
-    for (i=0; i<NY*NX; i++) {
-        if (buf[i] != rank+5) {
-            printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
-                   __FILE__,__LINE__, i, rank+5, buf[i]);
+        /* allocate I/O buffer */
+        buf = (int*) malloc(NY*NX * sizeof(int));
+        for (i=0; i<NY*NX; i++) buf[i] = rank+5;
+
+        /* write a subarray to each variable */
+        start[0] = 0;
+        start[1] = NX*rank+2;
+        count[0] = NY;
+        count[1] = 2;
+        err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
+        /* check if user put buffer contents altered */
+        for (i=0; i<NY*NX; i++) {
+            if (buf[i] != rank+5) {
+                printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
+                       __FILE__,__LINE__, i, rank+5, buf[i]);
+                nerrs++;
+            }
+        }
+        err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
+        /* check if user put buffer contents altered */
+        for (i=0; i<NY*NX; i++) {
+            if (buf[i] != rank+5) {
+                printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
+                       __FILE__,__LINE__, i, rank+5, buf[i]);
+                nerrs++;
+            }
+        }
+        err = ncmpi_close(ncid); CHECK_ERR
+
+        /* reopen the file and read data back */
+        err = ncmpi_open(comm, filename, NC_WRITE, info, &ncid); CHECK_ERR
+
+        err = ncmpi_inq_format(ncid, &format); CHECK_ERR
+        if (format != formats[k]) {
+            printf("Error at line %d of %s: expect format %d but got %d\n",
+                   __LINE__,__FILE__,formats[k],format);
             nerrs++;
         }
-    }
-    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
-    /* check if user put buffer contents altered */
-    for (i=0; i<NY*NX; i++) {
-        if (buf[i] != rank+5) {
-            printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
-                   __FILE__,__LINE__, i, rank+5, buf[i]);
-            nerrs++;
+
+        /* inquire variabe IDs */
+        err = ncmpi_inq_varid(ncid, "var_nofill", &varid[0]); CHECK_ERR
+        err = ncmpi_inq_varid(ncid, "var_fill",   &varid[1]); CHECK_ERR
+
+        /* read the subarray written by process (rank+1)%nproc */
+        start[0] = 0;
+        start[1] = NX*((rank+1)%nprocs);
+        count[0] = NY;
+        count[1] = NX;
+        for (i=0; i<NY*NX; i++) buf[i] = -1;
+        err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
+
+        /* check contents of variable var_nofill */
+        expect = (rank+1)%nprocs + 5;
+        for (i=0; i<NY; i++) for (j=0; j<NX; j++) {
+            if (2 <= j && j < 4) {
+                if (buf[i*NX+j] != expect) {
+                    printf("Error in %s line %d: expect get buf[%d]=%d but got %d\n",
+                           __FILE__,__LINE__,i*NX+j, expect, buf[i*NX+j]);
+                    nerrs++;
+                }
+            }
+            else if (buf[i*NX+j] == NC_FILL_INT) /* not an error */
+                /* content of buf[i*NX+j] can be any value */
+                printf("Warning in %s line %d: get buf[%d] same as NC_FILL_INT\n",
+                       __FILE__,__LINE__,i*NX+j);
         }
-    }
-    err = ncmpi_close(ncid); CHECK_ERR
 
-    /* reopen the file and read data back */
-    err = ncmpi_open(comm, filename, NC_WRITE, info, &ncid); CHECK_ERR
+        /* read the subarray written by process (rank+1)%nproc */
+        for (i=0; i<NY*NX; i++) buf[i] = -1;
+        err = ncmpi_get_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
 
-    /* inquire variabe IDs */
-    err = ncmpi_inq_varid(ncid, "var_nofill", &varid[0]); CHECK_ERR
-    err = ncmpi_inq_varid(ncid, "var_fill",   &varid[1]); CHECK_ERR
-
-    /* read the subarray written by process (rank+1)%nproc */
-    start[0] = 0;
-    start[1] = NX*((rank+1)%nprocs);
-    count[0] = NY;
-    count[1] = NX;
-    for (i=0; i<NY*NX; i++) buf[i] = -1;
-    err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
-
-    /* check contents of variable var_nofill */
-    expect = (rank+1)%nprocs + 5;
-    for (i=0; i<NY; i++) for (j=0; j<NX; j++) {
-        if (2 <= j && j < 4) {
+        /* check contents of variable var_fill */
+        for (i=0; i<NY; i++) for (j=0; j<NX; j++) {
+            expect = NC_FILL_INT;
+            if (2 <= j && j< 4) expect = (rank+1)%nprocs + 5;
             if (buf[i*NX+j] != expect) {
                 printf("Error in %s line %d: expect get buf[%d]=%d but got %d\n",
                        __FILE__,__LINE__,i*NX+j, expect, buf[i*NX+j]);
                 nerrs++;
             }
         }
-        else if (buf[i*NX+j] == NC_FILL_INT) /* not an error */
-            /* content of buf[i*NX+j] can be any value */
-            printf("Warning in %s line %d: get buf[%d] same as NC_FILL_INT\n",
-                   __FILE__,__LINE__,i*NX+j);
+
+        err = ncmpi_close(ncid); CHECK_ERR
     }
-
-    /* read the subarray written by process (rank+1)%nproc */
-    for (i=0; i<NY*NX; i++) buf[i] = -1;
-    err = ncmpi_get_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
-
-    /* check contents of variable var_fill */
-    for (i=0; i<NY; i++) for (j=0; j<NX; j++) {
-        expect = NC_FILL_INT;
-        if (2 <= j && j< 4) expect = (rank+1)%nprocs + 5;
-        if (buf[i*NX+j] != expect) {
-            printf("Error in %s line %d: expect get buf[%d]=%d but got %d\n",
-                   __FILE__,__LINE__,i*NX+j, expect, buf[i*NX+j]);
-            nerrs++;
-        }
-    }
-
-    err = ncmpi_close(ncid); CHECK_ERR
     free(buf);
 
     /* check if PnetCDF freed all internal malloc */
