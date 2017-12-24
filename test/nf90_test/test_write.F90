@@ -1686,7 +1686,6 @@
       integer i
       integer version
       integer old_format
-      integer*8 length  !/* of att */
       integer formats(3)
       integer nf90mpi_get_file_version
       
