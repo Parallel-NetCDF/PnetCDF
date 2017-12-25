@@ -25,14 +25,14 @@ static int verbose_debug;
 
 #define DEBUG_RETURN_ERROR(err) {                             \
     if (verbose_debug)                                        \
-        fprintf(stderr, "Error code %s at line %d of %s\n",   \
-        ncmpii_err_code_name(err),__LINE__,__FILE__);         \
+        fprintf(stderr, "Error at line %d of %s: %s\n",       \
+        __LINE__,__FILE__,#err);                              \
     return err;                                               \
 }
 #define DEBUG_ASSIGN_ERROR(status, err) {                     \
     if (verbose_debug)                                        \
-        fprintf(stderr, "Error code %s at line %d of %s\n",   \
-        ncmpii_err_code_name(err),__LINE__,__FILE__);         \
+        fprintf(stderr, "Error at line %d of %s: %s\n",       \
+        __LINE__,__FILE__,#err);                              \
     status = err;                                             \
 }
 
@@ -51,6 +51,7 @@ static int verbose_debug;
 #define NC_EBADDIM	(-46)	/**< Invalid dimension id or name */
 #define NC_EUNLIMPOS	(-47)	/**< NC_UNLIMITED in the wrong index */
 #define NC_ENOTNC	(-51)	/**< Not a netcdf file (file format violates CDF specification) */
+#define NC_EUNLIMIT    	(-54)	   /**< NC_UNLIMITED size already in use */
 #define NC_EVARSIZE     (-62)   /**< One or more variable sizes violate format constraints */
 
 #define NC_UNLIMITED 0L
@@ -126,8 +127,9 @@ typedef struct {
 } NC_dim;
 
 typedef struct NC_dimarray {
-    int      nalloc;    /* number allocated >= ndefined */
-    int      ndefined;  /* number of defined dimensions */
+    int      nalloc;       /* number allocated >= ndefined */
+    int      ndefined;     /* number of defined dimensions */
+    int      unlimited_id; /* ID of unlimited dimension */
     NC_dim **value;
 } NC_dimarray;
 
@@ -972,6 +974,7 @@ ncmpii_new_x_NC_dim(NC_string *name)
 /*----< hdr_get_NC_dim() >----------------------------------------------------*/
 static int
 hdr_get_NC_dim(bufferinfo  *gbp,
+               int          unlimited_id,
                NC_dim     **dimpp)
 {
     /* netCDF file format:
@@ -982,6 +985,7 @@ hdr_get_NC_dim(bufferinfo  *gbp,
      *              <non-negative INT64>  // CDF-5
      */
     int status;
+    long long dim_length;
     NC_string *ncstrp;
     NC_dim *dimp;
 
@@ -989,13 +993,20 @@ hdr_get_NC_dim(bufferinfo  *gbp,
     status = hdr_get_NC_name(gbp, &ncstrp);
     if (status != NC_NOERR) return status;
 
-    dimp = ncmpii_new_x_NC_dim(ncstrp);
-
     /* get dim_length */
     if (gbp->version == 5) 
-        dimp->size = get_uint64(gbp);
+        dim_length = get_uint64(gbp);
     else
-        dimp->size = get_uint32(gbp);
+        dim_length = get_uint32(gbp);
+
+    /* check if unlimited_id already set */
+    if (unlimited_id != -1 && dim_length == 0) {
+        free(ncstrp);
+        DEBUG_RETURN_ERROR(NC_EUNLIMIT);
+    }
+
+    dimp = ncmpii_new_x_NC_dim(ncstrp);
+    dimp->size = dim_length;
 
     *dimpp = dimp;
     return NC_NOERR;
@@ -1060,6 +1071,8 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
         ndefined = get_uint32(gbp);
     ncap->ndefined = (int)ndefined;
 
+    ncap->unlimited_id = -1;
+
     if (ndefined == 0) {
         if (type != NC_UNSPECIFIED)
             DEBUG_RETURN_ERROR(NC_ENOTNC);
@@ -1071,12 +1084,14 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
         ncap->nalloc = (int)ndefined;
 
         for (i=0; i<ndefined; i++) {
-            status = hdr_get_NC_dim(gbp, ncap->value + i);
+            status = hdr_get_NC_dim(gbp, ncap->unlimited_id, ncap->value + i);
             if (status != NC_NOERR) { /* error: fail to get the next dim */
                 ncap->ndefined = i;
                 ncmpii_free_NC_dimarray(ncap);
                 return status;
             }
+            if (ncap->value[i]->size == NC_UNLIMITED)
+                ncap->unlimited_id = i; /* ID of unlimited dimension */
         }
     }
 
@@ -1708,6 +1723,7 @@ ncmpii_err_code_name(int err)
       case NC_EBADDIM:   return "NC_EBADDIM";
       case NC_EUNLIMPOS: return "NC_EUNLIMPOS";
       case NC_ENOTNC:    return "NC_ENOTNC";
+      case NC_EUNLIMIT:  return "NC_EUNLIMIT";
       case NC_EVARSIZE : return "NC_EVARSIZE";
       default:
          printf("Unknown error code %d\n",err);
@@ -1888,7 +1904,8 @@ int main(int argc, char *argv[])
     /* read the header from file */
     err = ncmpii_hdr_get_NC(fd, ncp);
     if (err != NC_NOERR) {
-        fprintf(stderr,"Error: %s\n", ncmpii_err_code_name(err));
+        fprintf(stderr,"Error when reading header of file \"%s\": %s\n",
+                filename, ncmpii_err_code_name(err));
         exit(1);
     }
 
