@@ -1057,6 +1057,7 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp, NC_dimarray *ncap) {
     int err, status=NC_NOERR;
     char *name=NULL;
     size_t err_addr;
+    long long dim_length;
     NC_dim *dimp;
 
     *dimpp = NULL;
@@ -1067,33 +1068,32 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp, NC_dimarray *ncap) {
         return status;
     }
 
-    dimp = (NC_dim*) malloc(sizeof(NC_dim));
-    if (dimp == NULL) {
-        if (name != NULL) free(name);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    dimp->name     = name;
-    dimp->name_len = strlen(name);
-
-    /* read dimension size */
+    /* read dimension length */
     err_addr = ERR_ADDR;
-    err = hdr_get_NON_NEG(fd, gbp, &dimp->size);
+    err = hdr_get_NON_NEG(fd, gbp, &dim_length);
     if (err != NC_NOERR) { /* frees dimp */
         if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
         if (verbose) printf("\tDimension \"%s\": Failed to read dimension size\n",name);
-        free(dimp->name);
-        free(dimp);
+        free(name);
         return err;
     }
 
     /* check if unlimited_id already set */
-    if (ncap->unlimited_id != -1 && dimp->size == 0) {
+    if (ncap->unlimited_id != -1 && dim_length == 0) {
         if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
         if (verbose) printf("\tDimension \"%s\": NC_UNLIMITED dimension already found (\"%s\")\n",name,ncap->value[ncap->unlimited_id]->name);
-        free(dimp->name);
-        free(dimp);
+        free(name);
         return NC_EUNLIMIT;
     }
+
+    dimp = (NC_dim*) malloc(sizeof(NC_dim));
+    if (dimp == NULL) {
+        free(name);
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    }
+    dimp->name     = name;
+    dimp->name_len = strlen(name);
+    dimp->size     = dim_length;
 
     *dimpp = dimp;
 
