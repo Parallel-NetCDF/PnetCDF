@@ -42,20 +42,25 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New/updated utility program
-    * ncvalidator adds a new option -t to turn tracing mode that prints all
-      successful metadata.
-    * ncvalidator adds a check for error NC_EUNLIMIT, when more than one
-      unlimited dimension found in the file.
+    * ncvalidator adds a new option -t to turn on tracing mode which prints all
+      successfully validated metadata till the first error encountered.
+    * ncvalidator adds a check to detect whether there are two or more
+      unlimited dimensions defined in the file and, if yes, reports error code
+      NC_EUNLIMIT.
 
   o Other updates:
-    * ncmpi_open adds a check for error NC_EUNLIMIT, when more than one
-      unlimited dimension found in the file.
+    * Add a check for NC_EUNLIMIT in API ncmpi_open to detect whether two or
+      more unlimited dimensions are defined in a corrupted file.
 
   o Bug fixes
-    * Keep name allocated becupase NC_ENULLPAD is not a fatal error. See r3644.
-    * NC_dimarray.value, NC_attrarray.value, and NC_vararray.value can still be
-      NULL when error occurs at reading tags NC_DIMENSION, NC_ATTRIBUTE, and
-      NC_VARIABLE. Check NULL before freeing value. See r3645.
+    * Remove freeing name object because NC_ENULLPAD is not a fatal error. See
+      r3644. This bug only appears when --enable-null-byte-header-padding is
+      set at configure time and opening files whose headers are not padded with
+      null bytes.
+    * Member "value" of NC_dimarray, NC_attrarray, and NC_vararray can still be
+      NULL when a corrupted tag of NC_DIMENSION, NC_ATTRIBUTE, or NC_VARIABLE
+      is read from files. Add a check against NULL before freeing it. This bug
+      only appears when reading files with corruptted NC tags. See r3645.
 
   o New example programs
     * none
