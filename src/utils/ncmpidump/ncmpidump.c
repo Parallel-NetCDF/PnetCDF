@@ -855,7 +855,12 @@ main(int argc, char *argv[])
     file_kind = check_file_signature(argv[0]);
     err = MPI_Bcast(&file_kind, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (file_kind == UNKNOWN || err != MPI_SUCCESS) {
+    if (file_kind == UNKNOWN) {
+        fprintf(stderr,"Error: %s\n",ncmpi_strerror(NC_ENOTNC));
+        err = EXIT_FAILURE;
+        goto fn_exit;
+    }
+    if (err != MPI_SUCCESS) {
         err = EXIT_FAILURE;
         goto fn_exit; /* file I/O error */
     }
