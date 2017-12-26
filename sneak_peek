@@ -52,7 +52,7 @@ This is essentially a placeholder for the next release note ...
       unlimited dimension found in the file.
 
   o Bug fixes
-    * none
+    * Keep name allocated becuase NC_ENULLPAD is not a fatal error. See r3644.
 
   o New example programs
     * none
