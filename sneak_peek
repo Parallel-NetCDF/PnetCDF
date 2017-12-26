@@ -52,7 +52,10 @@ This is essentially a placeholder for the next release note ...
       unlimited dimension found in the file.
 
   o Bug fixes
-    * Keep name allocated becuase NC_ENULLPAD is not a fatal error. See r3644.
+    * Keep name allocated becupase NC_ENULLPAD is not a fatal error. See r3644.
+    * NC_dimarray.value, NC_attrarray.value, and NC_vararray.value can still be
+      NULL when error occurs at reading tags NC_DIMENSION, NC_ATTRIBUTE, and
+      NC_VARIABLE. Check NULL before freeing value. See r3645.
 
   o New example programs
     * none
