@@ -627,8 +627,6 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 #ifdef PNETCDF_DEBUG
             fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
-            NCI_Free(*namep);
-            *namep = NULL;
             DEBUG_ASSIGN_ERROR(err, NC_ENULLPAD) /* not a fatal error */
         }
 #endif
