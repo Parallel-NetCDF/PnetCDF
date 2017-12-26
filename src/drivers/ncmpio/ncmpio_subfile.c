@@ -92,7 +92,6 @@ subfile_create(NC *ncp)
     int myrank, nprocs, color, status=NC_NOERR, mpireturn;
     char path_sf[1024];
     double ratio;
-    MPI_Comm comm_sf;
     MPI_Info info=MPI_INFO_NULL;
 
     MPI_Comm_rank(ncp->comm, &myrank);
@@ -118,7 +117,7 @@ subfile_create(NC *ncp)
 
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
-    TRACE_COMM(MPI_Comm_split)(ncp->comm, color, myrank, &comm_sf);
+    TRACE_COMM(MPI_Comm_split)(ncp->comm, color, myrank, &ncp->comm_sf);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_split"); 
 
@@ -131,14 +130,13 @@ subfile_create(NC *ncp)
 */
 
     void *ncp_sf;
-    status = ncmpio_create(comm_sf, path_sf, ncp->iomode, ncp->ncid, info,
+    status = ncmpio_create(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid, info,
                            &ncp_sf);
     if (status != NC_NOERR && myrank == 0)
         fprintf(stderr, "%s: error in creating file(%s): %s\n",
                 __func__, path_sf, ncmpi_strerror(status));
 
     ncp->ncp_sf = (NC*) ncp_sf;
-    MPI_Comm_free(&comm_sf);
 /*
     MPI_Info_free(&info);
 */
@@ -152,7 +150,6 @@ ncmpio_subfile_open(NC *ncp)
 {
     int myrank, nprocs, color, status=NC_NOERR, mpireturn;
     char path_sf[1024];
-    MPI_Comm comm_sf;
     double ratio;
 
     MPI_Comm_rank(ncp->comm, &myrank);
@@ -179,7 +176,7 @@ ncmpio_subfile_open(NC *ncp)
 
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
-    TRACE_COMM(MPI_Comm_split)(ncp->comm, color, myrank, &comm_sf);
+    TRACE_COMM(MPI_Comm_split)(ncp->comm, color, myrank, &ncp->comm_sf);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_split"); 
 
@@ -189,11 +186,10 @@ ncmpio_subfile_open(NC *ncp)
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->path, color, "nc");
 
     void *ncp_sf;
-    status = ncmpio_open(comm_sf, path_sf, ncp->iomode, ncp->ncid,
+    status = ncmpio_open(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid,
                          MPI_INFO_NULL, &ncp_sf);
 
     ncp->ncp_sf = (NC*) ncp_sf;
-    MPI_Comm_free(&comm_sf);
     return status;
 }
 
@@ -206,6 +202,7 @@ int ncmpio_subfile_close(NC *ncp)
         status = ncmpio_close(ncp->ncp_sf);
         if (status != NC_NOERR) return status;
         ncp->ncp_sf = NULL;
+        MPI_Comm_free(&ncp->comm_sf);
     }
 
     /* reset values to 0 */

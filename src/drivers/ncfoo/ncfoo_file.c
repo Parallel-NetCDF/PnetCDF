@@ -75,11 +75,11 @@ ncfoo_create(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(foo->path, path);
-    foo->mode       = cmode;
-    foo->driver     = driver;
-    foo->flag       = 0;
-    foo->ncp        = ncp;
-    MPI_Comm_dup(comm, &foo->comm);
+    foo->mode   = cmode;
+    foo->driver = driver;
+    foo->flag   = 0;
+    foo->ncp    = ncp;
+    foo->comm   = comm;
 
     *ncpp = foo;
 
@@ -122,11 +122,11 @@ ncfoo_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(foo->path, path);
-    foo->mode       = omode;
-    foo->driver     = driver;
-    foo->flag       = 0;
-    foo->ncp        = ncp;
-    MPI_Comm_dup(comm, &foo->comm);
+    foo->mode   = omode;
+    foo->driver = driver;
+    foo->flag   = 0;
+    foo->ncp    = ncp;
+    foo->comm   = comm;
 
     *ncpp = foo;
 
@@ -143,7 +143,6 @@ ncfoo_close(void *ncdp)
 
     err = foo->driver->close(foo->ncp);
 
-    MPI_Comm_free(&foo->comm);
     NCI_Free(foo->path);
     NCI_Free(foo);
 
@@ -225,7 +224,6 @@ ncfoo_abort(void *ncdp)
 
     err = foo->driver->abort(foo->ncp);
 
-    MPI_Comm_free(&foo->comm);
     NCI_Free(foo->path);
     NCI_Free(foo);
 

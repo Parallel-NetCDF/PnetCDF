@@ -355,6 +355,11 @@ ncmpi_create(MPI_Comm    comm,
 
     if (safe_mode)         pncp->flag |= NC_MODE_SAFE;
     /* if (enable_foo_driver) pncp->flag |= NC_MODE_BB; */
+
+    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
+     * collective. pncp->comm will be passed to drivers, so there is no need
+     * for a driver to duplicate it again.
+     */
     MPI_Comm_dup(comm, &pncp->comm);
 
     /* set the file format version based on the create mode, cmode */
@@ -544,6 +549,11 @@ ncmpi_open(MPI_Comm    comm,
     if (!fIsSet(omode, NC_WRITE)) pncp->flag |= NC_MODE_RDONLY;
     if (safe_mode)                pncp->flag |= NC_MODE_SAFE;
     /* if (enable_foo_driver)        pncp->flag |= NC_MODE_BB; */
+
+    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
+     * collective. pncp->comm will be passed to drivers, so there is no need
+     * for a driver to duplicate it again.
+     */
     MPI_Comm_dup(comm, &pncp->comm);
 
     /* add to the PNCList */

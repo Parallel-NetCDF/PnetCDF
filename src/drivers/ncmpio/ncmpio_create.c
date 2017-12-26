@@ -41,7 +41,6 @@ ncmpio_create(MPI_Comm     comm,
     char *env_str;
     int rank, mpiomode, err, mpireturn, default_format;
     MPI_File fh;
-    MPI_Comm dup_comm;
     MPI_Info info_used;
     NC *ncp=NULL;
 
@@ -172,17 +171,10 @@ ncmpio_create(MPI_Comm     comm,
         /* reset errno, as MPI_File_open may change it, even for MPI_SUCCESS */
         errno = 0;
 
-    /* duplicate communicator as user may free it later */
-    mpireturn = MPI_Comm_dup(comm, &dup_comm);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
-
     /* get the file info actually used by MPI-IO (may alter user's info) */
     mpireturn = MPI_File_get_info(fh, &info_used);
-    if (mpireturn != MPI_SUCCESS) {
-        MPI_Comm_free(&dup_comm);
+    if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_File_get_info");
-    }
 
     /* Now the file has been successfully created, allocate/set NC object */
 
@@ -257,7 +249,7 @@ ncmpio_create(MPI_Comm     comm,
 
     /* For file create, ignore if NC_NOWRITE set in cmode by user */
     ncp->iomode         = cmode | NC_WRITE;
-    ncp->comm           = dup_comm;
+    ncp->comm           = comm;  /* reuse comm duplicated in dispatch layer */
     ncp->mpiinfo        = info_used;
     ncp->mpiomode       = mpiomode;
     ncp->collective_fh  = fh;

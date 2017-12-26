@@ -38,7 +38,6 @@ ncmpio_free_NC(NC *ncp)
     ncmpio_free_NC_attrarray(&ncp->attrs);
     ncmpio_free_NC_vararray(&ncp->vars);
 
-    if (ncp->comm    != MPI_COMM_NULL) MPI_Comm_free(&ncp->comm);
     if (ncp->mpiinfo != MPI_INFO_NULL) MPI_Info_free(&ncp->mpiinfo);
 
     if (ncp->get_list != NULL) NCI_Free(ncp->get_list);

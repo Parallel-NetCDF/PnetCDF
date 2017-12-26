@@ -340,6 +340,7 @@ struct NC {
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
     int           num_subfiles; /* number of subfiles */
     struct NC    *ncp_sf;       /* ncp of subfile */
+    MPI_Comm      comm_sf;      /* subfile MPI communicator */
 #endif
     int           striping_unit; /* file stripe size of the file */
     int           chunk;       /* chunk size for reading header */
