@@ -64,7 +64,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * test/testcases/tst_def_var_fill.c - tests API ncmpi_inq_var_fill
+    * test/testcases/tst_def_var_fill.c - tests API ncmpi_def_var_fill and
+      verifies fill values when fill mode is on and off.
+    * src/utils/ncvalidator/tst_open.c - tests API ncmpi_open against corrupted
+      files and checks expected error codes.
 
   o Conformity with NetCDF library
     * none
