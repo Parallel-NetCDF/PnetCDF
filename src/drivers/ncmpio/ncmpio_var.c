@@ -130,14 +130,17 @@ ncmpio_free_NC_vararray(NC_vararray *ncap)
     assert(ncap != NULL);
     if (ncap->ndefined == 0) return;
 
-    assert(ncap->value != NULL);
-    for (i=0; i<ncap->ndefined; i++) {
-        if (ncap->value[i] != NULL)
-            ncmpio_free_NC_var(ncap->value[i]);
+    if (ncap->value != NULL) {
+        /* when error is detected reading NC_VARIABLE tag, ncap->ndefined can
+         * be > 0 and ncap->value is still NULL
+         */
+        for (i=0; i<ncap->ndefined; i++) {
+            if (ncap->value[i] != NULL)
+                ncmpio_free_NC_var(ncap->value[i]);
+        }
+        NCI_Free(ncap->value);
+        ncap->value    = NULL;
     }
-
-    NCI_Free(ncap->value);
-    ncap->value    = NULL;
     ncap->ndefined = 0;
 
 #ifndef SEARCH_NAME_LINEARLY

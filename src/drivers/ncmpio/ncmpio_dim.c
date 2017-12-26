@@ -120,14 +120,21 @@ ncmpio_free_NC_dimarray(NC_dimarray *ncap)
     assert(ncap != NULL);
     if (ncap->ndefined == 0) return;
 
-    assert(ncap->value != NULL);
-    for (i=0; i<ncap->ndefined; i++) {
-        NCI_Free(ncap->value[i]->name);
-        NCI_Free(ncap->value[i]);
+    if (ncap->value != NULL) {
+        /* when error is detected reading NC_DIMENSION tag, ncap->ndefined can
+         * be > 0 and ncap->value is still NULL
+         */
+        for (i=0; i<ncap->ndefined; i++) {
+            /* when error is detected reading dimension i, ncap->value[i] can
+             * still be NULL
+             */
+            if (ncap->value[i] == NULL) break;
+            NCI_Free(ncap->value[i]->name);
+            NCI_Free(ncap->value[i]);
+        }
+        NCI_Free(ncap->value);
+        ncap->value = NULL;
     }
-
-    NCI_Free(ncap->value);
-    ncap->value    = NULL;
     ncap->ndefined = 0;
 
 #ifndef SEARCH_NAME_LINEARLY
