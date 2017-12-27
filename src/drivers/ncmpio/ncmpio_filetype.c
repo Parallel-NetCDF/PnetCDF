@@ -454,7 +454,7 @@ filetype_create_vara(const NC         *ncp,
 {
     int          dim, status, err;
     MPI_Offset   nbytes, offset;
-    MPI_Datatype filetype;
+    MPI_Datatype filetype, xtype;
 
     /* calculate the request size */
     nbytes = varp->xsz;
@@ -491,6 +491,9 @@ filetype_create_vara(const NC         *ncp,
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
     offset = varp->begin;
 
+    /* element MPI data type of variable */
+    xtype = ncmpii_nc2mpitype(varp->xtype);
+
     /* previously, request size has been checked and it must > 0 */
     if (IS_RECVAR(varp)) {
         int blocklength;
@@ -507,8 +510,8 @@ filetype_create_vara(const NC         *ncp,
         offset += start[0] * ncp->recsize;
 
         if (varp->ndims > 1) {
-            /* when ndims > 1, we need to construct a subarray type for a
-             * single record, i.e. for dimension 1 ... ndims-1 */
+            /* when ndims > 1, we first construct a subarray type for a
+             * single record, i.e. for dimensions 1 ... ndims-1 */
             MPI_Offset *shape64, *subcount64, *substart64;
 
             shape64 = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * 3 * SIZEOF_MPI_OFFSET);
@@ -524,13 +527,9 @@ filetype_create_vara(const NC         *ncp,
                 subcount64[dim] = count[dim];
                 substart64[dim] = start[dim];
             }
-            shape64[varp->ndims-1]    *= varp->xsz; 
-            subcount64[varp->ndims-1] *= varp->xsz; 
-            substart64[varp->ndims-1] *= varp->xsz; 
-
             status = type_create_subarray64(varp->ndims-1, shape64+1,
                                  subcount64+1, substart64+1, MPI_ORDER_C,
-                                 MPI_BYTE, &rectype);
+                                 xtype, &rectype);
             NCI_Free(shape64);
             if (status != NC_NOERR) return status;
 
@@ -541,6 +540,7 @@ filetype_create_vara(const NC         *ncp,
             blocklength = varp->xsz;
         }
 
+        /* concatenate number of count[0] subarray types into filetype */
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
         err = MPI_Type_create_hvector((int)count[0], blocklength, ncp->recsize,
                                       rectype, &filetype);
@@ -565,13 +565,9 @@ filetype_create_vara(const NC         *ncp,
             subcount64[dim] = count[dim];
             substart64[dim] = start[dim];
         }
-        shape64[varp->ndims-1]    *= varp->xsz; 
-        subcount64[varp->ndims-1] *= varp->xsz; 
-        substart64[varp->ndims-1] *= varp->xsz; 
-
         status = type_create_subarray64(varp->ndims, shape64, subcount64,
                                         substart64, MPI_ORDER_C,
-                                        MPI_BYTE, &filetype);
+                                        xtype, &filetype);
         NCI_Free(shape64);
         if (status != NC_NOERR) return status;
     }
