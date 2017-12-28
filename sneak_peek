@@ -53,6 +53,9 @@ This is essentially a placeholder for the next release note ...
       more unlimited dimensions are defined in a corrupted file.
 
   o Bug fixes
+    * Fix the calculation of growing size of nonblocking request queues to
+      include the number of records of a record variable, as such request is
+      split into multiple additional requests, one for each record. See r3651.
     * Remove freeing name object because NC_ENULLPAD is not a fatal error. See
       r3644. This bug only appears when --enable-null-byte-header-padding is
       set at configure time and opening files whose headers are not padded with
@@ -60,7 +63,7 @@ This is essentially a placeholder for the next release note ...
     * Member "value" of NC_dimarray, NC_attrarray, and NC_vararray can still be
       NULL when a corrupted tag of NC_DIMENSION, NC_ATTRIBUTE, or NC_VARIABLE
       is read from files. Add a check against NULL before freeing it. This bug
-      only appears when reading files with corruptted NC tags. See r3645.
+      only appears when reading files with corrupted NC tags. See r3645.
 
   o New example programs
     * none
@@ -69,8 +72,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/nonblocking/large_num_reqs.c - tests large number of nonblocking put
+      and get requests (larger than NC_REQUEST_CHUNK, the constant used to grow
+      the internal queues that store the nonblocking put and get requests. This
+      is to test bug fix in r3651.
     * test/testcases/tst_def_var_fill.c - tests API ncmpi_def_var_fill and
-      verifies fill values when fill mode is on and off.
+      verifies fill values when fill mode is turned on and off.
     * src/utils/ncvalidator/tst_open.c - tests API ncmpi_open against corrupted
       files and checks expected error codes.
 
