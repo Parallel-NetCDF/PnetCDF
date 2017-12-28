@@ -276,8 +276,9 @@ typedef struct NC_req {
     int            id;          /* even number for write, odd for read */
     int            abuf_index;  /* index in the abuf occupy_table
                                    -1 means not using attached buffer */
-    MPI_Offset     num_recs;    /* number of records requested (1 for
-                                   fixed-size variable) */
+    MPI_Offset     num_recs;    /* number of records requested (1 for fixed-
+                                   size variable, or lead record of a record
+                                   variable, 0 for non-lead subrequests) */
     void          *buf;         /* the original user buffer */
     void          *xbuf;        /* the buffer used to read/write, may point to
                                    the same address as buf */
