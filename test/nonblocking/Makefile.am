@@ -33,7 +33,8 @@ TESTPROGRAMS = test_bput \
                flexible_bput \
                wait_after_indep \
                req_all \
-               i_varn_indef
+               i_varn_indef \
+               large_num_reqs
 
 M4_SRCS  = bput_varn.m4 \
            column_wise.m4
