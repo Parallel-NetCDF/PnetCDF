@@ -396,11 +396,21 @@ ncmpio_igetput_varm(NC               *ncp,
     }
 
     if (fIsSet(reqMode, NC_REQ_WR)) {
-        /* allocate write/read request array */
-        if (ncp->numPutReqs % NC_REQUEST_CHUNK == 0)
+        /* allocate or expand write request array */
+        int add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
+        int rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
+        size_t req_alloc = ncp->numPutReqs;
+
+        if (add_reqs > NC_REQUEST_CHUNK)
+            req_alloc += add_reqs;
+        else if (rem == 0 || rem + add_reqs > NC_REQUEST_CHUNK)
+            req_alloc += NC_REQUEST_CHUNK - rem + NC_REQUEST_CHUNK;
+        else
+            req_alloc = 0;
+
+        if (req_alloc > 0)
             ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list,
-                            ((size_t)ncp->numPutReqs + NC_REQUEST_CHUNK) *
-                            sizeof(NC_req));
+                                                  req_alloc * sizeof(NC_req));
         req = ncp->put_list + ncp->numPutReqs;
 
         /* the new request ID will be an even number (max of write ID + 2) */
@@ -411,11 +421,21 @@ ncmpio_igetput_varm(NC               *ncp,
         ncp->numPutReqs++;
     }
     else {  /* read request */
-        /* allocate write/read request array */
-        if (ncp->numGetReqs % NC_REQUEST_CHUNK == 0)
+        /* allocate or expand read request array */
+        int add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
+        int rem = ncp->numGetReqs % NC_REQUEST_CHUNK;
+        size_t req_alloc = ncp->numGetReqs;
+
+        if (add_reqs > NC_REQUEST_CHUNK)
+            req_alloc += add_reqs;
+        else if (rem == 0 || rem + add_reqs > NC_REQUEST_CHUNK)
+            req_alloc += NC_REQUEST_CHUNK - rem + NC_REQUEST_CHUNK;
+        else
+            req_alloc = 0;
+
+        if (req_alloc > 0)
             ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list,
-                            ((size_t)ncp->numGetReqs + NC_REQUEST_CHUNK) *
-                            sizeof(NC_req));
+                                                  req_alloc * sizeof(NC_req));
         req = ncp->get_list + ncp->numGetReqs;
 
         /* the new request ID will be an odd number (max of read ID + 2) */
@@ -446,11 +466,11 @@ ncmpio_igetput_varm(NC               *ncp,
     req->userBuf     = NULL;
     req->status      = NULL;
     req->num_recs    = 1;   /* For record variable, this will be set to
-                                    * the number of records requested. For
-                                    * fixed-size variable, this will be 1.
-                                    */
+                             * the number of records requested. For
+                             * fixed-size variable, this will be 1.
+                             */
 
-    /* only when read and buftype is not contiguous, we duplicate buftype for
+    /* for read requst and buftype is not contiguous, we duplicate buftype for
      * later in the wait call to unpack buffer based on buftype
      */
     if (fIsSet(reqMode, NC_REQ_RD) && !buftype_is_contig)
@@ -480,14 +500,20 @@ ncmpio_igetput_varm(NC               *ncp,
             req->stride[i] = stride[i];
     }
 
-    /* if this is a record variable and number of requesting records is > 1,
-     * we split the request, one for each record
-     */
     if (IS_RECVAR(varp) && req->count[0] > 1) {
+        /* If this is a record variable and the number of requesting records is
+         * more than 1, we split this request into multiple (sub)requests, one
+         * for each record. Only the lead sub-request num_recs is set to 1.
+         * The rest sub-requests num_recs are set to 0.
+         */
         req->num_recs = req->count[0];
 
+        /* add (req->count[0]-1) number of (sub)requests */
         add_record_requests(varp, req, stride);
-        /* req->count[0] has been changed to 1 */
+
+        /* Note req is the lead request and its req->count[0] has been changed
+         * to 1 in add_record_requests()
+         */
 
         if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs += req->num_recs - 1;
         else                            ncp->numGetReqs += req->num_recs - 1;
