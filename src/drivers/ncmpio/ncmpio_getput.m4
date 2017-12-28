@@ -126,18 +126,16 @@ put_varm(NC               *ncp,
 
     /* decode buftype to obtain the followings:
      * itype:    element data type (MPI primitive type) in buftype
-     * xtype:    element data type (MPI primitive type) of variable in file
      * bufcount: If it is -1, then this is called from a high-level API and in
      *           this case buftype will be an MPI primitive data type.
      *           If it is >=0, then this is called from a flexible API.
-     * nelems:   number of itypes in user buffer, buf
-     *           nelems is also the number xtype to be written to file
+     * nelems:   number of itypes in user buffer, buf. It is also the number
+     *           of array elements to be written to file.
      * nbytes:   number of bytes (in external data representation) to write to
      *           the file
      * el_size:  byte size of itype
      * buftype_is_contig: whether buftype is contiguous
      */
-    xtype = ncmpii_nc2mpitype(varp->xtype);
     err = ncmpii_buftype_decode(varp->ndims, varp->xtype, count, bufcount,
                                 buftype, &itype, &el_size, &nelems,
                                 &nbytes, &buftype_is_contig);
@@ -251,6 +249,11 @@ err_check:
     memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
 
+    xtype = ncmpii_nc2mpitype(varp->xtype);
+    /* xtype is the element data type (MPI primitive type) in xbuf to be
+     * written to the variable defined in file. Note data stored in xbuf is in
+     * the external data type, ready to be written to file.
+     */
     if (fIsSet(reqMode, NC_REQ_COLL)) {
         TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, (int)nelems,
                                         xtype, &mpistatus);
@@ -373,18 +376,16 @@ get_varm(NC               *ncp,
 
     /* decode buftype to see if we can use buf to read from file.
      * itype:    element data type (MPI primitive type) in buftype
-     * xtype:    element data type (MPI primitive type) of variable in file
      * bufcount: If it is -1, then this is called from a high-level API and in
      *           this case buftype will be an MPI primitive data type.
      *           If it is >=0, then this is called from a flexible API.
-     * nelems:   number of itypes in user buffer
-     *           nelems is also the number xtype to be read from file
+     * nelems:   number of itypes in user buffer, buf. It is also the number
+     *           of array elements to be read from file.
      * nbytes:   number of bytes (in external data representation) to
      *           read from the file
      * el_size:  size of itype
      * buftype_is_contig: whether buftype is contiguous
      */
-    xtype = ncmpii_nc2mpitype(varp->xtype);
     err = ncmpii_buftype_decode(varp->ndims, varp->xtype, count, bufcount,
                                 buftype, &itype, &el_size, &nelems,
                                 &nbytes, &buftype_is_contig);
@@ -482,6 +483,11 @@ err_check:
     memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
 
+    xtype = ncmpii_nc2mpitype(varp->xtype);
+    /* xtype is the element data type (MPI primitive type) in xbuf to be
+     * read from the variable defined in file. Note xbuf will contain data read
+     * from the file and hence is in the external data type.
+     */
     if (fIsSet(reqMode, NC_REQ_COLL)) {
         TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, (int)nelems,
                                        xtype, &mpistatus);
