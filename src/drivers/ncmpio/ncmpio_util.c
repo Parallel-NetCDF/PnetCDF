@@ -108,8 +108,8 @@ ncmpio_last_offset(const NC         *ncp,
     offset = varp->begin; /* beginning file offset of this variable */
     ndims  = varp->ndims; /* number of dimensions of this variable */
 
-    if (ndims == 0) {
-        *offset_ptr = varp->begin + varp->xsz;
+    if (ndims == 0) { /* scalar variable */
+        *offset_ptr = varp->begin;
         return NC_NOERR;
     }
 
