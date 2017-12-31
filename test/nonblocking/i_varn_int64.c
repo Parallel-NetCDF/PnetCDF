@@ -24,11 +24,16 @@
  *    dimensions:
  *             Y = 4 ;
  *             X = 10 ;
+ *    	       time = UNLIMITED ; // (4 currently)
  *    variables:
  *            int64 var0(Y, X) ;
  *            int64 var1(Y, X) ;
  *            int64 var2(Y, X) ;
  *            int64 var3(Y, X) ;
+ *            int64 t_var0(time, X) ;
+ *            int64 t_var1(time, X) ;
+ *            int64 t_var2(time, X) ;
+ *            int64 t_var3(time, X) ;
  *    data:
  *
  *     var0 =
@@ -50,6 +55,30 @@
  *      12, 12, 12, 10, 13, 13, 13, 11, 11, 11 ;
  *
  *     var3 =
+ *      10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
+ *      11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
+ *      12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
+ *      11, 11, 11, 13, 12, 12, 12, 10, 10, 10 ;
+ *
+ *     t_var0 =
+ *      13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
+ *      10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
+ *      11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
+ *      10, 10, 10, 12, 11, 11, 11, 13, 13, 13 ;
+ *
+ *     t_var1 =
+ *      12, 12, 12, 10, 10, 13, 13, 11, 10, 10,
+ *      13, 11, 11, 11, 12, 10, 10, 11, 11, 11,
+ *      10, 10, 11, 12, 12, 12, 13, 13, 10, 10,
+ *      13, 13, 13, 11, 10, 10, 10, 12, 12, 12 ;
+ *
+ *     t_var2 =
+ *      11, 11, 11, 13, 13, 12, 12, 10, 13, 13,
+ *      12, 10, 10, 10, 11, 13, 13, 10, 10, 10,
+ *      13, 13, 10, 11, 11, 11, 12, 12, 13, 13,
+ *      12, 12, 12, 10, 13, 13, 13, 11, 11, 11 ;
+ *
+ *     t_var3 =
  *      10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
  *      11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
  *      12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
@@ -176,11 +205,11 @@ void permute(MPI_Offset *a, MPI_Offset *b)
     }
 }
 
-int main(int argc, char** argv)
+static int
+test_varn(int ncid, int rank, int *varid)
 {
-    char filename[256];
-    int i, j, k, rank, nprocs, err, nerrs=0, bufsize=0;
-    int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
+    int i, j, k, err, nerrs=0, bufsize=0;
+    int nreqs, reqs[4], sts[4];
     long long *buffer[4], *cbuffer[4];
     int num_segs[4] = {4, 6, 5, 4};
     int req_lens[4], my_nsegs[4];
@@ -215,44 +244,6 @@ int main(int argc, char** argv)
               -  -  -  X  X  X  -  -  -  - 
               -  -  -  -  -  -  -  X  X  X 
      */
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for iput/iget varn ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
-
-#ifdef DEBUG
-    if (nprocs != 4 && rank == 0)
-        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
-#endif
-
-    /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    FATAL_ERR
-
-    /* create a global array of size NY * NX */
-    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var0", NC_INT64, NDIMS, dimid, &varid[0]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var1", NC_INT64, NDIMS, dimid, &varid[1]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var2", NC_INT64, NDIMS, dimid, &varid[2]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var3", NC_INT64, NDIMS, dimid, &varid[3]); CHECK_ERR
-    err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* allocate space for starts and counts */
     starts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
@@ -528,15 +519,78 @@ int main(int argc, char** argv)
         }
     }
 
-    err = ncmpi_close(ncid);
-    CHECK_ERR
-
     if (bufsize>0) free(cbuffer[0]);
     for (i=0; i<nreqs; i++) free(buffer[i]);
     free(starts[0][0]);
     free(counts[0][0]);
     free(starts[0]);
     free(counts[0]);
+
+    return nerrs;
+}
+
+int main(int argc, char** argv)
+{
+    char filename[256];
+    int rank, nprocs, err, nerrs=0;
+    int ncid, cmode, varid[4], dimid[2];
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for iput/iget varn ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str);
+        free(cmd_str);
+    }
+
+#ifdef DEBUG
+    if (nprocs != 4 && rank == 0)
+        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
+#endif
+
+    /* create a new file for writing ----------------------------------------*/
+    cmode = NC_CLOBBER | NC_64BIT_DATA;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    FATAL_ERR
+
+    /* create fixed-size variables of size NY * NX */
+    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var0", NC_INT64, NDIMS, dimid, &varid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT64, NDIMS, dimid, &varid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var2", NC_INT64, NDIMS, dimid, &varid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var3", NC_INT64, NDIMS, dimid, &varid[3]); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    /* test fixed-size variables */
+    nerrs += test_varn(ncid, rank, varid);
+
+    err = ncmpi_redef(ncid); CHECK_ERR
+
+    /* add record variables */
+    err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "t_var0", NC_INT64, NDIMS, dimid, &varid[0]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "t_var1", NC_INT64, NDIMS, dimid, &varid[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "t_var2", NC_INT64, NDIMS, dimid, &varid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "t_var3", NC_INT64, NDIMS, dimid, &varid[3]); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    /* test record variables */
+    nerrs += test_varn(ncid, rank, varid);
+
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
