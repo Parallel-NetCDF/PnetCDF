@@ -337,6 +337,8 @@ test_varn(int ncid, int rank, int *varid)
         for (i=1; i<nreqs; i++) cbuffer[i] = cbuffer[i-1] + req_lens[i-1];
         for (i=0; i<bufsize; i++) cbuffer[0][i] = rank+10;
     }
+    else
+        for (i=0; i<4; i++) cbuffer[i] = NULL;
 
     /* write usning varn API */
     nerrs += clear_file_contents(ncid, varid);
