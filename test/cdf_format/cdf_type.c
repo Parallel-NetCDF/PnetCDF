@@ -69,7 +69,7 @@ int test_var_types(char *filename,
         sprintf(name, "var_%d", i);
         err = ncmpi_def_var(ncid, name, xtype[i], 1, &dimid, &varid[i]);
         if (err != NC_ESTRICTCDF2) {
-            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %s\n", __LINE__,nc_err_code_name(err));
+            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %s\n", __LINE__,ncmpi_strerrno(err));
             nerrs++;
         }
     }

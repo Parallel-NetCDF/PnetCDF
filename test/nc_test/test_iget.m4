@@ -11,7 +11,11 @@ dnl
 /* $Id$ */
 
 
-define(`EXPECT_ERR',`error("expecting $1 but got %s",nc_err_code_name($2));')dnl
+ifdef(`PNETCDF',`dnl
+#define NC_ERR_CODE_NAME ncmpi_strerrno',`dnl
+#define NC_ERR_CODE_NAME nc_err_code_name')
+
+define(`EXPECT_ERR',`error("expecting $1 but got %s",NC_ERR_CODE_NAME($2));')dnl
 
 define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
 define(`PTRDType',`ifdef(`PNETCDF',`MPI_Offset',`ptrdiff_t')')dnl

@@ -319,7 +319,7 @@ int main(int argc, char** argv)
                                    NULL, &reqs[4]);
     if (err != NC_ENULLSTART) {
         printf("expecting error code NC_ENULLSTART but got %s\n",
-               nc_err_code_name(err));
+               ncmpi_strerrno(err));
         nerrs++;
     }
 
