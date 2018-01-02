@@ -640,8 +640,10 @@ ncmpi_strerrno(int err)
         case (NC_EDISKLESS):			return "NC_EDISKLESS";
         case (NC_ECANTEXTEND):			return "NC_ECANTEXTEND";
         case (NC_EMPI):				return "NC_EMPI";
-        // case (NC_EURL):				return "NC_EURL";
-        // case (NC_ECONSTRAINT):			return "NC_ECONSTRAINT";
+/*
+        case (NC_EURL):				return "NC_EURL";
+        case (NC_ECONSTRAINT):			return "NC_ECONSTRAINT";
+*/
         case (NC_ESMALL):			return "NC_ESMALL";
         case (NC_ENOTINDEP):			return "NC_ENOTINDEP";
         case (NC_EINDEP):			return "NC_EINDEP";
