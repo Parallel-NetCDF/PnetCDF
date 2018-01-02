@@ -784,7 +784,7 @@ put_atts(int ncid, int numGatts, int numVars)
                      * 4th, ... will be specially made to cause NC_ERANGE
                      */
                     IF (err != NC_ERANGE)
-                        error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
+                        error("expecting NC_ERANGE but got %s", ncmpi_strerrno(err));
                 }
             }
         }
@@ -840,7 +840,7 @@ put_vars(int ncid, int numVars)
                  * http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
                  */
                 IF (err != NC_ERANGE)
-                    error("expecting NC_ERANGE but got %s", nc_err_code_name(err));
+                    error("expecting NC_ERANGE but got %s", ncmpi_strerrno(err));
             }
         }
     }

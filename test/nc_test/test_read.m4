@@ -27,7 +27,11 @@ dnl
 
 #include "tests.h"
 
-define(`EXPECT_ERR',`error("expecting $1 but got %s",nc_err_code_name($2));')dnl
+ifdef(`PNETCDF',`dnl
+#define NC_ERR_CODE_NAME ncmpi_strerrno',`dnl
+#define NC_ERR_CODE_NAME nc_err_code_name')
+
+define(`EXPECT_ERR',`error("expecting $1 but got %s",NC_ERR_CODE_NAME($2));')dnl
 
 define(`IntType', `ifdef(`PNETCDF',`MPI_Offset',`size_t')')dnl
 define(`PTRDType',`ifdef(`PNETCDF',`MPI_Offset',`ptrdiff_t')')dnl
@@ -158,7 +162,7 @@ ifdef(`PNETCDF',
     else IF (err != NC_ENOENT && err != NC_EFILE) {
         /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of
          * MPI_ERR_NO_SUCH_FILE */
-        error("expecting NC_ENOENT or NC_EFILE but got %s, indicating an MPI-IO internal error", nc_err_code_name(err));
+        error("expecting NC_ENOENT or NC_EFILE but got %s, indicating an MPI-IO internal error", NC_ERR_CODE_NAME(err));
     }
     else {
         nok++;
@@ -189,7 +193,7 @@ ifdef(`PNETCDF', ``#'if 1', ``#'if 0')
     /* Open a file that is not a netCDF file. */
     err = FileOpen(NOT_NC_FILE, NC_NOWRITE, &ncid); /* should fail */
     IF (err != NC_ENOTNC)
-        error("expecting NC_ENOTNC or NC_EFILE but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTNC or NC_EFILE, err)
     ELSE_NOK
 
     /* delete the not-nc file */
@@ -203,7 +207,7 @@ ifdef(`PNETCDF', ``#'if 1', ``#'if 0')
     ELSE_NOK
     err = APIFunc(redef)(ncid);        /* should fail */
     IF (err != NC_EPERM)
-        error("expecting NC_EPERM but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EPERM, err)
     /* Opened OK, see if can open again and get a different netCDF ID */
     err = FileOpen(testfile, NC_NOWRITE, &ncid2);
     IF (err != NC_NOERR)
@@ -263,13 +267,13 @@ TestFunc(close)(void)
     ELSE_NOK
     err = APIFunc(close)(ncid);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* Try with a bad netCDF ID */
     err = APIFunc(close)(BAD_ID);/* should fail */
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     /* Close in data mode */
@@ -325,7 +329,7 @@ TestFunc(inq)(AttVarArgs)
     /* Try on bad handle */
     err = APIFunc(inq)(BAD_ID, 0, 0, 0, 0);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
 
     err = APIFunc(inq)(ncid, &ndims, &nvars, &ngatts, &recdim);
@@ -462,7 +466,7 @@ TestFunc(inq_natts)(AttArgs)
 
     err = APIFunc(inq_natts)(BAD_ID, &ngatts);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
@@ -490,7 +494,7 @@ TestFunc(inq_ndims)(void)
 
     err = APIFunc(inq_ndims)(BAD_ID, &ndims);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
@@ -518,7 +522,7 @@ TestFunc(inq_nvars)(VarArgs)
 
     err = APIFunc(inq_nvars)(BAD_ID, &nvars);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
@@ -546,7 +550,7 @@ TestFunc(inq_unlimdim)(void)
 
     err = APIFunc(inq_unlimdim)(BAD_ID, &unlimdim);
     IF (err != NC_EBADID)
-        error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADID, err)
     ELSE_NOK
     err = FileOpen(testfile, NC_NOWRITE, &ncid);
     IF (err != NC_NOERR)
@@ -578,12 +582,12 @@ TestFunc(inq_dimid)(void)
         error("open: %s", APIFunc(strerror)(err));
     err = APIFunc(inq_dimid)(ncid, "noSuch", &dimid);
     IF (err != NC_EBADDIM)
-        error("expecting NC_EBADDIM but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_EBADDIM, err)
     ELSE_NOK
     for (i = 0; i < NDIMS; i++) {
         err = APIFunc(inq_dimid)(BAD_ID, dim_name[i], &dimid);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_dimid)(ncid, dim_name[i], &dimid);
         IF (err != NC_NOERR)
@@ -615,11 +619,11 @@ TestFunc(inq_dim)(void)
     for (i = 0; i < NDIMS; i++) {
         err = APIFunc(inq_dim)(BAD_ID, i, name, &length);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_dim)(ncid, BAD_DIMID, name, &length);
         IF (err != NC_EBADDIM)
-            error("expecting NC_EBADDIM but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADDIM, err)
         ELSE_NOK
         err = APIFunc(inq_dim)(ncid, i, 0, 0);
         IF (err != NC_NOERR)
@@ -668,11 +672,11 @@ TestFunc(inq_dimlen)(void)
     for (i = 0; i < NDIMS; i++) {
         err = APIFunc(inq_dimlen)(BAD_ID, i, &length);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_dimlen)(ncid, BAD_DIMID, &length);
         IF (err != NC_EBADDIM)
-            error("expecting NC_EBADDIM but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADDIM, err)
         ELSE_NOK
         err = APIFunc(inq_dimlen)(ncid, i, &length);
         IF (err != NC_NOERR)
@@ -703,11 +707,11 @@ TestFunc(inq_dimname)(void)
     for (i = 0; i < NDIMS; i++) {
         err = APIFunc(inq_dimname)(BAD_ID, i, name);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_dimname)(ncid, BAD_DIMID, name);
         IF (err != NC_EBADDIM)
-            error("expecting NC_EBADDIM but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADDIM, err)
         ELSE_NOK
         err = APIFunc(inq_dimname)(ncid, i, name);
         IF (err != NC_NOERR)
@@ -738,13 +742,13 @@ TestFunc(inq_varid)(VarArgs)
 
     err = APIFunc(inq_varid)(ncid, "noSuch", &varid);
     IF (err != NC_ENOTVAR)
-        error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+        EXPECT_ERR(NC_ENOTVAR, err)
     ELSE_NOK
 
     for (i = 0; i < numVars; i++) {
         err = APIFunc(inq_varid)(BAD_ID, var_name[i], &varid);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_varid)(ncid, var_name[i], &varid);
         IF (err != NC_NOERR)
@@ -780,11 +784,11 @@ TestFunc(inq_var)(VarArgs)
     for (i = 0; i < numVars; i++) {
         err = APIFunc(inq_var)(BAD_ID, i, name, &datatype, &ndims, dimids, &natts);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_var)(ncid,BAD_VARID,name,&datatype,&ndims,dimids,&natts);
         IF (err != NC_ENOTVAR)
-            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTVAR, err)
         ELSE_NOK
         err = APIFunc(inq_var)(ncid, i, 0, 0, 0, 0, 0);
         IF (err != NC_NOERR)
@@ -857,11 +861,11 @@ TestFunc(inq_vardimid)(VarArgs)
     for (i = 0; i < numVars; i++) {
         err = APIFunc(inq_vardimid)(BAD_ID, i, dimids);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_vardimid)(ncid, BAD_VARID, dimids);
         IF (err != NC_ENOTVAR)
-            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTVAR, err)
         ELSE_NOK
         err = APIFunc(inq_vardimid)(ncid, i, dimids);
         IF (err != NC_NOERR)
@@ -892,11 +896,11 @@ TestFunc(inq_varname)(VarArgs)
     for (i = 0; i < numVars; i++) {
         err = APIFunc(inq_varname)(BAD_ID, i, name);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         nok++;
         err = APIFunc(inq_varname)(ncid, BAD_VARID, name);
         IF (err != NC_ENOTVAR)
-            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTVAR, err)
         ELSE_NOK
         err = APIFunc(inq_varname)(ncid, i, name);
         IF (err != NC_NOERR)
@@ -927,11 +931,11 @@ TestFunc(inq_varnatts)(AttVarArgs)
     for (i = -1; i < numVars; i++) {
         err = APIFunc(inq_varnatts)(BAD_ID, i, &natts);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_varnatts)(ncid, BAD_VARID, &natts);
         IF (err != NC_ENOTVAR)
-            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTVAR, err)
         ELSE_NOK
         err = APIFunc(inq_varnatts)(ncid, VARID(i), &natts);
         IF (err != NC_NOERR)
@@ -962,11 +966,11 @@ TestFunc(inq_varndims)(VarArgs)
     for (i = 0; i < numVars; i++) {
         err = APIFunc(inq_varndims)(BAD_ID, i, &ndims);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_varndims)(ncid, BAD_VARID, &ndims);
         IF (err != NC_ENOTVAR)
-            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTVAR, err)
         ELSE_NOK
         err = APIFunc(inq_varndims)(ncid, i, &ndims);
         IF (err != NC_NOERR)
@@ -997,11 +1001,11 @@ TestFunc(inq_vartype)(VarArgs)
     for (i = 0; i < numVars; i++) {
         err = APIFunc(inq_vartype)(BAD_ID, i, &datatype);
         IF (err != NC_EBADID)
-            error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_EBADID, err)
         ELSE_NOK
         err = APIFunc(inq_vartype)(ncid, BAD_VARID, &datatype);
         IF (err != NC_ENOTVAR)
-            error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTVAR, err)
         ELSE_NOK
         err = APIFunc(inq_vartype)(ncid, i, &datatype);
         IF (err != NC_NOERR)
@@ -1758,15 +1762,15 @@ TestFunc(get_att)(AttVarArgs)
         for (j = 0; j < NATTS(i); j++) {
             err = APIFunc(get_att)(BAD_ID, i, ATT_NAME(i,j), buf);
             IF (err != NC_EBADID)
-                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EBADID, err)
             ELSE_NOK
             err = APIFunc(get_att)(ncid, BAD_VARID, ATT_NAME(i,j), buf);
             IF (err != NC_ENOTVAR)
-                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTVAR, err)
             ELSE_NOK
             err = APIFunc(get_att)(ncid, i, "noSuch", buf);
             IF (err != NC_ENOTATT)
-                error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTATT, err)
             ELSE_NOK
             err = APIFunc(get_att)(ncid, i, ATT_NAME(i,j), buf);
             IF (err != NC_NOERR) {
@@ -1827,15 +1831,15 @@ TestFunc(inq_att)(AttVarArgs)
         for (j = 0; j < NATTS(i); j++) {
             err = APIFunc(inq_att)(BAD_ID, i, ATT_NAME(i,j), &t, &n);
             IF (err != NC_EBADID)
-                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EBADID, err)
             ELSE_NOK
             err = APIFunc(inq_att)(ncid, BAD_VARID, ATT_NAME(i,j), &t, &n);
             IF (err != NC_ENOTVAR)
-                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTVAR, err)
             ELSE_NOK
             err = APIFunc(inq_att)(ncid, i, "noSuch", &t, &n);
             IF (err != NC_ENOTATT)
-                error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTATT, err)
             ELSE_NOK
             err = APIFunc(inq_att)(ncid, i, ATT_NAME(i,j), &t, &n);
             IF (err != NC_NOERR) {
@@ -1875,16 +1879,16 @@ TestFunc(inq_attlen)(AttVarArgs)
     for (i = -1; i < numVars; i++) {
         err = APIFunc(inq_attlen)(ncid, i, "noSuch", &len);
         IF (err != NC_ENOTATT)
-            error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTATT, err)
         ELSE_NOK
         for (j = 0; j < NATTS(i); j++) {
             err = APIFunc(inq_attlen)(BAD_ID, i, ATT_NAME(i,j), &len);
             IF (err != NC_EBADID)
-                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EBADID, err)
             ELSE_NOK
             err = APIFunc(inq_attlen)(ncid, BAD_VARID, ATT_NAME(i,j), &len);
             IF (err != NC_ENOTVAR)
-                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTVAR, err)
             ELSE_NOK
             err = APIFunc(inq_attlen)(ncid, i, ATT_NAME(i,j), &len);
             IF (err != NC_NOERR) {
@@ -1921,16 +1925,16 @@ TestFunc(inq_atttype)(AttVarArgs)
     for (i = -1; i < numVars; i++) {
         err = APIFunc(inq_atttype)(ncid, i, "noSuch", &datatype);
         IF (err != NC_ENOTATT)
-            error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTATT, err)
         ELSE_NOK
         for (j = 0; j < NATTS(i); j++) {
             err = APIFunc(inq_atttype)(BAD_ID, i, ATT_NAME(i,j), &datatype);
             IF (err != NC_EBADID)
-                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EBADID, err)
             ELSE_NOK
             err = APIFunc(inq_atttype)(ncid, BAD_VARID, ATT_NAME(i,j), &datatype);
             IF (err != NC_ENOTVAR)
-                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTVAR, err)
             ELSE_NOK
             err = APIFunc(inq_atttype)(ncid, i, ATT_NAME(i,j), &datatype);
             IF (err != NC_NOERR) {
@@ -1967,20 +1971,20 @@ TestFunc(inq_attname)(AttVarArgs)
     for (i = -1; i < numVars; i++) {
         err = APIFunc(inq_attname)(ncid, i, BAD_ATTNUM, name);
         IF (err != NC_ENOTATT)
-            error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTATT, err)
         ELSE_NOK
         err = APIFunc(inq_attname)(ncid, i, NATTS(i), name);
         IF (err != NC_ENOTATT)
-            error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTATT, err)
         ELSE_NOK
         for (j = 0; j < NATTS(i); j++) {
             err = APIFunc(inq_attname)(BAD_ID, i, j, name);
             IF (err != NC_EBADID)
-                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EBADID, err)
             ELSE_NOK
             err = APIFunc(inq_attname)(ncid, BAD_VARID, j, name);
             IF (err != NC_ENOTVAR)
-                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTVAR, err)
             ELSE_NOK
             err = APIFunc(inq_attname)(ncid, i, j, name);
             IF (err != NC_NOERR) {
@@ -2017,16 +2021,16 @@ TestFunc(inq_attid)(AttVarArgs)
     for (i = -1; i < numVars; i++) {
         err = APIFunc(inq_attid)(ncid, i, "noSuch", &attnum);
         IF (err != NC_ENOTATT)
-            error("expecting NC_ENOTATT but got %s", nc_err_code_name(err));
+            EXPECT_ERR(NC_ENOTATT, err)
         ELSE_NOK
         for (j = 0; j < NATTS(i); j++) {
             err = APIFunc(inq_attid)(BAD_ID, i, ATT_NAME(i,j), &attnum);
             IF (err != NC_EBADID)
-                error("expecting NC_EBADID but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_EBADID, err)
             ELSE_NOK
             err = APIFunc(inq_attid)(ncid, BAD_VARID, ATT_NAME(i,j), &attnum);
             IF (err != NC_ENOTVAR)
-                error("expecting NC_ENOTVAR but got %s", nc_err_code_name(err));
+                EXPECT_ERR(NC_ENOTVAR, err)
             ELSE_NOK
             err = APIFunc(inq_attid)(ncid, i, ATT_NAME(i,j), &attnum);
             IF (err != NC_NOERR) {
