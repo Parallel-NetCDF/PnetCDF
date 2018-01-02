@@ -154,7 +154,7 @@ dtype_filter(MPI_Datatype type)
         return MPI_LONG;
       #endif
     if (type == MPI_UNSIGNED_LONG)
-      #if (SIZEOF_UINT == 8)
+      #if defined(SIZEOF_UNSIGNED_INT) && SIZEOF_UNSIGNED_INT == 8
         return MPI_UNSIGNED;
       #else
         return MPI_UNSIGNED_LONG;
