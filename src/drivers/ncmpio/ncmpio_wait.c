@@ -440,32 +440,38 @@ construct_filetypes(NC           *ncp,
         int is_filetype_contig, ndims=reqs[i].varp->ndims;
         MPI_Offset *count=NULL, *stride=NULL, num_recs;
 
-        if (ndims > 0) { /* non-scalar variable */
+        ftypes[j] = MPI_BYTE; /* in case the call below failed */
+
+        if (ndims == 0) { /* scalar variable */
+            blocklens[j]       = reqs[i].varp->xsz;
+            displacements[j]   = reqs[i].varp->begin;
+            is_filetype_contig = 1;
+        }
+        else { /* non-scalar variable */
             count  = reqs[i].start + ndims;
             stride = fIsSet(reqs[i].flag, NC_REQ_STRIDE_NULL) ?
                      NULL : count + ndims;
             num_recs = count[0];
             if (IS_RECVAR(reqs[i].varp)) count[0]=1;
-        }
 
-        ftypes[j] = MPI_BYTE; /* in case the call below failed */
-        err = ncmpio_filetype_create_vars(ncp,
-                                          reqs[i].varp,
-                                          reqs[i].start,
-                                          count,
-                                          stride,
-                                          rw_flag,
-                                          &blocklens[j],
-                                          &displacements[j], /* to offset 0 */
-                                          &ftypes[j],
-                                          &is_filetype_contig);
-        if (ndims > 0) count[0] = num_recs; /* restore count[0] */
-        if (err != NC_NOERR) {
-            fSet(reqs[i].flag, NC_REQ_SKIP); /* make this request no effect */
-            if (reqs[i].status != NULL && *reqs[i].status == NC_NOERR)
-                *reqs[i].status = err;
-            if (status == NC_NOERR) status = err; /* report the first error */
-            continue;
+            err = ncmpio_filetype_create_vars(ncp,
+                                              reqs[i].varp,
+                                              reqs[i].start,
+                                              count,
+                                              stride,
+                                              rw_flag,
+                                              &blocklens[j],
+                                              &displacements[j],
+                                              &ftypes[j],
+                                              &is_filetype_contig);
+            count[0] = num_recs; /* restore count[0] */
+            if (err != NC_NOERR) {
+                fSet(reqs[i].flag, NC_REQ_SKIP); /* skip this request */
+                if (reqs[i].status != NULL && *reqs[i].status == NC_NOERR)
+                    *reqs[i].status = err;
+                if (status == NC_NOERR) status = err; /* report first error */
+                continue;
+            }
         }
 
         if (is_filetype_contig) {
