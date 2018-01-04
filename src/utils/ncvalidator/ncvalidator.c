@@ -186,6 +186,7 @@ typedef struct bufferinfo {
 #define NC_ENOMEM       (-61)   /**< Memory allocation (malloc) failure */
 #define NC_EVARSIZE     (-62)   /**< One or more variable sizes violate format constraints */
 #define NC_EFILE        (-204)  /**< Unknown error in file operation */
+#define NC_ENOTSUPPORT  (-214)  /**< Feature is not yet supported */
 #define NC_ENULLPAD     (-134)  /**< Header Bytes not Null-Byte padded */
 
 /*
@@ -2047,6 +2048,7 @@ val_get_NC(int fd, NC *ncp)
     bufferinfo getbuf;
     char magic[5];
     size_t err_addr, pos_addr, base_addr;
+    const char *hdf5_signature="\211HDF\r\n\032\n";
 
     /* find Endianness of the running machine */
     getbuf.is_little_endian = check_little_endian();
@@ -2065,7 +2067,17 @@ val_get_NC(int fd, NC *ncp)
     status = val_fetch(fd, &getbuf);
     if (status != NC_NOERR) goto fn_exit;
   
-    /* First get the file format information, magic */
+    /* Check HDF file signature */
+    if (memcmp(getbuf.base, hdf5_signature, 8) == 0) {
+        if (verbose) {
+            printf("Error: Input file is in HDF format\n");
+            printf("       ncvalidator only validates NetCDF classic files\n");
+        }
+        status = NC_ENOTSUPPORT;
+        goto fn_exit;
+    }
+
+    /* Check classic CDF file signature */
     magic[4] = '\0';
     memcpy(magic, getbuf.base, 4);
     getbuf.pos = (char*)getbuf.pos + 4;
@@ -2325,9 +2337,9 @@ prog_exit:
 
     if (verbose) {
         if (status == NC_NOERR)
-            printf("File \"%s\" is a valid NetCDF file.\n",filename);
+            printf("File \"%s\" is a valid NetCDF classic file.\n",filename);
         else {
-            printf("File \"%s\" fails to conform with CDF file format specifications\n",filename);
+            printf("File \"%s\" fails to conform with classic CDF file format specifications\n",filename);
             if (repair) {
                 printf("and it has been repaired in place to remove the errors.\n");
                 printf("Please run \"%s %s\" to validate again.\n",cmd,filename);
