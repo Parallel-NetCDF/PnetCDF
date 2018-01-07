@@ -57,6 +57,9 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
+    /* allocate I/O buffer */
+    buf = (int*) malloc(NY*NX * sizeof(int));
+
     for (k=0; k<3; k++) {
         ncmpi_set_default_format(formats[k], NULL);
 
@@ -78,8 +81,7 @@ int main(int argc, char** argv) {
 
         err = ncmpi_enddef(ncid); CHECK_ERR
 
-        /* allocate I/O buffer */
-        buf = (int*) malloc(NY*NX * sizeof(int));
+        /* initialize I/O buffer */
         for (i=0; i<NY*NX; i++) buf[i] = rank+5;
 
         /* write a subarray to each variable */
