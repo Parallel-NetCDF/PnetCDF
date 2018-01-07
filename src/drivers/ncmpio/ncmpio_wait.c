@@ -262,8 +262,7 @@ ncmpio_cancel(void *ncdp,
 
     /* coalesce get_list */
     for (i=0,j=0; j<ncp->numGetReqs; j++) {
-        for (; ncp->get_list[j].id==NC_REQ_NULL && j<ncp->numGetReqs; j++);
-        if (j == ncp->numGetReqs) break;
+        if (ncp->get_list[j].id == NC_REQ_NULL) continue;
         if (i < j) ncp->get_list[i] = ncp->get_list[j];
         i++;
     }
@@ -275,8 +274,7 @@ ncmpio_cancel(void *ncdp,
 
     /* coalesce put_list */
     for (i=0,j=0; j<ncp->numPutReqs; j++) {
-        for (; ncp->put_list[j].id==NC_REQ_NULL && j<ncp->numPutReqs; j++);
-        if (j == ncp->numPutReqs) break;
+        if  (ncp->put_list[j].id == NC_REQ_NULL) continue;
         if (i < j) ncp->put_list[i] = ncp->put_list[j];
         i++;
     }
@@ -724,8 +722,7 @@ req_commit(NC  *ncp,
     if (num_reqs > 0) { /* not NC_REQ_ALL, NC_GET_REQ_ALL, or NC_PUT_REQ_ALL */
         /* coalesce get_list */
         for (i=0,j=first_non_null_get; j<ncp->numGetReqs; j++) {
-            for (; ncp->get_list[j].id==NC_REQ_NULL && j<ncp->numGetReqs; j++);
-            if (j == ncp->numGetReqs) break;
+            if (ncp->get_list[j].id == NC_REQ_NULL) continue;
             if (i < j) ncp->get_list[i] = ncp->get_list[j];
             i++;
         }
@@ -737,8 +734,7 @@ req_commit(NC  *ncp,
 
         /* coalesce put_list */
         for (i=0,j=first_non_null_put; j<ncp->numPutReqs; j++) {
-            for (; ncp->put_list[j].id==NC_REQ_NULL && j<ncp->numPutReqs; j++);
-            if (j == ncp->numPutReqs) break;
+            if (ncp->put_list[j].id == NC_REQ_NULL) continue;
             if (i < j) ncp->put_list[i] = ncp->put_list[j];
             i++;
         }

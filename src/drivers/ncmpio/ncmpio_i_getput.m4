@@ -122,7 +122,7 @@ add_record_requests(NC_req           *reqs,
         if (stride != NULL) {
             reqi_stride    = reqi_count + ndims;
             reqi_start[0]  = req0_start[0] + stride[0] * i;
-            reqi_stride[0] = req0_stride[0];
+            reqi_stride[0] = req0_stride[0]; /* this does not matter */
         }
         else {
             reqi_stride   = NULL;
@@ -167,7 +167,6 @@ ncmpio_igetput_varm(NC               *ncp,
     void *xbuf=NULL;
     int i, j, err=NC_NOERR, abuf_index=-1, el_size, buftype_is_contig;
     int need_convert, need_swap, need_swap_back_buf=0;
-    size_t  dims_chunk;
     MPI_Offset bnelems=0, nbytes;
     MPI_Datatype ptype, imaptype;
     NC_req *req;
@@ -481,20 +480,21 @@ ncmpio_igetput_varm(NC               *ncp,
     else
         req->buftype = MPI_DATATYPE_NULL;
 
-    /* allocate an array for start/count/stride */
-    dims_chunk = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
+    /* allocate a single array to store start/count/stride */
     if (stride != NULL)
-        req->start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
+        req->start = (MPI_Offset*) NCI_Malloc(varp->ndims*3*SIZEOF_MPI_OFFSET);
     else {
-        req->start = (MPI_Offset*) NCI_Malloc(dims_chunk*2);
+        req->start = (MPI_Offset*) NCI_Malloc(varp->ndims*2*SIZEOF_MPI_OFFSET);
         fSet(req->flag, NC_REQ_STRIDE_NULL);
     }
 
-    /* fill the values for start/count/stride in req */
+    /* copy over start/count/stride */
     j = 0;
-    for (i=0;                 i<varp->ndims; i++) req->start[j++] = start[i];
-    for (i=0;                 i<varp->ndims; i++) req->start[j++] = count[i];
-    for (i=0; stride!=NULL && i<varp->ndims; i++) req->start[j++] = stride[i];
+    for (i=0; i<varp->ndims; i++) req->start[j++] = start[i];
+    for (i=0; i<varp->ndims; i++) req->start[j++] = count[i];
+    if (stride != NULL) {
+        for (i=0; i<varp->ndims; i++) req->start[j++] = stride[i];
+    }
 
     if (IS_RECVAR(varp) && count[0] > 1) {
         /* If this is a record variable and the number of requesting records is
