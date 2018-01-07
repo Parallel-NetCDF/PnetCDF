@@ -709,7 +709,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     }
 
 #ifdef SUBFILE_DEBUG
-    for (i=0; i<nprocs && myrank==0; i++) {
+    for (i=0; i<nprocs; i++) {
         printf("%d: count_my_req_per_proc[%d]=%d\n", myrank, i, count_my_req_per_proc[i]);
         printf("%d: count_others_req_per_proc[%d]=%d\n", myrank, i, count_others_req_per_proc[i]);
     }
@@ -727,7 +727,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 #endif
 
 #ifdef SUBFILE_DEBUG
-    for (i=0; i<nprocs && myrank==0; i++) {
+    for (i=0; i<nprocs; i++) {
         printf("=> %d: count_others_req_per_proc[%d]=%d\n", myrank, i, count_others_req_per_proc[i]);
     }
 #endif
@@ -928,7 +928,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 
 #ifdef SUBFILE_DEBUG
     /* DEBUG: print out others_req.{start,count} */
-    for (i=0; i<nprocs && myrank == 0; i++) {
+    for (i=0; i<nprocs; i++) {
         char str_st[100], str_st_org[100], str_ct[100], str_t1[10];
         sprintf(str_st, "%d: others.start(", i);
         sprintf(str_ct, "%d: others.count(", i);
