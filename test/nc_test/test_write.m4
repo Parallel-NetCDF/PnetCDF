@@ -578,6 +578,18 @@ TestFunc(def_dim)(VarArgs)
     IntType length;
 
     /* BAD_ID test */
+    ifdef(`PNETCDF',
+    `int num_opened; /* number of opened files, in PnetCDF ncid starts with 0 */
+    err = ncmpi_inq_files_opened(&num_opened, NULL);
+    IF (err != NC_NOERR)
+        error("inq_files_opened: %s", APIFunc(strerror)(err));
+    ELSE_NOK
+    err = APIFunc(def_dim)(num_opened, "abc", 8, &dimid);
+    IF (err != NC_EBADID)
+        EXPECT_ERR(NC_EBADID, err)
+    ELSE_NOK')
+
+    /* BAD_ID test */
     err = APIFunc(def_dim)(BAD_ID, "abc", 8, &dimid);
     IF (err != NC_EBADID)
         EXPECT_ERR(NC_EBADID, err)
