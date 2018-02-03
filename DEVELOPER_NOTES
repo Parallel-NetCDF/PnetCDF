@@ -8,7 +8,7 @@ Tasks immediately before a new release (must run in the following order)
 
  1. Make sure build is successful
     * build and test under the same directory as source
-      - autoreconf
+      - autoreconf -i  (-i is to add missing files, only needed at first run)
       - configure (with command-line options: --enable-strict
                                               --enable-coverage
                                               --disable-cxx
