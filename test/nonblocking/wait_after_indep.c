@@ -108,9 +108,11 @@ int main(int argc, char** argv)
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
+        if (rank == 0 && sum_size > 0) {
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+            ncmpi_inq_malloc_list();
+        }
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
