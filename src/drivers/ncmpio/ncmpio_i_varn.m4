@@ -164,9 +164,8 @@ igetput_varn(NC                *ncp,
     isSameGroup=0;
     bufp = (char*)cbuf;
     for (i=0; i<num; i++) {
-        MPI_Offset buflen;
-
-        for (buflen=1, j=0; j<varp->ndims; j++)
+        MPI_Offset buflen=1;
+        for (j=0; j<varp->ndims; j++)
             buflen *= _counts[i][j];
 
         if (buflen == 0) continue;

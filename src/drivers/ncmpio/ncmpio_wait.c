@@ -119,15 +119,20 @@ abuf_coalesce(NC *ncp)
     return NC_NOERR;
 }
 
-#define FREE_REQUEST(req) {                                                   \
-    if (fIsSet(req.flag, NC_REQ_LEAD)) {                                      \
-        if (req.abuf_index >= 0)                                              \
-            ncp->abuf->occupy_table[req.abuf_index].is_used = 0; /* free */   \
-        else if (req.xbuf != NULL && req.xbuf != req.buf)                     \
-            NCI_Free(req.xbuf);                                               \
-    }                                                                         \
-    req.xbuf = NULL;                                                          \
-    NCI_Free(req.start);                                                      \
+#define FREE_REQUEST(req) {                                       \
+    if (fIsSet(req.flag, NC_REQ_LEAD)) {                          \
+        /* free resource allocated at lead request */             \
+        if (req.abuf_index < 0) {                                 \
+            if (fIsSet(req.flag, NC_REQ_XBUF_TO_BE_FREED))        \
+                NCI_Free(req.xbuf); /* free xbuf */               \
+            if (fIsSet(req.flag, NC_REQ_BUF_TO_BE_FREED))         \
+                NCI_Free(req.buf);  /* free buf */                \
+        }                                                         \
+        else  /* this is bput request */                          \
+            ncp->abuf->occupy_table[req.abuf_index].is_used = 0;  \
+    }                                                             \
+    req.xbuf = NULL;                                              \
+    NCI_Free(req.start);                                          \
 }
 
 /*----< ncmpio_cancel() >-----------------------------------------------------*/
@@ -170,18 +175,14 @@ ncmpio_cancel(void *ncdp,
         /* cancel all pending write requests, ignore req_ids and statuses */
         NC_req *put_list = ncp->put_list;
         for (i=0; i<ncp->numPutReqs; i++) {
-            if (fIsSet(put_list[i].flag, NC_REQ_LEAD)) {
-                if (fIsSet(put_list[i].flag, NC_REQ_BUF_BYTE_SWAP)) {
-                    MPI_Offset nelems, *count;
-                    count=put_list[i].start+put_list[i].varp->ndims;
-                    for (nelems=1, k=0; k<put_list[i].varp->ndims; k++)
-                        nelems *= count[k];
-                    /* if user buffer is in-place byte-swapped, swap it back */
-                    ncmpii_in_swapn(put_list[i].buf, nelems, put_list[i].varp->xsz);
-                }
-                if (fIsSet(put_list[i].flag, NC_REQ_BUF_TO_BE_FREED) &&
-                    put_list[i].abuf_index == -1)
-                    NCI_Free(put_list[i].buf); /* free cbuf used in i_varn */
+            if (fIsSet(put_list[i].flag, NC_REQ_LEAD) &&
+                fIsSet(put_list[i].flag, NC_REQ_BUF_BYTE_SWAP)) {
+                MPI_Offset nelems, *count;
+                count=put_list[i].start+put_list[i].varp->ndims;
+                for (nelems=1, k=0; k<put_list[i].varp->ndims; k++)
+                    nelems *= count[k];
+                /* if user buffer is in-place byte-swapped, swap it back */
+                ncmpii_in_swapn(put_list[i].buf, nelems, put_list[i].varp->xsz);
             }
             FREE_REQUEST(put_list[i])
         }
@@ -212,8 +213,6 @@ ncmpio_cancel(void *ncdp,
                         MPI_Type_free(&req->imaptype);
                     if (!fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG))
                         MPI_Type_free(&req->buftype);
-                    if (fIsSet(req->flag, NC_REQ_BUF_TO_BE_FREED))
-                        NCI_Free(req->buf);
                 }
                 FREE_REQUEST(ncp->get_list[j])
                 req->id = NC_REQ_NULL; /* marked as freed */
@@ -230,19 +229,15 @@ ncmpio_cancel(void *ncdp,
                 NC_req *req=ncp->put_list+j;
                 if (req->id == NC_REQ_NULL || req->id != req_ids[i]) continue;
                 found = 1;
-                if (fIsSet(req->flag, NC_REQ_LEAD)) { /* lead request */
-                    if (fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP)) {
-                        MPI_Offset nelems=1;
-                        MPI_Offset *count=req->start+req->varp->ndims;
-                        for (k=0; k<req->varp->ndims; k++)
-                            nelems *= count[k];
-                        /* if user buffer has been in-place byte-swapped,
-                         * swap it back */
-                        ncmpii_in_swapn(req->buf, nelems, req->varp->xsz);
-                    }
-                    if (fIsSet(req->flag, NC_REQ_BUF_TO_BE_FREED) &&
-                        req->abuf_index == -1)
-                        NCI_Free(req->buf);
+                if (fIsSet(req->flag, NC_REQ_LEAD) && /* lead request */
+                    fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP)) {
+                    MPI_Offset nelems=1;
+                    MPI_Offset *count=req->start+req->varp->ndims;
+                    for (k=0; k<req->varp->ndims; k++)
+                        nelems *= count[k];
+                    /* if user buffer has been in-place byte-swapped,
+                     * swap it back */
+                    ncmpii_in_swapn(req->buf, nelems, req->varp->xsz);
                 }
                 FREE_REQUEST(ncp->put_list[j])
                 req->id = NC_REQ_NULL; /* marked as freed */
@@ -417,7 +412,7 @@ construct_filetypes(NC           *ncp,
                     int           rw_flag,
                     MPI_Datatype *filetype)  /* OUT */
 {
-    int i, j, err, status=NC_NOERR, *blocklens;
+    int i, j, err, status=NC_NOERR, *blocklens, all_filetype_contig=1;
     MPI_Datatype *ftypes;
     MPI_Offset *displacements;
 
@@ -484,7 +479,10 @@ construct_filetypes(NC           *ncp,
             }
             else last_contig_req = j;
         }
-        else last_contig_req = -1;
+        else {
+            last_contig_req = -1;
+            all_filetype_contig = 0;
+        }
     }
     /* j is the new num_reqs */
     num_reqs = j;
@@ -499,8 +497,25 @@ construct_filetypes(NC           *ncp,
     }
     else { /* if (num_reqs > 1 || (num_reqs == 1 && displacements[0] > 0)) */
         /* all ftypes[] created fine, now concatenate all ftypes[] */
-        err = concatenate_datatypes(num_reqs, blocklens, displacements, ftypes,
-                                    filetype);
+        if (all_filetype_contig) {
+            MPI_Aint *disp;
+#if SIZEOF_MPI_AINT < SIZEOF_MPI_OFFSET
+            disp = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * sizeof(MPI_Aint));
+            for (i=0; i<num_reqs; i++) disp[i] = (MPI_Aint)displacements[i];
+#else
+            disp = (MPI_Aint*) displacements;
+#endif
+            err = MPI_Type_create_hindexed(num_reqs, blocklens, disp,
+                                           MPI_BYTE, filetype);
+            MPI_Type_commit(filetype);
+#if SIZEOF_MPI_AINT < SIZEOF_MPI_OFFSET
+            NCI_Free(disp);
+#endif
+        }
+        else
+            err = concatenate_datatypes(num_reqs, blocklens, displacements,
+                                        ftypes, filetype);
+
         if (err != NC_NOERR) *filetype = MPI_BYTE;
         if (status == NC_NOERR) status = err; /* report the first error */
     }
@@ -846,10 +861,6 @@ req_commit(NC  *ncp,
          * the above one. We need to go through put_list[] to check each one
          * for NC_REQ_BUF_TO_BE_FREED in order to free the temporary buffer.
          */
-        if (fIsSet(put_list[i].flag, NC_REQ_BUF_TO_BE_FREED) &&
-            put_list[i].abuf_index == -1)
-            NCI_Free(put_list[i].buf);
-
         FREE_REQUEST(put_list[i])
     }
     if (num_w_reqs > 0) {
@@ -904,7 +915,8 @@ req_commit(NC  *ncp,
          * the above one. We need to go through get_list[] to check each one
          * for NC_REQ_BUF_TO_BE_FREED in order to free the temporary buffer.
          */
-        if (fIsSet(get_list[i].flag, NC_REQ_BUF_TO_BE_FREED)) {
+        if (fIsSet(get_list[i].flag, NC_REQ_LEAD) &&
+            fIsSet(get_list[i].flag, NC_REQ_BUF_TO_BE_FREED)) {
             int position=0, bufsize;
             MPI_Offset insize;
 
@@ -920,7 +932,6 @@ req_commit(NC  *ncp,
             MPI_Unpack(get_list[i].buf, (int)insize, &position,
                        get_list[i].userBuf, (int)get_list[i].bufcount,
                        get_list[i].buftype, MPI_COMM_SELF);
-            NCI_Free(get_list[i].buf);
             MPI_Type_free(&get_list[i].buftype);
         }
         FREE_REQUEST(get_list[i])
@@ -1927,11 +1938,11 @@ wait_getput(NC         *ncp,
         }
 
         /* get the starting file offset for this request */
-        ncmpio_last_offset(ncp, req->varp, req->start, NULL, NULL,
-                           rw_flag, &req->offset_start);
+        ncmpio_first_offset(ncp, req->varp, req->start,
+                            rw_flag, &req->offset_start);
 
         count  = req->start + ndims;
-        stride = fIsSet(req->flag, NC_REQ_STRIDE_NULL) ?  NULL : count+ndims;
+        stride = fIsSet(req->flag, NC_REQ_STRIDE_NULL) ? NULL : count+ndims;
 
         num_recs = count[0];
         if (IS_RECVAR(req->varp)) count[0]=1;

@@ -276,6 +276,7 @@ ncmpio_NC_lookupvar(NC *ncp, int varid, NC_var **varp);
 #define NC_REQ_BUF_TYPE_CONVERT    0x00000010
 #define NC_REQ_BUF_BYTE_SWAP       0x00000020
 #define NC_REQ_BUF_TO_BE_FREED     0x00000040
+#define NC_REQ_XBUF_TO_BE_FREED    0x00000080
 
 typedef struct NC_req {
     int           flag;         /* bit-wise OR of the above NC_REQ_* flags */
@@ -528,6 +529,10 @@ ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info);
 
 extern int
 ncmpio_NC_check_name(const char *name, int file_ver);
+
+extern int
+ncmpio_first_offset(const NC *ncp, const NC_var *varp, const MPI_Offset start[],
+                    const int reqMode, MPI_Offset *offset);
 
 extern int
 ncmpio_last_offset(const NC *ncp, const NC_var *varp, const MPI_Offset starts[],
