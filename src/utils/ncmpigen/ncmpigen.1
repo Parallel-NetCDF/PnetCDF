@@ -307,9 +307,9 @@ begins with `0', it is interpreted as octal, except that if it begins with
 `0x', it is interpreted as a hexadecimal constant.  For example:
 .RS
 .nf
--2s	// a short -2
+\-2s	// a short -2
 0123s	// octal
-0x7ffs  //hexadecimal
+0x7ffs	//hexadecimal
 .fi
 .RE
 .LP
@@ -321,7 +321,7 @@ octal, except that if it begins with `0x', it is interpreted as a hexadecimal
 constant.  Examples of valid \fIlong\fP constants include:
 .RS
 .nf
--2
+\-2
 1234567890L
 0123		// octal
 0x7ff		// hexadecimal
@@ -335,10 +335,10 @@ constant with an `f' or `F' appended.  For example the following
 are all acceptable \fIfloat\fP constants:
 .RS
 .nf
--2.0f
-3.14159265358979f	// will be truncated to less precision
-1.f
-.1f
+ \-2.0f
+ 3.14159265358979f	// will be truncated to less precision
+ 1.f
+ .1f
 .fi
 .RE
 .LP
@@ -349,7 +349,7 @@ floating point constant.  An optional `d' or `D' may be appended.
 For example the following are all acceptable \fIdouble\fP constants:
 .RS
 .nf
--2.0
+\-2.0
 3.141592653589793
 1.0e-20
 1.d
