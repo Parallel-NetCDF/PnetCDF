@@ -87,6 +87,47 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
 #endif
 }
 
+/*----< ncmpio_first_offset() >-----------------------------------------------*/
+/* Returns the file offset of the first variable element accessed by this
+ * request. Note zero-length request should never call this subroutine.
+ */
+int
+ncmpio_first_offset(const NC         *ncp,
+                    const NC_var     *varp,
+                    const MPI_Offset  start[],  /* [varp->ndims] */
+                    const int         reqMode,
+                    MPI_Offset       *offset)   /* OUT: file offset */
+{
+    int i, ndims;
+
+    ndims = varp->ndims; /* number of dimensions of this variable */
+
+    if (ndims == 0) { /* scalar variable */
+        *offset = varp->begin;
+        return NC_NOERR;
+    }
+
+    *offset = 0;
+    if (IS_RECVAR(varp)) {
+        if (ndims > 1) *offset += start[ndims - 1];
+        for (i=1; i<ndims-1; i++)
+            *offset += start[i] * varp->dsizes[i+1];
+        *offset *= varp->xsz;  /* multiply element size */
+        *offset += start[0] * ncp->recsize;
+    }
+    else {
+        if (ndims > 1) *offset += start[0] * varp->dsizes[1];
+        for (i=1; i<ndims-1; i++)
+            *offset += start[i] * varp->dsizes[i+1];
+        *offset += start[ndims-1];
+        *offset *= varp->xsz;  /* multiply element size */
+    }
+
+    *offset += varp->begin; /* beginning file offset of this variable */
+
+    return NC_NOERR;
+}
+
 /*----< ncmpio_last_offset() >-----------------------------------------------*/
 /* Returns the file offset of the last variable element accessed by this
  * request.
@@ -113,6 +154,7 @@ ncmpio_last_offset(const NC         *ncp,
         return NC_NOERR;
     }
 
+    /* when count == NULL, this is called from a var API */
     if (count != NULL) {
         last_indx = (MPI_Offset*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_OFFSET);
 
@@ -133,6 +175,8 @@ ncmpio_last_offset(const NC         *ncp,
         last_indx = (MPI_Offset*) start;
     }
 
+    /* check NC_EINVALCOORDS and NC_EEDGE already done in dispatchers/var_getput.m4 */
+#if 0
     /* check whether last_indx is valid */
 
     firstDim = 0;
@@ -157,6 +201,7 @@ ncmpio_last_offset(const NC         *ncp,
             DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
         }
     }
+#endif
 
     if (varp->shape[0] == NC_UNLIMITED)
         offset += last_indx[0] * ncp->recsize;

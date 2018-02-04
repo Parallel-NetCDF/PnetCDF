@@ -166,7 +166,7 @@ ncmpio_igetput_varm(NC               *ncp,
 {
     void *xbuf=NULL;
     int i, j, err=NC_NOERR, abuf_index=-1, el_size, buftype_is_contig;
-    int need_convert, need_swap, need_swap_back_buf=0;
+    int need_convert, need_swap, need_swap_back_buf=0, free_xbuf=0;
     MPI_Offset bnelems=0, nbytes;
     MPI_Datatype ptype, imaptype;
     NC_req *req;
@@ -236,6 +236,7 @@ ncmpio_igetput_varm(NC               *ncp,
 #endif
             ) {
                 xbuf = NCI_Malloc((size_t)nbytes);
+                free_xbuf = 1;
                 if (xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
                 need_swap_back_buf = 0;
             }
@@ -389,8 +390,10 @@ ncmpio_igetput_varm(NC               *ncp,
          */
         if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL && !need_convert)
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
-        else
+        else {
             xbuf = NCI_Malloc((size_t)nbytes);
+            free_xbuf = 1;
+        }
     }
 
     if (fIsSet(reqMode, NC_REQ_WR)) {
@@ -514,6 +517,9 @@ ncmpio_igetput_varm(NC               *ncp,
 
     /* mark req as the lead request */
     fSet(req->flag, NC_REQ_LEAD);
+
+    /* only lead request may free xbuf */
+    if (free_xbuf) fSet(req->flag, NC_REQ_XBUF_TO_BE_FREED);
 
     /* return the request ID */
     if (reqid != NULL) *reqid = req->id;
