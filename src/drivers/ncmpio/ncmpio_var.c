@@ -306,6 +306,9 @@ ncmpio_NC_var_shape64(NC_var            *varp,
 
     /*
      * compute dsizes[], from right to left product of shape
+     * For example, a 3D array of size 5x4x3 in C order,
+     * For fixed-size variable: dsizes[0]=60 dsizes[1]=12 dsizes[2]=3
+     * For record     variable: dsizes[0]=12 dsizes[1]=12 dsizes[2]=3
      */
     product = 1;
     if (varp->ndims == 1) {
