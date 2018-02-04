@@ -65,16 +65,16 @@ install-data-hook:
 	@echo '+----------------------------------------------------------------------------+'
 	@echo '|'
 	@echo '|  PnetCDF has been successfully installed under'
-	@echo '|          $(prefix)'
+	@echo '|          $(DESTDIR)$(prefix)'
 	@echo '|'
 	@echo '|  * PnetCDF header files have been installed in'
-	@echo '|          $(prefix)/include'
+	@echo '|          $(DESTDIR)$(prefix)/include'
 	@echo '|  * PnetCDF library files have been installed in'
-	@echo '|          $(exec_prefix)/lib'
+	@echo '|          $(DESTDIR)$(exec_prefix)/lib'
 	@echo '|  * PnetCDF utility programs have been installed in'
-	@echo '|          $(exec_prefix)/bin'
+	@echo '|          $(DESTDIR)$(exec_prefix)/bin'
 	@echo '|  * PnetCDF man pages have been installed in'
-	@echo '|          $(prefix)/share/man'
+	@echo '|          $(DESTDIR)$(prefix)/share/man'
 	@echo '|'
 	@if test 'x$(has_fortran)' = xyes && test 'x$(FC_MODINC)' = 'x-I' ; then \
 	 echo '|  To compile your PnetCDF programs, please add the following to the command' ; \
@@ -82,19 +82,19 @@ install-data-hook:
 	 echo '|  To compile your PnetCDF C programs, please add the following to the command' ; \
 	fi
 	@echo '|  line, so the compiler can find the PnetCDF header files:'
-	@echo '|      -I$(prefix)/include'
+	@echo '|      -I$(DESTDIR)$(prefix)/include'
 	@if test "x$(has_fortran)" = xyes && test 'x$(FC_MODINC)' != 'x-I' ; then \
 	 echo '|  Use the following line to compile your Fortran programs'; \
-	 echo '|      $(FC_MODINC)$(prefix)/include' ; \
+	 echo '|      $(FC_MODINC)$(DESTDIR)$(prefix)/include' ; \
 	fi
 	@echo '|'
 	@echo '|  Add the following line to link your program to PnetCDF library:'
-	@echo '|      -L$(exec_prefix)/lib -lpnetcdf'
+	@echo '|      -L$(DESTDIR)$(exec_prefix)/lib -lpnetcdf'
 	@echo '|'
 	@if test "x$(enable_shared)" = xyes ; then \
 	 echo '|  Add the following to your run-time environment variable LD_LIBRARY_PATH,' ; \
 	 echo '|  if your executable is linked with the PnetCDF shared libraries.' ; \
-	 echo '|      $(exec_prefix)/lib' ; \
+	 echo '|      $(DESTDIR)$(exec_prefix)/lib' ; \
 	 echo '|' ; \
 	fi
 	@echo '|  PnetCDF is jointly developed by a team at Northwestern University and'
