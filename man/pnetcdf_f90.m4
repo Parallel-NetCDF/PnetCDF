@@ -1,7 +1,7 @@
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH PnetCDF 3f90 "PnetCDF PNETCDF_VERSION" "Printed: \n(yr.\n(mo.\n(dy" "LIBRARY FUNCTIONS"
+.TH PnetCDF 3 "PnetCDF PNETCDF_VERSION" "Printed: \n(yr.\n(mo.\n(dy" "LIBRARY FUNCTIONS"
 .SH NAME
 PnetCDF \- Parallel library for accessing files in Network Common Data Form (CDF, CDF-2 and CDF-5 formats)
 .SH SYNOPSIS
@@ -779,7 +779,7 @@ visit https://lists.mcs.anl.gov/mailman/listinfo/parallel-netcdf
 .BR ncmpigen (1),
 .BR ncmpidiff (1),
 .BR ncvalidator (1),
-.BR pnetcdf (3f90).
+.BR pnetcdf (3).
 .SH DATE
 PNETCDF_RELEASE_DATE
 .LP
