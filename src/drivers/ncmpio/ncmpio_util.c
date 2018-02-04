@@ -143,8 +143,8 @@ ncmpio_last_offset(const NC         *ncp,
                    const int         reqMode,
                    MPI_Offset       *offset_ptr) /* OUT: file offset */
 {
+    int i, ndims;
     MPI_Offset offset, *last_indx=NULL;
-    int i, ndims, firstDim = 0;
 
     offset = varp->begin; /* beginning file offset of this variable */
     ndims  = varp->ndims; /* number of dimensions of this variable */
@@ -179,7 +179,7 @@ ncmpio_last_offset(const NC         *ncp,
 #if 0
     /* check whether last_indx is valid */
 
-    firstDim = 0;
+    int firstDim = 0;
     /* check NC_EINVALCOORDS for record dimension */
     if (varp->shape[0] == NC_UNLIMITED) {
         if (ncp->format < 5 && last_indx[0] > NC_MAX_UINT) { /* CDF-1 and 2 */
