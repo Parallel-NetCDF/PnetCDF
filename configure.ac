@@ -284,6 +284,17 @@ AC_CHECK_FUNC([MPI_File_open], [],
    -----------------------------------------------------------------------])
 ])])
 
+dnl compute canonical system types
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+
+dnl libtool v2.4.6 was released in 2015-02-15
+dnl Travis CI only has v2.4.2
+LT_PREREQ([2.4.2])
+dnl LT_INIT([dlopen disable-shared])
+dnl LT_INIT([dlopen])
+LT_INIT([disable-shared])
+
 dnl check MPI C++ compiler
 AC_ARG_ENABLE(cxx,
     [AS_HELP_STRING([--disable-cxx],
@@ -388,17 +399,6 @@ AC_SUBST(has_mpicxx)dnl for src/utils/pnetcdf-config.in
 UD_MSG_DEBUG(has_mpicxx=$has_mpicxx)
 AM_CONDITIONAL(HAS_MPICXX, [test x$has_mpicxx = xyes])
 AM_CONDITIONAL(SEEK_SET_REDEFINED, [test x$ac_cv_CHECK_MPI_CPP_SEEK_SET = xyes])
-
-dnl compute canonical system types
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
-
-dnl libtool v2.4.6 was released in 2015-02-15
-dnl Travis CI only has v2.4.2
-LT_PREREQ([2.4.2])
-dnl LT_INIT([dlopen disable-shared])
-dnl LT_INIT([dlopen])
-LT_INIT([disable-shared])
 
 dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
 dnl preventing PATH_MAX from being defined for some of the test files,
