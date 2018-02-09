@@ -57,7 +57,6 @@ getput_vard(NC               *ncp,
     MPI_Status mpistatus;
     MPI_Datatype ptype, orig_buftype=buftype;
     MPI_File fh=MPI_FILE_NULL;
-    MPI_Aint lb, extent=0, true_lb, true_extent;
 
     if (filetype == MPI_DATATYPE_NULL) {
         /* this process does zero-length I/O */
@@ -94,16 +93,15 @@ getput_vard(NC               *ncp,
         goto err_check;
     }
 
-    MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
-    MPI_Type_get_extent(filetype, &lb, &extent);
-
     if (!IS_RECVAR(varp)) {
         /* for fixed-size variable, extent should not be larger than the
          * variabe size */
+        MPI_Aint lb, extent;
         MPI_Offset var_size = varp->xsz;
         for (i=0; i<varp->ndims; i++)
             var_size *= varp->shape[i];
 
+        MPI_Type_get_extent(filetype, &lb, &extent);
         if (extent > var_size) {
             DEBUG_ASSIGN_ERROR(err, NC_ETYPESIZE)
             goto err_check;
@@ -325,13 +323,15 @@ err_check:
     else { /* write request */
         if (IS_RECVAR(varp)) {
             /* update header's number of records in memory */
-            MPI_Offset new_numrecs;
+            MPI_Offset new_numrecs, last_byte;
+            MPI_Aint true_lb=0, true_extent=0;
 
             /* filetype's lb may not always be 0 (e.g. created by constructor
              * MPI_Type_create_hindexed), we need to find the true last byte
              * accessed by this request, in order to calculate new_numrecs.
              */
-            MPI_Offset last_byte=true_lb+true_extent;
+            MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
+            last_byte = true_lb + true_extent;
             new_numrecs = last_byte / ncp->recsize;
             if (last_byte % ncp->recsize) new_numrecs++;
 
