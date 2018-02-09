@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", basename(argv[0]));
+        sprintf(cmd_str, "*** TESTING C   %s for vard put and get ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
