@@ -81,7 +81,7 @@ getput_vard(NC               *ncp,
 #endif
 
     /* PROBLEM: argument filetype_size is a 4-byte integer, cannot be used
-     * for largefiletypes */
+     * for large filetypes */
     mpireturn = MPI_Type_size(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
@@ -327,10 +327,13 @@ err_check:
             /* update header's number of records in memory */
             MPI_Offset new_numrecs;
 
-            /* since filetype's LB is required to be == varp->begin for vard
-             * API, we can simply use extent to calculate new_numrecs */
-            new_numrecs = extent / ncp->recsize;
-            if (extent % ncp->recsize) new_numrecs++;
+            /* filetype's lb may not always be 0 (e.g. created by constructor
+             * MPI_Type_create_hindexed), we need to find the true last byte
+             * accessed by this request, in order to calculate new_numrecs.
+             */
+            MPI_Offset last_byte=true_lb+true_extent;
+            new_numrecs = last_byte / ncp->recsize;
+            if (last_byte % ncp->recsize) new_numrecs++;
 
             if (fIsSet(reqMode, NC_REQ_INDEP)) {
                 /* For independent put, we delay the sync for numrecs until

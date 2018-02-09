@@ -53,6 +53,8 @@ This is essentially a placeholder for the next release note ...
       more unlimited dimensions are defined in a corrupted file.
 
   o Bug fixes
+    * Fix the calculation of new record number in put_vard API. Thanks to
+      Jim Edwards. See r3675.
     * Fix the calculation of growing size of nonblocking request queues to
       include the number of records of a record variable, as such request is
       split into multiple additional requests, one for each record. See r3651.
@@ -72,6 +74,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcase/test_vard_rec.c - tests ncmpi_put_vard APIs for writing a
+      record variable with one record at a time. This is to test the fix to
+      bug reported by Jim Edwards in r3675.
     * test/nonblocking/large_num_reqs.c - tests large number of nonblocking put
       and get requests (larger than NC_REQUEST_CHUNK, the constant used to grow
       the internal queues that store the nonblocking put and get requests. This

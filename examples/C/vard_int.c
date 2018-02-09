@@ -118,10 +118,10 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_recsize(ncid, &recsize);
     for (i=0; i<count[0]; i++) {
         array_of_blocklengths[i] = count[1];
-        array_of_displacements[i] = start[1]*sizeof(int) + recsize * i;
+        array_of_displacements[i] = start[1]*sizeof(int) + recsize * (start[0]+i);
     }
-    MPI_Type_create_hindexed(2, array_of_blocklengths, array_of_displacements,
-                             MPI_INT, &rec_filetype);
+    MPI_Type_create_hindexed(count[0], array_of_blocklengths,
+                             array_of_displacements, MPI_INT, &rec_filetype);
     MPI_Type_commit(&rec_filetype);
 
     /* create a file type for the fixed-size variable */
