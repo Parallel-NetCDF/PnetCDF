@@ -39,7 +39,7 @@ ncncio_def_dim(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -53,7 +53,7 @@ ncncio_inq_dimid(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Call nc_inq_dimid */
-    err = nc_inq_dimid(nc4p->ncid, name, dimidp);
+    err = nc_inq_dimid(nc4p->ncid, name, dimid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
@@ -89,7 +89,7 @@ ncncio_rename_dim(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     
     return NC_NOERR;
 }

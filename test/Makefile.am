@@ -14,9 +14,10 @@ C_SUBDIRS = common \
             header \
             testcases \
             nonblocking \
-            largefile
+            largefile \
+			cdf4
 
-DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile
+DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile cdf4
 
 SUBDIRS = $(C_SUBDIRS)
 

@@ -1446,6 +1446,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/common/Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
+                src/drivers/ncncio/Makefile \
                 src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
                 src/binding/cxx/Makefile \
@@ -1483,6 +1484,7 @@ AC_CONFIG_FILES(Makefile \
                 test/fandc/Makefile \
                 test/nc_test/Makefile \
                 test/cdf_format/Makefile \
+                test/cdf4/Makefile \
                 test/header/Makefile \
                 test/testcases/Makefile \
                 test/nonblocking/Makefile \

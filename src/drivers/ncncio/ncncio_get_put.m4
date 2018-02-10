@@ -16,7 +16,7 @@ define(`upcase', `translit(`$*', `a-z', `A-Z')')dnl
 dnl
 define(`GETATTTYPE',dnl
 `dnl
-    ifelse($1, `MPI_CHAR', , `else ')if (buftype == $1){
+    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1){
         err = nc_get_att_$2(nc4p->ncid, varid, name, ($3*) buf);
     }
 ')dnl
@@ -24,14 +24,14 @@ dnl
 define(`GETVARTYPE',dnl
 `dnl
         ifelse($2, `MPI_CHAR', , `else ')if (buftype == $2){
-            err = nc_get_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `(stze_t)start, ', $1, `vara', `(stze_t)start, (stze_t)count, ', $1, `vars', `(stze_t)start, (stze_t)count, (size_t)stride, ', $1, `varm', `(stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, ')($4*) buf);
+            err = nc_get_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `(size_t*)start, ', $1, `vara', `(size_t*)start, (size_t*)count, ', $1, `vars', `(size_t*)start, (size_t*)count, (size_t*)stride, ', $1, `varm', `(size_t*)start, (size_t*)count, (size_t*)stride, (size_t*)imap, ')($4*) buf);
         }
 ')dnl
 dnl
 define(`GETVAR',dnl
 `dnl
     ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2){
-foreach(`dt', (`(`MPI_CHAR', `char', `char')', dnl
+foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
                `(`MPI_SHORT', `short', `short')', dnl
@@ -72,7 +72,7 @@ ncncio_get_att(void         *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Call nc_del_att_<type> */
-foreach(`dt', (`(`MPI_CHAR', `char', `char')', dnl
+foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
                `(`MPI_SHORT', `short', `short')', dnl

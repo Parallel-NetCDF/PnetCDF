@@ -140,6 +140,8 @@ typedef struct PNC PNC;
 
 extern PNC_driver* ncmpio_inq_driver(void);
 
+extern PNC_driver* ncncio_inq_driver(void);
+
 extern PNC_driver* ncfoo_inq_driver(void);
 
 extern int PNC_check_id(int ncid, PNC **pncp);

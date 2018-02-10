@@ -495,12 +495,14 @@ ncmpi_open(MPI_Comm    comm,
         driver = ncmpio_inq_driver();
     }
     else if (format == NC_FORMAT_NETCDF4_CLASSIC) {
-        fprintf(stderr,"NC_FORMAT_NETCDF4_CLASSIC is not yet supported\n");
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        //fprintf(stderr,"NC_FORMAT_NETCDF4_CLASSIC is not yet supported\n");
+        //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        driver = ncncio_inq_driver();
     }
     else if (format == NC_FORMAT_NETCDF4) {
-        fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        //fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
+        //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        driver = ncncio_inq_driver();
     }
     else { /* unrecognized file format */
         DEBUG_RETURN_ERROR(NC_ENOTNC)
