@@ -38,6 +38,7 @@
 
 /* Note, netcdf header must come first due to conflicting constant definition */
 #include <netcdf.h>
+#include <netcdf_par.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,10 +60,9 @@ ncncio_create(MPI_Comm     comm,
     int err;
     void *ncp=NULL;
     NC_nc4 *nc4p;
-    PNC_driver *driver=NULL;
 
     /* TODO: support NC4 write */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     /* Create a NC_nc4 object and save its driver pointer */
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
@@ -75,9 +75,8 @@ ncncio_create(MPI_Comm     comm,
     }
     strcpy(nc4p->path, path);
     nc4p->mode   = cmode;
-    nc4p->driver = driver;
     nc4p->flag   = 0;
-    nc4p->ncp    = ncp;
+    nc4p->ncid  = ncid;
     nc4p->comm   = comm;
 
     *ncpp = nc4p;
@@ -94,21 +93,21 @@ ncncio_open(MPI_Comm     comm,
            void       **ncpp)
 {
     int err, format;
-    int ncid = -1;
+    int ncidtmp;
     NC_nc4 *nc4p;
 
     err = ncmpi_inq_file_format(path, &format);
     if (err != NC_NOERR) return err;
 
     /* Read only driver */
-    if (!(omode & NC_MODE_RDONLY)){
-        DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    if (omode & NC_WRITE){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     }
 
     if (format == NC_FORMAT_NETCDF4_CLASSIC ||
         format == NC_FORMAT_NETCDF4) {
         /* Open with netcdf */
-        err = nc_open_par(path, omode, comm, info, &ncid);
+        err = nc_open_par(path, omode | NC_MPIIO, comm, info, &ncidtmp);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
     }
     else{
@@ -129,6 +128,7 @@ ncncio_open(MPI_Comm     comm,
     nc4p->flag   = 0;
     nc4p->ncid  = ncid;
     nc4p->comm   = comm;
+    nc4p->ncid = ncidtmp;
 
     *ncpp = nc4p;
 
@@ -160,7 +160,7 @@ ncncio_enddef(void *ncdp)
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -176,7 +176,7 @@ ncncio__enddef(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -188,7 +188,7 @@ ncncio_redef(void *ncdp)
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -284,7 +284,7 @@ ncncio_inq_misc(void       *ncdp,
                MPI_Offset *usage,
                MPI_Offset *buf_size)
 {
-    int i, flag, mpireturn;
+    int i, err, flag, mpireturn;
     char value[MPI_MAX_INFO_VAL];
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
@@ -316,9 +316,9 @@ ncncio_inq_misc(void       *ncdp,
         /* Record size */
         if (recsize != NULL){
             size_t udlen;
-            err = nc_inq_unlimdim(nc4p->ncid, unlimdim, &udlen);
+            err = nc_inq_dimlen(nc4p->ncid, unlimdim, &udlen);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-            recsize = (MPI_Offset)udlen;
+            *recsize = (MPI_Offset)udlen;
         }
 
         if (num_fix_varsp != NULL || num_rec_varsp != NULL){
@@ -419,7 +419,7 @@ ncncio_cancel(void *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* TODO: Nonblocking IO */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -435,7 +435,7 @@ ncncio_wait(void *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* TODO: Nonblocking IO */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -464,7 +464,7 @@ ncncio_fill_var_rec(void      *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* NetCDF does not support this natively */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }

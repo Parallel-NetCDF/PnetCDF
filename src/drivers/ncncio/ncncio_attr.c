@@ -97,7 +97,7 @@ ncncio_rename_att(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     
     /* Call nc_rename_att */
     err = nc_rename_att(nc4p->ncid, varid, name, newname);
@@ -119,10 +119,10 @@ ncncio_copy_att(void       *ncdp_in,
     NC_nc4 *nc4p_out = (NC_nc4*)ncdp_out;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     /* Call nc_copy_att */
-    err = nc_copy_att(nc4p_in->ncid, varid_in, nc4p_out->ncid, varid_out);
+    err = nc_copy_att(nc4p_in->ncid, varid_in, name, nc4p_out->ncid, varid_out);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
@@ -137,7 +137,7 @@ ncncio_del_att(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     /* Call nc_del_att */
     err = nc_del_att(nc4p->ncid, varid, name);
@@ -164,7 +164,7 @@ ncncio_put_att(void         *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }

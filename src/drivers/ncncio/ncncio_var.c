@@ -66,7 +66,7 @@ ncncio_def_var(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -101,8 +101,8 @@ ncncio_inq_var(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Call nc_inq_var_all */
-    err = nc_inq_var_all(nc4p->ncid, varid, name, xtypep, ndimsp, dimids, nattsp, 
+    /* Call NC_inq_var_all */
+    err = NC_inq_var_all(nc4p->ncid, varid, name, xtypep, ndimsp, dimids, nattsp, 
                         NULL, NULL, NULL, NULL, NULL, NULL,
                         no_fillp, fill_valuep, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -119,7 +119,7 @@ ncncio_rename_var(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -145,7 +145,7 @@ ncncio_put_var(void             *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 }
 
 int
@@ -164,8 +164,12 @@ ncncio_iget_var(void             *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* TODO: Support nonblocking IO */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    /* Call ncncio_get_varn */
+    err = ncncio_get_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
+    if (err != NC_NOERR) return err;
+
+    /* TODO: Issue dummy id */
+    *reqid = NC_REQ_NULL;
 
     return NC_NOERR;
 }
@@ -187,7 +191,7 @@ ncncio_iput_var(void             *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -234,7 +238,7 @@ ncncio_bput_var(void             *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -254,7 +258,7 @@ ncncio_get_varn(void              *ncdp,
     
     /* Call ncncio_get_var for N times */
     for(i = 0; i < num; i++){
-        err = ncncio_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype);
+        err = ncncio_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
         if (err != NC_NOERR){
             return err;
         }
@@ -278,7 +282,7 @@ ncncio_put_varn(void              *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -299,11 +303,11 @@ ncncio_iget_varn(void               *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Call ncncio_get_varn */
-    err = ncncio_get_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype,Reqmode);
+    err = ncncio_get_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
 
     /* TODO: Issue dummy id */
-    reqid = NC_REQ_NULL;
+    *reqid = NC_REQ_NULL;
 
     return NC_NOERR;
 }
@@ -324,7 +328,7 @@ ncncio_iput_varn(void               *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -345,7 +349,7 @@ ncncio_bput_varn(void               *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -363,7 +367,7 @@ ncncio_get_vard(void         *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* vard not supported in NetCDF */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
@@ -381,7 +385,7 @@ ncncio_put_vard(void         *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOT_SUPPORTED)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
