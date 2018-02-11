@@ -33,7 +33,8 @@ check_PROGRAMS = collective_write \
                  bput_varn_int64 \
                  fill_mode \
                  ghost_cell \
-                 req_all
+                 req_all \
+                 vard_mvars
 
 # parallel runs only
 # TESTS = $(check_PROGRAMS)

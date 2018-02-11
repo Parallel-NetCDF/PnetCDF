@@ -20,8 +20,12 @@ This is essentially a placeholder for the next release note ...
   o API syntax changes
     * none
 
-  o Semantics updates
-    * none
+  o API semantics updates
+    * ncmpi_put_vard and ncmpi_get_vard APIs now allow to write and read two
+      or more consecutive variables in a single API call. In this case,
+      argument varid will be the ID of first variable. Argument filetype should
+      be constructed by using the relative distance between any two consecutive
+      variables. See example program examples/C/vard_mvars.c.
 
   o New error code precedence
     * none
@@ -68,7 +72,8 @@ This is essentially a placeholder for the next release note ...
       only appears when reading files with corrupted NC tags. See r3645.
 
   o New example programs
-    * none
+    * example/C/vard_mvars.c shows an example of using a single vard API call
+      to write or read two consecutive variables.
 
   o New programs for I/O benchmarks
     * none
