@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     /* check if the number of records changed to 1 */
     err = ncmpi_inq_dimlen(ncid, unlimit_dimid, &len); CHECK_ERR
     if (len != 1)
-        printf("Error at line %d in %s: number of records should be 2 but got %lld\n",
+        printf("Error at line %d in %s: number of records should be 1 but got %lld\n",
         __LINE__,__FILE__,len);
 
     /* create a file type for writing 2nd record */
