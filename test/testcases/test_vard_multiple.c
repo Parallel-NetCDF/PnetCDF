@@ -78,11 +78,11 @@
 int main(int argc, char **argv) {
 
     char         filename[256];
-    int          i, j, err, ncid, varid[4], dimids[3], nerrs=0;
+    int          i, j, err, ncid, varid[4], dimids[3], nerrs=0, unlimit_dimid;
     int          rank, nprocs, *buf[2];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int          array_of_blocklengths[NY];
-    MPI_Offset   recsize, start[2], count[2], offset[2];
+    MPI_Offset   len, recsize, start[2], count[2], offset[2];
     MPI_Aint     a0, a1, array_of_displacements[NY];
     MPI_Datatype buftype, vtype[2], filetype;
 
@@ -177,8 +177,8 @@ int main(int argc, char **argv) {
     array_of_displacements[0] = 0;
 
     /* calculate distance between 2 fixed-size variables */
-    err = ncmpi_inq_varoffset(ncid, varid[0], &offset[0]);
-    err = ncmpi_inq_varoffset(ncid, varid[1], &offset[1]);
+    err = ncmpi_inq_varoffset(ncid, varid[0], &offset[0]); CHECK_ERR
+    err = ncmpi_inq_varoffset(ncid, varid[1], &offset[1]); CHECK_ERR
     array_of_displacements[1] = offset[1] - offset[0];
 
     MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
@@ -205,11 +205,11 @@ int main(int argc, char **argv) {
     MPI_Type_free(&filetype);
 
     /* obtain record size */
-    err = ncmpi_inq_recsize(ncid, &recsize);
+    err = ncmpi_inq_recsize(ncid, &recsize); CHECK_ERR
 
     /* calculate distance between 2 record variables */
-    err = ncmpi_inq_varoffset(ncid, varid[2], &offset[0]);
-    err = ncmpi_inq_varoffset(ncid, varid[3], &offset[1]);
+    err = ncmpi_inq_varoffset(ncid, varid[2], &offset[0]); CHECK_ERR
+    err = ncmpi_inq_varoffset(ncid, varid[3], &offset[1]); CHECK_ERR
     array_of_displacements[1] = offset[1] - offset[0];
 
     /* write to 2nd record of two consecutive variables */
@@ -242,6 +242,27 @@ int main(int argc, char **argv) {
     /* check the contents of read buf */
     CHECK_VALUE(buf[0], 2000)
     CHECK_VALUE(buf[1], 3000)
+
+    /* write to 1st record of two consecutive variables */
+    MPI_Type_free(&filetype);
+    array_of_displacements[0] -= recsize;
+    array_of_displacements[1] -= recsize;
+    MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
+                           vtype, &filetype);
+    MPI_Type_commit(&filetype);
+
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[0][j*NX+i] = 0;
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[1][j*NX+i] = 0;
+
+    /* write 2 consecutive record variables */
+    err = ncmpi_put_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype); CHECK_ERR
+
+    /* check if the number of records is still 2 */
+    err = ncmpi_inq_unlimdim(ncid, &unlimit_dimid); CHECK_ERR
+    err = ncmpi_inq_dimlen(ncid, unlimit_dimid, &len); CHECK_ERR
+    if (len != 2)
+        printf("Error at line %d in %s: number of records should be 2 but got %lld\n",
+        __LINE__,__FILE__,len);
 
     MPI_Type_free(&vtype[0]);
     MPI_Type_free(&vtype[1]);
