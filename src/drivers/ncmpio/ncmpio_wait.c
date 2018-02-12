@@ -1486,7 +1486,7 @@ req_aggregation(NC     *ncp,
     MPI_File fh;
     MPI_Status mpistatus;
     MPI_Offset max_end;
-#ifdef HAVE_MPI_TYPE_SIZE_X
+#if MPI_VERSION >= 3
     MPI_Count buf_type_size=0;
 #else
     int buf_type_size=0;
@@ -1770,7 +1770,7 @@ req_aggregation(NC     *ncp,
         }
     }
 
-#ifdef HAVE_MPI_TYPE_SIZE_X
+#if MPI_VERSION >= 3
     MPI_Type_size_x(buf_type, &buf_type_size);
 #ifndef ENABLE_LARGE_REQ
     if (buf_type_size > INT_MAX) {
@@ -2047,7 +2047,7 @@ mgetput(NC     *ncp,
     MPI_Datatype filetype, buf_type=MPI_BYTE;
     MPI_File fh;
     MPI_Offset offset=0;
-#ifdef HAVE_MPI_TYPE_SIZE_X
+#if MPI_VERSION >= 3
     MPI_Count buf_type_size=0;
 #else
     int buf_type_size=0;
@@ -2208,7 +2208,7 @@ mgetput(NC     *ncp,
     }
     /* if (buf_type == MPI_BYTE) then the whole buf is contiguous */
 
-#ifdef HAVE_MPI_TYPE_SIZE_X
+#if MPI_VERSION >= 3
     MPI_Type_size_x(buf_type, &buf_type_size);
 #ifndef ENABLE_LARGE_REQ
     if (buf_type_size > INT_MAX) {
