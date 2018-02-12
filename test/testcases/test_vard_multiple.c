@@ -106,11 +106,11 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-    buf[0] = (int*)malloc(NY * NX * sizeof(int*));
+    buf[0] = (int*)malloc(NY * NX * sizeof(int));
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         buf[0][j*NX+i] = rank*100 + j*10 + i;
 
-    buf[1] = (int*)malloc(NY * NX * sizeof(int*));
+    buf[1] = (int*)malloc(NY * NX * sizeof(int));
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         buf[1][j*NX+i] = 1000 + rank*100 + j*10 + i;
 

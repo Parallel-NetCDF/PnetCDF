@@ -59,10 +59,10 @@ getput_vard(NC               *ncp,
     MPI_File fh=MPI_FILE_NULL;
 #if MPI_VERSION >= 3
     MPI_Count filetype_size=0;
-    MPI_Count true_lb=0, true_ub, true_extent=0;
+    MPI_Count true_lb=0, true_ub=0, true_extent=0;
 #else
     int filetype_size=0;
-    MPI_Aint true_lb=0, true_ub, true_extent=0;
+    MPI_Aint true_lb=0, true_ub=0, true_extent=0;
 #endif
 
     if (filetype == MPI_DATATYPE_NULL) {
