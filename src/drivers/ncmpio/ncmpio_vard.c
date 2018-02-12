@@ -52,12 +52,18 @@ getput_vard(NC               *ncp,
     void *cbuf=NULL;
     int isderived, el_size, mpireturn, status=NC_NOERR, err=NC_NOERR;
     int buftype_is_contig=0, filetype_is_contig=1, is_buf_swapped=0;
-    int need_swap=0, filetype_size=0, buftype_size=0;
-    MPI_Aint true_lb=0, true_ub, true_extent=0;
+    int need_swap=0, buftype_size=0;
     MPI_Offset btnelems=0, bnelems=0, offset=0, orig_bufcount=bufcount;
     MPI_Status mpistatus;
     MPI_Datatype ptype, orig_buftype=buftype;
     MPI_File fh=MPI_FILE_NULL;
+#if MPI_VERSION >= 3
+    MPI_Count filetype_size=0;
+    MPI_Count true_lb=0, true_ub, true_extent=0;
+#else
+    int filetype_size=0;
+    MPI_Aint true_lb=0, true_ub, true_extent=0;
+#endif
 
     if (filetype == MPI_DATATYPE_NULL) {
         /* this process does zero-length I/O */
@@ -80,13 +86,24 @@ getput_vard(NC               *ncp,
     }
 #endif
 
+#if MPI_VERSION >= 3
+    mpireturn = MPI_Type_size_x(filetype, &filetype_size);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size_x");
+        goto err_check;
+    }
+#else
     /* PROBLEM: argument filetype_size is a 4-byte integer, cannot be used
      * for large filetypes */
     mpireturn = MPI_Type_size(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
+        /* According to MPI 3 standard, if filetype_size parameter is too small
+         * to hold the output value, MPI_Type_size returns MPI_UNDEFINED.
+         */
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
         goto err_check;
     }
+#endif
 
     if (filetype_size == 0) { /* zero-length request */
         if (fIsSet(reqMode, NC_REQ_INDEP)) return NC_NOERR;
@@ -98,7 +115,11 @@ getput_vard(NC               *ncp,
      * MPI_Type_create_hindexed), we need to find the true last byte accessed
      * by this request, true_ub, in order to calculate new_numrecs.
      */
+#if MPI_VERSION >= 3
+    MPI_Type_get_true_extent_x(filetype, &true_lb, &true_extent);
+#else
     MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
+#endif
     true_ub = true_lb + true_extent;
 
     /* Starting from 1.9.1, reading/writing more than one varaible in a

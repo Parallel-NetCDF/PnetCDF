@@ -115,6 +115,7 @@ AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is def
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
+dnl AH_TEMPLATE([HAVE_MPI_COUNT],           [Define if type MPI_Count is defined])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])
@@ -979,6 +980,15 @@ else
    enable_aggregation=yes
 fi
 
+dnl check availability of MPI_Count, which is added in MPI 3.0 standard.
+dnl The new MPI functions added in 3.0 that have arguments of type MPI_Count:
+dnl MPI_Type_size_x, MPI_Type_get_extent_x, MPI_Type_get_true_extent_x, and
+dnl MPI_Get_elements_x
+dnl AC_CHECK_TYPE([MPI_Count], [], [], [#include <mpi.h>])
+dnl if test "x${ac_cv_type_MPI_Count}" = xyes; then
+dnl    AC_DEFINE(HAVE_MPI_COUNT)
+dnl fi
+
 dnl check MPI-2 only functions
 AC_CHECK_FUNCS([MPI_Info_dup \
                 MPI_Info_free \
@@ -988,8 +998,7 @@ AC_CHECK_FUNCS([MPI_Info_dup \
                 MPI_Type_create_hindexed \
                 MPI_Type_create_struct \
                 MPI_Type_create_resized \
-                MPI_Type_get_extent \
-                MPI_Type_size_x])
+                MPI_Type_get_extent])
 
 if test "$ac_cv_func_MPI_Info_dup" = no ; then
    AC_MSG_ERROR([
