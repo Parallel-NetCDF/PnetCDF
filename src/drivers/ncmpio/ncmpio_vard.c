@@ -214,6 +214,12 @@ getput_vard(NC               *ncp,
         }
     }
 
+    /* bufcount is used as int in MPI_File_read/write */
+    if (bufcount > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
+        goto err_check;
+    }
+
     /* Check if we need byte swap cbuf in-place or (into cbuf) */
     need_swap = ncmpii_need_swap(varp->xtype, ptype);
     if (need_swap) {
@@ -235,7 +241,7 @@ getput_vard(NC               *ncp,
              * buffer, buf, have been changed, i.e. byte swapped. */
         }
     }
-    /* no type conversion */
+    /* no type conversion is allowed by vard APIs */
 
     /* set fileview's displacement to the variable's starting file offset */
     offset = varp->begin;
@@ -269,12 +275,6 @@ err_check:
     if (err != NC_NOERR) {
         bufcount = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
-    }
-
-    /* bufcount is used as int in MPI_File_read/write */
-    if (bufcount > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
-        goto err_check;
     }
 
 #ifdef _USE_MPI_GET_COUNT
