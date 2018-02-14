@@ -143,6 +143,11 @@ int main(int argc, char **argv) {
     err = ncmpi_def_var(ncid, "rec_var3", NC_INT, 3, dimids, &varid[3]); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    /* test MPI_DATATYPE_NULL as filetype and buftype */
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, buftype); CHECK_ERR
+
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL); CHECK_ERR
+
     /* construct two MPI derived data types */
     start[0] = 0;  start[1] = NX*rank;
     count[0] = NY; count[1] = NX;
