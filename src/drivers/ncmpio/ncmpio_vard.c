@@ -263,6 +263,7 @@ err_check:
         offset = 0;
         bufcount = 0;
         filetype = MPI_BYTE;
+        buftype  = MPI_BYTE;
     }
     status = err;
 
