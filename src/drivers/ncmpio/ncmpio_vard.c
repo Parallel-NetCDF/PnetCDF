@@ -262,6 +262,7 @@ err_check:
         /* else for NC_REQ_COLL, must participate successive collective calls */
         offset = 0;
         bufcount = 0;
+        filetype = MPI_BYTE;
     }
     status = err;
 
