@@ -878,7 +878,7 @@ req_commit(NC  *ncp,
         if (!fIsSet(req->flag, NC_REQ_LEAD)) continue;
 
         /* now, xbuf contains the data read from the file.
-         * It may need to be type-converted, byte-swappeds, unpack from xbuf
+         * It may need to be type-converted, byte-swapped, unpacked from xbuf
          * buf. This is done in ncmpio_unpack_xbuf().
          */
         count = req->start + req->varp->ndims;
@@ -911,7 +911,7 @@ req_commit(NC  *ncp,
          * flag is set, it indicates req->buf points to this temporary buffer
          * and should be freed. Because get_list[] may be sorted based on
          * offset_start, the request whose NC_REQ_BUF_TO_BE_FREED bit is set may
-         * no longer be the first in the the group, this loop must run after
+         * no longer be the first in the group, this loop must run after
          * the above one. We need to go through get_list[] to check each one
          * for NC_REQ_BUF_TO_BE_FREED in order to free the temporary buffer.
          */
@@ -1011,7 +1011,7 @@ ncmpio_wait(void *ncdp,
         /* if (num_reqs == 0) return NC_NOERR; */
 
         /* This is called from ncmpi_wait_all which must be called in
-         * collective data mode, illegal in indep mode. This also
+         * collective data mode, illegal in independent mode. This also
          * ensures the program will returns back to collective mode.
          */
         if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP);
