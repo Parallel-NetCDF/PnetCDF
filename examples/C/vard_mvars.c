@@ -203,7 +203,7 @@ int main(int argc, char **argv)
 
     array_of_displacements[0] = NX*rank*sizeof(int);
     for (i=1; i<NY; i++)
-        /* distance betwee 2 consecutive block is always NX*nprocs */
+        /* distance between any 2 consecutive blocks is NX*nprocs */
         array_of_displacements[i] = array_of_displacements[i-1]
                                   + NX*nprocs*sizeof(int);
 

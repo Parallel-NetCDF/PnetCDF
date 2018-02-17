@@ -46,7 +46,7 @@ getput_vard(NC               *ncp,
             MPI_Datatype      filetype, /* access layout in the file */
             void             *buf,
             MPI_Offset        bufcount,
-            MPI_Datatype      buftype,  /* data type of the bufer */
+            MPI_Datatype      buftype,  /* data type of the buffer */
             int               reqMode)
 {
     void *cbuf=NULL;
@@ -66,7 +66,10 @@ getput_vard(NC               *ncp,
 #endif
 
     if (filetype == MPI_DATATYPE_NULL) {
-        /* this process does zero-length I/O */
+        /* This is actually an invalid filetype that can cause
+         * MPI_File_set_view to fail. In PnetCDF, we simply consider  this as
+         * zero-length request.
+         */
         if (fIsSet(reqMode, NC_REQ_INDEP)) return NC_NOERR;
         bufcount = 0;
         goto err_check;
@@ -122,7 +125,7 @@ getput_vard(NC               *ncp,
 #endif
     true_ub = true_lb + true_extent;
 
-    /* Starting from 1.9.1, reading/writing more than one varaible in a
+    /* Starting from 1.9.1, reading/writing more than one variable in a
      * single vard API is allowed.
      */
 #if 0
@@ -155,8 +158,8 @@ getput_vard(NC               *ncp,
 
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and will be set to the size of
-         * filetype. Note buf's data type must match the data type of variable
-         * defined in the file - no data conversion will be done.
+         * filetype. Note buf's data type must match the external data type of
+         * variable defined in the file - no data conversion will be done.
          */
         /* set buftype to the variable's data type */
         buftype = ncmpii_nc2mpitype(varp->xtype);
@@ -247,19 +250,19 @@ getput_vard(NC               *ncp,
     offset = varp->begin;
 
 err_check:
-    /* check API error from any proc before going into a collective call.
-     * optimization: to avoid MPI_Allreduce to check parameters at every call,
-     * we assume caller does the right thing most of the time.  If caller
-     * passed in bad parameters, we'll still conduct a zero-byte operation
-     * (everyone has to participate in the collective I/O call) but return
-     * the error at the end.
+    /* check error before going into a collective call.
+     * If an error has been detected on one or more process, we'll still
+     * conduct a zero-byte operation (everyone has to participate in the
+     * collective I/O call) but return the error at the end.
      */
     if (err != NC_NOERR || bufcount == 0 || filetype_size == 0) {
         if (fIsSet(reqMode, NC_REQ_INDEP)) {
             FINAL_CLEAN_UP  /* swap back put buffer and free temp buffers */
             return err;
         }
-        /* else for NC_REQ_COLL, must participate successive collective calls */
+        /* for NC_REQ_COLL, this process must participate successive collective
+         * MPI-IO calls as a zero-length request.
+         */
         offset = 0;
         bufcount = 0;
         filetype = MPI_BYTE;
