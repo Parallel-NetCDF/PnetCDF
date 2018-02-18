@@ -1,4 +1,0 @@
-[submodule "src/drivers/ncncio/netcdf-c"]
-	path = src/drivers/ncncio/netcdf-c
-	url = https://github.com/Parallel-NetCDF/netcdf-c.git
-	branch = pnetcdf
