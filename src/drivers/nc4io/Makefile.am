@@ -17,30 +17,30 @@ if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
 endif
 
-noinst_LTLIBRARIES = libncncio.la
+noinst_LTLIBRARIES = libnc4io.la
 
 M4FLAGS += -I${top_srcdir}/m4
 if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS = ncncio_get_put.m4
+M4_SRCS = nc4io_get_put.m4
 
-H_SRCS = ncncio_driver.h
+H_SRCS = nc4io_driver.h
 
-C_SRCS = ncncio_attr.c \
-         ncncio_dim.c \
-         ncncio_driver.c \
-         ncncio_file.c \
-         ncncio_var.c
+C_SRCS = nc4io_attr.c \
+         nc4io_dim.c \
+         nc4io_driver.c \
+         nc4io_file.c \
+         nc4io_var.c
 
 $(M4_SRCS:.m4=.c): Makefile
 
 .m4.c:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-libncncio_la_SOURCES = $(C_SRCS) $(H_SRCS)
-nodist_libncncio_la_SOURCES = $(M4_SRCS:.m4=.c)
+libnc4io_la_SOURCES = $(C_SRCS) $(H_SRCS)
+nodist_libnc4io_la_SOURCES = $(M4_SRCS:.m4=.c)
 
 # automake says "... BUILT_SOURCES is honored only by 'make all', 'make check',
 # and 'make install'. This means you cannot build a specific target (e.g.,

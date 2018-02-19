@@ -47,10 +47,10 @@
 #include <mpi.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <ncncio_driver.h>
+#include <nc4io_driver.h>
 
 int
-ncncio_create(MPI_Comm     comm,
+nc4io_create(MPI_Comm     comm,
              const char  *path,
              int          cmode,
              int          ncid,
@@ -85,7 +85,7 @@ ncncio_create(MPI_Comm     comm,
 }
 
 int
-ncncio_open(MPI_Comm     comm,
+nc4io_open(MPI_Comm     comm,
            const char  *path,
            int          omode,
            int          ncid,
@@ -136,7 +136,7 @@ ncncio_open(MPI_Comm     comm,
 }
 
 int
-ncncio_close(void *ncdp)
+nc4io_close(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
@@ -154,7 +154,7 @@ ncncio_close(void *ncdp)
 }
 
 int
-ncncio_enddef(void *ncdp)
+nc4io_enddef(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
@@ -166,7 +166,7 @@ ncncio_enddef(void *ncdp)
 }
 
 int
-ncncio__enddef(void       *ncdp,
+nc4io__enddef(void       *ncdp,
               MPI_Offset  h_minfree,
               MPI_Offset  v_align,
               MPI_Offset  v_minfree,
@@ -182,7 +182,7 @@ ncncio__enddef(void       *ncdp,
 }
 
 int
-ncncio_redef(void *ncdp)
+nc4io_redef(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
@@ -194,7 +194,7 @@ ncncio_redef(void *ncdp)
 }
 
 int
-ncncio_begin_indep_data(void *ncdp)
+nc4io_begin_indep_data(void *ncdp)
 {
     int i, err, nvar;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
@@ -213,7 +213,7 @@ ncncio_begin_indep_data(void *ncdp)
 }
 
 int
-ncncio_end_indep_data(void *ncdp)
+nc4io_end_indep_data(void *ncdp)
 {
     int i, err, nvar;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
@@ -232,7 +232,7 @@ ncncio_end_indep_data(void *ncdp)
 }
 
 int
-ncncio_abort(void *ncdp)
+nc4io_abort(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
@@ -250,7 +250,7 @@ ncncio_abort(void *ncdp)
 }
 
 int
-ncncio_inq(void *ncdp,
+nc4io_inq(void *ncdp,
           int  *ndimsp,
           int  *nvarsp,
           int  *nattsp,
@@ -267,7 +267,7 @@ ncncio_inq(void *ncdp,
 }
 
 int
-ncncio_inq_misc(void       *ncdp,
+nc4io_inq_misc(void       *ncdp,
                int        *pathlen,
                char       *path,
                int        *num_fix_varsp,
@@ -410,7 +410,7 @@ ncncio_inq_misc(void       *ncdp,
 }
 
 int
-ncncio_cancel(void *ncdp,
+nc4io_cancel(void *ncdp,
              int   num_req,
              int  *req_ids,
              int  *statuses)
@@ -425,7 +425,7 @@ ncncio_cancel(void *ncdp,
 }
 
 int
-ncncio_wait(void *ncdp,
+nc4io_wait(void *ncdp,
            int   num_reqs,
            int  *req_ids,
            int  *statuses,
@@ -441,7 +441,7 @@ ncncio_wait(void *ncdp,
 }
 
 int
-ncncio_set_fill(void *ncdp,
+nc4io_set_fill(void *ncdp,
                int   fill_mode,
                int  *old_fill_mode)
 {
@@ -456,7 +456,7 @@ ncncio_set_fill(void *ncdp,
 }
 
 int
-ncncio_fill_var_rec(void      *ncdp,
+nc4io_fill_var_rec(void      *ncdp,
                    int        varid,
                    MPI_Offset recno)
 {
@@ -470,7 +470,7 @@ ncncio_fill_var_rec(void      *ncdp,
 }
 
 int
-ncncio_def_var_fill(void       *ncdp,
+nc4io_def_var_fill(void       *ncdp,
                    int         varid,
                    int         no_fill,
                    const void *fill_value)
@@ -486,19 +486,20 @@ ncncio_def_var_fill(void       *ncdp,
 }
 
 int
-ncncio_sync_numrecs(void *ncdp)
+nc4io_sync_numrecs(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Not supported in NetCDF, just sync everything */
-    return ncncio_sync(ncdp);
+    /* For read only driver, we don't need sync_rec */
+    /* NetCDF does not support this natively */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }
 
 int
-ncncio_sync(void *ncdp)
+nc4io_sync(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;

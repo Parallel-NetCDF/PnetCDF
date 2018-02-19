@@ -59,10 +59,10 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 #include <mpi.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <ncncio_driver.h>
+#include <nc4io_driver.h>
 
 int
-ncncio_get_att(void         *ncdp,
+nc4io_get_att(void         *ncdp,
               int           varid,
               const char   *name,
               void         *buf,
@@ -90,7 +90,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 }
 
 int
-ncncio_get_var(void             *ncdp,
+nc4io_get_var(void             *ncdp,
               int               varid,
               const MPI_Offset *start,
               const MPI_Offset *count,

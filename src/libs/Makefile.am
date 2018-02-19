@@ -17,9 +17,11 @@ libpnetcdf_la_SOURCES =
 libpnetcdf_la_LIBADD  = ../dispatchers/libdispatchers.la
 libpnetcdf_la_LIBADD += ../drivers/common/libcommon.la
 libpnetcdf_la_LIBADD += ../drivers/ncmpio/libncmpio.la
-libpnetcdf_la_LIBADD += ../drivers/ncncio/libncncio.la
 if BUILD_DRIVER_FOO
 libpnetcdf_la_LIBADD += ../drivers/ncfoo/libncfoo.la
+endif
+if BUILD_DRIVER_NC4
+libpnetcdf_la_LIBADD += ../drivers/nc4io/libnc4io.la
 endif
 
 nodist_EXTRA_libpnetcdf_la_SOURCES = dummyc.c
