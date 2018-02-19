@@ -31,7 +31,7 @@ CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
 dnl AM_INIT_AUTOMAKE([subdir-objects])
 AM_INIT_AUTOMAKE([1.13])
-dnl enable silent rules by default 
+dnl enable silent rules by default
 AM_SILENT_RULES([yes])
 
 dnl if maintainer mode is disabled, make will *never* attempt to rebuild configure,
@@ -184,10 +184,10 @@ if test "x$MPIF77" = x && test "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
 if test "x$MPIF90" = x && test "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
 if test "x$MPIF90" = x && test "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
 
-CANDIDATE_MPICC="${MPICC} mpicc" 
-CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC" 
-CANDIDATE_MPIF77="${MPIF77} mpif77" 
-CANDIDATE_MPIF90="${MPIF90} mpif90" 
+CANDIDATE_MPICC="${MPICC} mpicc mpicc_r"
+CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC mpcxx mpc++ mpicxx_r mpiCC_r mpcxx_r mpic++_r mpc++_r"
+CANDIDATE_MPIF77="${MPIF77} mpif77 mpif77_r mpf77 mpf77_r"
+CANDIDATE_MPIF90="${MPIF90} mpif90 mpif90_r mpf90 mpf90_r mpif95 mpif95_r mpf95 mpf95_r"
 
 dnl add IBM MPI compilers
 CANDIDATE_MPICC+=" mpcc_r mpcc mpixlc_r mpixlc"
@@ -197,9 +197,9 @@ CANDIDATE_MPIF90+=" mpixlf90_r mpixlf90"
 
 dnl add IBM BGL MPI compilers
 CANDIDATE_MPICC+=" blrts_xlc mpxlc_r mpxlc"
-CANDIDATE_MPICXX+=" blrts_xlC mpxlC_r mpxlC"
-CANDIDATE_MPIF77+=" blrts_xlf mpxlf_r mpxlf"
-CANDIDATE_MPIF90+=" blrts_xlf90 mpxlf90_r mpxlf90 mpxlf95_r mpxlf95"
+CANDIDATE_MPICXX+=" blrts_xlC mpxlC_r mpxlC mpixlc++ mpxlcxx mpxlc++ mpxlCC mpixlc++_r mpxlcxx_r mpxlc++_r mpxlCC_r"
+CANDIDATE_MPIF77+=" blrts_xlf mpxlf_r mpxlf mpxlf77 mpxlf77_r mpixlf mpixlf_r"
+CANDIDATE_MPIF90+=" blrts_xlf90 mpxlf90_r mpxlf90 mpxlf95_r mpxlf95 mpixlf95 mpixlf95_r"
 
 dnl add Fujitsu MPI compilers
 CANDIDATE_MPICC+=" mpifccpx"
@@ -215,9 +215,15 @@ CANDIDATE_MPIF90+=" ftn"
 
 dnl add Intel MPI compiler wrappers
 CANDIDATE_MPICC+=" mpiicc icc"
-CANDIDATE_MPICXX+=" mpiicpc icpc"
-CANDIDATE_MPIF77+=" mpiifort mpiifc ifort"
-CANDIDATE_MPIF90+=" mpiifort mpiifc ifort"
+CANDIDATE_MPICXX+=" mpiicpc mpiicxx mpiic++ mpiiCC icpc"
+CANDIDATE_MPIF77+=" mpiifort mpiifc mpiif77 ifort"
+CANDIDATE_MPIF90+=" mpiifort mpiifc mpiif95 mpiif90 ifort"
+
+dnl add PGI MPI compiler wrappers
+CANDIDATE_MPICC+=" mpipgcc mppgcc"
+CANDIDATE_MPICXX+=" mpipgCC mppgCC"
+CANDIDATE_MPIF77+=" mpipgf77 mppgf77"
+CANDIDATE_MPIF90+=" mpipgf90 mpipgf95 mppgf90 mppgf95 "
 
 dnl find the full path of MPICC from CANDIDATE_MPICC and MPI_INSTALL
 if test "x${ac_user_MPICC}" = x ; then
@@ -700,7 +706,7 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl Checking for Fortran types also determines the Fortran name mangling
    dnl and places the value into FCALLSCSUB as the C name corresponding
-   dnl to the Fortran name SUB 
+   dnl to the Fortran name SUB
    AC_FC_FUNC(sub, [FCALLSCSUB])
 
    dnl determine the correct name mapping
@@ -709,11 +715,11 @@ if test "x${has_fortran}" = xyes ; then
            AC_DEFINE(F77_NAME_UPPER,,[Define if Fortran names are uppercase])
            ;;
        sub_)
-           dnl This is the hard case.  Gcc uses one _ unless the name includes
+           dnl This is the hard case.  gcc uses one _ unless the name includes
            dnl an underscore, in which case it gets two trailing underscores.
            dnl Use essentially the same configure code that the original configure
            dnl used to determine SUB
-           AC_MSG_CHECKING([for C-equivalent to Fortran routine "SUB_A"]) 
+           AC_MSG_CHECKING([for C-equivalent to Fortran routine "SUB_A"])
                    dnl "
            AC_FC_FUNC(sub_a, [FCALLSCSUBA])
            AC_MSG_RESULT($FCALLSCSUBA)
@@ -843,7 +849,7 @@ dnl       dnl cannot find bison or yacc required to build ncmpigentab.c
 dnl       have_yacc_lex=no
 dnl    fi
 dnl fi
-dnl 
+dnl
 dnl AC_PROG_LEX
 dnl if (test "x$LEX" != xflex) && (test "x$LEX" != xlex) ; then
 dnl    dnl cannot find flex or lex required to build ncmpigenyy.c
@@ -865,7 +871,7 @@ AC_PROG_GREP
 
 dnl YACC and LEX are required to build PnetCDF utility tool ncmpigen
 dnl if configure finds bison then YACC is set to bison -y, so we need to clean
-dnl up the output a bit before testing 
+dnl up the output a bit before testing
 dnl Below checks commands yacc and lex availability under PATH. However, this
 dnl checking is redundant, as AC_PROG_* did that already
 dnl YACC_CMD="${YACC% *}"
@@ -966,7 +972,7 @@ AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$ac_cv_sizeof_MPI_Aint = x4])
 
 dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
 dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
-dnl get mangled. 
+dnl get mangled.
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
    AC_MSG_WARN([
    -----------------------------------------------------------------------
@@ -1052,6 +1058,8 @@ UD_CHECK_MPI_DATATYPE(MPI_LONG_LONG_INT)
 UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
 UD_CHECK_MPI_DATATYPE(MPI_UB)
 UD_CHECK_MPI_DATATYPE(MPI_LB)
+dnl C data type MPI_Offset was first introduced in MPI 2.0, but MPI_OFFSET was
+dnl introduced as a predefined MPI datatype in MPI 2.2
 UD_CHECK_MPI_DATATYPE(MPI_OFFSET)
 AM_CONDITIONAL(DECL_MPI_OFFSET, [test x$ac_cv_CHECK_MPI_DATATYPE_MPI_OFFSET = xyes])
 
@@ -1135,24 +1143,24 @@ AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(unsigned long long)
 
-if test "$ac_cv_type_schar" = yes ; then 
-   AC_CHECK_SIZEOF(schar) 
-fi 
-if test "$ac_cv_type_uchar" = yes ; then 
-   AC_CHECK_SIZEOF(uchar) 
-fi 
-if test "$ac_cv_type_ushort" = yes ; then 
-   AC_CHECK_SIZEOF(ushort) 
-fi 
-if test "$ac_cv_type_uint" = yes ; then 
-   AC_CHECK_SIZEOF(uint) 
-fi 
-if test "$ac_cv_type_longlong" = yes ; then 
-   AC_CHECK_SIZEOF(longlong) 
-fi 
-if test "$ac_cv_type_ulonglong" = yes ; then 
-   AC_CHECK_SIZEOF(ulonglong) 
-fi 
+if test "$ac_cv_type_schar" = yes ; then
+   AC_CHECK_SIZEOF(schar)
+fi
+if test "$ac_cv_type_uchar" = yes ; then
+   AC_CHECK_SIZEOF(uchar)
+fi
+if test "$ac_cv_type_ushort" = yes ; then
+   AC_CHECK_SIZEOF(ushort)
+fi
+if test "$ac_cv_type_uint" = yes ; then
+   AC_CHECK_SIZEOF(uint)
+fi
+if test "$ac_cv_type_longlong" = yes ; then
+   AC_CHECK_SIZEOF(longlong)
+fi
+if test "$ac_cv_type_ulonglong" = yes ; then
+   AC_CHECK_SIZEOF(ulonglong)
+fi
 
 if test "x${has_fortran}" = xyes ; then
    if test "$cross_compiling" = yes; then
