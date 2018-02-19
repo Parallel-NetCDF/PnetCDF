@@ -52,10 +52,10 @@
 
 #include <pnc_debug.h>
 #include <common.h>
-#include <ncncio_driver.h>
+#include <nc4io_driver.h>
 
 int
-ncncio_def_var(void       *ncdp,
+nc4io_def_var(void       *ncdp,
               const char *name,
               nc_type     xtype,
               int         ndims,
@@ -72,7 +72,7 @@ ncncio_def_var(void       *ncdp,
 }
 
 int
-ncncio_inq_varid(void       *ncdp,
+nc4io_inq_varid(void       *ncdp,
                 const char *name,
                 int        *varid)
 {
@@ -87,7 +87,7 @@ ncncio_inq_varid(void       *ncdp,
 }
 
 int
-ncncio_inq_var(void       *ncdp,
+nc4io_inq_var(void       *ncdp,
               int         varid,
               char       *name,
               nc_type    *xtypep,
@@ -111,7 +111,7 @@ ncncio_inq_var(void       *ncdp,
 }
 
 int
-ncncio_rename_var(void       *ncdp,
+nc4io_rename_var(void       *ncdp,
                  int         varid,
                  const char *newname)
 {
@@ -125,11 +125,11 @@ ncncio_rename_var(void       *ncdp,
 }
 
 /* 
-ncncio_get_var is implemented iin ncmpio_get_put.m4
+nc4io_get_var is implemented iin ncmpio_get_put.m4
 */
 
 int
-ncncio_put_var(void             *ncdp,
+nc4io_put_var(void             *ncdp,
               int               varid,
               const MPI_Offset *start,
               const MPI_Offset *count,
@@ -149,7 +149,7 @@ ncncio_put_var(void             *ncdp,
 }
 
 int
-ncncio_iget_var(void             *ncdp,
+nc4io_iget_var(void             *ncdp,
                int               varid,
                const MPI_Offset *start,
                const MPI_Offset *count,
@@ -164,8 +164,8 @@ ncncio_iget_var(void             *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Call ncncio_get_varn */
-    err = ncncio_get_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
+    /* Call nc4io_get_varn */
+    err = nc4io_get_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
 
     /* TODO: Issue dummy id */
@@ -175,7 +175,7 @@ ncncio_iget_var(void             *ncdp,
 }
 
 int
-ncncio_iput_var(void             *ncdp,
+nc4io_iput_var(void             *ncdp,
                int               varid,
                const MPI_Offset *start,
                const MPI_Offset *count,
@@ -197,7 +197,7 @@ ncncio_iput_var(void             *ncdp,
 }
 
 int
-ncncio_buffer_attach(void       *ncdp,
+nc4io_buffer_attach(void       *ncdp,
                     MPI_Offset  bufsize)
 {
     int err;
@@ -210,7 +210,7 @@ ncncio_buffer_attach(void       *ncdp,
 }
 
 int
-ncncio_buffer_detach(void *ncdp)
+nc4io_buffer_detach(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
@@ -222,7 +222,7 @@ ncncio_buffer_detach(void *ncdp)
 }
 
 int
-ncncio_bput_var(void             *ncdp,
+nc4io_bput_var(void             *ncdp,
                int               varid,
                const MPI_Offset *start,
                const MPI_Offset *count,
@@ -243,7 +243,7 @@ ncncio_bput_var(void             *ncdp,
     return NC_NOERR;
 }
 int
-ncncio_get_varn(void              *ncdp,
+nc4io_get_varn(void              *ncdp,
                int                varid,
                int                num,
                MPI_Offset* const *starts,
@@ -256,9 +256,9 @@ ncncio_get_varn(void              *ncdp,
     int i, err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Call ncncio_get_var for N times */
+    /* Call nc4io_get_var for N times */
     for(i = 0; i < num; i++){
-        err = ncncio_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
+        err = nc4io_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
         if (err != NC_NOERR){
             return err;
         }
@@ -268,7 +268,7 @@ ncncio_get_varn(void              *ncdp,
 }
 
 int
-ncncio_put_varn(void              *ncdp,
+nc4io_put_varn(void              *ncdp,
                int                varid,
                int                num,
                MPI_Offset* const *starts,
@@ -288,7 +288,7 @@ ncncio_put_varn(void              *ncdp,
 }
 
 int
-ncncio_iget_varn(void               *ncdp,
+nc4io_iget_varn(void               *ncdp,
                 int                 varid,
                 int                 num,
                 MPI_Offset* const  *starts,
@@ -302,8 +302,8 @@ ncncio_iget_varn(void               *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Call ncncio_get_varn */
-    err = ncncio_get_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqMode);
+    /* Call nc4io_get_varn */
+    err = nc4io_get_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
 
     /* TODO: Issue dummy id */
@@ -313,7 +313,7 @@ ncncio_iget_varn(void               *ncdp,
 }
 
 int
-ncncio_iput_varn(void               *ncdp,
+nc4io_iput_varn(void               *ncdp,
                 int                 varid,
                 int                 num,
                 MPI_Offset* const  *starts,
@@ -334,7 +334,7 @@ ncncio_iput_varn(void               *ncdp,
 }
 
 int
-ncncio_bput_varn(void               *ncdp,
+nc4io_bput_varn(void               *ncdp,
                 int                 varid,
                 int                 num,
                 MPI_Offset* const  *starts,
@@ -355,7 +355,7 @@ ncncio_bput_varn(void               *ncdp,
 }
 
 int
-ncncio_get_vard(void         *ncdp,
+nc4io_get_vard(void         *ncdp,
                int           varid,
                MPI_Datatype  filetype,
                void         *buf,
@@ -373,7 +373,7 @@ ncncio_get_vard(void         *ncdp,
 }
 
 int
-ncncio_put_vard(void         *ncdp,
+nc4io_put_vard(void         *ncdp,
                int           varid,
                MPI_Datatype  filetype,
                const void   *buf,

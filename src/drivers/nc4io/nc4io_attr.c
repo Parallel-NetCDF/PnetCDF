@@ -31,10 +31,10 @@
 #include <mpi.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <ncncio_driver.h>
+#include <nc4io_driver.h>
 
 int
-ncncio_inq_attname(void *ncdp,
+nc4io_inq_attname(void *ncdp,
                   int   varid,
                   int   attid,
                   char *name)
@@ -50,7 +50,7 @@ ncncio_inq_attname(void *ncdp,
 }
 
 int
-ncncio_inq_attid(void       *ncdp,
+nc4io_inq_attid(void       *ncdp,
                 int         varid,
                 const char *name,
                 int        *attidp)
@@ -66,7 +66,7 @@ ncncio_inq_attid(void       *ncdp,
 }
 
 int
-ncncio_inq_att(void       *ncdp,
+nc4io_inq_att(void       *ncdp,
               int         varid,
               const char *name,
               nc_type    *datatypep,
@@ -88,7 +88,7 @@ ncncio_inq_att(void       *ncdp,
 }
 
 int
-ncncio_rename_att(void       *ncdp,
+nc4io_rename_att(void       *ncdp,
                  int         varid,
                  const char *name,
                  const char *newname)
@@ -108,7 +108,7 @@ ncncio_rename_att(void       *ncdp,
 
 
 int
-ncncio_copy_att(void       *ncdp_in,
+nc4io_copy_att(void       *ncdp_in,
                int         varid_in,
                const char *name,
                void       *ncdp_out,
@@ -129,7 +129,7 @@ ncncio_copy_att(void       *ncdp_in,
 }
 
 int
-ncncio_del_att(void       *ncdp,
+nc4io_del_att(void       *ncdp,
               int         varid,
               const char *name)
 {
@@ -148,11 +148,11 @@ ncncio_del_att(void       *ncdp,
 
 
 /* 
-ncncio_get_att is implemented iin ncmpio_get_put.m4
+nc4io_get_att is implemented iin ncmpio_get_put.m4
 */
 
 int
-ncncio_put_att(void         *ncdp,
+nc4io_put_att(void         *ncdp,
               int           varid,
               const char   *name,
               nc_type       xtype,

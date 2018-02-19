@@ -27,10 +27,10 @@
 
 #include <pnc_debug.h>
 #include <common.h>
-#include <ncncio_driver.h>
+#include <nc4io_driver.h>
 
 int
-ncncio_def_dim(void       *ncdp,
+nc4io_def_dim(void       *ncdp,
               const char *name,
               MPI_Offset  size,
               int        *dimidp)
@@ -45,7 +45,7 @@ ncncio_def_dim(void       *ncdp,
 }
 
 int
-ncncio_inq_dimid(void       *ncdp,
+nc4io_inq_dimid(void       *ncdp,
                 const char *name,
                 int        *dimid)
 {
@@ -60,7 +60,7 @@ ncncio_inq_dimid(void       *ncdp,
 }
 
 int
-ncncio_inq_dim(void       *ncdp,
+nc4io_inq_dim(void       *ncdp,
               int         dimid,
               char       *name,
               MPI_Offset *sizep)
@@ -81,7 +81,7 @@ ncncio_inq_dim(void       *ncdp,
 }
 
 int
-ncncio_rename_dim(void       *ncdp,
+nc4io_rename_dim(void       *ncdp,
                  int         dimid,
                  const char *newname)
 {

@@ -109,6 +109,7 @@ AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
+AH_TEMPLATE([BUILD_DRIVER_NC4],         [Define if to enable NetCDF4 feature])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
@@ -1293,6 +1294,21 @@ fi
 AC_SUBST(ENABLE_SUBFILING)
 AM_CONDITIONAL(ENABLE_SUBFILING, [test x$enable_subfiling = xyes])
 
+
+AC_ARG_ENABLE([netcdf4],
+   [AS_HELP_STRING([--enable-netcdf4],
+                   [Enable NetCDF4 support. @<:@default: disabled@:>@])],
+   [enable_netcdf4=${enableval}], [enable_netcdf4=no]
+)
+
+BUILD_DRIVER_NC4=0
+if test "x$enable_netcdf4" = "xyes" ; then
+   AC_DEFINE(BUILD_DRIVER_NC4)
+   BUILD_DRIVER_NC4=1
+fi
+AC_SUBST(BUILD_DRIVER_NC4)
+AM_CONDITIONAL(BUILD_DRIVER_NC4, [test x$enable_netcdf4 = xyes])
+
 AC_ARG_ENABLE([erange-fill],
    [AS_HELP_STRING([--disable-erange-fill],
                    [Disable use of fill value when out-of-range type
@@ -1446,7 +1462,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/common/Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
-                src/drivers/ncncio/Makefile \
+                src/drivers/nc4io/Makefile \
                 src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
                 src/binding/cxx/Makefile \
