@@ -189,6 +189,12 @@ CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC mpcxx mpc++ mpicxx_r mpiCC_r mpc
 CANDIDATE_MPIF77="${MPIF77} mpif77 mpif77_r mpf77 mpf77_r"
 CANDIDATE_MPIF90="${MPIF90} mpif90 mpif90_r mpf90 mpf90_r mpif95 mpif95_r mpf95 mpf95_r"
 
+dnl add GNU MPI compilers
+CANDIDATE_MPICC+=" mpigcc mpgcc mpigcc_r mpgcc_r"
+CANDIDATE_MPICXX+=" mpig++ mpg++ mpig++_r mpg++_r"
+CANDIDATE_MPIF77+=" mpig77 mpig77_r mpg77 mpg77_r"
+CANDIDATE_MPIF90+=" mpigfortran mpgfortran mpigfortran_r mpgfortran_r"
+
 dnl add IBM MPI compilers
 CANDIDATE_MPICC+=" mpcc_r mpcc mpixlc_r mpixlc"
 CANDIDATE_MPICXX+=" mpCC_r mpCC mpixlcxx_r mpixlcxx mpixlC_r mpixlC"
