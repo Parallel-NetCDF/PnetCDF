@@ -14,10 +14,9 @@ C_SUBDIRS = common \
             header \
             testcases \
             nonblocking \
-            largefile \
-			cdf4
+            largefile 
 
-DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile cdf4
+DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile
 
 SUBDIRS = $(C_SUBDIRS)
 
@@ -34,6 +33,10 @@ endif
 
 if ENABLE_SUBFILING
 SUBDIRS += subfile
+endif
+
+if BUILD_DRIVER_NC4
+SUBDIRS += nc4
 endif
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
