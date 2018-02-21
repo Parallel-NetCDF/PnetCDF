@@ -158,7 +158,6 @@ int main(int argc, char** argv)
     for (i=0; i<len; i++) buf0[i] = 50+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf0, &req[0]);
     CHECK_ERR
-    for (i=0; i<len; i++) CHECK_CONTENTS(buf0, 50 + i)
 
     /* write 1 x 3 elements */
     start[0] = 1; start[1] = 8;
@@ -168,7 +167,6 @@ int main(int argc, char** argv)
     for (i=0; i<len; i++) buf1[i] = 60+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf1, &req[1]);
     CHECK_ERR
-    for (i=0; i<len; i++) CHECK_CONTENTS(buf1, 60 + i)
 
     /* write 1 x 3 elements */
     start[0] = 3; start[1] = 7;
@@ -178,7 +176,6 @@ int main(int argc, char** argv)
     for (i=0; i<len; i++) buf2[i] = 70+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf2, &req[2]);
     CHECK_ERR
-    for (i=0; i<len; i++) CHECK_CONTENTS(buf2, 70 + i)
 
     err = ncmpi_wait_all(ncid, 3, req, st); CHECK_ERR
     free(buf0); free(buf1); free(buf2);
