@@ -1309,65 +1309,55 @@ fi
 AC_SUBST(BUILD_DRIVER_NC4)
 AM_CONDITIONAL(BUILD_DRIVER_NC4, [test x$enable_netcdf4 = xyes])
 
-NETCDF_INSTALL=""
-AC_ARG_WITH(netcdf,
-    [AS_HELP_STRING([--with-netcdf=/path/to/implementation],
-                    [installation prefix for NetCDF implementation])],
-    if test "x${withval}" = xyes; then
-        AC_MSG_ERROR(--with-netcdf must be given a pathname)
-    else
-        NETCDF_INSTALL=${withval}
-    fi
-)
-if test "x${NETCDF_INSTALL}" != x ; then
-    AC_MSG_CHECKING(NetCDF library)
-    CPPFLAGS+=" -I${NETCDF_INSTALL}/include"
-    LDFLAGS+=" -L${NETCDF_INSTALL}/lib"
-    LIBS+=" -lnetcdf"
-fi
-
-have_netcdf=yes
-#AC_SEARCH_LIBS([nc_create_par], [netcdf], [have_netcdf=yes])
-if test "x${have_netcdf}" = xyes; then
-    AC_CHECK_HEADERS([netcdf.h], [], [have_netcdf=no])
-fi
-
-HDF5_INSTALL=""
-AC_ARG_WITH(hdf5,
-    [AS_HELP_STRING([--with-hdf5=/path/to/implementation],
-                    [installation prefix for NetCDF implementation])],
-    if test "x${withval}" = xyes; then
-        AC_MSG_ERROR(--with-hdf5 must be given a pathname)
-    else
-        HDF5_INSTALL=${withval}
-    fi
-)
-if test "x${HDF5_INSTALL}" != x ; then
-    AC_MSG_CHECKING(HDF5 library)
-    CPPFLAGS+=" -I${HDF5_INSTALL}/include"
-    LDFLAGS+=" -L${HDF5_INSTALL}/lib"
-    LIBS+=" -lhdf5"
-fi
-
-have_hdf5=yes
-#AC_SEARCH_LIBS([H5Dcreate], [hdf5], [have_hdf5=yes])
-if test "x${have_hdf5}" = xyes; then
-    AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
-fi
-
 if test "x$enable_netcdf4" = "xyes" ; then
-    if test "x${have_netcdf}" = xno; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        The NetCDF library and header file are required to build
-        PnetCDF with NetCDF 4 support. Use option
-            --with-netcdf=/path/to/implementation
-        to specify the location of NetCDF build. In addition,
-        please make sure the MPI C compiler is compatible with the
-        one used to build NetCDF. The NetCDF library used must be built with NetCDF 4 support.
-        Stopping ...
-        Check 'config.log' for more information.
-        ------------------------------------------------------------])
+    HDF5_INSTALL=""
+    AC_ARG_WITH(hdf5,
+        [AS_HELP_STRING([--with-hdf5=/path/to/implementation],
+                        [installation prefix for NetCDF implementation])],
+        if test "x${withval}" = xyes; then
+            AC_MSG_ERROR(--with-hdf5 must be given a pathname)
+        else
+            HDF5_INSTALL=${withval}
+        fi
+    )
+
+    NETCDF_INSTALL=""
+    AC_ARG_WITH(netcdf,
+        [AS_HELP_STRING([--with-netcdf=/path/to/implementation],
+                        [installation prefix for NetCDF implementation])],
+        if test "x${withval}" = xyes; then
+            AC_MSG_ERROR(--with-netcdf must be given a pathname)
+        else
+            NETCDF_INSTALL=${withval}
+        fi
+    )
+
+    if test "x${NETCDF_INSTALL}" != x ; then 
+        CPPFLAGS+=" -I${NETCDF_INSTALL}/include"
+        LDFLAGS+=" -L${NETCDF_INSTALL}/lib"
+        LIBS+=" -lnetcdf"
+    fi
+
+    if test "x${HDF5_INSTALL}" != x ; then
+        CPPFLAGS+=" -I${HDF5_INSTALL}/include"
+        LDFLAGS+=" -L${HDF5_INSTALL}/lib"
+        LIBS+=" -lhdf5 -lhdf5_hl"
+    fi
+
+    LIBS+=" -lm"
+
+    have_hdf5=no
+    AC_MSG_CHECKING(HDF5 library)
+    AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [have_hdf5=yes], [have_hdf5=no])
+    if test "x${have_hdf5}" = xyes; then
+        AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
+    fi
+
+    have_netcdf=no
+    AC_MSG_CHECKING(NetCDF library)
+    AC_SEARCH_LIBS([nc_create_par], [netcdf], [have_netcdf=yes], [have_netcdf=no])
+    if test "x${have_netcdf}" = xyes; then
+        AC_CHECK_HEADERS([netcdf.h], [], [have_netcdf=no])
     fi
 
     if test "x${have_hdf5}" = xno; then
@@ -1379,6 +1369,20 @@ if test "x$enable_netcdf4" = "xyes" ; then
         to specify the location of HDF5 build. In addition,
         please make sure the MPI C compiler is compatible with the
         one used to build NetCDF. The HDF5 library used must be built with parallel support.
+        Stopping ...
+        Check 'config.log' for more information.
+        ------------------------------------------------------------])
+    fi
+
+    if test "x${have_netcdf}" = xno; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        The NetCDF library and header file are required to build
+        PnetCDF with NetCDF 4 support. Use option
+            --with-netcdf=/path/to/implementation
+        to specify the location of NetCDF build. In addition,
+        please make sure the MPI C compiler is compatible with the
+        one used to build NetCDF. The NetCDF library used must be built with NetCDF 4 support.
         Stopping ...
         Check 'config.log' for more information.
         ------------------------------------------------------------])
@@ -1609,7 +1613,8 @@ echo \
    Features:  Build static libraries                      - ${enable_static}
               Build shared libraries                      - ${enable_shared}
               Build Fortran APIs                          - ${has_fortran}
-              Build C++ APIs                              - ${has_mpicxx}"
+              Build C++ APIs                              - ${has_mpicxx}
+              Build NetCDF4 support                       - ${enable_netcdf4}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
               Request aggregation in nonblocking APIs     - OFF"
