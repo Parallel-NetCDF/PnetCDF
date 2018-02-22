@@ -63,7 +63,7 @@ enable_large_req="@ENABLE_LARGE_REQ@"
 enable_null_byte_header_padding="@ENABLE_NULL_BYTE_HEADER_PADDING@"
 enable_relax_coord_bound="@RELAX_COORD_BOUND@"
 is_bigendian="@ac_cv_c_bigendian@"
-enable_in_place_swap="@in_place_swap@"
+in_place_swap="@in_place_swap@"
 
 config_date="@CONFIG_DATE@"
 release_date="PNETCDF_RELEASE_DATE"
@@ -140,10 +140,14 @@ if test "x$enable_relax_coord_bound" = x1; then
 else
         echo "  --relax-coord-bound         -> disabled"
 fi
-if test "x$is_bigendian" = xno  && (test "x$enable_in_place_swap" = xno) ; then
+if test "x$is_bigendian" = xno ; then
+    if test "x$in_place_swap" = xno ; then
         echo "  --in-place-swap             -> disabled"
-else
+    elif test "x$in_place_swap" = xyes ; then
         echo "  --in-place-swap             -> enabled"
+    else
+        echo "  --in-place-swap             -> auto"
+    fi
 fi
 if test "x$enable_erange_fill" = x0; then
         echo "  --erange-fill               -> disabled"
@@ -283,10 +287,14 @@ fi
         ;;
 
     --in-place-swap)
-if test "x$is_bigendian" = xno  && (test "x$enable_in_place_swap" = xno) ; then
+if test "x$is_bigendian" = xno ; then
+   if test "x$in_place_swap" = xno ; then
         echo "disabled"
-else
+   elif test "x$in_place_swap" = xyes ; then
         echo "enabled"
+   else
+        echo "auto"
+   fi
 fi
         ;;
 

@@ -107,6 +107,7 @@ AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
+AH_TEMPLATE([ENABLE_IN_PLACE_SWAP],     [Define if to enable in-place byte swap])
 AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
@@ -1099,13 +1100,15 @@ AC_C_BIGENDIAN
 AM_CONDITIONAL(IS_BIGENDIAN, [test x$ac_cv_c_bigendian = xyes])
 AC_SUBST(ac_cv_c_bigendian)dnl for src/utils/pnetcdf-config.in
 
-in_place_swap=yes
 AC_ARG_ENABLE([in-place-swap],
-    [AS_HELP_STRING([--disable-in-place-swap],
-                    [Disable memory in-place byte swap on Little Endian
-                     machines. @<:@default: enabled@:>@])],
-    [in_place_swap=${enableval}], [in_place_swap=yes]
+    [AS_HELP_STRING([--(en/dis)able-in-place-swap],
+                    [Enable/disable memory in-place byte swap on Little Endian
+                     machines. @<:@default: auto@:>@])],
+    [in_place_swap=${enableval}], [in_place_swap=auto]
 )
+if test "x${in_place_swap}" = xyes ; then
+   AC_DEFINE(ENABLE_IN_PLACE_SWAP)
+fi
 if test "x${in_place_swap}" = xno ; then
    if test "x${ac_cv_c_bigendian}" = xyes ; then
       AC_MSG_WARN([--disable-in-place-swap takes no effect on Big Endian])
@@ -1114,6 +1117,7 @@ if test "x${in_place_swap}" = xno ; then
       AC_DEFINE(DISABLE_IN_PLACE_SWAP)
    fi
 fi
+dnl in_place_swap can be yes, no, auto
 AC_SUBST(in_place_swap)dnl for src/utils/pnetcdf-config.in
 
 dnl For big Endian, put buffer needs no byte swap and hence can be declared as
@@ -1555,9 +1559,14 @@ if test "x${enable_relax_coord_bound}" = xyes; then
    echo "\
               Relax start coordinate bound check          - ON"
 fi
-if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
-   echo "\
+if test "x${ac_cv_c_bigendian}" = xno ; then
+   if test "x${in_place_swap}" = xno ; then
+      echo "\
               Memory in-place byte swap                   - OFF"
+   elif test "x${in_place_swap}" = xyes ; then
+      echo "\
+              Memory in-place byte swap                   - ON"
+   fi
 fi
 if test "x${large_file_test}" = xyes; then
    echo "\

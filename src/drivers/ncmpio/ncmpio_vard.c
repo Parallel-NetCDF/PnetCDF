@@ -227,16 +227,17 @@ getput_vard(NC               *ncp,
     need_swap = ncmpii_need_swap(varp->xtype, ptype);
     if (need_swap) {
         if (fIsSet(reqMode, NC_REQ_WR)) {
-#ifdef DISABLE_IN_PLACE_SWAP
-            if (cbuf == buf)
-#else
-            if (cbuf == buf && filetype_size <= NC_BYTE_SWAP_BUFFER_SIZE)
+#ifndef ENABLE_IN_PLACE_SWAP
+            if (cbuf == buf
+#ifndef DISABLE_IN_PLACE_SWAP
+                && filetype_size <= NC_BYTE_SWAP_BUFFER_SIZE
 #endif
-            {
+            ) {
                 /* allocate cbuf and copy buf to cbuf, cbuf is to be freed */
                 cbuf = NCI_Malloc((size_t)filetype_size);
                 memcpy(cbuf, buf, (size_t)filetype_size);
             }
+#endif
             /* perform array in-place byte swap on cbuf */
             ncmpii_in_swapn(cbuf, bnelems, varp->xsz);
             is_buf_swapped = (cbuf == buf) ? 1 : 0;

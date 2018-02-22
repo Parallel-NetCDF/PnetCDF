@@ -363,11 +363,15 @@ ncmpii_put_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
     nbytes = (size_t)(nelems * xsz);
 
     /* allocate xbuf if necessary */
-    if (need_cast || (need_swap && !isNewBuf
+    if (need_cast
+#ifndef ENABLE_IN_PLACE_SWAP
+        || (need_swap && !isNewBuf
 #ifndef DISABLE_IN_PLACE_SWAP
-        && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE
+            && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE
 #endif
-        )) {
+           )
+#endif
+        ) {
         *xbuf = NCI_Malloc(nbytes);
         if (*xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
