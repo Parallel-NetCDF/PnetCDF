@@ -20,9 +20,9 @@
 #define FILE_ALIGNMENT_DEFAULT 512
 #define FILE_ALIGNMENT_LB      4
 
-/* define MPI_OFFSET if not defined */
+/* MPI_OFFSET datatype was introduced in MPI 2.2 */
 #ifndef HAVE_DECL_MPI_OFFSET
-    #ifdef HAVE_DECL_MPI_LONG_LONG_INT
+    #if SIZEOF_MPI_OFFSET ==  SIZEOF_MPI_LONG_LONG_INT
         #define MPI_OFFSET MPI_LONG_LONG_INT
     #else
         #define MPI_OFFSET MPI_INT

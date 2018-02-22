@@ -168,11 +168,11 @@ put_varm(NC               *ncp,
     err = ncmpii_create_imaptype(varp->ndims, count, imap, itype, &imaptype);
     if (err != NC_NOERR) goto err_check;
 
-    if (!buftype_is_contig || imaptype != MPI_DATATYPE_NULL || need_convert ||
+    if (!buftype_is_contig || imaptype != MPI_DATATYPE_NULL || need_convert
 #ifdef DISABLE_IN_PLACE_SWAP
-        need_swap
-#else
-        nbytes <= NC_BYTE_SWAP_BUFFER_SIZE
+        || need_swap
+#elif ! defined(ENABLE_IN_PLACE_SWAP)
+        || (need_swap && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE)
 #endif
     ) {
         xbuf = NCI_Malloc((size_t)nbytes);

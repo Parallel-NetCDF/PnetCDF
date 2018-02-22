@@ -11,6 +11,22 @@ This is essentially a placeholder for the next release note ...
   o New Limitations
     * none
 
+  o Update configure options
+    * Option in-place byte-swap is expanded into the followings.
+      --enable-in-place-swap : perform byte swap on user I/O buffers whenever
+      possible. This option results in the least amount of internal memory
+      usage. However, if an immutable user buffer is used, segmentation fault
+      may occur when byte swap is performed on user buffer in place.
+      --disable-in-place-swap : when byte swap is required, an internal memory
+      space will be allocated for byte swap without altering the contents of
+      user buffer. This option will increase internal memory footprint.
+      default (neither the above option is used at the command line): an
+      internal buffer is allocated for byte swap only when the I/O request size
+      is less than 4 KiB. For larger requests, user buffers are used for
+      in-place byte swap.
+      Note -in-place-swap option only affect applications running on Little
+      Endian machines, as no byte swap is necessary on Big Endian machines.
+
   o New constants
     * none
 
