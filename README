@@ -41,8 +41,11 @@ Requirements:
 
 Build recipes:
     The process of building and installation of PnetCDF library is usually
-    simple: by just running commands "./configure" and "make install". Several
-    configure options are also available to customize it.
+    simple: by just running commands "./configure", "make", and "make install".
+    (If more than one set of MPI compilers are available on your system, adding
+    option --with-mpi=/path/to/MPI/install to the configure command line is
+    recommended.) Several configure options are also available to customize it.
+    See INSTALL for more information.
 
     Several machine- and compiler-specific build recipes are available under
     the directory of doc.
