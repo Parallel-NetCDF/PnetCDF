@@ -160,7 +160,7 @@ put_varm(NC               *ncp,
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
-    need_swap    = ncmpii_need_swap(varp->xtype, itype);
+    need_swap    = NEED_BYTE_SWAP(varp->xtype, itype);
 
     /* check whether this is a true varm call, if yes, imaptype will be a
      * newly created MPI derived data type, otherwise MPI_DATATYPE_NULL
@@ -410,7 +410,7 @@ get_varm(NC               *ncp,
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
-    need_swap    = ncmpii_need_swap(varp->xtype, itype);
+    need_swap    = NEED_BYTE_SWAP(varp->xtype, itype);
 
     /* Check if this is a true varm call. If yes, construct a derived
      * datatype, imaptype.

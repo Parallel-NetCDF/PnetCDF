@@ -95,7 +95,9 @@ ncmpii_need_convert(int          format, /* 1, 2, or 5 (CDF format number) */
     if (format < NC_FORMAT_CDF5 &&
         xtype == NC_BYTE && itype == MPI_UNSIGNED_CHAR) return 0;
 
-    if (itype == MPI_LONG && SIZEOF_LONG == SIZEOF_INT) itype = MPI_INT;
+#if SIZEOF_LONG == SIZEOF_INT
+    if (itype == MPI_LONG) itype = MPI_INT;
+#endif
 
     return !( (xtype == NC_BYTE   && itype == MPI_SIGNED_CHAR)    ||
               (xtype == NC_SHORT  && itype == MPI_SHORT)          ||
@@ -108,23 +110,6 @@ ncmpii_need_convert(int          format, /* 1, 2, or 5 (CDF format number) */
               (xtype == NC_INT64  && itype == MPI_LONG_LONG_INT)  ||
               (xtype == NC_UINT64 && itype == MPI_UNSIGNED_LONG_LONG)
             );
-}
-
-/*----< ncmpii_need_swap() >-------------------------------------------------*/
-int
-ncmpii_need_swap(nc_type      xtype,  /* external NC type */
-                 MPI_Datatype itype)  /* internal MPI type */
-{
-#ifdef WORDS_BIGENDIAN
-    return 0;
-#else
-    if ((xtype == NC_CHAR  && itype == MPI_CHAR)           ||
-        (xtype == NC_BYTE  && itype == MPI_SIGNED_CHAR)    ||
-        (xtype == NC_UBYTE && itype == MPI_UNSIGNED_CHAR))
-        return 0;
-
-    return 1;
-#endif
 }
 
 /* Other options to in-place byte-swap
@@ -357,7 +342,7 @@ ncmpii_put_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
 
     /* check if type casting and Endianness byte swap are needed */
     need_cast = ncmpii_need_convert(format, xtype, itype);
-    need_swap = ncmpii_need_swap(xtype, itype);
+    need_swap = NEED_BYTE_SWAP(xtype, itype);
 
     ncmpii_xlen_nc_type(xtype, &xsz);
     nbytes = (size_t)(nelems * xsz);
@@ -514,7 +499,7 @@ ncmpii_get_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
         }
     }
     else { /* no need to convert */
-        if (ncmpii_need_swap(xtype, itype)) /* check if need byte swap */
+        if (NEED_BYTE_SWAP(xtype, itype)) /* check if need byte swap */
             ncmpii_in_swapn(xbuf, nelems, xsz);
         *ibuf = xbuf;
     }
