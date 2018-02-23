@@ -224,7 +224,7 @@ getput_vard(NC               *ncp,
     }
 
     /* Check if we need byte swap cbuf in-place or (into cbuf) */
-    need_swap = ncmpii_need_swap(varp->xtype, ptype);
+    need_swap = NEED_BYTE_SWAP(varp->xtype, ptype);
     if (need_swap) {
         if (fIsSet(reqMode, NC_REQ_WR)) {
 #ifndef ENABLE_IN_PLACE_SWAP
