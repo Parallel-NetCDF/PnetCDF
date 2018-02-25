@@ -1313,7 +1313,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
     HDF5_INSTALL=""
     AC_ARG_WITH(hdf5,
         [AS_HELP_STRING([--with-hdf5=/path/to/implementation],
-                        [installation prefix for NetCDF implementation])],
+                        [installation prefix for HDF5 implementation])],
         if test "x${withval}" = xyes; then
             AC_MSG_ERROR(--with-hdf5 must be given a pathname)
         else
@@ -1613,8 +1613,7 @@ echo \
    Features:  Build static libraries                      - ${enable_static}
               Build shared libraries                      - ${enable_shared}
               Build Fortran APIs                          - ${has_fortran}
-              Build C++ APIs                              - ${has_mpicxx}
-              Build NetCDF4 support                       - ${enable_netcdf4}"
+              Build C++ APIs                              - ${has_mpicxx}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
               Request aggregation in nonblocking APIs     - OFF"
@@ -1626,6 +1625,10 @@ fi
 if test "x${enable_subfiling}" = xyes; then
    echo "\
               Build subfiling support                     - ON"
+fi
+if test "x${enable_netcdf4}" = xyes; then
+   echo "\
+              Build NetCDF4 support                     - ON"
 fi
 if test "x${enable_relax_coord_bound}" = xyes; then
    echo "\
