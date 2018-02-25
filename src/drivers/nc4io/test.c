@@ -5,8 +5,6 @@
  */
 /* $Id$ */
 
-
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -33,41 +31,29 @@ nc4io_get_att(void         *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Call nc_del_att_<type> */
-    if (buftype == MPI_CHAR){
-        err = nc_get_att_char(nc4p->ncid, varid, name, (char*) buf);
-    }
-    else if (buftype == MPI_SIGNED_CHAR){
-        err = nc_get_att_schar(nc4p->ncid, varid, name, (char*) buf);
-    }
-    else if (buftype == MPI_UNSIGNED_CHAR){
-        err = nc_get_att_uchar(nc4p->ncid, varid, name, (unsigned char*) buf);
-    }
-    else if (buftype == MPI_SHORT){
-        err = nc_get_att_short(nc4p->ncid, varid, name, (short*) buf);
-    }
-    else if (buftype == MPI_UNSIGNED_SHORT){
-        err = nc_get_att_ushort(nc4p->ncid, varid, name, (unsigned short*) buf);
-    }
-    else if (buftype == MPI_INT){
-        err = nc_get_att_int(nc4p->ncid, varid, name, (int*) buf);
-    }
-    else if (buftype == MPI_UNSIGNED){
-        err = nc_get_att_uint(nc4p->ncid, varid, name, (unsigned int*) buf);
-    }
-    else if (buftype == MPI_FLOAT){
-        err = nc_get_att_float(nc4p->ncid, varid, name, (float*) buf);
-    }
-    else if (buftype == MPI_DOUBLE){
-        err = nc_get_att_double(nc4p->ncid, varid, name, (double*) buf);
-    }
-    else if (buftype == MPI_LONG_LONG_INT){
-        err = nc_get_att_longlong(nc4p->ncid, varid, name, (long long*) buf);
-    }
-    else if (buftype == MPI_UNSIGNED_LONG_LONG){
-        err = nc_get_att_ulonglong(nc4p->ncid, varid, name, (unsigned long long*) buf);
-    }
-            }
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+foreach(dt, ((`MPI_CHAR', `text', `char'),                (`MPI_SIGNED_CHAR', `schar', `char'),                (`MPI_UNSIGNED_CHAR', `uchar', `unsigned char'),                (`MPI_SHORT', `short', `short'),                (`MPI_UNSIGNED_SHORT', `ushort', `unsigned short'),                (`MPI_INT', `int', `int'),                (`MPI_UNSIGNED', `uint', `unsigned int'),                (`MPI_FLOAT', `float', `float'),                (`MPI_DOUBLE', `double', `double'),                (`MPI_LONG_LONG_INT', `longlong', `long long'),                (`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long'),                ), GETATTTYPE(translit(dt, `()')))    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+    return NC_NOERR;
+}
+
+int
+nc4io_put_att(void         *ncdp,
+              int           varid,
+              const char   *name,
+              nc_type       xtype,
+              MPI_Offset    nelems,
+              void         *buf,
+              MPI_Datatype  itype)
+{
+    int err;
+    size_t len;
+    NC_nc4 *nc4p = (NC_nc4*)ncdp;
+    
+    /* Convert from MPI_Offset to size_t */
+    len = (size_t)nelems;
+
+    /* Call nc_del_att_<type> */
+foreach(dt, ((`MPI_CHAR', `text', `char'),                (`MPI_SIGNED_CHAR', `schar', `char'),                (`MPI_UNSIGNED_CHAR', `uchar', `unsigned char'),                (`MPI_SHORT', `short', `short'),                (`MPI_UNSIGNED_SHORT', `ushort', `unsigned short'),                (`MPI_INT', `int', `int'),                (`MPI_UNSIGNED', `uint', `unsigned int'),                (`MPI_FLOAT', `float', `float'),                (`MPI_DOUBLE', `double', `double'),                (`MPI_LONG_LONG_INT', `longlong', `long long'),                (`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long'),                ), PUTATTTYPE(translit(dt, `()')))    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
 }
@@ -104,182 +90,7 @@ nc4io_get_var(void             *ncdp,
         apikind = NC4_API_KIND_VARM;
     }
 
-    if (apikind == NC4_API_KIND_VAR){
-        if (buftype == MPI_CHAR){
-            err = nc_get_var_char(nc4p->ncid, varid, (char*) buf);
-        }
-        else if (buftype == MPI_SIGNED_CHAR){
-            err = nc_get_var_schar(nc4p->ncid, varid, (char*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_CHAR){
-            err = nc_get_var_uchar(nc4p->ncid, varid, (unsigned char*) buf);
-        }
-        else if (buftype == MPI_SHORT){
-            err = nc_get_var_short(nc4p->ncid, varid, (short*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_SHORT){
-            err = nc_get_var_ushort(nc4p->ncid, varid, (unsigned short*) buf);
-        }
-        else if (buftype == MPI_INT){
-            err = nc_get_var_int(nc4p->ncid, varid, (int*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED){
-            err = nc_get_var_uint(nc4p->ncid, varid, (unsigned int*) buf);
-        }
-        else if (buftype == MPI_FLOAT){
-            err = nc_get_var_float(nc4p->ncid, varid, (float*) buf);
-        }
-        else if (buftype == MPI_DOUBLE){
-            err = nc_get_var_double(nc4p->ncid, varid, (double*) buf);
-        }
-        else if (buftype == MPI_LONG_LONG_INT){
-            err = nc_get_var_longlong(nc4p->ncid, varid, (long long*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_LONG_LONG){
-            err = nc_get_var_ulonglong(nc4p->ncid, varid, (unsigned long long*) buf);
-        }
-    }
-    else if (apikind == NC4_API_KIND_VAR1){
-        if (buftype == MPI_CHAR){
-            err = nc_get_var1_char(nc4p->ncid, varid, (stze_t)start, (char*) buf);
-        }
-        else if (buftype == MPI_SIGNED_CHAR){
-            err = nc_get_var1_schar(nc4p->ncid, varid, (stze_t)start, (char*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_CHAR){
-            err = nc_get_var1_uchar(nc4p->ncid, varid, (stze_t)start, (unsigned char*) buf);
-        }
-        else if (buftype == MPI_SHORT){
-            err = nc_get_var1_short(nc4p->ncid, varid, (stze_t)start, (short*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_SHORT){
-            err = nc_get_var1_ushort(nc4p->ncid, varid, (stze_t)start, (unsigned short*) buf);
-        }
-        else if (buftype == MPI_INT){
-            err = nc_get_var1_int(nc4p->ncid, varid, (stze_t)start, (int*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED){
-            err = nc_get_var1_uint(nc4p->ncid, varid, (stze_t)start, (unsigned int*) buf);
-        }
-        else if (buftype == MPI_FLOAT){
-            err = nc_get_var1_float(nc4p->ncid, varid, (stze_t)start, (float*) buf);
-        }
-        else if (buftype == MPI_DOUBLE){
-            err = nc_get_var1_double(nc4p->ncid, varid, (stze_t)start, (double*) buf);
-        }
-        else if (buftype == MPI_LONG_LONG_INT){
-            err = nc_get_var1_longlong(nc4p->ncid, varid, (stze_t)start, (long long*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_LONG_LONG){
-            err = nc_get_var1_ulonglong(nc4p->ncid, varid, (stze_t)start, (unsigned long long*) buf);
-        }
-    }
-    else if (apikind == NC4_API_KIND_VARA){
-        if (buftype == MPI_CHAR){
-            err = nc_get_vara_char(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (char*) buf);
-        }
-        else if (buftype == MPI_SIGNED_CHAR){
-            err = nc_get_vara_schar(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (char*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_CHAR){
-            err = nc_get_vara_uchar(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (unsigned char*) buf);
-        }
-        else if (buftype == MPI_SHORT){
-            err = nc_get_vara_short(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (short*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_SHORT){
-            err = nc_get_vara_ushort(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (unsigned short*) buf);
-        }
-        else if (buftype == MPI_INT){
-            err = nc_get_vara_int(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (int*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED){
-            err = nc_get_vara_uint(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (unsigned int*) buf);
-        }
-        else if (buftype == MPI_FLOAT){
-            err = nc_get_vara_float(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (float*) buf);
-        }
-        else if (buftype == MPI_DOUBLE){
-            err = nc_get_vara_double(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (double*) buf);
-        }
-        else if (buftype == MPI_LONG_LONG_INT){
-            err = nc_get_vara_longlong(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (long long*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_LONG_LONG){
-            err = nc_get_vara_ulonglong(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (unsigned long long*) buf);
-        }
-    }
-    else if (apikind == NC4_API_KIND_VARS){
-        if (buftype == MPI_CHAR){
-            err = nc_get_vars_char(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (char*) buf);
-        }
-        else if (buftype == MPI_SIGNED_CHAR){
-            err = nc_get_vars_schar(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (char*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_CHAR){
-            err = nc_get_vars_uchar(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (unsigned char*) buf);
-        }
-        else if (buftype == MPI_SHORT){
-            err = nc_get_vars_short(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (short*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_SHORT){
-            err = nc_get_vars_ushort(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (unsigned short*) buf);
-        }
-        else if (buftype == MPI_INT){
-            err = nc_get_vars_int(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (int*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED){
-            err = nc_get_vars_uint(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (unsigned int*) buf);
-        }
-        else if (buftype == MPI_FLOAT){
-            err = nc_get_vars_float(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (float*) buf);
-        }
-        else if (buftype == MPI_DOUBLE){
-            err = nc_get_vars_double(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (double*) buf);
-        }
-        else if (buftype == MPI_LONG_LONG_INT){
-            err = nc_get_vars_longlong(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (long long*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_LONG_LONG){
-            err = nc_get_vars_ulonglong(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (unsigned long long*) buf);
-        }
-    }
-    else if (apikind == NC4_API_KIND_VARM){
-        if (buftype == MPI_CHAR){
-            err = nc_get_varm_char(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (char*) buf);
-        }
-        else if (buftype == MPI_SIGNED_CHAR){
-            err = nc_get_varm_schar(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (char*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_CHAR){
-            err = nc_get_varm_uchar(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (unsigned char*) buf);
-        }
-        else if (buftype == MPI_SHORT){
-            err = nc_get_varm_short(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (short*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_SHORT){
-            err = nc_get_varm_ushort(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (unsigned short*) buf);
-        }
-        else if (buftype == MPI_INT){
-            err = nc_get_varm_int(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (int*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED){
-            err = nc_get_varm_uint(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (unsigned int*) buf);
-        }
-        else if (buftype == MPI_FLOAT){
-            err = nc_get_varm_float(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (float*) buf);
-        }
-        else if (buftype == MPI_DOUBLE){
-            err = nc_get_varm_double(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (double*) buf);
-        }
-        else if (buftype == MPI_LONG_LONG_INT){
-            err = nc_get_varm_longlong(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (long long*) buf);
-        }
-        else if (buftype == MPI_UNSIGNED_LONG_LONG){
-            err = nc_get_varm_ulonglong(nc4p->ncid, varid, (stze_t)start, (stze_t)count, (size_t)stride, (size_t)imap, (unsigned long long*) buf);
-        }
-    }
-     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+foreach(api, (var, var1, vara, vars, varm), GETVAR(api, upcase(api)))     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
 }

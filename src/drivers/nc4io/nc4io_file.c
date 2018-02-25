@@ -57,12 +57,17 @@ nc4io_create(MPI_Comm     comm,
              MPI_Info     info,
              void       **ncpp)  /* OUT */
 {
-    int err;
-    void *ncp=NULL;
+    int err, format;
+    int ncidtmp;
     NC_nc4 *nc4p;
 
     /* TODO: support NC4 write */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+
+    /* Create with netcdf */
+    err = nc_create_par(path, cmode | NC_NETCDF4 | NC_MPIIO, comm,
+             info, &ncidtmp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Create a NC_nc4 object and save its driver pointer */
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
@@ -78,6 +83,7 @@ nc4io_create(MPI_Comm     comm,
     nc4p->flag   = 0;
     nc4p->ncid  = ncid;
     nc4p->comm   = comm;
+    nc4p->ncid = ncidtmp;
 
     *ncpp = nc4p;
 
@@ -104,15 +110,9 @@ nc4io_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     }
 
-    if (format == NC_FORMAT_NETCDF4_CLASSIC ||
-        format == NC_FORMAT_NETCDF4) {
-        /* Open with netcdf */
-        err = nc_open_par(path, omode | NC_MPIIO, comm, info, &ncidtmp);
-        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-    }
-    else{
-        DEBUG_RETURN_ERROR(NC_ENOTNC4);
-    }
+    /* Open with netcdf */
+    err = nc_open_par(path, omode | NC_MPIIO, comm, info, &ncidtmp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Create a NC_nc4 object and save its driver pointer */
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
@@ -159,8 +159,9 @@ nc4io_enddef(void *ncdp)
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc_enddef */
+    err = nc_enddef(nc4p->ncid);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
 }
@@ -175,8 +176,9 @@ nc4io__enddef(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc__enddef */
+    err = nc__enddef(nc4p->ncid, (size_t)h_minfree, (size_t)v_align, (size_t)v_minfree, (size_t)r_align);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
 }
@@ -187,8 +189,9 @@ nc4io_redef(void *ncdp)
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc_redef */
+    err = nc_redef(nc4p->ncid);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
 }

@@ -65,8 +65,8 @@ nc4io_def_var(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc_def_var */
+    err = nc_def_var(nc4p->ncid, name, xtype, ndims, dimids, varidp);
 
     return NC_NOERR;
 }
@@ -77,11 +77,19 @@ nc4io_inq_varid(void       *ncdp,
                 int        *varid)
 {
     int err;
+    int vid;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Call nc_inq_varid */
-    err = nc_inq_varid(nc4p->ncid, name, varid);
+    err = nc_inq_varid(nc4p->ncid, name, &vid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+    /* NetCDF does not support NULL varid
+     * When varid is NULL, NC_NOERR will always return even given invalid name 
+     */
+    if (varid != NULL){
+        *varid = vid;
+    }
 
     return NC_NOERR;
 }
@@ -118,8 +126,8 @@ nc4io_rename_var(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc_rename_var */
+    err = nc_rename_var(nc4p->ncid, varid, newname);
 
     return NC_NOERR;
 }
@@ -128,25 +136,9 @@ nc4io_rename_var(void       *ncdp,
 nc4io_get_var is implemented iin ncmpio_get_put.m4
 */
 
-int
-nc4io_put_var(void             *ncdp,
-              int               varid,
-              const MPI_Offset *start,
-              const MPI_Offset *count,
-              const MPI_Offset *stride,
-              const MPI_Offset *imap,
-              const void       *buf,
-              MPI_Offset        bufcount,
-              MPI_Datatype      buftype,
-              int               reqMode)
-{
-    int err=NC_NOERR, status;
-    void *cbuf=(void*)buf;
-    NC_nc4 *nc4p = (NC_nc4*)ncdp;
-
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-}
+/* 
+nc4io_put_var is implemented iin ncmpio_get_put.m4
+*/
 
 int
 nc4io_iget_var(void             *ncdp,
@@ -164,7 +156,7 @@ nc4io_iget_var(void             *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Call nc4io_get_varn */
+    /* Call nc4io_get_var */
     err = nc4io_get_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
 
@@ -190,8 +182,12 @@ nc4io_iput_var(void             *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc4io_put_var */
+    err = nc4io_put_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
+    if (err != NC_NOERR) return err;
+
+    /* TODO: Issue dummy id */
+    *reqid = NC_REQ_NULL;
 
     return NC_NOERR;
 }
@@ -237,8 +233,9 @@ nc4io_bput_var(void             *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc4io_iput_var */
+    err = nc4io_iput_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid, reqMode);
+    if (err != NC_NOERR) return err;
 
     return NC_NOERR;
 }
@@ -278,11 +275,16 @@ nc4io_put_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    int err;
+    int i, err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc4io_put_var for N times */
+    for(i = 0; i < num; i++){
+        err = nc4io_put_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
+        if (err != NC_NOERR){
+            return err;
+        }
+    }
 
     return NC_NOERR;
 }
@@ -327,8 +329,12 @@ nc4io_iput_varn(void               *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc4io_put_varn */
+    err = nc4io_put_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqMode);
+    if (err != NC_NOERR) return err;
+
+    /* TODO: Issue dummy id */
+    *reqid = NC_REQ_NULL;
 
     return NC_NOERR;
 }
@@ -348,8 +354,9 @@ nc4io_bput_varn(void               *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc4io_iput_varn */
+    err = nc4io_iput_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqid, reqMode);
+    if (err != NC_NOERR) return err;
 
     return NC_NOERR;
 }
@@ -384,7 +391,7 @@ nc4io_put_vard(void         *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
+    /* vard not supported in NetCDF */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;

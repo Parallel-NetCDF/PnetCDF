@@ -97,7 +97,7 @@ nc4io_rename_att(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     
     /* Call nc_rename_att */
     err = nc_rename_att(nc4p->ncid, varid, name, newname);
@@ -119,7 +119,7 @@ nc4io_copy_att(void       *ncdp_in,
     NC_nc4 *nc4p_out = (NC_nc4*)ncdp_out;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     /* Call nc_copy_att */
     err = nc_copy_att(nc4p_in->ncid, varid_in, name, nc4p_out->ncid, varid_out);
@@ -137,7 +137,7 @@ nc4io_del_att(void       *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     /* Call nc_del_att */
     err = nc_del_att(nc4p->ncid, varid, name);
@@ -148,23 +148,9 @@ nc4io_del_att(void       *ncdp,
 
 
 /* 
-nc4io_get_att is implemented iin ncmpio_get_put.m4
+nc4io_get_att is implemented in ncmpio_get_put.m4
 */
 
-int
-nc4io_put_att(void         *ncdp,
-              int           varid,
-              const char   *name,
-              nc_type       xtype,
-              MPI_Offset    nelems,
-              const void   *buf,
-              MPI_Datatype  itype)
-{
-    int err;
-    NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
-    return NC_NOERR;
-}
+/* 
+nc4io_put_att is implemented in ncmpio_get_put.m4
+*/
