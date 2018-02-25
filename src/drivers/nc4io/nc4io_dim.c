@@ -36,7 +36,6 @@ nc4io_def_dim(void       *ncdp,
               int        *dimidp)
 {
     int err;
-    size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Call nc_def_dim */
@@ -75,6 +74,7 @@ nc4io_inq_dim(void       *ncdp,
     err = nc_inq_dim(nc4p->ncid, dimid, name, &len);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Convert to MPI_Offset */
     if (sizep != NULL){
         *sizep = (MPI_Offset)len;
     }

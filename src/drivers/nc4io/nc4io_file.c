@@ -212,6 +212,9 @@ nc4io_begin_indep_data(void *ncdp)
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
     }
 
+    /* Set indep flag */
+    fSet(nc4p->flag, NC_MODE_INDEP);
+
     return NC_NOERR;
 }
 
@@ -230,6 +233,9 @@ nc4io_end_indep_data(void *ncdp)
         err = nc_var_par_access(nc4p->ncid, i, NC_COLLECTIVE);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
     }
+
+    /* Clear indep flag */
+    fClr(nc4p->flag, NC_MODE_INDEP);
 
     return NC_NOERR;
 }
