@@ -31,14 +31,14 @@ dnl
 define(`GETVARTYPE',dnl
 `dnl
         ifelse($2, `MPI_CHAR', , `else ')if (buftype == $2){
-            err = nc_get_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `(size_t*)start, ', $1, `vara', `(size_t*)start, (size_t*)count, ', $1, `vars', `(size_t*)start, (size_t*)count, (size_t*)stride, ', $1, `varm', `(size_t*)start, (size_t*)count, (size_t*)stride, (size_t*)imap, ')($4*) buf);
+            err = nc_get_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `sstart, ', $1, `vara', `sstart, scount, ', $1, `vars', `sstart, scount, sstride, ', $1, `varm', `sstart, scount, sstride, simap, ')($4*) buf);
         }
 ')dnl
 dnl
 define(`PUTVARTYPE',dnl
 `dnl
         ifelse($2, `MPI_CHAR', , `else ')if (buftype == $2){
-            err = nc_put_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `(size_t*)start, ', $1, `vara', `(size_t*)start, (size_t*)count, ', $1, `vars', `(size_t*)start, (size_t*)count, (size_t*)stride, ', $1, `varm', `(size_t*)start, (size_t*)count, (size_t*)stride, (size_t*)imap, ')($4*) buf);
+            err = nc_put_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `sstart, ', $1, `vara', `sstart, scount, ', $1, `vars', `sstart, scount, sstride, ', $1, `varm', `sstart, scount, sstride, simap, ')($4*) buf);
         }
 ')dnl
 dnl
@@ -77,6 +77,31 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                ), `PUTVARTYPE($1, translit(dt, `()'))')dnl
     }
 ')dnl
+dnl
+define(`CONVERT',dnl
+`dnl
+    if ($1 != NULL){
+        /* Allocate sstart, scount, sstride, simap */
+        s$1 = (size_t*)NCI_Malloc(sizeof(size_t) * ndim);
+        if (s$1 == NULL){
+            DEBUG_RETURN_ERROR(NC_ENOMEM)
+        }
+
+        /* Convert to size_t */
+        for(i = 0; i < ndim; i++){
+            s$1[i] = (size_t) $1[i];
+        }
+    }
+')dnl
+dnl
+define(`FREE',dnl
+`dnl
+    if ($1 != NULL){
+        /* Free s$1 */
+        NCI_Free(s$1);
+    }
+')dnl
+dnl
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -167,8 +192,10 @@ nc4io_get_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int err;
+    int i, err;
     int apikind;
+    int ndim;
+    size_t *sstart, *scount, *sstride, *simap;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     if (start == NULL){
@@ -187,8 +214,16 @@ nc4io_get_var(void             *ncdp,
         apikind = NC4_API_KIND_VARM;
     }
 
+    /* Inq variable dim */
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
+
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
 
     return NC_NOERR;
 }
@@ -205,8 +240,10 @@ nc4io_put_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int err;
+    int i, err;
     int apikind;
+    int ndim;
+    size_t *sstart, *scount, *sstride, *simap;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     if (start == NULL){
@@ -225,8 +262,16 @@ nc4io_put_var(void             *ncdp,
         apikind = NC4_API_KIND_VARM;
     }
 
+    /* Inq variable dim */
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
+
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
 
     return NC_NOERR;
 }

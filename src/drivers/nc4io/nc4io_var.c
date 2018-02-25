@@ -45,6 +45,10 @@
 # include <config.h>
 #endif
 
+/* Note, netcdf header must come first due to conflicting constant definition */
+#include <netcdf.h>
+#include <netcdf_par.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -67,6 +71,12 @@ nc4io_def_var(void       *ncdp,
     
     /* Call nc_def_var */
     err = nc_def_var(nc4p->ncid, name, xtype, ndims, dimids, varidp);
+
+    /* Default mode in NetCDF is indep, set to coll if in coll mode */
+    if (!(nc4p->flag & NC_MODE_INDEP)){
+        err = nc_var_par_access(nc4p->ncid, *varidp, NC_COLLECTIVE);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+    }
 
     return NC_NOERR;
 }
@@ -128,6 +138,7 @@ nc4io_rename_var(void       *ncdp,
     
     /* Call nc_rename_var */
     err = nc_rename_var(nc4p->ncid, varid, newname);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
 }
