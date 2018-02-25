@@ -494,9 +494,9 @@ nc4io_sync_numrecs(void *ncdp)
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* For read only driver, we don't need sync_rec */
-    /* NetCDF does not support this natively */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* We assume NetCDF will take care of this internally
+     * Just pretend it's synced
+     */
 
     return NC_NOERR;
 }

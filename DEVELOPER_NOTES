@@ -751,4 +751,9 @@ diff -r automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
 ---
 > 		   'compile' => "\$(F77) @cpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
 
-
+==============================================================================
+NetCDF 4 Support
+==============================================================================
+Nonblocking IO not supported
+Accounting information not supported
+File info inquery not supported
