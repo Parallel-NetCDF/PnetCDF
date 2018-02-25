@@ -304,11 +304,18 @@ ncmpi_create(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
+    {
+#ifdef BUILD_DRIVER_NC4
+    if (cmode & NC_NETCDF4)
+        driver = nc4io_inq_driver();
+    else
+#endif
         /* TODO: Use environment variable and cmode to tell the file format
          * which is later used to select the right driver. For now, we have
          * only one driver, ncmpio.
          */
         driver = ncmpio_inq_driver();
+    }
 
 #if 0 /* refer to netCDF library's USE_REFCOUNT */
     /* check whether this path is already opened */
@@ -368,6 +375,8 @@ ncmpi_create(MPI_Comm    comm,
         pncp->format = NC_FORMAT_CDF5;
     } else if (cmode & NC_64BIT_OFFSET) {
         pncp->format = NC_FORMAT_CDF2;
+    } else if (cmode & NC_NETCDF4) {
+        pncp->format = NC_FORMAT_NETCDF4;
     } else {
         pncp->format = default_format;
     }

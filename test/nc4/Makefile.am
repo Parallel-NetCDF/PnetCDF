@@ -6,24 +6,44 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .c
+SUFFIXES = .o .c .f .F .f90
+
+AM_DEFAULT_SOURCE_EXT = .c
 
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
-LDADD = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
    # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
-   AM_CFLAGS = -DHAVE_DECL_MPI_OFFSET
-   # AM_FFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   AM_CFLAGS   = -DHAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = simple_xy
+NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
+NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
-check_PROGRAMS = $(TESTPROGRAMS)
+TESTPROGRAMS =  simple_xy \
+				pres_temp_4D_wr \
+				pres_temp_4D_rd 
+
+
+M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4
+
+nodist_put_get_all_kinds_SOURCES = put_get_all_kinds.c
+nodist_interoperability_rd_SOURCES = interoperability_rd.c
+nodist_interoperability_wr_SOURCES = interoperability_wr.c
+
+M4FLAGS += -I${top_srcdir}/m4
+
+$(M4_SRCS:.m4=.c): Makefile
+
+.m4.c:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
+
+check_PROGRAMS = $(TESTPROGRAMS) put_get_all_kinds interoperability_rd interoperability_wr
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -33,32 +53,55 @@ check_PROGRAMS = $(TESTPROGRAMS)
 TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT += BAD_FILES="$(BAD_FILES)" ; export BAD_FILES;
 
-TESTS = $(check_PROGRAMS)
-TEST_EXTENSIONS = .sh
-LOG_COMPILER = 
+TESTS = $(check_PROGRAMS) # seq_runs.sh
+# TEST_EXTENSIONS = .sh
+# LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-XFAIL_TESTS = xfail_runs.sh
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
-CLEANFILES = $(TESTOUTDIR)/cdf_type.nc $(TESTOUTDIR)/dim_cdf12.nc \
-             core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = $(M4_SRCS:.m4=.c) \
+             $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
+             $(NC_FILES)
+
+EXTRA_DIST = $(M4_SRCS) # seq_runs.sh redef-good.ncdump wrap_runs.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
+# Some of these tests are designed to run on one process,
+# Run them on 4 processes to see if they can handle well
+# Some of these tests are designed to run on 4 processes,
+# Run them on 2, 4, and 6 processes to see if they can handle well
+
+TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
-ptest ptests ptest4: $(TESTPROGRAMS)
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./test_inq_format $(srcdir)
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./test_inq_format $(srcdir)
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc
+ptest ptest4: $(TESTPROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
+	set -e; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	) ; done ; } ; done
 
-ptest2 ptest6 ptest8 ptest10:
+ptest2: $(TESTPROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
+	set -e; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	) ; done ; } ; done
+
+ptest6: $(TESTPROGRAMS)
+	for j in 0 1 ; do { \
+	export PNETCDF_SAFE_MODE=$$j ; \
+	set -e; for i in $(TESTPROGRAMS); do ( \
+	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	) ; done ; } ; done
+
+ptests: ptest2 ptest4 ptest6
+ptest8 ptest10:
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)

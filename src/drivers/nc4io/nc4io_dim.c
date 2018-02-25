@@ -36,10 +36,12 @@ nc4io_def_dim(void       *ncdp,
               int        *dimidp)
 {
     int err;
+    size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc_def_dim */
+    err = nc_def_dim(nc4p->ncid, name, (size_t) size, dimidp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
 }
@@ -88,8 +90,9 @@ nc4io_rename_dim(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* Call nc_rename_dim */
+    err = nc_rename_dim(nc4p->ncid, dimid, newname);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
     
     return NC_NOERR;
 }
