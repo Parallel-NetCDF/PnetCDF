@@ -71,6 +71,23 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
         else if (ncp->chunk < 0) ncp->chunk = 0;
     }
 
+    /* hint on setting in-place byte swap (matters only for Little Endian) */
+    MPI_Info_get(info, "nc_in_place_swap", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        if (strcasecmp(value, "enable") == 0) {
+            fClr(ncp->flags, NC_MODE_SWAP_OFF);
+            fSet(ncp->flags, NC_MODE_SWAP_ON);
+        }
+        else if (strcasecmp(value, "disable") == 0) {
+            fClr(ncp->flags, NC_MODE_SWAP_ON);
+            fSet(ncp->flags, NC_MODE_SWAP_OFF);
+        }
+        else if (strcasecmp(value, "auto") == 0) {
+            fClr(ncp->flags, NC_MODE_SWAP_ON);
+            fClr(ncp->flags, NC_MODE_SWAP_OFF);
+        }
+    }
+
 #ifdef ENABLE_SUBFILING
     MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "enable") == 0)

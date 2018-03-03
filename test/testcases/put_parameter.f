@@ -114,12 +114,12 @@
           err = nfmpi_def_dim(ncid, "Y", len_ll, dimid(2))
           call check(err, 'In nfmpi_def_dim Y: ')
 
-          ! define a 1D variable of integer type
+          ! define 2D variables of integer type
           err = nfmpi_def_var(ncid, "var1", NF_INT, 2, dimid, varid(1))
-          call check(err, 'In nfmpi_def_var: ')
+          call check(err, 'In nfmpi_def_var for var1: ')
 
           err = nfmpi_def_var(ncid, "var2", NF_INT, 2, dimid, varid(2))
-          call check(err, 'In nfmpi_def_var: ')
+          call check(err, 'In nfmpi_def_var for var2: ')
 
           ! do not forget to exit define mode
           err = nfmpi_enddef(ncid)
@@ -135,11 +135,17 @@
 ! pgf77 does not like using (/1,2,3,4/) as a function argument
 !          err = nfmpi_put_vara_int_all(ncid, varid(1), start, count,
 !     +                                 (/1,2,3,4/))
-!          call check(err, 'In nfmpi_put_var_int_all: ')
+!          call check(err, 'In nfmpi_put_vara_int_all: ')
 !
           err = nfmpi_put_vara_int_all(ncid, varid(2), start, count,
      +                                 buffer)
-          call check(err, 'In nfmpi_put_var_int_all: ')
+          call check(err, 'In nfmpi_put_vara_int_all: ')
+!
+! below will cause segmentation fault when in-place byte swap mode is
+! explicitly enabled, because NX is immutable
+!
+!          err = nfmpi_put_var1_int_all(ncid, varid(2), start, NX)
+!          call check(err, 'In nfmpi_put_var1_int_all: ')
 
           ! close the file
           err = nfmpi_close(ncid)
