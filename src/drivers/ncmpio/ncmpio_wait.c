@@ -1789,13 +1789,12 @@ req_aggregation(NC     *ncp,
 #else
     MPI_Type_size(buf_type, &buf_type_size);
 #ifndef ENABLE_LARGE_REQ
-    if (buf_type_size == MPI_UNDEFINED /* MPI 3.0 and later only */
-#if MPI_VERSION < 3
-        || buf_type_size < 0
-#endif
-       ) {
-        /* aggregated request size > 2 GiB, ROMIO currently does not support
-         * a single request with amount > 2 GiB
+    if (buf_type_size < 0) {
+        /* In MPI 2.x and prior, argument "size" in MPI_Type_size is defined
+         * as of type int. When int overflow occurs, the returned value in
+         * "size" argument may be a negative. This means the aggregated request
+         * size > 2 GiB. However, ROMIO currently does not support a single
+         * request with amount > 2 GiB
          */
         if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
         if (ncp->safe_mode)
@@ -2227,13 +2226,12 @@ mgetput(NC     *ncp,
 #else
     MPI_Type_size(buf_type, &buf_type_size);
 #ifndef ENABLE_LARGE_REQ
-    if (buf_type_size == MPI_UNDEFINED /* MPI 3.0 and later only */
-#if MPI_VERSION < 3
-        || buf_type_size < 0
-#endif
-       ) {
-        /* aggregated request size > 2 GiB, ROMIO currently does not support
-         * a single request with amount > 2 GiB
+    if (buf_type_size < 0) {
+        /* In MPI 2.x and prior, argument "size" in MPI_Type_size is defined
+         * as of type int. When int overflow occurs, the returned value in
+         * "size" argument may be a negative. This means the aggregated request
+         * size > 2 GiB. However, ROMIO currently does not support a single
+         * request with amount > 2 GiB
          */
         if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
         if (ncp->safe_mode)
