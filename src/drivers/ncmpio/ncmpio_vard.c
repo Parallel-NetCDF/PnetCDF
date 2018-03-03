@@ -97,13 +97,18 @@ getput_vard(NC               *ncp,
     }
 #else
     /* PROBLEM: argument filetype_size is a 4-byte integer, cannot be used
-     * for large filetypes */
+     * for large filetypes. Prior to MPI 3.0 standard, argument "size" of
+     * MPI_Type_size is of type int. When int overflows, the returned value
+     * in argument "size" may be a negative. */
     mpireturn = MPI_Type_size(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
-        /* According to MPI 3 standard, if filetype_size parameter is too small
-         * to hold the output value, MPI_Type_size returns MPI_UNDEFINED.
-         */
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+        goto err_check;
+    }
+    if (filetype_size < 0) { /* int overflow */
+        err = NC_EINTOVERFLOW;
+        if (fIsSet(reqMode, NC_REQ_INDEP)) return err;
+        bufcount = 0;
         goto err_check;
     }
 #endif
@@ -223,27 +228,24 @@ getput_vard(NC               *ncp,
         goto err_check;
     }
 
-    /* Check if we need byte swap cbuf in-place or (into cbuf) */
+    /* Check if we need byte swap buf in-place or (into cbuf) */
     need_swap = NEED_BYTE_SWAP(varp->xtype, ptype);
-    if (need_swap) {
-        if (fIsSet(reqMode, NC_REQ_WR)) {
-#ifndef ENABLE_IN_PLACE_SWAP
-            if (cbuf == buf
-#ifndef DISABLE_IN_PLACE_SWAP
-                && filetype_size <= NC_BYTE_SWAP_BUFFER_SIZE
-#endif
-            ) {
-                /* allocate cbuf and copy buf to cbuf, cbuf is to be freed */
-                cbuf = NCI_Malloc((size_t)filetype_size);
-                memcpy(cbuf, buf, (size_t)filetype_size);
-            }
-#endif
-            /* perform array in-place byte swap on cbuf */
-            ncmpii_in_swapn(cbuf, bnelems, varp->xsz);
-            is_buf_swapped = (cbuf == buf) ? 1 : 0;
-            /* is_buf_swapped indicates if the contents of the original user
-             * buffer, buf, have been changed, i.e. byte swapped. */
+    if (need_swap && fIsSet(reqMode, NC_REQ_WR)) {
+        if (cbuf == buf &&
+            (fIsSet(ncp->flags, NC_MODE_SWAP_OFF) ||
+             (!fIsSet(ncp->flags, NC_MODE_SWAP_ON) &&
+              filetype_size <= NC_BYTE_SWAP_BUFFER_SIZE))) {
+            /* No in-place byte swap.
+             * allocate cbuf and copy buf to cbuf, cbuf is to be freed */
+            cbuf = NCI_Malloc((size_t)filetype_size);
+            memcpy(cbuf, buf, (size_t)filetype_size);
         }
+
+        /* perform array in-place byte swap on cbuf */
+        ncmpii_in_swapn(cbuf, bnelems, varp->xsz);
+        is_buf_swapped = (cbuf == buf) ? 1 : 0;
+        /* is_buf_swapped indicates if the contents of the original user
+         * buffer, buf, have been changed, i.e. byte swapped. */
     }
     /* no type conversion is allowed by vard APIs */
 

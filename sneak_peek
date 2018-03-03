@@ -24,6 +24,8 @@ This is essentially a placeholder for the next release note ...
       internal buffer is allocated for byte swap only when the I/O request size
       is less than 4 KiB. For larger requests, user buffers are used for
       in-place byte swap.
+      The mode can also be changed at the run time by setting the PnetCDF hint
+      nc_in_place_swap. See New hints below for more info.
       Note -in-place-swap option only affect applications running on Little
       Endian machines, as no byte swap is necessary on Big Endian machines.
 
@@ -56,7 +58,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New PnetCDF hint
-    * none
+    * nc_in_place_swap -- to enable or disable in-place byte swap on Little
+      Endian architectures. The default mode is auto. See in-place byte-swap
+      option above for descriptions of the three modes. Below is an example
+      that changes the mode set at the configure time to "enable", by setting
+      the environment variable PNETCDF_HINTS with command:
+          export PNETCDF_HINTS="nc_in_place_swap=enable"
 
   o New run-time environment variables
     * none
