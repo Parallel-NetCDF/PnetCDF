@@ -53,7 +53,7 @@ BUILT_SOURCES = $(M4_SRCS:.m4=.c)
 
 EXTRA_DIST = $(M4_SRCS)
 
-CLEANFILES = $(M4_SRCS:.m4=.c) *.gcno
+CLEANFILES = $(M4_SRCS:.m4=.c) *.gcda *.gcno *.gcov gmon.out
 
 tests-local: all
 
