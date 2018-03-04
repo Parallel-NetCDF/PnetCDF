@@ -90,6 +90,7 @@ getput_vard(NC               *ncp,
 #endif
 
 #if MPI_VERSION >= 3
+    /* MPI_Type_size_x is introduced in MPI 3.0 */
     mpireturn = MPI_Type_size_x(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size_x");
@@ -124,6 +125,7 @@ getput_vard(NC               *ncp,
      * by this request, true_ub, in order to calculate new_numrecs.
      */
 #if MPI_VERSION >= 3
+    /* MPI_Type_get_true_extent_x is introduced in MPI 3.0 */
     MPI_Type_get_true_extent_x(filetype, &true_lb, &true_extent);
 #else
     MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);

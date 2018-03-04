@@ -112,7 +112,6 @@ int
 ncmpio_first_offset(const NC         *ncp,
                     const NC_var     *varp,
                     const MPI_Offset  start[],  /* [varp->ndims] */
-                    const int         reqMode,
                     MPI_Offset       *offset)   /* OUT: file offset */
 {
     int i, ndims;
@@ -157,7 +156,6 @@ ncmpio_last_offset(const NC         *ncp,
                    const MPI_Offset  start[],   /* [varp->ndims] */
                    const MPI_Offset  count[],   /* [varp->ndims] */
                    const MPI_Offset  stride[],  /* [varp->ndims] */
-                   const int         reqMode,
                    MPI_Offset       *offset_ptr) /* OUT: file offset */
 {
     int i, ndims;

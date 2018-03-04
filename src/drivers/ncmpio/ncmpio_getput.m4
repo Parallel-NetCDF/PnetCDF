@@ -226,8 +226,7 @@ err_check:
          * derived data type.
          */
         err = ncmpio_filetype_create_vars(ncp, varp, start, count, stride,
-                                          reqMode, NULL, &offset, &filetype,
-                                          NULL);
+                                          NULL, &offset, &filetype, NULL);
         if (err != NC_NOERR) {
             filetype = MPI_BYTE;
             nbytes   = 0;
@@ -460,8 +459,7 @@ err_check:
          * derived data type.
          */
         err = ncmpio_filetype_create_vars(ncp, varp, start, count, stride,
-                                          reqMode, NULL, &offset, &filetype,
-                                          NULL);
+                                          NULL, &offset, &filetype, NULL);
         if (err != NC_NOERR) {
             filetype = MPI_BYTE;
             nbytes   = 0;
