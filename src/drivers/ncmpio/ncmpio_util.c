@@ -241,6 +241,80 @@ ncmpio_last_offset(const NC         *ncp,
     return NC_NOERR;
 }
 
+/*----< ncmpio_access_range() >----------------------------------------------*/
+/* Returns the file offsets of access range of this request: starting file
+ * offset and end offset (exclusive).
+ * Note zero-length request should never call this subroutine.
+ */
+int
+ncmpio_access_range(const NC         *ncp,
+                    const NC_var     *varp,
+                    const MPI_Offset  start[],   /* [varp->ndims] */
+                    const MPI_Offset  count[],   /* [varp->ndims] */
+                    const MPI_Offset  stride[],  /* [varp->ndims] */
+                    MPI_Offset       *start_off, /* OUT: start offset */
+                    MPI_Offset       *end_off)   /* OUT: end   offset */
+{
+    int i, ndims;
+    MPI_Offset *last_indx=NULL;
+
+    ndims = varp->ndims; /* number of dimensions of this variable */
+
+    if (ndims == 0) { /* scalar variable */
+        *start_off = varp->begin; /* beginning file offset of this variable */
+        *end_off   = varp->begin + varp->xsz;
+        return NC_NOERR;
+    }
+
+    assert(start != NULL);
+    assert(count != NULL);
+
+    /* find the last access index in each dimension */
+    last_indx = (MPI_Offset*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_OFFSET);
+    if (stride != NULL) {
+        for (i=0; i<ndims; i++)
+            last_indx[i] = start[i] + (count[i] - 1) * stride[i];
+    }
+    else { /* stride == NULL */
+        for (i=0; i<ndims; i++)
+            last_indx[i] = start[i] + count[i] - 1;
+    }
+
+    if (IS_RECVAR(varp)) {
+        *start_off = 0;
+        *end_off = varp->begin + last_indx[0] * ncp->recsize;
+        if (ndims > 1) {
+            *start_off += start[ndims - 1];
+            *end_off   += last_indx[ndims - 1] * varp->xsz;
+        }
+        for (i=1; i<ndims-1; i++) {
+            *start_off += start[i] * varp->dsizes[i+1];
+            *end_off   += last_indx[i] * varp->dsizes[i+1] * varp->xsz;
+        }
+        *start_off *= varp->xsz;   /* multiply element size */
+        *start_off += start[0] * ncp->recsize;
+        *start_off += varp->begin; /* beginning file offset of this variable */
+    }
+    else {
+        *start_off = 0;
+        *end_off = varp->begin + last_indx[ndims-1] * varp->xsz;
+        if (ndims > 1) {
+            *start_off += start[0] * varp->dsizes[1];
+            *end_off += last_indx[0] * varp->dsizes[1] * varp->xsz;
+        }
+        for (i=1; i<ndims-1; i++) {
+            *start_off += start[i] * varp->dsizes[i+1];
+            *end_off   += last_indx[i] * varp->dsizes[i+1] * varp->xsz;
+        }
+        *start_off += start[ndims-1];
+        *start_off *= varp->xsz;   /* multiply element size */
+        *start_off += varp->begin; /* beginning file offset of this variable */
+    }
+    NCI_Free(last_indx);
+
+    return NC_NOERR;
+}
+
 /*----< ncmpio_pack_xbuf() >-------------------------------------------------*/
 /* Pack user buffer, buf, into xbuf, when buftype is non-contiguous or imap
  * is non-contiguous, or type-casting is needed. The immediate buffers, lbuf
