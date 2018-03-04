@@ -1771,6 +1771,7 @@ req_aggregation(NC     *ncp,
     }
 
 #if MPI_VERSION >= 3
+    /* MPI_Type_size_x is introduced in MPI 3.0 */
     MPI_Type_size_x(buf_type, &buf_type_size);
 #ifndef ENABLE_LARGE_REQ
     if (buf_type_size > INT_MAX) {
@@ -1936,7 +1937,17 @@ wait_getput(NC         *ncp,
             continue;
         }
 
-        /* get the starting file offset for this request */
+        count  = req->start + ndims;
+        stride = fIsSet(req->flag, NC_REQ_STRIDE_NULL) ? NULL : count+ndims;
+
+        num_recs = count[0];
+        if (IS_RECVAR(req->varp)) count[0]=1;
+
+        /* calculate access range of this request */
+        ncmpio_access_range(ncp, req->varp, req->start, count, stride,
+                            &req->offset_start, &req->offset_end);
+
+#if 0
         ncmpio_first_offset(ncp, req->varp, req->start,
                             rw_flag, &req->offset_start);
 
@@ -1950,7 +1961,7 @@ wait_getput(NC         *ncp,
         ncmpio_last_offset(ncp, req->varp, req->start, count, stride,
                            rw_flag, &req->offset_end);
         req->offset_end += req->varp->xsz;
-
+#endif
         if (IS_RECVAR(req->varp)) count[0] = num_recs; /* restore count[0] */
     }
 
@@ -2208,6 +2219,7 @@ mgetput(NC     *ncp,
     /* if (buf_type == MPI_BYTE) then the whole buf is contiguous */
 
 #if MPI_VERSION >= 3
+    /* MPI_Type_size_x is introduced in MPI 3.0 */
     MPI_Type_size_x(buf_type, &buf_type_size);
 #ifndef ENABLE_LARGE_REQ
     if (buf_type_size > INT_MAX) {

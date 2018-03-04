@@ -540,6 +540,11 @@ ncmpio_last_offset(const NC *ncp, const NC_var *varp, const MPI_Offset starts[],
                    const int rw_flag, MPI_Offset *offset_ptr);
 
 extern int
+ncmpio_access_range(const NC *ncp, const NC_var *varp, const MPI_Offset start[],
+                    const MPI_Offset count[], const MPI_Offset stride[],
+                    MPI_Offset *start_off, MPI_Offset *end_off);
+
+extern int
 ncmpio_pack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
                  MPI_Datatype buftype, int buftype_is_contig, MPI_Offset nelems,
                  MPI_Datatype etype, MPI_Datatype imaptype, int need_convert,
