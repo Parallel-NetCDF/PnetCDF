@@ -409,7 +409,6 @@ static int
 construct_filetypes(NC           *ncp,
                     int           num_reqs,
                     NC_req       *reqs,      /* [num_reqs] */
-                    int           rw_flag,
                     MPI_Datatype *filetype)  /* OUT */
 {
     int i, j, err, status=NC_NOERR, *blocklens, all_filetype_contig=1;
@@ -452,7 +451,6 @@ construct_filetypes(NC           *ncp,
                                               reqs[i].start,
                                               count,
                                               stride,
-                                              rw_flag,
                                               &blocklens[j],
                                               &displacements[j],
                                               &ftypes[j],
@@ -1631,8 +1629,7 @@ req_aggregation(NC     *ncp,
             /* This group contains no interleaved filetypes, so we can
              * simply concatenate filetypes of this group into a single one
              */
-            err = construct_filetypes(ncp, g_num_reqs, g_reqs, rw_flag,
-                                      &ftypes[i]);
+            err = construct_filetypes(ncp, g_num_reqs, g_reqs, &ftypes[i]);
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) { /* skip this group */
                 ftypes[i] = btypes[i] = MPI_BYTE;
@@ -2069,7 +2066,7 @@ mgetput(NC     *ncp,
         fh = ncp->independent_fh;
 
     /* construct a MPI file type by concatenating fileviews of all requests */
-    status = construct_filetypes(ncp,num_reqs, reqs, rw_flag, &filetype);
+    status = construct_filetypes(ncp,num_reqs, reqs, &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
         if (coll_indep == NC_REQ_INDEP) return status;
 

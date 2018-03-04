@@ -446,7 +446,6 @@ filetype_create_vara(const NC         *ncp,
                      const NC_var     *varp,
                      const MPI_Offset *start,
                      const MPI_Offset *count,
-                     int               rw_flag,
                      int              *blocklen,           /* OUT */
                      MPI_Offset       *offset_ptr,         /* OUT */
                      MPI_Datatype     *filetype_ptr,       /* OUT */
@@ -476,7 +475,7 @@ filetype_create_vara(const NC         *ncp,
     if (is_request_contiguous(IS_RECVAR(varp), ncp->vars.num_rec_vars,
                               varp->ndims, varp->shape, start, count)) {
         /* find the starting file offset of this request */
-        status = ncmpio_first_offset(ncp, varp, start, rw_flag, &offset);
+        status = ncmpio_first_offset(ncp, varp, start, &offset);
         *offset_ptr   = offset;
         *filetype_ptr = MPI_BYTE;
         if (is_filetype_contig != NULL) *is_filetype_contig = 1;
@@ -662,7 +661,6 @@ ncmpio_filetype_create_vars(const NC         *ncp,
                             const MPI_Offset *start,
                             const MPI_Offset *count,
                             const MPI_Offset *stride,
-                            int               rw_flag,
                             int              *blocklen,           /* OUT */
                             MPI_Offset       *offset_ptr,         /* OUT */
                             MPI_Datatype     *filetype_ptr,       /* OUT */
@@ -674,7 +672,7 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     MPI_Datatype  filetype=MPI_BYTE;
 
     if (stride == NULL)
-        return filetype_create_vara(ncp, varp, start, count, rw_flag,
+        return filetype_create_vara(ncp, varp, start, count,
                                     blocklen, offset_ptr, filetype_ptr,
                                     is_filetype_contig);
 
@@ -684,7 +682,7 @@ ncmpio_filetype_create_vars(const NC         *ncp,
             break;
 
     if (dim == varp->ndims) /* not a true vars */
-        return filetype_create_vara(ncp, varp, start, count, rw_flag,
+        return filetype_create_vara(ncp, varp, start, count,
                                     blocklen, offset_ptr, filetype_ptr,
                                     is_filetype_contig);
 
