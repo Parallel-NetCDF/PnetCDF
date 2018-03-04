@@ -55,7 +55,8 @@ BUILT_SOURCES = $(CXX_HEADER)
 
 EXTRA_DIST = pnetcdf.in
 
-CLEANFILES = $(CXX_HEADER) *.gcno a.out
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
+             $(CXX_HEADER) a.out
 
 $(CXX_HEADER): $(HPP_FILES) Makefile
 	cat $(srcdir)/pnetcdf.in >$@

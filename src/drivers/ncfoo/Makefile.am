@@ -47,7 +47,7 @@ nodist_libncfoo_la_SOURCES = $(M4_SRCS:.m4=.c)
 # 'make target') in a clean tree if it depends on a built source."
 BUILT_SOURCES = $(M4_SRCS:.m4=.c)
 
-CLEANFILES = $(M4_SRCS:.m4=.c) *.gcno
+CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = $(M4_HFILES) $(M4_SRCS)
 

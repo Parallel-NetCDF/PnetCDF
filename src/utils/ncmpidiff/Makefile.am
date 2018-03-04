@@ -18,7 +18,7 @@ $(top_builddir)/src/libs/libpnetcdf.la:
 
 dist_man_MANS = ncmpidiff.1
 
-CLEANFILES = *.gcno
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 
 dist-hook:
 	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g" $(distdir)/ncmpidiff.1

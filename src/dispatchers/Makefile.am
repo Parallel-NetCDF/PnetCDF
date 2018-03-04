@@ -36,7 +36,7 @@ nodist_libdispatchers_la_SOURCES = $(M4_SRCS:.m4=.c)
 
 BUILT_SOURCES = $(M4_SRCS:.m4=.c)
 
-CLEANFILES = $(M4_SRCS:.m4=.c) *.gcno
+CLEANFILES = $(M4_SRCS:.m4=.c) *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = $(M4_SRCS)
 
