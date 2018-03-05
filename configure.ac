@@ -1383,6 +1383,7 @@ AC_ARG_ENABLE([large-req],
                      @<:@default: disabled@:>@])],
     [large_req=${enableval}], [large_req=no]
 )
+ENABLE_LARGE_REQ=0
 if test "x${large_req}" = xyes ; then
     ENABLE_LARGE_REQ=1
     AC_DEFINE(ENABLE_LARGE_REQ)
@@ -1406,6 +1407,7 @@ AC_ARG_ENABLE([null-byte-header-padding],
                      files in classic formats. @<:@default: disabled@:>@])],
     [null_byte_header_padding=${enableval}], [null_byte_header_padding=no]
 )
+ENABLE_NULL_BYTE_HEADER_PADDING=0
 if test "x${null_byte_header_padding}" = xyes ; then
     ENABLE_NULL_BYTE_HEADER_PADDING=1
     AC_DEFINE(ENABLE_NULL_BYTE_HEADER_PADDING)
