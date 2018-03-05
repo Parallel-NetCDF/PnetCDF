@@ -116,6 +116,9 @@ AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is def
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
+AH_TEMPLATE([BUILD_DRIVER_DW],          [Define if to enable datawarp burst buffer feature])
+AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling]) 
+
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],           [Define if type MPI_Count is defined])
 
 AH_TOP([#ifndef _CONFIG_H
@@ -1410,6 +1413,34 @@ if test "x${null_byte_header_padding}" = xyes ; then
 fi
 AC_SUBST(ENABLE_NULL_BYTE_HEADER_PADDING)
 
+AC_ARG_ENABLE([datawarp],
+   [AS_HELP_STRING([--enable-datawarp],
+                   [Enable datawarp driver support. @<:@default: disabled@:>@])],
+   [enable_dwdriver=${enableval}], [enable_dwdriver=no]
+)
+
+BUILD_DRIVER_DW=0
+if test "x$enable_dwdriver" = "xyes" ; then
+   AC_DEFINE(BUILD_DRIVER_DW)
+   BUILD_DRIVER_DW=1
+fi
+AC_SUBST(BUILD_DRIVER_DW)
+AM_CONDITIONAL(BUILD_DRIVER_DW, [test x$enable_dwdriver = xyes])
+
+AC_ARG_ENABLE([profiling],
+   [AS_HELP_STRING([--enable_profiling],
+                   [Enable time and memory profiling. @<:@default: disabled@:>@])],
+   [enable_profiling=${enableval}], [enable_profiling=no]
+)
+
+PNETCDF_PROFILING=0
+if test "x$enable_profiling" = "xyes" ; then
+   AC_DEFINE(PNETCDF_PROFILING)
+   PNETCDF_PROFILING=1
+fi
+AC_SUBST(PNETCDF_PROFILING)
+AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
+
 dnl build test programs and benchmark programs
 AM_CONDITIONAL(BUILD_TESTSETS, [true])
 AM_CONDITIONAL(BUILD_BENCHMARKS_IN_PNETCDF, [true])
@@ -1473,6 +1504,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/common/Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
+                src/drivers/ncdwio/Makefile \
                 src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
                 src/binding/cxx/Makefile \
@@ -1489,6 +1521,7 @@ AC_CONFIG_FILES(Makefile \
                 src/utils/ncmpidiff/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpigen/Makefile \
+                src/utils/ncmpilogdump/Makefile \
                 src/utils/pnetcdf-config \
                 src/packaging/Makefile \
                 src/packaging/pnetcdf.pc \
@@ -1498,6 +1531,7 @@ AC_CONFIG_FILES(Makefile \
                 examples/CXX/Makefile \
                 examples/F77/Makefile \
                 examples/F90/Makefile \
+                examples/datawarp/Makefile \
                 benchmarks/Makefile \
                 benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
@@ -1521,6 +1555,7 @@ AC_CONFIG_FILES(Makefile \
                 test/nf90_test/Makefile \
                 test/nf90_test/tests.inc \
                 test/F90/Makefile \
+                test/datawarp/Makefile \
 )
 
 dnl The following dependency is for configure.in and configure
@@ -1545,48 +1580,56 @@ echo \
               Build C++ APIs                              - ${has_mpicxx}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
-              Request aggregation in nonblocking APIs     - OFF"
+              Request aggregation in nonblocking APIs     - disabled"
 fi
 if test "x${enable_erange_fill}" = xno; then
    echo "\
-              Fill variables when NC_ERANGE occurs        - OFF"
+              Fill variables when NC_ERANGE occurs        - disabled"
 fi
 if test "x${enable_subfiling}" = xyes; then
    echo "\
-              Build subfiling support                     - ON"
+              Subfiling support                           - enabled"
 fi
 if test "x${enable_relax_coord_bound}" = xyes; then
    echo "\
-              Relax start coordinate bound check          - ON"
+              Relax start coordinate bound check          - enabled"
 fi
 if test "x${ac_cv_c_bigendian}" = xno ; then
    if test "x${in_place_swap}" = xno ; then
       echo "\
-              Memory in-place byte swap                   - OFF"
+              Memory in-place byte swap                   - disabled"
    elif test "x${in_place_swap}" = xyes ; then
       echo "\
-              Memory in-place byte swap                   - ON"
+              Memory in-place byte swap                   - enabled"
    fi
 fi
 if test "x${large_file_test}" = xyes; then
    echo "\
-              Testing large file/variable I/O             - ON"
+              Testing large file/variable I/O             - enabled"
 fi
 if test "x${debug}" = xyes; then
    echo "\
-              PnetCDF internal debug mode                 - ON"
+              PnetCDF internal debug mode                 - enabled"
 fi
 if test "x${has_fortran}" = xyes && (test "x${ac_f77_support_freeform}" = xno) ; then
    echo "\
-              Support free form in Fortran 77             - OFF"
+              Support free form in Fortran 77             - disabled"
 fi
 if test "x${large_req}" = xyes ; then
    echo "\
-              Allow single large (> 2GiB) MPI-IO requests - ON"
+              Allow single large (> 2GiB) MPI-IO requests - enabled"
 fi
 if test "x${null_byte_header_padding}" = xyes ; then
    echo "\
-              Check null-byte header padding for reads    - ON"
+              Check null-byte header padding for reads    - enabled"
+fi
+if test "x${enable_dwdriver}" = xyes ; then
+   echo "\
+              Cray DataWarp driver                        - enabled"
+fi
+if test "x${enable_profiling}" = xyes ; then
+   echo "\
+              PnetCDF internal profiling                  - enabled"
 fi
 
 echo "\

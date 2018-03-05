@@ -751,4 +751,15 @@ diff -r automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
 ---
 > 		   'compile' => "\$(F77) @cpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
 
+-----------------------------------------------------------------------------
+Note on DataWarp driver
+-----------------------------------------------------------------------------
+
+DataWarp driver relies on ncmpio driver to write/read NetCDF files
+DataWarp driver uses subroutines of ncmpio driver internally.
+Whever the structure of PNC_Driver changes, not only the interface of DataWarp
+driver needs to be updated but also its internal ncmpio driver related codes.
+
+Known issue in DataWarp driver:
+1. vard API is not supported. It will be forward to ncmpio directly.
 

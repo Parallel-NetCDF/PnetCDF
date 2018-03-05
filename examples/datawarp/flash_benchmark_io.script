@@ -1,0 +1,38 @@
+# Here we provide a job script example to run the built in FLASH benchmark on Cori at NERSC
+
+# The first step is to request burst buffer access from the scheduler
+# Add #DW jobdw argument to request burst buffer space.
+# We request a private mode burst buffer access with capacity of 1289 GiB from the sm_pool
+
+# The second step is to set up the hint for DataWarp driver. We use following hints:
+# Enable the DataWarp driver
+#   nc_dw=enable;
+# DataWarp will recycle the space after job execution. We don't need to delete the log files.
+#   nc_dw_del_on_close=disable;
+# We are using private mode, DW_JOB_PRIVATE will be set to the path of burst buffer
+#   nc_dw_dirname=${DW_JOB_PRIVATE}
+# We can set the optional nc_dw_flush_buffer_size hint to limit the memory space PnetCDF can use on flushing the log.
+# There is no need to do so since the built in FLASH benchmark by default only generate around 75 MiB of data per process
+
+# The DataWarp driver is designed to be as transparent as possible. 
+# In most cases, we can run the job as usual after previous 2 steps.
+# We don't need to modify FLASH benchmark in this case.
+
+==================================================================================================================
+
+#!/bin/bash
+#SBATCH -p debug
+#SBATCH -N 1 
+#SBATCH -C haswell
+#SBATCH -t 00:01:00
+#SBATCH -o DataWarp_FLASH_example.txt
+#SBATCH -L scratch
+#DW jobdw capacity=1289GiB access_mode=private type=scratch pool=sm_pool
+
+NNodes=${SLURM_NNODES}
+NProc=NNodes*32
+
+export PNETCDF_HINTS="nc_dw=enable;nc_dw_del_on_close=disable;nc_dw_dirname=${DW_JOB_PRIVATE}"
+
+srun -n ${NProc} ./flash_benchmark_io ${SCRATCH}/flash_
+

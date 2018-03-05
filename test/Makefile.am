@@ -16,7 +16,7 @@ C_SUBDIRS = common \
             nonblocking \
             largefile
 
-DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile
+DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile datawarp
 
 SUBDIRS = $(C_SUBDIRS)
 
@@ -33,6 +33,10 @@ endif
 
 if ENABLE_SUBFILING
 SUBDIRS += subfile
+endif
+
+if BUILD_DRIVER_DW
+SUBDIRS += datawarp
 endif
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined

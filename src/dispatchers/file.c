@@ -235,14 +235,12 @@ ncmpi_create(MPI_Comm    comm,
 {
     int default_format, rank, status=NC_NOERR, err;
     int safe_mode=0, mpireturn, root_cmode;
+    int enable_foo_driver=0, enable_dw_driver=0;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
-#ifdef BUILD_DRIVER_FOO
-    int enable_foo_driver=0;
-#endif
 
     MPI_Comm_rank(comm, &rank);
 
@@ -288,26 +286,36 @@ ncmpi_create(MPI_Comm    comm,
     /* combine user's info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
-#ifdef BUILD_DRIVER_FOO
-    /* check if nc_foo_driver is enabled */
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
 
+        /* check if nc_foo_driver is enabled */
         MPI_Info_get(combined_info, "nc_foo_driver", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
+
+        /* check if nc_dw is enabled */
+        MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "enable") == 0)
+            enable_dw_driver = 1;
     }
 
+    /* Use environment variable and cmode to tell the file format
+     * which is later used to select the right driver.
+     */
+#ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
         driver = ncfoo_inq_driver();
     else
 #endif
-        /* TODO: Use environment variable and cmode to tell the file format
-         * which is later used to select the right driver. For now, we have
-         * only one driver, ncmpio.
-         */
+#ifdef BUILD_DRIVER_DW
+    if (enable_dw_driver)
+        driver = ncdwio_inq_driver();
+    else
+#endif
         driver = ncmpio_inq_driver();
 
 #if 0 /* refer to netCDF library's USE_REFCOUNT */
@@ -395,15 +403,13 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, nalloc, rank, format, msg[2], status=NC_NOERR, err;
+    int enable_foo_driver=0, enable_dw_driver=0;
     int safe_mode=0, mpireturn, root_omode;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
-#ifdef BUILD_DRIVER_FOO
-    int enable_foo_driver=0;
-#endif
 
     MPI_Comm_rank(comm, &rank);
 
@@ -470,40 +476,51 @@ ncmpi_open(MPI_Comm    comm,
     /* combine user's info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
-#ifdef BUILD_DRIVER_FOO
-    /* check if nc_foo_driver is enabled */
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
 
+        /* check if nc_foo_driver is enabled */
         MPI_Info_get(combined_info, "nc_foo_driver", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
+
+        /* check if nc_dw is enabled */
+        MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "enable") == 0)
+            enable_dw_driver = 1;
     }
 
+#ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
         driver = ncfoo_inq_driver();
     else
 #endif
-        /* TODO: currently we only have ncmpio driver. Need to add other
-         * drivers once they are available
-         */
+#ifdef BUILD_DRIVER_DW
+    if (enable_dw_driver)
+        driver = ncdwio_inq_driver();
+    else
+#endif
+    {
+        /* ncmpio driver */
         if (format == NC_FORMAT_CLASSIC ||
             format == NC_FORMAT_CDF2 ||
             format == NC_FORMAT_CDF5) {
-        driver = ncmpio_inq_driver();
-    }
-    else if (format == NC_FORMAT_NETCDF4_CLASSIC) {
-        fprintf(stderr,"NC_FORMAT_NETCDF4_CLASSIC is not yet supported\n");
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-    }
-    else if (format == NC_FORMAT_NETCDF4) {
-        fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-    }
-    else { /* unrecognized file format */
-        DEBUG_RETURN_ERROR(NC_ENOTNC)
+            driver = ncmpio_inq_driver();
+        }
+        else if (format == NC_FORMAT_NETCDF4_CLASSIC) {
+            fprintf(stderr,"NC_FORMAT_NETCDF4_CLASSIC is not yet supported\n");
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+        else if (format == NC_FORMAT_NETCDF4) {
+            fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+        else { /* unrecognized file format */
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
+        }
     }
 
     /* get a new ID from NCPList */
