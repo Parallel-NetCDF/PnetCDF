@@ -17,7 +17,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This program writes a series of 2D variables with a block-block data
  * partitioning pattern. The 2D variables are read back in a *-block pattern.
- * 
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file. In this example, NVARS = 4.
  *

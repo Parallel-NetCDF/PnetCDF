@@ -46,7 +46,7 @@
 
 #ifdef WORDS_BIGENDIAN
 #define NCMPII_NEED_SWAP(xtype,itype) 0
-#else         
+#else
 #define NEED_BYTE_SWAP(xtype,itype)                              \
     ((xtype == NC_CHAR  && itype == MPI_CHAR)           ||       \
      (xtype == NC_BYTE  && itype == MPI_SIGNED_CHAR)    ||       \
@@ -96,7 +96,7 @@ ncmpii_create_imaptype(int ndims, const MPI_Offset *count,
 extern int
 ncmpii_error_mpi2nc(int mpi_errorcode, char *msg);
 
-extern int 
+extern int
 ncmpii_error_posix2nc(char *err_msg);
 
 extern int
@@ -120,7 +120,7 @@ ncmpii_pack(int ndims, const MPI_Offset *count, const MPI_Offset *imap,
             MPI_Offset *bnelems, MPI_Datatype *ptype, void **cbuf);
 
 #if 0
-extern int    
+extern int
 ncmpii_put_cast_swap(int format, MPI_Offset nelems, nc_type xtype,
                      MPI_Datatype itype, void *fillp, void *ibuf,
                      int isNewBuf, void **xbuf);

@@ -1,6 +1,6 @@
 #define MDIM 3
 ! 3-d problem */
-#if N_DIM == 3 
+#if N_DIM == 3
 #define NDIM  3
 #define NGID 15
 #define ik2d 1
@@ -112,7 +112,7 @@
           if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: bndbox")
 
           ! define var for unknown array
-          dimids(1) = dim_nxb    
+          dimids(1) = dim_nxb
           dimids(2) = dim_nyb
           dimids(3) = dim_nzb
           dimids(4) = dim_tot_blocks
@@ -162,29 +162,29 @@
 ! Jianwei -- 11/15/02
 !
 ! This version of the plotfile routine is based on the Parallel netCDF
-! checkpoint.  The IO is done in parallel -- no copying of the data to 
-! a single processor to do the writing is performed.  
+! checkpoint.  The IO is done in parallel -- no copying of the data to
+! a single processor to do the writing is performed.
 !
 ! This is the SINGLE PRECISION version of the plotfile -- temporary
 ! storage is used to recast a variable (for every zone/block) into
 ! single precision before passing it onto the SP version of the C netCDF
 ! write routines.
-! 
+!
 ! The data for all blocks is recast and written together.  This makes the
 ! amount of data that is written very large, which should perform better
-! on the parallel filesystems.  The overhead for storing an entire 
+! on the parallel filesystems.  The overhead for storing an entire
 ! variable (with corners) is small, <~ 1%.
 !
-! Parallel netCDF uses MPI-IO (via ROMIO) to support parallel IO.  Each 
+! Parallel netCDF uses MPI-IO (via ROMIO) to support parallel IO.  Each
 ! processor must open the file, define the dataspaces for each netCDF variable.
 !
 ! A single record for each of the PARAMESH data structures is created.  A
-! processor only writes to a subset of this record.  Each record has a 
-! dimension with length = tot_blocks.  The offset of a processor into this 
+! processor only writes to a subset of this record.  Each record has a
+! dimension with length = tot_blocks.  The offset of a processor into this
 ! dimension is computed by looking at the total number of blocks that are
 ! below the current processor.
 !
-! In this version of the plotfile, each variable is given its own 
+! In this version of the plotfile, each variable is given its own
 ! record -- this makes it easier to change the variable list in the
 ! future without disturbing the format of the file.
 !
@@ -201,10 +201,10 @@
 
       integer filenum
       real simtime
-      
+
       integer block_no
       integer i, j, k, ivar, i_store, j_store, k_store
-      integer ngid 
+      integer ngid
       integer err
 
       integer n_to_left(0:16383)  ! must extend from 0 to NumPEs-1
@@ -214,13 +214,13 @@
       integer gid(nfaces+1+nchild,maxblocks_tr)
 
       integer tot_blocks
-      
+
       save gid, n_to_left
 
       integer nzones_block(3)
 
 ! create a character variable to hold the string representation of the block
-! number.  Note this is set to be 4 characters long (i.e. max = 9999).  
+! number.  Note this is set to be 4 characters long (i.e. max = 9999).
       character*4  fnum_string
       character*80 filename
       character*8 str
@@ -236,7 +236,7 @@
       character date_string*40
 
       character(len=4) :: ionam(ionmax), record_label
-      
+
       integer varid(6+num_out)
 
       integer global_offset
@@ -288,8 +288,8 @@
 !-----------------------------------------------------------------------------
 
 ! use an allgather routine here to get the number of blocks on each proc.
-      call MPI_Allgather(lnblocks, 1,MPI_INTEGER, & 
-                         n_to_left,1,MPI_INTEGER, & 
+      call MPI_Allgather(lnblocks, 1,MPI_INTEGER, &
+                         n_to_left,1,MPI_INTEGER, &
                          MPI_COMM_WORLD,err)
 
 ! compute the total number of blocks
@@ -311,7 +311,7 @@
 
 
 !-----------------------------------------------------------------------------
-! compute the global id -- this is a single array which stores the 
+! compute the global id -- this is a single array which stores the
 ! neighbor block numbers, the parent, and the children of a given block
 !-----------------------------------------------------------------------------
       do block_no = 1,lnblocks
@@ -326,11 +326,11 @@
 ! -- take into account the number of blocks below the processor that the
 ! neighbor is on, so the block number is global
             if (neigh(1,j,block_no).gt.0) then
-               gid(ngid,block_no) = neigh(1,j,block_no) +  & 
+               gid(ngid,block_no) = neigh(1,j,block_no) +  &
                     n_to_left(neigh(2,j,block_no))
             else
 
-! the neighbor is either a physical boundary or does not exist at that 
+! the neighbor is either a physical boundary or does not exist at that
 ! level of refinement
                gid(ngid,block_no) = neigh(1,j,block_no)
             end if
@@ -339,7 +339,7 @@
 ! store the parent of the current block
          ngid = ngid + 1
          if (parent(1,block_no).gt.0) then
-            gid(ngid,block_no) = parent(1,block_no) +  & 
+            gid(ngid,block_no) = parent(1,block_no) +  &
                  n_to_left(parent(2,block_no))
          else
             gid(ngid,block_no) = parent(1,block_no)
@@ -349,7 +349,7 @@
          do j = 1,nchild
             ngid = ngid + 1
             if (child(1,j,block_no).gt.0) then
-               gid(ngid,block_no) = child(1,j,block_no) +  & 
+               gid(ngid,block_no) = child(1,j,block_no) +  &
                     n_to_left(child(2,j,block_no))
             else
                gid(ngid,block_no) = child(1,j,block_no)
@@ -390,7 +390,7 @@
 !-----------------------------------------------------------------------------
 ! store the scalar information -- # of blocks, simulation time, etc
 !-----------------------------------------------------------------------------
-        date_string = 'now'      
+        date_string = 'now'
 
 ! store the number of zones / block in each direction
       if (corners) then
@@ -470,7 +470,7 @@
 !-----------------------------------------------------------------------------
 ! store the grid information
 !-----------------------------------------------------------------------------
-      
+
 ! store the coordinates
       do block_no = 1, lnblocks
          coord_single(:,block_no) = real(coord(:,block_no), kind = single)
@@ -507,7 +507,7 @@
 ! store the bounding box
 
       do block_no = 1, lnblocks
-         bnd_single(:,:,block_no) =  & 
+         bnd_single(:,:,block_no) =  &
               real(bnd_box(:,:,block_no), kind = single)
       enddo
 
@@ -526,7 +526,7 @@
       endif
 
       if (use_nonblocking_io) then
-          ! calculate attach buffer size for using buffered PnetCDF APIs 
+          ! calculate attach buffer size for using buffered PnetCDF APIs
           buf_size = (nxb+1) * (nyb+k2d) * (nzb+k3d) * maxblocks
           buf_size = buf_size + nxb * nyb * nzb * maxblocks
           buf_size = buf_size * num_out * 4
@@ -534,8 +534,8 @@
       endif
 
 !-----------------------------------------------------------------------------
-! store the unknowns -- here we will pass the entire unk array on each 
-! processor.  The HDF 5 memory space functionality will pick just the 
+! store the unknowns -- here we will pass the entire unk array on each
+! processor.  The HDF 5 memory space functionality will pick just the
 ! interior cells to write to disk.
 !-----------------------------------------------------------------------------
 
@@ -553,49 +553,49 @@
 ! put the data at the corners if necessary
          if (corners) then
 
-! interpolate only the variable we are storing to the corners            
+! interpolate only the variable we are storing to the corners
 
-! ** Important, the limits of the unkt_crn array do not include 
+! ** Important, the limits of the unkt_crn array do not include
 !    guard cells, so we need to map the interior of the unk array
 !    into the unkt_crn array.
             do block_no = 1, lnblocks
-            
+
                do k = nguard*k3d+1,nguard*k3d+nzb+k3d
                   k_store = k - nguard*k3d
 
                   do j = nguard*k2d+1,nguard*k2d+nyb+k2d
                      j_store = j - nguard*k2d
-                     
+
                      do i = nguard+1,nguard+nxb+1
                         i_store = i - nguard
 
 #if N_DIM == 2
-                        unkt_crn(1,i_store,j_store,k_store,block_no) =  & 
-                             real( & 
-                            .25*(unk(iout(ivar),i-1,j,  k,block_no) + & 
-                                 unk(iout(ivar),i  ,j,  k,block_no) + & 
-                                 unk(iout(ivar),i  ,j-1,k,block_no) + & 
-                                 unk(iout(ivar),i-1,j-1,k,block_no)), & 
+                        unkt_crn(1,i_store,j_store,k_store,block_no) =  &
+                             real( &
+                            .25*(unk(iout(ivar),i-1,j,  k,block_no) + &
+                                 unk(iout(ivar),i  ,j,  k,block_no) + &
+                                 unk(iout(ivar),i  ,j-1,k,block_no) + &
+                                 unk(iout(ivar),i-1,j-1,k,block_no)), &
                              kind = single)
 #endif
 #if N_DIM == 3
-                        unkt_crn(1,i_store,j_store,k_store,block_no) =  & 
-                             real( & 
-                            .125*(unk(iout(ivar),i-1,j  ,k  ,block_no) + & 
-                                  unk(iout(ivar),i  ,j  ,k  ,block_no) + & 
-                                  unk(iout(ivar),i  ,j-1,k  ,block_no) + & 
-                                  unk(iout(ivar),i-1,j-1,k  ,block_no) + & 
-                                  unk(iout(ivar),i-1,j  ,k-1,block_no) + & 
-                                  unk(iout(ivar),i  ,j  ,k-1,block_no) + & 
-                                  unk(iout(ivar),i  ,j-1,k-1,block_no) + & 
-                                  unk(iout(ivar),i-1,j-1,k-1,block_no)), & 
+                        unkt_crn(1,i_store,j_store,k_store,block_no) =  &
+                             real( &
+                            .125*(unk(iout(ivar),i-1,j  ,k  ,block_no) + &
+                                  unk(iout(ivar),i  ,j  ,k  ,block_no) + &
+                                  unk(iout(ivar),i  ,j-1,k  ,block_no) + &
+                                  unk(iout(ivar),i-1,j-1,k  ,block_no) + &
+                                  unk(iout(ivar),i-1,j  ,k-1,block_no) + &
+                                  unk(iout(ivar),i  ,j  ,k-1,block_no) + &
+                                  unk(iout(ivar),i  ,j-1,k-1,block_no) + &
+                                  unk(iout(ivar),i-1,j-1,k-1,block_no)), &
                              kind = single)
 #endif
-                        
+
                      end do
                   end do
                end do
-               
+
             enddo
 
 
@@ -619,10 +619,10 @@
 
          else
 
-            unkt(1,:,:,:,:) = real(unk(iout(ivar), & 
-                                       nguard+1:nguard+nxb, & 
-                                       nguard*k2d+1:nguard*k2d+nyb, & 
-                                       nguard*k3d+1:nguard*k3d+nzb,:), & 
+            unkt(1,:,:,:,:) = real(unk(iout(ivar), &
+                                       nguard+1:nguard+nxb, &
+                                       nguard*k2d+1:nguard*k2d+nyb, &
+                                       nguard*k3d+1:nguard*k3d+nzb,:), &
                                    kind = single)
 
             starts(1) = 1

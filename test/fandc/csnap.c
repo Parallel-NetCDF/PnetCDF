@@ -10,12 +10,12 @@
   This code writes one or two arrays, tt[k][j][i] (and smf[j][i], if
   'only_3d' is 0), into the file 'csnap.nc.' It then reads the field(s)
   from the file, and compares with the original field values.
- 
+
   i=longitude, j=latitude, k=level
- 
+
   To run: Set the global sizes, parallel decomposition and other I/O
   parameters below.
- 
+
   By Woo-Sun Yang and Chris Ding
   NERSC, Lawrence Berkeley National Laboratory
 
@@ -231,7 +231,7 @@ void write_file(char *filename, double *t) {
   start_2d[1] = istart;
   count_2d[0] = locsiz_2d[0];
   count_2d[1] = locsiz_2d[1];
-  
+
   tt = (double*)malloc(locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]*sizeof(double));
 
   if (has_2d)

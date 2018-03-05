@@ -741,7 +741,7 @@ NC_check_header(NC         *ncp,
         TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,
                                   ncp->nciop->comm);
         if (mpireturn != MPI_SUCCESS) {
-            return ncmpio_handle_error(mpireturn, "MPI_Allreduce"); 
+            return ncmpio_handle_error(mpireturn, "MPI_Allreduce");
         }
         if (g_status != NC_NOERR) { /* some headers are inconsistent */
             if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE)
@@ -831,13 +831,13 @@ ncmpio_swapn(void       *dest_p,  /* destination array */
         const uint64_t *src  = (const uint64_t*) src_p;
         for (i=0; i<nelems; i++) {
             dest[i] = src[i];
-            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) | 
-                      ((dest[i] & 0x000000000000FF00ULL) << 40) | 
-                      ((dest[i] & 0x0000000000FF0000ULL) << 24) | 
-                      ((dest[i] & 0x00000000FF000000ULL) <<  8) | 
-                      ((dest[i] & 0x000000FF00000000ULL) >>  8) | 
-                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) | 
-                      ((dest[i] & 0x00FF000000000000ULL) >> 40) | 
+            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) |
+                      ((dest[i] & 0x000000000000FF00ULL) << 40) |
+                      ((dest[i] & 0x0000000000FF0000ULL) << 24) |
+                      ((dest[i] & 0x00000000FF000000ULL) <<  8) |
+                      ((dest[i] & 0x000000FF00000000ULL) >>  8) |
+                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) |
+                      ((dest[i] & 0x00FF000000000000ULL) >> 40) |
                       ((dest[i] & 0xFF00000000000000ULL) >> 56);
         }
     }

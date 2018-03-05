@@ -2230,7 +2230,7 @@ APIPrefix`x_get_size_t'(const void **xpp,  size_t *ulp)
      * in memory may be 4 or 8 bytes, thus we must read xpp into an unsigned
      * int (4 bytes) and then type cast it to size_t */
     uint32_t u32;
- 
+
     u32  = (uint32_t)(*cp++) << 24;
     u32 |= (uint32_t)(*cp++) << 16;
     u32 |= (uint32_t)(*cp++) <<  8;

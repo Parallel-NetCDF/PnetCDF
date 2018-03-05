@@ -117,9 +117,8 @@ AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is e
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([BUILD_DRIVER_DW],          [Define if to enable datawarp burst buffer feature])
-AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling]) 
-
-dnl AH_TEMPLATE([HAVE_MPI_COUNT],           [Define if type MPI_Count is defined])
+AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
+dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])

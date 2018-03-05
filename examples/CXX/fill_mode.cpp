@@ -7,7 +7,7 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use 
+ * This example shows how to use
  * 1. NcmpiVar::setFill() to define the variable's fill value
  * 2. NcmpiVar::getFillModeParameters() to inquire the variable's fill mode
  *    information

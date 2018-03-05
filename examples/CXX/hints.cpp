@@ -72,7 +72,7 @@ void print_hints(NcmpiFile &ncFile,
 
     var0.Inq_file_offset(&var_zy_start);
     var1.Inq_file_offset(&var_yx_start);
-    
+
     /* get all the hints used */
     ncFile.Inq_file_info(&info_used);
 

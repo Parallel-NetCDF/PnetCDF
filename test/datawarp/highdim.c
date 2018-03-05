@@ -7,9 +7,9 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example tests writing a high dimensional int variable when log io is enabled..
- * Each process own a submatrix of size 2 * 2 * 2 * ... 1 * 1 * 1 that have as much
- * size 2 dimensions as the buffer can accommodate.
+ * This example tests writing a high dimensional int variable when log io is
+ * enabled.  Each process own a submatrix of size 2 * 2 * 2 * ... 1 * 1 * 1
+ * that have as much size 2 dimensions as the buffer can accommodate.
  * All cell in the submatrix is it's rank + 1
  * The submatrix is combined by interleaving along the first dimension.
  * The variable will have size (2 * np) * 2 * 2 * ... 1 * 1 * 1

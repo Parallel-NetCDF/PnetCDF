@@ -21,7 +21,7 @@
  * partitioning case writes 1st half followed by 2nd half. The same partitioning
  * patterns are used for read. In both cases, nonblocking APIs are used to
  * evaluate the performance.
- * 
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file. In this example, NVARS = 5.
  *
@@ -510,7 +510,7 @@ int benchmark_read(char       *filename,
 
 static void
 usage(char *argv0)
-{   
+{
     char *help =
     "Usage: %s [-h | -q | -d] len file_name\n"
     "       [-h] Print help\n"

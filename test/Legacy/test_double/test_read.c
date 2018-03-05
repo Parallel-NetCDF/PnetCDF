@@ -1,8 +1,8 @@
 /***********************************************************
  *
  * This test program reads a netCDF file, and then write it
- * out to another netCDF file, using the parallel netCDF 
- * library using MPI-IO. The two files should be identical. 
+ * out to another netCDF file, using the parallel netCDF
+ * library using MPI-IO. The two files should be identical.
  *
  * Input File: "../data/test_double.nc"  generated from original netcdf-3.
  * Output File: "testread.nc"
@@ -42,8 +42,8 @@
  *
  *
  *
- * This test uses collective APIs to read/write variable data and 
- * only deals with integer variables. 
+ * This test uses collective APIs to read/write variable data and
+ * only deals with integer variables.
  *
  * This test assume # of processors = 4
  *
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
     status = ncmpi_inq_att (ncid1, NC_GLOBAL, name, &type, &attlen);
     if (status != NC_NOERR) handle_error(status);
     switch (type) {
-      case NC_CHAR: 
+      case NC_CHAR:
 	valuep = (void *)malloc(attlen * sizeof(char));
 	status = ncmpi_get_att_text(ncid1, NC_GLOBAL, name, (char*) valuep);
 	if (status != NC_NOERR) handle_error(status);
@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
       status = ncmpi_inq_att (ncid1, i, name, &type, &attlen);
       if (status != NC_NOERR) handle_error(status);
       switch (type) {
-        case NC_CHAR: 
+        case NC_CHAR:
 	  valuep = (void *)malloc(attlen * sizeof(char));
 	  status = ncmpi_get_att_text(ncid1, i, name, (char*)valuep);
 	  if (status != NC_NOERR) handle_error(status);
@@ -270,7 +270,7 @@ int main(int argc, char **argv) {
   if (status != NC_NOERR) handle_error(status);
 
   /**
-   * Read data of variables from input dataset 
+   * Read data of variables from input dataset
    * (ONLY DEAL WITH: NC_INT, NC_FLOAT, NC_DOUBLE for now)
    * Write the data out to the corresponding variables in the output dataset
    *
@@ -312,7 +312,7 @@ int main(int argc, char **argv) {
 
       /* strided access for record variable */
 
-      case NC_CHAR: 
+      case NC_CHAR:
         break;
       case NC_SHORT:
         valuep = (void *)malloc(varsize * sizeof(short));

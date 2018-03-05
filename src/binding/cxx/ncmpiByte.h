@@ -5,12 +5,12 @@
 
 namespace PnetCDF
 {
-  
+
   /*! Class represents a netCDF atomic Byte type. */
   class NcmpiByte : public NcmpiType
   {
-  public: 
-    
+  public:
+
     /*! equivalence operator */
     bool operator==(const NcmpiByte & rhs);
 
@@ -18,7 +18,7 @@ namespace PnetCDF
     int sizeoff();
 
     ~NcmpiByte();
-    
+
     /*! Constructor */
     NcmpiByte();
   };

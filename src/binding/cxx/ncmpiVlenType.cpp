@@ -41,7 +41,7 @@ NcmpiVlenType& NcmpiVlenType::operator=(const NcmpiType& rhs)
 }
 
 // The copy constructor.
-NcmpiVlenType::NcmpiVlenType(const NcmpiVlenType& rhs):   
+NcmpiVlenType::NcmpiVlenType(const NcmpiVlenType& rhs):
   NcmpiType(rhs)
 {
 }
@@ -56,9 +56,9 @@ NcmpiVlenType::NcmpiVlenType() :
 NcmpiVlenType::NcmpiVlenType(const NcmpiGroup& grp, const string& name) :
   NcmpiType(grp,name)
 {}
-  
+
 // constructor
-NcmpiVlenType::NcmpiVlenType(const NcmpiType& ncmpiType): 
+NcmpiVlenType::NcmpiVlenType(const NcmpiType& ncmpiType):
   NcmpiType(ncmpiType)
 {
   // check the nctype object is the base of a Vlen type
@@ -79,12 +79,12 @@ NcmpiType NcmpiVlenType::getBaseType() const
   case NC_SHORT   : return ncmpiShort;
   case NC_USHORT  : return ncmpiUshort;
   case NC_INT     : return ncmpiInt;
-  case NC_UINT    : return ncmpiUint;  
-  case NC_INT64   : return ncmpiInt64; 
+  case NC_UINT    : return ncmpiUint;
+  case NC_INT64   : return ncmpiInt64;
   case NC_UINT64  : return ncmpiUint64;
   case NC_FLOAT   : return ncmpiFloat;
   case NC_DOUBLE  : return ncmpiDouble;
-  default:  
+  default:
     // this is a user defined type
     return NcmpiType(getParentGroup(),base_nc_typep);
   }

@@ -1,5 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
+/*
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *      See COPYRIGHT in top-level directory.
  */

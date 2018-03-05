@@ -13,15 +13,15 @@ namespace PnetCDF
   class NcmpiAtt
   {
   public:
-    
+
     /*! destructor */
     virtual ~NcmpiAtt()=0;
 
     /*! Constructor generates a \ref isNull "null object". */
     NcmpiAtt ();
-    
+
     /*! Constructor for non-null instances. */
-    NcmpiAtt(bool nullObject); 
+    NcmpiAtt(bool nullObject);
 
     /*! The copy constructor. */
     NcmpiAtt(const NcmpiAtt& rhs);
@@ -37,63 +37,63 @@ namespace PnetCDF
 
     /*! Gets parent group. */
     NcmpiGroup  getParentGroup() const;
-      
+
     /*! equivalence operator */
     bool operator== (const NcmpiAtt& rhs) const;
-      
+
     /*!  != operator */
-    bool operator!=(const NcmpiAtt& rhs) const;     
+    bool operator!=(const NcmpiAtt& rhs) const;
 
     /*! \overload
-     */ 
+     */
     void getValues(char* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(unsigned char* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(signed char* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(short* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(int* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(long* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(float* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(double* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(unsigned short* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(unsigned int* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(long long* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(unsigned long long* dataValues) const;
     /*! \overload
-     */ 
+     */
     void getValues(char** dataValues) const;
 
     /*! \overload
       (The string variable does not need preallocating.)
-     */ 
+     */
     void getValues(std::string& dataValues) const;
 
-    /*! 
+    /*!
       Gets a netCDF attribute.
       The user must ensure that the variable "dataValues" has sufficient space to hold the attribute.
-      \param  dataValues On return contains the value of the attribute. 
-      If the type of data values differs from the netCDF variable type, type conversion will occur. 
+      \param  dataValues On return contains the value of the attribute.
+      If the type of data values differs from the netCDF variable type, type conversion will occur.
       (However, no type conversion is carried out for variables using the user-defined data types:
       ncmpi_Vlen, ncmpi_Opaque, ncmpi_Compound and ncmpi_Enum.)
     */
@@ -105,17 +105,17 @@ namespace PnetCDF
   protected:
     /*! assignment operator */
     NcmpiAtt& operator= (const NcmpiAtt& rhs);
-      
+
     bool nullObject;
 
     std::string myName;
-    
+
     int groupId;
-      
+
     int varId;
-    
+
   };
-  
+
 }
 
 #endif

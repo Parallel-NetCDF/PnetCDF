@@ -5,18 +5,18 @@
 
 namespace PnetCDF
 {
-  
+
   /*! Class represents a netCDF atomic Ushort type. */
   class NcmpiUshort : public NcmpiType
   {
-  public: 
-    
+  public:
+
     /*! equivalence operator */
     bool operator==(const NcmpiUshort & rhs);
-    
+
     /*! destructor */
     ~NcmpiUshort();
-    
+
     /*! Constructor */
     NcmpiUshort();
   };

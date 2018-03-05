@@ -40,7 +40,7 @@ program tst_f90_nc4
   call check(nf90mpi_def_dim(fh, 'fred', ten, dimid))
   call check(nf90mpi_def_var(fh, 'john', NF90_INT, (/dimid/), varid))
   call check(nf90mpi_close(fh))
-  
+
   ! Check the file.
   call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_WRITE, MPI_INFO_NULL, fh))
   call check(nf90mpi_inquire(fh, nDimensions = ndim, nVariables = nvar))
@@ -51,7 +51,7 @@ program tst_f90_nc4
   call check(nf90mpi_def_dim(fh, 'fred', ten, dimid))
   call check(nf90mpi_def_var(fh, 'john', NF90_INT, (/dimid/), varid))
   call check(nf90mpi_close(fh))
-  
+
   ! Check the file.
   call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_WRITE, MPI_INFO_NULL, fh))
   call check(nf90mpi_inquire(fh, nDimensions = ndim, nVariables = nvar))
@@ -69,7 +69,7 @@ contains
   subroutine check(errcode)
     implicit none
     integer, intent(in) :: errcode
-    
+
     if(errcode /= nf90_noerr) then
        print *, 'Error: ', trim(nf90mpi_strerror(errcode))
        stop 2

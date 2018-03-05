@@ -265,7 +265,7 @@ int main(int argc, char **argv)
     err = ncmpi_def_var(ncid, "scalar3", NC_INT, 0, NULL, &varids[3]); CHECK_ERR
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
-    
+
     if (rank < 4) {
         err = ncmpi_put_var_int_all(ncid, varids[rank], &rank); CHECK_ERR
     }

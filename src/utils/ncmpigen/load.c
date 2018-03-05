@@ -35,7 +35,7 @@ tztrim(
     )
 {
     char *cp, *ep;
-    
+
     cp = ss;
     if (*cp == '-')
       cp++;
@@ -96,12 +96,12 @@ gen_load_c(
 		    vars[varnum].lname, vars[varnum].lname);
 	    cline(stmnt);
 	}
-	
+
 	/* load variable with data values using static initialization */
 	sprintf(stmnt, "    static %s %s[] = {",
 		ncctype(vars[varnum].type),
 		vars[varnum].lname);
-	
+
 	stmnt_len = strlen(stmnt);
 	switch (vars[varnum].type) {
 	  case NC_CHAR:
@@ -252,7 +252,7 @@ gen_load_c(
 		    (unsigned long)vars[varnum].nrecs, /* number of recs for this variable */
 		    vars[varnum].name);
 	    cline(stmnt);
-	    
+
 	    for (idim = 0; idim < vars[varnum].ndims; idim++) {
 		sprintf(stmnt, "    %s_start[%d] = 0;",
 			vars[varnum].lname,
@@ -268,7 +268,7 @@ gen_load_c(
 		cline(stmnt);
 	    }
 	}
-	
+
 	if (vars[varnum].dims[0] == rec_dim) {
 	    sprintf(stmnt,
 		    "    stat = ncmpi_put_vara_%s_all(ncid, %s_id, %s_start, %s_count, %s);",
@@ -293,7 +293,7 @@ gen_load_c(
 	sprintf(stmnt, "    static %s %s = ",
 		ncctype(vars[varnum].type),
 		vars[varnum].lname);
-	
+
 	switch (vars[varnum].type) {
 	  case NC_CHAR:
 	    val_string = cstrstr((char *) rec_start, var_len);
@@ -361,7 +361,7 @@ gen_load_c(
     cline("    check_err(stat,__LINE__,__FILE__);");
     cline("   }");
 }
-    
+
 
 /*
  * Add to a partial Fortran statement, checking if it's too long.  If it is too
@@ -413,7 +413,7 @@ f_var_init(
     size_t stmnt_len;
     char s2[FORT_MAX_STMNT];
     int ival;
-    
+
     /* load variable with data values  */
     sprintf(stmnt, "data %s /",vars[varnum].lname);
     stmnt_len = strlen(stmnt);
@@ -557,7 +557,7 @@ gen_load_fortran(
     } else {
 	v->data_stmnt = (char*) fstrstr((char*)rec_start, valnum);
     }
-    
+
     if (v->ndims >0 && v->dims[0] == rec_dim) {
 	return;
     }
@@ -570,7 +570,7 @@ gen_load_fortran(
 		nfftype(v->type), v->lname, char_expr);
 	free(char_expr);
     }
-    
+
     fline(stmnt);
     fline("call check_err(iret)");
 }

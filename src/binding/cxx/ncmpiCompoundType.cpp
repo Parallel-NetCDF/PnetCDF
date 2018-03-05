@@ -40,7 +40,7 @@ NcmpiCompoundType& NcmpiCompoundType::operator=(const NcmpiType& rhs)
 }
 
 // The copy constructor.
-NcmpiCompoundType::NcmpiCompoundType(const NcmpiCompoundType& rhs): 
+NcmpiCompoundType::NcmpiCompoundType(const NcmpiCompoundType& rhs):
   NcmpiType(rhs)
 {
 }
@@ -49,32 +49,32 @@ NcmpiCompoundType::NcmpiCompoundType(const NcmpiCompoundType& rhs):
 // equivalence operator
 bool NcmpiCompoundType::operator==(const NcmpiCompoundType& rhs)
 {
-  if(nullObject) 
+  if(nullObject)
     return nullObject == rhs.nullObject;
   else
     return myId ==rhs.myId && groupId == rhs.groupId;
-}  
-  
+}
+
 // Constructor generates a null object.
-NcmpiCompoundType::NcmpiCompoundType() : 
+NcmpiCompoundType::NcmpiCompoundType() :
   NcmpiType()   // invoke base class constructor
 {}
-  
+
 // constructor
-NcmpiCompoundType::NcmpiCompoundType(const NcmpiGroup& grp, const string& name): 
+NcmpiCompoundType::NcmpiCompoundType(const NcmpiGroup& grp, const string& name):
   NcmpiType(grp,name)
 {
 }
 
 // constructor
 // The copy constructor.
-NcmpiCompoundType::NcmpiCompoundType(const NcmpiType& rhs): 
+NcmpiCompoundType::NcmpiCompoundType(const NcmpiType& rhs):
   NcmpiType()
 {
   // assign base class parts
   NcmpiType::operator=(rhs);
 }
-  
+
 //  Inserts a named field.
 void NcmpiCompoundType::addMember(const string& memberName, const NcmpiType& newMemberType,MPI_Offset offset)
 {
@@ -101,10 +101,10 @@ MPI_Offset  NcmpiCompoundType::getMemberCount() const
   ncmpiCheck(ncmpi_inq_compound_nfields(groupId,myId,&nfieldsp),__FILE__,__LINE__);
   return nfieldsp;
 }
-  
+
 
 // Returns a NcmpiType object for a single member. */
-NcmpiType NcmpiCompoundType::getMember(int memberIndex) const 
+NcmpiType NcmpiCompoundType::getMember(int memberIndex) const
 {
   nc_type fieldtypeidp;
   ncmpiCheck(ncmpi_inq_compound_fieldtype(groupId,myId,memberIndex,&fieldtypeidp),__FILE__,__LINE__);
@@ -115,29 +115,29 @@ NcmpiType NcmpiCompoundType::getMember(int memberIndex) const
   case NC_SHORT   : return ncmpiShort;
   case NC_USHORT  : return ncmpiUshort;
   case NC_INT     : return ncmpiInt;
-  case NC_UINT    : return ncmpiUint;  
-  case NC_INT64   : return ncmpiInt64; 
+  case NC_UINT    : return ncmpiUint;
+  case NC_INT64   : return ncmpiInt64;
   case NC_UINT64  : return ncmpiUint64;
   case NC_FLOAT   : return ncmpiFloat;
   case NC_DOUBLE  : return ncmpiDouble;
-  default:  
+  default:
     // this is a user defined type
     return NcmpiType(getParentGroup(),fieldtypeidp);
   }
 }
 
-  
+
 // Returns the number of dimensions of a member with the given index.
-int NcmpiCompoundType::getMemberDimCount(int memberIndex) const 
+int NcmpiCompoundType::getMemberDimCount(int memberIndex) const
 {
   int ndimsp;
   ncmpiCheck(ncmpi_inq_compound_fieldndims(groupId,myId,memberIndex, &ndimsp),__FILE__,__LINE__);
   return ndimsp;
 }
-  
-  
+
+
 // Returns the shape of the given member.
-vector<int> NcmpiCompoundType::getMemberShape(int memberIndex) const 
+vector<int> NcmpiCompoundType::getMemberShape(int memberIndex) const
 {
   vector<int> dim_size;
   dim_size.resize(getMemberDimCount(memberIndex));
@@ -145,7 +145,7 @@ vector<int> NcmpiCompoundType::getMemberShape(int memberIndex) const
     ncmpiCheck(ncmpi_inq_compound_fielddim_sizes(groupId,myId,memberIndex,&dim_size[0]),__FILE__,__LINE__);
   return dim_size;
 }
- 
+
 
 // Returns the offset of the member with given index.
 MPI_Offset NcmpiCompoundType::getMemberOffset(const int index) const

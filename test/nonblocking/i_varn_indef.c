@@ -190,25 +190,25 @@ int main(int argc, char** argv)
                                     {{1,3}, {1,1}, {1,3}, {1,3}, {0,0}, {0,0}}};
 
     /* n_starts[0][][] n_counts[0][][] indicate the following: ("-" means skip)
-              -  -  -  -  -  X  X  -  -  - 
-              X  -  -  -  -  -  -  -  -  - 
-              -  -  -  -  -  -  X  X  -  - 
-              X  X  X  -  -  -  -  -  -  - 
+              -  -  -  -  -  X  X  -  -  -
+              X  -  -  -  -  -  -  -  -  -
+              -  -  -  -  -  -  X  X  -  -
+              X  X  X  -  -  -  -  -  -  -
        n_starts[1][][] n_counts[1][][] indicate the following pattern.
-              -  -  -  X  X  -  -  -  X  X 
-              -  -  -  -  -  X  X  -  -  - 
-              X  X  -  -  -  -  -  -  X  X 
-              -  -  -  -  X  X  X  -  -  - 
+              -  -  -  X  X  -  -  -  X  X
+              -  -  -  -  -  X  X  -  -  -
+              X  X  -  -  -  -  -  -  X  X
+              -  -  -  -  X  X  X  -  -  -
        n_starts[2][][] n_counts[2][][] indicate the following pattern.
-              -  -  -  -  -  -  -  X  -  - 
-              -  X  X  X  -  -  -  X  X  X 
-              -  -  X  -  -  -  -  -  -  - 
-              -  -  -  X  -  -  -  -  -  - 
+              -  -  -  -  -  -  -  X  -  -
+              -  X  X  X  -  -  -  X  X  X
+              -  -  X  -  -  -  -  -  -  -
+              -  -  -  X  -  -  -  -  -  -
        n_starts[3][][] n_counts[3][][] indicate the following pattern.
-              X  X  X  -  -  -  -  -  -  - 
-              -  -  -  -  X  -  -  -  -  - 
-              -  -  -  X  X  X  -  -  -  - 
-              -  -  -  -  -  -  -  X  X  X 
+              X  X  X  -  -  -  -  -  -  -
+              -  -  -  -  X  -  -  -  -  -
+              -  -  -  X  X  X  -  -  -  -
+              -  -  -  -  -  -  -  X  X  X
      */
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

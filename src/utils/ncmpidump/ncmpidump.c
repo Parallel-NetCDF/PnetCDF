@@ -59,13 +59,13 @@ usage(void)
     fprintf(stderr,
            "%s [-c|-h] [-v ...] [[-b|-f] [c|f]] [-l len] [-n name] [-p n[,n]] [-k] [-V] file\n%s",
            progname, USAGE);
-    
+
     fprintf(stderr, "PnetCDF library version %s\n", ncmpi_inq_libvers());
 }
 
 
-/* 
- * convert pathname of netcdf file into name for cdl unit, by taking 
+/*
+ * convert pathname of netcdf file into name for cdl unit, by taking
  * last component of path and stripping off any extension.
  */
 static char *
@@ -77,10 +77,10 @@ name_path(const char *path)
 
 #ifdef vms
 #define FILE_DELIMITER ']'
-#endif    
+#endif
 #ifdef MSDOS
 #define FILE_DELIMITER '\\'
-#endif    
+#endif
 #ifndef FILE_DELIMITER /* default to unix */
 #define FILE_DELIMITER '/'
 #endif
@@ -131,7 +131,7 @@ static void
 tztrim(char *ss)
 {
     char *cp, *ep;
-    
+
     cp = ss;
     if (*cp == '-')
         cp++;
@@ -296,7 +296,7 @@ pr_att(int         ncid,
        int         ia)
 {
     struct ncatt att;        /* attribute */
-        
+
     NC_CHECK(ncmpi_inq_attname(ncid, varid, ia, att.name));
 
     Printf ("\t\t%s:%s = ", varname, att.name);
@@ -389,25 +389,25 @@ do_ncdump(const char *path, struct fspec* specp)
 
     ncmpi_inq_version(ncid, &NC_mode);
     if (specp->version) {
-        if (NC_mode == NC_64BIT_DATA) 
+        if (NC_mode == NC_64BIT_DATA)
             Printf ("%s file format: CDF-5 (big variables)\n", specp->name);
-        else if (NC_mode == NC_64BIT_OFFSET) 
+        else if (NC_mode == NC_64BIT_OFFSET)
             Printf ("%s file format: CDF-2 (large file)\n", specp->name);
         else
             Printf ("%s file format: CDF-1\n", specp->name);
     } else if (specp->kind) {
-        if (NC_mode == NC_64BIT_DATA) 
+        if (NC_mode == NC_64BIT_DATA)
             Printf ("64-bit data\n");
-        else if (NC_mode == NC_64BIT_OFFSET) 
+        else if (NC_mode == NC_64BIT_OFFSET)
             Printf ("64-bit offset\n");
         else
             Printf ("classic\n");
     } else {
         Printf ("netcdf %s {\n", specp->name);
 
-        if (NC_mode == NC_64BIT_DATA) 
+        if (NC_mode == NC_64BIT_DATA)
             Printf ("// file format: CDF-5 (big variables)\n");
-        else if (NC_mode == NC_64BIT_OFFSET) 
+        else if (NC_mode == NC_64BIT_OFFSET)
             Printf ("// file format: CDF-2 (large file)\n");
         else
             Printf ("// file format: CDF-1\n");
@@ -428,7 +428,7 @@ do_ncdump(const char *path, struct fspec* specp)
                 Printf ("\t%s = %s ; // (%lld currently)\n",dims[dimid].name,
                         "UNLIMITED", (long long int)(dims[dimid].size));
             else
-                Printf ("\t%s = %lld ;\n", dims[dimid].name, 
+                Printf ("\t%s = %lld ;\n", dims[dimid].name,
 			(long long int)(dims[dimid].size));
         }
 
@@ -459,7 +459,7 @@ do_ncdump(const char *path, struct fspec* specp)
 
         for (ia = 0; ia < ngatts; ia++)
             pr_att(ncid, NC_GLOBAL, "", ia); /* print ia-th global attribute */
-    
+
         if (! specp->header_only) {
             if (nvars > 0) Printf ("data:\n");
             /* output variable data */
@@ -490,7 +490,7 @@ do_ncdump(const char *path, struct fspec* specp)
                  * been written.
                  */
                 if (var.ndims == 0 || var.dims[0] != xdimid ||
-                    dims[xdimid].size != 0) { 
+                    dims[xdimid].size != 0) {
                     /* Collect variable's dim sizes */
                     vdims = (size_t*) malloc(var.ndims * sizeof(size_t));
                     for (id = 0; id < var.ndims; id++)
@@ -591,7 +591,7 @@ make_lvars(char *optarg, struct fspec* fspecp)
     for (cp = strtok(optarg, ",");
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
-    
+
         *cpp = (char *) malloc(strlen(cp) + 1);
         if (!*cpp) error("out of memory");
 
@@ -834,7 +834,7 @@ main(int argc, char *argv[])
         }
 
     set_max_len(max_len);
-    
+
     argc -= optind;
     argv += optind;
 

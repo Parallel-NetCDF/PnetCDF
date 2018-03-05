@@ -29,11 +29,11 @@
  *           int dummy_rec(REC_DIM, X) ;
  *           int fix_var(FIX_DIM, X) ;
  *    data:
- * 
+ *
  *    rec_var =
  *      10, 11, 12, 13, 14,
  *      0, 1, 2, 3, 4 ;
- * 
+ *
  *    dummy_rec =
  *      0, 0, 0, 0, 0,
  *      0, 0, 0, 0, 0 ;
@@ -302,7 +302,7 @@ int main(int argc, char **argv) {
 
     /* check if the contents of buf are altered */
     CHECK_VALUE
- 
+
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid0, "rec_var"); CHECK_ERR
 

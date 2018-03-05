@@ -6,7 +6,7 @@
 
 using namespace std;
 using namespace PnetCDF;
-  
+
 
 // destructor  (defined even though it is virtual)
 NcmpiAtt::~NcmpiAtt() {}
@@ -22,14 +22,14 @@ NcmpiAtt& NcmpiAtt::operator=(const NcmpiAtt& rhs)
 }
 
 // Constructor generates a null object.
-NcmpiAtt::NcmpiAtt() : 
+NcmpiAtt::NcmpiAtt() :
   nullObject(true),
   groupId(-1),
   varId(-1)
 {}
 
 // Constructor for non-null instances.
-NcmpiAtt::NcmpiAtt(bool nullObject): 
+NcmpiAtt::NcmpiAtt(bool nullObject):
   nullObject(nullObject),
   groupId(-1),
   varId(-1)
@@ -47,23 +47,23 @@ NcmpiAtt::NcmpiAtt(const NcmpiAtt& rhs) :
 // equivalence operator
 bool NcmpiAtt::operator==(const NcmpiAtt & rhs) const
 {
-  if(nullObject) 
+  if(nullObject)
     return nullObject == rhs.nullObject;
   else
     return myName == rhs.myName && groupId == rhs.groupId && varId == rhs.varId;
-}  
+}
 
 //  !=  operator
 bool NcmpiAtt::operator!=(const NcmpiAtt & rhs) const
 {
   return !(*this == rhs);
-}  
+}
 
 // Gets parent group.
 PnetCDF::NcmpiGroup  NcmpiAtt::getParentGroup() const {
   return PnetCDF::NcmpiGroup(groupId);
 }
-      
+
 
 // Returns the attribute type.
 NcmpiType  NcmpiAtt::getType() const{
@@ -104,7 +104,7 @@ void NcmpiAtt::getValues(string& dataValues) const {
   assert(att_len == (MPI_Offset)(size_t)att_len);
   tmpValues = (char *) malloc((size_t)att_len + 1);  /* + 1 for trailing null */
 
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),tmpValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_text(groupId,varId,myName.c_str(),tmpValues),__FILE__,__LINE__);
@@ -115,7 +115,7 @@ void NcmpiAtt::getValues(string& dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(char* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_text(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -125,7 +125,7 @@ void NcmpiAtt::getValues(char* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(unsigned char* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_uchar(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -134,7 +134,7 @@ void NcmpiAtt::getValues(unsigned char* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(signed char* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_schar(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -143,7 +143,7 @@ void NcmpiAtt::getValues(signed char* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(short* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_short(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -152,7 +152,7 @@ void NcmpiAtt::getValues(short* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(int* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_int(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -161,7 +161,7 @@ void NcmpiAtt::getValues(int* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(long* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_long(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -170,7 +170,7 @@ void NcmpiAtt::getValues(long* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(float* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_float(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -179,7 +179,7 @@ void NcmpiAtt::getValues(float* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(double* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_double(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -188,7 +188,7 @@ void NcmpiAtt::getValues(double* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(unsigned short* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_ushort(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -197,7 +197,7 @@ void NcmpiAtt::getValues(unsigned short* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(unsigned int* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_uint(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -206,7 +206,7 @@ void NcmpiAtt::getValues(unsigned int* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(long long* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_longlong(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
@@ -215,7 +215,7 @@ void NcmpiAtt::getValues(long long* dataValues) const {
 // Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(unsigned long long* dataValues) const {
   NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_ulonglong(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);

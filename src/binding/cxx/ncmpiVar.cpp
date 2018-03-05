@@ -7,16 +7,16 @@
 #include<pnetcdf.h>
 using namespace std;
 using namespace PnetCDF::exceptions;
-  
+
 namespace PnetCDF {
   //  Global comparator operator ==============
-  // comparator operator 
+  // comparator operator
   bool operator<(const NcmpiVar& lhs,const NcmpiVar& rhs)
   {
     return false;
   }
-  
-  // comparator operator 
+
+  // comparator operator
   bool operator>(const NcmpiVar& lhs,const NcmpiVar& rhs)
   {
     return true;
@@ -35,7 +35,7 @@ NcmpiVar& NcmpiVar::operator=(const NcmpiVar & rhs)
 }
 
 // The copy constructor.
-NcmpiVar::NcmpiVar(const NcmpiVar& rhs) : 
+NcmpiVar::NcmpiVar(const NcmpiVar& rhs) :
   nullObject(rhs.nullObject),
   myId(rhs.myId),
   groupId(rhs.groupId)
@@ -47,20 +47,20 @@ bool NcmpiVar::operator==(const NcmpiVar & rhs) const
 {
   // simply check the netCDF id.
   return (myId == rhs.myId);
-}  
+}
 
 //  !=  operator
 bool NcmpiVar::operator!=(const NcmpiVar & rhs) const
 {
   return !(*this == rhs);
-}  
+}
 
 /////////////////
-  
+
 // Constructors and intialization
-  
+
 /////////////////
-  
+
 // Constructor generates a null object.
 NcmpiVar::NcmpiVar() :
   nullObject(true),
@@ -75,17 +75,17 @@ NcmpiVar::NcmpiVar (const NcmpiGroup& grp, const int& varId) :
   groupId(grp.getId())
 {}
 
-  
-  
+
+
 // Gets parent group.
 NcmpiGroup  NcmpiVar::getParentGroup() const {
   return NcmpiGroup(groupId);
 }
-  
+
 
 // Get the variable id.
 int  NcmpiVar::getId() const {return myId;}
-    
+
 //////////////////////
 
 //  Information about the variable type
@@ -109,8 +109,8 @@ NcmpiType NcmpiVar::getType() const {
   if(xtypep ==  ncmpiShort.getId()   ) return ncmpiShort;
   if(xtypep ==  ncmpiUshort.getId()  ) return ncmpiUshort;
   if(xtypep ==  ncmpiInt.getId()     ) return ncmpiInt;
-  if(xtypep ==  ncmpiUint.getId()    ) return ncmpiUint;  
-  if(xtypep ==  ncmpiInt64.getId()   ) return ncmpiInt64; 
+  if(xtypep ==  ncmpiUint.getId()    ) return ncmpiUint;
+  if(xtypep ==  ncmpiInt64.getId()   ) return ncmpiInt64;
   if(xtypep ==  ncmpiUint64.getId()  ) return ncmpiUint64;
   if(xtypep ==  ncmpiFloat.getId()   ) return ncmpiFloat;
   if(xtypep ==  ncmpiDouble.getId()  ) return ncmpiDouble;
@@ -130,14 +130,14 @@ NcmpiType NcmpiVar::getType() const {
 
 
 
-  
-/////////////////
-  
-// Information about Dimensions
-  
+
 /////////////////
 
-  
+// Information about Dimensions
+
+/////////////////
+
+
 // Gets the number of dimensions.
 int NcmpiVar::getDimCount() const
 {
@@ -145,13 +145,13 @@ int NcmpiVar::getDimCount() const
   int dimCount;
   ncmpiCheck(ncmpi_inq_varndims(groupId,myId, &dimCount),__FILE__,__LINE__);
   return dimCount;
-}  
+}
 
 // Gets the set of Ncdim objects.
 vector<NcmpiDim> NcmpiVar::getDims() const
 {
   // get the number of dimensions
-  int dimCount = getDimCount();  
+  int dimCount = getDimCount();
   // create a vector of dimensions.
   vector<NcmpiDim> ncmpiDims;
   if (dimCount){
@@ -164,9 +164,9 @@ vector<NcmpiDim> NcmpiVar::getDims() const
     }
   }
   return ncmpiDims;
-}  
+}
 
-  
+
 // Gets the i'th NcmpiDim object.
 NcmpiDim NcmpiVar::getDim(int i) const
 {
@@ -177,12 +177,12 @@ NcmpiDim NcmpiVar::getDim(int i) const
 
 
 /////////////////
-  
+
 // Information about Attributes
-  
+
 /////////////////
 
-  
+
 // Gets the number of attributes.
 int NcmpiVar::getAttCount() const
 {
@@ -190,13 +190,13 @@ int NcmpiVar::getAttCount() const
   int attCount;
   ncmpiCheck(ncmpi_inq_varnatts(groupId,myId, &attCount),__FILE__,__LINE__);
   return attCount;
-}  
+}
 
 // Gets the set of attributes.
 map<string,NcmpiVarAtt> NcmpiVar::getAtts() const
 {
   // get the number of attributes
-  int attCount = getAttCount();  
+  int attCount = getAttCount();
   // create a container of attributes.
   map<string,NcmpiVarAtt> ncmpiAtts;
   for (int i=0; i<attCount; i++){
@@ -204,9 +204,9 @@ map<string,NcmpiVarAtt> NcmpiVar::getAtts() const
     ncmpiAtts.insert(pair<const string,NcmpiVarAtt>(tmpAtt.getName(),tmpAtt));
   }
   return ncmpiAtts;
-}  
+}
 
-  
+
 // Gets attribute by name.
 NcmpiVarAtt NcmpiVar::getAtt(const string& name) const
 {
@@ -237,7 +237,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const string& dataValues) const
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const unsigned char* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_uchar(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -250,7 +250,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const signed char* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_schar(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -265,7 +265,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, short datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_short(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -278,7 +278,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, short da
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, int datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_int(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -290,7 +290,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, int datu
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, long datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_long(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -302,7 +302,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, long dat
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, float datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_float(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -315,7 +315,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, float da
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, double datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_double(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -328,7 +328,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, double d
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, unsigned short datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_ushort(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -340,7 +340,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, unsigned
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, unsigned int datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_uint(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -352,7 +352,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, unsigned
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, long long datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_longlong(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -365,7 +365,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, long lon
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, unsigned long long datumValue) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_ulonglong(groupId,myId,name.c_str(),type.getId(),1,&datumValue),__FILE__,__LINE__);
@@ -390,7 +390,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, unsigned
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const short* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_short(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -403,7 +403,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const int* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_int(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -415,7 +415,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const long* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_long(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -427,7 +427,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const float* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_float(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -440,7 +440,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const double* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_double(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -453,7 +453,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const unsigned short* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_ushort(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -465,7 +465,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const unsigned int* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_uint(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -477,7 +477,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const long long* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_longlong(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -490,7 +490,7 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const unsigned long long* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   NcmpiType::ncmpiType typeClass(type.getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
+  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND)
     ncmpiCheck(ncmpi_put_att(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_put_att_ulonglong(groupId,myId,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -511,11 +511,11 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 
 
 ////////////////////
-  
+
 // Other Basic variable info
-  
+
 ////////////////////
-  
+
 // The name of this variable.
 string NcmpiVar::getName() const{
   char charName[NC_MAX_NAME+1];
@@ -525,9 +525,9 @@ string NcmpiVar::getName() const{
 
 
 ////////////////////
-  
+
 // Chunking details
-  
+
 ////////////////////
 
 
@@ -536,8 +536,8 @@ void NcmpiVar::setChunking(ChunkMode chunkMode, vector<MPI_Offset>& chunkSizes) 
   MPI_Offset *chunkSizesPtr = chunkSizes.empty() ? 0 : &chunkSizes[0];
   ncmpiCheck(ncmpi_def_var_chunking(groupId,myId,static_cast<int> (chunkMode), chunkSizesPtr),__FILE__,__LINE__);
 }
-  
-  
+
+
 // Gets the chunking parameters
 void NcmpiVar::getChunkingParameters(ChunkMode& chunkMode, vector<MPI_Offset>& chunkSizes) const {
   int chunkModeInt;
@@ -546,14 +546,14 @@ void NcmpiVar::getChunkingParameters(ChunkMode& chunkMode, vector<MPI_Offset>& c
   ncmpiCheck(ncmpi_inq_var_chunking(groupId,myId, &chunkModeInt, chunkSizesPtr),__FILE__,__LINE__);
   chunkMode = static_cast<ChunkMode> (chunkModeInt);
 }
-  
-  
-  
-  
+
+
+
+
 ////////////////////
-  
+
 // Fill details
-  
+
 ////////////////////
 
 
@@ -562,7 +562,7 @@ void NcmpiVar::setFill(bool fillMode, void* fillValue) const {
   // If fillMode is enabled, check that fillValue has a legal pointer.
   // if(fillMode && fillValue == NULL)
     // throw NcmpiException("FillMode was set to zero but fillValue has invalid pointer",__FILE__,__LINE__);
-  
+
   ncmpiCheck(ncmpi_def_var_fill(groupId,myId,static_cast<int> (!fillMode),fillValue),__FILE__,__LINE__);
 }
 
@@ -576,12 +576,12 @@ void NcmpiVar::setFill(bool fillMode, const void* fillValue) const {
 
 // Gets the fill parameters
 void NcmpiVar::getFillModeParameters(bool& fillMode, void* fillValue)const{
-    
+
   int fillModeInt;
   ncmpiCheck(ncmpi_inq_var_fill(groupId,myId,&fillModeInt,fillValue),__FILE__,__LINE__);
   fillMode= static_cast<bool> (fillModeInt == 0);
 }
-  
+
 /* fill variable */
 void NcmpiVar::fillRec(MPI_Offset recno) const {
   ncmpiCheckDataMode(groupId);
@@ -590,29 +590,29 @@ void NcmpiVar::fillRec(MPI_Offset recno) const {
 
 
 ////////////////////
-  
+
 // Compression details
-  
+
 ////////////////////
 
 
 // Sets the compression parameters
 void NcmpiVar::setCompression(bool enableShuffleFilter, bool enableDeflateFilter, int deflateLevel) const {
-    
+
   // Check that the deflate level is legal
   if(enableDeflateFilter & (deflateLevel < 0 || deflateLevel >9))
     throw NcmpiException("The deflateLevel must be set between 0 and 9.",__FILE__,__LINE__);
-    
+
   ncmpiCheck(ncmpi_def_var_deflate(groupId,myId,
 			     static_cast<int> (enableShuffleFilter),
 			     static_cast<int> (enableDeflateFilter),
 			     deflateLevel),__FILE__,__LINE__);
 }
-  
+
 
 // Gets the compression parameters
 void NcmpiVar::getCompressionParameters(bool& shuffleFilterEnabled, bool& deflateFilterEnabled, int& deflateLevel) const {
-    
+
   int enableShuffleFilterInt;
   int enableDeflateFilterInt;
   ncmpiCheck(ncmpi_inq_var_deflate(groupId,myId,
@@ -622,63 +622,63 @@ void NcmpiVar::getCompressionParameters(bool& shuffleFilterEnabled, bool& deflat
   shuffleFilterEnabled =  static_cast<bool> (enableShuffleFilterInt);
   deflateFilterEnabled =  static_cast<bool> (enableDeflateFilterInt);
 }
-  
+
 
 
 ////////////////////
-  
+
 // Endianness details
-  
+
 ////////////////////
-      
+
 
 // Sets the endianness of the variable.
 void NcmpiVar::setEndianness(EndianMode endianMode) const {
-    
+
   ncmpiCheck(ncmpi_def_var_endian(groupId,myId,static_cast<int> (endianMode)),__FILE__,__LINE__);
 }
-  
-  
+
+
 // Gets the endianness of the variable.
 NcmpiVar::EndianMode NcmpiVar::getEndianness() const {
-    
+
   int endianInt;
   ncmpiCheck(ncmpi_inq_var_endian(groupId,myId,&endianInt),__FILE__,__LINE__);
   return static_cast<EndianMode> (endianInt);
 }
-  
-      
-  
+
+
+
 ////////////////////
-  
+
 // Checksum details
-  
+
 ////////////////////
-  
-  
+
+
 // Sets the checksum parameters of a variable.
 void NcmpiVar::setChecksum(ChecksumMode checksumMode) const {
   ncmpiCheck(ncmpi_def_var_fletcher32(groupId,myId,static_cast<int> (checksumMode)),__FILE__,__LINE__);
 }
-  
-  
+
+
 // Gets the checksum parameters of the variable.
 NcmpiVar::ChecksumMode NcmpiVar::getChecksum() const {
   int checksumInt;
   ncmpiCheck(ncmpi_inq_var_fletcher32(groupId,myId,&checksumInt),__FILE__,__LINE__);
   return static_cast<ChecksumMode> (checksumInt);
 }
-  
-  
 
-  
+
+
+
 ////////////////////
-  
+
 //  renaming the variable
-  
+
 ////////////////////
-  
-void NcmpiVar::rename( const string& newname ) const 
+
+void NcmpiVar::rename( const string& newname ) const
 {
   ncmpiCheck(ncmpi_rename_var(groupId,myId,newname.c_str()),__FILE__,__LINE__);
 }

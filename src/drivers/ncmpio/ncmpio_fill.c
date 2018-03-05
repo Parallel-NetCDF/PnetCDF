@@ -729,7 +729,7 @@ err_check:
 
         TRACE_COMM(MPI_Bcast)(&root_fill_mode, 1, MPI_INT, 0, ncp->comm);
         if (mpireturn != MPI_SUCCESS)
-            return  ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast"); 
+            return  ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
         if (err == NC_NOERR && fill_mode != root_fill_mode)
             /* dataset's fill mode is inconsistent with root's */
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FILL_MODE)

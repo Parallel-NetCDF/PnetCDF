@@ -6,8 +6,8 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
- * knowing nothing about the file, read in the variables. 
+/* simple demonstration of pnetcdf
+ * knowing nothing about the file, read in the variables.
  *
  * This example demonstrates the flexible interface, using the MPI derived
  * datatype to transpose the matrix.
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 		    100*i*dim_sizes[1]*dim_sizes[2] + 10*j*dim_sizes[2] + k;
 		/* permute the array data[X][Y][Z] to transpose[Y][Z][X] */
 		assert((j*dim_sizes[2]*dim_sizes[0] + k*dim_sizes[0] + i) < nitems);
-		transposed_data[j*dim_sizes[2]*dim_sizes[0] + k*dim_sizes[0] + i] = 
+		transposed_data[j*dim_sizes[2]*dim_sizes[0] + k*dim_sizes[0] + i] =
 		    100*i*dim_sizes[1]*dim_sizes[2] + 10*j*dim_sizes[2] + k;
 	    }
 	}
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
     count[1] = dim_sizes[2];
     count[2] = dim_sizes[0];
     if (rank > 0) nitems = count[0] = count[1] = count[2] = 0;
-    ret = ncmpi_put_vara_all(ncfile, transposed_varid, start, count, 
+    ret = ncmpi_put_vara_all(ncfile, transposed_varid, start, count,
 	    transposed_data, nitems, MPI_DOUBLE);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
     /* new innermost dimension is I items, strided across the old JK face*/
     MPI_Type_vector(dim_sizes[0], 1, dim_sizes[1]*dim_sizes[2], MPI_DOUBLE, &one_d);
     /* new middle dimension is K items, strided over the K row, which isn't
-     * actually a stride in this case.  We use hvector here because we 
+     * actually a stride in this case.  We use hvector here because we
      * operate directly in terms of array items */
     MPI_Type_create_hvector(dim_sizes[2], 1, sizeof(double), one_d, &two_d);
     /* new outermost dimension is J items, strided over the old J row */
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 
     nitems = 1;
     if (rank > 0) nitems = 0;
-    ret = ncmpi_put_vara_all(ncfile, flexible_varid, start, count, 
+    ret = ncmpi_put_vara_all(ncfile, flexible_varid, start, count,
 	    data, nitems, transposed_type);
 
     MPI_Type_free(&transposed_type);

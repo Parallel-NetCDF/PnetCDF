@@ -2080,7 +2080,7 @@ tst_atts(char *filename, int cmode)
 #define A1_NAME "a"
 #define B1_NAME "b"
 #define VAR_NAME "var"
-      
+
       int ncid, nvars, v, natts, varid;
       char name_in[NC_MAX_NAME + 1];
       char char_data = 'a';
@@ -2090,7 +2090,7 @@ tst_atts(char *filename, int cmode)
       err=ncmpi_def_var(ncid, VAR_NAME, NC_INT, 0, NULL, &varid); ERR
       err=ncmpi_put_att(ncid, varid, A1_NAME, NC_CHAR, 1, &char_data); ERR
       err=ncmpi_put_att(ncid, varid, B1_NAME, NC_CHAR, 1, &char_data); ERR
-      
+
       /* Add a global attribute A1_NAME. */
       err=ncmpi_put_att(ncid, NC_GLOBAL, A1_NAME, NC_CHAR, 1, &char_data); ERR
 

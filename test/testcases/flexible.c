@@ -25,7 +25,7 @@
  *    variables:
  * 	   int VAR(Y, X) ;
  *    data:
- * 
+ *
  *    var =
  *      11, 11, 11, 11, 11,
  *      10, 10, 10, 10, 10 ;
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
         for (i=0; i<NX; i++)
             if (buf[j][i] != j+10)
                 printf("buf[%d][%d] != %d\n",j,i,buf[j][i]);
- 
+
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid, "VAR"); CHECK_ERR
 

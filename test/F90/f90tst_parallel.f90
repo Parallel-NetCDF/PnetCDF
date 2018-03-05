@@ -19,7 +19,7 @@
 ! variables:
 ! 	int data(x, y) ;
 ! data:
-! 
+!
 !  data =
 !   0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 !   0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -43,7 +43,7 @@ program f90tst_parallel
   use mpi
   use pnetcdf
   implicit none
-  
+
   ! This is the name of the data file we will create.
   character (len = *), parameter :: FILE_NAME = "f90tst_parallel.nc"
 
@@ -86,7 +86,7 @@ program f90tst_parallel
      end do
   end do
 
-  ! Create the netCDF file. 
+  ! Create the netCDF file.
   mode_flag = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
   call handle_err(nf90mpi_create(MPI_COMM_WORLD, filename, mode_flag, MPI_INFO_NULL, ncid))
 
@@ -97,7 +97,7 @@ program f90tst_parallel
   call handle_err(nf90mpi_def_dim(ncid, "y", ny_ll, y_dimid))
   dimids =  (/ y_dimid, x_dimid /)
 
-  ! Define the variable. 
+  ! Define the variable.
   call handle_err(nf90mpi_def_var(ncid, "data", NF90_INT, dimids, varid))
 
   call handle_err(nf90mpi_enddef(ncid))
@@ -121,12 +121,12 @@ program f90tst_parallel
   ! Write this processor's data.
   call handle_err(nf90mpi_put_var_all(ncid, varid, data_out, start = start, count = count))
 
-  ! Close the file. 
+  ! Close the file.
   call handle_err(nf90mpi_close(ncid))
 
   ! Reopen the file.
   call handle_err(nf90mpi_open(MPI_COMM_WORLD, filename, nf90_nowrite, MPI_INFO_NULL, ncid))
-  
+
   ! Check some stuff out.
   call handle_err(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
   if (ndims /= 2 .or. nvars /= 1 .or. ngatts /= 0 .or. unlimdimid /= -1 .or. &
@@ -161,7 +161,7 @@ contains
   subroutine handle_err(errcode)
     implicit none
     integer, intent(in) :: errcode
-    
+
     if(errcode /= nf90_noerr) then
        print *, 'Error: ', trim(nf90mpi_strerror(errcode))
        stop 2

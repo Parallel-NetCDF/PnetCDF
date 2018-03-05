@@ -1,9 +1,9 @@
       program flash_benchmark_io
 !
-! This is a sample program that setups the FLASH data structures and 
+! This is a sample program that setups the FLASH data structures and
 ! drives the I/O routines.  It is intended for benchmarking the I/O
 ! performance.
-! 
+!
 
 ! #ifndef MPI_OFFSET
 ! #define MPI_OFFSET MPI_INTEGER8
@@ -71,7 +71,7 @@
                      MPI_COMM_WORLD, ierr)
 
 ! put ~100 blocks on each processor -- make it vary a little, since it does
-! in the real application.  This is the maximum that we can fit on Blue 
+! in the real application.  This is the maximum that we can fit on Blue
 ! Pacific comfortably.
       lnblocks = local_blocks + mod(MyPE,3)
 
@@ -110,14 +110,14 @@
       time_begin = MPI_Wtime()
       nocorner_io = plotfile_ncmpi_par(0,0.e0,.false.)
       time_io(2) = MPI_Wtime() - time_begin
-    
+
 !---------------------------------------------------------------------------
 ! netCDF plotfile -- corners
 !---------------------------------------------------------------------------
       time_begin = MPI_Wtime()
       corner_io = plotfile_ncmpi_par(0,0.e0,.true.)
       time_io(3) = MPI_Wtime() - time_begin
-    
+
       call report_io_performance(verbose, local_blocks, time_io, chk_io, &
                                  corner_io, nocorner_io)
 

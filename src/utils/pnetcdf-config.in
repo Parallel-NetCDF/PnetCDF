@@ -64,6 +64,7 @@ enable_null_byte_header_padding="@ENABLE_NULL_BYTE_HEADER_PADDING@"
 enable_relax_coord_bound="@RELAX_COORD_BOUND@"
 is_bigendian="@ac_cv_c_bigendian@"
 in_place_swap="@in_place_swap@"
+enable_dwdriver="@BUILD_DRIVER_DW@"
 
 config_date="@CONFIG_DATE@"
 release_date="PNETCDF_RELEASE_DATE"
@@ -97,6 +98,7 @@ Available values for OPTION include:
   --subfiling                 Whether subfiling is enabled or disabled
   --large-req                 Whether to allow single large (>2GiB) MPI-IO requests
   --null-byte-header-padding  Whether to check null-byte padding in header
+  --dwdriver                  Whether DataWarp driver is built or not
   --debug                     Whether PnetCDF is built with debug mode
   --prefix                    Install prefix
   --includedir                Include directory
@@ -168,6 +170,11 @@ if test "x$enable_null_byte_header_padding" = x1; then
         echo "  --null-byte-header-padding  -> enabled"
 else
         echo "  --null-byte-header-padding  -> disabled"
+fi
+if test "x$enable_dwdriver" = x1; then
+        echo "  --dwdriver                  -> enabled"
+else
+        echo "  --dwdriver                  -> disabled"
 fi
 if test "x$debug_mode" = x1; then
         echo "  --debug                     -> enabled"
@@ -324,6 +331,14 @@ fi
 
     --null-byte-header-padding)
 if test "x$enable_null_byte_header_padding" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --dwdriver)
+if test "x$enable_dwdriver" = x1; then
         echo "enabled"
 else
         echo "disabled"

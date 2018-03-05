@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     if (argc >= 1) snprintf(filename, 256, "%s", argv[0]);
     else           strcpy(filename, "testfile.nc");
 
-    len = 10; 
+    len = 10;
     if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
     len = (len <= 0) ? 10 : len;
 

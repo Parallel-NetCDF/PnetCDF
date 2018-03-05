@@ -129,10 +129,10 @@ define([TEST_NFMPI_GET_VAR1],[dnl
         integer i
         integer j
         integer err
-        integer nok      
+        integer nok
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         doubleprecision expect
-        logical canConvert     
+        logical canConvert
         DATATYPE_VAR1($1, value)
         doubleprecision val
 
@@ -225,13 +225,13 @@ define([TEST_NFMPI_GET_VAR],[dnl
         integer i
         integer j
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
-        integer nok      
+        integer nok
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         doubleprecision expect(MAX_NELS)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
 
@@ -326,16 +326,16 @@ define([TEST_NFMPI_GET_VARA],[dnl
         integer j
         integer k
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer nok      
+        integer nok
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, MAX_NELS)
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -433,7 +433,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 7           continue
-!           bits of k determine whether to get lower or upper part of dim 
+!           bits of k determine whether to get lower or upper part of dim
             do 8, k = 1, nslabs
                 nels = 1
                 do 9, j = 1, var_rank(i)
@@ -531,12 +531,12 @@ define([TEST_NFMPI_GET_VARS],dnl
         integer k
         integer m
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer(kind=MPI_OFFSET_KIND) nstarts         
-        integer nok             
+        integer(kind=MPI_OFFSET_KIND) nstarts
+        integer nok
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -545,7 +545,7 @@ define([TEST_NFMPI_GET_VARS],dnl
         integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, MAX_NELS)
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -569,12 +569,12 @@ define([TEST_NFMPI_GET_VARS],dnl
             err = GetVar(BAD_ID, i, value, start, edge, stride)
             if (err .ne. NF90_EBADID) &
                 call errore('bad ncid: ', err)
-            err = GetVar(ncid, BAD_VARID, value, start, edge, stride) 
+            err = GetVar(ncid, BAD_VARID, value, start, edge, stride)
             if (err .ne. NF90_ENOTVAR) &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
-                err = GetVar(ncid, i, value, start, edge, stride) 
+                err = GetVar(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('conversion: ', err)
@@ -584,7 +584,7 @@ define([TEST_NFMPI_GET_VARS],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = GetVar(ncid, i, value, start, edge, stride) 
+                err = GetVar(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('conversion: ', err)
@@ -695,7 +695,7 @@ define([TEST_NFMPI_GET_VARS],dnl
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 11                  continue
-!                   Random choice of forward or backward 
+!                   Random choice of forward or backward
 !    /* TODO
 !                   if ( roll(2) ) then
 !                       for (j = 0 j < var_rank(i) j++) {
@@ -803,12 +803,12 @@ define([TEST_NFMPI_GET_VARM],dnl
         integer k
         integer m
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer(kind=MPI_OFFSET_KIND) nstarts         
-        integer nok             
+        integer(kind=MPI_OFFSET_KIND) nstarts
+        integer nok
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -818,7 +818,7 @@ define([TEST_NFMPI_GET_VARM],dnl
         integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, MAX_NELS)
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -841,7 +841,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                 imap(j) = 1
 2           continue
             err = GetVar(BAD_ID, i, value, start, edge, &
-                                 stride, imap) 
+                                 stride, imap)
             if (err .ne. NF90_EBADID) &
                 call errore('bad ncid: ', err)
             err = GetVar(ncid, BAD_VARID, value, start, &
@@ -936,14 +936,14 @@ define([TEST_NFMPI_GET_VARM],dnl
 6               continue
             endif
 
-!           Choose a random point dividing each dim into 2 parts 
-!           get 2^rank (nslabs) slabs so defined 
+!           Choose a random point dividing each dim into 2 parts
+!           get 2^rank (nslabs) slabs so defined
             nslabs = 1
             do 7, j = 1, var_rank(i)
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 7           continue
-!           /* bits of k determine whether to get lower or upper part 
+!           /* bits of k determine whether to get lower or upper part
 !            * of dim
 !            * choose random stride from 1 to edge */
             do 8, k = 1, nslabs
@@ -975,7 +975,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 11                  continue
-!                   Random choice of forward or backward 
+!                   Random choice of forward or backward
 !    /* TODO
 !                   if ( roll(2) ) then
 !                       for (j = 0 j < var_rank(i) j++) {
@@ -1091,10 +1091,10 @@ define([TEST_NFMPI_GET_ATT],dnl
         integer(kind=MPI_OFFSET_KIND) ndx(1)
         logical allInExtRange
         logical allInIntRange
-        logical canConvert     
+        logical canConvert
         ATTDATATYPE($1, value, MAX_NELS)
         doubleprecision expect(MAX_NELS)
-        integer nok             
+        integer nok
         doubleprecision val
 
         nok = 0

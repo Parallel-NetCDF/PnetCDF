@@ -8,19 +8,19 @@
 namespace PnetCDF
 {
   class NcmpiGroup;  // forward declaration.
-     
+
   /*! Class represents a netCDF dimension */
   class NcmpiDim   {
-    
+
   public:
-     
+
     /*! destructor*/
     ~NcmpiDim(){};
 
     /*! Constructor generates a \ref isNull "null object". */
     NcmpiDim ();
 
-    /*! 
+    /*!
       Constructor for a dimension .
       The dimension must already exist in the netCDF file. New netCDF variables can be added using NcmpiGroup::addNcmpiDim();
       \param grp    Parent NcmpiGroup object.
@@ -32,10 +32,10 @@ namespace PnetCDF
     NcmpiDim& operator =(const NcmpiDim &);
 
     /*! equivalence operator */
-    bool operator==(const NcmpiDim& rhs) const;     
+    bool operator==(const NcmpiDim& rhs) const;
 
     /*!  != operator */
-    bool operator!=(const NcmpiDim& rhs) const;     
+    bool operator!=(const NcmpiDim& rhs) const;
 
     /*! The copy constructor. */
     NcmpiDim(const NcmpiDim& ncmpiDim);
@@ -45,10 +45,10 @@ namespace PnetCDF
 
     /*! The netCDF Id of this dimension. */
     int getId() const {return myId;};
-    
+
     /*! Gets a  NcmpiGroup object of the parent group. */
     NcmpiGroup getParentGroup() const;
-      
+
     /*! Returns true if this is an unlimited dimension */
     bool isUnlimited() const;
 
@@ -63,22 +63,22 @@ namespace PnetCDF
 
     /*! comparator operator  */
     friend bool operator<(const NcmpiDim& lhs,const NcmpiDim& rhs);
-    
+
     /*! comparator operator  */
     friend bool operator>(const NcmpiDim& lhs,const NcmpiDim& rhs);
-    
+
   private:
 
     bool nullObject;
 
-    int myId;	
+    int myId;
 
     int groupId;
 
   };
-  
+
 }
 
- 
+
 #endif
 

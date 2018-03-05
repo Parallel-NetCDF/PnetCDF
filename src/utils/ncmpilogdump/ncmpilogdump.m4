@@ -59,11 +59,11 @@ int main(int argc, char *argv[]) {
         err = NC_EFILE;
         goto fn_exit;
     }
-    
+
     /* Get file size */
     fd = fileno(fmeta);
     fstat(fd, &metastat);
-   
+
     /* Allocate buffer */
     Meta = (char*)malloc(metastat.st_size);
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
         err = NC_EBADLOG;
         goto fn_exit;
     }
- 
+
     /* Open data log if path is given */
     if (argc > 2){
         fdata = fopen(argv[2], "rb+");
@@ -81,11 +81,11 @@ int main(int argc, char *argv[]) {
             err = NC_EFILE;
             goto fn_exit;
         }
-        
+
         /* Get file size */
         fd = fileno(fdata);
         fstat(fd, &datastat);
-        
+
         /* Allocate buffer */
         Data = (char*)malloc(datastat.st_size);
         /* Read the data */
@@ -98,10 +98,10 @@ int main(int argc, char *argv[]) {
     else{
         Data = NULL;
     }
-   
+
     /* Parse header */
     Header = (NC_dw_metadataheader*)Meta;
-    
+
     printf("Metadata log header:\n");
     printf("Magic:\t\t\t\t\t\t%.8s\n", Header->magic);
     printf("Format:\t\t\t\t\t\t%.8s\n", Header->format);
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     printf("Max number of dimensions:\t%lld\n", Header->max_ndims);
     printf("Begin of entry record:\t\t\%lld\n", Header->entry_begin);
     printf("Number of entries:\t\t\t%lld\n", Header->num_entries);
-    
+
     printf("\nData log header:%.8s\n", Header->magic);
     printf("Magic:\t\t\t\t\t\t%.8s\n", Data);
 
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
         start = (MPI_Offset*)tail;
         count = start + E->ndims;
         stride = count + E->ndims;
-       
+
         /* Original function call */
         printf("ncmpi_put_var");
         /* put_vara or put_vars */
@@ -180,11 +180,11 @@ foreach(`vartype', (`text, uchar, schar, short, ushort, int, uint, float, double
                 if (i < (E->ndims - 1)){
                     printf(", ");
                 }
-            } 
+            }
             printf(" ], ");
         }
         printf("%08llx);\n", E->data_off);
-        
+
         /* Corresponding content in data log */
         if (Data != NULL){
             for (i = 0; i < E->data_len; i+= 16) {
@@ -221,7 +221,7 @@ fn_exit:
             break;
         default:
             printf("Unknown error\n");
-            
+
     }
     return 0;
 }

@@ -1,5 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
+/*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
@@ -23,7 +23,7 @@ static int verbose;
    block-distributed array to a file corresponding to the global array
    in row-major (C) order.
    Note that the file access pattern is noncontiguous.
-  
+
    Array size 128^3. For other array sizes, change array_of_gsizes below.
 */
 
@@ -241,7 +241,7 @@ int ncmpi_diff(char *filename1, char *filename2)
     }
 
     /**
-     * Read data of variables from input dataset 
+     * Read data of variables from input dataset
      * (ONLY DEAL WITH: NC_INT, NC_FLOAT, NC_DOUBLE for now)
      * Write the data out to the corresponding variables in the output dataset
      *
@@ -376,10 +376,10 @@ int main(int argc, char **argv)
         printf("counts malloc error\n");
         nerrs++; goto fn_exit;
     }
-    
+
     reqs = (int *)malloc(nvars*sizeof(int));
     sts = (int *)malloc(nvars*sizeof(int));
-    
+
     for (i=0; i<nvars; i++) {
         starts[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
         if (starts[i] == NULL){
@@ -392,7 +392,7 @@ int main(int argc, char **argv)
             nerrs++; goto fn_exit;
         }
     }
-  
+
     bufcount = 1;
     for (i=0; i<ndims; i++) {
         array_of_psizes[i] = 0;
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
     }
     buf_var = (int *) malloc(bufcount*nprocs*sizeof(int));
     for (i=0; i<bufcount*nprocs; i++)
-        buf_var[i] = rank + 1;  
+        buf_var[i] = rank + 1;
 
     nvars2 = (nvars > nprocs) ? nvars : nprocs;
     varid = (int *)malloc(nvars2*sizeof(int));
@@ -458,7 +458,7 @@ int main(int argc, char **argv)
             strcpy(filename1, filename);
         else if (k==7)
             strcpy(filename2, filename);
-        else 
+        else
             strcpy(filename3, filename);
 
         err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_OFFSET,
@@ -477,7 +477,7 @@ int main(int argc, char **argv)
             sprintf(dimname, "dim1_%d", i);
             err = ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids1[i]);
             CHECK_ERR
-        } 
+        }
 
         /* define variables */
         if (k<7){
@@ -522,7 +522,7 @@ int main(int argc, char **argv)
             }
             err = ncmpi_end_indep_data(ncid);
             CHECK_ERR
-        } 
+        }
 
         if (k == 2) {
             if (rank == 0 && verbose)
@@ -555,7 +555,7 @@ int main(int argc, char **argv)
             }
             err = ncmpi_wait_all(ncid, nvars, reqs, sts);
             CHECK_ERR
-        } 
+        }
 
         if (k == 5) {
             if (rank == 0 && verbose)
@@ -573,7 +573,7 @@ int main(int argc, char **argv)
             }
             err = ncmpi_end_indep_data(ncid);
             CHECK_ERR
-        } 
+        }
 
         if (k == 6) {
             if (rank == 0 && verbose)
@@ -587,7 +587,7 @@ int main(int argc, char **argv)
             }
             err = ncmpi_wait_all(ncid, nvars, reqs, sts);
             CHECK_ERR
-        } 
+        }
         if (k == 7) {
             if (rank == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_put_var() ...", nprocs);
@@ -627,23 +627,23 @@ int main(int argc, char **argv)
             if ((k>0)&&(k<7)){
             err = ncmpi_diff(filename1, filename3);
             if (rank == 0 && err == NC_NOERR && verbose)
-                printf("\t OK\n");                                       
+                printf("\t OK\n");
             } else if (k>7){
 /*
 printf("filename2=%s filename3=%s\n",filename2, filename3);
                 err = ncmpi_diff(filename2, filename3);
                 if (rank == 0 && err == NC_NOERR && verbose)
-                    printf("\t OK\n");                                       
+                    printf("\t OK\n");
 */
             } else {
              if (rank == 0 && verbose)
-                 printf("\t OK\n");                                       
+                 printf("\t OK\n");
             }
         }
     }
 
 /*
-    int nkeys; 
+    int nkeys;
     MPI_Info_get_nkeys(info, &nkeys);
     printf("MPI File Info: nkeys = %d\n",nkeys);
     for (i=0; i<nkeys; i++) {
@@ -659,7 +659,7 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
 */
 
     MPI_Info_free(&info);
-    
+
     for (i=0; i<nvars; i++){
         free(starts[i]);
         free(counts[i]);

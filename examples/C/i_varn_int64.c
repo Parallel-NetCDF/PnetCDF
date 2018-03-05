@@ -219,10 +219,10 @@ int main(int argc, char** argv)
     starts[n][2][0]=2; starts[n][2][1]=6; counts[n][2][0]=1; counts[n][2][1]=2;
     starts[n][3][0]=3; starts[n][3][1]=0; counts[n][3][0]=1; counts[n][3][1]=3;
     /* starts[n][][] n_counts[n][][] indicate the following: ("-" means skip)
-              -  -  -  -  -  X  X  -  -  - 
-              X  -  -  -  -  -  -  -  -  - 
-              -  -  -  -  -  -  X  X  -  - 
-              X  X  X  -  -  -  -  -  -  - 
+              -  -  -  -  -  X  X  -  -  -
+              X  -  -  -  -  -  -  -  -  -
+              -  -  -  -  -  -  X  X  -  -
+              X  X  X  -  -  -  -  -  -  -
      */
     n = (rank+1) % 4;
     num_segs[n] = 6; /* number of segments for this request */
@@ -233,10 +233,10 @@ int main(int argc, char** argv)
     starts[n][4][0]=2; starts[n][4][1]=8; counts[n][4][0]=1; counts[n][4][1]=2;
     starts[n][5][0]=3; starts[n][5][1]=4; counts[n][5][0]=1; counts[n][5][1]=3;
     /* starts[n][][] counts[n][][] indicate the following pattern.
-              -  -  -  X  X  -  -  -  X  X 
-              -  -  -  -  -  X  X  -  -  - 
-              X  X  -  -  -  -  -  -  X  X 
-              -  -  -  -  X  X  X  -  -  - 
+              -  -  -  X  X  -  -  -  X  X
+              -  -  -  -  -  X  X  -  -  -
+              X  X  -  -  -  -  -  -  X  X
+              -  -  -  -  X  X  X  -  -  -
      */
     n = (rank+2) % 4;
     num_segs[n] = 5; /* number of segments for this request */
@@ -246,10 +246,10 @@ int main(int argc, char** argv)
     starts[n][3][0]=2; starts[n][3][1]=2; counts[n][3][0]=1; counts[n][3][1]=1;
     starts[n][4][0]=3; starts[n][4][1]=3; counts[n][4][0]=1; counts[n][4][1]=1;
     /* starts[n][][] counts[n][][] indicate the following pattern.
-              -  -  -  -  -  -  -  X  -  - 
-              -  X  X  X  -  -  -  X  X  X 
-              -  -  X  -  -  -  -  -  -  - 
-              -  -  -  X  -  -  -  -  -  - 
+              -  -  -  -  -  -  -  X  -  -
+              -  X  X  X  -  -  -  X  X  X
+              -  -  X  -  -  -  -  -  -  -
+              -  -  -  X  -  -  -  -  -  -
      */
     n = (rank+3) % 4;
     num_segs[n] = 4; /* number of segments for this request */
@@ -258,10 +258,10 @@ int main(int argc, char** argv)
     starts[n][2][0]=2; starts[n][2][1]=3; counts[n][2][0]=1; counts[n][2][1]=3;
     starts[n][3][0]=3; starts[n][3][1]=7; counts[n][3][0]=1; counts[n][3][1]=3;
      /*starts[n][][] counts[n][][] indicate the following pattern.
-              X  X  X  -  -  -  -  -  -  - 
-              -  -  -  -  X  -  -  -  -  - 
-              -  -  -  X  X  X  -  -  -  - 
-              -  -  -  -  -  -  -  X  X  X 
+              X  X  X  -  -  -  -  -  -  -
+              -  -  -  -  X  -  -  -  -  -
+              -  -  -  X  X  X  -  -  -  -
+              -  -  -  -  -  -  -  X  X  X
      */
 
     /* only rank 0, 1, 2, and 3 do I/O:
@@ -314,7 +314,7 @@ int main(int argc, char** argv)
             if (buffer[i][j] != rank)
                 printf("Expected read buf[%d][%d]=%d, but got %lld\n",
                        i,j,rank,buffer[i][j]);
-    }                
+    }
 
     for (i=0; i<nreqs; i++) free(buffer[i]);
 
@@ -357,7 +357,7 @@ int main(int argc, char** argv)
             if (buffer[i][j*2] != rank)
                 printf("Expected read buf[%d][%d]=%d, but got %lld\n",
                        i,j*2,rank,buffer[i][j*2]);
-    }                
+    }
 
     err = ncmpi_close(ncid);
     ERR

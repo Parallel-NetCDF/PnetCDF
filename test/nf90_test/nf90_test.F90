@@ -17,11 +17,11 @@
 ! The read-only tests read files:
 !     test.nc (see below)
 !     test_get.F (used merely as an example of a non-netCDF file)
-! 
-! The write tests 
-!     read test.nc (see below) 
+!
+! The write tests
+!     read test.nc (see below)
 !     write scratch.nc (deleted after each test)
-! 
+!
 ! The file test.nc is created by running nc_test with the -c (create) option.
 !
 
@@ -115,7 +115,7 @@
         integer         iargc
 #endif
 #if defined(__crayx1)
-        integer         ipxfargc 
+        integer         ipxfargc
 #endif
 #include "tests.inc"
 
@@ -126,7 +126,7 @@
         character*1     opt
         integer         lastopt
         logical         skiparg
-        integer         err                       
+        integer         err
 
         external        test_nf90mpi_strerror
         external        test_nf90mpi_open
@@ -418,8 +418,8 @@
         external        test_nf90mpi_set_default_format
         external        nc_ignorefpe
 
-        call MPI_INIT(err)                        
-        comm = MPI_COMM_WORLD                   
+        call MPI_INIT(err)
+        comm = MPI_COMM_WORLD
 
         call nc_ignorefpe(1)
 

@@ -11,7 +11,7 @@
  * NC_REQ_ALL to commit all pending nonblocking I/O without checking the status
  * of individual requests. In this case, the first encountered error will be
  * returned in ncmpi_wait_all().
- * 
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *

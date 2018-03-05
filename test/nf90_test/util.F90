@@ -181,7 +181,7 @@
 
 
 !
-!  Does x == y, where one is internal and other external (netCDF)?  
+!  Does x == y, where one is internal and other external (netCDF)?
 !  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
 !
       logical function equal(x, y, extType, itype)
@@ -346,7 +346,7 @@
 
 
 ! Generate data values as function of type, rank (-1 for attribute), index */
-      double precision function hash(type, rank, index) 
+      double precision function hash(type, rank, index)
       use pnetcdf
       implicit  none
       integer   type
@@ -617,7 +617,7 @@
 
 !
 !   define global variables:
-!   dim_name, dim_len, 
+!   dim_name, dim_len,
 !   var_name, var_type, var_rank, var_shape, var_natts, var_dimid, var_nels
 !   att_name, gatt_name, att_type, gatt_type, att_len, gatt_len
 !
@@ -788,7 +788,7 @@
         logical inrange
 
         integer                 err             !/* netCDF status */
-        integer                 i               !/* variable index (0 => global 
+        integer                 i               !/* variable index (0 => global
                                                 ! * attribute */
         integer                 k               !/* attribute index */
         integer                 j               !/* index of attribute */
@@ -939,7 +939,7 @@
 
 
 ! Create & write all of specified file using global variables */
-        subroutine write_file(filename) 
+        subroutine write_file(filename)
       use pnetcdf
         implicit        none
         character*(*)   filename
@@ -1102,7 +1102,7 @@
 !
 ! check attributes of specified file have expected name, type, length & values
 !
-        subroutine check_atts(ncid) 
+        subroutine check_atts(ncid)
       use pnetcdf
         implicit        none
         integer         ncid
@@ -1195,7 +1195,7 @@
 
 
 ! Check file (dims, vars, atts) corresponds to global variables */
-        subroutine check_file(filename) 
+        subroutine check_file(filename)
       use pnetcdf
         implicit        none
         character*(*)   filename

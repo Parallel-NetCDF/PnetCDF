@@ -60,11 +60,11 @@ int main(int argc, char** argv)
     if (commsize > 1 && rank == 0)
         printf("Warning: %s is designed to run on 1 process\n",argv[0]);
 #endif
-  
+
     err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
                           MPI_INFO_NULL, &ncid);
     CHECK_ERR
-  
+
     err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
     CHECK_ERR
 
@@ -76,12 +76,12 @@ int main(int argc, char** argv)
 
     err = ncmpi_def_dim(ncid, "dim9", len9, &dim9id);
     CHECK_ERR
-  
+
     dimsid[0] = dim0id;
     dimsid[1] = dim1id;
     err = ncmpi_def_var(ncid, "xyz", NC_INT, 2, dimsid, &varid);
     CHECK_ERR
- 
+
     dimsid[0] = dim0id;
     dimsid[1] = dim5id;
     err = ncmpi_def_var(ncid, "connect", NC_INT, 2, dimsid, &var3id);
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
     CHECK_ERR
     free(data);
-    
+
     count[0] = len0;
     count[1] = len5;
     data = (int*) malloc(len0*len5 * sizeof(int));
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 
     err = ncmpi_def_dim(ncid, "dim2", len2, &dim2id);
     CHECK_ERR
-  
+
     dims2id[0] = dim0id;
     dims2id[1] = dim2id;
     err = ncmpi_def_var(ncid, "xyz_r", NC_DOUBLE, 2, dims2id, &var2id);

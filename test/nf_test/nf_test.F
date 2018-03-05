@@ -72,7 +72,7 @@ C implementation of the netCDF library.
         nfailsTotal = nfailsTotal + nfails
         if ( nfails .ne. 0) then
             print *, ' '
-            print *, '  ### ', nfails, ' FAILURES TESTING ', name, 
+            print *, '  ### ', nfails, ' FAILURES TESTING ', name,
      +               '! Stop ... ###'
             call report_test
             stop 2
@@ -107,7 +107,7 @@ C implementation of the netCDF library.
         integer         iargc
 #endif
 #if defined(__crayx1)
-        integer         ipxfargc 
+        integer         ipxfargc
 #endif
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -119,7 +119,7 @@ C implementation of the netCDF library.
         character*1     opt
         integer         lastopt
         logical         skiparg
-        integer         err                       
+        integer         err
         integer MY_LEN_TRIM
 
         external        test_nfmpi_strerror
@@ -412,8 +412,8 @@ C implementation of the netCDF library.
         external        test_nfmpi_set_default_format
         external        nc_ignorefpe
 
-        call MPI_INIT(err)                        
-        comm = MPI_COMM_WORLD                   
+        call MPI_INIT(err)
+        comm = MPI_COMM_WORLD
 
         call nc_ignorefpe(1)
 
@@ -690,7 +690,7 @@ C           /* Test write functions */
 #endif
             call test('nfmpi_put_var1_int', test_nfmpi_put_var1_int)
             call test('nfmpi_put_var1_real', test_nfmpi_put_var1_real)
-            call test('nfmpi_put_var1_double', 
+            call test('nfmpi_put_var1_double',
      +                 test_nfmpi_put_var1_double)
             call test('nfmpi_put_var1_int8', test_nfmpi_put_var1_int8)
             call test('nfmpi_put_var_text', test_nfmpi_put_var_text)
@@ -752,7 +752,7 @@ C           /* Test write functions */
 #endif
             call test('nfmpi_iput_var1_int', test_nfmpi_iput_var1_int)
             call test('nfmpi_iput_var1_real', test_nfmpi_iput_var1_real)
-            call test('nfmpi_iput_var1_double', 
+            call test('nfmpi_iput_var1_double',
      +                 test_nfmpi_iput_var1_double)
             call test('nfmpi_iput_var1_int8', test_nfmpi_iput_var1_int8)
 

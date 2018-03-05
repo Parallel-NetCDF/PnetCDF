@@ -89,7 +89,7 @@ int main(int argc, char **argv)
         MPI_Finalize();
         return 1;
     }
-        
+
     if (rank == 0) {
 	len = strlen(fbasename);
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);

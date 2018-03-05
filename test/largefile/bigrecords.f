@@ -84,7 +84,7 @@
       double precision  time(4)
 !      data time /0., 20., 40., 60./
 
-      data interfaces /2685.8359, 671.81, 495.91, 425.10001, 393.42999, 
+      data interfaces /2685.8359, 671.81, 495.91, 425.10001, 393.42999,
      + 377.5, 367.59, 360.06, 353.85999, 348.66, 342.5, 336, 328.5, 320,
      + 310, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 199.10001/
 
@@ -111,11 +111,11 @@
      +               ierr)
 
       iret = nfmpi_create( MPI_COMM_WORLD, filename,
-     +                       IOR(NF_CLOBBER,NF_64BIT_DATA), 
+     +                       IOR(NF_CLOBBER,NF_64BIT_DATA),
      +                       MPI_INFO_NULL, ncid)
 
         call check_err(cmd,"nfmpi_create(): ", iret)
-  
+
 ! define dimensions
 
         iret = nfmpi_def_dim(ncid, 'time', NFMPI_UNLIMITED, time_dim)
@@ -127,65 +127,65 @@
         call check_err(cmd,"nfmpi_def_dim(): cells ", iret)
 
         i8_size = 26
-        iret = nfmpi_def_dim(ncid, 'interfaces', 
+        iret = nfmpi_def_dim(ncid, 'interfaces',
      +                       i8_size, interfaces_dim)
         call check_err(cmd,"nfmpi_def_dim(): interfaces ", iret)
 ! define variables
         time_dims(1) = time_dim
 
-        iret = nfmpi_def_var(ncid, 'time', NF_DOUBLE, 
-     +                       time_rank, time_dims, 
+        iret = nfmpi_def_var(ncid, 'time', NF_DOUBLE,
+     +                       time_rank, time_dims,
      +                       time_id)
         call check_err(cmd,"nfmpi_def_var(): time ", iret)
         interfaces_dims(1) = interfaces_dim
 
-        iret = nfmpi_def_var(ncid, 'interfaces', NF_REAL, 
-     +                       interfaces_rank, 
+        iret = nfmpi_def_var(ncid, 'interfaces', NF_REAL,
+     +                       interfaces_rank,
      +                       interfaces_dims, interfaces_id)
         call check_err(cmd,"nfmpi_def_var(): interfaces ", iret)
 
         pressure_dims(3) = time_dim
         pressure_dims(2) = cells_dim
         pressure_dims(1) = interfaces_dim
-        iret = nfmpi_def_var(ncid, 
-     +                     'pressure', 
-     +                     NF_REAL, 
-     +                     pressure_rank, 
-     +                     pressure_dims, 
+        iret = nfmpi_def_var(ncid,
+     +                     'pressure',
+     +                     NF_REAL,
+     +                     pressure_rank,
+     +                     pressure_dims,
      +                     pressure_id)
 
         call check_err(cmd,"nfmpi_def_var(): pressure ", iret)
 ! assign attributes
 
         longlen = 4
-        iret = nfmpi_put_att_text(ncid, time_id, 'long_name', 
+        iret = nfmpi_put_att_text(ncid, time_id, 'long_name',
      +                            longlen, 'Time')
         call check_err(cmd,"nfmpi_put_att_text(): long_name ", iret)
         longlen = 21
-        iret = nfmpi_put_att_text(ncid, time_id, 'units', 
-     +                            longlen, 
+        iret = nfmpi_put_att_text(ncid, time_id, 'units',
+     +                            longlen,
      +                           'days since 1901-01-01')
         call check_err(cmd,"nfmpi_put_att_text(): units ", iret)
 
         longlen = 41
-        iret = nfmpi_put_att_text(ncid, interfaces_id, 'long_name', 
+        iret = nfmpi_put_att_text(ncid, interfaces_id, 'long_name',
      +                            longlen,
      +                     'Vertical interfaces, in terms of pressure')
         call check_err(cmd,"nfmpi_put_att_text(): long_name ", iret)
 
         longlen = 2
-        iret = nfmpi_put_att_text(ncid, interfaces_id, 'units', 
+        iret = nfmpi_put_att_text(ncid, interfaces_id, 'units',
      +                            longlen, 'Pa')
         call check_err(cmd,"nfmpi_put_att_text(): units ", iret)
 
         longlen = 8
-        iret = nfmpi_put_att_text(ncid, pressure_id, 'long_name', 
-     +                            longlen, 
+        iret = nfmpi_put_att_text(ncid, pressure_id, 'long_name',
+     +                            longlen,
      1                       'Pressure')
         call check_err(cmd,"nfmpi_put_att_text(): ", iret)
 
         longlen = 2
-        iret = nfmpi_put_att_text(ncid, pressure_id, 'units', 
+        iret = nfmpi_put_att_text(ncid, pressure_id, 'units',
      +                            longlen, 'Pa')
         call check_err(cmd,"nfmpi_put_att_text(): units ", iret)
 
@@ -206,7 +206,7 @@
         time(2) = 20.0
         time(3) = 40.0
         time(4) = 60.0
-      
+
 ! this test is tricky because it writes out the time variable one at a time.
 ! This element-at-a-time workload does not actually exercise the tricky 32 bit
 ! MPI_AINT problem, so the issue only shows up at read time.
@@ -219,7 +219,7 @@
             time_count(1) = 0
           endif
 
-          iret = nfmpi_put_vara_double_all(ncid, time_id, 
+          iret = nfmpi_put_vara_double_all(ncid, time_id,
      +                                     time_start, time_count,
      +                                     time(n))
           call check_err(cmd,"nfmpi_put_vara_double_all(): ", iret)
@@ -230,7 +230,7 @@
         call MPI_Barrier (MPI_COMM_WORLD, iret)
 
 ! todo: insert code to re-open dataset, read time variable all at onece
-! 
+!
       iret = nfmpi_open ( MPI_COMM_SELF,
      +                   filename,
      +                   IOR(NF_CLOBBER,NF_64BIT_DATA),
@@ -264,13 +264,13 @@
 
  999  call MPI_FINALIZE(ierr)
       end ! program main
-       
+
       subroutine writerecs(cmd,ncid,time_id)
 
       implicit none
       include "mpif.h"
       include "pnetcdf.inc"
-       
+
       character*(*) cmd
 ! netCDF id
       integer  ncid
@@ -280,13 +280,13 @@
 ! error status return
       integer  iret
       integer  n
-       
+
 ! netCDF dimension sizes for dimensions used with record variables
       integer  cells_len
       parameter (cells_len = 41943042)
       integer  interfaces_len
       parameter (interfaces_len = 26)
-       
+
 ! rank (number of dimensions) for each variable
       integer  time_rank
       integer  pressure_rank
@@ -296,17 +296,17 @@
       integer*8 time_start(1), time_count(1)
 
 ! data variables
-       
+
       integer  time_nr
       parameter (time_nr = 4)
-       
+
       integer  pressure_nr
       parameter (pressure_nr = 1)
 !      real  pressure(interfaces_len, cells_len, pressure_nr)
-       
+
       double precision  time(time_nr)
       data time /0., 20., 40., 60./
-      
+
 
 !      pressure = NF_FILL_FLOAT
 
@@ -315,15 +315,15 @@
       do n = 1, 4
         time_start(1) = n
         time_count(1) = 1
-        iret = nfmpi_put_vara_double_all(ncid, time_id, 
+        iret = nfmpi_put_vara_double_all(ncid, time_id,
      +                                   time_start, time_count,
      +                                   time)
 
         call check_err(cmd,"nfmpi_put_vara_double_all(): ", iret)
       enddo
-       
+
       end ! subroutine writerecs
-       
+
       subroutine check_err(cmd, msg, iret)
 
       include "pnetcdf.inc"

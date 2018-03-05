@@ -39,13 +39,13 @@ in the library. The SCCS \fBwhat(1)\fP command will find a string like
 .SH "ROUTINE DESCRIPTIONS"
 .LP
 All PnetCDF functions (except
-\fBnf90mpi_inq_libvers(\|)\fR and \fBnf90mpi_strerror(\|)\fR) return an integer 
+\fBnf90mpi_inq_libvers(\|)\fR and \fBnf90mpi_strerror(\|)\fR) return an integer
 status.
 This behavior replaces the \fBrcode\fR argument
 used in previous versions of the library.
 If this returned status value is not equal to
 \fBnf90_noerr\fR (zero), it
-indicates that an error occurred. The possible status values are defined in 
+indicates that an error occurred. The possible status values are defined in
 the module \fBpnetcdf\fP.
 .HP
 \fBfunction nf90mpi_strerror(\fIncerr\fP)\fR
@@ -133,8 +133,8 @@ integer, intent(in) :: ncid
 integer :: nf90mpi_redef
 .fi
 .sp
-Puts an open netCDF dataset into define mode, 
-so dimensions, variables, and attributes can be added or renamed and 
+Puts an open netCDF dataset into define mode,
+so dimensions, variables, and attributes can be added or renamed and
 attributes can be deleted.
 .RE
 .HP
@@ -177,7 +177,7 @@ integer :: nf90mpi_abort
 You don't need to call this function.
 This function is called automatically by
 \fBnf90mpi_close(\|)\fR
-if the netCDF dataset was in define mode and something 
+if the netCDF dataset was in define mode and something
 goes wrong with the commit.
 If the netCDF dataset isn't in define mode, then this function is equivalent to
 \fBnf90mpi_close(\|)\fR.
@@ -244,12 +244,12 @@ integer, intent(out) :: dimid
 integer :: nf90mpi_def_dim
 .fi
 .sp
-Adds a new dimension to an open netCDF dataset, which must be 
+Adds a new dimension to an open netCDF dataset, which must be
 in define mode.
 \fIname\fP is the dimension name.
 \fIlen\fP is the size of the new dimension or \fBnf90mpi_unlimited\fP to define
 the unlimited dimension.
-On return, \fIdimid\fP will contain the dimension ID of the newly created 
+On return, \fIdimid\fP will contain the dimension ID of the newly created
 dimension.
 .RE
 .HP
@@ -295,7 +295,7 @@ integer :: nf90mpi_rename_dim
 .fi
 .sp
 Renames an existing dimension in an open netCDF dataset.
-If the new name is longer than the old name, the netCDF dataset must be in 
+If the new name is longer than the old name, the netCDF dataset must be in
 define mode.
 You cannot rename a dimension to have the same name as another dimension.
 .RE
@@ -349,7 +349,7 @@ Returns the ID of a netCDF variable in \fIvarid\fP given an open netCDF dataset
 and the name of the variable.
 .RE
 .HP
-\fBfunction nf90mpi_inquire_variable(\fIncid\fP, \fIvarid\fP, \fIname\fP, 
+\fBfunction nf90mpi_inquire_variable(\fIncid\fP, \fIvarid\fP, \fIname\fP,
 \fIxtype\fP, \fIndims\fP, \fIdimids\fP, \fInatts\fP)\fR
 .RS
 .nf
@@ -361,9 +361,9 @@ integer, optional, intent(out) :: natts
 integer :: nf90mpi_inquire_variable
 .fi
 .sp
-Inquire about a netCDF variable in an open netCDF dataset, given its 
+Inquire about a netCDF variable in an open netCDF dataset, given its
 variable ID.
-On return, \fIname\fP will contain the name of the variable and should 
+On return, \fIname\fP will contain the name of the variable and should
 be capacious enough (\fBnf90_max_name\fP).
 \fIxtype\fP will contain the external, netCDF type of the variable.
 \fIndims\fP will contain the dimensionality of the netCDF variable: if the
@@ -388,7 +388,7 @@ If the new name is longer than the old name, the netCDF must be in define mode.
 You cannot rename a variable to have the name of any existing variable.
 .RE
 .HP
-\fBfunction nf90mpi_put_var(\fIncid\fP, \fIvarid\fP, \fIvalues\fP, 
+\fBfunction nf90mpi_put_var(\fIncid\fP, \fIvarid\fP, \fIvalues\fP,
 \fIstart\fP, \fIstride\fP, \fIimap\fP)\fR
 .RS
 .nf
@@ -426,7 +426,7 @@ The optional argument \fIimap\fP specifies the in-memory arrangement of the data
 values (see COMMON ARGUMENT DESCRIPTIONS below).
 .RE
 .HP
-\fBfunction nf90mpi_get_var(\fIncid\fP, \fIvarid\fP, \fIvalues\fP, 
+\fBfunction nf90mpi_get_var(\fIncid\fP, \fIvarid\fP, \fIvalues\fP,
 \fIstart\fP, \fIstride\fP, \fIimap\fP)\fR
 .RS
 .nf
@@ -482,7 +482,7 @@ in the open netCDF dataset \fIncid\fP.
 \fIattnum\fP will contain the attribute number.
 .RE
 .HP
-\fBfunction nf90mpi_inq_attname(\fIncid\fP, \fIvarid\fP, \fIattnum\fP, 
+\fBfunction nf90mpi_inq_attname(\fIncid\fP, \fIvarid\fP, \fIattnum\fP,
 \fIname\fP)\fR
 .RS
 .nf
@@ -515,7 +515,7 @@ character(len=*), intent(in) :: name
 integer :: nf90mpi_put_att
 .fi
 .sp
-Unlike variables, attributes do not have 
+Unlike variables, attributes do not have
 separate functions for defining and writing values.
 This function defines a new attribute with a value or changes
 the value of an existing attribute.
@@ -563,7 +563,7 @@ them.  If you don't know how much space to reserve, call
 first to find out the length of the attribute.
 .RE
 .HP
-\fBfunction nf90mpi_copy_att(\fIncid_in\fP, \fIvarid_in\fP, \fIname\fP, 
+\fBfunction nf90mpi_copy_att(\fIncid_in\fP, \fIvarid_in\fP, \fIname\fP,
 \fIncid_out\fP, \fIvarid_out\fP)\fR
 .RS
 .nf
@@ -586,19 +586,19 @@ for a global attribute.
 \fIname\fP
 is the name of the attribute in the input netCDF dataset to be copied.
 \fIncid_out\fP
-is the netCDF ID of the output netCDF dataset to which the attribute will be 
+is the netCDF ID of the output netCDF dataset to which the attribute will be
 copied.
 It is permissible for the input and output netCDF ID's to be the same.  The
 output netCDF dataset should be in define mode if the attribute to be
 copied does not already exist for the target variable, or if it would
 cause an existing target attribute to grow.
 \fIvarid_out\fP
-is the ID of the variable in the output netCDF dataset to which the 
+is the ID of the variable in the output netCDF dataset to which the
 attribute will
 be copied, or \fBnf90_global\fR to copy to a global attribute.
 .RE
 .HP
-\fBfunction nf90mpi_rename_att(\fIncid\fP, \fIvarid\fP, \fIname\fP, 
+\fBfunction nf90mpi_rename_att(\fIncid\fP, \fIvarid\fP, \fIname\fP,
 \fInewname\fP)\fR
 .RS
 .nf
@@ -630,7 +630,7 @@ define mode.
 .RE
 .SH "COMMON ARGUMENT DESCRIPTIONS"
 .LP
-In this section we define some common arguments which are used in the 
+In this section we define some common arguments which are used in the
 "FUNCTION DESCRIPTIONS" section.
 .TP
 integer \fIncid\fP
@@ -642,7 +642,7 @@ is the name of a dimension, variable, or attribute.
 It shall begin with an alphabetic character, followed by
 zero or more alphanumeric characters including the underscore
 (`_') or hyphen (`-').  Case is significant.
-The maximum allowable number of characters 
+The maximum allowable number of characters
 is \fBnf90_max_name\fR.
 Names that begin with an underscore (`_') are reserved for use
 by the netCDF and PnetCDF interfaces.
@@ -650,7 +650,7 @@ by the netCDF and PnetCDF interfaces.
 integer \fIxtype\fP
 specifies the external data type of a netCDF variable or attribute and
 is one of the following:
-\fBnf90_byte\fR, \fBnf90_char\fR, \fBnf90_short\fR, \fBnf90_int\fR, 
+\fBnf90_byte\fR, \fBnf90_char\fR, \fBnf90_short\fR, \fBnf90_int\fR,
 \fBnf90_float\fR, or \fBnf90_double\fR.
 These are used to specify 8-bit integers,
 characters, 16-bit integers, 32-bit integers, 32-bit IEEE floating point
@@ -673,22 +673,22 @@ dimensions for a variable is given by the symbolic constant
 .TP
 integer \fIdimid\fP
 is the ID of a netCDF dimension.
-netCDF dimension ID's are allocated sequentially from the 
+netCDF dimension ID's are allocated sequentially from the
 positive
 integers beginning with 1.
 .TP
 integer \fIndims\fP
 is either the total number of dimensions in a netCDF dataset or the rank
 (i.e. the number of dimensions) of a netCDF variable.
-The value shall not be negative or greater than the symbolic constant 
+The value shall not be negative or greater than the symbolic constant
 \fBnf90_max_var_dims\fR.
 .TP
 integer \fIvarid\fP
-is the ID of a netCDF variable or (for the attribute-access functions) 
+is the ID of a netCDF variable or (for the attribute-access functions)
 the symbolic constant
 \fBnf90_global\fR,
 which is used to reference global attributes.
-netCDF variable ID's are allocated sequentially from the 
+netCDF variable ID's are allocated sequentially from the
 positive
 integers beginning with 1.
 .TP
@@ -703,7 +703,7 @@ function.
 integer(kind=MPI_OFFSET) \fIstart\fP
 specifies the starting point
 for accessing a netCDF variable's data values
-in terms of the indicial coordinates of 
+in terms of the indicial coordinates of
 the corner of the array section.
 The indices start at 1;
 thus, the first data
@@ -716,7 +716,7 @@ integer(kind=MPI_OFFSET) \fIstride\fP
 specifies the sampling interval along each dimension of the netCDF
 variable.   The elements of the stride vector correspond, in order,
 to the netCDF variable's dimensions (\fIstride\fP(1))
-gives the sampling interval along the most rapidly 
+gives the sampling interval along the most rapidly
 varying dimension of the netCDF variable).  Sampling intervals are
 specified in type-independent units of elements (a value of 1 selects
 consecutive elements of the netCDF variable along the corresponding

@@ -14,7 +14,7 @@
 # We can set the optional nc_dw_flush_buffer_size hint to limit the memory space PnetCDF can use on flushing the log.
 # There is no need to do so since the built in FLASH benchmark by default only generate around 75 MiB of data per process
 
-# The DataWarp driver is designed to be as transparent as possible. 
+# The DataWarp driver is designed to be as transparent as possible.
 # In most cases, we can run the job as usual after previous 2 steps.
 # We don't need to modify FLASH benchmark in this case.
 
@@ -22,7 +22,7 @@
 
 #!/bin/bash
 #SBATCH -p debug
-#SBATCH -N 1 
+#SBATCH -N 1
 #SBATCH -C haswell
 #SBATCH -t 00:01:00
 #SBATCH -o DataWarp_FLASH_example.txt

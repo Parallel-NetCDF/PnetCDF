@@ -83,7 +83,7 @@ main(int argc, char **argv)
 
    /* Loop indexes. */
    int lvl, lat, lon, rec, i = 0;
-   
+
    /* Error handling. */
    int err, nerrs=0;
 
@@ -155,7 +155,7 @@ main(int argc, char **argv)
    count[3] = NLON;
    start[2] = 0;
    start[3] = 0;
- 
+
    /* divide NLVL dimension among processes */
    count[1] = NLVL / nprocs;
    start[1] = count[1] * rank;

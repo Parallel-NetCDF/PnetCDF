@@ -76,7 +76,7 @@ typedef enum {
     API_PUT,
     API_IGET,
     API_IPUT,
-    API_BPUT 
+    API_BPUT
 } IO_type;
 
 /*----< check_EEDGE() >------------------------------------------------------*/
@@ -311,7 +311,7 @@ APINAME($1,$2,$3,$4)(int ncid,
     if (err != NC_NOERR) return err;
 
     err = sanity_check(pncp, varid, IO_TYPE($1), ITYPE2MPI($3), IS_COLL($4));
-    
+
     ifelse(`$2',`m',`if (imap == NULL && stride != NULL) api_kind = API_VARS;
     else if (imap == NULL && stride == NULL) api_kind = API_VARA;',
            `$2',`s',`if (stride == NULL) api_kind = API_VARA;')
@@ -589,7 +589,7 @@ IAPINAME($1,$2,$3)(int ncid,
                    ArgKind($2)
                    BufArgs(substr($1,1),$3),
                    int *reqid)
-{   
+{
     int err, reqMode;
     PNC *pncp;
     ifelse(`$2',`',`',`NC_api api_kind=API_KIND($2);')

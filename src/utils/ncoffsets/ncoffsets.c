@@ -413,11 +413,11 @@ ncmpii_NC_var_shape64(NC                *ncp,
 out :
     /*
      * For CDF-1 and CDF-2 formats, the total number of array elements
-     * cannot exceed 2^32, unless this variable is the last fixed-size 
-     * variable, there is no record variable, and the file starting 
-     * offset of this variable is less than 2GiB. 
-     * We will check this in ncmpi_enddef() which calls ncmpii_NC_enddef() 
-     * which calls ncmpii_NC_check_vlens() 
+     * cannot exceed 2^32, unless this variable is the last fixed-size
+     * variable, there is no record variable, and the file starting
+     * offset of this variable is less than 2GiB.
+     * We will check this in ncmpi_enddef() which calls ncmpii_NC_enddef()
+     * which calls ncmpii_NC_check_vlens()
     if (ncp->flags != 5 && product >= X_UINT_MAX)
         DEBUG_RETURN_ERROR(NC_EVARSIZE);
      */
@@ -886,7 +886,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     char *cpos, pad[X_ALIGN-1];
 
     /* get nelems */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         nchars = get_uint64(gbp);
     else
         nchars = get_uint32(gbp);
@@ -994,7 +994,7 @@ hdr_get_NC_dim(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get dim_length */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         dim_length = get_uint64(gbp);
     else
         dim_length = get_uint32(gbp);
@@ -1065,7 +1065,7 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         ndefined = get_uint64(gbp);
     else
         ndefined = get_uint32(gbp);
@@ -1266,7 +1266,7 @@ hdr_get_NC_attr(bufferinfo  *gbp,
     }
 
     /* get nelems */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         nelems = get_uint64(gbp);
     else
         nelems = get_uint32(gbp);
@@ -1331,7 +1331,7 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         ndefined = get_uint64(gbp);
     else
         ndefined = get_uint32(gbp);
@@ -1433,7 +1433,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* nelems */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         ndims = get_uint64(gbp);
     else
         ndims = get_uint32(gbp);
@@ -1448,7 +1448,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
             ncmpii_free_NC_var(varp);
             return status;
         }
-        if (gbp->version == 5) 
+        if (gbp->version == 5)
             varp->dimids[dim] = get_uint64(gbp);
         else
             varp->dimids[dim] = get_uint32(gbp);
@@ -1469,7 +1469,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
     }
 
     /* get vsize */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         varp->len = get_uint64(gbp);
     else
         varp->len = get_uint32(gbp);
@@ -1543,7 +1543,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems (number of variables) from gbp buffer */
-    if (gbp->version == 5) 
+    if (gbp->version == 5)
         ndefined = get_uint64(gbp);
     else
         ndefined = get_uint32(gbp);
@@ -1641,7 +1641,7 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
     if(status != NC_NOERR) goto fn_exit;
 
     /* get numrecs from getbuf into ncp */
-    if (getbuf.version == 5) 
+    if (getbuf.version == 5)
         ncp->numrecs = get_uint64(&getbuf);
     else
         ncp->numrecs = get_uint32(&getbuf);
@@ -1947,7 +1947,7 @@ int main(int argc, char *argv[])
     printf("file header:\n");
     printf("\tsize   = %lld bytes\n",ncp->xsz);
     printf("\textent = %lld bytes\n",ncp->begin_var);
-    
+
     /* print dimensions */
     if (ncp->dims.ndefined > 0) printf("\ndimensions:\n");
     for (i=0; i<ncp->dims.ndefined; i++) {

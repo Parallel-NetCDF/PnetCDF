@@ -131,10 +131,10 @@ int main(int argc, char** argv)
             starts[6][y] = 3; starts[6][x] = 1;
             starts[7][y] = 3; starts[7][x] = 2;
             /* rank 0 is writing the following locations: ("-" means skip)
-                      -  -  -  -  -  0  0  -  -  - 
-                      0  -  -  -  -  -  -  -  -  - 
-                      -  -  -  -  -  -  0  0  -  - 
-                      0  0  0  -  -  -  -  -  -  - 
+                      -  -  -  -  -  0  0  -  -  -
+                      0  -  -  -  -  -  -  -  -  -
+                      -  -  -  -  -  -  0  0  -  -
+                      0  0  0  -  -  -  -  -  -  -
              */
         } else if (rank ==1) {
             starts[ 0][y] = 0; starts[ 0][x] = 3;
@@ -151,26 +151,26 @@ int main(int argc, char** argv)
             starts[11][y] = 3; starts[11][x] = 5;
             starts[12][y] = 3; starts[12][x] = 6;
             /* rank 1 is writing the following locations: ("-" means skip)
-                      -  -  -  1  1  -  -  -  1  1 
-                      -  -  -  -  -  1  1  -  -  - 
-                      1  1  -  -  -  -  -  -  1  1 
-                      -  -  -  -  1  1  1  -  -  - 
+                      -  -  -  1  1  -  -  -  1  1
+                      -  -  -  -  -  1  1  -  -  -
+                      1  1  -  -  -  -  -  -  1  1
+                      -  -  -  -  1  1  1  -  -  -
              */
         } else if (rank ==2) {
             starts[0][y] = 0; starts[0][x] = 7;
             starts[1][y] = 1; starts[1][x] = 1;
             starts[2][y] = 1; starts[2][x] = 7;
-            starts[3][y] = 2; starts[3][x] = 2; 
+            starts[3][y] = 2; starts[3][x] = 2;
             starts[4][y] = 3; starts[4][x] = 3;
             starts[5][y] = 1; starts[5][x] = 2;
             starts[6][y] = 1; starts[6][x] = 8;
             starts[7][y] = 1; starts[7][x] = 3;
             starts[8][y] = 1; starts[8][x] = 9;
             /* rank 2 is writing the following locations: ("-" means skip)
-                      -  -  -  -  -  -  -  2  -  - 
-                      -  2  2  2  -  -  -  2  2  2 
-                      -  -  2  -  -  -  -  -  -  - 
-                      -  -  -  2  -  -  -  -  -  - 
+                      -  -  -  -  -  -  -  2  -  -
+                      -  2  2  2  -  -  -  2  2  2
+                      -  -  2  -  -  -  -  -  -  -
+                      -  -  -  2  -  -  -  -  -  -
              */
         } else if (rank ==3) {
             starts[0][y] = 0; starts[0][x] = 0;
@@ -184,10 +184,10 @@ int main(int argc, char** argv)
             starts[8][y] = 2; starts[8][x] = 5;
             starts[9][y] = 3; starts[9][x] = 9;
             /* rank 3 is writing the following locations: ("-" means skip)
-                      3  3  3  -  -  -  -  -  -  - 
-                      -  -  -  -  3  -  -  -  -  - 
-                      -  -  -  3  3  3  -  -  -  - 
-                      -  -  -  -  -  -  -  3  3  3 
+                      3  3  3  -  -  -  -  -  -  -
+                      -  -  -  -  3  -  -  -  -  -
+                      -  -  -  3  3  3  -  -  -  -
+                      -  -  -  -  -  -  -  3  3  3
              */
         }
 

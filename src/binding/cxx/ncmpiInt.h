@@ -5,18 +5,18 @@
 
 namespace PnetCDF
 {
-  
+
   /*! Class represents a netCDF atomic Int type. */
   class NcmpiInt : public NcmpiType
   {
-  public: 
-    
+  public:
+
     /*! equivalence operator */
     bool operator==(const NcmpiInt & rhs);
-    
+
     /*!  destructor */
     ~NcmpiInt();
-    
+
     /*! Constructor */
     NcmpiInt();
   };

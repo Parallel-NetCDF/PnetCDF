@@ -26,9 +26,9 @@
 
         common /intgrs/ nstep, nbegin, MyPE, MasterPE, NumPEs
 
-! add the runtime parameters needed explicitly        
+! add the runtime parameters needed explicitly
         character*128 basenm
-        
+
         common /runtime_char/ basenm
 
 !==============================================================================

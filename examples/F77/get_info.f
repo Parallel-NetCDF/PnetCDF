@@ -83,7 +83,7 @@
  998    format(A,I13,A)
         err = nfmpi_inq_malloc_size(malloc_size)
         if (err .EQ. NF_NOERR) then
-            call MPI_Reduce(malloc_size, sum_size, 1, MPI_INTEGER8, 
+            call MPI_Reduce(malloc_size, sum_size, 1, MPI_INTEGER8,
      +                      MPI_SUM, 0, MPI_COMM_WORLD, err)
             if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +          print 998,
@@ -132,7 +132,7 @@
             integer       errcode
 
             ! local variables
-            integer err 
+            integer err
 
             print *, 'Error: ',err_msg//' '//nfmpi_strerror(errcode)
             call MPI_Abort(MPI_COMM_WORLD, -1, err)

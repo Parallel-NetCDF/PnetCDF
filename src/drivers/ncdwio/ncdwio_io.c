@@ -1,3 +1,11 @@
+/*********************************************************************
+ *
+ *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ *********************************************************************/
+/* $Id$ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -27,7 +35,7 @@
  * OUT       fd:    File structure
  */
 int ncdwio_file_open(MPI_Comm comm, char *path, int flag, NC_dw_file **fd) {
-    int err; 
+    int err;
     NC_dw_file *f;
 
     /* Allocate buffer */
@@ -239,7 +247,7 @@ int ncdwio_file_flush(NC_dw_file *f){
 }
 
 /*
- * Read buffered shared file 
+ * Read buffered shared file
  * IN       f:    File structure
  * OUT    buf:    Buffer for read data
  * IN   count:    Size of buffer
@@ -340,7 +348,7 @@ int ncdwio_file_write(NC_dw_file *f, void *buf, size_t count) {
      * bused=>bufused
      */
     if (f->bused > 0){
-        memcpy(f->buf + f->bused, cbuf, astart); 
+        memcpy(f->buf + f->bused, cbuf, astart);
         f->bused += astart;
         // Flush the buffer if it is full
         if (f->bused == f->bsize){
@@ -353,13 +361,13 @@ int ncdwio_file_write(NC_dw_file *f, void *buf, size_t count) {
     else{
         astart = 0;
     }
-    
+
     /*
      * Write aligned section as usual
      * From astart to aend
      */
     if (aend > astart) {
-        err = ncdwio_file_write_core(f, buf + astart, aend - astart); 
+        err = ncdwio_file_write_core(f, buf + astart, aend - astart);
         if (err != NC_NOERR){
             return err;
         }
@@ -373,7 +381,7 @@ int ncdwio_file_write(NC_dw_file *f, void *buf, size_t count) {
         memcpy(f->buf + f->bused, cbuf + aend, count - aend);
         f->bused += count - aend;
     }
-    
+
     f->pos += count;
 
     return NC_NOERR;
@@ -391,15 +399,15 @@ int ncdwio_file_seek(NC_dw_file *f, size_t off, int whence) {
     off_t ioret;
 
     // Calculate new position
-    if (whence == SEEK_SET){ 
+    if (whence == SEEK_SET){
         new_off = off;
-        
+
     }
     else if (whence == SEEK_CUR){
         new_off = f->fpos + off;
     }
     else{
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT); 
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
     }
 
     /*
@@ -410,7 +418,7 @@ int ncdwio_file_seek(NC_dw_file *f, size_t off, int whence) {
         return  NC_NOERR;
     }
 
-    /* 
+    /*
      * Flush the buffer
      * We assume buffered data region starts immediately after cursor position
      * When we change the cursor possition, we need to flush the buffer
@@ -427,7 +435,7 @@ int ncdwio_file_seek(NC_dw_file *f, size_t off, int whence) {
         ioret = lseek(f->fd, off, whence);
         if (ioret < 0){
             err = ncmpii_error_posix2nc("lseek");
-            DEBUG_RETURN_ERROR(err); 
+            DEBUG_RETURN_ERROR(err);
         }
     }
 

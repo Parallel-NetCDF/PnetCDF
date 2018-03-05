@@ -31,7 +31,7 @@
                __LINE__,__FILE__,itype,etype_name(etype),ncmpi_strerrno(err)); \
         nerrs++; \
     }  \
-} 
+}
 
 static char* etype_name(nc_type etype) {
     switch (etype) {

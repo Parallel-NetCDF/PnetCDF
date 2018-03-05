@@ -310,7 +310,7 @@ dnl CHECK_ATTS(TYPE)         numeric only
 dnl
 define([CHECK_ATTS],dnl
 [dnl
-! 
+!
 !  check all attributes in file which are (text/numeric) compatible with TYPE
 !  ignore any attributes containing values outside range of TYPE
 !
@@ -405,7 +405,7 @@ define([CHECK_ATTS],dnl
                             end if
                         end if
 3                   continue
-                end if                                               
+                end if
 2           continue
 1       continue
 

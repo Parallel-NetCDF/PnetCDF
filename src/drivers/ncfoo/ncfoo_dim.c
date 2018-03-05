@@ -34,7 +34,7 @@ ncfoo_def_dim(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->def_dim(foo->ncp, name, size, dimidp);
     if (err != NC_NOERR) return err;
 
@@ -48,7 +48,7 @@ ncfoo_inq_dimid(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->inq_dimid(foo->ncp, name, dimid);
     if (err != NC_NOERR) return err;
 
@@ -63,7 +63,7 @@ ncfoo_inq_dim(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->inq_dim(foo->ncp, dimid, name, sizep);
     if (err != NC_NOERR) return err;
 
@@ -77,7 +77,7 @@ ncfoo_rename_dim(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->rename_dim(foo->ncp, dimid, newname);
     if (err != NC_NOERR) return err;
 

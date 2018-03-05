@@ -10,7 +10,7 @@
    Corporation for Atmospheric Research/Unidata. See COPYRIGHT file
    for conditions of use.
 
-   Test attributes. 
+   Test attributes.
 */
 
 #include <stdio.h>
@@ -93,7 +93,7 @@ static int
 tst_att_ordering(char *filename, int cmode)
 {
    int ncid, err, nerrs=0;
-   char name[NUM_ATTS][ATT_MAX_NAME + 1] = {"Gc", "Gb", "Gs", "Gi", "Gf", 
+   char name[NUM_ATTS][ATT_MAX_NAME + 1] = {"Gc", "Gb", "Gs", "Gi", "Gf",
 					    "Gd", "Gatt-name-dashes", "Gatt.name.dots"};
    int len[NUM_ATTS] = {0, 2, 3, 3, 3, 3, 1, 1};
    signed char b[2] = {-128, 127};
@@ -116,7 +116,7 @@ tst_att_ordering(char *filename, int cmode)
    err=ncmpi_put_att_int(ncid, NC_GLOBAL, name[6], NC_INT, len[6], &att_name_dashes); ERR
    err=ncmpi_put_att_int(ncid, NC_GLOBAL, name[7], NC_INT, len[7], &att_name_dots); ERR
    err=ncmpi_close(ncid); ERR
-      
+
    /* Reopen the file and check the order. */
    err=ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    for (j = 0; j < NUM_ATTS; j++)
@@ -160,7 +160,7 @@ tst_atts3(char *filename, int cmode)
 #define NUM_SIMPLE_ATTS 9
    {
       int ncid;
-      char name[NUM_SIMPLE_ATTS][ATT_MAX_NAME + 1] = {"Gc", "Gb", "Gs", "Gi", "Gf", 
+      char name[NUM_SIMPLE_ATTS][ATT_MAX_NAME + 1] = {"Gc", "Gb", "Gs", "Gi", "Gf",
 						      "Gd", "G7", "G8", "G9"};
       char name_in[NC_MAX_NAME];
       int j;
@@ -170,7 +170,7 @@ tst_atts3(char *filename, int cmode)
       for (j = 0; j < NUM_SIMPLE_ATTS; j++)
 	 err=ncmpi_put_att_int(ncid, NC_GLOBAL, name[j], NC_INT, 0, NULL); ERR
       err=ncmpi_close(ncid); ERR
-      
+
       /* Reopen the file and check the order. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
       for (j = 0; j < NUM_SIMPLE_ATTS; j++)
@@ -516,7 +516,7 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,&ncid); ERR
       err=ncmpi_put_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, strlen(speech)+1, speech); ERR
       err=ncmpi_close(ncid); ERR
-      
+
       /* Rename it. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_attid(ncid, NC_GLOBAL, ATT_TEXT_NAME, &attid_in); ERR
@@ -536,7 +536,7 @@ tst_atts3(char *filename, int cmode)
       else {
           err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME2, speech_in); ERR
           if (strcmp(speech, speech_in)) ERRV
-          if ((err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in)) != NC_ENOTATT) ERR      
+          if ((err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, speech_in)) != NC_ENOTATT) ERR
           free(speech_in);
       }
       err=ncmpi_close(ncid); ERR
@@ -555,7 +555,7 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_def_var(ncid, VAR1_NAME, NC_INT, 2, dimids, &varid); ERR
       err=ncmpi_put_att_int(ncid, varid, ATT_INT_NAME, NC_INT, 3, int_out); ERR
       err=ncmpi_close(ncid); ERR
-      
+
       /* Reopen the file and delete it. Make sure it's gone. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_redef(ncid); ERR
@@ -590,7 +590,7 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_put_att_int(ncid, NC_GLOBAL, ATT0, NC_INT, 1, &number); ERR
       err=ncmpi_put_att_int(ncid, NC_GLOBAL, ATT1, NC_INT, 1, &number); ERR
       err=ncmpi_close(ncid); ERR
-      
+
       /* Open it and check the order. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_attid(ncid, NC_GLOBAL, ATT0, &attid_in); ERR
@@ -607,7 +607,7 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_put_att_int(ncid, varid, ATT0, NC_INT, 1, &number); ERR
       err=ncmpi_put_att_int(ncid, varid, ATT1, NC_INT, 1, &number); ERR
       err=ncmpi_close(ncid); ERR
-      
+
       /* Reopen the file and check the order of the attributes on the var. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_attid(ncid, 0, ATT0, &attid_in); ERR
@@ -621,9 +621,9 @@ tst_atts3(char *filename, int cmode)
    if (verbose) printf("*** testing attribute ordering some more...");
 
 #define VAR_NAME "i"
-#define A1_NAME "i"      
-#define A2_NAME "f"      
-#define A3_NAME "d"      
+#define A1_NAME "i"
+#define A2_NAME "f"
+#define A3_NAME "d"
 #define A1_LEN 3
 #define A2_LEN 4
 #define A3_LEN 5
@@ -640,7 +640,7 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_put_att_double(ncid, varid, A2_NAME, NC_INT, A2_LEN, dvalue); ERR
       err=ncmpi_put_att_double(ncid, varid, A3_NAME, NC_INT, A3_LEN, dvalue); ERR
       err=ncmpi_close(ncid); ERR
-      
+
       /* Reopen the file and check. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_nvars(ncid, &nvars); ERR
@@ -689,7 +689,7 @@ tst_atts3(char *filename, int cmode)
 
    if (verbose) printf("ok\n");
    if (verbose) printf("*** testing copy of simple global atts...");
-   {      
+   {
       int ncid, ncid2;
       nc_type att_type;
       MPI_Offset att_len;

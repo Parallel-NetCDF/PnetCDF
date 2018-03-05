@@ -389,7 +389,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  void         *xbuf)   /* already allocated, in external type */
 {
     int err=NC_NOERR, el_size, position;
-    void *lbuf=NULL, *cbuf=NULL; 
+    void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
@@ -559,7 +559,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                    void         *xbuf) /* already allocated, in external type */
 {
     int err=NC_NOERR, el_size, position;
-    void *lbuf=NULL, *cbuf=NULL; 
+    void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
