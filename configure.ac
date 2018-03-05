@@ -116,7 +116,7 @@ AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is def
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
-AH_TEMPLATE([BUILD_DRIVER_DW],          [Define if to enable datawarp burst buffer feature])
+AH_TEMPLATE([BUILD_DRIVER_DW],          [Define if to enable DataWarp burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 
@@ -1416,7 +1416,7 @@ AC_SUBST(ENABLE_NULL_BYTE_HEADER_PADDING)
 
 AC_ARG_ENABLE([datawarp],
    [AS_HELP_STRING([--enable-datawarp],
-                   [Enable datawarp driver support. @<:@default: disabled@:>@])],
+                   [Enable DataWarp driver support. @<:@default: disabled@:>@])],
    [enable_dwdriver=${enableval}], [enable_dwdriver=no]
 )
 
