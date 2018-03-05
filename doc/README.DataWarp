@@ -1,0 +1,89 @@
+#
+# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+
+-----------------------------------------------------------------------------
+ Using DataWarp as Burst Buffers in PnetCDF
+-----------------------------------------------------------------------------
+
+DataWarp driver is a I/O driver in PnetCDF that implements a log-based I/O
+aggregation for write related I/O requests that is designed to work on Cray
+DataWarp.
+
+-----------------------------------------------------------------------------
+ Build PnetCDF with Datawarp driver
+-----------------------------------------------------------------------------
+
+To build PnetCDF with DataWarp driver support, simply set "--enable-datawarp"
+option at configure time:
+
+./configure --prefix=/path/to/install --enable-datawarp
+
+-----------------------------------------------------------------------------
+ Running with DataWarp Driver
+-----------------------------------------------------------------------------
+
+The DataWarp driver is enable by setting file hints on file creation/opening.
+To enable DataWarp driver, set the hint "nc_dw" to enable.
+
+MPI_Info_set(info, "nc_dw", "enable");
+
+The hint can also be set using environment variable PNETCDF_HINTS.
+
+export PNETCDF_HINTS="nc_dw=enable"
+
+-----------------------------------------------------------------------------
+ Using PnetCDF with Datawarp driver
+-----------------------------------------------------------------------------
+
+The DataWarp can be configured using hints. Here's a list of supported hints:
+
+Hint                    Values          Default  Description
+----                    ------          -------  -----------
+nc_dw                   enable/disable  disable  Whether DataWarp driver is enabled.
+nc_dw_dirname           <Valid POSIX    ./       Directory where log file will be
+                        Directory>               stored. This is usually set to the
+                                                 path where burst buffer is mounted.
+nc_dw_del_on_close      enable/disable  enable   Whether logfile should be deleted
+                                                 after closing the NetCDF file. It
+                                                 can be disabled when the scheduler
+                                                 will clean up the burst buffer
+                                                 automatically after the job is
+                                                 completed.
+nc_dw_flush_buffer_size <integer>       0        Amount of memory that can be used
+                                                 to flush the log. The unit is in
+                                                 bytes. 0 means unlimited. Any write
+                                                 request that is larger than the
+                                                 buffer size will not be buffered,
+                                                 instead, it will be written to PFS
+                                                 directly.
+
+-----------------------------------------------------------------------------
+ Submitting Job that Enables DataWarp Driver
+-----------------------------------------------------------------------------
+
+We show an example script for enabling DataWarp driver on Cori at NERSC
+
+#!/bin/bash 
+#SBATCH -p debug 
+#SBATCH -N 1 
+#SBATCH -C haswell 
+#SBATCH -t 00:10:00 
+#SBATCH -o output.txt 
+#DW jobdw capacity=1289GiB access_mode=private type=scratch pool=sm_pool 
+export PNETCDF_HINTS="nc_dw=enable;nc_dw_del_on_close=disable;nc_dw_dirname=${DW_JOB_PRIVATE}" 
+srun -n 1 ./myapplication 
+
+-----------------------------------------------------------------------------
+ Known Problems
+-----------------------------------------------------------------------------
+While we design the DataWarp driver to be as transparent as possible. There are
+some behaviors that can change when the DataWarp driver is used. Here's a list
+of different behaviors:
+
+1. Log buffering delays actual file write to replay time. If there are errors
+caused by put operations, it will be hide by logging until the log is replayed.
+
+   

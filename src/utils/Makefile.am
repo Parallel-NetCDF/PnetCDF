@@ -7,7 +7,11 @@
 # @configure_input@
 
 SUBDIRS = ncmpigen ncmpidump ncmpidiff ncvalidator pnetcdf_version ncoffsets
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = ncmpigen ncmpidump ncmpidiff ncvalidator pnetcdf_version ncoffsets ncmpilogdump
+
+if BUILD_DRIVER_DW
+SUBDIRS += ncmpilogdump
+endif
 
 # The script shows the end users how pnetcdf is built
 bin_SCRIPTS = pnetcdf-config

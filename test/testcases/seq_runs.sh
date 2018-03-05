@@ -14,6 +14,11 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf1
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf2
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf5
 
+${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds.nc
+${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/iput_all_kinds.nc.cdf1
+${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/iput_all_kinds.nc.cdf2
+${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/iput_all_kinds.nc.cdf5
+
 NCMPIGEN=../../src/utils/ncmpigen/ncmpigen
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 

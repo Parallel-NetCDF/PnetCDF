@@ -7,7 +7,7 @@
 # @configure_input@
 
 SUBDIRS = C tutorial
-DIST_SUBDIRS = C tutorial CXX F77 F90
+DIST_SUBDIRS = C tutorial CXX F77 F90 datawarp
 
 if HAS_MPICXX
 SUBDIRS += CXX
@@ -18,6 +18,10 @@ SUBDIRS += F77
 if HAVE_MPI_MOD
 SUBDIRS += F90
 endif
+endif
+
+if BUILD_DRIVER_DW
+SUBDIRS += datawarp
 endif
 
 EXTRA_DIST = README

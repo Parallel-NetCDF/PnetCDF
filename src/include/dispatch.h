@@ -144,6 +144,8 @@ extern PNC_driver* ncmpio_inq_driver(void);
 
 extern PNC_driver* ncfoo_inq_driver(void);
 
+extern PNC_driver* ncdwio_inq_driver(void);
+
 extern int PNC_check_id(int ncid, PNC **pncp);
 
 #endif /* _PNC_DISPATCH_H */
