@@ -3,7 +3,7 @@
 # See COPYRIGHT notice in top-level directory.
 #
 # $Id$
- 
+
 ----------------------------------------------
 Notes in this file are for PnetCDF developers
 ----------------------------------------------
@@ -24,7 +24,7 @@ Notes in this file are for PnetCDF developers
 For example:
 	status = nc_open(path, NC_NOWRITE, &ncid);
 becomes
-	status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE, 
+	status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE,
 		MPI_INFO_NULL, &ncid);
 
 . if you make any independent calls ( those not ending in _all), you must put
@@ -56,5 +56,5 @@ becomes
 . Fortran 90 users can use 'use mpi' and 'use pnetcdf'.
 
 . Fortran  dimension sizes should be declared as type
-  INTEGER(KIND=MPI_OFFSET_KIND) 
+  INTEGER(KIND=MPI_OFFSET_KIND)
 
