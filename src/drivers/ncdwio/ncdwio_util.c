@@ -24,7 +24,7 @@ void ncdwio_extract_hint(NC_dw *ncdwp, MPI_Info info){
     int flag;
     char value[MPI_MAX_INFO_VAL];
 
-    ncdwp->hints = NC_LOG_HINT_DEL_ON_CLOSE | NC_LOG_HINT_FLUSH_ON_READ | 
+    ncdwp->hints = NC_LOG_HINT_DEL_ON_CLOSE | NC_LOG_HINT_FLUSH_ON_READ |
                     NC_LOG_HINT_FLUSH_ON_SYNC;
     // Directory to place log files
     MPI_Info_get(info, "nc_dw_dirname", MPI_MAX_INFO_VAL - 1,
@@ -36,19 +36,19 @@ void ncdwio_extract_hint(NC_dw *ncdwp, MPI_Info info){
         memset(ncdwp->logbase, 0, sizeof(ncdwp->logbase));
     }
     // Overwrite the logfile is already exists (disable)
-    MPI_Info_get(info, "nc_dw_overwrite", MPI_MAX_INFO_VAL - 1, 
+    MPI_Info_get(info, "nc_dw_overwrite", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag && strcasecmp(value, "enable") == 0){
         ncdwp->hints |= NC_LOG_HINT_LOG_OVERWRITE;
     }
     // Use shared logfile (disable)
-    MPI_Info_get(info, "nc_dw_shared_logs", MPI_MAX_INFO_VAL - 1, 
+    MPI_Info_get(info, "nc_dw_shared_logs", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag && strcasecmp(value, "enable") == 0){
         ncdwp->hints |= NC_LOG_HINT_LOG_SHARE;
     }
     // Delete the logfile after file closing (enable)
-    MPI_Info_get(info, "nc_dw_del_on_close", MPI_MAX_INFO_VAL - 1, 
+    MPI_Info_get(info, "nc_dw_del_on_close", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag && strcasecmp(value, "disable") == 0){
         ncdwp->hints ^= NC_LOG_HINT_DEL_ON_CLOSE;
@@ -61,7 +61,7 @@ void ncdwio_extract_hint(NC_dw *ncdwp, MPI_Info info){
         if (bsize < 0) {
             bsize = 0;
         }
-        ncdwp->flushbuffersize = (size_t)bsize; // Unit: byte 
+        ncdwp->flushbuffersize = (size_t)bsize; // Unit: byte
     }
     else{
         ncdwp->flushbuffersize = 0; // 0 means unlimited}

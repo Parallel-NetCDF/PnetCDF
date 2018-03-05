@@ -130,7 +130,7 @@
             integer,       intent(in) :: errcode
 
             ! local variables
-            integer err 
+            integer err
 
             print *, 'Error: ',trim(err_msg),' ',nf90mpi_strerror(errcode)
             call MPI_Abort(MPI_COMM_WORLD, -1, err)

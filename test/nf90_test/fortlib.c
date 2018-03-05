@@ -253,7 +253,7 @@ FORTRAN_API double FORT_CALL max_double_(void) {
 FORTRAN_API int FORT_CALL nfmpi_issyserr_(int * A1) {
 	if (*A1 > 0)
 		return 1;
-	else 
+	else
 		return 0;
 }
 
@@ -275,7 +275,7 @@ FORTRAN_API void FORT_CALL nfmpi_delete_(char * name, int *err, int d1) {
         p++;
         p1 = (char *)malloc( p-name + 1 );
         for (li=0; li<(p-name); li++) { p1[li] = name[li]; }
-        p1[li] = 0; 
+        p1[li] = 0;
     }
 
 	if ( unlink(p1) != 0 )

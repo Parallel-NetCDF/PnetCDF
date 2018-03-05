@@ -13,7 +13,7 @@
  * a sequence of selected file locations through the following 2 APIs.
  *
  *   H5Sselect_elements(fid, H5S_SELECT_SET, NUMP, (const hssize_t **)coord);
- *   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val); 
+ *   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val);
  *
  * Note that in NcmpiVar::putVarn_all(), users can write more than one
  * element starting at each selected location.
@@ -139,10 +139,10 @@ int main(int argc, char** argv)
             starts[2][y] = 2; starts[2][x] = 6; counts[2][y] = 1; counts[2][x] = 2;
             starts[3][y] = 3; starts[3][x] = 0; counts[3][y] = 1; counts[3][x] = 3;
             /* rank 0 is writing the followings: ("-" means skip)
-                      -  -  -  -  -  0  0  -  -  - 
-                      0  -  -  -  -  -  -  -  -  - 
-                      -  -  -  -  -  -  0  0  -  - 
-                      0  0  0  -  -  -  -  -  -  - 
+                      -  -  -  -  -  0  0  -  -  -
+                      0  -  -  -  -  -  -  -  -  -
+                      -  -  -  -  -  -  0  0  -  -
+                      0  0  0  -  -  -  -  -  -  -
              */
         } else if (rank ==1) {
             starts[0][y] = 0; starts[0][x] = 3; counts[0][y] = 1; counts[0][x] = 2;
@@ -152,10 +152,10 @@ int main(int argc, char** argv)
             starts[4][y] = 2; starts[4][x] = 8; counts[4][y] = 1; counts[4][x] = 2;
             starts[5][y] = 3; starts[5][x] = 4; counts[5][y] = 1; counts[5][x] = 3;
             /* rank 1 is writing the followings: ("-" means skip)
-                      -  -  -  1  1  -  -  -  1  1 
-                      -  -  -  -  -  1  1  -  -  - 
-                      1  1  -  -  -  -  -  -  1  1 
-                      -  -  -  -  1  1  1  -  -  - 
+                      -  -  -  1  1  -  -  -  1  1
+                      -  -  -  -  -  1  1  -  -  -
+                      1  1  -  -  -  -  -  -  1  1
+                      -  -  -  -  1  1  1  -  -  -
              */
         } else if (rank ==2) {
             starts[0][y] = 0; starts[0][x] = 7; counts[0][y] = 1; counts[0][x] = 1;
@@ -164,10 +164,10 @@ int main(int argc, char** argv)
             starts[3][y] = 2; starts[3][x] = 2; counts[3][y] = 1; counts[3][x] = 1;
             starts[4][y] = 3; starts[4][x] = 3; counts[4][y] = 1; counts[4][x] = 1;
             /* rank 2 is writing the followings: ("-" means skip)
-                      -  -  -  -  -  -  -  2  -  - 
-                      -  2  2  2  -  -  -  2  2  2 
-                      -  -  2  -  -  -  -  -  -  - 
-                      -  -  -  2  -  -  -  -  -  - 
+                      -  -  -  -  -  -  -  2  -  -
+                      -  2  2  2  -  -  -  2  2  2
+                      -  -  2  -  -  -  -  -  -  -
+                      -  -  -  2  -  -  -  -  -  -
              */
         } else if (rank ==3) {
             starts[0][y] = 0; starts[0][x] = 0; counts[0][y] = 1; counts[0][x] = 3;
@@ -175,10 +175,10 @@ int main(int argc, char** argv)
             starts[2][y] = 2; starts[2][x] = 3; counts[2][y] = 1; counts[2][x] = 3;
             starts[3][y] = 3; starts[3][x] = 7; counts[3][y] = 1; counts[3][x] = 3;
             /* rank 3 is writing the followings: ("-" means skip)
-                      3  3  3  -  -  -  -  -  -  - 
-                      -  -  -  -  3  -  -  -  -  - 
-                      -  -  -  3  3  3  -  -  -  - 
-                      -  -  -  -  -  -  -  3  3  3 
+                      3  3  3  -  -  -  -  -  -  -
+                      -  -  -  -  3  -  -  -  -  -
+                      -  -  -  3  3  3  -  -  -  -
+                      -  -  -  -  -  -  -  3  3  3
              */
         }
 

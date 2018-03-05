@@ -34,22 +34,22 @@
  *            float varr0002(time, dim000001) ;
  *            double vard0002(time, dim000001) ;
  *    data:
- *    
+ *
  *     vari0001 =
  *      1, _, 3, 4, 5, 6, 7, _, 9, 10, 11, 12, 13, 14, _, 16 ;
- *    
+ *
  *     varr0001 =
  *      1.1, _, 3.1, 4.1, 5.1, 6.1, 7.1, _, 9.1, 10.1, 11.1, 12.1, 13.1, 14.1, _, 16.1 ;
- *    
+ *
  *     vard0001 =
  *      1.3, _, 3.3, 4.3, 5.3, 6.3, 7.3, _, 9.3, 10.3, 11.3, 12.3, 13.3, 14.3, _, 16.3 ;
- *    
+ *
  *     vari0002 =
  *      1, _, 3, 4, 5, 6, 7, _, 9, 10, 11, 12, 13, 14, _, 16 ;
- *    
+ *
  *     varr0002 =
  *      1.2, _, 3.2, 4.2, 5.2, 6.2, 7.2, _, 9.2, 10.2, 11.2, 12.2, 13.2, 14.2, _, 16.2 ;
- *    
+ *
  *     vard0002 =
  *      1.4, _, 3.4, 4.4, 5.4, 6.4, 7.4, _, 9.4, 10.4, 11.4, 12.4, 13.4, 14.4, _, 16.4 ;
  *    }
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
 
         num_reqs = 12;
         /* rank 0 is writing the followings: ("x" means skip, "-" means fill value)
-                  1  -  3  4  x  x  x  x  x  x  x  x  x  x  x  x 
+                  1  -  3  4  x  x  x  x  x  x  x  x  x  x  x  x
          */
     } else if (rank ==1) {
         /* vari0001 and vari0002 */
@@ -304,7 +304,7 @@ int main(int argc, char** argv)
         num_reqs = 12;
         /* rank 1 is writing the followings: ("x" means skip, "-" means fill value)
                   vari0001:
-                  x  x  x  x  x  x  x  x  -  9  10 11 12 x  x  x  x 
+                  x  x  x  x  x  x  x  x  -  9  10 11 12 x  x  x  x
          */
     } else if (rank ==2) {
         /* vari0001 and vari0002 */
@@ -329,7 +329,7 @@ int main(int argc, char** argv)
         num_reqs = 6;
         /* rank 2 is writing the followings: ("x" means skip, "-" means fill value)
                   vari0001:
-                  x  x  x  x  x  5  6  7  x  x  x  x  x  x  x  x  x 
+                  x  x  x  x  x  5  6  7  x  x  x  x  x  x  x  x  x
          */
     } else if (rank ==3) {
         /* vari0001 and vari0002 */

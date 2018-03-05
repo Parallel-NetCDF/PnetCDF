@@ -40,7 +40,7 @@ NcmpiEnumType& NcmpiEnumType::operator=(const NcmpiType& rhs)
 }
 
 // The copy constructor.
-NcmpiEnumType::NcmpiEnumType(const NcmpiEnumType& rhs): 
+NcmpiEnumType::NcmpiEnumType(const NcmpiEnumType& rhs):
   NcmpiType(rhs)
 {
 }
@@ -50,15 +50,15 @@ NcmpiEnumType::NcmpiEnumType(const NcmpiEnumType& rhs):
 NcmpiEnumType::NcmpiEnumType() :
   NcmpiType()   // invoke base class constructor
 {}
-  
+
 // constructor
 NcmpiEnumType::NcmpiEnumType(const NcmpiGroup& grp, const string& name):
   NcmpiType(grp,name)
 {}
-  
+
 
 // constructor
-NcmpiEnumType::NcmpiEnumType(const NcmpiType& ncmpiType): 
+NcmpiEnumType::NcmpiEnumType(const NcmpiType& ncmpiType):
   NcmpiType(ncmpiType)
 {
   // check the nctype object is the base of an Enum type
@@ -80,18 +80,18 @@ NcmpiType NcmpiEnumType::getBaseType() const
   case NC_SHORT   : return ncmpiShort;
   case NC_USHORT  : return ncmpiUshort;
   case NC_INT     : return ncmpiInt;
-  case NC_UINT    : return ncmpiUint;  
-  case NC_INT64   : return ncmpiInt64; 
+  case NC_UINT    : return ncmpiUint;
+  case NC_INT64   : return ncmpiInt64;
   case NC_UINT64  : return ncmpiUint64;
   case NC_FLOAT   : return ncmpiFloat;
   case NC_DOUBLE  : return ncmpiDouble;
-  default:  
+  default:
     // this is a user defined type
     return NcmpiType(getParentGroup(),base_nc_typep);
   }
 }
 
-  
+
 // Returns number of members in this NcmpiEnumType object.
 MPI_Offset   NcmpiEnumType::getMemberCount() const{
   char charName[NC_MAX_NAME+1];
@@ -101,7 +101,7 @@ MPI_Offset   NcmpiEnumType::getMemberCount() const{
   ncmpiCheck(ncmpi_inq_enum(groupId,myId,charName,base_nc_typep,base_sizep,&num_membersp),__FILE__,__LINE__);
   return num_membersp;
 };
-  
+
 // Returns the member name for the given zero-based index.
 string NcmpiEnumType::getMemberNameFromIndex(int index) const{
   void* value=NULL;

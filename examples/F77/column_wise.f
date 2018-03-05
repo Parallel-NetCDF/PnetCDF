@@ -15,8 +15,8 @@
 ! pairs, merging the pairs across multiple nonblocking calls, and sorting
 ! them into an increasing order. The sorted pairs are used to construct a
 ! fileview that meets the monotonically non-decreasing offset requirement,
-! and thus the nonblocking requests can be serviced by a single MPI-IO call. 
-! 
+! and thus the nonblocking requests can be serviced by a single MPI-IO call.
+!
 ! The compile and run commands are given below, together with an ncmpidump of
 ! the output file. Note ncdump is in C order (row major).
 !
@@ -191,7 +191,7 @@
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
           if (err .EQ. NF_NOERR) then
-              call MPI_Reduce(malloc_size, sum_size, 1, MPI_INTEGER8, 
+              call MPI_Reduce(malloc_size, sum_size, 1, MPI_INTEGER8,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
               if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,

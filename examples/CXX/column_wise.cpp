@@ -19,8 +19,8 @@
  * pairs, merging the pairs across multiple nonblocking calls, and sorting
  * them into an increasing order. The sorted pairs are used to construct a
  * fileview that meets the monotonically non-decreasing offset requirement,
- * and thus the nonblocking requests can be serviced by a single MPI-IO call. 
- * 
+ * and thus the nonblocking requests can be serviced by a single MPI-IO call.
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *

@@ -29,7 +29,7 @@
  * OUT       fd:    File handler
  */
 int ncdwio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_dw_bufferedfile **fh) {
-    int err; 
+    int err;
     NC_dw_bufferedfile *f;
 
     /* Allocate buffer */
@@ -54,7 +54,7 @@ int ncdwio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info,
     else{
         f->buffer = NULL;
     }
-    
+
     /* Open file */
     err = ncdwio_sharedfile_open(comm, path, flag, info, &(f->fd));
     if (err != NC_NOERR){
@@ -91,18 +91,18 @@ int ncdwio_bufferedfile_close(NC_dw_bufferedfile *f) {
 }
 
 /*
- * This function write <count> bytes of data in buffer <buf> to the file at it's 
+ * This function write <count> bytes of data in buffer <buf> to the file at it's
  * current file position and increase the file position by <count>
  * IN       f:    File handle
  * IN     buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
- * 
+ *
  * We always left the physical file possition on the block boundary after a write operation
  * We keep track of logical file position including data writen to buffer
  * Buffer maps to a continuous region in the file space that is aligned to block boundary
  * Buffer is used to store the partial block from the tail of previous write
  * Whenever there is a seek, we flush the buffer to ensure correctness
- * 
+ *
  * Given a write region, we divide it into 3 parts
  * A head section where the start is not on the block boundary
  * A mid section which is perfectly aligned
@@ -112,14 +112,14 @@ int ncdwio_bufferedfile_close(NC_dw_bufferedfile *f) {
  * Because we flush the buffer after each seek operation, we are sure the data in the buffer is the data right before the head section
  * We then write out mid section as usual
  * Finally, we place the tail section in the buffer
- * 
+ *
  * Figure showing the case writing a region
  * | indicate block and write region boundary
  * File space:           |0123|4567|89AB|...
- * 
+ *
  *                 midstart (2)    midend (6)
  *                         0  v    v  count
- * Write region:           |23|4567|89|   
+ * Write region:           |23|4567|89|
  *                         ^          ^
  *                      position   position + count
  *
@@ -132,7 +132,7 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
     size_t midstart, midend;    // Start and end offset of the mid section related the file position
 
     if (f->buffer != NULL){
-        /* 
+        /*
         * The start position of mid section can be calculated as the first position on the block boundary after current file position
         * The end position of mid section can be calculated as the last position on the block boundary within the write region
         * This can be incorrect when write region sits within a block where we will have start > end
@@ -160,7 +160,7 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
         if (midstart > 0){
             if (f->bused - f->bunused > 0){
                 // Copy data into buffer
-                memcpy(f->buffer + f->bused, buf, midstart); 
+                memcpy(f->buffer + f->bused, buf, midstart);
                 // Write combined data to file, skipping unused part
                 err = ncdwio_sharedfile_write(f->fd, f->buffer + f->bunused, f->bsize - f->bunused);
                 if (err != NC_NOERR){
@@ -175,13 +175,13 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
                 midstart = 0;
             }
         }
-        
+
         /*
         * Write mid section as usual
         * Mid section may not exists due to short write region
         */
         if (midend > midstart) {
-            err = ncdwio_sharedfile_write(f->fd, (void*)(((char*)buf) + midstart), midend - midstart); 
+            err = ncdwio_sharedfile_write(f->fd, (void*)(((char*)buf) + midstart), midend - midstart);
             if (err != NC_NOERR){
                 return err;
             }
@@ -224,7 +224,7 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
  * IN     buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
  * IN  offset:    Starting write position
- * 
+ *
  * pwrite is not buffered, we write directly to the file
  */
 int ncdwio_bufferedfile_pwrite(NC_dw_bufferedfile *f, void *buf, size_t count, off_t offset){
@@ -245,11 +245,11 @@ int ncdwio_bufferedfile_pwrite(NC_dw_bufferedfile *f, void *buf, size_t count, o
  * OUT    buf:    Buffer of data to be written
  * IN   count:    Number of bytes to read
  * IN  offset:    Starting read position
- * 
+ *
  * We flush the buffer before read so data in the buffer can be reflected
  * Read is not buffered, we read directly from the file
  */
-int ncdwio_bufferedfile_pread(NC_dw_bufferedfile *f, void *buf, size_t count, off_t offset){    
+int ncdwio_bufferedfile_pread(NC_dw_bufferedfile *f, void *buf, size_t count, off_t offset){
     int err;
 
     if (f->buffer != NULL){
@@ -276,12 +276,12 @@ int ncdwio_bufferedfile_pread(NC_dw_bufferedfile *f, void *buf, size_t count, of
 }
 
 /*
- * This function read <count> bytes of data to buffer <buf> from the file at it's 
+ * This function read <count> bytes of data to buffer <buf> from the file at it's
  * current file position and increase the file position by <count>
  * IN       f:    File handle
  * OUT    buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
- * 
+ *
  * We call ncdwio_bufferedfile_pread and then increase the file position by count
  */
 int ncdwio_bufferedfile_read(NC_dw_bufferedfile *f, void *buf, size_t count){

@@ -194,14 +194,14 @@
                                info, ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_create: ', err)
-            else 
+            else
                 err = nf90mpi_close(ncid2)
             end if
             err = nf90mpi_open(comm, scratch, NF90_WRITE, info, &
                              ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_open: ', err)
-            else 
+            else
                 err = nf90mpi_close(ncid2)
                 nok = nok + 1
             end if
@@ -217,7 +217,7 @@
         end
 
 
-! 
+!
 ! Test nf90mpi_close.
 !    Try to close a netCDF file twice, check whether second close fails.
 !    Try on bad handle, check error return.
@@ -332,7 +332,7 @@
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        
+
 !       /* Try on bad handle */
         err = nf90mpi_inquire(BAD_ID, ndims, nvars, ngatts, recdim)
         if (err .ne. NF90_EBADID) then
@@ -340,7 +340,7 @@
         else
             nok = nok + 1
         endif
-        
+
         err = nf90mpi_inquire(ncid, ndims, nvars, ngatts, recdim)
         if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_inquire: ', err)

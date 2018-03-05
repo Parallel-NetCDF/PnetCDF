@@ -89,7 +89,7 @@ ptest3: $(check_PROGRAMS)
            exit 1; \
         fi ; } ; done ; } ; done
 
-ptests: ptest3 ptest4 ptest8 
+ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:
 
 # build check targets but not invoke

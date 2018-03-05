@@ -6,7 +6,7 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
+/* simple demonstration of pnetcdf
  * text attribute on dataset
  * write out rank into 1-d array collectively.
  * This example demonstrates the flexible interface */

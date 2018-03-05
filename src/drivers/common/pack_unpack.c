@@ -61,7 +61,7 @@ ncmpii_pack(int                ndims,
 
         if (buf_size == 0) /* zero-length request */
             return NC_NOERR;
-    
+
         if (imap == NULL) /* not called from a true varm API */
             return NC_NOERR;
     }
@@ -78,7 +78,7 @@ ncmpii_pack(int                ndims,
             if (ptype   != NULL) *ptype   = MPI_BYTE;
             return NC_NOERR;
         }
-    
+
         /* check if buftype is an MPI predefined primitive datatype */
         err = ncmpii_dtype_decode(buftype, &etype, &el_size, &num_ptypes,
                                   &isDerived, &isContig);

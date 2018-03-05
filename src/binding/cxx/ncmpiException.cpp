@@ -93,7 +93,7 @@ int NcmpiException::errorCode() const throw() {
 }
 
 
-// Thrown if the specified netCDF ID does not refer to an open netCDF dataset. 
+// Thrown if the specified netCDF ID does not refer to an open netCDF dataset.
 NcBadId::NcBadId(const char* complaint,const char* file,int line) :
   NcmpiException(NC_EBADID,complaint,file,line) { }
 
@@ -102,7 +102,7 @@ NcBadId::NcBadId(const char* complaint,const char* file,int line) :
 NcNFile::NcNFile(const char* complaint,const char* file,int line) :
   NcmpiException(NC_ENFILE,complaint,file,line) { }
 
-// Thrown if, having set NC_NOCLOBBER, the specified dataset already exists. 
+// Thrown if, having set NC_NOCLOBBER, the specified dataset already exists.
 NcExist::NcExist(const char* complaint,const char* file,int line) :
   NcmpiException(NC_EEXIST,complaint,file,line) { }
 

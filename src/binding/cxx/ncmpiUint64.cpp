@@ -19,4 +19,4 @@ NcmpiUint64::~NcmpiUint64() {
 bool NcmpiUint64::operator==(const NcmpiUint64 & rhs)    {
   // simply check the netCDF id.
   return myId == rhs.myId;
-}  
+}

@@ -38,7 +38,7 @@ ncdwio_inq_attname(void *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->inq_attname(ncdwp->ncp, varid, attid, name);
     if (err != NC_NOERR) return err;
 
@@ -53,7 +53,7 @@ ncdwio_inq_attid(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->inq_attid(ncdwp->ncp, varid, name, attidp);
     if (err != NC_NOERR) return err;
 
@@ -69,7 +69,7 @@ ncdwio_inq_att(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->inq_att(ncdwp->ncp, varid, name, datatypep, lenp);
     if (err != NC_NOERR) return err;
 
@@ -84,7 +84,7 @@ ncdwio_rename_att(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->rename_att(ncdwp->ncp, varid, name, newname);
     if (err != NC_NOERR) return err;
 
@@ -102,7 +102,7 @@ ncdwio_copy_att(void       *ncdp_in,
     int err;
     NC_dw *ncdwp_in  = (NC_dw*)ncdp_in;
     NC_dw *ncdwp_out = (NC_dw*)ncdp_out;
-    
+
     err = ncdwp_in->ncmpio_driver->copy_att(ncdwp_in->ncp,  varid_in, name,
                                    ncdwp_out->ncp, varid_out);
     if (err != NC_NOERR) return err;
@@ -117,7 +117,7 @@ ncdwio_del_att(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->del_att(ncdwp->ncp, varid, name);
     if (err != NC_NOERR) return err;
 
@@ -133,7 +133,7 @@ ncdwio_get_att(void         *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->get_att(ncdwp->ncp, varid, name, buf, itype);
     if (err != NC_NOERR) return err;
 
@@ -151,7 +151,7 @@ ncdwio_put_att(void         *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->put_att(ncdwp->ncp, varid, name, xtype, nelems, buf,
                                itype);
     if (err != NC_NOERR) return err;

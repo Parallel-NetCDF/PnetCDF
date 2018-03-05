@@ -795,7 +795,7 @@ req_commit(NC  *ncp,
         TRACE_COMM(MPI_Allreduce)(io_req, do_io, 4, MPI_OFFSET, MPI_MAX,
                                   ncp->comm);
         if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce"); 
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
 
         /* if error occurs, return the API collectively */
         if (do_io[2] != -NC_NOERR) return err;
@@ -1922,7 +1922,7 @@ wait_getput(NC         *ncp,
     /* move the offset calculation from posting API calls (pack_request) to
      * wait call, such that posting a nonblocking request can be made in
      * define mode
-     */  
+     */
     for (i=0; i<num_reqs; i++) {
         MPI_Offset *count, *stride, num_recs;
         NC_req     *req=reqs+i;
@@ -2016,14 +2016,14 @@ wait_getput(NC         *ncp,
             if (coll_indep == NC_REQ_INDEP) {
                 TRACE_IO(MPI_File_sync)(ncp->independent_fh);
                 if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync"); 
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
                     if (status == NC_NOERR) status = err;
                 }
             }
             else {
                 TRACE_IO(MPI_File_sync)(ncp->collective_fh);
                 if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync"); 
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
                     if (status == NC_NOERR) status = err;
                 }
                 TRACE_COMM(MPI_Barrier)(ncp->comm);

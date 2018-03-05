@@ -105,7 +105,7 @@ int main(int argc, char ** argv)
         if (i%STRIDE >= BLOCKLEN) continue;
         if (userbuf[i] != cmpbuf[i]) {
             errs++;
-            fprintf(stderr, "%d: expected 0x%x got 0x%x\n", 
+            fprintf(stderr, "%d: expected 0x%x got 0x%x\n",
                     i, userbuf[i], cmpbuf[i]);
         }
     }

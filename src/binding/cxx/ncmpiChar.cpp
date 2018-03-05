@@ -19,4 +19,4 @@ NcmpiChar::~NcmpiChar() {
 bool NcmpiChar::operator==(const NcmpiChar & rhs)    {
   // simply check the netCDF id.
   return myId == rhs.myId;
-}  
+}

@@ -21,4 +21,4 @@ int NcmpiByte::sizeoff(){char a;return sizeof(a);};
 bool NcmpiByte::operator==(const NcmpiByte & rhs)    {
   // simply check the netCDF id.
   return myId == rhs.myId;
-}  
+}

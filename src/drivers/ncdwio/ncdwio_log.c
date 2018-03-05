@@ -28,7 +28,7 @@
 /*
  * Create a new log structure
  * IN      info:    MPI info passed to ncmpi_create/ncmpi_open
- * INOUT   ncdwp:   NC_dw object holding the log structure 
+ * INOUT   ncdwp:   NC_dw object holding the log structure
  */
 int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
     int i, rank, np, err, flag, masterrank;
@@ -60,9 +60,9 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
         DEBUG_RETURN_ERROR(err);
     }
     masterrank = rank;
-       
+
     /* Initialize log structure */
-    
+
     /* Determine log file name
      * Log file name is $(bufferdir)$(basename)_$(ncid)_$(rank).{meta/data}
      * filepath is absolute path to the cdf file
@@ -71,7 +71,7 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
     /* Read environment variable for burst buffer path */
     private_path = getenv("DW_JOB_PRIVATE");
     stripe_path = getenv("DW_JOB_STRIPED");
-    
+
     /* Determine log base */
     if (ncdwp->logbase[0] != '\0'){
         logbasep = ncdwp->logbase;
@@ -83,8 +83,8 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
         logbasep = stripe_path;
     }
 
-    /* 
-     * Make sure bufferdir exists 
+    /*
+     * Make sure bufferdir exists
      * NOTE: Assume directory along netcdf file path exists
      */
     logdir = opendir(logbasep);
@@ -94,7 +94,7 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
     }
     closedir(logdir);
 
-    /* Resolve absolute path */    
+    /* Resolve absolute path */
     abspath = realpath(ncdwp->path, basename);
     if (abspath == NULL){
         /* Can not resolve absolute path */
@@ -117,7 +117,7 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
     /* Determine log to process mapping */
     if (rank == 0){
         int j;
-        char abs_private_path[NC_LOG_PATH_MAX], abs_stripe_path[NC_LOG_PATH_MAX]; 
+        char abs_private_path[NC_LOG_PATH_MAX], abs_stripe_path[NC_LOG_PATH_MAX];
 
         /* Resolve DW_JOB_PRIVATE and DW_JOB_STRIPED into absolute path*/
         memset(abs_private_path, 0, sizeof(abs_private_path));
@@ -155,7 +155,7 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
             }
         }
 
-        /* Whichever has longer matched prefix is considered a match 
+        /* Whichever has longer matched prefix is considered a match
          * Use log per node only when striped mode wins
          */
         if (j > i) {
@@ -171,27 +171,27 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
         }
     }
     MPI_Bcast(&log_per_node, 1, MPI_INT, 0, ncdwp->comm);
-    
+
     if (log_per_node){
         MPI_Comm_split_type(ncdwp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncdwp->logcomm));
-        MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncdwp->logcomm); 
+        MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncdwp->logcomm);
     }
     else{
         ncdwp->logcomm = MPI_COMM_SELF;
         masterrank = rank;
     }
 
-    /* Extract file anme 
+    /* Extract file anme
      * Search for first / charactor from the tail
      * Absolute path should always contains one '/', return error otherwise
      * We return the string including '/' for convenience
      */
     fname = strrchr(basename, '/');
     if (fname == NULL){
-        DEBUG_RETURN_ERROR(NC_EBAD_FILE);  
+        DEBUG_RETURN_ERROR(NC_EBAD_FILE);
     }
-    
+
     /* Log file path may also contain non-existing directory
      * We need to create them before we can search for usable id
      * As log file name hasn't been determined, we need to use a dummy one here
@@ -200,13 +200,13 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
             ncdwp->ncid, masterrank);
     sprintf(ncdwp->datalogpath, "%s%s_%d_%d.data", logbase, fname,
             ncdwp->ncid, masterrank);
-     
+
     /* Initialize metadata buffer */
     err = ncdwio_log_buffer_init(&(ncdwp->metadata));
     if (err != NC_NOERR){
         return err;
     }
-       
+
     /* Initialize metadata entry array */
     err = ncdwio_log_sizearray_init(&(ncdwp->entrydatasize));
     if (err != NC_NOERR){
@@ -239,7 +239,7 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
     ncdwp->maxentrysize = 0;
 
     /* Initialize metadata header */
-    
+
     /*
      * Allocate space for metadata header
      * Header consists of a fixed size info and variable size basename
@@ -260,18 +260,18 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
     headerp->rank_id = rank;   /* Rank */
     headerp->num_ranks = np;   /* Number of processes */
     /* Without convertion before logging, data in native representation */
-    headerp->is_external = 0;    
+    headerp->is_external = 0;
     /* Determine endianess */
-#ifdef WORDS_BIGENDIAN 
+#ifdef WORDS_BIGENDIAN
     headerp->big_endian = NC_LOG_TRUE;
-#else 
+#else
     headerp->big_endian = NC_LOG_FALSE;
 #endif
     headerp->num_entries = 0;    /* The log is empty */
     /* Highest dimension among all variables */
-    headerp->max_ndims = 0;    
+    headerp->max_ndims = 0;
     /* Location of the first entry */
-    headerp->entry_begin = ncdwp->metadata.nused;  
+    headerp->entry_begin = ncdwp->metadata.nused;
     headerp->basenamelen = strlen(basename);
 
     /* Create log files */
@@ -290,7 +290,7 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
     if (err != NC_NOERR) {
         return err;
     }
-   
+
     /* Write metadata header to file
      * Write from the memory buffer to file
      */
@@ -299,7 +299,7 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
         return err;
     }
 
-    /* Write data header to file 
+    /* Write data header to file
      * Data header consists of a fixed sized string PnetCDF0
      */
     err = ncdwio_bufferedfile_write(ncdwp->datalog_fd, "PnetCDF0", 8);
@@ -325,21 +325,21 @@ int ncdwio_log_create(NC_dw* ncdwp, MPI_Info info) {
  * Update information used by bb layer on enddef
  * IN    ncdwp:    NC_dw structure
  */
-int ncdwio_log_enddef(NC_dw *ncdwp){   
+int ncdwio_log_enddef(NC_dw *ncdwp){
     int err;
 #ifdef PNETCDF_PROFILING
-    double t1, t2; 
+    double t1, t2;
 #endif
     NC_dw_metadataheader *headerp;
-    
+
 #ifdef PNETCDF_PROFILING
     t1 = MPI_Wtime();
 #endif
 
     headerp = (NC_dw_metadataheader*)ncdwp->metadata.buffer;
-    
-    /* 
-     * Update the header if max ndim increased 
+
+    /*
+     * Update the header if max ndim increased
      * For now, max_ndims is the only field that can change
      */
     if (ncdwp->max_ndims > headerp->max_ndims){
@@ -349,10 +349,10 @@ int ncdwio_log_enddef(NC_dw *ncdwp){
          * This marks the completion of the record
          */
         err = ncdwio_sharedfile_pwrite(ncdwp->metalog_fd, &headerp->max_ndims,
-                                SIZEOF_MPI_OFFSET, sizeof(NC_dw_metadataheader) - 
-                               sizeof(headerp->basename) - 
-                               sizeof(headerp->basenamelen) - 
-                               sizeof(headerp->num_entries) - 
+                                SIZEOF_MPI_OFFSET, sizeof(NC_dw_metadataheader) -
+                               sizeof(headerp->basename) -
+                               sizeof(headerp->basenamelen) -
+                               sizeof(headerp->num_entries) -
                                sizeof(headerp->max_ndims));
         if (err != NC_NOERR){
             return err;
@@ -369,14 +369,14 @@ int ncdwio_log_enddef(NC_dw *ncdwp){
 }
 
 /*
- * Flush the log to CDF file and clean up the log structure 
+ * Flush the log to CDF file and clean up the log structure
  * Used by ncmpi_close()
  * IN    ncdwp:    log structure
  */
 int ncdwio_log_close(NC_dw *ncdwp) {
     int err;
 #ifdef PNETCDF_PROFILING
-    double t1, t2; 
+    double t1, t2;
     unsigned long long total_data;
     unsigned long long total_meta;
     unsigned long long buffer_size;
@@ -465,12 +465,12 @@ int ncdwio_log_close(NC_dw *ncdwp) {
                 MPI_MAX, 0, ncdwp->comm);
     MPI_Reduce(&(ncdwp->total_meta), &total_meta, 1, MPI_UNSIGNED_LONG_LONG,
                 MPI_SUM, 0, ncdwp->comm);
-    MPI_Reduce(&(ncdwp->total_data), &total_data, 1, MPI_UNSIGNED_LONG_LONG, 
+    MPI_Reduce(&(ncdwp->total_data), &total_data, 1, MPI_UNSIGNED_LONG_LONG,
                 MPI_SUM, 0, ncdwp->comm);
     MPI_Reduce(&(ncdwp->flushbuffersize), &buffer_size, 1,
                 MPI_UNSIGNED_LONG_LONG, MPI_MAX, 0, ncdwp->comm);
-    
-    if (ncdwp->rank == 0){ 
+
+    if (ncdwp->rank == 0){
         printf("==========================================================\n");
         printf("File: %s\n", ncdwp->path);
         printf("Data writen to variable: %llu\n", total_data);
@@ -506,7 +506,7 @@ int ncdwio_log_close(NC_dw *ncdwp) {
 int ncdwio_log_flush(NC_dw* ncdwp) {
     int err, status = NC_NOERR;
 #ifdef PNETCDF_PROFILING
-    double t1, t2; 
+    double t1, t2;
 #endif
     //NC_req *putlist;
     NC_dw_metadataheader *headerp;
@@ -529,9 +529,9 @@ int ncdwio_log_flush(NC_dw* ncdwp) {
             DEBUG_ASSIGN_ERROR(status, err);
         }
     }
- 
+
     /* Reset log status */
-    
+
     /* Set num_entries to 0 */
     headerp->num_entries = 0;
 

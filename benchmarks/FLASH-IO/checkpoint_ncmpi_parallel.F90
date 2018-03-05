@@ -1,6 +1,6 @@
 #define MDIM 3
 ! 3-d problem */
-#if N_DIM == 3 
+#if N_DIM == 3
 #define NDIM  3
 #define NGID 15
 ! 2-d problem */
@@ -118,7 +118,7 @@
           if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: bndbox")
 
           ! define var for unknown array
-          dimids(1) = dim_nxb    
+          dimids(1) = dim_nxb
           dimids(2) = dim_nyb
           dimids(3) = dim_nzb
           dimids(4) = dim_tot_blocks
@@ -151,7 +151,7 @@
           if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_int: nzb")
           err = nfmpi_put_att_double(ncid, NF_GLOBAL, "time", NF_DOUBLE, 1_MPI_OFFSET_KIND, atime)
           if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_double: time")
-      
+
           err = nfmpi_enddef(ncid)
           if (err .NE. NF_NOERR) call check(err, "nfmpi_enddef")
       end subroutine write_header_info
@@ -169,19 +169,19 @@
 !
 ! This version of checkpoint uses Parallel netCDF to store the PARAMESH data.
 ! The IO is done in parallel -- no copying of the data to a single processor
-! to do the writing is performed.  
+! to do the writing is performed.
 !
 ! Parallel netCDF uses MPI-IO (via ROMIO) to support parallel IO. Each
 ! processor must open the file, define the dataspaces for each netCDF
-! variables.  
+! variables.
 !
 ! A single record for each of the PARAMESH data structures is created.  A
-! processor only writes to a subset of this record.  Each record has a 
-! dimension with length = tot_blocks.  The offset of a processor into this 
+! processor only writes to a subset of this record.  Each record has a
+! dimension with length = tot_blocks.  The offset of a processor into this
 ! dimension is computed by looking at the total number of blocks that are
 ! below the current processor.
 !
-! In this version of the checkpoint, each variable is given its own 
+! In this version of the checkpoint, each variable is given its own
 ! record -- this makes it easier to change the variable list in the
 ! future without disturbing the format of the file.
 !
@@ -198,10 +198,10 @@
 
       integer filenum
       double precision simtime
-      
+
       integer block_no
       integer i, j
-      integer ngid 
+      integer ngid
       integer err
 
       integer n_to_left(0:16383)  ! must extend from 0 to NumPEs-1
@@ -217,7 +217,7 @@
       integer nzones_block(3)
 
 ! create a character variable to hold the string representation of the block
-! number.  Note this is set to be 4 characters long (i.e. max = 9999).  
+! number.  Note this is set to be 4 characters long (i.e. max = 9999).
       character*4  fnum_string
       character*80 filename
       character*8 str
@@ -254,19 +254,19 @@
 !-----------------------------------------------------------------------------
       chk_t(1) = MPI_Wtime()
 
-! use an allgather routine here 
-      call MPI_Allgather(lnblocks, 1,MPI_INTEGER, & 
-                         n_to_left,1,MPI_INTEGER, & 
+! use an allgather routine here
+      call MPI_Allgather(lnblocks, 1,MPI_INTEGER, &
+                         n_to_left,1,MPI_INTEGER, &
                          MPI_COMM_WORLD,err)
 
-      
+
 ! compute the total number of blocks
       tot_blocks = 0
 
       do i = 0,NumPEs-1
          tot_blocks = tot_blocks + n_to_left(i)
       end do
-      
+
 ! compute the number of procssors to the left of a processor
       do i = NumPEs-1,1,-1
          n_to_left(i) = n_to_left(i-1)
@@ -279,7 +279,7 @@
 
 
 !-----------------------------------------------------------------------------
-! compute the global id -- this is a single array which stores the 
+! compute the global id -- this is a single array which stores the
 ! neighbor block numbers, the parent, and the children of a given block
 !-----------------------------------------------------------------------------
       do block_no = 1,lnblocks
@@ -294,30 +294,30 @@
 ! -- take into account the number of blocks below the processor that the
 ! neighbor is on, so the block number is global
             if (neigh(1,j,block_no).gt.0) then
-               gid(ngid,block_no) = neigh(1,j,block_no) +  & 
+               gid(ngid,block_no) = neigh(1,j,block_no) +  &
                     n_to_left(neigh(2,j,block_no))
             else
 
-! the neighbor is either a physical boundary or does not exist at that 
+! the neighbor is either a physical boundary or does not exist at that
 ! level of refinement
                gid(ngid,block_no) = neigh(1,j,block_no)
             end if
          end do
-        
+
 ! store the parent of the current block
          ngid = ngid + 1
          if (parent(1,block_no).gt.0) then
-            gid(ngid,block_no) = parent(1,block_no) +  & 
+            gid(ngid,block_no) = parent(1,block_no) +  &
                  n_to_left(parent(2,block_no))
          else
             gid(ngid,block_no) = parent(1,block_no)
          end if
-         
+
 ! store the children of the current block
          do j = 1,nchild
             ngid = ngid + 1
             if (child(1,j,block_no).gt.0) then
-               gid(ngid,block_no) = child(1,j,block_no) +  & 
+               gid(ngid,block_no) = child(1,j,block_no) +  &
                     n_to_left(child(2,j,block_no))
             else
                gid(ngid,block_no) = child(1,j,block_no)
@@ -354,9 +354,9 @@
 !-----------------------------------------------------------------------------
 ! store the scalar information -- # of blocks, simulation time, etc
 !-----------------------------------------------------------------------------
-      
+
 ! get the current time and date
-      date_string = 'now'      
+      date_string = 'now'
 
 ! store the number of zones / block in each direction
       nzones_block(1) = nxb
@@ -374,19 +374,19 @@
       time_start = MPI_Wtime()
 #endif
 
-      call write_header_info(nvar, & 
-                             ncid, & 
+      call write_header_info(nvar, &
+                             ncid, &
                              date_string, &
                              flash_release(), &
-                             tot_blocks, & 
-                             simtime, & 
-                             nstep, & 
-                             nzones_block, & 
+                             tot_blocks, &
+                             simtime, &
+                             nstep, &
+                             nzones_block, &
                              unklabels, &
                              varid)
 
 #ifdef TIMERS
-      print *, 'header: MyPE = ', MyPE, ' time = ',  & 
+      print *, 'header: MyPE = ', MyPE, ' time = ',  &
            MPI_Wtime() - time_start
 #endif
 
@@ -412,14 +412,14 @@
       endif
 
 #ifdef TIMERS
-      print *, 'lrefine: MyPE = ', MyPE, ' time = ',  & 
+      print *, 'lrefine: MyPE = ', MyPE, ' time = ',  &
            MPI_Wtime() - time_start
 #endif
 
 ! store the nodetype
 #ifdef TIMERS
       time_start = MPI_Wtime()
-#endif      
+#endif
 
       if (use_nonblocking_io) then
           err = nfmpi_iput_vara_int(ncid, varid(2), starts, counts, nodetype, reqs(2))
@@ -430,14 +430,14 @@
       endif
 
 #ifdef TIMERS
-      print *, 'nodetype: MyPE = ', MyPE, ' time = ',  & 
+      print *, 'nodetype: MyPE = ', MyPE, ' time = ',  &
            MPI_Wtime() - time_start
 #endif
 
 ! store the global id
 #ifdef TIMERS
       time_start = MPI_Wtime()
-#endif      
+#endif
 
       starts(1) = 1
       starts(2) = global_offset+1
@@ -452,14 +452,14 @@
       endif
 
 #ifdef TIMERS
-      print *, 'gid: MyPE = ', MyPE, ' time = ',  & 
+      print *, 'gid: MyPE = ', MyPE, ' time = ',  &
            MPI_Wtime() - time_start
 #endif
 
 !-----------------------------------------------------------------------------
 ! store the grid information
 !-----------------------------------------------------------------------------
-      
+
 ! store the coordinates
 #ifdef TIMERS
       time_start = MPI_Wtime()
@@ -479,7 +479,7 @@
       endif
 
 #ifdef TIMERS
-      print *, 'coord: MyPE = ', MyPE, ' time = ',  & 
+      print *, 'coord: MyPE = ', MyPE, ' time = ',  &
            MPI_Wtime() - time_start
 #endif
 
@@ -502,14 +502,14 @@
       endif
 
 #ifdef TIMERS
-      print *, 'size: MyPE = ', MyPE, ' time = ',  & 
+      print *, 'size: MyPE = ', MyPE, ' time = ',  &
            MPI_Wtime() - time_start
 #endif
 
-! store the bounding box 
+! store the bounding box
 #ifdef TIMERS
       time_start = MPI_Wtime()
-#endif      
+#endif
       bb_buf(1:2,1:ndim,1:lnblocks) = bnd_box(1:2,1:ndim,1:lnblocks)
 
       starts(1) = 1
@@ -527,7 +527,7 @@
       endif
 
 #ifdef TIMERS
-      print *, 'bb1: MyPE = ', MyPE, ' time = ',  & 
+      print *, 'bb1: MyPE = ', MyPE, ' time = ',  &
            MPI_Wtime() - time_start
 #endif
 
@@ -535,8 +535,8 @@
       chk_t(1) = chk_t(2) - chk_t(1)
 
 !-----------------------------------------------------------------------------
-! store the unknowns -- here we will pass the entire unk array on each 
-! processor.  The HDF 5 memory space functionality will pick just the 
+! store the unknowns -- here we will pass the entire unk array on each
+! processor.  The HDF 5 memory space functionality will pick just the
 ! interior cells to write to disk.
 !-----------------------------------------------------------------------------
 #ifdef TIMERS
@@ -583,8 +583,8 @@
          if (.NOT. use_nonblocking_io) then
             ! when using nonblocking flexible API, we don't even need unk_buf
             unk_buf(1, 1:nxb, 1:nyb, 1:nzb, :) =        &
-                unk(i, nguard+1     : nguard+nxb,       & 
-                       nguard*k2d+1 : nguard*k2d+nyb,   & 
+                unk(i, nguard+1     : nguard+nxb,       &
+                       nguard*k2d+1 : nguard*k2d+nyb,   &
                        nguard*k3d+1 : nguard*k3d+nzb, :)
          endif
 

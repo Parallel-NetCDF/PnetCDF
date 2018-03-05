@@ -119,7 +119,7 @@ subfile_create(NC *ncp)
      * for now, just passing 0 value. */
     TRACE_COMM(MPI_Comm_split)(ncp->comm, color, myrank, &ncp->comm_sf);
     if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_split"); 
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_split");
 
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->path, color, "nc");
 
@@ -178,7 +178,7 @@ ncmpio_subfile_open(NC *ncp)
      * for now, just passing 0 value. */
     TRACE_COMM(MPI_Comm_split)(ncp->comm, color, myrank, &ncp->comm_sf);
     if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_split"); 
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_split");
 
     /* char path[1024], file[1024]; */
     /* find_path_and_fname(ncp->path, path, file); */

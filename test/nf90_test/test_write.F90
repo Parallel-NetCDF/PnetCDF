@@ -87,11 +87,11 @@
         end
 
 
-! Test nf90mpi_redef 
+! Test nf90mpi_redef
 ! (In fact also tests nf90mpi_enddef - called from test_nf90mpi_enddef)
 !    BAD_ID
 !    attempt redef (error) & enddef on read-only file
-!    create file, define dims & vars. 
+!    create file, define dims & vars.
 !    attempt put var (error)
 !    attempt redef (error) & enddef.
 !    put vars
@@ -174,7 +174,7 @@
             call errore('nf90mpi_inq_varid: ', err)
         var = 1.0
 !       should not enter indep mode in define mode
-        err = nf90mpi_begin_indep_data(ncid)       
+        err = nf90mpi_begin_indep_data(ncid)
         if (err .ne. NF90_EINDEFINE) &
           call errore('nf90mpi_begin_indep_data... in define mode: ', err)
         start = 0
@@ -230,7 +230,7 @@
         err = nf90mpi_put_var(ncid, vid, var, start)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_put_var: ', err)
-        err = nf90mpi_end_indep_data(ncid)       
+        err = nf90mpi_end_indep_data(ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_end_indep_data: ', err)
         err = nf90mpi_close(ncid)
@@ -271,7 +271,7 @@
         call print_nok(nok)
         end
 
-! Test nf90mpi_enddef 
+! Test nf90mpi_enddef
 ! Simply calls test_nf90mpi_redef which tests both nf90mpi_redef & nf90mpi_enddef
 
         subroutine test_nf90mpi_enddef()
@@ -1087,8 +1087,8 @@
                     call errore('nf90mpi_get_att: ', err)
                 if (value .ne. 'A') &
                     call error('Unexpected value')
-            end if                                                   
-4       continue                                                   
+            end if
+4       continue
 
         err = nf90mpi_close(ncid_out)
         if (err .ne. NF90_NOERR) &
@@ -1680,7 +1680,7 @@
         use pnetcdf
       implicit none
 #include "tests.inc"
-      
+
       integer ncid
       integer err, flags
       integer i
@@ -1688,7 +1688,7 @@
       integer old_format
       integer formats(3)
       integer nf90mpi_get_file_version
-      
+
 !     /* bad format */
       err = nf90mpi_set_default_format(3, old_format)
       IF (err .ne. NF90_EINVAL) &
@@ -1727,7 +1727,7 @@
         use pnetcdf
       implicit none
 #include "tests.inc"
-      
+
       character*(*) path
       integer version
       character magic*4

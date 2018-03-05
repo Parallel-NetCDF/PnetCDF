@@ -148,7 +148,7 @@ err_check:
     }
 
     if (err != NC_NOERR) return err;
-    
+
     /* calling the subroutine that implements ncmpi_def_dim() */
     err = pncp->driver->def_dim(pncp->ncp, name, size, &dimid);
     if (err != NC_NOERR) return err;

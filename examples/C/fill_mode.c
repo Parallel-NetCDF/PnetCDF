@@ -7,7 +7,7 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use 
+ * This example shows how to use
  * 1. ncmpi_set_fill() to enable fill mode
  * 2. ncmpi_def_var_fill() to define the variable's fill value
  * 3. ncmpi_inq_var_fill() to inquire the variable's fill mode information

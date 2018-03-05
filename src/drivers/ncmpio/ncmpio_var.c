@@ -596,7 +596,7 @@ ncmpio_rename_var(void       *ncdp,
     /* sanity check for ncdp and varid has been done in dispatchers */
     varp = ncp->vars.value[varid];
 
-    /* create a normalized character string */ 
+    /* create a normalized character string */
     err = ncmpii_utf8_normalize(newname, &nnewname);
     if (err != NC_NOERR) goto err_check;
 

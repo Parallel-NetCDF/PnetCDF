@@ -91,12 +91,12 @@ int log_flush(NC_dw *ncdwp) {
     NC_dw_metadataptr *ip;
 #ifdef PNETCDF_PROFILING
     double t1, t2, t3, t4;
-    
+
     t1 = MPI_Wtime();
 #endif
 
     /* Read datalog in to memory */
-    /* 
+    /*
      * Prepare data buffer
      * We determine the data buffer size according to:
      * hints, size of data log, the largest size of single record
@@ -110,7 +110,7 @@ int log_flush(NC_dw *ncdwp) {
     if (databuffersize < ncdwp->maxentrysize){
         databuffersize = ncdwp->maxentrysize;
     }
-    
+
 #ifdef PNETCDF_PROFILING
     if (ncdwp->max_buffer < databuffersize){
         ncdwp->max_buffer = databuffersize;
@@ -136,7 +136,7 @@ int log_flush(NC_dw *ncdwp) {
     reqids = (int*)NCI_Malloc(ncdwp->entrydatasize.nused * SIZEOF_INT);
     stats = (int*)NCI_Malloc(ncdwp->entrydatasize.nused * SIZEOF_INT);
 
-    /* 
+    /*
      * Iterate through meta log entries
      */
     headerp = (NC_dw_metadataheader*)ncdwp->metadata.buffer;
@@ -154,15 +154,15 @@ int log_flush(NC_dw *ncdwp) {
             else{
                 // We encounter a canceled record
                 // Read unread data into data buffer and jump through the gap
-                /* 
+                /*
                  * Read data to buffer
                  * We read only what needed by pending requests
                  */
-                if (dataread < databufferused){   
+                if (dataread < databufferused){
 #ifdef PNETCDF_PROFILING
                     t2 = MPI_Wtime();
 #endif
-                    err = ncdwio_bufferedfile_read(ncdwp->datalog_fd, databuffer + dataread, databufferused - dataread); 
+                    err = ncdwio_bufferedfile_read(ncdwp->datalog_fd, databuffer + dataread, databufferused - dataread);
                     if (err != NC_NOERR){
                         return err;
                     }
@@ -181,15 +181,15 @@ int log_flush(NC_dw *ncdwp) {
             }
         }
 
-        /* 
+        /*
          * Read data to buffer
          * We read only what needed by pending requests
          */
-        if (dataread < databufferused){   
+        if (dataread < databufferused){
 #ifdef PNETCDF_PROFILING
             t2 = MPI_Wtime();
 #endif
-            err = ncdwio_bufferedfile_read(ncdwp->datalog_fd, databuffer + dataread, databufferused - dataread); 
+            err = ncdwio_bufferedfile_read(ncdwp->datalog_fd, databuffer + dataread, databufferused - dataread);
             if (err != NC_NOERR){
                 return err;
             }
@@ -202,12 +202,12 @@ int log_flush(NC_dw *ncdwp) {
 
         // Pointer points to the data of current entry
         databufferoff = databuffer;
-        
+
         j = 0;
         for(i = lb; i < ub; i++){
             ip = ncdwp->metaidx.entries + i;
 
-            if (ip->valid) {                   
+            if (ip->valid) {
                 /* start, count, stride */
                 start = (MPI_Offset*)(entryp + 1);
                 count = start + entryp->ndims;
@@ -218,23 +218,23 @@ int log_flush(NC_dw *ncdwp) {
                 if (err != NC_NOERR){
                     return err;
                 }
-                
+
                 /* Determine API_Kind */
                 if (entryp->api_kind == NC_LOG_API_KIND_VARA){
-                    stride = NULL;    
+                    stride = NULL;
                 }
 
-#ifdef PNETCDF_PROFILING            
+#ifdef PNETCDF_PROFILING
                 t2 = MPI_Wtime();
 #endif
-                
+
                 /* Replay event with non-blocking call */
                 err = ncdwp->ncmpio_driver->iput_var(ncdwp->ncp, entryp->varid, start, count, stride, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
                 if (status == NC_NOERR) {
                     status = err;
                 }
 
-#ifdef PNETCDF_PROFILING                              
+#ifdef PNETCDF_PROFILING
                 t3 = MPI_Wtime();
                 ncdwp->flush_put_time += t3 - t2;
 #endif
@@ -243,7 +243,7 @@ int log_flush(NC_dw *ncdwp) {
                 databufferoff += entryp->data_len;
                 j++;
             }
-    
+
             /* Move to next position */
             entryp = (NC_dw_metadataentry*)(((char*)entryp) + entryp->esize);
         }
@@ -251,11 +251,11 @@ int log_flush(NC_dw *ncdwp) {
 #ifdef PNETCDF_PROFILING
         t2 = MPI_Wtime();
 #endif
-        /* 
+        /*
          * Wait must be called first or previous data will be corrupted
          */
         if (ncdwp->isindep) {
-            err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, j, reqids, stats, NC_REQ_INDEP); 
+            err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, j, reqids, stats, NC_REQ_INDEP);
         }
         else{
             err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, j, reqids, stats, NC_REQ_COLL);
@@ -281,14 +281,14 @@ int log_flush(NC_dw *ncdwp) {
                 j++;
             }
         }
-        
+
         /* Update batch status */
         databufferused = 0;
 
         // Mark as complete
         lb = ub;
 
-        /* 
+        /*
          * In case of collective flush, we sync our status with other processes
          */
         if (!ncdwp->isindep){
@@ -298,35 +298,35 @@ int log_flush(NC_dw *ncdwp) {
             else{
                 ready = 0;
             }
-            
+
             // Sync status
-            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncdwp->comm);  
+            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncdwp->comm);
             if (err != MPI_SUCCESS){
                 DEBUG_RETURN_ERROR(ncmpii_error_mpi2nc(err, "MPI_Allreduce"));
             }
         }
     }
 
-    /* 
+    /*
      * In case of collective flush, we must continue to call wait until every process is ready
      */
     if (!ncdwp->isindep){
         while(!ready_all){
-            // Participate collective wait 
+            // Participate collective wait
             err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, 0, NULL, NULL, NC_REQ_COLL);
             if (status == NC_NOERR) {
                 status = err;
             }
 
             // Sync status
-            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncdwp->comm);  
+            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncdwp->comm);
             if (err != MPI_SUCCESS){
                 DEBUG_RETURN_ERROR(ncmpii_error_mpi2nc(err, "MPI_Allreduce"));
             }
         }
     }
-               
-    /* Free the data buffer */ 
+
+    /* Free the data buffer */
     NCI_Free(databuffer);
     NCI_Free(reqids);
     NCI_Free(stats);

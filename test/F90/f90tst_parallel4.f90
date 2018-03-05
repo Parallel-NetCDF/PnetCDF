@@ -71,7 +71,7 @@ program f90tst
   call handle_err(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, MPI_INFO_NULL, fh))
 
   call handle_err(nf90mpi_get_var_all(fh, varid, f, start=start, count=count))
- 
+
   if (my_rank .LE. 8) then
      do i=1,3
         if (f(i) .ne. my_rank*3+i) then
@@ -79,7 +79,7 @@ program f90tst
            goto 999
         endif
      end do
-  endif 
+  endif
 
   call handle_err(nf90mpi_close(fh))
 

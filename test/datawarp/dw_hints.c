@@ -11,7 +11,7 @@
  * It is used to test if PnetCDF can correctly calculate the file offsets
  * for the two new variables, in particular for files that align the
  * fix-size variables to a boundary larger than 4 bytes, for instance
- * a file created by PnetCDF with fault alignment of 512 bytes.
+ * a file created by PnetCDF with default alignment of 512 bytes.
  *
  * The compile and run commands are given below.
  *

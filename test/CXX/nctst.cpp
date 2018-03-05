@@ -70,10 +70,10 @@ static float P_data[NFRTIMES][NLATS][NLONS] = {
 
 
 // Check a string attribute to make sure it has the correct value.
-int 
+int
 check_string_att(NcmpiAtt &att, const char *theName, const char *value)
 {
-   if (att.isNull() || att.getName().compare(theName) != 0 || 
+   if (att.isNull() || att.getName().compare(theName) != 0 ||
        att.getType() != ncmpiChar || att.getAttLength() != (long)strlen(value))
       return NC_ERR;
 
@@ -111,7 +111,7 @@ int read(const MPI_Comm        &comm,
 {
     try {
         // open the file
-        NcmpiFile nc(comm, path, NcmpiFile::read); 
+        NcmpiFile nc(comm, path, NcmpiFile::read);
 
         // Check the format.
         if (nc.getFormat() != format) {
@@ -138,25 +138,25 @@ int read(const MPI_Comm        &comm,
             cout << "global attribute "<<TITLE_STR<<" != "<<TITLE<<endl;
             throw NcmpiException("read Error ",__FILE__,__LINE__);
         }
-   
+
         // Check the dimensions.
         NcmpiDim latDim = nc.getDim(LAT);
-        if (latDim.isNull() || latDim.getName().compare(LAT) != 0 || 
+        if (latDim.isNull() || latDim.getName().compare(LAT) != 0 ||
             latDim.getSize() != NLATS || latDim.isUnlimited())
             throw NcmpiException("read Error: dimension lat ",__FILE__,__LINE__);
 
         NcmpiDim lonDim = nc.getDim(LON);
-        if (lonDim.isNull() || lonDim.getName().compare(LON) != 0 || 
+        if (lonDim.isNull() || lonDim.getName().compare(LON) != 0 ||
             lonDim.getSize() != NLONS || lonDim.isUnlimited())
             throw NcmpiException("read Error: dimension lon ",__FILE__,__LINE__);
 
         NcmpiDim frtimeDim = nc.getDim(FRTIME);
-        if (frtimeDim.isNull() || frtimeDim.getName().compare(FRTIME) != 0 || 
+        if (frtimeDim.isNull() || frtimeDim.getName().compare(FRTIME) != 0 ||
             frtimeDim.getSize() != NFRTIMES || !frtimeDim.isUnlimited())
             throw NcmpiException("read Error: unlimited dimension frtime ",__FILE__,__LINE__);
 
         NcmpiDim timeLenDim = nc.getDim(TIMELEN1);
-        if (timeLenDim.isNull() || timeLenDim.getName().compare(TIMELEN1) != 0 || 
+        if (timeLenDim.isNull() || timeLenDim.getName().compare(TIMELEN1) != 0 ||
             timeLenDim.getSize() != TIMESTRINGLEN || timeLenDim.isUnlimited())
             throw NcmpiException("read Error: dimension timeLen ",__FILE__,__LINE__);
 
@@ -201,7 +201,7 @@ int read(const MPI_Comm        &comm,
 
         // Check the valid range, and check the values.
         NcmpiVarAtt vatt = pVar.getAtt(VALID_RANGE);
-        if (vatt.isNull() || vatt.getName().compare(VALID_RANGE) != 0 || 
+        if (vatt.isNull() || vatt.getName().compare(VALID_RANGE) != 0 ||
             vatt.getType() != ncmpiFloat || vatt.getAttLength() != NRANGES)
             throw NcmpiException("read Error: VALID_RANGE ",__FILE__,__LINE__);
 
@@ -212,7 +212,7 @@ int read(const MPI_Comm        &comm,
 
         // Check the fill value, and check the value.
         vatt = pVar.getAtt(FILL_VALUE);
-        if (vatt.isNull() || vatt.getName().compare(FILL_VALUE) != 0 || 
+        if (vatt.isNull() || vatt.getName().compare(FILL_VALUE) != 0 ||
             vatt.getType() != ncmpiFloat || vatt.getAttLength() != 1)
             throw NcmpiException("read Error: FILL_VALUE ",__FILE__,__LINE__);
 
@@ -236,7 +236,7 @@ int read(const MPI_Comm        &comm,
 
         // Check for the scalar attribute of the scalar variable and check its value.
         vatt = scalarVar.getAtt(SCALAR_ATT);
-        if (vatt.isNull() || vatt.getName().compare(SCALAR_ATT) != 0 || 
+        if (vatt.isNull() || vatt.getName().compare(SCALAR_ATT) != 0 ||
             vatt.getType() != ncmpiInt || vatt.getAttLength() != 1)
             throw NcmpiException("read Error: SCALAR_ATT ",__FILE__,__LINE__);
 
@@ -269,7 +269,7 @@ int gen(const MPI_Comm        &comm,
         NcmpiDim latd     = nc.addDim(LAT, NLATS);
         NcmpiDim lond     = nc.addDim(LON, NLONS);
         NcmpiDim frtimed  = nc.addDim(FRTIME); // unlimited dimension
-        NcmpiDim timelend = nc.addDim(TIMELEN1, TIMESTRINGLEN); 
+        NcmpiDim timelend = nc.addDim(TIMELEN1, TIMESTRINGLEN);
 
         vector<NcmpiDim> dim3D(3);
         dim3D[0]=frtimed;
@@ -350,7 +350,7 @@ int gen(const MPI_Comm        &comm,
  * of path and stripping off any extension.  The returned string is in static
  * storage, so copy it if you need to keep it.
  */
-static char* 
+static char*
 cdl_name(const char* path)
 {
     const char* cp = path + strlen(path);
@@ -424,7 +424,7 @@ void DumpableNcmpiFile::dumpvars( void )
 		NcmpiDim dim = vp->getDim(d);
 		cout << dim.getName();
 		if (d < vp->getDimCount()-1)
-		  cout << ", ";		  
+		  cout << ", ";
 	    }
 	    cout << ")";
 	}
@@ -524,14 +524,14 @@ main(int argc, char* argv[])	// test new netCDF interface
    NcmpiFile::FileFormat format[NUM_FORMATS] =
               {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::classic5};
 #ifdef DEBUG
-   char format_name[NUM_FORMATS][NC_MAX_NAME] = 
+   char format_name[NUM_FORMATS][NC_MAX_NAME] =
         {"classic", "classic2", "classic5"};
 #endif
 
    int nerrs = 0;
    for (int i = 0; i < NUM_FORMATS; i++)
    {
-      if (gen(MPI_COMM_WORLD, filename, format[i]) || 
+      if (gen(MPI_COMM_WORLD, filename, format[i]) ||
 	  read(MPI_COMM_WORLD, filename, format[i]))
       {
 #ifdef DEBUG

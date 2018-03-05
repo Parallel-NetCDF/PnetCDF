@@ -5,7 +5,7 @@
 !   $Id$
 !
       program Pnf_Test
-! Test program thanks to From: John Tannahill <tannahill1@llnl.gov> 
+! Test program thanks to From: John Tannahill <tannahill1@llnl.gov>
 
       implicit none
       include "mpif.h"

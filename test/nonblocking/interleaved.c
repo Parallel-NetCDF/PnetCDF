@@ -8,7 +8,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This program tests nonblocking APIs for handling interleaved file types.
- * In the first case, 
+ * In the first case,
  *    It first defines a netCDF variable of size 10 x 18.
  *    3 calls to ncmpi_iput_vara_int(), where the first one interleaves with
  *    the second and third writes and its access region covers both of the

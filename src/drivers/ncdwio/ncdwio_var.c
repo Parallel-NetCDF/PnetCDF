@@ -64,7 +64,7 @@ ncdwio_def_var(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->def_var(ncdwp->ncp, name, xtype, ndims, dimids, varidp);
     if (err != NC_NOERR) return err;
 
@@ -83,7 +83,7 @@ ncdwio_inq_varid(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->inq_varid(ncdwp->ncp, name, varid);
     if (err != NC_NOERR) return err;
 
@@ -104,7 +104,7 @@ ncdwio_inq_var(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->inq_var(ncdwp->ncp, varid, name, xtypep, ndimsp, dimids,
                                nattsp, offsetp, no_fillp, fill_valuep);
     if (err != NC_NOERR) return err;
@@ -119,7 +119,7 @@ ncdwio_rename_var(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->rename_var(ncdwp->ncp, varid, newname);
     if (err != NC_NOERR) return err;
 
@@ -154,7 +154,7 @@ ncdwio_get_var(void             *ncdp,
     if (status == NC_NOERR){
         status = err;
     }
-    
+
     return status;
 }
 
@@ -223,7 +223,7 @@ ncdwio_iget_var(void             *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->iget_var(ncdwp->ncp, varid, start, count, stride, imap,
                                 buf, bufcount, buftype, reqid, reqMode);
     if (err != NC_NOERR) return err;
@@ -255,19 +255,19 @@ ncdwio_iput_var(void             *ncdp,
 {
     int i, err, id;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     // Create a new put request with id
     err = ncdwio_put_list_add(ncdwp, &id);
     if (err != NC_NOERR){
         return err;
     }
-    
+
     // Translate putlist id to ncdwio id
     if (reqid != NULL){
         *reqid = id * 2;
     }
 
-    /* We must link the request object to corresponding log entries 
+    /* We must link the request object to corresponding log entries
      * For varn operation, we will create multiple log entries, so it's a 1 to many mapping
      * Assuming the program runs under single thread, those entries are a continuous region within the metadata log
      * We record the first and last metadata entries associated with this request
@@ -285,11 +285,11 @@ ncdwio_iput_var(void             *ncdp,
         ncdwio_put_list_remove(ncdwp, id);
         return err;
     }
-    
+
     // Number of log entries after recording current operation to log
     ncdwp->putlist.reqs[id].entryend = ncdwp->metaidx.nused;
-    
-    /* 
+
+    /*
      * If new entry is created in the log, link those entries to the request
      * The entry may go directly to the ncmpio driver if it is too large
      * If there are no entry created, we mark this request as completed
@@ -313,7 +313,7 @@ ncdwio_buffer_attach(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->buffer_attach(ncdwp->ncp, bufsize);
     if (err != NC_NOERR) return err;
 
@@ -325,7 +325,7 @@ ncdwio_buffer_detach(void *ncdp)
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->buffer_detach(ncdwp->ncp);
     if (err != NC_NOERR) return err;
 
@@ -346,10 +346,10 @@ ncdwio_bput_var(void             *ncdp,
                int               reqMode)
 {
     int err;
-    
+
     /* bput same as iput in bb driver */
     err = ncdwio_iput_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid, reqMode);
-    
+
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
@@ -367,7 +367,7 @@ ncdwio_get_varn(void              *ncdp,
 {
     int err, status = NC_NOERR;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     /* Flush on read */
     if(ncdwp->inited){
         err = ncdwio_log_flush(ncdwp);
@@ -375,7 +375,7 @@ ncdwio_get_varn(void              *ncdp,
             status = err;
         }
     }
- 
+
     err = ncdwp->ncmpio_driver->get_varn(ncdwp->ncp, varid, num, starts, counts, buf,
                                 bufcount, buftype, reqMode);
     if (status == NC_NOERR){
@@ -405,7 +405,7 @@ ncdwio_put_varn(void              *ncdp,
     void *bufp;
     NC_dw *ncdwp = (NC_dw*)ncdp;
     MPI_Datatype ptype = buftype;
-    
+
     /* It is illegal for starts to be NULL unless num is 0*/
     if (num > 0 && starts == NULL){
         DEBUG_RETURN_ERROR(NC_ENULLSTART)
@@ -488,7 +488,7 @@ ncdwio_iput_varn(void               *ncdp,
 {
     int i, err, id;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     /* It is illegal for starts to be NULL unless num is 0*/
     if (num > 0 && starts == NULL){
         DEBUG_RETURN_ERROR(NC_ENULLSTART)
@@ -499,13 +499,13 @@ ncdwio_iput_varn(void               *ncdp,
     if (err != NC_NOERR){
         return err;
     }
-    
+
     // Translate putlist id to ncdwio id
     if (reqid != NULL){
         *reqid = id * 2;
     }
-    
-    /* We must link the request object to corresponding log entries 
+
+    /* We must link the request object to corresponding log entries
      * For varn operation, we will create multiple log entries, so it's a 1 to many mapping
      * Assuming the program runs under single thread, those entries are a continuous region within the metadata log
      * We record the first and last metadata entries associated with this request
@@ -516,7 +516,7 @@ ncdwio_iput_varn(void               *ncdp,
 
     // Number of log entries before recording current operation to log
     ncdwp->putlist.reqs[id].entrystart = ncdwp->metaidx.nused;
- 
+
     // Handle the IO operation same as blocking one
     err = ncdwio_put_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqMode);
     if (err != NC_NOERR){
@@ -526,7 +526,7 @@ ncdwio_iput_varn(void               *ncdp,
 
     // Number of log entries after recording current operation to log
     ncdwp->putlist.reqs[id].entryend = ncdwp->metaidx.nused;
-    
+
     /* If new entry is created in the log, link those entries to the request
      * The entry may go directly to the ncmpio driver if it is too large
      * If there are no entry created, we mark this request as completed
@@ -557,7 +557,7 @@ ncdwio_bput_varn(void               *ncdp,
                 int                 reqMode)
 {
     int err;
-   
+
     /* bput same as iput in bb driver */
     err = ncdwio_iput_varn(ncdp, varid, num, starts, counts, buf,
                                  bufcount, buftype, reqid, reqMode);
@@ -577,7 +577,7 @@ ncdwio_get_vard(void         *ncdp,
 {
     int err, status = NC_NOERR;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     /* Flush on read */
     if(ncdwp->inited){
         err = ncdwio_log_flush(ncdwp);
@@ -585,7 +585,7 @@ ncdwio_get_vard(void         *ncdp,
             status = err;
         }
     }
-    
+
     err = ncdwp->ncmpio_driver->get_vard(ncdwp->ncp, varid, filetype, buf, bufcount,
                                 buftype, reqMode);
     if (status == NC_NOERR){
@@ -606,7 +606,7 @@ ncdwio_put_vard(void         *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     /* BB driver does not support vard */
     err = ncdwp->ncmpio_driver->put_vard(ncdwp->ncp, varid, filetype, buf, bufcount,
                                 buftype, reqMode);

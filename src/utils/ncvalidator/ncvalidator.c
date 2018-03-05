@@ -190,9 +190,9 @@ typedef struct bufferinfo {
 #define NC_ENULLPAD     (-134)  /**< Header Bytes not Null-Byte padded */
 
 /*
- * "magic number" at beginning of file: 0x43444601 (big Endian) 
+ * "magic number" at beginning of file: 0x43444601 (big Endian)
  */
-static const char ncmagic[] = {'C', 'D', 'F', 0x01}; 
+static const char ncmagic[] = {'C', 'D', 'F', 0x01};
 
 #define ABSENT 0
 
@@ -704,11 +704,11 @@ var_shape64(NC_var            *varp,
 out :
     /*
      * For CDF-1 and CDF-2 formats, the total number of array elements
-     * cannot exceed 2^32, unless this variable is the last fixed-size 
-     * variable, there is no record variable, and the file starting 
-     * offset of this variable is less than 2GiB. 
-     * We will check this in ncmpi_enddef() which calls ncmpii_NC_enddef() 
-     * which calls ncmpii_NC_check_vlens() 
+     * cannot exceed 2^32, unless this variable is the last fixed-size
+     * variable, there is no record variable, and the file starting
+     * offset of this variable is less than 2GiB.
+     * We will check this in ncmpi_enddef() which calls ncmpii_NC_enddef()
+     * which calls ncmpii_NC_check_vlens()
     if (ncp->format != 5 && product >= X_UINT_MAX)
         DEBUG_RETURN_ERROR(NC_EVARSIZE);
      */
@@ -858,13 +858,13 @@ val_fetch(int fd, bufferinfo *gbp) {
     size_t pos_addr, base_addr;
 
     assert(gbp->base != NULL);
-  
+
     pos_addr = (size_t) gbp->pos;
     base_addr = (size_t) gbp->base;
 
     slack = gbp->size - (pos_addr - base_addr);
     /* if gbp->pos and gbp->base are the same, there is no leftover buffer data
-     * to worry about.  
+     * to worry about.
      * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then all
      * data in the buffer has been consumed */
     if (slack == gbp->size) slack = 0;
@@ -903,7 +903,7 @@ val_check_buffer(int         fd,
         return NC_NOERR;
 
     return val_fetch(fd, gbp);
-} 
+}
 
 static int
 val_get_NC_tag(int fd, bufferinfo *gbp, NC_tag *tagp, const char *loc)
@@ -946,11 +946,11 @@ hdr_get_NON_NEG(int fd, bufferinfo *gbp, long long *sp)
      */
     int sizeof_NON_NEG, status;
 
-    sizeof_NON_NEG = (gbp->version < 5) ? 4 : 8; 
+    sizeof_NON_NEG = (gbp->version < 5) ? 4 : 8;
     status = val_check_buffer(fd, gbp, sizeof_NON_NEG);
     if (status != NC_NOERR) {
         if (verbose) printf("%d-byte size is expected for ", sizeof_NON_NEG);
-        return status; 
+        return status;
     }
     if (gbp->version < 5)
         *sp = (long long) get_uint32(gbp);
@@ -1005,11 +1005,11 @@ hdr_get_name(int          fd,
 
     while (nchars > 0) {
         if (bufremain > 0) {
-            strcount = MIN(bufremain, nchars); 
+            strcount = MIN(bufremain, nchars);
             (void) memcpy(cpos, gbp->pos, strcount);
             nchars -= strcount;
             gbp->pos = (void *)((char *)gbp->pos + strcount);
-            cpos += strcount; 
+            cpos += strcount;
             bufremain -= strcount;
         } else {
             err_addr = ERR_ADDR;
@@ -1020,7 +1020,7 @@ hdr_get_name(int          fd,
                 free(*namep);
                 *namep = NULL;
                 return err;
-            } 
+            }
             bufremain = gbp->size;
         }
     }
@@ -1032,7 +1032,7 @@ hdr_get_name(int          fd,
             if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
             if (verbose) printf("\t%s - fetching name string padding\n", loc);
             return err;
-        } 
+        }
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             /* This is considered not a fatal error, we continue to validate */
@@ -1117,7 +1117,7 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap, long long numrec
      *                <non-negative INT64>        // CDF-5
      */
     int dim, err, status=NC_NOERR;
-    NC_tag tag = NC_UNSPECIFIED; 
+    NC_tag tag = NC_UNSPECIFIED;
     size_t tag_err_addr, nelems_err_addr;
     long long tmp;
 
@@ -1128,7 +1128,7 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap, long long numrec
     /* read NC_tag (NC_DIMENSION or ZERO) from gbp buffer */
     tag_err_addr = ERR_ADDR;
     err = val_get_NC_tag(fd, gbp, &tag, "tag NC_DIMENSION");
-    if (err != NC_NOERR) return err; 
+    if (err != NC_NOERR) return err;
 
     /* read nelems (number of dimensions) from gbp buffer */
     nelems_err_addr = ERR_ADDR;
@@ -1246,7 +1246,7 @@ err_exit:
 }
 
 /*
- * Get the values of an attribute 
+ * Get the values of an attribute
  */
 static int
 val_get_NC_attrV(int         fd,
@@ -1256,7 +1256,7 @@ val_get_NC_attrV(int         fd,
 {
     int status=NC_NOERR;
     void *value = attrp->xvalue;
-    char pad[X_ALIGN-1]; 
+    char pad[X_ALIGN-1];
     size_t err_addr;
     long long nvalues, padding, bufremain, attcount;
     size_t pos_addr, base_addr;
@@ -1286,7 +1286,7 @@ val_get_NC_attrV(int         fd,
             bufremain = gbp->size;
         }
     }
- 
+
     if (padding > 0) {
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
@@ -1376,15 +1376,15 @@ new_NC_attr(char        *name,
 }
 
 static int
-val_get_NC_attr(int          fd, 
-                bufferinfo  *gbp, 
+val_get_NC_attr(int          fd,
+                bufferinfo  *gbp,
                 NC_attr    **attrpp,
                 const char  *loc)
 {
     char *name=NULL, xloc[1024];
     int err, status=NC_NOERR;
     size_t err_addr;
-    nc_type xtype; 
+    nc_type xtype;
     long long nelems;
     NC_attr *attrp;
 
@@ -1402,7 +1402,7 @@ val_get_NC_attr(int          fd,
     }
 
     err_addr = ERR_ADDR;
-    err = hdr_get_NON_NEG(fd, gbp, &nelems); 
+    err = hdr_get_NON_NEG(fd, gbp, &nelems);
     if (err != NC_NOERR) {
         if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
         if (verbose) printf("\t%s: Failed to read attribute length\n",xloc);
@@ -1425,9 +1425,9 @@ val_get_NC_attr(int          fd,
     }
     if (status == NC_NOERR) status = err;
 
-    *attrpp = attrp; 
-  
-    return status; 
+    *attrpp = attrp;
+
+    return status;
 }
 
 static int
@@ -1461,7 +1461,7 @@ val_get_NC_attrarray(int           fd,
     /* read NC_tag (NC_ATTRIBUTE or ZERO) from gbp buffer */
     tag_err_addr = ERR_ADDR;
     err = val_get_NC_tag(fd, gbp, &tag, "tag NC_ATTRIBUTE");
-    if (err != NC_NOERR) return err; 
+    if (err != NC_NOERR) return err;
 
     /* read nelems (number of attributes) from gbp buffer */
     nelems_err_addr = ERR_ADDR;
@@ -1538,7 +1538,7 @@ val_get_NC_attrarray(int           fd,
             }
         }
     }
-  
+
     return status;
 }
 
@@ -1630,7 +1630,7 @@ val_get_NC_var(int          fd,
     /* read number of dimensions */
     sprintf(xloc,"%s \"%s\"",loc,name);
     err_addr = ERR_ADDR;
-    err = hdr_get_NON_NEG(fd, gbp, &ndims); 
+    err = hdr_get_NON_NEG(fd, gbp, &ndims);
     if (err != NC_NOERR) {
         if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
         if (verbose) printf("\t%s: Failed to read number of dimensions\n",xloc);
@@ -1710,7 +1710,7 @@ val_get_NC_var(int          fd,
     varp->xsz = len_nctype(varp->xtype);
 
     /* var = name nelems [dimid ...] vatt_list nc_type vsize begin
-     *                                                 ^^^^^      
+     *                                                 ^^^^^
      * instead of use vsize from file, we recalculate it in
      * compute_var_shape() */
     err_addr = ERR_ADDR;
@@ -1771,13 +1771,13 @@ val_get_NC_vararray(int          fd,
 
     assert(gbp != NULL && gbp->pos != NULL);
     assert(ncap != NULL);
-    assert(ncap->value == NULL); 
+    assert(ncap->value == NULL);
 
     /* read NC_tag (NC_VARIABLE or ZERO) from gbp buffer */
     tag_err_addr = ERR_ADDR;
     err = val_get_NC_tag(fd, gbp, &tag, "tag NC_VARIABLE");
     if (err != NC_NOERR) return err;
- 
+
     /* read nelems (number of variables) from gbp buffer */
     nelems_err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &tmp);
@@ -1818,10 +1818,10 @@ val_get_NC_vararray(int          fd,
         }
         if (trace) printf("\ttag = NC_VARIABLE\n");
         if (trace) printf("\tnumber of variables = %d\n", ncap->ndefined);
- 
+
         size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
         ncap->value = (NC_var **) calloc(alloc_size, sizeof(NC_var *));
-        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM) 
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         for (var=0; var<ncap->ndefined; var++) {
             if (trace) printf("\n\tvariable ID = %d\n", var);
@@ -2066,7 +2066,7 @@ val_get_NC(int fd, NC *ncp)
      */
     status = val_fetch(fd, &getbuf);
     if (status != NC_NOERR) goto fn_exit;
-  
+
     /* Check HDF file signature */
     if (memcmp(getbuf.base, hdf5_signature, 8) == 0) {
         if (verbose) {
@@ -2146,7 +2146,7 @@ val_get_NC(int fd, NC *ncp)
      * att_list = ABSENT | NC_ATTRIBUTE  nelems  [attr ...]
      * Check att_list
      */
-    err = val_get_NC_attrarray(fd, &getbuf, &ncp->attrs, "Global"); 
+    err = val_get_NC_attrarray(fd, &getbuf, &ncp->attrs, "Global");
     if (err != NC_NOERR && err != NC_ENULLPAD) {
         status = err;
         goto fn_exit;

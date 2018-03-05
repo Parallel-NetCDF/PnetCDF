@@ -125,7 +125,7 @@ inRange_float(const double value, const nc_type xtype)
  */
 int
 inRange3(const int       cdf_format,
-         const double    value, 
+         const double    value,
          const nc_type   xtype,
          const nct_itype itype)
 {
@@ -154,13 +154,13 @@ inRange3(const int       cdf_format,
 }
 
 
-/* 
- *  Does x == y, where one is internal and other external (netCDF)?  
+/*
+ *  Does x == y, where one is internal and other external (netCDF)?
  *  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
  */
 int
-equal(const double x, 
-      const double y, 
+equal(const double x,
+      const double y,
       nc_type      xtype,     /* external data type */
       nct_itype    itype)
 {
@@ -429,7 +429,7 @@ int dbl2nc ( const double d, const nc_type xtype, void *p)
 double
 hash(const nc_type     xtype,
      const int         rank,
-     const MPI_Offset *index) 
+     const MPI_Offset *index)
 {
     double base;
     double result = 0.0;
@@ -547,9 +547,9 @@ hash(const nc_type     xtype,
 /* wrapper for hash to handle special NC_BYTE/uchar adjustment */
 double
 hash4(const int         cdf_format,
-      const nc_type     xtype, 
-      const int         rank, 
-      const MPI_Offset *index, 
+      const nc_type     xtype,
+      const int         rank,
+      const MPI_Offset *index,
       const nct_itype   itype)
 {
     double result;
@@ -569,7 +569,7 @@ hash4(const int         cdf_format,
      * unsigned. Thus, no NC_ERANGE error can occur converting between NC_BYTE
      * and unsigned char.
      */
-    if (cdf_format < NC_FORMAT_CDF5 && 
+    if (cdf_format < NC_FORMAT_CDF5 &&
         itype == NCT_UCHAR && xtype == NC_BYTE &&
         result >= -128 && result < 0)
         result += 256;
@@ -635,9 +635,9 @@ product(int nn, const MPI_Offset *sp)
     return result;  /* == sp[0] * sp[1] * ... * sp[nn-1] */
 }
 
-/* 
+/*
    define global variables:
-   dim_name, dim_len, 
+   dim_name, dim_len,
    var_name, var_type, var_rank, var_shape, var_natts, var_dimid, var_nels
    att_name, gatt_name, att_type, gatt_type, att_len, gatt_len
  */
@@ -721,7 +721,7 @@ init_gvars(int numGatts, int numTypes, int numVars)
 
 
 /* define dims defined by global variables */
-void                                                        
+void
 def_dims(int ncid)
 {
     int  i, err, dimid;
@@ -735,7 +735,7 @@ def_dims(int ncid)
 
 
 /* define vars defined by global variables */
-void                                                        
+void
 def_vars(int ncid, int numVars)
 {
     int i, err, var_id;
@@ -749,7 +749,7 @@ def_vars(int ncid, int numVars)
 
 
 /* put attributes defined by global variables */
-void                                                        
+void
 put_atts(int ncid, int numGatts, int numVars)
 {
     int  i, j, allInRange, err;
@@ -766,7 +766,7 @@ put_atts(int ncid, int numGatts, int numVars)
                 }
                 err = ncmpi_put_att_text(ncid, i, ATT_NAME(i,j),
                                          ATT_LEN(i,j), catt);
-                IF (err != NC_NOERR) 
+                IF (err != NC_NOERR)
                     error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
             } else {
                 for (allInRange=1, k=0; k<ATT_LEN(i,j); k++) {
@@ -792,7 +792,7 @@ put_atts(int ncid, int numGatts, int numVars)
 }
 
 /* put variables defined by global variables */
-void                                                        
+void
 put_vars(int ncid, int numVars)
 {
     MPI_Offset start[MAX_RANK];
@@ -849,7 +849,7 @@ put_vars(int ncid, int numVars)
 
 /* Create & write all of specified file using global variables */
 void
-write_file(char *filename, int numGatts, int numVars) 
+write_file(char *filename, int numGatts, int numVars)
 {
     int  err, ncid;
 
@@ -910,24 +910,24 @@ check_vars(int ncid, int numVars)
     for (i = 0; i < numVars; i++) {
         isChar = var_type[i] == NC_CHAR;
         err = ncmpi_inq_var(ncid, i, name, &xtype, &ndims, dimids, NULL);
-        IF (err != NC_NOERR) 
+        IF (err != NC_NOERR)
             error("ncmpi_inq_var: %s", ncmpi_strerror(err));
-        IF (strcmp(name, var_name[i]) != 0) 
+        IF (strcmp(name, var_name[i]) != 0)
             error("Unexpected var_name");
-        IF (xtype != var_type[i]) 
+        IF (xtype != var_type[i])
             error("Unexpected type");
-        IF (ndims != var_rank[i]) 
+        IF (ndims != var_rank[i])
             error("Unexpected rank");
         for (j = 0; j < ndims; j++) {
             err = ncmpi_inq_dim(ncid, dimids[j], name, &length);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
-            IF (length != var_shape[i][j]) 
+            IF (length != var_shape[i][j])
                 error("Unexpected shape");
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("error in toMixedBase 2");
             expect = hash( var_type[i], var_rank[i], index );
             if (isChar) {
@@ -942,7 +942,7 @@ check_vars(int ncid, int numVars)
                     nok++;
                 }
             } else {
-                err = ncmpi_get_var1_double_all(ncid, i, index, &value); 
+                err = ncmpi_get_var1_double_all(ncid, i, index, &value);
                 if (inRange(expect,var_type[i])) {
                     IF (err != NC_NOERR) {
                         error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
@@ -967,7 +967,7 @@ check_vars(int ncid, int numVars)
  * check attributes of specified file have expected name, type, length & values
  */
 void
-check_atts(int ncid, int numGatts, int numVars) 
+check_atts(int ncid, int numGatts, int numVars)
 {
     char name[NC_MAX_NAME], text[MAX_NELS];
     int  i, j, err;        /* status */
@@ -979,12 +979,12 @@ check_atts(int ncid, int numGatts, int numVars)
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             err = ncmpi_inq_attname(ncid, i, j, name);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("ncmpi_inq_attname: %s", ncmpi_strerror(err));
             IF (strcmp(name, ATT_NAME(i,j)) != 0)
                 error("ncmpi_inq_attname: unexpected name");
             err = ncmpi_inq_att(ncid, i, name, &xtype, &length);
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("ncmpi_inq_att: %s", ncmpi_strerror(err));
             IF (xtype != ATT_TYPE(i,j))
                 error("ncmpi_inq_att: unexpected type");
@@ -1039,7 +1039,7 @@ check_file(char *filename, int numGatts, int numVars)
         check_vars(ncid, numVars);
         check_atts(ncid, numGatts, numVars);
         err = ncmpi_close (ncid);
-        IF (err != NC_NOERR) 
+        IF (err != NC_NOERR)
             error("ncmpi_close: %s", ncmpi_strerror(err));
     }
 }

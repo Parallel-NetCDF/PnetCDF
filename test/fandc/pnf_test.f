@@ -26,7 +26,7 @@
 ! This code writes the array, tt(k)(j)(i), into the file 'pnf_test.nc'. It
 ! then reads the array from the file, and compares it with the original
 ! values.
-! 
+!
 ! i=longitude, j=latitude, k=level
 !
 !=============================================================================
@@ -43,7 +43,7 @@
 !     Parameter declarations.
 !     -----------------------
 
-      integer NREADS, NWRITES 
+      integer NREADS, NWRITES
       parameter (NREADS = 5, NWRITES = 5 )
       ! number of read samples
       ! number of write samples
@@ -56,30 +56,30 @@
 !     ----------------------
 
       logical reorder
-              
+
       logical isperiodic(3)
-              
+
       integer comm_cart                   ! Cartesian communicator
       integer ierr
       integer*8 istart, jstart, kstart ! offsets of 3D field
       integer*8 locsiz
       integer mype                        ! rank in comm_cart
       integer totpes                      ! total number of PEs
-              
+
       integer*8 locsiz_3d(3) ! local sizes of 3D fields
       integer pe_coords(3)                ! Cartesian PE coords
-              
+
       integer numpes(3)                      ! number of PEs along axes;
                                              !   determined by MPI where a
                                              !   zero is specified
 
       double precision  filsiz
-              
+
       real*4  rdt_g(2)
       real*4  rdt_l(2)
       real*4  wrt_g(2)
       real*4  wrt_l(2)
-              
+
       real*4  rrates_g(2)
       real*4  rrates_l(2)
       real*4  wrates_g(2)
@@ -209,7 +209,7 @@
         Write (6,920) totpes
         Write (6,922) wrt_g(1), wrt_g(2), wrates_g(2),
      &                rdt_g(1), rdt_g(2), rrates_g(2)
-      end if 
+      end if
 
  905  format ("File size: ", e10.3, " MB")
  910  format ("    Write: ", f9.3, " MB/s  (eff., ", f9.3, " MB/s)")
@@ -264,14 +264,14 @@
       integer ncid
       integer nw
       integer tt_id
-              
+
       integer*8 count_3d(3)
       integer*8 start_3d(3)
-              
+
       integer dim_id(3)
-              
+
       double precision  t1, t2, t3
-           
+
       integer max_loc_size
       parameter( max_loc_size = 20000000 )
       real*4  tt(max_loc_size)   ! Need tt(locsiz)
@@ -409,12 +409,12 @@
       integer nr
       integer tt_id
       integer ii
-              
+
       integer*8 count_3d(3)
       integer*8 start_3d(3)
-              
+
       double precision  t1, t2, t3
-              
+
       integer max_loc_size
       parameter( max_loc_size = 20000000 )
       real*4  buf(max_loc_size)
@@ -598,8 +598,8 @@
           do ii = 1, int(locsiz_3d(1))
 
              tt(ind) = real(
-     &         (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 + 
-     &                 (jj - 1) + totsiz_3d(2)*(kstart-1 + 
+     &         (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 +
+     &                 (jj - 1) + totsiz_3d(2)*(kstart-1 +
      &                 (kk-1)))) * 1.0d-3)
              ind = ind + 1
 
@@ -641,10 +641,10 @@
 
       integer ierr
       integer ii
-              
+
       real*4  delmax(1), delmin(1), delta
       real*4  diff
-              
+
       real*4  wr(5)
       real*4  ws(5)
 

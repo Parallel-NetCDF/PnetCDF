@@ -29,7 +29,7 @@
  * OUT       fd:    File handler
  */
 int ncdwio_sharedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_dw_sharedfile **fh) {
-    int err; 
+    int err;
     NC_dw_sharedfile *f;
 
     // Allocate file handle
@@ -110,13 +110,13 @@ int ncdwio_sharedfile_close(NC_dw_sharedfile *f) {
  * IN     buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
  * IN  offset:    Starting write position
- * 
+ *
  * A continuous region in the logical file view seen by upper layer is not continuous in the shared file
  * As a result, one shared file write operation translates to multiple writes
  * We first divide the writing region in the logical file into blocks
  * Each block in the logical file view is then mapped to corresponding block in the shared file
- * First and last block may be partial, we need to adjust write region of the first block and the last block 
- * 
+ * First and last block may be partial, we need to adjust write region of the first block and the last block
+ *
  * Figure showing the case using chanel 0 with 2 chanels
  * logical file view: |B0      |B1      |B2      |B3      |...
  * write region:           |B0 |B1      |B2   |
@@ -166,14 +166,14 @@ int ncdwio_sharedfile_pwrite(NC_dw_sharedfile *f, void *buf, size_t count, off_t
      */
     for(i = sblock; i <= eblock; i++){
         /* Block boundary are inclusive, as a result, final block is always partial (can be empty)
-         * In this case, we can assume offend will always be larger than offstart 
+         * In this case, we can assume offend will always be larger than offstart
          */
         // Compute physical offset of th eblock
         offstart = i * f->nchanel * f->bsize;
         // A block can be first and last block at the same time due to short write region
         // Last block must be partial
         // NOTE: offend must be computed before offstart, we reply on unadjusted offstart to mark the start position of the block
-        if (i == eblock){  
+        if (i == eblock){
             // The local block offset of the end of writing region is the write size of final block
             offend = offstart + (offset + count) % f->bsize;
         }
@@ -181,7 +181,7 @@ int ncdwio_sharedfile_pwrite(NC_dw_sharedfile *f, void *buf, size_t count, off_t
             offend = offstart + f->bsize;
         }
         // First block can be partial
-        if (i == sblock){   
+        if (i == sblock){
             // The local block offset of the start of writing region is the amount to skip for the first block
             offstart += offset % f->bsize;
         }
@@ -210,12 +210,12 @@ int ncdwio_sharedfile_pwrite(NC_dw_sharedfile *f, void *buf, size_t count, off_t
 }
 
 /*
- * This function write <count> bytes of data in buffer <buf> to the file at it's 
+ * This function write <count> bytes of data in buffer <buf> to the file at it's
  * current file position and increase the file position by <count>
  * IN       f:    File handle
  * IN     buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
- * 
+ *
  * We call ncdwio_sharedfile_pwrite and then increase the file position by count
  */
 int ncdwio_sharedfile_write(NC_dw_sharedfile *f, void *buf, size_t count){
@@ -256,13 +256,13 @@ int ncdwio_sharedfile_write(NC_dw_sharedfile *f, void *buf, size_t count){
  * OUT    buf:    Buffer of data to be written
  * IN   count:    Number of bytes to read
  * IN  offset:    Starting read position
- * 
+ *
  * A continuous region in the logical file view seen by upper layer is not continuous in the shared file
  * As a result, one shared file read operation translates to multiple reads
  * We first divide the reading region in the logical file into blocks
  * Each block in the logical file view is then mapped to corresponding block in the shared file
- * First and last block may be partial, we need to adjust read region of the first block and the last block 
- * 
+ * First and last block may be partial, we need to adjust read region of the first block and the last block
+ *
  * Figure showing the case using chanel 0 with 2 chanels
  * logical file view: |B0      |B1      |B2      |B3      |...
  * read region:           |B0 |B1      |B2   |
@@ -312,14 +312,14 @@ int ncdwio_sharedfile_pread(NC_dw_sharedfile *f, void *buf, size_t count, off_t 
      */
     for(i = sblock; i <= eblock; i++){
         /* Block boundary are inclusive, as a result, final block is always partial (can be empty)
-         * In this case, we can assume offend will always be larger than offstart 
+         * In this case, we can assume offend will always be larger than offstart
          */
         // Compute physical offset of th eblock
         offstart = i * f->nchanel * f->bsize;
         // A block can be first and last block at the same time due to short write region
         // Last block must be partial
         // NOTE: offend must be computed before offstart, we reply on unadjusted offstart to mark the start position of the block
-        if (i == eblock){  
+        if (i == eblock){
             // The local block offset of the end of writing region is the write size of final block
             offend = offstart + (offset + count) % f->bsize;
         }
@@ -327,7 +327,7 @@ int ncdwio_sharedfile_pread(NC_dw_sharedfile *f, void *buf, size_t count, off_t 
             offend = offstart + f->bsize;
         }
         // First block can be partial
-        if (i == sblock){   
+        if (i == sblock){
             // The local block offset of the start of writing region is the amount to skip for the first block
             offstart += offset % f->bsize;
         }
@@ -356,12 +356,12 @@ int ncdwio_sharedfile_pread(NC_dw_sharedfile *f, void *buf, size_t count, off_t 
 }
 
 /*
- * This function read <count> bytes of data to buffer <buf> from the file at it's 
+ * This function read <count> bytes of data to buffer <buf> from the file at it's
  * current file position and increase the file position by <count>
  * IN       f:    File handle
  * OUT    buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
- * 
+ *
  * We call ncdwio_sharedfile_pread and then increase the file position by count
  */
 int ncdwio_sharedfile_read(NC_dw_sharedfile *f, void *buf, size_t count){

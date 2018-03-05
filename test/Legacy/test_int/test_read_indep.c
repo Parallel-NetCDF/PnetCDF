@@ -1,8 +1,8 @@
 /***********************************************************
  *
  * This test program reads a netCDF file, and then write it
- * out to another netCDF file, using the parallel netCDF 
- * library using MPI-IO. The two files should be identical. 
+ * out to another netCDF file, using the parallel netCDF
+ * library using MPI-IO. The two files should be identical.
  *
  * Input File: "../data/test_int.nc"  generated from original netcdf-3.
  * Output File: "testread.nc"
@@ -42,8 +42,8 @@
  *
  *
  *
- * This test uses non-collective APIs to read/write variable data and 
- * only deals with integer variables. 
+ * This test uses non-collective APIs to read/write variable data and
+ * only deals with integer variables.
  *
  * This test assume # of processors = 4
  *
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
   int rank;
   int nprocs;
   MPI_Comm comm = MPI_COMM_WORLD;
-  
+
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
     status = ncmpi_inq_att (ncid1, NC_GLOBAL, name, &type, &attlen);
     if (status != NC_NOERR) handle_error(status);
     switch (type) {
-      case NC_CHAR: 
+      case NC_CHAR:
 	valuep = (void *)malloc(attlen * sizeof(char));
 	status = ncmpi_get_att_text(ncid1, NC_GLOBAL, name, (char*)valuep);
 	if (status != NC_NOERR) handle_error(status);
@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
       status = ncmpi_inq_att (ncid1, i, name, &type, &attlen);
       if (status != NC_NOERR) handle_error(status);
       switch (type) {
-        case NC_CHAR: 
+        case NC_CHAR:
 	  valuep = (void *)malloc(attlen * sizeof(char));
 	  status = ncmpi_get_att_text(ncid1, i, name, (char*)valuep);
 	  if (status != NC_NOERR) handle_error(status);
@@ -283,14 +283,14 @@ int main(int argc, char **argv) {
    *   cube:   3-D, (Block, *, *), 25*100*100 from 100*100*100
    *   xytime: 3-D, (Block, *, *), 25*100*100 from 100*100*100
    *   time:   1-D, Block-wise, 25 from 100
-   *  
+   *
    *  Data Mode API: non-collective
    */
 
   status = ncmpi_begin_indep_data(ncid1);
-  if (status != NC_NOERR) handle_error(status); 
+  if (status != NC_NOERR) handle_error(status);
   status =ncmpi_begin_indep_data(ncid2);
-  if (status != NC_NOERR) handle_error(status); 
+  if (status != NC_NOERR) handle_error(status);
 
   for (i = 0; i < nvars; i++) {
     shape = (MPI_Offset*) calloc(varndims[i] * 2, sizeof(MPI_Offset));
@@ -307,7 +307,7 @@ int main(int argc, char **argv) {
       varsize *= shape[j];
     }
     switch (vartypes[i]) {
-      case NC_CHAR: 
+      case NC_CHAR:
         break;
       case NC_SHORT:
         valuep = (void *)malloc(varsize * sizeof(short));
@@ -354,10 +354,10 @@ int main(int argc, char **argv) {
   }
   free(varids);
 
-  status = ncmpi_end_indep_data(ncid1); 
+  status = ncmpi_end_indep_data(ncid1);
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_end_indep_data(ncid2);
-  if (status != NC_NOERR) handle_error(status); 
+  if (status != NC_NOERR) handle_error(status);
 
   /**
    * Close the datasets

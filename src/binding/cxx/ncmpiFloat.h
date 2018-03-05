@@ -5,18 +5,18 @@
 
 namespace PnetCDF
 {
-  
+
   /*! Class represents a netCDF atomic Float type. */
   class NcmpiFloat : public NcmpiType
   {
-  public: 
-    
+  public:
+
     /*! equivalence operator */
     bool operator==(const NcmpiFloat & rhs);
-    
+
     /*!  destructor */
     ~NcmpiFloat();
-    
+
     /*! Constructor */
     NcmpiFloat();
   };

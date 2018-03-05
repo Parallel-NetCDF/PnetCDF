@@ -8,13 +8,13 @@ using namespace std;
 
 namespace PnetCDF {
   //  Global comparator operator ==============
-  // comparator operator 
+  // comparator operator
   bool operator<(const NcmpiVarAtt& lhs,const NcmpiVarAtt& rhs)
   {
     return false;
   }
-  
-  // comparator operator 
+
+  // comparator operator
   bool operator>(const NcmpiVarAtt& lhs,const NcmpiVarAtt& rhs)
   {
     return true;
@@ -33,7 +33,7 @@ NcmpiVarAtt& NcmpiVarAtt::operator=(const NcmpiVarAtt & rhs)
 }
 
 //! The copy constructor.
-NcmpiVarAtt::NcmpiVarAtt(const NcmpiVarAtt& rhs): 
+NcmpiVarAtt::NcmpiVarAtt(const NcmpiVarAtt& rhs):
   NcmpiAtt(rhs) // invoke base class copy constructor
 {}
 

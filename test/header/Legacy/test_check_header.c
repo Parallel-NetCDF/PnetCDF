@@ -1,7 +1,7 @@
 /***********************************************************
  *
  * This test program writes a netCDF file using the parallel
- * netCDF library using MPI-IO. 
+ * netCDF library using MPI-IO.
  *
  * The output file is: "testwrite.nc"
  *
@@ -41,7 +41,7 @@
  *
  *
  * This test uses collective APIs to write variable data and only
- * deals with integer variables. 
+ * deals with integer variables.
  *
  * This test assume # of processors = 4
  *
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (rank == 0) 
+  if (rank == 0)
       fprintf(stderr, "Testing write ... \n");
   parse_write_args(argc, argv, rank, &opts);
 
@@ -112,8 +112,8 @@ int main(int argc, char **argv) {
   err = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
                           strlen(title), title);
   CHECK_ERR
-  
-   
+
+
   /**
    * Add 4 pre-defined dimensions:
    *   x = 100, y = 100, z = 100, time = NC_UNLIMITED
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
    * code, considered a fatal one so that the program should not continue. */
   if (rank == 0) /* make it inconsistent on purpose (a fatal error) */
       err = ncmpi_def_dim(ncid, "x", 100, &dimid1);
-  else 
+  else
       err = ncmpi_def_dim(ncid, "x", 99, &dimid1);
   CHECK_ERR
   err = ncmpi_def_dim(ncid, "y", 100, &dimid2);
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 
   /**
    * Define the dimensionality and then add 4 variables:
-   *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)  
+   *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)
    */
 
   square_dim[0] = cube_dim[0] = xytime_dim[1] = dimid1;
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
   CHECK_ERR
 
   /**
-   * Add an attribute for variable: 
+   * Add an attribute for variable:
    *    square: description = "2-D integer array"
    */
 
@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
 
   err = ncmpi_enddef(ncid);
   if ((rank == 0 && err != NC_EMULTIDEFINE) ||
-      (rank  > 0 && err != NC_EDIMS_SIZE_MULTIDEFINE)) {  
+      (rank  > 0 && err != NC_EDIMS_SIZE_MULTIDEFINE)) {
       fprintf(stderr, "Error at line %d in %s unexpected code %s!\n",__LINE__,__FILE__, ncmpi_strerrno(err));
       err = ncmpi_close(ncid);
       CHECK_ERR
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
 #ifdef NOT_YET
   /**
    * Data Partition (Assume 4 processors):
-   *   square: 2-D, (Block, Block), 50*50 from 100*100 
+   *   square: 2-D, (Block, Block), 50*50 from 100*100
    *   cube:   3-D, (*, Block, Block), 100*50*50 from 100*100*100
    *   xytime: 3-D, (*, Block, Block), 100*50*50 from 100*100*100
    *   time:   1-D, Block-wise, 25 from 100
@@ -193,12 +193,12 @@ int main(int argc, char **argv) {
 
 
   /**
-   * Packing data in the buffer 
+   * Packing data in the buffer
    */
 
   /* Data for variable: time */
       for ( i = time_start[0]; i < time_start[0] + time_count[0]; i++ )
-        buffer[i - time_start[0]] = i;   
+        buffer[i - time_start[0]] = i;
 
   /* Data for variable: square, cube and xytime */
       for ( i = 0; i < 100; i++ )
@@ -207,11 +207,11 @@ int main(int argc, char **argv) {
             data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
 
   /**
-   * Write data into variables: square, cube, time and xytime  
+   * Write data into variables: square, cube, time and xytime
    *   Access Method: subarray
    *   Data Mode API: collective
-   */ 
-  
+   */
+
       MPI_Offset dimlen;
       ncmpi_inq_dimlen(ncid, dimid1, &dimlen);
       printf("dimid1 len = %lld\n",dimlen);
@@ -253,7 +253,7 @@ CHECK_ERR
       CHECK_ERR
   /*******************  END OF NETCDF ACCESS  ****************/
 
-    MPI_Barrier(MPI_COMM_WORLD); 
+    MPI_Barrier(MPI_COMM_WORLD);
     TotalWriteTime = MPI_Wtime() - TotalWriteTime;
 
     if (rank == 0) {

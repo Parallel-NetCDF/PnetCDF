@@ -87,7 +87,7 @@ extern int
 ncfoo_inq_att(void *ncdp, int varid, const char *name, nc_type *xtypep, MPI_Offset *lenp);
 
 extern int
-ncfoo_inq_attid(void *ncdp, int varid, const char *name, int *idp); 
+ncfoo_inq_attid(void *ncdp, int varid, const char *name, int *idp);
 
 extern int
 ncfoo_inq_attname(void *ncdp, int varid, int attnum, char *name);

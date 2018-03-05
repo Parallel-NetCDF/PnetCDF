@@ -1,3 +1,11 @@
+/*********************************************************************
+ *
+ *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ *********************************************************************/
+/* $Id$ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -34,9 +42,9 @@ int ncdwio_log_check_header(NC* ncp, int num_entries){
     NC_dw *ncdwp = ncp->ncdwp;
 
     if (ncdwp == NULL){
-        return NC_NOERR;       
+        return NC_NOERR;
     }
-    
+
     /* Get rank and number of processes */
     err = MPI_Comm_rank(ncp->comm, &rank);
     if (err != MPI_SUCCESS) {
@@ -48,26 +56,26 @@ int ncdwio_log_check_header(NC* ncp, int num_entries){
         err = ncmpii_handle_error(err, "MPI_Comm_rank");
         DEBUG_RETURN_ERROR(err);
     }
-    
+
     /* Open log file */
     meta_fd = open(ncdwp->metalogpath, O_RDONLY);
     if (meta_fd < 0){
-        DEBUG_RETURN_ERROR(NC_ELOGCHECK);  
+        DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
     data_fd = open(ncdwp->datalogpath, O_RDONLY);
     if (data_fd < 0){
-        DEBUG_RETURN_ERROR(NC_ELOGCHECK);  
+        DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-    
+
     /* Calculate metadata log header size */
     headerp = (NC_dw_metadataheader*)ncdwp->metadata.buffer;
     metasize = sizeof(NC_dw_metadataheader) + headerp->basenamelen;
 
     /* Allocate buffer */
     buffer = (char*)malloc(metasize);
-    
+
     /* Read metadata log header */
-    ioret = read(meta_fd, buffer, metasize); 
+    ioret = read(meta_fd, buffer, metasize);
     if (ioret < 0) {
         err = ncmpii_handle_io_error("read");
         if (err == NC_EFILE){
@@ -79,12 +87,12 @@ int ncdwio_log_check_header(NC* ncp, int num_entries){
         DEBUG_RETURN_ERROR(NC_EBADLOG);
     }
 
-    /* Resolve absolute path */    
+    /* Resolve absolute path */
     abspath = realpath(ncp->path, basename);
     if (abspath == NULL){
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-    
+
     /* Check metadata log header */
     headerp = (NC_dw_metadataheader*)buffer;
     if (strncmp(headerp->magic, NC_LOG_MAGIC, NC_LOG_MAGIC_SIZE) != 0) {
@@ -93,11 +101,11 @@ int ncdwio_log_check_header(NC* ncp, int num_entries){
     if (strncmp(headerp->format, NC_LOG_FORMAT_CDF_MAGIC, NC_LOG_FORMAT_SIZE) != 0) {
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-#ifdef WORDS_BIGENDIAN 
+#ifdef WORDS_BIGENDIAN
     if (!headerp->big_endian){
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-#else 
+#else
     if (headerp->big_endian){
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
@@ -118,10 +126,10 @@ int ncdwio_log_check_header(NC* ncp, int num_entries){
     if (headerp->entry_begin != headersize){
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-    max_ndims = 0;    
+    max_ndims = 0;
     for(i = 0; i < ncp->vars.ndefined; i++){
         if (ncp->vars.value[i]->ndims > max_ndims){
-            max_ndims = ncp->vars.value[i]->ndims; 
+            max_ndims = ncp->vars.value[i]->ndims;
         }
     }
     if (headerp->max_ndims != max_ndims){
@@ -139,9 +147,9 @@ int ncdwio_log_check_header(NC* ncp, int num_entries){
     if (strncmp(headerp->basename, basename, strlen(basename)) != 0) {
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-    
+
     /* Read data log header */
-    ioret = read(data_fd, buffer, 8); 
+    ioret = read(data_fd, buffer, 8);
     if (ioret < 0) {
         err = ncmpii_handle_io_error("read");
         if (err == NC_EFILE){
@@ -159,7 +167,7 @@ int ncdwio_log_check_header(NC* ncp, int num_entries){
 
     close(meta_fd);
     close(data_fd);
-    
+
     return NC_NOERR;
 }
 
@@ -178,19 +186,19 @@ int ncdwio_log_check_put(NC* ncp, int varid, int api_kind, int itype, int packed
     NC_var *varp;
 
     if (ncdwp == NULL){
-        return NC_NOERR;       
+        return NC_NOERR;
     }
-    
+
     /* Open log file */
     meta_fd = open(ncdwp->metalogpath, O_RDONLY);
     if (meta_fd < 0){
-        DEBUG_RETURN_ERROR(NC_ELOGCHECK);  
+        DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
     data_fd = open(ncdwp->datalogpath, O_RDONLY);
     if (meta_fd < 0){
-        DEBUG_RETURN_ERROR(NC_ELOGCHECK);  
+        DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-    
+
     /* Calculate size of metadata log and data log */
     metasize = ncdwp->metadata.nused;
     ioret = lseek(ncdwp->datalog_fd, 0, SEEK_CUR);
@@ -198,13 +206,13 @@ int ncdwio_log_check_put(NC* ncp, int varid, int api_kind, int itype, int packed
         DEBUG_RETURN_ERROR(ncmpii_handle_io_error("lseek"));
     }
     datasize = ioret;
- 
+
     /* Get variable */
     err = ncmpii_NC_lookupvar(ncp, varid, &varp);
     if (err != NC_NOERR) {
-        DEBUG_RETURN_ERROR(NC_ELOGCHECK);  
+        DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-    
+
     /* Calculate log entry size and allocate buffer */
     esize = sizeof(NC_dw_metadataentry) + varp->ndims * SIZEOF_MPI_OFFSET * 3;
     if (esize > sizeof(NC_dw_metadataheader)){
@@ -216,7 +224,7 @@ int ncdwio_log_check_put(NC* ncp, int varid, int api_kind, int itype, int packed
 
     /* Check num_entries in header */
     if (num_entries >= 0) {
-        ioret = read(meta_fd, buffer, sizeof(NC_dw_metadataheader)); 
+        ioret = read(meta_fd, buffer, sizeof(NC_dw_metadataheader));
         if (ioret < 0) {
             err = ncmpii_handle_io_error("read");
             if (err == NC_EFILE){
@@ -228,18 +236,18 @@ int ncdwio_log_check_put(NC* ncp, int varid, int api_kind, int itype, int packed
             DEBUG_RETURN_ERROR(NC_EBADLOG);
         }
         headerp = (NC_dw_metadataheader*)buffer;
-        
+
         if (headerp->num_entries != num_entries){
             DEBUG_RETURN_ERROR(NC_ELOGCHECK);
         }
     }
-    
+
     /* Read last entry */
     ioret = lseek(meta_fd, metasize - esize, SEEK_SET);
     if (ioret < 0){
         DEBUG_RETURN_ERROR(ncmpii_handle_io_error("lseek"));
     }
-    ioret = read(meta_fd, buffer, esize); 
+    ioret = read(meta_fd, buffer, esize);
     if (ioret < 0) {
         err = ncmpii_handle_io_error("read");
         if (err == NC_EFILE){
@@ -250,13 +258,13 @@ int ncdwio_log_check_put(NC* ncp, int varid, int api_kind, int itype, int packed
     if (ioret != esize){
         DEBUG_RETURN_ERROR(NC_EBADLOG);
     }
-    
+
     /* Check entry */
     entryp = (NC_dw_metadataentry*)buffer;
     _start = (MPI_Offset*)(entryp + 1);
     _count = _start + entryp->ndims;
     _stride = _count + entryp->ndims;
-    
+
     if (entryp->ndims != varp->ndims) {
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
@@ -275,7 +283,7 @@ int ncdwio_log_check_put(NC* ncp, int varid, int api_kind, int itype, int packed
     if (entryp->data_off != datasize - entryp->data_len) {
         DEBUG_RETURN_ERROR(NC_ELOGCHECK);
     }
-    
+
     for(i = 0; i < varp->ndims; i++){
         if(start[i] != _start[i]){
             DEBUG_RETURN_ERROR(NC_ELOGCHECK);
@@ -284,7 +292,7 @@ int ncdwio_log_check_put(NC* ncp, int varid, int api_kind, int itype, int packed
             DEBUG_RETURN_ERROR(NC_ELOGCHECK);
         }
     }
-    
+
     if (api_kind == NC_LOG_API_KIND_VARS) {
         for(i = 0; i < varp->ndims; i++){
             if(stride[i] != _stride[i]){

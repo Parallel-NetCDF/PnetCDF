@@ -448,7 +448,7 @@ ncmpio_filetype_create_vars(const NC* ncp, const NC_var* varp,
                 MPI_Offset *offset, MPI_Datatype *filetype,
                 int *is_filetype_contig);
 
-extern int                
+extern int
 ncmpio_file_set_view(const NC *ncp, MPI_File fh, MPI_Offset *offset,
                 MPI_Datatype filetype);
 

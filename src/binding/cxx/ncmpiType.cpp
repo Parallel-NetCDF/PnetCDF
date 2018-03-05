@@ -7,13 +7,13 @@ using namespace std;
 
 namespace PnetCDF {
   //  Global comparator operator ==============
-  // comparator operator 
+  // comparator operator
   bool operator<(const NcmpiType& lhs,const NcmpiType& rhs)
   {
     return false;
   }
-  
-  // comparator operator 
+
+  // comparator operator
   bool operator>(const NcmpiType& lhs,const NcmpiType& rhs)
   {
     return true;
@@ -32,15 +32,15 @@ NcmpiType& NcmpiType::operator=(const NcmpiType & rhs)
 }
 
 // The copy constructor.
-NcmpiType::NcmpiType(const NcmpiType& rhs): 
+NcmpiType::NcmpiType(const NcmpiType& rhs):
   nullObject(rhs.nullObject),
-  myId(rhs.myId), 
+  myId(rhs.myId),
   groupId(rhs.groupId)
 {}
 
 
 // Constructor generates a null object.
-NcmpiType::NcmpiType() : 
+NcmpiType::NcmpiType() :
   nullObject(true),
   myId(-1),
   groupId(-1)
@@ -55,14 +55,14 @@ NcmpiType::NcmpiType(const NcmpiGroup& grp, const string& name) :
   myId = typTmp.getId();
 }
 
-// constructor for a global type 
+// constructor for a global type
 NcmpiType::NcmpiType(nc_type id) :
   nullObject(false),
   myId(id),
   groupId(0)
 {
 }
-  
+
 
 // Constructor for a non-global type
 NcmpiType::NcmpiType(const PnetCDF::NcmpiGroup& grp, nc_type id):
@@ -75,23 +75,23 @@ NcmpiType::NcmpiType(const PnetCDF::NcmpiGroup& grp, nc_type id):
 // equivalence operator
 bool NcmpiType::operator==(const NcmpiType & rhs) const
 {
-  if(nullObject) 
+  if(nullObject)
     return nullObject == rhs.nullObject;
   else
     return groupId == rhs.groupId && myId == rhs.myId;
-}  
-  
+}
+
 //  !=  operator
 bool NcmpiType::operator!=(const NcmpiType & rhs) const
 {
   return !(*this == rhs);
-}  
-  
+}
+
 // Gets parent group.
 NcmpiGroup  NcmpiType::getParentGroup() const {
   if(groupId == 0) return NcmpiGroup(); else  return NcmpiGroup(groupId);
 }
-  
+
 static
 string inq_type(int myId) {
     switch (myId) {
@@ -127,7 +127,7 @@ MPI_Offset NcmpiType::getSize() const{
   ncmpiCheck(ncmpi_inq_type(groupId,myId,charName,&sizep),__FILE__,__LINE__);
   return sizep;
 };
-  
+
 // The type class returned as an enumeration type.
 NcmpiType::ncmpiType NcmpiType::getTypeClass() const{
   switch (myId) {
@@ -137,14 +137,14 @@ NcmpiType::ncmpiType NcmpiType::getTypeClass() const{
   case NC_SHORT   : return ncmpi_SHORT;
   case NC_USHORT  : return ncmpi_USHORT;
   case NC_INT     : return ncmpi_INT;
-  case NC_UINT    : return ncmpi_UINT;  
-  case NC_INT64   : return ncmpi_INT64; 
+  case NC_UINT    : return ncmpi_UINT;
+  case NC_INT64   : return ncmpi_INT64;
   case NC_UINT64  : return ncmpi_UINT64;
   case NC_FLOAT   : return ncmpi_FLOAT;
   case NC_DOUBLE  : return ncmpi_DOUBLE;
-  default:  
+  default:
     // this is a user defined type
-    // establish its type class, ie whether it is: NC_VLEN, NC_OPAQUE, NC_ENUM, or NC_COMPOUND. 
+    // establish its type class, ie whether it is: NC_VLEN, NC_OPAQUE, NC_ENUM, or NC_COMPOUND.
     char* name=NULL;
     MPI_Offset* sizep=NULL;
     nc_type* base_nc_typep=NULL;
@@ -154,7 +154,7 @@ NcmpiType::ncmpiType NcmpiType::getTypeClass() const{
     return static_cast<ncmpiType>(classp);
   }
 }
-  
+
 // The type class returned as a string.
 string NcmpiType::getTypeClassName() const{
   ncmpiType typeClass=getTypeClass();
@@ -165,8 +165,8 @@ string NcmpiType::getTypeClassName() const{
   case ncmpi_SHORT   : return string("ncmpi_SHORT");
   case ncmpi_USHORT  : return string("ncmpi_USHORT");
   case ncmpi_INT     : return string("ncmpi_INT");
-  case ncmpi_UINT    : return string("ncmpi_UINT");  
-  case ncmpi_INT64   : return string("ncmpi_INT64"); 
+  case ncmpi_UINT    : return string("ncmpi_UINT");
+  case ncmpi_INT64   : return string("ncmpi_INT64");
   case ncmpi_UINT64  : return string("ncmpi_UINT64");
   case ncmpi_FLOAT   : return string("ncmpi_FLOAT");
   case ncmpi_DOUBLE  : return string("ncmpi_DOUBLE");

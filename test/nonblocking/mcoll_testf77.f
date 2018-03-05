@@ -10,7 +10,7 @@
 ! This code writes the array, tt(k)(j)(i), into the file 'testfile.nc'. It
 ! then reads the array from the file, and compares it with the original
 ! values.
-! 
+!
 ! i=longitude, j=latitude, k=level
 !
 ! $Id$
@@ -38,7 +38,7 @@
 !     -----------------------
 
       integer XTRIM
-      integer NWRITES 
+      integer NWRITES
       parameter (NWRITES = 5 )
       ! number of read samples
       ! number of write samples
@@ -51,19 +51,19 @@
 !     ----------------------
 
       logical reorder
-              
+
       logical isperiodic(3)
-              
+
       integer comm_cart                   ! Cartesian communicator
       integer err, ierr, get_args
       integer*8 istart, jstart, kstart      ! offsets of 3D field
       integer*8 locsiz
       integer mype                        ! rank in comm_cart
       integer totpes                      ! total number of PEs
-              
+
       integer*8 locsiz_3d(3)                ! local sizes of 3D fields
       integer pe_coords(3)                ! Cartesian PE coords
-              
+
       integer numpes(3)                   ! number of PEs along axes;
                                           !   determined by MPI where a
                                           !   zero is specified
@@ -72,11 +72,11 @@
       character*256 filename, cmd, msg
 
       real*4  filsiz
-              
+
       real*4  rdt_l(2)
       real*4  wrt_g(2)
       real*4  wrt_l(2)
-              
+
       real*4  wrates_g(2)
       real*4  wrates_l(2)
 
@@ -193,7 +193,7 @@
 !      if (mype == 0) then
 !        Write (6,905) filsiz
 !        Write (6,910) wrates_g(1), wrates_g(2)
-!      end if 
+!      end if
 
 ! 905  format ("File size: ", e10.3, " MB")
 ! 910  format ("    Write: ", f9.3, " MB/s  (eff., ", f9.3, " MB/s)")
@@ -250,14 +250,14 @@
       integer req1
       integer req(nwrites)
       integer stat(nwrites)
-        
+
       integer*8 count_3d(3)
       integer*8 start_3d(3)
-              
+
       integer dim_id(3)
-              
+
       double precision  t1, t2, t3
-           
+
       integer max_loc_size
       parameter( max_loc_size = 20000000 )
       real*4  tt1(max_loc_size)   ! Need tt(locsiz)
@@ -477,10 +477,10 @@
 
       integer ierr
       integer ii
-              
+
       real*4  delmax(1), delmin(1), delta
       real*4  diff
-              
+
       real*4  wr(5)
       real*4  ws(5)
 

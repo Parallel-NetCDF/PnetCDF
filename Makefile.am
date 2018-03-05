@@ -32,7 +32,7 @@ EXTRA_DIST = COPYRIGHT \
 # TESTS_SUBDIRS = test examples benchmarks
 # TESTS_DIRS = $(TESTS_SUBDIRS:%=tests-%)
 # tests: all $(TESTS_DIRS)
-# $(TESTS_DIRS): 
+# $(TESTS_DIRS):
 # 	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
 
 if BUILD_COVERAGE

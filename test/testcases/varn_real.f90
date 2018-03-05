@@ -83,7 +83,7 @@
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
-          
+
           call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
           nerrs = 0
@@ -137,10 +137,10 @@
               starts(y, 7) = 4; starts(x, 7) = 2
               starts(y, 8) = 4; starts(x, 8) = 3
               ! rank 0 is writing the following locations: ("-" means skip)
-              !   -  -  -  -  -  0  0  -  -  - 
-              !   0  -  -  -  -  -  -  -  -  - 
-              !   -  -  -  -  -  -  0  0  -  - 
-              !   0  0  0  -  -  -  -  -  -  - 
+              !   -  -  -  -  -  0  0  -  -  -
+              !   0  -  -  -  -  -  -  -  -  -
+              !   -  -  -  -  -  -  0  0  -  -
+              !   0  0  0  -  -  -  -  -  -  -
           elseif (rank .EQ. 1) then
               starts(y,  1) = 1; starts(x,  1) = 4
               starts(y,  2) = 1; starts(x,  2) = 9
@@ -156,10 +156,10 @@
               starts(y, 12) = 4; starts(x, 12) = 6
               starts(y, 13) = 4; starts(x, 13) = 7
               ! rank 1 is writing the following locations: ("-" means skip)
-              !   -  -  -  1  1  -  -  -  1  1 
-              !   -  -  -  -  -  1  1  -  -  - 
-              !   1  1  -  -  -  -  -  -  1  1 
-              !   -  -  -  -  1  1  1  -  -  - 
+              !   -  -  -  1  1  -  -  -  1  1
+              !   -  -  -  -  -  1  1  -  -  -
+              !   1  1  -  -  -  -  -  -  1  1
+              !   -  -  -  -  1  1  1  -  -  -
           elseif (rank .EQ. 2) then
               starts(y, 1) = 1; starts(x, 1) = 8
               starts(y, 2) = 2; starts(x, 2) = 2
@@ -171,10 +171,10 @@
               starts(y, 8) = 2; starts(x, 8) = 4
               starts(y, 9) = 2; starts(x, 9) = 10
               ! rank 2 is writing the following locations: ("-" means skip)
-              !   -  -  -  -  -  -  -  2  -  - 
-              !   -  2  2  2  -  -  -  2  2  2 
-              !   -  -  2  -  -  -  -  -  -  - 
-              !   -  -  -  2  -  -  -  -  -  - 
+              !   -  -  -  -  -  -  -  2  -  -
+              !   -  2  2  2  -  -  -  2  2  2
+              !   -  -  2  -  -  -  -  -  -  -
+              !   -  -  -  2  -  -  -  -  -  -
           elseif (rank .EQ. 3) then
               starts(y,  1) = 1; starts(x,  1) = 1
               starts(y,  2) = 2; starts(x,  2) = 5
@@ -187,10 +187,10 @@
               starts(y,  9) = 3; starts(x,  9) = 6
               starts(y, 10) = 4; starts(x, 10) = 10
               ! rank 3 is writing the following locations: ("-" means skip)
-              !   3  3  3  -  -  -  -  -  -  - 
-              !   -  -  -  -  3  -  -  -  -  - 
-              !   -  -  -  3  3  3  -  -  -  - 
-              !   -  -  -  -  -  -  -  3  3  3 
+              !   3  3  3  -  -  -  -  -  -  -
+              !   -  -  -  -  3  -  -  -  -  -
+              !   -  -  -  3  3  3  -  -  -  -
+              !   -  -  -  -  -  -  -  3  3  3
           endif
           counts = 1
 

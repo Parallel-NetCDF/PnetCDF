@@ -24,7 +24,7 @@ if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS = 
+M4_SRCS =
 
 H_SRCS = ncfoo_driver.h
 

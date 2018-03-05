@@ -28,7 +28,7 @@
  *           int rec_var2(REC_DIM, Y, X) ;
  *           int rec_var3(REC_DIM, Y, X) ;
  *    data:
- * 
+ *
  *    fix_var0 =
  *      0, 1, 2, 3, 4,
  *      10, 11, 12, 13, 14 ;

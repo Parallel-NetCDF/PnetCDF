@@ -11,7 +11,7 @@
 
 typedef enum {
     Version_number = 0,
-    Date           = 1, 
+    Date           = 1,
     Patches        = 2,
     Configure_args = 3,
     Compilers      = 4,

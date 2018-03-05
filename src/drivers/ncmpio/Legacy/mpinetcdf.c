@@ -194,7 +194,7 @@ ncmpii_create(MPI_Comm     comm,
     /* check cmode */
     if (fIsSet(cmode, NC_64BIT_DATA)     ||
         fIsSet(cmode, NC_64BIT_OFFSET)   ||
-        default_format == NC_FORMAT_CDF5 || 
+        default_format == NC_FORMAT_CDF5 ||
         default_format == NC_FORMAT_CDF2) {
         /* unlike serial netcdf, we will not bother to support
          * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.

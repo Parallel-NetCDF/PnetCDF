@@ -57,7 +57,7 @@
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
-          
+
           call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
           ! create file, truncate it if exists

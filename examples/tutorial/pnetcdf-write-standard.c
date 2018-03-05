@@ -6,7 +6,7 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
+/* simple demonstration of pnetcdf
  * text attribute on dataset
  * write out rank into 1-d array collectively.
  * The most basic way to do parallel i/o with pnetcdf */
@@ -16,7 +16,7 @@
 
     % mpiexec -n 4 pnetcdf-write-standard /orangefs/wkliao/output.nc
 
-    % ncmpidump /orangefs/wkliao/output.nc 
+    % ncmpidump /orangefs/wkliao/output.nc
     netcdf output {
     // file format: CDF-2 (large file)
     dimensions:

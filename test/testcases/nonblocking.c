@@ -24,7 +24,7 @@
  *    variables:
  *         int VAR(Y, X) ;
  *    data:
- * 
+ *
  *    var =
  *      1, 1, 1, 1, 1,
  *      0, 0, 0, 0, 0 ;
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
             if (buf[j][i] != j)
                 printf("Error at line %d in %s: buf[%d][%d]=%d != %d\n",
                 __LINE__,__FILE__,j,i,buf[j][i],j);
- 
+
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid, "VAR"); CHECK_ERR
 

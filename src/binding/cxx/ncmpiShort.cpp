@@ -19,4 +19,4 @@ NcmpiShort::~NcmpiShort() {
 bool NcmpiShort::operator==(const NcmpiShort & rhs)    {
   // simply check the netCDF id.
   return myId == rhs.myId;
-}  
+}

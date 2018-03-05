@@ -10,10 +10,10 @@
    temperatures. It is intended to illustrate the use of the netCDF
    C API. The companion program pres_temp_4D_rd.c shows how
    to read the netCDF data file created by this program.
-   
+
    This program is part of the netCDF tutorial:
    http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-tutorial
-   
+
    Full documentation of the netCDF C API can be found at:
    http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-c
 
@@ -88,7 +88,7 @@ main(int argc, char ** argv)
 
    /* Loop indexes. */
    int lvl, lat, lon, rec, i = 0;
-   
+
    /* Error handling. */
    int err;
 
@@ -148,10 +148,10 @@ main(int argc, char ** argv)
    CHECK_ERR
 
    /* Assign units attributes to coordinate variables. */
-   err = ncmpi_put_att_text(ncid, lat_varid, UNITS, 
+   err = ncmpi_put_att_text(ncid, lat_varid, UNITS,
 				 strlen(DEGREES_NORTH), DEGREES_NORTH);
    CHECK_ERR
-   err = ncmpi_put_att_text(ncid, lon_varid, UNITS, 
+   err = ncmpi_put_att_text(ncid, lon_varid, UNITS,
 				 strlen(DEGREES_EAST), DEGREES_EAST);
    CHECK_ERR
 
@@ -172,10 +172,10 @@ main(int argc, char ** argv)
    CHECK_ERR
 
    /* Assign units attributes to the netCDF variables. */
-   err = ncmpi_put_att_text(ncid, pres_varid, UNITS, 
+   err = ncmpi_put_att_text(ncid, pres_varid, UNITS,
 				 strlen(PRES_UNITS), PRES_UNITS);
    CHECK_ERR
-   err = ncmpi_put_att_text(ncid, temp_varid, UNITS, 
+   err = ncmpi_put_att_text(ncid, temp_varid, UNITS,
 				 strlen(TEMP_UNITS), TEMP_UNITS);
    CHECK_ERR
 
@@ -255,7 +255,7 @@ main(int argc, char ** argv)
    /* Close the file. */
    err = ncmpi_close(ncid);
    CHECK_ERR
-   
+
    if (count[1] > 0) free(pres_out[0]);
    free(pres_out);
 

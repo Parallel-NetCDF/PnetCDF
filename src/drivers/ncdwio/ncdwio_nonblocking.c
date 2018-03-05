@@ -20,12 +20,12 @@
 #include <pnetcdf.h>
 #include <ncdwio_driver.h>
 
-#define PUT_ARRAY_SIZE 128 /* Size of initial put list */    
+#define PUT_ARRAY_SIZE 128 /* Size of initial put list */
 #define SIZE_MULTIPLIER 2    /* When metadata buffer is full, we'll NCI_Reallocate it to META_BUFFER_MULTIPLIER times the original size*/
 
 /* putlist is a module in ncdwio driver that manage nonblocking put request object
  * It consist of a pool of request object (reqs) and request ids (ids)
- * It's implemented by 2 array of the same number of entries 
+ * It's implemented by 2 array of the same number of entries
  * The id i corresponds to the i-th request object
  * We issue request object by issuing the corresponding request id
  * ids is initialized with increasing id, ie. ids[i] = i
@@ -35,7 +35,7 @@
  * When recycle an id, we simple put it to the position right before position marked by nused and decrease nused by 1
  * NOTE: We does not guarantee to issue id in continuous and increasing order
  * NOTE: ids is simply a pool housing reqeust ids, the position od id within ids is not fixed and has no meaning
- * 
+ *
  * Eaxmple:
  * Initial:
  * ids = 0 1 2 3
@@ -60,12 +60,12 @@
 
 /*
  * Initialize the put list
- * 
+ *
  */
 int ncdwio_put_list_init(NC_dw *ncdwp){
     int i;
     NC_dw_put_list *lp = &(ncdwp->putlist);
-    
+
     /* Initialize parameter and allocate the array  */
     lp->nused = 0;
     lp->nalloc = PUT_ARRAY_SIZE;
@@ -74,7 +74,7 @@ int ncdwio_put_list_init(NC_dw *ncdwp){
     if (lp->reqs == NULL || lp->ids == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
-    
+
     /* Initialize values of ids and reqs
      * Assign increasing unique id
      */
@@ -100,9 +100,9 @@ int ncdwio_put_list_resize(NC_dw *ncdwp){
 
     /* Calculate new size */
     nsize = lp->nalloc * SIZE_MULTIPLIER;
-    
+
     /* Realloc reqs and ids */
-    ptr = NCI_Realloc(lp->reqs, 
+    ptr = NCI_Realloc(lp->reqs,
                             nsize * sizeof(NC_dw_put_req));
     if (ptr == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
@@ -113,7 +113,7 @@ int ncdwio_put_list_resize(NC_dw *ncdwp){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
     lp->ids = (int*)ptr;
- 
+
     /* Initialize values of ids and reqs
      * Assign increasing unique id
      */
@@ -121,9 +121,9 @@ int ncdwio_put_list_resize(NC_dw *ncdwp){
         lp->ids[i] = i; // Unique ids
         lp->reqs[i].valid = 0; // Not in use
     }
-    
+
     lp->nalloc = nsize;
-    
+
     return NC_NOERR;
 }
 
@@ -132,10 +132,10 @@ int ncdwio_put_list_resize(NC_dw *ncdwp){
  */
 int ncdwio_put_list_free(NC_dw *ncdwp){
     NC_dw_put_list *lp = &(ncdwp->putlist);
-    
+
     NCI_Free(lp->reqs);
     NCI_Free(lp->ids);
-    
+
     return NC_NOERR;
 }
 
@@ -156,14 +156,14 @@ int ncdwio_put_list_add(NC_dw *ncdwp, int *id) {
             return err;
         }
     }
-     
+
     /* Get the first unused id marked by nused */
     *id = lp->ids[lp->nused++];
     // Initialize new request object
     lp->reqs[*id].valid = 1;    // Id in use means request object in use
     lp->reqs[*id].ready = 0;    // Status not avaiable yet
     lp->reqs[*id].status = NC_NOERR;
-    
+
     return NC_NOERR;
 }
 
@@ -175,8 +175,8 @@ int ncdwio_put_list_add(NC_dw *ncdwp, int *id) {
  */
 int ncdwio_put_list_remove(NC_dw *ncdwp, int reqid){
     NC_dw_put_list *lp = &(ncdwp->putlist);
-    
-    /* Mark entry as invalid 
+
+    /* Mark entry as invalid
      * When the id is recycled, we also take back the request object
      */
     lp->reqs[reqid].valid = 0;
@@ -195,7 +195,7 @@ int ncdwio_put_list_remove(NC_dw *ncdwp, int reqid){
  * If not, the operation is still pending in the log file.
  * We do a log flush. Since log entries are linked to the request object, the status should be updated when the corresponding entry is flushed
  * Log module is responsible to fill up the status of corresponding request object
- * The request should be ready after log flush 
+ * The request should be ready after log flush
  */
 int ncdwio_handle_put_req(NC_dw *ncdwp, int reqid, int *stat){
     int err, status = NC_NOERR;
@@ -214,7 +214,7 @@ int ncdwio_handle_put_req(NC_dw *ncdwp, int reqid, int *stat){
 
     // Locate the req object, which is reqs[reqid]
     req = lp->reqs + reqid;
-    
+
     /* Filter invalid reqid
      * The request object must be in used
      * If not, the id is not yet issued, and hence invalid
@@ -231,7 +231,7 @@ int ncdwio_handle_put_req(NC_dw *ncdwp, int reqid, int *stat){
         // check return val
         ncdwio_log_flush(ncdwp);
     }
-    
+
     /* Log module is responsible to update the request obejct when entries are flushed
      * This should never happen
      * If it do, we have mising log entry or corrupt metadata index
@@ -263,7 +263,7 @@ int ncdwio_handle_put_req(NC_dw *ncdwp, int reqid, int *stat){
 int ncdwio_handle_all_put_req(NC_dw *ncdwp){
     int i, err, status = NC_NOERR;
     NC_dw_put_list *lp = &(ncdwp->putlist);
-    
+
     // Search through req object array for object in use */
     for(i = 0; i < lp->nalloc; i++){
         if (lp->reqs[i].valid){
@@ -300,7 +300,7 @@ int ncdwio_cancel_put_req(NC_dw *ncdwp, int reqid, int *stat){
 
     // Locate the req object, which is reqs[reqid]
     req = lp->reqs + reqid;
-    
+
     /* Filter invalid reqid
      * The request object must be in used
      * If not, the id is not yet issued, and hence invalid
@@ -323,13 +323,13 @@ int ncdwio_cancel_put_req(NC_dw *ncdwp, int reqid, int *stat){
         if (stat != NULL){
             *stat = NC_NOERR;   // Success
         }
-        
+
         // Mark log entries as invalid
         for(i = req->entrystart; i < req->entryend; i++) {
             ncdwp->metaidx.entries[i].valid = 0;
         }
     }
-    
+
     // Recycle req object to the pool
     err = ncdwio_put_list_remove(ncdwp, reqid);
     if (status == NC_NOERR){
@@ -347,7 +347,7 @@ int ncdwio_cancel_put_req(NC_dw *ncdwp, int reqid, int *stat){
 int ncdwio_cancel_all_put_req(NC_dw *ncdwp){
     int i, err, status = NC_NOERR;
     NC_dw_put_list *lp = &(ncdwp->putlist);
-    
+
     // Search through req object list for valid objects */
     for(i = 0; i < lp->nalloc; i++){
         if (lp->reqs[i].valid){

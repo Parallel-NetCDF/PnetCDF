@@ -21,17 +21,17 @@
  * The read-only tests read files:
  *     test.nc (see below)
  *     test_get.c (used merely as an example of a non-netCDF file)
- * 
- * The write tests 
- *     read test.nc (see below) 
+ *
+ * The write tests
+ *     read test.nc (see below)
  *     write scratch.nc (deleted after each test)
- * 
+ *
  * The file test.nc is created by running nc_test with the -c (create) option.
  * It is described by the following global variables.
  */
 
 
-/* 
+/*
  * global variables (defined by function init_gvars) describing file test.nc
  */
 char dim_name[NDIMS][3];
@@ -50,14 +50,14 @@ nc_type gatt_type[NGATTS];
 MPI_Offset att_len[NVARS][MAX_NATTS];
 MPI_Offset gatt_len[NGATTS];
 
-/* 
+/*
  * command-line options
  */
 int  read_only;		/* if 1, don't try to change files */
 int  verbose;		/* if 1, print details of tests */
 int  max_nmpt;		/* max. number of messages per test */
 
-/* 
+/*
  * Misc. global variables
  */
 int  nfails;		/* number of failures in specific test */
@@ -316,10 +316,10 @@ main(int argc, char *argv[])
     NC_TEST1(ncmpi_iget_var_schar, numVars);
     NC_TEST1(ncmpi_iget_var_short, numVars);
     NC_TEST1(ncmpi_iget_var_int, numVars);
-    NC_TEST1(ncmpi_iget_var_long, numVars); 
+    NC_TEST1(ncmpi_iget_var_long, numVars);
     NC_TEST1(ncmpi_iget_var_float, numVars);
     NC_TEST1(ncmpi_iget_var_double, numVars);
-    NC_TEST1(ncmpi_iget_var_uchar, numVars); 
+    NC_TEST1(ncmpi_iget_var_uchar, numVars);
     NC_TEST1(ncmpi_iget_var_ushort, numVars);
     NC_TEST1(ncmpi_iget_var_uint, numVars);
     NC_TEST1(ncmpi_iget_var_longlong, numVars);
@@ -332,7 +332,7 @@ main(int argc, char *argv[])
     NC_TEST1(ncmpi_iget_var1_long, numVars);
     NC_TEST1(ncmpi_iget_var1_float, numVars);
     NC_TEST1(ncmpi_iget_var1_double, numVars);
-    NC_TEST1(ncmpi_iget_var1_uchar, numVars); 
+    NC_TEST1(ncmpi_iget_var1_uchar, numVars);
     NC_TEST1(ncmpi_iget_var1_ushort, numVars);
     NC_TEST1(ncmpi_iget_var1_uint, numVars);
     NC_TEST1(ncmpi_iget_var1_longlong, numVars);
@@ -342,7 +342,7 @@ main(int argc, char *argv[])
     NC_TEST1(ncmpi_iget_vara_schar, numVars);
     NC_TEST1(ncmpi_iget_vara_short, numVars);
     NC_TEST1(ncmpi_iget_vara_int, numVars);
-    NC_TEST1(ncmpi_iget_vara_long, numVars); 
+    NC_TEST1(ncmpi_iget_vara_long, numVars);
     NC_TEST1(ncmpi_iget_vara_float, numVars);
     NC_TEST1(ncmpi_iget_vara_double, numVars);
     NC_TEST1(ncmpi_iget_vara_uchar, numVars);
@@ -355,7 +355,7 @@ main(int argc, char *argv[])
     NC_TEST1(ncmpi_iget_vars_schar, numVars);
     NC_TEST1(ncmpi_iget_vars_short, numVars);
     NC_TEST1(ncmpi_iget_vars_int, numVars);
-    NC_TEST1(ncmpi_iget_vars_long, numVars); 
+    NC_TEST1(ncmpi_iget_vars_long, numVars);
     NC_TEST1(ncmpi_iget_vars_float, numVars);
     NC_TEST1(ncmpi_iget_vars_double, numVars);
     NC_TEST1(ncmpi_iget_vars_uchar, numVars);

@@ -291,7 +291,7 @@ annotate(
 {
     int vrank = vp->ndims;
     int id;
-    
+
     /* print indices according to data_lang */
     (void) printf("  // %s(", vp->name);
     switch (fsp->data_lang) {
@@ -526,7 +526,7 @@ vardata(
     MPI_Offset *cor;	/* corner coordinates */
     MPI_Offset *edg;	/* edges of hypercube */
     size_t *add;	/* "odometer" increment to next "row"  */
- 
+
     int id;
     int ir;
     MPI_Offset nels;
@@ -604,7 +604,7 @@ vardata(
 	  add[vrank-2] = 1;
     }
     nrows = nels/ncols;		/* number of "rows" */
-    
+
     for (ir = 0; ir < nrows; ir++) {
 	/*
 	 * rather than just printing a whole row at once (which might exceed

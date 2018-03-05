@@ -144,7 +144,7 @@ ncmpio_update_name_lookup_table(NC_nametable *nameT,
 
     /* coalesce the id array */
     for (; i<nameT[key].num-1; i++)
-        nameT[key].list[i] = nameT[key].list[i+1]; 
+        nameT[key].list[i] = nameT[key].list[i+1];
 
     /* decrease the number of IDs and free space if necessary */
     nameT[key].num--;

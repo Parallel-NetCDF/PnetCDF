@@ -9,7 +9,7 @@
 ! This code writes the array, tt(k)(j)(i), into the file 'testfile.nc'. It
 ! then reads the array from the file, and compares it with the original
 ! values.
-! 
+!
 ! i=longitude, j=latitude, k=level
 !
 ! $Id$
@@ -26,7 +26,7 @@
 !     Parameter declarations.
 !     -----------------------
 
-      integer NREADS, NWRITES 
+      integer NREADS, NWRITES
       parameter (NREADS = 5, NWRITES = 5 )
       ! number of read samples
       ! number of write samples
@@ -44,7 +44,7 @@
       INTEGER(KIND=MPI_OFFSET_KIND) locsiz
       integer mype                        ! rank in comm_cart
       integer totpes                      ! total number of PEs
-              
+
       INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)  ! local sizes of 3D fields
       integer pe_coords(3)                ! Cartesian PE coords
       integer numpes(3)                   ! number of PEs along axes;
@@ -57,7 +57,7 @@
       real*4  rdt_l(2)
       real*4  wrt_g(2)
       real*4  wrt_l(2)
-              
+
       real*4  wrates_g(2)
       real*4  wrates_l(2)
 
@@ -170,7 +170,7 @@
 !      if (mype == 0) then
 !        Write (6,905) filsiz
 !        Write (6,910) wrates_g(1), wrates_g(2)
-!      end if 
+!      end if
 
 ! 905  format ("File size: ", e10.3, " MB")
 ! 910  format ("    Write: ", f9.3, " MB/s  (eff., ", f9.3, " MB/s)")

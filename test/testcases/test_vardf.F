@@ -28,11 +28,11 @@
 !           int dummy_rec(REC_DIM, X) ;
 !           int fix_var(FIX_DIM, X) ;
 !    data:
-! 
+!
 !    rec_var =
 !      10, 11, 12, 13, 14,
 !      0, 1, 2, 3, 4 ;
-! 
+!
 !    dummy_rec =
 !      0, 0, 0, 0, 0,
 !      0, 0, 0, 0, 0 ;

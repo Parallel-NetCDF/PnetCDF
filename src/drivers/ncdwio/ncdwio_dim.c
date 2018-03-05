@@ -34,11 +34,11 @@ ncdwio_def_dim(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->def_dim(ncdwp->ncp, name, size, dimidp);
     if (err != NC_NOERR) return err;
-    
-    /* 
+
+    /*
      * Record record dimension
      * Note: Assume only 1 rec dim
      */
@@ -56,7 +56,7 @@ ncdwio_inq_dimid(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->inq_dimid(ncdwp->ncp, name, dimid);
     if (err != NC_NOERR) return err;
 
@@ -71,11 +71,11 @@ ncdwio_inq_dim(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->inq_dim(ncdwp->ncp, dimid, name, sizep);
     if (err != NC_NOERR) return err;
-    
-    /* 
+
+    /*
      * Update size of record dimension with pending records in the log
      * Note: Assume only 1 rec dim
      */
@@ -95,7 +95,7 @@ ncdwio_rename_dim(void       *ncdp,
 {
     int err;
     NC_dw *ncdwp = (NC_dw*)ncdp;
-    
+
     err = ncdwp->ncmpio_driver->rename_dim(ncdwp->ncp, dimid, newname);
     if (err != NC_NOERR) return err;
 

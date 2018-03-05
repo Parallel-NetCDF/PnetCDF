@@ -93,7 +93,7 @@ non_blocking_put_$1(int         rank,
 
     err = ncmpi_iput_varm_double(ncid, varm_id, startM, countM, NULL, imap, buf, NULL);
     CHECK_ERR
-    
+
     /* wait for all input */
     err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
     CHECK_ERR
@@ -110,7 +110,7 @@ define(`TEST_CDF_FORMAT',dnl
     cmode = NC_CLOBBER;
     ifelse(`$1', `NC_FORMAT_64BIT_OFFSET', `cmode |= NC_64BIT_OFFSET;',
            `$1', `NC_FORMAT_64BIT_DATA',   `cmode |= NC_64BIT_DATA;')
- 
+
     sprintf(fname, "%s.cdf%d",filename, $1);
     err = ncmpi_create(MPI_COMM_WORLD, fname, cmode, info, &ncid);
     if (err != NC_NOERR) {
@@ -127,7 +127,7 @@ define(`TEST_CDF_FORMAT',dnl
     err = ncmpi_def_dim(ncid, "X",      gsize[2], &dimids[2]); CHECK_ERR
     err = ncmpi_enddef(ncid);
 
-ifelse(`$1', `NC_FORMAT_64BIT_DATA', 
+ifelse(`$1', `NC_FORMAT_64BIT_DATA',
     foreach(`itype',
     (`schar, uchar, short, ushort, int, uint, long, float, double, longlong, ulonglong'),`
     _CAT(`nerrs += non_blocking_put_',itype)'`(rank, ncid, dimids, start, count,

@@ -28,7 +28,7 @@ check_PROGRAMS = dw_bsize \
                  dw_hints \
                  dw_many_reqs \
                  dw_nonblocking \
-                 highdim 
+                 highdim
 
 EXTRA_DIST = wrap_runs.sh
 

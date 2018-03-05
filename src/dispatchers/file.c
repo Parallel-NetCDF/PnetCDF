@@ -44,7 +44,7 @@ static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
 /* get a new ID from the PNC list */
 static int
 new_id_PNCList(int *new_id)
-{   
+{
     int i;
 
     *new_id = -1;
@@ -64,7 +64,7 @@ new_id_PNCList(int *new_id)
 static int
 add_to_PNCList(PNC *pncp,
                int  new_id)
-{   
+{
     /* these checks below are redundant */
     assert(pncp != NULL);
     assert(new_id >= 0);
@@ -709,7 +709,7 @@ ncmpi__enddef(int        ncid,
               MPI_Offset v_align,
               MPI_Offset v_minfree,
               MPI_Offset r_align)
-{   
+{
     int err=NC_NOERR;
     PNC *pncp;
 
@@ -788,10 +788,10 @@ ncmpi_redef(int ncid)
         DEBUG_RETURN_ERROR(NC_EPERM)
     /* if open mode is inconsistent, then this return might cause parallel
      * program to hang */
-    
+
     /* cannot be in define mode, must enter from data mode */
     if (fIsSet(pncp->flag, NC_MODE_DEF)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
-    
+
     /* calling the subroutine that implements ncmpi_redef() */
     err = pncp->driver->redef(pncp->ncp);
     if (err != NC_NOERR) return err;
@@ -1038,7 +1038,7 @@ int
 ncmpi_inq_path(int   ncid,
                int  *pathlen,/* Ignored if NULL */
                char *path)   /* must have already been allocated. Ignored if NULL */
-{        
+{
     int err;
     PNC *pncp;
 
@@ -1471,7 +1471,7 @@ ncmpi_buffer_detach(int ncid)
 }
 
 /*----< ncmpi_delete() >-----------------------------------------------------*/
-/* 
+/*
  * filename: the name of the file we will remove.
  * info: MPI info object, in case underlying file system needs hints.
  *

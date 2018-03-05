@@ -12,7 +12,7 @@
  * starting offset of second variable "var_small" is incorrectly set to
  * a value smaller than the end offset of its previous variable "var_big".
  * Command "ncoffsets bad_begin.nc5" shows the followings.
- *     ncoffsets bad_begin.nc5 
+ *     ncoffsets bad_begin.nc5
  *     netcdf bad_begin.nc5 {
  *     // file format: CDF-5
  *

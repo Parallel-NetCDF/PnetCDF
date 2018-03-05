@@ -6,7 +6,7 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
+/* simple demonstration of pnetcdf
  * text attribute on dataset
  * write out rank into 1-d array after sending to rank 0.  This is a dumb way
  * to do parallel I/O, but folks do this sometimes... */
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 
         ret = ncmpi_put_att_text(ncid, NC_GLOBAL, "string", 13, buf);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
-        
+
         ret = ncmpi_enddef(ncid);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
