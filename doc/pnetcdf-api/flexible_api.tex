@@ -35,39 +35,39 @@ int ncmpi_get_vara_all(int ncid, int varid, const MPI_Offset start[],
 int ncmpi_put_vars(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const void *buf, MPI_Offset bufcount,
-                   MPI_Datatype datatype); 
+                   MPI_Datatype datatype);
 
 int ncmpi_put_vars_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const void *buf, MPI_Offset bufcount,
-                   MPI_Datatype datatype); 
+                   MPI_Datatype datatype);
 
 int ncmpi_get_vars(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   void *buf, MPI_Offset bufcount, MPI_Datatype datatype); 
+                   void *buf, MPI_Offset bufcount, MPI_Datatype datatype);
 
 int ncmpi_get_vars_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   void *buf, MPI_Offset bufcount, MPI_Datatype datatype); 
+                   void *buf, MPI_Offset bufcount, MPI_Datatype datatype);
 
 int ncmpi_put_varm(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], const void *buf,
-                   MPI_Offset bufcount, MPI_Datatype datatype); 
+                   MPI_Offset bufcount, MPI_Datatype datatype);
 
 int ncmpi_put_varm_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], const void *buf,
-                   MPI_Offset bufcount, MPI_Datatype datatype); 
+                   MPI_Offset bufcount, MPI_Datatype datatype);
 
 int ncmpi_get_varm(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], void *buf, MPI_Offset bufcount,
-                   MPI_Datatype datatype); 
+                   MPI_Datatype datatype);
 
 int ncmpi_get_varm_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], void *buf, MPI_Offset bufcount,
-                   MPI_Datatype datatype); 
+                   MPI_Datatype datatype);
 \end{verbatim}
 

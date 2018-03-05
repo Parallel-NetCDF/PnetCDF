@@ -72,7 +72,7 @@ will similarly use a communicator to denote a collection of MPI processes that
 will access a NetCDF file.  By describing this collection of processes, we
 provide the underlying implementation (of our parallel NetCDF API) with
 information that it can use to ensure that the file is kept in a consistent
-state.  
+state.
 
 Further, by using the collective operations provided in our parallel NetCDF
 API (ones in which all processes in this collection participate), application
@@ -153,14 +153,14 @@ information).  The value \texttt{MPI\_INFO\_NULL} may be passed in if the user
 does not want to take advantage of this feature.
 
 \begin{verbatim}
-int ncmpi_create(MPI_Comm comm, 
-                 const char *path, 
+int ncmpi_create(MPI_Comm comm,
+                 const char *path,
                  int cmode,
                  MPI_Info info,
                  int *ncidp)
 
-int ncmpi_open(MPI_Comm comm, 
-               const char *path, 
+int ncmpi_open(MPI_Comm comm,
+               const char *path,
                int omode,
                MPI_Info info,
                int *ncidp)
@@ -201,7 +201,7 @@ rationale).
 
 Attributes in NetCDF are intended for storing scalar or vector values that
 describe a variable in some way.  As such the expectation is that these
-attributes will be small enough to fit into memory.  
+attributes will be small enough to fit into memory.
 
 In the original interface, attribute operations can be performed in either
 define or data mode; however, it is possible for attribute operations that
@@ -292,17 +292,17 @@ separate calls for independent and collective access.
 Independent calls for writing or reading a strided subarray of values to/from
 a NetCDF variable (values are contiguous in memory):
 \begin{verbatim}
-int ncmpi_put_vars_uchar(int ncid, 
-                         int varid, 
+int ncmpi_put_vars_uchar(int ncid,
+                         int varid,
                          const MPI_Offset start[],
-                         const MPI_Offset count[], 
+                         const MPI_Offset count[],
                          const MPI_Offset stride[],
                          const unsigned char *up)
 
-int ncmpi_get_vars_uchar(int ncid, 
-                         int varid, 
+int ncmpi_get_vars_uchar(int ncid,
+                         int varid,
                          const MPI_Offset start[],
-                         const MPI_Offset count[], 
+                         const MPI_Offset count[],
                          const MPI_Offset stride[],
                          unsigned char *up)
 \end{verbatim}
@@ -310,15 +310,15 @@ int ncmpi_get_vars_uchar(int ncid,
 Collective calls for writing or reading a strided subarray of values to/from a
 NetCDF variable (values are contiguous in memory).
 \begin{verbatim}
-int ncmpi_put_vars_uchar_all(int ncid, 
-                             int varid, 
+int ncmpi_put_vars_uchar_all(int ncid,
+                             int varid,
                              const MPI_Offset start[],
-                             const MPI_Offset count[], 
+                             const MPI_Offset count[],
                              const MPI_Offset stride[],
                              unsigned char *up)
 
-int ncmpi_get_vars_uchar_all(int ncid, 
-                             int varid, 
+int ncmpi_get_vars_uchar_all(int ncid,
+                             int varid,
                              const MPI_Offset start[],
                              const MPI_Offset count[],
                              const MPI_Offset stride[],
