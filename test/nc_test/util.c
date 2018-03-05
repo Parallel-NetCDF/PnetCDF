@@ -49,7 +49,7 @@ inRange_uchar(const int     cdf_format,
 {
     /* check value of type xtype if within uchar range */
 
-    if (cdf_format < NC_FORMAT_CDF5 && xtype == NC_BYTE) {
+    if (cdf_format < NC_FORMAT_NETCDF4 && xtype == NC_BYTE) {
         /* netCDF specification make a special case for type conversion between
          * uchar and NC_BYTE: do not check for range error. See
          * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
@@ -1064,6 +1064,8 @@ s_nc_type(nc_type xtype)
     return "";
 }
 
+#ifndef BUILD_DRIVER_NC4
+/* NetCDF contains nctypelen, do not define if using nc4 */
 int
 nctypelen(nc_type xtype)
 {
@@ -1082,6 +1084,7 @@ nctypelen(nc_type xtype)
         default:         return -1;
     }
 }
+#endif
 
 MPI_Datatype
 nc_mpi_type(nc_type xtype)

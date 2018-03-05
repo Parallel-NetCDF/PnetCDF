@@ -28,7 +28,8 @@ NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 TESTPROGRAMS =  simple_xy \
 				pres_temp_4D_wr \
 				pres_temp_4D_rd \
-				varn_contig 
+				varn_contig \
+				varn_int
 
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4

@@ -233,7 +233,7 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int default_format, rank, status=NC_NOERR, err;
+    int default_format, format, rank, status=NC_NOERR, err;
     int safe_mode=0, mpireturn, root_cmode;
     char *env_str;
     MPI_Info combined_info;
@@ -277,6 +277,18 @@ ncmpi_create(MPI_Comm    comm,
         DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
     }
 
+    /* Set the file format version based on the create mode, cmode */
+    ncmpi_inq_default_format(&default_format);
+    if (cmode & NC_64BIT_DATA) {
+        format = NC_FORMAT_CDF5;
+    } else if (cmode & NC_64BIT_OFFSET) {
+        format = NC_FORMAT_CDF2;
+    } else if (cmode & NC_NETCDF4) {
+        format = NC_FORMAT_NETCDF4;
+    } else {
+        format = default_format;
+    }
+
     if (safe_mode) { /* sync status among all processes */
         err = status;
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
@@ -306,7 +318,7 @@ ncmpi_create(MPI_Comm    comm,
 #endif
     {
 #ifdef BUILD_DRIVER_NC4
-    if (cmode & NC_NETCDF4)
+    if (format == NC_FORMAT_NETCDF4)
         driver = nc4io_inq_driver();
     else
 #endif
@@ -359,6 +371,7 @@ ncmpi_create(MPI_Comm    comm,
     pncp->vars       = NULL;
     pncp->flag       = NC_MODE_DEF | NC_MODE_CREATE;
     pncp->ncp        = ncp;
+    pncp->format = format;
 
     if (safe_mode)         pncp->flag |= NC_MODE_SAFE;
     /* if (enable_foo_driver) pncp->flag |= NC_MODE_BB; */
@@ -368,18 +381,6 @@ ncmpi_create(MPI_Comm    comm,
      * for a driver to duplicate it again.
      */
     MPI_Comm_dup(comm, &pncp->comm);
-
-    /* set the file format version based on the create mode, cmode */
-    ncmpi_inq_default_format(&default_format);
-    if (cmode & NC_64BIT_DATA) {
-        pncp->format = NC_FORMAT_CDF5;
-    } else if (cmode & NC_64BIT_OFFSET) {
-        pncp->format = NC_FORMAT_CDF2;
-    } else if (cmode & NC_NETCDF4) {
-        pncp->format = NC_FORMAT_NETCDF4;
-    } else {
-        pncp->format = default_format;
-    }
 
     /* add to PNCList */
     err = add_to_PNCList(pncp, *ncidp);
@@ -495,24 +496,22 @@ ncmpi_open(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-        /* TODO: currently we only have ncmpio driver. Need to add other
-         * drivers once they are available
-         */
-        if (format == NC_FORMAT_CLASSIC ||
-            format == NC_FORMAT_CDF2 ||
-            format == NC_FORMAT_CDF5) {
+    /* TODO: currently we only have ncmpio driver. Need to add other
+        * drivers once they are available
+        */
+    if (format == NC_FORMAT_CLASSIC ||
+        format == NC_FORMAT_CDF2 ||
+        format == NC_FORMAT_CDF5) {
         driver = ncmpio_inq_driver();
     }
+#ifdef BUILD_DRIVER_NC4
     else if (format == NC_FORMAT_NETCDF4_CLASSIC) {
-        //fprintf(stderr,"NC_FORMAT_NETCDF4_CLASSIC is not yet supported\n");
-        //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
         driver = nc4io_inq_driver();
     }
     else if (format == NC_FORMAT_NETCDF4) {
-        //fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
-        //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
         driver = nc4io_inq_driver();
     }
+#endif
     else { /* unrecognized file format */
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
@@ -1319,6 +1318,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
     /* Make sure only valid format is set. */
     if (format != NC_FORMAT_CLASSIC &&
         format != NC_FORMAT_CDF2 &&
+        format != NC_FORMAT_NETCDF4 &&
         format != NC_FORMAT_CDF5) {
         DEBUG_RETURN_ERROR(NC_EINVAL)
     }

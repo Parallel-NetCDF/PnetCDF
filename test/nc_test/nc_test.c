@@ -147,7 +147,7 @@ main(int argc, char *argv[])
     strcpy(testfile, "test.nc");    /* read-only testfile */
     strcpy(scratch, "scratch.nc");  /* writable scratch file */
 
-    while ((c = getopt(argc, argv, "25hrn:d:v")) != -1)
+    while ((c = getopt(argc, argv, "245hrn:d:v")) != -1)
       switch(c) {
 	case 'r':		/* just perform read-only tests */
 	  read_only = 1;
@@ -160,6 +160,9 @@ main(int argc, char *argv[])
 	  break;
 	case '2':
 	  cdf_format = 2;
+	  break;
+	case '4':
+	  cdf_format = 4;
 	  break;
 	case '5':
 	  cdf_format = 5;
@@ -190,6 +193,8 @@ main(int argc, char *argv[])
         ncmpi_set_default_format(NC_FORMAT_CDF2, NULL);
     else if (cdf_format == 5)
         ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
+    else if (cdf_format == 4)
+        ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
     else
         ncmpi_set_default_format(NC_FORMAT_CLASSIC, NULL);
 

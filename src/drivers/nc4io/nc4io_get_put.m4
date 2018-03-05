@@ -17,14 +17,14 @@ dnl
 define(`GETATTTYPE',dnl
 `dnl
     ifelse($1, `MPI_CHAR', , `else ')if (itype == $1){
-        err = nc_get_att_$2(nc4p->ncid, varid, name, ($3*) buf);
+        err = ifelse($1, `MPI_DATATYPE_NULL', `nc_get_att', `nc_get_att_')$2(nc4p->ncid, varid, name, ($3*) buf);
     }
 ')dnl
 dnl
 define(`PUTATTTYPE',dnl
 `dnl
     ifelse($1, `MPI_CHAR', , `else ')if (itype == $1){
-        err = nc_put_att_$2(nc4p->ncid, varid, name, len, ifelse($1, `MPI_CHAR', , `xtype, ')($3*) value);
+        err = ifelse($1, `MPI_DATATYPE_NULL', `nc_put_att', `nc_put_att_')$2(nc4p->ncid, varid, name, ifelse($1, `MPI_CHAR', , `xtype, ')len, ($3*) value);
     }
 ')dnl
 dnl
@@ -52,6 +52,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_SHORT', `ushort', `unsigned short')', dnl
                `(`MPI_INT', `int', `int')', dnl
                `(`MPI_UNSIGNED', `uint', `unsigned int')', dnl
+               `(`MPI_LONG', `long', `long')', dnl
                `(`MPI_FLOAT', `float', `float')', dnl
                `(`MPI_DOUBLE', `double', `double')', dnl
                `(`MPI_LONG_LONG_INT', `longlong', `long long')', dnl
@@ -70,6 +71,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_SHORT', `ushort', `unsigned short')', dnl
                `(`MPI_INT', `int', `int')', dnl
                `(`MPI_UNSIGNED', `uint', `unsigned int')', dnl
+               `(`MPI_LONG', `long', `long')', dnl
                `(`MPI_FLOAT', `float', `float')', dnl
                `(`MPI_DOUBLE', `double', `double')', dnl
                `(`MPI_LONG_LONG_INT', `longlong', `long long')', dnl
@@ -80,26 +82,26 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 dnl
 define(`CONVERT',dnl
 `dnl
-    if ($1 != NULL){
-        /* Allocate sstart, scount, sstride, simap */
-        s$1 = (size_t*)NCI_Malloc(sizeof(size_t) * ndim);
-        if (s$1 == NULL){
-            DEBUG_RETURN_ERROR(NC_ENOMEM)
-        }
+        if ($1 != NULL){
+            /* Allocate s$1 */
+            s$1 = (size_t*)NCI_Malloc(sizeof(size_t) * ndim);
+            if (s$1 == NULL){
+                DEBUG_RETURN_ERROR(NC_ENOMEM)
+            }
 
-        /* Convert to size_t */
-        for(i = 0; i < ndim; i++){
-            s$1[i] = (size_t) $1[i];
+            /* Convert to size_t */
+            for(i = 0; i < ndim; i++){
+                s$1[i] = (size_t) $1[i];
+            }
         }
-    }
 ')dnl
 dnl
 define(`FREE',dnl
 `dnl
-    if ($1 != NULL){
-        /* Free s$1 */
-        NCI_Free(s$1);
-    }
+        if ($1 != NULL){
+            /* Free s$1 */
+            NCI_Free(s$1);
+        }
 ')dnl
 dnl
 
@@ -140,6 +142,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_DOUBLE', `double', `double')', dnl
                `(`MPI_LONG_LONG_INT', `longlong', `long long')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
+               `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `GETATTTYPE(translit(dt, `()'))')dnl
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
@@ -174,6 +177,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_DOUBLE', `double', `double')', dnl
                `(`MPI_LONG_LONG_INT', `longlong', `long long')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
+               `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `PUTATTTYPE(translit(dt, `()'))')dnl
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
@@ -218,12 +222,21 @@ nc4io_get_var(void             *ncdp,
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Convert to MPI_Offset if not scalar */
+    if(ndim > 0){
 foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
+    }
+    else{
+        sstart = scount = sstride = simap = NULL;
+    }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Free buffers if needed */
+    if(ndim > 0){
 foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
+    }
 
     return NC_NOERR;
 }
@@ -266,12 +279,21 @@ nc4io_put_var(void             *ncdp,
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Convert to MPI_Offset if not scalar */
+    if(ndim > 0){
 foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
+    }
+    else{
+        sstart = scount = sstride = simap = NULL;
+    }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-
+    
+    /* Free buffers if needed */
+    if(ndim > 0){
 foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
+    }
 
     return NC_NOERR;
 }
