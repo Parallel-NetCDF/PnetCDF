@@ -27,6 +27,10 @@ ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
 rm -f ${TESTOUTDIR}/tooth-fairy.nc
+${TESTSEQRUN} ./nc_test -4 -d ${TESTOUTDIR}
+${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+
+rm -f ${TESTOUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 

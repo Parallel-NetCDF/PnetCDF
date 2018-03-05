@@ -261,15 +261,53 @@ nc4io_get_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    int i, err;
+    int i, j, ndim, err;
+    int elsize;
+    size_t putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
+    /* Get variable dimensionality */
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
+    if (err != NC_NOERR){ 
+        DEBUG_RETURN_ERROR(err)
+    }
+
+    /* 
+     * Get element size 
+     * Use size of buftype for high-level API
+     * Flexible APi not supported
+     */
+    if (bufcount == -1){
+        MPI_Type_size(buftype, &elsize);
+    }
+    else{
+        nc_type type;
+
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+
+        err = nc_inq_vartype(nc4p->ncid, varid, &type);
+        if (err != NC_NOERR){ 
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+        
+        elsize = nc4io_nc_type_size(type);
+    }
+
     /* Call nc4io_get_var for N times */
     for(i = 0; i < num; i++){
         err = nc4io_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
         if (err != NC_NOERR){
             return err;
         }
+        
+        /* Calculate the size of each put_var */
+        putsize = (size_t)elsize;
+        for(j = 0; j < ndim; j++){
+            putsize *= counts[i][j];
+        }
+
+        /* Move buffer pointer */
+        buf = (void*)(((char*)buf) + putsize);
     }
 
     return NC_NOERR;
@@ -286,8 +324,37 @@ nc4io_put_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    int i, err;
+    int i, j, ndim, err;
+    int elsize;
+    size_t putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* Get variable dimensionality */
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
+    if (err != NC_NOERR){ 
+        DEBUG_RETURN_ERROR(err)
+    }
+
+    /* 
+     * Get element size 
+     * Use size of buftype for high-level API
+     * Flexible APi not supported
+     */
+    if (bufcount == -1){
+        MPI_Type_size(buftype, &elsize);
+    }
+    else{
+        nc_type type;
+
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+
+        err = nc_inq_vartype(nc4p->ncid, varid, &type);
+        if (err != NC_NOERR){ 
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+        
+        elsize = nc4io_nc_type_size(type);
+    }
     
     /* Call nc4io_put_var for N times */
     for(i = 0; i < num; i++){
@@ -295,6 +362,15 @@ nc4io_put_varn(void              *ncdp,
         if (err != NC_NOERR){
             return err;
         }
+        
+        /* Calculate the size of each put_var */
+        putsize = (size_t)elsize;
+        for(j = 0; j < ndim; j++){
+            putsize *= counts[i][j];
+        }
+
+        /* Move buffer pointer */
+        buf = (void*)(((char*)buf) + putsize);
     }
 
     return NC_NOERR;

@@ -105,11 +105,6 @@ nc4io_open(MPI_Comm     comm,
     err = ncmpi_inq_file_format(path, &format);
     if (err != NC_NOERR) return err;
 
-    /* Read only driver */
-    if (omode & NC_WRITE){
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-    }
-
     /* Open with netcdf */
     err = nc_open_par(path, omode | NC_MPIIO, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -427,9 +422,9 @@ nc4io_cancel(void *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* TODO: Nonblocking IO */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
+    /* Since we treat nonblocking IO as blocking IO 
+     * We don't need to wait for anything
+     */
     return NC_NOERR;
 }
 
@@ -443,9 +438,9 @@ nc4io_wait(void *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
-    /* TODO: Nonblocking IO */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
+    /* Since we treat nonblocking IO as blocking IO 
+     * We don't need to wait for anything
+     */
     return NC_NOERR;
 }
 
