@@ -115,7 +115,7 @@ int test_cdf2(char *filename)
 #ifdef BUILD_DRIVER_DW
     if (dw_enabled) {
         CHECK_ERR
-        err = ncmpi_sync(ncid);
+        err = ncmpi_flush(ncid);
     }
 #endif
     EXP_ERR(NC_ERANGE)
@@ -131,7 +131,7 @@ int test_cdf2(char *filename)
 #ifdef BUILD_DRIVER_DW
     if (dw_enabled) {
         CHECK_ERR
-        err = ncmpi_sync(ncid);
+        err = ncmpi_flush(ncid);
     }
 #endif
     EXP_ERR(NC_ERANGE)
@@ -211,7 +211,7 @@ int test_cdf5(char *filename)
 #ifdef BUILD_DRIVER_DW
     if (dw_enabled){
         CHECK_ERR
-        err = ncmpi_sync(ncid);
+        err = ncmpi_flush(ncid);
     }
 #endif
     EXP_ERR(NC_ERANGE)
@@ -221,7 +221,7 @@ int test_cdf5(char *filename)
 #ifdef BUILD_DRIVER_DW
     if (dw_enabled){
         CHECK_ERR
-        err = ncmpi_sync(ncid);
+        err = ncmpi_flush(ncid);
     }
 #endif
     EXP_ERR(NC_ERANGE)

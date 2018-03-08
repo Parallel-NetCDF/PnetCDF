@@ -21,6 +21,7 @@ static PNC_driver ncmpio_driver = {
     ncmpio__enddef,
     ncmpio_redef,
     ncmpio_sync,
+    ncmpio_flush,
     ncmpio_abort,
     ncmpio_set_fill,
     ncmpio_inq,

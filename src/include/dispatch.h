@@ -52,6 +52,7 @@ struct PNC_driver {
     int (*_enddef)(void*,MPI_Offset,MPI_Offset,MPI_Offset,MPI_Offset);
     int (*redef)(void*);
     int (*sync)(void*);
+    int (*flush)(void*);
     int (*abort)(void*);
     int (*set_fill)(void*,int,int*);
     int (*inq)(void*,int*,int*,int*,int*);

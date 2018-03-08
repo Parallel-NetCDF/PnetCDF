@@ -16,6 +16,7 @@
   public :: nf90mpi_create,   nf90mpi_open, &
             nf90mpi_set_fill, nf90mpi_redef, &
             nf90mpi_enddef,   nf90mpi_sync, &
+            nf90mpi_flush, &
             nf90mpi_abort,    nf90mpi_close, &
             nf90mpi_delete,   nf90mpi_set_default_format, &
             nf90mpi_sync_numrecs
@@ -97,6 +98,7 @@
         nfmpi_set_default_format, &
         nfmpi_inq_default_format, &
         nfmpi_sync, &
+        nfmpi_flush, &
         nfmpi_sync_numrecs, &
         nfmpi_abort, &
         nfmpi_close, &

@@ -442,6 +442,62 @@ TestFunc(sync)(AttVarArgs)
 
 
 /*
+ * Test APIFunc(flush)
+ *    try with bad handle, check error
+ *    try in define mode, check error
+ *    try writing with one handle, reading with another on same netCDF
+ */
+int
+TestFunc(flush)(AttVarArgs)
+{
+    int ncidw;         /* netcdf id for writing */
+    int ncidr;         /* netcdf id for reading */
+    int nok=0, err;
+
+    /* BAD_ID test */
+    err = APIFunc(flush)(BAD_ID);
+    IF (err != NC_EBADID)
+        EXPECT_ERR(NC_EBADID, err)
+    ELSE_NOK
+
+    /* create scratch file & try APIFunc(flush) in define mode */
+    err = FileCreate(scratch, NC_NOCLOBBER, &ncidw);
+    IF (err != NC_NOERR) {
+        error("create: %s", APIFunc(strerror)(err));
+        return nok;
+    }
+
+    /* write using same handle */
+    def_dims(ncidw);
+    Def_Vars(ncidw, numVars);
+    Put_Atts(ncidw, numGatts, numVars);
+    err = APIFunc(enddef)(ncidw);
+    IF (err != NC_NOERR)
+        error("enddef: %s", APIFunc(strerror)(err));
+    Put_Vars(ncidw, numVars);
+    err = APIFunc(flush)(ncidw);
+    IF (err != NC_NOERR)
+        error("flush of ncidw failed: %s", APIFunc(strerror)(err));
+    ELSE_NOK
+
+    /* Data should be avaiable for reading for the same handle after flush */
+    check_dims(ncidr);
+    Check_Atts(ncidr, numGatts, numVars);
+    Check_Vars(ncidr, numVars);
+
+    /* close both handles */
+    err = APIFunc(close)(ncidw);
+    IF (err != NC_NOERR)
+        error("close: %s", APIFunc(strerror)(err));
+
+    err = FileDelete(scratch, info);
+    IF (err != NC_NOERR)
+        error("remove of %s failed", scratch);
+    return nok;
+}
+
+
+/*
  * Test APIFunc(abort)
  *    try with bad handle, check error
  *    try in define mode before anything written, check that file was deleted
