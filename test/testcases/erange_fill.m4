@@ -207,7 +207,7 @@ int test_erange_put_$1_$2(char* filename) {
 #ifdef BUILD_DRIVER_DW
     if (dw_enabled) {
         CHECK_ERR
-        err = ncmpi_sync(ncid);
+        err = ncmpi_flush(ncid);
     }
 #endif
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')
@@ -215,7 +215,7 @@ int test_erange_put_$1_$2(char* filename) {
 #ifdef BUILD_DRIVER_DW
     if (dw_enabled) {
         CHECK_ERR
-        err = ncmpi_sync(ncid);
+        err = ncmpi_flush(ncid);
     }
 #endif
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')

@@ -292,6 +292,9 @@ extern int
 ncdwio_sync(void *ncdp);
 
 extern int
+ncdwio_flush(void *ncdp);
+
+extern int
 ncdwio_abort(void *ncdp);
 
 extern int

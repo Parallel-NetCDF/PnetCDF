@@ -28,6 +28,7 @@
  * ncmpi_inq_var_fill()     : dispatcher->inq()
  *
  * ncmpi_sync()             : dispatcher->sync()
+ * ncmpi_flush()             : dispatcher->flush()
  * ncmpi_sync_numrecs()     : dispatcher->sync_numrecs()
  *
  */
@@ -369,6 +370,18 @@ ncfoo_sync(void *ncdp)
     NC_foo *foo = (NC_foo*)ncdp;
 
     err = foo->driver->sync(foo->ncp);
+    if (err != NC_NOERR) return err;
+
+    return NC_NOERR;
+}
+
+int
+ncfoo_flush(void *ncdp)
+{
+    int err;
+    NC_foo *foo = (NC_foo*)ncdp;
+
+    err = foo->driver->flush(foo->ncp);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

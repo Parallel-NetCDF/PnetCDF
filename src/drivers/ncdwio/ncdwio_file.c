@@ -28,6 +28,7 @@
  * ncmpi_inq_var_fill()     : dispatcher->inq()
  *
  * ncmpi_sync()             : dispatcher->sync()
+ * ncmpi_flush()             : dispatcher->flush()
  * ncmpi_sync_numrecs()     : dispatcher->sync_numrecs()
  *
  */
@@ -851,6 +852,24 @@ ncdwio_sync(void *ncdp)
     }
 
     err = ncdwp->ncmpio_driver->sync(ncdwp->ncp);
+    if (err != NC_NOERR) return err;
+
+    return NC_NOERR;
+}
+
+int
+ncdwio_flush(void *ncdp)
+{
+    int err;
+    NC_dw *ncdwp = (NC_dw*)ncdp;
+
+    /* Flush the burst buffer */
+    if (ncdwp->inited) {
+        err = ncdwio_log_flush(ncdwp);
+        if (err != NC_NOERR) return err;
+    }
+
+    err = ncdwp->ncmpio_driver->flush(ncdwp->ncp);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

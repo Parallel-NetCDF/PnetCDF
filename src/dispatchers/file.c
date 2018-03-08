@@ -818,6 +818,24 @@ ncmpi_sync(int ncid)
     return pncp->driver->sync(pncp->ncp);
 }
 
+/*----< ncmpi_flush() >-------------------------------------------------------*/
+/* This API is a collective subroutine, and must be called in data mode, no
+ * matter if it is in collective or independent data mode.
+ */
+int
+ncmpi_flush(int ncid)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_flush() */
+    return pncp->driver->flush(pncp->ncp);
+}
+
 /*----< ncmpi_abort() >------------------------------------------------------*/
 /* This is a collective subroutine. */
 int

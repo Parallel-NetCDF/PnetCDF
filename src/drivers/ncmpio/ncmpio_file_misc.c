@@ -14,6 +14,7 @@
  * ncmpi_end_indep_data()   : dispatcher->end_indep_data()
  * ncmpi_inq()              : dispatcher->inq()
  * ncmpi_inq_xxx()          : dispatcher->inq_misc()
+ * ncmpi_flush()             : dispatcher->flush()
  */
 
 #ifdef HAVE_CONFIG_H
@@ -460,5 +461,16 @@ ncmpi_delete(const char *filename,
     if (mpireturn != MPI_SUCCESS)
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
     return err;
+}
+
+
+/*----< ncmpio_flush() >------------------------------------------------------*/
+/* This API is a collective subroutine, and must be called in data mode
+ */
+int
+ncmpio_flush(void *ncdp)
+{
+    /* Flush has no effect in ncmpio */
+    return NC_NOERR;
 }
 

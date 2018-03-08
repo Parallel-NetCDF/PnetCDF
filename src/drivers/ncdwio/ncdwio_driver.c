@@ -20,6 +20,7 @@ static PNC_driver ncdwio_driver = {
     ncdwio__enddef,
     ncdwio_redef,
     ncdwio_sync,
+    ncdwio_flush,
     ncdwio_abort,
     ncdwio_set_fill,
     ncdwio_inq,

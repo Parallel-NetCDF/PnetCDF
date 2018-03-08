@@ -678,6 +678,9 @@ extern int
 ncmpi_sync(int ncid);
 
 extern int
+ncmpi_flush(int ncid);
+
+extern int
 ncmpi_sync_numrecs(int ncid);
 
 extern int

@@ -43,6 +43,9 @@ extern int
 ncfoo_sync(void *ncdp);
 
 extern int
+ncfoo_flush(void *ncdp);
+
+extern int
 ncfoo_abort(void *ncdp);
 
 extern int
