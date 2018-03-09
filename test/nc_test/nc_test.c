@@ -396,10 +396,21 @@ main(int argc, char *argv[])
 	    /* NC_TEST(ncmpi_enddef);  redundant, as it calls test_ncmpi_redef() */
 	    NC_TEST2(ncmpi_sync, numGatts, numVars);
 	    NC_TEST2(ncmpi_abort, numGatts, numVars);
+        NC_TEST1(ncmpi_def_dim, numVars);
     }
-	NC_TEST1(ncmpi_def_dim, numVars);
-	NC_TEST(ncmpi_rename_dim);
-	NC_TEST1(ncmpi_def_var, numVars);
+    else{
+        NC_TEST2(ncmpi_redef4, numGatts, numVars);
+        NC_TEST2(ncmpi_sync4, numGatts, numVars);
+        NC_TEST2(ncmpi_abort, numGatts, numVars);
+        NC_TEST1(ncmpi_def_dim4, numVars);
+    }
+    NC_TEST(ncmpi_rename_dim);
+    if (cdf_format != 4){
+	    NC_TEST1(ncmpi_def_var, numVars);
+    }
+    else{
+        NC_TEST1(ncmpi_def_var4, numVars);
+    }
 	NC_TEST1(ncmpi_put_var_text, numVars);
 	NC_TEST1(ncmpi_put_var_schar, numVars);
 	NC_TEST1(ncmpi_put_var_short, numVars);
@@ -467,6 +478,9 @@ main(int argc, char *argv[])
     if (cdf_format != 4){
 	    NC_TEST1(ncmpi_rename_var, numVars);
     }
+    else{
+        NC_TEST1(ncmpi_rename_var4, numVars);
+    }
 	NC_TEST2(ncmpi_put_att_text, numGatts, numVars);
 	NC_TEST2(ncmpi_put_att_schar, numGatts, numVars);
 	NC_TEST2(ncmpi_put_att_short, numGatts, numVars);
@@ -483,14 +497,18 @@ main(int argc, char *argv[])
 	NC_TEST2(ncmpi_copy_att, numGatts, numVars);
     if (cdf_format != 4){
 	    NC_TEST2(ncmpi_rename_att, numGatts, numVars);
+        NC_TEST2(ncmpi_del_att, numGatts, numVars);
+        NC_TEST1(ncmpi_set_fill, numVars);
     }
-	NC_TEST2(ncmpi_del_att, numGatts, numVars);
-    if (cdf_format != 4){
-	    NC_TEST1(ncmpi_set_fill, numVars);
+    else{
+        NC_TEST2(ncmpi_rename_att4, numGatts, numVars);
+        NC_TEST2(ncmpi_del_att4, numGatts, numVars);
+        NC_TEST1(ncmpi_set_fill4, numVars);
     }
 	NC_TEST(ncmpi_delete);
 
     /* test nonblocking APIs */
+    /* TODO: enable tests when nc4 supports nonblocking */
     if (cdf_format != 4){
         NC_TEST1(ncmpi_iput_var_text, numVars);
         NC_TEST1(ncmpi_iput_var_schar, numVars);
