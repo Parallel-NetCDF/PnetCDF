@@ -174,7 +174,7 @@ integer, intent(in) :: ncid
 integer :: nf90mpi_flush
 .fi
 .sp
-Unless the
+Flush the data in the buffer.
 .RE
 .HP
 \fBfunction nf90mpi_abort(\fIncid\fP)\fR
