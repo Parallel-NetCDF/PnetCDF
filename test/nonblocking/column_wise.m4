@@ -67,7 +67,6 @@
 #include <stdlib.h>
 #include <string.h> /* strcpy() */
 #include <libgen.h> /* basename() */
-#include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>
 

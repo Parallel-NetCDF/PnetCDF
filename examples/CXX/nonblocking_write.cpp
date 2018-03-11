@@ -52,11 +52,11 @@ static void
 usage(char *argv0)
 {
     cerr <<
-    "Usage: %s [-h] | [-q] [file_name] [len]\n"
+    "Usage: %s [-h] | [-q] [-l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
+    "       [-l len] size of each dimension of the local array\n"
     "       [filename] output netCDF file name\n"
-    "       [len] size of each dimension of the local array\n"
     << argv0;
 }
 
@@ -104,22 +104,20 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hq")) != EOF)
+    while ((i = getopt(argc, argv, "hql:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
+                      break;
+            case 'l': len = atoi(optarg);
                       break;
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc >= 1) snprintf(filename, 256, "%s", argv[0]);
-    else           strcpy(filename, "testfile.nc");
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
-    len = 10;
-    if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
     len = (len <= 0) ? 10 : len;
 
     for (i=0; i<NDIMS; i++) psizes[i] = 0;
