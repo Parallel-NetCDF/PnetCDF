@@ -320,11 +320,11 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h | -q] len file_name\n"
+    "Usage: %s [-h] | [-q] [-l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode\n"
-    "       len: local variable of size len x len (default 10)\n"
-    "       filename: output netCDF file name (default ./testfile.nc)\n";
+    "       [-l len]: local variable of size len x len (default 10)\n"
+    "       [filename]: output netCDF file name (default ./testfile.nc)\n";
     fprintf(stderr, help, argv0);
 }
 
@@ -343,23 +343,21 @@ int main(int argc, char** argv) {
     MPI_Comm_size(comm, &nprocs);
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hq")) != EOF)
+    while ((i = getopt(argc, argv, "hql:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
+                      break;
+            case 'l': len = atoi(optarg);
                       break;
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
-    len = 10;
-    if (argc > 0) len = strtoll(argv[0],NULL,10);
     len = (len <= 0) ? 10 : len;
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
 
     nerrs += benchmark_write(filename, len, &w_size, &w_info_used, timing);
     nerrs += benchmark_read (filename, len, &r_size, &r_info_used, timing+5);

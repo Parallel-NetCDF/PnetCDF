@@ -14,7 +14,6 @@ dnl
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* strcpy(), strncpy() */
-#include <unistd.h> /* getopt() */
 #include <libgen.h> /* basename() */
 #include <mpi.h>
 #include <pnetcdf.h>
