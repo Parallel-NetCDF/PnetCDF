@@ -378,10 +378,8 @@ int main(int argc, char **argv) {
                           err = 1;
             }
         }
-        argc -= optind;
-        argv += optind;
-        if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
-        else           strcpy(filename, "testfile.nc");
+        if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+        else                      snprintf(filename, 256, "%s", argv[optind]);
     }
     MPI_Bcast(&err, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (err == 1) {
