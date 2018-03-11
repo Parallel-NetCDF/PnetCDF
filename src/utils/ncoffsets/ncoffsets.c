@@ -1838,15 +1838,13 @@ usage(char *cmd)
 int main(int argc, char *argv[])
 {
     extern int optind;
-    char *filename, *cmd, *env_str;
+    char *filename, *env_str;
     int i, j, err, opt;
     int print_var_size=0, print_gap=0, check_gap=0, print_all_rec=0;
     NC *ncp;
     struct fspec *fspecp=NULL;
 
     fspecp = (struct fspec*) calloc(1, sizeof(struct fspec));
-    cmd = (char*) malloc(strlen(argv[0])+1);
-    strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
     while ((opt = getopt(argc, argv, "v:sghqxr")) != EOF) {
@@ -1862,26 +1860,22 @@ int main(int argc, char *argv[])
             case 'x': check_gap = 1;
                       break;
             case 'h':
-            default:  usage(cmd);
+            default:  usage(argv[0]);
                       free(fspecp);
                       return 0;
         }
     }
-    argc -= optind;
-    argv += optind;
-    if (argc != 1) {
-        fprintf(stderr, "%s: missing file name\n", cmd);
-        usage(cmd);
+    if (argv[optind] == NULL) { /* input file name is mandatory */
+        fprintf(stderr, "%s: missing file name\n", argv[0]);
+        usage(argv[0]);
         if (fspecp->varp != NULL) free(fspecp->varp);
         for (i=0; i<fspecp->nlvars; i++)
             free(fspecp->lvars[i]);
         if (fspecp->lvars != NULL) free(fspecp->lvars);
         free(fspecp);
-        free(cmd);
         return 1;
     }
-    free(cmd);
-    filename = argv[0]; /* required argument */
+    filename = argv[optind]; /* required argument */
 
     verbose_debug = 0;
     env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");

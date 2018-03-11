@@ -2213,13 +2213,10 @@ usage(char *argv0)
 int main(int argc, char **argv)
 {
     extern int optind;
-    char filename[512], *cmd, *path;
+    char filename[512], *path;
     int i, omode, fd, status=NC_NOERR;
     NC *ncp=NULL;
     struct stat ncfilestat;
-
-    cmd = (char*) malloc(strlen(argv[0])+1);
-    strcpy(cmd,argv[0]);
 
     /* get command-line arguments */
     verbose = 1;
@@ -2234,18 +2231,16 @@ int main(int argc, char **argv)
             case 'q': verbose = 0;
                       break;
             case 'h':
-            default:  usage(cmd);
-                      free(cmd);
+            default:  usage(argv[0]);
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc != 1) {
-        usage(cmd);
-        free(cmd);
+
+    if (argv[optind] == NULL) { /* input file name is mandatory */
+        usage(argv[0]);
         return 1;
     }
-    snprintf(filename, 512, "%s", argv[0]);
+
+    snprintf(filename, 512, "%s", argv[optind]);
 
     /* remove the file system type prefix name if there is any.
      * For example, when filename = "lustre:/home/foo/testfile.nc", remove
@@ -2342,11 +2337,10 @@ prog_exit:
             printf("File \"%s\" fails to conform with classic CDF file format specifications\n",filename);
             if (repair) {
                 printf("and it has been repaired in place to remove the errors.\n");
-                printf("Please run \"%s %s\" to validate again.\n",cmd,filename);
+                printf("Please run \"%s %s\" to validate again.\n",argv[0],filename);
             }
         }
     }
-    free(cmd);
 
     exit((status == NC_NOERR) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
