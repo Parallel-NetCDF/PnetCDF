@@ -77,6 +77,14 @@ int ncdwio_log_put_var(NC_dw *ncdwp, int varid, const MPI_Offset start[],
         *putsize = size;
     }
 
+    /* Skip empty entries 
+     * Other arguments form upper layer may be invalid in case of 0 size request
+     * skip to prevent unnecessary error
+     */
+    if (size == 0){
+        return NC_NOERR;
+    }
+
     /* Record largest entry size */
     if (ncdwp->maxentrysize < size){
         ncdwp->maxentrysize = size;
@@ -142,6 +150,7 @@ int ncdwio_log_put_var(NC_dw *ncdwp, int varid, const MPI_Offset start[],
         itype = NC_LOG_TYPE_ULONGLONG;
     }
     else { /* Unrecognized type */
+        fprintf(stderr, "Rank: %d, Unrecognized type: %d\n", ncdwp->rank, buftype); fflush(stderr);
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
 

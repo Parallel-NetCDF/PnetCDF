@@ -519,7 +519,7 @@ int ncdwio_log_flush(NC_dw* ncdwp) {
 
     /* Nothing to replay if nothing have been written */
     if (headerp->num_entries == 0){
-        return NC_NOERR;
+        //return NC_NOERR;
     }
 
     /* Replay log file */
