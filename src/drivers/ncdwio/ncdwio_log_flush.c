@@ -81,7 +81,7 @@ int logtype2mpitype(int type, MPI_Datatype *buftype){
 int log_flush(NC_dw *ncdwp) {
     int i, j, lb, ub, err, status = NC_NOERR;
     int *reqids, *stats;
-    int ready, ready_all;
+    int ready, ready_all = 0;
     size_t databufferused, databuffersize, dataread;
     NC_dw_metadataentry *entryp;
     MPI_Offset *start, *count, *stride;
@@ -311,6 +311,7 @@ int log_flush(NC_dw *ncdwp) {
      * In case of collective flush, we must continue to call wait until every process is ready
      */
     if (!ncdwp->isindep){
+        ready = 1;
         while(!ready_all){
             // Participate collective wait
             err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, 0, NULL, NULL, NC_REQ_COLL);
