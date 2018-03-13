@@ -226,13 +226,8 @@ int ncdwio_handle_put_req(NC_dw *ncdwp, int reqid, int *stat){
         return status;
     }
 
-    // Flush the log if corresponding log entry hasn't been flushed
-    if (!req->ready){
-        // check return val
-        ncdwio_log_flush(ncdwp);
-    }
-
-    /* Log module is responsible to update the request obejct when entries are flushed
+    /* Flush is done whenever a wait is called
+     * Log module is responsible to update the request obejct when entries are flushed
      * This should never happen
      * If it do, we have mising log entry or corrupt metadata index
      */
