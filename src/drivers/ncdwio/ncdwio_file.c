@@ -654,18 +654,26 @@ ncdwio_wait(void *ncdp,
     int *swapidx;   // Swap target
     NC_dw *ncdwp = (NC_dw*)ncdp;
 
+    // Flush the log if log is initialized
+    if (ncdwp->inited){
+        err = ncdwio_log_flush(ncdwp);
+        if (status == NC_NOERR){
+            status = err;
+        }
+    }
+
    /*
     * If num_reqs is one of all requests, we don't need to handle request ids
     */
     if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
-        // Cancel all put requests
+        // Wait all put requests
         if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL){
             err = ncdwio_handle_all_put_req(ncdwp);
             if (status == NC_NOERR){
                 status = err;
             }
         }
-        // Cancel all get requests
+        // Wait all get requests
         if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
             err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, num_reqs, NULL, NULL, reqMode);
             if (status == NC_NOERR){
@@ -727,14 +735,7 @@ ncdwio_wait(void *ncdp,
      * ncmpio driver has it's own request id management, so we translate it by dividing the id by 2
      * We need to flush the log so new data can be read
      */
-    if (num_reqs > nput){
-        // Flush the log if log is initialized
-        if (ncdwp->inited){
-            err = ncdwio_log_flush(ncdwp);
-            if (status == NC_NOERR){
-                status = err;
-            }
-        }
+    if (num_reqs > nput || !(ncdwp->isindep)){
         // Translate reqid to ncmpio reqid
         for(i = nput; i < num_reqs; i++){
             req_ids[i] /= 2;
