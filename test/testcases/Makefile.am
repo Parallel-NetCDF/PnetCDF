@@ -51,6 +51,7 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                one_record \
                inq_recsize \
                test_vard \
+               test_vard2 \
                test_vard_rec \
                test_vard_multiple \
                varn_contig \
