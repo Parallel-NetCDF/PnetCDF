@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[256], str[512];
-    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
+    int i, j, rank, nprocs, len=0, ncid, bufsize, verbose=1, err, nerrs=0;
     int *buf[NUM_VARS], psizes[NDIMS], dimids[NDIMS], varids[NUM_VARS];
     double write_timing, max_write_timing, write_bw;
     MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS];
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hq")) != EOF)
+    while ((i = getopt(argc, argv, "hql:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;

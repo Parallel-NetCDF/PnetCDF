@@ -85,7 +85,8 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char filename[256];
-    int i, j, verbose=1, rank, nprocs, err, nerrs=0, myNX, G_NX, myOff, num_reqs;
+    int i, j, verbose=1, rank, nprocs, err, nerrs=0;
+    int myNX, G_NX, myOff, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset start[2], count[2];
     MPI_Info info;
