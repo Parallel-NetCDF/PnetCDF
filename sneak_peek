@@ -40,13 +40,17 @@ This is essentially a placeholder for the next release note ...
 
   o API semantics updates
     * ncmpi_put_vard and ncmpi_get_vard APIs
-      1. Now allow to write and read two or more consecutive variables in a
-         single API call. In this case, argument varid will be the ID of first
-         variable. Argument filetype should be constructed by using the
-         relative distance between any two consecutive variables. See example
-         program examples/C/vard_mvars.c.
+      1. Now allow to write and read two or more variables in a single API
+         call. In this case, argument varid will be the ID of first variable.
+         Argument filetype should be constructed by using the relative
+         distance between any two consecutive variables. See example program
+         examples/C/vard_mvars.c.
       2. When argument filetype is MPI_DATATYPE_NULL, the request is considered
          a zero-length request.
+      3. Limitation of vard APIs: No data type conversion will be performed.
+         The element data type of both filetype and buftype must be the same as
+         the variable external NC data type. The element data type must be the
+         same across the variables covered by the filetype and buftype.
 
   o New error code precedence
     * none
