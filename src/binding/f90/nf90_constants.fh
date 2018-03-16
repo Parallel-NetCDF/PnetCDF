@@ -244,7 +244,7 @@
       NF90_EREAD                    = NF_EREAD                    , & ! Unknown error in reading file
       NF90_EWRITE                   = NF_EWRITE                   , & ! Unknown error in writting to file
       NF90_EOFILE                   = NF_EOFILE                   , & ! file open/creation failed
-      NF90_EMULTITYPES              = NF_EMULTITYPES              , & ! Multiple types used in memory data
+      NF90_EMULTITYPES              = NF_EMULTITYPES              , & ! Multiple etypes used in MPI datatype
       NF90_EIOMISMATCH              = NF_EIOMISMATCH              , & ! Input/Output data amount mismatch
       NF90_ENEGATIVECNT             = NF_ENEGATIVECNT             , & ! Negative count is specified
       NF90_EUNSPTETYPE              = NF_EUNSPTETYPE              , & ! Unsupported etype in memory MPI datatype
