@@ -441,7 +441,7 @@
       PARAMETER (NF_EREAD                   = -205)   ! Unknown error in reading file
       PARAMETER (NF_EWRITE                  = -206)   ! Unknown error in writing to file
       PARAMETER (NF_EOFILE                  = -207)   ! file open/creation failed
-      PARAMETER (NF_EMULTITYPES             = -208)   ! Multiple types used in memory data
+      PARAMETER (NF_EMULTITYPES             = -208)   ! Multiple etypes used in MPI datatype
       PARAMETER (NF_EIOMISMATCH             = -209)   ! Input/Output data amount mismatch
       PARAMETER (NF_ENEGATIVECNT            = -210)   ! Negative count is specified
       PARAMETER (NF_EUNSPTETYPE             = -211)   ! Unsupported etype in memory MPI datatype
