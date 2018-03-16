@@ -114,18 +114,6 @@ int main(int argc, char **argv) {
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         buf[1][j*NX+i] = 1000 + rank*100 + j*10 + i;
 
-    /* construct buftype: concatenate two separated buffers */
-    array_of_blocklengths[0] = NY*NX;
-    array_of_blocklengths[1] = NY*NX;
-    array_of_displacements[0] = 0;
-    MPI_Get_address(buf[0], &a0);
-    MPI_Get_address(buf[1], &a1);
-    array_of_displacements[1] = a1 - a0;
-    vtype[0] = vtype[1] = MPI_INT;
-    MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
-                           vtype, &buftype);
-    MPI_Type_commit(&buftype);
-
     /* create a new NetCDF file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
                        &ncid); CHECK_ERR
@@ -144,9 +132,46 @@ int main(int argc, char **argv) {
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* test MPI_DATATYPE_NULL as filetype and buftype */
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, buftype); CHECK_ERR
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0,
+                             buftype); CHECK_ERR
 
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL); CHECK_ERR
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0,
+                             MPI_DATATYPE_NULL); CHECK_ERR
+
+    /* create a datatype contains 2 different etypes */
+    array_of_blocklengths[0]  = 1;
+    array_of_blocklengths[1]  = 1;
+    array_of_displacements[0] = 0;
+    array_of_displacements[1] = sizeof(int);
+    vtype[0] = MPI_INT;
+    vtype[1] = MPI_FLOAT;
+    MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
+                           vtype, &filetype);
+    MPI_Type_commit(&filetype);
+    MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
+                           vtype, &buftype);
+    MPI_Type_commit(&buftype);
+
+    /* test NC_EMULTITYPES */
+    err = ncmpi_put_vard_all(ncid, varid[0], filetype, buf[0], 2, MPI_INT); EXP_ERR(NC_EMULTITYPES)
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT,  buf[0], 2, buftype); EXP_ERR(NC_EMULTITYPES)
+    /* test NC_ETYPESIZE_MISMATCH */
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_INT);   EXP_ERR(NC_ETYPESIZE_MISMATCH)
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 1, MPI_SHORT); EXP_ERR(NC_ETYPE_MISMATCH)
+    MPI_Type_free(&filetype);
+    MPI_Type_free(&buftype);
+
+    /* construct buftype: concatenate two separated buffers */
+    array_of_blocklengths[0] = NY*NX;
+    array_of_blocklengths[1] = NY*NX;
+    array_of_displacements[0] = 0;
+    MPI_Get_address(buf[0], &a0);
+    MPI_Get_address(buf[1], &a1);
+    array_of_displacements[1] = a1 - a0;
+    vtype[0] = vtype[1] = MPI_INT;
+    MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
+                           vtype, &buftype);
+    MPI_Type_commit(&buftype);
 
     /* construct two MPI derived data types */
     start[0] = 0;  start[1] = NX*rank;
