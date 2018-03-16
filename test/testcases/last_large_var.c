@@ -45,14 +45,49 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h> /* basename() */
-#include <pnetcdf.h>
 
+/* This program can also be used to test NetCDF.
+ * Add #define TEST_NETCDF and compile with command:
+ * gcc -I/netcdf/path/include last_large_var.c -o last_large_var -L/netcdf/path/lib -lnetcdf
+ */
+#ifdef TEST_NETCDF
+#include <netcdf.h>
+#define CHECK_ERR { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,nc_strerror(err)); \
+    } \
+}
+#define EXP_ERR(exp) { \
+    if (err != exp) { \
+        nerrs++; \
+        printf("Error at line %d in %s: expecting %d but got %d\n", \
+        __LINE__,__FILE__,exp, err); \
+    } \
+}
+#define ncmpi_create(a,b,c,d,e)	nc_create(b,c,e)
+#define ncmpi_def_dim		nc_def_dim
+#define ncmpi_def_var		nc_def_var
+#define ncmpi_set_fill		nc_set_fill
+#define ncmpi_redef		nc_redef
+#define ncmpi_enddef		nc_enddef
+#define ncmpi__enddef		nc__enddef
+#define ncmpi_close		nc_close
+#define MPI_Init(a,b)
+#define MPI_Comm_rank(a,b)
+#define MPI_Comm_size(a,b)
+#define MPI_Finalize()
+#define MPI_Bcast(a,b,c,d,e)
+#else
+#include <pnetcdf.h>
 #include <testutils.h>
+#endif
 
 static
 int check_last_var(char *filename)
 {
-    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+    int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
@@ -68,6 +103,7 @@ int check_last_var(char *filename)
     err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid+1, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); CHECK_ERR
 
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -77,7 +113,7 @@ int check_last_var(char *filename)
 static
 int check_fix_var(char *filename)
 {
-    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+    int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new CDF-1 file ----------------------------------------------*/
     cmode = NC_CLOBBER;
@@ -94,8 +130,8 @@ int check_fix_var(char *filename)
     err = ncmpi_def_var(ncid, "var3", NC_SHORT, 1, dimid, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var4", NC_INT,   1, dimid, &varid); CHECK_ERR
 
-    err = ncmpi_close(ncid);
-    EXP_ERR(NC_EVARSIZE)
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
+    err = ncmpi_close(ncid); EXP_ERR(NC_EVARSIZE)
 
     /* create a new CDF-2 file ----------------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_OFFSET;
@@ -112,6 +148,7 @@ int check_fix_var(char *filename)
     err = ncmpi_def_var(ncid, "var3", NC_SHORT, 1, dimid, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var4", NC_INT,   1, dimid, &varid); CHECK_ERR
 
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -121,7 +158,7 @@ int check_fix_var(char *filename)
 static
 int check_fix_rec_var(char *filename)
 {
-    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+    int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
@@ -137,11 +174,9 @@ int check_fix_rec_var(char *filename)
     err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); CHECK_ERR
 
-    err = ncmpi_enddef(ncid);
-    EXP_ERR(NC_EVARSIZE)
-
-    err = ncmpi_close(ncid);
-    EXP_ERR(NC_EVARSIZE)
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
+    err = ncmpi_enddef(ncid); EXP_ERR(NC_EVARSIZE)
+    err = ncmpi_close(ncid); EXP_ERR(NC_EVARSIZE)
 
     return nerrs;
 }
@@ -154,7 +189,7 @@ int check_fix_rec_var(char *filename)
 static
 int check_rec_var(char *filename, int cmode)
 {
-    int err, nerrs=0, ncid, varid, dimid[3];
+    int err, nerrs=0, ncid, fill_mode, varid, dimid[3];
 
     /* create a new file ---------------------------------------------------*/
     cmode |= NC_CLOBBER;
@@ -169,6 +204,7 @@ int check_rec_var(char *filename, int cmode)
     err = ncmpi_def_var(ncid, "var",       NC_INT,   1, dimid, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_large", NC_FLOAT, 3, dimid, &varid); CHECK_ERR
 
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* create a new file ---------------------------------------------------*/
@@ -184,6 +220,7 @@ int check_rec_var(char *filename, int cmode)
     err = ncmpi_def_var(ncid, "var1", NC_SHORT, 3, dimid, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var2", NC_SHORT, 3, dimid, &varid); CHECK_ERR
 
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* create a new file ---------------------------------------------------*/
@@ -201,6 +238,7 @@ int check_rec_var(char *filename, int cmode)
     err = ncmpi_def_var(ncid, "var3", NC_SHORT, 3, dimid, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var4", NC_SHORT, 3, dimid, &varid); CHECK_ERR
 
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     err = ncmpi_close(ncid);
     if (cmode & NC_64BIT_OFFSET || cmode & NC_64BIT_DATA) CHECK_ERR
     else EXP_ERR(NC_EVARSIZE)
@@ -217,7 +255,7 @@ int check_rec_var(char *filename, int cmode)
 static
 int check_not_last_var(char *filename)
 {
-    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+    int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
@@ -233,11 +271,9 @@ int check_not_last_var(char *filename)
     err = ncmpi_def_var(ncid, "var_large", NC_FLOAT, 2, dimid+2, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var",       NC_INT,   1, dimid+1, &varid); CHECK_ERR
 
-    err = ncmpi_enddef(ncid);
-    EXP_ERR(NC_EVARSIZE)
-
-    err = ncmpi_close(ncid);
-    EXP_ERR(NC_EVARSIZE)
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
+    err = ncmpi_enddef(ncid); EXP_ERR(NC_EVARSIZE)
+    err = ncmpi_close(ncid); EXP_ERR(NC_EVARSIZE)
 
     return nerrs;
 }
@@ -245,7 +281,7 @@ int check_not_last_var(char *filename)
 static
 int check_add_var(char *filename)
 {
-    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+    int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
@@ -260,17 +296,16 @@ int check_add_var(char *filename)
     err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid+1, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); CHECK_ERR
 
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* add a new fixed-size variable */
     err = ncmpi_redef(ncid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_new", NC_INT, 2, dimid, &varid); CHECK_ERR
 
-    err = ncmpi_enddef(ncid);
-    EXP_ERR(NC_EVARSIZE)
-
-    err = ncmpi_close(ncid);
-    EXP_ERR(NC_EVARSIZE)
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
+    err = ncmpi_enddef(ncid); EXP_ERR(NC_EVARSIZE)
+    err = ncmpi_close(ncid); EXP_ERR(NC_EVARSIZE)
 
     return nerrs;
 }
@@ -278,7 +313,7 @@ int check_add_var(char *filename)
 static
 int check_var_offset(char *filename)
 {
-    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+    int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
@@ -293,14 +328,24 @@ int check_var_offset(char *filename)
     err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid+1, &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); CHECK_ERR
 
+    err = ncmpi_set_fill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     /* make the file header size larger than 2 GiB */
-    err = ncmpi__enddef(ncid, 2147483648LL, 1, 1, 1);
-    EXP_ERR(NC_EVARSIZE)
+    err = ncmpi__enddef(ncid, 2147483648LL, 1, 1, 1); EXP_ERR(NC_EVARSIZE)
 
     /* the above error keeps the program in define mode, thus close will
-     * call enddef again
+     * call enddef again and this time it will use default alignments, i.e.
+     * ncmpi_enddef() is equivalent to ncmpi__enddef(ncid, 0, 1, 0, 1).
+     * Thus, ncmpi_close() should return no error.
      */
-    err = ncmpi_close(ncid); CHECK_ERR
+    err = ncmpi_close(ncid);
+#ifdef TEST_NETCDF
+    EXP_ERR(NC_EVARSIZE) /* netCDF 4.6.0 and prior */
+    /* See the following pull request in NetCDF
+     * GitHub: https://github.com/Unidata/netcdf-c/pull/479
+     */
+#else
+    CHECK_ERR
+#endif
 
     return nerrs;
 }
@@ -308,7 +353,7 @@ int check_var_offset(char *filename)
 int main(int argc, char** argv)
 {
     char filename[256];
-    int  rank, nprocs, err, nerrs=0;
+    int  rank=0, nprocs=1, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -340,6 +385,10 @@ int main(int argc, char** argv)
     nerrs += check_add_var(filename);
     nerrs += check_var_offset(filename);
 
+#ifdef TEST_NETCDF
+    if (nerrs) printf("fail with %d mismatches\n",nerrs);
+    else       printf("pass\n");
+#else
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -355,6 +404,7 @@ int main(int argc, char** argv)
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
+#endif
 
     MPI_Finalize();
     return (nerrs > 0);

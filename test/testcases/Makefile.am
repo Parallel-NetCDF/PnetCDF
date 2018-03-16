@@ -129,17 +129,14 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = $(TESTPROGRAMS) seq_runs.sh
 TEST_EXTENSIONS = .sh
-if BUILD_DRIVER_DW
-LOG_COMPILER = $(srcdir)/wrap_runs_dw.sh
-TESTS += seq_runs_dw.sh
-else
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
-endif
 SH_LOG_COMPILER =
 
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 if BUILD_DRIVER_DW
+TESTDW = 1
+TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
 NC_FILES += $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf1 \
             $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf2 \
             $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf5 \
@@ -147,6 +144,8 @@ NC_FILES += $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf1 \
             $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf2 \
             $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf5
 endif
+
+BURST_BUFFER_FILES = $(NC_FILES:=_*.meta) $(NC_FILES:=_*.data)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/testfile.nc \
@@ -160,7 +159,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump \
-             wrap_runs.sh wrap_runs_dw.sh seq_runs_dw.sh
+             wrap_runs.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
@@ -179,6 +178,11 @@ ptest ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
@@ -186,6 +190,11 @@ ptest2: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest6: $(TESTPROGRAMS)
@@ -193,6 +202,11 @@ ptest6: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6
