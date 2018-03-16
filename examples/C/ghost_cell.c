@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     int i, j, rank, nprocs, ncid, bufsize, verbose=1, err, nerrs=0;
     int psizes[2], local_rank[2], dimids[2], varid, nghosts;
     int *buf, *buf_ptr;
-    MPI_Offset len, gsizes[2], starts[2], counts[2], imap[2];
+    MPI_Offset len=0, gsizes[2], starts[2], counts[2], imap[2];
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
