@@ -315,8 +315,8 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     int num_ints, num_adds, num_dtypes, combiner;
     int *array_of_ints;
     MPI_Offset count, tmpnelems, total_blocks;
-    MPI_Datatype tmpptype, *array_of_dtypes;
-    MPI_Aint *array_of_adds;
+    MPI_Datatype tmpptype, *array_of_dtypes=NULL;
+    MPI_Aint *array_of_adds=NULL;
 
     *isderived = 0;
 
@@ -422,8 +422,12 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                 if (status != NC_NOERR) return status;
                 if (*isderived) MPI_Type_free(array_of_dtypes+i);
                 if (tmpel_size > 0) {
-                    if (tmpptype != *ptype)
+                    if (tmpptype != *ptype) {
+                        NCI_Free(array_of_ints);
+                        NCI_Free(array_of_adds);
+                        NCI_Free(array_of_dtypes);
                         DEBUG_RETURN_ERROR(NC_EMULTITYPES)
+                    }
                     *nelems += tmpnelems*array_of_ints[1+i];
                 }
             }
