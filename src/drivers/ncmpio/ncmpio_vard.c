@@ -40,6 +40,17 @@
 }
 
 /*----< getput_vard() >------------------------------------------------------*/
+/* Starting from 1.9.1, it is possible to read/write multiple variables in a
+ * single call to vard. Because it is difficult to tell the variable boundaries
+ * from a single filetype, unless it is flattened. Similar for buftype, we
+ * enforce the following Requirements for vard APIs.
+ * 1. No data type conversion will be performed in vard APIs.
+ * 2. The element data type of filetype and buftype must be the conform with
+ *    the NC external data type of the variable, i.e. float <--> NC_FLOAT.
+ *    If the requirement is violated, NC_ETYPE_MISMATCH will be returned.
+ * 3. The data type of all variables in a single vard call must be of the same
+ *    data type. NC_EMULTITYPES will be returned if violated.
+ */
 static int
 getput_vard(NC               *ncp,
             NC_var           *varp,
@@ -67,8 +78,8 @@ getput_vard(NC               *ncp,
 
     if (filetype == MPI_DATATYPE_NULL) {
         /* This is actually an invalid filetype that can cause
-         * MPI_File_set_view to fail. In PnetCDF, we simply consider  this as
-         * zero-length request.
+         * MPI_File_set_view to fail. In PnetCDF, we simply consider this as
+         * a zero-length request.
          */
         if (fIsSet(reqMode, NC_REQ_INDEP)) return NC_NOERR;
         bufcount = 0;
@@ -157,7 +168,9 @@ getput_vard(NC               *ncp,
                               &isderived, &filetype_is_contig);
     if (err != NC_NOERR) goto err_check;
 
-    /* element type of filetype must be the same as variable's type */
+    /* because no type conversion is allowed in vard APIs, the element type of
+     * filetype must be the same as variable's type
+     */
     if (ptype != ncmpii_nc2mpitype(varp->xtype)) {
         DEBUG_ASSIGN_ERROR(err, NC_ETYPE_MISMATCH)
         goto err_check;
@@ -178,13 +191,22 @@ getput_vard(NC               *ncp,
     else {
         MPI_Offset outsize;
 
-        /* find whether buftype is contiguous */
+        /* find the element datatype of buftype and whether buftype is
+         * contiguous */
         err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &btnelems,
                                   &isderived, &buftype_is_contig);
         if (err != NC_NOERR) goto err_check;
 
         err = NCMPII_ECHAR(varp->xtype, ptype);
         if (err != NC_NOERR) goto err_check;
+
+	/* because no type conversion is allowed in vard APIs, the element type
+         * of buftype must be the same as variable's type
+         */
+	if (ptype != ncmpii_nc2mpitype(varp->xtype)) {
+            DEBUG_ASSIGN_ERROR(err, NC_ETYPE_MISMATCH)
+            goto err_check;
+        }
 
         if (btnelems != (int)btnelems) {
             DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
