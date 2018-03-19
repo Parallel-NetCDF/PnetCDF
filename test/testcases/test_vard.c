@@ -68,11 +68,11 @@
     } \
 } \
 
-#define CHECK_VALUE { \
+#define CHECK_VALUE(buf) { \
     for (j=0; j<count[0]; j++) { \
         for (i=0; i<count[1]; i++) \
             if (buf[j][i] != rank*100+j*10+i) { \
-                printf("line %d: expecting buf[%d][%d]=%d but got %d\n",__LINE__,j,i,rank*100+j*10+i,buf[j][i]); \
+                printf("line %d: expecting buf[%d][%d]=%d but got %d\n",__LINE__,j,i,rank*100+j*10+i,(int)buf[j][i]); \
                 nerrs++; \
             } \
     } \
@@ -109,7 +109,7 @@ int get_var_and_verify(int ncid,
     err = ncmpi_get_vara_all(ncid, varid, start, count, buf[1], 1, buftype); CHECK_ERR
 
     /* check if the contents of buf are expected */
-    CHECK_VALUE
+    CHECK_VALUE(buf)
 
     /* clear the contents of the read buffer */
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) buf[j][i] = -1;
@@ -118,7 +118,7 @@ int get_var_and_verify(int ncid,
     err = ncmpi_get_vard_all(ncid, varid, filetype, buf[1], 1, buftype); CHECK_ERR
 
     /* check if the contents of buf are expected */
-    CHECK_VALUE
+    CHECK_VALUE(buf)
 
     /* clear the contents of the read buffer */
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) buf[j][i] = -1;
@@ -155,9 +155,12 @@ int main(int argc, char **argv) {
     int          rank, nprocs, blocklengths[2], **buf, *bufptr;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int          buftype_size, expected_put_size, format;
+    float        **flt_buf, *flt_bufptr;
+    double       **dbl_buf, *dbl_bufptr;
     MPI_Offset   start[2], count[2], header_size, put_size, new_put_size;
     MPI_Aint     a0, a1, disps[2];
     MPI_Datatype buftype, ghost_buftype, rec_filetype, fix_filetype;
+    MPI_Datatype flt_buftype, dbl_buftype;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -179,11 +182,11 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
+    /* construct various MPI derived data types */
+
     buf = (int**)malloc(NY * sizeof(int*));
     buf[0] = (int*)malloc(NY * NX * sizeof(int));
     for (i=1; i<NY; i++) buf[i] = buf[i-1] + NX;
-
-    /* construct various MPI derived data types */
 
     /* construct an MPI derived data type for swapping 1st row with 2nd row */
     blocklengths[0] = blocklengths[1] = NX;
@@ -281,7 +284,7 @@ int main(int argc, char **argv) {
     }
 
     /* check if the contents of buf are altered */
-    CHECK_VALUE
+    CHECK_VALUE(buf)
 
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid0, "rec_VAR"); CHECK_ERR
@@ -301,7 +304,7 @@ int main(int argc, char **argv) {
     }
 
     /* check if the contents of buf are altered */
-    CHECK_VALUE
+    CHECK_VALUE(buf)
 
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid0, "rec_var"); CHECK_ERR
@@ -309,17 +312,17 @@ int main(int argc, char **argv) {
     /* test the same routines in independent data mode */
     err = ncmpi_begin_indep_data(ncid); CHECK_ERR
     err = ncmpi_put_vard(ncid, varid0, rec_filetype, bufptr, 1, buftype); CHECK_ERR
-    CHECK_VALUE
+    CHECK_VALUE(buf)
     err = ncmpi_rename_var(ncid, varid0, "rec_VAR"); CHECK_ERR
     err = ncmpi_put_vard(ncid, varid1, fix_filetype, bufptr, 1, buftype); CHECK_ERR
-    CHECK_VALUE
+    CHECK_VALUE(buf)
     err = ncmpi_rename_var(ncid, varid0, "rec_var"); CHECK_ERR
     err = ncmpi_end_indep_data(ncid); CHECK_ERR
 
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validate */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL,
                      &ncid); CHECK_ERR
 
     err = ncmpi_inq_varid(ncid, "rec_var", &varid0); CHECK_ERR
@@ -328,13 +331,122 @@ int main(int argc, char **argv) {
     nerrs += get_var_and_verify(ncid, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
     nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
 
+    /* test type conversion from float to int */
+    flt_buf = (float**)malloc(NY * sizeof(float*));
+    flt_buf[0] = (float*)malloc(NY * NX * sizeof(float));
+    for (i=1; i<NY; i++) flt_buf[i] = flt_buf[i-1] + NX;
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++)
+        flt_buf[j][i] = rank*100.0 + j*10.0 + i;
+
+    /* construct an MPI derived data type for swapping 1st row with 2nd row */
+    blocklengths[0] = blocklengths[1] = NX;
+    MPI_Get_address(flt_buf[1], &a0);
+    MPI_Get_address(flt_buf[0], &a1);
+    disps[0] = 0;
+    disps[1] = a1 - a0;
+    flt_bufptr = flt_buf[1];
+    err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_FLOAT, &flt_buftype);
+    if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
+    MPI_Type_commit(&flt_buftype);
+
+    /* write the record variable with type conversion from float to int */
+    err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+    CHECK_VALUE(flt_buf)
+    nerrs += get_var_and_verify(ncid, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
+
+    /* read the record variable with type conversion from int to float */
+    for (j=0; j<NY*NX; j++) flt_buf[0][j] = -1;
+    err = ncmpi_get_vard_all(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
+        float expected = rank*100.0 + j*10.0 + i;
+        if (flt_buf[j][i] != expected) {
+            printf("Error at line %d in %s: expecting flt_buf[%d][%d]=%.1f but got %.1f\n",
+            __LINE__,__FILE__,j,i,expected,flt_buf[j][i]);
+            nerrs++;
+        }
+    }
+
+    /* write the fixed-size variable with type conversion from float to int */
+    err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+    CHECK_VALUE(flt_buf)
+    nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
+
+    /* read the fixed-size variable with type conversion from int to float */
+    for (j=0; j<NY*NX; j++) flt_buf[0][j] = -1;
+    err = ncmpi_get_vard_all(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
+        float expected = rank*100.0 + j*10.0 + i;
+        if (flt_buf[j][i] != expected) {
+            printf("Error at line %d in %s: expecting flt_buf[%d][%d]=%.1f but got %.1f\n",
+            __LINE__,__FILE__,j,i,expected,flt_buf[j][i]);
+            nerrs++;
+        }
+    }
+
+    /* test type conversion from double to int */
+    dbl_buf = (double**)malloc(NY * sizeof(double*));
+    dbl_buf[0] = (double*)malloc(NY * NX * sizeof(double));
+    for (i=1; i<NY; i++) dbl_buf[i] = dbl_buf[i-1] + NX;
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++)
+        dbl_buf[j][i] = rank*100.0 + j*10.0 + i;
+
+    /* construct an MPI derived data type for swapping 1st row with 2nd row */
+    blocklengths[0] = blocklengths[1] = NX;
+    MPI_Get_address(dbl_buf[1], &a0);
+    MPI_Get_address(dbl_buf[0], &a1);
+    disps[0] = 0;
+    disps[1] = a1 - a0;
+    dbl_bufptr = dbl_buf[1];
+    err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_DOUBLE, &dbl_buftype);
+    if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
+    MPI_Type_commit(&dbl_buftype);
+
+    /* write the record variable with type conversion from double to int */
+    err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    CHECK_VALUE(dbl_buf)
+    nerrs += get_var_and_verify(ncid, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
+
+    /* read the record variable with type conversion from int to double */
+    for (j=0; j<NY*NX; j++) dbl_buf[0][j] = -1;
+    err = ncmpi_get_vard_all(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
+        double expected = rank*100.0 + j*10.0 + i;
+        if (dbl_buf[j][i] != expected) {
+            printf("Error at line %d in %s: expecting dbl_buf[%d][%d]=%.1f but got %.1f\n",
+            __LINE__,__FILE__,j,i,expected,dbl_buf[j][i]);
+            nerrs++;
+        }
+    }
+
+    /* write the fixed-size variable with type conversion from double to int */
+    err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    CHECK_VALUE(dbl_buf)
+    nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
+
+    /* read the fixed-size variable with type conversion from int to double */
+    for (j=0; j<NY*NX; j++) dbl_buf[0][j] = -1;
+    err = ncmpi_get_vard_all(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
+        double expected = rank*100.0 + j*10.0 + i;
+        if (dbl_buf[j][i] != expected) {
+            printf("Error at line %d in %s: expecting dbl_buf[%d][%d]=%.1f but got %.1f\n",
+            __LINE__,__FILE__,j,i,expected,dbl_buf[j][i]);
+            nerrs++;
+        }
+    }
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
     MPI_Type_free(&buftype);
+    MPI_Type_free(&flt_buftype);
+    MPI_Type_free(&dbl_buftype);
     MPI_Type_free(&ghost_buftype);
     free(buf[0]); free(buf);
+    free(flt_buf[0]); free(flt_buf);
+    free(dbl_buf[0]); free(dbl_buf);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
