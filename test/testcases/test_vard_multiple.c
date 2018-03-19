@@ -131,12 +131,21 @@ int main(int argc, char **argv) {
     err = ncmpi_def_var(ncid, "rec_var3", NC_INT, 3, dimids, &varid[3]); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    /* test MPI_DATATYPE_NULL as filetype and buftype */
+    /* MPI_DATATYPE_NULL means this is a zero-length request */
     err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0,
-                             buftype); CHECK_ERR
+                             MPI_INT); CHECK_ERR
 
+    /* when filetype is MPI_DATATYPE_NULL, buftype is ignored */
     err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0,
                              MPI_DATATYPE_NULL); CHECK_ERR
+
+    /* bufcount is ignored when buftype is MPI_DATATYPE_NULL */
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], -1,
+                             MPI_DATATYPE_NULL); CHECK_ERR
+
+    /* filetype and buftype are matched */
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 1,
+                             MPI_INT); CHECK_ERR
 
     /* create a datatype contains 2 different etypes */
     array_of_blocklengths[0]  = 1;
