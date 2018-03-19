@@ -156,8 +156,8 @@ int main(int argc, char **argv) {
     err = ncmpi_put_vard_all(ncid, varid[0], filetype, buf[0], 2, MPI_INT); EXP_ERR(NC_EMULTITYPES)
     err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT,  buf[0], 2, buftype); EXP_ERR(NC_EMULTITYPES)
     /* test NC_ETYPESIZE_MISMATCH */
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_INT);   EXP_ERR(NC_ETYPESIZE_MISMATCH)
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 1, MPI_SHORT); EXP_ERR(NC_ETYPE_MISMATCH)
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_INT);   EXP_ERR(NC_EIOMISMATCH)
+    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_SHORT); EXP_ERR(NC_EIOMISMATCH)
     MPI_Type_free(&filetype);
     MPI_Type_free(&buftype);
 
