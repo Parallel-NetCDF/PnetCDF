@@ -56,10 +56,10 @@ getput_vard(NC               *ncp,
     void *xbuf=NULL;
     int isderived, el_size, mpireturn, status=NC_NOERR, err=NC_NOERR;
     int buftype_is_contig=0, filetype_is_contig=1, need_swap_back_buf=0;
-    int nelems, need_convert=0, need_swap=0;
-    MPI_Offset fnelems, bnelems=0, offset=0;
+    int nelems=0, need_convert=0, need_swap=0;
+    MPI_Offset fnelems=0, bnelems=0, offset=0;
     MPI_Status mpistatus;
-    MPI_Datatype etype, xtype;
+    MPI_Datatype etype=MPI_DATATYPE_NULL, xtype;
     MPI_File fh=MPI_FILE_NULL;
 #if MPI_VERSION >= 3
     MPI_Count filetype_size=0;
@@ -286,6 +286,7 @@ err_check:
         filetype = MPI_BYTE;
         buftype  = MPI_BYTE;
         xtype    = MPI_BYTE;
+        etype    = MPI_BYTE;
     }
     status = err;
 
