@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
     err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimids[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X",       NX*nprocs,    &dimids[1]); CHECK_ERR
     err = ncmpi_def_var(ncid, "rec_var", NC_INT, 2, dimids, &varid0); CHECK_ERR
-    err = ncmpi_def_var(ncid, "dummy_rec", NC_INT, 2, dimids, &varid2); CHECK_ERR
+    err = ncmpi_def_var(ncid, "dummy_rec", NC_BYTE, 2, dimids, &varid2); CHECK_ERR
     err = ncmpi_def_dim(ncid, "FIX_DIM", 2, &dimids[0]); CHECK_ERR
     err = ncmpi_def_var(ncid, "fix_var", NC_INT, 2, dimids, &varid1); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
@@ -251,8 +251,6 @@ int main(int argc, char **argv) {
     MPI_Type_create_hindexed(2, array_of_blocklengths, array_of_displacements,
                              MPI_INT, &rec_filetype);
     MPI_Type_commit(&rec_filetype);
-    free(array_of_blocklengths);
-    free(array_of_displacements);
 
     /* initialize the contents of the array */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = rank*100 + j*10 + i;
@@ -436,6 +434,43 @@ int main(int argc, char **argv) {
         }
     }
 
+    /* test data type that need no conversion */
+    MPI_Type_free(&ghost_buftype);
+    MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
+                             array_of_starts, MPI_ORDER_C,
+                             MPI_SIGNED_CHAR, &ghost_buftype);
+    MPI_Type_commit(&ghost_buftype);
+
+    MPI_Type_free(&rec_filetype);
+    MPI_Type_create_hindexed(2, array_of_blocklengths, array_of_displacements,
+                             MPI_SIGNED_CHAR, &rec_filetype);
+    MPI_Type_commit(&rec_filetype);
+
+    signed char *schar_buf;
+    schar_buf = (signed char*) malloc(array_of_sizes[0]*array_of_sizes[1]);
+    for (i=0; i<array_of_sizes[0]*array_of_sizes[1]; i++) schar_buf[i] = i;
+
+    /* write to dummy_rec */
+    err = ncmpi_put_vard_all(ncid, varid2, rec_filetype, schar_buf, 1,
+                             ghost_buftype); CHECK_ERR
+
+    /* read from dummy_rec */
+    for (i=0; i<array_of_sizes[0]*array_of_sizes[1]; i++) schar_buf[i] = -1;
+    err = ncmpi_get_vard_all(ncid, varid2, rec_filetype, schar_buf, 1,
+                             ghost_buftype); CHECK_ERR
+    for (i=0; i<array_of_sizes[0]; i++)
+    for (j=0; j<array_of_sizes[1]; j++) {
+        signed char expected = i*array_of_sizes[1] + j;
+        if (i<2 || i >= 4)         expected = -1;
+        else if (j<2 || j >= NX+2) expected = -1;
+        if (schar_buf[i*array_of_sizes[1]+j] != expected) {
+            printf("Error at line %d in %s: expecting schar_buf[%d][%d]=%d but got %d\n",
+            __LINE__,__FILE__,i,j,expected,schar_buf[i*array_of_sizes[1]+j]);
+            nerrs++;
+        }
+    }
+    free(schar_buf);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     MPI_Type_free(&rec_filetype);
@@ -444,6 +479,8 @@ int main(int argc, char **argv) {
     MPI_Type_free(&flt_buftype);
     MPI_Type_free(&dbl_buftype);
     MPI_Type_free(&ghost_buftype);
+    free(array_of_blocklengths);
+    free(array_of_displacements);
     free(buf[0]); free(buf);
     free(flt_buf[0]); free(flt_buf);
     free(dbl_buf[0]); free(dbl_buf);

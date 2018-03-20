@@ -206,6 +206,45 @@ getput_vard(NC               *ncp,
                     in_place_swap = 1;
             }
         }
+        if (!need_convert &&
+            (!need_swap || (in_place_swap && buftype_is_contig))) {
+            /* reuse buftype, bufcount, buf in later MPI file write */
+            xbuf = buf;
+            if (need_swap) {
+                ncmpii_in_swapn(xbuf, bnelems, varp->xsz);
+                need_swap_back_buf = 1;
+            }
+        }
+        else { /* must allocate a buffer to convert/swap/pack */
+            xbuf = NCI_Malloc((size_t)filetype_size);
+            if (xbuf == NULL) {
+                DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+                goto err_check;
+            }
+            need_swap_back_buf = 0;
+
+            /* pack buf to xbuf, byte-swap and type-convert on xbuf, which
+             * will later be used in MPI file write */
+            err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
+                                   buftype_is_contig, bnelems, etype,
+                                   MPI_DATATYPE_NULL, need_convert, need_swap,
+                                   filetype_size, buf, xbuf);
+            if (err != NC_NOERR && err != NC_ERANGE) {
+                if (xbuf != buf) NCI_Free(xbuf);
+                xbuf = NULL;
+                goto err_check;
+            }
+        }
+#if 0
+        int in_place_swap = 0;
+        if (need_swap) {
+            if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
+                in_place_swap = 1;
+            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) { /* auto mode */
+                if (filetype_size > NC_BYTE_SWAP_BUFFER_SIZE)
+                    in_place_swap = 1;
+            }
+        }
 
         /* determine whether a temp buffer is needed for swap/convert */
         if (!buftype_is_contig || need_convert || in_place_swap == 0) {
@@ -233,8 +272,21 @@ getput_vard(NC               *ncp,
             xbuf = NULL;
             goto err_check;
         }
+#endif
     }
     else { /* read request */
+        if (!need_convert && (!need_swap || buftype_is_contig)) {
+            /* reuse buftype, bufcount, buf in later MPI file read */
+            xbuf = buf;
+        }
+        else { /* must allocate a buffer to convert/swap/unpack */
+            xbuf = NCI_Malloc((size_t)filetype_size);
+            if (xbuf == NULL) {
+                DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+                goto err_check;
+            }
+        }
+#if 0
         if (buftype_is_contig && !need_convert)
             xbuf = buf;
         else { /* allocate xbuf for reading */
@@ -244,6 +296,7 @@ getput_vard(NC               *ncp,
                 goto err_check;
             }
         }
+#endif
     }
 
     /* Set nelems and xtype which will be used in MPI read/write */
@@ -359,7 +412,7 @@ err_check:
     if (fIsSet(reqMode, NC_REQ_RD)) {
         if (filetype_size == 0) return status;
 
-        /* unpack xbuf into user buffer, buf, when necessary */
+        /* unpack/swap/convert xbuf into user buffer, buf, when necessary */
         err = ncmpio_unpack_xbuf(ncp->format, varp, bufcount, buftype,
                                  buftype_is_contig, bnelems, etype,
                                  MPI_DATATYPE_NULL, need_convert, need_swap,
