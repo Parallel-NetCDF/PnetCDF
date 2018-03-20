@@ -45,7 +45,7 @@
 #define NC_BYTE_SWAP_BUFFER_SIZE 4096
 
 #ifdef WORDS_BIGENDIAN
-#define NCMPII_NEED_SWAP(xtype,itype) 0
+#define NEED_BYTE_SWAP(xtype,itype) 0
 #else
 #define NEED_BYTE_SWAP(xtype,itype)                              \
     ((xtype == NC_CHAR  && itype == MPI_CHAR)           ||       \
