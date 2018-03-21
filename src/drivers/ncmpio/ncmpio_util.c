@@ -411,7 +411,6 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
             if (lbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         }
 
-if (buf == lbuf) printf("%s line %d:  buf == lbuf\n",__func__,__LINE__);
         if (buf != lbuf) {
             /* pack buf into lbuf based on buftype */
             if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
@@ -663,7 +662,6 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     }
 
     /* unpacked lbuf into buf based on buftype -----------------------------*/
-if (!buftype_is_contig && buf == lbuf) printf("%s line %d:  buf == lbuf\n",__func__,__LINE__);
     if (!buftype_is_contig && lbuf != buf) {
         /* no need unpack when buftype is used in MPI_File_read (lbuf == buf) */
         if (bufcount > INT_MAX) {
