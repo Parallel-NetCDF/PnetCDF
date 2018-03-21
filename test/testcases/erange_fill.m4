@@ -133,13 +133,16 @@ int test_user_fill_$1(char* filename, $1 fillv) {
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
 
+    void *fillp=&fillv;
+    ifelse(`$1',`long',`*(int*)fillp = (int)fillv;')
+
     /* create a new file */
     err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 1, &dimid, &varid); CHECK_ERR
     /* put attribute _FillValue does not automatically enable file mode */
-    err = ncmpi_put_att(ncid, varid, "_FillValue", NC_TYPE($1), 1, &fillv); CHECK_ERR
-    /* err = ncmpi_def_var_fill(ncid, varid, 0, &fillv); CHECK_ERR */
+    err = ncmpi_put_att(ncid, varid, "_FillValue", NC_TYPE($1), 1, fillp); CHECK_ERR
+    /* err = ncmpi_def_var_fill(ncid, varid, 0, fillp); CHECK_ERR */
     err = ncmpi_def_var_fill(ncid, varid, 0, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -149,7 +152,7 @@ int test_user_fill_$1(char* filename, $1 fillv) {
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
     err = GET_VAR($1)(ncid, varid, buf); CHECK_ERR
     for (i=0; i<LEN; i++) {
-        if (buf[i] != fillv) {
+        if (buf[i] != ($1)fillv) {
             printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
                    __func__,__LINE__,i,($1)fillv,buf[i]);
             nerrs++;
