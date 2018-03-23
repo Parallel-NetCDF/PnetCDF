@@ -299,36 +299,39 @@ darray_get_totalblks(int rank,
 . dtype - The MPI derived datatype to be decoded (can be predefined type).
 
   Output:
-. ptype - The bottom level primitive datatype (only one allowed) in buftype
-. el_size - The size of the ptype
-. nelems - Number of elements/entries of such ptype in one buftype object
+. ptype_p - The bottom level primitive datatype (only one allowed) in buftype
+. el_size_p - The size of the ptype
+. nelems_p - Number of elements/entries of such ptype in one buftype object
+. isderived_p - Whether dtype is an MPI derived data type
 . iscontig_of_ptypes - Whether dtype is a contiguous number of ptype
 @*/
 int ncmpii_dtype_decode(MPI_Datatype  dtype,
-                        MPI_Datatype *ptype,
-                        int          *el_size,
-                        MPI_Offset   *nelems,
-                        int          *isderived,
+                        MPI_Datatype *ptype_p,
+                        int          *el_size_p,
+                        MPI_Offset   *nelems_p,
+                        int          *isderived_p,
                         int          *iscontig_of_ptypes)
 {
-    int i, ndims, status=NC_NOERR, tmpel_size;
-    int num_ints, num_adds, num_dtypes, combiner;
+    int i, ndims, status=NC_NOERR, el_size;
+    int num_ints, num_adds, num_dtypes, combiner, isderived;
     int *array_of_ints;
-    MPI_Offset count, tmpnelems, total_blocks;
-    MPI_Datatype tmpptype, *array_of_dtypes=NULL;
+    MPI_Offset count, nelems, total_blocks;
+    MPI_Datatype ptype, *array_of_dtypes=NULL;
     MPI_Aint *array_of_adds=NULL;
 
-    *isderived = 0;
+    isderived = 0;
+    if (nelems_p) nelems = *nelems_p;
 
     /* Note to PnetCDF developers. High-level APIs should never reach this
      * subroutine. Check whether it is a high-level of flexible API should
      * be done before entering here.
      */
     if (dtype == MPI_DATATYPE_NULL) {
-        *nelems = 0;
-        *ptype = dtype;
-        *el_size = 0;
-        *iscontig_of_ptypes = 1;
+        if (nelems_p)           *nelems_p = 0;
+        if (ptype_p)            *ptype_p = dtype;
+        if (el_size_p)          *el_size_p = 0;
+        if (iscontig_of_ptypes) *iscontig_of_ptypes = 1;
+        if (isderived_p)        *isderived_p = isderived;
         return NC_NOERR;
     }
 
@@ -350,12 +353,16 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     }
 
     if (combiner == MPI_COMBINER_NAMED) { /* Predefined datatype */
-        *nelems = 1;
-        *ptype = dtype_filter(dtype);
-        if (*ptype == MPI_DATATYPE_NULL)
+        ptype = dtype_filter(dtype);
+        if (ptype == MPI_DATATYPE_NULL) {
+            if (ptype_p) *ptype_p = ptype;
             DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
-        MPI_Type_size(dtype, el_size);
-        *iscontig_of_ptypes = 1;
+        }
+        if (nelems_p)           *nelems_p = 1;
+        if (ptype_p)            *ptype_p = ptype;
+        if (el_size_p)          MPI_Type_size(dtype, el_size_p);
+        if (iscontig_of_ptypes) *iscontig_of_ptypes = 1;
+        if (isderived_p)        *isderived_p = isderived;
         return NC_NOERR;
     }
 
@@ -394,9 +401,10 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #ifdef HAVE_DECL_MPI_COMBINER_RESIZED
         case MPI_COMBINER_RESIZED:
 #endif
-            status = ncmpii_dtype_decode(array_of_dtypes[0], ptype, el_size,
-                                         nelems, isderived, iscontig_of_ptypes);
-            if (*isderived) MPI_Type_free(array_of_dtypes);
+            status = ncmpii_dtype_decode(array_of_dtypes[0], &ptype, &el_size,
+                                         &nelems, &isderived,
+                                         iscontig_of_ptypes);
+            if (isderived) MPI_Type_free(array_of_dtypes);
             break;
 
         /* multiple etypes */
@@ -405,37 +413,40 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         case MPI_COMBINER_STRUCT_INTEGER:
 #endif
             count = array_of_ints[0];
-            *el_size = 0;
-            for (i=0; i<count && *el_size==0; i++) {
+            el_size = 0;
+            for (i=0; i<count && el_size==0; i++) {
                 /* need to skip null/marker types */
-                status = ncmpii_dtype_decode(array_of_dtypes[i], ptype,
-                                             el_size, nelems, isderived,
+                status = ncmpii_dtype_decode(array_of_dtypes[i], &ptype,
+                                             &el_size, &nelems, &isderived,
                                              iscontig_of_ptypes);
                 if (status != NC_NOERR) return status;
-                if (*isderived) MPI_Type_free(array_of_dtypes+i);
-                if (*el_size > 0) *nelems *= array_of_ints[1+i];
+                if (isderived) MPI_Type_free(array_of_dtypes+i);
+                if (el_size > 0) nelems *= array_of_ints[1+i];
             }
             for ( ; i<count; i++) {
+                int tmpel_size;
+                MPI_Offset tmpnelems;
+                MPI_Datatype tmpptype;
                 status = ncmpii_dtype_decode(array_of_dtypes[i], &tmpptype,
                                              &tmpel_size, &tmpnelems,
-                                             isderived, iscontig_of_ptypes);
+                                             &isderived, iscontig_of_ptypes);
                 if (status != NC_NOERR) return status;
-                if (*isderived) MPI_Type_free(array_of_dtypes+i);
+                if (isderived) MPI_Type_free(array_of_dtypes+i);
                 if (tmpel_size > 0) {
-                    if (tmpptype != *ptype) {
+                    if (tmpptype != ptype) {
                         NCI_Free(array_of_ints);
                         NCI_Free(array_of_adds);
                         NCI_Free(array_of_dtypes);
                         DEBUG_RETURN_ERROR(NC_EMULTITYPES)
                     }
-                    *nelems += tmpnelems*array_of_ints[1+i];
+                    nelems += tmpnelems*array_of_ints[1+i];
                 }
             }
-            *iscontig_of_ptypes = 0;
+            if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             break;
         default: break;
     }
-    *isderived = 1;
+    isderived = 1;
 
     switch (combiner) {
         /* single etype */
@@ -450,7 +461,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #ifdef HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK
         case MPI_COMBINER_INDEXED_BLOCK:
 #endif
-            *iscontig_of_ptypes = 0;
+            if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             total_blocks = (MPI_Offset)array_of_ints[0]*array_of_ints[1];
             break;
         case MPI_COMBINER_HINDEXED:
@@ -458,13 +469,13 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #ifdef HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER
         case MPI_COMBINER_HINDEXED_INTEGER:
 #endif
-            *iscontig_of_ptypes = 0;
+            if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             for (i=0, total_blocks=0; i<array_of_ints[0]; i++)
                 total_blocks += array_of_ints[1+i];
             break;
 #ifdef HAVE_DECL_MPI_COMBINER_SUBARRAY
         case MPI_COMBINER_SUBARRAY:
-            *iscontig_of_ptypes = 0;
+            if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[0];
             for (i=0, total_blocks=1; i<ndims; i++)
                 total_blocks *= array_of_ints[1+ndims+i];
@@ -472,7 +483,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #endif
 #ifdef HAVE_DECL_MPI_COMBINER_DARRAY
         case MPI_COMBINER_DARRAY:
-            *iscontig_of_ptypes = 0;
+            if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[2];
             /* seldom reached, so put it in a separate function */
             total_blocks = darray_get_totalblks(array_of_ints[1],
@@ -485,7 +496,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #endif
 #ifdef HAVE_DECL_MPI_COMBINER_RESIZED
         case MPI_COMBINER_RESIZED:
-            *iscontig_of_ptypes = 0;
+            if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             total_blocks = 1;
             break;
 #endif
@@ -493,7 +504,12 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
             total_blocks = 1;
             break;
     }
-    *nelems *= total_blocks;
+    nelems *= total_blocks;
+
+    if (ptype_p)     *ptype_p = ptype;
+    if (nelems_p)    *nelems_p = nelems;
+    if (el_size_p)   *el_size_p = el_size;
+    if (isderived_p) *isderived_p = isderived;
 
     NCI_Free(array_of_ints);
     NCI_Free(array_of_adds);

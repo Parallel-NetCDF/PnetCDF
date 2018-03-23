@@ -54,8 +54,8 @@ getput_vard(NC               *ncp,
             int               reqMode)
 {
     void *xbuf=NULL;
-    int isderived, el_size, mpireturn, status=NC_NOERR, err=NC_NOERR;
-    int buftype_is_contig=0, filetype_is_contig=1, need_swap_back_buf=0;
+    int mpireturn, status=NC_NOERR, err=NC_NOERR;
+    int buftype_is_contig=0, need_swap_back_buf=0;
     int nelems=0, need_convert=0, need_swap=0;
     MPI_Offset fnelems=0, bnelems=0, offset=0;
     MPI_Status mpistatus;
@@ -77,6 +77,7 @@ getput_vard(NC               *ncp,
     }
 #endif
 
+    /* First check filetype whether it meets the requirement */
     if (filetype == MPI_DATATYPE_NULL) {
         /* This is actually an invalid filetype that can cause
          * MPI_File_set_view to fail. In PnetCDF, we simply consider this as
@@ -103,10 +104,10 @@ getput_vard(NC               *ncp,
     MPI_Type_get_true_extent_x(filetype, &true_lb, &true_extent);
     true_ub = true_lb + true_extent;
 #else
-    /* PROBLEM: argument filetype_size is a 4-byte integer, cannot be used
-     * for large filetypes. Prior to MPI 3.0 standard, argument "size" of
-     * MPI_Type_size is of type int. When int overflows, the returned value
-     * in argument "size" may be a negative. */
+    /* PROBLEM: In MPI_Type_size(), argument filetype_size is a 4-byte integer,
+     * cannot be used for large filetypes. Prior to MPI 3.0 standard, argument
+     * "size" of MPI_Type_size is of type int. When int overflows, the returned
+     * value in argument "size" may be a negative. */
     mpireturn = MPI_Type_size(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
@@ -139,10 +140,9 @@ getput_vard(NC               *ncp,
     /* get the corresponding MPI datatype of variable external type */
     xtype = ncmpii_nc2mpitype(varp->xtype);
 
-    /* find the element type of filetype */
-    err = ncmpii_dtype_decode(filetype, &etype, &el_size, &fnelems,
-                              &isderived, &filetype_is_contig);
-    /* ncmpii_dtype_decode() checks NC_EMULTITYPES */
+    /* find the element type of filetype. ncmpii_dtype_decode() checks
+     * NC_EMULTITYPES */
+    err = ncmpii_dtype_decode(filetype, &etype, NULL, &fnelems, NULL, NULL);
     if (err != NC_NOERR) goto err_check;
 
     /* element type of filetype must be the same as variable's NC type */
@@ -161,6 +161,7 @@ getput_vard(NC               *ncp,
 
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, the request size is the same as filetype */
+        int el_size;
         buftype = etype = xtype;
         MPI_Type_size(buftype, &el_size);
         bufcount = filetype_size / el_size;
@@ -168,9 +169,10 @@ getput_vard(NC               *ncp,
         bnelems = bufcount;
     }
     else {
-        err = ncmpii_dtype_decode(buftype, &etype, &el_size, &bnelems,
-                                  &isderived, &buftype_is_contig);
-        /* ncmpii_dtype_decode() checks NC_EMULTITYPES */
+        /* find the element type of filetype. ncmpii_dtype_decode() checks
+         * NC_EMULTITYPES */
+        err = ncmpii_dtype_decode(buftype, &etype, NULL, &bnelems, NULL,
+                                  &buftype_is_contig);
         if (err != NC_NOERR) goto err_check;
 
         /* type conversion between non-char and char is not allowed */
@@ -301,11 +303,12 @@ getput_vard(NC               *ncp,
 
     /* Set nelems and xtype which will be used in MPI read/write */
     if (buf != xbuf) {
-        /* xbuf is a contiguous buffer */
+        /* xbuf is a malloc-ed contiguous buffer */
         nelems = (int)bnelems;
     }
     else {
-        /* we can safely use bufcount and buftype in MPI File read/write */
+        /* we can safely use bufcount and buftype in MPI File read/write.
+         * Note buftype may be noncontiguous. */
         nelems = bufcount;
         xtype = buftype;
     }
@@ -412,7 +415,7 @@ err_check:
     if (fIsSet(reqMode, NC_REQ_RD)) {
         if (filetype_size == 0) return status;
 
-        /* unpack/swap/convert xbuf into user buffer, buf, when necessary */
+        /* swap/convert/unpack xbuf into user buffer, buf, when necessary */
         err = ncmpio_unpack_xbuf(ncp->format, varp, bufcount, buftype,
                                  buftype_is_contig, bnelems, etype,
                                  MPI_DATATYPE_NULL, need_convert, need_swap,

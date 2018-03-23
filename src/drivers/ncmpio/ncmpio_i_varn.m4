@@ -105,7 +105,7 @@ igetput_varn(NC                *ncp,
     }
     else { /* (bufcount > 0) flexible API is used */
         /* pack buf into cbuf, a contiguous buffer */
-        int isderived, iscontig_of_ptypes;
+        int iscontig_of_ptypes;
         MPI_Offset bnelems=0;
 
         /* ptype (primitive MPI data type) from buftype
@@ -113,7 +113,7 @@ igetput_varn(NC                *ncp,
          * bnelems is the total number of ptype elements in buftype
          */
         status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
-                                     &isderived, &iscontig_of_ptypes);
+                                     NULL, &iscontig_of_ptypes);
 
         if (status != NC_NOERR) return status;
 
