@@ -413,17 +413,21 @@ ncdwio_put_varn(void              *ncdp,
 
     /* Resolve flexible api so we can calculate size of each put_var */
     if (bufcount != -1){
-        int isderived, iscontig_of_ptypes;
-        int elsize, position;
-        MPI_Offset bnelems = 0;
+        int isderived, iscontig_of_ptypes, elsize, position;
+        MPI_Offset bnelems;
 
-        err = ncmpii_dtype_decode(buftype, &ptype, &elsize, &bnelems, &isderived, &iscontig_of_ptypes);
-        if (err != NC_NOERR){
-            return err;
+        err = ncmpii_dtype_decode(buftype, &ptype, &elsize, &bnelems,
+                                  &isderived, &iscontig_of_ptypes);
+        if (err != NC_NOERR) return err;
+
+        if (!iscontig_of_ptypes) { /* pack only if non-contiguous */
+            bnelems *= elsize;
+            if (bnelems != (int)bnelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
+            cbuf = NCI_Malloc(bnelems);
+            MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)bnelems,
+                     &position, MPI_COMM_SELF);
         }
-
-        cbuf = NCI_Malloc(elsize * bnelems);
-        MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)(elsize * bnelems), &position, MPI_COMM_SELF);
     }
 
     /* Decompose it into num put_vara calls */
