@@ -319,7 +319,10 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     MPI_Datatype ptype, *array_of_dtypes=NULL;
     MPI_Aint *array_of_adds=NULL;
 
+    el_size   = 0;
+    nelems    = 0;
     isderived = 0;
+    ptype     = MPI_DATATYPE_NULL;
     if (nelems_p) nelems = *nelems_p;
 
     /* Note to PnetCDF developers. High-level APIs should never reach this

@@ -83,8 +83,7 @@ getput_vard(NC               *ncp,
          * MPI_File_set_view to fail. In PnetCDF, we simply consider this as
          * a zero-length request.
          */
-        if (fIsSet(reqMode, NC_REQ_INDEP)) return NC_NOERR;
-        bufcount = 0;
+        filetype_size = 0;
         goto err_check;
     }
 
@@ -98,6 +97,7 @@ getput_vard(NC               *ncp,
     mpireturn = MPI_Type_size_x(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size_x");
+        xtype = MPI_BYTE;
         goto err_check;
     }
     /* MPI_Type_get_true_extent_x is introduced in MPI 3.0 */
@@ -111,12 +111,11 @@ getput_vard(NC               *ncp,
     mpireturn = MPI_Type_size(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+        xtype = MPI_BYTE;
         goto err_check;
     }
     if (filetype_size < 0) { /* int overflow */
-        err = NC_EINTOVERFLOW;
-        if (fIsSet(reqMode, NC_REQ_INDEP)) return err;
-        bufcount = 0;
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         goto err_check;
     }
     MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
@@ -124,8 +123,6 @@ getput_vard(NC               *ncp,
 #endif
 
     if (filetype_size == 0) { /* zero-length request */
-        if (fIsSet(reqMode, NC_REQ_INDEP)) return NC_NOERR;
-        bufcount = 0;
         goto err_check;
     }
 
@@ -155,7 +152,6 @@ getput_vard(NC               *ncp,
 
     if (bufcount == 0 && buftype != MPI_DATATYPE_NULL) {
         /* if this process has nothing to read/write */
-        if (fIsSet(reqMode, NC_REQ_INDEP)) return NC_NOERR;
         goto err_check;
     }
 
