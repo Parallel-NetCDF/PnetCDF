@@ -63,12 +63,29 @@
               STOP 2
           endif
 
-          err = nf90mpi_def_var(ncid, "test", NF90_INT64, varid)
-          call check(err, 'In nf90mpi_def_var: ')
+          err = nf90mpi_def_var(ncid, "var_int64", NF90_INT64, varid)
+          call check(err, 'In nf90mpi_def_var var_int64: ')
 
           buf = -9
           err = nf90mpi_put_att(ncid, varid, '_FillValue', buf)
-          call check(err, 'In nf90mpi_put_att: ')
+          call check(err, 'In nf90mpi_put_att var_int64: ')
+
+          err = nf90mpi_def_var(ncid, "var_short", NF90_SHORT, varid)
+          call check(err, 'In nf90mpi_def_var var_short: ')
+
+          err = nf90mpi_put_att(ncid, varid, '_FillValue', INT2(-999))
+          call check(err, 'In nf90mpi_put_att var_short: ')
+
+          err = nf90mpi_def_var(ncid, "var_int", NF90_INT, varid)
+          call check(err, 'In nf90mpi_def_var var_int: ')
+
+          err = nf90mpi_put_att(ncid, varid, '_FillValue', -999.9)
+          if (err .EQ. NF90_EBADTYPE) then
+10            FORMAT(A,I3)
+              write(msg,10) '*** test_attr_int64.f90 expects NF90_EBADTYPE but got ', err
+              call pass_fail(1, msg)
+              STOP 2
+          endif
 
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')
