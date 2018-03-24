@@ -113,6 +113,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/F90/test_attr_int64.f90 - tests the bug fixed in r3730 that
+      nf90mpi_put_att API writes a scalar attribute of type NF90_INT64 that
+      was mistakenly casted to NF90_INT.
     * test/testcase/test_vard_rec.c - tests ncmpi_put_vard APIs for writing a
       record variable with one record at a time. This is to test the fix to
       bug reported by Jim Edwards in r3675.

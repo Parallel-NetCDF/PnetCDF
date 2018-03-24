@@ -427,7 +427,7 @@ err_check:
             ncmpii_in_swapn(buf, bnelems, varp->xsz);
 
         if (IS_RECVAR(varp)) {
-            /* update header's number of records in memory */
+            /* update header's number of records */
             MPI_Offset new_numrecs = true_ub / ncp->recsize;
             if (true_ub % ncp->recsize) new_numrecs++;
 
