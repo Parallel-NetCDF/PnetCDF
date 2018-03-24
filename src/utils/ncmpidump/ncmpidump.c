@@ -274,11 +274,11 @@ pr_att_vals(nc_type       type,
                 break;
             case NC_INT64:
                 sll = vals[iel];
-                Printf ("%lldL", sll); /* match netCDF4 ncdump type indicator */
+                Printf ("%lldLL", sll); /* match netCDF4 ncdump type indicator */
                 break;
             case NC_UINT64:
                 ull = vals[iel];
-                Printf ("%lluUL", ull);/* match netCDF4 ncdump type indicator */
+                Printf ("%lluULL", ull);/* match netCDF4 ncdump type indicator */
                 break;
             default:
                 error("pr_att_vals: bad type");
