@@ -80,7 +80,7 @@
           call check(err, 'In nf90mpi_def_var var_int: ')
 
           err = nf90mpi_put_att(ncid, varid, '_FillValue', -999.9)
-          if (err .EQ. NF90_EBADTYPE) then
+          if (err .NE. NF90_EBADTYPE) then
 10            FORMAT(A,I3)
               write(msg,10) '*** test_attr_int64.f90 expects NF90_EBADTYPE but got ', err
               call pass_fail(1, msg)
