@@ -29,7 +29,7 @@
           implicit none
 
           character(LEN=256) filename, cmd, msg
-          integer rank, err, ierr, ncid, cmode, get_args, xtype
+          integer rank, err, ierr, ncid, cmode, get_args, xtype, varid
           integer(kind=MPI_OFFSET_KIND) :: buf
 
           call MPI_Init(err)
@@ -50,6 +50,7 @@
                                MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
 
+          buf = 5
           err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'attr_ll', buf)
           call check(err, 'In nf90mpi_put_att: ')
 
@@ -61,6 +62,13 @@
               call pass_fail(1, msg)
               STOP 2
           endif
+
+          err = nf90mpi_def_var(ncid, "test", NF90_INT64, varid)
+          call check(err, 'In nf90mpi_def_var: ')
+
+          buf = -9
+          err = nf90mpi_put_att(ncid, varid, '_FillValue', buf)
+          call check(err, 'In nf90mpi_put_att: ')
 
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')
