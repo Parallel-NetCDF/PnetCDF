@@ -113,6 +113,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/test_fillvalue.c - tests PnetCDF allows to put attribute
+      _FillValue for global variable and for non-global variable, requires the
+      data type of attribute _FillValue be the same as the variable's. 
     * test/F90/test_attr_int64.f90 - tests the bug fixed in r3730 that
       nf90mpi_put_att API writes a scalar attribute of type NF90_INT64 that
       was mistakenly casted to NF90_INT.
@@ -129,7 +132,14 @@ This is essentially a placeholder for the next release note ...
       files and checks expected error codes.
 
   o Conformity with NetCDF library
-    * none
+    * NetCDF allows to put attribute _FillValue of any NC data type to the
+      global variable, NC_GLOBAL. PnetCDF conforms with this behavior.
+    * For non-global variables, NetCDF treats the classic and HDF5 files
+      differently. For classic files, it allows to create attribute _FillValue
+      of a data type that is different from the variable's. For HDF5 files, the
+      data type of attribute _FillValue must be the same as the variable.
+      PnetCDF requires the data type of attribute _FillValue be the same as
+      the variable's.
 
   o Conflict with NetCDF library
     * none

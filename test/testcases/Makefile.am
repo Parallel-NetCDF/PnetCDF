@@ -69,7 +69,8 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                tst_max_var_dims \
                tst_info \
                tst_vars_fill \
-               tst_def_var_fill
+               tst_def_var_fill \
+               test_fillvalue
 
 M4_SRCS  = put_all_kinds.m4 erange_fill.m4 tst_vars_fill.m4 iput_all_kinds.m4
 
