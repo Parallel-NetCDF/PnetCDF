@@ -748,7 +748,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
      */
     MPI_Datatype ptype;
     int el_size;
-    int isderived, buftype_is_contig;
+    int buftype_is_contig;
     MPI_Offset bnelems;
 
     if (buftype == MPI_DATATYPE_NULL) {
@@ -766,16 +766,16 @@ ncmpio_subfile_getput_vars(NC               *ncp,
         buftype = ncmpii_nc2mpitype(varp->xtype);
     }
 
-    status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
-                                 &isderived, &buftype_is_contig);
+    status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems, NULL,
+                                 &buftype_is_contig);
     /* bnelems now is the number of ptype in a buftype */
     if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
 #ifdef SUBFILE_DEBUG
     MPI_Aint lb, extent;
     MPI_Type_get_extent(buftype, &lb, &extent);
-    printf("rank(%d): var(%s): ptype=0x%x, el_size=%d, bnelems=%d, isderived=%d, buftype_is_contig=%d, lb=%d, extent=%d\n",
-           myrank, varp->name, ptype, el_size, bnelems, isderived, buftype_is_contig, lb, extent);
+    printf("rank(%d): var(%s): ptype=0x%x, el_size=%d, bnelems=%d, buftype_is_contig=%d, lb=%d, extent=%d\n",
+           myrank, varp->name, ptype, el_size, bnelems, buftype_is_contig, lb, extent);
 #endif
 
     /* if buftype is non-contiguous, pack to contiguous buffer*/

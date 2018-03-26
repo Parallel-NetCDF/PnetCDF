@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     int i, j, verbose=1, err, nerrs=0;
-    int nprocs, len, *buf[NUM_VARS], bufsize, rank;
+    int nprocs, len=0, *buf[NUM_VARS], bufsize, rank;
     int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     char filename[256], str[512];

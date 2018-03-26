@@ -236,7 +236,7 @@
       NF_EREAD                    = -205, & ! Unknown error in reading file
       NF_EWRITE                   = -206, & ! Unknown error in writting to file
       NF_EOFILE                   = -207, & ! file open/creation failed
-      NF_EMULTITYPES              = -208, & ! Multiple types used in memory data
+      NF_EMULTITYPES              = -208, & ! Multiple etypes used in MPI datatype
       NF_EIOMISMATCH              = -209, & ! Input/Output data amount mismatch
       NF_ENEGATIVECNT             = -210, & ! Negative count is specified
       NF_EUNSPTETYPE              = -211, & ! Unsupported etype in memory MPI datatype
