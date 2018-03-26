@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[256], str[512];
-    int i, j, k, rank, nprocs, len, bufsize, verbose=1;
+    int i, j, k, rank, nprocs, len=0, bufsize, verbose=1;
     int *buf, psizes[NDIMS];
     vector<MPI_Offset> gsizes(NDIMS), starts(NDIMS), counts(NDIMS), imap(NDIMS);
     vector<MPI_Offset> startsT(NDIMS), countsT(NDIMS), strides(NDIMS);

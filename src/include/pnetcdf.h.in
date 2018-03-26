@@ -545,7 +545,7 @@ by the desired type. */
 #define NC_EREAD			(-205) /**< Unknown error in reading file */
 #define NC_EWRITE			(-206) /**< Unknown error in writing to file */
 #define NC_EOFILE			(-207) /**< file open/creation failed */
-#define NC_EMULTITYPES			(-208) /**< Multiple types used in memory data */
+#define NC_EMULTITYPES			(-208) /**< Multiple etypes used in MPI datatype */
 #define NC_EIOMISMATCH			(-209) /**< Input/Output data amount mismatch */
 #define NC_ENEGATIVECNT			(-210) /**< Negative count is specified */
 #define NC_EUNSPTETYPE			(-211) /**< Unsupported etype in memory MPI datatype */

@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[256], str[512];
-    int i, j, k, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
+    int i, j, k, rank, nprocs, len=0, ncid, bufsize, verbose=1, err, nerrs=0;
     int *buf, psizes[NDIMS], dimids[NDIMS], dimidsT[NDIMS];
     int XYZ_id, XZY_id, YZX_id, YXZ_id, ZYX_id, ZXY_id;
     MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS], imap[NDIMS];

@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[256], str[512];
-    int i, j, rank, nprocs, len, bufsize, verbose=1;
+    int i, j, rank, nprocs, len=0, bufsize, verbose=1;
     int *buf[NUM_VARS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     vector<MPI_Offset> starts(NDIMS), counts(NDIMS);

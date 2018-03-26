@@ -527,7 +527,7 @@ int main(int argc, char** argv) {
     char filename[256];
     int i, rank, nprocs, verbose=1, nerrs=0;
     double timing[11], max_t[11];
-    MPI_Offset len, w_size=0, r_size=0, sum_w_size, sum_r_size;
+    MPI_Offset len=0, w_size=0, r_size=0, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
     MPI_Info w_info_used, r_info_used;
 
