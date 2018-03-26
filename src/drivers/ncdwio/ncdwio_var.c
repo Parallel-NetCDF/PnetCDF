@@ -191,9 +191,15 @@ ncdwio_put_var(void             *ncdp,
                                    NULL, NULL, NULL, NULL);
         if (err != NC_NOERR) return err;;
 
-        err = ncmpii_pack(ndims, count, imap, (void*)buf, bufcount, buftype,
-                          &nelems, &etype, &cbuf);
-        if (err != NC_NOERR) return err;
+        if (buftype != MPI_DATATYPE_NULL){
+            err = ncmpii_pack(ndims, count, imap, (void*)buf, bufcount, buftype,
+                            &nelems, &etype, &cbuf);
+            if (err != NC_NOERR) return err;
+        }
+        else{
+            etype = MPI_DATATYPE_NULL;
+            nelems = 0;
+        }
 
         imap     = NULL;
         bufcount = (nelems == 0) ? 0 : -1;  /* make it a high-level API */
@@ -255,6 +261,16 @@ ncdwio_iput_var(void             *ncdp,
 {
     int i, err, id;
     NC_dw *ncdwp = (NC_dw*)ncdp;
+
+    /* Initialize driver if not yet initialized 
+     * Since PnetCDF allow nonblocking requests in define mode, we must initialize the driver if it hasn't been initialized
+     */
+    if (!ncdwp->inited){
+        err = ncdwio_init(ncdwp);
+        if (err != NC_NOERR){
+            return err;
+        }
+    }
 
     // Create a new put request with id
     err = ncdwio_put_list_add(ncdwp, &id);
@@ -414,7 +430,7 @@ ncdwio_put_varn(void              *ncdp,
     /* Resolve flexible api so we can calculate size of each put_var */
     if (bufcount != -1){
         int isderived, iscontig_of_ptypes;
-        int elsize, position;
+        int elsize, position = 0;
         MPI_Offset bnelems = 0;
 
         err = ncmpii_dtype_decode(buftype, &ptype, &elsize, &bnelems, &isderived, &iscontig_of_ptypes);
@@ -492,6 +508,16 @@ ncdwio_iput_varn(void               *ncdp,
     /* It is illegal for starts to be NULL unless num is 0*/
     if (num > 0 && starts == NULL){
         DEBUG_RETURN_ERROR(NC_ENULLSTART)
+    }
+
+    /* Initialize driver if not yet initialized 
+     * Since PnetCDF allow nonblocking requests in define mode, we must initialize the driver if it hasn't been initialized
+     */
+    if (!ncdwp->inited){
+        err = ncdwio_init(ncdwp);
+        if (err != NC_NOERR){
+            return err;
+        }
     }
 
     // Create a new put request with id

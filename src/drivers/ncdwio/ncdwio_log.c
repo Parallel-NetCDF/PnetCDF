@@ -405,7 +405,7 @@ int ncdwio_log_close(NC_dw *ncdwp) {
     /* If log file is created, flush the log */
     if (ncdwp->metalog_fd >= 0){
         /* Commit to CDF file */
-        if (headerp->num_entries > 0){
+        if (headerp->num_entries > 0 || !(ncdwp->isindep)){
             log_flush(ncdwp);
         }
 

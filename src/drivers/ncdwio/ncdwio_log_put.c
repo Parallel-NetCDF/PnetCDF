@@ -66,7 +66,12 @@ int ncdwio_log_put_var(NC_dw *ncdwp, int varid, const MPI_Offset start[],
     }
 
     /* Calcalate submatrix size */
-    MPI_Type_size(buftype, &elsize);
+    if (buftype != MPI_DATATYPE_NULL){
+        MPI_Type_size(buftype, &elsize);
+    }
+    else{
+        elsize = 0;
+    }
     size = (MPI_Offset)elsize;
     for(i = 0; i < dim; i++){
         size *= count[i];
