@@ -240,9 +240,29 @@ ncdwio_enddef(void *ncdp)
     if (ncdwp->inited){
         /* Update log with new information */
         err = ncdwio_log_enddef(ncdwp);
-        if (err != NC_NOERR) return err;
     }
     else {
+        err = ncdwio_init(ncdwp);
+    }
+    if (err != NC_NOERR) return err;
+
+    return NC_NOERR;
+}
+
+/*
+ * Initialize the driver for data handling
+ * Must be called on before first data operation, including nonblocking request
+ * Initialize the log
+ * Initialize metadata index
+ * Initialize nonblocking request pool
+ */
+int
+ncdwio_init(NC_dw *ncdwp)
+{
+    int err;
+    
+    /* If logfile are not initialized, we initialize the logfile */
+    if (!ncdwp->inited){
         /* Init log file */
         err = ncdwio_log_create(ncdwp, ncdwp->info);
         if (err != NC_NOERR) {
