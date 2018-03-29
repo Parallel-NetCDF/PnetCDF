@@ -211,7 +211,7 @@ int sanity_check(PNC          *pncp,
 
     /* blocking get/put APIs must be called in data mode */
     if (io == API_PUT || io == API_GET)
-        if ((pncp->flag & NC_MODE_DEF) &&!(pncp->mode & NC_NETCDF4)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
+        if ((pncp->flag & NC_MODE_DEF)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     /* for blocking APIs, check if in collective or independent mode */
     if (io == API_PUT || io == API_GET) {

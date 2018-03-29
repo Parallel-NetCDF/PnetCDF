@@ -376,7 +376,7 @@ ncmpi_del_att(int         ncid,
         goto err_check;
     }
 
-    if (!(pncp->flag & NC_MODE_DEF) && !(pncp->mode & NC_NETCDF4)) { /* must be called in define mode */
+    if (!(pncp->flag & NC_MODE_DEF)) { /* must be called in define mode */
         DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
         goto err_check;
     }

@@ -673,7 +673,7 @@ ncmpi_enddef(int ncid) {
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (!(pncp->flag & NC_MODE_DEF) && !(pncp->mode & NC_NETCDF4)) DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
+    if (!(pncp->flag & NC_MODE_DEF)) DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
 
     if (pncp->flag & NC_MODE_SAFE) {
         int minE, mpireturn;
@@ -710,7 +710,7 @@ ncmpi__enddef(int        ncid,
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (!(pncp->flag & NC_MODE_DEF)  && !(pncp->mode & NC_NETCDF4)) {
+    if (!(pncp->flag & NC_MODE_DEF)) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
         goto err_check;
     }
@@ -783,7 +783,7 @@ ncmpi_redef(int ncid)
      * program to hang */
     
     /* cannot be in define mode, must enter from data mode */
-    if (fIsSet(pncp->flag, NC_MODE_DEF) && !(pncp->mode & NC_NETCDF4)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
+    if (fIsSet(pncp->flag, NC_MODE_DEF)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
     
     /* calling the subroutine that implements ncmpi_redef() */
     err = pncp->driver->redef(pncp->ncp);
