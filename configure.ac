@@ -1335,7 +1335,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
     if test "x${NETCDF_INSTALL}" != x ; then 
         CPPFLAGS+=" -I${NETCDF_INSTALL}/include"
         LDFLAGS+=" -L${NETCDF_INSTALL}/lib"
-        LIBS+=" -lnetcdf"
+        LIBS+=" -lnetcdf -lhdf5 -lhdf5_hl"
     fi
 
     if test "x${HDF5_INSTALL}" != x ; then
