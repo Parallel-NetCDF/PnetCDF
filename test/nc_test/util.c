@@ -891,7 +891,6 @@ check_dims(int  ncid)
     }
 }
 
-
 /*
  * check variables of specified file have expected name, type, shape & values
  */
