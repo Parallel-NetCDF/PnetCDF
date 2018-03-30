@@ -32,7 +32,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-    if (!(pncp->flag & NC_MODE_DEF) && (pncp->format != NC_FORMAT_NETCDF4 && pncp->format != NC_FORMAT_NETCDF4_CLASSIC)) { /* must be called in define mode */
+    if (!(pncp->flag & NC_MODE_DEF)) { /* must be called in define mode */
         DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
         goto err_check;
     }
