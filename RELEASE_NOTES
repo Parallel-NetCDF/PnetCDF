@@ -481,7 +481,7 @@ version  1.8.0 (December 19, 2016)
       are unsigned. NetCDF-3 specifically makes an exception to skip NC_ERANGE
       check when calling _uchar APIs on NC_BYTE variables. However, in netCDF-4
       and CDF-5, because of the introduction of the new data type NC_UBYTE, an
-      unsigned 8-bit integer, which makes NC_BYTE an signed 8-bit integer and
+      unsigned 8-bit integer, which makes NC_BYTE a signed 8-bit integer and
       thus renders the above exception less sense. Starting from this release,
       for CDF-5 files, regular NC_ERANGE check is performed in PnetCDF for all
       APIs that access NC_BYTE variables. For CDF-1 and 2 files, PnetCDF still
@@ -1373,7 +1373,7 @@ version  1.4.0 (November 17, 2013)
     The original design of nonblocking I/O is to concatenate the fileviews of
     individual nonblocking requests and serve them with a single MPI-IO call,
     if possible. However, because MPI-IO requires the file displacements of
-    the flattened fileview be in an monotonically nondecreasing order, the
+    the flattened fileview be in a monotonically nondecreasing order, the
     original approach (in v1.3.1 and prior) divides the nonblocking requests
     into groups such that each group abides by this MPI-IO fileview
     requirement. Each group is then carried out by a separate MPI-IO call.
