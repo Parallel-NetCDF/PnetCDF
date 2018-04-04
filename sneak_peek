@@ -6,7 +6,13 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New optimization
-    * none
+    * Prior to this release, when buftype in flexible APIs indicates a
+      noncontiguous layout in user buffer, PnetCDF packs the user buffer into
+      a contiguous buffer allocated internally, which will later be used in
+      MPI-IO calls. To reduce memory footprint, this release avoids the
+      additional memory allocation and directly uses the user buffer in MPI-IO
+      calls when byte-swap and type-conversion are not required. See r3722 and
+      r3723.
 
   o New Limitations
     * none
