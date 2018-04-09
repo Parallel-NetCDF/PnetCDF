@@ -81,7 +81,8 @@ int logtype2mpitype(int type, MPI_Datatype *buftype){
 int log_flush(NC_dw *ncdwp) {
     int i, j, lb, ub, err, status = NC_NOERR;
     int *reqids, *stats;
-    int ready, ready_all = 0;
+    //int ready, ready_all = 0;
+    int nrounds, nrounds_all;
     size_t databufferused, databuffersize, dataread;
     NC_dw_metadataentry *entryp;
     MPI_Offset *start, *count, *stride;
@@ -116,6 +117,35 @@ int log_flush(NC_dw *ncdwp) {
         ncdwp->max_buffer = databuffersize;
     }
 #endif
+
+    /* Sync rounds */
+    databufferused = 0;
+    dataread = 0;
+    nrounds = 0;
+    err = ncdwio_bufferedfile_seek(ncdwp->datalog_fd, 8, SEEK_SET);
+    if (err != NC_NOERR){
+        return err;
+    }
+    headerp = (NC_dw_metadataheader*)ncdwp->metadata.buffer;
+    entryp = (NC_dw_metadataentry*)(((char*)ncdwp->metadata.buffer) + headerp->entry_begin);
+    for (i = 0; i < ncdwp->metaidx.nused; i++){
+        if (ncdwp->metaidx.entries[i].valid){
+            if (ncdwp->entrydatasize.values[i] + databufferused > databuffersize){
+                nrounds++;
+                databufferused = ncdwp->entrydatasize.values[i];
+            }
+            else{
+                databufferused += ncdwp->entrydatasize.values[i];
+            }
+        }
+    }
+    nrounds++;
+    if (ncdwp->isindep){
+        MPI_Allreduce(&nrounds, &nrounds_all, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    }
+    else{
+        nrounds_all = nrounds;
+    }
 
     /* Allocate buffer */
     databuffer = (char*)NCI_Malloc(databuffersize);
@@ -291,6 +321,8 @@ int log_flush(NC_dw *ncdwp) {
         /*
          * In case of collective flush, we sync our status with other processes
          */
+        nrounds_all--;
+        /*
         if (!ncdwp->isindep){
             if (lb >= ncdwp->metaidx.nused){
                 ready = 1;
@@ -305,11 +337,19 @@ int log_flush(NC_dw *ncdwp) {
                 DEBUG_RETURN_ERROR(ncmpii_error_mpi2nc(err, "MPI_Allreduce"));
             }
         }
+        */
     }
 
     /*
      * In case of collective flush, we must continue to call wait until every process is ready
      */
+    while(nrounds_all--){
+        err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, 0, NULL, NULL, NC_REQ_COLL);
+        if (status == NC_NOERR) {
+            status = err;
+        }
+    }
+    /*
     if (!ncdwp->isindep){
         ready = 1;
         while(!ready_all){
@@ -326,6 +366,7 @@ int log_flush(NC_dw *ncdwp) {
             }
         }
     }
+    */
 
     /* Free the data buffer */
     NCI_Free(databuffer);
