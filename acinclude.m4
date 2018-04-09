@@ -1652,8 +1652,17 @@ rm -f conftest.$ac_ext
 AC_LANG_PUSH([C])
 ])
 
-dnl check the availability of one MPI executable
+dnl check the availability of one MPI executable in $2
+dnl Note $2 can be a compiler name followed by compile options. In this case
+dnl we check the first string token, the compiler name.
+dnl In addition, $2 can contain the full path of the compiler.
 AC_DEFUN([UD_MPI_PATH_PROG], [
+   if test "x$2" = x ; then
+      AC_MSG_ERROR("2nd argument cannot be NULL")
+   else
+      AC_MSG_CHECKING($2)
+   fi
+
    dnl 1st token in $2 must be the program name, rests are command-line options
    ac_first_token=`echo $2 | cut -d" " -f1`
    ac_rest_tokens=`echo $2 | cut -d" " -s -f2-`
@@ -1685,22 +1694,31 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
       AC_PATH_PROG([ac_mpi_prog_$1], [$ac_first_token])
    fi
    UD_MSG_DEBUG([ac_mpi_prog_$1=${ac_mpi_prog_$1}])
+
+   dnl In case ac_first_token is a full path, the above test may still set
+   dnl ac_mpi_prog_$1 to NULL
    if test "x${ac_mpi_prog_$1}" = x ; then
-      dnl AC_CHECK_FILE fails when $ac_first_token is not found in cross compile
-      dnl AC_CHECK_FILE([$ac_first_token], [ac_mpi_prog_$1=$2])
-      AC_CHECK_PROG([ac_mpi_prog_$1], [$ac_first_token])
-      dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
-      dnl ac_first_token=`echo $2 | cut -d" " -f1`
-      dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)
-      dnl if test -f $ac_first_token ; then
-         dnl UD_MSG_DEBUG(use file $ac_first_token as it exits)
-         dnl ac_mpi_prog_$1=$2
-      dnl fi
-   else
-      if test "x$ac_rest_tokens" != x ; then
-         ac_mpi_prog_$1="$ac_mpi_prog_$1 $ac_rest_tokens"
+      dnl Note we cannot use AC_CHECK_FILE because it fails for cross compiling
+      dnl with error: cannot check for file existence when cross compiling
+      ac_mpi_prog_path=`dirname $ac_first_token`
+      ac_mpi_prog_name=`basename $ac_first_token`
+      UD_MSG_DEBUG(ac_mpi_prog_path=$ac_mpi_prog_path)
+      UD_MSG_DEBUG(ac_mpi_prog_name=$ac_mpi_prog_name)
+      if (! test -d "${ac_mpi_prog_path}") ; then
+         AC_MSG_ERROR(Directory '${ac_mpi_prog_path}' does not exist)  
+      fi
+
+      AC_PATH_PROG([ac_mpi_prog_$1], [$ac_mpi_prog_name], [], [$ac_mpi_prog_path])
+      if test "x$ac_mpi_prog_$1" = x ; then
+         AC_MSG_ERROR($ac_mpi_prog_name cannot be found under $ac_mpi_prog_path)
       fi
    fi
+
+   dnl add back the compile options if there is any
+   if test "x$ac_rest_tokens" != x ; then
+      ac_mpi_prog_$1="$ac_mpi_prog_$1 $ac_rest_tokens"
+   fi
+
    $1=${ac_mpi_prog_$1}
 ])
 
@@ -1726,7 +1744,8 @@ AC_DEFUN([UD_MPI_PATH_PROGS], [
    if test "x${ac_mpi_prog_$1}" = x ; then
       dnl AC_CHECK_FILES fails when $2 is not found in cross compile
       dnl AC_CHECK_FILES([$2], [ac_mpi_prog_$1=$2])
-      AC_CHECK_PROGS([ac_mpi_prog_$1], [$2])
+      AC_PATH_PROGS([ac_mpi_prog_$1], [$2])
+      dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2])
       dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
       dnl ac_first_token=`echo $2 | cut -d" " -f1`
       dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)
