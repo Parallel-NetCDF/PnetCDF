@@ -60,9 +60,9 @@ dnl PNETCDF_RELEASE_DATE2=`echo $SVN_DATE | cut -d' ' -f2`
 dnl PNETCDF_RELEASE_DATE=`echo $SVN_DATE | cut -d' ' -f6,7,8 | cut -d')' -f1`
 
 dnl user defined macro for printing messages for debugging
-_DEBUG=no
+dnl add "pnc_ac_debug=yes" at command line to enable
 AC_DEFUN([UD_MSG_DEBUG],
-         [if test "x${_DEBUG}" = xyes ; then
+         [if test "x${pnc_ac_debug}" = xyes ; then
              AC_MSG_NOTICE([DEBUG: $1])
           fi
          ]
@@ -152,15 +152,14 @@ MPI_INSTALL=
 AC_ARG_WITH(mpi,
    [AS_HELP_STRING([--with-mpi=/path/to/implementation],
                    [The installation prefix path for MPI implementation.])],
-   if test x"$withval" = xyes; then
-      AC_MSG_ERROR(--with-mpi must be given a pathname)
-   else
-      MPI_INSTALL=${withval}
-   fi
+   [if test "x${withval}" = x ; then
+       AC_MSG_ERROR(--with-mpi is set but the value is NULL)
+    fi
+    if (! test -d "${withval}") ; then
+      AC_MSG_ERROR(Directory '${withval}' specified in --with-mpi does not exist)
+    fi
+    MPI_INSTALL=${withval}]
 )
-if test "x${MPI_INSTALL}" != x && (! test -d "${MPI_INSTALL}") ; then
-   AC_MSG_ERROR(Directory '${MPI_INSTALL}' specified in --with-mpi does not exist)
-fi
 dnl MPI_INSTALL will be referred in UD_MPI_PATH_PROGS and UD_MPI_PATH_PROG
 dnl defined in acinclude.m4
 
@@ -236,6 +235,8 @@ CANDIDATE_MPIF90+=" mpipgf90 mpipgf95 mppgf90 mppgf95 "
 
 dnl find the full path of MPICC from CANDIDATE_MPICC and MPI_INSTALL
 if test "x${ac_user_MPICC}" = x ; then
+   dnl if MPICC or CC has not been set by users, then search from
+   dnl CANDIDATE_MPICC, and find the full path of MPICC
    UD_MPI_PATH_PROGS([MPICC], [$CANDIDATE_MPICC])
 else
    dnl check whether user specified MPICC is valid
@@ -324,6 +325,8 @@ dnl If MPICXX or CXX has not been set by users, then
 dnl search from CANDIDATE_MPICXX and find the full path of MPICXX
 if test "x${enable_cxx}" != xno ; then
    if test "x${ac_user_MPICXX}" = x ; then
+      dnl if MPICXX or CXX has not been set by users, then search from
+      dnl CANDIDATE_MPICXX, and find the full path of MPICXX
       UD_MPI_PATH_PROGS([MPICXX], [$CANDIDATE_MPICXX])
    else
       dnl check whether user specified MPICXX is valid
@@ -1450,6 +1453,7 @@ AC_ARG_VAR(TESTSEQRUN, [Run command (on one MPI process) for "make check" on cro
 
 AC_ARG_VAR(TESTMPIRUN, [MPI run command for "make ptest", @<:@default: mpiexec -n NP@:>@])
 if test "x${TESTMPIRUN}" = x ; then
+   dnl if TESTMPIRUN has not been set by users, then
    dnl set default to "mpiexec -n NP"
    UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun srun])
    if test "x${TESTMPIRUN}" != x ; then

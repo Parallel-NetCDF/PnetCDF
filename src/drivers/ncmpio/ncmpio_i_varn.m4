@@ -247,11 +247,9 @@ ncmpio_$1_varn(void               *ncdp,
 
     if (reqid != NULL) *reqid = NC_REQ_NULL;
 
-    /* check for zero-size request */
-    if (num == 0 || bufcount == 0 || fIsSet(reqMode, NC_REQ_ZERO))
-        return NC_NOERR;
-
-    /* Note sanity check for ncdp and varid has been done in dispatchers */
+    /* Note sanity check for ncdp and varid has been done in the dispatcher.
+     * The same for zero-size request checking (return immediately)
+     */
 
     return igetput_varn(ncp, ncp->vars.value[varid], num, starts, counts,
                         (void*)buf, bufcount, buftype, reqid, reqMode);
