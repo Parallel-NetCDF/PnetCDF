@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <mpi.h>
 
@@ -90,6 +91,18 @@ nc4io_rename_dim(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* New name can not be longer than old one in data mode */
+    if (!fIsSet(nc4p->flag, NC_MODE_DEF)){
+        char oldname[NC_MAX_NAME + 1];
+        err = nc_inq_dimname(nc4p->ncid, dimid, oldname);
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(err);
+        }
+        if (strlen(newname) > strlen(oldname)){
+            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE);
+        }
+    }
+
     /* Call nc_rename_dim */
     err = nc_rename_dim(nc4p->ncid, dimid, newname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);

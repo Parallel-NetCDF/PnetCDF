@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <mpi.h>
 #include <pnc_debug.h>
@@ -96,8 +97,12 @@ nc4io_rename_att(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
-    /* Read only driver */
-    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* New name can not be longer than old one in data mode */
+    if (!fIsSet(nc4p->flag, NC_MODE_DEF)){
+        if (strlen(newname) > strlen(name)){
+            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE);
+        }
+    }
     
     /* Call nc_rename_att */
     err = nc_rename_att(nc4p->ncid, varid, name, newname);
