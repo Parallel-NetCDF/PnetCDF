@@ -202,11 +202,23 @@ nc4io_get_var(void             *ncdp,
     size_t *sstart, *scount, *sstride, *simap;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* Inq variable dim */
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
     if (start == NULL){
         apikind = NC4_API_KIND_VAR;
+        // VAR should be transformed to VARA by the dispatcher
+        if (ndim > 0){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
     }
     else if (count == NULL){
         apikind = NC4_API_KIND_VAR1;
+        // VAR1 should be transformed to VARA by the dispatcher
+        if (ndim > 0){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
     }
     else if (stride == NULL){
         apikind = NC4_API_KIND_VARA;
@@ -217,10 +229,6 @@ nc4io_get_var(void             *ncdp,
     else{
         apikind = NC4_API_KIND_VARM;
     }
-
-    /* Inq variable dim */
-    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Convert to MPI_Offset if not scalar */
     if(ndim > 0){
@@ -259,11 +267,23 @@ nc4io_put_var(void             *ncdp,
     size_t *sstart, *scount, *sstride, *simap;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* Inq variable dim */
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
     if (start == NULL){
         apikind = NC4_API_KIND_VAR;
+        // VAR should be transformed to VARA by the dispatcher
+        if (ndim > 0){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
     }
     else if (count == NULL){
         apikind = NC4_API_KIND_VAR1;
+        // VAR1 should be transformed to VARA by the dispatcher
+        if (ndim > 0){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
     }
     else if (stride == NULL){
         apikind = NC4_API_KIND_VARA;
@@ -274,10 +294,6 @@ nc4io_put_var(void             *ncdp,
     else{
         apikind = NC4_API_KIND_VARM;
     }
-
-    /* Inq variable dim */
-    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Convert to MPI_Offset if not scalar */
     if(ndim > 0){

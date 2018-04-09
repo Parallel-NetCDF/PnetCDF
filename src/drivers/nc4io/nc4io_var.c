@@ -51,6 +51,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <mpi.h>
 
@@ -136,6 +137,18 @@ nc4io_rename_var(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* New name can not be longer than old one in data mode */
+    if (!fIsSet(nc4p->flag, NC_MODE_DEF)){
+        char oldname[NC_MAX_NAME + 1];
+        err = nc_inq_varname(nc4p->ncid, varid, oldname);
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(err);
+        }
+        if (strlen(newname) > strlen(oldname)){
+            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE);
+        }
+    }
+
     /* Call nc_rename_var */
     err = nc_rename_var(nc4p->ncid, varid, newname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -263,8 +276,15 @@ nc4io_get_varn(void              *ncdp,
 {
     int i, j, ndim, err;
     int elsize;
+    int num_all;
     size_t putsize;
+    MPI_Offset *dstart, *dcount;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* Check arguments */
+    if (starts == NULL){
+        DEBUG_RETURN_ERROR(NC_ENULLSTART)
+    }
 
     /* Get variable dimensionality */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
@@ -293,21 +313,49 @@ nc4io_get_varn(void              *ncdp,
         elsize = nc4io_nc_type_size(type);
     }
 
-    /* Call nc4io_get_var for N times */
-    for(i = 0; i < num; i++){
-        err = nc4io_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
-        if (err != NC_NOERR){
-            return err;
+    /* In Collective mode, number of vara calls must be the same accross processes */
+    if (fIsSet(nc4p->flag, NC_MODE_INDEP)){
+        num_all = num;
+    }
+    else{
+        MPI_Allreduce(&num, &num_all, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        if (num_all > num){
+            dstart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
+            dcount = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
+            memset(dstart, 0, sizeof(MPI_Offset) * ndim);
+            memset(dcount, 0, sizeof(MPI_Offset) * ndim);
         }
-        
-        /* Calculate the size of each put_var */
-        putsize = (size_t)elsize;
-        for(j = 0; j < ndim; j++){
-            putsize *= counts[i][j];
-        }
+    }
 
-        /* Move buffer pointer */
-        buf = (void*)(((char*)buf) + putsize);
+    /* Call nc4io_get_var for N times */
+    for(i = 0; i < num_all; i++){
+        if (i < num){
+            err = nc4io_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
+            if (err != NC_NOERR){
+                return err;
+            }
+            
+            /* Calculate the size of each put_var */
+            putsize = (size_t)elsize;
+            for(j = 0; j < ndim; j++){
+                putsize *= counts[i][j];
+            }
+
+            /* Move buffer pointer */
+            buf = (void*)(((char*)buf) + putsize);
+        }
+        else{
+            // Follow collective IO by doing dummy API call
+            err = nc4io_get_var(ncdp, varid, dstart, dcount, NULL, NULL, buf, bufcount, buftype, reqMode);
+            if (err != NC_NOERR){
+                return err;
+            }
+        }
+    }
+
+    if (num_all > num){
+        NCI_Free(dstart);
+        NCI_Free(dcount);
     }
 
     return NC_NOERR;
@@ -326,8 +374,15 @@ nc4io_put_varn(void              *ncdp,
 {
     int i, j, ndim, err;
     int elsize;
+    int num_all;
     size_t putsize;
+    MPI_Offset *dstart, *dcount;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* Check arguments */
+    if (starts == NULL){
+        DEBUG_RETURN_ERROR(NC_ENULLSTART)
+    }
 
     /* Get variable dimensionality */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
@@ -355,22 +410,50 @@ nc4io_put_varn(void              *ncdp,
         
         elsize = nc4io_nc_type_size(type);
     }
+
+    /* In Collective mode, number of vara calls must be the same accross processes */
+    if (fIsSet(nc4p->flag, NC_MODE_INDEP)){
+        num_all = num;
+    }
+    else{
+        MPI_Allreduce(&num, &num_all, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        if (num_all > num){
+            dstart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
+            dcount = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
+            memset(dstart, 0, sizeof(MPI_Offset) * ndim);
+            memset(dcount, 0, sizeof(MPI_Offset) * ndim);
+        }
+    }
     
     /* Call nc4io_put_var for N times */
-    for(i = 0; i < num; i++){
-        err = nc4io_put_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
-        if (err != NC_NOERR){
-            return err;
-        }
-        
-        /* Calculate the size of each put_var */
-        putsize = (size_t)elsize;
-        for(j = 0; j < ndim; j++){
-            putsize *= counts[i][j];
-        }
+    for(i = 0; i < num_all; i++){
+        if (i < num){
+            err = nc4io_put_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
+            if (err != NC_NOERR){
+                return err;
+            }
+            
+            /* Calculate the size of each put_var */
+            putsize = (size_t)elsize;
+            for(j = 0; j < ndim; j++){
+                putsize *= counts[i][j];
+            }
 
-        /* Move buffer pointer */
-        buf = (void*)(((char*)buf) + putsize);
+            /* Move buffer pointer */
+            buf = (void*)(((char*)buf) + putsize);
+        }
+        else{
+            // Follow collective IO by doing dummy API call
+            err = nc4io_put_var(ncdp, varid, dstart, dcount, NULL, NULL, buf, bufcount, buftype, reqMode);
+            if (err != NC_NOERR){
+                return err;
+            }
+        }
+    }
+
+    if (num_all > num){
+        NCI_Free(dstart);
+        NCI_Free(dcount);
     }
 
     return NC_NOERR;

@@ -69,6 +69,11 @@ nc4io_create(MPI_Comm     comm,
              info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Set fill mdoe to NC_NOFILL
+     * netcdf default fill mode is NC_FILL */
+    err = nc_set_fill(ncidtmp, NC_NOFILL, NULL);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
     /* Create a NC_nc4 object and save its driver pointer */
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
     if (nc4p == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -80,10 +85,13 @@ nc4io_create(MPI_Comm     comm,
     }
     strcpy(nc4p->path, path);
     nc4p->mode   = cmode;
-    nc4p->flag   = 0;
+    nc4p->flag   = NC_MODE_DEF;
     nc4p->ncid  = ncid;
     nc4p->comm   = comm;
     nc4p->ncid = ncidtmp;
+    if (cmode & NC_MODE_RDONLY){
+        fSet(nc4p->flag, NC_MODE_RDONLY);
+    }
 
     *ncpp = nc4p;
 
@@ -124,6 +132,9 @@ nc4io_open(MPI_Comm     comm,
     nc4p->ncid  = ncid;
     nc4p->comm   = comm;
     nc4p->ncid = ncidtmp;
+    if (omode & NC_MODE_RDONLY){
+        fSet(nc4p->flag, NC_MODE_RDONLY);
+    }
 
     *ncpp = nc4p;
 
@@ -158,6 +169,9 @@ nc4io_enddef(void *ncdp)
     err = nc_enddef(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Clear def flag */
+    fClr(nc4p->flag, NC_MODE_DEF);
+
     return NC_NOERR;
 }
 
@@ -175,6 +189,9 @@ nc4io__enddef(void       *ncdp,
     err = nc__enddef(nc4p->ncid, (size_t)h_minfree, (size_t)v_align, (size_t)v_minfree, (size_t)r_align);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Clear def flag */
+    fClr(nc4p->flag, NC_MODE_DEF);
+
     return NC_NOERR;
 }
 
@@ -188,6 +205,9 @@ nc4io_redef(void *ncdp)
     err = nc_redef(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* Set def flag */
+    fSet(nc4p->flag, NC_MODE_DEF);
+
     return NC_NOERR;
 }
 
@@ -197,6 +217,11 @@ nc4io_begin_indep_data(void *ncdp)
     int i, err, nvar;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* Make sure we are in data mode */
+    if (fIsSet(nc4p->flag, NC_MODE_DEF)){
+        DEBUG_RETURN_ERROR(NC_EINDEFINE);
+    }
+
     /* Get number of variables */
     err = nc_inq(nc4p->ncid, NULL, &nvar, NULL, NULL);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -219,6 +244,11 @@ nc4io_end_indep_data(void *ncdp)
     int i, err, nvar;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* Make sure we are in data mode */
+    if (fIsSet(nc4p->flag, NC_MODE_DEF)){
+        DEBUG_RETURN_ERROR(NC_EINDEFINE);
+    }
+
     /* Get number of variables */
     err = nc_inq(nc4p->ncid, NULL, &nvar, NULL, NULL);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -452,6 +482,16 @@ nc4io_set_fill(void *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* Not avaiable in read-only mode */
+    if (fIsSet(nc4p->flag, NC_MODE_RDONLY)){
+        DEBUG_RETURN_ERROR(NC_EPERM);
+    }
+
+    /* Make sure we are in define mode */
+    if (!fIsSet(nc4p->flag, NC_MODE_DEF)){
+        DEBUG_RETURN_ERROR(NC_ENOTINDEFINE);
+    }
+
     /* Call nc_set_fill */
     err = nc_set_fill(nc4p->ncid, fill_mode, old_fill_mode);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -508,6 +548,11 @@ nc4io_sync(void *ncdp)
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* Make sure we are in data mode */
+    if (fIsSet(nc4p->flag, NC_MODE_DEF)){
+        DEBUG_RETURN_ERROR(NC_EINDEFINE);
+    }
+
     /* Call nc_sync */
     err = nc_sync(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);

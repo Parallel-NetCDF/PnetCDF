@@ -1344,7 +1344,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
         LIBS+=" -lhdf5 -lhdf5_hl"
     fi
 
-    LIBS+=" -lm"
+    LIBS+=" -lm -ldl"
 
     have_hdf5=no
     AC_MSG_CHECKING(HDF5 library)
