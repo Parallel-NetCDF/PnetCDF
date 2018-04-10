@@ -140,8 +140,8 @@ int log_flush(NC_dw *ncdwp) {
         }
     }
     nrounds++;
-    if (ncdwp->isindep){
-        MPI_Allreduce(&nrounds, &nrounds_all, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    if (!ncdwp->isindep){
+        MPI_Allreduce(&nrounds, &nrounds_all, 1, MPI_INT, MPI_MAX, ncdwp->comm);
     }
     else{
         nrounds_all = nrounds;
