@@ -47,6 +47,11 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 
+if BUILD_DRIVER_DW
+	TESTDW = 1
+	TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
+endif
+
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
@@ -85,6 +90,11 @@ ptest ptest4: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
@@ -94,6 +104,11 @@ ptest2: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+    if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
 ptest6: $(TESTPROGRAMS)
@@ -102,6 +117,11 @@ ptest6: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; done ; } ; done
 
