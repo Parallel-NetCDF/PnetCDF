@@ -234,6 +234,7 @@ int ncdwio_log_put_var(NC_dw *ncdwp, int varid, const MPI_Offset start[], const 
 int ncdwio_log_close(NC_dw *ncdwp);
 int ncdwio_log_flush(NC_dw *ncdwp);
 int ncdwio_log_enddef(NC_dw *ncdwp);
+int ncdwio_init(NC_dw *ncdwp);
 
 int ncdwio_put_list_init(NC_dw *ncdwp);
 int ncdwio_put_list_resize(NC_dw *ncdwp);
