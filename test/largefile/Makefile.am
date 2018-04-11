@@ -95,6 +95,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
@@ -109,6 +110,7 @@ ptest2: $(TESTPROGRAMS)
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest6: $(TESTPROGRAMS)
@@ -123,6 +125,7 @@ ptest6: $(TESTPROGRAMS)
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6
