@@ -178,6 +178,9 @@ int main(int argc, char** argv)
     long long *buffer[4], *cbuffer[4], *rbuffer[4];
     int num_segs[4] = {4, 6, 5, 4};
     int req_lens[4], my_nsegs[4];
+#ifdef BUILD_DRIVER_DW
+    int dw_enabled=0;
+#endif
     MPI_Datatype buftype[4];
     MPI_Offset **starts[4], **counts[4];
     MPI_Offset n_starts[4][6][2] = {{{0,5}, {1,0}, {2,6}, {3,0}, {0,0}, {0,0}},
@@ -300,6 +303,20 @@ int main(int argc, char** argv)
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
+#ifdef BUILD_DRIVER_DW
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_dw", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            dw_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
+
     /* create a global array of size NY * NX */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
@@ -327,7 +344,13 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-    nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    if (!dw_enabled) {
+#endif
+        nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    }
+#endif
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
@@ -378,7 +401,13 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-    nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    if (!dw_enabled) {
+#endif
+        nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    }
+#endif
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
@@ -439,7 +468,13 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-    nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    if (!dw_enabled) {
+#endif
+        nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    }
+#endif
     nerrs += check_num_pending_reqs(ncid, nreqs*2, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
@@ -534,7 +569,13 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-    nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    if (!dw_enabled) {
+#endif
+        nerrs += clear_file_contents(ncid, varid);
+#ifdef BUILD_DRIVER_DW
+    }
+#endif
     nerrs += check_num_pending_reqs(ncid, nreqs*3, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
