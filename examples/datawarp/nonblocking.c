@@ -120,12 +120,12 @@ int main(int argc, char** argv)
 
     /* Set up the hints for DataWarp driver in ncmpi_create
      * Note that the remaining part of the code remains unchanged
-     * PnetCDF will warn if nc_dw_dirname is not set.
+     * PnetCDF will warn if nc_bb_dirname is not set.
      */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_dw", "enable");
+    MPI_Info_set(info, "nc_bb", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_dw_dirname", argv[1]);
+        MPI_Info_set(info, "nc_bb_dirname", argv[1]);
     }
 
     /* create a new file using clobber mode ----------------------------------*/

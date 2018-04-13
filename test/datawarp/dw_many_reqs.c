@@ -59,8 +59,8 @@ int main(int argc, char *argv[]) {
 
     /* Initialize file info */
 	MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_dw", "enable");
-    MPI_Info_set(info, "nc_dw_overwrite", "enable");
+    MPI_Info_set(info, "nc_bb", "enable");
+    MPI_Info_set(info, "nc_bb_overwrite", "enable");
 
     /* Create new netcdf file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);    CHECK_ERR

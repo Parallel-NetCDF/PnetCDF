@@ -35,7 +35,7 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
 if [ -n "${TESTDW}" ]; then
    # Run using DataWarp driver
-   export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable"
+   export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
    ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds_dw.nc
    ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds_dw.nc
    unset PNETCDF_HINTS

@@ -73,7 +73,7 @@ TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 ptest ptest4: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR}" ; \
 	set -e ; for i in $(TESTPROGRAMS) ; do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
@@ -83,7 +83,7 @@ ptest ptest4: $(TESTPROGRAMS)
 ptest2: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR}" ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
@@ -93,7 +93,7 @@ ptest2: $(TESTPROGRAMS)
 ptest6: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR}" ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \

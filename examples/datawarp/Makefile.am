@@ -33,7 +33,7 @@ TESTMPIRUN8  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/8/g'`
 ptest ptest4: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR}" ; \
 	for i in $(check_PROGRAMS); do { \
         if [ $$i = "get_vara" ] ; then \
            $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
@@ -50,7 +50,7 @@ ptest ptest4: $(check_PROGRAMS)
 ptest8: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR}" ; \
 	for i in $(check_PROGRAMS); do { \
         if [ $$i = "get_vara" ] ; then \
            $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
@@ -67,7 +67,7 @@ ptest8: $(check_PROGRAMS)
 ptest3: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR}" ; \
 	for i in $(check_PROGRAMS) ; do { \
         if [ $$i = "get_vara" ] ; then \
            $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \

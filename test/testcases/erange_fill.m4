@@ -187,7 +187,7 @@ int test_erange_put_$1_$2(char* filename) {
         MPI_Info infoused;
 
         ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_dw", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
             dw_enabled = 1;
         MPI_Info_free(&infoused);

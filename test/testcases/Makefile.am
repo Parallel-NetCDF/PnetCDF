@@ -180,7 +180,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTDW)" ]; then ( \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \
@@ -192,7 +192,7 @@ ptest2: $(TESTPROGRAMS)
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTDW)" ]; then ( \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \
@@ -204,7 +204,7 @@ ptest6: $(TESTPROGRAMS)
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTDW)" ]; then ( \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \

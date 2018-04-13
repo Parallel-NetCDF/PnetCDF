@@ -296,8 +296,8 @@ ncmpi_create(MPI_Comm    comm,
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
 
-        /* check if nc_dw is enabled */
-        MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
+        /* check if nc_bb is enabled */
+        MPI_Info_get(combined_info, "nc_bb", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_dw_driver = 1;
@@ -313,7 +313,7 @@ ncmpi_create(MPI_Comm    comm,
 #endif
 #ifdef BUILD_DRIVER_DW
     if (enable_dw_driver)
-        driver = ncdwio_inq_driver();
+        driver = ncbbio_inq_driver();
     else
 #endif
         driver = ncmpio_inq_driver();
@@ -486,8 +486,8 @@ ncmpi_open(MPI_Comm    comm,
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
 
-        /* check if nc_dw is enabled */
-        MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
+        /* check if nc_bb is enabled */
+        MPI_Info_get(combined_info, "nc_bb", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_dw_driver = 1;
@@ -500,7 +500,7 @@ ncmpi_open(MPI_Comm    comm,
 #endif
 #ifdef BUILD_DRIVER_DW
     if (enable_dw_driver)
-        driver = ncdwio_inq_driver();
+        driver = ncbbio_inq_driver();
     else
 #endif
     {
