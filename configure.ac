@@ -179,12 +179,12 @@ ac_user_MPICC=$MPICC
 ac_user_MPICXX=$MPICXX
 ac_user_MPIF77=$MPIF77
 ac_user_MPIF90=$MPIF90
-if test "x$MPICC"  = x && test "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
-if test "x$MPICXX" = x && test "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
-if test "x$MPIF77" = x && test "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
-if test "x$MPIF77" = x && test "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
-if test "x$MPIF90" = x && test "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
-if test "x$MPIF90" = x && test "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
+if test "x$MPICC"  = x -a "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
+if test "x$MPICXX" = x -a "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
+if test "x$MPIF77" = x -a "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
+if test "x$MPIF77" = x -a "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
+if test "x$MPIF90" = x -a "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
+if test "x$MPIF90" = x -a "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
 
 CANDIDATE_MPICC="${MPICC} mpicc mpicc_r"
 CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC mpcxx mpc++ mpicxx_r mpiCC_r mpcxx_r mpic++_r mpc++_r"
@@ -364,7 +364,7 @@ if test "x${enable_cxx}" != xno ; then
    fi
 fi
 
-if test "x${enable_cxx}" = xno || test "x${MPICXX}" = x ; then
+if test "x${enable_cxx}" = xno -o "x${MPICXX}" = x ; then
    dnl when cxx is explicitly disabled or no MPICXX can be found
    has_mpicxx=no
 else
@@ -651,7 +651,7 @@ AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])
 
 if test "x${has_fortran}" = xyes ; then
-   if test "x${enable_strict}" = xyes && test "x${GFC}" = xyes; then
+   if test "x${enable_strict}" = xyes -a "x${GFC}" = xyes; then
       dnl not all Fortran compilers recognize -Wall
       FFLAGS+=" -Wall"
       FCFLAGS+=" -Wall"
@@ -954,8 +954,7 @@ if test "x${debug}" = xyes; then
    AC_CHECK_FUNCS([tsearch tdelete])
 
    dnl check required functions for enabling malloc tracing
-   if (test "x${ac_cv_func_tsearch}" = xyes) &&
-      (test "x${ac_cv_func_tdelete}" = xyes) ; then
+   if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
       AC_DEFINE(PNC_MALLOC_TRACE)
    fi
    PNETCDF_DEBUG=1
@@ -1129,7 +1128,7 @@ dnl For big Endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little Endian, put buffer may be used for byte swap in
 dnl place and hence must be declared as INTENT(INOUT).
 dnl This will configure/produce the file src/binding/f90/api.f90
-if test "x${ac_cv_c_bigendian}" = xyes  || (test "x${in_place_swap}" = xno) ; then
+if test "x${ac_cv_c_bigendian}" = xyes -o "x${in_place_swap}" = xno ; then
    INTENTV="IN"
 else
    INTENTV="INOUT"
@@ -1616,7 +1615,7 @@ if test "x${debug}" = xyes; then
    echo "\
               PnetCDF internal debug mode                 - enabled"
 fi
-if test "x${has_fortran}" = xyes && (test "x${ac_f77_support_freeform}" = xno) ; then
+if test "x${has_fortran}" = xyes -a "x${ac_f77_support_freeform}" = xno ; then
    echo "\
               Support free form in Fortran 77             - disabled"
 fi

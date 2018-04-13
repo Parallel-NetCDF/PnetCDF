@@ -76,14 +76,14 @@ install-data-hook:
 	@echo '|  * PnetCDF man pages have been installed in'
 	@echo '|          $(DESTDIR)$(prefix)/share/man'
 	@echo '|'
-	@if test 'x$(has_fortran)' = xyes && test 'x$(FC_MODINC)' = 'x-I' ; then \
+	@if test 'x$(has_fortran)' = xyes -a 'x$(FC_MODINC)' = 'x-I' ; then \
 	 echo '|  To compile your PnetCDF programs, please add the following to the command' ; \
 	else \
 	 echo '|  To compile your PnetCDF C programs, please add the following to the command' ; \
 	fi
 	@echo '|  line, so the compiler can find the PnetCDF header files:'
 	@echo '|      -I$(DESTDIR)$(prefix)/include'
-	@if test "x$(has_fortran)" = xyes && test 'x$(FC_MODINC)' != 'x-I' ; then \
+	@if test "x$(has_fortran)" = xyes -a 'x$(FC_MODINC)' != 'x-I' ; then \
 	 echo '|  Use the following line to compile your Fortran programs'; \
 	 echo '|      $(FC_MODINC)$(DESTDIR)$(prefix)/include' ; \
 	fi
