@@ -33,7 +33,7 @@
 int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     int i, rank, np, err, flag, masterrank;
     char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
-    char *abspath, *fname;
+    char *abspath, *fname, *fdir = NULL;
     char *private_path = NULL, *stripe_path = NULL;
     char *logbasep = ".";
     int log_per_node = 0;
@@ -66,22 +66,45 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     /* Determine log file name
      * Log file name is $(bufferdir)$(basename)_$(ncid)_$(rank).{meta/data}
      * filepath is absolute path to the cdf file
+     * If buffer directory is not set, we use the same directory as the NetCDF file
      */
 
     /* Read environment variable for burst buffer path */
-    private_path = getenv("DW_JOB_PRIVATE");
-    stripe_path = getenv("DW_JOB_STRIPED");
+    //private_path = getenv("DW_JOB_PRIVATE");
+    //stripe_path = getenv("DW_JOB_STRIPED");
 
     /* Determine log base */
     if (ncbbp->logbase[0] != '\0'){
         logbasep = ncbbp->logbase;
     }
-    else if (private_path != NULL){
-        logbasep = private_path;
+    else{
+        /* Warn if log base not set by user */
+        if (rank == 0){
+            printf("Warning: Log directory not set. Using %s.\n", logbase);
+            fflush(stdout);
+        }
+        i = strlen(ncbbp->path);
+        fdir = (char*)NCI_Malloc((i + 1) * sizeof(char));
+        strncpy(fdir, ncbbp->path, i + 1);
+        /* Search for first '\' from the back */
+        for(i--; i > -1; i--){
+            if (fdir[i] == '/'){
+                fdir[i + 1] = '\0';
+                break;
+            }
+        }
+
+        /* If directory is fund, use it as logbase */
+        if (i >= 0){
+            logbasep = fdir;
+        }
     }
-    else if (stripe_path != NULL){
-        logbasep = stripe_path;
-    }
+    //else if (private_path != NULL){
+    //    logbasep = private_path;
+    //}
+    //else if (stripe_path != NULL){
+    //    logbasep = stripe_path;
+    //}
 
     /*
      * Make sure bufferdir exists
@@ -106,38 +129,35 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         DEBUG_RETURN_ERROR(NC_EBAD_FILE);
     }
 
-    /* Warn if log base not set by user */
-    if (rank == 0){
-        if (ncbbp->logbase[0] == '\0'){
-            printf("Warning: Log directory not set. Using %s.\n", logbase);
-            fflush(stdout);
-        }
+    if (fdir != NULL){
+        NCI_Free(fdir);
     }
 
-    /* Determine log to process mapping */
+    /*
+    /* Determine log to process mapping *
     if (rank == 0){
         int j;
         char abs_private_path[NC_LOG_PATH_MAX], abs_stripe_path[NC_LOG_PATH_MAX];
 
-        /* Resolve DW_JOB_PRIVATE and DW_JOB_STRIPED into absolute path*/
+        /* Resolve DW_JOB_PRIVATE and DW_JOB_STRIPED into absolute path*
         memset(abs_private_path, 0, sizeof(abs_private_path));
         memset(abs_stripe_path, 0, sizeof(abs_stripe_path));
         if (private_path != NULL){
             abspath = realpath(private_path, abs_private_path);
             if (abspath == NULL){
-                /* Can not resolve absolute path */
+                /* Can not resolve absolute path *
                 memset(abs_private_path, 0, sizeof(abs_private_path));
             }
         }
         if (stripe_path != NULL){
             abspath = realpath(stripe_path, abs_stripe_path);
             if (abspath == NULL){
-                /* Can not resolve absolute path */
+                /* Can not resolve absolute path *
                 memset(abs_stripe_path, 0, sizeof(abs_stripe_path));
             }
         }
 
-        /* Match against logbase */
+        /* Match against logbase *
         for(i = 0; i < NC_LOG_PATH_MAX; i++){
             if (logbase[i] == '\0' || abs_private_path[i] == '\0'){
                 break;
@@ -157,7 +177,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
         /* Whichever has longer matched prefix is considered a match
          * Use log per node only when striped mode wins
-         */
+         *
         if (j > i) {
             log_per_node = 1;
         }
@@ -165,13 +185,18 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
             log_per_node = 0;
         }
 
-        /* Hints can overwrite the default action */
+        /* Hints can overwrite the default action *
         if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE){
             log_per_node = 1;
         }
     }
     MPI_Bcast(&log_per_node, 1, MPI_INT, 0, ncbbp->comm);
+    /*
 
+    /* Communicator for processes sharing log files */
+    if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE){
+        log_per_node = 1;
+    }
     if (log_per_node){
         MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncbbp->logcomm));
