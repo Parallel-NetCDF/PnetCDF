@@ -178,8 +178,8 @@ int main(int argc, char** argv)
     long long *buffer[4], *cbuffer[4], *rbuffer[4];
     int num_segs[4] = {4, 6, 5, 4};
     int req_lens[4], my_nsegs[4];
-#ifdef BUILD_DRIVER_DW
-    int dw_enabled=0;
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
 #endif
     MPI_Datatype buftype[4];
     MPI_Offset **starts[4], **counts[4];
@@ -303,7 +303,7 @@ int main(int argc, char** argv)
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     {
         int flag;
         char hint[MPI_MAX_INFO_VAL];
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
         ncmpi_inq_file_info(ncid, &infoused);
         MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
-            dw_enabled = 1;
+            bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
 #endif
@@ -344,11 +344,11 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-#ifdef BUILD_DRIVER_DW
-    if (!dw_enabled) {
+#ifdef BUILD_DRIVER_BB
+    if (!bb_enabled) {
 #endif
         nerrs += clear_file_contents(ncid, varid);
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     }
 #endif
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
@@ -401,11 +401,11 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-#ifdef BUILD_DRIVER_DW
-    if (!dw_enabled) {
+#ifdef BUILD_DRIVER_BB
+    if (!bb_enabled) {
 #endif
         nerrs += clear_file_contents(ncid, varid);
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     }
 #endif
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
@@ -468,11 +468,11 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-#ifdef BUILD_DRIVER_DW
-    if (!dw_enabled) {
+#ifdef BUILD_DRIVER_BB
+    if (!bb_enabled) {
 #endif
         nerrs += clear_file_contents(ncid, varid);
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     }
 #endif
     nerrs += check_num_pending_reqs(ncid, nreqs*2, __LINE__);
@@ -569,11 +569,11 @@ int main(int argc, char** argv)
 
     /* clear the file contents using a blocking API, before commit the
      * nonblocking requests posted in define mode */
-#ifdef BUILD_DRIVER_DW
-    if (!dw_enabled) {
+#ifdef BUILD_DRIVER_BB
+    if (!bb_enabled) {
 #endif
         nerrs += clear_file_contents(ncid, varid);
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     }
 #endif
     nerrs += check_num_pending_reqs(ncid, nreqs*3, __LINE__);

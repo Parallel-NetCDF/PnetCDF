@@ -135,15 +135,15 @@ SH_LOG_COMPILER =
 
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
-if BUILD_DRIVER_DW
+if BUILD_DRIVER_BB
 TESTDW = 1
 TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
-NC_FILES += $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf1 \
-            $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf2 \
-            $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf5 \
-            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf1 \
-            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf2 \
-            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf5
+NC_FILES += $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf1 \
+            $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf2 \
+            $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf5 \
+            $(TESTOUTDIR)/iput_all_kinds_bb.nc.cdf1 \
+            $(TESTOUTDIR)/iput_all_kinds_bb.nc.cdf2 \
+            $(TESTOUTDIR)/iput_all_kinds_bb.nc.cdf5
 endif
 
 BURST_BUFFER_FILES = $(NC_FILES:=_*.meta) $(NC_FILES:=_*.data)

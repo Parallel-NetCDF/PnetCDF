@@ -121,8 +121,8 @@ int clear_file_contents(int ncid, int *varid)
 {
     int i, err, rank, nerrs=0;
     long long *w_buffer = (long long*) malloc(NY*NX * sizeof(long long));
-#ifdef BUILD_DRIVER_DW
-    int dw_enabled=0;
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
 
     {
         int flag;
@@ -132,7 +132,7 @@ int clear_file_contents(int ncid, int *varid)
         ncmpi_inq_file_info(ncid, &infoused);
         MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
-            dw_enabled = 1;
+            bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
 #endif
@@ -147,9 +147,9 @@ int clear_file_contents(int ncid, int *varid)
     }
     free(w_buffer);
 
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     // Flush the log to prevent new value being skipped due to overlaping domain
-    if (dw_enabled) {
+    if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
@@ -270,8 +270,8 @@ test_varn(int ncid, int rank, int *varid)
               -  -  -  -  -  -  -  X  X  X
      */
 
-#ifdef BUILD_DRIVER_DW
-    int dw_enabled=0;
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
 
     {
         int flag;
@@ -281,7 +281,7 @@ test_varn(int ncid, int rank, int *varid)
         ncmpi_inq_file_info(ncid, &infoused);
         MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
-            dw_enabled = 1;
+            bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
 #endif

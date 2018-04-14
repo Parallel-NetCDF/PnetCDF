@@ -47,7 +47,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 
-if BUILD_DRIVER_DW
+if BUILD_DRIVER_BB
 	TESTDW = 1
 	TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
 endif

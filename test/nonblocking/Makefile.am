@@ -93,7 +93,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh
 
-if BUILD_DRIVER_DW
+if BUILD_DRIVER_BB
 TESTDW = 1
 TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
 endif
