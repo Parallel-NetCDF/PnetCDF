@@ -12,7 +12,7 @@ if BUILD_DRIVER_FOO
    SUBDIRS += ncfoo
 endif
 
-if BUILD_DRIVER_DW
+if BUILD_DRIVER_BB
    SUBDIRS += ncbbio
 endif
 

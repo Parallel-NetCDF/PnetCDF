@@ -20,7 +20,7 @@ EXTRA_DIST = README.CRAY \
              README.Ubuntu \
              README.consistency \
              README.large_files \
-             README.DataWarp \
+             README.burst buffer \
              pbs.script
 
 # For VPATH build (parallel build), try delete all sub-directories

@@ -235,7 +235,7 @@ ncmpi_create(MPI_Comm    comm,
 {
     int default_format, rank, status=NC_NOERR, err;
     int safe_mode=0, mpireturn, root_cmode;
-    int enable_foo_driver=0, enable_dw_driver=0;
+    int enable_foo_driver=0, enable_bb_driver=0;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -300,7 +300,7 @@ ncmpi_create(MPI_Comm    comm,
         MPI_Info_get(combined_info, "nc_bb", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
-            enable_dw_driver = 1;
+            enable_bb_driver = 1;
     }
 
     /* Use environment variable and cmode to tell the file format
@@ -311,8 +311,8 @@ ncmpi_create(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef BUILD_DRIVER_DW
-    if (enable_dw_driver)
+#ifdef BUILD_DRIVER_BB
+    if (enable_bb_driver)
         driver = ncbbio_inq_driver();
     else
 #endif
@@ -403,7 +403,7 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, nalloc, rank, format, msg[2], status=NC_NOERR, err;
-    int enable_foo_driver=0, enable_dw_driver=0;
+    int enable_foo_driver=0, enable_bb_driver=0;
     int safe_mode=0, mpireturn, root_omode;
     char *env_str;
     MPI_Info combined_info;
@@ -490,7 +490,7 @@ ncmpi_open(MPI_Comm    comm,
         MPI_Info_get(combined_info, "nc_bb", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
-            enable_dw_driver = 1;
+            enable_bb_driver = 1;
     }
 
 #ifdef BUILD_DRIVER_FOO
@@ -498,8 +498,8 @@ ncmpi_open(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef BUILD_DRIVER_DW
-    if (enable_dw_driver)
+#ifdef BUILD_DRIVER_BB
+    if (enable_bb_driver)
         driver = ncbbio_inq_driver();
     else
 #endif

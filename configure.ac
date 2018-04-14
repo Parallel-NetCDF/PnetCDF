@@ -116,7 +116,7 @@ AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is def
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
-AH_TEMPLATE([BUILD_DRIVER_DW],          [Define if to enable DataWarp burst buffer feature])
+AH_TEMPLATE([BUILD_DRIVER_BB],          [Define if to enable burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 
@@ -1417,19 +1417,19 @@ if test "x${null_byte_header_padding}" = xyes ; then
 fi
 AC_SUBST(ENABLE_NULL_BYTE_HEADER_PADDING)
 
-AC_ARG_ENABLE([datawarp],
-   [AS_HELP_STRING([--enable-datawarp],
-                   [Enable DataWarp driver support. @<:@default: disabled@:>@])],
-   [enable_dwdriver=${enableval}], [enable_dwdriver=no]
+AC_ARG_ENABLE([burstbuffer],
+   [AS_HELP_STRING([--enable-burstbuffer],
+                   [Enable burst buffer driver support. @<:@default: disabled@:>@])],
+   [enable_bbdriver=${enableval}], [enable_bbdriver=no]
 )
 
-BUILD_DRIVER_DW=0
-if test "x$enable_dwdriver" = "xyes" ; then
-   AC_DEFINE(BUILD_DRIVER_DW)
-   BUILD_DRIVER_DW=1
+BUILD_DRIVER_BB=0
+if test "x$enable_bbdriver" = "xyes" ; then
+   AC_DEFINE(BUILD_DRIVER_BB)
+   BUILD_DRIVER_BB=1
 fi
-AC_SUBST(BUILD_DRIVER_DW)
-AM_CONDITIONAL(BUILD_DRIVER_DW, [test x$enable_dwdriver = xyes])
+AC_SUBST(BUILD_DRIVER_BB)
+AM_CONDITIONAL(BUILD_DRIVER_BB, [test x$enable_bbdriver = xyes])
 
 AC_ARG_ENABLE([profiling],
    [AS_HELP_STRING([--enable_profiling],
@@ -1536,7 +1536,7 @@ AC_CONFIG_FILES(Makefile \
                 examples/CXX/Makefile \
                 examples/F77/Makefile \
                 examples/F90/Makefile \
-                examples/datawarp/Makefile \
+                examples/burstbuffer/Makefile \
                 benchmarks/Makefile \
                 benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
@@ -1560,7 +1560,7 @@ AC_CONFIG_FILES(Makefile \
                 test/nf90_test/Makefile \
                 test/nf90_test/tests.inc \
                 test/F90/Makefile \
-                test/datawarp/Makefile \
+                test/burstbuffer/Makefile \
 )
 
 dnl The following dependency is for configure.in and configure
@@ -1628,9 +1628,9 @@ if test "x${null_byte_header_padding}" = xyes ; then
    echo "\
               Check null-byte header padding for reads    - enabled"
 fi
-if test "x${enable_dwdriver}" = xyes ; then
+if test "x${enable_bbdriver}" = xyes ; then
    echo "\
-              Cray DataWarp driver                        - enabled"
+              Burst buffer driver                         - enabled"
 fi
 if test "x${enable_profiling}" = xyes ; then
    echo "\

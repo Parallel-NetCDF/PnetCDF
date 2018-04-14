@@ -5,28 +5,28 @@
 # $Id$
 
 -----------------------------------------------------------------------------
- Using DataWarp as Burst Buffers in PnetCDF
+ Using burst buffer as Burst Buffers in PnetCDF
 -----------------------------------------------------------------------------
 
-DataWarp driver is a I/O driver in PnetCDF that implements a log-based I/O
+burst buffer driver is a I/O driver in PnetCDF that implements a log-based I/O
 aggregation for write related I/O requests that is designed to work on Cray
-DataWarp.
+burst buffer.
 
 -----------------------------------------------------------------------------
  Build PnetCDF with Datawarp driver
 -----------------------------------------------------------------------------
 
-To build PnetCDF with DataWarp driver support, simply set "--enable-datawarp"
+To build PnetCDF with burst buffer driver support, simply set "--enable-burstbuffer"
 option at configure time:
 
-./configure --prefix=/path/to/install --enable-datawarp
+./configure --prefix=/path/to/install --enable-burstbuffer
 
 -----------------------------------------------------------------------------
- Running with DataWarp Driver
+ Running with burst buffer Driver
 -----------------------------------------------------------------------------
 
-The DataWarp driver is enable by setting file hints on file creation/opening.
-To enable DataWarp driver, set the hint "nc_bb" to enable.
+The burst buffer driver is enable by setting file hints on file creation/opening.
+To enable burst buffer driver, set the hint "nc_bb" to enable.
 
 MPI_Info_set(info, "nc_bb", "enable");
 
@@ -38,11 +38,11 @@ export PNETCDF_HINTS="nc_bb=enable"
  Using PnetCDF with Datawarp driver
 -----------------------------------------------------------------------------
 
-The DataWarp can be configured using hints. Here's a list of supported hints:
+The burst buffer can be configured using hints. Here's a list of supported hints:
 
 Hint                    Values          Default  Description
 ----                    ------          -------  -----------
-nc_bb                   enable/disable  disable  Whether DataWarp driver is enabled.
+nc_bb                   enable/disable  disable  Whether burst buffer driver is enabled.
 nc_bb_dirname           <Valid POSIX    ./       Directory where log file will be
                         Directory>               stored. This is usually set to the
                                                  path where burst buffer is mounted.
@@ -61,10 +61,10 @@ nc_bb_flush_buffer_size <integer>       0        Amount of memory that can be us
                                                  directly.
 
 -----------------------------------------------------------------------------
- Submitting Job that Enables DataWarp Driver
+ Submitting Job that Enables burst buffer Driver
 -----------------------------------------------------------------------------
 
-We show an example script for enabling DataWarp driver on Cori at NERSC
+We show an example script for enabling burst buffer driver on Cori at NERSC
 
 #!/bin/bash 
 #SBATCH -p debug 
@@ -79,8 +79,8 @@ srun -n 1 ./myapplication
 -----------------------------------------------------------------------------
  Known Problems
 -----------------------------------------------------------------------------
-While we design the DataWarp driver to be as transparent as possible. There are
-some behaviors that can change when the DataWarp driver is used. Here's a list
+While we design the burst buffer driver to be as transparent as possible. There are
+some behaviors that can change when the burst buffer driver is used. Here's a list
 of different behaviors:
 
 1. Log buffering delays actual file write to replay time. If there are errors

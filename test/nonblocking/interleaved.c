@@ -92,8 +92,8 @@ int main(int argc, char** argv)
     size_t len;
     MPI_Offset start[2], count[2];
     MPI_Info info;
-#ifdef BUILD_DRIVER_DW
-    int dw_enabled=0;
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
 #endif
 
     MPI_Init(&argc, &argv);
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 
     MPI_Info_free(&info);
 
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     {
         int flag;
         char hint[MPI_MAX_INFO_VAL];
@@ -140,7 +140,7 @@ int main(int argc, char** argv)
         ncmpi_inq_file_info(ncid, &infoused);
         MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
-            dw_enabled = 1;
+            bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
 #endif
@@ -166,9 +166,9 @@ int main(int argc, char** argv)
     for (i=0; i<NY*NX; i++) buf[i] = -1;
     err = ncmpi_put_var_int_all(ncid, varid[0], buf); CHECK_ERR
 
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     // Flush the log to prevent new value being skipped due to overlaping domain
-    if (dw_enabled) {
+    if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
@@ -209,9 +209,9 @@ int main(int argc, char** argv)
     for (i=0; i<NY*NX; i++) buf[i] = -1;
     err = ncmpi_put_var_int_all(ncid, varid[1], buf); CHECK_ERR
 
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     // Flush the log to prevent new value being skipped due to overlaping domain
-    if (dw_enabled) {
+    if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
