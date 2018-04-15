@@ -84,14 +84,11 @@ nc4io_create(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(nc4p->path, path);
-    nc4p->mode   = cmode;
+    nc4p->mode   = cmode | NC_WRITE;
     nc4p->flag   = NC_MODE_DEF;
     nc4p->ncid  = ncid;
     nc4p->comm   = comm;
     nc4p->ncid = ncidtmp;
-    if (cmode & NC_MODE_RDONLY){
-        fSet(nc4p->flag, NC_MODE_RDONLY);
-    }
 
     *ncpp = nc4p;
 
@@ -132,7 +129,7 @@ nc4io_open(MPI_Comm     comm,
     nc4p->ncid  = ncid;
     nc4p->comm   = comm;
     nc4p->ncid = ncidtmp;
-    if (omode & NC_MODE_RDONLY){
+    if (!fIsSet(omode, NC_WRITE)){
         fSet(nc4p->flag, NC_MODE_RDONLY);
     }
 

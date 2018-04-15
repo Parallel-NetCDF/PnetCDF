@@ -1628,7 +1628,7 @@ if test "x${enable_subfiling}" = xyes; then
 fi
 if test "x${enable_netcdf4}" = xyes; then
    echo "\
-              Build NetCDF4 support                     - ON"
+              Build NetCDF4 support                       - ON"
 fi
 if test "x${enable_relax_coord_bound}" = xyes; then
    echo "\
