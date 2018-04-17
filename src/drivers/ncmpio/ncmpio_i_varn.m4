@@ -73,6 +73,7 @@ igetput_varn(NC                *ncp,
 
     /* calculate the total number of array elements in this request */
     if (counts != NULL) {
+        /* nelems will be the total number of array elements of this varn */
         nelems = 0;
         max_nreqs = 0;
         for (j=0; j<num; j++) {
@@ -80,7 +81,9 @@ igetput_varn(NC                *ncp,
             for (i=0; i<varp->ndims; i++)
                 nlen *= counts[j][i];
             nelems += nlen;
-            if (IS_RECVAR(varp))
+
+            /* calculate the max number of requests to be added to queue */
+            if (IS_RECVAR(varp)) /* each record will be a separate request */
                 max_nreqs += counts[j][0];
             else
                 max_nreqs++;
@@ -91,6 +94,8 @@ igetput_varn(NC                *ncp,
         max_nreqs = num;
     }
 
+    /* xtype is the MPI element type in external representation, xszie is its
+     * size in bytes */
     xtype = ncmpii_nc2mpitype(varp->xtype);
     MPI_Type_size(xtype, &xsize);
 
@@ -106,8 +111,9 @@ igetput_varn(NC                *ncp,
     else if (bufcount == -1) { /* buftype is an MPI primitive data type */
         /* In this case, this subroutine is called from a high-level API.
          * buftype is one of the MPI primitive data type. We set itype to
-         * buftype. In addition, it means the user buf is contiguous.
-         * Hereinafter buftype will no longer be used.
+         * buftype. itype is the MPI element type in internal representation.
+         * In addition, it means the user buf is contiguous. Hereinafter
+         * buftype will no longer be used.
          */
         itype = buftype;
         MPI_Type_size(itype, &isize); /* buffer element size */
@@ -121,27 +127,24 @@ igetput_varn(NC                *ncp,
         if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
         /* itype (primitive MPI data type) from buftype
-         * isize is the element size of itype
+         * isize is the size of itype in bytes
          * bnelems is the total number of itype elements in one buftype
          */
         err = ncmpii_dtype_decode(buftype, &itype, &isize, &bnelems,
-                                     NULL, &isContig);
-
+                                  NULL, &isContig);
         if (err != NC_NOERR) return err;
 
-        bnelems *= bufcount;
-        if (bnelems != nelems) DEBUG_RETURN_ERROR(NC_EIOMISMATCH)
+        if (bnelems * bufcount != nelems) DEBUG_RETURN_ERROR(NC_EIOMISMATCH)
     }
 
-    /* nbytes is the amount of this request in bytes */
+    /* nbytes is the amount of this varn request in bytes */
     nbytes = nelems * xsize;
 
     /* for nonblocking API, return now if request size is zero */
     if (nbytes == 0) return NC_NOERR;
 
 #ifndef ENABLE_LARGE_REQ
-    if (nbytes > INT_MAX)
-        DEBUG_RETURN_ERROR(NC_EMAX_REQ)
+    if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
 #endif
 
     xbuf = buf;
@@ -163,12 +166,13 @@ igetput_varn(NC                *ncp,
         }
 
         /* Because we are going to break the varn request into several vara
-         * requests, we must allocate a contiguous buffer, xbuf, if buftype
-         * is not contiguous. So, we can do byte-swap and type-convert there.
+         * requests, we allocate a contiguous buffer, xbuf, if buftype is not
+         * contiguous. So, we can do byte-swap and type-conversion on xbuf.
          */
         if (fIsSet(reqMode, NC_REQ_NBB)) {
             /* for bput call, check if the remaining buffer space is sufficient
-             * to accommodate this request and obtain a space for xbuf
+             * to accommodate this varn request. If yes, allocate a space for
+             * xbuf.
              */
             if (ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes)
                 DEBUG_RETURN_ERROR(NC_EINSUFFBUF)
@@ -176,7 +180,7 @@ igetput_varn(NC                *ncp,
             if (err != NC_NOERR) return err;
         }
         else if (!need_convert && in_place_swap && isContig) {
-            /* reuse buf to break it into several vara requests */
+            /* reuse buf and break it into multiple vara requests */
             xbuf = buf;
             if (need_swap) need_swap_back_buf = 1;
         }
@@ -202,7 +206,7 @@ igetput_varn(NC                *ncp,
             return err;
         }
 
-        /* allocate/expand write request queue */
+        /* allocate/expand the size of nonblocking write request queue */
         int add_reqs=0;
         if (IS_RECVAR(varp) && counts != NULL) {
             for (i=0; i<num; i++)
@@ -224,9 +228,7 @@ igetput_varn(NC                *ncp,
         }
     }
     else { /* read request */
-        /* Type conversion and byte swap for read are done at wait call, we
-         * need nelems to reverse the steps as done in write case
-         */
+        /* Type conversion and byte swap for read are done at wait call */
 
         if (!need_convert && isContig) {
             /* reuse buf in later MPI file read */
@@ -238,7 +240,7 @@ igetput_varn(NC                *ncp,
             free_xbuf = 1;
         }
 
-        /* allocate/expand read request queue */
+        /* allocate/expand the size of nonblocking read request queue */
         int add_reqs=0;
         if (IS_RECVAR(varp) && counts != NULL) {
             for (i=0; i<num; i++)
@@ -265,7 +267,7 @@ igetput_varn(NC                *ncp,
     reqid = NC_REQ_NULL;
     xbufp = (char*)xbuf;
     for (i=0; i<num; i++) {
-        MPI_Offset req_len=1;
+        MPI_Offset req_len=1; /* number of elements of request i */
         if (counts != NULL) {
             for (j=0; j<varp->ndims; j++)
                 req_len *= counts[i][j];
@@ -292,22 +294,22 @@ igetput_varn(NC                *ncp,
         req->bufcount    = 0;
         req->buftype     = MPI_DATATYPE_NULL;
 
-        /* varn APIs have not argument stride */
+        /* varn APIs have no argument stride */
         fSet(req->flag, NC_REQ_STRIDE_NULL);
 
-        if (reqid == NC_REQ_NULL) { /* first request of the group */
+        if (reqid == NC_REQ_NULL) { /* lead request of the varn group */
             /* mark the first request as the lead request. Only lead requests
-             * perform byte-swap, type-conversion, buffer unpacking.
+             * perform byte-swap, type-conversion, buffer unpacking, and free
+             * xbuf.
              */
             fSet(req->flag, NC_REQ_LEAD);
-
             req->nelems = nelems;
             req->buf = buf;
-            /* only the lead request of this varn group may free xbuf */
             if (free_xbuf) fSet(req->flag, NC_REQ_XBUF_TO_BE_FREED);
 
-            /* Lead request allocates a single array to store start/count for
-             * all requests, including sub-requests if record variable */
+            /* Lead request allocates a single array to store num start/count
+             * for all requests, including sub-requests if record variable.
+             */
             req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * max_nreqs);
             start_ptr = req->start;
 
@@ -347,16 +349,12 @@ igetput_varn(NC                *ncp,
             }
         }
         else {
-            /* use the same reqid so we end up with one nonblocking request
-             * (only the first request gets a new request ID back, the rest
-             * reuse the same ID. This single ID represents num nonblocking
-             * requests.
+            /* Non-lead requests use the same reqid of the lead, so we end up
+             * with one nonblocking request (only the lead request gets a new
+             * request ID).
              */
             req->id = reqid;
         }
-
-        if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs++;
-        else                            ncp->numGetReqs++;
 
         /* copy start and count */
         req->start = start_ptr;
@@ -370,17 +368,18 @@ igetput_varn(NC                *ncp,
             memcpy(start_ptr, counts[i], memChunk);
         start_ptr += varp->ndims;
 
+        if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs++;
+        else                            ncp->numGetReqs++;
+
         if (IS_RECVAR(varp) && counts != NULL && counts[i][0] > 1) {
-            /* If this is a record variable and the number of requesting
+            /* If this is a record variable and the number of requested
              * records is more than 1, we split this request into multiple
              * (sub)requests, one for each record. The number of records is
              * only preserved in the lead request counts[i][0]. The rest
-             * sub-requests counts[i][0] are set to 1. The one preserved in
-             * lead request will be used to byte-swap the I/O buffer once
-             * the file read/write is complete.
+             * sub-requests counts[i][0] are set to 1.
              */
 
-            /* add (counts[i][0]-1) number of (sub)requests */
+            /* add (counts[i][0]-1) number of (sub)requests to the queue */
             ncmpio_add_record_requests(req, NULL);
             start_ptr += (counts[i][0] - 1) * 2 * varp->ndims;
 

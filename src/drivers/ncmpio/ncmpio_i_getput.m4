@@ -167,8 +167,7 @@ ncmpio_igetput_varm(NC               *ncp,
                     MPI_Offset        bufcount,
                     MPI_Datatype      buftype,
                     int              *reqid,    /* out, can be NULL */
-                    int               reqMode,
-                    int               isSameGroup) /* if part of a varn group */
+                    int               reqMode)
 {
     void *xbuf=NULL;
     int err=NC_NOERR, abuf_index=-1, el_size, memChunk;
@@ -201,8 +200,7 @@ ncmpio_igetput_varm(NC               *ncp,
 
     if (nelems == 0) {
         /* zero-length request, mark this as a NULL request */
-        if (!isSameGroup && reqid != NULL)
-            /* only if this is not part of a group request */
+        if (reqid != NULL) /* only if this is not part of a group request */
             *reqid = NC_REQ_NULL;
         return NC_NOERR;
     }
@@ -230,10 +228,7 @@ ncmpio_igetput_varm(NC               *ncp,
 
     if (fIsSet(reqMode, NC_REQ_WR)) { /* pack request to xbuf */
 #if 1
-        /* when user buf is used as xbuf, we need to byte-swap buf
-         * back to its original contents */
         xbuf = buf;
-        need_swap_back_buf = 1;
 
         if (fIsSet(reqMode, NC_REQ_NBB)) {
             /* for bput call, check if the remaining buffer space is sufficient
@@ -253,9 +248,14 @@ ncmpio_igetput_varm(NC               *ncp,
                 if (xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
                 need_swap_back_buf = 0;
             }
+            else /* when user buf is used as xbuf, we need to byte-swap buf
+                  * back to its original contents */
+                need_swap_back_buf = 1;
         }
 
-        /* pack user buffer, buf, to xbuf which will be used to write to file */
+        /* pack user buffer, buf, to xbuf which will be used to write to file.
+         * In the meanwhile, perform byte-swap and type-conversion if required.
+         */
         err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
                                buftype_is_contig, nelems, itype, imaptype,
                                need_convert, need_swap, nbytes, buf, xbuf);
@@ -400,9 +400,7 @@ ncmpio_igetput_varm(NC               *ncp,
 #endif
     }
     else { /* read request */
-        /* Type conversion and byte swap for read are done at wait call, we
-         * need nelems to reverse the steps as done in write case
-         */
+        /* Type conversion and byte swap for read are done at wait call. */
         if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL && !need_convert)
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
         else {
@@ -412,7 +410,7 @@ ncmpio_igetput_varm(NC               *ncp,
     }
 
     if (fIsSet(reqMode, NC_REQ_WR)) {
-        /* allocate or expand write request array */
+        /* allocate or expand the size of write request array */
         int add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
         int rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
         if (rem) rem = NC_REQUEST_CHUNK - rem;
@@ -436,7 +434,7 @@ ncmpio_igetput_varm(NC               *ncp,
         ncp->numPutReqs++;
     }
     else {  /* read request */
-        /* allocate or expand read request array */
+        /* allocate or expand the size of read request array */
         int add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
         int rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
         if (rem) rem = NC_REQUEST_CHUNK - rem;
@@ -459,10 +457,6 @@ ncmpio_igetput_varm(NC               *ncp,
 
         ncp->numGetReqs++;
     }
-
-    /* if isSameGroup, then this request is from i_varn API */
-    if (isSameGroup && reqid != NULL)
-        req->id = *reqid;
 
     req->flag = 0;
     if (buftype_is_contig)  fSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
@@ -583,7 +577,7 @@ ncmpio_i$1_var(void             *ncdp,
 
     return ncmpio_igetput_varm(ncp, ncp->vars.value[varid], start, count,
                                stride, imap, (void*)buf, bufcount, buftype,
-                               reqid, reqMode, 0);
+                               reqid, reqMode);
 }
 ')dnl
 dnl
