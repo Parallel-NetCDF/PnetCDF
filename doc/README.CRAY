@@ -17,9 +17,9 @@
                 MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
                 CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS=""
 
-  On Cori, when using Intel-based compilers are used, NERSC recommends no
-  optimization arguments for compilation. See "Recommended flags" for Intel
-  compilers at
+  On Cori, when using Intel-based compilers, NERSC recommends the default level
+  of optimization, i.e. no optimization arguments to the compiler. See section
+  "Recommended flags" for Intel compilers at
   http://www.nersc.gov/users/computational-systems/cori/programming/compiling-codes-on-cori/
 
 
