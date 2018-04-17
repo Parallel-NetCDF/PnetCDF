@@ -407,6 +407,7 @@ test_varn(int ncid, int rank, int *varid)
                                        counts[i], buffer[i], &reqs[i]);
         CHECK_ERR
     }
+
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
@@ -416,8 +417,8 @@ test_varn(int ncid, int rank, int *varid)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
-                       __LINE__,__FILE__,i,j,rank+10,buffer[i][j]);
+                printf("Error at line %d in %s: expecting var %d buffer[%d][%d]=%d but got %lld\n",
+                       __LINE__,__FILE__,varid[i],i,j,rank+10,buffer[i][j]);
                 nerrs++;
             }
         }
@@ -490,12 +491,15 @@ test_varn(int ncid, int rank, int *varid)
         }
     }
 
-    /* read back using a contiguous buffer. First swap back the starts[] and counts[].
-     * swap segment 0 with segment 2 and swap segment 1 with segment 3
+    /* read back using a contiguous buffer. First swap back the starts[] and
+     * counts[]. swap segment 0 with segment 2 and swap segment 1 with segment
+     * 3
      */
     for (i=0; i<nreqs; i++) {
-        permute(starts[i][0], starts[i][2]); permute(counts[i][0], counts[i][2]);
-        permute(starts[i][1], starts[i][3]); permute(counts[i][1], counts[i][3]);
+        permute(starts[i][0], starts[i][2]);
+        permute(counts[i][0], counts[i][2]);
+        permute(starts[i][1], starts[i][3]);
+        permute(counts[i][1], counts[i][3]);
     }
 
     for (i=0; i<bufsize; i++) cbuffer[0][i] = -1;
@@ -599,9 +603,11 @@ int main(int argc, char** argv)
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
+        if (rank == 0 && sum_size > 0) {
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+            ncmpi_inq_malloc_list();
+        }
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
