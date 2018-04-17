@@ -32,7 +32,7 @@
 /* buffer layers:
 
         User Level              buf     (user defined buffer of MPI_Datatype)
-        MPI Datatype Level      cbuf    (contiguous buffer of ptype)
+        MPI Datatype Level      cbuf    (contiguous buffer of itype)
         NetCDF XDR Level        xbuf    (XDR I/O buffer)
 */
 
@@ -125,8 +125,6 @@ abuf_coalesce(NC *ncp)
         if (req.abuf_index < 0) {                                 \
             if (fIsSet(req.flag, NC_REQ_XBUF_TO_BE_FREED))        \
                 NCI_Free(req.xbuf); /* free xbuf */               \
-            if (fIsSet(req.flag, NC_REQ_BUF_TO_BE_FREED))         \
-                NCI_Free(req.buf);  /* free buf */                \
         }                                                         \
         else  /* this is bput request */                          \
             ncp->abuf->occupy_table[req.abuf_index].is_used = 0;  \
@@ -160,8 +158,6 @@ ncmpio_cancel(void *ncdp,
                 if (ncp->get_list[i].imaptype != MPI_DATATYPE_NULL)
                     MPI_Type_free(&ncp->get_list[i].imaptype);
                 if (!fIsSet(ncp->get_list[i].flag, NC_REQ_BUF_TYPE_IS_CONTIG))
-                    MPI_Type_free(&ncp->get_list[i].buftype);
-                if (fIsSet(ncp->get_list[i].flag, NC_REQ_BUF_TO_BE_FREED))
                     MPI_Type_free(&ncp->get_list[i].buftype);
             }
             FREE_REQUEST(ncp->get_list[i])
@@ -632,7 +628,7 @@ req_commit(NC  *ncp,
            int *statuses,   /* [num_reqs] */
            int  coll_indep) /* NC_REQ_COLL or NC_REQ_INDEP */
 {
-    int i, j, k, err=NC_NOERR, status=NC_NOERR;
+    int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
     int first_non_null_get, first_non_null_put;
     MPI_Offset newnumrecs=0;
@@ -831,36 +827,26 @@ req_commit(NC  *ncp,
      */
 
     for (i=0; i<num_w_reqs; i++) {
-        /* must byte-swap the user buffer back to its original Endianness
-         * only when the buffer itself has been byte-swapped before,
+        /* Lead request must byte-swap the user buffer back to its original
+         * Endianness only when the buffer itself has been byte-swapped before,
          * i.e. NOT buftype_is_contig && NOT need_convert && need_swap
-         * For requests that write to record variables for more than one
-         * record, only the request containing the lead record does this (it
-         * does swap for the entire request)
          */
-        if (fIsSet(put_list[i].flag, NC_REQ_LEAD) &&
-            fIsSet(put_list[i].flag, NC_REQ_BUF_BYTE_SWAP)) {
-            MPI_Offset nelems=1;
-            MPI_Offset *count=put_list[i].start+put_list[i].varp->ndims;
-            for (k=0; k<put_list[i].varp->ndims; k++)
-                nelems *= count[k];
-            ncmpii_in_swapn(put_list[i].buf, nelems, put_list[i].varp->xsz);
+        if (fIsSet(put_list[i].flag, NC_REQ_LEAD)) {
+            if (fIsSet(put_list[i].flag, NC_REQ_BUF_BYTE_SWAP))
+                ncmpii_in_swapn(put_list[i].buf, put_list[i].nelems,
+                                put_list[i].varp->xsz);
+            /* free resource allocated at lead request */
+            if (put_list[i].abuf_index < 0) {
+                if (fIsSet(put_list[i].flag, NC_REQ_XBUF_TO_BE_FREED))
+                    NCI_Free(put_list[i].xbuf); /* free xbuf */
+            }
+            else  /* this is bput request */
+                ncp->abuf->occupy_table[put_list[i].abuf_index].is_used = 0;
         }
+        put_list[i].xbuf = NULL;
+        NCI_Free(put_list[i].start);
     }
-    for (i=0; i<num_w_reqs; i++) {
-        /* Free space allocated for the request objects. During the posting of
-         * a nonblocking varn request, the temporary buffer (cbuf), if
-         * allocated, can be split into several sub-buffers, each used in a
-         * separate requests. If the NC_REQ_BUF_TO_BE_FREED bit of a request
-         * flag is set, it indicates req->buf points to this temporary buffer
-         * and should be freed. Because put_list[] may be sorted based on
-         * offset_start, the request whose NC_REQ_BUF_TO_BE_FREED bit is set may
-         * no longer be the first in the the group, this loop must run after
-         * the above one. We need to go through put_list[] to check each one
-         * for NC_REQ_BUF_TO_BE_FREED in order to free the temporary buffer.
-         */
-        FREE_REQUEST(put_list[i])
-    }
+
     if (num_w_reqs > 0) {
         /* once the bput requests are served, we reclaim the space and try
          * coalesce the freed space for the attached buffer */
@@ -869,25 +855,27 @@ req_commit(NC  *ncp,
     }
 
     for (i=0; i<num_r_reqs; i++) {
-        MPI_Offset nelems, *count;
+        int isContig;
         NC_req *req=get_list+i;
 
-        /* non-lead record requests skip type-conversion/byte-swap/unpack */
-        if (!fIsSet(req->flag, NC_REQ_LEAD)) continue;
+        /* non-lead requests skip type-conversion/byte-swap/unpack */
+        if (!fIsSet(req->flag, NC_REQ_LEAD)) {
+            req->xbuf = NULL;
+            NCI_Free(req->start);
+            continue;
+        }
 
         /* now, xbuf contains the data read from the file.
-         * It may need to be type-converted, byte-swapped, unpacked from xbuf
+         * It may need to be type-converted, byte-swapped from xbuf to
          * buf. This is done in ncmpio_unpack_xbuf().
          */
-        count = req->start + req->varp->ndims;
-        for (nelems=1, k=0; k<req->varp->ndims; k++)
-            nelems *= count[k];
+        isContig = fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
         err = ncmpio_unpack_xbuf(ncp->format, req->varp,
                                  req->bufcount,
                                  req->buftype,
-                                 fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG),
-                                 nelems,
-                                 req->ptype,
+                                 isContig,
+                                 req->nelems,
+                                 req->itype,
                                  req->imaptype,
                                  fIsSet(req->flag, NC_REQ_BUF_TYPE_CONVERT),
                                  fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP),
@@ -897,43 +885,20 @@ req_commit(NC  *ncp,
             *req->status = err;
         if (status == NC_NOERR) status = err;
 
-        if (!fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG))
+        if (req->abuf_index < 0) {
+            if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                NCI_Free(req->xbuf); /* free xbuf */
+        }
+        else  /* this is bput request */
+            ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+
+        req->xbuf = NULL;
+        NCI_Free(req->start);
+
+        if (!isContig && req->buftype != MPI_DATATYPE_NULL)
             MPI_Type_free(&req->buftype);
     }
 
-    for (i=0; i<num_r_reqs; i++) {
-        /* Free space allocated for the request objects. During the posting of
-         * a nonblocking varn request, the temporary buffer (cbuf), if
-         * allocated, can be split into several sub-buffers, each used in a
-         * separate requests. If the NC_REQ_BUF_TO_BE_FREED bit of a request
-         * flag is set, it indicates req->buf points to this temporary buffer
-         * and should be freed. Because get_list[] may be sorted based on
-         * offset_start, the request whose NC_REQ_BUF_TO_BE_FREED bit is set may
-         * no longer be the first in the group, this loop must run after
-         * the above one. We need to go through get_list[] to check each one
-         * for NC_REQ_BUF_TO_BE_FREED in order to free the temporary buffer.
-         */
-        if (fIsSet(get_list[i].flag, NC_REQ_LEAD) &&
-            fIsSet(get_list[i].flag, NC_REQ_BUF_TO_BE_FREED)) {
-            int position=0, bufsize;
-            MPI_Offset insize;
-
-            /* unpack buf to userBuf and free buf (only done by lead request)
-             * Note this unpack must wait for all above unpacks are done
-             * because get_list[i].buf may be part of get_list[i].userBuf
-             */
-            MPI_Type_size(get_list[i].buftype, &bufsize);
-            insize = get_list[i].bufcount * bufsize;
-            if (insize != (int)insize && status == NC_NOERR)
-                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-
-            MPI_Unpack(get_list[i].buf, (int)insize, &position,
-                       get_list[i].userBuf, (int)get_list[i].bufcount,
-                       get_list[i].buftype, MPI_COMM_SELF);
-            MPI_Type_free(&get_list[i].buftype);
-        }
-        FREE_REQUEST(get_list[i])
-    }
     if (num_r_reqs > 0) NCI_Free(get_list);
 
     return status;
@@ -1968,6 +1933,7 @@ wait_getput(NC         *ncp,
             break;
         }
     }
+
     if (i < num_reqs) /* a non-increasing order is found */
         /* sort reqs[] based on reqs[].offset_start */
         qsort(reqs, (size_t)num_reqs, sizeof(NC_req), req_compare);

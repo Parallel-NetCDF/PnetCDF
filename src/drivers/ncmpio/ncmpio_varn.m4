@@ -130,6 +130,8 @@ getput_varn(NC                *ncp,
 
         if (status != NC_NOERR) goto err_check;
 
+        /* TODO: handle when bnelems == 0 */
+
 #ifndef ENABLE_LARGE_REQ
         if (bufcount * bnelems * varp->xsz > INT_MAX) {
             /* this request is larger than INT_MAX */
