@@ -119,20 +119,6 @@ abuf_coalesce(NC *ncp)
     return NC_NOERR;
 }
 
-#define FREE_REQUEST(req) {                                       \
-    if (fIsSet(req.flag, NC_REQ_LEAD)) {                          \
-        /* free resource allocated at lead request */             \
-        if (req.abuf_index < 0) {                                 \
-            if (fIsSet(req.flag, NC_REQ_XBUF_TO_BE_FREED))        \
-                NCI_Free(req.xbuf); /* free xbuf */               \
-        }                                                         \
-        else  /* this is bput request */                          \
-            ncp->abuf->occupy_table[req.abuf_index].is_used = 0;  \
-    }                                                             \
-    req.xbuf = NULL;                                              \
-    NCI_Free(req.start);                                          \
-}
-
 /*----< ncmpio_cancel() >-----------------------------------------------------*/
 /* argument num_req can be NC_REQ_ALL, NC_GET_REQ_ALL, NC_PUT_REQ_ALL, or
  * non-negative value */
@@ -153,14 +139,23 @@ ncmpio_cancel(void *ncdp,
 
     if (num_req == NC_GET_REQ_ALL || num_req == NC_REQ_ALL) {
         /* cancel all pending read requests, ignore req_ids and statuses */
+        NC_req *req = ncp->get_list;
         for (i=0; i<ncp->numGetReqs; i++) {
-            if (fIsSet(ncp->get_list[i].flag, NC_REQ_LEAD)) {
-                if (ncp->get_list[i].imaptype != MPI_DATATYPE_NULL)
-                    MPI_Type_free(&ncp->get_list[i].imaptype);
-                if (!fIsSet(ncp->get_list[i].flag, NC_REQ_BUF_TYPE_IS_CONTIG))
-                    MPI_Type_free(&ncp->get_list[i].buftype);
+            if (fIsSet(req->flag, NC_REQ_LEAD)) {
+                /* free resource allocated at lead request */
+                if (req->imaptype != MPI_DATATYPE_NULL)
+                    MPI_Type_free(&req->imaptype);
+                if (!fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG))
+                    MPI_Type_free(&req->buftype);
+                if (req->abuf_index < 0) {
+                    if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                        NCI_Free(req->xbuf); /* free xbuf */
+                }
+                else  /* this is bput request */
+                    ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+                NCI_Free(req->start);
             }
-            FREE_REQUEST(ncp->get_list[i])
+            req++;
         }
         NCI_Free(ncp->get_list);
         ncp->get_list = NULL;
@@ -169,20 +164,24 @@ ncmpio_cancel(void *ncdp,
 
     if (num_req == NC_PUT_REQ_ALL || num_req == NC_REQ_ALL) {
         /* cancel all pending write requests, ignore req_ids and statuses */
-        NC_req *put_list = ncp->put_list;
+        NC_req *req = ncp->put_list;
         for (i=0; i<ncp->numPutReqs; i++) {
-            if (fIsSet(put_list[i].flag, NC_REQ_LEAD) &&
-                fIsSet(put_list[i].flag, NC_REQ_BUF_BYTE_SWAP)) {
-                MPI_Offset nelems, *count;
-                count=put_list[i].start+put_list[i].varp->ndims;
-                for (nelems=1, k=0; k<put_list[i].varp->ndims; k++)
-                    nelems *= count[k];
-                /* if user buffer is in-place byte-swapped, swap it back */
-                ncmpii_in_swapn(put_list[i].buf, nelems, put_list[i].varp->xsz);
+            if (fIsSet(req->flag, NC_REQ_LEAD)) {
+                if (fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP))
+                    /* if user buffer is in-place byte-swapped, swap it back */
+                    ncmpii_in_swapn(req->buf, req->nelems, req->varp->xsz);
+                /* free resource allocated at lead request */
+                if (req->abuf_index < 0) {
+                    if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                        NCI_Free(req->xbuf); /* free xbuf */
+                }
+                else  /* this is bput request */
+                    ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+                NCI_Free(req->start);
             }
-            FREE_REQUEST(put_list[i])
+            req++;
         }
-        NCI_Free(put_list);
+        NCI_Free(ncp->put_list);
         ncp->put_list = NULL;
         ncp->numPutReqs = 0;
         if (ncp->abuf != NULL) { /* clear out the attached buffer usage */
@@ -200,18 +199,29 @@ ncmpio_cancel(void *ncdp,
 
         if (req_ids[i] & 1) { /* read request (id is an odd number) */
             int found=0;
+            NC_req *req=ncp->get_list;
             for (j=0; j<ncp->numGetReqs; j++) {
-                NC_req *req=ncp->get_list+j;
-                if (req->id == NC_REQ_NULL || req->id != req_ids[i]) continue;
+                if (req->id == NC_REQ_NULL || req->id != req_ids[i]) {
+                    req++;
+                    continue;
+                }
                 found = 1;
                 if (fIsSet(req->flag, NC_REQ_LEAD)) { /* lead request */
+                    /* free resource allocated at lead request */
                     if (req->imaptype != MPI_DATATYPE_NULL)
                         MPI_Type_free(&req->imaptype);
                     if (!fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG))
                         MPI_Type_free(&req->buftype);
+                    if (req->abuf_index < 0) {
+                        if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                            NCI_Free(req->xbuf); /* free xbuf */
+                    }
+                    else  /* this is bput request */
+                        ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+                    NCI_Free(req->start);
                 }
-                FREE_REQUEST(ncp->get_list[j])
                 req->id = NC_REQ_NULL; /* marked as freed */
+                req++;
             }
             if (found) {
                 req_ids[i] = NC_REQ_NULL;
@@ -221,22 +231,29 @@ ncmpio_cancel(void *ncdp,
         }
         else { /* write request (id is an even number) */
             int found=0;
+            NC_req *req=ncp->put_list;
             for (j=0; j<ncp->numPutReqs; j++) {
-                NC_req *req=ncp->put_list+j;
-                if (req->id == NC_REQ_NULL || req->id != req_ids[i]) continue;
-                found = 1;
-                if (fIsSet(req->flag, NC_REQ_LEAD) && /* lead request */
-                    fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP)) {
-                    MPI_Offset nelems=1;
-                    MPI_Offset *count=req->start+req->varp->ndims;
-                    for (k=0; k<req->varp->ndims; k++)
-                        nelems *= count[k];
-                    /* if user buffer has been in-place byte-swapped,
-                     * swap it back */
-                    ncmpii_in_swapn(req->buf, nelems, req->varp->xsz);
+                if (req->id == NC_REQ_NULL || req->id != req_ids[i]) {
+                    req++;
+                    continue;
                 }
-                FREE_REQUEST(ncp->put_list[j])
+                found = 1;
+                if (fIsSet(req->flag, NC_REQ_LEAD)) { /* lead request */
+                    if (fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP))
+                        /* if user buffer has been in-place byte-swapped,
+                         * swap it back */
+                        ncmpii_in_swapn(req->buf, req->nelems, req->varp->xsz);
+                    /* free resource allocated at lead request */
+                    if (req->abuf_index < 0) {
+                        if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                            NCI_Free(req->xbuf); /* free xbuf */
+                    }
+                    else  /* this is bput request */
+                        ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+                    NCI_Free(req->start);
+                }
                 req->id = NC_REQ_NULL; /* marked as freed */
+                req++;
             }
             if (found) {
                 req_ids[i] = NC_REQ_NULL;
@@ -831,20 +848,21 @@ req_commit(NC  *ncp,
          * Endianness only when the buffer itself has been byte-swapped before,
          * i.e. NOT buftype_is_contig && NOT need_convert && need_swap
          */
-        if (fIsSet(put_list[i].flag, NC_REQ_LEAD)) {
-            if (fIsSet(put_list[i].flag, NC_REQ_BUF_BYTE_SWAP))
-                ncmpii_in_swapn(put_list[i].buf, put_list[i].nelems,
-                                put_list[i].varp->xsz);
+        NC_req *req=put_list+i;
+        if (fIsSet(req->flag, NC_REQ_LEAD)) {
+            if (fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP))
+                ncmpii_in_swapn(req->buf, req->nelems, req->varp->xsz);
             /* free resource allocated at lead request */
-            if (put_list[i].abuf_index < 0) {
-                if (fIsSet(put_list[i].flag, NC_REQ_XBUF_TO_BE_FREED))
-                    NCI_Free(put_list[i].xbuf); /* free xbuf */
+            if (req->abuf_index < 0) {
+                if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                    NCI_Free(req->xbuf); /* free xbuf */
             }
             else  /* this is bput request */
-                ncp->abuf->occupy_table[put_list[i].abuf_index].is_used = 0;
+                ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+
+            /* lead request allocated start array for all sub-requests */
+            NCI_Free(req->start);
         }
-        put_list[i].xbuf = NULL;
-        NCI_Free(put_list[i].start);
     }
 
     if (num_w_reqs > 0) {
@@ -859,11 +877,7 @@ req_commit(NC  *ncp,
         NC_req *req=get_list+i;
 
         /* non-lead requests skip type-conversion/byte-swap/unpack */
-        if (!fIsSet(req->flag, NC_REQ_LEAD)) {
-            req->xbuf = NULL;
-            NCI_Free(req->start);
-            continue;
-        }
+        if (!fIsSet(req->flag, NC_REQ_LEAD)) continue;
 
         /* now, xbuf contains the data read from the file.
          * It may need to be type-converted, byte-swapped from xbuf to
@@ -885,18 +899,17 @@ req_commit(NC  *ncp,
             *req->status = err;
         if (status == NC_NOERR) status = err;
 
-        if (req->abuf_index < 0) {
+        if (req->abuf_index < 0) { /* not from bput API */
             if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
                 NCI_Free(req->xbuf); /* free xbuf */
         }
-        else  /* this is bput request */
+        else if (ncp->abuf != NULL)  /* from bput API */
             ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
-
-        req->xbuf = NULL;
-        NCI_Free(req->start);
 
         if (!isContig && req->buftype != MPI_DATATYPE_NULL)
             MPI_Type_free(&req->buftype);
+
+        NCI_Free(req->start);
     }
 
     if (num_r_reqs > 0) NCI_Free(get_list);

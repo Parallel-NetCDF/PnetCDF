@@ -91,7 +91,7 @@ ncmpio_add_record_requests(NC_req           *reqs,
 {
     int    i, j, ndims;
     size_t dims_chunk;
-    MPI_Offset rec_bufsize, *req0_start, *req0_count, *req0_stride;
+    MPI_Offset rec_bufsize, *req0_start, *req0_count, *req0_stride, *start_ptr;
 
     ndims = reqs[0].varp->ndims;
     if (stride != NULL)
@@ -108,6 +108,8 @@ ncmpio_add_record_requests(NC_req           *reqs,
     for (i=1; i<ndims; i++) rec_bufsize *= req0_count[i];
 
     /* append each record to the end of list */
+    start_ptr = req0_start + ((stride == NULL) ? (2 * ndims) : (3 * ndims));
+
     for (i=1; i<req0_count[0]; i++) {
         MPI_Offset *reqi_start, *reqi_count, *reqi_stride; /* of reqs[i] */
 
@@ -118,7 +120,8 @@ ncmpio_add_record_requests(NC_req           *reqs,
         /* clear NC_REQ_LEAD flag */
         fClr(reqs[i].flag, NC_REQ_LEAD);
 
-        reqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk);
+        reqs[i].start = start_ptr;
+        start_ptr += (stride == NULL) ? (2 * ndims) : (3 * ndims);
         reqi_start = reqs[i].start;
         reqi_count = reqi_start + ndims;
 
@@ -491,7 +494,10 @@ ncmpio_igetput_varm(NC               *ncp,
 
     /* allocate a single array to store start/count/stride */
     memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
-    req->start = (MPI_Offset*) NCI_Malloc(memChunk * 3);
+    if (IS_RECVAR(varp) && count[0] > 1)
+        req->start = (MPI_Offset*) NCI_Malloc(memChunk * 3 * count[0]);
+    else
+        req->start = (MPI_Offset*) NCI_Malloc(memChunk * 3);
 
     /* copy over start/count/stride */
     ptr = req->start;
