@@ -448,14 +448,17 @@ NAPINAME($1,$2,$3)(int                ncid,
     return ifelse(`$3',`',`status;',`(err != NC_NOERR) ? err : status; /* first error encountered */')
 #endif
 
-    if (err == NC_NOERR) {
+    ifelse(`$3',`_all',`/* for collective API */
+    if (err != NC_NOERR)
+        reqid = NC_REQ_NULL;
+    else')
+    {
         reqMode |= IO_MODE($1) | NC_REQ_NBI | FLEX_MODE($2);
         /* calling the nonblocking subroutine */
         err = pncp->driver->i`$1'_varn(pncp->ncp, varid, num, starts, counts,
                                        buf, FLEX_ARG($2), &reqid, reqMode);
+        ifelse(`$3',`',`if (err != NC_NOERR) return err;')
     }
-    else
-        reqid = NC_REQ_NULL;
 
     reqMode |= COLL_MODE($3);
     status = pncp->driver->wait(pncp->ncp, 1, &reqid, NULL, reqMode);
