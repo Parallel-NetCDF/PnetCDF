@@ -462,8 +462,7 @@ extern int
 ncmpio_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *stride, const MPI_Offset *imap,
                 const MPI_Offset *count, void *buf, MPI_Offset bufcount,
-                MPI_Datatype datatype, int *reqid, int reqMode,
-                int isSameGroup);
+                MPI_Datatype datatype, int *reqid, int reqMode);
 
 /* Begin defined in ncmpio_hash_func.c --------------------------------------*/
 extern int

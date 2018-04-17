@@ -22,250 +22,11 @@ dnl
 # include <config.h>
 #endif
 
-#include <stdio.h>
-#include <unistd.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#include <limits.h> /* INT_MAX */
-#include <assert.h>
-
 #include <mpi.h>
 
 #include <pnc_debug.h>
 #include <common.h>
-#include <ncx.h>
 #include "ncmpio_NC.h"
-
-/*----< getput_varn() >------------------------------------------------------*/
-/* The current implementation for varn APIs is to make num calls to iget/iput
- * APIs, although an alternative is to flatten each start-count request into
- * a list of offset-length pairs and concatenate all lists into a hindexed
- * data type.
- */
-static int
-getput_varn(NC                *ncp,
-            NC_var            *varp,
-            int                num,
-            MPI_Offset* const *starts,  /* [num][varp->ndims] */
-            MPI_Offset* const *counts,  /* [num][varp->ndims] */
-            void              *buf,
-            MPI_Offset         bufcount,
-            MPI_Datatype       buftype,   /* data type of the buffer */
-            int                reqMode)
-{
-    int i, j, el_size, status=NC_NOERR, min_st, err, free_cbuf=0;
-    int req_id=NC_REQ_NULL, isSameGroup, position;
-    void *cbuf=NULL;
-    char *bufp;
-    MPI_Offset packsize=0, **_counts=NULL;
-    MPI_Datatype ptype;
-
-    /* check for zero-size request */
-    if (num == 0 || bufcount == 0) goto err_check;
-
-    /* it is illegal for starts to be NULL */
-    if (starts == NULL) {
-        DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART)
-        goto err_check;
-    }
-    else { /* it is illegal for any starts[i] to be NULL */
-        for (i=0; i<num; i++) {
-            if (starts[i] == NULL) {
-                DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART)
-                goto err_check;
-            }
-        }
-    }
-
-    if (buftype == MPI_DATATYPE_NULL) {
-        /* In this case, bufcount is ignored and will be recalculated to match
-         * counts[]. Note buf's data type must match the data type of
-         * variable defined in the file - no data conversion will be done.
-         */
-        if (counts == NULL)
-            bufcount = 1;
-        else {
-            bufcount = 0;
-            for (j=0; j<num; j++) {
-                MPI_Offset bufcount_j = 1;
-                if (counts[i] == NULL) {
-                    DEBUG_ASSIGN_ERROR(status, NC_ENULLCOUNT)
-                    goto err_check;
-                }
-                for (i=0; i<varp->ndims; i++) {
-                    if (counts[j][i] < 0) { /* no negative counts[][] */
-                        DEBUG_ASSIGN_ERROR(status, NC_ENEGATIVECNT)
-                        goto err_check;
-                    }
-                    bufcount_j *= counts[j][i];
-                }
-                bufcount += bufcount_j;
-            }
-        }
-        /* assign buftype match with the variable's data type */
-        buftype = ncmpii_nc2mpitype(varp->xtype);
-
-#ifndef ENABLE_LARGE_REQ
-        if (bufcount * varp->xsz > INT_MAX) {
-            /* this request is larger than INT_MAX */
-            DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
-            goto err_check;
-        }
-#endif
-    }
-
-    cbuf = buf;
-    if (bufcount > 0) { /* flexible API is used */
-        /* pack buf into cbuf, a contiguous buffer */
-        int iscontig_of_ptypes;
-        MPI_Offset bnelems=0;
-
-        /* ptype (primitive MPI data type) from buftype
-         * el_size is the element size of ptype
-         * bnelems is the total number of ptype elements in buftype
-         */
-        status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
-                                     NULL, &iscontig_of_ptypes);
-
-        if (status != NC_NOERR) goto err_check;
-
-        /* TODO: handle when bnelems == 0 */
-
-#ifndef ENABLE_LARGE_REQ
-        if (bufcount * bnelems * varp->xsz > INT_MAX) {
-            /* this request is larger than INT_MAX */
-            DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
-            goto err_check;
-        }
-#endif
-
-        /* check if buftype is contiguous, if not, pack to one, cbuf */
-        if (! iscontig_of_ptypes && bnelems > 0) {
-            position = 0;
-            packsize  = bnelems*el_size;
-            if (packsize > INT_MAX) {
-                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-                goto err_check;
-            }
-            if (bufcount > INT_MAX) {
-                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-                goto err_check;
-            }
-            cbuf = NCI_Malloc((size_t)packsize);
-            free_cbuf = 1;
-            if (fIsSet(reqMode, NC_REQ_WR))
-                MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)packsize,
-                         &position, MPI_COMM_SELF);
-        }
-    }
-    else {
-        /* this subroutine is called from a high-level API */
-        status = NCMPII_ECHAR(varp->xtype, buftype);
-        if (status != NC_NOERR) goto err_check;
-
-        ptype = buftype;
-        el_size = varp->xsz;
-
-#ifndef ENABLE_LARGE_REQ
-        /* TODO: sum up all request sizes and check against INT_MAX */
-#endif
-    }
-
-    /* We allow counts == NULL and treat this the same as all 1s */
-    if (counts == NULL) {
-        _counts    = (MPI_Offset**) NCI_Malloc((size_t)num *
-                                               sizeof(MPI_Offset*));
-        _counts[0] = (MPI_Offset*)  NCI_Malloc((size_t)num * varp->ndims *
-                                               SIZEOF_MPI_OFFSET);
-        for (i=1; i<num; i++)
-            _counts[i] = _counts[i-1] + varp->ndims;
-        for (i=0; i<num; i++)
-            for (j=0; j<varp->ndims; j++)
-                _counts[i][j] = 1;
-    }
-    else
-        _counts = (MPI_Offset**) counts;
-
-    /* break buf into num pieces */
-    isSameGroup=0;
-    bufp = (char*)cbuf;
-    for (i=0; i<num; i++) {
-        MPI_Offset buflen;
-        for (buflen=1, j=0; j<varp->ndims; j++) {
-            if (_counts[i][j] < 0) { /* any negative counts[][] is illegal */
-                DEBUG_ASSIGN_ERROR(status, NC_ENEGATIVECNT)
-                goto err_check;
-            }
-            buflen *= _counts[i][j];
-        }
-        if (buflen == 0) continue;
-        status = ncmpio_igetput_varm(ncp, varp, starts[i], _counts[i], NULL,
-                                     NULL, bufp, buflen, ptype, &req_id,
-                                     reqMode, isSameGroup);
-        /* req_id is reused because requests in a varn is considered in the
-         * same group */
-        if (status != NC_NOERR) goto err_check;
-
-        /* use isSamegroup so we end up with one nonblocking request (only the
-         * first request gets a request ID back, the rest reuse the same ID.
-         * This single ID represents num nonblocking requests */
-        isSameGroup=1;
-        bufp += buflen * el_size;
-    }
-
-err_check:
-    if (_counts != NULL && _counts != counts) {
-        NCI_Free(_counts[0]);
-        NCI_Free(_counts);
-    }
-
-    if (ncp->safe_mode == 1 && fIsSet(reqMode, NC_REQ_COLL)) {
-        int mpireturn;
-        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
-                                  ncp->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
-
-        if (min_st != NC_NOERR) {
-            if (req_id != NC_REQ_NULL) /* cancel pending nonblocking request */
-                ncmpio_cancel(ncp, 1, &req_id, NULL);
-            if (free_cbuf) NCI_Free(cbuf);
-            return status;
-        }
-    }
-
-    if (fIsSet(reqMode, NC_REQ_INDEP) && status != NC_NOERR) {
-        if (req_id != NC_REQ_NULL) /* cancel pending nonblocking request */
-            ncmpio_cancel(ncp, 1, &req_id, NULL);
-        if (free_cbuf) NCI_Free(cbuf);
-        return status;
-    }
-
-    if (status == NC_NOERR)
-        err = ncmpio_wait(ncp, 1, &req_id, NULL, reqMode);
-    else
-        /* This can only be reached for NC_REQ_COLL and safe_mode == 0.
-         * Let this process participate the collective calls in wait_all */
-        err = ncmpio_wait(ncp, 0, NULL, NULL, reqMode);
-
-    /* if error occurs, it is reflected in err */
-
-    /* unpack cbuf to user buf, if buftype is noncontiguous */
-    if (status == NC_NOERR && fIsSet(reqMode, NC_REQ_RD) && free_cbuf) {
-        /* possible bufcount integer overflow has been checked above */
-        position = 0;
-        MPI_Unpack(cbuf, (int)packsize, &position, buf, (int)bufcount, buftype,
-                   MPI_COMM_SELF);
-    }
-
-    /* return the first error, if there is one */
-    if (status == NC_NOERR) status = err;
-
-    if (free_cbuf) NCI_Free(cbuf);
-
-    return status;
-}
 
 include(`utils.m4')
 
@@ -284,16 +45,18 @@ ncmpio_$1_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    NC *ncp=(NC*)ncdp;
+    int reqid=NC_REQ_NULL, err=NC_NOERR, status;
 
-    if (fIsSet(reqMode, NC_REQ_ZERO) && fIsSet(reqMode, NC_REQ_COLL))
-        /* this collective API has a zero-length request */
-        return ncmpio_getput_zero_req(ncp, reqMode);
+    if (!fIsSet(reqMode, NC_REQ_ZERO)) {
+        err = ncmpio_i`$1'_varn(ncdp, varid, num, starts, counts, buf,
+                                bufcount, buftype, &reqid, reqMode);
+        if (err != NC_NOERR && fIsSet(reqMode, NC_REQ_INDEP))
+            return err;
+    }
 
-    /* Note sanity check for ncdp and varid has been done in dispatchers */
+    status = ncmpio_wait(ncdp, 1, &reqid, NULL, reqMode);
 
-    return getput_varn(ncp, ncp->vars.value[varid], num, starts, counts,
-                       (void*)buf, bufcount, buftype, reqMode);
+    return (err != NC_NOERR) ? err : status;
 }
 ')dnl
 
