@@ -398,7 +398,7 @@ NAPINAME($1,$2,$3)(int                ncid,
                    MPI_Offset* const *counts,
                    BufArgs($1,$2))
 {
-    int i, err, status, reqMode=0;
+    int i, reqid, err, status, reqMode=0;
     PNC *pncp;
 
     /* check if ncid is valid.
@@ -438,6 +438,7 @@ NAPINAME($1,$2,$3)(int                ncid,
     else if (err != NC_NOERR) /* other errors, participate collective call */
         reqMode |= NC_REQ_ZERO;')
 
+#if 0
     reqMode |= IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2) | COLL_MODE($3);
 
     /* calling the subroutine that implements NAPINAME($1,$2,$3)() */
@@ -445,6 +446,21 @@ NAPINAME($1,$2,$3)(int                ncid,
                                      buf, FLEX_ARG($2), reqMode);
 
     return ifelse(`$3',`',`status;',`(err != NC_NOERR) ? err : status; /* first error encountered */')
+#endif
+
+    if (err == NC_NOERR) {
+        reqMode |= IO_MODE($1) | NC_REQ_NBI | FLEX_MODE($2);
+        /* calling the nonblocking subroutine */
+        err = pncp->driver->i`$1'_varn(pncp->ncp, varid, num, starts, counts,
+                                       buf, FLEX_ARG($2), &reqid, reqMode);
+    }
+    else
+        reqid = NC_REQ_NULL;
+
+    reqMode |= COLL_MODE($3);
+    status = pncp->driver->wait(pncp->ncp, 1, &reqid, NULL, reqMode);
+
+    return (err != NC_NOERR) ? err : status;
 }
 ')dnl
 dnl
