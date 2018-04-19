@@ -6,6 +6,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New optimization
+    * Both blocking and nonblocking varn APIs have been improved for better
+      performance and reduced memory footprint. See r3747-r3750.
     * Prior to this release, when buftype in flexible APIs indicates a
       noncontiguous layout in user buffer, PnetCDF packs the user buffer into
       a contiguous buffer allocated internally, which will later be used in
