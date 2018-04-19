@@ -228,8 +228,6 @@ ncmpio_igetput_varm(NC               *ncp,
 
     if (fIsSet(reqMode, NC_REQ_WR)) { /* pack request to xbuf */
 #if 1
-        xbuf = buf;
-
         if (fIsSet(reqMode, NC_REQ_NBB)) {
             /* for bput call, check if the remaining buffer space is sufficient
              * to accommodate this request and obtain a space for xbuf
@@ -248,9 +246,11 @@ ncmpio_igetput_varm(NC               *ncp,
                 if (xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
                 need_swap_back_buf = 0;
             }
-            else /* when user buf is used as xbuf, we need to byte-swap buf
-                  * back to its original contents */
-                need_swap_back_buf = 1;
+            else { /* when user buf is used as xbuf, we need to byte-swap buf
+                    * back to its original contents */
+                xbuf = buf;
+                if (need_swap) need_swap_back_buf = 1;
+            }
         }
 
         /* pack user buffer, buf, to xbuf which will be used to write to file.
@@ -426,12 +426,13 @@ ncmpio_igetput_varm(NC               *ncp,
 
         req = ncp->put_list + ncp->numPutReqs;
 
+        req->flag = 0;
+        if (need_swap_back_buf) fSet(req->flag, NC_REQ_BUF_BYTE_SWAP);
+
         /* the new request ID will be an even number (max of write ID + 2) */
         req->id = 0;
         if (ncp->numPutReqs > 0)
             req->id = ncp->put_list[ncp->numPutReqs-1].id + 2;
-
-        ncp->numPutReqs++;
     }
     else {  /* read request */
         /* allocate or expand the size of read request array */
@@ -450,23 +451,17 @@ ncmpio_igetput_varm(NC               *ncp,
 
         req = ncp->get_list + ncp->numGetReqs;
 
+        req->flag = 0;
+        if (need_convert) fSet(req->flag, NC_REQ_BUF_TYPE_CONVERT);
+        if (need_swap)    fSet(req->flag, NC_REQ_BUF_BYTE_SWAP);
+
         /* the new request ID will be an odd number (max of read ID + 2) */
         req->id = 1;
         if (ncp->numGetReqs > 0)
             req->id = ncp->get_list[ncp->numGetReqs-1].id + 2;
-
-        ncp->numGetReqs++;
     }
 
-    req->flag = 0;
-    if (buftype_is_contig)  fSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
-    if (need_convert)       fSet(req->flag, NC_REQ_BUF_TYPE_CONVERT);
-    if (fIsSet(reqMode, NC_REQ_WR)) {
-        if (need_swap_back_buf) fSet(req->flag, NC_REQ_BUF_BYTE_SWAP);
-    }
-    else {
-        if (need_swap) fSet(req->flag, NC_REQ_BUF_BYTE_SWAP);
-    }
+    if (buftype_is_contig) fSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
 
     req->varp        = varp;
     req->buf         = buf;
@@ -517,8 +512,12 @@ ncmpio_igetput_varm(NC               *ncp,
         /* add (count[0]-1) number of (sub)requests */
         ncmpio_add_record_requests(req, stride);
 
-        if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs += count[0] - 1;
-        else                            ncp->numGetReqs += count[0] - 1;
+        if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs += count[0];
+        else                            ncp->numGetReqs += count[0];
+    }
+    else {
+        if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs++;
+        else                            ncp->numGetReqs++;
     }
 
     /* mark the first record of this request as the lead request. Non-lead are

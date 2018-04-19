@@ -455,21 +455,18 @@ filetype_create_vara(const NC         *ncp,
     MPI_Offset   nbytes, offset;
     MPI_Datatype filetype, xtype;
 
+    *offset_ptr   = varp->begin;
+    *filetype_ptr = MPI_BYTE;
+    if (is_filetype_contig != NULL) *is_filetype_contig = 1;
+
     /* calculate the request size */
     nbytes = varp->xsz;
     for (dim=0; dim<varp->ndims; dim++) nbytes *= count[dim];
     if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     if (blocklen != NULL) *blocklen = (int)nbytes;
 
-    /* when nbytes == 0 or varp is a scalar, i.e. varp->ndims == 0, no need to
-     * create a filetype
-     */
-    if (varp->ndims == 0 || nbytes == 0) {
-        *offset_ptr   = varp->begin;
-        *filetype_ptr = MPI_BYTE;
-        if (is_filetype_contig != NULL) *is_filetype_contig = 1;
-        return NC_NOERR;
-    }
+    /* when varp is a scalar or nbytes == 0, no need to create a filetype */
+    if (varp->ndims == 0 || nbytes == 0) return NC_NOERR;
 
     /* if the request is contiguous in file, no need to create a filetype */
     if (is_request_contiguous(IS_RECVAR(varp), ncp->vars.num_rec_vars,
@@ -477,8 +474,6 @@ filetype_create_vara(const NC         *ncp,
         /* find the starting file offset of this request */
         status = ncmpio_first_offset(ncp, varp, start, &offset);
         *offset_ptr   = offset;
-        *filetype_ptr = MPI_BYTE;
-        if (is_filetype_contig != NULL) *is_filetype_contig = 1;
         return status;
     }
 
@@ -886,7 +881,8 @@ ncmpio_file_set_view(const NC     *ncp,
            ftypes[0] = MPI_BYTE;
 
         /* check if header size > 2^31 */
-        if (ncp->begin_var != blocklens[0]) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+        if (ncp->begin_var != blocklens[0])
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         /* second block is filetype, the subarray request(s) to the variable */
         blocklens[1] = 1;

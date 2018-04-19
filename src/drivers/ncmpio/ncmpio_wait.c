@@ -128,7 +128,7 @@ ncmpio_cancel(void *ncdp,
               int  *req_ids,  /* [num_req]: IN/OUT */
               int  *statuses) /* [num_req] can be NULL (ignore status) */
 {
-    int i, j, k, status=NC_NOERR;
+    int i, j, status=NC_NOERR;
     NC *ncp=(NC*)ncdp;
 
     if (num_req == 0) return NC_NOERR;
@@ -468,6 +468,7 @@ construct_filetypes(NC           *ncp,
                                               &displacements[j],
                                               &ftypes[j],
                                               &is_filetype_contig);
+
             count[0] = num_recs; /* restore count[0] */
             if (err != NC_NOERR) {
                 fSet(reqs[i].flag, NC_REQ_SKIP); /* skip this request */
@@ -844,25 +845,27 @@ req_commit(NC  *ncp,
      */
 
     for (i=0; i<num_w_reqs; i++) {
-        /* Lead request must byte-swap the user buffer back to its original
-         * Endianness only when the buffer itself has been byte-swapped before,
-         * i.e. NOT buftype_is_contig && NOT need_convert && need_swap
-         */
         NC_req *req=put_list+i;
-        if (fIsSet(req->flag, NC_REQ_LEAD)) {
-            if (fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP))
-                ncmpii_in_swapn(req->buf, req->nelems, req->varp->xsz);
-            /* free resource allocated at lead request */
-            if (req->abuf_index < 0) {
-                if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
-                    NCI_Free(req->xbuf); /* free xbuf */
-            }
-            else  /* this is bput request */
-                ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
 
-            /* lead request allocated start array for all sub-requests */
-            NCI_Free(req->start);
+        /* non-lead requests skip type-conversion/byte-swap/unpack */
+        if (!fIsSet(req->flag, NC_REQ_LEAD)) continue;
+
+        /* Lead request must byte-swap the user buffer back to its original
+         * Endianness only when it has been byte-swapped.
+         */
+        if (fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP))
+            ncmpii_in_swapn(req->buf, req->nelems, req->varp->xsz);
+
+        /* free resource allocated at lead request */
+        if (req->abuf_index < 0) {
+            if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                NCI_Free(req->xbuf); /* free xbuf */
         }
+        else if (ncp->abuf != NULL)  /* from bput API */
+            ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+
+        /* lead request allocated start array for all sub-requests */
+        NCI_Free(req->start);
     }
 
     if (num_w_reqs > 0) {
@@ -879,9 +882,9 @@ req_commit(NC  *ncp,
         /* non-lead requests skip type-conversion/byte-swap/unpack */
         if (!fIsSet(req->flag, NC_REQ_LEAD)) continue;
 
-        /* now, xbuf contains the data read from the file.
-         * It may need to be type-converted, byte-swapped from xbuf to
-         * buf. This is done in ncmpio_unpack_xbuf().
+        /* now, xbuf contains the data read from the file. It may need to be
+         * type-converted, byte-swapped, imap-unpacked, and buftype-unpacked
+         * from xbuf to buf. This is done in ncmpio_unpack_xbuf().
          */
         isContig = fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
         err = ncmpio_unpack_xbuf(ncp->format, req->varp,
@@ -895,16 +898,14 @@ req_commit(NC  *ncp,
                                  fIsSet(req->flag, NC_REQ_BUF_BYTE_SWAP),
                                  req->buf,
                                  req->xbuf);
-        if (req->status != NULL && *req->status == NC_NOERR)
-            *req->status = err;
-        if (status == NC_NOERR) status = err;
-
-        if (req->abuf_index < 0) { /* not from bput API */
-            if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
-                NCI_Free(req->xbuf); /* free xbuf */
+        if (err != NC_NOERR) {
+            if (req->status != NULL && *req->status == NC_NOERR)
+                *req->status = err;
+            if (status == NC_NOERR) status = err;
         }
-        else if (ncp->abuf != NULL)  /* from bput API */
-            ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+
+        if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+            NCI_Free(req->xbuf); /* free xbuf */
 
         if (!isContig && req->buftype != MPI_DATATYPE_NULL)
             MPI_Type_free(&req->buftype);
@@ -1915,8 +1916,8 @@ wait_getput(NC         *ncp,
         count  = req->start + ndims;
         stride = fIsSet(req->flag, NC_REQ_STRIDE_NULL) ? NULL : count+ndims;
 
-        num_recs = count[0];
-        if (IS_RECVAR(req->varp)) count[0]=1;
+        num_recs = count[0]; /* save count[0] temporarily */
+        if (IS_RECVAR(req->varp)) count[0] = 1;
 
         /* calculate access range of this request */
         ncmpio_access_range(ncp, req->varp, req->start, count, stride,
@@ -2045,7 +2046,7 @@ mgetput(NC     *ncp,
         fh = ncp->independent_fh;
 
     /* construct a MPI file type by concatenating fileviews of all requests */
-    status = construct_filetypes(ncp,num_reqs, reqs, &filetype);
+    status = construct_filetypes(ncp, num_reqs, reqs, &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
         if (coll_indep == NC_REQ_INDEP) return status;
 
