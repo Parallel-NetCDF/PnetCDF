@@ -850,7 +850,10 @@ ncmpio_filetype_create_vars(const NC         *ncp,
 
 /*----< ncmpio_file_set_view() >---------------------------------------------*/
 /* This function handles the special case for root process for setting its
- * file view: to keeps the whole file header visible to the root process.
+ * file view: to keeps the whole file header visible to the root process. This
+ * is because the root process may update the number of records or attributes
+ * into the file header while in data mode. In PnetCDF design, only root
+ * process can read/write the file header.
  * This function is collective if called in collective data mode
  */
 int
@@ -904,7 +907,7 @@ ncmpio_file_set_view(const NC     *ncp,
         MPI_Type_commit(&root_filetype);
 
         TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype,
-                                        "native", MPI_INFO_NULL);
+                                    "native", MPI_INFO_NULL);
         MPI_Type_free(&root_filetype);
 
         /* now update the explicit offset to be used in MPI-IO call later */
