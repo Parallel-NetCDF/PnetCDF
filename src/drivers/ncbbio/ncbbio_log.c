@@ -70,8 +70,8 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
      */
 
     /* Read environment variable for burst buffer path */
-    //private_path = getenv("DW_JOB_PRIVATE");
-    //stripe_path = getenv("DW_JOB_STRIPED");
+    //private_path = getenv("BB_JOB_PRIVATE");
+    //stripe_path = getenv("BB_JOB_STRIPED");
 
     /* Determine log base */
     if (ncbbp->logbase[0] != '\0'){
@@ -139,7 +139,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         int j;
         char abs_private_path[NC_LOG_PATH_MAX], abs_stripe_path[NC_LOG_PATH_MAX];
 
-        /* Resolve DW_JOB_PRIVATE and DW_JOB_STRIPED into absolute path*
+        /* Resolve BB_JOB_PRIVATE and BB_JOB_STRIPED into absolute path*
         memset(abs_private_path, 0, sizeof(abs_private_path));
         memset(abs_stripe_path, 0, sizeof(abs_stripe_path));
         if (private_path != NULL){

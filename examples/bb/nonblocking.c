@@ -7,8 +7,8 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to nonblocking IO with DataWarp driver.
- * It is same as using without the DataWarp driver with the only exception that
+ * This example shows how to nonblocking IO with burst buffer driver.
+ * It is same as using without the burst buffer driver with the only exception that
  * we may not be able to cancel nonblocking requests
  * In this example, every process write its rank to n-th cell in 3 1 X N variables.
  * N is the number of processes.
@@ -25,7 +25,7 @@
  *
  *    % mpiexec -n 4 ./nonblocking testfile.nc
  *    nonblocking.c: example of nonblocking IO
- *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/datawarp.
+ *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/burst buffer.
  *    Canceling write on variable A, get 0 (No error)
  *    Waiting on variable B, get 0 (No error)
  *    Canceling write on variable C, get -306 (Nonblocking requests already flushed.)
@@ -118,14 +118,14 @@ int main(int argc, char** argv)
 
     if (verbose && rank == 0) printf("%s: example of nonblocking IO\n",__FILE__);
 
-    /* Set up the hints for DataWarp driver in ncmpi_create
+    /* Set up the hints for burst buffer driver in ncmpi_create
      * Note that the remaining part of the code remains unchanged
-     * PnetCDF will warn if nc_dw_dirname is not set.
+     * PnetCDF will warn if nc_bb_dirname is not set.
      */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_dw", "enable");
+    MPI_Info_set(info, "nc_bb", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_dw_dirname", argv[1]);
+        MPI_Info_set(info, "nc_bb_dirname", argv[1]);
     }
 
     /* create a new file using clobber mode ----------------------------------*/
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
     err = ncmpi_def_var(ncid, "B", NC_INT, 2, dimid, varid + 1);    ERR
     err = ncmpi_def_var(ncid, "C", NC_INT, 2, dimid, varid + 2);    ERR
 
-    /* DataWarp initialize log files on the first time we enters data mode */
+    /* burst buffer initialize log files on the first time we enters data mode */
     err = ncmpi_enddef(ncid);
     ERR
 

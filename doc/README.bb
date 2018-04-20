@@ -13,7 +13,7 @@ aggregation for write related I/O requests that is designed to work on Cray
 burst buffer.
 
 -----------------------------------------------------------------------------
- Build PnetCDF with Datawarp driver
+ Build PnetCDF with burst buffer driver
 -----------------------------------------------------------------------------
 
 To build PnetCDF with burst buffer driver support, simply set "--enable-burstbuffer"
@@ -35,7 +35,7 @@ The hint can also be set using environment variable PNETCDF_HINTS.
 export PNETCDF_HINTS="nc_bb=enable"
 
 -----------------------------------------------------------------------------
- Using PnetCDF with Datawarp driver
+ Using PnetCDF with burst buffer driver
 -----------------------------------------------------------------------------
 
 The burst buffer can be configured using hints. Here's a list of supported hints:
@@ -73,7 +73,7 @@ We show an example script for enabling burst buffer driver on Cori at NERSC
 #SBATCH -t 00:10:00 
 #SBATCH -o output.txt 
 #DW jobdw capacity=1289GiB access_mode=private type=scratch pool=sm_pool 
-export PNETCDF_HINTS="nc_bb=enable;nc_bb_del_on_close=disable;nc_bb_dirname=${DW_JOB_PRIVATE}" 
+export PNETCDF_HINTS="nc_bb=enable;nc_bb_del_on_close=disable;nc_bb_dirname=${BB_JOB_PRIVATE}" 
 srun -n 1 ./myapplication 
 
 -----------------------------------------------------------------------------
