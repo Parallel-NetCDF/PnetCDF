@@ -79,9 +79,11 @@ ncbbio_inq_dim(void       *ncdp,
      * Update size of record dimension with pending records in the log
      * Note: Assume only 1 rec dim
      */
-    if (dimid == ncbbp->recdimid){
-        if (*sizep < ncbbp->recdimsize){
-            *sizep = ncbbp->recdimsize;
+    if (sizep != NULL) {
+        if (dimid == ncbbp->recdimid){
+            if (*sizep < ncbbp->recdimsize){
+                *sizep = ncbbp->recdimsize;
+            }
         }
     }
 
