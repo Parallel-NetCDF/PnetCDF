@@ -30,3 +30,18 @@ rm -f ${TESTOUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
+if [ -n "${TESTDW}" ]; then
+    export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
+    rm -f ${TESTOUTDIR}/tooth-fairy.nc
+    ${TESTSEQRUN} ./nc_test    -d ${TESTOUTDIR}
+    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+
+    rm -f ${TESTOUTDIR}/tooth-fairy.nc
+    ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
+    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+
+    rm -f ${TESTOUTDIR}/tooth-fairy.nc
+    ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
+    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+    unset PNETCDF_HINTS
+fi
