@@ -142,5 +142,5 @@ ncmpio_bput_var(void             *ncdp,
 
     return ncmpio_igetput_varm(ncp, ncp->vars.value[varid], start, count,
                                stride, imap, (void*)buf, bufcount, buftype,
-                               reqid, reqMode, 0);
+                               reqid, reqMode);
 }

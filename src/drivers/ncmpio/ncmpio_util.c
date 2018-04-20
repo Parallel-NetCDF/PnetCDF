@@ -379,8 +379,8 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  MPI_Offset    bufcount,
                  MPI_Datatype  buftype,
                  int           buftype_is_contig,
-                 MPI_Offset    nelems, /* no. elements in etype in buf */
-                 MPI_Datatype  etype,  /* element type in buftype */
+                 MPI_Offset    nelems, /* no. elements in buf */
+                 MPI_Datatype  itype,  /* element type in buftype */
                  MPI_Datatype  imaptype,
                  int           need_convert,
                  int           need_swap,
@@ -393,7 +393,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
-    MPI_Type_size(etype, &el_size);
+    MPI_Type_size(itype, &el_size);
     ibuf_size = nelems * el_size;
     if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
@@ -460,34 +460,34 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         /* datatype conversion + byte-swap from cbuf to xbuf */
         switch(varp->xtype) {
             case NC_BYTE:
-                err = ncmpii_putn_NC_BYTE(fmt,xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_BYTE(fmt,xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_UBYTE:
-                err = ncmpii_putn_NC_UBYTE(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_UBYTE(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_SHORT:
-                err = ncmpii_putn_NC_SHORT(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_SHORT(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_USHORT:
-                err = ncmpii_putn_NC_USHORT(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_USHORT(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_INT:
-                err = ncmpii_putn_NC_INT(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_INT(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_UINT:
-                err = ncmpii_putn_NC_UINT(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_UINT(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_FLOAT:
-                err = ncmpii_putn_NC_FLOAT(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_FLOAT(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_DOUBLE:
-                err = ncmpii_putn_NC_DOUBLE(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_DOUBLE(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_INT64:
-                err = ncmpii_putn_NC_INT64(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_INT64(xbuf,cbuf,nelems,itype,fillp);
                 break;
             case NC_UINT64:
-                err = ncmpii_putn_NC_UINT64(xbuf,cbuf,nelems,etype,fillp);
+                err = ncmpii_putn_NC_UINT64(xbuf,cbuf,nelems,itype,fillp);
                 break;
             default:
                 err = NC_EBADTYPE; /* this never happens */
@@ -552,8 +552,8 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                    MPI_Offset    bufcount,
                    MPI_Datatype  buftype,
                    int           buftype_is_contig,
-                   MPI_Offset    nelems, /* no. elements in etype in buf */
-                   MPI_Datatype  etype,  /* element type in buftype */
+                   MPI_Offset    nelems, /* no. elements in buf */
+                   MPI_Datatype  itype,  /* element type in buftype */
                    MPI_Datatype  imaptype,
                    int           need_convert,
                    int           need_swap,
@@ -565,7 +565,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
-    MPI_Type_size(etype, &el_size);
+    MPI_Type_size(itype, &el_size);
     ibuf_size = nelems * el_size;
     if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
@@ -586,34 +586,34 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         /* datatype conversion + byte-swap from xbuf to cbuf */
         switch(varp->xtype) {
             case NC_BYTE:
-                err = ncmpii_getn_NC_BYTE(fmt,xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_BYTE(fmt,xbuf,cbuf,nelems,itype);
                 break;
             case NC_UBYTE:
-                err = ncmpii_getn_NC_UBYTE(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_UBYTE(xbuf,cbuf,nelems,itype);
                 break;
             case NC_SHORT:
-                err = ncmpii_getn_NC_SHORT(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_SHORT(xbuf,cbuf,nelems,itype);
                 break;
             case NC_USHORT:
-                err = ncmpii_getn_NC_USHORT(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_USHORT(xbuf,cbuf,nelems,itype);
                 break;
             case NC_INT:
-                err = ncmpii_getn_NC_INT(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_INT(xbuf,cbuf,nelems,itype);
                 break;
             case NC_UINT:
-                err = ncmpii_getn_NC_UINT(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_UINT(xbuf,cbuf,nelems,itype);
                 break;
             case NC_FLOAT:
-                err = ncmpii_getn_NC_FLOAT(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_FLOAT(xbuf,cbuf,nelems,itype);
                 break;
             case NC_DOUBLE:
-                err = ncmpii_getn_NC_DOUBLE(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_DOUBLE(xbuf,cbuf,nelems,itype);
                 break;
             case NC_INT64:
-                err = ncmpii_getn_NC_INT64(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_INT64(xbuf,cbuf,nelems,itype);
                 break;
             case NC_UINT64:
-                err = ncmpii_getn_NC_UINT64(xbuf,cbuf,nelems,etype);
+                err = ncmpii_getn_NC_UINT64(xbuf,cbuf,nelems,itype);
                 break;
             default:
                 err = NC_EBADTYPE; /* this never happens */
