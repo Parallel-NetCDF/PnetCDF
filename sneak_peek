@@ -6,6 +6,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New optimization
+    * Both blocking and nonblocking varn APIs have been improved for better
+      performance and reduced memory footprint. See r3747-r3750.
     * Prior to this release, when buftype in flexible APIs indicates a
       noncontiguous layout in user buffer, PnetCDF packs the user buffer into
       a contiguous buffer allocated internally, which will later be used in
@@ -95,8 +97,9 @@ This is essentially a placeholder for the next release note ...
       more unlimited dimensions are defined in a corrupted file.
 
   o Bug fixes
-    * Fix configure bug when MPICC or CC uses the full path name.
-      See Ticket #35 for bug report and r3740 for fix.
+    * Fix configure-time bug that configure fails to recognize the compilers
+      with full path names set in the environment variable MPICC, MPICXX,
+      MPIF77, or MPI_F90. See Ticket #35 for bug report and r3740 for fix.
     * Fix the bug that writing scalar attributes of type NF_INT64 was
       mistakenly casted to NF_INT. See r3730.
     * Fix the calculation of new record number in put_vard API. Thanks to
