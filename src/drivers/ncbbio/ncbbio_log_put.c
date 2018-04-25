@@ -142,6 +142,9 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
     else if (buftype == MPI_UNSIGNED) { /* put_*_uint */
         itype = NC_LOG_TYPE_UINT;
     }
+    else if (buftype == MPI_LONG) { /* put_*_int */
+        itype = NC_LOG_TYPE_LONG;
+    }
     else if (buftype == MPI_FLOAT) { /* put_*_float */
         itype = NC_LOG_TYPE_FLOAT;
     }

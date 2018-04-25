@@ -45,6 +45,9 @@ int logtype2mpitype(int type, MPI_Datatype *buftype){
     else if (type == NC_LOG_TYPE_INT) {
         *buftype = MPI_INT;
     }
+    else if (type == NC_LOG_TYPE_LONG) {
+        *buftype = MPI_LONG;
+    }
     else if (type == NC_LOG_TYPE_FLOAT) {
         *buftype = MPI_FLOAT;
     }

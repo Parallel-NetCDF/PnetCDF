@@ -388,7 +388,7 @@ main(int argc, char *argv[])
 	/* NC_TEST(ncmpi_enddef);  redundant, as it calls test_ncmpi_redef() */
 	NC_TEST2(ncmpi_sync, numGatts, numVars);
     NC_TEST2(ncmpi_flush, numGatts, numVars);
-	NC_TEST2(ncmpi_abort, numGatts, numVars);
+	//NC_TEST2(ncmpi_abort, numGatts, numVars);
 	NC_TEST1(ncmpi_def_dim, numVars);
 	NC_TEST(ncmpi_rename_dim);
 	NC_TEST1(ncmpi_def_var, numVars);

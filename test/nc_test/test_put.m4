@@ -66,6 +66,11 @@ ifelse(`$1',`uchar',`ifdef(`PNETCDF',,`
 `#'else')')
                     else {
 ifelse(`$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+#ifdef BUILD_DRIVER_BB
+                        if (bb_enabled){
+                            err = ncmpi_flush(ncid);
+                        }
+#endif
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         ELSE_NOK
@@ -370,12 +375,29 @@ TestFunc(var1)_$1(VarArgs)
     int canConvert;      /* Both text or both numeric */
     IntType j, index[MAX_RANK];
     $1 value[1];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -510,12 +532,29 @@ TestFunc(var)_$1(VarArgs)
     int allInExtRange;     /* all values within external range? */
     IntType j, index[MAX_RANK];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -618,6 +657,11 @@ TestFunc(var)_$1(VarArgs)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
             } else {
+#ifdef BUILD_DRIVER_BB
+                if (bb_enabled){
+                    err = ncmpi_flush(ncid);
+                }
+#endif
                 IF (err != NC_ERANGE)
                     EXPECT_ERR(NC_ERANGE, err)
                 ELSE_NOK
@@ -670,12 +714,29 @@ TestFunc(vara)_$1(VarArgs)
     IntType start[MAX_RANK], edge[MAX_RANK];
     IntType mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -896,12 +957,29 @@ TestFunc(vars)_$1(VarArgs)
     PTRDType nstarts;   /* number of different starts */
     PTRDType stride[MAX_RANK];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -1148,12 +1226,29 @@ TestFunc(varm)_$1(VarArgs)
     PTRDType nstarts;   /* number of different starts */
     PTRDType stride[MAX_RANK], imap[MAX_RANK];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -1397,6 +1492,9 @@ TestFunc(att)_text(AttVarArgs)
     int i, j, err, ncid, nok=0;
     IntType k, ndx[1];
     text value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
@@ -1473,6 +1571,9 @@ TestFunc(att)_$1(AttVarArgs)
     int allInExtRange;  /* all values within external range? */
     IntType k, ndx[1];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
