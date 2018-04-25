@@ -78,11 +78,6 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         logbasep = ncbbp->logbase;
     }
     else{
-        /* Warn if log base not set by user */
-        if (rank == 0){
-            printf("Warning: Log directory not set. Using %s.\n", logbase);
-            fflush(stdout);
-        }
         i = strlen(ncbbp->path);
         fdir = (char*)NCI_Malloc((i + 1) * sizeof(char));
         strncpy(fdir, ncbbp->path, i + 1);
@@ -97,6 +92,12 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         /* If directory is fund, use it as logbase */
         if (i >= 0){
             logbasep = fdir;
+        }
+
+        /* Warn if log base not set by user */
+        if (rank == 0){
+            printf("Warning: Log directory not set. Using %s\n", logbasep);
+            fflush(stdout);
         }
     }
     //else if (private_path != NULL){
