@@ -185,10 +185,10 @@ static int test_varn(int ncid)
         starts[2][y] = 2; starts[2][x] = 6; counts[2][y] = 1; counts[2][x] = 2;
         starts[3][y] = 3; starts[3][x] = 0; counts[3][y] = 1; counts[3][x] = 3;
         /* rank 0 is writing the followings: ("-" means skip)
-                  -  -  -  -  -  0  0  -  -  - 
-                  0  -  -  -  -  -  -  -  -  - 
-                  -  -  -  -  -  -  0  0  -  - 
-                  0  0  0  -  -  -  -  -  -  - 
+                  -  -  -  -  -  0  0  -  -  -
+                  0  -  -  -  -  -  -  -  -  -
+                  -  -  -  -  -  -  0  0  -  -
+                  0  0  0  -  -  -  -  -  -  -
          */
     } else if (rank ==1) {
         starts[0][y] = 0; starts[0][x] = 3; counts[0][y] = 1; counts[0][x] = 2;
@@ -198,10 +198,10 @@ static int test_varn(int ncid)
         starts[4][y] = 2; starts[4][x] = 8; counts[4][y] = 1; counts[4][x] = 2;
         starts[5][y] = 3; starts[5][x] = 4; counts[5][y] = 1; counts[5][x] = 3;
         /* rank 1 is writing the followings: ("-" means skip)
-                  -  -  -  1  1  -  -  -  1  1 
-                  -  -  -  -  -  1  1  -  -  - 
-                  1  1  -  -  -  -  -  -  1  1 
-                  -  -  -  -  1  1  1  -  -  - 
+                  -  -  -  1  1  -  -  -  1  1
+                  -  -  -  -  -  1  1  -  -  -
+                  1  1  -  -  -  -  -  -  1  1
+                  -  -  -  -  1  1  1  -  -  -
          */
     } else if (rank ==2) {
         starts[0][y] = 0; starts[0][x] = 7; counts[0][y] = 1; counts[0][x] = 1;
@@ -210,10 +210,10 @@ static int test_varn(int ncid)
         starts[3][y] = 2; starts[3][x] = 2; counts[3][y] = 1; counts[3][x] = 1;
         starts[4][y] = 3; starts[4][x] = 3; counts[4][y] = 1; counts[4][x] = 1;
         /* rank 2 is writing the followings: ("-" means skip)
-                  -  -  -  -  -  -  -  2  -  - 
-                  -  2  2  2  -  -  -  2  2  2 
-                  -  -  2  -  -  -  -  -  -  - 
-                  -  -  -  2  -  -  -  -  -  - 
+                  -  -  -  -  -  -  -  2  -  -
+                  -  2  2  2  -  -  -  2  2  2
+                  -  -  2  -  -  -  -  -  -  -
+                  -  -  -  2  -  -  -  -  -  -
          */
     } else if (rank ==3) {
         starts[0][y] = 0; starts[0][x] = 0; counts[0][y] = 1; counts[0][x] = 3;
@@ -221,10 +221,10 @@ static int test_varn(int ncid)
         starts[2][y] = 2; starts[2][x] = 3; counts[2][y] = 1; counts[2][x] = 3;
         starts[3][y] = 3; starts[3][x] = 7; counts[3][y] = 1; counts[3][x] = 3;
         /* rank 3 is writing the followings: ("-" means skip)
-                  3  3  3  -  -  -  -  -  -  - 
-                  -  -  -  -  3  -  -  -  -  - 
-                  -  -  -  3  3  3  -  -  -  - 
-                  -  -  -  -  -  -  -  3  3  3 
+                  3  3  3  -  -  -  -  -  -  -
+                  -  -  -  -  3  -  -  -  -  -
+                  -  -  -  3  3  3  -  -  -  -
+                  -  -  -  -  -  -  -  3  3  3
          */
     }
     buffer = (int*) malloc(4*10 * sizeof(int));
@@ -378,10 +378,8 @@ int main(int argc, char **argv) {
                           err = 1;
             }
         }
-        argc -= optind;
-        argv += optind;
-        if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
-        else           strcpy(filename, "testfile.nc");
+        if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+        else                      snprintf(filename, 256, "%s", argv[optind]);
     }
     MPI_Bcast(&err, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (err == 1) {
@@ -422,6 +420,7 @@ int main(int argc, char **argv) {
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

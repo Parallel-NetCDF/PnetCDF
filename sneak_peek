@@ -6,10 +6,36 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New optimization
-    * none
+    * Both blocking and nonblocking varn APIs have been improved for better
+      performance and reduced memory footprint. See r3747-r3750.
+    * Prior to this release, when buftype in flexible APIs indicates a
+      noncontiguous layout in user buffer, PnetCDF packs the user buffer into
+      a contiguous buffer allocated internally, which will later be used in
+      MPI-IO calls. To reduce memory footprint, this release avoids the
+      additional memory allocation and directly uses the user buffer in MPI-IO
+      calls when byte-swap and type-conversion are not required. See r3722 and
+      r3723.
 
   o New Limitations
     * none
+
+  o Update configure options
+    * Option in-place byte-swap is expanded into the followings.
+      --enable-in-place-swap : perform byte swap on user I/O buffers whenever
+      possible. This option results in the least amount of internal memory
+      usage. However, if an immutable user buffer is used, segmentation fault
+      may occur when byte swap is performed on user buffer in place.
+      --disable-in-place-swap : when byte swap is required, an internal memory
+      space will be allocated for byte swap without altering the contents of
+      user buffer. This option will increase internal memory footprint.
+      default (neither the above option is used at the command line): an
+      internal buffer is allocated for byte swap only when the I/O request size
+      is less than 4 KiB. For larger requests, user buffers are used for
+      in-place byte swap.
+      The mode can also be changed at the run time by setting the PnetCDF hint
+      nc_in_place_swap. See New hints below for more info.
+      Note -in-place-swap option only affect applications running on Little
+      Endian machines, as no byte swap is necessary on Big Endian machines.
 
   o New constants
     * none
@@ -20,8 +46,21 @@ This is essentially a placeholder for the next release note ...
   o API syntax changes
     * none
 
-  o Semantics updates
-    * none
+  o API semantics updates
+    * ncmpi_put_vard and ncmpi_get_vard APIs
+      1. Now allow to write and read two or more variables in a single call to
+         vard APIs. In this case, argument varid will be the ID of first
+         variable. Argument filetype should be constructed by using the
+         relative distance between any two successive variables. See example
+         program examples/C/vard_mvars.c.
+      2. When argument filetype is MPI_DATATYPE_NULL, the request is considered
+         a zero-length request.
+      3. Limitation of vard APIs: The element data type of filetype must
+         conform with the variable external NC data type. The element data
+         types of all variables accessed in filetype must be the same.
+         Otherwise, NC_EMULTITYPES will be returned.
+      4. buftype must contain only one element data type. Otherwise
+         NC_EMULTITYPES will be returned.
 
   o New error code precedence
     * none
@@ -33,7 +72,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New PnetCDF hint
-    * none
+    * nc_in_place_swap -- to enable or disable in-place byte swap on Little
+      Endian architectures. The default mode is auto. See in-place byte-swap
+      option above for descriptions of the three modes. Below is an example
+      that changes the mode set at the configure time to "enable", by setting
+      the environment variable PNETCDF_HINTS with command:
+          export PNETCDF_HINTS="nc_in_place_swap=enable"
 
   o New run-time environment variables
     * none
@@ -53,6 +97,13 @@ This is essentially a placeholder for the next release note ...
       more unlimited dimensions are defined in a corrupted file.
 
   o Bug fixes
+    * Fix configure-time bug that configure fails to recognize the compilers
+      with full path names set in the environment variable MPICC, MPICXX,
+      MPIF77, or MPI_F90. See Ticket #35 for bug report and r3740 for fix.
+    * Fix the bug that writing scalar attributes of type NF_INT64 was
+      mistakenly casted to NF_INT. See r3730.
+    * Fix the calculation of new record number in put_vard API. Thanks to
+      Jim Edwards. See r3675.
     * Fix the calculation of growing size of nonblocking request queues to
       include the number of records of a record variable, as such request is
       split into multiple additional requests, one for each record. See r3651.
@@ -66,12 +117,22 @@ This is essentially a placeholder for the next release note ...
       only appears when reading files with corrupted NC tags. See r3645.
 
   o New example programs
-    * none
+    * example/C/vard_mvars.c shows an example of using a single vard API call
+      to write or read two variables.
 
   o New programs for I/O benchmarks
     * none
 
   o New test program
+    * test/testcases/test_fillvalue.c - tests PnetCDF allows to put attribute
+      _FillValue for global variable and for non-global variable, requires the
+      data type of attribute _FillValue be the same as the variable's. 
+    * test/F90/test_attr_int64.f90 - tests the bug fixed in r3730 that
+      nf90mpi_put_att API writes a scalar attribute of type NF90_INT64 that
+      was mistakenly casted to NF90_INT.
+    * test/testcase/test_vard_rec.c - tests ncmpi_put_vard APIs for writing a
+      record variable with one record at a time. This is to test the fix to
+      bug reported by Jim Edwards in r3675.
     * test/nonblocking/large_num_reqs.c - tests large number of nonblocking put
       and get requests (larger than NC_REQUEST_CHUNK, the constant used to grow
       the internal queues that store the nonblocking put and get requests. This
@@ -82,7 +143,14 @@ This is essentially a placeholder for the next release note ...
       files and checks expected error codes.
 
   o Conformity with NetCDF library
-    * none
+    * NetCDF allows to put attribute _FillValue of any NC data type to the
+      global variable, NC_GLOBAL. PnetCDF conforms with this behavior.
+    * For non-global variables, NetCDF treats the classic and HDF5 files
+      differently. For classic files, it allows to create attribute _FillValue
+      of a data type that is different from the variable's. For HDF5 files, the
+      data type of attribute _FillValue must be the same as the variable.
+      PnetCDF requires the data type of attribute _FillValue be the same as
+      the variable's.
 
   o Conflict with NetCDF library
     * none

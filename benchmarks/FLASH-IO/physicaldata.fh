@@ -49,7 +49,7 @@
 ! set size of grid blocks
 ! The spatial relationship between grid points in parents
 ! and their children is subtly different depending on whether
-! the block dimensions (ie nxb,nyb,nzb) are even or odd. This has 
+! the block dimensions (ie nxb,nyb,nzb) are even or odd. This has
 ! significant consequences when defining interpolation within
 ! restriction or prolongation operations.
 
@@ -87,15 +87,15 @@
 #if N_DIM == 3
       parameter (maxblocks = 200)              !<<< USER EDIT
 #else /* N_DIM < 3 */
-      parameter (maxblocks = 500)            !<<< USER EDIT 
+      parameter (maxblocks = 500)            !<<< USER EDIT
 #endif /*N_DIM*/
 #endif /*MAXBLOCKS*/
 
 
 
 
-!..this include file is very important at this location, as it sets a 
-!..parameter (ionmax) that determines the array sizes and do-loop limits 
+!..this include file is very important at this location, as it sets a
+!..parameter (ionmax) that determines the array sizes and do-loop limits
 !..of the mesh, hydro, eos and burn modules. it touches just about everything.
 
 #include "numfluids.fh"
@@ -147,7 +147,7 @@
       integer nfacevar
 ! 2 added to store strong fields at faces for all components of B
       parameter(nfacevar=0)   !<<< USER EDIT
-      
+
       integer nbndvar
       parameter(nbndvar=max(1,nfacevar))
 
@@ -172,14 +172,14 @@
 ! To average fluxes set red_f = .25.
 ! To sum fluxes set red_f = 1.0.
 
-! changed -- 2-24-00 
+! changed -- 2-24-00
 ! we are now converting the flux densities to fluxes before the call to
 ! amr_flux_conserve.  This is to get the proper geometry factors included
 ! in non-cartesian cases.  The fluxes are converted back after the call.
-! 
+!
 ! red_f is set according to dimension, to sum instead of average
       double precision red_f
-!      parameter(red_f = 0.25)   
+!      parameter(red_f = 0.25)
 
 #if N_DIM == 1
        parameter (red_f = 0.25)

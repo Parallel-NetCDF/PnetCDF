@@ -10,7 +10,7 @@
    Copyright 2006 University Corporation for Atmospheric Research/Unidata.
    See COPYRIGHT file for conditions of use.
 
-   This is a very simple example which tests NFC normalization of 
+   This is a very simple example which tests NFC normalization of
    Unicode names encoded with UTF-8.
 */
 #include <stdlib.h>

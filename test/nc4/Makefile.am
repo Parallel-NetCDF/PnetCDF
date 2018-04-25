@@ -34,7 +34,8 @@ TESTPROGRAMS =  simple_xy \
 				null_args \
 				redef1 \
 				scalar \
-				tst_def_var_fill
+				tst_def_var_fill \
+				record_nc 
 
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4

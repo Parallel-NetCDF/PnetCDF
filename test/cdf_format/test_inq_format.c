@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
         nerrs++;
     }
     err = ncmpi_close(ncid); CHECK_ERR
-  
+
     /* test NULL argument */
     err = ncmpi_inq_file_format(filename, NULL); CHECK_ERR
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
         nerrs++;
     }
     err = ncmpi_close(ncid); CHECK_ERR
-  
+
     err = ncmpi_inq_file_format(filename, &format); CHECK_ERR
     if (format != NC_FORMAT_CDF2) {
         printf("Error at line %d in %s: expecting CDF-2 format for file %s but got %d\n",
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
         nerrs++;
     }
     err = ncmpi_close(ncid); CHECK_ERR
-  
+
     err = ncmpi_inq_file_format(filename, &format); CHECK_ERR
     if (format != NC_FORMAT_CDF5) {
         printf("Error at line %d in %s: expecting CDF-5 format for file %s but got %d\n",

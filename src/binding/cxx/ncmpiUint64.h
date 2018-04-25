@@ -5,18 +5,18 @@
 
 namespace PnetCDF
 {
-  
+
   /*! Class represents a netCDF atomic Uint64 type.*/
   class NcmpiUint64 : public NcmpiType
   {
-  public: 
-    
+  public:
+
     /*! equivalence operator */
     bool operator==(const NcmpiUint64 & rhs);
-    
+
     /*! destructor */
     ~NcmpiUint64();
-    
+
     /*! Constructor */
     NcmpiUint64();
   };

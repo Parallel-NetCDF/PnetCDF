@@ -7,13 +7,13 @@ using namespace std;
 
 namespace PnetCDF {
   //  Global comparator operator ==============
-  // comparator operator 
+  // comparator operator
   bool operator<(const NcmpiDim& lhs,const NcmpiDim& rhs)
   {
     return false;
   }
-  
-  // comparator operator 
+
+  // comparator operator
   bool operator>(const NcmpiDim& lhs,const NcmpiDim& rhs)
   {
     return true;
@@ -32,7 +32,7 @@ NcmpiDim& NcmpiDim::operator=(const NcmpiDim & rhs)
 }
 
 // The copy constructor.
-NcmpiDim::NcmpiDim(const NcmpiDim& rhs): 
+NcmpiDim::NcmpiDim(const NcmpiDim& rhs):
   nullObject(rhs.nullObject),
   myId(rhs.myId),
   groupId(rhs.groupId)
@@ -42,17 +42,17 @@ NcmpiDim::NcmpiDim(const NcmpiDim& rhs):
 // equivalence operator
 bool NcmpiDim::operator==(const NcmpiDim& rhs) const
 {
-  if(nullObject) 
+  if(nullObject)
     return nullObject == rhs.nullObject;
   else
     return myId == rhs.myId && groupId == rhs.groupId;
-}  
+}
 
 //  !=  operator
 bool NcmpiDim::operator!=(const NcmpiDim & rhs) const
 {
   return !(*this == rhs);
-}  
+}
 
 
 // Gets parent group.
@@ -61,7 +61,7 @@ NcmpiGroup  NcmpiDim::getParentGroup() const {
 }
 
 // Constructor generates a null object.
-NcmpiDim::NcmpiDim() : 
+NcmpiDim::NcmpiDim() :
   nullObject(true),
   myId(-1),
   groupId(-1)
@@ -117,7 +117,7 @@ const string NcmpiDim::getName() const
   ncmpiCheck(ncmpi_inq_dimname(groupId, myId, dimName),__FILE__,__LINE__);
   return string(dimName);
 }
-  
+
 // renames this dimension.
 void NcmpiDim::rename(const string& name)
 {

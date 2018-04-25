@@ -20,9 +20,9 @@
 #define FILE_ALIGNMENT_DEFAULT 512
 #define FILE_ALIGNMENT_LB      4
 
-/* define MPI_OFFSET if not defined */
+/* MPI_OFFSET datatype was introduced in MPI 2.2 */
 #ifndef HAVE_DECL_MPI_OFFSET
-    #ifdef HAVE_DECL_MPI_LONG_LONG_INT
+    #if SIZEOF_MPI_OFFSET ==  SIZEOF_MPI_LONG_LONG_INT
         #define MPI_OFFSET MPI_LONG_LONG_INT
     #else
         #define MPI_OFFSET MPI_INT
@@ -275,27 +275,24 @@ ncmpio_NC_lookupvar(NC *ncp, int varid, NC_var **varp);
 #define NC_REQ_BUF_TYPE_IS_CONTIG  0x00000008
 #define NC_REQ_BUF_TYPE_CONVERT    0x00000010
 #define NC_REQ_BUF_BYTE_SWAP       0x00000020
-#define NC_REQ_BUF_TO_BE_FREED     0x00000040
+#define NC_REQ_XBUF_TO_BE_FREED    0x00000040
 
 typedef struct NC_req {
     int           flag;         /* bit-wise OR of the above NC_REQ_* flags */
     int           id;           /* even number for write, odd for read */
     int           abuf_index;   /* index in the abuf occupy_table. -1 means not
                                    using attached buffer */
-    void         *buf;          /* buffer used in calling iput/iget */
-    void         *xbuf;         /* buffer in external type, used to read/write,
-                                   may point to buf */
-    void         *userBuf;      /* buffer used in calling iput/iget varn APIs.
-                                   When buftype is noncontig, buf is a temp
-                                   allocated, to be unpacked to userBuf and
-                                   freed after file access */
-    NC_var       *varp;         /* pointer to variable object */
+    void         *buf;          /* user buffer used in nonblocking call */
+    void         *xbuf;         /* buffer in external type, used in MPI-IO
+                                   calls, may be == buf */
+    NC_var       *varp;         /* pointer to NC variable object */
     MPI_Offset   *start;        /* [varp->ndims*3] for start/count/stride */
     MPI_Offset    offset_start; /* starting offset of aggregate access region */
     MPI_Offset    offset_end;   /*   ending offset of aggregate access region */
+    MPI_Offset    nelems;       /* number of array elements in this request */
     MPI_Offset    bufcount;     /* number of buftype in this request */
     MPI_Datatype  buftype;      /* user defined derived data type */
-    MPI_Datatype  ptype;        /* element data type in buftype */
+    MPI_Datatype  itype;        /* internal element data type in buftype */
     MPI_Datatype  imaptype;     /* derived data type constructed from imap */
     int          *status;       /* pointer to user's status */
 } NC_req;
@@ -443,21 +440,29 @@ ncmpio_write_numrecs(NC *ncp, MPI_Offset new_numrecs);
 extern int
 ncmpio_filetype_create_vars(const NC* ncp, const NC_var* varp,
                 const MPI_Offset start[], const MPI_Offset count[],
-                const MPI_Offset stride[], int rw_flag, int *blocklen,
+                const MPI_Offset stride[], int *blocklen,
                 MPI_Offset *offset, MPI_Datatype *filetype,
                 int *is_filetype_contig);
 
-extern int                
+extern int
 ncmpio_file_set_view(const NC *ncp, MPI_File fh, MPI_Offset *offset,
                 MPI_Datatype filetype);
 
 /* Begin defined in ncmpio_igetput.m4 ---------------------------------------*/
 extern int
+ncmpio_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf, int *abuf_index);
+
+extern int
+ncmpio_abuf_dealloc(NC *ncp, int abuf_index);
+
+extern int
+ncmpio_add_record_requests(NC_req *reqs, const MPI_Offset *stride);
+
+extern int
 ncmpio_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *stride, const MPI_Offset *imap,
                 const MPI_Offset *count, void *buf, MPI_Offset bufcount,
-                MPI_Datatype datatype, int *reqid, int reqMode,
-                int isSameGroup);
+                MPI_Datatype datatype, int *reqid, int reqMode);
 
 /* Begin defined in ncmpio_hash_func.c --------------------------------------*/
 extern int
@@ -530,9 +535,18 @@ extern int
 ncmpio_NC_check_name(const char *name, int file_ver);
 
 extern int
+ncmpio_first_offset(const NC *ncp, const NC_var *varp, const MPI_Offset start[],
+                    MPI_Offset *offset);
+
+extern int
 ncmpio_last_offset(const NC *ncp, const NC_var *varp, const MPI_Offset starts[],
                    const MPI_Offset counts[], const MPI_Offset strides[],
-                   const int rw_flag, MPI_Offset *offset_ptr);
+                   MPI_Offset *offset_ptr);
+
+extern int
+ncmpio_access_range(const NC *ncp, const NC_var *varp, const MPI_Offset start[],
+                    const MPI_Offset count[], const MPI_Offset stride[],
+                    MPI_Offset *start_off, MPI_Offset *end_off);
 
 extern int
 ncmpio_pack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,

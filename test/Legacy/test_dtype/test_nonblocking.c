@@ -91,11 +91,11 @@ void parse_args(int argc, char **argv, int rank) {
 }
 
 static
-void partition_array(int ndims, 
-		     int *total_sizes, 
-		     int *local_subsizes, 
-		     int *local_starts, 
-		     int nprocs, 
+void partition_array(int ndims,
+		     int *total_sizes,
+		     int *local_subsizes,
+		     int *local_starts,
+		     int nprocs,
 		     int myrank)
 {
   int k;
@@ -107,17 +107,17 @@ void partition_array(int ndims,
   }
 
   /* starting from the last dimension */
-  k = ndims - 1; 
+  k = ndims - 1;
 
   while (nprocs > 1) {
 
     /* cut this dimension into two halves:
 	- [0 : ceiling{nprocs/2}) get first half
-	- [ceiling{nprocs/2} : nprocs) get second half 
+	- [ceiling{nprocs/2} : nprocs) get second half
     */
 
     odd = local_subsizes[k] % 2;
-    local_subsizes[k] /= 2; 
+    local_subsizes[k] /= 2;
     if (myrank >= (nprocs+1)/2) {
       local_starts[k] += local_subsizes[k];
       local_subsizes[k] += odd;
@@ -164,14 +164,14 @@ int main(int argc, char** argv) {
 
   parse_args(argc, argv, rank);
   TEST_SET_NCMPI_ETYPE(nc_etype, mpi_etype);
-#ifdef TEST_NCTYPE						
-  nc_etype = TEST_NCTYPE;					
-#endif								
+#ifdef TEST_NCTYPE
+  nc_etype = TEST_NCTYPE;
+#endif
   if (rank == 0) {
     printf("testing memory subarray layout ...\n");
   }
 
-  status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, 
+  status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER,
 			MPI_INFO_NULL, &ncid);
   TEST_HANDLE_ERR(status);
 
@@ -222,8 +222,8 @@ int main(int argc, char** argv) {
   TEST_HANDLE_ERR(status);
 
   if (rank == 0) {
-    printf("\t Filesize = %2.3fMB, MAX_Memory_needed = %2.3fMB\n\n", 
-	   2*total_sz*TEST_NCTYPE_LEN(nc_etype)/1024.0/1024.0, 
+    printf("\t Filesize = %2.3fMB, MAX_Memory_needed = %2.3fMB\n\n",
+	   2*total_sz*TEST_NCTYPE_LEN(nc_etype)/1024.0/1024.0,
 	   ( (2*total_sz + 4*total_sz/nprocs)*sizeof(TEST_NATIVE_ETYPE)
 	   + total_sz*TEST_NCTYPE_LEN(nc_etype) )/1024.0/1024.0);
   }
@@ -247,11 +247,11 @@ int main(int argc, char** argv) {
   for (i=0; i<total_sz; i++)
     /* just make sure any type can represent the number */
     /* and make it irregular (cycle != power of 2) for random test */
-    buf1[i] = buf2[i] = (TEST_NATIVE_ETYPE)(i%127); 
+    buf1[i] = buf2[i] = (TEST_NATIVE_ETYPE)(i%127);
 
  /* PARTITION and calculate the local target region */
 
-  partition_array(ndims, 
+  partition_array(ndims,
 		  array_of_sizes, array_of_subsizes, array_of_starts,
                   nprocs, rank);
 
@@ -316,7 +316,7 @@ int main(int argc, char** argv) {
 
   }
 
-  fflush(stdout); 
+  fflush(stdout);
   MPI_Barrier(MPI_COMM_WORLD);
 
   for (i=0; i<nprocs; i++) {
@@ -327,7 +327,7 @@ int main(int argc, char** argv) {
       printf("counts = [");
       TEST_PRINT_LIST(local_edges, 0, ndims-1, 1);
       printf("] \n");
- 
+
     }
     fflush(stdout);
     /* Synchronizer: processes should print out their stuffs in turn :) */
@@ -348,7 +348,7 @@ int main(int argc, char** argv) {
   for (i=0; i<local_sz; i++)
     tmpbuf[i] = (TEST_NATIVE_ETYPE)(-1);
   packpos = 0;
-  MPI_Pack((void *)tmpbuf, local_sz, mpi_etype, 
+  MPI_Pack((void *)tmpbuf, local_sz, mpi_etype,
 	   packbuf, packsz, &packpos, MPI_COMM_SELF);
   packpos = 0;
   MPI_Unpack(packbuf, packsz, &packpos, buf2, 1, mpi_subarray, MPI_COMM_SELF);
@@ -371,7 +371,7 @@ int main(int argc, char** argv) {
   status = ncmpi_begin_indep_data(ncid);
   TEST_HANDLE_ERR(status);
 
-  status = ncmpi_iput_vara(ncid, varid_1, local_starts, local_edges, 
+  status = ncmpi_iput_vara(ncid, varid_1, local_starts, local_edges,
 			   (const void *)buf1, 1, mpi_subarray, &request);
   TEST_HANDLE_ERR(status);
 
@@ -429,7 +429,7 @@ int main(int argc, char** argv) {
     success = 1;
 
   MPI_Allreduce(&success, &successall, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
-  
+
   if (rank == 0) {
     if (successall)
       printf("\t PASS: memory subarray layout passes test1! \n\n");

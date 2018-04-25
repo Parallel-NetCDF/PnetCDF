@@ -64,7 +64,7 @@ ncfoo_def_var(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->def_var(foo->ncp, name, xtype, ndims, dimids, varidp);
     if (err != NC_NOERR) return err;
 
@@ -78,7 +78,7 @@ ncfoo_inq_varid(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->inq_varid(foo->ncp, name, varid);
     if (err != NC_NOERR) return err;
 
@@ -99,7 +99,7 @@ ncfoo_inq_var(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->inq_var(foo->ncp, varid, name, xtypep, ndimsp, dimids,
                                nattsp, offsetp, no_fillp, fill_valuep);
     if (err != NC_NOERR) return err;
@@ -114,7 +114,7 @@ ncfoo_rename_var(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->rename_var(foo->ncp, varid, newname);
     if (err != NC_NOERR) return err;
 
@@ -135,7 +135,7 @@ ncfoo_get_var(void             *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->get_var(foo->ncp, varid, start, count, stride, imap,
                                buf, bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
@@ -212,7 +212,7 @@ ncfoo_iget_var(void             *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->iget_var(foo->ncp, varid, start, count, stride, imap,
                                 buf, bufcount, buftype, reqid, reqMode);
     if (err != NC_NOERR) return err;
@@ -235,7 +235,7 @@ ncfoo_iput_var(void             *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->iput_var(foo->ncp, varid, start, count, stride, imap,
                                 buf, bufcount, buftype, reqid, reqMode);
     if (err != NC_NOERR) return err;
@@ -249,7 +249,7 @@ ncfoo_buffer_attach(void       *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->buffer_attach(foo->ncp, bufsize);
     if (err != NC_NOERR) return err;
 
@@ -261,7 +261,7 @@ ncfoo_buffer_detach(void *ncdp)
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->buffer_detach(foo->ncp);
     if (err != NC_NOERR) return err;
 
@@ -283,7 +283,7 @@ ncfoo_bput_var(void             *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->bput_var(foo->ncp, varid, start, count, stride, imap,
                                 buf, bufcount, buftype, reqid, reqMode);
     if (err != NC_NOERR) return err;
@@ -303,7 +303,7 @@ ncfoo_get_varn(void              *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->get_varn(foo->ncp, varid, num, starts, counts, buf,
                                 bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
@@ -324,7 +324,7 @@ ncfoo_put_varn(void              *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->put_varn(foo->ncp, varid, num, starts, counts, buf,
                                 bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
@@ -346,7 +346,7 @@ ncfoo_iget_varn(void               *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->iget_varn(foo->ncp, varid, num, starts, counts, buf,
                                  bufcount, buftype, reqid, reqMode);
     if (err != NC_NOERR) return err;
@@ -368,7 +368,7 @@ ncfoo_iput_varn(void               *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->iput_varn(foo->ncp, varid, num, starts, counts, buf,
                                  bufcount, buftype, reqid, reqMode);
     if (err != NC_NOERR) return err;
@@ -390,7 +390,7 @@ ncfoo_bput_varn(void               *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->bput_varn(foo->ncp, varid, num, starts, counts, buf,
                                  bufcount, buftype, reqid, reqMode);
     if (err != NC_NOERR) return err;
@@ -409,7 +409,7 @@ ncfoo_get_vard(void         *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->get_vard(foo->ncp, varid, filetype, buf, bufcount,
                                 buftype, reqMode);
     if (err != NC_NOERR) return err;
@@ -428,7 +428,7 @@ ncfoo_put_vard(void         *ncdp,
 {
     int err;
     NC_foo *foo = (NC_foo*)ncdp;
-    
+
     err = foo->driver->put_vard(foo->ncp, varid, filetype, buf, bufcount,
                                 buftype, reqMode);
     if (err != NC_NOERR) return err;

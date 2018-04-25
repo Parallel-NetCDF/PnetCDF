@@ -13,21 +13,21 @@ using namespace PnetCDF::exceptions;
 NcmpiFile::~NcmpiFile()
 {
   // destructor may be called due to an exception being thrown
-  // hence throwing an exception from within a destructor 
+  // hence throwing an exception from within a destructor
   // causes undefined behaviour! so just printing a warning message
   try
   {
     if (!nullObject)
       ncmpiCheck(ncmpi_close(myId),__FILE__,__LINE__);
   }
-  catch (NcmpiException &e) 
+  catch (NcmpiException &e)
   {
     cerr << e.what() << endl;
   }
 }
 
 // Constructor generates a null object.
-NcmpiFile::NcmpiFile() : 
+NcmpiFile::NcmpiFile() :
     NcmpiGroup()  // invoke base class constructor
 {}
 
@@ -37,7 +37,7 @@ NcmpiFile::NcmpiFile(const MPI_Comm  &comm,
                      const FileMode   fMode,
                      const MPI_Info  &info /* = MPI_INFO_NULL */ )
 {
-  switch (fMode) 
+  switch (fMode)
     {
     case NcmpiFile::write:
       ncmpiCheck(ncmpi_open(comm, filePath.c_str(), NC_WRITE, info, &myId),__FILE__,__LINE__);
@@ -83,7 +83,7 @@ NcmpiFile::NcmpiFile(const MPI_Comm   &comm,
     case NcmpiFile::BadFormat:
         throw NcNotNCF("NetCDF: Unknown file format",__FILE__,__LINE__);
     }
-  switch (fMode) 
+  switch (fMode)
     {
     case NcmpiFile::write:
       ncmpiCheck(ncmpi_open(comm, filePath.c_str(), format | NC_WRITE, info, &myId),__FILE__,__LINE__);

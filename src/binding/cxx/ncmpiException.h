@@ -15,9 +15,9 @@ namespace PnetCDF
   namespace exceptions
   {
 
-    /*! 
+    /*!
       Base object is thrown if a netCDF exception is encountered.
-      An unsatisfactory return from a call to one of the netCDF C-routines 
+      An unsatisfactory return from a call to one of the netCDF C-routines
       generates an exception using an object inheriting this class.  All other netCDF-related
       errors  including those originating in the C++ binding, generates an NcmpiException.
     */
@@ -86,11 +86,11 @@ namespace PnetCDF
       NcInDefineMode(const char* complaint,const char* file,int line);
     };
 
-    /*! 
+    /*!
       Index exceeds dimension bound.
       Exception may  be generated during operations to get or put  netCDF variable data.
-      The exception is thrown if the specified indices were out of range for the rank of the 
-      specified variable. For example, a negative index or an index that is larger than 
+      The exception is thrown if the specified indices were out of range for the rank of the
+      specified variable. For example, a negative index or an index that is larger than
       the corresponding dimension length will cause an error.
     */
     class NcInvalidCoords : public NcmpiException
@@ -386,9 +386,9 @@ namespace PnetCDF
       NcEnoGrp(const char* complaint,const char* file,int line);
     };
 
-    /*! 
+    /*!
       Thrown if the requested operation is on a NULL group.
-    
+
       This exception is thrown if an operation on a NcmpiGroup object is requested which is empty. To test if the object is empty used NcmpiGroup::isNull()
      */
     class NcNullGrp : public NcmpiException
@@ -397,9 +397,9 @@ namespace PnetCDF
       NcNullGrp(const char* complaint,const char* file,int line);
     };
 
-    /*! 
+    /*!
       Thrown if the requested operation is on a NULL type.
-    
+
       This exception is thrown if an operation on a NcmpiType object is requested which is empty. To test if the object is empty used NcmpiType::isNull()
      */
     class NcNullType : public NcmpiException
@@ -408,9 +408,9 @@ namespace PnetCDF
       NcNullType(const char* complaint,const char* file,int line);
     };
 
-    /*! 
+    /*!
       Thrown if the requested operation is on a NULL dimension.
-    
+
       This exception is thrown if an operation on a NcmpiDim object is requested which is empty. To test if the object is empty used NcmpiDim::isNull()
      */
     class NcNullDim : public NcmpiException
@@ -419,8 +419,8 @@ namespace PnetCDF
       NcNullDim(const char* complaint,const char* file,int line);
     };
 
-    /*! 
-      Thrown if an operation to set the chunking, endianness, fill of a NcmpiVar object is issued after a 
+    /*!
+      Thrown if an operation to set the chunking, endianness, fill of a NcmpiVar object is issued after a
       call to NcmpiVar::getVar or NcmpiVar::putVar has been made.
     */
     class NcElateDef : public NcmpiException

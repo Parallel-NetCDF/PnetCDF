@@ -128,7 +128,7 @@ AC_DEFUN([UD_PROG_CC],
     # On some systems, a discovered compiler nevertheless won't
     # work (due to licensing, for example); thus, we check the
     # compiler with a test program.
-    # 
+    #
     AC_MSG_CHECKING([C compiler "$CC"])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],
                       [AC_MSG_RESULT(works)],
@@ -182,7 +182,7 @@ AC_DEFUN([UD_PROG_CXX],
 			# compiler with a test program.  We also test
 			# for <iostream.h> and the standard C++ library
 			# because we need these to work.
-			# 
+			#
 			AC_MSG_CHECKING(C++ compiler \"$CXX\")
 			AC_RUN_IFELSE([AC_LANG_SOURCE([[
 				#include <iostream.h>
@@ -243,7 +243,7 @@ if test $ac_cv_c_long_long = yes; then
 fi
 ])
 
-dnl 
+dnl
 dnl UD_CHECK_IEEE
 dnl If the 'double' is not an IEEE double
 dnl or the 'float' is not and IEEE single,
@@ -525,8 +525,8 @@ AC_DEFUN([UD_PROG_FC],
 			    # The use of f90(1) results in the following for
 			    # an unknown reason (`make' works in the fortran/
 			    # directory):
-			    # f90 -c -I../libsrc ftest.F 
-			    # Last chance handler: pc = 0xa971b8, 
+			    # f90 -c -I../libsrc ftest.F
+			    # Last chance handler: pc = 0xa971b8,
 			    # sp = 0x3fece0, ra = 0xa971b8
 			    # Last chance handler: internal exception: unwinding
 			    forts="f77 gfortran"
@@ -557,7 +557,7 @@ AC_DEFUN([UD_PROG_FC],
 				# nevertheless won't work (due to licensing,
 				# for example); thus, we check the compiler
 				# with a test program.
-				# 
+				#
                                 AC_LANG_PUSH([Fortran])
                                 AC_COMPILE_IFELSE([AC_LANG_CALL([],[FOO])],
                                    [AC_MSG_RESULT(works)],
@@ -1525,7 +1525,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          integer*8  nf_fill_uint
          integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295_8)
-         parameter (nf_fill_int64 = -9223372036854775806_8) 
+         parameter (nf_fill_int64 = -9223372036854775806_8)
          end]],
         [ac_cv_fc_constant_modifier=8],
         [AC_COMPILE_IFELSE([[
@@ -1533,7 +1533,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          integer*8  nf_fill_uint
          integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295)
-         parameter (nf_fill_int64 = -9223372036854775806) 
+         parameter (nf_fill_int64 = -9223372036854775806)
          end]],
         [ac_cv_fc_constant_modifier=none],
         [AC_COMPILE_IFELSE([[
@@ -1542,7 +1542,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          integer*8  nf_fill_uint
          integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295_EightByteInt)
-         parameter (nf_fill_int64 = -9223372036854775806_EightByteInt) 
+         parameter (nf_fill_int64 = -9223372036854775806_EightByteInt)
          end]],
         [ac_cv_fc_constant_modifier=EightByteInt],
         [AC_MSG_ERROR([no appropriate modifier found])])
@@ -1631,7 +1631,7 @@ AC_LINK_IFELSE([],[
     pac_libs=""
     pac_other=""
     for name in $FCLIBS ; do
-        case $name in 
+        case $name in
         -l*) pac_libs="$pac_libs $name"   ;;
         -L*) pac_ldirs="$pac_ldirs $name" ;;
           *) pac_other="$pac_other $name" ;;
@@ -1652,8 +1652,17 @@ rm -f conftest.$ac_ext
 AC_LANG_PUSH([C])
 ])
 
-dnl check the availability of one MPI executable
+dnl check the availability of one MPI executable in $2
+dnl Note $2 can be a compiler name followed by compile options. In this case
+dnl we check the first string token, the compiler name.
+dnl In addition, $2 can contain the full path of the compiler.
 AC_DEFUN([UD_MPI_PATH_PROG], [
+   if test "x$2" = x ; then
+      AC_MSG_ERROR("2nd argument cannot be NULL")
+   else
+      AC_MSG_CHECKING($2)
+   fi
+
    dnl 1st token in $2 must be the program name, rests are command-line options
    ac_first_token=`echo $2 | cut -d" " -f1`
    ac_rest_tokens=`echo $2 | cut -d" " -s -f2-`
@@ -1685,22 +1694,31 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
       AC_PATH_PROG([ac_mpi_prog_$1], [$ac_first_token])
    fi
    UD_MSG_DEBUG([ac_mpi_prog_$1=${ac_mpi_prog_$1}])
+
+   dnl In case ac_first_token is a full path, the above test may still set
+   dnl ac_mpi_prog_$1 to NULL
    if test "x${ac_mpi_prog_$1}" = x ; then
-      dnl AC_CHECK_FILE fails when $ac_first_token is not found in cross compile
-      dnl AC_CHECK_FILE([$ac_first_token], [ac_mpi_prog_$1=$2])
-      AC_CHECK_PROG([ac_mpi_prog_$1], [$ac_first_token])
-      dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
-      dnl ac_first_token=`echo $2 | cut -d" " -f1`
-      dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)
-      dnl if test -f $ac_first_token ; then
-         dnl UD_MSG_DEBUG(use file $ac_first_token as it exits)
-         dnl ac_mpi_prog_$1=$2
-      dnl fi
-   else
-      if test "x$ac_rest_tokens" != x ; then
-         ac_mpi_prog_$1="$ac_mpi_prog_$1 $ac_rest_tokens"
+      dnl Note we cannot use AC_CHECK_FILE because it fails for cross compiling
+      dnl with error: cannot check for file existence when cross compiling
+      ac_mpi_prog_path=`dirname $ac_first_token`
+      ac_mpi_prog_name=`basename $ac_first_token`
+      UD_MSG_DEBUG(ac_mpi_prog_path=$ac_mpi_prog_path)
+      UD_MSG_DEBUG(ac_mpi_prog_name=$ac_mpi_prog_name)
+      if (! test -d "${ac_mpi_prog_path}") ; then
+         AC_MSG_ERROR(Directory '${ac_mpi_prog_path}' does not exist)  
+      fi
+
+      AC_PATH_PROG([ac_mpi_prog_$1], [$ac_mpi_prog_name], [], [$ac_mpi_prog_path])
+      if test "x$ac_mpi_prog_$1" = x ; then
+         AC_MSG_ERROR($ac_mpi_prog_name cannot be found under $ac_mpi_prog_path)
       fi
    fi
+
+   dnl add back the compile options if there is any
+   if test "x$ac_rest_tokens" != x ; then
+      ac_mpi_prog_$1="$ac_mpi_prog_$1 $ac_rest_tokens"
+   fi
+
    $1=${ac_mpi_prog_$1}
 ])
 
@@ -1726,7 +1744,8 @@ AC_DEFUN([UD_MPI_PATH_PROGS], [
    if test "x${ac_mpi_prog_$1}" = x ; then
       dnl AC_CHECK_FILES fails when $2 is not found in cross compile
       dnl AC_CHECK_FILES([$2], [ac_mpi_prog_$1=$2])
-      AC_CHECK_PROGS([ac_mpi_prog_$1], [$2])
+      AC_PATH_PROGS([ac_mpi_prog_$1], [$2])
+      dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2])
       dnl AC_CHECK_PROGS([ac_mpi_prog_$1], [$2], [], [/])
       dnl ac_first_token=`echo $2 | cut -d" " -f1`
       dnl UD_MSG_DEBUG(check first token $ac_first_token of $2)

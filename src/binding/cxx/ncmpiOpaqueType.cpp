@@ -9,15 +9,15 @@ using namespace PnetCDF::exceptions;
 
 // Class represents a netCDF variable.
 using namespace PnetCDF;
-  
+
 // assignment operator
 NcmpiOpaqueType& NcmpiOpaqueType::operator=(const NcmpiOpaqueType& rhs)
 {
   // assign base class parts
-  NcmpiType::operator=(rhs);    
+  NcmpiType::operator=(rhs);
   return *this;
 }
-  
+
 // assignment operator
 NcmpiOpaqueType& NcmpiOpaqueType::operator=(const NcmpiType& rhs)
 {
@@ -31,7 +31,7 @@ NcmpiOpaqueType& NcmpiOpaqueType::operator=(const NcmpiType& rhs)
 }
 
 // The copy constructor.
-NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiOpaqueType& rhs): 
+NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiOpaqueType& rhs):
   NcmpiType(rhs)
 {
 }
@@ -47,8 +47,8 @@ NcmpiOpaqueType::NcmpiOpaqueType() :
 NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiGroup& grp, const string& name) :
   NcmpiType(grp,name)
 {}
-  
-  
+
+
 // constructor
 NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiType& ncmpiType) :
   NcmpiType(ncmpiType)
@@ -56,7 +56,7 @@ NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiType& ncmpiType) :
   // check the nctype object is the base of a Opaque type
   if(getTypeClass() != NC_OPAQUE) 	throw NcmpiException("The NcmpiType object must be the base of an Opaque type.",__FILE__,__LINE__);
 }
-  
+
 // Returns the size of the opaque type in bytes.
 MPI_Offset  NcmpiOpaqueType::getTypeSize() const
 {

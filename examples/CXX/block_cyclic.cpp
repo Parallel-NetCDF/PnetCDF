@@ -15,7 +15,7 @@
  * block_len. In this example, block_len is set to 2. Blocks are layout in a
  * cyclic fashion in the file. This example can test if PnetCDF can coalesce
  * file offsets and lengths when constructing a merged filetype.
- * 
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file. In this example, block_len = 2.
  *
@@ -118,10 +118,8 @@ int main(int argc, char** argv)
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
-    else           strcpy(filename, "testfile.nc");
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     try {
         /* create a new file for writing ------------------------------------*/

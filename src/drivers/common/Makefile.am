@@ -36,7 +36,8 @@ C_SRCS    = utf8proc.c \
             error_mpi2nc.c \
             check_name.c \
             pack_unpack.c \
-            utils.c
+            utils.c \
+            error_posix2nc.c
 
 libcommon_la_SOURCES = $(C_SRCS) $(H_SRCS)
 nodist_libcommon_la_SOURCES = $(M4_SRCS:.m4=.c)
@@ -53,7 +54,7 @@ BUILT_SOURCES = $(M4_SRCS:.m4=.c)
 
 EXTRA_DIST = $(M4_SRCS)
 
-CLEANFILES = $(M4_SRCS:.m4=.c) *.gcno
+CLEANFILES = $(M4_SRCS:.m4=.c) *.gcda *.gcno *.gcov gmon.out
 
 tests-local: all
 

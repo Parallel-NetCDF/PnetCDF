@@ -6,7 +6,7 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
+/* simple demonstration of pnetcdf
  * text attribute on dataset
  * rank 0 reads into 1-d array, broadcasts to all.  This is a dumb way
  * to do parallel I/O, but folks do this sometimes... */

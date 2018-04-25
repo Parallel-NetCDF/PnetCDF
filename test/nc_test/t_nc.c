@@ -13,11 +13,11 @@
    Program to create a cdf, exercise all cdf functions.  Creates cdf,
    stuff it full of numbers, closes it. Then reopens it, and checks
    for consistency.  Leaves the file around afterwards.
- 
+
    Based on a program to test the nasa look-alike program, so not the
    most appropropriate test. See ../nctest for a complete spec test.
 */
- 
+
 #define REDEF
 /* #define SYNCDEBUG */
 
@@ -244,7 +244,7 @@ fill_seq(int id)
 	{
 		MPI_Offset *cc = vindices;
 		while (cc < &vindices[num_dims])
-			*cc++ = 0; 
+			*cc++ = 0;
 	}
 
 	sizes[0] = NUM_RECS;
@@ -264,7 +264,7 @@ check_fill_seq(int id)
 	sizes[0] = NUM_RECS;
 	cc = vindices;
 	while (cc < &vindices[num_dims])
-		*cc++ = 0; 
+		*cc++ = 0;
 
 	/* ripple counter */
 	cc = vindices;
@@ -275,7 +275,7 @@ check_fill_seq(int id)
 	    {
 		if (mm == &sizes[num_dims - 1])
 		{
-	if(ncmpi_get_var1_float(id, Float_id, vindices, &got.fl[0]) == -1) 
+	if(ncmpi_get_var1_float(id, Float_id, vindices, &got.fl[0]) == -1)
 		goto bad_ret;
 	/* val = (float) ii;  */
 	/* if(val != got.fl[0]) */
@@ -341,7 +341,7 @@ int t_nc(char *filename, int cmode)
 	MPI_Offset align = 8192/32;
 
 	err = ncmpi_create(MPI_COMM_WORLD, filename,cmode, MPI_INFO_NULL, &id); ERR
-	
+
 	err = ncmpi_put_att_text(id, NC_GLOBAL, "TITLE", 12, "another name"); ERR
 	err = ncmpi_get_att_text(id, NC_GLOBAL, "TITLE", buf); ERR
 /*	(void) printf("title 1 \"%s\"\n", buf); */
@@ -373,13 +373,13 @@ int t_nc(char *filename, int cmode)
 /*	err = ncmpi_rename_dim(id,2, "a long dim name"); ERR */
 #endif
 
-	err = ncmpi_rename_dim(id,1, "IXX"); ERR 
-	err = ncmpi_inq_dim(id, 1, buf, &ui); ERR 
+	err = ncmpi_rename_dim(id,1, "IXX"); ERR
+	err = ncmpi_inq_dim(id, 1, buf, &ui); ERR
 	/* (void) printf("dimrename: %s\n", buf); */
-	err = ncmpi_rename_dim(id,1, dim_names[1]); ERR 
+	err = ncmpi_rename_dim(id,1, dim_names[1]); ERR
 
 #ifdef ATTRX
-	err = ncmpi_rename_att(id, 1, "UNITS", "units"); ERR 
+	err = ncmpi_rename_att(id, 1, "UNITS", "units"); ERR
 	err = ncmpi_del_att(id, 4, "FIELDNAM"); ERR
 	err = ncmpi_del_att(id, 2, "SCALEMIN"); ERR
 	err = ncmpi_del_att(id, 2, "SCALEMAX"); ERR
@@ -425,14 +425,14 @@ int t_nc(char *filename, int cmode)
 	err = ncmpi_open(MPI_COMM_WORLD, filename,NC_NOWRITE, MPI_INFO_NULL, &id); ERR
 	err = ncmpi_begin_indep_data(id); ERR
 
-	/*	NC	*/ 
+	/*	NC	*/
 	/* (void) printf("NC "); */
 	err = ncmpi_inq(id, &(cdesc->num_dims), &(cdesc->num_vars), &(cdesc->num_attrs), &(cdesc->xtendim) ); ERR
 	assert((MPI_Offset) cdesc->num_dims == num_dims);
 	assert(cdesc->num_attrs == 1);
 	assert(cdesc->num_vars == NUM_TESTVARS);
 	/* (void) printf("done\n"); */
-	
+
 	/*	GATTR	*/
 	/* (void) printf("GATTR "); */
 
@@ -449,7 +449,7 @@ int t_nc(char *filename, int cmode)
 	/* (void) printf("VAR "); */
 	assert( cdesc->num_vars == NUM_TESTVARS );
 
-	for(ii = 0; ii < cdesc->num_vars; ii++, tvp++ ) 
+	for(ii = 0; ii < cdesc->num_vars; ii++, tvp++ )
 	{
 		int jj;
 		err = ncmpi_inq_varndims(id, ii, &vdesc->ndims); ERR
@@ -486,7 +486,7 @@ int t_nc(char *filename, int cmode)
 
 		/* VATTR */
 		/* (void) printf("VATTR\n"); */
-		for(jj=0; jj<vdesc->num_attrs; jj++ ) 
+		for(jj=0; jj<vdesc->num_attrs; jj++ )
 		{
 			err = ncmpi_inq_attname(id, ii, jj, adesc->mnem); ERR
 			if( strcmp(adesc->mnem, reqattr[jj]) != 0 )

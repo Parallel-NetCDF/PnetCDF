@@ -91,7 +91,7 @@ EXTRA_DIST = xfail_runs.sh wrap_runs.sh \
              $(ENULLPAD_FILES) $(EMAXVARS_FILES) \
              $(EUNLIMIT_FILES) $(ENOTNC_FILES)
 
-CLEANFILES = *.gcno
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)

@@ -190,25 +190,25 @@ int main(int argc, char** argv)
                                     {{1,3}, {1,1}, {1,3}, {1,3}, {0,0}, {0,0}}};
 
     /* n_starts[0][][] n_counts[0][][] indicate the following: ("-" means skip)
-              -  -  -  -  -  X  X  -  -  - 
-              X  -  -  -  -  -  -  -  -  - 
-              -  -  -  -  -  -  X  X  -  - 
-              X  X  X  -  -  -  -  -  -  - 
+              -  -  -  -  -  X  X  -  -  -
+              X  -  -  -  -  -  -  -  -  -
+              -  -  -  -  -  -  X  X  -  -
+              X  X  X  -  -  -  -  -  -  -
        n_starts[1][][] n_counts[1][][] indicate the following pattern.
-              -  -  -  X  X  -  -  -  X  X 
-              -  -  -  -  -  X  X  -  -  - 
-              X  X  -  -  -  -  -  -  X  X 
-              -  -  -  -  X  X  X  -  -  - 
+              -  -  -  X  X  -  -  -  X  X
+              -  -  -  -  -  X  X  -  -  -
+              X  X  -  -  -  -  -  -  X  X
+              -  -  -  -  X  X  X  -  -  -
        n_starts[2][][] n_counts[2][][] indicate the following pattern.
-              -  -  -  -  -  -  -  X  -  - 
-              -  X  X  X  -  -  -  X  X  X 
-              -  -  X  -  -  -  -  -  -  - 
-              -  -  -  X  -  -  -  -  -  - 
+              -  -  -  -  -  -  -  X  -  -
+              -  X  X  X  -  -  -  X  X  X
+              -  -  X  -  -  -  -  -  -  -
+              -  -  -  X  -  -  -  -  -  -
        n_starts[3][][] n_counts[3][][] indicate the following pattern.
-              X  X  X  -  -  -  -  -  -  - 
-              -  -  -  -  X  -  -  -  -  - 
-              -  -  -  X  X  X  -  -  -  - 
-              -  -  -  -  -  -  -  X  X  X 
+              X  X  X  -  -  -  -  -  -  -
+              -  -  -  -  X  -  -  -  -  -
+              -  -  -  X  X  X  -  -  -  -
+              -  -  -  -  -  -  -  X  X  X
      */
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -596,9 +596,11 @@ int main(int argc, char** argv)
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
+        if (rank == 0 && sum_size > 0) {
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+            ncmpi_inq_malloc_list();
+        }
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

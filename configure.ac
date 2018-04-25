@@ -31,7 +31,7 @@ CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
 dnl AM_INIT_AUTOMAKE([subdir-objects])
 AM_INIT_AUTOMAKE([1.13])
-dnl enable silent rules by default 
+dnl enable silent rules by default
 AM_SILENT_RULES([yes])
 
 dnl if maintainer mode is disabled, make will *never* attempt to rebuild configure,
@@ -60,9 +60,9 @@ dnl PNETCDF_RELEASE_DATE2=`echo $SVN_DATE | cut -d' ' -f2`
 dnl PNETCDF_RELEASE_DATE=`echo $SVN_DATE | cut -d' ' -f6,7,8 | cut -d')' -f1`
 
 dnl user defined macro for printing messages for debugging
-_DEBUG=no
+dnl add "pnc_ac_debug=yes" at command line to enable
 AC_DEFUN([UD_MSG_DEBUG],
-         [if test "x${_DEBUG}" = xyes ; then
+         [if test "x${pnc_ac_debug}" = xyes ; then
              AC_MSG_NOTICE([DEBUG: $1])
           fi
          ]
@@ -107,6 +107,7 @@ AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
+AH_TEMPLATE([ENABLE_IN_PLACE_SWAP],     [Define if to enable in-place byte swap])
 AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([BUILD_DRIVER_NC4],         [Define if to enable NetCDF4 feature])
@@ -116,6 +117,9 @@ AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is def
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
+AH_TEMPLATE([BUILD_DRIVER_DW],          [Define if to enable DataWarp burst buffer feature])
+AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
+dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])
@@ -149,15 +153,14 @@ MPI_INSTALL=
 AC_ARG_WITH(mpi,
    [AS_HELP_STRING([--with-mpi=/path/to/implementation],
                    [The installation prefix path for MPI implementation.])],
-   if test x"$withval" = xyes; then
-      AC_MSG_ERROR(--with-mpi must be given a pathname)
-   else
-      MPI_INSTALL=${withval}
-   fi
+   [if test "x${withval}" = x ; then
+       AC_MSG_ERROR(--with-mpi is set but the value is NULL)
+    fi
+    if (! test -d "${withval}") ; then
+      AC_MSG_ERROR(Directory '${withval}' specified in --with-mpi does not exist)
+    fi
+    MPI_INSTALL=${withval}]
 )
-if test "x${MPI_INSTALL}" != x && (! test -d "${MPI_INSTALL}") ; then
-   AC_MSG_ERROR(Directory '${MPI_INSTALL}' specified in --with-mpi does not exist)
-fi
 dnl MPI_INSTALL will be referred in UD_MPI_PATH_PROGS and UD_MPI_PATH_PROG
 dnl defined in acinclude.m4
 
@@ -177,17 +180,23 @@ ac_user_MPICC=$MPICC
 ac_user_MPICXX=$MPICXX
 ac_user_MPIF77=$MPIF77
 ac_user_MPIF90=$MPIF90
-if test "x$MPICC"  = x && test "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
-if test "x$MPICXX" = x && test "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
-if test "x$MPIF77" = x && test "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
-if test "x$MPIF77" = x && test "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
-if test "x$MPIF90" = x && test "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
-if test "x$MPIF90" = x && test "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
+if test "x$MPICC"  = x -a "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
+if test "x$MPICXX" = x -a "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
+if test "x$MPIF77" = x -a "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
+if test "x$MPIF77" = x -a "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
+if test "x$MPIF90" = x -a "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
+if test "x$MPIF90" = x -a "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
 
-CANDIDATE_MPICC="${MPICC} mpicc" 
-CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC" 
-CANDIDATE_MPIF77="${MPIF77} mpif77" 
-CANDIDATE_MPIF90="${MPIF90} mpif90" 
+CANDIDATE_MPICC="${MPICC} mpicc mpicc_r"
+CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC mpcxx mpc++ mpicxx_r mpiCC_r mpcxx_r mpic++_r mpc++_r"
+CANDIDATE_MPIF77="${MPIF77} mpif77 mpif77_r mpf77 mpf77_r"
+CANDIDATE_MPIF90="${MPIF90} mpif90 mpif90_r mpf90 mpf90_r mpif95 mpif95_r mpf95 mpf95_r"
+
+dnl add GNU MPI compilers
+CANDIDATE_MPICC+=" mpigcc mpgcc mpigcc_r mpgcc_r"
+CANDIDATE_MPICXX+=" mpig++ mpg++ mpig++_r mpg++_r"
+CANDIDATE_MPIF77+=" mpig77 mpig77_r mpg77 mpg77_r"
+CANDIDATE_MPIF90+=" mpigfortran mpgfortran mpigfortran_r mpgfortran_r"
 
 dnl add IBM MPI compilers
 CANDIDATE_MPICC+=" mpcc_r mpcc mpixlc_r mpixlc"
@@ -197,9 +206,9 @@ CANDIDATE_MPIF90+=" mpixlf90_r mpixlf90"
 
 dnl add IBM BGL MPI compilers
 CANDIDATE_MPICC+=" blrts_xlc mpxlc_r mpxlc"
-CANDIDATE_MPICXX+=" blrts_xlC mpxlC_r mpxlC"
-CANDIDATE_MPIF77+=" blrts_xlf mpxlf_r mpxlf"
-CANDIDATE_MPIF90+=" blrts_xlf90 mpxlf90_r mpxlf90 mpxlf95_r mpxlf95"
+CANDIDATE_MPICXX+=" blrts_xlC mpxlC_r mpxlC mpixlc++ mpxlcxx mpxlc++ mpxlCC mpixlc++_r mpxlcxx_r mpxlc++_r mpxlCC_r"
+CANDIDATE_MPIF77+=" blrts_xlf mpxlf_r mpxlf mpxlf77 mpxlf77_r mpixlf mpixlf_r"
+CANDIDATE_MPIF90+=" blrts_xlf90 mpxlf90_r mpxlf90 mpxlf95_r mpxlf95 mpixlf95 mpixlf95_r"
 
 dnl add Fujitsu MPI compilers
 CANDIDATE_MPICC+=" mpifccpx"
@@ -215,12 +224,20 @@ CANDIDATE_MPIF90+=" ftn"
 
 dnl add Intel MPI compiler wrappers
 CANDIDATE_MPICC+=" mpiicc icc"
-CANDIDATE_MPICXX+=" mpiicpc icpc"
-CANDIDATE_MPIF77+=" mpiifort mpiifc ifort"
-CANDIDATE_MPIF90+=" mpiifort mpiifc ifort"
+CANDIDATE_MPICXX+=" mpiicpc mpiicxx mpiic++ mpiiCC icpc"
+CANDIDATE_MPIF77+=" mpiifort mpiifc mpiif77 ifort"
+CANDIDATE_MPIF90+=" mpiifort mpiifc mpiif95 mpiif90 ifort"
+
+dnl add PGI MPI compiler wrappers
+CANDIDATE_MPICC+=" mpipgcc mppgcc"
+CANDIDATE_MPICXX+=" mpipgCC mppgCC"
+CANDIDATE_MPIF77+=" mpipgf77 mppgf77"
+CANDIDATE_MPIF90+=" mpipgf90 mpipgf95 mppgf90 mppgf95 "
 
 dnl find the full path of MPICC from CANDIDATE_MPICC and MPI_INSTALL
 if test "x${ac_user_MPICC}" = x ; then
+   dnl if MPICC or CC has not been set by users, then search from
+   dnl CANDIDATE_MPICC, and find the full path of MPICC
    UD_MPI_PATH_PROGS([MPICC], [$CANDIDATE_MPICC])
 else
    dnl check whether user specified MPICC is valid
@@ -285,6 +302,17 @@ AC_CHECK_FUNC([MPI_File_open], [],
    -----------------------------------------------------------------------])
 ])])
 
+dnl compute canonical system types
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+
+dnl libtool v2.4.6 was released in 2015-02-15
+dnl Travis CI only has v2.4.2
+LT_PREREQ([2.4.2])
+dnl LT_INIT([dlopen disable-shared])
+dnl LT_INIT([dlopen])
+LT_INIT([disable-shared])
+
 dnl check MPI C++ compiler
 AC_ARG_ENABLE(cxx,
     [AS_HELP_STRING([--disable-cxx],
@@ -298,6 +326,8 @@ dnl If MPICXX or CXX has not been set by users, then
 dnl search from CANDIDATE_MPICXX and find the full path of MPICXX
 if test "x${enable_cxx}" != xno ; then
    if test "x${ac_user_MPICXX}" = x ; then
+      dnl if MPICXX or CXX has not been set by users, then search from
+      dnl CANDIDATE_MPICXX, and find the full path of MPICXX
       UD_MPI_PATH_PROGS([MPICXX], [$CANDIDATE_MPICXX])
    else
       dnl check whether user specified MPICXX is valid
@@ -335,7 +365,7 @@ if test "x${enable_cxx}" != xno ; then
    fi
 fi
 
-if test "x${enable_cxx}" = xno || test "x${MPICXX}" = x ; then
+if test "x${enable_cxx}" = xno -o "x${MPICXX}" = x ; then
    dnl when cxx is explicitly disabled or no MPICXX can be found
    has_mpicxx=no
 else
@@ -389,17 +419,6 @@ AC_SUBST(has_mpicxx)dnl for src/utils/pnetcdf-config.in
 UD_MSG_DEBUG(has_mpicxx=$has_mpicxx)
 AM_CONDITIONAL(HAS_MPICXX, [test x$has_mpicxx = xyes])
 AM_CONDITIONAL(SEEK_SET_REDEFINED, [test x$ac_cv_CHECK_MPI_CPP_SEEK_SET = xyes])
-
-dnl compute canonical system types
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
-
-dnl libtool v2.4.6 was released in 2015-02-15
-dnl Travis CI only has v2.4.2
-LT_PREREQ([2.4.2])
-dnl LT_INIT([dlopen disable-shared])
-dnl LT_INIT([dlopen])
-LT_INIT([disable-shared])
 
 dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
 dnl preventing PATH_MAX from being defined for some of the test files,
@@ -633,7 +652,7 @@ AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])
 
 if test "x${has_fortran}" = xyes ; then
-   if test "x${enable_strict}" = xyes && test "x${GFC}" = xyes; then
+   if test "x${enable_strict}" = xyes -a "x${GFC}" = xyes; then
       dnl not all Fortran compilers recognize -Wall
       FFLAGS+=" -Wall"
       FCFLAGS+=" -Wall"
@@ -700,7 +719,7 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl Checking for Fortran types also determines the Fortran name mangling
    dnl and places the value into FCALLSCSUB as the C name corresponding
-   dnl to the Fortran name SUB 
+   dnl to the Fortran name SUB
    AC_FC_FUNC(sub, [FCALLSCSUB])
 
    dnl determine the correct name mapping
@@ -709,11 +728,11 @@ if test "x${has_fortran}" = xyes ; then
            AC_DEFINE(F77_NAME_UPPER,,[Define if Fortran names are uppercase])
            ;;
        sub_)
-           dnl This is the hard case.  Gcc uses one _ unless the name includes
+           dnl This is the hard case.  gcc uses one _ unless the name includes
            dnl an underscore, in which case it gets two trailing underscores.
            dnl Use essentially the same configure code that the original configure
            dnl used to determine SUB
-           AC_MSG_CHECKING([for C-equivalent to Fortran routine "SUB_A"]) 
+           AC_MSG_CHECKING([for C-equivalent to Fortran routine "SUB_A"])
                    dnl "
            AC_FC_FUNC(sub_a, [FCALLSCSUBA])
            AC_MSG_RESULT($FCALLSCSUBA)
@@ -843,7 +862,7 @@ dnl       dnl cannot find bison or yacc required to build ncmpigentab.c
 dnl       have_yacc_lex=no
 dnl    fi
 dnl fi
-dnl 
+dnl
 dnl AC_PROG_LEX
 dnl if (test "x$LEX" != xflex) && (test "x$LEX" != xlex) ; then
 dnl    dnl cannot find flex or lex required to build ncmpigenyy.c
@@ -865,7 +884,7 @@ AC_PROG_GREP
 
 dnl YACC and LEX are required to build PnetCDF utility tool ncmpigen
 dnl if configure finds bison then YACC is set to bison -y, so we need to clean
-dnl up the output a bit before testing 
+dnl up the output a bit before testing
 dnl Below checks commands yacc and lex availability under PATH. However, this
 dnl checking is redundant, as AC_PROG_* did that already
 dnl YACC_CMD="${YACC% *}"
@@ -936,8 +955,7 @@ if test "x${debug}" = xyes; then
    AC_CHECK_FUNCS([tsearch tdelete])
 
    dnl check required functions for enabling malloc tracing
-   if (test "x${ac_cv_func_tsearch}" = xyes) &&
-      (test "x${ac_cv_func_tdelete}" = xyes) ; then
+   if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
       AC_DEFINE(PNC_MALLOC_TRACE)
    fi
    PNETCDF_DEBUG=1
@@ -966,7 +984,7 @@ AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$ac_cv_sizeof_MPI_Aint = x4])
 
 dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
 dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
-dnl get mangled. 
+dnl get mangled.
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
    AC_MSG_WARN([
    -----------------------------------------------------------------------
@@ -980,6 +998,15 @@ else
    enable_aggregation=yes
 fi
 
+dnl check availability of MPI_Count, which is added in MPI 3.0 standard.
+dnl The new MPI functions added in 3.0 that have arguments of type MPI_Count:
+dnl MPI_Type_size_x, MPI_Type_get_extent_x, MPI_Type_get_true_extent_x, and
+dnl MPI_Get_elements_x
+dnl AC_CHECK_TYPE([MPI_Count], [], [], [#include <mpi.h>])
+dnl if test "x${ac_cv_type_MPI_Count}" = xyes; then
+dnl    AC_DEFINE(HAVE_MPI_COUNT)
+dnl fi
+
 dnl check MPI-2 only functions
 AC_CHECK_FUNCS([MPI_Info_dup \
                 MPI_Info_free \
@@ -989,8 +1016,7 @@ AC_CHECK_FUNCS([MPI_Info_dup \
                 MPI_Type_create_hindexed \
                 MPI_Type_create_struct \
                 MPI_Type_create_resized \
-                MPI_Type_get_extent \
-                MPI_Type_size_x])
+                MPI_Type_get_extent])
 
 if test "$ac_cv_func_MPI_Info_dup" = no ; then
    AC_MSG_ERROR([
@@ -1044,6 +1070,8 @@ UD_CHECK_MPI_DATATYPE(MPI_LONG_LONG_INT)
 UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
 UD_CHECK_MPI_DATATYPE(MPI_UB)
 UD_CHECK_MPI_DATATYPE(MPI_LB)
+dnl C data type MPI_Offset was first introduced in MPI 2.0, but MPI_OFFSET was
+dnl introduced as a predefined MPI datatype in MPI 2.2
 UD_CHECK_MPI_DATATYPE(MPI_OFFSET)
 AM_CONDITIONAL(DECL_MPI_OFFSET, [test x$ac_cv_CHECK_MPI_DATATYPE_MPI_OFFSET = xyes])
 
@@ -1077,13 +1105,15 @@ AC_C_BIGENDIAN
 AM_CONDITIONAL(IS_BIGENDIAN, [test x$ac_cv_c_bigendian = xyes])
 AC_SUBST(ac_cv_c_bigendian)dnl for src/utils/pnetcdf-config.in
 
-in_place_swap=yes
 AC_ARG_ENABLE([in-place-swap],
-    [AS_HELP_STRING([--disable-in-place-swap],
-                    [Disable memory in-place byte swap on Little Endian
-                     machines. @<:@default: enabled@:>@])],
-    [in_place_swap=${enableval}], [in_place_swap=yes]
+    [AS_HELP_STRING([--(en/dis)able-in-place-swap],
+                    [Enable/disable memory in-place byte swap on Little Endian
+                     machines. @<:@default: auto@:>@])],
+    [in_place_swap=${enableval}], [in_place_swap=auto]
 )
+if test "x${in_place_swap}" = xyes ; then
+   AC_DEFINE(ENABLE_IN_PLACE_SWAP)
+fi
 if test "x${in_place_swap}" = xno ; then
    if test "x${ac_cv_c_bigendian}" = xyes ; then
       AC_MSG_WARN([--disable-in-place-swap takes no effect on Big Endian])
@@ -1092,13 +1122,14 @@ if test "x${in_place_swap}" = xno ; then
       AC_DEFINE(DISABLE_IN_PLACE_SWAP)
    fi
 fi
+dnl in_place_swap can be yes, no, auto
 AC_SUBST(in_place_swap)dnl for src/utils/pnetcdf-config.in
 
 dnl For big Endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little Endian, put buffer may be used for byte swap in
 dnl place and hence must be declared as INTENT(INOUT).
 dnl This will configure/produce the file src/binding/f90/api.f90
-if test "x${ac_cv_c_bigendian}" = xyes  || (test "x${in_place_swap}" = xno) ; then
+if test "x${ac_cv_c_bigendian}" = xyes -o "x${in_place_swap}" = xno ; then
    INTENTV="IN"
 else
    INTENTV="INOUT"
@@ -1127,24 +1158,24 @@ AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(unsigned long long)
 
-if test "$ac_cv_type_schar" = yes ; then 
-   AC_CHECK_SIZEOF(schar) 
-fi 
-if test "$ac_cv_type_uchar" = yes ; then 
-   AC_CHECK_SIZEOF(uchar) 
-fi 
-if test "$ac_cv_type_ushort" = yes ; then 
-   AC_CHECK_SIZEOF(ushort) 
-fi 
-if test "$ac_cv_type_uint" = yes ; then 
-   AC_CHECK_SIZEOF(uint) 
-fi 
-if test "$ac_cv_type_longlong" = yes ; then 
-   AC_CHECK_SIZEOF(longlong) 
-fi 
-if test "$ac_cv_type_ulonglong" = yes ; then 
-   AC_CHECK_SIZEOF(ulonglong) 
-fi 
+if test "$ac_cv_type_schar" = yes ; then
+   AC_CHECK_SIZEOF(schar)
+fi
+if test "$ac_cv_type_uchar" = yes ; then
+   AC_CHECK_SIZEOF(uchar)
+fi
+if test "$ac_cv_type_ushort" = yes ; then
+   AC_CHECK_SIZEOF(ushort)
+fi
+if test "$ac_cv_type_uint" = yes ; then
+   AC_CHECK_SIZEOF(uint)
+fi
+if test "$ac_cv_type_longlong" = yes ; then
+   AC_CHECK_SIZEOF(longlong)
+fi
+if test "$ac_cv_type_ulonglong" = yes ; then
+   AC_CHECK_SIZEOF(ulonglong)
+fi
 
 if test "x${has_fortran}" = xyes ; then
    if test "$cross_compiling" = yes; then
@@ -1450,6 +1481,7 @@ AC_ARG_ENABLE([large-req],
                      @<:@default: disabled@:>@])],
     [large_req=${enableval}], [large_req=no]
 )
+ENABLE_LARGE_REQ=0
 if test "x${large_req}" = xyes ; then
     ENABLE_LARGE_REQ=1
     AC_DEFINE(ENABLE_LARGE_REQ)
@@ -1473,11 +1505,40 @@ AC_ARG_ENABLE([null-byte-header-padding],
                      files in classic formats. @<:@default: disabled@:>@])],
     [null_byte_header_padding=${enableval}], [null_byte_header_padding=no]
 )
+ENABLE_NULL_BYTE_HEADER_PADDING=0
 if test "x${null_byte_header_padding}" = xyes ; then
     ENABLE_NULL_BYTE_HEADER_PADDING=1
     AC_DEFINE(ENABLE_NULL_BYTE_HEADER_PADDING)
 fi
 AC_SUBST(ENABLE_NULL_BYTE_HEADER_PADDING)
+
+AC_ARG_ENABLE([datawarp],
+   [AS_HELP_STRING([--enable-datawarp],
+                   [Enable DataWarp driver support. @<:@default: disabled@:>@])],
+   [enable_dwdriver=${enableval}], [enable_dwdriver=no]
+)
+
+BUILD_DRIVER_DW=0
+if test "x$enable_dwdriver" = "xyes" ; then
+   AC_DEFINE(BUILD_DRIVER_DW)
+   BUILD_DRIVER_DW=1
+fi
+AC_SUBST(BUILD_DRIVER_DW)
+AM_CONDITIONAL(BUILD_DRIVER_DW, [test x$enable_dwdriver = xyes])
+
+AC_ARG_ENABLE([profiling],
+   [AS_HELP_STRING([--enable_profiling],
+                   [Enable time and memory profiling. @<:@default: disabled@:>@])],
+   [enable_profiling=${enableval}], [enable_profiling=no]
+)
+
+PNETCDF_PROFILING=0
+if test "x$enable_profiling" = "xyes" ; then
+   AC_DEFINE(PNETCDF_PROFILING)
+   PNETCDF_PROFILING=1
+fi
+AC_SUBST(PNETCDF_PROFILING)
+AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
 
 dnl build test programs and benchmark programs
 AM_CONDITIONAL(BUILD_TESTSETS, [true])
@@ -1487,6 +1548,7 @@ AC_ARG_VAR(TESTSEQRUN, [Run command (on one MPI process) for "make check" on cro
 
 AC_ARG_VAR(TESTMPIRUN, [MPI run command for "make ptest", @<:@default: mpiexec -n NP@:>@])
 if test "x${TESTMPIRUN}" = x ; then
+   dnl if TESTMPIRUN has not been set by users, then
    dnl set default to "mpiexec -n NP"
    UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun srun])
    if test "x${TESTMPIRUN}" != x ; then
@@ -1543,6 +1605,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
                 src/drivers/nc4io/Makefile \
+                src/drivers/ncdwio/Makefile \
                 src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
                 src/binding/cxx/Makefile \
@@ -1559,6 +1622,7 @@ AC_CONFIG_FILES(Makefile \
                 src/utils/ncmpidiff/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpigen/Makefile \
+                src/utils/ncmpilogdump/Makefile \
                 src/utils/pnetcdf-config \
                 src/packaging/Makefile \
                 src/packaging/pnetcdf.pc \
@@ -1568,6 +1632,7 @@ AC_CONFIG_FILES(Makefile \
                 examples/CXX/Makefile \
                 examples/F77/Makefile \
                 examples/F90/Makefile \
+                examples/datawarp/Makefile \
                 benchmarks/Makefile \
                 benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
@@ -1592,6 +1657,7 @@ AC_CONFIG_FILES(Makefile \
                 test/nf90_test/Makefile \
                 test/nf90_test/tests.inc \
                 test/F90/Makefile \
+                test/datawarp/Makefile \
 )
 
 dnl The following dependency is for configure.in and configure
@@ -1616,47 +1682,60 @@ echo \
               Build C++ APIs                              - ${has_mpicxx}"
 if test "x${enable_aggreg}" = xno; then
    echo "\
-              Request aggregation in nonblocking APIs     - OFF"
+              Request aggregation in nonblocking APIs     - disabled"
 fi
 if test "x${enable_erange_fill}" = xno; then
    echo "\
-              Fill variables when NC_ERANGE occurs        - OFF"
+              Fill variables when NC_ERANGE occurs        - disabled"
 fi
 if test "x${enable_subfiling}" = xyes; then
    echo "\
-              Build subfiling support                     - ON"
+              Subfiling support                           - enabled"
 fi
 if test "x${enable_netcdf4}" = xyes; then
    echo "\
-              Build NetCDF4 support                       - ON"
+              NetCDF4 support                             - enabled"
 fi
 if test "x${enable_relax_coord_bound}" = xyes; then
    echo "\
-              Relax start coordinate bound check          - ON"
+              Relax start coordinate bound check          - enabled"
 fi
-if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
-   echo "\
-              Memory in-place byte swap                   - OFF"
+if test "x${ac_cv_c_bigendian}" = xno ; then
+   if test "x${in_place_swap}" = xno ; then
+      echo "\
+              Memory in-place byte swap                   - disabled"
+   elif test "x${in_place_swap}" = xyes ; then
+      echo "\
+              Memory in-place byte swap                   - enabled"
+   fi
 fi
 if test "x${large_file_test}" = xyes; then
    echo "\
-              Testing large file/variable I/O             - ON"
+              Testing large file/variable I/O             - enabled"
 fi
 if test "x${debug}" = xyes; then
    echo "\
-              PnetCDF internal debug mode                 - ON"
+              PnetCDF internal debug mode                 - enabled"
 fi
-if test "x${has_fortran}" = xyes && (test "x${ac_f77_support_freeform}" = xno) ; then
+if test "x${has_fortran}" = xyes -a "x${ac_f77_support_freeform}" = xno ; then
    echo "\
-              Support free form in Fortran 77             - OFF"
+              Support free form in Fortran 77             - disabled"
 fi
 if test "x${large_req}" = xyes ; then
    echo "\
-              Allow single large (> 2GiB) MPI-IO requests - ON"
+              Allow single large (> 2GiB) MPI-IO requests - enabled"
 fi
 if test "x${null_byte_header_padding}" = xyes ; then
    echo "\
-              Check null-byte header padding for reads    - ON"
+              Check null-byte header padding for reads    - enabled"
+fi
+if test "x${enable_dwdriver}" = xyes ; then
+   echo "\
+              Cray DataWarp driver                        - enabled"
+fi
+if test "x${enable_profiling}" = xyes ; then
+   echo "\
+              PnetCDF internal profiling                  - enabled"
 fi
 
 echo "\

@@ -1,7 +1,7 @@
 /***********************************************************
  *
  * This test program writes a netCDF file using the parallel
- * netCDF library using MPI-IO. 
+ * netCDF library using MPI-IO.
  *
  * The output file is: "testwrite.nc"
  *
@@ -41,7 +41,7 @@
  *
  *
  * This test uses collective APIs to write variable data and only
- * deals with double variables. 
+ * deals with double variables.
  *
  * This test assume # of processors = 4
  *
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 
   /**
    * Define the dimensionality and then add 4 variables:
-   *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)  
+   *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)
    */
   square_dim[0] = cube_dim[0] = xytime_dim[1] = dimid1;
   square_dim[1] = cube_dim[1] = xytime_dim[2] = dimid2;
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
   err = ncmpi_def_var(ncid, "xytime", NC_DOUBLE, 3, xytime_dim, &xytime_id); ERR
 
   /**
-   * Add an attribute for variable: 
+   * Add an attribute for variable:
    *    square: decsription = "2-D integer array"
    */
   err = ncmpi_put_att_text(ncid, square_id, "description", strlen(description), description); ERR
@@ -151,12 +151,12 @@ int main(int argc, char **argv) {
   square_start[1] = rank%2;
 
   /**
-   * Packing data in the buffer 
+   * Packing data in the buffer
    */
 
   /* Data for variable: time */
   for ( i = time_start[0]; i < time_start[0] + time_count[0]; i++ )
-    buffer[i - time_start[0]] = i;   
+    buffer[i - time_start[0]] = i;
 
   /* Data for variable: cube and xytime */
   for ( i = 0; i < 100; i++ )
@@ -182,10 +182,10 @@ int main(int argc, char **argv) {
     time_count[0] = 0;
   }
   /**
-   * Write data into variables: square, cube, time and xytime  
+   * Write data into variables: square, cube, time and xytime
    *   Access Method: subarray
    *   Data Mode API: collective
-   */ 
+   */
   err = ncmpi_put_vars_double_all(ncid, square_id,
                     square_start, square_count, square_stride,
                     &stride_2d_data[0][0]);

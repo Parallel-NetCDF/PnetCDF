@@ -254,7 +254,7 @@ int main(int argc, char **argv)
     extern char *optarg;
     extern int optind;
     MPI_Info info;
- 
+
     MPI_Init(&argc, &argv);
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
@@ -739,7 +739,7 @@ int main(int argc, char **argv)
         for (j=0; j<ndims1; j++) {
             varsize *= shape[j];
         }
- 
+
         /* compare the variable contents */
         switch (type1) {
             case NC_CHAR:   CHECK_VAR_DIFF(char,   ncmpi_get_vara_text_all,      NC_CHAR)

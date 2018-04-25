@@ -2,7 +2,7 @@
 !  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
 !  See COPYRIGHT notice in top-level directory.
 !
-!  $Id$ 
+!  $Id$
 !
 
       integer, parameter :: INT1_KIND = selected_int_kind(2)
@@ -196,7 +196,7 @@
 !    /* Common blocks for global variables: */
 
 !/* MPI_OFFSET */
-      COMMON    /OFFSETCOM/     DIM_LEN, VAR_SHAPE, GATT_LEN 
+      COMMON    /OFFSETCOM/     DIM_LEN, VAR_SHAPE, GATT_LEN
 
       COMMON    /MPICOM/        COMM
       COMMON    /LOGCOM/        READONLY, & !/* don't change files */

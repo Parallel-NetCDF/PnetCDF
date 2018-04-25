@@ -21,7 +21,7 @@
  * partitioning case writes 1st half followed by 2nd half. The same partitioning
  * patterns are used for read. In both cases, nonblocking APIs are used to
  * evaluate the performance.
- * 
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file. In this example, NVARS = 5.
  *
@@ -510,14 +510,14 @@ int benchmark_read(char       *filename,
 
 static void
 usage(char *argv0)
-{   
+{
     char *help =
-    "Usage: %s [-h | -q | -d] len file_name\n"
+    "Usage: %s [-h] | [-q] [-d] [-l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode\n"
     "       [-d] Debug mode\n"
-    "       len: local variable of size len x len (default 10)\n"
-    "       filename: output netCDF file name (default ./testfile.nc)\n";
+    "       [-l len]: local variable of size len x len (default 10)\n"
+    "       [filename]: output netCDF file name (default ./testfile.nc)\n";
     fprintf(stderr, help, argv0);
 }
 
@@ -527,7 +527,7 @@ int main(int argc, char** argv) {
     char filename[256];
     int i, rank, nprocs, verbose=1, nerrs=0;
     double timing[11], max_t[11];
-    MPI_Offset len, w_size=0, r_size=0, sum_w_size, sum_r_size;
+    MPI_Offset len=0, w_size=0, r_size=0, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
     MPI_Info w_info_used, r_info_used;
 
@@ -537,26 +537,23 @@ int main(int argc, char** argv) {
 
     /* get command-line arguments */
     debug = 0;
-    while ((i = getopt(argc, argv, "hqd")) != EOF)
+    while ((i = getopt(argc, argv, "hqdl:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
             case 'd': debug = 1;
+                      break;
+            case 'l': len = atoi(optarg);
                       break;
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
-    len = 10;
-    if (argc > 0) len = strtoll(argv[0],NULL,10);
     len = (len <= 0) ? 10 : len;
-
-    if (argc > 1) snprintf(filename, 256, "%s", argv[1]);
-    else          strcpy(filename, "testfile.nc");
 
     nerrs += benchmark_write(filename, len, &w_size, &w_info_used, timing);
     nerrs += benchmark_read (filename, len, &r_size, &r_info_used, timing+6);

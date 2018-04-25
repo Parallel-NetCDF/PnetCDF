@@ -200,7 +200,7 @@
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
               if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,
-     +            'heap memory allocated by PnetCDF internally has ', 
+     +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 

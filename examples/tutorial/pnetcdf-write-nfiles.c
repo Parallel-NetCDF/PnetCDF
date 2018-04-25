@@ -6,7 +6,7 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
+/* simple demonstration of pnetcdf
  * text attribute on dataset
  * Each process writes out rank into 1-d array to a separate file.
  * This is not a good way to do parallel I/O */
@@ -18,8 +18,8 @@ To run on 4 processes for example,
 There will be 4 files created.
     output.nc.0-4.nc
     output.nc.1-4.nc
-    output.nc.2-4.nc 
-    output.nc.3-4.nc  
+    output.nc.2-4.nc
+    output.nc.3-4.nc
 
 The contents of files are shown at the bottom of this files.
 */
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     /* ncmpi_enddef writes the header out as in other examples, but because
      * each processor opened the file independently, there can be no "write
      * and broadcast" optimization.  Instead, every processor does header
-     * i/o.  */        
+     * i/o.  */
     ret = ncmpi_enddef(ncfile); if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     /* the one advantage to this approach: data decomposition is easy the
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
      * variables */
     /* When each processor writes to its own file, a whole host of
      * optimizations cannot take place.   */
-        
+
     ret = ncmpi_put_var_int_all(ncfile, varid1, &data);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 

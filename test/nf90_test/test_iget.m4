@@ -98,10 +98,10 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
         integer i
         integer j
         integer err
-        integer nok      
+        integer nok
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         doubleprecision expect
-        logical canConvert     
+        logical canConvert
         DATATYPE_VAR1($1, value)
         doubleprecision val
         integer err_w, reqid(1), st(1)
@@ -198,16 +198,16 @@ define([TEST_NFMPI_IGET_VAR],[dnl
         integer i
         integer j
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
-        integer nok      
+        integer nok
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         doubleprecision expect(MAX_NELS)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
-        integer err_w, reqid(1), st(1)      
+        integer err_w, reqid(1), st(1)
 
         nok = 0
 
@@ -304,21 +304,21 @@ define([TEST_NFMPI_IGET_VARA],[dnl
         integer j
         integer k
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer nok      
+        integer nok
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)      
+        integer err_w, reqid(1), st(1)
 
         nok = 0
 
@@ -422,7 +422,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 7           continue
-!           bits of k determine whether to get lower or upper part of dim 
+!           bits of k determine whether to get lower or upper part of dim
             do 8, k = 1, nslabs
                 nels = 1
                 do 9, j = 1, var_rank(i)
@@ -528,12 +528,12 @@ define([TEST_NFMPI_IGET_VARS],dnl
         integer k
         integer m
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer(kind=MPI_OFFSET_KIND) nstarts         
-        integer nok             
+        integer(kind=MPI_OFFSET_KIND) nstarts
+        integer nok
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -542,12 +542,12 @@ define([TEST_NFMPI_IGET_VARS],dnl
         integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)      
+        integer err_w, reqid(1), st(1)
 
         nok = 0
 
@@ -693,7 +693,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 11                  continue
-!                   Random choice of forward or backward 
+!                   Random choice of forward or backward
 !    /* TODO
 !                   if ( roll(2) ) then
 !                       for (j = 0 j < var_rank(i) j++) {
@@ -798,12 +798,12 @@ define([TEST_NFMPI_IGET_VARM],dnl
         integer k
         integer m
         integer err
-        logical allInExtRange   
-        logical allInIntRange   
+        logical allInExtRange
+        logical allInIntRange
         integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer(kind=MPI_OFFSET_KIND) nstarts         
-        integer nok             
+        integer(kind=MPI_OFFSET_KIND) nstarts
+        integer nok
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -813,12 +813,12 @@ define([TEST_NFMPI_IGET_VARM],dnl
         integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
-        logical canConvert     
+        logical canConvert
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)      
+        integer err_w, reqid(1), st(1)
 
         nok = 0
 
@@ -927,14 +927,14 @@ define([TEST_NFMPI_IGET_VARM],dnl
 6               continue
             endif
 
-!           Choose a random point dividing each dim into 2 parts 
-!           get 2^rank (nslabs) slabs so defined 
+!           Choose a random point dividing each dim into 2 parts
+!           get 2^rank (nslabs) slabs so defined
             nslabs = 1
             do 7, j = 1, var_rank(i)
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 7           continue
-!           /* bits of k determine whether to get lower or upper part 
+!           /* bits of k determine whether to get lower or upper part
 !            * of dim
 !            * choose random stride from 1 to edge */
             do 8, k = 1, nslabs
@@ -966,7 +966,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 11                  continue
-!                   Random choice of forward or backward 
+!                   Random choice of forward or backward
 !    /* TODO
 !                   if ( roll(2) ) then
 !                       for (j = 0 j < var_rank(i) j++) {

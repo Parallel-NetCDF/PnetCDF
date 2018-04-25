@@ -60,11 +60,11 @@
           MIN = 0
           MAX = X_UINT_MAX
       ELSE IF (DATATYPE .EQ. NF_INT64) THEN
-          INRANGE = (VALUE .GE. X_INT8_MIN) .AND. 
+          INRANGE = (VALUE .GE. X_INT8_MIN) .AND.
      +              (VALUE .LE. X_INT8_MAX)
           return
       ELSE IF (DATATYPE .EQ. NF_UINT64) THEN
-          INRANGE = (VALUE .GE. 0) .AND. 
+          INRANGE = (VALUE .GE. 0) .AND.
      +              (VALUE .LE. X_UINT8_MAX)
           return
       ELSE
@@ -181,7 +181,7 @@
 
 
 !
-!  Does x == y, where one is internal and other external (netCDF)?  
+!  Does x == y, where one is internal and other external (netCDF)?
 !  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
 !
       logical function equal(x, y, extType, itype)
@@ -346,7 +346,7 @@
 
 
 ! Generate data values as function of type, rank (-1 for attribute), index */
-      double precision function hash(type, rank, index) 
+      double precision function hash(type, rank, index)
       implicit  none
       integer   type
       integer   rank
@@ -619,7 +619,7 @@
 
 !
 !   define global variables:
-!   dim_name, dim_len, 
+!   dim_name, dim_len,
 !   var_name, var_type, var_rank, var_shape, var_natts, var_dimid, var_nels
 !   att_name, gatt_name, att_type, gatt_type, att_len, gatt_len
 !
@@ -688,7 +688,7 @@
                     end if
 
                     do 4, ac = 1, var_natts(vn)
-                        attname(ac,vn) = 
+                        attname(ac,vn) =
      +                      type_letter(1+mod(an, numTypes))
                         attlen(ac,vn) = an
                         atttype(ac,vn) =
@@ -710,7 +710,7 @@
                         if (var_dimid(dn,vn) .gt. 9) then
                             stop 'Invalid var_dimid vector'
                         end if
-                        var_name(vn)(rank+2-dn:rank+2-dn) = 
+                        var_name(vn)(rank+2-dn:rank+2-dn) =
      +                      digit(var_dimid(dn,vn))
                         if (var_dimid(dn,vn) .ne. RECDIM) then
                             var_shape(dn,vn) = var_dimid(dn,vn) - 1
@@ -769,7 +769,7 @@
         integer         var_id
 
         do 1, i = 1, numVars
-            err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
+            err = nfmpi_def_var(ncid, var_name(i), var_type(i),
      +                       var_rank(i), var_dimid(1,i), var_id)
             if (err .ne. NF_NOERR) then
                 call errore('nfmpi_def_var: ', err)
@@ -791,7 +791,7 @@
         logical inrange
 
         integer                 err             !/* netCDF status */
-        integer                 i               !/* variable index (0 => global 
+        integer                 i               !/* variable index (0 => global
                                                 ! * attribute */
         integer                 k               !/* attribute index */
         integer                 j               !/* index of attribute */
@@ -806,7 +806,7 @@
                     catt = ' '
                     do 3, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
-                        catt(k:k) = char(int(hash(ATT_TYPE(j,i), -1, 
+                        catt(k:k) = char(int(hash(ATT_TYPE(j,i), -1,
      +                                   ndx)))
 3                   continue
 !                   /*
@@ -820,7 +820,7 @@
                     catt(ATT_LEN(j,i)+2:ATT_LEN(j,i)+2) = char(0)
 
                     ATT_LEN_LL = ATT_LEN(j,i)
-                    err = nfmpi_put_att_text(ncid, varid(i), 
+                    err = nfmpi_put_att_text(ncid, varid(i),
      +                                    ATT_NAME(j,i),
      +                                    ATT_LEN_LL, catt)
                     if (err .ne. NF_NOERR) then
@@ -882,14 +882,14 @@
         do 2, i = 1, numVars
             allInRange = .true.
             do 3, j = 1, var_nels(i)
-                err = index2indexes(j, var_rank(i), var_shape(1,i), 
+                err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                              index)
                 if (err .ne. NF_NOERR) then
                     call errori(
      +                  'Error calling index2indexes() for var ', j)
                 end if
                 if (var_name(i)(1:1) .eq. 'c') then
-                    text(j:j) = 
+                    text(j:j) =
      +                  char(int(hash(var_type(i), var_rank(i), index)))
                 else
                     value(j)  = hash(var_type(i), var_rank(i), index)
@@ -922,7 +922,7 @@
                 else
                     if (err .ne. NF_ERANGE) then
                         call errore('put_vars '//
-     +                      'type-conversion range error: status = ', 
+     +                      'type-conversion range error: status = ',
      +                      err)
                     end if
                 end if
@@ -932,7 +932,7 @@
 
 
 ! Create & write all of specified file using global variables */
-        subroutine write_file(filename) 
+        subroutine write_file(filename)
         implicit        none
         character*(*)   filename
         include "pnetcdf.inc"
@@ -1028,7 +1028,7 @@
 
         do 1, i = 1, numVars
             isChar = var_type(i) .eq. NF_CHAR
-            err = nfmpi_inq_var(ncid, i, name, datatype, ndims, dimids, 
+            err = nfmpi_inq_var(ncid, i, name, datatype, ndims, dimids,
      +          natt)
             if (err .ne. NF_NOERR) then
                 call errore('nfmpi_inq_var: ', err)
@@ -1052,7 +1052,7 @@
                 end if
 2           continue
             do 3, j = 1, var_nels(i)
-                err = index2indexes(j, var_rank(i), var_shape(1,i), 
+                err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                  index)
                 if (err .ne. NF_NOERR)  then
                     call errori('error in index2indexes() 2, variable ',
@@ -1073,7 +1073,7 @@
                         nok = nok + 1
                     end if
                 else
-                    err = nfmpi_get_var1_double(ncid, i, index, 
+                    err = nfmpi_get_var1_double(ncid, i, index,
      +                     value)
                     if (inRange(expect,var_type(i))) then
                         if (err .ne. NF_NOERR) then
@@ -1099,7 +1099,7 @@
 !
 ! check attributes of specified file have expected name, type, length & values
 !
-        subroutine check_atts(ncid) 
+        subroutine check_atts(ncid)
         implicit        none
         integer         ncid
         include "pnetcdf.inc"
@@ -1156,7 +1156,7 @@
                     end if
                     do 3, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
-                        if (ichar(text(k:k)) .ne. hash(datatype, -1, 
+                        if (ichar(text(k:k)) .ne. hash(datatype, -1,
      +                                                 ndx))
      +                  then
                             call errori(
@@ -1192,7 +1192,7 @@
 
 
 ! Check file (dims, vars, atts) corresponds to global variables */
-        subroutine check_file(filename) 
+        subroutine check_file(filename)
         implicit        none
         character*(*)   filename
         include "pnetcdf.inc"
@@ -1518,7 +1518,7 @@
      +                      value .le. internal_max(itype)
         end
 
-! Returns length of string ignoring trailing blanks 
+! Returns length of string ignoring trailing blanks
        INTEGER FUNCTION MY_LEN_TRIM(STRING)
            CHARACTER*(*) STRING
            DO I = LEN(STRING), 1, -1

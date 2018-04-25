@@ -26,7 +26,7 @@ void parse_read_args(int argc, char **argv, int rank, params *p)
 			strcpy(p->infname, "../data/test_double.nc");
 			strcpy(p->outfname, "testread.nc");
 		} else {
-			fprintf(stderr, "Usage: %s: <source> <destination>\n", 
+			fprintf(stderr, "Usage: %s: <source> <destination>\n",
 					argv[0]);
 			MPI_Abort(MPI_COMM_WORLD, 1);
 		}

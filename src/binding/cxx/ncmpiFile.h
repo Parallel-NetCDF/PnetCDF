@@ -8,7 +8,7 @@
 namespace PnetCDF
 {
 
-  /*! 
+  /*!
     Class represents a netCDF root group.
     The Ncfile class is the same as the NcmpiGroup class with the additional
     functionality for opening and closing files.
@@ -16,8 +16,8 @@ namespace PnetCDF
   class NcmpiFile : public NcmpiGroup
    {
    public:
-    
-      enum FileMode 
+
+      enum FileMode
 	 {
 	    read,	//!< File exists, open read-only.
 	    write,      //!< File exists, open for writing.
@@ -34,12 +34,12 @@ namespace PnetCDF
 	    classic5,   //!< CDF-5 format, classic data model
             BadFormat
          };
-    
-         
+
+
       /*! Constructor generates a \ref isNull "null object". */
       NcmpiFile();
 
-      /*! 
+      /*!
 	Creates/opens a netCDF file.
 	\param comm        MPI intra-communicator
 	\param filePath    Name of netCDF optional path.
@@ -55,7 +55,7 @@ namespace PnetCDF
                 FileMode           fMode,
                 const MPI_Info    &info = MPI_INFO_NULL);
 
-      /*! 
+      /*!
 	Creates a netCDF file of a specified format.
 	\param comm        MPI intra-communicator
 	\param filePath    Name of netCDF optional path.
@@ -69,10 +69,10 @@ namespace PnetCDF
                 FileMode           fMode,
                 FileFormat         fFormat,
                 const MPI_Info    &info = MPI_INFO_NULL);
-    
+
       /*! destructor */
       virtual ~NcmpiFile(); //closes file and releases all resources
-     
+
       //! Synchronize an open netcdf dataset to disk
       void sync();
 
@@ -120,7 +120,7 @@ namespace PnetCDF
 	NcmpiFile(const NcmpiGroup& rhs);
 	NcmpiFile(const NcmpiFile& rhs);
    };
-  
+
 }
 
 #endif

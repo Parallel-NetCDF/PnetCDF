@@ -44,6 +44,15 @@
  */
 #define NC_BYTE_SWAP_BUFFER_SIZE 4096
 
+#ifdef WORDS_BIGENDIAN
+#define NEED_BYTE_SWAP(xtype,itype) 0
+#else
+#define NEED_BYTE_SWAP(xtype,itype)                              \
+    ((xtype == NC_CHAR  && itype == MPI_CHAR)           ||       \
+     (xtype == NC_BYTE  && itype == MPI_SIGNED_CHAR)    ||       \
+     (xtype == NC_UBYTE && itype == MPI_UNSIGNED_CHAR)) ? 0 : 1
+#endif
+
 extern void *
 NCI_Malloc_fn(size_t size, const int lineno, const char *func,
               const char *filename);
@@ -88,6 +97,9 @@ extern int
 ncmpii_error_mpi2nc(int mpi_errorcode, char *msg);
 
 extern int
+ncmpii_error_posix2nc(char *err_msg);
+
+extern int
 ncmpii_check_name(const char *name, int file_ver);
 
 extern MPI_Datatype
@@ -108,7 +120,7 @@ ncmpii_pack(int ndims, const MPI_Offset *count, const MPI_Offset *imap,
             MPI_Offset *bnelems, MPI_Datatype *ptype, void **cbuf);
 
 #if 0
-extern int    
+extern int
 ncmpii_put_cast_swap(int format, MPI_Offset nelems, nc_type xtype,
                      MPI_Datatype itype, void *fillp, void *ibuf,
                      int isNewBuf, void **xbuf);
@@ -120,9 +132,6 @@ ncmpii_get_cast_swap(int format, MPI_Offset nelems, nc_type xtype,
 
 extern int
 ncmpii_need_convert(int format, nc_type xtype, MPI_Datatype mpitype);
-
-extern int
-ncmpii_need_swap(nc_type xtype, MPI_Datatype mpitype);
 
 extern void
 ncmpii_in_swapn(void *buf, MPI_Offset nelems, int esize);

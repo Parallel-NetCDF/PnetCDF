@@ -16,13 +16,15 @@ check_LTLIBRARIES = libtestutils.la
 
 libtestutils_la_SOURCES = testutils.c testutils.h
 
+CLEANFILES = core.* *.gcda *.gcno *.gcov gmon.out
+
 # Must build the Fortran library separately, otherwise libtools will keep
 # using FCLINK to build C library even when --disable-fortran is used
 if HAS_FORTRAN
 check_LTLIBRARIES += libtestutilsf.la
 libtestutilsf_la_SOURCES = testutilsf.F90
 libtestutils_la_LIBADD = libtestutilsf.la
-CLEANFILES = testutilsf.mod
+CLEANFILES += testutilsf.mod
 endif
 
 if DECL_MPI_OFFSET

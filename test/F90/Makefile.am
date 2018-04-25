@@ -19,7 +19,8 @@ TESTPROGRAMS = tst_f90 \
                f90tst_vars2 \
                f90tst_vars3 \
                f90tst_vars4 \
-               test_intent
+               test_intent \
+               test_attr_int64
 
 PARALLEL_PROGS = f90tst_parallel \
                  f90tst_parallel2 \

@@ -13,7 +13,7 @@ program tst_flarge
   use pnetcdf
   implicit none
 
-  integer :: ncFileID, dimID, varID1, varID2 
+  integer :: ncFileID, dimID, varID1, varID2
   integer(KIND=MPI_OFFSET_KIND) :: BIG_DIMENSION = 300000000
   character (len = *), parameter :: FILE_NAME = "tst_flarge.nc"
   character (len = *), parameter :: dimName = "really_big_dimension"
@@ -90,11 +90,11 @@ program tst_flarge
 
 contains
   ! Internal subroutine - checks error status after each netcdf, prints out text message each time
-  !   an error code is returned. 
+  !   an error code is returned.
   subroutine check(status)
     integer, intent ( in) :: status
 
-    if(status /= nf90_noerr) then 
+    if(status /= nf90_noerr) then
        print *, trim(nf90mpi_strerror(status))
        stop 2
     end if

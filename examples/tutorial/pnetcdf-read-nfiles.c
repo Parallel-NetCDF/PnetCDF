@@ -6,12 +6,12 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
+/* simple demonstration of pnetcdf
  * text attribute on dataset
  * rank 0 reads into 1-d array, broadcasts to all.  This is a dumb way
  * to do parallel I/O but folks do this sometimes...
  *
- * This program reads the files generated from its counterpart program 
+ * This program reads the files generated from its counterpart program
  * pnetcdf-write-nfiles.c. See comments in pnetcdf-write-nfiles.c for
  * the contents of the netCDF files.
  */

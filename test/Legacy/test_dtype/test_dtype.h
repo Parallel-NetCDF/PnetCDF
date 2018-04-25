@@ -4,7 +4,7 @@
 /* This is the only two macros you may need to edit for various etypes */
 #define TEST_TYPE_INDEX 6 /* which type is used? [0..7] */
 #define TEST_NCTYPE NC_DOUBLE
-/* available memory types	VS	cooresponding MPI types 
+/* available memory types	VS	cooresponding MPI types
 	0 - unsigned char		MPI_UNSIGNED_CHAR
 	1 - signed char			MPI_SIGNED_CHAR
 	2 - char			MPI_CHAR
@@ -16,7 +16,7 @@
 */
 
 #if TEST_TYPE_INDEX == 0
-#define TEST_NATIVE_ETYPE unsigned char 
+#define TEST_NATIVE_ETYPE unsigned char
 #define TEST_NATIVE_ETYPE_STR "unsigned char"
 #elif TEST_TYPE_INDEX == 1
 #define TEST_NATIVE_ETYPE signed char
@@ -95,7 +95,7 @@
   (nc_etype == NC_FLOAT)?"NC_FLOAT":(				\
   (nc_etype == NC_DOUBLE)?"NC_DOUBLE":"INVALID_TYPE")))))	\
 )
-    
+
 #define TEST_NCTYPE_LEN(nc_etype)				\
 (								\
   (nc_etype == NC_CHAR || nc_etype == NC_BYTE)	? 1 : (		\

@@ -16,7 +16,7 @@ AM_CPPFLAGS += -I$(top_builddir)/src/include
 AM_FFLAGS    = -I$(top_builddir)/src/binding/f77
 AM_FCFLAGS   = $(FC_MODINC)$(top_builddir)/src/binding/f90
 AM_FCFLAGS  += $(FC_MODINC)$(srcdir)/../common
-AM_FCFLAGS  += -I$(top_builddir)/src/binding/f77 
+AM_FCFLAGS  += -I$(top_builddir)/src/binding/f77
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
 if SIZEOF_MPI_AINT_IS_4
@@ -51,6 +51,8 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                one_record \
                inq_recsize \
                test_vard \
+               test_vard_rec \
+               test_vard_multiple \
                varn_contig \
                ivarn \
                check_striping \
@@ -67,13 +69,15 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                tst_max_var_dims \
                tst_info \
                tst_vars_fill \
-               tst_def_var_fill
+               tst_def_var_fill \
+               test_fillvalue
 
-M4_SRCS  = put_all_kinds.m4 erange_fill.m4 tst_vars_fill.m4
+M4_SRCS  = put_all_kinds.m4 erange_fill.m4 tst_vars_fill.m4 iput_all_kinds.m4
 
 nodist_put_all_kinds_SOURCES = put_all_kinds.c
 nodist_erange_fill_SOURCES = erange_fill.c
 nodist_tst_vars_fill_SOURCES = tst_vars_fill.c
+nodist_iput_all_kinds_SOURCES = iput_all_kinds.c
 
 if ENABLE_ERANGE_FILL
    M4FLAGS += -DERANGE_FILL
@@ -112,7 +116,8 @@ if HAVE_MPI_MOD
 endif
 endif
 
-check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1 tst_vars_fill
+check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1 tst_vars_fill \
+                 iput_all_kinds
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -130,15 +135,32 @@ SH_LOG_COMPILER =
 
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
+if BUILD_DRIVER_DW
+TESTDW = 1
+TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
+NC_FILES += $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf1 \
+            $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf2 \
+            $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf5 \
+            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf1 \
+            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf2 \
+            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf5
+endif
+
+BURST_BUFFER_FILES = $(NC_FILES:=_*.meta) $(NC_FILES:=_*.data)
+
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/testfile.nc \
              $(TESTOUTDIR)/redef1.nc \
              $(TESTOUTDIR)/put_all_kinds.nc.cdf1 \
              $(TESTOUTDIR)/put_all_kinds.nc.cdf2 \
              $(TESTOUTDIR)/put_all_kinds.nc.cdf5 \
+             $(TESTOUTDIR)/iput_all_kinds.nc.cdf1 \
+             $(TESTOUTDIR)/iput_all_kinds.nc.cdf2 \
+             $(TESTOUTDIR)/iput_all_kinds.nc.cdf5 \
              $(NC_FILES)
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump wrap_runs.sh
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump \
+             wrap_runs.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
@@ -157,6 +179,11 @@ ptest ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
@@ -164,6 +191,11 @@ ptest2: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest6: $(TESTPROGRAMS)
@@ -171,6 +203,11 @@ ptest6: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTDW)" ]; then ( \
+	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6

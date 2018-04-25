@@ -32,7 +32,7 @@
 
 
 
-! storage used for cell edges at block boundaries. 
+! storage used for cell edges at block boundaries.
 ! This is used when quantities located at cell edge centers need to
 ! be used consistently at the boundaries between blocks at different
 ! refinement levels.

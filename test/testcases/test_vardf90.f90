@@ -28,11 +28,11 @@
 !           int dummy_rec(REC_DIM, X) ;
 !           int fix_var(FIX_DIM, X) ;
 !    data:
-! 
+!
 !    rec_var =
 !      10, 11, 12, 13, 14,
 !      0, 1, 2, 3, 4 ;
-! 
+!
 !    dummy_rec =
 !      0, 0, 0, 0, 0,
 !      0, 0, 0, 0, 0 ;
@@ -206,7 +206,7 @@
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
-          
+
           call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
           nerrs = 0

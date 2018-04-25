@@ -26,7 +26,7 @@ program f90tst_parallel3
   use mpi
   use pnetcdf
   implicit none
-  
+
   integer, parameter ::   OneByteInt = selected_int_kind(2), &
                           TwoByteInt = selected_int_kind(4), &
                          FourByteInt = selected_int_kind(9), &
@@ -91,7 +91,7 @@ program f90tst_parallel3
      end do
   end do
 
-  ! Create the netCDF file. 
+  ! Create the netCDF file.
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncid))
 
@@ -102,7 +102,7 @@ program f90tst_parallel3
   call check(nf90mpi_def_dim(ncid, "y", ny_ll, y_dimid))
   dimids =  (/ y_dimid, x_dimid /)
 
-  ! Define the variables. 
+  ! Define the variables.
   do v = 1, NUM_VARS
      call check(nf90mpi_def_var(ncid, var_name(v), var_type(v), dimids, varid(v)))
   end do
@@ -135,12 +135,12 @@ program f90tst_parallel3
   call check(nf90mpi_put_var_all(ncid, varid(5), double_out, start = start, count = count))
   call check(nf90mpi_put_var_all(ncid, varid(6), int64_out, start = start, count = count))
 
-  ! Close the file. 
+  ! Close the file.
   call check(nf90mpi_close(ncid))
 
   ! Reopen the file.
   call check(nf90mpi_open(MPI_COMM_WORLD, filename, nf90_nowrite, MPI_INFO_NULL, ncid))
-  
+
   ! Check some stuff out.
   call check(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
   if (ndims /= 2 .or. nvars /= NUM_VARS .or. ngatts /= 0 .or. unlimdimid /= -1 .or. &
@@ -171,8 +171,8 @@ program f90tst_parallel3
         end do
      end do
   endif
- 
-  ! Close the file. 
+
+  ! Close the file.
   call check(nf90mpi_close(ncid))
 
    if (my_rank .eq. 0) then
@@ -188,7 +188,7 @@ contains
   subroutine check(errcode)
     implicit none
     integer, intent(in) :: errcode
-    
+
     if(errcode /= nf90_noerr) then
        print *, 'Error: ', trim(nf90mpi_strerror(errcode))
        stop 99
