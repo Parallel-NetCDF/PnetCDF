@@ -11,7 +11,7 @@
   See COPYRIGHT file for copying and redistribution conditions.
 
   This is part of netCDF.
-   
+
   This program runs some extra tests.
 
 */
@@ -25,7 +25,7 @@
 #include <testutils.h>
 
 int
-main(int argc, char **argv) 
+main(int argc, char **argv)
 {
     char *cmd_str, filename[256];
     int rank, nprocs, err, nerrs=0, ncid;
@@ -52,7 +52,7 @@ main(int argc, char **argv)
    printf("*** Trying to open non-netCDF files of tiny length...");
 */
     {
-#define DATA_LEN 32    
+#define DATA_LEN 32
       char dummy_data[DATA_LEN];
       int i, openstat;
       FILE *file;
@@ -77,7 +77,7 @@ main(int argc, char **argv)
 	     if (fwrite(dummy_data, 1, i, file) != i) nerrs++;
 	     if (fclose(file)) nerrs++;
          }
-	 
+
 	 /* Make sure that netCDF rejects this file politely. */
 	 openstat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 	 /* Some platforms (OSX, buddy) return stat = 2 (file not found)

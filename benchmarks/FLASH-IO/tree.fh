@@ -52,7 +52,7 @@
 !--------------------------------------------
 !
 ! A convention is established for numbering the neighbors (or faces
-! of a block. The first neighbor is at lower x coordinate, the 
+! of a block. The first neighbor is at lower x coordinate, the
 ! second at higher x, the third at lower y, fourth at higher y, fifth
 ! at lower z and the sixth at higher z.
 !
@@ -64,7 +64,7 @@
 !
 ! When a block has a refined neighbor we will need to know which children
 ! of this neighbor are to provide guard cell information. The id's of the
-! correct children are stored in kchild using the conventions described 
+! correct children are stored in kchild using the conventions described
 ! above. For example, if we are working on the 3rd neighbor of the
 ! current block and it is at finer refinement level, then we must access
 ! the children designated by kchild(:,3), in this case children 1, 2, 5
@@ -78,21 +78,21 @@
 ! implemented on a parallel computer.
 !
 ! The tree organizes a set of up to maxblocks_tr grids on each processor.
-! All the grids are assumed to be cartesian with a uniform size. Each 
+! All the grids are assumed to be cartesian with a uniform size. Each
 ! grid has a level of refinement associated with it. The set of level 0
 ! grids cover the computational domain without overlap. Each grid
-! can be the parent of 2**d offspring grids which completely cover 
+! can be the parent of 2**d offspring grids which completely cover
 ! the sub-domain of their parents, where d is the physical dimension
-! of the simulation. The linear resolution varies by a factor of 2 
+! of the simulation. The linear resolution varies by a factor of 2
 ! between successive levels of refinement. At no point do we allow the
 ! resolution to jump by more than one level of refinement.
 !
 !
-! In the following list the index i ranges from 1 to maxblocks. 
+! In the following list the index i ranges from 1 to maxblocks.
 !
 !       neigh(2,nfaces,i)     local and processor ids of block i's neighbors,
-!                               at i's refinement level. If a neighbor does 
-!                               not exist both values are set to -1, unless 
+!                               at i's refinement level. If a neighbor does
+!                               not exist both values are set to -1, unless
 !                               that face is at an external domain boundary
 !                               where non-periodic boundary conditions are to
 !                               be applied, in which case these are set to -20
@@ -102,7 +102,7 @@
 !       parent(2,i)           local and processor ids of block i's parent
 !       coord(ndim,i)         array storing x,y and z coordinates of the
 !                               center of block i.
-!       bnd_box(2,ndim,i)     bounding box information for block i. The 
+!       bnd_box(2,ndim,i)     bounding box information for block i. The
 !                               lower edge of block i along the j-th coordinate
 !                               axis is at bnd_box(1,j,i) and the upper edge
 !                               at bnd_box(2,j,i).
@@ -117,12 +117,12 @@
 !                               when an obstacle is inserted inside the
 !                               computational domain. normal blocks have
 !                               empty=0, empty blocks have empty=1.
-!       
+!
 !       new_child(i)          if true then child has just been produced by
 !                               a refinement step, otherwise false.
 !       lnblocks              number of blocks on the local processor
-!       new_lnblocks          the new number of blocks on the local 
-!                               processor after a refinement or derefinement 
+!       new_lnblocks          the new number of blocks on the local
+!                               processor after a refinement or derefinement
 !                               step.
 !       refine(i)             refinement flag. If set to .true. block i
 !                               will be refined during the next call to

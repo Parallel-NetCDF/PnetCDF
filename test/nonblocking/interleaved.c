@@ -8,7 +8,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This program tests nonblocking APIs for handling interleaved file types.
- * In the first case, 
+ * In the first case,
  *    It first defines a netCDF variable of size 10 x 18.
  *    3 calls to ncmpi_iput_vara_int(), where the first one interleaves with
  *    the second and third writes and its access region covers both of the
@@ -158,7 +158,6 @@ int main(int argc, char** argv)
     for (i=0; i<len; i++) buf0[i] = 50+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf0, &req[0]);
     CHECK_ERR
-    for (i=0; i<len; i++) CHECK_CONTENTS(buf0, 50 + i)
 
     /* write 1 x 3 elements */
     start[0] = 1; start[1] = 8;
@@ -168,7 +167,6 @@ int main(int argc, char** argv)
     for (i=0; i<len; i++) buf1[i] = 60+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf1, &req[1]);
     CHECK_ERR
-    for (i=0; i<len; i++) CHECK_CONTENTS(buf1, 60 + i)
 
     /* write 1 x 3 elements */
     start[0] = 3; start[1] = 7;
@@ -178,7 +176,6 @@ int main(int argc, char** argv)
     for (i=0; i<len; i++) buf2[i] = 70+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf2, &req[2]);
     CHECK_ERR
-    for (i=0; i<len; i++) CHECK_CONTENTS(buf2, 70 + i)
 
     err = ncmpi_wait_all(ncid, 3, req, st); CHECK_ERR
     free(buf0); free(buf1); free(buf2);
@@ -314,8 +311,10 @@ int main(int argc, char** argv)
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR && malloc_size > 0)
+    if (err == NC_NOERR && malloc_size > 0) {
         printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n", malloc_size);
+        ncmpi_inq_malloc_list();
+    }
 
 fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

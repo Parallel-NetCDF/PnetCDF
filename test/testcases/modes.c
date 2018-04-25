@@ -156,9 +156,9 @@ int main(int argc, char** argv)
         MPI_Finalize();
         return 1;
     }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]); 
-    else           strcpy(filename, "testfile.nc"); 
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD); 
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
@@ -183,6 +183,7 @@ int main(int argc, char** argv)
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

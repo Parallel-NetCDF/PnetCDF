@@ -29,6 +29,8 @@
 #define NC_MODE_FILL   0x00010000  /* fill mode */
 #define NC_MODE_SAFE   0x00020000  /* safe mode enabled */
 #define NC_MODE_BB     0x00040000  /* burst buffering mode enabled */
+#define NC_MODE_SWAP_ON  0x00080000  /* in-place byte swap enabled */
+#define NC_MODE_SWAP_OFF 0x00100000  /* in-place byte swap disabled */
 
 /* list of all API kinds */
 typedef enum {
@@ -143,6 +145,8 @@ extern PNC_driver* ncmpio_inq_driver(void);
 extern PNC_driver* nc4io_inq_driver(void);
 
 extern PNC_driver* ncfoo_inq_driver(void);
+
+extern PNC_driver* ncdwio_inq_driver(void);
 
 extern int PNC_check_id(int ncid, PNC **pncp);
 

@@ -18,8 +18,8 @@
  * pairs, merging the pairs across multiple nonblocking calls, and sorting
  * them into an increasing order. The sorted pairs are used to construct a
  * fileview that meets the monotonically non-decreasing offset requirement,
- * and thus the nonblocking requests can be serviced by a single MPI-IO call. 
- * 
+ * and thus the nonblocking requests can be serviced by a single MPI-IO call.
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
@@ -85,7 +85,8 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char filename[256];
-    int i, j, verbose=1, rank, nprocs, err, nerrs=0, myNX, G_NX, myOff, num_reqs;
+    int i, j, verbose=1, rank, nprocs, err, nerrs=0;
+    int myNX, G_NX, myOff, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset start[2], count[2];
     MPI_Info info;
@@ -104,10 +105,8 @@ int main(int argc, char** argv)
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
-    else           strcpy(filename, "testfile.nc");
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */

@@ -33,7 +33,7 @@
                   'pres',  &
                   'ener',  &
                   'temp',  &
-                  'gamc',  & 
+                  'gamc',  &
                   'game',  &
                   'enuc',  &
                         'gpot'/

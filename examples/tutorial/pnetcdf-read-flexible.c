@@ -6,8 +6,8 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
- * knowing nothing about the file, read in the variables. 
+/* simple demonstration of pnetcdf
+ * knowing nothing about the file, read in the variables.
  *
  * This example demonstrates the flexible interface */
 

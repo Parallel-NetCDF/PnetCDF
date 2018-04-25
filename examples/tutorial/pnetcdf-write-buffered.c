@@ -18,7 +18,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
     int i, j, ncid, dimid[2], varid, err, rank, nprocs, cmode;
-    int req[2], status[2]; 
+    int req[2], status[2];
     float  var[4][6];
     char filename[256];
     MPI_Offset start[2], count[2], stride[2], imap[2];

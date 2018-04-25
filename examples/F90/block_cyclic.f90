@@ -13,7 +13,7 @@
 ! block_len. In this example, block_len is set to 2. Blocks are layout in a
 ! cyclic fashion in the file. This example can test if PnetCDF can coalesce
 ! file offsets and lengths when constructing a merged filetype.
-! 
+!
 ! The compile and run commands are given below, together with an ncmpidump of
 ! the output file. In this example, block_len = 2.
 !

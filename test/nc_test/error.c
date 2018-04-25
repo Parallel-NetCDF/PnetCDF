@@ -63,7 +63,7 @@ ifFail(const int expr, const int line, const char *file, const char *func)
 }
 
 /* TODO:
- * This diagnostic doesn't fit very well with the diagnostic message 
+ * This diagnostic doesn't fit very well with the diagnostic message
  * "architecture" of this program.
  */
 void

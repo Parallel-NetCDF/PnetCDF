@@ -230,7 +230,7 @@
     integer (kind=MPI_OFFSET_KIND)                          :: ilen
 
     ilen = size(values)
-    nf90mpi_put_att_EightByteInt = nfmpi_put_att_int8(ncid, varid, name, nf90_int, ilen, values)
+    nf90mpi_put_att_EightByteInt = nfmpi_put_att_int8(ncid, varid, name, nf90_int64, ilen, values)
   end function nf90mpi_put_att_EightByteInt
   ! -------
   function nf90mpi_put_att_one_EightByteInt(ncid, varid, name, values)
@@ -241,7 +241,7 @@
 
     integer (kind = EightByteInt), dimension(1) :: valuesA
     valuesA(1) = values
-    nf90mpi_put_att_one_EightByteInt = nfmpi_put_att_int8(ncid, varid, name, nf90_int, 1_MPI_OFFSET_KIND, valuesA)
+    nf90mpi_put_att_one_EightByteInt = nfmpi_put_att_int8(ncid, varid, name, nf90_int64, 1_MPI_OFFSET_KIND, valuesA)
   end function nf90mpi_put_att_one_EightByteInt
   ! -------
   function nf90mpi_get_att_EightByteInt(ncid, varid, name, values)

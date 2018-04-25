@@ -15,7 +15,6 @@ dnl
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <pnetcdf.h>
 #include <dispatch.h>
@@ -135,7 +134,6 @@ check_consistency_put(MPI_Comm      comm,
     MPI_Comm_rank(comm, &rank);
 
     /* check if attribute name is consistent among all processes */
-    assert(name != NULL);
     root_name_len = strlen(name) + 1;
     TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, comm);
     if (mpireturn != MPI_SUCCESS)

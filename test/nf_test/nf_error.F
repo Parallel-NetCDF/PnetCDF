@@ -61,7 +61,7 @@ C
 
         integer MY_LEN_TRIM
         nfails = nfails + 1
-        if (nfails .le. max_nmpt) print *, msg, 
+        if (nfails .le. max_nmpt) print *, msg,
      +      TRIM(string) ! string(1:len_trim(string))
         end
 

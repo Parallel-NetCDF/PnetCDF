@@ -55,7 +55,7 @@ EXTRA_DIST = block_boundary_data.fh \
              acinclude.m4 \
              configure.ac
 
-CLEANFILES = core core.* \
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/flash_io_test_ncmpi_chk_0000.nc \
              $(TESTOUTDIR)/flash_io_test_ncmpi_plt_crn_0000.nc \
              $(TESTOUTDIR)/flash_io_test_ncmpi_plt_cnt_0000.nc

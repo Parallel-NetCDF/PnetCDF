@@ -7,7 +7,7 @@
 # @configure_input@
 
 SUBDIRS = C tutorial
-DIST_SUBDIRS = C tutorial CXX F77 F90
+DIST_SUBDIRS = C tutorial CXX F77 F90 datawarp
 
 if HAS_MPICXX
 SUBDIRS += CXX
@@ -20,12 +20,16 @@ SUBDIRS += F90
 endif
 endif
 
+if BUILD_DRIVER_DW
+SUBDIRS += datawarp
+endif
+
 EXTRA_DIST = README
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
 # TESTS_DIRS = $(SUBDIRS:%=tests-%)
 # tests: $(TESTS_DIRS)
-# $(TESTS_DIRS): 
+# $(TESTS_DIRS):
 # 	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
 
 if BUILD_COVERAGE

@@ -3,7 +3,7 @@
   See COPYRIGHT file for copying and redistribution conditions.
 
   This is part of netCDF.
-   
+
   This program also takes a long time to run - it writes some data in
   a very large file, and then reads it all back to be sure it's
   correct.
@@ -43,7 +43,7 @@ main(int argc, char **argv) {
    int j_dim;
    int k_dim;
    int n_dim;
- 
+
 #define NUMRECS 1
 #define I_LEN 4104
 #define J_LEN 1023
@@ -88,10 +88,10 @@ main(int argc, char **argv) {
    printf("*** Creating large file %s...", filename);
 
    /* enter define mode */
-   stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_64BIT_DATA, 
+   stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_64BIT_DATA,
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
- 
+
    /* define dimensions */
    stat = ncmpi_def_dim(ncid, "rec", rec_len, &rec_dim);
    check_err(stat,__LINE__,__FILE__);
@@ -156,7 +156,7 @@ main(int argc, char **argv) {
    printf("ok\n");
    printf("*** Reading large file %s...", filename);
 
-   stat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, 
+   stat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE,
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
 
@@ -178,7 +178,7 @@ main(int argc, char **argv) {
 		   for (k=0; k<K_LEN; k++) {
 		       if (var1[j][k] != (signed char) n) {
 			   printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
-				  "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n); 
+				  "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
 			   nerrs++;
 		       }
 		       n++;

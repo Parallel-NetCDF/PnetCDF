@@ -19,4 +19,4 @@ NcmpiDouble::~NcmpiDouble() {
 bool NcmpiDouble::operator==(const NcmpiDouble & rhs)    {
   // simply check the netCDF id.
   return myId == rhs.myId;
-}  
+}

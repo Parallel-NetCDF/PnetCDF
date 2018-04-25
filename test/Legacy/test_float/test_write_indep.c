@@ -1,7 +1,7 @@
 /***********************************************************
  *
  * This test program writes a netCDF file using the parallel
- * netCDF library using MPI-IO. 
+ * netCDF library using MPI-IO.
  *
  * The output file is: "testwrite.nc"
  *
@@ -41,7 +41,7 @@
  *
  *
  * This test uses non-collective APIs to write variable data and only
- * deals with float variables. 
+ * deals with float variables.
  *
  * This test assume # of processors = 4
  *
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (rank == 0) 
+  if (rank == 0)
 	  fprintf(stderr, "Testing independent write ... ");
   parse_write_args(argc, argv, rank, &opts);
 
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
 
   /**
    * Define the dimensionality and then add 4 variables:
-   *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)  
+   *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)
    */
 
   square_dim[0] = cube_dim[0] = xytime_dim[1] = dimid1;
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
   if (status != NC_NOERR) handle_error(status);
 
   /**
-   * Add an attribute for variable: 
+   * Add an attribute for variable:
    *    square: decsription = "2-D integer array"
    */
 
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
 
   /**
    * Data Partition (Assume 4 processors):
-   *   square: 2-D, (Block, Block), 50*50 from 100*100 
+   *   square: 2-D, (Block, Block), 50*50 from 100*100
    *   cube:   3-D, (*, Block, Block), 100*50*50 from 100*100*100
    *   xytime: 3-D, (*, Block, Block), 100*50*50 from 100*100*100
    *   time:   1-D, Block-wise, 25 from 100
@@ -178,12 +178,12 @@ int main(int argc, char **argv) {
 
 
   /**
-   * Packing data in the buffer 
+   * Packing data in the buffer
    */
 
   /* Data for variable: time */
   for ( i = time_start[0]; i < time_start[0] + time_count[0]; i++ )
-    buffer[i - time_start[0]] = i;   
+    buffer[i - time_start[0]] = i;
 
   /* Data for variable: square, cube and xytime */
   for ( i = 0; i < 100; i++ )
@@ -192,11 +192,11 @@ int main(int argc, char **argv) {
         data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
 
   /**
-   * Write data into variables: square, cube, time and xytime  
+   * Write data into variables: square, cube, time and xytime
    *   Access Method: subarray
    *   Data Mode API: non-collective
-   */ 
-  
+   */
+
   status = ncmpi_begin_indep_data(ncid);
   if (status != NC_NOERR) handle_error(status);
 

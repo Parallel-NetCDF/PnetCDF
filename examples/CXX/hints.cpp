@@ -72,7 +72,7 @@ void print_hints(NcmpiFile &ncFile,
 
     var0.Inq_file_offset(&var_zy_start);
     var1.Inq_file_offset(&var_yx_start);
-    
+
     /* get all the hints used */
     ncFile.Inq_file_info(&info_used);
 
@@ -136,10 +136,8 @@ int main(int argc, char** argv)
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
-    else           strcpy(filename, "testfile.nc");
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     try {
         MPI_Info_create(&info);

@@ -7,7 +7,7 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use 
+ * This example shows how to use
  * 1. NcmpiVar::setFill() to define the variable's fill value
  * 2. NcmpiVar::getFillModeParameters() to inquire the variable's fill mode
  *    information
@@ -107,10 +107,8 @@ int main(int argc, char** argv)
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
-    else           strcpy(filename, "testfile.nc");
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     try {
         /* create a new file for writing ------------------------------------*/

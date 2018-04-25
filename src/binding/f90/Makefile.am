@@ -52,7 +52,7 @@ pnetcdf.lo $(PNETCDF_MOD): pnetcdf.f90 $(SRCS)
 
 EXTRA_DIST = $(M4_SRCS)
 
-CLEANFILES = $(PNETCDF_MOD) $(M4_SRCS:.m4=.fh) *.gcno
+CLEANFILES = $(PNETCDF_MOD) $(M4_SRCS:.m4=.fh) *.gcda *.gcno *.gcov gmon.out
 
 tests-local: all
 

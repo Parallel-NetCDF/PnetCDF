@@ -12,11 +12,11 @@ program f90tst_vars3
   use mpi
   use pnetcdf
   implicit none
-  
+
   ! This is the name of the data file we will create.
   character (len = *), parameter :: FILE_NAME = "f90tst_vars3.nc"
 
-  ! We are writing 2D data, a 6 x 12 grid. 
+  ! We are writing 2D data, a 6 x 12 grid.
   integer, parameter :: MAX_DIMS = 2
   integer, parameter :: NX = 6, NY = 12
   integer :: data_out(NY, NX), data_in(NY, NX)
@@ -77,7 +77,7 @@ program f90tst_vars3
         data_out_1d(x) = x
   end do
 
-  ! Create the netCDF file. 
+  ! Create the netCDF file.
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncid))
 
@@ -88,7 +88,7 @@ program f90tst_vars3
   call check(nf90mpi_def_dim(ncid, "y", ny_ll, y_dimid))
   dimids =  (/ y_dimid, x_dimid /)
 
-  ! Define some variables. 
+  ! Define some variables.
   call check(nf90mpi_def_var(ncid, VAR1_NAME, NF90_INT, dimids, varid1))
   call check(nf90mpi_def_var(ncid, VAR2_NAME, NF90_INT, dimids, varid2))
   call check(nf90mpi_def_var(ncid, VAR3_NAME, NF90_INT64, varid3))
@@ -105,12 +105,12 @@ program f90tst_vars3
   call check(nf90mpi_put_var(ncid, varid4, data_out_1d))
   call check(nf90mpi_put_var(ncid, varid5, data_out))
 
-  ! Close the file. 
+  ! Close the file.
   call check(nf90mpi_close(ncid))
 
   ! Reopen the file.
   call check(nf90mpi_open(MPI_COMM_WORLD, filename, nf90_nowrite, MPI_INFO_NULL, ncid))
-  
+
   ! Check some stuff out.
   call check(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
   if (ndims /= 2 .or. nvars /= 5 .or. ngatts /= 0 .or. unlimdimid /= -1 .or. &
@@ -124,7 +124,7 @@ program f90tst_vars3
   call check(nf90mpi_inq_varid(ncid, VAR5_NAME, varid5_in))
 
   ! Check variable 1.
-  call check(nf90mpi_inquire_variable(ncid, varid1_in, name_in, xtype_in, ndims_in, dimids_in, natts_in)) 
+  call check(nf90mpi_inquire_variable(ncid, varid1_in, name_in, xtype_in, ndims_in, dimids_in, natts_in))
   if (name_in .ne. VAR1_NAME .or. xtype_in .ne. NF90_INT .or. ndims_in .ne. MAX_DIMS .or. &
        natts_in .ne. 0 .or. dimids_in(1) .ne. dimids(1) .or. dimids_in(2) .ne. dimids(2)) stop 3
 
@@ -137,7 +137,7 @@ program f90tst_vars3
   call check(nf90mpi_inquire_variable(ncid, varid3_in, name_in, xtype_in, ndims_in, dimids_in, natts_in))
   if (name_in .ne. VAR3_NAME .or. xtype_in .ne. NF90_INT64 .or. ndims_in .ne. 0 .or. &
        natts_in .ne. 0) stop 8
-  
+
   ! Check variable 4.
   call check(nf90mpi_inquire_variable(ncid, varid4_in, name_in, xtype_in, ndims_in, dimids_in, natts_in))
   if (name_in .ne. VAR4_NAME .or. xtype_in .ne. NF90_INT .or. ndims_in .ne. 1 .or. &
@@ -169,7 +169,7 @@ program f90tst_vars3
      end do
   end do
 
-  ! Close the file. 
+  ! Close the file.
   call check(nf90mpi_close(ncid))
 
   msg = '*** TESTING F90 '//trim(cmd)//' for def_var API'
@@ -183,7 +183,7 @@ contains
   subroutine check(errcode)
     implicit none
     integer, intent(in) :: errcode
-    
+
     if(errcode /= nf90_noerr) then
        print *, 'Error: ', trim(nf90mpi_strerror(errcode))
        stop 2

@@ -7,7 +7,7 @@
 /* $Id$ */
 
 /* simple demonstration of pnetcdf:
- * knowing nothing about the file, read in the variables. 
+ * knowing nothing about the file, read in the variables.
  *
  * This example demonstrates the non-blocking read interface */
 
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     int i, j, rank, nprocs, ret;
     int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
     MPI_Offset *dim_sizes, var_size, *start, *count;
-    int *requests, *statuses, *dimids=NULL, **data; 
+    int *requests, *statuses, *dimids=NULL, **data;
     char filename[256], varname[NC_MAX_NAME+1];
     nc_type type;
 

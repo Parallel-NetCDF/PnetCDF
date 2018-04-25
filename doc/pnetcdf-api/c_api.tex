@@ -36,7 +36,7 @@ int ncmpi_close(int ncid);
 \begin{verbatim}
 int ncmpi_def_dim(int ncid, const char *name, MPI_Offset len, int *idp);
 
-int ncmpi_def_var(int ncid, const char *name, nc_type xtype, int ndims, 
+int ncmpi_def_var(int ncid, const char *name, nc_type xtype, int ndims,
                   const int *dimidsp, int *varidp);
 
 int ncmpi_rename_dim(int ncid, int dimid, const char *name);
@@ -50,7 +50,7 @@ int ncmpi_rename_var(int ncid, int varid, const char *name);
 \subsection*{A.3  Inquiry Functions}
 
 \begin{verbatim}
-int ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *ngattsp, int *unlimdimidp); 
+int ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *ngattsp, int *unlimdimidp);
 
 int ncmpi_inq_ndims(int ncid, int *ndimsp);
 
@@ -68,7 +68,7 @@ int ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
 int ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 
-int ncmpi_inq_var(int ncid, int varid, char *name, nc_type *xtypep, 
+int ncmpi_inq_var(int ncid, int varid, char *name, nc_type *xtypep,
                   int *ndimsp, int *dimidsp, int *nattsp);
 
 int ncmpi_inq_varid(int ncid, const char *name, int *varidp);
@@ -119,7 +119,7 @@ int ncmpi_put_att_uchar(int ncid, int varid, const char *name, nc_type xtype,
 
 int ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *ip);
 
-int ncmpi_put_att_schar(int ncid, int varid, const char *name, nc_type xtype, 
+int ncmpi_put_att_schar(int ncid, int varid, const char *name, nc_type xtype,
                         MPI_Offset len, const signed char *op);
 
 int ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *ip);
@@ -129,7 +129,7 @@ int ncmpi_put_att_short(int ncid, int varid, const char *name, nc_type xtype,
 
 int ncmpi_get_att_short(int ncid, int varid, const char *name, short *ip);
 
-int ncmpi_put_att_int(int ncid, int varid, const char *name, nc_type xtype, 
+int ncmpi_put_att_int(int ncid, int varid, const char *name, nc_type xtype,
                       MPI_Offset len, const int *op);
 
 int ncmpi_get_att_int(int ncid, int varid, const char *name, int *ip);

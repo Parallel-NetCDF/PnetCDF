@@ -10,7 +10,7 @@
 ! a sequence of selected file locations through the following 2 APIs.
 !
 !   H5Sselect_elements(fid, H5S_SELECT_SET, NUMP, (const hssize_t **)coord);
-!   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val); 
+!   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val);
 !
 ! Note that in nfmpi_put_varn_int_all(), users can write more than one element
 ! starting at each selected location.
@@ -150,10 +150,10 @@
           ! assign arbitrary starts and counts
           if (rank .EQ. 0) then
               ! rank 0 is writing the followings: ("-" means skip)
-              !        -  -  -  -  -  0  0  -  -  - 
-              !        -  -  -  -  -  0  0  -  -  - 
-              !        -  0  0  -  -  -  -  0  -  - 
-              !        -  0  0  -  -  -  -  0  -  - 
+              !        -  -  -  -  -  0  0  -  -  -
+              !        -  -  -  -  -  0  0  -  -  -
+              !        -  0  0  -  -  -  -  0  -  -
+              !        -  0  0  -  -  -  -  0  -  -
               ! Note this is in Fortran order
               starts(1, 1) = 1
               starts(2, 1) = 6
@@ -169,10 +169,10 @@
               counts(2, 3) = 1
           elseif (rank .EQ. 1) then
               ! rank 1 is writing the followings: ("-" means skip)
-              !        -  -  1  1  -  -  -  -  -  - 
-              !        -  -  1  1  -  -  -  -  -  - 
-              !        1  -  -  -  -  1  1  -  -  - 
-              !        1  -  -  -  -  1  1  -  -  - 
+              !        -  -  1  1  -  -  -  -  -  -
+              !        -  -  1  1  -  -  -  -  -  -
+              !        1  -  -  -  -  1  1  -  -  -
+              !        1  -  -  -  -  1  1  -  -  -
               ! Note this is in Fortran order
               starts(1, 1) = 1
               starts(2, 1) = 3
@@ -188,10 +188,10 @@
               counts(2, 3) = 2
           elseif (rank .EQ. 2) then
               ! rank 2 is writing the followings: ("-" means skip)
-              !        2  2  -  -  -  -  -  2  -  - 
-              !        2  2  -  -  -  -  -  2  -  - 
-              !        -  -  -  -  2  -  -  -  -  - 
-              !        -  -  -  -  2  -  -  -  -  - 
+              !        2  2  -  -  -  -  -  2  -  -
+              !        2  2  -  -  -  -  -  2  -  -
+              !        -  -  -  -  2  -  -  -  -  -
+              !        -  -  -  -  2  -  -  -  -  -
               ! Note this is in Fortran order
               starts(1, 1) = 1
               starts(2, 1) = 1
@@ -207,10 +207,10 @@
               counts(2, 3) = 1
           elseif (rank .EQ. 3) then
               ! rank 3 is writing the followings: ("-" means skip)
-              !        -  -  -  -  3  -  -  -  3  3 
-              !        -  -  -  -  3  -  -  -  3  3 
-              !        -  -  -  3  -  -  -  -  3  3 
-              !        -  -  -  3  -  -  -  -  3  3 
+              !        -  -  -  -  3  -  -  -  3  3
+              !        -  -  -  -  3  -  -  -  3  3
+              !        -  -  -  3  -  -  -  -  3  3
+              !        -  -  -  3  -  -  -  -  3  3
               ! Note this is in Fortran order
               starts(1, 1) = 1
               starts(2, 1) = 5
@@ -225,7 +225,7 @@
               counts(1, 3) = 2
               counts(2, 3) = 1
           endif
- 
+
           ! w_len is total write length for this process
           w_len = 0
           do i=1, num_reqs

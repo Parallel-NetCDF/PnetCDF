@@ -265,7 +265,7 @@ int main(int argc, char **argv)
     err = ncmpi_def_var(ncid, "scalar3", NC_INT, 0, NULL, &varids[3]); CHECK_ERR
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
-    
+
     if (rank < 4) {
         err = ncmpi_put_var_int_all(ncid, varids[rank], &rank); CHECK_ERR
     }
@@ -285,6 +285,7 @@ int main(int argc, char **argv)
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

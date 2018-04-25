@@ -252,7 +252,7 @@ NC_begins(NC *ncp)
         /* only root's header size matters */
         TRACE_COMM(MPI_Bcast)(&root_xsz, 1, MPI_OFFSET, 0, ncp->comm);
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast"); 
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
             DEBUG_RETURN_ERROR(err)
         }
 
@@ -602,7 +602,7 @@ write_NC(NC *ncp)
  * collectively, if any one process got an error. However, when safe mode is
  * off, we simply return the error and program may hang if some processes
  * do not get error and proceed to the next subroutine call.
- */ 
+ */
 #define CHECK_ERROR(err) {                                              \
     if (ncp->safe_mode == 1) {                                          \
         int status;                                                     \

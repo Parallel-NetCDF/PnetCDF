@@ -12,10 +12,10 @@ program tst_types2
   use mpi
   use pnetcdf
   implicit none
-  
+
   ! This is the name of the data file we will create.
   character (len = *), parameter :: FILE_NAME = "tst_types2.nc"
-  
+
   integer :: ncid, varid1, varid2, varid3, varid4, varid5, varid6, varid7
   integer :: dimid1, dimid2, dimid3, dimid4, dimid5, dimid6, dimid7
   integer :: dimids1(1), dimids2(2), dimids3(3), dimids4(4), dimids5(5), dimids6(6), dimids7(7)
@@ -120,8 +120,8 @@ program tst_types2
         end do
      end do
   end do
-  
-  ! Create the netCDF file. 
+
+  ! Create the netCDF file.
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncid))
 
@@ -185,10 +185,10 @@ program tst_types2
   call check(nf90mpi_put_var(ncid, varid6, data6_out))
   call check(nf90mpi_put_var(ncid, varid7, data7_out))
 
-  ! Close the file. 
+  ! Close the file.
   call check(nf90mpi_close(ncid))
 
-  ! Reopen the netCDF file. 
+  ! Reopen the netCDF file.
   call check(nf90mpi_open(MPI_COMM_WORLD, filename, nf90_nowrite, MPI_INFO_NULL, ncid))
 
   ! Read in the large numbers.
@@ -269,9 +269,9 @@ program tst_types2
      end do
   end do
 
-  ! Close the file. 
+  ! Close the file.
   call check(nf90mpi_close(ncid))
-  
+
    msg = '*** TESTING F90 '//trim(cmd)//' for 64-bit integer types'
    if (my_rank .eq. 0) call pass_fail(0, msg)
 
@@ -282,12 +282,12 @@ program tst_types2
 contains
   subroutine check(status)
     integer, intent ( in) :: status
-    
-    if(status /= nf90_noerr) then 
+
+    if(status /= nf90_noerr) then
       print *, trim(nf90mpi_strerror(status))
       stop 2
     end if
-  end subroutine check  
+  end subroutine check
 
 end program tst_types2
 

@@ -50,11 +50,11 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [file_name] [len]\n"
+    "Usage: %s [-h] | [-q] [-l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
-    "       [filename] output netCDF file name\n"
-    "       [len] size of each dimension of the local array\n";
+    "       [-l len] size of each dimension of the local array\n"
+    "       [filename] output netCDF file name\n";
     fprintf(stderr, help, argv0);
 }
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[256], str[512];
-    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err, nerrs=0;
+    int i, j, rank, nprocs, len=0, ncid, bufsize, verbose=1, err, nerrs=0;
     int *buf[NUM_VARS], psizes[NDIMS], dimids[NDIMS], varids[NUM_VARS];
     double write_timing, max_write_timing, write_bw;
     MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS];
@@ -99,22 +99,20 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hq")) != EOF)
+    while ((i = getopt(argc, argv, "hql:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
+                      break;
+            case 'l': len = atoi(optarg);
                       break;
             case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc >= 1) snprintf(filename, 256, "%s", argv[0]);
-    else           strcpy(filename, "testfile.nc");
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
-    len = 10; 
-    if (argc >= 2) len = (int)strtol(argv[1],NULL,10); /* optional argument */
     len = (len <= 0) ? 10 : len;
 
     for (i=0; i<NDIMS; i++)

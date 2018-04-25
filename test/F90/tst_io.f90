@@ -6,7 +6,7 @@
 !
 !     $Id$
 
-! This program tests large files (> 4 GB) in PnetCDF. 
+! This program tests large files (> 4 GB) in PnetCDF.
 
 program tst_io
   use mpi

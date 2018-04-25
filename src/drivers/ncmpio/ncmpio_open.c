@@ -96,6 +96,15 @@ ncmpio_open(MPI_Comm     comm,
     fClr(ncp->flags, NC_MODE_FILL);
     if (!fIsSet(omode, NC_WRITE)) fSet(ncp->flags, NC_MODE_RDONLY);
 
+    /* default mode for in-place byte swap is auto */
+#ifdef DISABLE_IN_PLACE_SWAP
+    /* if in-place byte swap mode is disabled at configure time */
+    fSet(ncp->flags, NC_MODE_SWAP_OFF);
+#elif defined(ENABLE_IN_PLACE_SWAP)
+    /* if in-place byte swap mode is enabled at configure time */
+    fSet(ncp->flags, NC_MODE_SWAP_ON);
+#endif
+
     ncp->ncid = ncid;
 
     /* chunk size for reading header (set default before check hints) */

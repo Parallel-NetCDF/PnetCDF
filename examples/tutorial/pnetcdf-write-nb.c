@@ -6,7 +6,7 @@
  *********************************************************************/
 /* $Id$ */
 
-/* simple demonstration of pnetcdf 
+/* simple demonstration of pnetcdf
  * text attribute on dataset
  * write out rank into 1-d array collectively.
  * This example demonstrates the non-blocking write interface */
@@ -16,7 +16,7 @@
 
     % mpiexec -n 4 pnetcdf-write-nb /orangefs/wkliao/output.nc
 
-    % ncmpidump /orangefs/wkliao/output.nc 
+    % ncmpidump /orangefs/wkliao/output.nc
     netcdf output {
     // file format: CDF-2 (large file)
     dimensions:
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
             MPI_INT, &requests[0]);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-    ret = ncmpi_iput_vara(ncfile, varid2, &start, &count, &data2, count, 
+    ret = ncmpi_iput_vara(ncfile, varid2, &start, &count, &data2, count,
             MPI_INT, &requests[1]);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 

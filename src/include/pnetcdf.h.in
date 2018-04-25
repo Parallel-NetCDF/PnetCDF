@@ -23,7 +23,7 @@
 #define PNETCDF_SUBFILING                @ENABLE_SUBFILING@
 #define PNETCDF_RELAX_COORD_BOUND        @RELAX_COORD_BOUND@
 #define PNETCDF_DEBUG_MODE               @PNETCDF_DEBUG@
-#define PNETCDF_LARFE_REQ                @ENABLE_LARGE_REQ@
+#define PNETCDF_LARGE_REQ                @ENABLE_LARGE_REQ@
 #define PNETCDF_NULL_BYTE_HEADER_PADDING @ENABLE_NULL_BYTE_HEADER_PADDING@
 
 
@@ -545,7 +545,7 @@ by the desired type. */
 #define NC_EREAD			(-205) /**< Unknown error in reading file */
 #define NC_EWRITE			(-206) /**< Unknown error in writing to file */
 #define NC_EOFILE			(-207) /**< file open/creation failed */
-#define NC_EMULTITYPES			(-208) /**< Multiple types used in memory data */
+#define NC_EMULTITYPES			(-208) /**< Multiple etypes used in MPI datatype */
 #define NC_EIOMISMATCH			(-209) /**< Input/Output data amount mismatch */
 #define NC_ENEGATIVECNT			(-210) /**< Negative count is specified */
 #define NC_EUNSPTETYPE			(-211) /**< Unsupported etype in memory MPI datatype */
@@ -575,6 +575,12 @@ by the desired type. */
 #define NC_EINVAL_OMODE			(-235) /**< Invalid file open mode */
 #define NC_EPENDING			(-236) /**< Pending nonblocking request is found at file close */
 #define NC_EMAX_REQ			(-237) /**< Size of I/O request exceeds INT_MAX */
+#define NC_EBADLOG			(-238) /**< burst buffer wrong log format */
+#define NC_EWRONGBASE			(-239) /**< burst buffer base name not match */
+#define NC_ENODATALOG			(-240) /**< burst buffer data log does not exist */
+#define NC_ELOGNOTINIT			(-241) /**< burst buffer log file not initialized */
+#define NC_ELOGCHECK			(-242) /**< burst buffer log file check fail */
+#define NC_EFLUSHED			(-243) /**< burst buffer already flushed */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */

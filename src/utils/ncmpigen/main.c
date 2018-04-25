@@ -14,7 +14,7 @@
 #ifdef __hpux
 #include <locale.h>  /* setlocale() */
 #endif
-    
+
 #include <pnetcdf.h>
 
 #include <unistd.h>
@@ -89,7 +89,7 @@ main(int argc, char *argv[])
 #ifdef __hpux
     setlocale(LC_CTYPE,"");
 #endif
-    
+
 #ifdef MDEBUG
     malloc_debug(2) ;	/* helps find malloc/free errors on Sun */
 #endif /* MDEBUG */
@@ -134,12 +134,12 @@ main(int argc, char *argv[])
                if (strcmp(lang_name, "c") == 0 || strcmp(lang_name, "C") == 0) {
                    c_flag = 1;
                }
-               else if (strcmp(lang_name, "f77") == 0 || 
+               else if (strcmp(lang_name, "f77") == 0 ||
                         strcmp(lang_name, "fortran77") == 0 ||
                         strcmp(lang_name, "Fortran77") == 0) {
                    fortran_flag = 1;
                } else {     /* Fortran90, Java, C++, Perl, Python, Ruby, ... */
-                   derror("%s: output language %s not implemented", 
+                   derror("%s: output language %s not implemented",
                           progname, lang_name);
                    return(1);
                }
@@ -175,11 +175,11 @@ main(int argc, char *argv[])
 		  }
 		  /* the 64-bit offset version (2) should only be used if
 		   * actually needed */
-		  else if (strcmp(version_name, "2") == 0 || 
+		  else if (strcmp(version_name, "2") == 0 ||
 				  strcmp(version_name, "64-bit-offset") == 0) {
 			  giantfile_flag = 1;
 		  } else if (strcmp(version_name, "5") == 0 ||
-				  strcmp(version_name, 
+				  strcmp(version_name,
 					  "64-bit-variables") == 0) {
 			  giantvar_flag = 1;
 		  }
@@ -218,7 +218,7 @@ main(int argc, char *argv[])
 	cdlname = argv[0];
     }
     ncmpiin = fp;
-    ret = ncmpiparse(); 
+    ret = ncmpiparse();
     MPI_Finalize();
     return ret;
 }

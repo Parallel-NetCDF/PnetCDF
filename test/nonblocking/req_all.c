@@ -30,7 +30,7 @@
  *            int var_int(Y, X) ;
  *            float var_flt(Y, X) ;
  *    data:
- *    
+ *
  *     var_int =
  *      10, 10, 11, 11, 12, 12, 13, 13,
  *      10, 10, 11, 11, 12, 12, 13, 13,
@@ -40,7 +40,7 @@
  *      10, 10, 11, 11, 12, 12, 13, 13,
  *      10, 10, 11, 11, 12, 12, 13, 13,
  *      10, 10, 11, 11, 12, 12, 13, 13 ;
- *    
+ *
  *     var_flt =
  *      10.5, 10.5, 11.5, 11.5, 12.5, 12.5, 13.5, 13.5,
  *      10.5, 10.5, 11.5, 11.5, 12.5, 12.5, 13.5, 13.5,
@@ -155,9 +155,11 @@ int main(int argc, char** argv)
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
+        if (rank == 0 && sum_size > 0) {
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+            ncmpi_inq_malloc_list();
+        }
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

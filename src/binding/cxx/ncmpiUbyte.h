@@ -5,18 +5,18 @@
 
 namespace PnetCDF
 {
-  
+
   /*! Class represents a netCDF atomic Ubyte type. */
   class NcmpiUbyte : public NcmpiType
   {
-  public: 
-    
+  public:
+
     /*! equivalence operator */
     bool operator==(const NcmpiUbyte & rhs);
-    
+
     /*! destructor */
     ~NcmpiUbyte();
-    
+
     /*! Constructor */
     NcmpiUbyte();
   };

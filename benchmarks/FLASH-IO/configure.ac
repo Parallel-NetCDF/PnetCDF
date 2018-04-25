@@ -224,7 +224,7 @@ echo \
 "
    FLASH I/O kernel with PnetCDF I/O method
 
-   Compilers: 
+   Compilers:
               MPIF90      = ${MPIF90}
               FFLAGS      = ${FFLAGS}
               FCFLAGS     = ${FCFLAGS}

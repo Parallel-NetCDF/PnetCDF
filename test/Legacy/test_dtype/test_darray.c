@@ -49,7 +49,7 @@ void parse_args(int argc, char **argv, int rank) {
       case 'o':
 	if ( !strncmp(optarg, "MPI_ORDER_C", 11) || !strcmp(optarg, "0") )
 	  order = MPI_ORDER_C;
-	else if ( !strncmp(optarg, "MPI_ORDER_FORTRAN", 17) || 
+	else if ( !strncmp(optarg, "MPI_ORDER_FORTRAN", 17) ||
 		  !strcmp(optarg, "1") )
 	  order = MPI_ORDER_FORTRAN;
 	else {
@@ -95,8 +95,8 @@ void partition_array(	/* input parameters : */
 		     int nprocs, int myrank, int ndims, int *array_of_sizes,
 			/* output parameters : */
 		     int *array_of_distribs, int *array_of_dargs,
-		     MPI_Offset *local_starts, 
-		     MPI_Offset *local_edges, 
+		     MPI_Offset *local_starts,
+		     MPI_Offset *local_edges,
 		     MPI_Offset *local_strides,
 		     int *array_of_psizes)
 {
@@ -111,7 +111,7 @@ void partition_array(	/* input parameters : */
    /* all dimensions will be partitioned */
     array_of_psizes[i] = 0;
   }
-  
+
   MPI_Dims_create(nprocs, ndims, array_of_psizes);
 
   for (i=ndims-1; i>=0; i--) {
@@ -124,7 +124,7 @@ void partition_array(	/* input parameters : */
       local_edges[i]++;
     local_strides[i] = (MPI_Offset)array_of_psizes[i];
   }
-  
+
   return;
 }
 
@@ -159,14 +159,14 @@ int main(int argc, char** argv) {
 
   parse_args(argc, argv, rank);
   TEST_SET_NCMPI_ETYPE(nc_etype, mpi_etype);
-#ifdef TEST_NCTYPE						
-  nc_etype = TEST_NCTYPE;					
-#endif								
+#ifdef TEST_NCTYPE
+  nc_etype = TEST_NCTYPE;
+#endif
   if (rank == 0) {
     printf("testing memory darray layout ...\n");
   }
 
-  status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, 
+  status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER,
 			MPI_INFO_NULL, &ncid);
   TEST_HANDLE_ERR(status);
 
@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
       /* upper bound check */
       if (rank == 0) {
         fprintf(stderr, "Total size of array is too big to be represented\n");
-	fprintf(stderr, "Current size = %f, Max size = %d\n", 
+	fprintf(stderr, "Current size = %f, Max size = %d\n",
 		(double)total_sz*array_of_sizes[i], TEST_MAX_INT);
       }
       TEST_EXIT(-1);
@@ -215,14 +215,14 @@ int main(int argc, char** argv) {
   TEST_HANDLE_ERR(status);
 
   if (rank == 0) {
-    printf("\t Filesize = %2.3fMB, MAX_Memory_needed = %2.3fMB\n\n", 
-	   1*total_sz*TEST_NCTYPE_LEN(nc_etype)/1024.0/1024.0, 
+    printf("\t Filesize = %2.3fMB, MAX_Memory_needed = %2.3fMB\n\n",
+	   1*total_sz*TEST_NCTYPE_LEN(nc_etype)/1024.0/1024.0,
 	   ( (2*total_sz + 4*total_sz/nprocs)*sizeof(TEST_NATIVE_ETYPE)
 	   + total_sz*TEST_NCTYPE_LEN(nc_etype) )/1024.0/1024.0 );
   }
 
   buf1 = (TEST_NATIVE_ETYPE *)malloc(total_sz*sizeof(TEST_NATIVE_ETYPE)*2);
-  malloc_failure = (buf1 == NULL || 
+  malloc_failure = (buf1 == NULL ||
 		    (float)total_sz*sizeof(TEST_NATIVE_ETYPE)*2 > TEST_MAX_INT);
   MPI_Allreduce(&malloc_failure, &malloc_failure_any, 1, MPI_INT,
                 MPI_LOR, MPI_COMM_WORLD);
@@ -239,11 +239,11 @@ int main(int argc, char** argv) {
   for (i=0; i<total_sz; i++)
     /* just make sure any type can represent the number */
     /* and make it irregular (cycle != power of 2) for random test */
-    buf1[i] = buf2[i] = (TEST_NATIVE_ETYPE)(i%127); 
+    buf1[i] = buf2[i] = (TEST_NATIVE_ETYPE)(i%127);
 
  /* PARTITION and calculate the local target region */
 
-  partition_array(nprocs, rank, ndims, array_of_sizes, 
+  partition_array(nprocs, rank, ndims, array_of_sizes,
 		  array_of_distribs, array_of_dargs,
 		  local_starts, local_edges, local_strides,
 		  array_of_psizes);
@@ -262,11 +262,11 @@ int main(int argc, char** argv) {
 
  /* CREATE local darray memory view */
 
-  MPI_Type_create_darray(nprocs, rank, ndims, array_of_sizes, 
+  MPI_Type_create_darray(nprocs, rank, ndims, array_of_sizes,
 			 array_of_distribs, array_of_dargs,
-			 array_of_psizes, 
-			 order, 
-			 mpi_etype, 
+			 array_of_psizes,
+			 order,
+			 mpi_etype,
 			 &mpi_darray);
   MPI_Type_commit(&mpi_darray);
 
@@ -313,7 +313,7 @@ int main(int argc, char** argv) {
       printf("\t \t\t\t strides = [");
       TEST_PRINT_LIST(local_strides, 0, ndims-1, 1);
       printf("]\n\n");
- 
+
       fflush(stdout);
       MPI_Barrier(MPI_COMM_WORLD);
     } else {
@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
   for (i=0; i<local_sz; i++)
     tmpbuf[i] = (TEST_NATIVE_ETYPE)(-1);
   packpos = 0;
-  MPI_Pack((void *)tmpbuf, local_sz, mpi_etype, 
+  MPI_Pack((void *)tmpbuf, local_sz, mpi_etype,
 	   packbuf, packsz, &packpos, MPI_COMM_SELF);
   packpos = 0;
   MPI_Unpack(packbuf, packsz, &packpos, buf2, 1, mpi_darray, MPI_COMM_SELF);
@@ -353,7 +353,7 @@ int main(int argc, char** argv) {
     printf("\t all procs collectively writing their darrays into Var_1 ...\n");
   }
 
-  status = ncmpi_put_vars_all(ncid, varid_1, 
+  status = ncmpi_put_vars_all(ncid, varid_1,
 			      local_starts, local_edges, local_strides,
 			      (const void *)buf1, 1, mpi_darray);
   TEST_HANDLE_ERR(status);
@@ -364,7 +364,7 @@ int main(int argc, char** argv) {
     printf("\t all procs collectively reading their darrays from Var_1 ...\n");
   }
 
-  status = ncmpi_get_vars_all(ncid, varid_1, 
+  status = ncmpi_get_vars_all(ncid, varid_1,
 			      local_starts, local_edges, local_strides,
 			      (void *)buf2, 1, mpi_darray);
   TEST_HANDLE_ERR(status);
@@ -378,7 +378,7 @@ int main(int argc, char** argv) {
 
   MPI_Allreduce(&success, &successall, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
   pass1 = successall;
-  
+
   if (rank == 0) {
     if (successall)
       printf("\t PASS: memory darray layout passes test1! \n\n");
@@ -416,7 +416,7 @@ int main(int argc, char** argv) {
 
   MPI_Allreduce(&success, &successall, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
   pass2 = successall;
-  
+
   if (rank == 0) {
     if (successall)
       printf("\t PASS: memory darray layout passes test2! \n\n");

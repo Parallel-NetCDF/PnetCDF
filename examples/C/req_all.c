@@ -11,7 +11,7 @@
  * NC_REQ_ALL to commit all pending nonblocking I/O without checking the status
  * of individual requests. In this case, the first encountered error will be
  * returned in ncmpi_wait_all().
- * 
+ *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
@@ -96,10 +96,8 @@ int main(int argc, char** argv)
                       MPI_Finalize();
                       return 1;
         }
-    argc -= optind;
-    argv += optind;
-    if (argc == 1) snprintf(filename, 256, "%s", argv[0]);
-    else           strcpy(filename, "testfile.nc");
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */

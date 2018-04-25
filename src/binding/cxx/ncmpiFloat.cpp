@@ -19,4 +19,4 @@ NcmpiFloat::~NcmpiFloat() {
 bool NcmpiFloat::operator==(const NcmpiFloat & rhs)    {
   // simply check the netCDF id.
   return myId == rhs.myId;
-}  
+}

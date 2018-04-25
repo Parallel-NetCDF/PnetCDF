@@ -32,7 +32,8 @@ EXTRA_DIST = $(HFILES) $(MANUAL) \
 CLEANFILES = c0.nc c1.cdl c1.nc c2.cdl f0.nc \
 	     ctest.c ctest ctest0.nc ctest1.cdl \
 	     ftest.f ftest ftest0.nc ftest1.cdl \
-	     lex.ncmpi.c y.tab.c y.tab.h *.gcno
+	     lex.ncmpi.c y.tab.c y.tab.h \
+             core core.* *.gcda *.gcno *.gcov gmon.out
 
 # generating the fortran does not work yet
 # test:           $(PROGRAM) b-test c-test f-test FORCE

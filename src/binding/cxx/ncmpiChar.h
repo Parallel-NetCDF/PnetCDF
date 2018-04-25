@@ -5,17 +5,17 @@
 
 namespace PnetCDF
 {
-  
+
   /*! Class represents a netCDF atomic Char type. */
   class NcmpiChar : public NcmpiType
   {
-  public: 
-    
+  public:
+
     /*! equivalence operator */
     bool operator==(const NcmpiChar & rhs);
-    
+
     ~NcmpiChar();
-    
+
     /*! Constructor */
     NcmpiChar();
   };

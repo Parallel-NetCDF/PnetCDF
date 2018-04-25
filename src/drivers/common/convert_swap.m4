@@ -95,7 +95,9 @@ ncmpii_need_convert(int          format, /* 1, 2, or 5 (CDF format number) */
     if (format < NC_FORMAT_CDF5 &&
         xtype == NC_BYTE && itype == MPI_UNSIGNED_CHAR) return 0;
 
-    if (itype == MPI_LONG && SIZEOF_LONG == SIZEOF_INT) itype = MPI_INT;
+#if SIZEOF_LONG == SIZEOF_INT
+    if (itype == MPI_LONG) itype = MPI_INT;
+#endif
 
     return !( (xtype == NC_BYTE   && itype == MPI_SIGNED_CHAR)    ||
               (xtype == NC_SHORT  && itype == MPI_SHORT)          ||
@@ -108,23 +110,6 @@ ncmpii_need_convert(int          format, /* 1, 2, or 5 (CDF format number) */
               (xtype == NC_INT64  && itype == MPI_LONG_LONG_INT)  ||
               (xtype == NC_UINT64 && itype == MPI_UNSIGNED_LONG_LONG)
             );
-}
-
-/*----< ncmpii_need_swap() >-------------------------------------------------*/
-int
-ncmpii_need_swap(nc_type      xtype,  /* external NC type */
-                 MPI_Datatype itype)  /* internal MPI type */
-{
-#ifdef WORDS_BIGENDIAN
-    return 0;
-#else
-    if ((xtype == NC_CHAR  && itype == MPI_CHAR)           ||
-        (xtype == NC_BYTE  && itype == MPI_SIGNED_CHAR)    ||
-        (xtype == NC_UBYTE && itype == MPI_UNSIGNED_CHAR))
-        return 0;
-
-    return 1;
-#endif
 }
 
 /* Other options to in-place byte-swap
@@ -169,13 +154,13 @@ ncmpii_in_swapn(void       *buf,
     else if (esize == 8) {
         uint64_t *dest = (uint64_t*) buf;
         for (i=0; i<nelems; i++)
-            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) | 
-                      ((dest[i] & 0x000000000000FF00ULL) << 40) | 
-                      ((dest[i] & 0x0000000000FF0000ULL) << 24) | 
-                      ((dest[i] & 0x00000000FF000000ULL) <<  8) | 
-                      ((dest[i] & 0x000000FF00000000ULL) >>  8) | 
-                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) | 
-                      ((dest[i] & 0x00FF000000000000ULL) >> 40) | 
+            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) |
+                      ((dest[i] & 0x000000000000FF00ULL) << 40) |
+                      ((dest[i] & 0x0000000000FF0000ULL) << 24) |
+                      ((dest[i] & 0x00000000FF000000ULL) <<  8) |
+                      ((dest[i] & 0x000000FF00000000ULL) >>  8) |
+                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) |
+                      ((dest[i] & 0x00FF000000000000ULL) >> 40) |
                       ((dest[i] & 0xFF00000000000000ULL) >> 56);
     }
     else if (esize == 2) {
@@ -357,17 +342,21 @@ ncmpii_put_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
 
     /* check if type casting and Endianness byte swap are needed */
     need_cast = ncmpii_need_convert(format, xtype, itype);
-    need_swap = ncmpii_need_swap(xtype, itype);
+    need_swap = NEED_BYTE_SWAP(xtype, itype);
 
     ncmpii_xlen_nc_type(xtype, &xsz);
     nbytes = (size_t)(nelems * xsz);
 
     /* allocate xbuf if necessary */
-    if (need_cast || (need_swap && !isNewBuf
+    if (need_cast
+#ifndef ENABLE_IN_PLACE_SWAP
+        || (need_swap && !isNewBuf
 #ifndef DISABLE_IN_PLACE_SWAP
-        && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE
+            && nbytes <= NC_BYTE_SWAP_BUFFER_SIZE
 #endif
-        )) {
+           )
+#endif
+        ) {
         *xbuf = NCI_Malloc(nbytes);
         if (*xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
@@ -510,7 +499,7 @@ ncmpii_get_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
         }
     }
     else { /* no need to convert */
-        if (ncmpii_need_swap(xtype, itype)) /* check if need byte swap */
+        if (NEED_BYTE_SWAP(xtype, itype)) /* check if need byte swap */
             ncmpii_in_swapn(xbuf, nelems, xsz);
         *ibuf = xbuf;
     }

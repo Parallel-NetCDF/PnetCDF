@@ -11,7 +11,7 @@
    See COPYRIGHT file for conditions of use.
 
    This is a very simple example which tests rejection of bad names for
-   netCDF data objects, including names with "/" character, trailing spaces, 
+   netCDF data objects, including names with "/" character, trailing spaces,
    leading special characters, and invalid UTF-8 strings.
 */
 #include <stdlib.h>
@@ -253,7 +253,7 @@ main(int argc, char **argv)
 #endif
        if((res = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|cmode[j], MPI_INFO_NULL, &ncid)))
 	   ERROR
-       
+
        /* Define dimensions, variables, and attributes with various
 	* acceptable names */
        for (i = 0; i < NUM_GOOD; i++) {
@@ -271,7 +271,7 @@ main(int argc, char **argv)
 	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, valid[i], NC_DOUBLE, NATTVALS, attvals)))
 	       ERRORI
        }
-       
+
        /* Try defining dimensions, variables, and attributes with various
 	* bad names and make sure these are rejected */
        for (i = 0; i < NUM_BAD; i++) {
@@ -288,7 +288,7 @@ main(int argc, char **argv)
 	   ERROR
        if ((res = ncmpi_close(ncid)))
 	   ERROR
-       
+
        /* Check it out, make sure all objects with good names were defined OK */
        if ((res = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid)))
 	   ERROR
@@ -299,12 +299,12 @@ main(int argc, char **argv)
 	   if ((res = ncmpi_inq_varid(ncid, valid[i], &varid)) || varid != varids[i])
 	       ERRORI
 	   res = ncmpi_inq_attlen(ncid, varid, valid[i], &attlen);
-	   if ((res = ncmpi_get_att_text(ncid, varid, valid[i], attstr_in))) 
+	   if ((res = ncmpi_get_att_text(ncid, varid, valid[i], attstr_in)))
 	       ERRORI
 	   attstr_in[attlen] = '\0';
-	   if (strcmp(valid[i], attstr_in) != 0) 
+	   if (strcmp(valid[i], attstr_in) != 0)
 	       ERRORI
-	   if ((res = ncmpi_get_att_double(ncid, NC_GLOBAL, valid[i], attvals_in)) || attvals[0] != attvals_in[0]) 
+	   if ((res = ncmpi_get_att_double(ncid, NC_GLOBAL, valid[i], attvals_in)) || attvals[0] != attvals_in[0])
 	       ERRORI
        }
        if ((res = ncmpi_close(ncid)))

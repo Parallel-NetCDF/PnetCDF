@@ -13,7 +13,7 @@
 ! block_len. In this example, block_len is set to 2. Blocks are layout in a
 ! cyclic fashion in the file. This example can test if PnetCDF can coalesce
 ! file offsets and lengths when constructing a merged filetype.
-! 
+!
 ! The compile and run commands are given below, together with an ncmpidump of
 ! the output file. In this example, block_len = 2.
 !
@@ -129,7 +129,7 @@
 
           ! First, fill the entire array with zeros, using a blocking I/O.
           ! Every process writes a subarray of size NX * NY
-          do i=1, NY 
+          do i=1, NY
           do j=1, NX
              buf(j,i) = 0
           enddo
@@ -142,7 +142,7 @@
           call check(err, 'In nfmpi_put_vara_int_all: ')
 
           ! initialize the buffer with rank ID
-          do i=1, NY 
+          do i=1, NY
           do j=1, NX
              buf(j,i) = rank+10
           enddo
@@ -214,7 +214,7 @@
           call check(err, 'In nfmpi_inq_varid: ')
 
           ! initialize the buffer with -1, so a read error can be pinpointed
-          do i=1, NY 
+          do i=1, NY
           do j=1, NX
              buf(j,i) = -1
           enddo
@@ -279,7 +279,7 @@
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
           if (err .EQ. NF_NOERR) then
-              call MPI_Reduce(malloc_size, sum_size, 1, MPI_INTEGER8, 
+              call MPI_Reduce(malloc_size, sum_size, 1, MPI_INTEGER8,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
               if (rank .EQ. 0 .AND. sum_size .GT. 0)
      +            print 998,

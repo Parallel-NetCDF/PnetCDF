@@ -7,13 +7,13 @@ using namespace std;
 
 namespace PnetCDF {
   //  Global comparator operator ==============
-  // comparator operator 
+  // comparator operator
   bool operator<(const NcmpiGroupAtt& lhs,const NcmpiGroupAtt& rhs)
   {
     return false;
   }
-  
-  // comparator operator 
+
+  // comparator operator
   bool operator>(const NcmpiGroupAtt& lhs,const NcmpiGroupAtt& rhs)
   {
     return true;
@@ -31,24 +31,24 @@ NcmpiGroupAtt& NcmpiGroupAtt::operator=(const NcmpiGroupAtt & rhs)
 }
 
 //! The copy constructor.
-NcmpiGroupAtt::NcmpiGroupAtt(const NcmpiGroupAtt& rhs): 
+NcmpiGroupAtt::NcmpiGroupAtt(const NcmpiGroupAtt& rhs):
   NcmpiAtt(rhs)   // invoke base class copy constructor
 {}
 
 
 // Constructor generates a null object.
-NcmpiGroupAtt::NcmpiGroupAtt() : 
+NcmpiGroupAtt::NcmpiGroupAtt() :
   NcmpiAtt()  // invoke base class constructor
 {}
 
 // equivalence operator (doesn't bother compaing varid's of each object).
 bool NcmpiGroupAtt::operator==(const NcmpiGroupAtt & rhs)
 {
-  if(nullObject) 
+  if(nullObject)
     return nullObject == rhs.isNull();
   else
     return myName == rhs.myName && groupId == rhs.groupId;
-}  
+}
 
 // Constructor for an existing global attribute.
 NcmpiGroupAtt::NcmpiGroupAtt(const NcmpiGroup& grp, const int index):

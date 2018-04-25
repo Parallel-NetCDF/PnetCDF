@@ -27,6 +27,13 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 rm -f ${TESTOUTDIR}/test.nc
 rm -f ${TESTOUTDIR}/scratch.nc
 rm -f ${TESTOUTDIR}/tooth-fairy.nc
+${TESTSEQRUN} ./nf_test -4 -d ${TESTOUTDIR}
+# Validator does not support nc4
+# ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+
+rm -f ${TESTOUTDIR}/test.nc
+rm -f ${TESTOUTDIR}/scratch.nc
+rm -f ${TESTOUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nf_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 

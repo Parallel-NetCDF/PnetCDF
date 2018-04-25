@@ -25,7 +25,7 @@
 #define NUM_FORMATS 3
 
 #define ATT_NAME "Atom"
-#define MAX_LEN 7   
+#define MAX_LEN 7
 
 #define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
@@ -37,7 +37,7 @@ test_small_atts(const char *testfile, int cmode)
    int ndims, nvars, natts, unlimdimid;
    MPI_Offset len_in;
    int t, f;
-   
+
    /* Run this with and without fill mode. */
    for (f = 0; f < 2; f++)
    {
@@ -48,13 +48,13 @@ test_small_atts(const char *testfile, int cmode)
 	 /* Create null-terminated text string of correct length. */
 	 strncpy(att, source, t);
          att[t] = '\0';
-	 
+
 	 /* Create a file with one attribute. */
          err = ncmpi_create(MPI_COMM_WORLD, testfile,cmode, MPI_INFO_NULL, &ncid); ERR
 	 err = ncmpi_put_att_text(ncid, NC_GLOBAL, ATT_NAME, t + 1, att); ERR
 	 if (f) { err=ncmpi_set_fill(ncid, NC_NOFILL, NULL); ERR}
 	 err=ncmpi_close(ncid); ERR;
-	 
+
 	 /* Reopen the file and check it. */
          err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 	 err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
@@ -95,7 +95,7 @@ test_small_unlim(const char *testfile, int cmode)
      strcpy(data[i], source);*/
    strcpy(data[0], "2005-04-11_12:00:00");
    strcpy(data[1], "2005-04-11_13:00:00");
-   
+
    /* Create a file with two dimensions, one unlimited, and one
     * var, and a global att. */
    err=ncmpi_create(MPI_COMM_WORLD, testfile,cmode, MPI_INFO_NULL, &ncid); ERR
@@ -115,7 +115,7 @@ test_small_unlim(const char *testfile, int cmode)
 
    /* We're done! */
    err=ncmpi_close(ncid); ERR
-   
+
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
@@ -144,7 +144,7 @@ test_small_fixed(const char *testfile, int cmode)
      strcpy(data[i], source);*/
    strcpy(data[0], "2005-04-11_12:00:00");
    strcpy(data[1], "2005-04-11_13:00:00");
-   
+
    /* Create a file with two dimensions, one unlimited, and one
     * var, and a global att. */
    err=ncmpi_create(MPI_COMM_WORLD, testfile,cmode, MPI_INFO_NULL, &ncid); ERR
@@ -164,7 +164,7 @@ test_small_fixed(const char *testfile, int cmode)
 
    /* We're done! */
    err=ncmpi_close(ncid); ERR
-   
+
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
@@ -198,7 +198,7 @@ test_small_one(const char *testfile, int cmode)
 
    /* We're done! */
    err=ncmpi_close(ncid); ERR
-   
+
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
@@ -245,7 +245,7 @@ test_one_growing(const char *testfile, int cmode)
 	 start[0] = r;
 	 err=ncmpi_put_vara_text_all(ncid, varid, start, count, &data[r]); ERR
 	 err=ncmpi_close(ncid); ERR
-      
+
 	 /* Reopen the file and check it. */
          err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 	 err=ncmpi_inq_dimlen(ncid, 0, &len_in); ERR
@@ -298,7 +298,7 @@ test_one_growing_with_att(const char *testfile, int cmode)
       err=ncmpi_redef(ncid); ERR
       err=ncmpi_put_att_text(ncid, varid, att_name, 1, &data[r]); ERR
       err=ncmpi_close(ncid); ERR
-      
+
       /* Reopen the file and check it. */
       err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_dimlen(ncid, 0, &len_in); ERR
@@ -357,7 +357,7 @@ test_two_growing_with_att(const char *testfile, int cmode)
 	 err=ncmpi_enddef(ncid); ERR
       }
       err=ncmpi_close(ncid); ERR
-      
+
       /* Reopen the file and check it. */
       err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_dimlen(ncid, 0, &len_in); ERR
@@ -397,7 +397,7 @@ test_one_with_att(const char *testfile, int cmode)
 
    /* We're done! */
    err=ncmpi_close(ncid); ERR
-   
+
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
       printf("*** testing simple small file with a global attribute...");
 #endif
       nerrs += test_small_atts(filename, cmode[i]|NC_CLOBBER);
-      
+
 #ifdef DEBUG
       printf("*** testing simple small file with fixed dimensions...");
 #endif
@@ -449,17 +449,17 @@ int main(int argc, char *argv[])
       printf("*** testing simple small file with an unlimited dimension...");
 #endif
       nerrs += test_small_unlim(filename, cmode[i]|NC_CLOBBER);
-      
+
 #ifdef DEBUG
       printf("*** testing small file with one variable...");
 #endif
       nerrs += test_small_one(filename, cmode[i]|NC_CLOBBER);
-      
+
 #ifdef DEBUG
       printf("*** testing small file with one variable and one att...");
 #endif
       nerrs += test_one_with_att(filename, cmode[i]|NC_CLOBBER);
-      
+
 #ifdef DEBUG
       printf("*** testing small file with one record variable, which grows...");
 #endif

@@ -72,7 +72,7 @@ C implementation of the netCDF library.
         nfailsTotal = nfailsTotal + nfails
         if ( nfails .ne. 0) then
             print *, ' '
-            print *, '  ### ', nfails, ' FAILURES TESTING ', name, 
+            print *, '  ### ', nfails, ' FAILURES TESTING ', name,
      +               '! Stop ... ###'
             call report_test
             stop 2
@@ -107,7 +107,7 @@ C implementation of the netCDF library.
         integer         iargc
 #endif
 #if defined(__crayx1)
-        integer         ipxfargc 
+        integer         ipxfargc
 #endif
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -119,7 +119,7 @@ C implementation of the netCDF library.
         character*1     opt
         integer         lastopt
         logical         skiparg
-        integer         err                       
+        integer         err
         integer MY_LEN_TRIM
 
         external        test_nfmpi_strerror
@@ -412,8 +412,8 @@ C implementation of the netCDF library.
         external        test_nfmpi_set_default_format
         external        nc_ignorefpe
 
-        call MPI_INIT(err)                        
-        comm = MPI_COMM_WORLD                   
+        call MPI_INIT(err)
+        comm = MPI_COMM_WORLD
 
         call nc_ignorefpe(1)
 
@@ -462,6 +462,9 @@ C implementation of the netCDF library.
                         else if (opt .eq. '2') then
                             cdf_format = 2
                             extra_flags = NF_64BIT_OFFSET
+                        else if (opt .eq. '4') then
+                            cdf_format = 4
+                            extra_flags = 4096
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF_64BIT_DATA
@@ -594,6 +597,7 @@ C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_get_varm_double', test_nfmpi_get_varm_double)
         call test('nfmpi_get_varm_int8', test_nfmpi_get_varm_int8)
 
+        if (cdf_format .ne. 4) then
         call test('nfmpi_iget_var1_text', test_nfmpi_iget_var1_text)
 #if defined(NF_INT1_T)
         call test('nfmpi_iget_var1_int1', test_nfmpi_iget_var1_int1)
@@ -653,6 +657,7 @@ C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_iget_varm_real', test_nfmpi_iget_varm_real)
         call test('nfmpi_iget_varm_double', test_nfmpi_iget_varm_double)
         call test('nfmpi_iget_varm_int8', test_nfmpi_iget_varm_int8)
+        end if
 
         call test('nfmpi_get_att_text', test_nfmpi_get_att_text)
 #if defined(NF_INT1_T)
@@ -690,7 +695,7 @@ C           /* Test write functions */
 #endif
             call test('nfmpi_put_var1_int', test_nfmpi_put_var1_int)
             call test('nfmpi_put_var1_real', test_nfmpi_put_var1_real)
-            call test('nfmpi_put_var1_double', 
+            call test('nfmpi_put_var1_double',
      +                 test_nfmpi_put_var1_double)
             call test('nfmpi_put_var1_int8', test_nfmpi_put_var1_int8)
             call test('nfmpi_put_var_text', test_nfmpi_put_var_text)
@@ -743,6 +748,7 @@ C           /* Test write functions */
      +                 test_nfmpi_put_varm_double)
             call test('nfmpi_put_varm_int8', test_nfmpi_put_varm_int8)
 
+        if (cdf_format .ne. 4) then
             call test('nfmpi_iput_var1_text', test_nfmpi_iput_var1_text)
 #if defined(NF_INT1_T)
             call test('nfmpi_iput_var1_int1', test_nfmpi_iput_var1_int1)
@@ -752,7 +758,7 @@ C           /* Test write functions */
 #endif
             call test('nfmpi_iput_var1_int', test_nfmpi_iput_var1_int)
             call test('nfmpi_iput_var1_real', test_nfmpi_iput_var1_real)
-            call test('nfmpi_iput_var1_double', 
+            call test('nfmpi_iput_var1_double',
      +                 test_nfmpi_iput_var1_double)
             call test('nfmpi_iput_var1_int8', test_nfmpi_iput_var1_int8)
 
@@ -807,6 +813,7 @@ C           /* Test write functions */
             call test('nfmpi_iput_varm_double',
      +                 test_nfmpi_iput_varm_double)
             call test('nfmpi_iput_varm_int8', test_nfmpi_iput_varm_int8)
+        end if
 
             call test('nfmpi_rename_var', test_nfmpi_rename_var)
             call test('nfmpi_put_att_text', test_nfmpi_put_att_text)
@@ -824,7 +831,9 @@ C           /* Test write functions */
             call test('nfmpi_copy_att', test_nfmpi_copy_att)
             call test('nfmpi_rename_att', test_nfmpi_rename_att)
             call test('nfmpi_del_att', test_nfmpi_del_att)
+            if (cdf_format .ne. 4) then
             call test('nfmpi_set_fill', test_nfmpi_set_fill)
+            end if
             call test('nfmpi_set_default_format',
      +                test_nfmpi_set_default_format)
         end if

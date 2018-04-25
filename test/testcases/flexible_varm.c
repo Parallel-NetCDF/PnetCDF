@@ -30,7 +30,7 @@
  *    variables:
  *            double var(Y, X) ;
  *    data:
- *            
+ *
  *    var =
  *      0,  6, 12, 18, 0,  6, 12, 18, 0,  6, 12, 18, 0,  6, 12, 18,
  *      1,  7, 13, 19, 1,  7, 13, 19, 1,  7, 13, 19, 1,  7, 13, 19,
@@ -233,6 +233,7 @@ int main(int argc, char** argv)
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
