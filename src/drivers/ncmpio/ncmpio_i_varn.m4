@@ -38,7 +38,7 @@ dnl
 #include "ncmpio_NC.h"
 
 /*----< igetput_varn() >-----------------------------------------------------*/
-/* The implementation of nonlocking varn APIs is to add "num" iget/iput
+/* The implementation of nonblocking varn APIs is to add "num" iget/iput
  * requests to the nonblocking request queue. These requests may be flattened
  * and sorted together with other nonblocking requests during the wait call.
  * All the "num" nonblocking requests posted by iget/iput/bput_varn() share
@@ -94,7 +94,7 @@ igetput_varn(NC                *ncp,
         max_nreqs = num;
     }
 
-    /* xtype is the MPI element type in external representation, xszie is its
+    /* xtype is the MPI element type in external representation, xsize is its
      * size in bytes. Similarly, itype and isize for internal representation.
      */
     xtype = ncmpii_nc2mpitype(varp->xtype);
@@ -268,11 +268,11 @@ igetput_varn(NC                *ncp,
     reqid = NC_REQ_NULL;
     xbufp = (char*)xbuf;
     for (i=0; i<num; i++) {
-        MPI_Offset req_len=1; /* number of array elements in request i */
+        MPI_Offset req_size=xsize; /* calculate size of request i */
         if (counts != NULL) {
             for (j=0; j<varp->ndims; j++)
-                req_len *= counts[i][j];
-            if (req_len == 0) continue; /* ignore this 0-length request i */
+                req_size *= counts[i][j];
+            if (req_size == 0) continue; /* ignore this 0-length request i */
         }
 
         if (fIsSet(reqMode, NC_REQ_WR))
@@ -284,7 +284,7 @@ igetput_varn(NC                *ncp,
         req->varp        = varp;
         req->itype       = itype;
         req->xbuf        = xbufp;
-        xbufp += req_len * xsize;
+        xbufp           += req_size;
 
         /* below matter only for the lead request */
         req->buf         = NULL;
