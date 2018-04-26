@@ -327,6 +327,8 @@ igetput_varn(NC                *ncp,
                 if (ncp->numPutReqs > 0)
                     req->id = ncp->put_list[ncp->numPutReqs-1].id + 2;
                 reqid = req->id;
+
+                ncp->numLeadPutReqs++;
             }
             else { /* read request */
                 if (need_convert) fSet(req->flag, NC_REQ_BUF_TYPE_CONVERT);
@@ -348,6 +350,8 @@ igetput_varn(NC                *ncp,
                 if (ncp->numGetReqs > 0)
                     req->id = ncp->get_list[ncp->numGetReqs-1].id + 2;
                 reqid = req->id;
+
+                ncp->numLeadGetReqs++;
             }
         }
         else {

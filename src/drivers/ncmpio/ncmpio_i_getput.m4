@@ -523,6 +523,9 @@ ncmpio_igetput_varm(NC               *ncp,
      */
     fSet(req->flag, NC_REQ_LEAD);
 
+    if (fIsSet(reqMode, NC_REQ_WR)) ncp->numLeadPutReqs++;
+    else                            ncp->numLeadGetReqs++;
+
     /* only lead request may free xbuf */
     if (free_xbuf) fSet(req->flag, NC_REQ_XBUF_TO_BE_FREED);
 
