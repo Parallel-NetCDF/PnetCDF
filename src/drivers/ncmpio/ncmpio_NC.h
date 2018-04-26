@@ -365,6 +365,9 @@ struct NC {
     NC_attrarray  attrs;    /* global attributes defined */
     NC_vararray   vars;     /* variables defined */
 
+    int           numLeadGetReqs; /* number of lead get requests */
+    int           numLeadPutReqs; /* number of lead put requests */
+
     NC_req       *get_list; /* list of nonblocking read requests */
     NC_req       *put_list; /* list of nonblocking write requests */
     NC_buf       *abuf;     /* attached buffer, used by bput APIs */

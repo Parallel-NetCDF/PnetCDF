@@ -160,6 +160,7 @@ ncmpio_cancel(void *ncdp,
         NCI_Free(ncp->get_list);
         ncp->get_list = NULL;
         ncp->numGetReqs = 0;
+        ncp->numLeadGetReqs = 0;
     }
 
     if (num_req == NC_PUT_REQ_ALL || num_req == NC_REQ_ALL) {
@@ -184,6 +185,7 @@ ncmpio_cancel(void *ncdp,
         NCI_Free(ncp->put_list);
         ncp->put_list = NULL;
         ncp->numPutReqs = 0;
+        ncp->numLeadPutReqs = 0;
         if (ncp->abuf != NULL) { /* clear out the attached buffer usage */
             ncp->abuf->tail = 0;
             ncp->abuf->size_used = 0;
@@ -212,13 +214,10 @@ ncmpio_cancel(void *ncdp,
                         MPI_Type_free(&req->imaptype);
                     if (!fIsSet(req->flag, NC_REQ_BUF_TYPE_IS_CONTIG))
                         MPI_Type_free(&req->buftype);
-                    if (req->abuf_index < 0) {
-                        if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
-                            NCI_Free(req->xbuf); /* free xbuf */
-                    }
-                    else  /* this is bput request */
-                        ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+                    if (fIsSet(req->flag, NC_REQ_XBUF_TO_BE_FREED))
+                        NCI_Free(req->xbuf); /* free xbuf */
                     NCI_Free(req->start);
+                    ncp->numLeadGetReqs--;
                 }
                 req->id = NC_REQ_NULL; /* marked as freed */
                 req++;
@@ -251,6 +250,7 @@ ncmpio_cancel(void *ncdp,
                     else  /* this is bput request */
                         ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
                     NCI_Free(req->start);
+                    ncp->numLeadPutReqs--;
                 }
                 req->id = NC_REQ_NULL; /* marked as freed */
                 req++;
@@ -675,7 +675,7 @@ req_commit(NC  *ncp,
      * meantime, coalesce the pending request lists.
      */
     if (num_reqs > 0) { /* assume the max number of requests */
-        if (ncp->numGetReqs == 0 && num_reqs == ncp->numPutReqs) {
+        if (ncp->numGetReqs == 0 && num_reqs == ncp->numLeadPutReqs) {
             /* this is the same as NC_PUT_REQ_ALL */
             for (i=0; i<num_reqs; i++) {
                 if (statuses != NULL)
@@ -688,7 +688,7 @@ req_commit(NC  *ncp,
             ncp->numPutReqs = 0;
             ncp->put_list   = NULL;
         }
-        else if (ncp->numPutReqs == 0 && num_reqs == ncp->numGetReqs) {
+        else if (ncp->numPutReqs == 0 && num_reqs == ncp->numLeadGetReqs) {
             /* this is the same as NC_GET_REQ_ALL */
             for (i=0; i<num_reqs; i++) {
                 if (statuses != NULL)
@@ -891,6 +891,8 @@ req_commit(NC  *ncp,
         }
         else if (ncp->abuf != NULL)  /* from bput API */
             ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
+
+        ncp->numLeadPutReqs--;
     }
 
     if (num_w_reqs > 0) {
@@ -934,6 +936,8 @@ req_commit(NC  *ncp,
 
         if (!isContig && req->buftype != MPI_DATATYPE_NULL)
             MPI_Type_free(&req->buftype);
+
+        ncp->numLeadGetReqs--;
     }
 
     if (num_r_reqs > 0) NCI_Free(get_list);
@@ -2191,14 +2195,14 @@ mgetput(NC     *ncp,
         else {
             /* after possible concatenating the user buffers, the true number
              * of non-contiguous buffers is last_contig_req+1 */
-            num_reqs = last_contig_req+1;
+            int num_contig_reqs = last_contig_req+1;
 
             /* concatenate buffer addresses into a single buffer type */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-            mpireturn = MPI_Type_create_hindexed(num_reqs, blocklengths, disps,
-                                                 MPI_BYTE, &buf_type);
+            mpireturn = MPI_Type_create_hindexed(num_contig_reqs, blocklengths,
+                                                 disps, MPI_BYTE, &buf_type);
 #else
-            mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps,
+            mpireturn = MPI_Type_hindexed(num_contig_reqs, blocklengths, disps,
                                           MPI_BYTE, &buf_type);
 #endif
             if (mpireturn != MPI_SUCCESS) {
