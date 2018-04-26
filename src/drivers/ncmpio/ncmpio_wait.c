@@ -675,8 +675,36 @@ req_commit(NC  *ncp,
      * meantime, coalesce the pending request lists.
      */
     if (num_reqs > 0) { /* assume the max number of requests */
-        put_list = (NC_req*) NCI_Malloc((size_t)ncp->numPutReqs*sizeof(NC_req));
-        get_list = (NC_req*) NCI_Malloc((size_t)ncp->numGetReqs*sizeof(NC_req));
+        if (ncp->numGetReqs == 0 && num_reqs == ncp->numPutReqs) {
+            /* this is the same as NC_PUT_REQ_ALL */
+            for (i=0; i<num_reqs; i++) {
+                if (statuses != NULL)
+                    statuses[i] = NC_NOERR;
+                req_ids[i] = NC_REQ_NULL;
+            }
+            num_reqs        = NC_PUT_REQ_ALL;
+            num_w_reqs      = ncp->numPutReqs;
+            put_list        = ncp->put_list;
+            ncp->numPutReqs = 0;
+            ncp->put_list   = NULL;
+        }
+        else if (ncp->numPutReqs == 0 && num_reqs == ncp->numGetReqs) {
+            /* this is the same as NC_GET_REQ_ALL */
+            for (i=0; i<num_reqs; i++) {
+                if (statuses != NULL)
+                    statuses[i] = NC_NOERR;
+                req_ids[i] = NC_REQ_NULL;
+            }
+            num_reqs        = NC_GET_REQ_ALL;
+            num_r_reqs      = ncp->numGetReqs;
+            get_list        = ncp->get_list;
+            ncp->numGetReqs = 0;
+            ncp->get_list   = NULL;
+        }
+        else { /* TODO: this has a large memory footprint */
+            put_list = (NC_req*) NCI_Malloc((size_t)ncp->numPutReqs*sizeof(NC_req));
+            get_list = (NC_req*) NCI_Malloc((size_t)ncp->numGetReqs*sizeof(NC_req));
+        }
     }
 
     /* check each request ID from the read/write request list */
@@ -863,9 +891,6 @@ req_commit(NC  *ncp,
         }
         else if (ncp->abuf != NULL)  /* from bput API */
             ncp->abuf->occupy_table[req->abuf_index].is_used = 0;
-
-        /* lead request allocated start array for all sub-requests */
-        NCI_Free(req->start);
     }
 
     if (num_w_reqs > 0) {
@@ -909,8 +934,6 @@ req_commit(NC  *ncp,
 
         if (!isContig && req->buftype != MPI_DATATYPE_NULL)
             MPI_Type_free(&req->buftype);
-
-        NCI_Free(req->start);
     }
 
     if (num_r_reqs > 0) NCI_Free(get_list);
@@ -1746,6 +1769,12 @@ req_aggregation(NC     *ncp,
         }
     }
 
+    /* reqs[].start is no longer used */
+    for (i=0; i<num_reqs; i++)
+        if (fIsSet(reqs[i].flag, NC_REQ_LEAD))
+            /* lead request allocated start array for all sub-requests */
+            NCI_Free(reqs[i].start);
+
 #if MPI_VERSION >= 3
     /* MPI_Type_size_x is introduced in MPI 3.0 */
     MPI_Type_size_x(buf_type, &buf_type_size);
@@ -2074,25 +2103,23 @@ mgetput(NC     *ncp,
         len = 0;
     }
     else if (num_reqs == 1) {
-        MPI_Offset req_size;
         if (fIsSet(reqs[0].flag, NC_REQ_SKIP))
-            req_size = 0;
+            len = 0;
         else {
-            req_size = reqs[0].varp->xsz;
+            MPI_Offset req_size = reqs[0].varp->xsz;
             if (reqs[0].varp->ndims > 0) {
                 MPI_Offset *count = reqs[0].start + reqs[0].varp->ndims;
                 if (!IS_RECVAR(reqs[0].varp)) req_size *= count[0];
                 for (k=1; k<reqs[0].varp->ndims; k++) req_size *= count[k];
             }
+            if (req_size > INT_MAX) { /* skip this request */
+                if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+                fSet(reqs[0].flag, NC_REQ_SKIP);
+                len = 0; /* skip this request */
+            }
+            else
+                len = (int)req_size;
         }
-
-        if (req_size > INT_MAX) { /* skip this request */
-            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-            fSet(reqs[0].flag, NC_REQ_SKIP);
-            len = 0; /* skip this request */
-        }
-        else
-            len = (int)req_size;
         buf = reqs[0].xbuf;
     }
     else if (num_reqs > 1) { /* create the I/O buffer derived data type */
@@ -2194,6 +2221,12 @@ mgetput(NC     *ncp,
         NCI_Free(blocklengths);
     }
     /* if (buf_type == MPI_BYTE) then the whole buf is contiguous */
+
+    /* reqs[].start is no longer used */
+    for (i=0; i<num_reqs; i++)
+        if (fIsSet(reqs[i].flag, NC_REQ_LEAD))
+            /* lead request allocated start array for all sub-requests */
+            NCI_Free(reqs[i].start);
 
 #if MPI_VERSION >= 3
     /* MPI_Type_size_x is introduced in MPI 3.0 */

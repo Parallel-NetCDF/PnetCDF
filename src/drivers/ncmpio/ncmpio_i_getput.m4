@@ -113,9 +113,7 @@ ncmpio_add_record_requests(NC_req           *reqs,
     for (i=1; i<req0_count[0]; i++) {
         MPI_Offset *reqi_start, *reqi_count, *reqi_stride; /* of reqs[i] */
 
-        reqs[i] = reqs[0]; /* inherit most attributes from reqs[0], except
-                            * below ones, including the ones need malloc
-                            */
+        reqs[i] = reqs[0]; /* inherit attributes of reqs[0], except below */
 
         /* clear NC_REQ_LEAD flag */
         fClr(reqs[i].flag, NC_REQ_LEAD);
@@ -145,8 +143,8 @@ ncmpio_add_record_requests(NC_req           *reqs,
 
         /* xbuf cannot be NULL    assert(reqs[0].xbuf != NULL); */
 
-        reqs[i].buf      = (char*)(reqs[i-1].buf)  + rec_bufsize;
-        reqs[i].xbuf     = (char*)(reqs[i-1].xbuf) + rec_bufsize;
+        reqs[i].buf  = (char*)(reqs[i-1].buf)  + rec_bufsize;
+        reqs[i].xbuf = (char*)(reqs[i-1].xbuf) + rec_bufsize;
 
         /* reqs[i].bufcount and reqs[i].buftype will not be used in
          * wait call, only the lead request's matters */
