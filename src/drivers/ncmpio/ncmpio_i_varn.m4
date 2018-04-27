@@ -32,8 +32,6 @@ dnl
 #include <assert.h>
 
 #include <mpi.h>
-double t_varm_in_varn; /* for MPI_Wtime */
-
 
 #include <pnc_debug.h>
 #include <common.h>
@@ -46,8 +44,6 @@ double t_varm_in_varn; /* for MPI_Wtime */
  * All the "num" nonblocking requests posted by iget/iput/bput_varn() share
  * the same request ID.
  */
-double varn1, varn2, varn3, varn4; /* for MPI_Wtime */
-
 static int
 igetput_varn(NC                *ncp,
              NC_var            *varp,
@@ -68,8 +64,6 @@ igetput_varn(NC                *ncp,
     MPI_Offset nelems, nbytes, *start_ptr;
     MPI_Datatype itype, xtype;
     NC_req *req;
-
-double Tstart, Tstop; Tstart=MPI_Wtime();
 
     /* if called from a bput API, check if buffer has been attached */
     if (fIsSet(reqMode, NC_REQ_NBB) && ncp->abuf == NULL)
@@ -154,8 +148,6 @@ double Tstart, Tstop; Tstart=MPI_Wtime();
     if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
 #endif
 
-Tstop=MPI_Wtime(); varn1+=Tstop-Tstart;Tstart=Tstop;
-
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
     need_swap    = NEED_BYTE_SWAP(varp->xtype, itype);
@@ -212,8 +204,6 @@ Tstop=MPI_Wtime(); varn1+=Tstop-Tstart;Tstart=Tstop;
             return err;
         }
 
-Tstop=MPI_Wtime(); varn2+=Tstop-Tstart;Tstart=Tstop;
-
         /* allocate/expand the size of nonblocking write request queue */
         int add_reqs=0;
         if (IS_RECVAR(varp) && counts != NULL) {
@@ -249,8 +239,6 @@ Tstop=MPI_Wtime(); varn2+=Tstop-Tstart;Tstart=Tstop;
             free_xbuf = 1;
         }
 
-Tstop=MPI_Wtime(); varn2+=Tstop-Tstart;Tstart=Tstop;
-
         /* allocate/expand the size of nonblocking read request queue */
         int add_reqs=0;
         if (IS_RECVAR(varp) && counts != NULL) {
@@ -272,8 +260,6 @@ Tstop=MPI_Wtime(); varn2+=Tstop-Tstart;Tstart=Tstop;
             ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list, req_alloc);
         }
     }
-
-Tstop=MPI_Wtime(); varn3+=Tstop-Tstart;Tstart=Tstop;
 
     /* break varn into multiple requests and buf/xbuf into num sub-buffers and
      * each is used in a new request object and added to the request queues.
@@ -410,8 +396,6 @@ Tstop=MPI_Wtime(); varn3+=Tstop-Tstart;Tstart=Tstop;
     }
 
     if (reqidp != NULL) *reqidp = reqid;
-
-Tstop=MPI_Wtime(); varn4+=Tstop-Tstart;Tstart=Tstop;
 
     return NC_NOERR;
 }
