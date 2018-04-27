@@ -180,7 +180,8 @@ ifdef(`PNETCDF',`dnl
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -218,6 +219,7 @@ ifdef(`PNETCDF',`dnl
             ELSE_NOK
 
             err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+            assert(err == status);
             IF (err != NC_NOERR)
                 error("wait_all: err=%s", APIFunc(strerror)(err));
             else IF (status != NC_NOERR)
@@ -301,7 +303,8 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -346,6 +349,7 @@ ifdef(`PNETCDF',`dnl
                         error("%s", APIFunc(strerror)(err));
                     else {
                         err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                        assert(err == status);
                         IF (err != NC_NOERR)
                             error("wait_all: err=%s", APIFunc(strerror)(err));
                         else IF (status != NC_NOERR)
@@ -361,6 +365,7 @@ ifdef(`PNETCDF',`dnl
                     else { /* NC_ERANGE does not invalidate the nonblocking
                             * request, the request is still posted */
                         err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                        assert(err == status);
                         IF (err != NC_NOERR)
                             error("wait_all: err=%s", APIFunc(strerror)(err));
                         else IF (status != NC_NOERR)
@@ -447,6 +452,7 @@ TestFunc(var)(VarArgs)
     IF (err != NC_NOERR)
         error("iput_var1_text: %s", APIFunc(strerror)(err));
     err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+    assert(err == status);
     IF (err != NC_NOERR)
         error("wait_all: %s", APIFunc(strerror)(err));
 
@@ -480,6 +486,7 @@ TestFunc(var)(VarArgs)
         ELSE_NOK
 
         err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+        assert(err == status);
         IF (err != NC_NOERR)
             error("wait_all: %s", APIFunc(strerror)(err));
         ELSE_NOK
@@ -572,6 +579,7 @@ TestFunc(var)_$1(VarArgs)
                     error("%s", APIFunc(strerror)(err));
                 else {
                     err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                    assert(err == status);
                     IF (err != NC_NOERR)
                         error("wait_all: err=%s", APIFunc(strerror)(err));
                     else IF (status != NC_NOERR)
@@ -587,6 +595,7 @@ TestFunc(var)_$1(VarArgs)
                 else { /* NC_ERANGE does not invalidate the nonblocking
                         * request, the request is still posted */
                     err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                    assert(err == status);
                     IF (err != NC_NOERR)
                         error("wait_all: err=%s", APIFunc(strerror)(err));
                     else IF (status != NC_NOERR)
@@ -614,6 +623,7 @@ TestFunc(var)_$1(VarArgs)
         error("iput_var1_text: %s", APIFunc(strerror)(err));
     else {
         err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+        assert(err == status);
         IF (err != NC_NOERR)
             error("wait_all: err=%s", APIFunc(strerror)(err));
         else IF (status != NC_NOERR)
@@ -645,6 +655,7 @@ TestFunc(var)_$1(VarArgs)
                     error("%s", APIFunc(strerror)(err));
                 else {
                     err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                    assert(err == status);
                     IF (err != NC_NOERR)
                         error("wait_all: err=%s", APIFunc(strerror)(err));
                     else IF (status != NC_NOERR)
@@ -660,6 +671,7 @@ TestFunc(var)_$1(VarArgs)
                 else { /* NC_ERANGE does not invalidate the nonblocking
                         * request, the request is still posted */
                     err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                    assert(err == status);
                     IF (err != NC_NOERR)
                         error("wait_all: err=%s", APIFunc(strerror)(err));
                     else IF (status != NC_NOERR)
@@ -756,7 +768,8 @@ ifdef(`PNETCDF',`dnl
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -770,7 +783,8 @@ ifdef(`PNETCDF',`dnl
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -860,6 +874,7 @@ ifdef(`PNETCDF',`dnl
             ELSE_NOK
 
             err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+            assert(err == status);
             IF (err != NC_NOERR)
                 error("wait_all: err=%s", APIFunc(strerror)(err));
             else IF (status != NC_NOERR)
@@ -950,7 +965,8 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -967,7 +983,8 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1073,6 +1090,7 @@ ifdef(`PNETCDF',`dnl
                         EXPECT_ERR(NC_NOERR, err)
                     else {
                         err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                        assert(err == status);
                         IF (err != NC_NOERR)
                             error("wait_all: err=%s", APIFunc(strerror)(err));
                         else IF (status != NC_NOERR)
@@ -1084,6 +1102,7 @@ ifdef(`PNETCDF',`dnl
                     else { /* NC_ERANGE does not invalidate the nonblocking
                             * request, the request is still posted */
                         err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                        assert(err == status);
                         IF (err != NC_NOERR)
                             error("wait_all: err=%s", APIFunc(strerror)(err));
                         else IF (status != NC_NOERR)
@@ -1184,7 +1203,8 @@ ifdef(`PNETCDF',`dnl
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1198,7 +1218,8 @@ ifdef(`PNETCDF',`dnl
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1315,6 +1336,7 @@ ifdef(`PNETCDF',`dnl
                 ELSE_NOK
 
                 err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR)
                     error("wait_all: err=%s", APIFunc(strerror)(err));
                 else IF (status != NC_NOERR)
@@ -1409,7 +1431,8 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1426,7 +1449,8 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1559,6 +1583,7 @@ ifdef(`PNETCDF',`dnl
                             error("%s", APIFunc(strerror)(err));
                         else {
                             err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                            assert(err == status);
                             IF (err != NC_NOERR)
                                 error("wait_all: err=%s", APIFunc(strerror)(err));
                             else IF (status != NC_NOERR)
@@ -1570,6 +1595,7 @@ ifdef(`PNETCDF',`dnl
                         else { /* NC_ERANGE does not invalidate the nonblocking
                                 * request, the request is still posted */
                             err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                            assert(err == status);
                             IF (err != NC_NOERR)
                                 error("wait_all: err=%s", APIFunc(strerror)(err));
                             else IF (status != NC_NOERR)
@@ -1672,7 +1698,8 @@ ifdef(`PNETCDF',`dnl
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1686,7 +1713,8 @@ ifdef(`PNETCDF',`dnl
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1809,6 +1837,7 @@ ifdef(`PNETCDF',`dnl
                 ELSE_NOK
 
                 err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR)
                     error("wait_all: err=%s", APIFunc(strerror)(err));
                 else IF (status != NC_NOERR)
@@ -1904,7 +1933,8 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -1921,7 +1951,8 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             else {
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                assert(err == status);
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             }
         }
@@ -2060,6 +2091,7 @@ ifdef(`PNETCDF',`dnl
                             error("%s", APIFunc(strerror)(err));
                         else {
                             err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                            assert(err == status);
                             IF (err != NC_NOERR)
                                 error("wait_all: err=%s", APIFunc(strerror)(err));
                             else IF (status != NC_NOERR)
@@ -2071,6 +2103,7 @@ ifdef(`PNETCDF',`dnl
                         else { /* NC_ERANGE does not invalidate the nonblocking
                                 * request, the request is still posted */
                             err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                            assert(err == status);
                             IF (err != NC_NOERR)
                                 error("wait_all: err=%s", APIFunc(strerror)(err));
                             else IF (status != NC_NOERR)
