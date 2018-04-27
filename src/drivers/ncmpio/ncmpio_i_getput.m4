@@ -153,8 +153,6 @@ ncmpio_add_record_requests(NC_req           *reqs,
     return NC_NOERR;
 }
 
-double varm1, varm2, varm3, varm4; /* for MPI_Wtime */
-
 /*----< ncmpio_igetput_varm() >-----------------------------------------------*/
 int
 ncmpio_igetput_varm(NC               *ncp,
@@ -176,8 +174,6 @@ ncmpio_igetput_varm(NC               *ncp,
     MPI_Offset nelems=0, nbytes, *ptr;
     MPI_Datatype itype, imaptype;
     NC_req *req;
-
-double Tstart,Tstop; Tstart=MPI_Wtime();
 
     /* decode buftype to obtain the followings:
      * itype:    internal element data type (MPI primitive type) in buftype
@@ -227,8 +223,6 @@ double Tstart,Tstop; Tstart=MPI_Wtime();
      */
     err = ncmpii_create_imaptype(varp->ndims, count, imap, itype, &imaptype);
     if (err != NC_NOERR) return err;
-
-Tstop=MPI_Wtime(); varm1+=Tstop-Tstart;Tstart=Tstop;
 
     if (fIsSet(reqMode, NC_REQ_WR)) { /* pack request to xbuf */
 #if 1
@@ -413,8 +407,6 @@ Tstop=MPI_Wtime(); varm1+=Tstop-Tstart;Tstart=Tstop;
         }
     }
 
-Tstop=MPI_Wtime(); varm2+=Tstop-Tstart;Tstart=Tstop;
-
     if (fIsSet(reqMode, NC_REQ_WR)) {
         /* allocate or expand the size of write request array */
         int add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
@@ -487,8 +479,6 @@ Tstop=MPI_Wtime(); varm2+=Tstop-Tstart;Tstart=Tstop;
     else
         req->buftype = MPI_DATATYPE_NULL;
 
-Tstop=MPI_Wtime(); varm3+=Tstop-Tstart;Tstart=Tstop;
-
     /* allocate a single array to store start/count/stride */
     memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
     if (IS_RECVAR(varp) && count[0] > 1)
@@ -541,8 +531,6 @@ Tstop=MPI_Wtime(); varm3+=Tstop-Tstart;Tstart=Tstop;
 
     /* return the request ID */
     if (reqid != NULL) *reqid = req->id;
-
-Tstop=MPI_Wtime(); varm4+=Tstop-Tstart;Tstart=Tstop;
 
     return err;
 }
