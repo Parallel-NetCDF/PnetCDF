@@ -264,7 +264,7 @@ nc4io_put_var(void             *ncdp,
     int i, err;
     int apikind;
     int ndim;
-    size_t *sstart, *scount, *sstride, *simap;
+    size_t *sstart, *scount, *sstride, *simap, putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* Inq variable dim */
@@ -285,14 +285,27 @@ nc4io_put_var(void             *ncdp,
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
     }
-    else if (stride == NULL){
-        apikind = NC4_API_KIND_VARA;
-    }
-    else if (imap == NULL){
-        apikind = NC4_API_KIND_VARS;
-    }
     else{
-        apikind = NC4_API_KIND_VARM;
+        if (stride == NULL){
+            apikind = NC4_API_KIND_VARA;
+        }
+        else if (imap == NULL){
+            apikind = NC4_API_KIND_VARS;
+        }
+        else{
+            apikind = NC4_API_KIND_VARM;
+        }
+
+        // NetCDF/HDF5 does not allow 0 put size, skip it here */
+        if (ndim > 0){
+            putsize = (size_t)count[0];
+            for(i = 1; i < ndim; i++){
+                putsize *= (size_t)count[i];
+            }
+            if (putsize <= 0){
+                return NC_NOERR;
+            }
+        }
     }
 
     /* Convert to MPI_Offset if not scalar */

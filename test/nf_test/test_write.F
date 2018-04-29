@@ -1675,18 +1675,19 @@ C *    close file & create again for test using attribute _FillValue
       integer version
       integer old_format
       integer*8 length  !/* of att */
-      integer formats(3)
+      integer formats(4)
       integer nfmpi_get_file_version
 
 C     /* bad format */
-      err = nfmpi_set_default_format(3, old_format)
+      err = nfmpi_set_default_format(10, old_format)
       if (err .ne. NF_EINVAL)
      +     call errore("bad default format: ", err)
       formats(1) = nf_format_classic
       formats(2) = nf_format_cdf2
       formats(3) = nf_format_cdf5
+      formats(4) = nf_format_netcdf4
 C    /* Cycle through available formats. */
-      do 1 i=1, 3
+      do 1 i=1, 4
          err = nfmpi_set_default_format(formats(i), old_format)
          if (err .ne. NF_NOERR)
      +       call errore("setting classic format: ", err)
@@ -1754,6 +1755,9 @@ C     If the first three characters are not "CDF" we're done.
             version = nf_format_cdf5
             nfmpi_get_file_version = NF_NOERR
          endif
+      elseif (index(magic, 'HDF') .eq. 2) then
+            version = nf_format_netcdf4
+            nfmpi_get_file_version = NF_NOERR
       endif
 
  1    close(f)
