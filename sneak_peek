@@ -3,7 +3,7 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * none
+    * NetCDF4 format classic mode support via netcdf. 
 
   o New optimization
     * Both blocking and nonblocking varn APIs have been improved for better
@@ -36,6 +36,10 @@ This is essentially a placeholder for the next release note ...
       nc_in_place_swap. See New hints below for more info.
       Note -in-place-swap option only affect applications running on Little
       Endian machines, as no byte swap is necessary on Big Endian machines.
+    * Enable netcdf4 support.
+      --enable-netcdf4 : enable NetCDF4 format classic mode support
+      --with-hdf5=<HDF5 install path> : set HDF5 install path
+      --with-netcdf=<NetCDF install path> : set NetCDF install path
 
   o New constants
     * none
@@ -141,6 +145,8 @@ This is essentially a placeholder for the next release note ...
       verifies fill values when fill mode is turned on and off.
     * src/utils/ncvalidator/tst_open.c - tests API ncmpi_open against corrupted
       files and checks expected error codes.
+    * test/nc4/interoperability_rd.m4 - test whether NetCDF4 file written using NetCDF can be read by PnetCDF
+    * test/nc4/interoperability_wr.m4 - test whether NetCDF4 file written using PnetCDF can be read by NetCDF
 
   o Conformity with NetCDF library
     * NetCDF allows to put attribute _FillValue of any NC data type to the
@@ -151,6 +157,7 @@ This is essentially a placeholder for the next release note ...
       data type of attribute _FillValue must be the same as the variable.
       PnetCDF requires the data type of attribute _FillValue be the same as
       the variable's.
+    * NetCDF allow data operation in define mode and vice-versa in NetCDF4 format. PnetCDF does not.
 
   o Conflict with NetCDF library
     * none
