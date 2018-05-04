@@ -18,7 +18,7 @@
 #include <pnetcdf.h>
 #include <ncbbio_driver.h>
 
-#define BUFSIZE 8388608
+#define BUFSIZE 0
 
 /*
  * Open buffered file

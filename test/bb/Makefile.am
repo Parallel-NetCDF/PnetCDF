@@ -28,7 +28,8 @@ check_PROGRAMS = bb_bsize \
                  bb_hints \
                  bb_many_reqs \
                  bb_nonblocking \
-                 highdim
+                 highdim \
+				 bb_scalar
 
 EXTRA_DIST = wrap_runs.sh
 
