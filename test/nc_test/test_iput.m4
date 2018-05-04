@@ -248,12 +248,29 @@ TestFunc(var1)_$1(VarArgs)
     int canConvert;      /* Both text or both numeric */
     IntType j, index[MAX_RANK];
     $1 value[1];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -352,6 +369,11 @@ ifdef(`PNETCDF',`dnl
                             error("wait_all: status=%s", APIFunc(strerror)(status));
                     }
                 } else {
+#ifdef BUILD_DRIVER_BB
+                    if (bb_enabled){
+                        err = ncmpi_flush(ncid);
+                    }
+#endif
                     IF (err != NC_ERANGE) {
                         EXPECT_ERR(NC_ERANGE, err)
                         error("\n\t\tfor type %s value %.17e %ld",
@@ -508,12 +530,29 @@ TestFunc(var)_$1(VarArgs)
     int allInExtRange;   /* all values within external range? */
     IntType j, index[MAX_RANK];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -578,6 +617,11 @@ TestFunc(var)_$1(VarArgs)
                         error("wait_all: status=%s", APIFunc(strerror)(status));
                 }
             } else {
+#ifdef BUILD_DRIVER_BB
+                if (bb_enabled){
+                    err = ncmpi_flush(ncid);
+                }
+#endif
                 IF (err != NC_ERANGE) {
                     EXPECT_ERR(NC_ERANGE, err)
                     error("\n\t\tfor type %s value %.17e %ld",
@@ -651,6 +695,11 @@ TestFunc(var)_$1(VarArgs)
                         error("wait_all: status=%s", APIFunc(strerror)(status));
                 }
             } else {
+#ifdef BUILD_DRIVER_BB
+                if (bb_enabled){
+                    err = ncmpi_flush(ncid);
+                }
+#endif
                 IF (err != NC_ERANGE) {
                     EXPECT_ERR(NC_ERANGE, err)
                     error("\n\t\tfor type %s value %.17e %ld",
@@ -893,11 +942,29 @@ TestFunc(vara)_$1(VarArgs)
     IntType start[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
 
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
+
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -1079,6 +1146,11 @@ ifdef(`PNETCDF',`dnl
                             error("wait_all: status=%s", APIFunc(strerror)(status));
                     }
                 } else {
+#ifdef BUILD_DRIVER_BB
+                    if (bb_enabled){
+                        err = ncmpi_flush(ncid);
+                    }
+#endif
                     IF (err != NC_ERANGE)
                         EXPECT_ERR(NC_ERANGE, err)
                     else { /* NC_ERANGE does not invalidate the nonblocking
@@ -1350,12 +1422,29 @@ TestFunc(vars)_$1(VarArgs)
     IntType index2[MAX_RANK], count[MAX_RANK], sstride[MAX_RANK];
     PTRDType stride[MAX_RANK];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -1565,6 +1654,11 @@ ifdef(`PNETCDF',`dnl
                                 error("wait_all: status=%s", APIFunc(strerror)(status));
                         }
                     } else {
+#ifdef BUILD_DRIVER_BB
+                        if (bb_enabled){
+                            err = ncmpi_flush(ncid);
+                        }
+#endif
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         else { /* NC_ERANGE does not invalidate the nonblocking
@@ -1844,12 +1938,29 @@ TestFunc(varm)_$1(VarArgs)
     IntType index2[MAX_RANK], count[MAX_RANK], sstride[MAX_RANK];
     PTRDType stride[MAX_RANK], imap[MAX_RANK];
     $1 value[MAX_NELS];
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -2066,6 +2177,11 @@ ifdef(`PNETCDF',`dnl
                                 error("wait_all: status=%s", APIFunc(strerror)(status));
                         }
                     } else {
+#ifdef BUILD_DRIVER_BB
+                        if (bb_enabled){
+                            err = ncmpi_flush(ncid);
+                        }
+#endif
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         else { /* NC_ERANGE does not invalidate the nonblocking

@@ -914,12 +914,28 @@ TestFunc(put_var1)(VarArgs)
     double value[1];
     double buf[1];                /* (void *) buffer */
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     def_dims(ncid);
     Def_Vars(ncid, numVars);
@@ -953,6 +969,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVar1(ncid, i, NULL, value, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#ifdef BUILD_DRIVER_BB
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+            }
+#endif
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1022,12 +1043,28 @@ TestFunc(put_vara)(VarArgs)
     char *p;                      /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     def_dims(ncid);
     Def_Vars(ncid, numVars);
@@ -1072,6 +1109,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVara(ncid, i, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#ifdef BUILD_DRIVER_BB
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+            }
+#endif
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1082,6 +1124,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVara(ncid, i, start, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#ifdef BUILD_DRIVER_BB
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+            }
+#endif
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
@@ -1208,12 +1255,28 @@ TestFunc(put_vars)(VarArgs)
     char *p;              /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     def_dims(ncid);
     Def_Vars(ncid, numVars);
@@ -1259,6 +1322,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVars(ncid, i, NULL, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#ifdef BUILD_DRIVER_BB
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+            }
+#endif
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1269,6 +1337,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVars(ncid, i, start, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#ifdef BUILD_DRIVER_BB
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+            }
+#endif
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
@@ -1430,12 +1503,28 @@ TestFunc(put_varm)(VarArgs)
     char *p;                    /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
 
     def_dims(ncid);
     Def_Vars(ncid, numVars);
@@ -1482,6 +1571,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVarm(ncid, i, NULL, NULL, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#ifdef BUILD_DRIVER_BB
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+            }
+#endif
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1492,6 +1586,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVarm(ncid, i, start, NULL, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+#ifdef BUILD_DRIVER_BB
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+            }
+#endif
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
