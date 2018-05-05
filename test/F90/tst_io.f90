@@ -32,6 +32,7 @@ program tst_io
   ! integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
   character(LEN=256) dirpath, cmd, msg
   integer my_rank, p
+  integer format, old_format
 
   call MPI_Init(ierr)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
@@ -71,70 +72,77 @@ program tst_io
      enddo
   enddo
 
-  ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
-  call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
-       x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
-  call system_clock(start)
-  call check(nfmpi_begin_indep_data(ncid), 11)
-  call check (NF90MPI_PUT_VAR(ncid, vrid, x), 18)
-  call check(nfmpi_end_indep_data(ncid), 11)
-  call system_clock(now)
-  ncint1 = now - start
-!   print 3, size, "MB"," netcdf write = ", ncint1 * clockRate, &
-!        real(ncint1)/real (wrint1)
-! 3 format("Time for", i5, a, a25, i7, " msec. Spd ratio = ", f5.2)
+  do format = 1, 2
+    if (format .eq. 1) then
+      err = nf90mpi_set_default_format(nf90_format_netcdf4, old_format)
+    else
+      err = nf90mpi_set_default_format(nf90_format_classic, old_format)
+    end if 
 
-  call check (NF90MPI_CLOSE(ncid), 14)
+    ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+    call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
+        x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
+    call system_clock(start)
+    call check(nfmpi_begin_indep_data(ncid), 11)
+    call check (NF90MPI_PUT_VAR(ncid, vrid, x), 18)
+    call check(nfmpi_end_indep_data(ncid), 11)
+    call system_clock(now)
+    ncint1 = now - start
+  !   print 3, size, "MB"," netcdf write = ", ncint1 * clockRate, &
+  !        real(ncint1)/real (wrint1)
+  ! 3 format("Time for", i5, a, a25, i7, " msec. Spd ratio = ", f5.2)
 
-  call system_clock(start)
-  do i1 = 1, repct
-     ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
-     call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
-          x1id, x2id, x3id, x4id, NF90_CLOBBER, 130)
-     call check(nfmpi_begin_indep_data(ncid), 11)
-     call check (NF90MPI_PUT_VAR(ncid, vrid, x), 23 + i1)
-     call check(nfmpi_end_indep_data(ncid), 11)
-     call check (NF90MPI_CLOSE(ncid), 15)
+    call check (NF90MPI_CLOSE(ncid), 14)
+
+    call system_clock(start)
+    do i1 = 1, repct
+      ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+      call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
+            x1id, x2id, x3id, x4id, NF90_CLOBBER, 130)
+      call check(nfmpi_begin_indep_data(ncid), 11)
+      call check (NF90MPI_PUT_VAR(ncid, vrid, x), 23 + i1)
+      call check(nfmpi_end_indep_data(ncid), 11)
+      call check (NF90MPI_CLOSE(ncid), 15)
+    enddo
+    call system_clock(now)
+    ncint2 = now - start
+  !   print 4, size, repct, " repeated netcdf writes = ", ncint2 * clockRate, &
+  !        real(ncint2)/real(wrint2);
+  ! 4 format("Time for", i5, "MB", i3, a22, i7, " msec. Spd ratio = ", f5.2)
+
+  !  call system_clock(start)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm3, ncid, vrids, s, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm4, ncid, vridt, t, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 30)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm5, ncid, vridu, u, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 40)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm6, ncid, vridv, v, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 50)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm7, ncid, vridw, w, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 60)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm8, ncid, vridx, x, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 70)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm9, ncid, vridy, y, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 80)
+  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm10, ncid, vridz, z, prsz1, prsz2, prsz3, prsz4, &
+  !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 90)
+  !  call check(nfmpi_begin_indep_data(ncid), 11)
+  !  call check (NF90MPI_PUT_VAR(ncid, vrids, s), 118)
+  !  call check (NF90MPI_PUT_VAR(ncid, vridt, t), 119)
+  !  call check (NF90MPI_PUT_VAR(ncid, vridu, u), 120)
+  !  call check (NF90MPI_PUT_VAR(ncid, vridv, v), 121)
+  !  call check (NF90MPI_PUT_VAR(ncid, vridw, w), 122)
+  !  call check (NF90MPI_PUT_VAR(ncid, vridx, x), 123)
+  !  call check (NF90MPI_PUT_VAR(ncid, vridy, y), 124)
+  !  call check (NF90MPI_PUT_VAR(ncid, vridz, z), 125)
+  !  call check(nfmpi_end_indep_data(ncid), 11)
+  !  call system_clock(now)
+  !  ncint3 = now - start
+  !  call check (NF90MPI_CLOSE(ncid), 16)
+  !   print 4, size, 8, " netcdf file writes = ", ncint3 * clockRate, &
+  !        real(ncint3)/real(wrint3);
   enddo
-  call system_clock(now)
-  ncint2 = now - start
-!   print 4, size, repct, " repeated netcdf writes = ", ncint2 * clockRate, &
-!        real(ncint2)/real(wrint2);
-! 4 format("Time for", i5, "MB", i3, a22, i7, " msec. Spd ratio = ", f5.2)
-
-!  call system_clock(start)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm3, ncid, vrids, s, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm4, ncid, vridt, t, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 30)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm5, ncid, vridu, u, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 40)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm6, ncid, vridv, v, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 50)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm7, ncid, vridw, w, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 60)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm8, ncid, vridx, x, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 70)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm9, ncid, vridy, y, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 80)
-!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm10, ncid, vridz, z, prsz1, prsz2, prsz3, prsz4, &
-!       x1id, x2id, x3id, x4id, NF90_CLOBBER, 90)
-!  call check(nfmpi_begin_indep_data(ncid), 11)
-!  call check (NF90MPI_PUT_VAR(ncid, vrids, s), 118)
-!  call check (NF90MPI_PUT_VAR(ncid, vridt, t), 119)
-!  call check (NF90MPI_PUT_VAR(ncid, vridu, u), 120)
-!  call check (NF90MPI_PUT_VAR(ncid, vridv, v), 121)
-!  call check (NF90MPI_PUT_VAR(ncid, vridw, w), 122)
-!  call check (NF90MPI_PUT_VAR(ncid, vridx, x), 123)
-!  call check (NF90MPI_PUT_VAR(ncid, vridy, y), 124)
-!  call check (NF90MPI_PUT_VAR(ncid, vridz, z), 125)
-!  call check(nfmpi_end_indep_data(ncid), 11)
-!  call system_clock(now)
-!  ncint3 = now - start
-!  call check (NF90MPI_CLOSE(ncid), 16)
-!   print 4, size, 8, " netcdf file writes = ", ncint3 * clockRate, &
-!        real(ncint3)/real(wrint3);
-
    msg = '*** TESTING F90 '//trim(cmd)
    if (my_rank .eq. 0) call pass_fail(0, msg)
 

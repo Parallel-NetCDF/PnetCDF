@@ -137,7 +137,7 @@
       parameter (nf_nofill = 256)
       parameter (nf_lock = 1024)
       parameter (nf_share = 2048)
-      parameter (nf_netcdf4 = 2048)
+      parameter (nf_netcdf4 = 4096)
       parameter (nf_64bit_offset = 512)
       parameter (nf_64bit_data = 32)
       parameter (nf_32bit = 16777216)

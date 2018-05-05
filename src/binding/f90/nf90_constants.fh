@@ -69,6 +69,7 @@
     nf90_nofill       = 256,    &
     nf90_64bit_offset = 512,    &
     nf90_64bit_data   = 32,     &
+    nf90_netcdf4      = 4096,   &
     nf90_lock         = 1024,   &
     nf90_share        = 2048
 
