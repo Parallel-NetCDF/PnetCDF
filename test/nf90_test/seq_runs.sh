@@ -24,6 +24,15 @@ rm -f ${TESTOUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nf90_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
 
+if [ -n "${TESTDW}" ]; then
+    rm -f ${TESTOUTDIR}/test.nc
+    rm -f ${TESTOUTDIR}/scratch.nc
+    rm -f ${TESTOUTDIR}/tooth-fairy.nc
+    ${TESTSEQRUN} ./nf90_test -2 -d ${TESTOUTDIR}
+    # Validator does not support nc4
+    # ${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
+fi
+
 rm -f ${TESTOUTDIR}/test.nc
 rm -f ${TESTOUTDIR}/scratch.nc
 rm -f ${TESTOUTDIR}/tooth-fairy.nc
