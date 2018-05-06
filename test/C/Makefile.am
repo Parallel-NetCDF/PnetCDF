@@ -43,6 +43,12 @@ EXTRA_DIST = wrap_runs.sh
 CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
+if BUILD_DRIVER_NC4
+TESTNC4 = 1
+TESTS_ENVIRONMENT += TESTNC4=1 ; export TESTNC4;
+CLEANFILES += $(TESTOUTDIR)/pres_temp_4D_nc4.nc
+endif
+
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
