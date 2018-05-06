@@ -239,7 +239,9 @@ foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+    if (err != NC_NOERR){
+        DEBUG_RETURN_ERROR(err);
+    }
 
     /* Free buffers if needed */
     if(ndim > 0){
@@ -317,7 +319,9 @@ foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+    if (err != NC_NOERR){
+        DEBUG_RETURN_ERROR(err);
+    }
     
     /* Free buffers if needed */
     if(ndim > 0){
