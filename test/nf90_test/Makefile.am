@@ -41,8 +41,8 @@ nf90_test_SOURCES = $(F90_SRCS) fortlib.c
 nodist_nf90_test_SOURCES = $(M4SRCS_F90)
 
 if BUILD_DRIVER_NC4
-TESTDW = 1
-TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
+TESTNC4 = 1
+TESTS_ENVIRONMENT += TESTNC4=1 ; export TESTNC4;
 endif
 
 $(M4SRCS_F90): Makefile

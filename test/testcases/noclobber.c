@@ -21,7 +21,7 @@
 
 int main(int argc, char **argv) {
     char filename[256];
-    int  err, nerrs=0, ncid, cmode, rank, nprocs;
+    int  err, nerrs=0, ncid, cmode, rank, nprocs, format;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -43,16 +43,37 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-    /* create a file if it does not exist */
-    cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    CHECK_ERR
-    err = ncmpi_close(ncid); CHECK_ERR
+#ifdef BUILD_DRIVER_NC4
+    for(format = 0; format < 2; format ++)
+#endif
+    {
+        /* create a file if it does not exist */
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            cmode = NC_CLOBBER | NC_NETCDF4;
+        }
+        else
+#endif
+        {
+            cmode = NC_CLOBBER;
+        }
+        err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+        CHECK_ERR
+        err = ncmpi_close(ncid); CHECK_ERR
 
-    /* now the file exists, test if PnetCDF can return correct error code */
-    cmode = NC_NOCLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
+        /* now the file exists, test if PnetCDF can return correct error code */
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            cmode = NC_NOCLOBBER | NC_NETCDF4;
+        }
+        else
+#endif
+        {
+            cmode = NC_NOCLOBBER;
+        }
+        err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+        EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
+    }
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -61,7 +82,7 @@ int main(int argc, char **argv) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
-                   sum_size);
+                sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
