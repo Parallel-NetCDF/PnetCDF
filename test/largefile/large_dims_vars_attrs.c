@@ -55,6 +55,7 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
+    /* skip test for nc4 before netcdf high-dim bug fixed */
 #ifdef BUILD_DRIVER_NC4
     for(format = 1; format < 2; format ++)
 #endif
