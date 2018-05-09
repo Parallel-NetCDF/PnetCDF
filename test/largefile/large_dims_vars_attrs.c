@@ -32,6 +32,7 @@ int main(int argc, char** argv)
     char filename[256], str[32];
     int i, rank, nprocs, err, nerrs=0;
     int ncid, cmode, varid, *dimids;
+    int format;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -54,8 +55,17 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
+#ifdef BUILD_DRIVER_NC4
+    for(format = 1; format < 2; format ++)
+#endif
+    {
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            cmode |= NC_NETCDF4;
+        }
+#endif
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
@@ -112,6 +122,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     free(dimids);
+    }
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
