@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
     int i, j, cmode, rank, nprocs, err, nerrs=0;
     int ncid, fvarid[NVARS], rvarid[NVARS], dimids[NDIMS], rdimids[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS], stride[NDIMS];
+    int format;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -53,8 +54,20 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
+#ifdef BUILD_DRIVER_NC4
+    for(format = 0; format < 2; format ++)
+#endif
+    {
     cmode = NC_CLOBBER;
-    cmode |= NC_64BIT_DATA;
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            cmode |= NC_NETCDF4;
+        }
+        else
+#endif
+        {
+            cmode |= NC_64BIT_DATA;
+        }
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,
                        &ncid); CHECK_ERR
 
@@ -149,6 +162,7 @@ int main(int argc, char** argv) {
 
 fn_exit:
     err = ncmpi_close(ncid); CHECK_ERR
+    }
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

@@ -505,7 +505,8 @@ nc4io_fill_var_rec(void      *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* NetCDF does not support this natively */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    /* We assume NetCDF filled it automatically */
+    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     return NC_NOERR;
 }

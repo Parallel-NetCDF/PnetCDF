@@ -69,6 +69,8 @@ main(int argc, char **argv) {
    int var1_dims[RANK_var1];
    int x_dims[RANK_x];
 
+   int format;
+
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -87,9 +89,23 @@ main(int argc, char **argv) {
    printf("\n*** Testing large files, slowly.\n");
    printf("*** Creating large file %s...", filename);
 
-   /* enter define mode */
-   stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_64BIT_DATA,
+#ifdef BUILD_DRIVER_NC4
+    for(format = 0; format < 2; format ++)
+#endif
+    {
+        /* enter define mode */
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_NETCDF4,
 		   MPI_INFO_NULL, &ncid);
+        }
+        else
+#endif
+        {
+        
+            stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_64BIT_DATA,
+		    MPI_INFO_NULL, &ncid);
+        }
    check_err(stat,__LINE__,__FILE__);
 
    /* define dimensions */
@@ -194,6 +210,7 @@ main(int argc, char **argv) {
    }
    stat = ncmpi_close(ncid);
    check_err(stat,__LINE__,__FILE__);
+    }
 
    printf("ok\n");
    printf("*** Tests successful!\n");
