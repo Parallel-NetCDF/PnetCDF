@@ -37,6 +37,33 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
+#ifdef BUILD_DRIVER_NC4
+    /* test CDF-4 -----------------------------------------------------------*/
+    sprintf(filename,"%s/test_cdf4.nc",dir_name);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid); CHECK_ERR
+
+    /* test NULL argument */
+    err = ncmpi_inq_format(ncid, NULL); CHECK_ERR
+
+    err = ncmpi_inq_format(ncid, &format); CHECK_ERR
+    if (format != NC_FORMAT_NETCDF4) {
+        printf("Error at line %d in %s: expecting CDF-1 format for file %s but got %d\n",
+               __LINE__,__FILE__,filename,format);
+        nerrs++;
+    }
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* test NULL argument */
+    err = ncmpi_inq_file_format(filename, NULL); CHECK_ERR
+
+    err = ncmpi_inq_file_format(filename, &format); CHECK_ERR
+    if (format != NC_FORMAT_NETCDF4) {
+        printf("Error at line %d in %s: expecting CDF-1 format for file %s but got %d\n",
+               __LINE__,__FILE__,filename,format);
+        nerrs++;
+    }
+#endif
+
     /* test CDF-1 -----------------------------------------------------------*/
     sprintf(filename,"%s/test_cdf1.nc",dir_name);
     err = ncmpi_open(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid); CHECK_ERR
