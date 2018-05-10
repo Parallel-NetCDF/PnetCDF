@@ -200,8 +200,8 @@ BUILD_DRIVER_BB = 1
 CC = /usr/local/bin/mpicc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g  -O0
-CONFIGURE_ARGS_CLEAN = --disable-shared --enable-debug --enable-burstbuffer --prefix=/home/khl7265/ncmpi_bb
-CONFIG_DATE = Fri Apr 20 16:30:12 DST 2018
+CONFIGURE_ARGS_CLEAN = --disable-shared --enable-debug --enable-burstbuffer --prefix=/home/khl7265/ncmpi_bb --no-create --no-recursion
+CONFIG_DATE = Wed May  9 13:58:19 DST 2018
 CPP = /usr/local/bin/mpicc -E
 CPPFLAGS = 
 CXX = /usr/local/bin/mpicxx
@@ -226,7 +226,7 @@ ENABLE_SUBFILING = 0
 EXEEXT = 
 F77 = /usr/local/bin/mpif77
 FC = /usr/local/bin/mpif90
-FCFLAGS = -g  -O0
+FCFLAGS = -g  -O0 -DBUILD_DRIVER_BB
 FCFLAGS_F = 
 FCFLAGS_F90 = 
 FCFLAGS_f = 
@@ -236,7 +236,7 @@ FC_DEFINE = -D
 FC_MODEXT = mod
 FC_MODINC = -I
 FFIXEDFORMFLAG = -ffixed-form
-FFLAGS = -g  -O0
+FFLAGS = -g  -O0 -DBUILD_DRIVER_BB
 FFREEFORMFLAG = -ffree-form
 FGREP = /bin/grep -F
 GCOV = gcov

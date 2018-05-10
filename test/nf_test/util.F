@@ -874,6 +874,12 @@
         doubleprecision         value(MAX_NELS)
         character*(MAX_NELS+2)  text
         logical                 allInRange
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         do 1, j = 1, MAX_RANK
             start(j) = 1
@@ -920,6 +926,18 @@
                         call errore('nfmpi_put_vara_double_all: ', err)
                     end if
                 else
+#if defined(BUILD_DRIVER_BB)
+                    err2 = nfmpi_inq_file_info(ncid, infoused)
+                    call MPI_Info_get(infoused, "nc_bb",
+     +                 MPI_MAX_INFO_VAL, hint, flag, err2)
+                    if (flag .eq. 1) then
+                        if (hint .eq. 'enable') then
+                            err = nfmpi_flush(ncid)
+                        endif
+                    endif
+                    call MPI_Info_free(infoused, err2);
+#endif
+
                     if (err .ne. NF_ERANGE) then
                         call errore('put_vars '//
      +                      'type-conversion range error: status = ',

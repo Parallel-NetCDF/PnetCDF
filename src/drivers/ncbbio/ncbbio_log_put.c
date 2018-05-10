@@ -44,6 +44,8 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
     int itype;    /* Type used in log file */
     int *dimids;
     char *buffer;
+    nc_type xtype;
+    PNC *pncp;
 #ifdef PNETCDF_PROFILING
     double t1, t2, t3, t4, t5;
 #endif
@@ -57,13 +59,58 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
     t1 = MPI_Wtime();
 #endif
 
+    /* Check parameters 
+     * Varid must be valid
+     * Start, count must be valid
+     * ECHAR must be detected
+     */
+    
+    /* Get PNC */
+    err = PNC_check_id(ncbbp->ncid, &pncp);
+    if (err != NC_NOERR){
+        return err;
+    }
+
+    /* check whether variable ID is valid */
+    if (varid == NC_GLOBAL || varid < 0 || varid >= pncp->nvars) {
+        DEBUG_RETURN_ERROR(NC_ENOTVAR)
+    }
+
     /* Calculate data size */
     /* Get ndims */
-    err = ncbbp->ncmpio_driver->inq_var(ncbbp->ncp, varid, NULL, NULL, &dim,
+    dim = pncp->vars[varid].ndims;
+    xtype = pncp->vars[varid].xtype;
+    /*
+    err = ncbbp->ncmpio_driver->inq_var(ncbbp->ncp, varid, NULL, &xtype, &dim,
                                         NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR){
         return err;
     }
+    */
+
+    /* Count should always be avaiable for non scalar var 
+     * Upper layer may not fill up count if an error occurs
+     */
+    if (dim > 0){
+        if (count == NULL){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+    }
+
+    /* We need to check for ECHAR for scalar variables, they are not filtered by upper layer
+        * Ncmpio driver will abort when it sees ECHAR, it should never be in the log
+        */
+    if (buftype == MPI_CHAR) {   
+        if (xtype != NC_CHAR){
+            DEBUG_RETURN_ERROR(NC_ECHAR);
+        }
+    }
+    else{
+        if (xtype == NC_CHAR){
+            DEBUG_RETURN_ERROR(NC_ECHAR);
+        }
+    }
+
 
     /* Calcalate submatrix size */
     if (buftype != MPI_DATATYPE_NULL){
@@ -104,7 +151,8 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
         return err;
     }
     /* Update recdimsize if first dim is unlimited */
-    if (dim > 0 && dimids[0] == ncbbp->recdimid) {
+    //if (dim > 0 && dimids[0] == ncbbp->recdimid) {
+    if (pncp->vars[varid].recdim >= 0) {
         /* Dim size after the put operation */
         if (stride == NULL) {
             recsize = start[0] + count[0];

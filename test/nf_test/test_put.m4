@@ -409,6 +409,12 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
         doubleprecision val
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -465,6 +471,18 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                         if (err .ne. NF_NOERR)
      +                      call error(ErrFunc(err))
                     else
+#if defined(BUILD_DRIVER_BB)
+                        err2 = nfmpi_inq_file_info(ncid, infoused)
+                        call MPI_Info_get(infoused, "nc_bb",
+     +                  MPI_MAX_INFO_VAL, hint, flag, err2)
+                        if (flag .eq. 1) then
+                            if (hint .eq. 'enable') then
+                                err = nfmpi_flush(ncid)
+                            endif
+                        endif
+                        call MPI_Info_free(infoused, err2);
+#endif
+
                         if (err .ne. NF_ERANGE)
      +                      call errore('Range error: ', err)
                     end if
@@ -511,6 +529,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -555,6 +579,18 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     if (err .ne. NF_NOERR)
      +                  call error(ErrFunc(err))
                 else
+#if defined(BUILD_DRIVER_BB)
+                    err2 = nfmpi_inq_file_info(ncid, infoused)
+                    call MPI_Info_get(infoused, "nc_bb",
+     +                 MPI_MAX_INFO_VAL, hint, flag, err2)
+                    if (flag .eq. 1) then
+                        if (hint .eq. 'enable') then
+                            err = nfmpi_flush(ncid)
+                        endif
+                    endif
+                    call MPI_Info_free(infoused, err2);
+#endif
+
                     if (err .ne. NF_ERANGE .and.
      +                      var_dimid(var_rank(i),i) .ne. RECDIM)
      +                  call errore('Range error: ', err)
@@ -614,6 +650,17 @@ C           Only test record variables here
                         if (err .ne. NF_NOERR)
      +                      call error(ErrFunc(err))
                     else
+#if defined(BUILD_DRIVER_BB)
+                        err2 = nfmpi_inq_file_info(ncid, infoused)
+                        call MPI_Info_get(infoused, "nc_bb",
+     +                  MPI_MAX_INFO_VAL, hint, flag, err2)
+                        if (flag .eq. 1) then
+                            if (hint .eq. 'enable') then
+                                err = nfmpi_flush(ncid)
+                            endif
+                        endif
+                        call MPI_Info_free(infoused, err2);
+#endif
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
                     endif
@@ -666,6 +713,12 @@ define([TEST_NFMPI_PUT_VARA],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -779,6 +832,10 @@ C           /* Check correct error returned even when nothing to put */
                 edge(j) = 1
 6           continue
 
+#if defined(BUILD_DRIVER_BB)
+            err = nfmpi_flush(ncid)
+#endif
+
             !/* Choose a random point dividing each dim into 2 parts */
             !/* Put 2^rank (nslabs) slabs so defined */
             nslabs = 1
@@ -821,6 +878,18 @@ C           /* Check correct error returned even when nothing to put */
                         if (err .ne. NF_NOERR)
      +                      call error(ErrFunc(err))
                     else
+#if defined(BUILD_DRIVER_BB)
+                        err2 = nfmpi_inq_file_info(ncid, infoused)
+                        call MPI_Info_get(infoused, "nc_bb",
+     +                  MPI_MAX_INFO_VAL, hint, flag, err2)
+                        if (flag .eq. 1) then
+                            if (hint .eq. 'enable') then
+                                err = nfmpi_flush(ncid)
+                            endif
+                        endif
+                        call MPI_Info_free(infoused, err2);
+#endif
+
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
                     end if
@@ -880,6 +949,12 @@ define([TEST_NFMPI_PUT_VARS],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -997,6 +1072,10 @@ C           /* Check correct error returned even when nothing to put */
                 edge(j) = 1
 6           continue
 
+#if defined(BUILD_DRIVER_BB)
+            err = nfmpi_flush(ncid)
+#endif
+
             !/* Choose a random point dividing each dim into 2 parts */
             !/* Put 2^rank (nslabs) slabs so defined */
             nslabs = 1
@@ -1069,6 +1148,18 @@ C*/
                             if (err .ne. NF_NOERR)
      +                          call error(ErrFunc(err))
                         else
+#if defined(BUILD_DRIVER_BB)
+                            err2 = nfmpi_inq_file_info(ncid, infoused)
+                            call MPI_Info_get(infoused, "nc_bb",
+     +                      MPI_MAX_INFO_VAL, hint, flag, err2)
+                            if (flag .eq. 1) then
+                                if (hint .eq. 'enable') then
+                                    err = nfmpi_flush(ncid)
+                                endif
+                            endif
+                            call MPI_Info_free(infoused, err2);
+#endif
+
                             if (err .ne. NF_ERANGE)
      +                          call errore('range error: ', err)
                         end if
@@ -1132,6 +1223,12 @@ define([TEST_NFMPI_PUT_VARM],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1249,6 +1346,10 @@ C           /* Check correct error returned even when nothing to put */
                 edge(j) = 1
 6           continue
 
+#if defined(BUILD_DRIVER_BB)
+            err = nfmpi_flush(ncid)
+#endif
+
             !/* Choose a random point dividing each dim into 2 parts */
             !/* Put 2^rank (nslabs) slabs so defined */
             nslabs = 1
@@ -1328,6 +1429,18 @@ C*/
                             if (err .ne. NF_NOERR)
      +                          call error(ErrFunc(err))
                         else
+#if defined(BUILD_DRIVER_BB)
+                            err2 = nfmpi_inq_file_info(ncid, infoused)
+                            call MPI_Info_get(infoused, "nc_bb",
+     +                      MPI_MAX_INFO_VAL, hint, flag, err2)
+                            if (flag .eq. 1) then
+                                if (hint .eq. 'enable') then
+                                    err = nfmpi_flush(ncid)
+                                endif
+                            endif
+                            call MPI_Info_free(infoused, err2);
+#endif
+
                             if (err .ne. NF_ERANGE)
      +                          call errore('range error: ', err)
                         end if

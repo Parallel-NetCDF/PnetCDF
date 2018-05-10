@@ -1426,6 +1426,8 @@ BUILD_DRIVER_BB=0
 if test "x$enable_bbdriver" = "xyes" ; then
    AC_DEFINE(BUILD_DRIVER_BB)
    BUILD_DRIVER_BB=1
+   FFLAGS+=" -DBUILD_DRIVER_BB"
+   FCFLAGS+=" -DBUILD_DRIVER_BB"
 fi
 AC_SUBST(BUILD_DRIVER_BB)
 AM_CONDITIONAL(BUILD_DRIVER_BB, [test x$enable_bbdriver = xyes])

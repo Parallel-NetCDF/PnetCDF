@@ -215,6 +215,11 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 MAKE_TYPE2($1, value, val)
                 err = iPutVar1($1)(ncid, i,
      +                index, value, reqid(1))
+#if defined(BUILD_DRIVER_BB) 
+                if (err .eq. NF_NOERR) then
+                    err = nfmpi_flush(ncid)
+                endif
+#endif
                 if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +              err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                 if (canConvert) then
@@ -310,6 +315,11 @@ define([TEST_NFMPI_IPUT_VAR],dnl
      +              inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
             err = iPutVar($1)(ncid, i, value,reqid(1))
+#if defined(BUILD_DRIVER_BB) 
+            if (err .eq. NF_NOERR) then
+                err = nfmpi_flush(ncid)
+            endif
+#endif
             if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +          err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
                 ! NF_ERANGE is not a fatal error
@@ -375,6 +385,11 @@ C           Only test record variables here
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
                 err = iPutVar($1)(ncid, i, value,reqid(1))
+#if defined(BUILD_DRIVER_BB) 
+                if (err .eq. NF_NOERR) then
+                    err = nfmpi_flush(ncid)
+                endif
+#endif
                 if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +              err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
                     ! NF_ERANGE is not a fatal error?
@@ -591,6 +606,11 @@ C           /* Check correct error returned even when nothing to put */
 10              continue
                 err = iPutVara($1)(ncid, i, start,
      +                  edge, value,reqid(1))
+#if defined(BUILD_DRIVER_BB) 
+                if (err .eq. NF_NOERR) then
+                    err = nfmpi_flush(ncid)
+                endif
+#endif
                 if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +              err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     ! NF_ERANGE is not a fatal error?
@@ -855,6 +875,11 @@ C*/
 12                   continue
                     err = iPutVars($1)(ncid, i,
      +                    index, count, stride, value,reqid(1))
+#if defined(BUILD_DRIVER_BB) 
+                    if (err .eq. NF_NOERR) then
+                        err = nfmpi_flush(ncid)
+                    endif
+#endif
                     if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     if (canConvert) then
@@ -1130,6 +1155,11 @@ C*/
 14                  continue
                     err = iPutVarm($1)(ncid,i,
      +                   index,count, stride,imap, value,reqid(1))
+#if defined(BUILD_DRIVER_BB) 
+                    if (err .eq. NF_NOERR) then
+                        err = nfmpi_flush(ncid)
+                    endif
+#endif
                     if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     if (canConvert) then

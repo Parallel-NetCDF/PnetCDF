@@ -401,7 +401,7 @@ ncbbio_abort(void *ncdp)
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
-
+    
     err = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
 
     MPI_Comm_free(&(ncbbp->comm));
