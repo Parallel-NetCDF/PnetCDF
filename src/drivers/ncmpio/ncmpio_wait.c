@@ -1803,9 +1803,10 @@ req_aggregation(NC      *ncp,
             if (j == maxLead) break;
         }
     }
-    if (j < *num_reqs) {
-        *num_reqs = j;  /* number of lead requests */
+    if (j < *num_reqs) { /* free space occupied by non-lead requests */
+        *num_reqs = j;  /* updated number of lead requests */
         *reqs = (NC_req*) NCI_Realloc(*reqs, j * sizeof(NC_req));
+        /* Note reqs will be freed later in req_commit() */
     }
 
 #if MPI_VERSION >= 3
@@ -2266,9 +2267,10 @@ mgetput(NC      *ncp,
             if (j == maxLead) break;
         }
     }
-    if (j < *num_reqs) {
-        *num_reqs = j;  /* number of lead requests */
+    if (j < *num_reqs) { /* free space occupied by non-lead requests */
+        *num_reqs = j;  /* updated number of lead requests */
         *reqs = (NC_req*) NCI_Realloc(*reqs, j * sizeof(NC_req));
+        /* Note reqs will be freed later in req_commit() */
     }
 
 #if MPI_VERSION >= 3
