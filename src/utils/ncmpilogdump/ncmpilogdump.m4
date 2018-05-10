@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
         stride = count + E->ndims;
 
         /* Original function call */
-        printf("ncmpi_put_var");
+        printf("ncmpi_put_");
         /* put_vara or put_vars */
         switch (E->api_kind){
 foreach(`apikind', (`var1, var, vara, vars'), `PRINTAPIKIND(apikind, upcase(apikind))')dnl

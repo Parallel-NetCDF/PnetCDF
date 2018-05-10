@@ -513,6 +513,9 @@ TestFunc(abort)(AttVarArgs)
     int nvars;
     int ngatts;
     int nok=0;
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     /* BAD_ID test */
     err = APIFunc(abort)(BAD_ID);
@@ -526,6 +529,21 @@ TestFunc(abort)(AttVarArgs)
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
+
     def_dims(ncid);
     Def_Vars(ncid, numVars);
     Put_Atts(ncid, numGatts, numVars);
@@ -599,6 +617,11 @@ ifdef(`PNETCDF',
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     Put_Vars(ncid, numVars);
+#ifdef BUILD_DRIVER_BB
+    if (bb_enabled){
+        err = ncmpi_flush(ncid);
+    }
+#endif
     err = APIFunc(abort)(ncid);
     IF (err != NC_NOERR)
         error("abort of ncid failed: %s", APIFunc(strerror)(err));
