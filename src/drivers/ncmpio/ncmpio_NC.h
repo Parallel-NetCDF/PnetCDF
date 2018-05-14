@@ -269,7 +269,7 @@ ncmpio_NC_lookupvar(NC *ncp, int varid, NC_var **varp);
 /*
  *  The PnetCDF non-blocking I/O request type
  */
-#define NC_REQ_LEAD                0x00000001
+#define NC_REQ_TO_FREE             0x00000001
 #define NC_REQ_SKIP                0x00000002
 #define NC_REQ_STRIDE_NULL         0x00000004
 #define NC_REQ_BUF_TYPE_IS_CONTIG  0x00000008
@@ -277,24 +277,33 @@ ncmpio_NC_lookupvar(NC *ncp, int varid, NC_var **varp);
 #define NC_REQ_BUF_BYTE_SWAP       0x00000020
 #define NC_REQ_XBUF_TO_BE_FREED    0x00000040
 
-typedef struct NC_req {
+typedef struct NC_lead_req {
     int           flag;         /* bit-wise OR of the above NC_REQ_* flags */
     int           id;           /* even number for write, odd for read */
+    int           nonlead_off;  /* start index in the non-lead queue */
+    int           nonlead_num;  /* number of non-lead requests */
     int           abuf_index;   /* index in the abuf occupy_table. -1 means not
                                    using attached buffer */
-    void         *buf;          /* user buffer used in nonblocking call */
-    void         *xbuf;         /* buffer in external type, used in MPI-IO
-                                   calls, may be == buf */
+    void         *buf;          /* user buffer */
+    void         *xbuf;         /* buffer in external type, may be == buf */
     NC_var       *varp;         /* pointer to NC variable object */
-    MPI_Offset   *start;        /* [varp->ndims*3] for start/count/stride */
-    MPI_Offset    offset_start; /* starting offset of aggregate access region */
-    MPI_Offset    offset_end;   /*   ending offset of aggregate access region */
-    MPI_Offset    nelems;       /* number of array elements in this request */
+    MPI_Offset    nelems;       /* total number of array elements requested */
+    MPI_Offset    max_rec;      /* highest record requested */
     MPI_Offset    bufcount;     /* number of buftype in this request */
+    MPI_Offset   *start;        /* [varp->ndims*3] for start/count/stride */
     MPI_Datatype  buftype;      /* user defined derived data type */
     MPI_Datatype  itype;        /* internal element data type in buftype */
     MPI_Datatype  imaptype;     /* derived data type constructed from imap */
     int          *status;       /* pointer to user's status */
+} NC_lead_req;
+
+typedef struct NC_req {
+    MPI_Offset    offset_start; /* starting offset of aggregate access region */
+    MPI_Offset    offset_end;   /*   ending offset of aggregate access region */
+    MPI_Offset    nelems;       /* number of array elements requested */
+    MPI_Offset   *start;        /* [varp->ndims*3] for start/count/stride */
+    void         *xbuf;         /* buffer in external type, used in file I/O calls */
+    NC_lead_req  *lead;         /* point to lead request */
 } NC_req;
 
 #define NC_ABUF_DEFAULT_TABLE_SIZE 128
@@ -331,8 +340,6 @@ struct NC {
                                  * collective open to independent open */
     int           format;       /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
     int           safe_mode;    /* 0 or 1, for parameter consistency check */
-    int           numGetReqs;   /* number of pending nonblocking get requests */
-    int           numPutReqs;   /* number of pending nonblocking put requests */
 #ifdef ENABLE_SUBFILING
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
     int           num_subfiles; /* number of subfiles */
@@ -365,11 +372,16 @@ struct NC {
     NC_attrarray  attrs;    /* global attributes defined */
     NC_vararray   vars;     /* variables defined */
 
-    int           numLeadGetReqs; /* number of lead get requests */
-    int           numLeadPutReqs; /* number of lead put requests */
+    int           numLeadGetReqs; /* number of pending lead get requests */
+    int           numLeadPutReqs; /* number of pending lead put requests */
+    NC_lead_req  *get_lead_list;  /* list of lead nonblocking read requests */
+    NC_lead_req  *put_lead_list;  /* list of lead nonblocking write requests */
 
-    NC_req       *get_list; /* list of nonblocking read requests */
-    NC_req       *put_list; /* list of nonblocking write requests */
+    int           numGetReqs;   /* number of pending nonblocking get requests */
+    int           numPutReqs;   /* number of pending nonblocking put requests */
+    NC_req       *get_list;     /* list of nonblocking read requests */
+    NC_req       *put_list;     /* list of nonblocking write requests */
+
     NC_buf       *abuf;     /* attached buffer, used by bput APIs */
 
     char         *path;     /* file name */
@@ -459,7 +471,8 @@ extern int
 ncmpio_abuf_dealloc(NC *ncp, int abuf_index);
 
 extern int
-ncmpio_add_record_requests(NC_req *reqs, const MPI_Offset *stride);
+ncmpio_add_record_requests(NC_req *reqs, MPI_Offset num_recs,
+                           const MPI_Offset *stride);
 
 extern int
 ncmpio_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,

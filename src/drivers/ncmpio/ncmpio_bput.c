@@ -69,8 +69,8 @@ ncmpio_buffer_detach(void *ncdp)
     if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* this API assumes users are responsible for no pending bput */
-    for (i=0; i<ncp->numPutReqs; i++) {
-        if (ncp->put_list[i].abuf_index >= 0) /* check for a pending bput */
+    for (i=0; i<ncp->numLeadPutReqs; i++) {
+        if (ncp->put_lead_list[i].abuf_index >= 0) /* check for pending bput */
             DEBUG_RETURN_ERROR(NC_EPENDINGBPUT)
             /* return now, so users can call wait and try detach again */
     }
@@ -105,8 +105,8 @@ ncmpio_buffer_detach(void       *ncdp,
     *bufsize         = ncp->abuf->size_allocated;
 
     /* this API assumes users are responsible for no pending bput when called */
-    for (i=0; i<ncp->numPutReqs; i++) {
-        if (ncp->put_list[i].abuf_index >= 0) /* check for a pending bput */
+    for (i=0; i<ncp->numLeadPutReqs; i++) {
+        if (ncp->put_lead_list[i].abuf_index >= 0) /* check for pending bput */
             DEBUG_RETURN_ERROR(NC_EPENDINGBPUT)
             /* return now, so users can call wait and try detach again */
     }

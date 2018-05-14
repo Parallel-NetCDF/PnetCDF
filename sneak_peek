@@ -6,6 +6,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New optimization
+    * Internal memory management for nonblocking APIs has been improved further
+      to reduce memory footprint. See r3763.
     * Both blocking and nonblocking varn APIs have been improved for better
       performance and reduced memory footprint. See r3747-r3750.
     * Prior to this release, when buftype in flexible APIs indicates a
@@ -126,7 +128,7 @@ This is essentially a placeholder for the next release note ...
   o New test program
     * test/testcases/test_fillvalue.c - tests PnetCDF allows to put attribute
       _FillValue for global variable and for non-global variable, requires the
-      data type of attribute _FillValue be the same as the variable's. 
+      data type of attribute _FillValue be the same as the variable's.
     * test/F90/test_attr_int64.f90 - tests the bug fixed in r3730 that
       nf90mpi_put_att API writes a scalar attribute of type NF90_INT64 that
       was mistakenly casted to NF90_INT.
