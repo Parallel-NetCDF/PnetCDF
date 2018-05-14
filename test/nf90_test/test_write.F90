@@ -506,17 +506,6 @@
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
-#if defined(BUILD_DRIVER_BB)
-        err2 = nf90mpi_inq_file_info(ncid, infoused)
-        call MPI_Info_get(infoused, "nc_bb", &
-               MPI_MAX_INFO_VAL, hint, flag, err2)
-        if (flag .eq. 1) then
-            if (hint .eq. 'enable') then
-                err = nf90mpi_flush(ncid)
-            endif
-        endif
-        call MPI_Info_free(infoused, err2);
-#endif
         err = nf90mpi_abort(ncid)
         if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_abort of ncid failed: ', err)
@@ -558,6 +547,17 @@
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         call put_vars(ncid)
+#if defined(BUILD_DRIVER_BB)
+        err2 = nf90mpi_inq_file_info(ncid, infoused)
+        call MPI_Info_get(infoused, "nc_bb", &
+               MPI_MAX_INFO_VAL, hint, flag, err2)
+        if (flag .eq. 1) then
+            if (hint .eq. 'enable') then
+                err = nf90mpi_flush(ncid)
+            endif
+        endif
+        call MPI_Info_free(infoused, err2);
+#endif
         err = nf90mpi_abort(ncid)
         if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_abort of ncid failed: ', err)
