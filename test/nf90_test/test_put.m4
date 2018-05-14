@@ -843,6 +843,18 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 edge(j) = 1
 6           continue
 
+#if defined(BUILD_DRIVER_BB)
+            err2 = nf90mpi_inq_file_info(ncid, infoused)
+            call MPI_Info_get(infoused, "nc_bb", &
+            MPI_MAX_INFO_VAL, hint, flag, err2)
+            if (flag .eq. 1) then
+                if (hint .eq. 'enable') then
+                    err = nf90mpi_flush(ncid)
+                endif
+            endif
+            call MPI_Info_free(infoused, err2);
+#endif
+
             !/* Choose a random point dividing each dim into 2 parts */
             !/* Put 2^rank (nslabs) slabs so defined */
             nslabs = 1
@@ -1075,6 +1087,18 @@ define([TEST_NFMPI_PUT_VARS],dnl
             do 6, j = 1, var_rank(i)
                 edge(j) = 1
 6           continue
+
+#if defined(BUILD_DRIVER_BB)
+            err2 = nf90mpi_inq_file_info(ncid, infoused)
+            call MPI_Info_get(infoused, "nc_bb", &
+            MPI_MAX_INFO_VAL, hint, flag, err2)
+            if (flag .eq. 1) then
+                if (hint .eq. 'enable') then
+                    err = nf90mpi_flush(ncid)
+                endif
+            endif
+            call MPI_Info_free(infoused, err2);
+#endif
 
             !/* Choose a random point dividing each dim into 2 parts */
             !/* Put 2^rank (nslabs) slabs so defined */
@@ -1349,6 +1373,18 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 edge(j) = 1
 6           continue
 
+#if defined(BUILD_DRIVER_BB)
+            err2 = nf90mpi_inq_file_info(ncid, infoused)
+            call MPI_Info_get(infoused, "nc_bb", &
+            MPI_MAX_INFO_VAL, hint, flag, err2)
+            if (flag .eq. 1) then
+                if (hint .eq. 'enable') then
+                    err = nf90mpi_flush(ncid)
+                endif
+            endif
+            call MPI_Info_free(infoused, err2);
+#endif
+
             !/* Choose a random point dividing each dim into 2 parts */
             !/* Put 2^rank (nslabs) slabs so defined */
             nslabs = 1
@@ -1531,18 +1567,6 @@ define([TEST_NFMPI_PUT_ATT],dnl
                         if (err .ne. NF90_NOERR) &
                             call errore('PutAtt: ', err)
                     else
-#if defined(BUILD_DRIVER_BB)
-                        err2 = nf90mpi_inq_file_info(ncid, infoused)
-                        call MPI_Info_get(infoused, "nc_bb", &
-                        MPI_MAX_INFO_VAL, hint, flag, err2)
-                        if (flag .eq. 1) then
-                            if (hint .eq. 'enable') then
-                                err = nf90mpi_flush(ncid)
-                            endif
-                        endif
-                        call MPI_Info_free(infoused, err2);
-#endif
-
                         if (err .ne. NF90_ERANGE) &
                             call errore('range error: ', err)
                     end if

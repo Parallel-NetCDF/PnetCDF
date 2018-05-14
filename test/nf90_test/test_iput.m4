@@ -160,6 +160,12 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         DATATYPE_VAR1($1, value)
         double precision val
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -206,6 +212,17 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 val = hash_$1(var_type(i),var_rank(i), index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, value, val)
                 err = iPutVar(ncid, i, value(1:1), reqid(1), index)
+#if defined(BUILD_DRIVER_BB) 
+                err2 = nf90mpi_inq_file_info(ncid, infoused)
+                call MPI_Info_get(infoused, "nc_bb", &
+                MPI_MAX_INFO_VAL, hint, flag, err2)
+                if (flag .eq. 1) then
+                    if (err .eq. NF_NOERR) then
+                        err = nf90mpi_flush(ncid)
+                    endif
+                endif
+                call MPI_Info_free(infoused, err2);
+#endif
                 if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                     err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                 if (canConvert) then
@@ -261,6 +278,12 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -299,6 +322,17 @@ define([TEST_NFMPI_IPUT_VAR],dnl
                     inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
             err = iPutVar(ncid, i, value, reqid(1), count=var_shape(:,i))
+#if defined(BUILD_DRIVER_BB) 
+                err2 = nf90mpi_inq_file_info(ncid, infoused)
+                call MPI_Info_get(infoused, "nc_bb", &
+                MPI_MAX_INFO_VAL, hint, flag, err2)
+                if (flag .eq. 1) then
+                    if (err .eq. NF_NOERR) then
+                        err = nf90mpi_flush(ncid)
+                    endif
+                endif
+                call MPI_Info_free(infoused, err2);
+#endif
             if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                 err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
                 ! NF90_ERANGE is not a fatal error
@@ -363,6 +397,17 @@ define([TEST_NFMPI_IPUT_VAR],dnl
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
                 err = iPutVar(ncid, i, value, reqid(1), count=var_shape(:,i))
+#if defined(BUILD_DRIVER_BB) 
+                err2 = nf90mpi_inq_file_info(ncid, infoused)
+                call MPI_Info_get(infoused, "nc_bb", &
+                MPI_MAX_INFO_VAL, hint, flag, err2)
+                if (flag .eq. 1) then
+                    if (err .eq. NF_NOERR) then
+                        err = nf90mpi_flush(ncid)
+                    endif
+                endif
+                call MPI_Info_free(infoused, err2);
+#endif
                 if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                     err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
                     ! NF90_ERANGE is not a fatal error
@@ -424,6 +469,12 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -566,6 +617,17 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 10              continue
                 err = iPutVar(ncid, i, value,reqid(1), start, edge)
+#if defined(BUILD_DRIVER_BB) 
+                err2 = nf90mpi_inq_file_info(ncid, infoused)
+                call MPI_Info_get(infoused, "nc_bb", &
+                MPI_MAX_INFO_VAL, hint, flag, err2)
+                if (flag .eq. 1) then
+                    if (err .eq. NF_NOERR) then
+                        err = nf90mpi_flush(ncid)
+                    endif
+                endif
+                call MPI_Info_free(infoused, err2);
+#endif
                 if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                     err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     ! NF90_ERANGE is not a fatal error
@@ -634,6 +696,12 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -816,6 +884,17 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                                      NFT_ITYPE($1))
 12                  continue
                     err = iPutVar(ncid, i, value,reqid(1), index, count, stride)
+#if defined(BUILD_DRIVER_BB) 
+                    err2 = nf90mpi_inq_file_info(ncid, infoused)
+                    call MPI_Info_get(infoused, "nc_bb", &
+                    MPI_MAX_INFO_VAL, hint, flag, err2)
+                    if (flag .eq. 1) then
+                        if (err .eq. NF_NOERR) then
+                            err = nf90mpi_flush(ncid)
+                        endif
+                    endif
+                    call MPI_Info_free(infoused, err2);
+#endif
                     if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                         err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     if (canConvert) then
@@ -887,6 +966,12 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1077,6 +1162,17 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                                      NFT_ITYPE($1))
 14                  continue
                     err = iPutVar(ncid,i,value,reqid(1), index, count, stride, imap)
+#if defined(BUILD_DRIVER_BB) 
+                    err2 = nf90mpi_inq_file_info(ncid, infoused)
+                    call MPI_Info_get(infoused, "nc_bb", &
+                    MPI_MAX_INFO_VAL, hint, flag, err2)
+                    if (flag .eq. 1) then
+                        if (err .eq. NF_NOERR) then
+                            err = nf90mpi_flush(ncid)
+                        endif
+                    endif
+                    call MPI_Info_free(infoused, err2);
+#endif
                     if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                         err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                     if (canConvert) then

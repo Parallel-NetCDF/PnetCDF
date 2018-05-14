@@ -833,7 +833,15 @@ C           /* Check correct error returned even when nothing to put */
 6           continue
 
 #if defined(BUILD_DRIVER_BB)
-            err = nfmpi_flush(ncid)
+            err2 = nfmpi_inq_file_info(ncid, infoused)
+            call MPI_Info_get(infoused, "nc_bb",
+     +         MPI_MAX_INFO_VAL, hint, flag, err2)
+            if (flag .eq. 1) then
+                if (hint .eq. 'enable') then
+                    err = nfmpi_flush(ncid)
+                endif
+            endif
+            call MPI_Info_free(infoused, err2);
 #endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1073,7 +1081,15 @@ C           /* Check correct error returned even when nothing to put */
 6           continue
 
 #if defined(BUILD_DRIVER_BB)
-            err = nfmpi_flush(ncid)
+            err2 = nfmpi_inq_file_info(ncid, infoused)
+            call MPI_Info_get(infoused, "nc_bb",
+     +           MPI_MAX_INFO_VAL, hint, flag, err2)
+            if (flag .eq. 1) then
+                if (hint .eq. 'enable') then
+                    err = nfmpi_flush(ncid)
+                endif
+            endif
+            call MPI_Info_free(infoused, err2);
 #endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1347,7 +1363,15 @@ C           /* Check correct error returned even when nothing to put */
 6           continue
 
 #if defined(BUILD_DRIVER_BB)
-            err = nfmpi_flush(ncid)
+            err2 = nfmpi_inq_file_info(ncid, infoused)
+            call MPI_Info_get(infoused, "nc_bb",
+     +           MPI_MAX_INFO_VAL, hint, flag, err2)
+            if (flag .eq. 1) then
+                if (hint .eq. 'enable') then
+                    err = nfmpi_flush(ncid)
+                endif
+            endif
+            call MPI_Info_free(infoused, err2);
 #endif
 
             !/* Choose a random point dividing each dim into 2 parts */

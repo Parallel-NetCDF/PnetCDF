@@ -163,6 +163,12 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         DATATYPE_VAR1($1, value)
         doubleprecision val
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -216,9 +222,17 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 err = iPutVar1($1)(ncid, i,
      +                index, value, reqid(1))
 #if defined(BUILD_DRIVER_BB) 
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
+                err2 = nfmpi_inq_file_info(ncid, infoused)
+                call MPI_Info_get(infoused, "nc_bb",
+     +                 MPI_MAX_INFO_VAL, hint, flag, err2)
+                if (flag .eq. 1) then
+                    if (hint .eq. 'enable') then
+                        if (err .eq. NF_NOERR) then
+                            err = nfmpi_flush(ncid)
+                        endif
+                    endif
                 endif
+                call MPI_Info_free(infoused, err2);
 #endif
                 if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +              err_w = APIFunc(wait_all)(ncid,1,reqid,st)
@@ -275,6 +289,12 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -316,9 +336,17 @@ define([TEST_NFMPI_IPUT_VAR],dnl
 4           continue
             err = iPutVar($1)(ncid, i, value,reqid(1))
 #if defined(BUILD_DRIVER_BB) 
-            if (err .eq. NF_NOERR) then
-                err = nfmpi_flush(ncid)
+            err2 = nfmpi_inq_file_info(ncid, infoused)
+            call MPI_Info_get(infoused, "nc_bb",
+     +             MPI_MAX_INFO_VAL, hint, flag, err2)
+            if (flag .eq. 1) then
+                if (hint .eq. 'enable') then
+                    if (err .eq. NF_NOERR) then
+                        err = nfmpi_flush(ncid)
+                    endif
+                endif
             endif
+            call MPI_Info_free(infoused, err2);
 #endif
             if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +          err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
@@ -386,9 +414,17 @@ C           Only test record variables here
 7               continue
                 err = iPutVar($1)(ncid, i, value,reqid(1))
 #if defined(BUILD_DRIVER_BB) 
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
+                err2 = nfmpi_inq_file_info(ncid, infoused)
+                call MPI_Info_get(infoused, "nc_bb",
+     +                 MPI_MAX_INFO_VAL, hint, flag, err2)
+                if (flag .eq. 1) then
+                    if (hint .eq. 'enable') then
+                        if (err .eq. NF_NOERR) then
+                            err = nfmpi_flush(ncid)
+                        endif
+                    endif
                 endif
+                call MPI_Info_free(infoused, err2);
 #endif
                 if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +              err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
@@ -451,6 +487,12 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -607,9 +649,17 @@ C           /* Check correct error returned even when nothing to put */
                 err = iPutVara($1)(ncid, i, start,
      +                  edge, value,reqid(1))
 #if defined(BUILD_DRIVER_BB) 
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
+                err2 = nfmpi_inq_file_info(ncid, infoused)
+                call MPI_Info_get(infoused, "nc_bb",
+     +                 MPI_MAX_INFO_VAL, hint, flag, err2)
+                if (flag .eq. 1) then
+                    if (hint .eq. 'enable') then
+                        if (err .eq. NF_NOERR) then
+                            err = nfmpi_flush(ncid)
+                        endif
+                    endif
                 endif
+                call MPI_Info_free(infoused, err2);
 #endif
                 if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +              err_w = APIFunc(wait_all)(ncid,1,reqid,st)
@@ -679,6 +729,12 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -876,9 +932,17 @@ C*/
                     err = iPutVars($1)(ncid, i,
      +                    index, count, stride, value,reqid(1))
 #if defined(BUILD_DRIVER_BB) 
-                    if (err .eq. NF_NOERR) then
-                        err = nfmpi_flush(ncid)
+                    err2 = nfmpi_inq_file_info(ncid, infoused)
+                    call MPI_Info_get(infoused, "nc_bb",
+     +                     MPI_MAX_INFO_VAL, hint, flag, err2)
+                    if (flag .eq. 1) then
+                        if (hint .eq. 'enable') then
+                            if (err .eq. NF_NOERR) then
+                                err = nfmpi_flush(ncid)
+                            endif
+                        endif
                     endif
+                    call MPI_Info_free(infoused, err2);
 #endif
                     if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
@@ -951,6 +1015,12 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
+#if defined(BUILD_DRIVER_BB)
+        integer                 flag
+        integer                 err2
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+#endif
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1156,9 +1226,17 @@ C*/
                     err = iPutVarm($1)(ncid,i,
      +                   index,count, stride,imap, value,reqid(1))
 #if defined(BUILD_DRIVER_BB) 
-                    if (err .eq. NF_NOERR) then
-                        err = nfmpi_flush(ncid)
+                    err2 = nfmpi_inq_file_info(ncid, infoused)
+                    call MPI_Info_get(infoused, "nc_bb",
+     +                     MPI_MAX_INFO_VAL, hint, flag, err2)
+                    if (flag .eq. 1) then
+                        if (hint .eq. 'enable') then
+                            if (err .eq. NF_NOERR) then
+                                err = nfmpi_flush(ncid)
+                            endif
+                        endif
                     endif
+                    call MPI_Info_free(infoused, err2);
 #endif
                     if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
