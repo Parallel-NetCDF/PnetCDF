@@ -814,7 +814,10 @@ extract_reqs(NC      *ncp,
             /* skip the lead requests to be freed */
             if (fIsSet(ncp->put_lead_list[i].flag, NC_REQ_TO_FREE)) continue;
             off = ncp->put_lead_list[i].nonlead_off;
-            if (off == k) continue; /* no need to coalesce this one */
+            if (off == k) { /* no need to coalesce this one */
+                k += ncp->put_lead_list[i].nonlead_num;
+                continue;
+            }
 
             /* update offset index to the non-lead queue */
             ncp->put_lead_list[i].nonlead_off = k;
@@ -830,9 +833,13 @@ extract_reqs(NC      *ncp,
             NCI_Free(ncp->put_list);
             ncp->put_list = NULL;
         }
-        else
+        else {
+            /* calculate the ceiling based on NC_REQUEST_CHUNK */
+            int rem = NC_REQUEST_CHUNK - (ncp->numPutReqs % NC_REQUEST_CHUNK);
+            size_t nChunks = ncp->numPutReqs + rem;
             ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list,
-                                      ncp->numPutReqs * sizeof(NC_req));
+                                      nChunks * sizeof(NC_req));
+        }
     }
 
     /* coalesce non-lead get request queue */
@@ -844,7 +851,10 @@ extract_reqs(NC      *ncp,
             /* skip the lead requests to be freed */
             if (fIsSet(ncp->get_lead_list[i].flag, NC_REQ_TO_FREE)) continue;
             off = ncp->get_lead_list[i].nonlead_off;
-            if (off == k) continue; /* no need to coalesce this one */
+            if (off == k) { /* no need to coalesce this one */
+                k += ncp->get_lead_list[i].nonlead_num;
+                continue;
+            }
 
             /* update offset index to the non-lead queue */
             ncp->get_lead_list[i].nonlead_off = k;
@@ -860,9 +870,13 @@ extract_reqs(NC      *ncp,
             NCI_Free(ncp->get_list);
             ncp->get_list = NULL;
         }
-        else
+        else {
+            /* calculate the ceiling based on NC_REQUEST_CHUNK */
+            int rem = NC_REQUEST_CHUNK - (ncp->numGetReqs % NC_REQUEST_CHUNK);
+            size_t nChunks = ncp->numGetReqs + rem;
             ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list,
-                                      ncp->numGetReqs * sizeof(NC_req));
+                                      nChunks * sizeof(NC_req));
+        }
     }
 
     /* coalesce lead queues has to wait after MPI-IO */
@@ -997,12 +1011,14 @@ req_commit(NC  *ncp,
                 else if (ncp->abuf != NULL)  /* from bput API */
                     ncp->abuf->occupy_table[lead_req->abuf_index].is_used = 0;
             }
-            else if (j < i) {
-                /* coalesce put_lead_list[] and update put_list[].lead */
-                int k, off = ncp->put_lead_list[i].nonlead_off;
-                ncp->put_lead_list[j] = ncp->put_lead_list[i];
-                for (k=0; k<ncp->put_lead_list[i].nonlead_num; k++)
-                    ncp->put_list[off++].lead = ncp->put_lead_list + j;
+            else {
+                if (j < i) {
+                    /* coalesce put_lead_list[] and update put_list[].lead */
+                    int k, off = ncp->put_lead_list[i].nonlead_off;
+                    ncp->put_lead_list[j] = ncp->put_lead_list[i];
+                    for (k=0; k<ncp->put_lead_list[i].nonlead_num; k++)
+                        ncp->put_list[off++].lead = ncp->put_lead_list + j;
+                }
                 j++;
             }
         }
@@ -1060,12 +1076,14 @@ req_commit(NC  *ncp,
                 if (!isContig && lead_req->buftype != MPI_DATATYPE_NULL)
                     MPI_Type_free(&lead_req->buftype);
             }
-            else if (j < i) {
-                /* coalesce get_lead_list[] and update get_list[].lead */
-                int k, off = ncp->get_lead_list[i].nonlead_off;
-                ncp->get_lead_list[j] = ncp->get_lead_list[i];
-                for (k=0; k<ncp->get_lead_list[i].nonlead_num; k++)
-                    ncp->get_list[off++].lead = ncp->get_lead_list + j;
+            else {
+                if (j < i) {
+                    /* coalesce get_lead_list[] and update get_list[].lead */
+                    int k, off = ncp->get_lead_list[i].nonlead_off;
+                    ncp->get_lead_list[j] = ncp->get_lead_list[i];
+                    for (k=0; k<ncp->get_lead_list[i].nonlead_num; k++)
+                        ncp->get_list[off++].lead = ncp->get_lead_list + j;
+                }
                 j++;
             }
         }
@@ -1164,17 +1182,21 @@ ncmpio_wait(void *ncdp,
 
     if (num_reqs <= NC_REQ_ALL) { /* flush all get or put pending requests */
         if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL) {
-            for (i=0; i<ncp->numLeadGetReqs; i++) {
-                /* commit one request at a time */
-                err = req_commit(ncp, 1, &ncp->get_lead_list[i].id, NULL,
+            while (ncp->numLeadGetReqs) {
+                /* commit one request at a time. Note ncp->numLeadGetReqs
+                 * will be descreased in req_commit()
+                 */
+                err = req_commit(ncp, 1, &ncp->get_lead_list[0].id, NULL,
                                  NC_REQ_INDEP);
                 if (status == NC_NOERR) status = err;
             }
         }
         if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL) {
-            for (i=0; i<ncp->numLeadPutReqs; i++) {
-                /* commit one request at a time */
-                err = req_commit(ncp, 1, &ncp->put_lead_list[i].id, NULL,
+            while (ncp->numLeadPutReqs) {
+                /* commit one request at a time. Note ncp->numLeadPutReqs
+                 * will be descreased in req_commit()
+                 */
+                err = req_commit(ncp, 1, &ncp->put_lead_list[0].id, NULL,
                                  NC_REQ_INDEP);
                 if (status == NC_NOERR) status = err;
             }
