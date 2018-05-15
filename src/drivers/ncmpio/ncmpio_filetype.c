@@ -268,7 +268,7 @@ type_create_subarray64(int               ndims,
     /* check if any of the dimensions is larger than 2^31-1 */
     tag = 0;
     for (i=0; i<ndims; i++) {
-        if (array_of_sizes[i] > 2147483647) {
+        if (array_of_sizes[i] > INT_MAX) {
             tag = 1;
             break;
         }
@@ -505,25 +505,9 @@ filetype_create_vara(const NC         *ncp,
         if (varp->ndims > 1) {
             /* when ndims > 1, we first construct a subarray type for a
              * single record, i.e. for dimensions 1 ... ndims-1 */
-            MPI_Offset *shape64, *subcount64, *substart64;
-
-            shape64 = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * 3 * SIZEOF_MPI_OFFSET);
-            subcount64 = shape64    + varp->ndims;
-            substart64 = subcount64 + varp->ndims;
-
-            shape64[0]    = count[0];
-            subcount64[0] = count[0];
-            substart64[0] = 0;
-
-            for (dim=1; dim<varp->ndims; dim++) {
-                shape64[dim]    = varp->shape[dim];
-                subcount64[dim] = count[dim];
-                substart64[dim] = start[dim];
-            }
-            status = type_create_subarray64(varp->ndims-1, shape64+1,
-                                 subcount64+1, substart64+1, MPI_ORDER_C,
+            status = type_create_subarray64(varp->ndims-1, varp->shape+1,
+                                 count+1, start+1, MPI_ORDER_C,
                                  xtype, &rectype);
-            NCI_Free(shape64);
             if (status != NC_NOERR) return status;
 
             MPI_Type_commit(&rectype);
@@ -548,20 +532,8 @@ filetype_create_vara(const NC         *ncp,
         if (rectype != MPI_BYTE) MPI_Type_free(&rectype);
     }
     else { /* for non-record variable, just create a subarray datatype */
-        MPI_Offset *shape64, *subcount64, *substart64;
-        shape64 = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * 3 * SIZEOF_MPI_OFFSET);
-        subcount64 = shape64    + varp->ndims;
-        substart64 = subcount64 + varp->ndims;
-
-        for (dim=0; dim<varp->ndims; dim++) {
-            shape64[dim]    = varp->shape[dim];
-            subcount64[dim] = count[dim];
-            substart64[dim] = start[dim];
-        }
-        status = type_create_subarray64(varp->ndims, shape64, subcount64,
-                                        substart64, MPI_ORDER_C,
-                                        xtype, &filetype);
-        NCI_Free(shape64);
+        status = type_create_subarray64(varp->ndims, varp->shape, count, start,
+                                        MPI_ORDER_C, xtype, &filetype);
         if (status != NC_NOERR) return status;
     }
     MPI_Type_commit(&filetype);
