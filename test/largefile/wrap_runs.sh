@@ -18,7 +18,7 @@ for j in 0 ; do
     rm -f ${TESTOUTDIR}/$1.nc
 done
 
-if [ -n "${TESTDW}" ]; then
+if [ -n "${TESTBB}" ]; then
    for j in 0 1 ; do
        export PNETCDF_SAFE_MODE=$j
        export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"

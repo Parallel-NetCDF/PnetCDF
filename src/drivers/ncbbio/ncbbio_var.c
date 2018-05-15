@@ -174,6 +174,11 @@ ncbbio_put_var(void             *ncdp,
     void *cbuf=(void*)buf;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
+    /* Skip ZERO request */
+    if (reqMode & NC_REQ_ZERO){
+        return NC_NOERR;
+    }
+
     /* Resolve imap */
     if (imap != NULL || bufcount != -1) {
         /* pack buf to cbuf -------------------------------------------------*/
@@ -421,6 +426,11 @@ ncbbio_put_varn(void              *ncdp,
     void *bufp;
     NC_bb *ncbbp = (NC_bb*)ncdp;
     MPI_Datatype ptype = buftype;
+
+    /* Skip ZERO request */
+    if (reqMode & NC_REQ_ZERO){
+        return NC_NOERR;
+    }
 
     /* It is illegal for starts to be NULL unless num is 0*/
     if (num > 0 && starts == NULL){

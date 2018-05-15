@@ -33,7 +33,7 @@ diff -q ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
 
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
-if [ -n "${TESTDW}" ]; then
+if [ -n "${TESTBB}" ]; then
    # Run using burst buffer driver
    export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
    ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds_bb.nc

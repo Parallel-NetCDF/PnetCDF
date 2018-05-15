@@ -42,6 +42,11 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
+
 BAD_FILES = bad_begin.nc5 \
             bad_xtype.nc1 bad_xtype.nc2 bad_xtype.nc5 \
             bad_ndims.nc1 bad_ndims.nc2 bad_ndims.nc5 \

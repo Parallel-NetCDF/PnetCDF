@@ -136,8 +136,8 @@ SH_LOG_COMPILER =
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 if BUILD_DRIVER_BB
-TESTDW = 1
-TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
 NC_FILES += $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf1 \
             $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf2 \
             $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf5 \
@@ -179,7 +179,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
+	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
@@ -191,7 +191,7 @@ ptest2: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
+	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
@@ -203,7 +203,7 @@ ptest6: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
+	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
