@@ -325,6 +325,7 @@ ncmpio_cancel(void *ncdp,
     return status;
 }
 
+#if 0
 /*----< concatenate_datatypes() >--------------------------------------------*/
 static int
 concatenate_datatypes(int           num,
@@ -380,18 +381,20 @@ concatenate_datatypes(int           num,
 
     return status;
 }
+#endif
 
 /*----< construct_filetypes() >----------------------------------------------*/
 /* concatenate the requests into a single MPI derived filetype */
 static int
 construct_filetypes(NC           *ncp,
                     int           num_reqs,
+                    int          *blocklens, /* [num_reqs] temp buffer */
+                    MPI_Aint     *disps,     /* [num_reqs] temp buffer */
                     NC_req       *reqs,      /* [num_reqs] */
                     MPI_Datatype *filetype)  /* OUT */
 {
-    int i, j, err, status=NC_NOERR, *blocklens, all_filetype_contig=1;
+    int i, j, err, status=NC_NOERR, all_filetype_contig=1;
     MPI_Datatype *ftypes;
-    MPI_Offset *displacements;
 
     if (num_reqs <= 0) { /* for participating collective call */
         *filetype = MPI_BYTE;
@@ -399,30 +402,37 @@ construct_filetypes(NC           *ncp,
     }
 
     /* hereinafter, num_reqs > 0 */
-    blocklens     = (int*)          NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
-    displacements = (MPI_Offset*)   NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_OFFSET);
-    ftypes        = (MPI_Datatype*) NCI_Malloc((size_t)num_reqs * sizeof(MPI_Datatype));
+    ftypes = (MPI_Datatype*) NCI_Malloc((size_t)num_reqs * sizeof(MPI_Datatype));
 
     /* create a filetype for each request */
     int last_contig_req = -1; /* index of the last contiguous request */
     j = 0;                    /* index of last valid ftypes */
     for (i=0; i<num_reqs; i++, j++) {
         int is_filetype_contig, ndims=reqs[i].lead->varp->ndims;
-        MPI_Offset *count=NULL, *stride=NULL, num_recs;
+        MPI_Offset *count=NULL, *stride=NULL;
 
         ftypes[j] = MPI_BYTE; /* in case the call below failed */
 
         if (ndims == 0) { /* scalar variable */
+#if SIZEOF_MPI_AINT < SIZEOF_MPI_OFFSET
+            if (reqs[i].lead->varp->begin > INT_MAX) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+                fSet(reqs[i].lead->flag, NC_REQ_SKIP); /* skip this request */
+                if ( reqs[i].lead->status != NULL &&
+                    *reqs[i].lead->status == NC_NOERR)
+                    *reqs[i].lead->status = err;
+                status = err; /* report first error */
+            }
+#endif
             blocklens[j]       = reqs[i].lead->varp->xsz;
-            displacements[j]   = reqs[i].lead->varp->begin;
+            disps[j]           = reqs[i].lead->varp->begin;
             is_filetype_contig = 1;
         }
         else { /* non-scalar variable */
+            MPI_Offset offset;
             count  = reqs[i].start + ndims;
             stride = fIsSet(reqs[i].lead->flag, NC_REQ_STRIDE_NULL) ?
                      NULL : count + ndims;
-            num_recs = count[0];
-            if (IS_RECVAR(reqs[i].lead->varp)) count[0]=1;
 
             err = ncmpio_filetype_create_vars(ncp,
                                               reqs[i].lead->varp,
@@ -430,11 +440,15 @@ construct_filetypes(NC           *ncp,
                                               count,
                                               stride,
                                               &blocklens[j],
-                                              &displacements[j],
+                                              &offset,
                                               &ftypes[j],
                                               &is_filetype_contig);
 
-            count[0] = num_recs; /* restore count[0] */
+            if (err == NC_NOERR && offset > INT_MAX)
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+            else
+               disps[j] = offset;
+
             if (err != NC_NOERR) {
                 fSet(reqs[i].lead->flag, NC_REQ_SKIP); /* skip this request */
                 if ( reqs[i].lead->status != NULL &&
@@ -450,7 +464,7 @@ construct_filetypes(NC           *ncp,
             if (last_contig_req >= 0) int8 += blocklens[last_contig_req];
             /* if int8 overflows 4-byte int, then skip coalescing */
             if (int8 == (int)int8 && last_contig_req >= 0 &&
-                displacements[j] - displacements[last_contig_req] ==
+                disps[j] - disps[last_contig_req] ==
                 blocklens[last_contig_req]) {
                 blocklens[last_contig_req] = int8;
                 j--;
@@ -470,29 +484,30 @@ construct_filetypes(NC           *ncp,
            call to MPI_File_set_view() */
         *filetype = MPI_BYTE;
     }
-    else if (num_reqs == 1 && displacements[0] == 0) {
+    else if (num_reqs == 1 && disps[0] == 0) {
         MPI_Type_dup(ftypes[0], filetype);
     }
-    else { /* if (num_reqs > 1 || (num_reqs == 1 && displacements[0] > 0)) */
+    else { /* if (num_reqs > 1 || (num_reqs == 1 && disps[0] > 0)) */
         /* all ftypes[] created fine, now concatenate all ftypes[] */
         if (all_filetype_contig) {
-            MPI_Aint *disp;
-#if SIZEOF_MPI_AINT < SIZEOF_MPI_OFFSET
-            disp = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * sizeof(MPI_Aint));
-            for (i=0; i<num_reqs; i++) disp[i] = (MPI_Aint)displacements[i];
-#else
-            disp = (MPI_Aint*) displacements;
-#endif
-            err = MPI_Type_create_hindexed(num_reqs, blocklens, disp,
+            err = MPI_Type_create_hindexed(num_reqs, blocklens, disps,
                                            MPI_BYTE, filetype);
             MPI_Type_commit(filetype);
-#if SIZEOF_MPI_AINT < SIZEOF_MPI_OFFSET
-            NCI_Free(disp);
-#endif
         }
-        else
-            err = concatenate_datatypes(num_reqs, blocklens, displacements,
-                                        ftypes, filetype);
+        else {
+            int mpireturn;
+#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
+            mpireturn = MPI_Type_create_struct(num_reqs, blocklens, disps,
+                                               ftypes, filetype);
+#else
+            mpireturn = MPI_Type_struct(num_reqs, blocklens, disps,
+                                               ftypes, filetype);
+#endif
+            if (mpireturn != MPI_SUCCESS)
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
+            else
+                MPI_Type_commit(filetype);
+        }
 
         if (err != NC_NOERR) *filetype = MPI_BYTE;
         if (status == NC_NOERR) status = err; /* report the first error */
@@ -503,8 +518,6 @@ construct_filetypes(NC           *ncp,
             MPI_Type_free(&ftypes[i]);
     }
     NCI_Free(ftypes);
-    NCI_Free(displacements);
-    NCI_Free(blocklens);
 
     return status;
 }
@@ -513,20 +526,20 @@ construct_filetypes(NC           *ncp,
 /* the input requests, reqs[], are non-interleaving requests */
 static int
 construct_buffertypes(int           num_reqs,
+                      int          *blocklens,    /* [num_reqs] temp buffer */
+                      MPI_Aint     *disps,        /* [num_reqs] temp buffer */
                       NC_req       *reqs,         /* [num_reqs] */
                       MPI_Datatype *buffer_type)  /* OUT */
 {
-    int i, j, k, *blocklengths, status=NC_NOERR, mpireturn;
-    MPI_Aint a0, ai, *disps;
+    int i, j, k, status=NC_NOERR, mpireturn;
+    MPI_Aint a0, ai;
 
     *buffer_type = MPI_BYTE;
     if (num_reqs == 0) return NC_NOERR;
 
     /* create the I/O buffer derived data type */
-    blocklengths = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
-    disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs*SIZEOF_MPI_AINT);
 
-    /* calculate blocklengths[], and disps[] */
+    /* calculate blocklens[], and disps[] */
     for (i=0, j=0; i<num_reqs; i++) {
         MPI_Offset req_size;
         if (fIsSet(reqs[i].lead->flag, NC_REQ_SKIP)) continue;
@@ -544,7 +557,7 @@ construct_buffertypes(int           num_reqs,
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             continue;
         }
-        blocklengths[j] = (int)req_size;
+        blocklens[j] = (int)req_size;
 
 #ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(reqs[i].xbuf, &ai);
@@ -561,10 +574,10 @@ construct_buffertypes(int           num_reqs,
     if (num_reqs > 0) {
         /* concatenate buffer addresses into a single buffer type */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-        mpireturn = MPI_Type_create_hindexed(num_reqs, blocklengths, disps,
+        mpireturn = MPI_Type_create_hindexed(num_reqs, blocklens, disps,
                                              MPI_BYTE, buffer_type);
 #else
-        mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
+        mpireturn = MPI_Type_hindexed(num_reqs, blocklens, disps, MPI_BYTE,
                                       buffer_type);
 #endif
         if (mpireturn != MPI_SUCCESS) {
@@ -575,8 +588,6 @@ construct_buffertypes(int           num_reqs,
         else
             MPI_Type_commit(buffer_type);
     }
-    NCI_Free(disps);
-    NCI_Free(blocklengths);
 
     return status;
 }
@@ -1463,9 +1474,9 @@ type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
                     MPI_Datatype *filetype,
                     MPI_Datatype *buf_type)
 {
-    int i, j, mpireturn, *blocklengths;
-    MPI_Aint   *displacements;
-    MPI_Offset  next_off, next_len;
+    int i, j, *blocklens, mpireturn;
+    MPI_Offset next_off, next_len, true_nsegs;
+    MPI_Aint *disps;
 
     assert(nsegs > 0);
 
@@ -1490,44 +1501,50 @@ type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
         }
     }
     /* j+1 is the coalesced length */
-    blocklengths  = (int*)      NCI_Malloc((size_t)(j+1) * SIZEOF_INT);
-    displacements = (MPI_Aint*) NCI_Malloc((size_t)(j+1) * SIZEOF_MPI_AINT);
+    true_nsegs = j + 1;
+    blocklens = (int*)      NCI_Malloc(true_nsegs * SIZEOF_INT);
+    disps     = (MPI_Aint*) NCI_Malloc(true_nsegs * SIZEOF_MPI_AINT);
 
-    /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
-    if (segs[0].len != (int)segs[0].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    displacements[0] =      segs[0].off;
-    blocklengths[0]  = (int)segs[0].len;
+    /* coalesce segs[].off and len to disps[] and blocklens[] */
+    if (segs[0].len > INT_MAX) {
+        NCI_Free(disps);
+        NCI_Free(blocklens);
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    }
+    disps[0]     =      segs[0].off;
+    blocklens[0] = (int)segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
-        if (segs[i].len != (int)segs[i].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        if (displacements[j] + blocklengths[j] == segs[i].off)
+        if (segs[i].len > INT_MAX) {
+            NCI_Free(disps);
+            NCI_Free(blocklens);
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        }
+        if (disps[j] + blocklens[j] == segs[i].off)
             /* j and i are contiguous */
-            blocklengths[j] += (int)segs[i].len;
+            blocklens[j] += (int)segs[i].len;
             /* TODO: take care of 4-byte int overflow problem */
         else {
             j++;
-            displacements[j] =      segs[i].off;
-            blocklengths[j]  = (int)segs[i].len;
+            disps[j]     =      segs[i].off;
+            blocklens[j] = (int)segs[i].len;
         }
     }
     /* j+1 is the coalesced length */
 
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-    mpireturn = MPI_Type_create_hindexed(j+1, blocklengths, displacements,
-                                         MPI_BYTE, filetype);
+    mpireturn = MPI_Type_create_hindexed(j+1, blocklens, disps, MPI_BYTE,
+                                         filetype);
 #else
-    mpireturn = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                                  filetype);
+    mpireturn = MPI_Type_hindexed(j+1, blocklens, disps, MPI_BYTE, filetype);
 #endif
     if (mpireturn != MPI_SUCCESS) {
         *filetype = MPI_BYTE;
         *buf_type = MPI_BYTE;
-        NCI_Free(displacements);
-        NCI_Free(blocklengths);
+        NCI_Free(disps);
+        NCI_Free(blocklens);
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hindexed");
     }
     MPI_Type_commit(filetype);
-    NCI_Free(displacements);
-    NCI_Free(blocklengths);
 
     /* create the I/O buffer derived data type from the I/O buffer's
        offset-length pairs */
@@ -1547,50 +1564,50 @@ type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
         }
     }
     /* j+1 is the coalesced length */
-    blocklengths  = (int*)      NCI_Malloc((size_t)(j+1) * SIZEOF_INT);
-    displacements = (MPI_Aint*) NCI_Malloc((size_t)(j+1) * SIZEOF_MPI_AINT);
+    if (true_nsegs < j + 1) {
+        blocklens = (int*)      NCI_Realloc(blocklens, (j+1) * SIZEOF_INT);
+        disps     = (MPI_Aint*) NCI_Realloc(disps,     (j+1) * SIZEOF_MPI_AINT);
+    }
 
-    /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
-    if (segs[0].len != (int)segs[0].len) {
-        NCI_Free(displacements);
-        NCI_Free(blocklengths);
+    /* coalesce segs[].off and len to disps[] and blocklens[] */
+    if (segs[0].len > INT_MAX) {
+        NCI_Free(disps);
+        NCI_Free(blocklens);
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     }
-    displacements[0] =      segs[0].buf_addr;
-    blocklengths[0]  = (int)segs[0].len;
+    disps[0]     =      segs[0].buf_addr;
+    blocklens[0] = (int)segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
-        if (segs[i].len != (int)segs[i].len) {
-            NCI_Free(displacements);
+        if (segs[i].len > INT_MAX) {
+            NCI_Free(disps);
+            NCI_Free(blocklens);
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         }
-        if (displacements[j] + blocklengths[j] == segs[i].buf_addr)
+        if (disps[j] + blocklens[j] == segs[i].buf_addr)
             /* j and i are contiguous */
-            blocklengths[j] += (int)segs[i].len;
+            blocklens[j] += (int)segs[i].len;
         else {
             j++;
-            displacements[j] =      segs[i].buf_addr;
-            blocklengths[j]  = (int)segs[i].len;
+            disps[j]     =      segs[i].buf_addr;
+            blocklens[j] = (int)segs[i].len;
         }
     }
     /* j+1 is the coalesced length */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-    mpireturn = MPI_Type_create_hindexed(j+1, blocklengths, displacements,
-                                         MPI_BYTE, buf_type);
+    mpireturn = MPI_Type_create_hindexed(j+1, blocklens, disps, MPI_BYTE,
+                                         buf_type);
 #else
-    mpireturn = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                                  buf_type);
+    mpireturn = MPI_Type_hindexed(j+1, blocklens, disps, MPI_BYTE, buf_type);
 #endif
+    NCI_Free(disps);
+    NCI_Free(blocklens);
     if (mpireturn != MPI_SUCCESS) {
         if (*filetype != MPI_BYTE) MPI_Type_free(filetype);
         *filetype = MPI_BYTE;
         *buf_type = MPI_BYTE;
-        NCI_Free(displacements);
-        NCI_Free(blocklengths);
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hindexed");
     }
     MPI_Type_commit(buf_type);
-    NCI_Free(displacements);
-    NCI_Free(blocklengths);
 
     return NC_NOERR;
 }
@@ -1617,7 +1634,7 @@ req_aggregation(NC     *ncp,
                 int     interleaved) /* interleaved in reqs[] */
 {
     int i, gtype, err, status=NC_NOERR, ngroups, mpireturn, buf_len;
-    int *group_index, *group_type, *f_blocklengths, *b_blocklengths;
+    int *group_index, *group_type, *f_blocklens, *b_blocklens;
     int  numLeadReqs;
     NC_lead_req *lead_list;
     void *buf; /* point to starting buffer, used by MPI-IO call */
@@ -1695,8 +1712,8 @@ req_aggregation(NC     *ncp,
         }
     }
 
-    group_index = (int*) NCI_Malloc((size_t)(ngroups+1) * SIZEOF_INT);
-    group_type  = (int*) NCI_Malloc((size_t)(ngroups+1) * SIZEOF_INT);
+    group_index = (int*) NCI_Malloc((size_t)(ngroups+1) * 2 * SIZEOF_INT);
+    group_type  = group_index + (ngroups+1);
 
     /* calculate the starting index of each group and determine group type */
     ngroups        = 1;
@@ -1747,8 +1764,8 @@ req_aggregation(NC     *ncp,
 
     ftypes = (MPI_Datatype*) NCI_Malloc((size_t)ngroups*2*sizeof(MPI_Datatype));
     btypes = ftypes + ngroups;
-    f_blocklengths = (int*) NCI_Malloc((size_t)ngroups*2*SIZEOF_INT);
-    b_blocklengths = f_blocklengths + ngroups;
+    f_blocklens = (int*) NCI_Malloc((size_t)ngroups*2*SIZEOF_INT);
+    b_blocklens = f_blocklens + ngroups;
     f_disps = (MPI_Aint*) NCI_Malloc((size_t)ngroups*2*SIZEOF_MPI_AINT);
     b_disps = f_disps + ngroups;
 
@@ -1759,6 +1776,10 @@ req_aggregation(NC     *ncp,
 #else
     MPI_Address(buf, &b_begin);
 #endif
+
+    /* temp buffers */
+    int *blocklens = (int*) NCI_Malloc((size_t)num_reqs*SIZEOF_INT);
+    MPI_Aint *disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs*SIZEOF_MPI_AINT);
 
     /* for each group, build a filetype and a buffer type in ftypes[i] and
        btypes[i] */
@@ -1771,22 +1792,24 @@ req_aggregation(NC     *ncp,
             /* This group contains no interleaved filetypes, so we can
              * simply concatenate filetypes of this group into a single one
              */
-            err = construct_filetypes(ncp, g_num_reqs, g_reqs, &ftypes[i]);
+            err = construct_filetypes(ncp, g_num_reqs, blocklens, disps,
+                                      g_reqs, &ftypes[i]);
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) { /* skip this group */
                 ftypes[i] = btypes[i] = MPI_BYTE;
-                f_blocklengths[i] = 0;
+                f_blocklens[i] = 0;
                 continue;
             }
-            f_blocklengths[i] = 1;
+            f_blocklens[i] = 1;
 
             /* concatenate buffer types of this group into a single one */
-            err = construct_buffertypes(g_num_reqs, g_reqs, &btypes[i]);
+            err = construct_buffertypes(g_num_reqs, blocklens, disps, g_reqs,
+                                        &btypes[i]);
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) { /* skip this group */
                 ftypes[i] = btypes[i] = MPI_BYTE;
-                b_blocklengths[i] = 0;
-                f_blocklengths[i] = 0;
+                b_blocklens[i] = 0;
+                f_blocklens[i] = 0;
                 continue;
             }
         }
@@ -1819,8 +1842,8 @@ req_aggregation(NC     *ncp,
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) { /* skip this group */
                 ftypes[i] = btypes[i] = MPI_BYTE;
-                b_blocklengths[i] = 0;
-                f_blocklengths[i] = 0;
+                b_blocklens[i] = 0;
+                f_blocklens[i] = 0;
                 if (segs != NULL) NCI_Free(segs);
                 continue;
             }
@@ -1833,11 +1856,11 @@ req_aggregation(NC     *ncp,
             NCI_Free(segs);
             if (err != NC_NOERR) { /* skip this group */
                 ftypes[i] = btypes[i] = MPI_BYTE;
-                b_blocklengths[i] = 0;
-                f_blocklengths[i] = 0;
+                b_blocklens[i] = 0;
+                f_blocklens[i] = 0;
                 continue;
             }
-            f_blocklengths[i] = 1;
+            f_blocklens[i] = 1;
         }
 
         if (i > 0) {
@@ -1849,10 +1872,11 @@ req_aggregation(NC     *ncp,
 #endif
             b_disps[i] = b_addr - b_begin; /* to 1st buffer of 1st group*/
         }
-        b_blocklengths[i] = 1;
+        b_blocklens[i] = 1;
     }
+    NCI_Free(disps);
+    NCI_Free(blocklens);
     NCI_Free(group_index);
-    NCI_Free(group_type);
 
     buf_len=1;
 
@@ -1864,10 +1888,10 @@ req_aggregation(NC     *ncp,
     else {
         /* concatenate all ftypes[] to filetype */
 #ifdef HAVE_MPI_TYPE_CREATE_STRUCT
-        mpireturn = MPI_Type_create_struct(ngroups, f_blocklengths, f_disps,
+        mpireturn = MPI_Type_create_struct(ngroups, f_blocklens, f_disps,
                                            ftypes, &filetype);
 #else
-        mpireturn = MPI_Type_struct(ngroups, f_blocklengths, f_disps, ftypes,
+        mpireturn = MPI_Type_struct(ngroups, f_blocklens, f_disps, ftypes,
                                     &filetype);
 #endif
         if (mpireturn != MPI_SUCCESS) {
@@ -1887,10 +1911,10 @@ req_aggregation(NC     *ncp,
 
         /* concatenate all btypes[] to buf_type */
 #ifdef HAVE_MPI_TYPE_CREATE_STRUCT
-        mpireturn = MPI_Type_create_struct(ngroups, b_blocklengths, b_disps,
+        mpireturn = MPI_Type_create_struct(ngroups, b_blocklens, b_disps,
                                            btypes, &buf_type);
 #else
-        mpireturn = MPI_Type_struct(ngroups, b_blocklengths, b_disps, btypes,
+        mpireturn = MPI_Type_struct(ngroups, b_blocklens, b_disps, btypes,
                                     &buf_type);
 #endif
         if (mpireturn != MPI_SUCCESS) {
@@ -2058,7 +2082,7 @@ req_aggregation(NC     *ncp,
      */
 
     NCI_Free(ftypes);
-    NCI_Free(f_blocklengths);
+    NCI_Free(f_blocklens);
     NCI_Free(f_disps);
 
     return status;
@@ -2184,13 +2208,14 @@ mgetput(NC     *ncp,
         int     rw_flag,     /* NC_REQ_WR or NC_REQ_RD */
         int     coll_indep)  /* NC_REQ_COLL or NC_REQ_INDEP */
 {
-    int i, j, len=0, numLeadReqs, status=NC_NOERR, mpireturn, err;
+    int i, j, len=0, numLeadReqs, status=NC_NOERR, mpireturn, err, *blocklens;
     void *buf=NULL;
     NC_lead_req *lead_list;
     MPI_Status mpistatus;
     MPI_Datatype filetype, buf_type=MPI_BYTE;
     MPI_File fh;
     MPI_Offset offset=0;
+    MPI_Aint *disps;
 #if MPI_VERSION >= 3
     MPI_Count buf_type_size=0;
 #else
@@ -2202,8 +2227,12 @@ mgetput(NC     *ncp,
     else
         fh = ncp->independent_fh;
 
+    blocklens = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
+    disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_AINT);
+
     /* construct a MPI file type by concatenating fileviews of all requests */
-    status = construct_filetypes(ncp, num_reqs, reqs, &filetype);
+    status = construct_filetypes(ncp, num_reqs, blocklens, disps, reqs,
+                                 &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
         if (coll_indep == NC_REQ_INDEP) return status;
 
@@ -2246,11 +2275,8 @@ mgetput(NC     *ncp,
         buf = reqs[0].xbuf;
     }
     else if (num_reqs > 1) { /* create the I/O buffer derived data type */
-        int *blocklengths, last_contig_req;
-        MPI_Aint *disps, a0=0, ai, a_last_contig;
-
-        blocklengths = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
-        disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_AINT);
+        int last_contig_req;
+        MPI_Aint a0=0, ai, a_last_contig;
 
         last_contig_req = 0; /* index of the last contiguous request */
         buf = NULL;
@@ -2268,7 +2294,7 @@ mgetput(NC     *ncp,
                 fSet(reqs[i].lead->flag, NC_REQ_SKIP);
                 continue; /* skip this request */
             }
-            blocklengths[j] = (int)req_size;
+            blocklens[j] = (int)req_size;
 
 #ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(reqs[i].xbuf, &ai);
@@ -2281,21 +2307,21 @@ mgetput(NC     *ncp,
             }
             disps[j] = ai - a0;
 
-            req_size = blocklengths[last_contig_req];
-            req_size += blocklengths[j];
+            req_size = blocklens[last_contig_req];
+            req_size += blocklens[j];
             /* if req_size overflows 4-byte int, then skip coalescing */
             if (req_size <= INT_MAX &&
-                ai - a_last_contig == blocklengths[last_contig_req]) {
+                ai - a_last_contig == blocklens[last_contig_req]) {
                 /* user buffer of request j is contiguous from j-1
                  * we coalesce j to j-1 */
-                blocklengths[last_contig_req] += blocklengths[j];
+                blocklens[last_contig_req] += blocklens[j];
             }
             else if (j > 0) {
                 /* not contiguous from request last_contig_req */
                 last_contig_req++;
                 a_last_contig = ai;
                 disps[last_contig_req] = ai - a0;
-                blocklengths[last_contig_req] = blocklengths[i];
+                blocklens[last_contig_req] = blocklens[i];
             }
             j++;
         }
@@ -2304,7 +2330,7 @@ mgetput(NC     *ncp,
         if (last_contig_req == 0) {
             /* user buffers can be concatenated into a contiguous buffer */
             buf_type = MPI_BYTE;
-            len = blocklengths[0];
+            len = blocklens[0];
         }
         else {
             /* after possible concatenating the user buffers, the true number
@@ -2313,10 +2339,10 @@ mgetput(NC     *ncp,
 
             /* concatenate buffer addresses into a single buffer type */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-            mpireturn = MPI_Type_create_hindexed(num_contig_reqs, blocklengths,
+            mpireturn = MPI_Type_create_hindexed(num_contig_reqs, blocklens,
                                                  disps, MPI_BYTE, &buf_type);
 #else
-            mpireturn = MPI_Type_hindexed(num_contig_reqs, blocklengths, disps,
+            mpireturn = MPI_Type_hindexed(num_contig_reqs, blocklens, disps,
                                           MPI_BYTE, &buf_type);
 #endif
             if (mpireturn != MPI_SUCCESS) {
@@ -2335,10 +2361,11 @@ mgetput(NC     *ncp,
 
             len = 1;
         }
-        NCI_Free(disps);
-        NCI_Free(blocklengths);
     }
     /* if (buf_type == MPI_BYTE) then the whole buf is contiguous */
+
+    NCI_Free(disps);
+    NCI_Free(blocklens);
 
     /* non-lead request list is no longer used once fileview and buftype have
      * been constructed. Free the start arrays allocated at lead requests.
