@@ -444,9 +444,11 @@ construct_filetypes(NC           *ncp,
                                               &ftypes[j],
                                               &is_filetype_contig);
 
+#if SIZEOF_MPI_AINT < SIZEOF_MPI_OFFSET
             if (err == NC_NOERR && offset > INT_MAX)
                 DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
             else
+#endif
                disps[j] = offset;
 
             if (err != NC_NOERR) {
