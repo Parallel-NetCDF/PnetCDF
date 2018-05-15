@@ -393,20 +393,21 @@ igetput_varn(NC                *ncp,
     start_ptr = lead_req->start;
     xbufp = (char*)xbuf;
     for (i=0; i<num; i++) {
-        req->nelems=1; /* calculate size of request i */
+        MPI_Offset req_nelems=1; /* calculate size of request i */
         if (counts != NULL) {
             for (j=0; j<varp->ndims; j++)
-                req->nelems *= counts[i][j];
-            if (req->nelems == 0) continue; /* ignore this 0-length request i */
+                req_nelems *= counts[i][j];
+            if (req_nelems == 0) continue; /* ignore this 0-length request i */
         }
 
         lead_req->nonlead_num++;
 
-        req->lead  = lead_req;
-        req->xbuf  = xbufp;
-        xbufp     += req->nelems * xsize;
+        req->lead    = lead_req;
+        req->nelems  = req_nelems;
+        req->xbuf    = xbufp;
+        xbufp       += req_nelems * xsize;
 
-        /* copy starts[i][] and counts[i][] over to req */
+        /* copy starts[i] and counts[i] over to req */
         req->start = start_ptr;
         memcpy(start_ptr, starts[i], memChunk);
         start_ptr += varp->ndims;
