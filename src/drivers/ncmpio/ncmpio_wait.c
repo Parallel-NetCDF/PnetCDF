@@ -409,7 +409,6 @@ construct_filetypes(NC           *ncp,
     j = 0;                    /* index of last valid ftypes */
     for (i=0; i<num_reqs; i++, j++) {
         int is_filetype_contig, ndims=reqs[i].lead->varp->ndims;
-        MPI_Offset *count=NULL, *stride=NULL;
 
         ftypes[j] = MPI_BYTE; /* in case the call below failed */
 
@@ -429,7 +428,7 @@ construct_filetypes(NC           *ncp,
             is_filetype_contig = 1;
         }
         else { /* non-scalar variable */
-            MPI_Offset offset;
+            MPI_Offset offset, *count, *stride;
             count  = reqs[i].start + ndims;
             stride = fIsSet(reqs[i].lead->flag, NC_REQ_STRIDE_NULL) ?
                      NULL : count + ndims;
@@ -462,13 +461,14 @@ construct_filetypes(NC           *ncp,
         }
 
         if (is_filetype_contig) {
-            MPI_Offset int8 = blocklens[j];
-            if (last_contig_req >= 0) int8 += blocklens[last_contig_req];
-            /* if int8 overflows 4-byte int, then skip coalescing */
-            if (int8 == (int)int8 && last_contig_req >= 0 &&
+            MPI_Offset coalesced_len = blocklens[j];
+            if (last_contig_req >= 0)
+                coalesced_len += blocklens[last_contig_req];
+            /* if coalesced_len overflows 4-byte int, then skip coalescing */
+            if (coalesced_len < INT_MAX && last_contig_req >= 0 &&
                 disps[j] - disps[last_contig_req] ==
                 blocklens[last_contig_req]) {
-                blocklens[last_contig_req] = int8;
+                blocklens[last_contig_req] = coalesced_len;
                 j--;
             }
             else last_contig_req = j;
@@ -2351,7 +2351,7 @@ mgetput(NC     *ncp,
     }
 
     /* set the MPI-IO fileview */
-    offset=0;
+    offset = 0;
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         if (coll_indep == NC_REQ_INDEP) return status;
