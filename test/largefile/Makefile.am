@@ -48,8 +48,8 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 
 if BUILD_DRIVER_BB
-	TESTDW = 1
-	TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
+	TESTBB = 1
+	TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
 endif
 
 ../common/libtestutils.la:
@@ -90,7 +90,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
+	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
@@ -105,7 +105,7 @@ ptest2: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-    if [ -n "$(TESTDW)" ]; then ( \
+    if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
@@ -120,7 +120,7 @@ ptest6: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
+	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \

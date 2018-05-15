@@ -325,22 +325,6 @@ int log_flush(NC_bb *ncbbp) {
          * In case of collective flush, we sync our status with other processes
          */
         nrounds_all--;
-        /*
-        if (!ncbbp->isindep){
-            if (lb >= ncbbp->metaidx.nused){
-                ready = 1;
-            }
-            else{
-                ready = 0;
-            }
-
-            // Sync status
-            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncbbp->comm);
-            if (err != MPI_SUCCESS){
-                DEBUG_RETURN_ERROR(ncmpii_error_mpi2nc(err, "MPI_Allreduce"));
-            }
-        }
-        */
     }
 
     /*
@@ -352,24 +336,7 @@ int log_flush(NC_bb *ncbbp) {
             status = err;
         }
     }
-    /*
-    if (!ncbbp->isindep){
-        ready = 1;
-        while(!ready_all){
-            // Participate collective wait
-            err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, 0, NULL, NULL, NC_REQ_COLL);
-            if (status == NC_NOERR) {
-                status = err;
-            }
 
-            // Sync status
-            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncbbp->comm);
-            if (err != MPI_SUCCESS){
-                DEBUG_RETURN_ERROR(ncmpii_error_mpi2nc(err, "MPI_Allreduce"));
-            }
-        }
-    }
-    */
 
     /* Free the data buffer */
     NCI_Free(databuffer);

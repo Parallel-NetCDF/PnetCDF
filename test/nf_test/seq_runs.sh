@@ -31,7 +31,7 @@ ${TESTSEQRUN} ./nf_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
 
-if [ -n "${TESTDW}" ]; then
+if [ -n "${TESTBB}" ]; then
     export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
     rm -f ${TESTOUTDIR}/test.nc
     rm -f ${TESTOUTDIR}/scratch.nc
