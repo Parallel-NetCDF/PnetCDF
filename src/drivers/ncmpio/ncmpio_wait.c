@@ -881,7 +881,7 @@ extract_reqs(NC      *ncp,
         }
     }
 
-    /* coalesce lead queues has to wait after MPI-IO */
+    /* coalescing lead queues has to wait after MPI-IO */
 
     return NC_NOERR;
 }
@@ -930,19 +930,20 @@ req_commit(NC  *ncp,
     /* calculate new number of records:
      * Need to update the number of records if new records have been created.
      * For nonblocking APIs, there is no way for a process to know whether
-     * others write to a record variable or not. Hence, we must sync the
-     * number of records for write request.
-     * Because netCDF allows only one unlimited dimension, we can scan all
-     * requests to find the maximum number of records.
+     * other processes write to a record variable or not. Hence, we must sync
+     * the number of records for write requests.
+     * Because netCDF classic files allow only one unlimited dimension, we can
+     * scan all requests to find the maximum number of records.
      */
     newnumrecs = ncp->numrecs;
     for (i=0; i<num_w_lead_reqs; i++) {
-        if (!fIsSet(ncp->put_lead_list[i].flag, NC_REQ_TO_FREE) ||
-            /* skip requests not marked to be freed */
-             fIsSet(ncp->put_lead_list[i].flag, NC_REQ_SKIP) ||
-            /* skip invalid request */
-            !IS_RECVAR(ncp->put_lead_list[i].varp)) continue;
+        if (!IS_RECVAR(ncp->put_lead_list[i].varp) ||
             /* skip fixed-size variables */
+            !fIsSet(ncp->put_lead_list[i].flag, NC_REQ_TO_FREE) ||
+            /* skip requests not marked to be freed */
+             fIsSet(ncp->put_lead_list[i].flag, NC_REQ_SKIP))
+            /* skip invalid request */
+            continue;
         newnumrecs = MAX(newnumrecs, ncp->put_lead_list[i].max_rec);
     }
 
@@ -2227,6 +2228,7 @@ wait_getput(NC         *ncp,
             continue;
         }
 
+        /* start/count/stride are in the same contiguously allocated array */
         count  = req->start + req->lead->varp->ndims;
         stride = (fIsSet(req->lead->flag, NC_REQ_STRIDE_NULL)) ? NULL :
                  count + req->lead->varp->ndims;
@@ -2339,7 +2341,7 @@ mgetput(NC     *ncp,
     blocklens = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
     disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_AINT);
 
-    /* construct a MPI file type by concatenating fileviews of all requests */
+    /* construct an MPI file type by concatenating fileviews of all requests */
     status = construct_filetypes(ncp, num_reqs, blocklens, disps, reqs,
                                  &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
@@ -2350,7 +2352,7 @@ mgetput(NC     *ncp,
         filetype = MPI_BYTE;
     }
 
-    /* set the MPI-IO fileview */
+    /* set the MPI-IO fileview, this is a collective call */
     offset = 0;
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
@@ -2476,8 +2478,11 @@ mgetput(NC     *ncp,
     NCI_Free(disps);
     NCI_Free(blocklens);
 
-    /* non-lead request list is no longer used once fileview and buftype have
-     * been constructed. Free the start arrays allocated at lead requests.
+    /* Free up memory space allocated before entering MPI-IO calls, as MPI-IO
+     * flattens the fileview and buftype which can take some space. The
+     * non-lead request list, reqs, is no longer used after fileview and buftype
+     * have been constructed. In addition, the start arrays allocated at lead
+     * requests are no longer used.
      */
     numLeadReqs = (rw_flag == NC_REQ_RD) ? ncp->numLeadGetReqs
                                          : ncp->numLeadPutReqs;
