@@ -224,28 +224,24 @@ int main(int argc, char **argv) {
     MPI_Type_commit(&buftype);
     err = ncmpi_get_vara_all(ncid, varid1, start, count, ncbuf, 1, buftype); CHECK_ERR
 
-    for (j=0; j<count[0]; j++) {
-        for (i=0; i<count[1]; i++) {
-            int expect = ncbuf[(j+2)*(count[1]+4)+(i+2)];
-            if (buf[j][i] != expect) {
-                printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                       __FILE__,__LINE__,j,i,expect,buf[j][i]);
-                nerrs++;
-            }
+    for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
+        int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
+        if (buf[j][i] != getValue) {
+            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+                   __FILE__,__LINE__,j,i,buf[j][i],getValue);
+            nerrs++;
         }
     }
 
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
     err = ncmpi_get_vara_all(ncid, varid2, start, count, ncbuf, 1, buftype); CHECK_ERR
 
-    for (j=0; j<count[0]; j++) {
-        for (i=0; i<count[1]; i++) {
-            int expect = ncbuf[(j+2)*(count[1]+4)+(i+2)];
-            if (buf[j][i] != expect) {
-                printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                       __FILE__,__LINE__,j,i,expect,buf[j][i]);
-                nerrs++;
-            }
+    for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
+        int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
+        if (buf[j][i] != getValue) {
+            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+                   __FILE__,__LINE__,j,i,buf[j][i],getValue);
+            nerrs++;
         }
     }
 
@@ -253,15 +249,14 @@ int main(int argc, char **argv) {
 
     err = ncmpi_iget_vara(ncid, varid1, start, count, ncbuf, 1, buftype, &req); CHECK_ERR
     err = ncmpi_wait_all(ncid, 1, &req, &st); CHECK_ERR
+    err = st; CHECK_ERR
 
-    for (j=0; j<count[0]; j++) {
-        for (i=0; i<count[1]; i++) {
-            int expect = ncbuf[(j+2)*(count[1]+4)+(i+2)];
-            if (buf[j][i] != expect) {
-                printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                       __FILE__,__LINE__,j,i,expect,buf[j][i]);
-                nerrs++;
-            }
+    for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
+        int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
+        if (buf[j][i] != getValue) {
+            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+                   __FILE__,__LINE__,j,i,buf[j][i],getValue);
+            nerrs++;
         }
     }
 
@@ -269,15 +264,14 @@ int main(int argc, char **argv) {
 
     err = ncmpi_iget_vara(ncid, varid2, start, count, ncbuf, 1, buftype, &req); CHECK_ERR
     err = ncmpi_wait_all(ncid, 1, &req, &st); CHECK_ERR
+    err = st; CHECK_ERR
 
-    for (j=0; j<count[0]; j++) {
-        for (i=0; i<count[1]; i++) {
-            int expect = ncbuf[(j+2)*(count[1]+4)+(i+2)];
-            if (buf[j][i] != expect) {
-                printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                       __FILE__,__LINE__,j,i,expect,buf[j][i]);
-                nerrs++;
-            }
+    for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
+        int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
+        if (buf[j][i] != getValue) {
+            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+                   __FILE__,__LINE__,j,i,buf[j][i],getValue);
+            nerrs++;
         }
     }
 

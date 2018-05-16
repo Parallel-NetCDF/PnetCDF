@@ -947,12 +947,12 @@ AC_ARG_ENABLE([debug],
     [debug=${enableval}], [debug=no]
 )
 
+dnl malloc memory allocation tracing relies on tdelete and tsearch
+AC_CHECK_HEADERS([search.h])
+AC_CHECK_FUNCS([tsearch tdelete])
+
 PNETCDF_DEBUG=0
 if test "x${debug}" = xyes; then
-   dnl malloc memory allocation tracing relies on tdelete and tsearch
-   AC_CHECK_HEADERS([search.h])
-   AC_CHECK_FUNCS([tsearch tdelete])
-
    dnl check required functions for enabling malloc tracing
    if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
       AC_DEFINE(PNC_MALLOC_TRACE)
@@ -1433,7 +1433,7 @@ AC_SUBST(BUILD_DRIVER_BB)
 AM_CONDITIONAL(BUILD_DRIVER_BB, [test x$enable_bbdriver = xyes])
 
 AC_ARG_ENABLE([profiling],
-   [AS_HELP_STRING([--enable_profiling],
+   [AS_HELP_STRING([--enable-profiling],
                    [Enable time and memory profiling. @<:@default: disabled@:>@])],
    [enable_profiling=${enableval}], [enable_profiling=no]
 )
@@ -1442,6 +1442,13 @@ PNETCDF_PROFILING=0
 if test "x$enable_profiling" = "xyes" ; then
    AC_DEFINE(PNETCDF_PROFILING)
    PNETCDF_PROFILING=1
+
+   if test "x${debug}" = xno; then
+      dnl check required functions for enabling malloc tracing
+      if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
+         AC_DEFINE(PNC_MALLOC_TRACE)
+      fi
+   fi
 fi
 AC_SUBST(PNETCDF_PROFILING)
 AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
