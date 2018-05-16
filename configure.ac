@@ -1561,7 +1561,7 @@ AC_CONFIG_FILES(Makefile \
                 test/nf90_test/Makefile \
                 test/nf90_test/tests.inc \
                 test/F90/Makefile \
-                test/bb/Makefile \
+                test/burstbuffer/Makefile \
 )
 
 dnl The following dependency is for configure.in and configure

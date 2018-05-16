@@ -79,6 +79,11 @@ ptest ptest4: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2: $(PARALLEL_PROGS)
@@ -86,6 +91,11 @@ ptest2: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest8: $(PARALLEL_PROGS)
@@ -93,6 +103,11 @@ ptest8: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest10: $(PARALLEL_PROGS)
@@ -100,6 +115,11 @@ ptest10: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest8 ptest10
