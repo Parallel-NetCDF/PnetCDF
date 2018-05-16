@@ -23,4 +23,5 @@ if [ -n "${TESTBB}" ]; then
        ${TESTSEQRUN} $1              ${TESTOUTDIR}/$1.nc
        unset PNETCDF_HINTS
        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$1.nc
+    done
 fi

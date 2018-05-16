@@ -346,13 +346,14 @@ ncbbio_redef(void *ncdp)
 
     /*
      * Flush log entries to the file system on redefine
+     * After redef, our record in the log can become out dated due to change in varid, dimsize ... etc.
+     * Flush the log to ensure we have a fresh start
      */
-    /*
+    
     if (ncbbp->inited) {
         err = ncbbio_log_flush(ncbbp);
         if (err != NC_NOERR) return err;
     }
-    */
 
     err = ncbbp->ncmpio_driver->redef(ncbbp->ncp);
     if (err != NC_NOERR) return err;

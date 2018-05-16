@@ -58,6 +58,11 @@ ptest ptests ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pres_temp_4D.nc ; \
+    if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pres_temp_4D.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2 ptest6 ptest8 ptest10:
