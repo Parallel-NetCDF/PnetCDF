@@ -854,8 +854,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                                      buf_count_my[myrank],
                                      (!buftype_is_contig?ptype:buftype),
                                      &array_of_requests[nasyncios++],
-                                     reqMode,
-                                     0);
+                                     reqMode);
         if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
     }
 #ifdef SUBFILE_DEBUG
@@ -1042,8 +1041,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                                          buf_count_others[i],
                                          (!buftype_is_contig?ptype:buftype),
                                          &array_of_requests[nasyncios++],
-                                         reqMode,
-                                         0);
+                                         reqMode);
             if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
         }
     }

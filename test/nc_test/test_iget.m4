@@ -65,7 +65,7 @@ define(`CheckNumRange',
 int
 TestFunc(var1)(VarArgs)
 {
-    int i, j, err, ncid, nok=0, reqid;
+    int i, j, err, st, ncid, nok=0, reqid;
     IntType index[MAX_RANK];
     double expect, value[1];
     MPI_Datatype datatype;
@@ -101,7 +101,8 @@ ifdef(`PNETCDF',`dnl
         err = APIFunc(iget_var1)(ncid, i, NULL, value, 1, datatype, &reqid);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -123,7 +124,8 @@ ifdef(`PNETCDF',`dnl
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
-        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+        assert(err == st);
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
@@ -139,7 +141,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR)
                 EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR)
                 EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
@@ -175,7 +178,7 @@ define(`TEST_NC_IGET_VAR1',dnl
 int
 TestFunc(var1)_$1(VarArgs)
 {
-    int i, err, ncid, cdf_format, reqid;
+    int i, err, st, ncid, cdf_format, reqid;
     int nok = 0;        /* count of valid comparisons */
     int canConvert;     /* Both text or both numeric */
     IntType j, index[MAX_RANK];
@@ -220,7 +223,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             index[0] = 0;
             expect = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect, var_type[i], NCT_ITYPE($1)) &&
@@ -261,7 +265,8 @@ ifdef(`PNETCDF',`dnl
             err = iGetVar1($1)(ncid, i, index, value, &reqid);
             if (canConvert) {
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+                assert(err == st);
                 if (inRange3(cdf_format, expect,var_type[i], NCT_ITYPE($1))) {
                     if (CheckRange($1, expect)) {
                         IF (err != NC_NOERR) {
@@ -319,7 +324,7 @@ TEST_NC_IGET_VAR1(ulonglong)
 int
 TestFunc(var)(VarArgs)
 {
-    int i, err, ncid, nok=0, reqid;
+    int i, err, st, ncid, nok=0, reqid;
     IntType j, index[MAX_RANK];
     MPI_Datatype datatype;
     double value[MAX_NELS], expect[MAX_NELS];
@@ -361,7 +366,8 @@ TestFunc(var)(VarArgs)
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
-        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+        assert(err == st);
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
@@ -410,7 +416,7 @@ define(`TEST_NC_IGET_VAR',dnl
 int
 TestFunc(var)_$1(VarArgs)
 {
-    int i, err, ncid, cdf_format, reqid;
+    int i, err, st, ncid, cdf_format, reqid;
     int allInExtRange;  /* all values within range of external data type */
     int allInIntRange;  /* all values within range of internal data type */
     int nok = 0;        /* count of valid comparisons */
@@ -465,7 +471,8 @@ TestFunc(var)_$1(VarArgs)
         err = iGetVar($1)(ncid, i, value, &reqid);
         if (canConvert) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             if (allInExtRange) {
                 if (allInIntRange) {
                     IF (err != NC_NOERR)
@@ -535,7 +542,7 @@ TEST_NC_IGET_VAR(ulonglong)
 int
 TestFunc(vara)(VarArgs)
 {
-    int i, j, k, err, ncid, nok=0, nslabs, reqid;
+    int i, j, k, err, st, ncid, nok=0, nslabs, reqid;
     double value[MAX_NELS], expect[MAX_NELS];
     IntType start[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], index[MAX_RANK];
     MPI_Datatype datatype;
@@ -576,7 +583,8 @@ ifdef(`PNETCDF',`dnl
         err = APIFunc(iget_vara)(ncid, i, NULL, NULL, value, 1, datatype, &reqid);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -587,7 +595,8 @@ ifdef(`PNETCDF',`dnl
         err = APIFunc(iget_vara)(ncid, i, start, NULL, value, 1, datatype, &reqid);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EEDGE)
@@ -639,7 +648,8 @@ ifdef(`PNETCDF',`dnl
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
-        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+        assert(err == st);
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
@@ -676,7 +686,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR)
                 EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR)
                 EXPECT_ERR(NC_NOERR, err)
             ELSE_NOK
@@ -726,7 +737,7 @@ define(`TEST_NC_IGET_VARA',dnl
 int
 TestFunc(vara)_$1(VarArgs)
 {
-    int i, k, err, nslabs, ncid, cdf_format, reqid;
+    int i, k, err, st, nslabs, ncid, cdf_format, reqid;
     int allInExtRange;  /* all values within external range? */
     int allInIntRange;  /* all values within internal range? */
     int nok = 0;        /* count of valid comparisons */
@@ -780,7 +791,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             index[0] = 0;
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
@@ -801,7 +813,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             index[0] = 0;
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
@@ -855,7 +868,8 @@ ifdef(`PNETCDF',`dnl
 #ifdef RELAX_COORD_BOUND
             IF (err != NC_NOERR) /* allowed when edge[j]==0 */
                 EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
 #else
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
@@ -875,7 +889,8 @@ ifdef(`PNETCDF',`dnl
                 EXPECT_ERR(NC_ECHAR, err)
         } else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
                 CheckRange($1, expect[0])) {
@@ -927,7 +942,8 @@ ifdef(`PNETCDF',`dnl
             err = iGetVara($1)(ncid, i, start, edge, value, &reqid);
             if (canConvert) {
                 IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+                assert(err == st);
                 if (allInExtRange) {
                     if (allInIntRange) {
                         IF (err != NC_NOERR)
@@ -997,7 +1013,7 @@ TEST_NC_IGET_VARA(ulonglong)
 int
 TestFunc(vars)(VarArgs)
 {
-    int i, j, k, err, ncid, nok=0, nslabs, reqid;
+    int i, j, k, err, st, ncid, nok=0, nslabs, reqid;
     double value[MAX_NELS], expect[MAX_NELS];
     IntType m, start[MAX_RANK], index[MAX_RANK], index2[MAX_RANK];
     IntType count[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], sstride[MAX_RANK];
@@ -1042,7 +1058,8 @@ ifdef(`PNETCDF',`dnl
         err = APIFunc(iget_vars)(ncid, i, NULL, NULL, NULL, value, 1, datatype, &reqid);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -1053,7 +1070,8 @@ ifdef(`PNETCDF',`dnl
         err = APIFunc(iget_vars)(ncid, i, start, NULL, NULL, value, 1, datatype, &reqid);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EEDGE)
@@ -1111,7 +1129,8 @@ ifdef(`PNETCDF',`dnl
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
-        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+        assert(err == st);
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
@@ -1168,7 +1187,8 @@ ifdef(`PNETCDF',`dnl
                 IF (err != NC_NOERR)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+                assert(err == st);
                 IF (err != NC_NOERR)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
@@ -1219,7 +1239,7 @@ define(`TEST_NC_IGET_VARS',dnl
 int
 TestFunc(vars)_$1(VarArgs)
 {
-    int i, k, err, nslabs, ncid, cdf_format, reqid;
+    int i, k, err, st, nslabs, ncid, cdf_format, reqid;
     int allInExtRange;  /* all values within external range? */
     int allInIntRange;  /* all values within internal range? */
     int nok = 0;        /* count of valid comparisons */
@@ -1278,7 +1298,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             index[0] = 0;
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
@@ -1299,7 +1320,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             index[0] = 0;
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
@@ -1359,7 +1381,8 @@ ifdef(`PNETCDF',`dnl
 #ifdef RELAX_COORD_BOUND
             IF (err != NC_NOERR) /* allowed when edge[j]==0 */
                 EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
 #else
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
@@ -1379,7 +1402,8 @@ ifdef(`PNETCDF',`dnl
                 EXPECT_ERR(NC_ECHAR, err)
         } else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
                 CheckRange($1, expect[0])) {
@@ -1451,7 +1475,8 @@ ifdef(`PNETCDF',`dnl
                 err = iGetVars($1)(ncid, i, index, count, stride, value, &reqid);
                 if (canConvert) {
                     IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-                    err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                    err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+                    assert(err == st);
                     if (allInExtRange) {
                         if (allInIntRange) {
                             IF (err != NC_NOERR)
@@ -1522,7 +1547,7 @@ TEST_NC_IGET_VARS(ulonglong)
 int
 TestFunc(varm)(VarArgs)
 {
-    int i, j, k, err, ncid, nok=0, nslabs, reqid;
+    int i, j, k, err, st, ncid, nok=0, nslabs, reqid;
     double value[MAX_NELS], expect[MAX_NELS];
     IntType m, start[MAX_RANK], index[MAX_RANK], index2[MAX_RANK];
     IntType count[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], sstride[MAX_RANK];
@@ -1568,7 +1593,8 @@ ifdef(`PNETCDF',`dnl
         err = APIFunc(iget_varm)(ncid, i, NULL, NULL, NULL, NULL, value, 1, datatype, &reqid);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -1579,7 +1605,8 @@ ifdef(`PNETCDF',`dnl
         err = APIFunc(iget_varm)(ncid, i, start, NULL, NULL, NULL, value, 1, datatype, &reqid);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EEDGE)
@@ -1637,7 +1664,8 @@ ifdef(`PNETCDF',`dnl
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
-        err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+        err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+        assert(err == st);
         IF (err != NC_NOERR)
             EXPECT_ERR(NC_NOERR, err)
         ELSE_NOK
@@ -1700,7 +1728,8 @@ ifdef(`PNETCDF',`dnl
                 IF (err != NC_NOERR)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
-                err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+                assert(err == st);
                 IF (err != NC_NOERR)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
@@ -1751,7 +1780,7 @@ define(`TEST_NC_IGET_VARM',dnl
 int
 TestFunc(varm)_$1(VarArgs)
 {
-    int i, k, err, nslabs, ncid, cdf_format, reqid;
+    int i, k, err, st, nslabs, ncid, cdf_format, reqid;
     int allInExtRange;  /* all values within external range? */
     int allInIntRange;  /* all values within internal range? */
     int nok = 0;        /* count of valid comparisons */
@@ -1811,7 +1840,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             index[0] = 0;
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
@@ -1832,7 +1862,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             index[0] = 0;
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
@@ -1892,7 +1923,8 @@ ifdef(`PNETCDF',`dnl
 #ifdef RELAX_COORD_BOUND
             IF (err != NC_NOERR) /* allowed when edge[j]==0 */
                 EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
 #else
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
@@ -1912,7 +1944,8 @@ ifdef(`PNETCDF',`dnl
                 EXPECT_ERR(NC_ECHAR, err)
         } else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+            err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+            assert(err == st);
             expect[0] = hash4(cdf_format, var_type[i], 0, index, NCT_ITYPE($1));
             if (inRange3(cdf_format, expect[0], var_type[i], NCT_ITYPE($1)) &&
                 CheckRange($1, expect[0])) {
@@ -1990,7 +2023,8 @@ ifdef(`PNETCDF',`dnl
                 err = iGetVarm($1)(ncid,i,index,count,stride,imap,value, &reqid);
                 if (canConvert) {
                     IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-                    err = APIFunc(wait_all)(ncid, 1, &reqid, NULL);
+                    err = APIFunc(wait_all)(ncid, 1, &reqid, &st);
+                    assert(err == st);
                     if (allInExtRange) {
                         if (allInIntRange) {
                             IF (err != NC_NOERR)
