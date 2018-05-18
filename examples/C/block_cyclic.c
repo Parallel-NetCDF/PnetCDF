@@ -102,6 +102,9 @@ int main(int argc, char** argv) {
     MPI_Offset myNX, G_NX, myOff, block_start, block_len;
     MPI_Offset start[2], count[2];
     MPI_Info info;
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -130,6 +133,20 @@ int main(int argc, char** argv) {
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     ERR
 
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif
+
     MPI_Info_free(&info);
 
     /* the global array is NY * (NX * nprocs) */
@@ -155,6 +172,12 @@ int main(int argc, char** argv) {
     count[0] = NY;  count[1] = myNX;
     err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf[0]);
     free(buf[0]);
+
+#ifdef BUILD_DRIVER_BB
+    if (bb_enabled) {
+        err = ncmpi_flush(ncid); CHECK_ERR
+    }
+#endif
 
     /* initialize the buffer with rank ID. Also make the case interesting,
        by allocating buffers separately */

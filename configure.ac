@@ -1544,7 +1544,7 @@ AC_CONFIG_FILES(Makefile \
                 examples/CXX/Makefile \
                 examples/F77/Makefile \
                 examples/F90/Makefile \
-                examples/bb/Makefile \
+                examples/burstbuffer/Makefile \
                 benchmarks/Makefile \
                 benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
