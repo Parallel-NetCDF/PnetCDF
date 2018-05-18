@@ -240,7 +240,9 @@ ncbbio_iget_var(void             *ncdp,
     if (err != NC_NOERR) return err;
 
     // Translate from ncmpio id to ncbbio id
-    *reqid = *reqid * 2 + 1;
+    if (reqid != NULL){
+        *reqid = *reqid * 2 + 1;
+    }
 
     return NC_NOERR;
 }
@@ -427,6 +429,8 @@ ncbbio_put_varn(void              *ncdp,
     NC_bb *ncbbp = (NC_bb*)ncdp;
     MPI_Datatype ptype = buftype;
 
+
+
     /* Skip ZERO request */
     if (reqMode & NC_REQ_ZERO){
         return NC_NOERR;
@@ -458,12 +462,45 @@ ncbbio_put_varn(void              *ncdp,
 
     /* Decompose it into num put_vara calls */
     bufp = cbuf;
-    for(i = 0; i < num; i++){
-        err = ncbbio_log_put_var(ncbbp, varid, starts[i], counts[i], NULL, bufp, ptype, &size);
-        if (status == NC_NOERR){
-            status = err;
+    if (counts != NULL) {
+        for(i = 0; i < num; i++){
+            err = ncbbio_log_put_var(ncbbp, varid, starts[i], counts[i], NULL, bufp, ptype, &size);
+            if (status == NC_NOERR){
+                status = err;
+            }
+            bufp = (void*)(((char*)bufp) + size);
         }
-        bufp = (void*)(((char*)bufp) + size);
+    }
+    else{
+        MPI_Offset *count;
+        PNC *pncp;
+        int dim;
+
+        /* Get PNC */
+        err = PNC_check_id(ncbbp->ncid, &pncp);
+        if (err != NC_NOERR){
+            return err;
+        }
+
+        /* Get ndims */
+        dim = pncp->vars[varid].ndims;
+
+        /* Create dummy count */
+        count = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * dim);
+        for(i = 0; i < dim; i++){
+            count[i] = 1;
+        }
+
+        for(i = 0; i < num; i++){
+            err = ncbbio_log_put_var(ncbbp, varid, starts[i], count, NULL, bufp, ptype, &size);
+            if (status == NC_NOERR){
+                status = err;
+            }
+            bufp = (void*)(((char*)bufp) + size);
+        }
+
+        /* Free dummy count */
+        NCI_Free(count);
     }
 
     if (cbuf != buf){
@@ -493,7 +530,9 @@ ncbbio_iget_varn(void               *ncdp,
     if (err != NC_NOERR) return err;
 
     // Translate form ncmpio id to ncbbio id
-    *reqid = *reqid * 2 + 1;
+    if (reqid != NULL){
+        *reqid = *reqid * 2 + 1;
+    }
 
     return NC_NOERR;
 }

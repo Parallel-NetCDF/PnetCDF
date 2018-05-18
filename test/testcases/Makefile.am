@@ -203,11 +203,11 @@ ptest6: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
+    if [ -n "$(TESTBB)" ]; then ( \
+    export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+    $(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+    unset PNETCDF_HINTS ; \
+    ) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6

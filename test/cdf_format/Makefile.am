@@ -74,14 +74,14 @@ ptest ptests ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./test_inq_format $(srcdir)
 	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc
 	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc
-    if [ -n "$(TESTBB)" ]; then ( \
+	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./test_inq_format $(srcdir) \
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc \
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc \
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./test_inq_format $(srcdir) \
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc \
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc \
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./test_inq_format $(srcdir) ; \
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc ; \
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc ; \
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./test_inq_format $(srcdir) ; \
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc ; \
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ;
 
