@@ -72,12 +72,10 @@ is_request_contiguous(int               isRecVar,
     most_sig_dim = 0;
 
     if (isRecVar) {
-        /* if there are more than one record variable, then the record
-           dimensions, count[0] must == 1. For now, we assume there
-           are more than one record variable.
-           TODO: we may need an API to inquire how many record variables
-           are defined */
-        if (numRecVars > 1) { /* more than one record variable */
+        /* if there are more than one record variable and when count[0] > 1,
+         * then this request is noncontiguous.
+         */
+        if (numRecVars > 1) {
             if (count[0] > 1) return 0;
 
             /* continue to check from dimension ndims-1 up to dimension 1 */
@@ -445,41 +443,31 @@ filetype_create_vara(const NC         *ncp,
                      const NC_var     *varp,
                      const MPI_Offset *start,
                      const MPI_Offset *count,
-                     int              *blocklen,           /* OUT */
                      MPI_Offset       *offset_ptr,         /* OUT */
                      MPI_Datatype     *filetype_ptr,       /* OUT */
                      int              *is_filetype_contig) /* OUT */
 {
-    int          dim, status, err;
-    MPI_Offset   nbytes, offset;
+    int          status, err;
+    MPI_Offset   offset;
     MPI_Datatype filetype, xtype;
 
     *offset_ptr   = varp->begin;
     *filetype_ptr = MPI_BYTE;
     if (is_filetype_contig != NULL) *is_filetype_contig = 1;
 
-    /* calculate the request size */
-    nbytes = varp->xsz;
-    for (dim=0; dim<varp->ndims; dim++) nbytes *= count[dim];
-    if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    if (blocklen != NULL) *blocklen = (int)nbytes;
-
-    /* when varp is a scalar or nbytes == 0, no need to create a filetype */
-    if (varp->ndims == 0 || nbytes == 0) return NC_NOERR;
+    /* when varp is a scalar, no need to create a filetype */
+    if (varp->ndims == 0) return NC_NOERR;
 
     /* if the request is contiguous in file, no need to create a filetype */
     if (is_request_contiguous(IS_RECVAR(varp), ncp->vars.num_rec_vars,
                               varp->ndims, varp->shape, start, count)) {
         /* find the starting file offset of this request */
         status = ncmpio_first_offset(ncp, varp, start, &offset);
-        *offset_ptr   = offset;
+        *offset_ptr = offset;
         return status;
     }
 
-    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE.
-     * Since we will construct a filetype, blocklen is set to 1.
-     */
-    if (blocklen           != NULL) *blocklen           = 1;
+    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE */
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
     offset = varp->begin;
 
@@ -627,7 +615,6 @@ ncmpio_filetype_create_vars(const NC         *ncp,
                             const MPI_Offset *start,
                             const MPI_Offset *count,
                             const MPI_Offset *stride,
-                            int              *blocklen,           /* OUT */
                             MPI_Offset       *offset_ptr,         /* OUT */
                             MPI_Datatype     *filetype_ptr,       /* OUT */
                             int              *is_filetype_contig) /* OUT */
@@ -638,9 +625,8 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     MPI_Datatype  filetype=MPI_BYTE;
 
     if (stride == NULL)
-        return filetype_create_vara(ncp, varp, start, count, blocklen,
-                                    offset_ptr, filetype_ptr,
-                                    is_filetype_contig);
+        return filetype_create_vara(ncp, varp, start, count, offset_ptr,
+                                    filetype_ptr, is_filetype_contig);
 
     /* check if a true vars (skip stride[] when count[] == 1) */
     for (dim=0; dim<varp->ndims; dim++)
@@ -648,9 +634,8 @@ ncmpio_filetype_create_vars(const NC         *ncp,
             break;
 
     if (dim == varp->ndims) /* not a true vars */
-        return filetype_create_vara(ncp, varp, start, count, blocklen,
-                                    offset_ptr, filetype_ptr,
-                                    is_filetype_contig);
+        return filetype_create_vara(ncp, varp, start, count, offset_ptr,
+                                    filetype_ptr, is_filetype_contig);
 
     /* now stride[] indicates a non-contiguous fileview */
 
@@ -664,15 +649,11 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     if (varp->ndims == 0 || nelems == 0) {
         *offset_ptr   = varp->begin;
         *filetype_ptr = MPI_BYTE;
-        if (blocklen           != NULL) *blocklen           = 0;
         if (is_filetype_contig != NULL) *is_filetype_contig = 1;
         return NC_NOERR;
     }
 
-    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE.
-     * Since we will construct a filetype, blocklen is set to 1.
-     */
-    if (blocklen           != NULL) *blocklen           = 1;
+    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE */
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
     offset = varp->begin;
 
