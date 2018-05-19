@@ -423,7 +423,6 @@ construct_filetypes(NC           *ncp,
                 status = err; /* report first error */
             }
 #endif
-            blocklens[j]       = reqs[i].lead->varp->xsz;
             disps[j]           = reqs[i].lead->varp->begin;
             is_filetype_contig = 1;
         }
@@ -438,7 +437,6 @@ construct_filetypes(NC           *ncp,
                                               reqs[i].start,
                                               count,
                                               stride,
-                                              &blocklens[j],
                                               &offset,
                                               &ftypes[j],
                                               &is_filetype_contig);
@@ -461,7 +459,11 @@ construct_filetypes(NC           *ncp,
         }
 
         if (is_filetype_contig) {
-            MPI_Offset coalesced_len = blocklens[j];
+            MPI_Offset coalesced_len;
+
+            /* No need to construct a filetype */
+            blocklens[j] = reqs[i].lead->varp->xsz * reqs[i].nelems;
+            coalesced_len = blocklens[j];
             if (last_contig_req >= 0)
                 coalesced_len += blocklens[last_contig_req];
             /* if coalesced_len overflows 4-byte int, then skip coalescing */
@@ -474,6 +476,8 @@ construct_filetypes(NC           *ncp,
             else last_contig_req = j;
         }
         else {
+            /* we will construct a filetype, set blocklen to 1 */
+            blocklens[j] = 1;
             last_contig_req = -1;
             all_filetype_contig = 0;
         }
@@ -2238,12 +2242,13 @@ wait_getput(NC         *ncp,
                                &req->offset_start, &req->offset_end);
 
         if (i > 0) {
-            /* check if offset_start are in monotonic nondecreasing order */
-            if (req->offset_start < reqs[i-1].offset_start)
-                descreasing = 1;
-            /* check for any interleaved requests */
-            if (req->offset_start < reqs[i-1].offset_end)
+            /* check for interleaved requests */
+            if (req->offset_start < reqs[i-1].offset_end) {
                 interleaved = 1;
+                /* check if offset_start are in monotonic nondecreasing order */
+                if (req->offset_start < reqs[i-1].offset_start)
+                    descreasing = 1;
+            }
         }
     }
 

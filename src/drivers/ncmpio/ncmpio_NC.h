@@ -455,9 +455,8 @@ ncmpio_write_numrecs(NC *ncp, MPI_Offset new_numrecs);
 extern int
 ncmpio_filetype_create_vars(const NC* ncp, const NC_var* varp,
                 const MPI_Offset start[], const MPI_Offset count[],
-                const MPI_Offset stride[], int *blocklen,
-                MPI_Offset *offset, MPI_Datatype *filetype,
-                int *is_filetype_contig);
+                const MPI_Offset stride[], MPI_Offset *offset,
+                MPI_Datatype *filetype, int *is_filetype_contig);
 
 extern int
 ncmpio_file_set_view(const NC *ncp, MPI_File fh, MPI_Offset *offset,
