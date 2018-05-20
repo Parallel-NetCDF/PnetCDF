@@ -538,7 +538,7 @@ if test "x${has_fortran}" = xyes ; then
    F77=${MPIF77}
    AC_PROG_F77
    dnl FFLAGS is set in AC_PROG_F77
-   dnl AC_F77_LIBRARY_LDFLAGS
+   AC_F77_LIBRARY_LDFLAGS
 
    AC_MSG_CHECKING([if $MPIF77 is a valid MPI compiler])
    AC_LANG_PUSH([Fortran 77])
@@ -580,7 +580,7 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl FCLIBS_save="$FCLIBS"
    dnl FCLIBS=""
-   dnl AC_FC_LIBRARY_LDFLAGS
+   AC_FC_LIBRARY_LDFLAGS
    dnl UD_MSG_DEBUG([before FCLIBS=$FCLIBS])
    dnl The autoconf macro for finding FCLIBS sometimes makes mistakes
    dnl (particularly with the Fujitsu frt compiler).  This next step
