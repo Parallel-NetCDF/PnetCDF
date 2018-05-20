@@ -37,7 +37,7 @@ ptest ptests ptest4: $(check_PROGRAMS)
 	else \
 	    echo "FAILED:  C  parallel run on 4 processes ------------- $$i"; \
 	    exit 1; \
-	fi ; \ 
+	fi ; \
 	if [ -n "$(TESTBB)" ]; then ( \
         export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
         $(TESTMPIRUN4) ./$$i -q 10 $(TESTOUTDIR)/$$i.nc ; \
@@ -47,7 +47,7 @@ ptest ptests ptest4: $(check_PROGRAMS)
 		else \
 			echo "FAILED:  C  parallel run on 4 processes ------------- $$i"; \
 			exit 1; \
-		fi ; \ 
+		fi ; \
 	) ; fi ; \
 	} ; done
 
