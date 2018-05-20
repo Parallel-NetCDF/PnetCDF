@@ -84,8 +84,9 @@ This is essentially a placeholder for the next release note ...
   o New run-time environment variables
     * none
 
-  o New build recipe
-    * none
+  o Build recipe
+    * doc/README.Ubuntu is revised and the fix of adding LDFLAGS is no longer
+      necessary.
 
   o New/updated utility program
     * ncvalidator adds a new option -t to turn on tracing mode which prints all
@@ -95,6 +96,8 @@ This is essentially a placeholder for the next release note ...
       NC_EUNLIMIT.
 
   o Other updates:
+    * Inter-library dependencies among C, C++ and Fortran have been updated to
+      follow automake user guide: add FLIBS and FCLIBS to _LIBADD.
     * Add a check for NC_EUNLIMIT in API ncmpi_open to detect whether two or
       more unlimited dimensions are defined in a corrupted file.
 
