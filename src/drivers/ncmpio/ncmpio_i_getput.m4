@@ -107,7 +107,7 @@ ncmpio_add_record_requests(NC_req           *reqs,
     rec_bufsize = reqs[0].nelems * reqs[0].lead->varp->xsz;
 
     /* add new requests, one per record */
-    xbuf = reqs[0].xbuf + rec_bufsize;
+    xbuf = (char*)reqs[0].xbuf + rec_bufsize;
     for (i=1; i<num_recs; i++) {
         /* copy start/count/stride */
         reqs[i].start = reqs[i-1].start + dims_chunk;
