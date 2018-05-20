@@ -335,13 +335,13 @@ ifdef(`PNETCDF',`dnl
         }
 
         for (j = 0; j < var_nels[i]; j++) {
-            $1 orig_value;
+            ifelse(`$1',`text',,`$1 orig_value;')
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != 0) error("error in toMixedBase");
             if (canConvert)
                 value[0] = hash_$1(cdf_format, var_type[i], var_rank[i], index,
                                    NCT_ITYPE($1));
-            orig_value = value[0];
+            ifelse(`$1',`text',,`orig_value = value[0];')
             err = iPutVar1($1)(ncid, i, index, value, &reqid);
             if (canConvert) {
                 if (CheckRange3($1, orig_value, var_type[i])) {
