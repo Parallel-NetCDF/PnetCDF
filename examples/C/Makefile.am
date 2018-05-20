@@ -44,6 +44,7 @@ check_PROGRAMS = collective_write \
 if BUILD_DRIVER_BB
 TESTBB = 1
 TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
+AM_CPPFLAGS += -DBUILD_DRIVER_BB
 endif
 
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
@@ -101,7 +102,23 @@ ptest8: $(check_PROGRAMS)
         else \
            echo "FAILED:  C  parallel run on 8 processes ------------- $$i"; \
 	   exit 1; \
-        fi ; } ; done ; } ; done
+        fi ; \
+        if [ -n "$(TESTBB)" ]; then ( \
+                export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+                if [ $$i = "get_vara" ] ; then \
+                        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
+                else \
+                        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
+                fi ; \
+                unset PNETCDF_HINTS ; \
+                if [ $$? = 0 ] ; then \
+                        echo "PASS:  C  parallel run on 8 processes --------------- $$i"; \
+                else \
+                        echo "FAILED:  C  parallel run on 8 processes ------------- $$i"; \
+                        exit 1; \
+                fi ; \
+	) ; fi ; \
+        } ; done ; } ; done
 
 ptest3: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
@@ -117,7 +134,23 @@ ptest3: $(check_PROGRAMS)
         else \
            echo "FAILED:  C  parallel run on 3 processes ------------- $$i"; \
 	   exit 1; \
-        fi ; } ; done ; } ; done
+        fi ; \
+        if [ -n "$(TESTBB)" ]; then ( \
+                export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+                if [ $$i = "get_vara" ] ; then \
+                        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
+                else \
+                        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
+                fi ; \
+                unset PNETCDF_HINTS ; \
+                if [ $$? = 0 ] ; then \
+                        echo "PASS:  C  parallel run on 3 processes --------------- $$i"; \
+                else \
+                        echo "FAILED:  C  parallel run on 3 processes ------------- $$i"; \
+                        exit 1; \
+                fi ; \
+	) ; fi ; \
+        } ; done ; } ; done
 
 ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:

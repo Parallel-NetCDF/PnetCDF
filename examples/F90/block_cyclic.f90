@@ -77,6 +77,12 @@
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
           logical verbose
           integer info
+#if defined(BUILD_DRIVER_BB)
+          LOGICAL*4                  flag
+          integer                 err2
+          character*(MPI_MAX_INFO_VAL)     hint
+          integer                 infoused
+#endif
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -140,6 +146,18 @@
           count(2) = NX
           err = nf90mpi_put_var_all(ncid, varid, buf, start, count)
           call check(err, 'In nf90mpi_put_vara_int_all: ')
+
+#if defined(BUILD_DRIVER_BB)
+          err2 = nf90mpi_inq_file_info(ncid, infoused)
+          call MPI_Info_get(infoused, "nc_bb", & 
+                MPI_MAX_INFO_VAL, hint, flag, err2)
+          if (flag) then
+              if (hint .eq. 'enable') then
+                  err = nf90mpi_flush(ncid)
+              endif
+          endif
+          call MPI_Info_free(infoused, err2);
+#endif
 
           ! initialize the buffer with rank ID
           buf = rank+10

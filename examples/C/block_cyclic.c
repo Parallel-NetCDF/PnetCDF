@@ -175,7 +175,8 @@ int main(int argc, char** argv) {
 
 #ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
-        err = ncmpi_flush(ncid); CHECK_ERR
+        err = ncmpi_flush(ncid);
+        ERR
     }
 #endif
 

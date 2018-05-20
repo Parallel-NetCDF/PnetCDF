@@ -45,6 +45,14 @@ endif
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
+AM_CPPFLAGS += -DBUILD_DRIVER_BB
+AM_FFLAGS += -DBUILD_DRIVER_BB
+AM_FCFLAGS += -DBUILD_DRIVER_BB
+endif
+
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
@@ -75,7 +83,31 @@ ptest ptest4: $(check_PROGRAMS)
         else \
            echo "FAILED:     parallel run on 4 processes ------------- $$i"; \
            exit 1; \
-        fi ; } ; done ; } ; done
+        fi ; \
+        if [ -n "$(TESTBB)" ]; then ( \
+                export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+                if [ $$i = "pnetcdf-read-from-master" ] ; then \
+                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-from-master.nc ; \
+                elif [ $$i = "pnetcdf-read-nfiles" ] ; then \
+                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nfiles.nc ; \
+                elif [ $$i = "pnetcdf-read-standard" ] ; then \
+                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-standard.nc ; \
+                elif [ $$i = "pnetcdf-read-flexible" ] ; then \
+                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-flexible.nc ; \
+                elif [ $$i = "pnetcdf-read-nb" ] ; then \
+                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nb.nc ; \
+                else \
+                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+                fi ; \
+                unset PNETCDF_HINTS ; \
+                if [ $$? = 0 ] ; then \
+                        echo "PASS:     parallel run on 4 processes --------------- $$i"; \
+                else \
+                        echo "FAILED:     parallel run on 4 processes ------------- $$i"; \
+                        exit 1; \
+                fi ; \
+	) ; fi ; \
+        } ; done ; } ; done
 
 ptests: ptest4
 ptest2 ptest3 ptest6 ptest8 ptest10:

@@ -103,6 +103,9 @@ int main(int argc, char** argv)
     int *reqs, *sts, **buf;
     MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
     vector<MPI_Offset> start(2), count(2);
+#ifdef BUILD_DRIVER_BB
+    int bb_enabled=0;
+#endif
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -125,6 +128,20 @@ int main(int argc, char** argv)
         /* create a new file for writing ------------------------------------*/
         NcmpiFile nc(MPI_COMM_WORLD, filename, NcmpiFile::replace,
                      NcmpiFile::classic5);
+
+#ifdef BUILD_DRIVER_BB
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        nc.Inq_file_info(&infoused);
+        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+#endif        
 
         /* the global array is NY * (NX * nprocs) */
         G_NX  = NX * nprocs;
@@ -152,6 +169,12 @@ int main(int argc, char** argv)
         var.putVar_all(start, count, &buf[0][0]);
 
         free(buf[0]);
+
+#ifdef BUILD_DRIVER_BB
+        if (bb_enabled) {
+            nc.flush();
+        }
+#endif
 
         /* initialize the buffer with rank ID. Also make the case interesting,
            by allocating buffers separately */

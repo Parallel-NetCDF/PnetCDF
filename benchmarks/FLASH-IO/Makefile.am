@@ -60,6 +60,11 @@ CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/flash_io_test_ncmpi_plt_crn_0000.nc \
              $(TESTOUTDIR)/flash_io_test_ncmpi_plt_cnt_0000.nc
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
+endif
+
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
 ptests ptest ptest4: $(check_PROGRAMS)
@@ -68,7 +73,17 @@ ptests ptest ptest4: $(check_PROGRAMS)
 	    echo "PASS: F90 parallel run on 4 processes --------------- FLASH_IO"; \
 	else \
 	    echo "FAILED: F90 parallel run on 4 processes ------------- FLASH_IO"; \
-	fi
+	fi ; \
+    if [ -n "$(TESTBB)" ]; then ( \
+        export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+        $(TESTMPIRUN4) ./$(check_PROGRAMS) $(RUN_QUIETLY) $(TESTOUTDIR)/flash_io_test_ ; \
+        unset PNETCDF_HINTS ; \
+        if [ $$? = 0 ] ; then \
+            echo "PASS: F90 parallel run on 4 processes --------------- FLASH_IO"; \
+        else \
+            echo "FAILED: F90 parallel run on 4 processes ------------- FLASH_IO"; \
+        fi ; \
+	) ; fi 
 
 ptest2 ptest6 ptest8 ptest10:
 
