@@ -403,7 +403,7 @@ type_create_subarray64(int               ndims,
 
     /* disps[1] is the first byte displacement of the subarray */
     disps[1] = array_of_starts[ndims-1] * extent;
-    size = 1;
+    size = extent;
     for (i=ndims-2; i>=0; i--) {
         size *= array_of_sizes[i+1];
         disps[1] += size * array_of_starts[i];
