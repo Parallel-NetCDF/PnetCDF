@@ -409,7 +409,6 @@ construct_filetypes(NC           *ncp,
     j = 0;                    /* index of last valid ftypes */
     for (i=0; i<num_reqs; i++, j++) {
         int is_filetype_contig, ndims=reqs[i].lead->varp->ndims;
-        MPI_Offset *count=NULL, *stride=NULL;
 
         ftypes[j] = MPI_BYTE; /* in case the call below failed */
 
@@ -424,12 +423,11 @@ construct_filetypes(NC           *ncp,
                 status = err; /* report first error */
             }
 #endif
-            blocklens[j]       = reqs[i].lead->varp->xsz;
             disps[j]           = reqs[i].lead->varp->begin;
             is_filetype_contig = 1;
         }
         else { /* non-scalar variable */
-            MPI_Offset offset;
+            MPI_Offset offset, *count, *stride;
             count  = reqs[i].start + ndims;
             stride = fIsSet(reqs[i].lead->flag, NC_REQ_STRIDE_NULL) ?
                      NULL : count + ndims;
@@ -439,7 +437,6 @@ construct_filetypes(NC           *ncp,
                                               reqs[i].start,
                                               count,
                                               stride,
-                                              &blocklens[j],
                                               &offset,
                                               &ftypes[j],
                                               &is_filetype_contig);
@@ -462,18 +459,25 @@ construct_filetypes(NC           *ncp,
         }
 
         if (is_filetype_contig) {
-            MPI_Offset int8 = blocklens[j];
-            if (last_contig_req >= 0) int8 += blocklens[last_contig_req];
-            /* if int8 overflows 4-byte int, then skip coalescing */
-            if (int8 == (int)int8 && last_contig_req >= 0 &&
+            MPI_Offset coalesced_len;
+
+            /* No need to construct a filetype */
+            blocklens[j] = reqs[i].lead->varp->xsz * reqs[i].nelems;
+            coalesced_len = blocklens[j];
+            if (last_contig_req >= 0)
+                coalesced_len += blocklens[last_contig_req];
+            /* if coalesced_len overflows 4-byte int, then skip coalescing */
+            if (coalesced_len < INT_MAX && last_contig_req >= 0 &&
                 disps[j] - disps[last_contig_req] ==
                 blocklens[last_contig_req]) {
-                blocklens[last_contig_req] = int8;
+                blocklens[last_contig_req] = coalesced_len;
                 j--;
             }
             else last_contig_req = j;
         }
         else {
+            /* we will construct a filetype, set blocklen to 1 */
+            blocklens[j] = 1;
             last_contig_req = -1;
             all_filetype_contig = 0;
         }
@@ -881,7 +885,7 @@ extract_reqs(NC      *ncp,
         }
     }
 
-    /* coalesce lead queues has to wait after MPI-IO */
+    /* coalescing lead queues has to wait after MPI-IO */
 
     return NC_NOERR;
 }
@@ -930,19 +934,20 @@ req_commit(NC  *ncp,
     /* calculate new number of records:
      * Need to update the number of records if new records have been created.
      * For nonblocking APIs, there is no way for a process to know whether
-     * others write to a record variable or not. Hence, we must sync the
-     * number of records for write request.
-     * Because netCDF allows only one unlimited dimension, we can scan all
-     * requests to find the maximum number of records.
+     * other processes write to a record variable or not. Hence, we must sync
+     * the number of records for write requests.
+     * Because netCDF classic files allow only one unlimited dimension, we can
+     * scan all requests to find the maximum number of records.
      */
     newnumrecs = ncp->numrecs;
     for (i=0; i<num_w_lead_reqs; i++) {
-        if (!fIsSet(ncp->put_lead_list[i].flag, NC_REQ_TO_FREE) ||
-            /* skip requests not marked to be freed */
-             fIsSet(ncp->put_lead_list[i].flag, NC_REQ_SKIP) ||
-            /* skip invalid request */
-            !IS_RECVAR(ncp->put_lead_list[i].varp)) continue;
+        if (!IS_RECVAR(ncp->put_lead_list[i].varp) ||
             /* skip fixed-size variables */
+            !fIsSet(ncp->put_lead_list[i].flag, NC_REQ_TO_FREE) ||
+            /* skip requests not marked to be freed */
+             fIsSet(ncp->put_lead_list[i].flag, NC_REQ_SKIP))
+            /* skip invalid request */
+            continue;
         newnumrecs = MAX(newnumrecs, ncp->put_lead_list[i].max_rec);
     }
 
@@ -2112,6 +2117,97 @@ req_aggregation(NC     *ncp,
     return status;
 }
 
+/*----< calculate_access_range() >-------------------------------------------*/
+/* Returns the file offsets of access range of this request: starting file
+ * offset and end offset (exclusive).
+ * Note zero-length request should never call this subroutine.
+ */
+static int
+calculate_access_range(const NC         *ncp,
+                       const NC_var     *varp,
+                       const MPI_Offset  start[],   /* [varp->ndims] */
+                       const MPI_Offset  count[],   /* [varp->ndims] */
+                       const MPI_Offset  stride[],  /* [varp->ndims] */
+                       MPI_Offset       *start_off, /* OUT: start offset */
+                       MPI_Offset       *end_off)   /* OUT: end   offset */
+{
+    int i, ndims = varp->ndims; /* number of dimensions of this variable */
+
+    /*
+     * varp->dsizes[] is computed from right to left product of shape
+     * For example, a 3D array of size 5x4x3 in C order,
+     * For fixed-size variable: dsizes[0]=60 dsizes[1]=12 dsizes[2]=3
+     * For record     variable: dsizes[0]=12 dsizes[1]=12 dsizes[2]=3
+     */
+    if (IS_RECVAR(varp)) {
+        *start_off = 0;
+        *end_off   = 0;
+        if (stride == NULL) {
+            if (ndims > 1) {
+                /* least significant dimension */
+                *start_off = start[ndims-1];
+                *end_off   = start[ndims-1]+(count[ndims-1]-1);
+                /* the remaining dimensions */
+                for (i=ndims-2; i>0; i--) {
+                    *start_off += start[i]*varp->dsizes[i+1];
+                    *end_off += (start[i]+(count[i]-1))*varp->dsizes[i+1];
+                }
+            }
+            *start_off *= varp->xsz;  /* offset in bytes */
+            *end_off   *= varp->xsz;
+            /* handle the unlimited, most significant one */
+            *start_off += start[0] * ncp->recsize;
+            *end_off   += (start[0]+(count[0]-1)) * ncp->recsize;
+        }
+        else {
+            if (ndims > 1) {
+                /* least significant dimension */
+                *start_off = start[ndims-1];
+                *end_off   = start[ndims-1]+(count[ndims-1]-1)*stride[ndims-1];
+                /* the remaining dimensions */
+                for (i=ndims-2; i>0; i--) {
+                    *start_off += start[i]*varp->dsizes[i+1];
+                    *end_off += (start[i]+(count[i]-1)*stride[i]) *
+                                varp->dsizes[i+1];
+                }
+            }
+            *start_off *= varp->xsz;  /* offset in bytes */
+            *end_off   *= varp->xsz;
+            /* handle the unlimited, most significant one */
+            *start_off += start[0] * ncp->recsize;
+            *end_off   += (start[0]+(count[0]-1)*stride[0]) * ncp->recsize;
+        }
+    }
+    else {
+        if (stride == NULL) {
+            /* first handle the least significant dimension */
+            *start_off = start[ndims-1];
+            *end_off = start[ndims-1] + (count[ndims-1]-1);
+            /* remaining dimensions till the most significant one */
+            for (i=ndims-2; i>=0; i--) {
+                *start_off += start[i] * varp->dsizes[i+1];
+                *end_off += (start[i]+(count[i]-1)) * varp->dsizes[i+1];
+            }
+        }
+        else {
+            /* first handle the least significant dimension */
+            *start_off = start[ndims-1];
+            *end_off   = start[ndims-1]+(count[ndims-1]-1)*stride[ndims-1];
+            /* remaining dimensions till the most significant one */
+            for (i=ndims-2; i>=0; i--) {
+                *start_off += start[i] * varp->dsizes[i+1];
+                *end_off += (start[i]+(count[i]-1)*stride[i])*varp->dsizes[i+1];
+            }
+        }
+        *start_off *= varp->xsz;  /* offset in bytes */
+        *end_off   *= varp->xsz;
+    }
+    *start_off += varp->begin; /* beginning file offset of this variable */
+    *end_off   += varp->begin + varp->xsz;
+
+    return NC_NOERR;
+}
+
 /*----< wait_getput() >------------------------------------------------------*/
 static int
 wait_getput(NC         *ncp,
@@ -2121,13 +2217,13 @@ wait_getput(NC         *ncp,
             int         coll_indep, /* NC_REQ_COLL or NC_REQ_INDEP */
             MPI_Offset  newnumrecs) /* new number of records */
 {
-    int i, err, status=NC_NOERR, access_interleaved=0;
+    int i, err, status=NC_NOERR, interleaved=0, descreasing=0;
 
     /* move the offset calculation from request posting API calls to wait call,
      * such that posting a nonblocking request can be made in define mode
      */
     for (i=0; i<num_reqs; i++) {
-        MPI_Offset *count, *stride=NULL;
+        MPI_Offset *count, *stride;
         NC_req     *req=reqs+i;
 
         if (req->lead->varp->ndims == 0) { /* scalar variable */
@@ -2136,37 +2232,33 @@ wait_getput(NC         *ncp,
             continue;
         }
 
-        count = req->start + req->lead->varp->ndims;
-        if (!fIsSet(req->lead->flag, NC_REQ_STRIDE_NULL))
-            stride = count + req->lead->varp->ndims;
+        /* start/count/stride are in the same contiguously allocated array */
+        count  = req->start + req->lead->varp->ndims;
+        stride = (fIsSet(req->lead->flag, NC_REQ_STRIDE_NULL)) ? NULL :
+                 count + req->lead->varp->ndims;
 
         /* calculate access range of this request */
-        ncmpio_access_range(ncp, req->lead->varp, req->start, count, stride,
-                            &req->offset_start, &req->offset_end);
-    }
+        calculate_access_range(ncp, req->lead->varp, req->start, count, stride,
+                               &req->offset_start, &req->offset_end);
 
-    /* check if reqs[].offset_start are in an increasing order */
-    for (i=1; i<num_reqs; i++) {
-        if (reqs[i-1].offset_start > reqs[i].offset_start) {
-            break;
+        if (i > 0) {
+            /* check for interleaved requests */
+            if (req->offset_start < reqs[i-1].offset_end) {
+                interleaved = 1;
+                /* check if offset_start are in monotonic nondecreasing order */
+                if (req->offset_start < reqs[i-1].offset_start)
+                    descreasing = 1;
+            }
         }
     }
 
-    if (i < num_reqs) /* a non-increasing order is found */
+    if (descreasing) /* a decreasing order is found */
         /* sort reqs[] based on reqs[].offset_start */
         qsort(reqs, (size_t)num_reqs, sizeof(NC_req), req_compare);
 
-    /* check for any interleaved requests */
-    for (i=1; i<num_reqs; i++) {
-        if (reqs[i-1].offset_end > reqs[i].offset_start) {
-            access_interleaved = 1;
-            break;
-        }
-    }
-
     /* aggregate requests and carry out the I/O */
     err = req_aggregation(ncp, num_reqs, reqs, rw_flag, coll_indep,
-                          access_interleaved);
+                          interleaved);
     if (status == NC_NOERR) status = err;
 
     /* Update the number of records if new records have been created.
@@ -2254,7 +2346,7 @@ mgetput(NC     *ncp,
     blocklens = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
     disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_AINT);
 
-    /* construct a MPI file type by concatenating fileviews of all requests */
+    /* construct an MPI file type by concatenating fileviews of all requests */
     status = construct_filetypes(ncp, num_reqs, blocklens, disps, reqs,
                                  &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
@@ -2265,8 +2357,8 @@ mgetput(NC     *ncp,
         filetype = MPI_BYTE;
     }
 
-    /* set the MPI-IO fileview */
-    offset=0;
+    /* set the MPI-IO fileview, this is a collective call */
+    offset = 0;
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         if (coll_indep == NC_REQ_INDEP) return status;
@@ -2391,8 +2483,11 @@ mgetput(NC     *ncp,
     NCI_Free(disps);
     NCI_Free(blocklens);
 
-    /* non-lead request list is no longer used once fileview and buftype have
-     * been constructed. Free the start arrays allocated at lead requests.
+    /* Free up memory space allocated before entering MPI-IO calls, as MPI-IO
+     * flattens the fileview and buftype which can take some space. The
+     * non-lead request list, reqs, is no longer used after fileview and buftype
+     * have been constructed. In addition, the start arrays allocated at lead
+     * requests are no longer used.
      */
     numLeadReqs = (rw_flag == NC_REQ_RD) ? ncp->numLeadGetReqs
                                          : ncp->numLeadPutReqs;

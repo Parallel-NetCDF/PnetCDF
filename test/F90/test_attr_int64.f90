@@ -31,6 +31,7 @@
           character(LEN=256) filename, cmd, msg
           integer rank, err, ierr, ncid, cmode, get_args, xtype, varid
           integer(kind=MPI_OFFSET_KIND) :: buf
+          integer,parameter :: INT2_KIND = selected_int_kind(4)
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -73,7 +74,7 @@
           err = nf90mpi_def_var(ncid, "var_short", NF90_SHORT, varid)
           call check(err, 'In nf90mpi_def_var var_short: ')
 
-          err = nf90mpi_put_att(ncid, varid, '_FillValue', INT2(-999))
+          err = nf90mpi_put_att(ncid, varid, '_FillValue', INT(-999,KIND=INT2_KIND))
           call check(err, 'In nf90mpi_put_att var_short: ')
 
           err = nf90mpi_def_var(ncid, "var_int", NF90_INT, varid)
