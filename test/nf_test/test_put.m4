@@ -614,6 +614,17 @@ C       Assumes variable cr is char vector with UNLIMITED dimension.
         err = PutVar1(text)(ncid, vid, index, 'x')
         if (err .ne. NF_NOERR)
      +      call errore('PutVar1(text): ', err)
+#if defined(BUILD_DRIVER_BB)
+        err2 = nfmpi_inq_file_info(ncid, infoused)
+        call MPI_Info_get(infoused, "nc_bb",
+     +      MPI_MAX_INFO_VAL, hint, flag, err2)
+        if (flag .eq. 1) then
+            if (hint .eq. 'enable') then
+                err = nfmpi_flush(ncid)
+            endif
+        endif
+        call MPI_Info_free(infoused, err2);
+#endif
 
         do 5 i = 1, numVars
 C           Only test record variables here
