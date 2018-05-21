@@ -55,7 +55,7 @@ getput_vard(NC               *ncp,
 {
     void *xbuf=NULL;
     int mpireturn, status=NC_NOERR, err=NC_NOERR;
-    int buftype_is_contig=0, need_swap_back_buf=0;
+    int el_size, buftype_is_contig=0, need_swap_back_buf=0;
     int nelems=0, need_convert=0, need_swap=0;
     MPI_Offset fnelems=0, bnelems=0, offset=0;
     MPI_Status mpistatus;
@@ -157,7 +157,6 @@ getput_vard(NC               *ncp,
 
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, the request size is the same as filetype */
-        int el_size;
         buftype = etype = xtype;
         MPI_Type_size(buftype, &el_size);
         bufcount = filetype_size / el_size;
@@ -167,7 +166,7 @@ getput_vard(NC               *ncp,
     else {
         /* find the element type of filetype. ncmpii_dtype_decode() checks
          * NC_EMULTITYPES */
-        err = ncmpii_dtype_decode(buftype, &etype, NULL, &bnelems, NULL,
+        err = ncmpii_dtype_decode(buftype, &etype, &el_size, &bnelems, NULL,
                                   &buftype_is_contig);
         if (err != NC_NOERR) goto err_check;
 
@@ -224,7 +223,7 @@ getput_vard(NC               *ncp,
             /* pack buf to xbuf, byte-swap and type-convert on xbuf, which
              * will later be used in MPI file write */
             err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                                   buftype_is_contig, bnelems, etype,
+                                   buftype_is_contig, bnelems, etype, el_size,
                                    MPI_DATATYPE_NULL, need_convert, need_swap,
                                    filetype_size, buf, xbuf);
             if (err != NC_NOERR && err != NC_ERANGE) {

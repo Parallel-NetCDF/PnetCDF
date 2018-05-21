@@ -561,8 +561,9 @@ ncmpio_last_offset(const NC *ncp, const NC_var *varp, const MPI_Offset starts[],
 extern int
 ncmpio_pack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
                  MPI_Datatype buftype, int buftype_is_contig, MPI_Offset nelems,
-                 MPI_Datatype etype, MPI_Datatype imaptype, int need_convert,
-                 int need_swap, size_t xbuf_size, void *buf, void *xbuf);
+                 MPI_Datatype etype, int esize, MPI_Datatype imaptype,
+                 int need_convert, int need_swap, size_t xbuf_size, void *buf,
+                 void *xbuf);
 
 extern int
 ncmpio_unpack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
