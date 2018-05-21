@@ -229,8 +229,9 @@ ncmpio_igetput_varm(NC               *ncp,
          * In the meanwhile, perform byte-swap and type-conversion if required.
          */
         err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                               buftype_is_contig, nelems, itype, imaptype,
-                               need_convert, need_swap, nbytes, buf, xbuf);
+                               buftype_is_contig, nelems, itype, el_size,
+                               imaptype, need_convert, need_swap, nbytes, buf,
+                               xbuf);
         if (err != NC_NOERR && err != NC_ERANGE) {
             if (fIsSet(reqMode, NC_REQ_NBB))
                 ncmpio_abuf_dealloc(ncp, abuf_index);
