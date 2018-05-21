@@ -102,6 +102,10 @@ This is essentially a placeholder for the next release note ...
       more unlimited dimensions are defined in a corrupted file.
 
   o Bug fixes
+    * Fix type_create_subarray64() for case when some dimensions of the global
+      array is larger than 4G and oldtype is not MPI_BYTE. See r3779. Without
+      this fix, test/largefile/large_var.c will fail. Note prior to 1.9.1,
+      type_create_subarray64() is always called with oldtype being MPI_BYTE.
     * Fix configure-time bug that configure fails to recognize the compilers
       with full path names set in the environment variable MPICC, MPICXX,
       MPIF77, or MPI_F90. See Ticket #35 for bug report and r3740 for fix.
