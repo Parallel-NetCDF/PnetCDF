@@ -9,7 +9,7 @@ env:
 addons:
   coverity_scan:
     project:
-      name: "Parallel-NetCDF/PnetCDF"
+      name: "Parallel-NetCDF"
       description: "PnetCDF nightly build submitted via Travis CI"
     build_command_prepend: ./configure
     notification_email: wkliao@eecs.northwestern.edu
