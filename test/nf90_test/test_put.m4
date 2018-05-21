@@ -635,6 +635,17 @@ define([TEST_NFMPI_PUT_VAR],dnl
         err = PutVar(ncid, vid, 'x', index)
         if (err .ne. NF90_NOERR) &
             call errore('PutVar: ', err)
+#if defined(BUILD_DRIVER_BB)
+        err2 = nf90mpi_inq_file_info(ncid, infoused)
+        call MPI_Info_get(infoused, "nc_bb", &
+        MPI_MAX_INFO_VAL, hint, flag, err2)
+        if (flag .eq. 1) then
+            if (hint .eq. 'enable') then
+                err = nf90mpi_flush(ncid)
+            endif
+        endif
+        call MPI_Info_free(infoused, err2);
+#endif
 
         do 5 i = 1, numVars
 !           Only test record variables here
