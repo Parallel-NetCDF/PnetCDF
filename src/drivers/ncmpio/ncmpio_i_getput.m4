@@ -107,7 +107,7 @@ ncmpio_add_record_requests(NC_req           *reqs,
     rec_bufsize = reqs[0].nelems * reqs[0].lead->varp->xsz;
 
     /* add new requests, one per record */
-    xbuf = reqs[0].xbuf + rec_bufsize;
+    xbuf = (char*)reqs[0].xbuf + rec_bufsize;
     for (i=1; i<num_recs; i++) {
         /* copy start/count/stride */
         reqs[i].start = reqs[i-1].start + dims_chunk;
@@ -229,8 +229,9 @@ ncmpio_igetput_varm(NC               *ncp,
          * In the meanwhile, perform byte-swap and type-conversion if required.
          */
         err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                               buftype_is_contig, nelems, itype, imaptype,
-                               need_convert, need_swap, nbytes, buf, xbuf);
+                               buftype_is_contig, nelems, itype, el_size,
+                               imaptype, need_convert, need_swap, nbytes, buf,
+                               xbuf);
         if (err != NC_NOERR && err != NC_ERANGE) {
             if (fIsSet(reqMode, NC_REQ_NBB))
                 ncmpio_abuf_dealloc(ncp, abuf_index);
