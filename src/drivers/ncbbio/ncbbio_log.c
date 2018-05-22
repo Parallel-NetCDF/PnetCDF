@@ -33,7 +33,7 @@
 int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     int i, rank, np, err, flag, masterrank;
     char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
-    char *abspath, *fname, *fdir = NULL;
+    char *abspath, *fname, *path, *fdir = NULL;
     char *private_path = NULL, *stripe_path = NULL;
     char *logbasep = ".";
     int log_per_node = 0;
@@ -73,14 +73,25 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     //private_path = getenv("BB_JOB_PRIVATE");
     //stripe_path = getenv("BB_JOB_STRIPED");
 
+    /* Remove romio driver specifier form the begining of path */
+    path = strchr(ncbbp->path, ':');
+    if (path == NULL){
+        /* No driver specifier, use full path */
+        path = ncbbp->path;
+    }
+    else{
+        /* Skip until after the first ':' */
+        path += 1;
+    }
+
     /* Determine log base */
     if (ncbbp->logbase[0] != '\0'){
         logbasep = ncbbp->logbase;
     }
     else{
-        i = strlen(ncbbp->path);
+        i = strlen(path);
         fdir = (char*)NCI_Malloc((i + 1) * sizeof(char));
-        strncpy(fdir, ncbbp->path, i + 1);
+        strncpy(fdir, path, i + 1);
         /* Search for first '\' from the back */
         for(i--; i > -1; i--){
             if (fdir[i] == '/'){
@@ -119,7 +130,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     closedir(logdir);
 
     /* Resolve absolute path */
-    abspath = realpath(ncbbp->path, basename);
+    abspath = realpath(path, basename);
     if (abspath == NULL){
         /* Can not resolve absolute path */
         DEBUG_RETURN_ERROR(NC_EBAD_FILE);
