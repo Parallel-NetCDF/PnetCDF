@@ -86,7 +86,16 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
     /* Determine log base */
     if (ncbbp->logbase[0] != '\0'){
-        logbasep = ncbbp->logbase;
+        /* We don't need driver specifier in logbase as well */
+        logbasep = strchr(ncbbp->logbase, ':');
+        if (logbasep == NULL){
+            /* No driver specifier, use full path */
+            logbasep = ncbbp->logbase;
+        }
+        else{
+            /* Skip until after the first ':' */
+            logbasep += 1;
+        }
     }
     else{
         i = strlen(path);
