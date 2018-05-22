@@ -7,7 +7,7 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program tests nonblocking functionality of dw driver
+ * This program tests nonblocking functionality of bb driver
  * It create many nonblocking request to test the driver's ability to handle large amount of nonblocking requests
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

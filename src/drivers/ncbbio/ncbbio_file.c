@@ -208,7 +208,7 @@ ncbbio_close(void *ncdp)
         status = err;
     }
 
-    // Cleanup NC-dw object
+    // Cleanup NC-bb object
     MPI_Comm_free(&(ncbbp->comm));
     MPI_Info_free(&(ncbbp->info));
     NCI_Free(ncbbp->path);
@@ -472,7 +472,7 @@ ncbbio_inq_misc(void       *ncdp,
         }
     }
 
-    /* Export dw related settings
+    /* Export bb related settings
      * ncbbio driver has it's own hints that is not handled by ncmpio driver
      */
     if (info_used != NULL){
