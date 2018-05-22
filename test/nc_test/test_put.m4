@@ -638,9 +638,9 @@ TestFunc(var)_$1(VarArgs)
     IF (err != NC_NOERR)
         error("put_var1_text: %s", APIFunc(strerror)(err));
 #ifdef BUILD_DRIVER_BB
-    if (bb_enabled){
-        err = ncmpi_flush(ncid);
-    }
+if (bb_enabled){
+err = ncmpi_flush(ncid);
+}
 #endif
 
     for (i = 0; i < numVars; i++) {
