@@ -307,6 +307,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  int           buftype_is_contig,
                  MPI_Offset    nelems, /* no. elements in buf */
                  MPI_Datatype  itype,  /* element type in buftype */
+                 int           el_size,/* size of itype */
                  MPI_Datatype  imaptype,
                  int           need_convert,
                  int           need_swap,
@@ -314,12 +315,11 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  void         *buf,    /* user buffer */
                  void         *xbuf)   /* already allocated, in external type */
 {
-    int err=NC_NOERR, el_size, position;
+    int err=NC_NOERR, position;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
-    MPI_Type_size(itype, &el_size);
     ibuf_size = nelems * el_size;
     if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
@@ -377,10 +377,10 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
      */
     if (need_convert) {
         /* user buf type does not match nc var type defined in file */
-        void *fillp; /* fill value in internal representation */
+        char  tmpbuf[8];
+        void *fillp=tmpbuf; /* fill value in internal representation */
 
         /* find the fill value */
-        fillp = NCI_Malloc((size_t)varp->xsz);
         ncmpio_inq_var_fill(varp, fillp);
 
         /* datatype conversion + byte-swap from cbuf to xbuf */
@@ -428,7 +428,6 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 	 * request must continue to finish.
          */
 
-        NCI_Free(fillp);
         if (cbuf != buf) NCI_Free(cbuf);
     }
     else {

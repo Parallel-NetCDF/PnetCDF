@@ -1499,7 +1499,7 @@ merge_requests(NC          *ncp,
 /*----< type_create_off_len() >----------------------------------------------*/
 static int
 type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
-                    off_len      *segs,     /* [nsegs] off-en pairs */
+                    off_len      *segs,     /* [nsegs] off-len pairs (sorted) */
                     MPI_Datatype *filetype,
                     MPI_Datatype *buf_type)
 {
@@ -1806,7 +1806,7 @@ req_aggregation(NC     *ncp,
     MPI_Address(buf, &b_begin);
 #endif
 
-    /* temp buffers */
+    /* temp buffers, used by multiple calls to construct_filetypes()  */
     int *blocklens = (int*) NCI_Malloc((size_t)num_reqs*SIZEOF_INT);
     MPI_Aint *disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs*SIZEOF_MPI_AINT);
 
@@ -1865,7 +1865,9 @@ req_aggregation(NC     *ncp,
             off_len    *segs=NULL; /* array of the offset-length pairs */
             void       *merged_buf;
 
-            /* merge all requests into sorted offset-length pairs */
+            /* merge all requests into sorted offset-length pairs. Note
+             * g_reqs[].offset_start and offset_end are relative to the
+             * beginning of file */
             err = merge_requests(ncp, g_num_reqs, g_reqs, &merged_buf, &nsegs,
                                  &segs);
             if (status == NC_NOERR) status = err;

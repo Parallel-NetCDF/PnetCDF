@@ -197,8 +197,8 @@ igetput_varn(NC                *ncp,
          * sub-buffers, each to be added to the nonblocking request queue.
          */
         err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype, isContig,
-                               nelems, itype, MPI_DATATYPE_NULL, need_convert,
-                               need_swap, nbytes, buf, xbuf);
+                               nelems, itype, isize, MPI_DATATYPE_NULL,
+                               need_convert, need_swap, nbytes, buf, xbuf);
         if (err != NC_NOERR && err != NC_ERANGE) {
             if (fIsSet(reqMode, NC_REQ_NBB))
                 ncmpio_abuf_dealloc(ncp, abuf_index);
