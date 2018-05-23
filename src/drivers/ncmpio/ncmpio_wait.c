@@ -980,13 +980,17 @@ req_commit(NC  *ncp,
     }
 
     /* carry out writes and reads separately (writes first) */
-    if (do_write > 0)
+    if (do_write > 0) {
         err = wait_getput(ncp, num_w_reqs, put_list, NC_REQ_WR, coll_indep,
                           newnumrecs);
+        put_list = NULL; /* has been freed in wait_getput() */
+    }
 
-    if (do_read > 0)
+    if (do_read > 0) {
         err = wait_getput(ncp, num_r_reqs, get_list, NC_REQ_RD, coll_indep,
                           newnumrecs);
+        get_list = NULL; /* has been freed in wait_getput() */
+    }
 
     /* retain the first error status */
     if (status == NC_NOERR) status = err;
