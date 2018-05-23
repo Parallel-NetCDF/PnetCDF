@@ -111,6 +111,9 @@ This is essentially a placeholder for the next release note ...
       MPIF77, or MPI_F90. See Ticket #35 for bug report and r3740 for fix.
     * Fix the bug that writing scalar attributes of type NF_INT64 was
       mistakenly casted to NF_INT. See r3730.
+    * Fix test/testcases/erange_fill.m4 for the case of NC_LONG data type.
+      NC_LONG is synonym of NC_INT. When setting fill value for variables of
+      type NC_LONG, the user buffer must be of type int (internal). See r3726.
     * Fix the calculation of new record number in put_vard API. Thanks to
       Jim Edwards. See r3675.
     * Fix the calculation of growing size of nonblocking request queues to
