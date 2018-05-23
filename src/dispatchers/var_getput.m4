@@ -46,6 +46,8 @@ define(`GOTO_CHECK',`{ DEBUG_ASSIGN_ERROR(err, $1) goto err_check; }')dnl
         err = pncp->driver->inq_dim(pncp->ncp, varp.recdim, NULL, &numrecs);  \
         if (err != NC_NOERR) {                                                \
             reqMode |= NC_REQ_ZERO;                                           \
+            start = NULL;                                                     \
+            count = NULL;                                                     \
             NCI_Free(start);                                                  \
         }                                                                     \
         else                                                                  \
@@ -341,18 +343,19 @@ APINAME($1,$2,$3,$4)(int ncid,
 
     reqMode |= IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3) | COLL_MODE($4);
 
-    ifelse(`$2',`',`if (err == NC_NOERR)
-        GET_FULL_DIMENSIONS(pncp, pncp->vars[varid], start, count)',
-           `$2',`1',`if (err == NC_NOERR)
-        GET_ONE_COUNT(pncp->vars[varid].ndims, count)')
+    ifelse(`$2',`',`ifelse(`$4',`_all',`if (err == NC_NOERR)')
+            GET_FULL_DIMENSIONS(pncp, pncp->vars[varid], start, count)
+            ifelse(`$4',`',`if (err != NC_NOERR) return err;')')
+    ifelse(`$2',`1',`ifelse(`$4',`_all',`if (err == NC_NOERR)')
+            GET_ONE_COUNT(pncp->vars[varid].ndims, count)')
 
     /* call the subroutine that implements APINAME($1,$2,$3,$4)() */
     status = pncp->driver->`$1'_var(pncp->ncp, varid, start, count,
                                     ArgStrideMap($2), buf,
                                     FLEX_ARG($3), reqMode);
 
-    ifelse(`$2',`',`if (err == NC_NOERR) NCI_Free(start);',
-           `$2',`1',`if (err == NC_NOERR) NCI_Free(count);')
+    ifelse(`$2',`',`if (start != NULL) NCI_Free(start);',
+           `$2',`1',`if (count != NULL) NCI_Free(count);')
 
     return ifelse(`$4',`',`status;',`(err != NC_NOERR) ? err : status; /* first error encountered */')
 }
@@ -633,9 +636,10 @@ IAPINAME($1,$2,$3)(int ncid,
 
     reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3);
 
-    ifelse(`$2',`',`GET_FULL_DIMENSIONS(pncp, pncp->vars[varid], start, count)
-                    if (err != NC_NOERR) return err;',
-           `$2',`1',`GET_ONE_COUNT(pncp->vars[varid].ndims, count)')
+    ifelse(`$2',`',
+    `GET_FULL_DIMENSIONS(pncp, pncp->vars[varid], start, count)
+     if (err != NC_NOERR) return err;',
+    `$2',`1',`GET_ONE_COUNT(pncp->vars[varid].ndims, count)')
 
     /* calling the subroutine that implements IAPINAME($1,$2,$3)() */
     err = pncp->driver->`$1'_var(pncp->ncp, varid, start, count,
