@@ -1474,7 +1474,11 @@ if test "x${TESTOUTDIR}" = x ; then
 fi
 
 dnl find if gcc is available for compiling ncoffsets to run in sequential
-AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+if test "$cross_compiling" = yes; then
+   SEQ_CC=$MPICC
+else
+   AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+fi
 AC_SUBST(SEQ_CC)
 
 dnl Configuration Date
