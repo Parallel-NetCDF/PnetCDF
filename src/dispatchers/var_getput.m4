@@ -46,9 +46,9 @@ define(`GOTO_CHECK',`{ DEBUG_ASSIGN_ERROR(err, $1) goto err_check; }')dnl
         err = pncp->driver->inq_dim(pncp->ncp, varp.recdim, NULL, &numrecs);  \
         if (err != NC_NOERR) {                                                \
             reqMode |= NC_REQ_ZERO;                                           \
+            NCI_Free(start);                                                  \
             start = NULL;                                                     \
             count = NULL;                                                     \
-            NCI_Free(start);                                                  \
         }                                                                     \
         else                                                                  \
             count[0] = numrecs;                                               \
