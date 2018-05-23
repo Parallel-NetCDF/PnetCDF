@@ -1657,7 +1657,8 @@ req_compare(const void *a, const void *b)
 static int
 req_aggregation(NC     *ncp,
                 int     num_reqs,    /* IN/OUT: # requests */
-                NC_req *reqs,        /* sorted requests */
+                NC_req *reqs,        /* [num_reqs] sorted requests, to be freed
+                                        in this subroutine */
                 int     rw_flag,     /* NC_REQ_WR or NC_REQ_RD */
                 int     coll_indep,  /* NC_REQ_COLL or NC_REQ_INDEP */
                 int     interleaved) /* interleaved in reqs[] */
@@ -1989,9 +1990,7 @@ req_aggregation(NC     *ncp,
         if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
         if (ncp->safe_mode)
             printf("Error at line %d file %s: size of aggregated nonblocking requests (%lld) > INT_MAX\n", __LINE__,__FILE__,(long long)buf_type_size);
-        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
-        if (coll_indep == NC_REQ_INDEP) return status;
-        buf_type = MPI_BYTE;
+        if (coll_indep == NC_REQ_INDEP) goto fn_exit;
         buf_len = 0; /* allow this process to participate collective call */
     }
 #endif
@@ -2008,9 +2007,7 @@ req_aggregation(NC     *ncp,
         if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
         if (ncp->safe_mode)
             printf("Error at line %d file %s: size of aggregated nonblocking requests > INT_MAX\n", __LINE__,__FILE__);
-        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
-        if (coll_indep == NC_REQ_INDEP) return status;
-        buf_type = MPI_BYTE;
+        if (coll_indep == NC_REQ_INDEP) goto fn_exit;
         buf_len = 0; /* allow this process to participate collective call */
     }
 #endif
@@ -2103,6 +2100,7 @@ req_aggregation(NC     *ncp,
         }
     }
 
+fn_exit:
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
     if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
 
@@ -2258,7 +2256,8 @@ wait_getput(NC         *ncp,
         /* sort reqs[] based on reqs[].offset_start */
         qsort(reqs, (size_t)num_reqs, sizeof(NC_req), req_compare);
 
-    /* aggregate requests and carry out the I/O */
+    /* aggregate requests and carry out the I/O (reqs will be freed in
+     * req_aggregation() */
     err = req_aggregation(ncp, num_reqs, reqs, rw_flag, coll_indep,
                           interleaved);
     if (status == NC_NOERR) status = err;
@@ -2322,7 +2321,8 @@ wait_getput(NC         *ncp,
 static int
 mgetput(NC     *ncp,
         int     num_reqs,    /* IN: number of requests */
-        NC_req *reqs,        /* [num_reqs] non-lead request list */
+        NC_req *reqs,        /* [num_reqs] non-lead request list, to be freed
+                                in this subroutine */
         int     rw_flag,     /* NC_REQ_WR or NC_REQ_RD */
         int     coll_indep)  /* NC_REQ_COLL or NC_REQ_INDEP */
 {
@@ -2352,7 +2352,12 @@ mgetput(NC     *ncp,
     status = construct_filetypes(ncp, num_reqs, blocklens, disps, reqs,
                                  &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
-        if (coll_indep == NC_REQ_INDEP) return status;
+        if (coll_indep == NC_REQ_INDEP) {
+            NCI_Free(blocklens);
+            NCI_Free(disps);
+            NCI_Free(reqs);
+            return status;
+        }
 
         /* For collective I/O, we still need to participate the successive
            collective calls: setview/read/write */
@@ -2363,7 +2368,12 @@ mgetput(NC     *ncp,
     offset = 0;
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
-        if (coll_indep == NC_REQ_INDEP) return status;
+        if (coll_indep == NC_REQ_INDEP) {
+            NCI_Free(blocklens);
+            NCI_Free(disps);
+            NCI_Free(reqs);
+            return status;
+        }
         if (status == NC_NOERR) status = err;
     }
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
