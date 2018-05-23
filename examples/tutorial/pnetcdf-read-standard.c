@@ -33,7 +33,6 @@ int main(int argc, char **argv) {
     char filename[256], varname[NC_MAX_NAME+1];
     int *dimids=NULL;
     nc_type type;
-    int *data=NULL;
 
     MPI_Init(&argc, &argv);
 
@@ -107,8 +106,9 @@ int main(int argc, char **argv) {
 
         switch(type) {
             case NC_INT:
-                data = (int*) calloc(var_size, sizeof(int));
+                int *data = (int*) calloc(var_size, sizeof(int));
                 ret = ncmpi_get_vara_int_all(ncfile, i, start, count, data);
+                free(data);
                 if (ret != NC_NOERR) handle_error(ret, __LINE__);
                 break;
             default:
@@ -120,7 +120,6 @@ int main(int argc, char **argv) {
         free(start);
         free(count);
         free(dimids);
-        if (data != NULL) free(data);
     }
 
     ret = ncmpi_close(ncfile);
