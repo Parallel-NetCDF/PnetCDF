@@ -33,21 +33,23 @@ define(`GOTO_CHECK',`{ DEBUG_ASSIGN_ERROR(err, $1) goto err_check; }')dnl
 }
 
 #define GET_FULL_DIMENSIONS(pncp, varp, start, count) {                       \
-    int _i=0;                                                                 \
+    int _i;                                                                   \
     start = (MPI_Offset*) NCI_Malloc((size_t)varp.ndims*2*SIZEOF_MPI_OFFSET); \
     count = start + varp.ndims;                                               \
                                                                               \
+    for (_i=0; _i<varp.ndims; _i++) {                                         \
+        count[_i] = varp.shape[_i];                                           \
+        start[_i] = 0;                                                        \
+    }                                                                         \
     if (varp.recdim >= 0) { /* find current numrec if varp is record var */   \
         MPI_Offset numrecs;                                                   \
         err = pncp->driver->inq_dim(pncp->ncp, varp.recdim, NULL, &numrecs);  \
-        if (err != NC_NOERR) return err;                                      \
-        count[0] = numrecs;                                                   \
-        start[0] = 0;                                                         \
-        _i = 1;                                                               \
-    }                                                                         \
-    for (; _i<varp.ndims; _i++) {                                             \
-        count[_i] = varp.shape[_i];                                           \
-        start[_i] = 0;                                                        \
+        if (err != NC_NOERR) {                                                \
+            reqMode |= NC_REQ_ZERO;                                           \
+            NCI_Free(start);                                                  \
+        }                                                                     \
+        else                                                                  \
+            count[0] = numrecs;                                               \
     }                                                                         \
 }
 
@@ -544,7 +546,8 @@ MAPINAME($1,$2,$3,$4)(int                ncid,
         MPI_Offset *start, *count, *stride=NULL, *imap=NULL;
 
         /* call the nonblocking subroutines */
-        ifelse(`$2',`',`GET_FULL_DIMENSIONS(pncp, pncp->vars[varids[i]], start, count)',
+        ifelse(`$2',`',`GET_FULL_DIMENSIONS(pncp, pncp->vars[varids[i]], start, count)
+        if (err != NC_NOERR) break;',
                `$2',`1',`GET_ONE_COUNT(pncp->vars[varids[i]].ndims, count)
         start = starts[i];',`start = starts[i]; count = counts[i];')
         ifelse(`$2',`s',`if (strides != NULL) stride = strides[i];',
@@ -630,7 +633,8 @@ IAPINAME($1,$2,$3)(int ncid,
 
     reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3);
 
-    ifelse(`$2',`',`GET_FULL_DIMENSIONS(pncp, pncp->vars[varid], start, count)',
+    ifelse(`$2',`',`GET_FULL_DIMENSIONS(pncp, pncp->vars[varid], start, count)
+                    if (err != NC_NOERR) return err;',
            `$2',`1',`GET_ONE_COUNT(pncp->vars[varid].ndims, count)')
 
     /* calling the subroutine that implements IAPINAME($1,$2,$3)() */
