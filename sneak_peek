@@ -3,7 +3,14 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * none
+    * Burst Buffer dirver is now avaiable.
+      Burst buffer driver is a I/O driver in PnetCDF that implements a log-based I/O aggregation for write related I/O requests that is designed to work on Cray burst buffer.
+      To build PnetCDF with burst buffer driver support, simply set "--enable-burstbuffer" option at configure time:
+        ./configure --prefix=/path/to/install --enable-burstbuffer 
+      The burst buffer driver is enable by setting file hints on file creation/opening. To enable burst buffer driver, set the hint "nc_bb" to enable.
+        MPI_Info_set(info, "nc_bb", "enable");
+      The hint can also be set using environment variable PNETCDF_HINTS.
+        export PNETCDF_HINTS="nc_bb=enable"
 
   o New optimization
     * Internal memory management for nonblocking APIs has been improved further
