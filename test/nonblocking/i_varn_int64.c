@@ -270,22 +270,6 @@ test_varn(int ncid, int rank, int *varid)
               -  -  -  -  -  -  -  X  X  X
      */
 
-#ifdef BUILD_DRIVER_BB
-    int bb_enabled=0;
-
-    {
-        int flag;
-        char hint[MPI_MAX_INFO_VAL];
-        MPI_Info infoused;
-
-        ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag && strcasecmp(hint, "enable") == 0)
-            bb_enabled = 1;
-        MPI_Info_free(&infoused);
-    }
-#endif
-
     /* allocate space for starts and counts */
     starts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
     counts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
