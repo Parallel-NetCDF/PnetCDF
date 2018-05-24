@@ -1582,6 +1582,7 @@ AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 
 AC_SUBST(enable_static)
 AC_SUBST(enable_shared)
+AM_CONDITIONAL(BUILD_SHARED_LIB, [test x${enable_shared} = xyes])
 
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
