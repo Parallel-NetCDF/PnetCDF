@@ -1476,7 +1476,11 @@ if test "x${TESTOUTDIR}" = x ; then
 fi
 
 dnl find if gcc is available for compiling ncoffsets to run in sequential
-AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+if test "$cross_compiling" = yes; then
+   SEQ_CC=$MPICC
+else
+   AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+fi
 AC_SUBST(SEQ_CC)
 
 dnl Configuration Date
@@ -1580,6 +1584,7 @@ AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 
 AC_SUBST(enable_static)
 AC_SUBST(enable_shared)
+AM_CONDITIONAL(BUILD_SHARED_LIB, [test x${enable_shared} = xyes])
 
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
