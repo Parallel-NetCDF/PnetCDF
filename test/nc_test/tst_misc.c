@@ -79,12 +79,13 @@ main(int argc, char **argv)
          }
 
 	 /* Make sure that netCDF rejects this file politely. */
-	 openstat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+	 openstat = ncmpi_open(MPI_COMM_SELF, path, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 	 /* Some platforms (OSX, buddy) return stat = 2 (file not found)
 	    for index i == 2.  Not sure why, but this is a work around. */
 	 if(openstat != NC_ENOTNC && openstat != NC_ENOENT && openstat != NC_EFILE) {
             /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
-            printf("Expecting error code %d or %d but got %d\n",NC_ENOTNC,NC_ENOENT,openstat);
+            printf("Error %s line %s: Expecting error code %d or %d but got %d\n",
+                   __FILE__,__LINE__,NC_ENOTNC,NC_ENOENT,openstat);
             nerrs++;
          }
       }
