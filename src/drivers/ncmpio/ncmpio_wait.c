@@ -1676,7 +1676,7 @@ req_aggregation(NC     *ncp,
     MPI_Datatype  filetype, buf_type, *ftypes, *btypes;
     MPI_File fh;
     MPI_Status mpistatus;
-    MPI_Offset max_end;
+    MPI_Offset max_end, offset;
 #if MPI_VERSION >= 3
     MPI_Count buf_type_size=0;
 #else
@@ -2023,7 +2023,7 @@ req_aggregation(NC     *ncp,
         fh = ncp->independent_fh;
 
     /* set the file view */
-    MPI_Offset offset=0;
+    offset = 0;
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         buf_len = 0; /* skip this request */
