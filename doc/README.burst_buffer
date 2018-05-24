@@ -5,12 +5,12 @@
 # $Id$
 
 -----------------------------------------------------------------------------
- Using burst buffer as Burst Buffers in PnetCDF
+ Using Burst Buffers in PnetCDF
 -----------------------------------------------------------------------------
 
-burst buffer driver is a I/O driver in PnetCDF that implements a log-based I/O
-aggregation for write related I/O requests that is designed to work on Cray
-burst buffer.
+Burst buffer driver is a I/O driver in PnetCDF that implements a log-based I/O
+aggregation for write related I/O requests that is designed to work on a wide 
+range of burst buffer architecture.
 
 -----------------------------------------------------------------------------
  Build PnetCDF with burst buffer driver
