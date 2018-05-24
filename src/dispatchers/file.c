@@ -627,7 +627,7 @@ ncmpi_open(MPI_Comm    comm,
         int ndims;
         err = driver->inq_var(pncp->ncp, i, NULL, &xtype, &ndims,
                               NULL, NULL, NULL, NULL, NULL);
-        if (err != NC_NOERR) return err;
+        if (err != NC_NOERR) goto fn_exit;
         pncp->vars[i].xtype  = xtype;
         pncp->vars[i].ndims  = ndims;
         pncp->vars[i].recdim = -1;   /* if fixed-size variable */

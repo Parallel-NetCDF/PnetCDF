@@ -73,7 +73,7 @@ typedef int nc_type;
 #define	NC_UINT64 	11	/**< unsigned 8-byte int */
 #define	NC_STRING 	12	/**< string */
 
-#define NC_MAX_ATOMIC_TYPE NC_STRING
+#define NC_MAX_ATOMIC_TYPE NC_STRING /**< @internal Largest atomic type. */
 
 /* The following are use internally in support of user-defines
  * types. They are also the class returned by nc_inq_user_type. */
@@ -82,7 +82,8 @@ typedef int nc_type;
 #define	NC_ENUM 	15	/**< enum types */
 #define	NC_COMPOUND 	16	/**< compound types */
 
-/* Define the first user defined type id (leave some room) */
+/** @internal Define the first user defined type id (leave some
+ * room) */
 #define NC_FIRSTUSERTYPEID 32
 
 /** Default fill value. This is used unless _FillValue attribute
@@ -181,7 +182,7 @@ Use this in mode flags for both nc_create() and nc_open(). */
 Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_MPIPOSIX      0x4000 /**< \deprecated As of libhdf5 1.8.13. */
 
-#define NC_INMEMORY      0x8000  /**< Read from memory. Mode flag for nc_open() or nc_create(). */
+#define NC_INMEMORY      0x8000  /**< Read from memory. Mode flag for nc_open() or nc_create() => NC_DISKLESS */
 
 #define NC_PNETCDF       (NC_MPIIO) /**< Use parallel-netcdf library; alias for NC_MPIIO. */
 
@@ -281,6 +282,16 @@ These maximums are not used for netCDF-4/HDF5 files unless they were
 created with the ::NC_CLASSIC_MODEL flag.
 
 As a rule, NC_MAX_VAR_DIMS <= NC_MAX_DIMS.
+
+NOTE: The NC_MAX_DIMS, NC_MAX_ATTRS, and NC_MAX_VARS limits
+      are *not* enforced after version 4.5.0
+
+#define NC_MAX_DIMS     1024 (not enforced after 4.5.0)
+#define NC_MAX_ATTRS    8192 (not enforced after 4.5.0)
+#define NC_MAX_VARS     8192 (not enforced after 4.5.0)
+#define NC_MAX_VAR_DIMS 1024 (max per variable dimensions)
+PnetCDF defines the above 4 constants differently from NetCDF 4.5.0.
+
 */
 /**@{*/
 #define NC_MAX_DIMS	NC_MAX_INT
@@ -327,6 +338,9 @@ there. */
 #define NC_SHUFFLE   1
 /**@}*/
 
+#define NC_MIN_DEFLATE_LEVEL 0 /**< Minimum deflate level. */
+#define NC_MAX_DEFLATE_LEVEL 9 /**< Maximum deflate level. */
+
 /** The netcdf version 3 functions all return integer error status.
  * These are the possible values, in addition to certain values from
  * the system errno.h.
@@ -370,11 +384,11 @@ larger than the corresponding dimension length will cause an error. */
 /** NC_MAX_DIMS exceeded. Max number of dimensions exceeded in a
 classic or 64-bit offset file, or an netCDF-4 file with
 ::NC_CLASSIC_MODEL on. */
-#define	NC_EMAXDIMS	(-41)      /**< NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeds */
+#define	NC_EMAXDIMS	(-41)      /**< NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeds - not enforced after 4.5.0 */
 
 #define	NC_ENAMEINUSE	(-42)	   /**< String match to name in use */
 #define NC_ENOTATT	(-43)	   /**< Attribute not found */
-#define	NC_EMAXATTS	(-44)	   /**< NC_MAX_ATTRS exceeded */
+#define	NC_EMAXATTS	(-44)	   /**< NC_MAX_ATTRS exceeded - not enforced after 4.5.0 */
 #define NC_EBADTYPE	(-45)	   /**< Not a netcdf data type */
 #define NC_EBADDIM	(-46)	   /**< Invalid dimension id or name */
 #define NC_EUNLIMPOS	(-47)	   /**< NC_UNLIMITED in the wrong index */
@@ -382,7 +396,7 @@ classic or 64-bit offset file, or an netCDF-4 file with
 /** NC_MAX_VARS exceeded. Max number of variables exceeded in a
 classic or 64-bit offset file, or an netCDF-4 file with
 ::NC_CLASSIC_MODEL on. */
-#define	NC_EMAXVARS	(-48)
+#define	NC_EMAXVARS	(-48)	/* not enforced after 4.5.0 */
 
 /** Variable not found.
 
@@ -403,7 +417,7 @@ referenced data out of range for the rank of the specified
 variable. For example, an edge length that is larger than the
 corresponding dimension length minus the corner index will cause an
 error. */
-#define NC_EEDGE	(-57)      /**< Start+count exceeds dimension bound */
+#define NC_EEDGE	(-57)      /**< Start+count exceeds dimension bound. */
 #define NC_ESTRIDE	(-58)	   /**< Illegal stride */
 #define NC_EBADNAME	(-59)	   /**< Attribute or variable name contains illegal characters */
 /* N.B. following must match value in ncx.h */
@@ -439,12 +453,12 @@ by the desired type. */
 /* Misc. additional errors */
 #define NC_ENOTFOUND     (-90)      /**< No such file */
 #define NC_ECANTREMOVE   (-91)      /**< Can't remove file */
+#define NC_EINTERNAL     (-92)      /**< NetCDF Library Internal Error */
 
 /* The following was added in support of netcdf-4. Make all netcdf-4
    error codes < -100 so that errors can be added to netcdf-3 if
    needed. */
-#define NC4_FIRST_ERROR  (-100)
-
+#define NC4_FIRST_ERROR  (-100)    /**< @internal All HDF5 errors < this. */
 #define NC_EHDFERR       (-101)    /**< Error at HDF5 layer. */
 #define NC_ECANTREAD     (-102)    /**< Can't read. */
 #define NC_ECANTWRITE    (-103)    /**< Can't write. */
@@ -456,8 +470,7 @@ by the desired type. */
 #define NC_ENOCOMPOUND   (-109)    /**< Not a compound type. */
 #define NC_EATTEXISTS    (-110)    /**< Attribute already exists. */
 #define NC_ENOTNC4       (-111)    /**< Attempting netcdf-4 operation on netcdf-3 file. */
-
-#define NC_ESTRICTNC3    (-112)    /** Attempting netcdf-4 operation on strict nc3 netcdf-4 file. */
+#define NC_ESTRICTNC3    (-112)    /**< Attempting netcdf-4 operation on strict nc3 netcdf-4 file. */
 #define NC_ENOTNC3       (-113)    /**< Attempting netcdf-3 operation on netcdf-4 file. */
 #define NC_ENOPAR        (-114)    /**< Parallel operation on file opened for non-parallel access. */
 #define NC_EPARINIT      (-115)    /**< Error initializing for parallel access. */
@@ -481,20 +494,21 @@ by the desired type. */
 #define NC_EFILTER       (-132)    /**< Filter operation failed. */
 #define NC_ERCFILE       (-133)    /**< RC file failure */
 #define NC_ENULLPAD      (-134)    /**< Header Bytes not Null-Byte padded */
-#define NC4_LAST_ERROR   (-135)
+#define NC_EINMEMORY     (-135)    /**< In-memory file error */
+#define NC4_LAST_ERROR   (-136)    /**< @internal All netCDF errors > this. */
 
-/* This is used in netCDF-4 files for dimensions without coordinate
- * vars. */
+/** @internal This is used in netCDF-4 files for dimensions without
+ * coordinate vars. */
 #define DIM_WITHOUT_VARIABLE "This is a netCDF dimension but not a netCDF variable."
 
-/* This is here at the request of the NCO team to support our
- * mistake of having chunksizes be first ints, then size_t. Doh! */
+/** @internal This is here at the request of the NCO team to support
+ * our mistake of having chunksizes be first ints, then
+ * size_t. Doh! */
 #define NC_HAVE_NEW_CHUNKING_API 1
 
-
 /*Errors for all remote access methods(e.g. DAP and CDMREMOTE)*/
-#define NC_EURL		(NC_EDAPURL)   /* Malformed URL */
-#define NC_ECONSTRAINT  (NC_EDAPCONSTRAINT)   /* Malformed Constraint*/
+#define NC_EURL		(NC_EDAPURL)   /**< Malformed URL */
+#define NC_ECONSTRAINT  (NC_EDAPCONSTRAINT)   /**< Malformed Constraint*/
 
 #endif
 /* end of #ifndef _NETCDF_ */

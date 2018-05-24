@@ -26,8 +26,8 @@
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
-        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+        printf("Error at line %d in %s: input file %s (%s)\n", \
+        __LINE__,__FILE__,filename,ncmpi_strerrno(err)); \
     } \
 }
 
