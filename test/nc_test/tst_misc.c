@@ -84,7 +84,7 @@ main(int argc, char **argv)
 	    for index i == 2.  Not sure why, but this is a work around. */
 	 if(openstat != NC_ENOTNC && openstat != NC_ENOENT && openstat != NC_EFILE) {
             /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
-            printf("Error %s line %s: Expecting error code %d or %d but got %d\n",
+            printf("Error %s line %d: Expecting error code %d or %d but got %d\n",
                    __FILE__,__LINE__,NC_ENOTNC,NC_ENOENT,openstat);
             nerrs++;
          }
