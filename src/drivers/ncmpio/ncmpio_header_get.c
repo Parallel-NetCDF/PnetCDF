@@ -906,7 +906,10 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp)
 
     /* get nc_type */
     err = hdr_get_nc_type(gbp, &type);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        NCI_Free(name);
+        return err;
+    }
 
     /* get nelems */
     if (gbp->version < 5) {
@@ -919,9 +922,12 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp)
         err = hdr_get_uint64(gbp, &tmp);
         nelems = (MPI_Offset)tmp;
     }
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        NCI_Free(name);
+        return err;
+    }
 
-    /* allocate space for attribute object */
+    /* allocate space for attribute object, name will be assigned in attrp */
     err = ncmpio_new_NC_attr(name, type, nelems, &attrp);
     if (err != NC_NOERR) {
         NCI_Free(name);
@@ -1063,17 +1069,29 @@ hdr_get_NC_var(bufferinfo  *gbp,
     if (gbp->version < 5) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
-        if (err != NC_NOERR) return err;
+        if (err != NC_NOERR) {
+            NCI_Free(name);
+            return err;
+        }
         /* cannot be more than NC_MAX_VAR_DIMS */
-        if (tmp > NC_MAX_VAR_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        if (tmp > NC_MAX_VAR_DIMS) {
+            NCI_Free(name);
+            DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        }
         ndims = (int)tmp;
     }
     else {
         uint64 tmp;
         err = hdr_get_uint64(gbp, &tmp);
-        if (err != NC_NOERR) return err;
+        if (err != NC_NOERR) {
+            NCI_Free(name);
+            return err;
+        }
         /* cannot be more than NC_MAX_VAR_DIMS */
-        if (tmp > NC_MAX_VAR_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        if (tmp > NC_MAX_VAR_DIMS) {
+            NCI_Free(name);
+            DEBUG_RETURN_ERROR(NC_EMAXDIMS)
+        }
         ndims = (int)tmp;
     }
 
