@@ -870,7 +870,7 @@
         doubleprecision         value1
         character*(MAX_NELS+2)  text
         logical                 allInRange
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -932,7 +932,7 @@
                         call errore('nf90mpi_put_var: ', err)
                     end if
                 else
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
                     err2 = nf90mpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb", &
                        MPI_MAX_INFO_VAL, hint, flag, err2)

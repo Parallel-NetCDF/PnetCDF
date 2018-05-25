@@ -77,7 +77,7 @@
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
           logical verbose
           integer info
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
           LOGICAL*4                  flag
           integer                 err2
           character*(MPI_MAX_INFO_VAL)     hint
@@ -147,7 +147,7 @@
           err = nf90mpi_put_var_all(ncid, varid, buf, start, count)
           call check(err, 'In nf90mpi_put_vara_int_all: ')
 
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
           err2 = nf90mpi_inq_file_info(ncid, infoused)
           call MPI_Info_get(infoused, "nc_bb", & 
                 MPI_MAX_INFO_VAL, hint, flag, err2)

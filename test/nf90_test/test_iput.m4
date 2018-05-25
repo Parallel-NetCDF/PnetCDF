@@ -160,7 +160,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         DATATYPE_VAR1($1, value)
         double precision val
         integer err_w, reqid(1), st(1)
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -212,7 +212,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 val = hash_$1(var_type(i),var_rank(i), index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, value, val)
                 err = iPutVar(ncid, i, value(1:1), reqid(1), index)
-#ifdef BUILD_DRIVER_BB 
+#if defined(BUILD_DRIVER_BB) 
                 err2 = nf90mpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb", &
                 MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -278,7 +278,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
         integer err_w, reqid(1), st(1)
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -322,7 +322,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
                     inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
             err = iPutVar(ncid, i, value, reqid(1), count=var_shape(:,i))
-#ifdef BUILD_DRIVER_BB 
+#if defined(BUILD_DRIVER_BB) 
                 err2 = nf90mpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb", &
                 MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -397,7 +397,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
                 err = iPutVar(ncid, i, value, reqid(1), count=var_shape(:,i))
-#ifdef BUILD_DRIVER_BB 
+#if defined(BUILD_DRIVER_BB) 
                 err2 = nf90mpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb", &
                 MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -469,7 +469,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -617,7 +617,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 10              continue
                 err = iPutVar(ncid, i, value,reqid(1), start, edge)
-#ifdef BUILD_DRIVER_BB 
+#if defined(BUILD_DRIVER_BB) 
                 err2 = nf90mpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb", &
                 MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -696,7 +696,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -884,7 +884,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                                      NFT_ITYPE($1))
 12                  continue
                     err = iPutVar(ncid, i, value,reqid(1), index, count, stride)
-#ifdef BUILD_DRIVER_BB 
+#if defined(BUILD_DRIVER_BB) 
                     err2 = nf90mpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb", &
                     MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -966,7 +966,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
-#ifdef BUILD_DRIVER_BB
+#if defined(BUILD_DRIVER_BB)
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -1162,7 +1162,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                                      NFT_ITYPE($1))
 14                  continue
                     err = iPutVar(ncid,i,value,reqid(1), index, count, stride, imap)
-#ifdef BUILD_DRIVER_BB 
+#if defined(BUILD_DRIVER_BB) 
                     err2 = nf90mpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb", &
                     MPI_MAX_INFO_VAL, hint, flag, err2)
