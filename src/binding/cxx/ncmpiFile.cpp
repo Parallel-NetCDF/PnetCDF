@@ -106,7 +106,7 @@ void NcmpiFile::sync(){
   ncmpiCheck(ncmpi_sync(myId),__FILE__,__LINE__);
 }
 
-// Flush an open netcdf dataset to disk
+// Flush data buffered by PnetCDF to disk
 void NcmpiFile::flush(){
   ncmpiCheck(ncmpi_flush(myId),__FILE__,__LINE__);
 }
