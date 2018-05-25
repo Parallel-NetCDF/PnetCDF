@@ -195,10 +195,9 @@ typedef struct bufferinfo {
 
 /*
  * "magic number" at beginning of file: 0x43444601 (big endian)
+ * "CDF1", "CDF2", or "CDF5"
  */
-static const char ncmagic1[] = {'C', 'D', 'F', 0x01};
-static const char ncmagic2[] = {'C', 'D', 'F', 0x02};
-static const char ncmagic5[] = {'C', 'D', 'F', 0x05};
+#define NC_MAGIC_LEN 4
 
 const char * ncmpii_err_code_name(int err);
 
@@ -767,7 +766,7 @@ ncmpii_hdr_len_NC(const NC *ncp)
         sizeof_off_t = X_SIZEOF_INT; /* 4-byte integer in CDF-1 */
     }
 
-    xlen  = sizeof(ncmagic1);                                          /* magic */
+    xlen  = NC_MAGIC_LEN;                                              /* magic */
     xlen += sizeof_t;                                                  /* numrecs */
     xlen += hdr_len_NC_dimarray(&ncp->dims,   sizeof_t);               /* dim_list */
     xlen += hdr_len_NC_attrarray(&ncp->attrs, sizeof_t);               /* gatt_list */
@@ -794,7 +793,7 @@ hdr_fetch(bufferinfo *gbp) {
     gbp->pos = gbp->base;
 
     lseek(gbp->fd, (gbp->offset)-slack, SEEK_SET);
-    size_t read_amount = read(gbp->fd, gbp->base, gbp->size);
+    ssize_t read_amount = read(gbp->fd, gbp->base, gbp->size);
     if (read_amount == -1) {
         fprintf(stderr,"ERROR at line %d: read error %s\n",__LINE__,strerror(errno));
         exit(1);
@@ -828,7 +827,7 @@ hdr_get_NCtype(bufferinfo *gbp,
     if (status != NC_NOERR) return status;
 
     /* get a 4-byte integer */
-    *typep = get_uint32(gbp);
+    *typep = (NCtype) get_uint32(gbp);
 
     return NC_NOERR;
 }
@@ -883,7 +882,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     int status;
     size_t  nchars, nbytes, padding, bufremain, strcount;
     NC_string *ncstrp;
-    char *cpos, pad[X_ALIGN-1];
+    char *cpos;
 
     /* get nelems */
     if (gbp->version == 5)
@@ -943,6 +942,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
          * and discussion in NetCDF Github issue
          * https://github.com/Unidata/netcdf-c/issues/657.
          */
+        char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             free(ncstrp);
@@ -1118,7 +1118,6 @@ hdr_get_NC_attrV(bufferinfo *gbp,
      */
     int status;
     void *value = attrp->xvalue;
-    char pad[X_ALIGN-1];
     size_t nbytes, padding, bufremain, attcount;
 
     nbytes = attrp->nelems * ncmpix_len_nctype(attrp->type);
@@ -1166,6 +1165,7 @@ hdr_get_NC_attrV(bufferinfo *gbp,
          * and discussion in NetCDF Github issue
          * https://github.com/Unidata/netcdf-c/issues/657.
          */
+        char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0)
             DEBUG_RETURN_ERROR(NC_ENOTNC);
@@ -1616,19 +1616,19 @@ ncmpii_hdr_get_NC(int fd, NC *ncp)
     /* don't need to worry about CDF-1 or CDF-2
      * if the first bits are not 'CDF'
      */
-    if (memcmp(magic, ncmagic1, sizeof(ncmagic1)-1) != 0) {
+    if (strncmp(magic, "CDF", NC_MAGIC_LEN-1) != 0) {
         DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         goto fn_exit;
     }
 
     /* check version number in last byte of magic */
-    if (magic[sizeof(ncmagic1)-1] == 0x1) {
+    if (magic[NC_MAGIC_LEN-1] == 0x1) {
         getbuf.version = 1;
         ncp->flags = 1;
-    } else if (magic[sizeof(ncmagic1)-1] == 0x2) {
+    } else if (magic[NC_MAGIC_LEN-1] == 0x2) {
         getbuf.version = 2;
         ncp->flags = 2;
-    } else if (magic[sizeof(ncmagic1)-1] == 0x5) {
+    } else if (magic[NC_MAGIC_LEN-1] == 0x5) {
         getbuf.version = 5;
         ncp->flags = 5;
     } else {
