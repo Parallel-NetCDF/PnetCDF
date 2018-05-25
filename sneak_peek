@@ -50,7 +50,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New APIs
-    * 
+    * ncmpi_flush
+      Flush any data buffered by PnetCDF to the file. When using the burst buffer driver, the data cached on the burst buffer will be flushed.
 
   o API syntax changes
     * none
