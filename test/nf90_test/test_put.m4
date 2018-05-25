@@ -434,7 +434,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
         doubleprecision val
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -493,7 +493,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                         if (err .ne. NF90_NOERR) &
                             call errore('PutVar: ', err)
                     else
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
                         err2 = nf90mpi_inq_file_info(ncid, infoused)
                         call MPI_Info_get(infoused, "nc_bb", &
                         MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -551,7 +551,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -600,7 +600,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     if (err .ne. NF90_NOERR) &
                         call errore('PutVar: ', err)
                 else
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
                     err2 = nf90mpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb", &
                     MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -635,7 +635,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         err = PutVar(ncid, vid, 'x', index)
         if (err .ne. NF90_NOERR) &
             call errore('PutVar: ', err)
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         err2 = nf90mpi_inq_file_info(ncid, infoused)
         call MPI_Info_get(infoused, "nc_bb", &
         MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -680,7 +680,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                         if (err .ne. NF90_NOERR) &
                             call errore('PutVar: ', err)
                     else
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
                         err2 = nf90mpi_inq_file_info(ncid, infoused)
                         call MPI_Info_get(infoused, "nc_bb", &
                         MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -744,7 +744,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -854,7 +854,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 edge(j) = 1
 6           continue
 
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
             err2 = nf90mpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb", &
             MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -907,7 +907,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                         if (err .ne. NF90_NOERR)  &
                             call error(ErrFunc(err))
                     else
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
                         err2 = nf90mpi_inq_file_info(ncid, infoused)
                         call MPI_Info_get(infoused, "nc_bb", &
                         MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -978,7 +978,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -1099,7 +1099,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 edge(j) = 1
 6           continue
 
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
             err2 = nf90mpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb", &
             MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -1182,7 +1182,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                             if (err .ne. NF90_NOERR)  &
                                 call error(ErrFunc(err))
                         else
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
                             err2 = nf90mpi_inq_file_info(ncid, infoused)
                             call MPI_Info_get(infoused, "nc_bb", &
                             MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -1257,7 +1257,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -1384,7 +1384,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 edge(j) = 1
 6           continue
 
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
             err2 = nf90mpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb", &
             MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -1474,7 +1474,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                             if (err .ne. NF90_NOERR) &
                                 call error(ErrFunc(err))
                         else
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
                             err2 = nf90mpi_inq_file_info(ncid, infoused)
                             call MPI_Info_get(infoused, "nc_bb", &
                             MPI_MAX_INFO_VAL, hint, flag, err2)
