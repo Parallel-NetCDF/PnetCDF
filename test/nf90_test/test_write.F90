@@ -445,7 +445,7 @@
         integer ngatts
         integer recdim
         integer nok
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -547,7 +547,7 @@
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         call put_vars(ncid)
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         err2 = nf90mpi_inq_file_info(ncid, infoused)
         call MPI_Info_get(infoused, "nc_bb", &
                MPI_MAX_INFO_VAL, hint, flag, err2)

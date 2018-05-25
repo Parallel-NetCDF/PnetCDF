@@ -163,7 +163,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         DATATYPE_VAR1($1, value)
         doubleprecision val
         integer err_w, reqid(1), st(1)
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -221,7 +221,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 MAKE_TYPE2($1, value, val)
                 err = iPutVar1($1)(ncid, i,
      +                index, value, reqid(1))
-#if defined(BUILD_DRIVER_BB) 
+#ifdef BUILD_DRIVER_BB 
                 err2 = nfmpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb",
      +                 MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -289,7 +289,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer err_w, reqid(1), st(1)
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -335,7 +335,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
      +              inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
             err = iPutVar($1)(ncid, i, value,reqid(1))
-#if defined(BUILD_DRIVER_BB) 
+#ifdef BUILD_DRIVER_BB 
             err2 = nfmpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb",
      +             MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -413,7 +413,7 @@ C           Only test record variables here
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
                 err = iPutVar($1)(ncid, i, value,reqid(1))
-#if defined(BUILD_DRIVER_BB) 
+#ifdef BUILD_DRIVER_BB 
                 err2 = nfmpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb",
      +                 MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -487,7 +487,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -648,7 +648,7 @@ C           /* Check correct error returned even when nothing to put */
 10              continue
                 err = iPutVara($1)(ncid, i, start,
      +                  edge, value,reqid(1))
-#if defined(BUILD_DRIVER_BB) 
+#ifdef BUILD_DRIVER_BB 
                 err2 = nfmpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb",
      +                 MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -729,7 +729,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -931,7 +931,7 @@ C*/
 12                   continue
                     err = iPutVars($1)(ncid, i,
      +                    index, count, stride, value,reqid(1))
-#if defined(BUILD_DRIVER_BB) 
+#ifdef BUILD_DRIVER_BB 
                     err2 = nfmpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb",
      +                     MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -1015,7 +1015,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         doubleprecision val
         integer ud_shift
         integer err_w, reqid(1), st(1)
-#if defined(BUILD_DRIVER_BB)
+#ifdef BUILD_DRIVER_BB
         integer                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
@@ -1225,7 +1225,7 @@ C*/
 14                  continue
                     err = iPutVarm($1)(ncid,i,
      +                   index,count, stride,imap, value,reqid(1))
-#if defined(BUILD_DRIVER_BB) 
+#ifdef BUILD_DRIVER_BB 
                     err2 = nfmpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb",
      +                     MPI_MAX_INFO_VAL, hint, flag, err2)
