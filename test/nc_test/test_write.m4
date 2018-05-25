@@ -451,7 +451,6 @@ int
 TestFunc(flush)(AttVarArgs)
 {
     int ncidw;         /* netcdf id for writing */
-    int ncidr;         /* netcdf id for reading */
     int nok=0, err;
 
     /* BAD_ID test */
@@ -481,9 +480,9 @@ TestFunc(flush)(AttVarArgs)
     ELSE_NOK
 
     /* Data should be avaiable for reading for the same handle after flush */
-    check_dims(ncidr);
-    Check_Atts(ncidr, numGatts, numVars);
-    Check_Vars(ncidr, numVars);
+    check_dims(ncidw);
+    Check_Atts(ncidw, numGatts, numVars);
+    Check_Vars(ncidw, numVars);
 
     /* close both handles */
     err = APIFunc(close)(ncidw);
