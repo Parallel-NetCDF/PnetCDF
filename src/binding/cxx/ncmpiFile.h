@@ -76,7 +76,7 @@ namespace PnetCDF
       //! Synchronize an open netcdf dataset to disk
       void sync();
 
-      //! Synchronize an open netcdf dataset to disk
+      //! Flush data buffered by PnetCDF to disk
       void flush();
 
       //! Leave define mode, used for classic model
