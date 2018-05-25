@@ -76,12 +76,11 @@
           integer*8 malloc_size, sum_size
           logical verbose
           integer dummy, info
-#if defined(BUILD_DRIVER_BB)
+
             integer                 flag
             integer                 err2
             character*(MPI_MAX_INFO_VAL)     hint
             integer                 infoused
-#endif
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -147,7 +146,6 @@
           err = nfmpi_put_vara_int_all(ncid, varid, start, count, buf)
           call check(err, 'In nfmpi_put_vara_int_all: ')
 
-#if defined(BUILD_DRIVER_BB)
             err2 = nfmpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb",
      +           MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -157,7 +155,6 @@
                 endif
             endif
             call MPI_Info_free(infoused, err2);
-#endif
 
           ! initialize the buffer with rank ID
           do i=1, NY
