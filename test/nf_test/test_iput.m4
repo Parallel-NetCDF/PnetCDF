@@ -164,7 +164,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         doubleprecision val
         integer err_w, reqid(1), st(1)
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -225,7 +225,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 err2 = nfmpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb",
      +                 MPI_MAX_INFO_VAL, hint, flag, err2)
-                if (flag .eq. 1) then
+                if (flag) then
                     if (hint .eq. 'enable') then
                         if (err .eq. NF_NOERR) then
                             err = nfmpi_flush(ncid)
@@ -290,7 +290,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         doubleprecision val
         integer err_w, reqid(1), st(1)
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -339,7 +339,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
             err2 = nfmpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb",
      +             MPI_MAX_INFO_VAL, hint, flag, err2)
-            if (flag .eq. 1) then
+            if (flag) then
                 if (hint .eq. 'enable') then
                     if (err .eq. NF_NOERR) then
                         err = nfmpi_flush(ncid)
@@ -417,7 +417,7 @@ C           Only test record variables here
                 err2 = nfmpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb",
      +                 MPI_MAX_INFO_VAL, hint, flag, err2)
-                if (flag .eq. 1) then
+                if (flag) then
                     if (hint .eq. 'enable') then
                         if (err .eq. NF_NOERR) then
                             err = nfmpi_flush(ncid)
@@ -488,7 +488,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1)
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -652,7 +652,7 @@ C           /* Check correct error returned even when nothing to put */
                 err2 = nfmpi_inq_file_info(ncid, infoused)
                 call MPI_Info_get(infoused, "nc_bb",
      +                 MPI_MAX_INFO_VAL, hint, flag, err2)
-                if (flag .eq. 1) then
+                if (flag) then
                     if (hint .eq. 'enable') then
                         if (err .eq. NF_NOERR) then
                             err = nfmpi_flush(ncid)
@@ -730,7 +730,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1)
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -935,7 +935,7 @@ C*/
                     err2 = nfmpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb",
      +                     MPI_MAX_INFO_VAL, hint, flag, err2)
-                    if (flag .eq. 1) then
+                    if (flag) then
                         if (hint .eq. 'enable') then
                             if (err .eq. NF_NOERR) then
                                 err = nfmpi_flush(ncid)
@@ -1016,7 +1016,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1)
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -1229,7 +1229,7 @@ C*/
                     err2 = nfmpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb",
      +                     MPI_MAX_INFO_VAL, hint, flag, err2)
-                    if (flag .eq. 1) then
+                    if (flag) then
                         if (hint .eq. 'enable') then
                             if (err .eq. NF_NOERR) then
                                 err = nfmpi_flush(ncid)

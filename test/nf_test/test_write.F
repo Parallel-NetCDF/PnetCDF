@@ -440,7 +440,7 @@ C    try after writing variable
         integer recdim
         integer nok, flags
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -540,7 +540,7 @@ C           /* try nfmpi_abort in data mode - should just close */
         err2 = nfmpi_inq_file_info(ncid, infoused)
         call MPI_Info_get(infoused, "nc_bb",
      +          MPI_MAX_INFO_VAL, hint, flag, err2)
-        if (flag .eq. 1) then
+        if (flag) then
             if (hint .eq. 'enable') then
                 err = nfmpi_flush(ncid)
             endif

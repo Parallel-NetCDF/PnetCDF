@@ -435,7 +435,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         DATATYPE_VAR1($1, value)
         doubleprecision val
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -497,7 +497,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                         err2 = nf90mpi_inq_file_info(ncid, infoused)
                         call MPI_Info_get(infoused, "nc_bb", &
                         MPI_MAX_INFO_VAL, hint, flag, err2)
-                        if (flag .eq. 1) then
+                        if (flag) then
                             if (hint .eq. 'enable') then
                                 err = nf90mpi_flush(ncid)
                             endif
@@ -552,7 +552,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -604,7 +604,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     err2 = nf90mpi_inq_file_info(ncid, infoused)
                     call MPI_Info_get(infoused, "nc_bb", &
                     MPI_MAX_INFO_VAL, hint, flag, err2)
-                    if (flag .eq. 1) then
+                    if (flag) then
                         if (hint .eq. 'enable') then
                             err = nf90mpi_flush(ncid)
                         endif
@@ -639,7 +639,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         err2 = nf90mpi_inq_file_info(ncid, infoused)
         call MPI_Info_get(infoused, "nc_bb", &
         MPI_MAX_INFO_VAL, hint, flag, err2)
-        if (flag .eq. 1) then
+        if (flag) then
             if (hint .eq. 'enable') then
                 err = nf90mpi_flush(ncid)
             endif
@@ -684,7 +684,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                         err2 = nf90mpi_inq_file_info(ncid, infoused)
                         call MPI_Info_get(infoused, "nc_bb", &
                         MPI_MAX_INFO_VAL, hint, flag, err2)
-                        if (flag .eq. 1) then
+                        if (flag) then
                             if (hint .eq. 'enable') then
                                 err = nf90mpi_flush(ncid)
                             endif
@@ -745,7 +745,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         doubleprecision val
         integer ud_shift
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -858,7 +858,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
             err2 = nf90mpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb", &
             MPI_MAX_INFO_VAL, hint, flag, err2)
-            if (flag .eq. 1) then
+            if (flag) then
                 if (hint .eq. 'enable') then
                     err = nf90mpi_flush(ncid)
                 endif
@@ -911,7 +911,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                         err2 = nf90mpi_inq_file_info(ncid, infoused)
                         call MPI_Info_get(infoused, "nc_bb", &
                         MPI_MAX_INFO_VAL, hint, flag, err2)
-                        if (flag .eq. 1) then
+                        if (flag) then
                             if (hint .eq. 'enable') then
                                 err = nf90mpi_flush(ncid)
                             endif
@@ -979,7 +979,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         doubleprecision val
         integer ud_shift
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -1103,7 +1103,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
             err2 = nf90mpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb", &
             MPI_MAX_INFO_VAL, hint, flag, err2)
-            if (flag .eq. 1) then
+            if (flag) then
                 if (hint .eq. 'enable') then
                     err = nf90mpi_flush(ncid)
                 endif
@@ -1186,7 +1186,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                             err2 = nf90mpi_inq_file_info(ncid, infoused)
                             call MPI_Info_get(infoused, "nc_bb", &
                             MPI_MAX_INFO_VAL, hint, flag, err2)
-                            if (flag .eq. 1) then
+                            if (flag) then
                                 if (hint .eq. 'enable') then
                                     err = nf90mpi_flush(ncid)
                                 endif
@@ -1258,7 +1258,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         doubleprecision val
         integer ud_shift
 #if defined(BUILD_DRIVER_BB)
-        integer                 flag
+        logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
@@ -1388,7 +1388,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
             err2 = nf90mpi_inq_file_info(ncid, infoused)
             call MPI_Info_get(infoused, "nc_bb", &
             MPI_MAX_INFO_VAL, hint, flag, err2)
-            if (flag .eq. 1) then
+            if (flag) then
                 if (hint .eq. 'enable') then
                     err = nf90mpi_flush(ncid)
                 endif
@@ -1478,7 +1478,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                             err2 = nf90mpi_inq_file_info(ncid, infoused)
                             call MPI_Info_get(infoused, "nc_bb", &
                             MPI_MAX_INFO_VAL, hint, flag, err2)
-                            if (flag .eq. 1) then
+                            if (flag) then
                                 if (hint .eq. 'enable') then
                                     err = nf90mpi_flush(ncid)
                                 endif
