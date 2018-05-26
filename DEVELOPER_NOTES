@@ -699,19 +699,38 @@ compiler, which causes errors for building PnetCDF at the configure time.
 The fix and patch have been discussed and provided in the link below. PnetCDF
 users/developers are encouraged to apply to patch to their autoconf utility.
 
+-----------------
+Fujitsu compilers
+-----------------
 Subject: Support Fujitsu in _AC_PROG_FC_V
 https://lists.gnu.org/archive/html/autoconf-patches/2013-11/msg00001.html
 
-diff -r autoconf-2.69/lib/autoconf/fortran.m4 Origin/autoconf-2.69/lib/autoconf/fortran.m4
-581,582d580
-< # Fujitsu accepts --verbose and passes it to the linker, which doesn't yield
-< # the desired result. Therefore test for -### before testing for --verbose.
-590c588
-< for ac_verb in -v -verbose -V -\#\#\# --verbose; do
----
-> for ac_verb in -v -verbose --verbose -V -\#\#\#; do
+diff -u Origin/autoconf-2.69/lib/autoconf/fortran.m4 autoconf-2.69/lib/autoconf/fortran.m4
+--- Origin/autoconf-2.69/lib/autoconf/fortran.m4	2012-03-07 11:35:25.000000000 -0600
++++ autoconf-2.69/lib/autoconf/fortran.m4	2017-05-08 12:23:15.110473352 -0500
+@@ -578,6 +578,8 @@
+ # information of library and object files (normally -v)
+ # Needed for _AC_FC_LIBRARY_FLAGS
+ # Some compilers don't accept -v (Lahey: (-)-verbose, xlf: -V, Fujitsu: -###)
++# Fujitsu accepts --verbose and passes it to the linker, which doesn't yield
++# the desired result. Therefore test for -### before testing for --verbose.
+ AC_DEFUN([_AC_PROG_FC_V],
+ [_AC_FORTRAN_ASSERT()dnl
+ AC_CACHE_CHECK([how to get verbose linking output from $[]_AC_FC[]],
+@@ -585,7 +587,7 @@
+ [AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
+ [ac_cv_prog_[]_AC_LANG_ABBREV[]_v=
+ # Try some options frequently used verbose output
+-for ac_verb in -v -verbose --verbose -V -\#\#\#; do
++for ac_verb in -v -verbose -V -\#\#\# --verbose; do
+   _AC_PROG_FC_V_OUTPUT($ac_verb)
+   # look for -l* and *.a constructs in the output
+   for ac_arg in $ac_[]_AC_LANG_ABBREV[]_v_output; do
 
 
+-------------------------
+Fortran preprocessor flag
+-------------------------
 On some systems, the Fortran preprocessor flag is not "-D". For example, IBM
 XL fortran compilers use flag "-WF,-D". However, autoconf 2.69 hard-codes
 "-DHAVE_CONFIG_H" into pre-defined variable "DEFS" which is used in C, C++,
@@ -720,38 +739,74 @@ FC_DEFS, and replaces DEFS with it for Fortran-based compile commands. Thus,
 in Makefile.am, use ${FC_DEFINE} instead of -D when setting FCFLAGS/FFLAGS.
 See an example in test/common/Makefile.am.
 
-diff -r autoconf-2.69/lib/autoconf/general.m4 Origin/autoconf-2.69/lib/autoconf/general.m4
-1411d1410
-< AC_SUBST([FC_DEFS])dnl
+diff -u autoconf-2.69/lib/autoconf/general.m4 Origin/autoconf-2.69/lib/autoconf/general.m4
+--- autoconf-2.69/lib/autoconf/general.m4	2017-05-08 10:33:20.396072040 -0500
++++ Origin/autoconf-2.69/lib/autoconf/general.m4	2012-04-24 21:37:26.000000000 -0500
+@@ -1408,7 +1408,6 @@
+ dnl
+ dnl Substitute for predefined variables.
+ AC_SUBST([DEFS])dnl
+-AC_SUBST([FC_DEFS])dnl
+ AC_SUBST([ECHO_C])dnl
+ AC_SUBST([ECHO_N])dnl
+ AC_SUBST([ECHO_T])dnl
 
-diff -r autoconf-2.69/lib/autoconf/status.m4 Origin/autoconf-2.69/lib/autoconf/status.m4
-1269,1274d1268
-< if test "x$FC_DEFINE" != "x-D" ; then
-<    ac_fc_define_sed_str="s/-D/${FC_DEFINE}/g"
-<    FC_DEFS=`echo $DEFS | sed $ac_fc_define_sed_str`
-< else
-<    FC_DEFS=$DEFS
-< fi
 
-diff -r automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
-625,633d624
-< my @fpplike_flags =
-<   qw{
-<     $(FC_DEFS)
-<     $(DEFAULT_INCLUDES)
-<     $(INCLUDES)
-<     $(AM_CPPFLAGS)
-<     $(CPPFLAGS)
-<   };
-<
-888c879
-< 		   'compile' => "\$(FC) @fpplike_flags \$(AM_FCFLAGS) \$(FCFLAGS)",
----
-> 		   'compile' => "\$(FC) @cpplike_flags \$(AM_FCFLAGS) \$(FCFLAGS)",
-920c911
-< 		   'compile' => "\$(F77) @fpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
----
-> 		   'compile' => "\$(F77) @cpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
+diff -u autoconf-2.69/lib/autoconf/status.m4 Origin/autoconf-2.69/lib/autoconf/status.m4
+--- autoconf-2.69/lib/autoconf/status.m4	2017-05-08 18:49:02.966611595 -0500
++++ Origin/autoconf-2.69/lib/autoconf/status.m4	2012-04-24 21:37:26.000000000 -0500
+@@ -1266,12 +1266,6 @@
+ test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
+ 
+ m4_ifdef([_AC_SEEN_CONFIG(HEADERS)], [DEFS=-DHAVE_CONFIG_H], [AC_OUTPUT_MAKE_DEFS()])
+-if test "x$FC_DEFINE" != "x-D" ; then
+-   ac_fc_define_sed_str="s/-D/${FC_DEFINE}/g"
+-   FC_DEFS=`echo $DEFS | sed $ac_fc_define_sed_str`
+-else
+-   FC_DEFS=$DEFS
+-fi
+ 
+ dnl Commands to run before creating config.status.
+ AC_OUTPUT_COMMANDS_PRE()dnl
+
+
+diff -u automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
+--- automake-1.15/bin/automake.in	2017-05-08 01:01:05.098144772 -0500
++++ Origin/automake-1.15/bin/automake.in	2015-01-05 13:25:55.000000000 -0600
+@@ -622,15 +622,6 @@
+     $(CPPFLAGS)
+   };
+ 
+-my @fpplike_flags =
+-  qw{
+-    $(FC_DEFS)
+-    $(DEFAULT_INCLUDES)
+-    $(INCLUDES)
+-    $(AM_CPPFLAGS)
+-    $(CPPFLAGS)
+-  };
+-
+ # C.
+ register_language ('name' => 'c',
+ 		   'Name' => 'C',
+@@ -885,7 +876,7 @@
+ 		   'flags' => ['FCFLAGS', 'CPPFLAGS'],
+ 		   'ccer' => 'PPFC',
+ 		   'compiler' => 'PPFCCOMPILE',
+-		   'compile' => "\$(FC) @fpplike_flags \$(AM_FCFLAGS) \$(FCFLAGS)",
++		   'compile' => "\$(FC) @cpplike_flags \$(AM_FCFLAGS) \$(FCFLAGS)",
+ 		   'compile_flag' => '-c',
+ 		   'output_flag' => '-o',
+ 		   'libtool_tag' => 'FC',
+@@ -917,7 +908,7 @@
+ 		   'flags' => ['FFLAGS', 'CPPFLAGS'],
+ 		   'ccer' => 'PPF77',
+ 		   'compiler' => 'PPF77COMPILE',
+-		   'compile' => "\$(F77) @fpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
++		   'compile' => "\$(F77) @cpplike_flags \$(AM_FFLAGS) \$(FFLAGS)",
+ 		   'compile_flag' => '-c',
+ 		   'output_flag' => '-o',
+ 		   'libtool_tag' => 'F77',
 
 -----------------------------------------------------------------------------
 Note on DataWarp driver
