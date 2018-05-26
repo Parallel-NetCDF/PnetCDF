@@ -37,7 +37,6 @@ utils.o: utils.F90
 if BUILD_DRIVER_BB
 TESTBB = 1
 TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
-AM_FCFLAGS += -DBUILD_DRIVER_BB -cpp
 endif
 
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
