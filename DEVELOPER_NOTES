@@ -314,7 +314,7 @@ If a new PnetCDF API is created, please check and do the followings.
 
 2. In src/libf (1.8.1 and prior) src/binding/f77 (1.9.0 and later)
    * The new APIs should be declared in "pnetcdf.inc.in"
-   * add their C-to-Fortran file name in "Makefile.in"
+   * add their C-to-Fortran file name in "Makefile.in" ((1.8.1 and prior)
      For example, API nfmpi_put_att() corresponds to file put_attf.c
    * Some APIs have arguments that need special treatment in file "defs"
      for example, put_vard API's second argument varid, its Fortran value
@@ -716,7 +716,9 @@ On some systems, the Fortran preprocessor flag is not "-D". For example, IBM
 XL fortran compilers use flag "-WF,-D". However, autoconf 2.69 hard-codes
 "-DHAVE_CONFIG_H" into pre-defined variable "DEFS" which is used in C, C++,
 F77, and F90 compile commands. The hack below adds a pre-define variable,
-FC_DEFS, and replaces DEFS with it for Fortran-based compile commands.
+FC_DEFS, and replaces DEFS with it for Fortran-based compile commands. Thus,
+in Makefile.am, use ${FC_DEFINE} instead of -D when setting FCFLAGS/FFLAGS.
+See an example in test/common/Makefile.am.
 
 diff -r autoconf-2.69/lib/autoconf/general.m4 Origin/autoconf-2.69/lib/autoconf/general.m4
 1411d1410
