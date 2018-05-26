@@ -74,6 +74,10 @@ The commands to do so are:
     soft delete +mpiwrapper-xl
     soft add +mpiwrapper-gcc
 
+The GNU-based MPI compilers are mpicc, mpicxx, mpif77, and mpif90
+
+  ---- To build static-only library with GNU based compilers ----
+
     ./configure --prefix=/path/to/install \
                 --host powerpc64-bgq-linux \
                 --build ppc64-redhat-linux \
@@ -82,7 +86,11 @@ The commands to do so are:
                 MPIF77=mpif77 \
                 MPIF90=mpif90
 
----- To build shared library with GNU based compilers ----
+    Then add the following LDFLAGS to the make command line.
+
+        make LDFLAGS=-all-static
+
+  ---- To build shared library with GNU based compilers ----
 
     PnetCDF's default is to build static libraries only. To build shared
     libraries, add the following to the above configure command line.
@@ -91,8 +99,8 @@ The commands to do so are:
                 LDFLAGS=-dynamic
 
     Link flag -dynamic is required to build shared libraries when using the
-    GNU C/C++ compilers. It should not be used when building static
-    libraried only.
+    GNU C/C++ compilers. It should not be used when building static libraries
+    only.
 
 ---- To use thread-safe XL compilers ----
 
