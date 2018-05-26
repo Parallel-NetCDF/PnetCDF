@@ -85,9 +85,11 @@
                 MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
                 CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS=""
 
-  and then run
+  Then add the following LDFLAGS to the make command line, i.e.
 
-                make LDFLAGS=-all-static
+                make       LDFLAGS=-all-static
+                make tests LDFLAGS=-all-static
+                make check LDFLAGS=-all-static
 
   Without adding LDFLAGS, you may encounter the following error messages. 
     libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libgfortran.la' seems to be moved 
