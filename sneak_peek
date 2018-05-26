@@ -84,7 +84,11 @@ This is essentially a placeholder for the next release note ...
   o New run-time environment variables
     * none
 
-  o Build recipe
+  o Build recipes
+    * doc/README.IBM is revised as the compiler behavior has changed on BGQ
+      since the release of 1.9.0.
+    * doc/README.CRAY is revised as the compiler behavior has changed on CRAY
+      since the release of 1.9.0.
     * doc/README.Ubuntu is revised and the fix of adding LDFLAGS is no longer
       necessary.
 
