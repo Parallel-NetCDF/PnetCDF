@@ -96,8 +96,12 @@
     /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/6.3.0/snos/lib/../lib64/libgfortran.so' 
     collect2: error: ld returned 1 exit status 
 
-  Building shared libraries has no such problem. Simply use command below.
+  * Building shared libraries:
 
+  For 1.9.1 and later, follow the same instructions for the Intel-based
+  compilers above.
+
+  For 1.9.0, use command below.
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
                 MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
