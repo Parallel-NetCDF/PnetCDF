@@ -102,6 +102,8 @@ This is essentially a placeholder for the next release note ...
   o Other updates:
     * Inter-library dependencies among C, C++ and Fortran have been updated to
       follow automake user guide: add FLIBS and FCLIBS to _LIBADD.
+    * Move the memory allocation trace feature out of --enable-debug into the
+      new configure option --enable-profiling. By default, this is disabled.
     * Add a check for NC_EUNLIMIT in API ncmpi_open to detect whether two or
       more unlimited dimensions are defined in a corrupted file.
 

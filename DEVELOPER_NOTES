@@ -220,6 +220,8 @@ Conform with netCDF
    4. src/drivers/common/utf8proc.c      v.s. netcdf-c/libdispatch/utf8proc.c
    5. src/drivers/common/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h
 
+   utf8proc URL: https://github.com/JuliaLang/utf8proc
+
 ==========================================================================
 Note on netCDF text APIs and variables of external data type NC_CHAR
 ==========================================================================
