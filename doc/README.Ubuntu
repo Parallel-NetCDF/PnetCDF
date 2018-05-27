@@ -15,7 +15,7 @@
 
 
 -----------------------------------------------------------------------
-The following note applies to 1.9.0 only and not for 1.9.1 and later.
+The following note applies to 1.9.0 only.
 -----------------------------------------------------------------------
 
    Set LDFLAGS to the following at the configure command line, i.e.,

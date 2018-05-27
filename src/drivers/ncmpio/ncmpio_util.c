@@ -375,7 +375,10 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         MPI_Type_free(&imaptype);
 
         /* lbuf is no longer needed */
-        if (free_lbuf) NCI_Free(lbuf);
+        if (free_lbuf) {
+            NCI_Free(lbuf);
+            free_lbuf = 0;
+        }
     }
     else /* not a true varm call: reuse lbuf */
         cbuf = lbuf;
@@ -436,6 +439,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 	 * request must continue to finish.
          */
         if (free_cbuf) NCI_Free(cbuf);
+        if (free_lbuf) NCI_Free(lbuf);
     }
     else {
         if (cbuf == buf && xbuf != buf)

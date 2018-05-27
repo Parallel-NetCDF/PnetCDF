@@ -86,9 +86,11 @@ The GNU-based MPI compilers are mpicc, mpicxx, mpif77, and mpif90
                 MPIF77=mpif77 \
                 MPIF90=mpif90
 
-    Then add the following LDFLAGS to the make command line.
+    Then add the following LDFLAGS to the make command line, i.e.
 
-        make LDFLAGS=-all-static
+        make       LDFLAGS=-all-static
+        make tests LDFLAGS=-all-static
+        make check LDFLAGS=-all-static
 
   ---- To build shared library with GNU based compilers ----
 
