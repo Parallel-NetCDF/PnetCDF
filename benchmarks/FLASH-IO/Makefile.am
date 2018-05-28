@@ -83,7 +83,7 @@ ptests ptest ptest4: $(check_PROGRAMS)
         else \
             echo "FAILED: F90 parallel run on 4 processes ------------- FLASH_IO"; \
         fi ; \
-	) ; fi 
+	) ; fi
 
 ptest2 ptest6 ptest8 ptest10:
 

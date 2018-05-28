@@ -30,7 +30,7 @@ if [ -n "${TESTBB}" ]; then
             ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
         done
     done
-    
+
     export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test_subfile.nc.subfile_0.nc
     unset PNETCDF_HINTS

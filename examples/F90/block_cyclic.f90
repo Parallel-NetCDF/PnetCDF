@@ -147,7 +147,7 @@
           call check(err, 'In nf90mpi_put_vara_int_all: ')
 
           err2 = nf90mpi_inq_file_info(ncid, infoused)
-          call MPI_Info_get(infoused, "nc_bb", & 
+          call MPI_Info_get(infoused, "nc_bb", &
                 MPI_MAX_INFO_VAL, hint, flag, err2)
           if (flag) then
               if (hint .eq. 'enable') then

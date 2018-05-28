@@ -260,7 +260,7 @@ int
 ncbbio_init(NC_bb *ncbbp)
 {
     int err;
-    
+
     /* If logfile are not initialized, we initialize the logfile */
     if (!ncbbp->inited){
         /* Init log file */
@@ -349,7 +349,7 @@ ncbbio_redef(void *ncdp)
      * After redef, our record in the log can become out dated due to change in varid, dimsize ... etc.
      * Flush the log to ensure we have a fresh start
      */
-    
+
     if (ncbbp->inited) {
         err = ncbbio_log_flush(ncbbp);
         if (err != NC_NOERR) return err;
@@ -402,7 +402,7 @@ ncbbio_abort(void *ncdp)
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
-    
+
     err = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
 
     MPI_Comm_free(&(ncbbp->comm));
