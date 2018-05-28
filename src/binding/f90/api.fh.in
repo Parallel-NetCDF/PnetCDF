@@ -67,7 +67,7 @@ INTERFACE
     INTEGER FUNCTION nfmpi_sync(ncid)
                      INTEGER,                       INTENT(IN)  :: ncid
     END     FUNCTION nfmpi_sync
-    
+
     INTEGER FUNCTION nfmpi_flush(ncid)
                      INTEGER,                       INTENT(IN)  :: ncid
     END     FUNCTION nfmpi_flush

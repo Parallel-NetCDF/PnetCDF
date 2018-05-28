@@ -565,7 +565,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
 
     /* Nothing to replay if nothing have been written
      * We still need to participate the flush in collective mode
-     * We assume some processes will have things to flush to save communication cost 
+     * We assume some processes will have things to flush to save communication cost
      */
     if (headerp->num_entries == 0 && ncbbp->isindep){
         return NC_NOERR;

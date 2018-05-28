@@ -640,7 +640,7 @@ by the desired type. */
 #define NC_ENUMRECS_MULTIDEFINE		NC_EMULTIDEFINE_NUMRECS
 #define NC_EVARS_BEGIN_MULTIDEFINE	NC_EMULTIDEFINE_VAR_BEGIN
 
-
+
 /*
  * The Interface
  */

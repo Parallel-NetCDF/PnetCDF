@@ -1328,7 +1328,7 @@ ifdef(`PNETCDF',`dnl
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
 #ifdef BUILD_DRIVER_BB
-            err = ncmpi_flush(ncid); 
+            err = ncmpi_flush(ncid);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
 #endif
         }

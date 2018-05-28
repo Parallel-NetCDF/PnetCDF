@@ -59,12 +59,12 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
     t1 = MPI_Wtime();
 #endif
 
-    /* Check parameters 
+    /* Check parameters
      * Varid must be valid
      * Start, count must be valid
      * ECHAR must be detected
      */
-    
+
     /* Get PNC */
     err = PNC_check_id(ncbbp->ncid, &pncp);
     if (err != NC_NOERR){
@@ -91,7 +91,7 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
         *putsize = size;
     }
 
-    /* Skip empty entries 
+    /* Skip empty entries
      * Other arguments form upper layer may be invalid in case of 0 size request
      * skip to prevent unnecessary error
      */
@@ -99,7 +99,7 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
         return NC_NOERR;
     }
 
-    /* Record largest entry size 
+    /* Record largest entry size
      * This is used later to determine minimal buffer size required to flush the log
      */
     if (ncbbp->maxentrysize < size){

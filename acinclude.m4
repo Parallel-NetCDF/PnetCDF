@@ -1705,7 +1705,7 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
       UD_MSG_DEBUG(ac_mpi_prog_path=$ac_mpi_prog_path)
       UD_MSG_DEBUG(ac_mpi_prog_name=$ac_mpi_prog_name)
       if (! test -d "${ac_mpi_prog_path}") ; then
-         AC_MSG_ERROR(Directory '${ac_mpi_prog_path}' does not exist)  
+         AC_MSG_ERROR(Directory '${ac_mpi_prog_path}' does not exist)
       fi
 
       AC_PATH_PROG([ac_mpi_prog_$1], [$ac_mpi_prog_name], [], [$ac_mpi_prog_path])

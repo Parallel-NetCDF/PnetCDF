@@ -141,7 +141,7 @@ int main(int argc, char** argv)
             bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
-#endif        
+#endif
 
         /* the global array is NY * (NX * nprocs) */
         G_NX  = NX * nprocs;

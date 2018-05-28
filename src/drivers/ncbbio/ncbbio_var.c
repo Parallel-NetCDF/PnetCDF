@@ -269,7 +269,7 @@ ncbbio_iput_var(void             *ncdp,
     int i, err, id;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    /* Initialize driver if not yet initialized 
+    /* Initialize driver if not yet initialized
      * Since PnetCDF allow nonblocking requests in define mode, we must initialize the driver if it hasn't been initialized
      */
     if (!ncbbp->inited){
@@ -563,7 +563,7 @@ ncbbio_iput_varn(void               *ncdp,
         DEBUG_RETURN_ERROR(NC_ENULLSTART)
     }
 
-    /* Initialize driver if not yet initialized 
+    /* Initialize driver if not yet initialized
      * Since PnetCDF allow nonblocking requests in define mode, we must initialize the driver if it hasn't been initialized
      */
     if (!ncbbp->inited){
