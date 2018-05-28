@@ -60,6 +60,11 @@ TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 TESTS = seq_runs.sh
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
+
 CLEANFILES = $(M4SRCS_F90) \
              $(TESTOUTDIR)/scratch.nc \
              $(TESTOUTDIR)/test.nc \
