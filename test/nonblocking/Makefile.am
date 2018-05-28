@@ -117,6 +117,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
@@ -130,6 +131,7 @@ ptest2 : $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
@@ -143,6 +145,7 @@ ptest6 : $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
