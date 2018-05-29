@@ -589,9 +589,8 @@ by the desired type. */
 #define NC_EINVAL_OMODE			(-235) /**< Invalid file open mode */
 #define NC_EPENDING			(-236) /**< Pending nonblocking request is found at file close */
 #define NC_EMAX_REQ			(-237) /**< Size of I/O request exceeds INT_MAX */
-#define NC_EBADLOG			(-238) /**< burst buffer wrong log format */
-#define NC_ELOGCHECK		(-239) /**< burst buffer log file check fail */
-#define NC_EFLUSHED			(-240) /**< burst buffer already flushed */
+#define NC_EBADLOG			(-238) /**< Unrecognized log file format */
+#define NC_EFLUSHED			(-239) /**< Nonblocking request has already been flushed to the PFS. It is too late to cancel */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
