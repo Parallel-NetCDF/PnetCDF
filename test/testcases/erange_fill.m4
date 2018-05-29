@@ -174,13 +174,10 @@ int test_erange_put_$1_$2(char* filename) {
     $1 buf[LEN], fillv=99;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
-#ifdef BUILD_DRIVER_BB
     int bb_enabled=0;
-#endif
 
     /* create a new file */
     err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
-#ifdef BUILD_DRIVER_BB
     {
         int flag;
         char hint[MPI_MAX_INFO_VAL];
@@ -192,7 +189,6 @@ int test_erange_put_$1_$2(char* filename) {
             bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
-#endif
 
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
@@ -208,20 +204,19 @@ int test_erange_put_$1_$2(char* filename) {
     $2 wbuf[LEN];
     for (i=0; i<LEN; i++) wbuf[i] = ($2) ifelse(index(`$1',`u'), 0, `-1', `XTYPE_MAX($2)');
     err = PUT_VAR($2)(ncid, varid1, wbuf);
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
-#endif
+
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')
     err = PUT_VAR($2)(ncid, varid2, wbuf);
-#ifdef BUILD_DRIVER_BB
+
     if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
-#endif
+
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')
 
     err = ncmpi_close(ncid); CHECK_ERR

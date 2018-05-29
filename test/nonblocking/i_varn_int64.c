@@ -121,7 +121,6 @@ int clear_file_contents(int ncid, int *varid)
 {
     int i, err, rank, nerrs=0;
     long long *w_buffer = (long long*) malloc(NY*NX * sizeof(long long));
-#ifdef BUILD_DRIVER_BB
     int bb_enabled=0;
 
     {
@@ -135,7 +134,6 @@ int clear_file_contents(int ncid, int *varid)
             bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
-#endif
 
     for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
 
@@ -147,13 +145,11 @@ int clear_file_contents(int ncid, int *varid)
     }
     free(w_buffer);
 
-#ifdef BUILD_DRIVER_BB
     // Flush the log to prevent new value being skipped due to overlaping domain
     if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
-#endif
 
     return nerrs;
 }
