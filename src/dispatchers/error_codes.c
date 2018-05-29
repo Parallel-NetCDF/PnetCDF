@@ -291,12 +291,6 @@ ncmpi_strerror(int err)
             return "File create mode is inconsistent among processes.";
         case NC_EBADLOG:
             return "Unrecognized log files.";
-        case NC_EWRONGBASE:
-            return "Log files base name not match.";
-        case NC_ENODATALOG:
-            return "Data log is missing.";
-        case NC_ELOGNOTINIT:
-            return "Log file not initialized.";
         case NC_ELOGCHECK:
             return "Log file corrupted.";
         case NC_EFLUSHED:
