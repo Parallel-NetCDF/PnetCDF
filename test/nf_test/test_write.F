@@ -439,8 +439,7 @@ C    try after writing variable
         integer ngatts
         integer recdim
         integer nok, flags
-        logical                 flag
-        integer                 err2
+        logical                 flag, bb_enable
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
         nok = 0
@@ -460,6 +459,19 @@ C           /* create scratch file & try nfmpi_abort in define mode */
             call errore('nfmpi_create: ', err)
             return
         end if
+
+        ! Determine if burst buffer driver is being used
+        bb_enable = .FALSE.
+        err = nfmpi_inq_file_info(ncid, infoused)
+        if (err .eq. NF_NOERR) then
+            call MPI_Info_get(infoused, "nc_bb",
+     +            MPI_MAX_INFO_VAL, hint, flag, err)
+            if (flag) then
+                bb_enable = (hint .eq. 'enable')
+            endif
+            call MPI_Info_free(infoused, err);
+        endif
+
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
@@ -534,15 +546,14 @@ C           /* try nfmpi_abort in data mode - should just close */
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
-        err2 = nfmpi_inq_file_info(ncid, infoused)
-        call MPI_Info_get(infoused, "nc_bb",
-     +          MPI_MAX_INFO_VAL, hint, flag, err2)
-        if (flag) then
-            if (hint .eq. 'enable') then
+        
+        ! Flush the buffer to reveal potential error
+        if (bb_enable) then
+            if (err .eq. NF_NOERR) then
                 err = nfmpi_flush(ncid)
             endif
         endif
-        call MPI_Info_free(infoused, err2);
+
         err = nfmpi_abort(ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_abort of ncid failed: ', err)

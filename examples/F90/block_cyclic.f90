@@ -78,10 +78,10 @@
           logical verbose
           integer info
 
-          LOGICAL*4                  flag
-          integer                 err2
+          logical                 flag, bb_enable
           character*(MPI_MAX_INFO_VAL)     hint
           integer                 infoused
+
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -109,6 +109,18 @@
           err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
                                info, ncid)
           call check(err, 'In nf90mpi_create: ')
+
+          ! Determine if burst buffer driver is being used
+          bb_enable = .FALSE.
+          err = nfmpi_inq_file_info(ncid, infoused)
+          if (err .eq. NF_NOERR) then
+              call MPI_Info_get(infoused, "nc_bb", &
+                   MPI_MAX_INFO_VAL, hint, flag, err)
+              if (flag) then
+                  bb_enable = (hint .eq. 'enable')
+              endif
+              call MPI_Info_free(infoused, err);
+          endif
 
           call MPI_Info_free(info, err)
 
@@ -146,15 +158,12 @@
           err = nf90mpi_put_var_all(ncid, varid, buf, start, count)
           call check(err, 'In nf90mpi_put_vara_int_all: ')
 
-          err2 = nf90mpi_inq_file_info(ncid, infoused)
-          call MPI_Info_get(infoused, "nc_bb", &
-                MPI_MAX_INFO_VAL, hint, flag, err2)
-          if (flag) then
-              if (hint .eq. 'enable') then
-                  err = nf90mpi_flush(ncid)
+          ! Flush the buffer to reveal potential error
+          if (bb_enable) then
+              if (err .eq. NF_NOERR) then
+                  err = nfmpi_flush(ncid)
               endif
           endif
-          call MPI_Info_free(infoused, err2);
 
           ! initialize the buffer with rank ID
           buf = rank+10

@@ -870,10 +870,21 @@
         doubleprecision         value1
         character*(MAX_NELS+2)  text
         logical                 allInRange
-        logical                 flag
-        integer                 err2
+        logical                 flag, bb_enable
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
+
+        ! Determine if burst buffer driver is being used
+        bb_enable = .FALSE.
+        err = nf90mpi_inq_file_info(ncid, infoused)
+        if (err .eq. NF_NOERR) then
+            call MPI_Info_get(infoused, "nc_bb", &
+                MPI_MAX_INFO_VAL, hint, flag, err)
+            if (flag) then
+                bb_enable = (hint .eq. 'enable')
+            endif
+            call MPI_Info_free(infoused, err);
+        endif
 
         do 1, j = 1, MAX_RANK
             start(j) = 1
@@ -930,15 +941,12 @@
                         call errore('nf90mpi_put_var: ', err)
                     end if
                 else
-                    err2 = nf90mpi_inq_file_info(ncid, infoused)
-                    call MPI_Info_get(infoused, "nc_bb", &
-                       MPI_MAX_INFO_VAL, hint, flag, err2)
-                    if (flag) then
-                        if (hint .eq. 'enable') then
-                            err = nf90mpi_flush(ncid)
+                    ! Flush the buffer to reveal potential error
+                    if (bb_enable) then
+                        if (err .eq. NF_NOERR) then
+                            err = nfmpi_flush(ncid)
                         endif
                     endif
-                    call MPI_Info_free(infoused, err2);
 
                     if (err .ne. NF90_ERANGE) then
                         call errore( &
