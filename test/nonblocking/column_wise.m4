@@ -88,9 +88,7 @@ int test_column_wise_$1(char *filename, int cdf)
     int ncid, cmode, varid, dimid[2], *reqs, *sts;
     $1 **buf;
     MPI_Offset start[2], count[2];
-#ifdef BUILD_DRIVER_BB
     int bb_enabled=0;
-#endif
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -103,7 +101,6 @@ int test_column_wise_$1(char *filename, int cdf)
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-#ifdef BUILD_DRIVER_BB
     {
         int flag;
         char hint[MPI_MAX_INFO_VAL];
@@ -115,7 +112,6 @@ int test_column_wise_$1(char *filename, int cdf)
             bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
-#endif
 
     /* the global array is NY * (NX * nprocs) */
     G_NX  = NX * nprocs;
@@ -136,13 +132,11 @@ int test_column_wise_$1(char *filename, int cdf)
     err = ncmpi_put_vara_`$1'_all(ncid, varid, start, count, buf[0]);
     free(buf[0]);
 
-#ifdef BUILD_DRIVER_BB
     // Flush the log to prevent new value being skipped due to overlaping domain
     if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
-#endif
 
     /* initialize the buffer with rank ID. Also make the case interesting,
        by allocatsing buffersd separately */

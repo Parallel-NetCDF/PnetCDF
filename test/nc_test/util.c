@@ -800,7 +800,6 @@ put_vars(int ncid, int numVars)
     int  i, j, err, allInRange;
     double value[MAX_NELS];
     char text[MAX_NELS];
-#ifdef BUILD_DRIVER_BB
     int bb_enabled=0;
     {
         int flag;
@@ -813,7 +812,6 @@ put_vars(int ncid, int numVars)
             bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
-#endif
 
     for (j = 0; j < MAX_RANK; j++) start[j] = 0;
     for (i = 0; i < numVars; i++) {
@@ -853,11 +851,9 @@ put_vars(int ncid, int numVars)
                  * See
                  * http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
                  */
-#ifdef BUILD_DRIVER_BB
                 if (bb_enabled){
                     err = ncmpi_flush(ncid);
                 }
-#endif
                 IF (err != NC_ERANGE)
                     error("expecting NC_ERANGE but got %s", ncmpi_strerrno(err));
             }

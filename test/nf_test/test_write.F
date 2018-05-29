@@ -439,12 +439,10 @@ C    try after writing variable
         integer ngatts
         integer recdim
         integer nok, flags
-#if defined(BUILD_DRIVER_BB)
         logical                 flag
         integer                 err2
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
-#endif
         nok = 0
 
 C           /* BAD_ID test */
@@ -536,7 +534,6 @@ C           /* try nfmpi_abort in data mode - should just close */
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
-#if defined(BUILD_DRIVER_BB)
         err2 = nfmpi_inq_file_info(ncid, infoused)
         call MPI_Info_get(infoused, "nc_bb",
      +          MPI_MAX_INFO_VAL, hint, flag, err2)
@@ -546,7 +543,6 @@ C           /* try nfmpi_abort in data mode - should just close */
             endif
         endif
         call MPI_Info_free(infoused, err2);
-#endif
         err = nfmpi_abort(ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_abort of ncid failed: ', err)

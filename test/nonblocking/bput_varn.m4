@@ -232,9 +232,8 @@ test_bput_varn_$1(char *filename, int cdf)
     int ncid, cmode, varid[NLOOPS], dimid[2], nreqs, reqs[NLOOPS], sts[NLOOPS];
     int req_lens[NLOOPS], my_nsegs[NLOOPS], num_segs[NLOOPS] = {4, 6, 5, 4};
     $1 *buffer[NLOOPS];
-#ifdef BUILD_DRIVER_BB
     int bb_enabled=0;
-#endif
+
     MPI_Offset **starts[NLOOPS], **counts[NLOOPS];
     MPI_Offset n_starts[NLOOPS][MAX_NREQS][2] =
                                     {{{0,5}, {1,0}, {2,6}, {3,0}, {0,0}, {0,0}},
@@ -280,7 +279,6 @@ test_bput_varn_$1(char *filename, int cdf)
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-#ifdef BUILD_DRIVER_BB
     {
         int flag;
         char hint[MPI_MAX_INFO_VAL];
@@ -292,7 +290,6 @@ test_bput_varn_$1(char *filename, int cdf)
             bb_enabled = 1;
         MPI_Info_free(&infoused);
     }
-#endif
 
 
     /* create a global array of size NY * NX */
@@ -392,28 +389,21 @@ test_bput_varn_$1(char *filename, int cdf)
         }
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
+
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);
 
@@ -443,29 +433,21 @@ test_bput_varn_$1(char *filename, int cdf)
         }
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);
@@ -497,16 +479,13 @@ test_bput_varn_$1(char *filename, int cdf)
         }
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
+
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
@@ -520,16 +499,13 @@ test_bput_varn_$1(char *filename, int cdf)
             }
         }
     }
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
+
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);
 
@@ -564,16 +540,12 @@ test_bput_varn_$1(char *filename, int cdf)
         }
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
@@ -587,16 +559,12 @@ test_bput_varn_$1(char *filename, int cdf)
             }
         }
     }
-#ifdef BUILD_DRIVER_BB
     if (bb_enabled) {
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
-#endif
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-#ifdef BUILD_DRIVER_BB
     }
-#endif
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);
