@@ -77,6 +77,26 @@ export PNETCDF_HINTS="nc_bb=enable;nc_bb_del_on_close=disable;nc_bb_dirname=${BB
 srun -n 1 ./myapplication 
 
 -----------------------------------------------------------------------------
+ How does it work
+-----------------------------------------------------------------------------
+
+The burst buffer driver is a wraper driver of the defualt ncmpio (MPI-IO) driver.
+All I/O operations (blocking or nonblocking) regarding variable write are intercepted and cached
+ on the burst buffer.
+Other I/O oeprations proceed to the ncmpio driver as usual.
+To flush the data on the burst buffer. The burst buffer combine all cached I/O operations into a
+ (larger) single I/O request in hope to yield better I/O performance.
+When the buffer size is not enough to accomodate all cached data, flushing will be done in 
+multiple rounds.
+The data on the burst buffer is flushed when:
+    (1) The NetCDF file is closed
+    (2) There is a variable read related I/O request being processed
+    (3) A nonblocking request involving operation cached on the burst buffer is being waited on
+    (4) ncmpi_flush is called
+
+
+
+-----------------------------------------------------------------------------
  Known Problems
 -----------------------------------------------------------------------------
 While we design the burst buffer driver to be as transparent as possible. There are
@@ -86,4 +106,7 @@ of different behaviors:
 1. Log buffering delays actual file write to replay time. If there are errors
 caused by put operations, it will be hide by logging until the log is replayed.
 
+2. Partial flushing is not supported. Whenever there is a need of data on the burst 
+buffer, all data will be flushed to the PFS. It can cause an nonblocking request to 
+be processed before it is being waited on, making it not possible to cancel.
    
