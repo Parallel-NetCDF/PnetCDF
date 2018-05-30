@@ -91,7 +91,7 @@ multiple rounds.
 The data on the burst buffer is flushed when:
     (1) The NetCDF file is closed
     (2) There is a variable read related I/O request being processed
-    (3) A nonblocking request involving operation cached on the burst buffer is being waited on
+    (3) ncmpi_wait/ncmpi_wait_all is called
     (4) ncmpi_flush is called
 
 
@@ -108,5 +108,13 @@ caused by put operations, it will be hide by logging until the log is replayed.
 
 2. Partial flushing is not supported. Whenever there is a need of data on the burst 
 buffer, all data will be flushed to the PFS. It can cause an nonblocking request to 
-be processed before it is being waited on, making it not possible to cancel.
+be processed before it is being waited on. It is not possible to cancel those requests 
+after flushing, doing so will get NC_EFLUSHED.
    
+3. Sequential consistancy is not guaranteed. The burst buffer driver does not consider 
+the order the data is cached when making combined MPI-IO request. As a result, if the 
+application write to the same place twice without flushing, the resulting NetCDF file 
+can contain either value regardless of the order they were written. User need to call 
+ncmpi_flush when the order of I/O operation matters. For example, after initializing a 
+variable using put operation, a flush must be called to ensure initial value is 
+overwritten by later I/O operations.
