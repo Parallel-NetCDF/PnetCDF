@@ -85,13 +85,13 @@
           ! create file, truncate it if exists
           err = nfmpi_create(MPI_COMM_WORLD, filename, NF_CLOBBER,
      +                        MPI_INFO_NULL, ncid)
-          call check(err, 'In nfmpi_create: ')
+          call check(err, 'In nfmpi_create:')
 
           ! define dimensions x and y
           err = nfmpi_def_dim(ncid, "X", NX, dimid(1))
-          call check(err, 'In nfmpi_def_dim X: ')
+          call check(err, 'In nfmpi_def_dim X:')
           err = nfmpi_def_dim(ncid, "Y", NY*nprocs, dimid(2))
-          call check(err, 'In nfmpi_def_dim Y: ')
+          call check(err, 'In nfmpi_def_dim Y:')
 
           ! define 2D variables of integer type
           do i=1, NREQS
@@ -99,12 +99,12 @@
              varname = 'var'//str(1:XTRIM(str))
              err = nfmpi_def_var(ncid,varname,NF_INT,2,dimid,varid(i))
              call check(err, 'In nfmpi_def_var '//
-     |                  varname(1:XTRIM(varname))//' : ')
+     |                  varname(1:XTRIM(varname))//' :')
           enddo
 
           ! do not forget to exit define mode
           err = nfmpi_enddef(ncid)
-          call check(err, 'In nfmpi_enddef: ')
+          call check(err, 'In nfmpi_enddef:')
 
           ! Note that in Fortran, array indices start with 1
           start(1) = 1
@@ -115,7 +115,7 @@
           do i=1, NREQS
              err = nfmpi_put_vara_int_all(ncid, varid(i), start, count,
      +                                    buf(1,i))
-             call check(err, 'In nfmpi_put_vara_int_all: ')
+             call check(err, 'In nfmpi_put_vara_int_all:')
           enddo
 
           ! define an MPI datatype using MPI_Type_create_subarray()
@@ -135,14 +135,14 @@
 
               err = nfmpi_iget_vara(ncid, varid(i), start, count,
      +                              buf(1,i), one, buftype(i), req(i))
-              call check(err, 'In nfmpi_iget_vara ')
+              call check(err, 'In nfmpi_iget_vara:')
               ! immediately free the data type
               call MPI_Type_free(buftype(i), err)
           enddo
 
           ! wait for the nonblocking I/O to complete
           err = nfmpi_wait_all(ncid, NREQS, req, st)
-          call check(err, 'In nfmpi_wait_all')
+          call check(err, 'In nfmpi_wait_all:')
 
           ! check the status of each nonblocking request
           do i=1, NREQS
@@ -153,7 +153,7 @@
 
           ! close the file
           err = nfmpi_close(ncid)
-          call check(err, 'In nfmpi_close')
+          call check(err, 'In nfmpi_close:')
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
