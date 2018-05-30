@@ -25,7 +25,7 @@ File "testfile.nc" is a valid NetCDF file.
 Otherwise, a NetCDF error message is printed.
 .SH OPTIONS
 .IP "\fB-x\fP"
-Repair null-byte padding in file header.
+Repair the null-byte padding in file header. The null-byte padding is required by the NetCDF Classic Format Specifications. PnetCDF enforces this requirement, but NetCDF has never enforced it. This option checks the header for locations where null bytes are expected and replaces them with null bytes if non-null bytes are found. The repaired file is then conformed with the specification and allows both PnetCDF and NetCDF libraries to read the file without reporting error code NC_ENOTNC or NC_ENULLPAD. Noted that this repair is done in place and users might want to backup the input file first. Once the file is repaired, one may run ncmpidiff command to compare the contents of two files.
 .IP "\fB-t\fP"
 Turn on tracing mode, printing the progress of all successful metadata validation. When an error is detected, the tracing stops at the location of the error found.
 .IP "\fB-q\fP"
