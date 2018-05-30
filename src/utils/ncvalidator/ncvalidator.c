@@ -2200,10 +2200,10 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] file_name\n"
+    "Usage: %s [-h] | [-t] [-x] [-q] input_file\n"
     "       [-h] Print help\n"
     "       [-t] Turn on tracing mode, printing progress of validation\n"
-    "       [-x] Repair null-byte padding in file header\n"
+    "       [-x] Repair in-place the null-byte padding in file header.\n"
     "       [-q] Quiet mode (exit 1 when fail, 0 success)\n"
     "       filename: input netCDF file name\n";
     fprintf(stderr, help, argv0);
