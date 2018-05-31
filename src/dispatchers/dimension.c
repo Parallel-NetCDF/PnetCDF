@@ -64,6 +64,9 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     } else if (pncp->format == NC_FORMAT_CDF5) { /* CDF-5 format*/
         if (size < 0)
             err = NC_EDIMSIZE;
+    } else if (pncp->format == NC_FORMAT_NETCDF4 || pncp->format == NC_FORMAT_NETCDF4_CLASSIC) { /* CDF-4 format*/
+        if (size < 0)
+            err = NC_EDIMSIZE;
     } else { /* CDF-1 format, max is 2^31-4 */
         if (size > NC_MAX_INT - 3 || (size < 0))
             /* "-3" handles rounded-up size */

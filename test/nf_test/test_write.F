@@ -1678,10 +1678,10 @@ C *    close file & create again for test using attribute _FillValue
       integer formats(4)
       integer nfmpi_get_file_version
 
-      err = nf90mpi_inq_default_format(format);
-      if (err .ne. NF90_NOERR) then
-          call errori( &
-            'Error calling nf90mpi_inq_default_format()')
+      err = nfmpi_inq_default_format(format);
+      if (err .ne. NF_NOERR) then
+         call errori( 
+     +       'Error calling nf90mpi_inq_default_format()')
       end if
     
       if (format .eq. 4) then

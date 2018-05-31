@@ -28,6 +28,10 @@ if ENABLE_LARGE_REQ
    AM_CFLAGS += -DENABLE_LARGE_REQ
 endif
 
+if BUILD_DRIVER_NC4
+   AM_CFLAGS += -DBUILD_DRIVER_NC4
+endif
+
 check_PROGRAMS = large_files \
                  large_var \
                  large_dims_vars_attrs \
