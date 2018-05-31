@@ -72,12 +72,10 @@ is_request_contiguous(int               isRecVar,
     most_sig_dim = 0;
 
     if (isRecVar) {
-        /* if there are more than one record variable, then the record
-           dimensions, count[0] must == 1. For now, we assume there
-           are more than one record variable.
-           TODO: we may need an API to inquire how many record variables
-           are defined */
-        if (numRecVars > 1) { /* more than one record variable */
+        /* if there are more than one record variable and when count[0] > 1,
+         * then this request is noncontiguous.
+         */
+        if (numRecVars > 1) {
             if (count[0] > 1) return 0;
 
             /* continue to check from dimension ndims-1 up to dimension 1 */
@@ -256,7 +254,7 @@ type_create_subarray64(int               ndims,
                        MPI_Datatype      oldtype,
                        MPI_Datatype     *newtype)
 {
-    int i, err, tag, blklens[3] = {1, 1, 1};
+    int i, err=NC_NOERR, mpireturn, tag, blklens[3] = {1, 1, 1};
     MPI_Datatype type1, type2;
     MPI_Aint extent, size, array_size, stride, disps[3];
 #ifdef HAVE_MPI_TYPE_GET_EXTENT
@@ -268,38 +266,37 @@ type_create_subarray64(int               ndims,
     /* check if any of the dimensions is larger than 2^31-1 */
     tag = 0;
     for (i=0; i<ndims; i++) {
-        if (array_of_sizes[i] > 2147483647) {
+        if (array_of_sizes[i] > INT_MAX || array_of_starts[i] > INT_MAX) {
             tag = 1;
             break;
         }
     }
 
     if (tag == 0) {
+        int gsizes[24], *sizes, *subsizes, *starts;
         /* none of dimensions > 2^31-1, we can safely use
          * MPI_Type_create_subarray */
-        int *sizes    = (int*) NCI_Malloc((size_t)ndims * 3 * SIZEOF_INT);
-        int *subsizes = sizes    + ndims;
-        int *starts   = subsizes + ndims;
+        if (ndims <= 8) /* avoid malloc */
+            sizes = gsizes;
+        else
+            sizes = (int*) NCI_Malloc((size_t)ndims * 3 * SIZEOF_INT);
+        subsizes = sizes    + ndims;
+        starts   = subsizes + ndims;
         for (i=0; i<ndims; i++) {
             sizes[i]    = (int)array_of_sizes[i];
             subsizes[i] = (int)array_of_subsizes[i];
             starts[i]   = (int)array_of_starts[i];
-            if (array_of_sizes[i]    != sizes[i] ||
-                array_of_subsizes[i] != subsizes[i] ||
-                array_of_starts[i]   != starts[i])
-                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         }
 #ifdef HAVE_MPI_TYPE_CREATE_SUBARRAY
-        err = MPI_Type_create_subarray(ndims, sizes, subsizes, starts,
-                                       order, oldtype, newtype);
-        NCI_Free(sizes);
-        if (err != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(err, "MPI_Type_create_subarray");
+        mpireturn = MPI_Type_create_subarray(ndims, sizes, subsizes, starts,
+                                             order, oldtype, newtype);
+        if (mpireturn != MPI_SUCCESS)
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_subarray");
 #else
         err = type_create_subarray(ndims, sizes, subsizes, starts,
                                    order, oldtype, newtype);
-        NCI_Free(sizes);
 #endif
+        if (ndims > 8) NCI_Free(sizes);
         return err;
     }
 
@@ -406,7 +403,7 @@ type_create_subarray64(int               ndims,
 
     /* disps[1] is the first byte displacement of the subarray */
     disps[1] = array_of_starts[ndims-1] * extent;
-    size = 1;
+    size = extent;
     for (i=ndims-2; i>=0; i--) {
         size *= array_of_sizes[i+1];
         disps[1] += size * array_of_starts[i];
@@ -446,41 +443,31 @@ filetype_create_vara(const NC         *ncp,
                      const NC_var     *varp,
                      const MPI_Offset *start,
                      const MPI_Offset *count,
-                     int              *blocklen,           /* OUT */
                      MPI_Offset       *offset_ptr,         /* OUT */
                      MPI_Datatype     *filetype_ptr,       /* OUT */
                      int              *is_filetype_contig) /* OUT */
 {
-    int          dim, status, err;
-    MPI_Offset   nbytes, offset;
+    int          status, err;
+    MPI_Offset   offset;
     MPI_Datatype filetype, xtype;
 
     *offset_ptr   = varp->begin;
     *filetype_ptr = MPI_BYTE;
     if (is_filetype_contig != NULL) *is_filetype_contig = 1;
 
-    /* calculate the request size */
-    nbytes = varp->xsz;
-    for (dim=0; dim<varp->ndims; dim++) nbytes *= count[dim];
-    if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    if (blocklen != NULL) *blocklen = (int)nbytes;
-
-    /* when varp is a scalar or nbytes == 0, no need to create a filetype */
-    if (varp->ndims == 0 || nbytes == 0) return NC_NOERR;
+    /* when varp is a scalar, no need to create a filetype */
+    if (varp->ndims == 0) return NC_NOERR;
 
     /* if the request is contiguous in file, no need to create a filetype */
     if (is_request_contiguous(IS_RECVAR(varp), ncp->vars.num_rec_vars,
                               varp->ndims, varp->shape, start, count)) {
         /* find the starting file offset of this request */
         status = ncmpio_first_offset(ncp, varp, start, &offset);
-        *offset_ptr   = offset;
+        *offset_ptr = offset;
         return status;
     }
 
-    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE.
-     * Since we will construct a filetype, blocklen is set to 1.
-     */
-    if (blocklen           != NULL) *blocklen           = 1;
+    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE */
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
     offset = varp->begin;
 
@@ -505,25 +492,9 @@ filetype_create_vara(const NC         *ncp,
         if (varp->ndims > 1) {
             /* when ndims > 1, we first construct a subarray type for a
              * single record, i.e. for dimensions 1 ... ndims-1 */
-            MPI_Offset *shape64, *subcount64, *substart64;
-
-            shape64 = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * 3 * SIZEOF_MPI_OFFSET);
-            subcount64 = shape64    + varp->ndims;
-            substart64 = subcount64 + varp->ndims;
-
-            shape64[0]    = count[0];
-            subcount64[0] = count[0];
-            substart64[0] = 0;
-
-            for (dim=1; dim<varp->ndims; dim++) {
-                shape64[dim]    = varp->shape[dim];
-                subcount64[dim] = count[dim];
-                substart64[dim] = start[dim];
-            }
-            status = type_create_subarray64(varp->ndims-1, shape64+1,
-                                 subcount64+1, substart64+1, MPI_ORDER_C,
-                                 xtype, &rectype);
-            NCI_Free(shape64);
+            status = type_create_subarray64(varp->ndims-1, varp->shape+1,
+                                            count+1, start+1, MPI_ORDER_C,
+                                            xtype, &rectype);
             if (status != NC_NOERR) return status;
 
             MPI_Type_commit(&rectype);
@@ -548,20 +519,8 @@ filetype_create_vara(const NC         *ncp,
         if (rectype != MPI_BYTE) MPI_Type_free(&rectype);
     }
     else { /* for non-record variable, just create a subarray datatype */
-        MPI_Offset *shape64, *subcount64, *substart64;
-        shape64 = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * 3 * SIZEOF_MPI_OFFSET);
-        subcount64 = shape64    + varp->ndims;
-        substart64 = subcount64 + varp->ndims;
-
-        for (dim=0; dim<varp->ndims; dim++) {
-            shape64[dim]    = varp->shape[dim];
-            subcount64[dim] = count[dim];
-            substart64[dim] = start[dim];
-        }
-        status = type_create_subarray64(varp->ndims, shape64, subcount64,
-                                        substart64, MPI_ORDER_C,
-                                        xtype, &filetype);
-        NCI_Free(shape64);
+        status = type_create_subarray64(varp->ndims, varp->shape, count, start,
+                                        MPI_ORDER_C, xtype, &filetype);
         if (status != NC_NOERR) return status;
     }
     MPI_Type_commit(&filetype);
@@ -656,7 +615,6 @@ ncmpio_filetype_create_vars(const NC         *ncp,
                             const MPI_Offset *start,
                             const MPI_Offset *count,
                             const MPI_Offset *stride,
-                            int              *blocklen,           /* OUT */
                             MPI_Offset       *offset_ptr,         /* OUT */
                             MPI_Datatype     *filetype_ptr,       /* OUT */
                             int              *is_filetype_contig) /* OUT */
@@ -667,9 +625,8 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     MPI_Datatype  filetype=MPI_BYTE;
 
     if (stride == NULL)
-        return filetype_create_vara(ncp, varp, start, count,
-                                    blocklen, offset_ptr, filetype_ptr,
-                                    is_filetype_contig);
+        return filetype_create_vara(ncp, varp, start, count, offset_ptr,
+                                    filetype_ptr, is_filetype_contig);
 
     /* check if a true vars (skip stride[] when count[] == 1) */
     for (dim=0; dim<varp->ndims; dim++)
@@ -677,9 +634,8 @@ ncmpio_filetype_create_vars(const NC         *ncp,
             break;
 
     if (dim == varp->ndims) /* not a true vars */
-        return filetype_create_vara(ncp, varp, start, count,
-                                    blocklen, offset_ptr, filetype_ptr,
-                                    is_filetype_contig);
+        return filetype_create_vara(ncp, varp, start, count, offset_ptr,
+                                    filetype_ptr, is_filetype_contig);
 
     /* now stride[] indicates a non-contiguous fileview */
 
@@ -693,15 +649,11 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     if (varp->ndims == 0 || nelems == 0) {
         *offset_ptr   = varp->begin;
         *filetype_ptr = MPI_BYTE;
-        if (blocklen           != NULL) *blocklen           = 0;
         if (is_filetype_contig != NULL) *is_filetype_contig = 1;
         return NC_NOERR;
     }
 
-    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE.
-     * Since we will construct a filetype, blocklen is set to 1.
-     */
-    if (blocklen           != NULL) *blocklen           = 1;
+    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE */
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
     offset = varp->begin;
 
@@ -884,7 +836,7 @@ ncmpio_file_set_view(const NC     *ncp,
            ftypes[0] = MPI_BYTE;
 
         /* check if header size > 2^31 */
-        if (ncp->begin_var != blocklens[0])
+        if (ncp->begin_var > INT_MAX)
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         /* second block is filetype, the subarray request(s) to the variable */
@@ -893,7 +845,7 @@ ncmpio_file_set_view(const NC     *ncp,
            ftypes[1] = filetype;
 
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-        if (*offset != disps[1]) {
+        if (*offset > INT_MAX) {
             blocklens[1] = 0;
             DEBUG_ASSIGN_ERROR(status, NC_EAINT_TOO_SMALL)
         }
@@ -906,16 +858,16 @@ ncmpio_file_set_view(const NC     *ncp,
 #endif
         MPI_Type_commit(&root_filetype);
 
-        TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype,
-                                    "native", MPI_INFO_NULL);
+        TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype, "native",
+                                    MPI_INFO_NULL);
         MPI_Type_free(&root_filetype);
 
         /* now update the explicit offset to be used in MPI-IO call later */
         *offset = ncp->begin_var;
     }
     else {
-        TRACE_IO(MPI_File_set_view)(fh, *offset, MPI_BYTE, filetype,
-                                    "native", MPI_INFO_NULL);
+        TRACE_IO(MPI_File_set_view)(fh, *offset, MPI_BYTE, filetype, "native",
+                                    MPI_INFO_NULL);
         /* the explicit offset is already set in fileview */
         *offset = 0;
     }

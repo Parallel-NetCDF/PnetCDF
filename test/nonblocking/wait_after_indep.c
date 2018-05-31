@@ -89,6 +89,7 @@ int main(int argc, char** argv)
 
     /* calling wait API after exiting independent data mode on purpose */
     err = ncmpi_wait_all(ncid, 1, &req, &st); CHECK_ERR
+    err = st; CHECK_ERR
 
     /* check if write buffer contents have been altered */
     for (i=0; i<NY; i++)

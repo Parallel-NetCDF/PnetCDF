@@ -27,7 +27,7 @@
 int
 main(int argc, char **argv)
 {
-    char *cmd_str, filename[256];
+    char *cmd_str, *path, filename[256];
     int rank, nprocs, err, nerrs=0, ncid;
 
     MPI_Init(&argc, &argv);
@@ -47,6 +47,15 @@ main(int argc, char **argv)
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", basename(argv[0]));
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
+
+    /* remove the file system type prefix name if there is any.
+     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
+     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+     */
+    path = strchr(filename, ':');
+    if (path == NULL) path = filename; /* no prefix */
+    else              path++;
+
 /*
    printf("\n*** Testing some extra stuff.\n");
    printf("*** Trying to open non-netCDF files of tiny length...");
@@ -63,15 +72,7 @@ main(int argc, char **argv)
 
       for (i = DATA_LEN; i >= 0; i--)
       {
-	 /* Create a small file which is not a netCDF file.
-          * remove the file system type prefix name if there is any.
-          * For example, when filename = "lustre:/home/foo/testfile.nc", remove
-          * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
-          */
-         char *path = strchr(filename, ':');
-         if (path == NULL) path = filename; /* no prefix */
-         else              path++;
-
+	 /* Create a small file which is not a netCDF file. */
 	 if (!(file = fopen(path, "w+"))) nerrs++;
          else {
 	     if (fwrite(dummy_data, 1, i, file) != i) nerrs++;
@@ -79,12 +80,13 @@ main(int argc, char **argv)
          }
 
 	 /* Make sure that netCDF rejects this file politely. */
-	 openstat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+	 openstat = ncmpi_open(MPI_COMM_SELF, path, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 	 /* Some platforms (OSX, buddy) return stat = 2 (file not found)
 	    for index i == 2.  Not sure why, but this is a work around. */
 	 if(openstat != NC_ENOTNC && openstat != NC_ENOENT && openstat != NC_EFILE) {
             /* older version of OpenMPI and MPICH may return MPI_ERR_IO instead of MPI_ERR_NO_SUCH_FILE */
-            printf("Expecting error code %d or %d but got %d\n",NC_ENOTNC,NC_ENOENT,openstat);
+            printf("Error %s line %d: Expecting error code %d or %d but got %d\n",
+                   __FILE__,__LINE__,NC_ENOTNC,NC_ENOENT,openstat);
             nerrs++;
          }
       }

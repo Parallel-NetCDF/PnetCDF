@@ -408,23 +408,8 @@ ncmpio_inq_misc(void       *ncdp,
 #endif
     }
 
-    if (nreqs != NULL) {
-        /* cannot just use *nreqs = ncp->numGetReqs + ncp->numPutReqs;
-         * because some request IDs are repeated, such as record variables and
-         * varn requests
-         */
-        *nreqs = 0;
-        for (i=0; i<ncp->numGetReqs; i++) {
-            if (i > 0 && ncp->get_list[i].id == ncp->get_list[i-1].id)
-                continue;
-            (*nreqs)++;
-        }
-        for (i=0; i<ncp->numPutReqs; i++) {
-            if (i > 0 && ncp->put_list[i].id == ncp->put_list[i-1].id)
-                continue;
-            (*nreqs)++;
-        }
-    }
+    if (nreqs != NULL)
+        *nreqs = ncp->numLeadGetReqs + ncp->numLeadPutReqs;
 
     if (usage != NULL) {
         /* check if the buffer has been previously attached */

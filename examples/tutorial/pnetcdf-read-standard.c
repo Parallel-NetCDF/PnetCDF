@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
             case NC_INT:
                 data = (int*) calloc(var_size, sizeof(int));
                 ret = ncmpi_get_vara_int_all(ncfile, i, start, count, data);
+                free(data);
                 if (ret != NC_NOERR) handle_error(ret, __LINE__);
                 break;
             default:
@@ -120,7 +121,6 @@ int main(int argc, char **argv) {
         free(start);
         free(count);
         free(dimids);
-        if (data != NULL) free(data);
     }
 
     ret = ncmpi_close(ncfile);
