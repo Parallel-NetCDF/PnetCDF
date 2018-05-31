@@ -308,8 +308,8 @@ ncmpi_create(MPI_Comm    comm,
         char value[MPI_MAX_INFO_VAL];
         int flag;
 
-        /* check if nc_bb is enabled */
-        MPI_Info_get(combined_info, "nc_bb", MPI_MAX_INFO_VAL-1,
+        /* check if nc_burst_buf is enabled */
+        MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_bb_driver = 1;
@@ -512,8 +512,8 @@ ncmpi_open(MPI_Comm    comm,
         char value[MPI_MAX_INFO_VAL];
         int flag;
 
-        /* check if nc_bb is enabled */
-        MPI_Info_get(combined_info, "nc_bb", MPI_MAX_INFO_VAL-1,
+        /* check if nc_burst_buf is enabled */
+        MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_bb_driver = 1;

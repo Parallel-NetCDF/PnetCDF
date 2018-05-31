@@ -59,7 +59,7 @@ ptest ptests ptest4: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pres_temp_4D.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pres_temp_4D.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \

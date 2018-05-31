@@ -1416,8 +1416,8 @@ if test "x${null_byte_header_padding}" = xyes ; then
 fi
 AC_SUBST(ENABLE_NULL_BYTE_HEADER_PADDING)
 
-AC_ARG_ENABLE([burstbuffer],
-   [AS_HELP_STRING([--enable-burstbuffer],
+AC_ARG_ENABLE([burst-buffering],
+   [AS_HELP_STRING([--enable-burst-buffering],
                    [Enable burst buffer driver support. @<:@default: disabled@:>@])],
    [enable_bbdriver=${enableval}], [enable_bbdriver=no]
 )
@@ -1426,8 +1426,6 @@ BUILD_DRIVER_BB=0
 if test "x$enable_bbdriver" = "xyes" ; then
    AC_DEFINE(BUILD_DRIVER_BB)
    BUILD_DRIVER_BB=1
-   FFLAGS+=" ${FC_DEFINE}BUILD_DRIVER_BB"
-   FCFLAGS+=" ${FC_DEFINE}BUILD_DRIVER_BB"
 fi
 AC_SUBST(BUILD_DRIVER_BB)
 AM_CONDITIONAL(BUILD_DRIVER_BB, [test x$enable_bbdriver = xyes])
@@ -1643,7 +1641,7 @@ if test "x${null_byte_header_padding}" = xyes ; then
 fi
 if test "x${enable_bbdriver}" = xyes ; then
    echo "\
-              Burst buffer driver                         - enabled"
+              Burst buffering                             - enabled"
 fi
 if test "x${enable_profiling}" = xyes ; then
    echo "\

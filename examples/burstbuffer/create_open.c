@@ -91,15 +91,15 @@ int main(int argc, char** argv)
      * The burst buffer driver will not proceed if the log files already exists
      * to prevent overwriting existing files by accident
      * To open the file again, we need to delete the log file after file closing
-     * The default value of nc_bb_del_on_close is enable, we set it for the
+     * The default value of nc_burst_buf_del_on_close is enable, we set it for the
      * purpose of demonstration.
-     * PnetCDF will warn if nc_bb_dirname is not set.
+     * PnetCDF will warn if nc_burst_buf_dirname is not set.
      */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_bb", "enable");
-    MPI_Info_set(info, "nc_bb_del_on_close", "enable");
+    MPI_Info_set(info, "nc_burst_buf", "enable");
+    MPI_Info_set(info, "nc_burst_buf_del_on_close", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_bb_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
     }
 
     /* create a new file using clobber mode ----------------------------------*/
@@ -120,12 +120,12 @@ int main(int argc, char** argv)
 
     /* Set up the hints for burst buffer driver in ncmpi_create
      * Note that the remaining part of the code remains unchanged
-     * PnetCDF will warn if nc_bb_dirname is not set.
+     * PnetCDF will warn if nc_burst_buf_dirname is not set.
      */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_bb", "enable");
+    MPI_Info_set(info, "nc_burst_buf", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_bb_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
     }
 
     /* open the newly created file for read only -----------------------------*/

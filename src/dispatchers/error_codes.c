@@ -290,9 +290,9 @@ ncmpi_strerror(int err)
         case NC_EMULTIDEFINE_CMODE:
             return "File create mode is inconsistent among processes.";
         case NC_EBADLOG:
-            return "Unrecognized log file format.";
+            return "Unrecognized burst buffering log file format.";
         case NC_EFLUSHED:
-            return "Nonblocking request has already been flushed to the PFS. It is too late to cancel.";
+            return "Nonblocking request has already been flushed. It is too late to cancel.";
 
         default:
             /* check netCDF-3 and netCDF-4 errors */

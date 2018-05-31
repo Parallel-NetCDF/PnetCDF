@@ -52,7 +52,7 @@ int test_cdf2(char *filename)
         char hint[MPI_MAX_INFO_VAL];
         MPI_Info infoused;
         ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
             bb_enabled = 1;
         MPI_Info_free(&infoused);
@@ -166,7 +166,7 @@ int test_cdf5(char *filename)
         char hint[MPI_MAX_INFO_VAL];
         MPI_Info infoused;
         ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
             bb_enabled = 1;
         MPI_Info_free(&infoused);

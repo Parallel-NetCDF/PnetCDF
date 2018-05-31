@@ -6,12 +6,12 @@
 
 # The second step is to set up the hint for burst buffer driver. We use following hints:
 # Enable the burst buffer driver
-#   nc_bb=enable;
+#   nc_burst_buf=enable;
 # burst buffer will recycle the space after job execution. We don't need to delete the log files.
-#   nc_bb_del_on_close=disable;
+#   nc_burst_buf_del_on_close=disable;
 # We are using private mode, BB_JOB_PRIVATE will be set to the path of burst buffer
-#   nc_bb_dirname=${BB_JOB_PRIVATE}
-# We can set the optional nc_bb_flush_buffer_size hint to limit the memory space PnetCDF can use on flushing the log.
+#   nc_burst_buf_dirname=${BB_JOB_PRIVATE}
+# We can set the optional nc_burst_buf_flush_buffer_size hint to limit the memory space PnetCDF can use on flushing the log.
 # There is no need to do so since the built in FLASH benchmark by default only generate around 75 MiB of data per process
 
 # The burst buffer driver is designed to be as transparent as possible.
@@ -32,7 +32,7 @@
 NNodes=${SLURM_NNODES}
 NProc=NNodes*32
 
-export PNETCDF_HINTS="nc_bb=enable;nc_bb_del_on_close=disable;nc_bb_dirname=${BB_JOB_PRIVATE}"
+export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_del_on_close=disable;nc_burst_buf_dirname=${BB_JOB_PRIVATE}"
 
 srun -n ${NProc} ./flash_benchmark_io ${SCRATCH}/flash_
 

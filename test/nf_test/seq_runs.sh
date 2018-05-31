@@ -32,7 +32,7 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
 
 if [ -n "${TESTBB}" ]; then
-    export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
+    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     rm -f ${TESTOUTDIR}/test.nc
     rm -f ${TESTOUTDIR}/scratch.nc
     rm -f ${TESTOUTDIR}/tooth-fairy.nc

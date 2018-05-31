@@ -133,7 +133,7 @@ int main(int argc, char** argv)
         MPI_Info infoused;
 
         nc.Inq_file_info(&infoused);
-        MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
             bb_enabled = 1;
         MPI_Info_free(&infoused);
