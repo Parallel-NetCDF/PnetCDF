@@ -31,7 +31,6 @@ int main(int argc, char** argv) {
     int i, j, cmode, rank, nprocs, err, nerrs=0;
     int ncid, fvarid[NVARS], rvarid[NVARS], dimids[NDIMS], rdimids[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS], stride[NDIMS];
-    int format;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -55,7 +54,7 @@ int main(int argc, char** argv) {
     }
 
 #ifdef BUILD_DRIVER_NC4
-    for(format = 0; format < 2; format ++)
+    for(int format = 0; format < 2; format ++)
 #endif
     {
     cmode = NC_CLOBBER;

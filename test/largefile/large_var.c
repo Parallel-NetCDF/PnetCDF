@@ -147,24 +147,47 @@ int main(int argc, char** argv)
         /* write: subarray of 1 x 2 x 5 at start 3 x 8 x (2G + rank * 10) */
         start[0] = 3;
         count[2] = 5;
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            err = ncmpi_put_vara_int(ncid, varid, start, count, buf+20);
+        }
+        else
+#endif
         err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+20, &req[0]);
         CHECK_ERR
 
         /* write: subarray of 1 x 1 x 5 at start 3 x 8 x (2G + rank * 10 + 5) */
         start[2] += 5;
         count[1]  = 1;
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            err = ncmpi_put_vara_int(ncid, varid, start, count, buf+30);
+        }
+        else
+#endif
         err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+30, &req[1]);
         CHECK_ERR
 
         /* write: subarray of 1 x 1 x 5 at start 3 x 9 x (2G + rank * 10 + 5) */
         start[1] = 9;
+#ifdef BUILD_DRIVER_NC4
+        if (format == 0){
+            err = ncmpi_put_vara_int(ncid, varid, start, count, buf+35);
+        }
+        else
+#endif
         err = ncmpi_iput_vara_int(ncid, varid, start, count, buf+35, &req[2]);
         CHECK_ERR
 
-        err = ncmpi_wait_all(ncid, 3, req, st); CHECK_ERR
-        for (i=0; i<3; i++) {
-            err = st[i];
-            CHECK_ERR
+#ifdef BUILD_DRIVER_NC4
+        if (format > 0){
+#endif
+        {
+            err = ncmpi_wait_all(ncid, 3, req, st); CHECK_ERR
+            for (i=0; i<3; i++) {
+                err = st[i];
+                CHECK_ERR
+            }
         }
 
         err = ncmpi_close(ncid); CHECK_ERR
