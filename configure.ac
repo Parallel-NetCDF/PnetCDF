@@ -1007,9 +1007,7 @@ dnl    AC_DEFINE(HAVE_MPI_COUNT)
 dnl fi
 
 dnl check MPI-2 only functions
-AC_CHECK_FUNCS([MPI_Info_dup \
-                MPI_Info_free \
-                MPI_Get_address \
+AC_CHECK_FUNCS([MPI_Get_address \
                 MPI_Type_create_subarray \
                 MPI_Type_create_hvector \
                 MPI_Type_create_hindexed \
@@ -1017,15 +1015,8 @@ AC_CHECK_FUNCS([MPI_Info_dup \
                 MPI_Type_create_resized \
                 MPI_Type_get_extent])
 
-if test "$ac_cv_func_MPI_Info_dup" = no ; then
-   AC_MSG_ERROR([
-   -----------------------------------------------------------------------
-     Function MPI_Info_dup required by PnetCDF is missing from the MPI
-     library.  Please use an MPI library that supports MPI_Info_dup. Abort.
-   -----------------------------------------------------------------------])
-fi
-
 dnl Check presence of MPI COMBINERS. These are of type int.
+dnl These are introduced in MPI 2.0.
 AC_CHECK_DECLS([MPI_COMBINER_DUP,
                 MPI_COMBINER_HVECTOR_INTEGER,
                 MPI_COMBINER_HINDEXED_INTEGER,
@@ -1039,7 +1030,7 @@ AC_CHECK_DECLS([MPI_COMBINER_DUP,
                 MPI_COMBINER_F90_COMPLEX],
                 [], [], [[#include <mpi.h>]])
 
-dnl Check presence of various MPI error classes.
+dnl Check presence of various MPI error classes. Introduced in MPI 2.0.
 dnl These could be enums, so we have to do compile checks.
 AC_CHECK_DECLS([MPI_ERR_FILE_EXISTS,
                 MPI_ERR_NO_SUCH_FILE,
@@ -1054,21 +1045,23 @@ AC_CHECK_DECLS([MPI_ERR_FILE_EXISTS,
 
 dnl Check presence of C MPI data types.
 dnl Note they are of type MPI_Datatype, thus cannot use AC_CHECK_DECLS
-UD_CHECK_MPI_DATATYPE(MPI_CHAR)
-UD_CHECK_MPI_DATATYPE(MPI_BYTE)
-UD_CHECK_MPI_DATATYPE(MPI_SIGNED_CHAR)
-UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_CHAR)
-UD_CHECK_MPI_DATATYPE(MPI_SHORT)
-UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_SHORT)
-UD_CHECK_MPI_DATATYPE(MPI_INT)
-UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED)
-UD_CHECK_MPI_DATATYPE(MPI_LONG)
-UD_CHECK_MPI_DATATYPE(MPI_FLOAT)
-UD_CHECK_MPI_DATATYPE(MPI_DOUBLE)
-UD_CHECK_MPI_DATATYPE(MPI_LONG_LONG_INT)
-UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
-UD_CHECK_MPI_DATATYPE(MPI_UB)
-UD_CHECK_MPI_DATATYPE(MPI_LB)
+dnl UD_CHECK_MPI_DATATYPE(MPI_CHAR)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_BYTE)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_SIGNED_CHAR)	dnl first defined in MPI 2.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_CHAR)	dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_SHORT)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_SHORT)	dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_INT)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_LONG)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_LONG)	dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_FLOAT)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_DOUBLE)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_LONG_LONG_INT)	dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG) dnl first defined in MPI 2.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_UB)		dnl first defined in MPI 1.0
+dnl UD_CHECK_MPI_DATATYPE(MPI_LB)		dnl first defined in MPI 1.0
+
 dnl C data type MPI_Offset was first introduced in MPI 2.0, but MPI_OFFSET was
 dnl introduced as a predefined MPI datatype in MPI 2.2
 UD_CHECK_MPI_DATATYPE(MPI_OFFSET)
@@ -1082,21 +1075,17 @@ dnl built without Fortran support, in which case these types might not
 dnl exist.  Second, we need to map these types to corresponding C types
 dnl where possible to simplify processing at run time.
 if test "x${has_fortran}" = xyes ; then
-    UD_CHECK_MPI_DATATYPE(MPI_CHARACTER)
-    UD_CHECK_MPI_DATATYPE(MPI_REAL)
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER)
-    UD_CHECK_MPI_DATATYPE(MPI_DOUBLE_PRECISION)
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER1)
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER2)
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER4)
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER8)
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER16)
-    UD_CHECK_MPI_DATATYPE(MPI_REAL4)
-    UD_CHECK_MPI_DATATYPE(MPI_REAL8)
-    UD_CHECK_MPI_DATATYPE(MPI_REAL16)
-    UD_CHECK_MPI_DATATYPE(MPI_COMPLEX8)
-    UD_CHECK_MPI_DATATYPE(MPI_COMPLEX16)
-    UD_CHECK_MPI_DATATYPE(MPI_COMPLEX32)
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER8)		dnl first defined in MPI 2.1
+    UD_CHECK_MPI_DATATYPE(MPI_CHARACTER)	dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_REAL)		dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER)		dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_DOUBLE_PRECISION)	dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER1)		dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER2)		dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_INTEGER4)		dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_REAL2)		dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_REAL4)		dnl first defined in MPI 1.0
+    UD_CHECK_MPI_DATATYPE(MPI_REAL8)		dnl first defined in MPI 1.0
 fi
 
 AC_C_CHAR_UNSIGNED
