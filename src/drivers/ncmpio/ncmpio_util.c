@@ -239,80 +239,6 @@ ncmpio_last_offset(const NC         *ncp,
     return NC_NOERR;
 }
 
-/*----< ncmpio_access_range() >----------------------------------------------*/
-/* Returns the file offsets of access range of this request: starting file
- * offset and end offset (exclusive).
- * Note zero-length request should never call this subroutine.
- */
-int
-ncmpio_access_range(const NC         *ncp,
-                    const NC_var     *varp,
-                    const MPI_Offset  start[],   /* [varp->ndims] */
-                    const MPI_Offset  count[],   /* [varp->ndims] */
-                    const MPI_Offset  stride[],  /* [varp->ndims] */
-                    MPI_Offset       *start_off, /* OUT: start offset */
-                    MPI_Offset       *end_off)   /* OUT: end   offset */
-{
-    int i, ndims;
-    MPI_Offset *last_indx=NULL;
-
-    ndims = varp->ndims; /* number of dimensions of this variable */
-
-    if (ndims == 0) { /* scalar variable */
-        *start_off = varp->begin; /* beginning file offset of this variable */
-        *end_off   = varp->begin + varp->xsz;
-        return NC_NOERR;
-    }
-
-    assert(start != NULL);
-    assert(count != NULL);
-
-    /* find the last access index in each dimension */
-    last_indx = (MPI_Offset*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_OFFSET);
-    if (stride != NULL) {
-        for (i=0; i<ndims; i++)
-            last_indx[i] = start[i] + (count[i] - 1) * stride[i];
-    }
-    else { /* stride == NULL */
-        for (i=0; i<ndims; i++)
-            last_indx[i] = start[i] + count[i] - 1;
-    }
-
-    if (IS_RECVAR(varp)) {
-        *start_off = 0;
-        *end_off = varp->begin + last_indx[0] * ncp->recsize;
-        if (ndims > 1) {
-            *start_off += start[ndims - 1];
-            *end_off   += last_indx[ndims - 1] * varp->xsz;
-        }
-        for (i=1; i<ndims-1; i++) {
-            *start_off += start[i] * varp->dsizes[i+1];
-            *end_off   += last_indx[i] * varp->dsizes[i+1] * varp->xsz;
-        }
-        *start_off *= varp->xsz;   /* multiply element size */
-        *start_off += start[0] * ncp->recsize;
-        *start_off += varp->begin; /* beginning file offset of this variable */
-    }
-    else {
-        *start_off = 0;
-        *end_off = varp->begin + last_indx[ndims-1] * varp->xsz;
-        if (ndims > 1) {
-            *start_off += start[0] * varp->dsizes[1];
-            *end_off += last_indx[0] * varp->dsizes[1] * varp->xsz;
-        }
-        for (i=1; i<ndims-1; i++) {
-            *start_off += start[i] * varp->dsizes[i+1];
-            *end_off   += last_indx[i] * varp->dsizes[i+1] * varp->xsz;
-        }
-        *start_off += start[ndims-1];
-        *start_off *= varp->xsz;   /* multiply element size */
-        *start_off += varp->begin; /* beginning file offset of this variable */
-    }
-    NCI_Free(last_indx);
-
-    return NC_NOERR;
-}
-
 /*----< ncmpio_pack_xbuf() >-------------------------------------------------*/
 /* Pack user buffer, buf, into xbuf, when buftype is non-contiguous or imap
  * is non-contiguous, or type-casting is needed. The immediate buffers, lbuf
@@ -381,6 +307,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  int           buftype_is_contig,
                  MPI_Offset    nelems, /* no. elements in buf */
                  MPI_Datatype  itype,  /* element type in buftype */
+                 int           el_size,/* size of itype */
                  MPI_Datatype  imaptype,
                  int           need_convert,
                  int           need_swap,
@@ -388,12 +315,11 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  void         *buf,    /* user buffer */
                  void         *xbuf)   /* already allocated, in external type */
 {
-    int err=NC_NOERR, el_size, position;
+    int err=NC_NOERR, position, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
-    MPI_Type_size(itype, &el_size);
     ibuf_size = nelems * el_size;
     if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
@@ -409,11 +335,15 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
              * constructing xbuf */
             lbuf = NCI_Malloc((size_t)ibuf_size);
             if (lbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+            free_lbuf = 1;
         }
 
         if (buf != lbuf) {
             /* pack buf into lbuf based on buftype */
-            if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (bufcount > INT_MAX) {
+                if (free_lbuf) NCI_Free(lbuf);
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            }
             position = 0;
             MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibuf_size,
                      &position, MPI_COMM_SELF);
@@ -431,7 +361,11 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
             /* in this case, allocate cbuf and cbuf will be freed before
              * constructing xbuf */
             cbuf = NCI_Malloc((size_t)ibuf_size);
-            if (cbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+            if (cbuf == NULL) {
+                if (free_lbuf) NCI_Free(lbuf);
+                DEBUG_RETURN_ERROR(NC_ENOMEM)
+            }
+            free_cbuf = 1;
         }
 
         /* pack lbuf to cbuf based on imaptype */
@@ -441,7 +375,10 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         MPI_Type_free(&imaptype);
 
         /* lbuf is no longer needed */
-        if (lbuf != buf) NCI_Free(lbuf);
+        if (free_lbuf) {
+            NCI_Free(lbuf);
+            free_lbuf = 0;
+        }
     }
     else /* not a true varm call: reuse lbuf */
         cbuf = lbuf;
@@ -451,10 +388,10 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
      */
     if (need_convert) {
         /* user buf type does not match nc var type defined in file */
-        void *fillp; /* fill value in internal representation */
+        char  tmpbuf[8];
+        void *fillp=tmpbuf; /* fill value in internal representation */
 
         /* find the fill value */
-        fillp = NCI_Malloc((size_t)varp->xsz);
         ncmpio_inq_var_fill(varp, fillp);
 
         /* datatype conversion + byte-swap from cbuf to xbuf */
@@ -501,9 +438,8 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 	 * the external data type, it is not considered a fatal error. This
 	 * request must continue to finish.
          */
-
-        NCI_Free(fillp);
-        if (cbuf != buf) NCI_Free(cbuf);
+        if (free_cbuf) NCI_Free(cbuf);
+        if (free_lbuf) NCI_Free(lbuf);
     }
     else {
         if (cbuf == buf && xbuf != buf)
@@ -512,6 +448,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         if (need_swap) /* perform array in-place byte swap on xbuf */
             ncmpii_in_swapn(xbuf, nelems, varp->xsz);
     }
+
     return err;
 }
 
@@ -560,7 +497,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                    void         *buf,  /* user buffer */
                    void         *xbuf) /* already allocated, in external type */
 {
-    int err=NC_NOERR, el_size, position;
+    int err=NC_NOERR, el_size, position, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
@@ -581,6 +518,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         else {
             cbuf = NCI_Malloc(ibuf_size);
             if (cbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+            free_cbuf = 1;
         }
 
         /* datatype conversion + byte-swap from xbuf to cbuf */
@@ -643,7 +581,11 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
          * In this case, cbuf cannot be buf and lbuf cannot be buf.
          */
         lbuf = NCI_Malloc((size_t)ibuf_size);
-        if (lbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+        if (lbuf == NULL) {
+            if (free_cbuf) NCI_Free(cbuf);
+            DEBUG_RETURN_ERROR(NC_ENOMEM)
+        }
+        free_lbuf = 1;
     }
     else if (imaptype == MPI_DATATYPE_NULL) /* not varm */
         lbuf = cbuf;
@@ -657,8 +599,6 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         MPI_Unpack(cbuf, (int)ibuf_size, &position, lbuf, 1, imaptype,
                    MPI_COMM_SELF);
         MPI_Type_free(&imaptype);
-        /* done with cbuf */
-        if (cbuf != xbuf) NCI_Free(cbuf);
     }
 
     /* unpacked lbuf into buf based on buftype -----------------------------*/
@@ -672,10 +612,10 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
             position = 0;
             MPI_Unpack(lbuf, (int)ibuf_size, &position, buf, (int)bufcount,
                        buftype, MPI_COMM_SELF);
-            /* done with lbuf */
-            if (lbuf != xbuf) NCI_Free(lbuf);
         }
     }
+    if (free_cbuf) NCI_Free(cbuf);
+    if (free_lbuf) NCI_Free(lbuf);
 
     return err;
 }

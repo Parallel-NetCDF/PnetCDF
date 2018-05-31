@@ -6,6 +6,8 @@ This is essentially a placeholder for the next release note ...
     * NetCDF4 format classic mode support via netcdf. 
 
   o New optimization
+    * Internal memory management for nonblocking APIs has been improved further
+      to reduce memory footprint. See r3763.
     * Both blocking and nonblocking varn APIs have been improved for better
       performance and reduced memory footprint. See r3747-r3750.
     * Prior to this release, when buftype in flexible APIs indicates a
@@ -86,8 +88,13 @@ This is essentially a placeholder for the next release note ...
   o New run-time environment variables
     * none
 
-  o New build recipe
-    * none
+  o Build recipes
+    * doc/README.IBM is revised as the compiler behavior has changed on BGQ
+      since the release of 1.9.0.
+    * doc/README.CRAY is revised as the compiler behavior has changed on CRAY
+      since the release of 1.9.0.
+    * doc/README.Ubuntu is revised and the fix of adding LDFLAGS is no longer
+      necessary.
 
   o New/updated utility program
     * ncvalidator adds a new option -t to turn on tracing mode which prints all
@@ -97,15 +104,26 @@ This is essentially a placeholder for the next release note ...
       NC_EUNLIMIT.
 
   o Other updates:
+    * Inter-library dependencies among C, C++ and Fortran have been updated to
+      follow automake user guide: add FLIBS and FCLIBS to _LIBADD.
+    * Move the memory allocation trace feature out of --enable-debug into the
+      new configure option --enable-profiling. By default, this is disabled.
     * Add a check for NC_EUNLIMIT in API ncmpi_open to detect whether two or
       more unlimited dimensions are defined in a corrupted file.
 
   o Bug fixes
+    * Fix type_create_subarray64() for case when some dimensions of the global
+      array is larger than 4G and oldtype is not MPI_BYTE. See r3779. Without
+      this fix, test/largefile/large_var.c will fail. Note prior to 1.9.1,
+      type_create_subarray64() is always called with oldtype being MPI_BYTE.
     * Fix configure-time bug that configure fails to recognize the compilers
       with full path names set in the environment variable MPICC, MPICXX,
       MPIF77, or MPI_F90. See Ticket #35 for bug report and r3740 for fix.
     * Fix the bug that writing scalar attributes of type NF_INT64 was
       mistakenly casted to NF_INT. See r3730.
+    * Fix test/testcases/erange_fill.m4 for the case of NC_LONG data type.
+      NC_LONG is synonym of NC_INT. When setting fill value for variables of
+      type NC_LONG, the user buffer must be of type int (internal). See r3726.
     * Fix the calculation of new record number in put_vard API. Thanks to
       Jim Edwards. See r3675.
     * Fix the calculation of growing size of nonblocking request queues to
@@ -130,7 +148,7 @@ This is essentially a placeholder for the next release note ...
   o New test program
     * test/testcases/test_fillvalue.c - tests PnetCDF allows to put attribute
       _FillValue for global variable and for non-global variable, requires the
-      data type of attribute _FillValue be the same as the variable's. 
+      data type of attribute _FillValue be the same as the variable's.
     * test/F90/test_attr_int64.f90 - tests the bug fixed in r3730 that
       nf90mpi_put_att API writes a scalar attribute of type NF90_INT64 that
       was mistakenly casted to NF90_INT.

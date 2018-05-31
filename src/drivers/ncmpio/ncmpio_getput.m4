@@ -198,8 +198,9 @@ put_varm(NC               *ncp,
         /* pack buf to xbuf, byte-swap and type-convert on xbuf, which
          * will later be used in MPI file write */
         err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                               buftype_is_contig, bnelems, itype, imaptype,
-                               need_convert, need_swap, nbytes, buf, xbuf);
+                               buftype_is_contig, bnelems, itype, el_size,
+                               imaptype, need_convert, need_swap, nbytes, buf,
+                               xbuf);
         if (err != NC_NOERR && err != NC_ERANGE) {
             if (xbuf != buf) NCI_Free(xbuf);
             xbuf = NULL;
@@ -225,7 +226,7 @@ put_varm(NC               *ncp,
 
     /* pack user buffer, buf, to xbuf, which will be used to write to file */
     err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                           buftype_is_contig, bnelems, itype, imaptype,
+                           buftype_is_contig, bnelems, itype, el_size, imaptype,
                            need_convert, need_swap, nbytes, buf, xbuf);
     if (err != NC_NOERR && err != NC_ERANGE) {
         if (xbuf != buf) NCI_Free(xbuf);
@@ -269,7 +270,7 @@ err_check:
          * derived data type.
          */
         err = ncmpio_filetype_create_vars(ncp, varp, start, count, stride,
-                                          NULL, &offset, &filetype, NULL);
+                                          &offset, &filetype, NULL);
         if (err != NC_NOERR) {
             nbytes   = 0;
             nelems   = 0;
@@ -524,7 +525,7 @@ err_check:
          * derived data type.
          */
         err = ncmpio_filetype_create_vars(ncp, varp, start, count, stride,
-                                          NULL, &offset, &filetype, NULL);
+                                          &offset, &filetype, NULL);
         if (err != NC_NOERR) {
             filetype = MPI_BYTE;
             xtype    = MPI_BYTE;

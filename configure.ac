@@ -539,7 +539,7 @@ if test "x${has_fortran}" = xyes ; then
    F77=${MPIF77}
    AC_PROG_F77
    dnl FFLAGS is set in AC_PROG_F77
-   dnl AC_F77_LIBRARY_LDFLAGS
+   AC_F77_LIBRARY_LDFLAGS
 
    AC_MSG_CHECKING([if $MPIF77 is a valid MPI compiler])
    AC_LANG_PUSH([Fortran 77])
@@ -581,7 +581,7 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl FCLIBS_save="$FCLIBS"
    dnl FCLIBS=""
-   dnl AC_FC_LIBRARY_LDFLAGS
+   AC_FC_LIBRARY_LDFLAGS
    dnl UD_MSG_DEBUG([before FCLIBS=$FCLIBS])
    dnl The autoconf macro for finding FCLIBS sometimes makes mistakes
    dnl (particularly with the Fujitsu frt compiler).  This next step
@@ -948,12 +948,12 @@ AC_ARG_ENABLE([debug],
     [debug=${enableval}], [debug=no]
 )
 
+dnl malloc memory allocation tracing relies on tdelete and tsearch
+AC_CHECK_HEADERS([search.h])
+AC_CHECK_FUNCS([tsearch tdelete])
+
 PNETCDF_DEBUG=0
 if test "x${debug}" = xyes; then
-   dnl malloc memory allocation tracing relies on tdelete and tsearch
-   AC_CHECK_HEADERS([search.h])
-   AC_CHECK_FUNCS([tsearch tdelete])
-
    dnl check required functions for enabling malloc tracing
    if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
       AC_DEFINE(PNC_MALLOC_TRACE)
@@ -1527,7 +1527,7 @@ AC_SUBST(BUILD_DRIVER_DW)
 AM_CONDITIONAL(BUILD_DRIVER_DW, [test x$enable_dwdriver = xyes])
 
 AC_ARG_ENABLE([profiling],
-   [AS_HELP_STRING([--enable_profiling],
+   [AS_HELP_STRING([--enable-profiling],
                    [Enable time and memory profiling. @<:@default: disabled@:>@])],
    [enable_profiling=${enableval}], [enable_profiling=no]
 )
@@ -1536,6 +1536,13 @@ PNETCDF_PROFILING=0
 if test "x$enable_profiling" = "xyes" ; then
    AC_DEFINE(PNETCDF_PROFILING)
    PNETCDF_PROFILING=1
+
+   if test "x${debug}" = xno; then
+      dnl check required functions for enabling malloc tracing
+      if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
+         AC_DEFINE(PNC_MALLOC_TRACE)
+      fi
+   fi
 fi
 AC_SUBST(PNETCDF_PROFILING)
 AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
@@ -1563,7 +1570,11 @@ if test "x${TESTOUTDIR}" = x ; then
 fi
 
 dnl find if gcc is available for compiling ncoffsets to run in sequential
-AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+if test "$cross_compiling" = yes; then
+   SEQ_CC=$MPICC
+else
+   AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+fi
 AC_SUBST(SEQ_CC)
 
 dnl Configuration Date
@@ -1669,6 +1680,7 @@ AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 
 AC_SUBST(enable_static)
 AC_SUBST(enable_shared)
+AM_CONDITIONAL(BUILD_SHARED_LIB, [test x${enable_shared} = xyes])
 
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"

@@ -235,12 +235,17 @@ ncmpi_create(MPI_Comm    comm,
 {
     int default_format, format, rank, status=NC_NOERR, err;
     int safe_mode=0, mpireturn, root_cmode;
-    int enable_foo_driver=0, enable_dw_driver=0;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
+#ifdef BUILD_DRIVER_FOO
+    int enable_foo_driver=0;
+#endif
+#ifdef BUILD_DRIVER_DW
+    int enable_dw_driver=0;
+#endif
 
     MPI_Comm_rank(comm, &rank);
 
@@ -298,6 +303,7 @@ ncmpi_create(MPI_Comm    comm,
     /* combine user's info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
+#ifdef BUILD_DRIVER_FOO
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
@@ -307,6 +313,12 @@ ncmpi_create(MPI_Comm    comm,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
+    }
+#endif
+#ifdef BUILD_DRIVER_DW
+    if (combined_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int flag;
 
         /* check if nc_dw is enabled */
         MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
@@ -314,6 +326,7 @@ ncmpi_create(MPI_Comm    comm,
         if (flag && strcasecmp(value, "enable") == 0)
             enable_dw_driver = 1;
     }
+#endif
 
     /* Use environment variable and cmode to tell the file format
      * which is later used to select the right driver.
@@ -420,13 +433,18 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, nalloc, rank, format, msg[2], status=NC_NOERR, err;
-    int enable_foo_driver=0, enable_dw_driver=0;
     int safe_mode=0, mpireturn, root_omode;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
+#ifdef BUILD_DRIVER_FOO
+    int enable_foo_driver=0;
+#endif
+#ifdef BUILD_DRIVER_DW
+    int enable_dw_driver=0;
+#endif
 
     MPI_Comm_rank(comm, &rank);
 
@@ -493,6 +511,7 @@ ncmpi_open(MPI_Comm    comm,
     /* combine user's info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
+#ifdef BUILD_DRIVER_FOO
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
@@ -503,12 +522,20 @@ ncmpi_open(MPI_Comm    comm,
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
 
+    }
+#endif
+#ifdef BUILD_DRIVER_DW
+    if (combined_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int flag;
+
         /* check if nc_dw is enabled */
         MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_dw_driver = 1;
     }
+#endif
 
 #ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
@@ -626,7 +653,7 @@ ncmpi_open(MPI_Comm    comm,
         int ndims;
         err = driver->inq_var(pncp->ncp, i, NULL, &xtype, &ndims,
                               NULL, NULL, NULL, NULL, NULL);
-        if (err != NC_NOERR) return err;
+        if (err != NC_NOERR) goto fn_exit;
         pncp->vars[i].xtype  = xtype;
         pncp->vars[i].ndims  = ndims;
         pncp->vars[i].recdim = -1;   /* if fixed-size variable */
