@@ -153,7 +153,7 @@ ncmpi_strerror(int err)
              * 4-byte integer and when the I/O request amount or accessing
              * file offset is > 2GB.
              */
-        case NC_ENOTSUPPORT:
+        case NC_ENOTSUPPORTED:
             return "Feature is not yet supported.";
         case NC_ENULLBUF:
             return "Trying to attach a NULL buffer or the buffer size is negative.";
@@ -669,7 +669,7 @@ ncmpi_strerrno(int err)
         case (NC_EUNSPTETYPE):			return "NC_EUNSPTETYPE";
         case (NC_EINVAL_REQUEST):		return "NC_EINVAL_REQUEST";
         case (NC_EAINT_TOO_SMALL):		return "NC_EAINT_TOO_SMALL";
-        case (NC_ENOTSUPPORT):			return "NC_ENOTSUPPORT";
+        case (NC_ENOTSUPPORTED):			return "NC_ENOTSUPPORTED";
         case (NC_ENULLBUF):			return "NC_ENULLBUF";
         case (NC_EPREVATTACHBUF):		return "NC_EPREVATTACHBUF";
         case (NC_ENULLABUF):			return "NC_ENULLABUF";

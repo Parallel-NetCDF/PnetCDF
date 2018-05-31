@@ -564,11 +564,11 @@ ncmpi_open(MPI_Comm    comm,
 #else
         else if (format == NC_FORMAT_NETCDF4_CLASSIC) {
             fprintf(stderr,"NC_FORMAT_NETCDF4_CLASSIC is not yet supported\n");
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
         }
         else if (format == NC_FORMAT_NETCDF4) {
             fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
 #endif
         }
         else { /* unrecognized file format */

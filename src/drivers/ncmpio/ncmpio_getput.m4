@@ -660,7 +660,7 @@ ncmpio_$1_var(void             *ncdp,
     if (varp->num_subfiles > 1) {
         if (imap != NULL) {
             fprintf(stderr, "varm APIs for subfiling is NOT implemented\n");
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
         }
         else
             return ncmpio_subfile_getput_vars(ncp, varp, start, count,

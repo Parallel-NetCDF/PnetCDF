@@ -407,7 +407,7 @@ int ncdwio_file_seek(NC_dw_file *f, size_t off, int whence) {
         new_off = f->fpos + off;
     }
     else{
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED);
     }
 
     /*
