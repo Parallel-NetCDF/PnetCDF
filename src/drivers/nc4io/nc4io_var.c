@@ -206,6 +206,9 @@ nc4io_iput_var(void             *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
+    /* We do not support nonblocking I/O so far */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED);
+
     /* Call nc4io_put_var */
     err = nc4io_put_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
     if (err != NC_NOERR) return err;
@@ -303,11 +306,11 @@ nc4io_get_varn(void              *ncdp,
     else{
         nc_type type;
 
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
 
         err = nc_inq_vartype(nc4p->ncid, varid, &type);
         if (err != NC_NOERR){ 
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
         }
         
         elsize = nc4io_nc_type_size(type);
@@ -401,11 +404,11 @@ nc4io_put_varn(void              *ncdp,
     else{
         nc_type type;
 
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
 
         err = nc_inq_vartype(nc4p->ncid, varid, &type);
         if (err != NC_NOERR){ 
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
         }
         
         elsize = nc4io_nc_type_size(type);
@@ -498,6 +501,9 @@ nc4io_iput_varn(void               *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* We do not support nonblocking I/O so far */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED);
     
     /* Call nc4io_put_varn */
     err = nc4io_put_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqMode);
@@ -544,7 +550,7 @@ nc4io_get_vard(void         *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* vard not supported in NetCDF */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
 
     return NC_NOERR;
 }
@@ -562,7 +568,7 @@ nc4io_put_vard(void         *ncdp,
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
     /* vard not supported in NetCDF */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
 
     return NC_NOERR;
 }

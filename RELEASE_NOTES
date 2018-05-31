@@ -1498,7 +1498,7 @@ version  1.3.0 (June 26, 2012)
       var1, var, vars and varm APIs. Also for get and nonblocking APIs.
     - New Fortran APIs: nfmpi_put_vars_int8 and similarly for var1, var, vars,
       varm, get, and nonblocking APIs.
-    - Add a new error code, NC_ENOTSUPPORT, for not-yet-supported features.
+    - Add a new error code, NC_ENOTSUPPORTED, for not-yet-supported features.
     - A new set of buffered put APIs (eg. ncmpi_bput_vara_float) is added (see
       BufferedInterface). They make a copy of the user's buffer internally, so
       the user's buffer can be reused when the call returns. Their usage are

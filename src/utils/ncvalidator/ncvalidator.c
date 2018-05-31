@@ -186,7 +186,7 @@ typedef struct bufferinfo {
 #define NC_ENOMEM       (-61)   /**< Memory allocation (malloc) failure */
 #define NC_EVARSIZE     (-62)   /**< One or more variable sizes violate format constraints */
 #define NC_EFILE        (-204)  /**< Unknown error in file operation */
-#define NC_ENOTSUPPORT  (-214)  /**< Feature is not yet supported */
+#define NC_ENOTSUPPORTED  (-214)  /**< Feature is not yet supported */
 #define NC_ENULLPAD     (-134)  /**< Header Bytes not Null-Byte padded */
 
 /*
@@ -2073,7 +2073,7 @@ val_get_NC(int fd, NC *ncp)
             printf("Error: Input file is in HDF format\n");
             printf("       ncvalidator only validates NetCDF classic files\n");
         }
-        status = NC_ENOTSUPPORT;
+        status = NC_ENOTSUPPORTED;
         goto fn_exit;
     }
 

@@ -62,7 +62,7 @@ nc4io_create(MPI_Comm     comm,
     NC_nc4 *nc4p;
 
     /* TODO: support NC4 write */
-    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
 
     /* Create with netcdf */
     err = nc_create_par(path, cmode | NC_NETCDF4 | NC_MPIIO, comm,
@@ -448,6 +448,9 @@ nc4io_cancel(void *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* We do not support nonblocking I/O so far */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED);
     
     /* Since we treat nonblocking IO as blocking IO 
      * We don't need to wait for anything
@@ -464,6 +467,9 @@ nc4io_wait(void *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* We do not support nonblocking I/O so far */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED);
     
     /* Since we treat nonblocking IO as blocking IO 
      * We don't need to wait for anything
@@ -506,7 +512,7 @@ nc4io_fill_var_rec(void      *ncdp,
     
     /* NetCDF does not support this natively */
     /* We assume NetCDF filled it automatically */
-    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+    // DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
 
     return NC_NOERR;
 }
