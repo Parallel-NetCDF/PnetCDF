@@ -406,7 +406,6 @@
       integer NF_EPENDING
       integer NF_EMAX_REQ
       integer NF_EBADLOG
-      integer NF_ELOGCHECK
       integer NF_EFLUSHED
 
       integer NF_EMULTIDEFINE

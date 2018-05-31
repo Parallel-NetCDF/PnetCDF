@@ -59,7 +59,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \
@@ -71,7 +71,7 @@ ptest2: $(TESTPROGRAMS)
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable" ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \

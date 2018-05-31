@@ -57,54 +57,54 @@ int main(int argc, char** argv) {
     }
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_bb_overwrite", "enable");
-    MPI_Info_set(info, "nc_bb_del_on_close", "disable");
-    MPI_Info_set(info, "nc_bb_flush_buffer_size", "256");
-    /* MPI_Info_set(info, "nc_bb_dirname", "()@^$@!(_&$)@(#%%&)(*#$"); */
+    MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
+    MPI_Info_set(info, "nc_burst_buf_del_on_close", "disable");
+    MPI_Info_set(info, "nc_burst_buf_flush_buffer_size", "256");
+    /* MPI_Info_set(info, "nc_burst_buf_dirname", "()@^$@!(_&$)@(#%%&)(*#$"); */
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
     err = ncmpi_inq_file_info(ncid, &infoused); CHECK_ERR
 
-    MPI_Info_get(infoused, "nc_bb", MPI_MAX_INFO_VAL - 1, hint, &flag);
+    MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
     if (flag && strcasecmp(hint, "enable") == 0)
         log_enabled = 1;
     else
         log_enabled = 0;
 
     if (log_enabled) {
-        MPI_Info_get(infoused, "nc_bb_overwrite", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        MPI_Info_get(infoused, "nc_burst_buf_overwrite", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag) {
             if (strcmp(hint, "enable") != 0) {
-                printf("Error at line %d: unexpected nc_bb_overwrite = %s, but got %s\n", __LINE__, "enable", hint);
+                printf("Error at line %d: unexpected nc_burst_buf_overwrite = %s, but got %s\n", __LINE__, "enable", hint);
                 nerrs++;
             }
         }
         else{
-            printf("Error at line %d: nc_bb_overwrite is not set\n", __LINE__);
+            printf("Error at line %d: nc_burst_buf_overwrite is not set\n", __LINE__);
             nerrs++;
         }
 
-        MPI_Info_get(infoused, "nc_bb_del_on_close", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        MPI_Info_get(infoused, "nc_burst_buf_del_on_close", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag) {
             if (strcmp(hint, "disable") != 0) {
-                printf("Error at line %d: unexpected nc_bb_del_on_close = %s, but got %s\n", __LINE__, "disable", hint);
+                printf("Error at line %d: unexpected nc_burst_buf_del_on_close = %s, but got %s\n", __LINE__, "disable", hint);
                 nerrs++;
             }
         }
         else{
-            printf("Error at line %d: nc_bb_del_on_close is not set\n", __LINE__);
+            printf("Error at line %d: nc_burst_buf_del_on_close is not set\n", __LINE__);
             nerrs++;
         }
 
-        MPI_Info_get(infoused, "nc_bb_flush_buffer_size", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        MPI_Info_get(infoused, "nc_burst_buf_flush_buffer_size", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag) {
             if (strcmp(hint, "256") != 0) {
-                printf("Error at line %d: unexpected nc_bb_flush_buffer_size = %s, but got %s\n", __LINE__, "256", hint);
+                printf("Error at line %d: unexpected nc_burst_buf_flush_buffer_size = %s, but got %s\n", __LINE__, "256", hint);
                 nerrs++;
             }
         }
         else{
-            printf("Error at line %d: nc_bb_flush_buffer_size is not set\n", __LINE__);
+            printf("Error at line %d: nc_burst_buf_flush_buffer_size is not set\n", __LINE__);
             nerrs++;
         }
     }

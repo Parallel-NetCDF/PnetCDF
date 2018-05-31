@@ -18,7 +18,7 @@ for j in 0 1 2 3 4 5 6 7 8 9 ; do
 done
 
 if [ -n "${TESTBB}" ]; then
-    export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
+    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     ${TESTSEQRUN} ./mcoll_perf ${TESTOUTDIR}/testfile
     unset PNETCDF_HINTS
     for j in 0 1 2 3 4 5 6 7 8 9 ; do

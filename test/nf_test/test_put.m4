@@ -426,7 +426,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         bb_enable = .FALSE.
         err = nfmpi_inq_file_info(ncid, infoused)
         if (err .eq. NF_NOERR) then
-            call MPI_Info_get(infoused, "nc_bb",
+            call MPI_Info_get(infoused, "nc_burst_buf",
      +            MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
                 bb_enable = (hint .eq. 'enable')
@@ -549,7 +549,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         bb_enable = .FALSE.
         err = nfmpi_inq_file_info(ncid, infoused)
         if (err .eq. NF_NOERR) then
-            call MPI_Info_get(infoused, "nc_bb",
+            call MPI_Info_get(infoused, "nc_burst_buf",
      +            MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
                 bb_enable = (hint .eq. 'enable')
@@ -741,7 +741,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         bb_enable = .FALSE.
         err = nfmpi_inq_file_info(ncid, infoused)
         if (err .eq. NF_NOERR) then
-            call MPI_Info_get(infoused, "nc_bb",
+            call MPI_Info_get(infoused, "nc_burst_buf",
      +            MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
                 bb_enable = (hint .eq. 'enable')
@@ -985,7 +985,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         bb_enable = .FALSE.
         err = nfmpi_inq_file_info(ncid, infoused)
         if (err .eq. NF_NOERR) then
-            call MPI_Info_get(infoused, "nc_bb",
+            call MPI_Info_get(infoused, "nc_burst_buf",
      +            MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
                 bb_enable = (hint .eq. 'enable')
@@ -1267,7 +1267,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         bb_enable = .FALSE.
         err = nfmpi_inq_file_info(ncid, infoused)
         if (err .eq. NF_NOERR) then
-            call MPI_Info_get(infoused, "nc_bb",
+            call MPI_Info_get(infoused, "nc_burst_buf",
      +            MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
                 bb_enable = (hint .eq. 'enable')

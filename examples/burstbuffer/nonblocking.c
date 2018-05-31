@@ -120,12 +120,12 @@ int main(int argc, char** argv)
 
     /* Set up the hints for burst buffer driver in ncmpi_create
      * Note that the remaining part of the code remains unchanged
-     * PnetCDF will warn if nc_bb_dirname is not set.
+     * PnetCDF will warn if nc_burst_buf_dirname is not set.
      */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_bb", "enable");
+    MPI_Info_set(info, "nc_burst_buf", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_bb_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
     }
 
     /* create a new file using clobber mode ----------------------------------*/

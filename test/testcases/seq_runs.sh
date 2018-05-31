@@ -35,7 +35,7 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
 if [ -n "${TESTBB}" ]; then
    # Run using burst buffer driver
-   export PNETCDF_HINTS="nc_bb=enable;nc_bb_dirname=${TESTOUTDIR};nc_bb_overwrite=enable"
+   export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
    ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds_bb.nc
    ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds_bb.nc
    unset PNETCDF_HINTS
