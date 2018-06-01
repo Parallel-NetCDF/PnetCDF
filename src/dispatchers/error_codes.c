@@ -292,7 +292,7 @@ ncmpi_strerror(int err)
         case NC_EBADLOG:
             return "Unrecognized burst buffering log file format.";
         case NC_EFLUSHED:
-            return "Nonblocking request has already been flushed. It is too late to cancel.";
+            return "Nonblocking requests already flushed.";
 
         default:
             /* check netCDF-3 and netCDF-4 errors */
