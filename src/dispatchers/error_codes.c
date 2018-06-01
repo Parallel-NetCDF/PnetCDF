@@ -403,13 +403,13 @@ nc_strerror(int ncerr1)
       case NC_EINVALCOORDS:
 	 return "NetCDF: Index exceeds dimension bound";
       case NC_EMAXDIMS:
-	 return "NetCDF: NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeded";
+	 return "NetCDF: NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeded"; /* not enforced after 4.5.0 */
       case NC_ENAMEINUSE:
 	 return "NetCDF: String match to name in use";
       case NC_ENOTATT:
 	 return "NetCDF: Attribute not found";
       case NC_EMAXATTS:
-	 return "NetCDF: NC_MAX_ATTRS exceeded";
+	 return "NetCDF: NC_MAX_ATTRS exceeded"; /* not enforced after 4.5.0 */
       case NC_EBADTYPE:
 	 return "NetCDF: Not a valid data type or _FillValue type mismatch";
       case NC_EBADDIM:
@@ -417,7 +417,7 @@ nc_strerror(int ncerr1)
       case NC_EUNLIMPOS:
 	 return "NetCDF: NC_UNLIMITED in the wrong index";
       case NC_EMAXVARS:
-	 return "NetCDF: NC_MAX_VARS exceeded";
+	 return "NetCDF: NC_MAX_VARS exceeded"; /* not enforced after 4.5.0 */
       case NC_ENOTVAR:
 	 return "NetCDF: Variable not found";
       case NC_EGLOBAL:
@@ -480,8 +480,6 @@ nc_strerror(int ncerr1)
 	 return "NetCDF: Authorization failure";
       case NC_ENOTFOUND:
 	 return "NetCDF: file not found";
-      case NC_ECANTEXTEND:
-	return "NetCDF: Attempt to extend dataset during NC_INDEPENDENT I/O operation. Use nc_var_par_access to set mode NC_COLLECTIVE before extending variable.";
       case NC_ECANTREMOVE:
 	 return "NetCDF: cannot delete file";
       case NC_EHDFERR:
@@ -543,14 +541,20 @@ nc_strerror(int ncerr1)
 	    "when netCDF was built.";
       case NC_EDISKLESS:
 	 return "NetCDF: Error in using diskless access";
+      case NC_EFILTER:
+	 return "NetCDF: Filter error: bad id or parameters or filter library non-existent";
+      case NC_ECANTEXTEND:
+	 return "NetCDF: Attempt to extend dataset during NC_INDEPENDENT I/O operation. Use nc_var_par_access to set mode NC_COLLECTIVE before extending variable.";
       case NC_EMPI:
 	 return "MPI operation failed";
       case NC_ERCFILE:
 	 return "NetCDF: RC File Failure.";
       case NC_ENULLPAD:
 	 return "NetCDF: File fails strict Null-Byte Header check.";
+      case NC_EINMEMORY:
+	 return "NetCDF: In-memory File operation failed.";
       default:
-         return nc_unknown_err_msg;
+	 return nc_unknown_err_msg;
    }
 }
 /** \} */
@@ -650,8 +654,12 @@ ncmpi_strerrno(int err)
         case (NC_EBADCHUNK):			return "NC_EBADCHUNK";
         case (NC_ENOTBUILT):			return "NC_ENOTBUILT";
         case (NC_EDISKLESS):			return "NC_EDISKLESS";
+        case (NC_EFILTER):			return "NC_EFILTER";
         case (NC_ECANTEXTEND):			return "NC_ECANTEXTEND";
         case (NC_EMPI):				return "NC_EMPI";
+        case (NC_ERCFILE):			return "NC_ERCFILE";
+        case (NC_ENULLPAD):			return "NC_ENULLPAD";
+        case (NC_EINMEMORY):			return "NC_EINMEMORY";
 /*
         case (NC_EURL):				return "NC_EURL";
         case (NC_ECONSTRAINT):			return "NC_ECONSTRAINT";
