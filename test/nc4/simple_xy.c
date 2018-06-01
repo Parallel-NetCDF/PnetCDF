@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
     /* Create the file. The NC_NETCDF4 parameter tells netCDF to create
         * a file in netCDF-4/HDF5 standard. */
-    if ((err = nc_create(filename, NC_NETCDF4 | NC_MPIIO, &ncid)))
+    if ((err = nc_create_par(filename, NC_NETCDF4 | NC_MPIIO, MPI_COMM_WORLD, MPI_INFO_NULL, &ncid)))
         CHECK_ERR
 
     /* Define the dimensions. */
