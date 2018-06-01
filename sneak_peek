@@ -3,7 +3,7 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * Burst Buffer dirver is now avaiable.
+    * Burst Buffer driver is now available.
       Burst buffer driver is a I/O driver in PnetCDF that implements a 
       log-based I/O aggregation for write related I/O requests that cache data
       on on a wide range of burst buffer architecture.
@@ -79,7 +79,7 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New error code
-    * none
+    * NC_EFLUSHED -- Non-blocking requests already flushed.
 
   o New PnetCDF hint
     * nc_in_place_swap -- to enable or disable in-place byte swap on Little
@@ -88,6 +88,23 @@ This is essentially a placeholder for the next release note ...
       that changes the mode set at the configure time to "enable", by setting
       the environment variable PNETCDF_HINTS with command:
           export PNETCDF_HINTS="nc_in_place_swap=enable"
+    * nc_burst_buf -- Whether burst buffer driver is enabled. The default is 
+      disable. Below is an example that enables burst buffering by setting
+      the environment variable PNETCDF_HINTS with command:
+          export PNETCDF_HINTS="nc_burst_buf=enable"
+    * nc_burst_buf_dirname -- Directory where log file will be stored. This is 
+      usually set to the path where burst buffer is mounted. The default path 
+      is the directory housing the NetCDF file.
+    * nc_burst_buf_del_on_close -- Whether log file should be deleted after 
+      closing the NetCDF file. It can be disabled when the scheduler will clean
+      up the burst buffer automatically after the job is completed. The default
+      is enable. Below is an example that disables deleting on file closing by 
+      setting the environment variable PNETCDF_HINTS with command:
+          export PNETCDF_HINTS="nc_burst_buf_del_on_close=disable"
+    * nc_burst_buf_flush_buffer_size -- Amount of memory that can be used to 
+      flush the log. The unit is in bytes. 0 means unlimited. User must 
+      guarantee that it is larger than every single I/O request the program 
+      will make. Otherwise, the hint will not be followed.
 
   o New run-time environment variables
     * none
@@ -145,6 +162,10 @@ This is essentially a placeholder for the next release note ...
   o New example programs
     * example/C/vard_mvars.c shows an example of using a single vard API call
       to write or read two variables.
+    * example/burstbuffer/create_open.c shows an example of creating and opening
+      a simple NetCDF file with burst buffering is enabled.
+    * example/burstbuffer/nonblocking.c shows an example of difference in 
+      non-blocking API behavior when burst buffering is enabled.
 
   o New programs for I/O benchmarks
     * none
