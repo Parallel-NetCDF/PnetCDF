@@ -35,7 +35,6 @@ check_PROGRAMS = collective_write \
 if BUILD_DRIVER_BB
 TESTBB = 1
 TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
-AM_CPPFLAGS += -DBUILD_DRIVER_BB
 endif
 
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
