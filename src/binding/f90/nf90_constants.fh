@@ -227,7 +227,8 @@
     NF90_EMPI           = NF_EMPI          , & ! MPI operation failed.
     NF90_EFILTER        = NF_EFILTER       , & ! Filter operation failed.
     NF90_ERCFILE        = NF_ERCFILE       , & ! RC file failure.
-    NF90_ENULLPAD       = NF_ENULLPAD          ! Header Bytes not Null-Byte padded
+    NF90_ENULLPAD       = NF_ENULLPAD      , & ! Header Bytes not Null-Byte padded
+    NF90_EINMEMORY      = NF_EINMEMORY         ! In-memory file error
 
   ! This is the position of NC_NETCDF4 in cmode, counting from the
   ! right, starting (uncharacteristically for fortran) at 0. It's needed
