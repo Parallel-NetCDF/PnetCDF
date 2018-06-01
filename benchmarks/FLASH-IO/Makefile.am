@@ -75,7 +75,7 @@ ptests ptest ptest4: $(check_PROGRAMS)
 	    echo "FAILED: F90 parallel run on 4 processes ------------- FLASH_IO"; \
 	fi ; \
     if [ -n "$(TESTBB)" ]; then ( \
-        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
+        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
         $(TESTMPIRUN4) ./$(check_PROGRAMS) $(RUN_QUIETLY) $(TESTOUTDIR)/flash_io_test_ ; \
         unset PNETCDF_HINTS ; \
         if [ $$? = 0 ] ; then \

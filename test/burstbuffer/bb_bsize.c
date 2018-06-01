@@ -68,7 +68,6 @@ int main(int argc, char *argv[]) {
     /* Initialize file info */
 	MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
-    MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
     /* Set default buffer size to 1/16 of the rows */
     sprintf(bsize, "%u", (unsigned int)(SIZE * SIZE / 16 * sizeof(int)));
     MPI_Info_set(info, "nc_burst_buf_flush_buffer_size", bsize);

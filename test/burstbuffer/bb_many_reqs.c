@@ -60,7 +60,6 @@ int main(int argc, char *argv[]) {
     /* Initialize file info */
 	MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
-    MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
 
     /* Create new netcdf file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);    CHECK_ERR

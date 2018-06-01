@@ -57,7 +57,6 @@ int main(int argc, char** argv) {
     }
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
     MPI_Info_set(info, "nc_burst_buf_del_on_close", "disable");
     MPI_Info_set(info, "nc_burst_buf_flush_buffer_size", "256");
     /* MPI_Info_set(info, "nc_burst_buf_dirname", "()@^$@!(_&$)@(#%%&)(*#$"); */
@@ -72,18 +71,6 @@ int main(int argc, char** argv) {
         log_enabled = 0;
 
     if (log_enabled) {
-        MPI_Info_get(infoused, "nc_burst_buf_overwrite", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag) {
-            if (strcmp(hint, "enable") != 0) {
-                printf("Error at line %d: unexpected nc_burst_buf_overwrite = %s, but got %s\n", __LINE__, "enable", hint);
-                nerrs++;
-            }
-        }
-        else{
-            printf("Error at line %d: nc_burst_buf_overwrite is not set\n", __LINE__);
-            nerrs++;
-        }
-
         MPI_Info_get(infoused, "nc_burst_buf_del_on_close", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag) {
             if (strcmp(hint, "disable") != 0) {
