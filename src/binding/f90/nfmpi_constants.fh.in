@@ -225,7 +225,8 @@
       NF_EMPI           = -131, & ! MPI operation failed.
       NF_EFILTER        = -132, & ! Filter operation failed.
       NF_ERCFILE        = -133, & ! RC file failure
-      NF_ENULLPAD       = -134    ! Header Bytes not Null-Byte padded
+      NF_ENULLPAD       = -134, & ! Header Bytes not Null-Byte padded
+      NF_EINMEMORY      = -135    ! In-memory file error
 
 ! PnetCDF error codes start here
       integer, parameter, public :: &
