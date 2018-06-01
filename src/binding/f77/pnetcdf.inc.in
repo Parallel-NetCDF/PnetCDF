@@ -329,6 +329,7 @@
       integer NF_EFILTER
       integer NF_ERCFILE
       integer NF_ENULLPAD
+      integer NF_EINMEMORY
 
       PARAMETER (NF_EHDFERR      = -101)  ! Error at HDF5 layer.
       PARAMETER (NF_ECANTREAD    = -102)  ! Can't read.
@@ -364,6 +365,7 @@
       PARAMETER (NF_EFILTER      = -132)  ! Filter operation failed.
       PARAMETER (NF_ERCFILE      = -133)  ! RC file failure
       PARAMETER (NF_ENULLPAD     = -134)  ! Header Bytes not Null-Byte padded
+      PARAMETER (NF_EINMEMORY    = -135)  ! In-memory file error
 
 !
 ! PnetCDF error codes start here
