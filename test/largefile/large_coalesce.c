@@ -69,10 +69,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_cb_write", "enable");
-    MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
-
 #ifndef ENABLE_LARGE_REQ
     /* silence iternal debug messages */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
@@ -82,6 +78,10 @@ int main(int argc, char** argv)
     for(format = 0; format < 2; format ++)
 #endif
     {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "romio_cb_write", "enable");
+        MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
+
         /* create a new file for writing ----------------------------------------*/
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
