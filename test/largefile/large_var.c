@@ -149,7 +149,7 @@ int main(int argc, char** argv)
         count[2] = 5;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_put_vara_int(ncid, varid, start, count, buf+20);
+            err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf+20);
         }
         else
 #endif
@@ -161,7 +161,7 @@ int main(int argc, char** argv)
         count[1]  = 1;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_put_vara_int(ncid, varid, start, count, buf+30);
+            err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf+30);
         }
         else
 #endif
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
         start[1] = 9;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_put_vara_int(ncid, varid, start, count, buf+35);
+            err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf+35);
         }
         else
 #endif
