@@ -65,7 +65,7 @@ ptest ptest4: $(check_PROGRAMS)
            exit 1; \
         fi ; \
         if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
+                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
                 $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
                 unset PNETCDF_HINTS ; \
                 if [ $$? = 0 ] ; then \
@@ -89,7 +89,7 @@ ptest8: $(check_PROGRAMS)
            exit 1; \
         fi ; \
         if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
+                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
                 $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
                 unset PNETCDF_HINTS ; \
                 if [ $$? = 0 ] ; then \
@@ -113,7 +113,7 @@ ptest3: $(check_PROGRAMS)
            exit 1; \
         fi ; \
         if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
+                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
                 $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
                 unset PNETCDF_HINTS ; \
                 if [ $$? = 0 ] ; then \

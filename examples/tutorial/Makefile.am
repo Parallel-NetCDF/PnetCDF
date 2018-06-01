@@ -82,7 +82,7 @@ ptest ptest4: $(check_PROGRAMS)
            exit 1; \
         fi ; \
         if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
+                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
                 if [ $$i = "pnetcdf-read-from-master" ] ; then \
                         $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-from-master.nc ; \
                 elif [ $$i = "pnetcdf-read-nfiles" ] ; then \
