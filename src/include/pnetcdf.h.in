@@ -565,7 +565,7 @@ by the desired type. */
 #define NC_EUNSPTETYPE			(-211) /**< Unsupported etype in memory MPI datatype */
 #define NC_EINVAL_REQUEST		(-212) /**< invalid nonblocking request ID */
 #define NC_EAINT_TOO_SMALL		(-213) /**< MPI_Aint not large enough to hold requested value */
-#define NC_ENOTSUPPORTED			(-214) /**< feature is not yet supported */
+#define NC_ENOTSUPPORT			(-214) /**< feature is not yet supported */
 #define NC_ENULLBUF			(-215) /**< trying to attach a NULL buffer */
 #define NC_EPREVATTACHBUF		(-216) /**< previous attached buffer is found */
 #define NC_ENULLABUF			(-217) /**< no attached buffer is found */

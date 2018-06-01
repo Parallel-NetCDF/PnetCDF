@@ -175,7 +175,7 @@ char* nc_err_code_name(int err)
         case (NC_EUNSPTETYPE):			return "NC_EUNSPTETYPE";
         case (NC_EINVAL_REQUEST):		return "NC_EINVAL_REQUEST";
         case (NC_EAINT_TOO_SMALL):		return "NC_EAINT_TOO_SMALL";
-        case (NC_ENOTSUPPORTED):			return "NC_ENOTSUPPORTED";
+        case (NC_ENOTSUPPORT):			return "NC_ENOTSUPPORT";
         case (NC_ENULLBUF):			return "NC_ENULLBUF";
         case (NC_EPREVATTACHBUF):		return "NC_EPREVATTACHBUF";
         case (NC_ENULLABUF):			return "NC_ENULLABUF";
