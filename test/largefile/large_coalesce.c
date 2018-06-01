@@ -37,6 +37,9 @@ int main(int argc, char** argv)
 #ifdef ENABLE_LARGE_REQ
     size_t i;
 #endif
+#ifdef BUILD_DRIVER_NC4
+    int format;
+#endif
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -76,7 +79,7 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef BUILD_DRIVER_NC4
-    for(int format = 0; format < 2; format ++)
+    for(format = 0; format < 2; format ++)
 #endif
     {
         /* create a new file for writing ----------------------------------------*/
@@ -119,7 +122,7 @@ int main(int argc, char** argv)
         count[1] = 10;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_put_vara_uchar(ncid, varid, start, count, buf);
+            err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf);
         }
         else
 #endif
@@ -131,7 +134,7 @@ int main(int argc, char** argv)
         count[1] = ONE_G-1024;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_put_vara_uchar(ncid, varid, start, count, buf+1024);
+            err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+1024);
         }
         else
 #endif
@@ -145,7 +148,7 @@ int main(int argc, char** argv)
         count[1] = ONE_G+1024;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_put_vara_uchar(ncid, varid, start, count, buf+ONE_G);
+            err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
         }
         else
 #endif
@@ -196,7 +199,7 @@ int main(int argc, char** argv)
         count[1] = 10;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_get_vara_uchar(ncid, varid, start, count, buf);
+            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
         }
         else
 #endif
@@ -207,7 +210,7 @@ int main(int argc, char** argv)
         count[1] = ONE_G-1024;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_get_vara_uchar(ncid, varid, start, count, buf+1024);
+            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+1024);
         }
         else
 #endif
@@ -218,7 +221,7 @@ int main(int argc, char** argv)
         count[1] = ONE_G+1024;
 #ifdef BUILD_DRIVER_NC4
         if (format == 0){
-            err = ncmpi_get_vara_uchar(ncid, varid, start, count, buf+ONE_G);
+            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
         }
         else
 #endif
