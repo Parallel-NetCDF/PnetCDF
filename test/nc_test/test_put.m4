@@ -625,9 +625,10 @@ TestFunc(var)_$1(VarArgs)
     err = PutVar1(text)(ncid, varid, index, "x");
     IF (err != NC_NOERR)
         error("put_var1_text: %s", APIFunc(strerror)(err));
-if (bb_enabled){
-err = ncmpi_flush(ncid);
-}
+
+    if (bb_enabled){
+        err = ncmpi_flush(ncid);
+    }
 
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] != RECDIM) continue; /* only record variables here */
