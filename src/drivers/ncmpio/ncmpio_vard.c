@@ -73,7 +73,7 @@ getput_vard(NC               *ncp,
     /* call a separate routine if variable is stored in subfiles */
     if (varp->num_subfiles > 1) {
         printf("This feature for subfiling is yet to implement\n");
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORTED)
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     }
 #endif
 

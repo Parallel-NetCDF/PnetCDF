@@ -180,7 +180,7 @@ int main(int argc, char** argv)
         CHECK_ERR
 
 #ifdef BUILD_DRIVER_NC4
-        if (format > 0){
+        if (format > 0)
 #endif
         {
             err = ncmpi_wait_all(ncid, 3, req, st); CHECK_ERR
