@@ -147,8 +147,8 @@ int clear_file_contents(int ncid, int *varid)
 
     // Flush the log to prevent new value being skipped due to overlaping domain
     if (bb_enabled) {
-        CHECK_ERR
         err = ncmpi_flush(ncid);
+        CHECK_ERR
     }
 
     return nerrs;

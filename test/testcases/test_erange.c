@@ -109,8 +109,9 @@ int test_cdf2(char *filename)
     si[0] = -129;
     err = ncmpi_put_var_int_all(ncid, vid, si);
     if (bb_enabled) {
-        CHECK_ERR
-        err = ncmpi_flush(ncid);
+        if (err == NC_NOERR){
+            err = ncmpi_flush(ncid);
+        }
     }
 
     EXP_ERR(NC_ERANGE)
@@ -125,8 +126,9 @@ int test_cdf2(char *filename)
     err = ncmpi_put_var_int_all(ncid, vid, si);
 
     if (bb_enabled) {
-        CHECK_ERR
-        err = ncmpi_flush(ncid);
+        if (err == NC_NOERR){
+            err = ncmpi_flush(ncid);
+        }   
     }
 
     EXP_ERR(NC_ERANGE)
@@ -200,8 +202,9 @@ int test_cdf5(char *filename)
     sc[0] = -1; /* in CDF-5, put -1 to an uchar should result in NC_ERANGE */
     err = ncmpi_put_var_schar_all(ncid, uc_vid, sc);
     if (bb_enabled){
-        CHECK_ERR
-        err = ncmpi_flush(ncid);
+        if (err == NC_NOERR){
+            err = ncmpi_flush(ncid);
+        }
     }
 
     EXP_ERR(NC_ERANGE)
@@ -210,8 +213,9 @@ int test_cdf5(char *filename)
     err = ncmpi_put_var_uchar_all(ncid, sc_vid, uc);
 
     if (bb_enabled){
-        CHECK_ERR
-        err = ncmpi_flush(ncid);
+        if (err == NC_NOERR){
+            err = ncmpi_flush(ncid);
+        }
     }
 
     EXP_ERR(NC_ERANGE)

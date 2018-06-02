@@ -129,13 +129,13 @@ int test_column_wise_$1(char *filename, int cdf)
     buf[0] = ($1*)  calloc(NY * myNX, sizeof($1));
     start[0] = 0;   start[1] = myOff;
     count[0] = NY;  count[1] = myNX;
-    err = ncmpi_put_vara_`$1'_all(ncid, varid, start, count, buf[0]);
+    err = ncmpi_put_vara_`$1'_all(ncid, varid, start, count, buf[0]); CHECK_ERR
     free(buf[0]);
 
     // Flush the log to prevent new value being skipped due to overlaping domain
     if (bb_enabled) {
-        CHECK_ERR
         err = ncmpi_flush(ncid);
+        CHECK_ERR
     }
 
     /* initialize the buffer with rank ID. Also make the case interesting,
