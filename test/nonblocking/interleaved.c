@@ -164,8 +164,8 @@ int main(int argc, char** argv)
 
     // Flush the log to prevent new value being skipped due to overlaping domain
     if (bb_enabled) {
-        CHECK_ERR
         err = ncmpi_flush(ncid);
+        CHECK_ERR
     }
 
     /* write 8 x 2 elements so this only interleaves the next two
@@ -205,8 +205,8 @@ int main(int argc, char** argv)
 
     // Flush the log to prevent new value being skipped due to overlaping domain
     if (bb_enabled) {
-        CHECK_ERR
         err = ncmpi_flush(ncid);
+        CHECK_ERR
     }
 
     /* write 8 x 2 elements so this only interleaves the next two iput

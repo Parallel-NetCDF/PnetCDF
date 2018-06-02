@@ -614,6 +614,8 @@ ifdef(`PNETCDF',
     Put_Vars(ncid, numVars);
     if (bb_enabled){
         err = ncmpi_flush(ncid);
+        IF (err != NC_NOERR)
+            error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
     }
     err = APIFunc(abort)(ncid);
     IF (err != NC_NOERR)
@@ -983,6 +985,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             if (bb_enabled) {
                 err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
             }
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -1117,6 +1121,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             if (bb_enabled) {
                 err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
             }
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -1130,6 +1136,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             if (bb_enabled) {
                 err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
             }
         }
         else IF (err != NC_EEDGE) {
@@ -1322,6 +1330,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             if (bb_enabled) {
                 err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
             }
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -1335,6 +1345,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             if (bb_enabled) {
                 err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
             }
         }
         else IF (err != NC_EEDGE) {
@@ -1563,6 +1575,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             if (bb_enabled) {
                 err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
             }
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -1576,6 +1590,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
             if (bb_enabled) {
                 err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
             }
         }
         else IF (err != NC_EEDGE) {
