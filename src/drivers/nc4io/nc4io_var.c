@@ -294,7 +294,7 @@ nc4io_get_varn(void              *ncdp,
         else{
             // Participate coll I/O
             num = 0;
-            status = DEBUG_ASSIGN_ERROR(NC_ENULLSTART);
+            DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART);
         }
     }
 
@@ -308,7 +308,7 @@ nc4io_get_varn(void              *ncdp,
             // Participate coll I/O
             num = 0;
             if (status == NC_NOERR){
-                status = DEBUG_ASSIGN_ERROR(err);
+                DEBUG_ASSIGN_ERROR(status, err);
             }
         }
     }
@@ -331,7 +331,7 @@ nc4io_get_varn(void              *ncdp,
             // Participate coll I/O
             num = 0;
             if (status == NC_NOERR){
-                status = DEBUG_ASSIGN_ERROR(NC_ENOTSUPPORT);
+                DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT);
             }
         }
         
@@ -352,7 +352,7 @@ nc4io_get_varn(void              *ncdp,
             if (err != NC_NOERR){ 
                 num = 0;
                 if (status == NC_NOERR){
-                    status = DEBUG_ASSIGN_ERROR(err);
+                    DEBUG_ASSIGN_ERROR(status, err);
                 }
             }
         }
@@ -368,7 +368,7 @@ nc4io_get_varn(void              *ncdp,
                 else{
                     // Participate coll I/O
                     if (status == NC_NOERR){
-                        status = DEBUG_ASSIGN_ERROR(err);
+                        DEBUG_ASSIGN_ERROR(status, err);
                     }
                 }
             }
@@ -389,7 +389,7 @@ nc4io_get_varn(void              *ncdp,
             err = nc_var_par_access(nc4p->ncid, varid, NC_COLLECTIVE);
             if (err != NC_NOERR){ 
                 if (status == NC_NOERR){
-                    status = DEBUG_ASSIGN_ERROR(err);
+                    DEBUG_ASSIGN_ERROR(status, err);
                 }
             }
         }
@@ -426,7 +426,7 @@ nc4io_put_varn(void              *ncdp,
         else{
             // Participate coll I/O
             num = 0;
-            status = DEBUG_ASSIGN_ERROR(NC_ENULLSTART);
+            DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART);
         }
     }
 
@@ -440,7 +440,7 @@ nc4io_put_varn(void              *ncdp,
             // Participate coll I/O
             num = 0;
             if (status == NC_NOERR){
-                status = DEBUG_ASSIGN_ERROR(err);
+                DEBUG_ASSIGN_ERROR(status, err);
             }
         }
     }
@@ -463,7 +463,7 @@ nc4io_put_varn(void              *ncdp,
             // Participate coll I/O
             num = 0;
             if (status == NC_NOERR){
-                status = DEBUG_ASSIGN_ERROR(NC_ENOTSUPPORT);
+                DEBUG_ASSIGN_ERROR(status, NC_ENOTSUPPORT);
             }
         }
         
@@ -484,7 +484,7 @@ nc4io_put_varn(void              *ncdp,
             if (err != NC_NOERR){ 
                 num = 0;
                 if (status == NC_NOERR){
-                    status = DEBUG_ASSIGN_ERROR(err);
+                    DEBUG_ASSIGN_ERROR(status, err);
                 }
             }
         }
@@ -500,7 +500,7 @@ nc4io_put_varn(void              *ncdp,
             else{
                 // Participate coll I/O
                 if (status == NC_NOERR){
-                    status = DEBUG_ASSIGN_ERROR(err);
+                    DEBUG_ASSIGN_ERROR(status, err);
                 }
             }
         }
@@ -521,7 +521,7 @@ nc4io_put_varn(void              *ncdp,
             err = nc_var_par_access(nc4p->ncid, varid, NC_COLLECTIVE);
             if (err != NC_NOERR){ 
                 if (status == NC_NOERR){
-                    status = DEBUG_ASSIGN_ERROR(err);
+                    DEBUG_ASSIGN_ERROR(status, err);
                 }
             }
         }
