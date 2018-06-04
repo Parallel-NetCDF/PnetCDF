@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef BUILD_DRIVER_NC4
-    for(format = 0; format < 2; format ++)
+    for(format = 1; format < 2; format ++)
 #endif
     {
         /* create a new file for writing ----------------------------------------*/
