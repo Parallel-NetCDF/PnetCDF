@@ -277,22 +277,40 @@ nc4io_get_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    int i, j, ndim, err;
+    int i, j, ndim, err, status = NC_NOERR;
     int elsize;
-    int num_all;
+    int num_max, num_min;
+    int isindep;
     size_t putsize;
-    MPI_Offset *dstart, *dcount;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    isindep = fIsSet(nc4p->flag, NC_MODE_INDEP);
 
     /* Check arguments */
     if (starts == NULL){
-        DEBUG_RETURN_ERROR(NC_ENULLSTART)
+        if (isindep){
+            DEBUG_RETURN_ERROR(NC_ENULLSTART)
+        }
+        else{
+            // Participate coll I/O
+            num = 0;
+            status = DEBUG_ASSIGN_ERROR(NC_ENULLSTART);
+        }
     }
 
     /* Get variable dimensionality */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
     if (err != NC_NOERR){ 
-        DEBUG_RETURN_ERROR(err)
+        if (isindep){
+            DEBUG_RETURN_ERROR(err)
+        }
+        else{
+            // Participate coll I/O
+            num = 0;
+            if (status == NC_NOERR){
+                status = DEBUG_ASSIGN_ERROR(err);
+            }
+        }
     }
 
     /* 
@@ -305,9 +323,18 @@ nc4io_get_varn(void              *ncdp,
     }
     else{
         nc_type type;
-
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
+        
+        if (isindep){
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+        else{
+            // Participate coll I/O
+            num = 0;
+            if (status == NC_NOERR){
+                status = DEBUG_ASSIGN_ERROR(NC_ENOTSUPPORT);
+            }
+        }
+        
         err = nc_inq_vartype(nc4p->ncid, varid, &type);
         if (err != NC_NOERR){ 
             DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
@@ -315,27 +342,35 @@ nc4io_get_varn(void              *ncdp,
         
         elsize = nc4io_nc_type_size(type);
     }
-
-    /* In Collective mode, number of vara calls must be the same accross processes */
-    if (fIsSet(nc4p->flag, NC_MODE_INDEP)){
-        num_all = num;
-    }
-    else{
-        MPI_Allreduce(&num, &num_all, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-        if (num_all > num){
-            dstart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
-            dcount = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
-            memset(dstart, 0, sizeof(MPI_Offset) * ndim);
-            memset(dcount, 0, sizeof(MPI_Offset) * ndim);
+    
+    if (!isindep){
+        MPI_Allreduce(&num, &num_max, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        MPI_Allreduce(&num, &num_min, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+        if (num_max != num_min){
+            // Num mismatch, need to switch to indep mode
+            err = nc_var_par_access(nc4p->ncid, varid, NC_INDEPENDENT);
+            if (err != NC_NOERR){ 
+                num = 0;
+                if (status == NC_NOERR){
+                    status = DEBUG_ASSIGN_ERROR(err);
+                }
+            }
         }
     }
 
-    /* Call nc4io_get_var for N times */
-    for(i = 0; i < num_all; i++){
-        if (i < num){
+    /* Call nc4io_put_var for num times */
+    for(i = 0; i < num; i++){
             err = nc4io_get_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
-            if (err != NC_NOERR){
-                return err;
+            if (err != NC_NOERR){ 
+                if (isindep){
+                    DEBUG_RETURN_ERROR(err)
+                }
+                else{
+                    // Participate coll I/O
+                    if (status == NC_NOERR){
+                        status = DEBUG_ASSIGN_ERROR(err);
+                    }
+                }
             }
             
             /* Calculate the size of each put_var */
@@ -346,22 +381,21 @@ nc4io_get_varn(void              *ncdp,
 
             /* Move buffer pointer */
             buf = (void*)(((char*)buf) + putsize);
-        }
-        else{
-            // Follow collective IO by doing dummy API call
-            err = nc4io_get_var(ncdp, varid, dstart, dcount, NULL, NULL, buf, bufcount, buftype, reqMode);
-            if (err != NC_NOERR){
-                return err;
+    }
+
+    if (!isindep){
+        if (num_max != num_min){
+            // switch back to coll mode
+            err = nc_var_par_access(nc4p->ncid, varid, NC_COLLECTIVE);
+            if (err != NC_NOERR){ 
+                if (status == NC_NOERR){
+                    status = DEBUG_ASSIGN_ERROR(err);
+                }
             }
         }
     }
 
-    if (num_all > num){
-        NCI_Free(dstart);
-        NCI_Free(dcount);
-    }
-
-    return NC_NOERR;
+    return status;
 }
 
 int
@@ -375,22 +409,40 @@ nc4io_put_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    int i, j, ndim, err;
+    int i, j, ndim, err, status = NC_NOERR;
     int elsize;
-    int num_all;
+    int num_max, num_min;
+    int isindep;
     size_t putsize;
-    MPI_Offset *dstart, *dcount;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    isindep = fIsSet(nc4p->flag, NC_MODE_INDEP);
 
     /* Check arguments */
     if (starts == NULL){
-        DEBUG_RETURN_ERROR(NC_ENULLSTART)
+        if (isindep){
+            DEBUG_RETURN_ERROR(NC_ENULLSTART)
+        }
+        else{
+            // Participate coll I/O
+            num = 0;
+            status = DEBUG_ASSIGN_ERROR(NC_ENULLSTART);
+        }
     }
 
     /* Get variable dimensionality */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
     if (err != NC_NOERR){ 
-        DEBUG_RETURN_ERROR(err)
+        if (isindep){
+            DEBUG_RETURN_ERROR(err)
+        }
+        else{
+            // Participate coll I/O
+            num = 0;
+            if (status == NC_NOERR){
+                status = DEBUG_ASSIGN_ERROR(err);
+            }
+        }
     }
 
     /* 
@@ -403,9 +455,18 @@ nc4io_put_varn(void              *ncdp,
     }
     else{
         nc_type type;
-
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
+        
+        if (isindep){
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+        else{
+            // Participate coll I/O
+            num = 0;
+            if (status == NC_NOERR){
+                status = DEBUG_ASSIGN_ERROR(NC_ENOTSUPPORT);
+            }
+        }
+        
         err = nc_inq_vartype(nc4p->ncid, varid, &type);
         if (err != NC_NOERR){ 
             DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
@@ -413,53 +474,60 @@ nc4io_put_varn(void              *ncdp,
         
         elsize = nc4io_nc_type_size(type);
     }
-
-    /* In Collective mode, number of vara calls must be the same accross processes */
-    if (fIsSet(nc4p->flag, NC_MODE_INDEP)){
-        num_all = num;
-    }
-    else{
-        MPI_Allreduce(&num, &num_all, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-        if (num_all > num){
-            dstart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
-            dcount = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndim);
-            memset(dstart, 0, sizeof(MPI_Offset) * ndim);
-            memset(dcount, 0, sizeof(MPI_Offset) * ndim);
-        }
-    }
     
-    /* Call nc4io_put_var for N times */
-    for(i = 0; i < num_all; i++){
-        if (i < num){
-            err = nc4io_put_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
-            if (err != NC_NOERR){
-                return err;
-            }
-            
-            /* Calculate the size of each put_var */
-            putsize = (size_t)elsize;
-            for(j = 0; j < ndim; j++){
-                putsize *= counts[i][j];
-            }
-
-            /* Move buffer pointer */
-            buf = (void*)(((char*)buf) + putsize);
-        }
-        else{
-            // Follow collective IO by doing dummy API call
-            err = nc4io_put_var(ncdp, varid, dstart, dcount, NULL, NULL, buf, bufcount, buftype, reqMode);
-            if (err != NC_NOERR){
-                return err;
+    if (!isindep){
+        MPI_Allreduce(&num, &num_max, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        MPI_Allreduce(&num, &num_min, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+        if (num_max != num_min){
+            // Num mismatch, need to switch to indep mode
+            err = nc_var_par_access(nc4p->ncid, varid, NC_INDEPENDENT);
+            if (err != NC_NOERR){ 
+                num = 0;
+                if (status == NC_NOERR){
+                    status = DEBUG_ASSIGN_ERROR(err);
+                }
             }
         }
     }
 
-    if (num_all > num){
-        NCI_Free(dstart);
-        NCI_Free(dcount);
+    /* Call nc4io_put_var for num times */
+    for(i = 0; i < num; i++){
+        err = nc4io_put_var(ncdp, varid, starts[i], counts[i], NULL, NULL, buf, bufcount, buftype, reqMode);
+        if (err != NC_NOERR){ 
+            if (isindep){
+                DEBUG_RETURN_ERROR(err)
+            }
+            else{
+                // Participate coll I/O
+                if (status == NC_NOERR){
+                    status = DEBUG_ASSIGN_ERROR(err);
+                }
+            }
+        }
+        
+        /* Calculate the size of each put_var */
+        putsize = (size_t)elsize;
+        for(j = 0; j < ndim; j++){
+            putsize *= counts[i][j];
+        }
+
+        /* Move buffer pointer */
+        buf = (void*)(((char*)buf) + putsize);
     }
 
-    return NC_NOERR;
+    if (!isindep){
+        if (num_max != num_min){
+            // switch back to coll mode
+            err = nc_var_par_access(nc4p->ncid, varid, NC_COLLECTIVE);
+            if (err != NC_NOERR){ 
+                if (status == NC_NOERR){
+                    status = DEBUG_ASSIGN_ERROR(err);
+                }
+            }
+        }
+    }
+
+    return status;
 }
 
 int
