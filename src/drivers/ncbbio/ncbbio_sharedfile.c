@@ -16,7 +16,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <pnetcdf.h>
-#include <ncdwio_driver.h>
+#include <ncbbio_driver.h>
 
 #define BLOCK_SIZE 8388608
 
@@ -28,12 +28,12 @@
  * IN      info:    File hint for opened file (currently unused)
  * OUT       fd:    File handler
  */
-int ncdwio_sharedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_dw_sharedfile **fh) {
+int ncbbio_sharedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_bb_sharedfile **fh) {
     int err;
-    NC_dw_sharedfile *f;
+    NC_bb_sharedfile *f;
 
     // Allocate file handle
-    f = (NC_dw_sharedfile*)NCI_Malloc(sizeof(NC_dw_sharedfile));
+    f = (NC_bb_sharedfile*)NCI_Malloc(sizeof(NC_bb_sharedfile));
 
     /* Initialize metadata associate with the file
      * We assum all processes within the given communicator is sharing the file
@@ -86,7 +86,7 @@ int ncdwio_sharedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, N
  * Close shared file
  * OUT       fd:    File handler
  */
-int ncdwio_sharedfile_close(NC_dw_sharedfile *f) {
+int ncbbio_sharedfile_close(NC_bb_sharedfile *f) {
     int err;
 
     /* Close posix file descriptor */
@@ -128,7 +128,7 @@ int ncdwio_sharedfile_close(NC_dw_sharedfile *f) {
  *               offstart(s) offend(e) (s)      (e)      (s)   (e)
  * Dashed line shows write coverage
  */
-int ncdwio_sharedfile_pwrite(NC_dw_sharedfile *f, void *buf, size_t count, off_t offset){
+int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     int i, err;
     int sblock, eblock;   // start and end block
     off_t offstart, offend; // Start and end offset to write for current block in physical file
@@ -216,9 +216,9 @@ int ncdwio_sharedfile_pwrite(NC_dw_sharedfile *f, void *buf, size_t count, off_t
  * IN     buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
  *
- * We call ncdwio_sharedfile_pwrite and then increase the file position by count
+ * We call ncbbio_sharedfile_pwrite and then increase the file position by count
  */
-int ncdwio_sharedfile_write(NC_dw_sharedfile *f, void *buf, size_t count){
+int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count){
     int err;
 
     // Write directly if not sharing
@@ -236,7 +236,7 @@ int ncdwio_sharedfile_write(NC_dw_sharedfile *f, void *buf, size_t count){
     }
     else{
         // Write at current file position
-        err = ncdwio_sharedfile_pwrite(f, buf, count, f->pos);
+        err = ncbbio_sharedfile_pwrite(f, buf, count, f->pos);
         if (err != NC_NOERR){
             return err;
         }
@@ -274,7 +274,7 @@ int ncdwio_sharedfile_write(NC_dw_sharedfile *f, void *buf, size_t count){
  *               offstart(s) offend(e) (s)      (e)      (s)   (e)
  * Dashed line shows write coverage
  */
-int ncdwio_sharedfile_pread(NC_dw_sharedfile *f, void *buf, size_t count, off_t offset){
+int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     int i, err;
     int sblock, eblock;   // start and end block
     off_t offstart, offend; // Start and end offset to write for current block in physical file
@@ -362,9 +362,9 @@ int ncdwio_sharedfile_pread(NC_dw_sharedfile *f, void *buf, size_t count, off_t 
  * OUT    buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
  *
- * We call ncdwio_sharedfile_pread and then increase the file position by count
+ * We call ncbbio_sharedfile_pread and then increase the file position by count
  */
-int ncdwio_sharedfile_read(NC_dw_sharedfile *f, void *buf, size_t count){
+int ncbbio_sharedfile_read(NC_bb_sharedfile *f, void *buf, size_t count){
     int err;
 
     // Read directly if not sharing
@@ -382,7 +382,7 @@ int ncdwio_sharedfile_read(NC_dw_sharedfile *f, void *buf, size_t count){
     }
     else{
         // Read from current file position
-        err = ncdwio_sharedfile_pread(f, buf, count, f->pos);
+        err = ncbbio_sharedfile_pread(f, buf, count, f->pos);
         if (err != NC_NOERR){
             return err;
         }
@@ -400,7 +400,7 @@ int ncdwio_sharedfile_read(NC_dw_sharedfile *f, void *buf, size_t count){
  * IN  offset:    New offset
  * IN  whence:    Meaning of new offset
  */
-int ncdwio_sharedfile_seek(NC_dw_sharedfile *f, off_t offset, int whence){
+int ncbbio_sharedfile_seek(NC_bb_sharedfile *f, off_t offset, int whence){
     int err;
     off_t ioret;
 

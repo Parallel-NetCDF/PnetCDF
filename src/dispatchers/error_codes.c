@@ -290,15 +290,7 @@ ncmpi_strerror(int err)
         case NC_EMULTIDEFINE_CMODE:
             return "File create mode is inconsistent among processes.";
         case NC_EBADLOG:
-            return "Unrecognized log files.";
-        case NC_EWRONGBASE:
-            return "Log files base name not match.";
-        case NC_ENODATALOG:
-            return "Data log is missing.";
-        case NC_ELOGNOTINIT:
-            return "Log file not initialized.";
-        case NC_ELOGCHECK:
-            return "Log file corrupted.";
+            return "Unrecognized burst buffering log file format.";
         case NC_EFLUSHED:
             return "Nonblocking requests already flushed.";
 

@@ -16,9 +16,9 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <pnetcdf.h>
-#include <ncdwio_driver.h>
+#include <ncbbio_driver.h>
 
-#define BUFSIZE 8388608
+#define BUFSIZE 0
 
 /*
  * Open buffered file
@@ -28,12 +28,12 @@
  * IN      info:    File hint for opened file (currently unused)
  * OUT       fd:    File handler
  */
-int ncdwio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_dw_bufferedfile **fh) {
+int ncbbio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_bb_bufferedfile **fh) {
     int err;
-    NC_dw_bufferedfile *f;
+    NC_bb_bufferedfile *f;
 
     /* Allocate buffer */
-    f = (NC_dw_bufferedfile*)NCI_Malloc(sizeof(NC_dw_bufferedfile));
+    f = (NC_bb_bufferedfile*)NCI_Malloc(sizeof(NC_bb_bufferedfile));
 
     /* Initialize metadata associate with the file
      * We assum file system block (stripe) size is equal to buffer size
@@ -56,7 +56,7 @@ int ncdwio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info,
     }
 
     /* Open file */
-    err = ncdwio_sharedfile_open(comm, path, flag, info, &(f->fd));
+    err = ncbbio_sharedfile_open(comm, path, flag, info, &(f->fd));
     if (err != NC_NOERR){
         NCI_Free(f->buffer);
         NCI_Free(f);
@@ -71,11 +71,11 @@ int ncdwio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info,
  * Close buffered file
  * OUT       fd:    File handler
  */
-int ncdwio_bufferedfile_close(NC_dw_bufferedfile *f) {
+int ncbbio_bufferedfile_close(NC_bb_bufferedfile *f) {
     int err;
 
     /* Close file */
-    err = ncdwio_sharedfile_close(f->fd);
+    err = ncbbio_sharedfile_close(f->fd);
     if (err != 0){
         err = ncmpii_error_posix2nc("close");
         DEBUG_RETURN_ERROR(err);
@@ -127,7 +127,7 @@ int ncdwio_bufferedfile_close(NC_dw_bufferedfile *f) {
  * Data written to file: |0123|4567|
  * Buffer after write:             |89  |
  */
-int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
+int ncbbio_bufferedfile_write(NC_bb_bufferedfile *f, void *buf, size_t count){
     int err;
     size_t midstart, midend;    // Start and end offset of the mid section related the file position
 
@@ -162,7 +162,7 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
                 // Copy data into buffer
                 memcpy(f->buffer + f->bused, buf, midstart);
                 // Write combined data to file, skipping unused part
-                err = ncdwio_sharedfile_write(f->fd, f->buffer + f->bunused, f->bsize - f->bunused);
+                err = ncbbio_sharedfile_write(f->fd, f->buffer + f->bunused, f->bsize - f->bunused);
                 if (err != NC_NOERR){
                     return err;
                 }
@@ -181,7 +181,7 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
         * Mid section may not exists due to short write region
         */
         if (midend > midstart) {
-            err = ncdwio_sharedfile_write(f->fd, (void*)(((char*)buf) + midstart), midend - midstart);
+            err = ncbbio_sharedfile_write(f->fd, (void*)(((char*)buf) + midstart), midend - midstart);
             if (err != NC_NOERR){
                 return err;
             }
@@ -199,7 +199,7 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
     }
     else{
         // Write to file directly if buffer is disabled
-        err = ncdwio_sharedfile_write(f->fd, buf, count);
+        err = ncbbio_sharedfile_write(f->fd, buf, count);
         if (err != NC_NOERR){
             return err;
         }
@@ -227,14 +227,14 @@ int ncdwio_bufferedfile_write(NC_dw_bufferedfile *f, void *buf, size_t count){
  *
  * pwrite is not buffered, we write directly to the file
  */
-int ncdwio_bufferedfile_pwrite(NC_dw_bufferedfile *f, void *buf, size_t count, off_t offset){
+int ncbbio_bufferedfile_pwrite(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset){
     // Record the file size as the largest location ever reach by IO operation
     if (f->fsize < offset + count){
         f->fsize = offset + count;
     }
 
     // Write directly
-    return ncdwio_sharedfile_pwrite(f->fd, buf, count, offset);
+    return ncbbio_sharedfile_pwrite(f->fd, buf, count, offset);
 }
 
 /*
@@ -249,14 +249,14 @@ int ncdwio_bufferedfile_pwrite(NC_dw_bufferedfile *f, void *buf, size_t count, o
  * We flush the buffer before read so data in the buffer can be reflected
  * Read is not buffered, we read directly from the file
  */
-int ncdwio_bufferedfile_pread(NC_dw_bufferedfile *f, void *buf, size_t count, off_t offset){
+int ncbbio_bufferedfile_pread(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset){
     int err;
 
     if (f->buffer != NULL){
         // Flush the buffer
         if (f->bused - f->bunused > 0){
             // Write data to file, skipping unused part
-            err = ncdwio_sharedfile_write(f->fd, f->buffer + f->bunused, f->bsize - f->bunused);
+            err = ncbbio_sharedfile_write(f->fd, f->buffer + f->bunused, f->bsize - f->bunused);
             if (err != NC_NOERR){
                 return err;
             }
@@ -272,7 +272,7 @@ int ncdwio_bufferedfile_pread(NC_dw_bufferedfile *f, void *buf, size_t count, of
     }
 
     // Read directly
-    return ncdwio_sharedfile_pread(f->fd, buf, count, offset);
+    return ncbbio_sharedfile_pread(f->fd, buf, count, offset);
 }
 
 /*
@@ -282,13 +282,13 @@ int ncdwio_bufferedfile_pread(NC_dw_bufferedfile *f, void *buf, size_t count, of
  * OUT    buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
  *
- * We call ncdwio_bufferedfile_pread and then increase the file position by count
+ * We call ncbbio_bufferedfile_pread and then increase the file position by count
  */
-int ncdwio_bufferedfile_read(NC_dw_bufferedfile *f, void *buf, size_t count){
+int ncbbio_bufferedfile_read(NC_bb_bufferedfile *f, void *buf, size_t count){
     int err;
 
     // Read from current file position
-    err = ncdwio_bufferedfile_pread(f, buf, count, f->pos);
+    err = ncbbio_bufferedfile_pread(f, buf, count, f->pos);
     if (err != NC_NOERR){
         return err;
     }
@@ -310,7 +310,7 @@ int ncdwio_bufferedfile_read(NC_dw_bufferedfile *f, void *buf, size_t count){
  * IN  offset:    New offset
  * IN  whence:    Meaning of new offset
  */
-int ncdwio_bufferedfile_seek(NC_dw_bufferedfile *f, off_t offset, int whence){
+int ncbbio_bufferedfile_seek(NC_bb_bufferedfile *f, off_t offset, int whence){
     int err;
 
     // Update file position
@@ -335,7 +335,7 @@ int ncdwio_bufferedfile_seek(NC_dw_bufferedfile *f, off_t offset, int whence){
         */
         if (f->bused - f->bunused > 0){
             // Write data to file, skipping unused part
-            err = ncdwio_sharedfile_write(f->fd, f->buffer + f->bunused, f->bsize - f->bunused);
+            err = ncbbio_sharedfile_write(f->fd, f->buffer + f->bunused, f->bsize - f->bunused);
             if (err != NC_NOERR){
                 return err;
             }
@@ -353,7 +353,7 @@ int ncdwio_bufferedfile_seek(NC_dw_bufferedfile *f, off_t offset, int whence){
     }
 
     // Seek physical file position
-    err = ncdwio_sharedfile_seek(f->fd, offset, whence);
+    err = ncbbio_sharedfile_seek(f->fd, offset, whence);
     if (err != NC_NOERR){
         return err;
     }

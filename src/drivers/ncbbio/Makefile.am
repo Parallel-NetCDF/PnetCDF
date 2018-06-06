@@ -17,38 +17,38 @@ if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
 endif
 
-noinst_LTLIBRARIES = libncdwio.la
+noinst_LTLIBRARIES = libncbbio.la
 
 M4FLAGS += -I${top_srcdir}/m4
 if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS = #ncdwio_log_flush.m4
+M4_SRCS = #ncbbio_log_flush.m4
 
-H_SRCS = ncdwio_driver.h
+H_SRCS = ncbbio_driver.h
 
-C_SRCS = ncdwio_attr.c \
-         ncdwio_dim.c \
-         ncdwio_driver.c \
-         ncdwio_file.c \
-         ncdwio_var.c \
-		 ncdwio_log.c \
-		 ncdwio_mem.c \
-         ncdwio_nonblocking.c \
-		 ncdwio_util.c \
-		 ncdwio_log_flush.c \
-		 ncdwio_log_put.c \
-		 ncdwio_sharedfile.c \
-		 ncdwio_bufferedfile.c
+C_SRCS = ncbbio_attr.c \
+         ncbbio_dim.c \
+         ncbbio_driver.c \
+         ncbbio_file.c \
+         ncbbio_var.c \
+		 ncbbio_log.c \
+		 ncbbio_mem.c \
+         ncbbio_nonblocking.c \
+		 ncbbio_util.c \
+		 ncbbio_log_flush.c \
+		 ncbbio_log_put.c \
+		 ncbbio_sharedfile.c \
+		 ncbbio_bufferedfile.c
 
 $(M4_SRCS:.m4=.c): Makefile
 
 .m4.c:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-libncdwio_la_SOURCES = $(C_SRCS) $(H_SRCS)
-nodist_libncdwio_la_SOURCES = $(M4_SRCS:.m4=.c)
+libncbbio_la_SOURCES = $(C_SRCS) $(H_SRCS)
+nodist_libncbbio_la_SOURCES = $(M4_SRCS:.m4=.c)
 
 # automake says "... BUILT_SOURCES is honored only by 'make all', 'make check',
 # and 'make install'. This means you cannot build a specific target (e.g.,

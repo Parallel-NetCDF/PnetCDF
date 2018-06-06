@@ -135,15 +135,15 @@ SH_LOG_COMPILER =
 
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
-if BUILD_DRIVER_DW
-TESTDW = 1
-TESTS_ENVIRONMENT += TESTDW=1 ; export TESTDW;
-NC_FILES += $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf1 \
-            $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf2 \
-            $(TESTOUTDIR)/put_all_kinds_dw.nc.cdf5 \
-            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf1 \
-            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf2 \
-            $(TESTOUTDIR)/iput_all_kinds_dw.nc.cdf5
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+NC_FILES += $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf1 \
+            $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf2 \
+            $(TESTOUTDIR)/put_all_kinds_bb.nc.cdf5 \
+            $(TESTOUTDIR)/iput_all_kinds_bb.nc.cdf1 \
+            $(TESTOUTDIR)/iput_all_kinds_bb.nc.cdf2 \
+            $(TESTOUTDIR)/iput_all_kinds_bb.nc.cdf5
 endif
 
 BURST_BUFFER_FILES = $(NC_FILES:=_*.meta) $(NC_FILES:=_*.data)
@@ -179,8 +179,8 @@ ptest ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \
@@ -191,8 +191,8 @@ ptest2: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	) ; fi ; \
@@ -203,11 +203,11 @@ ptest6: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTDW)" ]; then ( \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable" ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
+    if [ -n "$(TESTBB)" ]; then ( \
+    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+    $(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+    unset PNETCDF_HINTS ; \
+    ) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest6

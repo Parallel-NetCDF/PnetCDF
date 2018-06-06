@@ -42,6 +42,11 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
+
 BAD_FILES = bad_begin.nc5 \
             bad_xtype.nc1 bad_xtype.nc2 bad_xtype.nc5 \
             bad_ndims.nc1 bad_ndims.nc2 bad_ndims.nc5 \
@@ -69,6 +74,16 @@ ptest ptests ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./test_inq_format $(srcdir)
 	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc
 	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./test_inq_format $(srcdir) ; \
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc ; \
+	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc ; \
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./test_inq_format $(srcdir) ; \
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./cdf_type $(TESTOUTDIR)/cdf_type.nc ; \
+	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./dim_cdf12 $(TESTOUTDIR)/dim_cdf12.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ;
 
 ptest2 ptest6 ptest8 ptest10:
 

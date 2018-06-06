@@ -243,8 +243,8 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
-#ifdef BUILD_DRIVER_DW
-    int enable_dw_driver=0;
+#ifdef BUILD_DRIVER_BB
+    int enable_bb_driver=0;
 #endif
 
     MPI_Comm_rank(comm, &rank);
@@ -303,16 +303,16 @@ ncmpi_create(MPI_Comm    comm,
             enable_foo_driver = 1;
     }
 #endif
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
 
-        /* check if nc_dw is enabled */
-        MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
+        /* check if nc_burst_buf is enabled */
+        MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
-            enable_dw_driver = 1;
+            enable_bb_driver = 1;
     }
 #endif
 
@@ -324,9 +324,9 @@ ncmpi_create(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef BUILD_DRIVER_DW
-    if (enable_dw_driver)
-        driver = ncdwio_inq_driver();
+#ifdef BUILD_DRIVER_BB
+    if (enable_bb_driver)
+        driver = ncbbio_inq_driver();
     else
 #endif
         driver = ncmpio_inq_driver();
@@ -425,8 +425,8 @@ ncmpi_open(MPI_Comm    comm,
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
-#ifdef BUILD_DRIVER_DW
-    int enable_dw_driver=0;
+#ifdef BUILD_DRIVER_BB
+    int enable_bb_driver=0;
 #endif
 
     MPI_Comm_rank(comm, &rank);
@@ -507,16 +507,16 @@ ncmpi_open(MPI_Comm    comm,
 
     }
 #endif
-#ifdef BUILD_DRIVER_DW
+#ifdef BUILD_DRIVER_BB
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
 
-        /* check if nc_dw is enabled */
-        MPI_Info_get(combined_info, "nc_dw", MPI_MAX_INFO_VAL-1,
+        /* check if nc_burst_buf is enabled */
+        MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
-            enable_dw_driver = 1;
+            enable_bb_driver = 1;
     }
 #endif
 
@@ -525,9 +525,9 @@ ncmpi_open(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef BUILD_DRIVER_DW
-    if (enable_dw_driver)
-        driver = ncdwio_inq_driver();
+#ifdef BUILD_DRIVER_BB
+    if (enable_bb_driver)
+        driver = ncbbio_inq_driver();
     else
 #endif
     {
@@ -843,6 +843,24 @@ ncmpi_sync(int ncid)
 
     /* calling the subroutine that implements ncmpi_sync() */
     return pncp->driver->sync(pncp->ncp);
+}
+
+/*----< ncmpi_flush() >-------------------------------------------------------*/
+/* This API is a collective subroutine, and must be called in data mode, no
+ * matter if it is in collective or independent data mode.
+ */
+int
+ncmpi_flush(int ncid)
+{
+    int err;
+    PNC *pncp;
+
+    /* check if ncid is valid */
+    err = PNC_check_id(ncid, &pncp);
+    if (err != NC_NOERR) return err;
+
+    /* calling the subroutine that implements ncmpi_flush() */
+    return pncp->driver->flush(pncp->ncp);
 }
 
 /*----< ncmpi_abort() >------------------------------------------------------*/

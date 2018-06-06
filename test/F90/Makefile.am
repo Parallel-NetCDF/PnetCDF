@@ -48,6 +48,11 @@ TESTS_ENVIRONMENT += TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
+
 TESTS = $(TESTPROGRAMS) seq_runs.sh
 TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
@@ -74,6 +79,11 @@ ptest ptest4: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2: $(PARALLEL_PROGS)
@@ -81,6 +91,11 @@ ptest2: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest8: $(PARALLEL_PROGS)
@@ -88,6 +103,11 @@ ptest8: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN8) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest10: $(PARALLEL_PROGS)
@@ -95,6 +115,11 @@ ptest10: $(PARALLEL_PROGS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(PARALLEL_PROGS); do ( \
 	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN10) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4 ptest8 ptest10

@@ -52,6 +52,7 @@ struct PNC_driver {
     int (*_enddef)(void*,MPI_Offset,MPI_Offset,MPI_Offset,MPI_Offset);
     int (*redef)(void*);
     int (*sync)(void*);
+    int (*flush)(void*);
     int (*abort)(void*);
     int (*set_fill)(void*,int,int*);
     int (*inq)(void*,int*,int*,int*,int*);
@@ -144,7 +145,7 @@ extern PNC_driver* ncmpio_inq_driver(void);
 
 extern PNC_driver* ncfoo_inq_driver(void);
 
-extern PNC_driver* ncdwio_inq_driver(void);
+extern PNC_driver* ncbbio_inq_driver(void);
 
 extern int PNC_check_id(int ncid, PNC **pncp);
 

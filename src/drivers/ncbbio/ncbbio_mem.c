@@ -17,7 +17,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <pnetcdf.h>
-#include <ncdwio_driver.h>
+#include <ncbbio_driver.h>
 
 #define LOG_BUFFER_SIZE 1024 /* Size of initial metadata buffer */
 #define LOG_ARRAY_SIZE 32 /* Size of initial metadata offset list */
@@ -27,7 +27,7 @@
  * Initialize a variable sized buffer
  * IN   bp: buffer structure to be initialized
  */
-int ncdwio_log_buffer_init(NC_dw_buffer *bp){
+int ncbbio_log_buffer_init(NC_bb_buffer *bp){
     bp->buffer = NCI_Malloc(LOG_BUFFER_SIZE);
     if (bp->buffer == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
@@ -41,7 +41,7 @@ int ncdwio_log_buffer_init(NC_dw_buffer *bp){
  * Free the variable sized buffer
  * IN   bp: buffer structure to be freed
  */
-void ncdwio_log_buffer_free(NC_dw_buffer * bp){
+void ncbbio_log_buffer_free(NC_bb_buffer * bp){
     NCI_Free(bp->buffer);
 }
 
@@ -51,7 +51,7 @@ void ncdwio_log_buffer_free(NC_dw_buffer * bp){
  * IN    bp:    buffer structure
  * IN    size:    size required in the buffer
  */
-char* ncdwio_log_buffer_alloc(NC_dw_buffer *bp, size_t size) {
+char* ncbbio_log_buffer_alloc(NC_bb_buffer *bp, size_t size) {
     char* ret;
 
     /* Expand buffer if needed
@@ -69,7 +69,7 @@ char* ncdwio_log_buffer_alloc(NC_dw_buffer *bp, size_t size) {
             /* (new size) = (old size) * (META_BUFFER_MULTIPLIER) */
             newsize *= SIZE_MULTIPLIER;
         }
-        /* ret is used to temporaryly hold the allocated buffer so we don't lose ncdwp->metadata.buffer if allocation fails */
+        /* ret is used to temporaryly hold the allocated buffer so we don't lose ncbbp->metadata.buffer if allocation fails */
         ret = (char*)NCI_Realloc(bp->buffer, newsize);
         /* If not enough memory */
         if (ret == NULL) {
@@ -91,7 +91,7 @@ char* ncdwio_log_buffer_alloc(NC_dw_buffer *bp, size_t size) {
  * Initialize log entry array
  * IN   ep: array to be initialized
  */
-int ncdwio_log_sizearray_init(NC_dw_sizevector *sp){
+int ncbbio_log_sizearray_init(NC_bb_sizevector *sp){
     sp->values = (size_t*)NCI_Malloc(LOG_ARRAY_SIZE * sizeof(size_t));
     if (sp->values == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
@@ -105,7 +105,7 @@ int ncdwio_log_sizearray_init(NC_dw_sizevector *sp){
  * Free the log entry array
  * IN   ep: array to be freed
  */
-void ncdwio_log_sizearray_free(NC_dw_sizevector *sp){
+void ncbbio_log_sizearray_free(NC_bb_sizevector *sp){
     NCI_Free(sp->values);
 }
 
@@ -114,7 +114,7 @@ void ncdwio_log_sizearray_free(NC_dw_sizevector *sp){
  * IN    ep:    array structure
  * IN    ent:    entry to be added
  */
-int ncdwio_log_sizearray_append(NC_dw_sizevector *sp, size_t size) {
+int ncbbio_log_sizearray_append(NC_bb_sizevector *sp, size_t size) {
     size_t *ret;
 
     /* Expand array if needed
@@ -128,7 +128,7 @@ int ncdwio_log_sizearray_append(NC_dw_sizevector *sp, size_t size) {
          * (new size) = (old size) * (META_BUFFER_MULTIPLIER)
          */
         size_t newsize = sp->nalloc * SIZE_MULTIPLIER;
-        /* ret is used to temporaryly hold the allocated buffer so we don't lose ncdwp->metadata.buffer if allocation fails */
+        /* ret is used to temporaryly hold the allocated buffer so we don't lose ncbbp->metadata.buffer if allocation fails */
         ret = (size_t*)NCI_Realloc(sp->values, newsize * sizeof(size_t));
         /* If not enough memory */
         if (ret == NULL) {
@@ -149,7 +149,7 @@ int ncdwio_log_sizearray_append(NC_dw_sizevector *sp, size_t size) {
  * Initialize vector
  * IN   vp: vector to be initialized
  */
-int ncdwio_log_intvector_init(NC_dw_intvector *vp){
+int ncbbio_log_intvector_init(NC_bb_intvector *vp){
     vp->values = (int*)NCI_Malloc(LOG_ARRAY_SIZE * SIZEOF_INT);
     if (vp->values == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
@@ -163,7 +163,7 @@ int ncdwio_log_intvector_init(NC_dw_intvector *vp){
  * Free the vector
  * IN   vp: vector to be freed
  */
-void ncdwio_log_intvector_free(NC_dw_intvector *vp){
+void ncbbio_log_intvector_free(NC_bb_intvector *vp){
     NCI_Free(vp->values);
 }
 
@@ -172,7 +172,7 @@ void ncdwio_log_intvector_free(NC_dw_intvector *vp){
  * IN    vp:    vector structure
  * IN    val:   value to be added
  */
-int ncdwio_log_intvector_append(NC_dw_intvector *vp, int size) {
+int ncbbio_log_intvector_append(NC_bb_intvector *vp, int size) {
     int *ret;
 
     /* Expand array if needed
@@ -186,7 +186,7 @@ int ncdwio_log_intvector_append(NC_dw_intvector *vp, int size) {
          * (new size) = (old size) * (META_BUFFER_MULTIPLIER)
          */
         size_t newsize = vp->nalloc * SIZE_MULTIPLIER;
-        /* ret is used to temporaryly hold the allocated buffer so we don't lose ncdwp->metadata.buffer if allocation fails */
+        /* ret is used to temporaryly hold the allocated buffer so we don't lose ncbbp->metadata.buffer if allocation fails */
         ret = (int*)NCI_Realloc(vp->values, newsize * SIZEOF_INT);
         /* If not enough memory */
         if (ret == NULL) {
@@ -203,23 +203,23 @@ int ncdwio_log_intvector_append(NC_dw_intvector *vp, int size) {
     return NC_NOERR;
 }
 
-int ncdwio_metaidx_init(NC_dw *ncdwp) {
-    NC_dw_metadataidx *ip = &(ncdwp->metaidx);
+int ncbbio_metaidx_init(NC_bb *ncbbp) {
+    NC_bb_metadataidx *ip = &(ncbbp->metaidx);
 
     ip->nalloc = LOG_ARRAY_SIZE;
     ip->nused = 0;
-    ip->entries = (NC_dw_metadataptr*)NCI_Malloc(sizeof(NC_dw_metadataptr) * ip->nalloc);
+    ip->entries = (NC_bb_metadataptr*)NCI_Malloc(sizeof(NC_bb_metadataptr) * ip->nalloc);
 
     return NC_NOERR;
 }
 
-int ncdwio_metaidx_add(NC_dw *ncdwp, NC_dw_metadataentry *ptr) {
-    NC_dw_metadataidx *ip = &(ncdwp->metaidx);
-    NC_dw_metadataptr *tmp;
+int ncbbio_metaidx_add(NC_bb *ncbbp, NC_bb_metadataentry *ptr) {
+    NC_bb_metadataidx *ip = &(ncbbp->metaidx);
+    NC_bb_metadataptr *tmp;
 
     if (ip->nused == ip->nalloc) {
         ip->nalloc *= SIZE_MULTIPLIER;
-        tmp = (NC_dw_metadataptr*)NCI_Realloc(ip->entries, sizeof(NC_dw_metadataptr) * ip->nalloc);
+        tmp = (NC_bb_metadataptr*)NCI_Realloc(ip->entries, sizeof(NC_bb_metadataptr) * ip->nalloc);
         ip->entries = tmp;
     }
 
@@ -230,8 +230,8 @@ int ncdwio_metaidx_add(NC_dw *ncdwp, NC_dw_metadataentry *ptr) {
     return NC_NOERR;
 }
 
-int ncdwio_metaidx_free(NC_dw *ncdwp) {
-    NC_dw_metadataidx *ip = &(ncdwp->metaidx);
+int ncbbio_metaidx_free(NC_bb *ncbbp) {
+    NC_bb_metadataidx *ip = &(ncbbp->metaidx);
 
     NCI_Free(ip->entries);
 

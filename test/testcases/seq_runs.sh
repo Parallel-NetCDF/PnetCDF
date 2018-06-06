@@ -33,17 +33,17 @@ diff -q ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
 
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
-if [ -n "${TESTDW}" ]; then
-   # Run using DataWarp driver
-   export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR};nc_dw_overwrite=enable"
-   ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds_dw.nc
-   ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds_dw.nc
+if [ -n "${TESTBB}" ]; then
+   # Run using burst buffer driver
+   export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+   ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds_bb.nc
+   ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds_bb.nc
    unset PNETCDF_HINTS
 
    # Compare
    for i in 1 2 5 ; do
-       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf$i ${TESTOUTDIR}/put_all_kinds_dw.nc.cdf$i
-       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/iput_all_kinds.nc.cdf$i ${TESTOUTDIR}/iput_all_kinds_dw.nc.cdf$i
+       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf$i ${TESTOUTDIR}/put_all_kinds_bb.nc.cdf$i
+       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/iput_all_kinds.nc.cdf$i ${TESTOUTDIR}/iput_all_kinds_bb.nc.cdf$i
    done
 fi
 

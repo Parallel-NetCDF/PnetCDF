@@ -66,6 +66,27 @@ ifelse(`$1',`uchar',`ifdef(`PNETCDF',,`
 `#'else')')
                     else {
 ifelse(`$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
+                        if (bb_enabled){
+                            if (err == NC_NOERR){
+                                err = ncmpi_flush(ncid);
+                            }
+                        }
+                        IF (err != NC_ERANGE)
+                            EXPECT_ERR(NC_ERANGE, err)
+                        ELSE_NOK
+                    }
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')')'
+)dnl
+
+define(`PNETCDF_CHECK_ERANGE_ATT',`dnl
+ifelse(`$1',`uchar',`ifdef(`PNETCDF',,`
+`#'if !defined(USE_PNETCDF) || (PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR>=8)')',
+       `$1',`schar',`ifdef(`PNETCDF',,`
+`#'if defined(USE_PNETCDF) && PNETCDF_VERSION_MAJOR==1 && PNETCDF_VERSION_MINOR<7
+                    else if (cdf_format < NC_FORMAT_CDF5) {
+`#'else')')
+                    else {
+ifelse(`$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         ELSE_NOK
@@ -370,11 +391,24 @@ TestFunc(var1)_$1(VarArgs)
     int canConvert;      /* Both text or both numeric */
     IntType j, index[MAX_RANK];
     $1 value[1];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -421,6 +455,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_ECHAR) EXPECT_ERR(NC_ECHAR, err)
         }
         else if (var_rank[i] == 0) {
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = ncmpi_flush(ncid);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
@@ -510,11 +546,24 @@ TestFunc(var)_$1(VarArgs)
     int allInExtRange;     /* all values within external range? */
     IntType j, index[MAX_RANK];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -595,6 +644,12 @@ TestFunc(var)_$1(VarArgs)
     IF (err != NC_NOERR)
         error("put_var1_text: %s", APIFunc(strerror)(err));
 
+    if (bb_enabled){
+        err = ncmpi_flush(ncid);
+        IF (err != NC_NOERR)
+            error("ncmpi_flush: %s", APIFunc(strerror)(err));
+    }
+
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] != RECDIM) continue; /* only record variables here */
 
@@ -618,6 +673,9 @@ TestFunc(var)_$1(VarArgs)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
             } else {
+                if (bb_enabled){
+                    err = ncmpi_flush(ncid);
+                }
                 IF (err != NC_ERANGE)
                     EXPECT_ERR(NC_ERANGE, err)
                 ELSE_NOK
@@ -670,11 +728,24 @@ TestFunc(vara)_$1(VarArgs)
     IntType start[MAX_RANK], edge[MAX_RANK];
     IntType mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -727,6 +798,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = ncmpi_flush(ncid);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -739,6 +812,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_ECHAR) EXPECT_ERR(NC_ECHAR, err)
         }
         else if (var_rank[i] == 0) {
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = ncmpi_flush(ncid);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EEDGE) {
@@ -896,11 +971,24 @@ TestFunc(vars)_$1(VarArgs)
     PTRDType nstarts;   /* number of different starts */
     PTRDType stride[MAX_RANK];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -953,6 +1041,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = ncmpi_flush(ncid);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -965,6 +1055,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_ECHAR) EXPECT_ERR(NC_ECHAR, err)
         }
         else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = ncmpi_flush(ncid);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EEDGE) {
@@ -1148,11 +1240,24 @@ TestFunc(varm)_$1(VarArgs)
     PTRDType nstarts;   /* number of different starts */
     PTRDType stride[MAX_RANK], imap[MAX_RANK];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -1207,6 +1312,8 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = ncmpi_flush(ncid);
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1219,6 +1326,8 @@ ifdef(`PNETCDF',`dnl
             IF (err != NC_ECHAR) EXPECT_ERR(NC_ECHAR, err)
         }
         else if (var_rank[i] == 0) { /* scalar variable */
+            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            err = ncmpi_flush(ncid);
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
         }
         else IF (err != NC_EEDGE) {
@@ -1397,6 +1506,7 @@ TestFunc(att)_text(AttVarArgs)
     int i, j, err, ncid, nok=0;
     IntType k, ndx[1];
     text value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
@@ -1473,6 +1583,7 @@ TestFunc(att)_$1(AttVarArgs)
     int allInExtRange;  /* all values within external range? */
     IntType k, ndx[1];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
@@ -1532,7 +1643,7 @@ TestFunc(att)_$1(AttVarArgs)
                         EXPECT_ERR(NC_NOERR, err)
                     ELSE_NOK
                 }
-                PNETCDF_CHECK_ERANGE($1)
+                PNETCDF_CHECK_ERANGE_ATT($1)
             }
         }
     }
