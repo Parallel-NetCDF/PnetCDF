@@ -800,6 +800,18 @@ put_vars(int ncid, int numVars)
     int  i, j, err, allInRange;
     double value[MAX_NELS];
     char text[MAX_NELS];
+    int bb_enabled=0;
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
 
     for (j = 0; j < MAX_RANK; j++) start[j] = 0;
     for (i = 0; i < numVars; i++) {
@@ -839,6 +851,9 @@ put_vars(int ncid, int numVars)
                  * See
                  * http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
                  */
+                if (bb_enabled){
+                    err = ncmpi_flush(ncid);
+                }
                 IF (err != NC_ERANGE)
                     error("expecting NC_ERANGE but got %s", ncmpi_strerrno(err));
             }

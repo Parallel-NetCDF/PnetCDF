@@ -106,6 +106,11 @@ void NcmpiFile::sync(){
   ncmpiCheck(ncmpi_sync(myId),__FILE__,__LINE__);
 }
 
+// Flush data buffered by PnetCDF to disk
+void NcmpiFile::flush(){
+  ncmpiCheck(ncmpi_flush(myId),__FILE__,__LINE__);
+}
+
 // Leave define mode, used for classic model
 void NcmpiFile::enddef() {
     ncmpiCheck(ncmpi_enddef(myId),__FILE__,__LINE__);

@@ -407,6 +407,8 @@
       integer NF_EINVAL_OMODE
       integer NF_EPENDING
       integer NF_EMAX_REQ
+      integer NF_EBADLOG
+      integer NF_EFLUSHED
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -473,6 +475,8 @@
       PARAMETER (NF_EINVAL_OMODE            = -235)   ! Invalid file open mode
       PARAMETER (NF_EPENDING                = -236)   ! Pending nonblocking request is found at file close
       PARAMETER (NF_EMAX_REQ                = -237)   ! Size of I/O request exceeds INT_MAX
+      PARAMETER (NF_EBADLOG                 = -238)   ! Unrecognized log file format
+      PARAMETER (NF_EFLUSHED                = -239)   ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
 
 !
 ! PnetCDF header inconsistency errors start from -250
@@ -777,6 +781,7 @@
       integer  nfmpi_set_default_format
       integer  nfmpi_inq_default_format
       integer  nfmpi_sync
+      integer  nfmpi_flush
       integer  nfmpi_abort
       integer  nfmpi_close
       integer  nfmpi_set_fill
@@ -797,6 +802,7 @@
       external nfmpi_set_default_format
       external nfmpi_inq_default_format
       external nfmpi_sync
+      external nfmpi_flush
       external nfmpi_abort
       external nfmpi_close
       external nfmpi_set_fill

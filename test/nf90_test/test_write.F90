@@ -365,6 +365,68 @@
         call print_nok(nok)
         end
 
+! Test nf90mpi_flush
+!    try with bad handle, check error
+!    try in define mode, check error
+!    try writing with one handle, reading with another on same netCDF
+        subroutine test_nf90mpi_flush()
+        use pnetcdf
+        implicit        none
+#include "tests.inc"
+
+        integer ncidw         !/* netcdf id for writing */
+        integer ncidr         !/* netcdf id for reading */
+        integer err, flags
+        integer nok
+
+        nok = 0
+!           /* BAD_ID test */
+        err = nf90mpi_flush(BAD_ID)
+        if (err .ne. NF90_EBADID) then
+            call errore('bad ncid: ', err)
+        else
+            nok = nok + 1
+        endif
+
+!           /* create scratch file */
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, info, &
+                           ncidw)
+        if (err .ne. NF90_NOERR) then
+            call errore('nf90mpi_create: ', err)
+            return
+        end if
+
+!          /* write using same handle */
+        call def_dims(ncidw)
+        call def_vars(ncidw)
+        call put_atts(ncidw)
+        err = nf90mpi_enddef(ncidw)
+        if (err .ne. NF90_NOERR) &
+            call errore('nf90mpi_enddef: ', err)
+        call put_vars(ncidw)
+        err = nf90mpi_flush(ncidw)
+        if (err .ne. NF90_NOERR) then
+            call errore('nf90mpi_flush of ncidw failed: ', err)
+        else
+            nok = nok + 1
+        endif
+
+!           /* Data should be avaiable for read after flush */
+        call check_dims(ncidw)
+        call check_atts(ncidw)
+        call check_vars(ncidw)
+
+!           /* close handle */
+        err = nf90mpi_close(ncidw)
+        if (err .ne. NF90_NOERR) &
+            call errore('nf90mpi_close: ', err)
+
+        err = nf90mpi_delete(scratch, info)
+        if (err .ne. NF90_NOERR) &
+            call errori('delete of scratch file failed: ', err)
+        call print_nok(nok)
+        end
 
 ! Test nf90mpi_abort
 !    try with bad handle, check error
@@ -383,6 +445,9 @@
         integer ngatts
         integer recdim
         integer nok
+        logical                 flag, bb_enable
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
 
         nok = 0
 
@@ -402,6 +467,19 @@
             call errore('nf90mpi_create: ', err)
             return
         end if
+
+        ! Determine if burst buffer driver is being used
+        bb_enable = .FALSE.
+        err = nf90mpi_inq_file_info(ncid, infoused)
+        if (err .eq. NF_NOERR) then
+            call MPI_Info_get(infoused, "nc_burst_buf", &
+                MPI_MAX_INFO_VAL, hint, flag, err)
+            if (flag) then
+                bb_enable = (hint .eq. 'enable')
+            endif
+            call MPI_Info_free(infoused, err);
+        endif
+
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
@@ -479,6 +557,14 @@
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         call put_vars(ncid)
+
+        ! Flush the buffer to reveal potential error
+        if (bb_enable) then
+            if (err .eq. NF_NOERR) then
+                err = nfmpi_flush(ncid)
+            endif
+        endif
+
         err = nf90mpi_abort(ncid)
         if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_abort of ncid failed: ', err)

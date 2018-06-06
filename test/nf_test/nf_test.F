@@ -275,6 +275,7 @@ C implementation of the netCDF library.
         external        test_nfmpi_redef
         external        test_nfmpi_enddef
         external        test_nfmpi_sync
+        external        test_nfmpi_flush
         external        test_nfmpi_abort
         external        test_nfmpi_def_dim
         external        test_nfmpi_rename_dim
@@ -677,6 +678,7 @@ C           /* Test write functions */
             call test('nfmpi_redef', test_nfmpi_redef)
             call test('nfmpi_enddef', test_nfmpi_enddef)
             call test('nfmpi_sync', test_nfmpi_sync)
+            call test('nfmpi_flush', test_nfmpi_flush)
             call test('nfmpi_abort', test_nfmpi_abort)
             call test('nfmpi_def_dim', test_nfmpi_def_dim)
             call test('nfmpi_rename_dim', test_nfmpi_rename_dim)

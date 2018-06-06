@@ -20,7 +20,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <pnetcdf.h>
-#include <ncdwio_driver.h>
+#include <ncbbio_driver.h>
 #include <fcntl.h>
 #include <pnetcdf.h>
 
@@ -34,12 +34,12 @@
  * IN      flag:    File open flag
  * OUT       fd:    File structure
  */
-int ncdwio_file_open(MPI_Comm comm, char *path, int flag, NC_dw_file **fd) {
+int ncbbio_file_open(MPI_Comm comm, char *path, int flag, NC_bb_file **fd) {
     int err;
-    NC_dw_file *f;
+    NC_bb_file *f;
 
     /* Allocate buffer */
-    f = (NC_dw_file*)NCI_Malloc(sizeof(NC_dw_file));
+    f = (NC_bb_file*)NCI_Malloc(sizeof(NC_bb_file));
     f->buf = NCI_Malloc(BUFSIZE);
     if (f->buf == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
@@ -86,7 +86,7 @@ int ncdwio_file_open(MPI_Comm comm, char *path, int flag, NC_dw_file **fd) {
  * Close buffered file
  * IN       f:    File structure
  */
-int ncdwio_file_close(NC_dw_file *f) {
+int ncbbio_file_close(NC_bb_file *f) {
     int err;
 
     /* Free the buffer */
@@ -109,7 +109,7 @@ int ncdwio_file_close(NC_dw_file *f) {
  * OUT    buf:    Buffer for read data
  * IN   count:    Size of buffer
  */
-int ncdwio_file_write_core(NC_dw_file *f, void *buf, size_t count){
+int ncbbio_file_write_core(NC_bb_file *f, void *buf, size_t count){
     int i, err;
     size_t sblock, soff, eblock, eoff;
     size_t off, len;
@@ -172,7 +172,7 @@ int ncdwio_file_write_core(NC_dw_file *f, void *buf, size_t count){
  * OUT    buf:    Buffer for read data
  * IN   count:    Size of buffer
  */
-int ncdwio_file_pwrite(NC_dw_file *f, void *buf, size_t count, size_t offset){
+int ncbbio_file_pwrite(NC_bb_file *f, void *buf, size_t count, size_t offset){
     int i, err;
     size_t sblock, soff, eblock, eoff;
     size_t off, len;
@@ -231,13 +231,13 @@ int ncdwio_file_pwrite(NC_dw_file *f, void *buf, size_t count, size_t offset){
  * Flush file buffer
  * IN       f:    File structure
  */
-int ncdwio_file_flush(NC_dw_file *f){
+int ncbbio_file_flush(NC_bb_file *f){
     int err;
     ssize_t ioret;
 
     /* Write data if buffer is not empty */
     if (f->bused > 0){
-        err = ncdwio_file_write_core(f, f->buf, f->bused);
+        err = ncbbio_file_write_core(f, f->buf, f->bused);
         if (err != NC_NOERR){
             return err;
         }
@@ -252,7 +252,7 @@ int ncdwio_file_flush(NC_dw_file *f){
  * OUT    buf:    Buffer for read data
  * IN   count:    Size of buffer
  */
-int ncdwio_file_read(NC_dw_file *f, void *buf, size_t count) {
+int ncbbio_file_read(NC_bb_file *f, void *buf, size_t count) {
     int i, err;
     size_t sblock, soff, eblock, eoff;
     size_t off, len;
@@ -316,7 +316,7 @@ int ncdwio_file_read(NC_dw_file *f, void *buf, size_t count) {
  * IN     buf:    Data buffer to write
  * IN   count:    Size of write request
  */
-int ncdwio_file_write(NC_dw_file *f, void *buf, size_t count) {
+int ncbbio_file_write(NC_bb_file *f, void *buf, size_t count) {
     int err;
     ssize_t ioret;
     size_t wsize;
@@ -352,7 +352,7 @@ int ncdwio_file_write(NC_dw_file *f, void *buf, size_t count) {
         f->bused += astart;
         // Flush the buffer if it is full
         if (f->bused == f->bsize){
-            err = ncdwio_file_flush(f);
+            err = ncbbio_file_flush(f);
             if (err != NC_NOERR){
                 return err;
             }
@@ -367,7 +367,7 @@ int ncdwio_file_write(NC_dw_file *f, void *buf, size_t count) {
      * From astart to aend
      */
     if (aend > astart) {
-        err = ncdwio_file_write_core(f, buf + astart, aend - astart);
+        err = ncbbio_file_write_core(f, buf + astart, aend - astart);
         if (err != NC_NOERR){
             return err;
         }
@@ -393,7 +393,7 @@ int ncdwio_file_write(NC_dw_file *f, void *buf, size_t count) {
  * IN     off:    Offset to seek
  * IN  whence:    Type of offset
  */
-int ncdwio_file_seek(NC_dw_file *f, size_t off, int whence) {
+int ncbbio_file_seek(NC_bb_file *f, size_t off, int whence) {
     int err;
     size_t new_off;
     off_t ioret;
@@ -423,7 +423,7 @@ int ncdwio_file_seek(NC_dw_file *f, size_t off, int whence) {
      * We assume buffered data region starts immediately after cursor position
      * When we change the cursor possition, we need to flush the buffer
      */
-    err = ncdwio_file_flush(f);
+    err = ncbbio_file_flush(f);
     if (err != NC_NOERR){
         return err;
     }

@@ -23,7 +23,7 @@
  * // global attributes:
  *		:_FillValue = 1.234f ;
  * data:
- *	
+ *
  *  var = _ ;
  * }
  */

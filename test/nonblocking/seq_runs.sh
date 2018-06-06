@@ -16,3 +16,12 @@ ${TESTSEQRUN} ./mcoll_perf ${TESTOUTDIR}/testfile
 for j in 0 1 2 3 4 5 6 7 8 9 ; do
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.2.4.$j.nc
 done
+
+if [ -n "${TESTBB}" ]; then
+    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+    ${TESTSEQRUN} ./mcoll_perf ${TESTOUTDIR}/testfile
+    unset PNETCDF_HINTS
+    for j in 0 1 2 3 4 5 6 7 8 9 ; do
+        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.2.4.$j.nc
+    done
+fi

@@ -20,8 +20,8 @@ libpnetcdf_la_LIBADD += ../drivers/ncmpio/libncmpio.la
 if BUILD_DRIVER_FOO
 libpnetcdf_la_LIBADD += ../drivers/ncfoo/libncfoo.la
 endif
-if BUILD_DRIVER_DW
-libpnetcdf_la_LIBADD += ../drivers/ncdwio/libncdwio.la
+if BUILD_DRIVER_BB
+libpnetcdf_la_LIBADD += ../drivers/ncbbio/libncbbio.la
 endif
 
 nodist_EXTRA_libpnetcdf_la_SOURCES = dummyc.c

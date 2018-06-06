@@ -15,3 +15,13 @@ for j in 0 1 ; do
     ${TESTSEQRUN} ./$1            ${TESTOUTDIR}/$1.nc
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$1.nc
 done
+
+if [ -n "${TESTBB}" ]; then
+   for j in 0 1 ; do
+       export PNETCDF_SAFE_MODE=$j
+       export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+       ${TESTSEQRUN} $1              ${TESTOUTDIR}/$1.nc
+       unset PNETCDF_HINTS
+       ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$1.nc
+   done
+fi

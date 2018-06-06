@@ -24,10 +24,10 @@ if IS_BIGENDIAN
    # AM_FCFLAGS += $(FC_DEFINE)WORDS_BIGENDIAN
 endif
 
-check_PROGRAMS = dw_bsize \
-                 dw_hints \
-                 dw_many_reqs \
-                 dw_nonblocking \
+check_PROGRAMS = bb_bsize \
+                 bb_hints \
+                 bb_many_reqs \
+                 bb_nonblocking \
                  highdim
 
 EXTRA_DIST = wrap_runs.sh
@@ -42,7 +42,7 @@ CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out \
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-if BUILD_DRIVER_DW
+if BUILD_DRIVER_BB
 TESTPROGRAMS = $(check_PROGRAMS)
 else
 TESTPROGRAMS =
@@ -73,7 +73,7 @@ TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 ptest ptest4: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR}" ; \
 	set -e ; for i in $(TESTPROGRAMS) ; do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
@@ -83,7 +83,7 @@ ptest ptest4: $(TESTPROGRAMS)
 ptest2: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR}" ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
@@ -93,7 +93,7 @@ ptest2: $(TESTPROGRAMS)
 ptest6: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_dw=enable;nc_dw_dirname=${TESTOUTDIR}" ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR}" ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \

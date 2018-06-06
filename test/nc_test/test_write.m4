@@ -442,6 +442,61 @@ TestFunc(sync)(AttVarArgs)
 
 
 /*
+ * Test APIFunc(flush)
+ *    try with bad handle, check error
+ *    try in define mode, check error
+ *    try writing with one handle, reading with another on same netCDF
+ */
+int
+TestFunc(flush)(AttVarArgs)
+{
+    int ncidw;         /* netcdf id for writing */
+    int nok=0, err;
+
+    /* BAD_ID test */
+    err = APIFunc(flush)(BAD_ID);
+    IF (err != NC_EBADID)
+        EXPECT_ERR(NC_EBADID, err)
+    ELSE_NOK
+
+    /* create scratch file & try APIFunc(flush) in define mode */
+    err = FileCreate(scratch, NC_NOCLOBBER, &ncidw);
+    IF (err != NC_NOERR) {
+        error("create: %s", APIFunc(strerror)(err));
+        return nok;
+    }
+
+    /* write using same handle */
+    def_dims(ncidw);
+    Def_Vars(ncidw, numVars);
+    Put_Atts(ncidw, numGatts, numVars);
+    err = APIFunc(enddef)(ncidw);
+    IF (err != NC_NOERR)
+        error("enddef: %s", APIFunc(strerror)(err));
+    Put_Vars(ncidw, numVars);
+    err = APIFunc(flush)(ncidw);
+    IF (err != NC_NOERR)
+        error("flush of ncidw failed: %s", APIFunc(strerror)(err));
+    ELSE_NOK
+
+    /* Data should be avaiable for reading for the same handle after flush */
+    check_dims(ncidw);
+    Check_Atts(ncidw, numGatts, numVars);
+    Check_Vars(ncidw, numVars);
+
+    /* close both handles */
+    err = APIFunc(close)(ncidw);
+    IF (err != NC_NOERR)
+        error("close: %s", APIFunc(strerror)(err));
+
+    err = FileDelete(scratch, info);
+    IF (err != NC_NOERR)
+        error("remove of %s failed", scratch);
+    return nok;
+}
+
+
+/*
  * Test APIFunc(abort)
  *    try with bad handle, check error
  *    try in define mode before anything written, check that file was deleted
@@ -457,6 +512,7 @@ TestFunc(abort)(AttVarArgs)
     int nvars;
     int ngatts;
     int nok=0;
+    int bb_enabled=0;
 
     /* BAD_ID test */
     err = APIFunc(abort)(BAD_ID);
@@ -470,6 +526,19 @@ TestFunc(abort)(AttVarArgs)
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+
     def_dims(ncid);
     Def_Vars(ncid, numVars);
     Put_Atts(ncid, numGatts, numVars);
@@ -543,6 +612,11 @@ ifdef(`PNETCDF',
     IF (err != NC_NOERR)
         error("enddef: %s", APIFunc(strerror)(err));
     Put_Vars(ncid, numVars);
+    if (bb_enabled){
+        err = ncmpi_flush(ncid);
+        IF (err != NC_NOERR)
+            error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+    }
     err = APIFunc(abort)(ncid);
     IF (err != NC_NOERR)
         error("abort of ncid failed: %s", APIFunc(strerror)(err));
@@ -858,11 +932,23 @@ TestFunc(put_var1)(VarArgs)
     double value[1];
     double buf[1];                /* (void *) buffer */
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     def_dims(ncid);
@@ -897,6 +983,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVar1(ncid, i, NULL, value, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -966,11 +1057,23 @@ TestFunc(put_vara)(VarArgs)
     char *p;                      /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     def_dims(ncid);
@@ -1016,6 +1119,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVara(ncid, i, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1026,6 +1134,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVara(ncid, i, start, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+            }
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
@@ -1152,11 +1265,23 @@ TestFunc(put_vars)(VarArgs)
     char *p;              /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     def_dims(ncid);
@@ -1203,6 +1328,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVars(ncid, i, NULL, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1213,6 +1343,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVars(ncid, i, start, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+            }
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
@@ -1374,11 +1509,23 @@ TestFunc(put_varm)(VarArgs)
     char *p;                    /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     def_dims(ncid);
@@ -1426,6 +1573,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVarm(ncid, i, NULL, NULL, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1436,6 +1588,11 @@ ifdef(`PNETCDF',`dnl
         err = PutVarm(ncid, i, start, NULL, NULL, NULL, buf, 1, datatype);
         if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR)
+                    error("ncmpi_flush of ncid failed: %s", ncmpi_strerror(err));
+            }
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)

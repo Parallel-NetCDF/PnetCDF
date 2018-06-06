@@ -870,6 +870,21 @@
         doubleprecision         value1
         character*(MAX_NELS+2)  text
         logical                 allInRange
+        logical                 flag, bb_enable
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
+
+        ! Determine if burst buffer driver is being used
+        bb_enable = .FALSE.
+        err = nf90mpi_inq_file_info(ncid, infoused)
+        if (err .eq. NF_NOERR) then
+            call MPI_Info_get(infoused, "nc_burst_buf", &
+                MPI_MAX_INFO_VAL, hint, flag, err)
+            if (flag) then
+                bb_enable = (hint .eq. 'enable')
+            endif
+            call MPI_Info_free(infoused, err);
+        endif
 
         do 1, j = 1, MAX_RANK
             start(j) = 1
@@ -926,6 +941,13 @@
                         call errore('nf90mpi_put_var: ', err)
                     end if
                 else
+                    ! Flush the buffer to reveal potential error
+                    if (bb_enable) then
+                        if (err .eq. NF_NOERR) then
+                            err = nfmpi_flush(ncid)
+                        endif
+                    endif
+
                     if (err .ne. NF90_ERANGE) then
                         call errore( &
                             'type-conversion range error: status = ',  &

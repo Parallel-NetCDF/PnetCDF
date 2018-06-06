@@ -360,6 +360,67 @@ C           /* close both handles */
         call print_nok(nok)
         end
 
+C Test nfmpi_flush
+C    try with bad handle, check error
+C    try in define mode, check error
+C    try writing with one handle, reading with another on same netCDF
+        subroutine test_nfmpi_flush()
+        implicit        none
+        include "pnetcdf.inc"
+#include "tests.inc"
+
+        integer ncidw         !/* netcdf id for writing */
+        integer ncidr         !/* netcdf id for reading */
+        integer err
+        integer nok, flags
+
+        nok = 0
+C           /* BAD_ID test */
+        err = nfmpi_flush(BAD_ID)
+        if (err .ne. NF_EBADID) then
+            call errore('bad ncid: ', err)
+        else
+            nok = nok + 1
+        endif
+
+C           /* create scratch file */
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, info, ncidw)
+        if (err .ne. NF_NOERR) then
+            call errore('nfmpi_create: ', err)
+            return
+        end if
+
+C           /* write using same handle */
+        call def_dims(ncidw)
+        call def_vars(ncidw)
+        call put_atts(ncidw)
+        err = nfmpi_enddef(ncidw)
+        if (err .ne. NF_NOERR)
+     +      call errore('nfmpi_enddef: ', err)
+        call put_vars(ncidw)
+        err = nfmpi_flush(ncidw)
+        if (err .ne. NF_NOERR) then
+            call errore('nfmpi_flush of ncidw failed: ', err)
+        else
+            nok = nok + 1
+        endif
+
+C           /* Data should be avaiable for read after flush */
+        call check_dims(ncidw)
+        call check_atts(ncidw)
+        call check_vars(ncidw)
+
+C           /* close both handles */
+        err = nfmpi_close(ncidw)
+        if (err .ne. NF_NOERR)
+     +      call errore('nfmpi_close: ', err)
+
+        err = nfmpi_delete(scratch, info)
+        if (err .ne. NF_NOERR)
+     +      call errori('delete of scratch file failed: ', err)
+        call print_nok(nok)
+        end
 
 C Test nfmpi_abort
 C    try with bad handle, check error
@@ -378,7 +439,9 @@ C    try after writing variable
         integer ngatts
         integer recdim
         integer nok, flags
-
+        logical                 flag, bb_enable
+        character*(MPI_MAX_INFO_VAL)     hint
+        integer                 infoused
         nok = 0
 
 C           /* BAD_ID test */
@@ -396,6 +459,19 @@ C           /* create scratch file & try nfmpi_abort in define mode */
             call errore('nfmpi_create: ', err)
             return
         end if
+
+        ! Determine if burst buffer driver is being used
+        bb_enable = .FALSE.
+        err = nfmpi_inq_file_info(ncid, infoused)
+        if (err .eq. NF_NOERR) then
+            call MPI_Info_get(infoused, "nc_burst_buf",
+     +            MPI_MAX_INFO_VAL, hint, flag, err)
+            if (flag) then
+                bb_enable = (hint .eq. 'enable')
+            endif
+            call MPI_Info_free(infoused, err);
+        endif
+
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
@@ -470,6 +546,14 @@ C           /* try nfmpi_abort in data mode - should just close */
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
+        
+        ! Flush the buffer to reveal potential error
+        if (bb_enable) then
+            if (err .eq. NF_NOERR) then
+                err = nfmpi_flush(ncid)
+            endif
+        endif
+
         err = nfmpi_abort(ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_abort of ncid failed: ', err)

@@ -8,7 +8,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This program tests nonblocking functionality of bb driver
- * Flushed requests can not be canceled, canceled request can't be waited
+ * It create many nonblocking request to test the driver's ability to handle large amount of nonblocking requests
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdio.h>
@@ -18,11 +18,14 @@
 #include <testutils.h>
 #include <libgen.h>
 
+#define NREQ 2048
+#define NROUND 4
+
 int main(int argc, char *argv[]) {
-    int err, tmp, nerrs = 0;
+    int i, j, err, nerrs = 0;
     int rank, np;
     int ncid, varid;
-    int buffer, req1, req2, stat;
+    int *buffer, *reqs, *stat;
     int dimid[2];
     char filename[PATH_MAX];
     MPI_Offset start[2];
@@ -49,22 +52,21 @@ int main(int argc, char *argv[]) {
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for when requests are > buffer size", basename(argv[0]));
+        sprintf(cmd_str, "*** TESTING C   %s for burst buffer big requests", basename(argv[0]));
 		printf("%-66s ------ ", cmd_str); fflush(stdout);
 		free(cmd_str);
-    }
+	}
 
-     /* Initialize file info */
+    /* Initialize file info */
 	MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_dw", "enable");
-    MPI_Info_set(info, "nc_dw_overwrite", "enable");
+    MPI_Info_set(info, "nc_burst_buf", "enable");
 
     /* Create new netcdf file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);    CHECK_ERR
 
     /* Define dimensions */
     err = ncmpi_def_dim(ncid, "X", np, dimid);    CHECK_ERR
-    err = ncmpi_def_dim(ncid, "Y", 4, dimid + 1);    CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y", NREQ, dimid + 1);    CHECK_ERR
 
     /* Define variable */
     err = ncmpi_def_var(ncid, "M", NC_INT, 2, dimid, &varid);    CHECK_ERR
@@ -72,43 +74,61 @@ int main(int argc, char *argv[]) {
     /* Switch to data mode */
     err = ncmpi_enddef(ncid);    CHECK_ERR
 
-    buffer = rank + 1;
+    /* Prepare Buffer */
+    reqs = (int*)malloc(sizeof(int) * NREQ);
+    stat = (int*)malloc(sizeof(int) * NREQ);
+    buffer = (int*)malloc(sizeof(int) * NREQ);
+    for (i = 0; i < NREQ; i++) {
+        buffer[i] = rank + 1;
+    }
 
-    start[0] = 0;
-    start[1] = 0;
-    err = ncmpi_iput_var1_int(ncid, varid, start, &buffer, &req1);    CHECK_ERR
-    start[1] = 1;
-    err = ncmpi_iput_var1_int(ncid, varid, start, &buffer, &req2);    CHECK_ERR
-    start[1] = 0;
-    err = ncmpi_get_var1_int_all(ncid, varid, start, &buffer);    CHECK_ERR
-    start[1] = 1;
-    err = ncmpi_get_var1_int_all(ncid, varid, start, &buffer);    CHECK_ERR
-    err = ncmpi_cancel(ncid, 1, &req1, &stat);    CHECK_ERR
-    err = stat;    EXP_ERR(NC_EFLUSHED)
-    err = ncmpi_wait_all(ncid, 1, &req2, &stat);    CHECK_ERR
-    err = stat;    CHECK_ERR
+    for (j = 0; j < NROUND; j++) {
+        /* Test nonblocking put */
+        for (i = 0; i < NREQ; i++) {
+            start[0] = rank;
+            start[1] = i;
+            err = ncmpi_iput_var1_int(ncid, varid, start, buffer + i, reqs + i);    CHECK_ERR
+        }
+        err = ncmpi_wait_all(ncid, NREQ, reqs, stat);    CHECK_ERR
+        for (i = 0; i < NREQ; i++) {
+            err = stat[i];    CHECK_ERR
+        }
+        for (i = 0; i < NREQ; i++) {
+            if (reqs[i] != NC_REQ_NULL) {
+                printf("Error at line %d in %s: expecting reqs[%d] = NC_REQ_NULL but got %d\n", __LINE__, __FILE__, i, reqs[i]);
+            }
+        }
 
-    start[1] = 2;
-    err = ncmpi_iput_var1_int(ncid, varid, start, &buffer, &req1);    CHECK_ERR
-    start[1] = 3;
-    err = ncmpi_iput_var1_int(ncid, varid, start, &buffer, &req2);    CHECK_ERR
-    tmp = req1;
-    err = ncmpi_cancel(ncid, 1, &req1, &stat);    CHECK_ERR
-    err = stat;    CHECK_ERR
-    start[1] = 2;
-    err = ncmpi_get_var1_int_all(ncid, varid, start, &buffer);    CHECK_ERR
-    start[1] = 3;
-    err = ncmpi_get_var1_int_all(ncid, varid, start, &buffer);    CHECK_ERR
-    req1 = tmp;
-    err = ncmpi_wait_all(ncid, 1, &req1, &stat);    CHECK_ERR
-    err = stat;    EXP_ERR(NC_EINVAL_REQUEST)
-    err = ncmpi_wait_all(ncid, 1, &req2, &stat);    CHECK_ERR
-    err = stat;    CHECK_ERR
+        /* Test nonblocking get */
+        memset(buffer, 0, sizeof(int) * NREQ);
+        for (i = 0; i < NREQ; i++ ) {
+            start[0] = rank;
+            start[1] = i;
+            err = ncmpi_iget_var1_int(ncid, varid, start, buffer + i, reqs + i);    CHECK_ERR
+        }
+        err = ncmpi_wait_all(ncid, NREQ, reqs, stat);    CHECK_ERR
+        for (i = 0; i < NREQ; i++) {
+            err = stat[i];    CHECK_ERR
+        }
+        for (i = 0; i < NREQ; i++) {
+            if (buffer[i] != rank + 1) {
+                printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n", __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            }
+        }
+        for (i = 0; i < NREQ; i++) {
+            if (reqs[i] != NC_REQ_NULL) {
+                printf("Error at line %d in %s: expecting reqs[%d] = NC_REQ_NULL but got %d\n", __LINE__, __FILE__, i, reqs[i]);
+            }
+        }
+    }
 
     /* Close the file */
     err = ncmpi_close(ncid);    CHECK_ERR
 
     MPI_Info_free(&info);
+    free(buffer);
+    free(reqs);
+    free(stat);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

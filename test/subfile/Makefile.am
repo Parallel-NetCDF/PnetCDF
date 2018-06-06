@@ -40,6 +40,11 @@ CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
 
 EXTRA_DIST = README seq_runs.sh
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
+
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
@@ -51,6 +56,11 @@ ptest ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
+    if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
@@ -58,6 +68,11 @@ ptest2: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
+    if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4
