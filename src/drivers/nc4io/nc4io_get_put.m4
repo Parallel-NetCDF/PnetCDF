@@ -266,6 +266,7 @@ nc4io_put_var(void             *ncdp,
     int i, err;
     int apikind;
     int ndim;
+    int zeroreq = 0;
     size_t *sstart, *scount, *sstride, *simap, putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
@@ -305,7 +306,10 @@ nc4io_put_var(void             *ncdp,
                 putsize *= (size_t)count[i];
             }
             if (putsize <= 0){
-                //return NC_NOERR;
+                /* Zero req will cause error in hdf5 layer under some unknown conditions
+                 * We simply ignore the error code if request size is 0
+                 */
+                zero_req = 1;
             }
         }
     }
@@ -319,6 +323,12 @@ foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
+    /* Zero req will cause error in hdf5 layer under some unknown conditions
+     * We simply ignore the error code if request size is 0
+     */
+    if (zero_req && err == NC_EHDFERR){
+        err = NC_NOERR;
+    }
     if (err != NC_NOERR){
         DEBUG_RETURN_ERROR(err);
     }
