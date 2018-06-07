@@ -266,7 +266,7 @@ nc4io_put_var(void             *ncdp,
     int i, err;
     int apikind;
     int ndim;
-    int zeroreq = 0;
+    int zero_req = 0;
     size_t *sstart, *scount, *sstride, *simap, putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
     
