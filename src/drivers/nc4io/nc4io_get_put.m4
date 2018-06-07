@@ -305,7 +305,7 @@ nc4io_put_var(void             *ncdp,
                 putsize *= (size_t)count[i];
             }
             if (putsize <= 0){
-                return NC_NOERR;
+                //return NC_NOERR;
             }
         }
     }
