@@ -122,6 +122,8 @@ int main(int argc, char** argv) {
     if (rank > 0) for (i=0; i<NDIMS; i++) count[i] = 0;
 
     for (i=0; i<NVARS; i++) {
+        MPI_Barrier(MPI_COMM_WORLD);
+
         start[0] = 0;
         err = ncmpi_put_vars_short_all(ncid, fvarid[i], start, count, stride,
                                        buffer); CHECK_ERR
