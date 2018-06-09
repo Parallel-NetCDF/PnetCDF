@@ -397,6 +397,13 @@ ncmpio_inq_misc(void       *ncdp,
         sprintf(value, "%d", ncp->chunk);
         MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
 
+        if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
+            MPI_Info_set(*info_used, "nc_in_place_swap", "enable");
+        else if (fIsSet(ncp->flags, NC_MODE_SWAP_OFF))
+            MPI_Info_set(*info_used, "nc_in_place_swap", "disable");
+        else
+            MPI_Info_set(*info_used, "nc_in_place_swap", "auto");
+
 #ifdef ENABLE_SUBFILING
         if (ncp->subfile_mode)
             MPI_Info_set(*info_used, "pnetcdf_subfiling", "enable");
