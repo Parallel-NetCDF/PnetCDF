@@ -26,11 +26,17 @@
       integer PNETCDF_SUBFILING
       integer PNETCDF_RELAX_COORD_BOUND
       integer PNETCDF_DEBUG_MODE
+      integer PNETCDF_LARGE_REQ
+      integer PNETCDF_NULL_BYTE_HEADER_PADDING
+      integer PNETCDF_BYTE_SWAP_IN_PLACE
 
-      parameter (PNETCDF_ERANGE_FILL       = @ENABLE_ERANGE_FILL@)
-      parameter (PNETCDF_SUBFILING         = @ENABLE_SUBFILING@)
-      parameter (PNETCDF_RELAX_COORD_BOUND = @RELAX_COORD_BOUND@)
-      parameter (PNETCDF_DEBUG_MODE        = @PNETCDF_DEBUG@)
+      parameter (PNETCDF_ERANGE_FILL              = @ENABLE_ERANGE_FILL@)
+      parameter (PNETCDF_SUBFILING                = @ENABLE_SUBFILING@)
+      parameter (PNETCDF_RELAX_COORD_BOUND        = @RELAX_COORD_BOUND@)
+      parameter (PNETCDF_DEBUG_MODE               = @PNETCDF_DEBUG@)
+      parameter (PNETCDF_LARGE_REQ                = @ENABLE_LARGE_REQ@)
+      parameter (PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@)
+      parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
 
 !
 ! external netcdf data types:

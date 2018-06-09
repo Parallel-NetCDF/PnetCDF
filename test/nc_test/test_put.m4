@@ -860,12 +860,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1; /* out of boundary check */
@@ -1108,12 +1108,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1; /* out of boundary check */
@@ -1379,12 +1379,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1; /* out of boundary check */
