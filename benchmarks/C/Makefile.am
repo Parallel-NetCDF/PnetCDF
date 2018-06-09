@@ -31,7 +31,7 @@ endif
 
 ptest ptests ptest4: $(check_PROGRAMS)
 	for i in $(check_PROGRAMS); do { \
-	$(TESTMPIRUN4) ./$$i -q 10 $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN4) ./$$i -q -l 10 $(TESTOUTDIR)/$$i.nc ; \
 	if [ $$? = 0 ] ; then \
 	    echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
 	else \
@@ -40,7 +40,7 @@ ptest ptests ptest4: $(check_PROGRAMS)
 	fi ; \
 	if [ -n "$(TESTBB)" ]; then ( \
         export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-        $(TESTMPIRUN4) ./$$i -q 10 $(TESTOUTDIR)/$$i.nc ; \
+        $(TESTMPIRUN4) ./$$i -q -l 10 $(TESTOUTDIR)/$$i.nc ; \
         unset PNETCDF_HINTS ; \
 		if [ $$? = 0 ] ; then \
 			echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
