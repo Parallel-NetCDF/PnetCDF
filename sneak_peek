@@ -3,14 +3,12 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * Burst Buffer driver is now available.
-      Burst buffer driver is a I/O driver in PnetCDF that implements a 
-      log-based I/O aggregation for write related I/O requests that cache data
-      on on a wide range of burst buffer architecture.
-      Burst buffer driver record variable write operations on the burst buffer 
-      and flush them out as a single I/O request to the PFS. 
-      The burst buffer is flushed 1) when the file is closed, 2) when 
-      ncmpi_flush is called, or 3) when variable read operation is performed.
+    * Burst Buffering is now available. Burst buffer driver is an I/O driver
+      that implements a log-based I/O aggregation for write requests with the
+      present of burst buffer storage devices. The design is to save write
+      requests in burst buffers and later flush the saved requests to the
+      destination file system. See doc/README.burst_buffering for more detailed
+      description.
 
   o New optimization
     * Internal memory management for nonblocking APIs has been improved further
@@ -29,6 +27,11 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Update configure options
+    * The default option for relax-coord-bound is changed to "enable", in
+      accord with NetCDF 1.7.0. Users may use --disable-relax-coord-bound to
+      disable this setting at configure time or at run time by setting the
+      environment variable PNETCDF_RELAX_COORD_BOUND. See section "New run-time
+      environment variables" below for more information.
     * Option in-place byte-swap is expanded into the followings.
       --enable-in-place-swap : perform byte swap on user I/O buffers whenever
       possible. This option results in the least amount of internal memory
@@ -36,7 +39,7 @@ This is essentially a placeholder for the next release note ...
       may occur when byte swap is performed on user buffer in place.
       --disable-in-place-swap : when byte swap is required, an internal memory
       space will be allocated for byte swap without altering the contents of
-      user buffer. This option will increase internal memory footprint.
+      user buffer. This option will increase internal memory footprint. The
       default (neither the above option is used at the command line): an
       internal buffer is allocated for byte swap only when the I/O request size
       is less than 4 KiB. For larger requests, user buffers are used for
@@ -50,13 +53,18 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New APIs
-    * ncmpi_flush
-      Flush any data buffered by PnetCDF to the file. When using the burst buffer driver, the data cached on the burst buffer will be flushed.
+    * ncmpi_flush() flushes data buffered by PnetCDF to the destination file
+      system. When using the burst buffers, the data cached in the burst
+      buffers will be flushed.
 
   o API syntax changes
     * none
 
   o API semantics updates
+    * The default setting for checking the coordinate bound is changed to the
+      more relaxed check. Users can still change this checking at run time by
+      setting the environment variable PNETCDF_RELAX_COORD_BOUND. See section
+      of "New run-time environment variables" below for more information.
     * ncmpi_put_vard and ncmpi_get_vard APIs
       1. Now allow to write and read two or more variables in a single call to
          vard APIs. In this case, argument varid will be the ID of first
@@ -79,7 +87,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New error code
-    * NC_EFLUSHED -- Non-blocking requests already flushed.
+    * NC_EFLUSHED when calling ncmpi_cancel() to cancel non-blocking requests
+      but the requests have already flushed.
+    * NC_EBADLOG when the log files stored in the burst buffers are corrupted.
 
   o New PnetCDF hint
     * nc_in_place_swap -- to enable or disable in-place byte swap on Little
@@ -88,28 +98,40 @@ This is essentially a placeholder for the next release note ...
       that changes the mode set at the configure time to "enable", by setting
       the environment variable PNETCDF_HINTS with command:
           export PNETCDF_HINTS="nc_in_place_swap=enable"
-    * nc_burst_buf -- Whether burst buffer driver is enabled. The default is 
-      disable. Below is an example that enables burst buffering by setting
-      the environment variable PNETCDF_HINTS with command:
+    * nc_burst_buf -- to use the burst buffering feature. The default is 
+      disable. To enable at the run time, one can add the hint to environment
+      variable PNETCDF_HINTS, for example,
           export PNETCDF_HINTS="nc_burst_buf=enable"
-    * nc_burst_buf_dirname -- Directory where log file will be stored. This is 
-      usually set to the path where burst buffer is mounted. The default path 
-      is the directory housing the NetCDF file.
-    * nc_burst_buf_del_on_close -- Whether log file should be deleted after 
-      closing the NetCDF file. It can be disabled when the scheduler will clean
-      up the burst buffer automatically after the job is completed. The default
-      is enable. Below is an example that disables deleting on file closing by 
-      setting the environment variable PNETCDF_HINTS with command:
+    * nc_burst_buf_dirname -- Name of directory on the burst buffer where the
+      internal log files will be stored. This is usually set to the path where
+      burst buffer is mounted. The default path is the same directory of the
+      output file.
+    * nc_burst_buf_del_on_close -- Whether the log files stored in burst buffer
+      should be deleted when closing the NetCDF file. The default is enable. To
+      disable at the run time, one can add the hint to environment variable
+      PNETCDF_HINTS, for example,
           export PNETCDF_HINTS="nc_burst_buf_del_on_close=disable"
+      Note that on some systems, e.g. DataWarp, the files stored in burst
+      buffers are purged when the user job is completed. In this case, users
+      who wish to keep the files to be used for other jobs must refer to the
+      burst buffer user guide for such setting. For DataWarp on Cori @NERSC,
+      the settings are described in
+      http://www.nersc.gov/users/computational-systems/cori/burst-buffer/example-batch-scripts/
     * nc_burst_buf_flush_buffer_size -- Amount of memory that can be used to 
-      flush the log. The unit is in bytes. 0 means unlimited. User must 
-      guarantee that it is larger than every single I/O request the program 
-      will make. Otherwise, the hint will not be followed.
+      flush the data stored in burst buffer. The unit is in bytes. 0 means
+      unlimited. Users are suggested to use a number that is at least the size
+      of largest individual requests. The default is unlimited.
 
   o New run-time environment variables
-    * none
+    * PNETCDF_RELAX_COORD_BOUND environment variable can be set to 0 to disable
+      or 1 to enable the more relaxed boundary check for argument start. Prior
+      to version 1.10.0, the default behavior is to use a strict boundary
+      check, i.e. error code NC_EINVALCOORDS will be thrown when the value of
+      start is larger than or equal to the defined dimension size.
 
   o Build recipes
+    * doc/README.burst_buffering is added to describe the usage of the new
+      feature of burst buffering.
     * doc/README.IBM is revised as the compiler behavior has changed on BGQ
       since the release of 1.9.0.
     * doc/README.CRAY is revised as the compiler behavior has changed on CRAY
@@ -118,6 +140,8 @@ This is essentially a placeholder for the next release note ...
       necessary.
 
   o New/updated utility program
+    * ncmpilogdump prints on screen the contents of log files stored in the
+      burst buffer.
     * ncvalidator adds a new option -t to turn on tracing mode which prints all
       successfully validated metadata till the first error encountered.
     * ncvalidator adds a check to detect whether there are two or more
@@ -163,14 +187,20 @@ This is essentially a placeholder for the next release note ...
     * example/C/vard_mvars.c shows an example of using a single vard API call
       to write or read two variables.
     * example/burstbuffer/create_open.c shows an example of creating and opening
-      a simple NetCDF file with burst buffering is enabled.
-    * example/burstbuffer/nonblocking.c shows an example of difference in 
-      non-blocking API behavior when burst buffering is enabled.
+      a NetCDF file on burst buffer.
+    * example/burstbuffer/nonblocking.c shows an example of using non-blocking
+      APIs when burst buffering is enabled.
 
   o New programs for I/O benchmarks
     * none
 
   o New test program
+    * test/burst_buffer/bb_bsize.c
+    * test/burst_buffer/bb_hints.c
+    * test/burst_buffer/bb_many_reqs.c
+    * test/burst_buffer/bb_nonblocking.c
+    * test/burst_buffer/highdim.c
+    * test/burst_buffer/log.c
     * test/testcases/test_fillvalue.c - tests PnetCDF allows to put attribute
       _FillValue for global variable and for non-global variable, requires the
       data type of attribute _FillValue be the same as the variable's.
