@@ -284,6 +284,12 @@ nc4io_get_varn(void              *ncdp,
     size_t putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
+    /* No support for varn at this time
+     * NetCDF hang when collective call consists of 0 count on part of process 
+     * It make varn difficult to be implemented efficiently 
+     */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
     isindep = fIsSet(nc4p->flag, NC_MODE_INDEP);
 
     /* Check arguments */
@@ -415,6 +421,12 @@ nc4io_put_varn(void              *ncdp,
     int isindep;
     size_t putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* No support for varn at this time
+     * NetCDF hang when collective call consists of 0 count on part of process 
+     * It make varn difficult to be implemented efficiently 
+     */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     isindep = fIsSet(nc4p->flag, NC_MODE_INDEP);
 
