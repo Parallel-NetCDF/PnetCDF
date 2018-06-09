@@ -62,141 +62,234 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef BUILD_DRIVER_NC4
-    for(format = 0; format < 2; format ++)
+    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    err = ncmpi_create(comm, filename, NC_CLOBBER | NC_NETCDF4,
+                            MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim1", len1, &dim1id);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim5", len5, &dim5id);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim9", len9, &dim9id);
+    CHECK_ERR
+
+    dimsid[0] = dim0id;
+    dimsid[1] = dim1id;
+    err = ncmpi_def_var(ncid, "xyz", NC_INT, 2, dimsid, &varid);
+    CHECK_ERR
+
+    dimsid[0] = dim0id;
+    dimsid[1] = dim5id;
+    err = ncmpi_def_var(ncid, "connect", NC_INT, 2, dimsid, &var3id);
+    CHECK_ERR
+
+    dimsid[0] = dim0id;
+    dimsid[1] = dim9id;
+    err = ncmpi_def_var(ncid, "connect_exterior", NC_INT, 2, dimsid, &var4id);
+    CHECK_ERR
+
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    /* put data */
+    start[0] = 0;
+    start[1] = 0;
+    count[0] = len0;
+    count[1] = len1;
+
+    data = (int*) malloc(len0*len1 * sizeof(int));
+    k=0;
+    for (i=0; i<len0; i++)
+        for (j=0; j<len1; j++)
+            data[i*len1+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
+    CHECK_ERR
+    free(data);
+
+    count[0] = len0;
+    count[1] = len5;
+    data = (int*) malloc(len0*len5 * sizeof(int));
+    k=0;
+    for (i=0; i<len0; i++)
+        for (j=0; j<len5; j++)
+            data[i*len5+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
+    CHECK_ERR
+    free(data);
+
+    count[0] = len0;
+    count[1] = len9;
+    data = (int*) malloc(len0*len9 * sizeof(int));
+    k=0;
+    for (i=0; i<len0; i++)
+        for (j=0; j<len9; j++)
+            data[i*len9+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
+    CHECK_ERR
+    free(data);
+
+    err = ncmpi_close(ncid);
+    CHECK_ERR
+
+    err = ncmpi_open(comm, filename, NC_WRITE | NC_NETCDF4, MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_redef(ncid);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim2", len2, &dim2id);
+    CHECK_ERR
+
+    dims2id[0] = dim0id;
+    dims2id[1] = dim2id;
+    err = ncmpi_def_var(ncid, "xyz_r", NC_DOUBLE, 2, dims2id, &var2id);
+    CHECK_ERR
+
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    start[0] = 0;
+    start[1] = 0;
+    count[0] = len0;
+    count[1] = len2;
+    k=0;
+    dbl_data = (double*) malloc(len0*len2 * sizeof(double));
+    for (i=0; i<len0; i++)
+        for (j=0; j<len2; j++) {
+            dbl_data[i*len2+j] = (k*k);
+            k++;
+        }
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
+    CHECK_ERR
+    free(dbl_data);
+
+    err = ncmpi_close(ncid);
+    CHECK_ERR
 #endif
-    {
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_create(comm, filename, NC_CLOBBER | NC_NETCDF4,
-                                MPI_INFO_NULL, &ncid);
-            CHECK_ERR
+
+    /* Test traditional format */
+    err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
+                            MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim1", len1, &dim1id);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim5", len5, &dim5id);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim9", len9, &dim9id);
+    CHECK_ERR
+
+    dimsid[0] = dim0id;
+    dimsid[1] = dim1id;
+    err = ncmpi_def_var(ncid, "xyz", NC_INT, 2, dimsid, &varid);
+    CHECK_ERR
+
+    dimsid[0] = dim0id;
+    dimsid[1] = dim5id;
+    err = ncmpi_def_var(ncid, "connect", NC_INT, 2, dimsid, &var3id);
+    CHECK_ERR
+
+    dimsid[0] = dim0id;
+    dimsid[1] = dim9id;
+    err = ncmpi_def_var(ncid, "connect_exterior", NC_INT, 2, dimsid, &var4id);
+    CHECK_ERR
+
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    /* put data */
+    start[0] = 0;
+    start[1] = 0;
+    count[0] = len0;
+    count[1] = len1;
+
+    data = (int*) malloc(len0*len1 * sizeof(int));
+    k=0;
+    for (i=0; i<len0; i++)
+        for (j=0; j<len1; j++)
+            data[i*len1+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
+    CHECK_ERR
+    free(data);
+
+    count[0] = len0;
+    count[1] = len5;
+    data = (int*) malloc(len0*len5 * sizeof(int));
+    k=0;
+    for (i=0; i<len0; i++)
+        for (j=0; j<len5; j++)
+            data[i*len5+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
+    CHECK_ERR
+    free(data);
+
+    count[0] = len0;
+    count[1] = len9;
+    data = (int*) malloc(len0*len9 * sizeof(int));
+    k=0;
+    for (i=0; i<len0; i++)
+        for (j=0; j<len9; j++)
+            data[i*len9+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
+    CHECK_ERR
+    free(data);
+
+    err = ncmpi_close(ncid);
+    CHECK_ERR
+
+    err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_redef(ncid);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "dim2", len2, &dim2id);
+    CHECK_ERR
+
+    dims2id[0] = dim0id;
+    dims2id[1] = dim2id;
+    err = ncmpi_def_var(ncid, "xyz_r", NC_DOUBLE, 2, dims2id, &var2id);
+    CHECK_ERR
+
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    start[0] = 0;
+    start[1] = 0;
+    count[0] = len0;
+    count[1] = len2;
+    k=0;
+    dbl_data = (double*) malloc(len0*len2 * sizeof(double));
+    for (i=0; i<len0; i++)
+        for (j=0; j<len2; j++) {
+            dbl_data[i*len2+j] = (k*k);
+            k++;
         }
-        else
-#endif
-        {
-            err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
-                                MPI_INFO_NULL, &ncid);
-            CHECK_ERR
-        }
+    if (rank > 0) count[0] = count[1] = 0;
+    err = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
+    CHECK_ERR
+    free(dbl_data);
 
-        err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
-        CHECK_ERR
-
-        err = ncmpi_def_dim(ncid, "dim1", len1, &dim1id);
-        CHECK_ERR
-
-        err = ncmpi_def_dim(ncid, "dim5", len5, &dim5id);
-        CHECK_ERR
-
-        err = ncmpi_def_dim(ncid, "dim9", len9, &dim9id);
-        CHECK_ERR
-
-        dimsid[0] = dim0id;
-        dimsid[1] = dim1id;
-        err = ncmpi_def_var(ncid, "xyz", NC_INT, 2, dimsid, &varid);
-        CHECK_ERR
-
-        dimsid[0] = dim0id;
-        dimsid[1] = dim5id;
-        err = ncmpi_def_var(ncid, "connect", NC_INT, 2, dimsid, &var3id);
-        CHECK_ERR
-
-        dimsid[0] = dim0id;
-        dimsid[1] = dim9id;
-        err = ncmpi_def_var(ncid, "connect_exterior", NC_INT, 2, dimsid, &var4id);
-        CHECK_ERR
-
-        err = ncmpi_enddef(ncid);
-        CHECK_ERR
-
-        /* put data */
-        start[0] = 0;
-        start[1] = 0;
-        count[0] = len0;
-        count[1] = len1;
-
-        data = (int*) malloc(len0*len1 * sizeof(int));
-        k=0;
-        for (i=0; i<len0; i++)
-            for (j=0; j<len1; j++)
-                data[i*len1+j] = k++;
-        if (rank > 0) count[0] = count[1] = 0;
-        err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
-        CHECK_ERR
-        free(data);
-
-        count[0] = len0;
-        count[1] = len5;
-        data = (int*) malloc(len0*len5 * sizeof(int));
-        k=0;
-        for (i=0; i<len0; i++)
-            for (j=0; j<len5; j++)
-                data[i*len5+j] = k++;
-        if (rank > 0) count[0] = count[1] = 0;
-        err = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
-        CHECK_ERR
-        free(data);
-
-        count[0] = len0;
-        count[1] = len9;
-        data = (int*) malloc(len0*len9 * sizeof(int));
-        k=0;
-        for (i=0; i<len0; i++)
-            for (j=0; j<len9; j++)
-                data[i*len9+j] = k++;
-        if (rank > 0) count[0] = count[1] = 0;
-        err = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
-        CHECK_ERR
-        free(data);
-
-        err = ncmpi_close(ncid);
-        CHECK_ERR
-
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_open(comm, filename, NC_WRITE | NC_NETCDF4, MPI_INFO_NULL, &ncid);
-            CHECK_ERR
-        }
-        else
-#endif
-        {
-            err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
-            CHECK_ERR
-        }
-
-        err = ncmpi_redef(ncid);
-        CHECK_ERR
-
-        err = ncmpi_def_dim(ncid, "dim2", len2, &dim2id);
-        CHECK_ERR
-
-        dims2id[0] = dim0id;
-        dims2id[1] = dim2id;
-        err = ncmpi_def_var(ncid, "xyz_r", NC_DOUBLE, 2, dims2id, &var2id);
-        CHECK_ERR
-
-        err = ncmpi_enddef(ncid);
-        CHECK_ERR
-
-        start[0] = 0;
-        start[1] = 0;
-        count[0] = len0;
-        count[1] = len2;
-        k=0;
-        dbl_data = (double*) malloc(len0*len2 * sizeof(double));
-        for (i=0; i<len0; i++)
-            for (j=0; j<len2; j++) {
-                dbl_data[i*len2+j] = (k*k);
-                k++;
-            }
-        if (rank > 0) count[0] = count[1] = 0;
-        err = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
-        CHECK_ERR
-        free(dbl_data);
-
-        err = ncmpi_close(ncid);
-        CHECK_ERR
-    }
+    err = ncmpi_close(ncid);
+    CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

@@ -44,36 +44,30 @@ int main(int argc, char **argv) {
     }
 
 #ifdef BUILD_DRIVER_NC4
-    for(format = 0; format < 2; format ++)
-#endif
-    {
-        /* create a file if it does not exist */
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            cmode = NC_CLOBBER | NC_NETCDF4;
-        }
-        else
-#endif
-        {
-            cmode = NC_CLOBBER;
-        }
-        err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-        CHECK_ERR
-        err = ncmpi_close(ncid); CHECK_ERR
+    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    /* create a file if it does not exist */
+    cmode = NC_CLOBBER | NC_NETCDF4;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
-        /* now the file exists, test if PnetCDF can return correct error code */
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            cmode = NC_NOCLOBBER | NC_NETCDF4;
-        }
-        else
+    /* now the file exists, test if PnetCDF can return correct error code */
+    cmode = NC_NOCLOBBER | NC_NETCDF4;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
 #endif
-        {
-            cmode = NC_NOCLOBBER;
-        }
-        err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-        EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
-    }
+
+    /* Test traditional format */
+    /* create a file if it does not exist */
+    cmode = NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* now the file exists, test if PnetCDF can return correct error code */
+    cmode = NC_NOCLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

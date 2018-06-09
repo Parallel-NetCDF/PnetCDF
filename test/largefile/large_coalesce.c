@@ -75,190 +75,208 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef BUILD_DRIVER_NC4
-    for(format = 0; format < 2; format ++)
-#endif
-    {
-        MPI_Info_create(&info);
-        MPI_Info_set(info, "romio_cb_write", "enable");
-        MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
+    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "romio_cb_write", "enable");
+    MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
 
-        /* create a new file for writing ----------------------------------------*/
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            cmode = NC_CLOBBER | NC_NETCDF4;
+    /* create a new file for writing ----------------------------------------*/
+    cmode = NC_CLOBBER | NC_NETCDF4;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    CHECK_ERR
+    MPI_Info_free(&info);
+
+    /* define dimensions */
+    err = ncmpi_def_dim(ncid, "NPROCS", nprocs, &dimid[0]);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "X", TWO_G+1024, &dimid[1]);
+    CHECK_ERR
+
+    /* define a big 1D variable of ubyte type */
+    err = ncmpi_def_var(ncid, "big_var", NC_UBYTE, 2, dimid, &varid);
+    CHECK_ERR
+
+    /* do not forget to exit define mode */
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    /* now we are in data mode */
+#ifdef ENABLE_LARGE_REQ
+    for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
+    for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
+#endif
+
+    start[0] = rank;
+    count[0] = 1;
+
+    start[1] = 0;
+    count[1] = 10;
+    err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf);
+    CHECK_ERR
+
+    /* 2nd request is not contiguous from the first */
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+1024);
+    CHECK_ERR
+
+    /* make file access and write buffer of 3rd request contiguous from the 2nd
+    * request to check whether the internal fileview and buftype coalescing
+    * are skipped */
+    start[1] = ONE_G;
+    count[1] = ONE_G+1024;
+    err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
+    CHECK_ERR
+
+    start[1] = 0;
+    count[1] = 10;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
+    CHECK_ERR
+
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+1024);
+    CHECK_ERR
+
+    start[1] = ONE_G;
+    count[1] = ONE_G+1024;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
+    CHECK_ERR
+
+    err = ncmpi_close(ncid);
+    CHECK_ERR
+#endif
+    /* Test traditional format */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "romio_cb_write", "enable");
+    MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
+
+    /* create a new file for writing ----------------------------------------*/
+    cmode = NC_CLOBBER | NC_64BIT_DATA;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    CHECK_ERR
+    MPI_Info_free(&info);
+
+    /* define dimensions */
+    err = ncmpi_def_dim(ncid, "NPROCS", nprocs, &dimid[0]);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "X", TWO_G+1024, &dimid[1]);
+    CHECK_ERR
+
+    /* define a big 1D variable of ubyte type */
+    err = ncmpi_def_var(ncid, "big_var", NC_UBYTE, 2, dimid, &varid);
+    CHECK_ERR
+
+    /* do not forget to exit define mode */
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    /* now we are in data mode */
+#ifdef ENABLE_LARGE_REQ
+    for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
+    for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
+#endif
+
+    start[0] = rank;
+    count[0] = 1;
+
+    start[1] = 0;
+    count[1] = 10;
+    err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf, &req[0]);
+    CHECK_ERR
+
+    /* 2nd request is not contiguous from the first */
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+1024, &req[1]);
+    CHECK_ERR
+
+    /* make file access and write buffer of 3rd request contiguous from the 2nd
+    * request to check whether the internal fileview and buftype coalescing
+    * are skipped */
+    start[1] = ONE_G;
+    count[1] = ONE_G+1024;
+    err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[2]);
+    CHECK_ERR
+
+    err = ncmpi_wait_all(ncid, 3, req, st);
+#ifndef ENABLE_LARGE_REQ
+    EXP_ERR(NC_EMAX_REQ)
+#else
+    CHECK_ERR
+
+    /* read back to check contents */
+    start[1] = ONE_G-10;
+    count[1] = 20;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
+    CHECK_ERR
+    for (i=0; i<20; i++) {
+        if (buf[i] != 'a'+i) {
+            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+                rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
+            nerrs++;
         }
-        else
-#endif
-        cmode = NC_CLOBBER | NC_64BIT_DATA;
-        err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
-        CHECK_ERR
-        MPI_Info_free(&info);
-
-        /* define dimensions */
-        err = ncmpi_def_dim(ncid, "NPROCS", nprocs, &dimid[0]);
-        CHECK_ERR
-
-        err = ncmpi_def_dim(ncid, "X", TWO_G+1024, &dimid[1]);
-        CHECK_ERR
-
-        /* define a big 1D variable of ubyte type */
-        err = ncmpi_def_var(ncid, "big_var", NC_UBYTE, 2, dimid, &varid);
-        CHECK_ERR
-
-        /* do not forget to exit define mode */
-        err = ncmpi_enddef(ncid);
-        CHECK_ERR
-
-        /* now we are in data mode */
-    #ifdef ENABLE_LARGE_REQ
-        for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
-        for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
-    #endif
-
-        start[0] = rank;
-        count[0] = 1;
-
-        start[1] = 0;
-        count[1] = 10;
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf);
-        }
-        else
-#endif
-        err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf, &req[0]);
-        CHECK_ERR
-
-        /* 2nd request is not contiguous from the first */
-        start[1] = 1024;
-        count[1] = ONE_G-1024;
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+1024);
-        }
-        else
-#endif
-        err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+1024, &req[1]);
-        CHECK_ERR
-
-        /* make file access and write buffer of 3rd request contiguous from the 2nd
-        * request to check whether the internal fileview and buftype coalescing
-        * are skipped */
-        start[1] = ONE_G;
-        count[1] = ONE_G+1024;
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
-        }
-        else
-#endif
-        err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[2]);
-        CHECK_ERR
-#ifdef BUILD_DRIVER_NC4
-        if (format > 0)
-#endif
-        {
-            err = ncmpi_wait_all(ncid, 3, req, st);
-        #ifndef ENABLE_LARGE_REQ
-            EXP_ERR(NC_EMAX_REQ)
-        #else
-            CHECK_ERR
-
-            /* read back to check contents */
-            start[1] = ONE_G-10;
-            count[1] = 20;
-            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
-            CHECK_ERR
-            for (i=0; i<20; i++) {
-                if (buf[i] != 'a'+i) {
-                    printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                        rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
-                    nerrs++;
-                }
-            }
-
-            /* read back to check contents */
-            start[1] = TWO_G-10;
-            count[1] = 20;
-            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
-            CHECK_ERR
-            for (i=0; i<20; i++) {
-                if (buf[i] != 'A'+i) {
-                    printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                        rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
-                    nerrs++;
-                }
-            }
-
-            /* test the same pattern but for iget */
-            for (i=0; i<TWO_G+1024; i++) buf[i] = 0;
-        #endif
-        }
-
-        start[1] = 0;
-        count[1] = 10;
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
-        }
-        else
-#endif
-        err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf, &req[0]);
-        CHECK_ERR
-
-        start[1] = 1024;
-        count[1] = ONE_G-1024;
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+1024);
-        }
-        else
-#endif
-        err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf+1024, &req[1]);
-        CHECK_ERR
-
-        start[1] = ONE_G;
-        count[1] = ONE_G+1024;
-#ifdef BUILD_DRIVER_NC4
-        if (format == 0){
-            err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
-        }
-        else
-#endif
-        err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[2]);
-        CHECK_ERR
-
-#ifdef BUILD_DRIVER_NC4
-        if (format > 0)
-#endif
-        {
-            err = ncmpi_wait_all(ncid, 3, req, st);
-        #ifndef ENABLE_LARGE_REQ
-            EXP_ERR(NC_EMAX_REQ)
-        #else
-            CHECK_ERR
-
-            for (i=0; i<20; i++) {
-                if (buf[ONE_G-10+i] != 'a'+i) {
-                    printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                        rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
-                    nerrs++;
-                }
-            }
-
-            for (i=0; i<20; i++) {
-                if (buf[TWO_G-10+i] != 'A'+i) {
-                    printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                        rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
-                    nerrs++;
-                }
-            }
-        #endif
-        }
-
-        err = ncmpi_close(ncid);
-        CHECK_ERR
     }
+
+    /* read back to check contents */
+    start[1] = TWO_G-10;
+    count[1] = 20;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
+    CHECK_ERR
+    for (i=0; i<20; i++) {
+        if (buf[i] != 'A'+i) {
+            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+                rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
+            nerrs++;
+        }
+    }
+
+    /* test the same pattern but for iget */
+    for (i=0; i<TWO_G+1024; i++) buf[i] = 0;
+#endif
+
+    start[1] = 0;
+    count[1] = 10;
+    err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf, &req[0]);
+    CHECK_ERR
+
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf+1024, &req[1]);
+    CHECK_ERR
+
+    start[1] = ONE_G;
+    count[1] = ONE_G+1024;
+    err = ncmpi_iget_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[2]);
+    CHECK_ERR
+
+    err = ncmpi_wait_all(ncid, 3, req, st);
+#ifndef ENABLE_LARGE_REQ
+    EXP_ERR(NC_EMAX_REQ)
+#else
+    CHECK_ERR
+
+    for (i=0; i<20; i++) {
+        if (buf[ONE_G-10+i] != 'a'+i) {
+            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+                rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
+            nerrs++;
+        }
+    }
+
+    for (i=0; i<20; i++) {
+        if (buf[TWO_G-10+i] != 'A'+i) {
+            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+                rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
+            nerrs++;
+        }
+    }
+#endif
+
+    err = ncmpi_close(ncid);
+    CHECK_ERR
 
     free(buf);
 
