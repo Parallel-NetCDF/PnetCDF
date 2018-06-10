@@ -1558,7 +1558,7 @@ AC_CONFIG_FILES(Makefile \
                 examples/CXX/Makefile \
                 examples/F77/Makefile \
                 examples/F90/Makefile \
-                examples/burstbuffer/Makefile \
+                examples/burst_buffer/Makefile \
                 benchmarks/Makefile \
                 benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
@@ -1582,7 +1582,7 @@ AC_CONFIG_FILES(Makefile \
                 test/nf90_test/Makefile \
                 test/nf90_test/tests.inc \
                 test/F90/Makefile \
-                test/burstbuffer/Makefile \
+                test/burst_buffer/Makefile \
 )
 
 dnl The following dependency is for configure.in and configure

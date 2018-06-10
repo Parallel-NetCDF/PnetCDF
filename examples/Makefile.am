@@ -7,7 +7,7 @@
 # @configure_input@
 
 SUBDIRS = C tutorial
-DIST_SUBDIRS = C tutorial CXX F77 F90 burstbuffer
+DIST_SUBDIRS = C tutorial CXX F77 F90 burst_buffer
 
 if HAS_MPICXX
 SUBDIRS += CXX
@@ -21,7 +21,7 @@ endif
 endif
 
 if BUILD_DRIVER_BB
-SUBDIRS += burstbuffer
+SUBDIRS += burst_buffer
 endif
 
 EXTRA_DIST = README
