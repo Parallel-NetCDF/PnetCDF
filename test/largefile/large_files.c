@@ -69,8 +69,6 @@ main(int argc, char **argv) {
    int var1_dims[RANK_var1];
    int x_dims[RANK_x];
 
-   int format;
-
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);

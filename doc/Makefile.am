@@ -21,6 +21,7 @@ EXTRA_DIST = README.CRAY \
              README.consistency \
              README.large_files \
              README.DataWarp \
+             README.NetCDF4 \
              pbs.script
 
 # For VPATH build (parallel build), try delete all sub-directories

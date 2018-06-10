@@ -67,7 +67,6 @@ int main(int argc, char** argv)
     MPI_File fh;
     MPI_Status status;
     MPI_Info info;
-    int format;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

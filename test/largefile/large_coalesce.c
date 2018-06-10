@@ -37,9 +37,6 @@ int main(int argc, char** argv)
 #ifdef ENABLE_LARGE_REQ
     size_t i;
 #endif
-#ifdef BUILD_DRIVER_NC4
-    int format;
-#endif
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
