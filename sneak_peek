@@ -28,7 +28,7 @@ This is essentially a placeholder for the next release note ...
 
   o Update configure options
     * The default option for relax-coord-bound is changed to "enable", in
-      accord with NetCDF 1.7.0. Users may use --disable-relax-coord-bound to
+      accord with NetCDF 4.7.0. Users may use --disable-relax-coord-bound to
       disable this setting at configure time or at run time by setting the
       environment variable PNETCDF_RELAX_COORD_BOUND. See section "New run-time
       environment variables" below for more information.
