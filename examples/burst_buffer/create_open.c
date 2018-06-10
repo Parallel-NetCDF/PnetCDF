@@ -7,8 +7,8 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to create/open the file using the DataWarp driver.
- * It is a modified version of create_open.c under examples/C using the DataWarp driver.
+ * This example shows how to create/open the file using the burst buffer driver.
+ * It is a modified version of create_open.c under examples/C using the burst buffer driver.
  *
  *    To compile:
  *        mpicc -O2 create_open.c -o create_open -lpnetcdf
@@ -18,8 +18,8 @@
  *
  *    % mpiexec -n 4 ./create_open testfile.nc
  *    create_open.c: example of file create and open
- *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/datawarp.
- *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/datawarp.
+ *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/burst buffer.
+ *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/burst buffer.
  *
  *    % ncmpidump testfile.nc
  *    netcdf testfile {
@@ -86,20 +86,20 @@ int main(int argc, char** argv)
 
     if (verbose && rank == 0) printf("%s: example of file create and open\n",__FILE__);
 
-    /* Set up the hints for DataWarp driver in ncmpi_create
+    /* Set up the hints for burst buffer driver in ncmpi_create
      * Note that the remaining part of the code remains unchanged
-     * The DataWarp driver will not proceed if the log files already exists
+     * The burst buffer driver will not proceed if the log files already exists
      * to prevent overwriting existing files by accident
      * To open the file again, we need to delete the log file after file closing
-     * The default value of nc_dw_del_on_close is enable, we set it for the
+     * The default value of nc_burst_buf_del_on_close is enable, we set it for the
      * purpose of demonstration.
-     * PnetCDF will warn if nc_dw_dirname is not set.
+     * PnetCDF will warn if nc_burst_buf_dirname is not set.
      */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_dw", "enable");
-    MPI_Info_set(info, "nc_dw_del_on_close", "enable");
+    MPI_Info_set(info, "nc_burst_buf", "enable");
+    MPI_Info_set(info, "nc_burst_buf_del_on_close", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_dw_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
     }
 
     /* create a new file using clobber mode ----------------------------------*/
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     /* Info can be freed after file creation */
     MPI_Info_free(&info);
 
-    /* DataWarp initialize log files on the first time we enters data mode */
+    /* burst buffer initialize log files on the first time we enters data mode */
     err = ncmpi_enddef(ncid);
     ERR
 
@@ -118,14 +118,14 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     ERR
 
-    /* Set up the hints for DataWarp driver in ncmpi_create
+    /* Set up the hints for burst buffer driver in ncmpi_create
      * Note that the remaining part of the code remains unchanged
-     * PnetCDF will warn if nc_dw_dirname is not set.
+     * PnetCDF will warn if nc_burst_buf_dirname is not set.
      */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_dw", "enable");
+    MPI_Info_set(info, "nc_burst_buf", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_dw_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
     }
 
     /* open the newly created file for read only -----------------------------*/

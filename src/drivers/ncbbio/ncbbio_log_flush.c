@@ -22,7 +22,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <stdio.h>
-#include <ncdwio_driver.h>
+#include <ncbbio_driver.h>
 #include <mpi.h>
 
 /* Convert from log type to MPI type used by pnetcdf library
@@ -44,6 +44,9 @@ int logtype2mpitype(int type, MPI_Datatype *buftype){
     }
     else if (type == NC_LOG_TYPE_INT) {
         *buftype = MPI_INT;
+    }
+    else if (type == NC_LOG_TYPE_LONG) {
+        *buftype = MPI_LONG;
     }
     else if (type == NC_LOG_TYPE_FLOAT) {
         *buftype = MPI_FLOAT;
@@ -76,19 +79,20 @@ int logtype2mpitype(int type, MPI_Datatype *buftype){
 /*
  * Commit log file into CDF file
  * Meta data is stored in memory, metalog is only used for restoration after abnormal shutdown
- * IN    ncdwp:    log structure
+ * IN    ncbbp:    log structure
  */
-int log_flush(NC_dw *ncdwp) {
+int log_flush(NC_bb *ncbbp) {
     int i, j, lb, ub, err, status = NC_NOERR;
     int *reqids, *stats;
-    int ready, ready_all;
+    //int ready, ready_all = 0;
+    int nrounds, nrounds_all;
     size_t databufferused, databuffersize, dataread;
-    NC_dw_metadataentry *entryp;
+    NC_bb_metadataentry *entryp;
     MPI_Offset *start, *count, *stride;
     MPI_Datatype buftype;
     char *databuffer, *databufferoff;
-    NC_dw_metadataheader *headerp;
-    NC_dw_metadataptr *ip;
+    NC_bb_metadataheader *headerp;
+    NC_bb_metadataptr *ip;
 #ifdef PNETCDF_PROFILING
     double t1, t2, t3, t4;
 
@@ -103,19 +107,48 @@ int log_flush(NC_dw *ncdwp) {
      * 0 in hint means no limit
      * (Buffer size) = max((largest size of single record), min((size of data log), (size specified in hint)))
      */
-    databuffersize = ncdwp->datalogsize;
-    if (ncdwp->flushbuffersize > 0 && databuffersize > ncdwp->flushbuffersize){
-        databuffersize = ncdwp->flushbuffersize;
+    databuffersize = ncbbp->datalogsize;
+    if (ncbbp->flushbuffersize > 0 && databuffersize > ncbbp->flushbuffersize){
+        databuffersize = ncbbp->flushbuffersize;
     }
-    if (databuffersize < ncdwp->maxentrysize){
-        databuffersize = ncdwp->maxentrysize;
+    if (databuffersize < ncbbp->maxentrysize){
+        databuffersize = ncbbp->maxentrysize;
     }
 
 #ifdef PNETCDF_PROFILING
-    if (ncdwp->max_buffer < databuffersize){
-        ncdwp->max_buffer = databuffersize;
+    if (ncbbp->max_buffer < databuffersize){
+        ncbbp->max_buffer = databuffersize;
     }
 #endif
+
+    /* Sync rounds */
+    databufferused = 0;
+    dataread = 0;
+    nrounds = 0;
+    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    if (err != NC_NOERR){
+        return err;
+    }
+    headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
+    entryp = (NC_bb_metadataentry*)(((char*)ncbbp->metadata.buffer) + headerp->entry_begin);
+    for (i = 0; i < ncbbp->metaidx.nused; i++){
+        if (ncbbp->metaidx.entries[i].valid){
+            if (ncbbp->entrydatasize.values[i] + databufferused > databuffersize){
+                nrounds++;
+                databufferused = ncbbp->entrydatasize.values[i];
+            }
+            else{
+                databufferused += ncbbp->entrydatasize.values[i];
+            }
+        }
+    }
+    nrounds++;
+    if (!ncbbp->isindep){
+        MPI_Allreduce(&nrounds, &nrounds_all, 1, MPI_INT, MPI_MAX, ncbbp->comm);
+    }
+    else{
+        nrounds_all = nrounds;
+    }
 
     /* Allocate buffer */
     databuffer = (char*)NCI_Malloc(databuffersize);
@@ -124,7 +157,7 @@ int log_flush(NC_dw *ncdwp) {
     }
 
     /* Seek to the start position of first data record */
-    err = ncdwio_bufferedfile_seek(ncdwp->datalog_fd, 8, SEEK_SET);
+    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
@@ -133,22 +166,22 @@ int log_flush(NC_dw *ncdwp) {
     databufferused = 0;
     dataread = 0;
 
-    reqids = (int*)NCI_Malloc(ncdwp->entrydatasize.nused * SIZEOF_INT);
-    stats = (int*)NCI_Malloc(ncdwp->entrydatasize.nused * SIZEOF_INT);
+    reqids = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
+    stats = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
 
     /*
      * Iterate through meta log entries
      */
-    headerp = (NC_dw_metadataheader*)ncdwp->metadata.buffer;
-    entryp = (NC_dw_metadataentry*)(((char*)ncdwp->metadata.buffer) + headerp->entry_begin);
-    for (lb = 0; lb < ncdwp->metaidx.nused;){
-        for (ub = lb; ub < ncdwp->metaidx.nused; ub++) {
-            if (ncdwp->metaidx.entries[ub].valid){
-                if(ncdwp->entrydatasize.values[ub] + databufferused > databuffersize) {
+    headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
+    entryp = (NC_bb_metadataentry*)(((char*)ncbbp->metadata.buffer) + headerp->entry_begin);
+    for (lb = 0; lb < ncbbp->metaidx.nused;){
+        for (ub = lb; ub < ncbbp->metaidx.nused; ub++) {
+            if (ncbbp->metaidx.entries[ub].valid){
+                if(ncbbp->entrydatasize.values[ub] + databufferused > databuffersize) {
                     break;  // Buffer full
                 }
                 else{
-                    databufferused += ncdwp->entrydatasize.values[ub]; // Record size of entry
+                    databufferused += ncbbp->entrydatasize.values[ub]; // Record size of entry
                 }
             }
             else{
@@ -162,19 +195,19 @@ int log_flush(NC_dw *ncdwp) {
 #ifdef PNETCDF_PROFILING
                     t2 = MPI_Wtime();
 #endif
-                    err = ncdwio_bufferedfile_read(ncdwp->datalog_fd, databuffer + dataread, databufferused - dataread);
+                    err = ncbbio_bufferedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
                     if (err != NC_NOERR){
                         return err;
                     }
 #ifdef PNETCDF_PROFILING
                     t3 = MPI_Wtime();
-                    ncdwp->flush_data_rd_time += t3 - t2;
+                    ncbbp->flush_data_rd_time += t3 - t2;
 #endif
                     dataread = databufferused;
                 }
 
                 // Skip canceled entry
-                err = ncdwio_bufferedfile_seek(ncdwp->datalog_fd, ncdwp->entrydatasize.values[ub], SEEK_CUR);
+                err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, ncbbp->entrydatasize.values[ub], SEEK_CUR);
                 if (err != NC_NOERR){
                     return err;
                 }
@@ -189,13 +222,13 @@ int log_flush(NC_dw *ncdwp) {
 #ifdef PNETCDF_PROFILING
             t2 = MPI_Wtime();
 #endif
-            err = ncdwio_bufferedfile_read(ncdwp->datalog_fd, databuffer + dataread, databufferused - dataread);
+            err = ncbbio_bufferedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
             if (err != NC_NOERR){
                 return err;
             }
 #ifdef PNETCDF_PROFILING
             t3 = MPI_Wtime();
-            ncdwp->flush_data_rd_time += t3 - t2;
+            ncbbp->flush_data_rd_time += t3 - t2;
 #endif
             dataread = databufferused;
         }
@@ -205,7 +238,7 @@ int log_flush(NC_dw *ncdwp) {
 
         j = 0;
         for(i = lb; i < ub; i++){
-            ip = ncdwp->metaidx.entries + i;
+            ip = ncbbp->metaidx.entries + i;
 
             if (ip->valid) {
                 /* start, count, stride */
@@ -229,14 +262,14 @@ int log_flush(NC_dw *ncdwp) {
 #endif
 
                 /* Replay event with non-blocking call */
-                err = ncdwp->ncmpio_driver->iput_var(ncdwp->ncp, entryp->varid, start, count, stride, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+                err = ncbbp->ncmpio_driver->iput_var(ncbbp->ncp, entryp->varid, start, count, stride, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
                 if (status == NC_NOERR) {
                     status = err;
                 }
 
 #ifdef PNETCDF_PROFILING
                 t3 = MPI_Wtime();
-                ncdwp->flush_put_time += t3 - t2;
+                ncbbp->flush_put_time += t3 - t2;
 #endif
 
                 // Move to next data location
@@ -245,7 +278,7 @@ int log_flush(NC_dw *ncdwp) {
             }
 
             /* Move to next position */
-            entryp = (NC_dw_metadataentry*)(((char*)entryp) + entryp->esize);
+            entryp = (NC_bb_metadataentry*)(((char*)entryp) + entryp->esize);
         }
 
 #ifdef PNETCDF_PROFILING
@@ -254,11 +287,11 @@ int log_flush(NC_dw *ncdwp) {
         /*
          * Wait must be called first or previous data will be corrupted
          */
-        if (ncdwp->isindep) {
-            err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, j, reqids, stats, NC_REQ_INDEP);
+        if (ncbbp->isindep) {
+            err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, j, reqids, stats, NC_REQ_INDEP);
         }
         else{
-            err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, j, reqids, stats, NC_REQ_COLL);
+            err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, j, reqids, stats, NC_REQ_COLL);
         }
         if (status == NC_NOERR) {
             status = err;
@@ -266,17 +299,17 @@ int log_flush(NC_dw *ncdwp) {
 
 #ifdef PNETCDF_PROFILING
         t3 = MPI_Wtime();
-        ncdwp->flush_wait_time += t3 - t2;
+        ncbbp->flush_wait_time += t3 - t2;
 #endif
 
         // Fill up the status for nonblocking request
         for(i = lb; i < ub; i++){
-            ip = ncdwp->metaidx.entries + i;
+            ip = ncbbp->metaidx.entries + i;
             j = 0;
             if (ip->valid) {
                 if (ip->reqid >= 0){
-                    ncdwp->putlist.reqs[ip->reqid].status = stats[j];
-                    ncdwp->putlist.reqs[ip->reqid].ready = 1;
+                    ncbbp->putlist.reqs[ip->reqid].status = stats[j];
+                    ncbbp->putlist.reqs[ip->reqid].ready = 1;
                 }
                 j++;
             }
@@ -291,40 +324,19 @@ int log_flush(NC_dw *ncdwp) {
         /*
          * In case of collective flush, we sync our status with other processes
          */
-        if (!ncdwp->isindep){
-            if (lb >= ncdwp->metaidx.nused){
-                ready = 1;
-            }
-            else{
-                ready = 0;
-            }
-
-            // Sync status
-            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncdwp->comm);
-            if (err != MPI_SUCCESS){
-                DEBUG_RETURN_ERROR(ncmpii_error_mpi2nc(err, "MPI_Allreduce"));
-            }
-        }
+        nrounds_all--;
     }
 
     /*
      * In case of collective flush, we must continue to call wait until every process is ready
      */
-    if (!ncdwp->isindep){
-        while(!ready_all){
-            // Participate collective wait
-            err = ncdwp->ncmpio_driver->wait(ncdwp->ncp, 0, NULL, NULL, NC_REQ_COLL);
-            if (status == NC_NOERR) {
-                status = err;
-            }
-
-            // Sync status
-            err = MPI_Allreduce(&ready, &ready_all, 1, MPI_INT, MPI_LAND, ncdwp->comm);
-            if (err != MPI_SUCCESS){
-                DEBUG_RETURN_ERROR(ncmpii_error_mpi2nc(err, "MPI_Allreduce"));
-            }
+    while(nrounds_all--){
+        err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, 0, NULL, NULL, NC_REQ_COLL);
+        if (status == NC_NOERR) {
+            status = err;
         }
     }
+
 
     /* Free the data buffer */
     NCI_Free(databuffer);
@@ -333,7 +345,7 @@ int log_flush(NC_dw *ncdwp) {
 
 #ifdef PNETCDF_PROFILING
     t4 = MPI_Wtime();
-    ncdwp->flush_replay_time += t4 - t1;
+    ncbbp->flush_replay_time += t4 - t1;
 #endif
 
     return status;

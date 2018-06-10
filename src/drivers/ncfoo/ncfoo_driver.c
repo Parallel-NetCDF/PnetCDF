@@ -20,6 +20,7 @@ static PNC_driver ncfoo_driver = {
     ncfoo__enddef,
     ncfoo_redef,
     ncfoo_sync,
+    ncfoo_flush,
     ncfoo_abort,
     ncfoo_set_fill,
     ncfoo_inq,

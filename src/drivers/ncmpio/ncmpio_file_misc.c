@@ -14,6 +14,7 @@
  * ncmpi_end_indep_data()   : dispatcher->end_indep_data()
  * ncmpi_inq()              : dispatcher->inq()
  * ncmpi_inq_xxx()          : dispatcher->inq_misc()
+ * ncmpi_flush()             : dispatcher->flush()
  */
 
 #ifdef HAVE_CONFIG_H
@@ -396,6 +397,13 @@ ncmpio_inq_misc(void       *ncdp,
         sprintf(value, "%d", ncp->chunk);
         MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
 
+        if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
+            MPI_Info_set(*info_used, "nc_in_place_swap", "enable");
+        else if (fIsSet(ncp->flags, NC_MODE_SWAP_OFF))
+            MPI_Info_set(*info_used, "nc_in_place_swap", "disable");
+        else
+            MPI_Info_set(*info_used, "nc_in_place_swap", "auto");
+
 #ifdef ENABLE_SUBFILING
         if (ncp->subfile_mode)
             MPI_Info_set(*info_used, "pnetcdf_subfiling", "enable");
@@ -445,5 +453,16 @@ ncmpi_delete(const char *filename,
     if (mpireturn != MPI_SUCCESS)
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
     return err;
+}
+
+
+/*----< ncmpio_flush() >------------------------------------------------------*/
+/* This API is a collective subroutine, and must be called in data mode
+ */
+int
+ncmpio_flush(void *ncdp)
+{
+    /* Flush has no effect in ncmpio */
+    return NC_NOERR;
 }
 

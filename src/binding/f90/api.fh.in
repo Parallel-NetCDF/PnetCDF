@@ -68,6 +68,10 @@ INTERFACE
                      INTEGER,                       INTENT(IN)  :: ncid
     END     FUNCTION nfmpi_sync
 
+    INTEGER FUNCTION nfmpi_flush(ncid)
+                     INTEGER,                       INTENT(IN)  :: ncid
+    END     FUNCTION nfmpi_flush
+
     INTEGER FUNCTION nfmpi_sync_numrecs(ncid)
                      INTEGER,                       INTENT(IN)  :: ncid
     END     FUNCTION nfmpi_sync_numrecs

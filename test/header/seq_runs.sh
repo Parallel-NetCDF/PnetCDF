@@ -14,3 +14,14 @@ for j in 0 1 ; do
         ${TESTSEQRUN} ./$i ${TESTOUTDIR}/$i.nc
     done
 done
+
+if [ -n "${TESTBB}" ]; then
+    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+    for j in 0 1 ; do
+        export PNETCDF_SAFE_MODE=$j
+        for i in ${TESTPROGRAMS} ; do
+            ${TESTSEQRUN} ./$i ${TESTOUTDIR}/$i.nc
+        done
+    done
+    unset PNETCDF_HINTS
+fi

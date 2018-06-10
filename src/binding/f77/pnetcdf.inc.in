@@ -26,11 +26,17 @@
       integer PNETCDF_SUBFILING
       integer PNETCDF_RELAX_COORD_BOUND
       integer PNETCDF_DEBUG_MODE
+      integer PNETCDF_LARGE_REQ
+      integer PNETCDF_NULL_BYTE_HEADER_PADDING
+      integer PNETCDF_BYTE_SWAP_IN_PLACE
 
-      parameter (PNETCDF_ERANGE_FILL       = @ENABLE_ERANGE_FILL@)
-      parameter (PNETCDF_SUBFILING         = @ENABLE_SUBFILING@)
-      parameter (PNETCDF_RELAX_COORD_BOUND = @RELAX_COORD_BOUND@)
-      parameter (PNETCDF_DEBUG_MODE        = @PNETCDF_DEBUG@)
+      parameter (PNETCDF_ERANGE_FILL              = @ENABLE_ERANGE_FILL@)
+      parameter (PNETCDF_SUBFILING                = @ENABLE_SUBFILING@)
+      parameter (PNETCDF_RELAX_COORD_BOUND        = @RELAX_COORD_BOUND@)
+      parameter (PNETCDF_DEBUG_MODE               = @PNETCDF_DEBUG@)
+      parameter (PNETCDF_LARGE_REQ                = @ENABLE_LARGE_REQ@)
+      parameter (PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@)
+      parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
 
 !
 ! external netcdf data types: (must conform with netCDF release)
@@ -335,6 +341,7 @@
       integer NF_EFILTER
       integer NF_ERCFILE
       integer NF_ENULLPAD
+      integer NF_EINMEMORY
 
       PARAMETER (NF_EHDFERR      = -101)  ! Error at HDF5 layer.
       PARAMETER (NF_ECANTREAD    = -102)  ! Can't read.
@@ -370,6 +377,7 @@
       PARAMETER (NF_EFILTER      = -132)  ! Filter operation failed.
       PARAMETER (NF_ERCFILE      = -133)  ! RC file failure
       PARAMETER (NF_ENULLPAD     = -134)  ! Header Bytes not Null-Byte padded
+      PARAMETER (NF_EINMEMORY    = -135)  ! In-memory file error
 
 !
 ! PnetCDF error codes start here
@@ -411,6 +419,8 @@
       integer NF_EINVAL_OMODE
       integer NF_EPENDING
       integer NF_EMAX_REQ
+      integer NF_EBADLOG
+      integer NF_EFLUSHED
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -477,6 +487,8 @@
       PARAMETER (NF_EINVAL_OMODE            = -235)   ! Invalid file open mode
       PARAMETER (NF_EPENDING                = -236)   ! Pending nonblocking request is found at file close
       PARAMETER (NF_EMAX_REQ                = -237)   ! Size of I/O request exceeds INT_MAX
+      PARAMETER (NF_EBADLOG                 = -238)   ! Unrecognized log file format
+      PARAMETER (NF_EFLUSHED                = -239)   ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
 
 !
 ! PnetCDF header inconsistency errors start from -250
@@ -781,6 +793,7 @@
       integer  nfmpi_set_default_format
       integer  nfmpi_inq_default_format
       integer  nfmpi_sync
+      integer  nfmpi_flush
       integer  nfmpi_abort
       integer  nfmpi_close
       integer  nfmpi_set_fill
@@ -801,6 +814,7 @@
       external nfmpi_set_default_format
       external nfmpi_inq_default_format
       external nfmpi_sync
+      external nfmpi_flush
       external nfmpi_abort
       external nfmpi_close
       external nfmpi_set_fill

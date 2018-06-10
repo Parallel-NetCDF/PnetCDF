@@ -228,7 +228,8 @@
     NF90_EMPI           = NF_EMPI          , & ! MPI operation failed.
     NF90_EFILTER        = NF_EFILTER       , & ! Filter operation failed.
     NF90_ERCFILE        = NF_ERCFILE       , & ! RC file failure.
-    NF90_ENULLPAD       = NF_ENULLPAD          ! Header Bytes not Null-Byte padded
+    NF90_ENULLPAD       = NF_ENULLPAD      , & ! Header Bytes not Null-Byte padded
+    NF90_EINMEMORY      = NF_EINMEMORY         ! In-memory file error
 
   ! This is the position of NC_NETCDF4 in cmode, counting from the
   ! right, starting (uncharacteristically for fortran) at 0. It's needed
@@ -277,6 +278,8 @@
       NF90_EINVAL_OMODE             = NF_EINVAL_OMODE             , & ! Invalid file open mode
       NF90_EPENDING                 = NF_EPENDING                 , & ! Pending nonblocking request is found at file close
       NF90_EMAX_REQ                 = NF_EMAX_REQ                 , & ! Size of I/O request exceeds INT_MAX
+      NF90_EBADLOG                  = NF_EBADLOG                  , & ! Unrecognized log file format
+      NF90_EFLUSHED                 = NF_EFLUSHED                 , & ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions inconsistent among processes
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! inconsistent file open modes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions

@@ -7,7 +7,7 @@
 # @configure_input@
 
 SUBDIRS = C tutorial
-DIST_SUBDIRS = C tutorial CXX F77 F90 datawarp
+DIST_SUBDIRS = C tutorial CXX F77 F90 burst_buffer
 
 if HAS_MPICXX
 SUBDIRS += CXX
@@ -20,8 +20,8 @@ SUBDIRS += F90
 endif
 endif
 
-if BUILD_DRIVER_DW
-SUBDIRS += datawarp
+if BUILD_DRIVER_BB
+SUBDIRS += burst_buffer
 endif
 
 EXTRA_DIST = README

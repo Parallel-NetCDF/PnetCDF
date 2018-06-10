@@ -282,6 +282,7 @@
         external        test_nf90mpi_redef4
         external        test_nf90mpi_enddef
         external        test_nf90mpi_sync
+        external        test_nf90mpi_flush
         external        test_nf90mpi_abort
         external        test_nf90mpi_def_dim
         external        test_nf90mpi_rename_dim
@@ -689,6 +690,7 @@
 !           /* test_nf90mpi_enddef calls test_nf90mpi_redef, no need to repeaat */
             endif
             call test('nf90mpi_sync', test_nf90mpi_sync)
+            call test('nf90mpi_flush', test_nf90mpi_flush)
             call test('nf90mpi_abort', test_nf90mpi_abort)
             call test('nf90mpi_def_dim', test_nf90mpi_def_dim)
             call test('nf90mpi_rename_dim', test_nf90mpi_rename_dim)
