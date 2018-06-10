@@ -107,8 +107,8 @@ AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
-AH_TEMPLATE([ENABLE_IN_PLACE_SWAP],     [Define if to enable in-place byte swap])
-AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
+dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP],     [Define if to enable in-place byte swap])
+dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
@@ -1099,17 +1099,38 @@ AC_ARG_ENABLE([in-place-swap],
                      machines. @<:@default: auto@:>@])],
     [in_place_swap=${enableval}], [in_place_swap=auto]
 )
-if test "x${in_place_swap}" = xyes ; then
-   AC_DEFINE(ENABLE_IN_PLACE_SWAP)
-fi
-if test "x${in_place_swap}" = xno ; then
-   if test "x${ac_cv_c_bigendian}" = xyes ; then
-      AC_MSG_WARN([--disable-in-place-swap takes no effect on Big Endian])
-      in_place_swap=yes
-   else
-      AC_DEFINE(DISABLE_IN_PLACE_SWAP)
+UD_MSG_DEBUG([in_place_swap=$in_place_swap])
+dnl ENABLE_IN_PLACE_SWAP=0
+dnl if test "x${in_place_swap}" = xyes ; then
+dnl    ENABLE_IN_PLACE_SWAP=1
+dnl fi
+dnl AC_DEFINE(ENABLE_IN_PLACE_SWAP, $ENABLE_IN_PLACE_SWAP)
+dnl DISABLE_IN_PLACE_SWAP=0
+dnl if test "x${in_place_swap}" = xno ; then
+dnl    if test "x${ac_cv_c_bigendian}" = xyes ; then
+dnl       AC_MSG_WARN([--disable-in-place-swap takes no effect on Big Endian])
+dnl       in_place_swap=yes
+dnl    else
+dnl       DISABLE_IN_PLACE_SWAP=1
+dnl    fi
+dnl fi
+dnl AC_DEFINE(DISABLE_IN_PLACE_SWAP, $DISABLE_IN_PLACE_SWAP)
+
+dnl IN_PLACE_SWAP being -1 corresponds to "auto"
+IN_PLACE_SWAP=-1
+if test "x${ac_cv_c_bigendian}" = xyes -a "x${in_place_swap}" != xauto ; then
+   AC_MSG_WARN([--(en/dis)able-in-place-swap takes no effect on Big Endian])
+else
+   if test "x${in_place_swap}" = xyes ; then
+      dnl IN_PLACE_SWAP being 1 corresponds to "yes"
+      IN_PLACE_SWAP=1
+   fi
+   if test "x${in_place_swap}" = xno ; then
+      dnl IN_PLACE_SWAP being 0 corresponds to "no"
+      IN_PLACE_SWAP=0
    fi
 fi
+AC_SUBST(IN_PLACE_SWAP, $IN_PLACE_SWAP)dnl for src/include/pnetcdf-h.in
 dnl in_place_swap can be yes, no, auto
 AC_SUBST(in_place_swap)dnl for src/utils/pnetcdf-config.in
 
@@ -1323,23 +1344,25 @@ ENABLE_ERANGE_FILL=0
 if test "x$enable_erange_fill" = "xyes" ; then
    ENABLE_ERANGE_FILL=1
 fi
+UD_MSG_DEBUG(enable_erange_fill=$enable_erange_fill)
 AC_SUBST(ENABLE_ERANGE_FILL)
 AM_CONDITIONAL(ENABLE_ERANGE_FILL, [test x$enable_erange_fill = xyes])
 
 AC_ARG_ENABLE([relax-coord-bound],
-   [AS_HELP_STRING([--enable-relax-coord-bound],
-                   [Enable relaxed error NC_EINVALCOORDS to allow coordinate
+   [AS_HELP_STRING([--disable-relax-coord-bound],
+                   [Use stricter rule for error NC_EINVALCOORDS to disallow coordinate
                     start argument equal to dimension size when argument
-                    count is zero. @<:@default: disabled@:>@])],
-   [enable_relax_coord_bound=${enableval}], [enable_relax_coord_bound=no]
+                    count is zero. @<:@default: enabled@:>@])],
+   [relax_coord_bound=${enableval}], [relax_coord_bound=yes]
 )
+UD_MSG_DEBUG(relax_coord_bound=$relax_coord_bound)
 RELAX_COORD_BOUND=0
-if test "x$enable_relax_coord_bound" = "xyes" ; then
-   AC_DEFINE(RELAX_COORD_BOUND)
+if test "x$relax_coord_bound" = "xyes" ; then
    RELAX_COORD_BOUND=1
+   AC_DEFINE(RELAX_COORD_BOUND)
 fi
 AC_SUBST(RELAX_COORD_BOUND)
-AM_CONDITIONAL([RELAX_COORD_BOUND], [test "x$RELAX_COORD_BOUND" = x1])
+AM_CONDITIONAL([RELAX_COORD_BOUND], [test "x$relax_coord_bound" = xyes])
 
 AC_ARG_ENABLE([doxygen],
    [AS_HELP_STRING([--enable-doxygen], [Enable generation of documentation. @<:@default: disabled@:>@])],
@@ -1595,9 +1618,9 @@ if test "x${enable_subfiling}" = xyes; then
    echo "\
               Subfiling support                           - enabled"
 fi
-if test "x${enable_relax_coord_bound}" = xyes; then
+if test "x${relax_coord_bound}" = xno; then
    echo "\
-              Relax start coordinate bound check          - enabled"
+              Relax start coordinate bound check          - disabled"
 fi
 if test "x${ac_cv_c_bigendian}" = xno ; then
    if test "x${in_place_swap}" = xno ; then

@@ -25,7 +25,7 @@
 #define PNETCDF_DEBUG_MODE               @PNETCDF_DEBUG@
 #define PNETCDF_LARGE_REQ                @ENABLE_LARGE_REQ@
 #define PNETCDF_NULL_BYTE_HEADER_PADDING @ENABLE_NULL_BYTE_HEADER_PADDING@
-
+#define PNETCDF_BYTE_SWAP_IN_PLACE       @IN_PLACE_SWAP@
 
 #if defined(__cplusplus)
 extern "C" {

@@ -199,6 +199,7 @@ ncmpio_create(MPI_Comm     comm,
     /* PnetCDF default mode is no fill */
     fClr(ncp->flags, NC_MODE_FILL);
 
+#if 0
     /* default mode for in-place byte swap is auto */
 #ifdef DISABLE_IN_PLACE_SWAP
     /* if in-place byte swap mode is disabled at configure time */
@@ -206,6 +207,7 @@ ncmpio_create(MPI_Comm     comm,
 #elif defined(ENABLE_IN_PLACE_SWAP)
     /* if in-place byte swap mode is enabled at configure time */
     fSet(ncp->flags, NC_MODE_SWAP_ON);
+#endif
 #endif
 
     ncp->ncid = ncid;

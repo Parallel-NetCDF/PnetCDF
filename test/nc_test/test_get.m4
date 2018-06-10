@@ -492,12 +492,12 @@ ifelse(`$1',`uchar',`ifdef(`PNETCDF',,``#'endif')')
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             start[j] = var_shape[i][j]+1; /* should cause NC_EINVALCOORDS */
             err = GetVara($1)(ncid, i, start, edge, value);
@@ -763,12 +763,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             start[j] = var_shape[i][j]+1;  /* should cause NC_EINVALCOORDS */
             err = GetVars($1)(ncid, i, start, edge, stride, value);
@@ -1063,12 +1063,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             start[j] = var_shape[i][j]+1;  /* should cause NC_EINVALCOORDS */
             err = GetVarm($1)(ncid, i, start, edge, stride, imap, value);
