@@ -351,6 +351,7 @@ extern int test_ncmpi_create(void);
 extern int test_ncmpi_redef(int numGatts, int numVars);
 extern int test_ncmpi_enddef(int numGatts, int numVars);
 extern int test_ncmpi_sync(int numGatts, int numVars);
+extern int test_ncmpi_flush(int numGatts, int numVars);
 extern int test_ncmpi_abort(int numGatts, int numVars);
 extern int test_ncmpi_def_dim(int numVars);
 extern int test_ncmpi_rename_dim(void);

@@ -58,19 +58,21 @@ define(`GOTO_CHECK',`{ DEBUG_ASSIGN_ERROR(err, $1) goto err_check; }')dnl
 
 /*----< check_EINVALCOORDS() >-----------------------------------------------*/
 static
-int check_EINVALCOORDS(MPI_Offset start,
+int check_EINVALCOORDS(int        strict_coord_bound,
+                       MPI_Offset start,
                        MPI_Offset count,
                        MPI_Offset shape)
 {
-#ifdef RELAX_COORD_BOUND
-    if (start < 0 || start > shape)
-        DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-    if (start == shape && count > 0)
-        DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-#else
-    if (start < 0 || start >= shape)
-        DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-#endif
+    if (strict_coord_bound) {
+        if (start < 0 || start >= shape)
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+    }
+    else {
+        if (start < 0 || start > shape)
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+        if (start == shape && count > 0)
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+    }
     return NC_NOERR;
 }
 
@@ -140,7 +142,8 @@ int check_start_count_stride(PNC              *pncp,
         /* read cannot go beyond current numrecs */
         if (isRead) {
             MPI_Offset len = (count == NULL) ? 1 : count[0];
-            err = check_EINVALCOORDS(start[0], len, shape[0]);
+            err = check_EINVALCOORDS(pncp->flag & NC_MODE_STRICT_COORD_BOUND,
+                                     start[0], len, shape[0]);
             if (err != NC_NOERR) return err;
         }
         firstDim = 1; /* done for checking the record dimension */
@@ -150,7 +153,8 @@ int check_start_count_stride(PNC              *pncp,
     ndims = pncp->vars[varid].ndims;
     for (i=firstDim; i<ndims; i++) {
         MPI_Offset len = (count == NULL) ? 1 : count[i];
-        err = check_EINVALCOORDS(start[i], len, shape[i]);
+        err = check_EINVALCOORDS(pncp->flag & NC_MODE_STRICT_COORD_BOUND,
+                                 start[i], len, shape[i]);
         if (err != NC_NOERR) return err;
     }
 

@@ -167,6 +167,16 @@ data written by PnetCDF APIs may be cached by local file system on each compute
 node.  This API flushes cached data by calling MPI_File_sync.
 .RE
 .HP
+\fBfunction nf90mpi_flush(\fIncid\fP)\fR
+.RS
+.nf
+integer, intent(in) :: ncid
+integer :: nf90mpi_flush
+.fi
+.sp
+Flush the data in the buffer.
+.RE
+.HP
 \fBfunction nf90mpi_abort(\fIncid\fP)\fR
 .RS
 .nf

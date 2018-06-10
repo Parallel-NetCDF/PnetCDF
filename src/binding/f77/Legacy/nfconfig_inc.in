@@ -2,7 +2,7 @@
     Copyright (C) 2003, Northwestern University and Argonne National Laboratory
     See COPYRIGHT notice in top-level directory.
 
-    $Id$ 
+    $Id$
 #endif
 
 
@@ -13,7 +13,7 @@
 #if 0
     Do not have C-style comments in here because this file is processed
     by both the FORTRAN compiler (for the nf_test/ stuff) and the C
-    compiler (for the FORTRAN-callable interface routines) and some 
+    compiler (for the FORTRAN-callable interface routines) and some
     FORTRAN preprocessors do not understand the /*...*/ syntax.
 #endif
 

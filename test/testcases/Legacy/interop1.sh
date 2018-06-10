@@ -4,7 +4,7 @@
 
 # Step 0: see if we have the utilities in our path:
 
-which ncgen >/dev/null 
+which ncgen >/dev/null
 
 if [ $? -ne 0 ] ; then
 	echo "could not find 'ncgen' (from serial netcdf) in path. exiting"

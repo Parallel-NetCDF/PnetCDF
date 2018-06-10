@@ -33,6 +33,9 @@ extern int
 ncmpio_sync(void *ncdp);
 
 extern int
+ncmpio_flush(void *ncdp);
+
+extern int
 ncmpio_abort(void *ncdp);
 
 extern int

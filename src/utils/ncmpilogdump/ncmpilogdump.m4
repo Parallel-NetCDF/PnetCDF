@@ -33,7 +33,7 @@ define(`PRINTTYPE',dnl
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <../../drivers/ncdwio/ncdwio_driver.h>
+#include <../../drivers/ncbbio/ncbbio_driver.h>
 #include <pnetcdf.h>
 
 int main(int argc, char *argv[]) {
@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
     MPI_Offset *start, *count, *stride;
     char *tail;
     char *Data=NULL, *Meta=NULL;
-    NC_dw_metadataheader *Header;
-    NC_dw_metadataentry *E;
+    NC_bb_metadataheader *Header;
+    NC_bb_metadataentry *E;
 
     if (argc < 2){
         printf("Usage: ./ncmpilogdump <metadata log> [<data log>]\n");
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Parse header */
-    Header = (NC_dw_metadataheader*)Meta;
+    Header = (NC_bb_metadataheader*)Meta;
 
     printf("Metadata log header:\n");
     printf("Magic:\t\t\t\t\t\t%.8s\n", Header->magic);
@@ -133,14 +133,14 @@ int main(int argc, char *argv[]) {
     offset = Header->entry_begin;
     for (j = 0; j < Header->num_entries; j++) {
         /* Parse metadata entry header */
-        E = (NC_dw_metadataentry*)(Meta + offset);
-        tail = (char*)E + sizeof(NC_dw_metadataentry);
+        E = (NC_bb_metadataentry*)(Meta + offset);
+        tail = (char*)E + sizeof(NC_bb_metadataentry);
         start = (MPI_Offset*)tail;
         count = start + E->ndims;
         stride = count + E->ndims;
 
         /* Original function call */
-        printf("ncmpi_put_var");
+        printf("ncmpi_put_");
         /* put_vara or put_vars */
         switch (E->api_kind){
 foreach(`apikind', (`var1, var, vara, vars'), `PRINTAPIKIND(apikind, upcase(apikind))')dnl

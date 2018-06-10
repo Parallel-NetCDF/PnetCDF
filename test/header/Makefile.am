@@ -34,6 +34,11 @@ TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
+if BUILD_DRIVER_BB
+TESTBB = 1
+TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
+
 # consistency check should be run on more than one process
 # TESTS = seq_runs.sh
 
@@ -53,6 +58,11 @@ ptest ptest4: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptest2: $(TESTPROGRAMS)
@@ -60,6 +70,11 @@ ptest2: $(TESTPROGRAMS)
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	unset PNETCDF_HINTS ; \
+	) ; fi ; \
 	) ; done ; } ; done
 
 ptests: ptest2 ptest4

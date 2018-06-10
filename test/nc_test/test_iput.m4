@@ -250,11 +250,25 @@ TestFunc(var1)_$1(VarArgs)
     int canConvert;      /* Both text or both numeric */
     IntType j, index[MAX_RANK];
     $1 value[1];
+    int bb_enabled=0;
+
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -356,6 +370,9 @@ ifdef(`PNETCDF',`dnl
                             error("wait_all: status=%s", APIFunc(strerror)(status));
                     }
                 } else {
+                    if (bb_enabled){
+                        err = ncmpi_flush(ncid);
+                    }
                     IF (err != NC_ERANGE) {
                         EXPECT_ERR(NC_ERANGE, err)
                         error("\n\t\tfor type %s value %.17e %ld",
@@ -515,11 +532,24 @@ TestFunc(var)_$1(VarArgs)
     int allInExtRange;   /* all values within external range? */
     IntType j, index[MAX_RANK];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -586,6 +616,9 @@ TestFunc(var)_$1(VarArgs)
                         error("wait_all: status=%s", APIFunc(strerror)(status));
                 }
             } else {
+                if (bb_enabled){
+                    err = ncmpi_flush(ncid);
+                }
                 IF (err != NC_ERANGE) {
                     EXPECT_ERR(NC_ERANGE, err)
                     error("\n\t\tfor type %s value %.17e %ld",
@@ -662,6 +695,9 @@ TestFunc(var)_$1(VarArgs)
                         error("wait_all: status=%s", APIFunc(strerror)(status));
                 }
             } else {
+                if (bb_enabled){
+                    err = ncmpi_flush(ncid);
+                }
                 IF (err != NC_ERANGE) {
                     EXPECT_ERR(NC_ERANGE, err)
                     error("\n\t\tfor type %s value %.17e %ld",
@@ -818,12 +854,12 @@ ifdef(`PNETCDF',`dnl
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
             start[j] = var_shape[i][j];
             err = APIFunc(iput_vara)(ncid, i, start, edge, value, 0, datatype, &reqid);
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1; /* out of boundary check */
@@ -908,11 +944,26 @@ TestFunc(vara)_$1(VarArgs)
     IntType start[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
 
+    int bb_enabled=0;
+
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
     }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
+
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
     IF (err != NC_NOERR)
@@ -1032,12 +1083,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1;     /* out of boundary check */
@@ -1097,6 +1148,9 @@ ifdef(`PNETCDF',`dnl
                             error("wait_all: status=%s", APIFunc(strerror)(status));
                     }
                 } else {
+                    if (bb_enabled){
+                        err = ncmpi_flush(ncid);
+                    }
                     IF (err != NC_ERANGE)
                         EXPECT_ERR(NC_ERANGE, err)
                     else { /* NC_ERANGE does not invalidate the nonblocking
@@ -1258,12 +1312,12 @@ ifdef(`PNETCDF',`dnl
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
             start[j] = var_shape[i][j];
             err = APIFunc(iput_vars)(ncid, i, start, edge, stride, value, 0, datatype, &reqid);
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1; /* out of boundary check */
@@ -1372,11 +1426,24 @@ TestFunc(vars)_$1(VarArgs)
     IntType index2[MAX_RANK], count[MAX_RANK], sstride[MAX_RANK];
     PTRDType stride[MAX_RANK];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -1504,12 +1571,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1;     /* out of boundary check */
@@ -1590,6 +1657,9 @@ ifdef(`PNETCDF',`dnl
                                 error("wait_all: status=%s", APIFunc(strerror)(status));
                         }
                     } else {
+                        if (bb_enabled){
+                            err = ncmpi_flush(ncid);
+                        }
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         else { /* NC_ERANGE does not invalidate the nonblocking
@@ -1753,12 +1823,12 @@ ifdef(`PNETCDF',`dnl
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
             start[j] = var_shape[i][j];
             err = APIFunc(iput_varm)(ncid, i, start, edge, stride, imap, value, 0, datatype, &reqid);
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1; /* out of boundary check */
@@ -1873,11 +1943,24 @@ TestFunc(varm)_$1(VarArgs)
     IntType index2[MAX_RANK], count[MAX_RANK], sstride[MAX_RANK];
     PTRDType stride[MAX_RANK], imap[MAX_RANK];
     $1 value[MAX_NELS];
+    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
         error("create: %s", APIFunc(strerror)(err));
         return nok;
+    }
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
     }
 
     err = APIFunc(inq_format)(ncid, &cdf_format);
@@ -2005,12 +2088,12 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifdef RELAX_COORD_BOUND
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#else
+#ifndef RELAX_COORD_BOUND
             IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
                 EXPECT_ERR(NC_EINVALCOORDS, err)
+#else
+            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                EXPECT_ERR(NC_NOERR, err)
 #endif
             ELSE_NOK
             start[j] = var_shape[i][j]+1;     /* out of boundary check */
@@ -2098,6 +2181,9 @@ ifdef(`PNETCDF',`dnl
                                 error("wait_all: status=%s", APIFunc(strerror)(status));
                         }
                     } else {
+                        if (bb_enabled){
+                            err = ncmpi_flush(ncid);
+                        }
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
                         else { /* NC_ERANGE does not invalidate the nonblocking
