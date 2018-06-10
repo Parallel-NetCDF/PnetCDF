@@ -814,11 +814,14 @@ diff -u automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
 Note on burst buffer driver
 -----------------------------------------------------------------------------
 
-burst buffer driver relies on ncmpio driver to write/read NetCDF files
-burst buffer driver uses subroutines of ncmpio driver internally.
-Whever the structure of PNC_Driver changes, not only the interface of burst buffer
-driver needs to be updated but also its internal ncmpio driver related codes.
+* Burst buffer driver relies on ncmpio driver to write/read NetCDF files, as it
+  uses subroutines of ncmpio driver internally. When the structure of
+  PNC_Driver is modified, not only the interface of burst buffer driver needs
+  to be updated but also its internal ncmpio driver related codes.
 
-Known issue in burst buffer driver:
-1. vard API is not supported. It will be forward to ncmpio directly.
+* A utility program named ncmpilogdump has been developed to print on screen
+  the contents of log files stored in the burst buffer.
+
+* Known issues:
+  1.vard API is not supported. It will be carried out by ncmpio driver directly.
 

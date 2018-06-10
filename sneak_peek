@@ -140,8 +140,6 @@ This is essentially a placeholder for the next release note ...
       necessary.
 
   o New/updated utility program
-    * ncmpilogdump prints on screen the contents of log files stored in the
-      burst buffer.
     * ncvalidator adds a new option -t to turn on tracing mode which prints all
       successfully validated metadata till the first error encountered.
     * ncvalidator adds a check to detect whether there are two or more
