@@ -234,7 +234,7 @@ ncmpi_create(MPI_Comm    comm,
              int        *ncidp)
 {
     int default_format, rank, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, root_cmode;
+    int safe_mode=0, mpireturn, root_cmode, relax_coord_bound;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -251,8 +251,9 @@ ncmpi_create(MPI_Comm    comm,
 
 #ifdef PNETCDF_DEBUG
     safe_mode = 1;
-    /* this configure time setting will be overwritten by the run-time
-     * environment variable PNETCDF_SAFE_MODE */
+    /* When debug mode is enabled at the configure time, safe_mode is by
+     * default enabled. This can be overwritten by the run-time environment
+     * variable PNETCDF_SAFE_MODE */
 #endif
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
@@ -262,6 +263,22 @@ ncmpi_create(MPI_Comm    comm,
         else                 safe_mode = 1;
         /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
          * be '\0' (null character). In this case, safe_mode is enabled */
+    }
+
+    /* get environment variable PNETCDF_RELAX_COORD_BOUND
+     * if it is set to 0, then we perform a strict start bound check
+     */
+#ifndef RELAX_COORD_BOUND
+    relax_coord_bound = 0;
+#else
+    relax_coord_bound = 1;
+#endif
+    if ((env_str = getenv("PNETCDF_RELAX_COORD_BOUND")) != NULL) {
+        if (*env_str == '0') relax_coord_bound = 0;
+        else                 relax_coord_bound = 1;
+        /* if PNETCDF_RELAX_COORD_BOUND is set but without a value, *env_str
+         * can be '\0' (null character). This is equivalent to setting
+         * relax_coord_bound to 1 */
     }
 
     /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
@@ -288,7 +305,7 @@ ncmpi_create(MPI_Comm    comm,
     /* continue to use root's cmode to create the file, but will report cmode
      * inconsistency error, if there is any */
 
-    /* combine user's info and PNETCDF_HINTS env variable */
+    /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
 #ifdef BUILD_DRIVER_FOO
@@ -374,7 +391,8 @@ ncmpi_create(MPI_Comm    comm,
     pncp->flag       = NC_MODE_DEF | NC_MODE_CREATE;
     pncp->ncp        = ncp;
 
-    if (safe_mode)         pncp->flag |= NC_MODE_SAFE;
+    if (safe_mode)          pncp->flag |= NC_MODE_SAFE;
+    if (!relax_coord_bound) pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
     /* if (enable_foo_driver) pncp->flag |= NC_MODE_BB; */
 
     /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
@@ -416,7 +434,7 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, nalloc, rank, format, msg[2], status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, root_omode;
+    int safe_mode=0, mpireturn, root_omode, relax_coord_bound;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -433,8 +451,9 @@ ncmpi_open(MPI_Comm    comm,
 
 #ifdef PNETCDF_DEBUG
     safe_mode = 1;
-    /* this configure time setting will be overwritten by the run-time
-     * environment variable PNETCDF_SAFE_MODE */
+    /* When debug mode is enabled at the configure time, safe_mode is by
+     * default enabled. This can be overwritten by the run-time environment
+     * variable PNETCDF_SAFE_MODE */
 #endif
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
@@ -444,6 +463,22 @@ ncmpi_open(MPI_Comm    comm,
         else                 safe_mode = 1;
         /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
          * be '\0' (null character). In this case, safe_mode is enabled */
+    }
+
+    /* get environment variable PNETCDF_RELAX_COORD_BOUND
+     * if it is set to 0, then we perform a strict start bound check
+     */
+#ifndef RELAX_COORD_BOUND
+    relax_coord_bound = 0;
+#else
+    relax_coord_bound = 1;
+#endif
+    if ((env_str = getenv("PNETCDF_RELAX_COORD_BOUND")) != NULL) {
+        if (*env_str == '0') relax_coord_bound = 0;
+        else                 relax_coord_bound = 1;
+        /* if PNETCDF_RELAX_COORD_BOUND is set but without a value, *env_str
+         * can be '\0' (null character). This is equivalent to setting
+         * relax_coord_bound to 1 */
     }
 
     /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
@@ -491,7 +526,7 @@ ncmpi_open(MPI_Comm    comm,
     /* continue to use root's omode to open the file, but will report omode
      * inconsistency error, if there is any */
 
-    /* combine user's info and PNETCDF_HINTS env variable */
+    /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
 #ifdef BUILD_DRIVER_FOO
@@ -590,8 +625,10 @@ ncmpi_open(MPI_Comm    comm,
     pncp->flag       = 0;
     pncp->ncp        = ncp;
     pncp->format     = format;
+
     if (!fIsSet(omode, NC_WRITE)) pncp->flag |= NC_MODE_RDONLY;
     if (safe_mode)                pncp->flag |= NC_MODE_SAFE;
+    if (!relax_coord_bound)       pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
     /* if (enable_foo_driver)        pncp->flag |= NC_MODE_BB; */
 
     /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
