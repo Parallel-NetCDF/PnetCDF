@@ -564,3 +564,10 @@ nc4io_sync(void *ncdp)
     return NC_NOERR;
 }
 
+int
+nc4io_flush(void *ncdp)
+{
+    // NetCDF does not have flush
+    return NC_NOERR;
+}
+

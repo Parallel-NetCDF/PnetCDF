@@ -48,6 +48,9 @@ extern int
 nc4io_sync(void *ncdp);
 
 extern int
+nc4io_flush(void *ncdp);
+
+extern int
 nc4io_abort(void *ncdp);
 
 extern int
