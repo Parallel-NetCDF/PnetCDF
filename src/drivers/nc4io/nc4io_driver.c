@@ -20,6 +20,7 @@ static PNC_driver nc4io_driver = {
     nc4io__enddef,
     nc4io_redef,
     nc4io_sync,
+    nc4io_flush,
     nc4io_abort,
     nc4io_set_fill,
     nc4io_inq,
