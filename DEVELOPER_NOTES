@@ -65,9 +65,9 @@ Tasks immediately before a new release (must run in the following order)
                                  ^^^^^
 
  3. Update file "RELEASE_NOTES".
-    Copy the contents of file "sneak_peek" into file "RELEASE_NOTES".
+    Copy the contents of file "ChangeLog" into file "RELEASE_NOTES".
     Add the release version and date at the top of file "RELEASE_NOTES".
-    Clear up file "sneak_peek" (reset all items to none)
+    Clear up file "ChangeLog" (reset all items to none)
 
  4. Update the release date (skip this step for 1.9.0 and later)
     Below describe how to set the release date for 1.8.1 and prior.
