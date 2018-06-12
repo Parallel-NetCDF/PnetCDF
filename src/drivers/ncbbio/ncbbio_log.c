@@ -34,9 +34,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     int i, rank, np, err, flag, masterrank;
     char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
     char *abspath, *fname, *path, *fdir = NULL;
-    // char *private_path = NULL, *stripe_path = NULL;
     char *logbasep = ".";
-    // int log_per_node = 0;
 #ifdef PNETCDF_PROFILING
     double t1, t2;
 #endif
