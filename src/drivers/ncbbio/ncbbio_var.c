@@ -455,7 +455,7 @@ ncbbio_put_varn(void              *ncdp,
             if (bnelems != (int)bnelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             cbuf = NCI_Malloc(bnelems);
-            MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)bnelems,
+            MPI_Pack((void*)buf, (int)bufcount, buftype, cbuf, (int)bnelems,
                      &position, MPI_COMM_SELF);
         }
     }
