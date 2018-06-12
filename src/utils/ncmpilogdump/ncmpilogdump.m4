@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
         printf("Data representation:\t\tinternal\n");
     }
     printf("Max number of dimensions:\t%lld\n", Header->max_ndims);
-    printf("Begin of entry record:\t\t\%lld\n", Header->entry_begin);
+    printf("Begin of entry record:\t\t%lld\n", Header->entry_begin);
     printf("Number of entries:\t\t\t%lld\n", Header->num_entries);
 
     printf("\nData log header:%.8s\n", Header->magic);
