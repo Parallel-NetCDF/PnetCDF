@@ -194,11 +194,17 @@ This is essentially a placeholder for the next release note ...
 
   o New test program
     * test/burst_buffer/bb_bsize.c
+      Test whether the burst buffer driver works under limited flush buffer size
     * test/burst_buffer/bb_hints.c
+      Test file hints related to the burst buffer driver
     * test/burst_buffer/bb_many_reqs.c
+      Stress test the nonblocking request pool in the burst buffer driver
     * test/burst_buffer/bb_nonblocking.c
+      Test the behavior of burst buffer driver on nonblocking I/O
+      A flushed request can never be canceled
+      Canceled request can't be processed during flushing
     * test/burst_buffer/highdim.c
-    * test/burst_buffer/log.c
+      Test whether the burst buffer driver can handle very high dimension variables.
     * test/testcases/test_fillvalue.c - tests PnetCDF allows to put attribute
       _FillValue for global variable and for non-global variable, requires the
       data type of attribute _FillValue be the same as the variable's.
