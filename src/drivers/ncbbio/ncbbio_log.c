@@ -155,30 +155,30 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     }
 
 #if 0
-    /* Determine log to process mapping *
+    /* Determine log to process mapping */
     if (rank == 0){
         int j;
         char abs_private_path[NC_LOG_PATH_MAX], abs_stripe_path[NC_LOG_PATH_MAX];
 
-        /* Resolve BB_JOB_PRIVATE and BB_JOB_STRIPED into absolute path*
+        /* Resolve BB_JOB_PRIVATE and BB_JOB_STRIPED into absolute path */
         memset(abs_private_path, 0, sizeof(abs_private_path));
         memset(abs_stripe_path, 0, sizeof(abs_stripe_path));
         if (private_path != NULL){
             abspath = realpath(private_path, abs_private_path);
             if (abspath == NULL){
-                /* Can not resolve absolute path *
+                /* Can not resolve absolute path */
                 memset(abs_private_path, 0, sizeof(abs_private_path));
             }
         }
         if (stripe_path != NULL){
             abspath = realpath(stripe_path, abs_stripe_path);
             if (abspath == NULL){
-                /* Can not resolve absolute path *
+                /* Can not resolve absolute path */
                 memset(abs_stripe_path, 0, sizeof(abs_stripe_path));
             }
         }
 
-        /* Match against logbase *
+        /* Match against logbase */
         for(i = 0; i < NC_LOG_PATH_MAX; i++){
             if (logbase[i] == '\0' || abs_private_path[i] == '\0'){
                 break;
@@ -198,7 +198,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
         /* Whichever has longer matched prefix is considered a match
          * Use log per node only when striped mode wins
-         *
+         */
         if (j > i) {
             log_per_node = 1;
         }
@@ -206,7 +206,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
             log_per_node = 0;
         }
 
-        /* Hints can overwrite the default action *
+        /* Hints can overwrite the default action */
         if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE){
             log_per_node = 1;
         }
