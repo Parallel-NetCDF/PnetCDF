@@ -41,12 +41,18 @@ void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info){
     if (flag && strcasecmp(value, "enable") == 0){
         ncbbp->hints |= NC_LOG_HINT_LOG_OVERWRITE;
     }
-    // Use shared logfile (disable)
+#if MPI_VERSION >= 3
+    /* Use shared logfiles among processes on the same compute node (default is
+     * disabled). This feature depends on the availability of MPI constant
+     * MPI_COMM_TYPE_SHARED, which is first defined in MPI standard version 3.0
+     */
     MPI_Info_get(info, "nc_burst_buf_shared_logs", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag && strcasecmp(value, "enable") == 0){
         ncbbp->hints |= NC_LOG_HINT_LOG_SHARE;
     }
+#endif
+
     // Delete the logfile after file closing (enable)
     MPI_Info_get(info, "nc_burst_buf_del_on_close", MPI_MAX_INFO_VAL - 1,
                  value, &flag);

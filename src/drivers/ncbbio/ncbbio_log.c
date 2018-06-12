@@ -154,7 +154,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         NCI_Free(fdir);
     }
 
-    /*
+#if 0
     /* Determine log to process mapping *
     if (rank == 0){
         int j;
@@ -212,18 +212,17 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         }
     }
     MPI_Bcast(&log_per_node, 1, MPI_INT, 0, ncbbp->comm);
-    /*
+#endif
 
     /* Communicator for processes sharing log files */
-    if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE){
-        log_per_node = 1;
-    }
-    if (log_per_node){
+#if MPI_VERSION >= 3
+    if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE) {
         MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncbbp->logcomm));
         MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
-    }
-    else{
+    } else
+#endif
+    {
         ncbbp->logcomm = MPI_COMM_SELF;
         masterrank = rank;
     }
