@@ -82,9 +82,12 @@ Tasks immediately before a new release (must run in the following order)
  6. Create a new SVN tag on svn repo.
     Run command below to duplicate the current trunk to a new tag:
 
-    svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
-             -m "Tagging release version 1.8.1"
+        svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
+                 https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
+                 -m "Tagging release version 1.8.1"
+
+    For GitHub tag, use command
+        git tag -a v1.10.0 -m "Tagging release version 1.10.0"
 
  7. Generate release tar balls
     a. Generate a new "configure" file
@@ -189,8 +192,8 @@ Note on autotools version used for software development
 =====================================================
 Working on configure.in or configure.ac
 =====================================================
- - Debugging: change the value of variable _DEBUG to yes
-   This will print some messages for debugging purpose.
+ - Debugging: add "pnc_ac_debug=yes" to the configure command line to print
+   debugging messages on screen.
 
 =====================================================
 Conform with netCDF
@@ -206,8 +209,8 @@ Conform with netCDF
 
  - Similarly, check Fortran error codes defined as parameters in
      src/libf/pnetcdf.inc.in           or src/binding/f77/pnetcdf.inc.in
-     src/libf90/nf90_constants.f90     or src/binding/f90/nf90_constants.f90
-     src/libf90/nfmpi_constants.f90.in or src/binding/f90/nfmpi_constants.f90.in
+     src/libf90/nf90_constants.f90     or src/binding/f90/nf90_constants.fh
+     src/libf90/nfmpi_constants.f90.in or src/binding/f90/nfmpi_constants.fh.in
 
  - PnetCDF error codes start from -201
  - PnetCDF error codes for inconsistent header data start from -250
@@ -373,8 +376,8 @@ Note on PnetCDF internal function and variable name convention
 Note on debugging
 =====================================================
 1. Enable debugging option (--enable-debug) at the configure time can trace the
-   usage of malloc and whether there is a malloc residue. All PnetCDF
-   development should call NCI_Malloc, NCI_Calloc, NCI_Realloc, and NCI_Free,
+   usage of malloc and whether there is a malloc residue. All PnetCDF internal
+   subroutines should call NCI_Malloc, NCI_Calloc, NCI_Realloc, and NCI_Free,
    instead of malloc, calloc, realloc, and free. When adding a new test or
    example program, please add a check for any malloc residue at the end. This
    is to make sure PnetCDF properly free up all malloc used internally. The
@@ -759,7 +762,7 @@ diff -u autoconf-2.69/lib/autoconf/status.m4 Origin/autoconf-2.69/lib/autoconf/s
 +++ Origin/autoconf-2.69/lib/autoconf/status.m4	2012-04-24 21:37:26.000000000 -0500
 @@ -1266,12 +1266,6 @@
  test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
- 
+
  m4_ifdef([_AC_SEEN_CONFIG(HEADERS)], [DEFS=-DHAVE_CONFIG_H], [AC_OUTPUT_MAKE_DEFS()])
 -if test "x$FC_DEFINE" != "x-D" ; then
 -   ac_fc_define_sed_str="s/-D/${FC_DEFINE}/g"
@@ -767,7 +770,7 @@ diff -u autoconf-2.69/lib/autoconf/status.m4 Origin/autoconf-2.69/lib/autoconf/s
 -else
 -   FC_DEFS=$DEFS
 -fi
- 
+
  dnl Commands to run before creating config.status.
  AC_OUTPUT_COMMANDS_PRE()dnl
 
@@ -778,7 +781,7 @@ diff -u automake-1.15/bin/automake.in Origin/automake-1.15/bin/automake.in
 @@ -622,15 +622,6 @@
      $(CPPFLAGS)
    };
- 
+
 -my @fpplike_flags =
 -  qw{
 -    $(FC_DEFS)
