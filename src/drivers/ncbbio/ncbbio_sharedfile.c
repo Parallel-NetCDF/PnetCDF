@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#define _XOPEN_SOURCE 500
 #include <unistd.h> /* pwrite() pread() */
 
 #include <pnc_debug.h>
