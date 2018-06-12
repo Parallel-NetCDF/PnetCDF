@@ -66,10 +66,9 @@ ifelse(`$1',`uchar',`ifdef(`PNETCDF',,`
 `#'else')')
                     else {
 ifelse(`$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
-                        if (bb_enabled){
-                            if (err == NC_NOERR){
+                        if (bb_enabled) {
+                            if (err == NC_NOERR)
                                 err = ncmpi_flush(ncid);
-                            }
                         }
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
@@ -1506,7 +1505,6 @@ TestFunc(att)_text(AttVarArgs)
     int i, j, err, ncid, nok=0;
     IntType k, ndx[1];
     text value[MAX_NELS];
-    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
@@ -1583,7 +1581,6 @@ TestFunc(att)_$1(AttVarArgs)
     int allInExtRange;  /* all values within external range? */
     IntType k, ndx[1];
     $1 value[MAX_NELS];
-    int bb_enabled=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER);
     IF (err != NC_NOERR) {
