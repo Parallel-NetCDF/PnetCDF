@@ -70,8 +70,6 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
      */
 
     /* Read environment variable for burst buffer path */
-    //private_path = getenv("BB_JOB_PRIVATE");
-    //stripe_path = getenv("BB_JOB_STRIPED");
 
     /* Remove romio driver specifier form the begining of path */
     path = strchr(ncbbp->path, ':');
@@ -120,12 +118,6 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
             fflush(stdout);
         }
     }
-    //else if (private_path != NULL){
-    //    logbasep = private_path;
-    //}
-    //else if (stripe_path != NULL){
-    //    logbasep = stripe_path;
-    //}
 
     /*
      * Make sure bufferdir exists
@@ -153,66 +145,6 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     if (fdir != NULL){
         NCI_Free(fdir);
     }
-
-    /*
-    /* Determine log to process mapping *
-    if (rank == 0){
-        int j;
-        char abs_private_path[NC_LOG_PATH_MAX], abs_stripe_path[NC_LOG_PATH_MAX];
-
-        /* Resolve BB_JOB_PRIVATE and BB_JOB_STRIPED into absolute path*
-        memset(abs_private_path, 0, sizeof(abs_private_path));
-        memset(abs_stripe_path, 0, sizeof(abs_stripe_path));
-        if (private_path != NULL){
-            abspath = realpath(private_path, abs_private_path);
-            if (abspath == NULL){
-                /* Can not resolve absolute path *
-                memset(abs_private_path, 0, sizeof(abs_private_path));
-            }
-        }
-        if (stripe_path != NULL){
-            abspath = realpath(stripe_path, abs_stripe_path);
-            if (abspath == NULL){
-                /* Can not resolve absolute path *
-                memset(abs_stripe_path, 0, sizeof(abs_stripe_path));
-            }
-        }
-
-        /* Match against logbase *
-        for(i = 0; i < NC_LOG_PATH_MAX; i++){
-            if (logbase[i] == '\0' || abs_private_path[i] == '\0'){
-                break;
-            }
-            if (logbase[i] != abs_private_path[i]){
-                break;
-            }
-        }
-        for(j = 0; j < NC_LOG_PATH_MAX; j++){
-            if (logbase[j] == '\0' || abs_stripe_path[j] == '\0'){
-                break;
-            }
-            if (logbase[j] != abs_stripe_path[j]){
-                break;
-            }
-        }
-
-        /* Whichever has longer matched prefix is considered a match
-         * Use log per node only when striped mode wins
-         *
-        if (j > i) {
-            log_per_node = 1;
-        }
-        else {
-            log_per_node = 0;
-        }
-
-        /* Hints can overwrite the default action *
-        if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE){
-            log_per_node = 1;
-        }
-    }
-    MPI_Bcast(&log_per_node, 1, MPI_INT, 0, ncbbp->comm);
-    /*
 
     /* Communicator for processes sharing log files */
     if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE){
@@ -263,6 +195,9 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
 #ifdef PNETCDF_PROFILING
     /* Performance counters */
+    ncbbp->total_data = 0;
+    ncbbp->total_meta = 0;
+    ncbbp->max_buffer = 0;
     ncbbp->total_time = 0;
     ncbbp->create_time = 0;
     ncbbp->enddef_time = 0;
@@ -325,7 +260,6 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     if (!(ncbbp->hints & NC_LOG_HINT_LOG_OVERWRITE)) {
         flag |= O_EXCL;
     }
-    //ncbbp->datalog_fd = ncbbp->metalog_fd = -1;
     err = ncbbio_sharedfile_open(ncbbp->logcomm, ncbbp->metalogpath, flag,
                            MPI_INFO_NULL, &(ncbbp->metalog_fd));
     if (err != NC_NOERR) {
