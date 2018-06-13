@@ -65,9 +65,10 @@ Tasks immediately before a new release (must run in the following order)
                                  ^^^^^
 
  3. Update file "RELEASE_NOTES".
-    Copy the contents of file "ChangeLog" into file "RELEASE_NOTES".
-    Add the release version and date at the top of file "RELEASE_NOTES".
-    Clear up file "ChangeLog" (reset all items to none)
+    Copy the contents of file "ChangeLog" (file "sneak_peek" for v1.9.0 and
+    prior) into file "RELEASE_NOTES". Add the release version and date at the
+    top of file "RELEASE_NOTES". Clear up file "ChangeLog" (reset all items to
+    none).
 
  4. Update the release date (skip this step for 1.9.0 and later)
     Below describe how to set the release date for 1.8.1 and prior.
@@ -79,15 +80,16 @@ Tasks immediately before a new release (must run in the following order)
 
  5. Run svn commit to commit the above changes to trunk branch.
 
- 6. Create a new SVN tag on svn repo.
+ 6. Create a new SVN tag on svn repo (v1.9.0 and prior).
     Run command below to duplicate the current trunk to a new tag:
 
         svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
                  https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
                  -m "Tagging release version 1.8.1"
 
-    For GitHub tag, use command
+    To create a new tag on GitHub, use command (v1.10.0 and after):
         git tag -a v1.10.0 -m "Tagging release version 1.10.0"
+        git push origin v1.10.0
 
  7. Generate release tar balls
     a. Generate a new "configure" file
