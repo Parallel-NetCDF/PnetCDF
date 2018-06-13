@@ -185,9 +185,9 @@ This is essentially a placeholder for the next release note ...
     * example/C/vard_mvars.c shows an example of using a single vard API call
       to write or read two variables.
     * example/burst_buffer/create_open.c shows an example of creating and
-      opening a NetCDF file on burst buffer.
+      opening a NetCDF file with the burst buffering feature enabled.
     * example/burst_buffer/nonblocking.c shows an example of using non-blocking
-      APIs when burst buffering is enabled.
+      put APIs with the burst buffering feature enabled.
 
   o New programs for I/O benchmarks
     * none
