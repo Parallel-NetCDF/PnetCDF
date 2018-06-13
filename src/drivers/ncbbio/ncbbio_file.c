@@ -184,7 +184,7 @@ ncbbio_open(MPI_Comm     comm,
 int
 ncbbio_close(void *ncdp)
 {
-    int err, status = NC_NOERR;
+    int status=NC_NOERR, err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
@@ -194,10 +194,7 @@ ncbbio_close(void *ncdp)
      */
     if (ncbbp->inited){
         // Close log file
-        err = ncbbio_log_close(ncbbp);
-        if (status == NC_NOERR) {
-            status = err;
-        }
+        status = ncbbio_log_close(ncbbp);
         // Clean up put list
         ncbbio_put_list_free(ncbbp);
         // Clean up metadata index
@@ -206,9 +203,7 @@ ncbbio_close(void *ncdp)
 
     // Call ncmpio driver
     err = ncbbp->ncmpio_driver->close(ncbbp->ncp);
-    if (status == NC_NOERR) {
-        status = err;
-    }
+    if (status == NC_NOERR) status = err;
 
     // Cleanup NC-bb object
     MPI_Comm_free(&(ncbbp->comm));
@@ -400,25 +395,26 @@ ncbbio_end_indep_data(void *ncdp)
 int
 ncbbio_abort(void *ncdp)
 {
-    int status, err;
+    int status=NC_NOERR, err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
-
-    status = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
 
     /* If log is initialized, we must close the log file
      * Putlist and metadata index also needs to be cleaned up
      */
     if (ncbbp->inited){
         // Close log file
-        err = ncbbio_log_close(ncbbp);
-        if (status == NC_NOERR) status = err;
+        status = ncbbio_log_close(ncbbp);
         // Clean up put list
         ncbbio_put_list_free(ncbbp);
         // Clean up metadata index
         ncbbio_metaidx_free(ncbbp);
     }
+
+    // Call ncmpio driver
+    err = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
+    if (status == NC_NOERR) status = err;
 
     MPI_Comm_free(&(ncbbp->comm));
     MPI_Info_free(&(ncbbp->info));
