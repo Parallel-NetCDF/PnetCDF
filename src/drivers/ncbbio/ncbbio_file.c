@@ -406,6 +406,7 @@ ncbbio_abort(void *ncdp)
     err = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
 
     MPI_Comm_free(&(ncbbp->comm));
+    MPI_Info_free(&(ncbbp->info));
     NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
