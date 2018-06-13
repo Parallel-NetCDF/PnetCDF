@@ -84,6 +84,8 @@ ncbbio_create(MPI_Comm     comm,
     ncbbp->recdimsize = 0;
     ncbbp->recdimid = -1;   // Id of record dimension
     ncbbp->max_ndims = 0;   // Highest dimensionality among all variables
+    ncbbp->datalog_fd = NULL;
+    ncbbp->metalog_fd = NULL;
     MPI_Comm_dup(comm, &(ncbbp->comm));
     MPI_Info_dup(info, &(ncbbp->info));
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
@@ -398,19 +400,32 @@ ncbbio_end_indep_data(void *ncdp)
 int
 ncbbio_abort(void *ncdp)
 {
-    int err;
+    int status, err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
 
-    err = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
+    status = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
+
+    /* If log is initialized, we must close the log file
+     * Putlist and metadata index also needs to be cleaned up
+     */
+    if (ncbbp->inited){
+        // Close log file
+        err = ncbbio_log_close(ncbbp);
+        if (status == NC_NOERR) status = err;
+        // Clean up put list
+        ncbbio_put_list_free(ncbbp);
+        // Clean up metadata index
+        ncbbio_metaidx_free(ncbbp);
+    }
 
     MPI_Comm_free(&(ncbbp->comm));
     MPI_Info_free(&(ncbbp->info));
     NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
-    return err;
+    return status;
 }
 
 int
