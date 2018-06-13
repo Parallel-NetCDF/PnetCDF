@@ -350,7 +350,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp){
  * Used by ncmpi_close()
  * IN    ncbbp:    log structure
  */
-int ncbbio_log_close(NC_bb *ncbbp) {
+int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     int err;
 #ifdef PNETCDF_PROFILING
     double t1, t2;
@@ -382,7 +382,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
     /* If log file is created, flush the log */
     if (ncbbp->metalog_fd != NULL){
         /* Commit to CDF file */
-        if (headerp->num_entries > 0 || !(ncbbp->isindep)){
+        if (replay && (headerp->num_entries > 0 || !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))){
             log_flush(ncbbp);
         }
 
@@ -498,7 +498,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
      * We still need to participate the flush in collective mode
      * We assume some processes will have things to flush to save communication cost
      */
-    if (headerp->num_entries == 0 && ncbbp->isindep){
+    if (headerp->num_entries == 0 && fIsSet(ncbbp->flag, NC_MODE_INDEP)){
         return NC_NOERR;
     }
 
