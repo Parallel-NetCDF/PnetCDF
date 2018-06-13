@@ -380,7 +380,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
     headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
 
     /* If log file is created, flush the log */
-    if (ncbbp->metalog_fd >= 0){
+    if (ncbbp->metalog_fd != NULL){
         /* Commit to CDF file */
         if (headerp->num_entries > 0 || !(ncbbp->isindep)){
             log_flush(ncbbp);
