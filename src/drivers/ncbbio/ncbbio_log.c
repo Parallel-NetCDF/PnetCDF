@@ -145,13 +145,26 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     }
 
     /* Communicator for processes sharing log files */
-#if MPI_VERSION >= 3
     if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE) {
-        MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
+//#if MPI_VERSION >= 3
+#if 0
+        err = MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncbbp->logcomm));
-        MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
-    } else
-#endif
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(NC_EMPI);
+        }
+#else
+        err = ncbbio_get_node_comm(ncbbp->comm, &ncbbp->logcomm);
+        if (err != NC_NOERR){
+            return err;
+        }
+#endif                
+        err = MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(NC_EMPI);
+        }
+    }
+    else
     {
         ncbbp->logcomm = MPI_COMM_SELF;
         masterrank = rank;
