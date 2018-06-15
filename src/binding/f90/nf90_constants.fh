@@ -218,7 +218,7 @@
     NF90_EMAPTYPE       = NF_EMAPTYPE      , & ! Mapped access for atomic types only.
     NF90_ELATEFILL      = NF_ELATEFILL     , & ! Attempt to define fill value when data already exists.
     NF90_ELATEDEF       = NF_ELATEDEF      , & ! Attempt to define var properties, like deflate, after enddef.
-    NF90_EDIMSCALE      = NF_EDIMSCALE     , & ! Probem with HDF5 dimscales.
+    NF90_EDIMSCALE      = NF_EDIMSCALE     , & ! Problem with HDF5 dimscales.
     NF90_ENOGRP         = NF_ENOGRP        , & ! No group found.
     NF90_ESTORAGE       = NF_ESTORAGE      , & ! Can't specify both contiguous and chunking.
     NF90_EBADCHUNK      = NF_EBADCHUNK     , & ! Bad chunksize.
