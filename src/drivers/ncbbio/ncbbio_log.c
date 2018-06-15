@@ -145,13 +145,26 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     }
 
     /* Communicator for processes sharing log files */
-#if MPI_VERSION >= 3
     if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE) {
-        MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
+//#if MPI_VERSION >= 3
+#if 0
+        err = MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncbbp->logcomm));
-        MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
-    } else
-#endif
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(NC_EMPI);
+        }
+#else
+        err = ncbbio_get_node_comm(ncbbp->comm, &ncbbp->logcomm);
+        if (err != NC_NOERR){
+            return err;
+        }
+#endif                
+        err = MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(NC_EMPI);
+        }
+    }
+    else
     {
         ncbbp->logcomm = MPI_COMM_SELF;
         masterrank = rank;
@@ -350,7 +363,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp){
  * Used by ncmpi_close()
  * IN    ncbbp:    log structure
  */
-int ncbbio_log_close(NC_bb *ncbbp) {
+int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     int err;
 #ifdef PNETCDF_PROFILING
     double t1, t2;
@@ -382,7 +395,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
     /* If log file is created, flush the log */
     if (ncbbp->metalog_fd != NULL){
         /* Commit to CDF file */
-        if (headerp->num_entries > 0 || !(ncbbp->isindep)){
+        if (replay && (headerp->num_entries > 0 || !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))){
             log_flush(ncbbp);
         }
 
@@ -498,7 +511,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
      * We still need to participate the flush in collective mode
      * We assume some processes will have things to flush to save communication cost
      */
-    if (headerp->num_entries == 0 && ncbbp->isindep){
+    if (headerp->num_entries == 0 && fIsSet(ncbbp->flag, NC_MODE_INDEP)){
         return NC_NOERR;
     }
 

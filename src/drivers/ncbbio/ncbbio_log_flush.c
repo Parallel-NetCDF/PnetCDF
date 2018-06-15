@@ -143,7 +143,7 @@ int log_flush(NC_bb *ncbbp) {
         }
     }
     nrounds++;
-    if (!ncbbp->isindep){
+    if (!fIsSet(ncbbp->flag, NC_MODE_INDEP)){
         MPI_Allreduce(&nrounds, &nrounds_all, 1, MPI_INT, MPI_MAX, ncbbp->comm);
     }
     else{
@@ -287,7 +287,7 @@ int log_flush(NC_bb *ncbbp) {
         /*
          * Wait must be called first or previous data will be corrupted
          */
-        if (ncbbp->isindep) {
+        if (fIsSet(ncbbp->flag, NC_MODE_INDEP)){
             err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, j, reqids, stats, NC_REQ_INDEP);
         }
         else{
