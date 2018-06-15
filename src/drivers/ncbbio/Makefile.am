@@ -40,7 +40,8 @@ C_SRCS = ncbbio_attr.c \
 		 ncbbio_log_flush.c \
 		 ncbbio_log_put.c \
 		 ncbbio_sharedfile.c \
-		 ncbbio_bufferedfile.c
+		 ncbbio_bufferedfile.c \
+		 ncbbio_misc.c
 
 $(M4_SRCS:.m4=.c): Makefile
 
