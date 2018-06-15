@@ -320,3 +320,11 @@ with C, C++, F77, and F90 versions.
   entering to data mode, a single call to ncmpi_wait_all() to flush all pending
   nonblocking requests.
 
+./burst_buffer/create_open.c
+This program shows an example of creating and opening a NetCDF file with the
+burst buffering feature enabled.
+
+./burst_buffer/nonblocking.c
+This program shows an example of using non-blocking put APIs with the burst
+buffering feature enabled.
+

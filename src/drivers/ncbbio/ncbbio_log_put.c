@@ -42,9 +42,7 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
                        void *buf, MPI_Datatype buftype, MPI_Offset *putsize){
     int err, i, dim, elsize;
     int itype;    /* Type used in log file */
-    int *dimids;
     char *buffer;
-    nc_type xtype;
     PNC *pncp;
 #ifdef PNETCDF_PROFILING
     double t1, t2, t3, t4, t5;
