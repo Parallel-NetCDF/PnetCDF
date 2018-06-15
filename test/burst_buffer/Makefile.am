@@ -78,7 +78,14 @@ ptest ptest4: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; } ; done
+	) ; done ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable" ; \
+	set -e ; for i in $(TESTPROGRAMS) ; do ( \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	) ; done ; \
+	} ; done
 
 ptest2: $(TESTPROGRAMS)
 	for j in 0 ; do { \
@@ -88,7 +95,14 @@ ptest2: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; } ; done
+	) ; done ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable" ; \
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	) ; done ; \
+	} ; done
 
 ptest6: $(TESTPROGRAMS)
 	for j in 0 ; do { \
@@ -98,7 +112,14 @@ ptest6: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; } ; done
+	) ; done ; \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable" ; \
+	set -e ; for i in $(TESTPROGRAMS); do ( \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	) ; done ; \
+	} ; done
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:
