@@ -71,14 +71,14 @@ int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm)
     for(i = 0; i < np; i++){   
         name = buf + MPI_MAX_PROCESSOR_NAME * i;
         err = hash_map_add(&map, name, nnode);
-        if (err == 0){
+        if (err == NC_NOERR){
             /* New host name, increase node number */
             nnode += 1;
         }
     }
 
     err = hash_map_find(&map, myname, &color);
-    if (err != 0){
+    if (err != NC_NOERR){
         /* Our own name is not in the map, not possible */
         MPI_Abort(global_comm, -1);
     }
@@ -88,5 +88,5 @@ int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm)
         DEBUG_RETURN_ERROR(NC_EMPI);
     }
 
-    return 0;
+    return NC_NOERR;
 }
