@@ -146,7 +146,8 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
     /* Communicator for processes sharing log files */
     if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE) {
-#if MPI_VERSION >= 3
+//#if MPI_VERSION >= 3
+#if 0
         err = MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncbbp->logcomm));
         if (err != NC_NOERR){

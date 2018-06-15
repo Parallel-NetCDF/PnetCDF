@@ -1,13 +1,35 @@
-#include <stdlib.h>
+/*
+ *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #include <string.h>
+#include <ctype.h>  /* isspace() */
+#include <assert.h>
+#include <mpi.h>
+
+#include <pnetcdf.h>
+#include <pnc_debug.h>
 #include <common.h>
-#include <errno.h>
 
 int hash_map_init(hash_map *map, int size, unsigned int (*hash)(const char* key)){
     map->hash = hash;
     map->table = (hash_map_node**)NCI_Malloc(sizeof(hash_map_node*) * size);
+    if (map->table == NULL){
+        DEBUG_RETURN_ERROR(NC_ENOMEM);
+    }
     map->size = size;
+    
+    return NC_NOERR;
 }
 
 int hash_map_free(hash_map *map) {
@@ -25,6 +47,8 @@ int hash_map_free(hash_map *map) {
         }
     }
     NCI_Free(map->table);
+
+    return NC_NOERR;
 }
 
 int hash_map_add(hash_map *map, char *key, int val) {
@@ -40,7 +64,7 @@ int hash_map_add(hash_map *map, char *key, int val) {
     cur = map->table[idx];
     while(cur != NULL){
         if (strcmp(key, cur->key) == 0){
-            return -1;
+            return NC_EEXIST;
         }
         pre = cur;
         cur = cur->next;
@@ -48,7 +72,13 @@ int hash_map_add(hash_map *map, char *key, int val) {
 
     /* Create new node */
     new_node = (hash_map_node*)NCI_Malloc(sizeof(hash_map_node));
+    if (new_node == NULL){
+        DEBUG_RETURN_ERROR(NC_ENOMEM);
+    }
     new_node->key = (char*)NCI_Malloc((strlen(key) + 1) * sizeof(char));
+    if (new_node->key == NULL){
+        DEBUG_RETURN_ERROR(NC_ENOMEM);
+    }
     strcpy(new_node->key, key);
     new_node->val = val;
 
@@ -59,7 +89,7 @@ int hash_map_add(hash_map *map, char *key, int val) {
         pre->next = new_node;
     }
 
-    return 0;
+    return NC_NOERR;
 }
 
 
@@ -76,11 +106,11 @@ int hash_map_find(hash_map *map, char *key, int *val) {
     while(cur != NULL){
         if (strcmp(key, cur->key) == 0){
             *val = cur->val;
-            return 0;
+            return NC_NOERR;
         }
         pre = cur;
         cur = cur->next;
     }
 
-    return -1;
+    return NC_ENOTFOUND;
 }
