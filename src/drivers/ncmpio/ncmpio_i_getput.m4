@@ -140,14 +140,65 @@ ncmpio_igetput_varm(NC               *ncp,
                     int               reqMode)
 {
     void *xbuf=NULL;
-    int i, err=NC_NOERR, abuf_index=-1, el_size, memChunk;
-    int buftype_is_contig, need_convert, free_xbuf=0;
+    int i, err=NC_NOERR, abuf_index=-1, isize, xsize, memChunk;
+    int buftype_is_contig=1, need_convert, free_xbuf=0;
     int need_swap, in_place_swap, need_swap_back_buf=0;
     MPI_Offset nelems=0, nbytes, *ptr;
-    MPI_Datatype itype, imaptype;
+    MPI_Datatype itype, xtype, imaptype;
     NC_lead_req *lead_req;
     NC_req *req;
 
+    /* validity of start and count has been checked at dispatcher layer */
+
+    nelems = 1; /* total number of array elements of this vara */
+    for (i=0; i<varp->ndims; i++)
+        nelems *= count[i];
+
+    xtype = ncmpii_nc2mpitype(varp->xtype);
+    MPI_Type_size(xtype, &xsize);
+
+    if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and the internal buffer data type
+         * match the external variable data type. No data conversion will be
+         * done. In addition, it means buf is contiguous. Hereinafter, buftype
+         * is ignored.
+         */
+        itype = xtype;
+        isize = xsize;
+    }
+    else if (bufcount == -1) { /* buftype is an MPI primitive data type */
+        /* In this case, this subroutine is called from a high-level API.
+         * buftype is one of the MPI primitive data type. We set itype to
+         * buftype. itype is the MPI element type in internal representation.
+         * In addition, it means the user buf is contiguous.
+         */
+        itype = buftype;
+        MPI_Type_size(itype, &isize); /* buffer element size */
+    }
+    else { /* (bufcount > 0) */
+        /* When bufcount > 0, this subroutine is called from a flexible API. If
+         * buftype is noncontiguous, we pack buf into xbuf, a contiguous buffer.
+         */
+        MPI_Offset bnelems=0;
+
+        if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
+        /* itype (primitive MPI data type) from buftype
+         * isize is the size of itype in bytes
+         * bnelems is the number of itype elements in one buftype
+         */
+        err = ncmpii_dtype_decode(buftype, &itype, &isize, &bnelems,
+                                  NULL, &buftype_is_contig);
+        if (err != NC_NOERR) return err;
+
+        /* size in bufcount * buftype must match with counts[] */
+        if (bnelems * bufcount != nelems) DEBUG_RETURN_ERROR(NC_EIOMISMATCH)
+    }
+
+    /* nbytes is the amount of this varn request in bytes */
+    nbytes = nelems * xsize;
+
+#if 0
     /* decode buftype to obtain the followings:
      * itype:    internal element data type (MPI primitive type) in buftype
      * bufcount: If it is -1, then this is called from a high-level API and in
@@ -164,13 +215,15 @@ ncmpio_igetput_varm(NC               *ncp,
                                 buftype, &itype, &el_size, &nelems,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) return err;
+#endif
 
 #ifndef ENABLE_LARGE_REQ
     if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
 #endif
 
-    if (nelems == 0) { /* zero-length request, mark this as a NULL request */
-        *reqid = NC_REQ_NULL;
+    /* for nonblocking API, return now if request size is zero */
+    if (nbytes == 0) {
+        *reqid = NC_REQ_NULL; /* mark this as a NULL request */
         return NC_NOERR;
     }
 
@@ -207,7 +260,6 @@ ncmpio_igetput_varm(NC               *ncp,
                 DEBUG_RETURN_ERROR(NC_EINSUFFBUF)
             err = ncmpio_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
             if (err != NC_NOERR) return err;
-            need_swap_back_buf = 0; /* no need to byte-swap user buffer */
         }
         else {
             if (!buftype_is_contig || imaptype != MPI_DATATYPE_NULL ||
@@ -216,7 +268,6 @@ ncmpio_igetput_varm(NC               *ncp,
                 xbuf = NCI_Malloc((size_t)nbytes);
                 free_xbuf = 1;
                 if (xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-                need_swap_back_buf = 0; /* no need to byte-swap user buffer */
             }
             else { /* when user buf is used as xbuf, we need to byte-swap buf
                     * back to its original contents */
@@ -229,7 +280,7 @@ ncmpio_igetput_varm(NC               *ncp,
          * In the meanwhile, perform byte-swap and type-conversion if required.
          */
         err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                               buftype_is_contig, nelems, itype, el_size,
+                               buftype_is_contig, nelems, itype, isize,
                                imaptype, need_convert, need_swap, nbytes, buf,
                                xbuf);
         if (err != NC_NOERR && err != NC_ERANGE) {
@@ -392,9 +443,10 @@ ncmpio_igetput_varm(NC               *ncp,
                                  (ncp->numLeadPutReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
             /* non-lead requests must also update their member lead */
-            for (i=0; i<ncp->numPutReqs; i++)
-                ncp->put_list[i].lead = ncp->put_lead_list +
-                                        (ncp->put_list[i].lead - old);
+            if (old != ncp->put_lead_list)
+                for (i=0; i<ncp->numPutReqs; i++)
+                    ncp->put_list[i].lead = ncp->put_lead_list +
+                                            (ncp->put_list[i].lead - old);
         }
 
         lead_req = ncp->put_lead_list + ncp->numLeadPutReqs;
@@ -434,9 +486,10 @@ ncmpio_igetput_varm(NC               *ncp,
                                  (ncp->numLeadGetReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
             /* non-lead requests must also update their member lead */
-            for (i=0; i<ncp->numGetReqs; i++)
-                ncp->get_list[i].lead = ncp->get_lead_list +
-                                        (ncp->get_list[i].lead - old);
+            if (old != ncp->get_lead_list)
+                for (i=0; i<ncp->numGetReqs; i++)
+                    ncp->get_list[i].lead = ncp->get_lead_list +
+                                            (ncp->get_list[i].lead - old);
         }
 
         lead_req = ncp->get_lead_list + ncp->numLeadGetReqs;

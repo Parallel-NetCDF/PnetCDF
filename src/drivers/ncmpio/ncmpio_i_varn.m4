@@ -214,9 +214,10 @@ igetput_varn(NC                *ncp,
                                  (ncp->numLeadPutReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
             /* non-lead requests must also update their member lead */
-            for (i=0; i<ncp->numPutReqs; i++)
-                ncp->put_list[i].lead = ncp->put_lead_list +
-                                        (ncp->put_list[i].lead - old);
+            if (old != ncp->put_lead_list)
+                for (i=0; i<ncp->numPutReqs; i++)
+                    ncp->put_list[i].lead = ncp->put_lead_list +
+                                            (ncp->put_list[i].lead - old);
         }
 
         lead_req = ncp->put_lead_list + ncp->numLeadPutReqs;
@@ -305,9 +306,10 @@ igetput_varn(NC                *ncp,
                                  (ncp->numLeadGetReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
             /* non-lead requests must also update their member lead */
-            for (i=0; i<ncp->numGetReqs; i++)
-                ncp->get_list[i].lead = ncp->get_lead_list +
-                                        (ncp->get_list[i].lead - old);
+            if (old != ncp->get_lead_list)
+                for (i=0; i<ncp->numGetReqs; i++)
+                    ncp->get_list[i].lead = ncp->get_lead_list +
+                                            (ncp->get_list[i].lead - old);
         }
 
         lead_req = ncp->get_lead_list + ncp->numLeadGetReqs;
