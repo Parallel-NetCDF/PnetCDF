@@ -28,7 +28,7 @@ int hash_map_init(hash_map *map, int size, unsigned int (*hash)(const char* key)
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
     map->size = size;
-    
+
     return NC_NOERR;
 }
 

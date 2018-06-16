@@ -68,7 +68,7 @@ int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm)
         DEBUG_RETURN_ERROR(NC_EMPI);
     }
 
-    for(i = 0; i < np; i++){   
+    for(i = 0; i < np; i++){
         name = buf + MPI_MAX_PROCESSOR_NAME * i;
         err = hash_map_add(&map, name, nnode);
         if (err == NC_NOERR){
