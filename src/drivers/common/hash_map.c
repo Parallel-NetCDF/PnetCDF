@@ -27,6 +27,7 @@ int hash_map_init(hash_map *map, int size, unsigned int (*hash)(const char* key)
     if (map->table == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
+    memset(map->table, 0, sizeof(hash_map_node*) * size);
     map->size = size;
     
     return NC_NOERR;
