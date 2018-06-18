@@ -2394,7 +2394,7 @@ mgetput(NC     *ncp,
         if (fIsSet(reqs[0].lead->flag, NC_REQ_SKIP))
             len = 0;
         else {
-            MPI_Offset req_size = reqs[0].lead->varp->xsz * reqs[0].nelems;
+            MPI_Offset req_size = reqs[0].nelems * reqs[0].lead->varp->xsz;
             if (req_size > INT_MAX) { /* skip this request */
                 if (status == NC_NOERR)
                     DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
@@ -2417,7 +2417,7 @@ mgetput(NC     *ncp,
             MPI_Offset req_size;
             if (fIsSet(reqs[i].lead->flag, NC_REQ_SKIP)) continue;
 
-            req_size = reqs[i].lead->varp->xsz * reqs[i].nelems;
+            req_size = reqs[i].nelems * reqs[i].lead->varp->xsz;
 
             /* check int overflow */
             if (req_size > INT_MAX) { /* int overflows, skip this request */
