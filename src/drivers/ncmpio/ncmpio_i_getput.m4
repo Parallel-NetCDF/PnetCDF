@@ -129,10 +129,10 @@ ncmpio_add_record_requests(NC_req           *reqs,
 int
 ncmpio_igetput_varm(NC               *ncp,
                     NC_var           *varp,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[],
-                    const MPI_Offset  imap[],
+                    const MPI_Offset  start[],  /* not NULL */
+                    const MPI_Offset  count[],  /* not NULL */
+                    const MPI_Offset  stride[], /* can be NULL */
+                    const MPI_Offset  imap[],   /* can be NULL */
                     void             *buf,      /* user buffer */
                     MPI_Offset        bufcount,
                     MPI_Datatype      buftype,
@@ -140,7 +140,7 @@ ncmpio_igetput_varm(NC               *ncp,
                     int               reqMode)
 {
     void *xbuf=NULL;
-    int i, err=NC_NOERR, abuf_index=-1, isize, xsize, memChunk;
+    int i, err=NC_NOERR, abuf_index=-1, isize, xsize, add_reqs, rem;
     int buftype_is_contig=1, need_convert, free_xbuf=0;
     int need_swap, in_place_swap, need_swap_back_buf=0;
     MPI_Offset nelems=0, nbytes, *ptr;
@@ -150,23 +150,17 @@ ncmpio_igetput_varm(NC               *ncp,
 
     /* validity of start and count has been checked at dispatcher layer */
 
-    nelems = 1; /* total number of array elements of this vara */
+    nelems = 1; /* total number of array elements of this vara request */
     for (i=0; i<varp->ndims; i++)
         nelems *= count[i];
 
+    /* xtype is the MPI element type in external representation, xsize is its
+     * size in bytes. Similarly, itype and isize for internal representation.
+     */
     xtype = ncmpii_nc2mpitype(varp->xtype);
     MPI_Type_size(xtype, &xsize);
 
-    if (buftype == MPI_DATATYPE_NULL) {
-        /* In this case, bufcount is ignored and the internal buffer data type
-         * match the external variable data type. No data conversion will be
-         * done. In addition, it means buf is contiguous. Hereinafter, buftype
-         * is ignored.
-         */
-        itype = xtype;
-        isize = xsize;
-    }
-    else if (bufcount == -1) { /* buftype is an MPI primitive data type */
+    if (bufcount == -1) { /* buftype is an MPI primitive data type */
         /* In this case, this subroutine is called from a high-level API.
          * buftype is one of the MPI primitive data type. We set itype to
          * buftype. itype is the MPI element type in internal representation.
@@ -174,6 +168,15 @@ ncmpio_igetput_varm(NC               *ncp,
          */
         itype = buftype;
         MPI_Type_size(itype, &isize); /* buffer element size */
+    }
+    else if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and the internal buffer data type
+         * match the external variable data type. No data conversion will be
+         * done. In addition, it means buf is contiguous. Hereinafter, buftype
+         * is ignored.
+         */
+        itype = xtype;
+        isize = xsize;
     }
     else { /* (bufcount > 0) */
         /* When bufcount > 0, this subroutine is called from a flexible API. If
@@ -195,7 +198,7 @@ ncmpio_igetput_varm(NC               *ncp,
         if (bnelems * bufcount != nelems) DEBUG_RETURN_ERROR(NC_EIOMISMATCH)
     }
 
-    /* nbytes is the amount of this varn request in bytes */
+    /* nbytes is the amount of this vara request in bytes */
     nbytes = nelems * xsize;
 
 #if 0
@@ -424,7 +427,7 @@ ncmpio_igetput_varm(NC               *ncp,
 #endif
     }
     else { /* read request */
-        /* Type conversion and byte swap for read are done at wait call. */
+        /* Type conversion and byte swap for read will be done at wait call. */
         if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL && !need_convert)
             xbuf = buf;  /* there is no buffered read APIs (bget_var, etc.) */
         else {
@@ -461,8 +464,8 @@ ncmpio_igetput_varm(NC               *ncp,
         ncp->numLeadPutReqs++;
 
         /* allocate or expand the size of non-lead write request queue */
-        int add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
-        int rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
+        add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
+        rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
         if (rem) rem = NC_REQUEST_CHUNK - rem;
 
         if (ncp->put_list == NULL || add_reqs > rem) {
@@ -505,8 +508,8 @@ ncmpio_igetput_varm(NC               *ncp,
         ncp->numLeadGetReqs++;
 
         /* allocate or expand the size of non-lead read request queue */
-        int add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
-        int rem = ncp->numGetReqs % NC_REQUEST_CHUNK;
+        add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
+        rem = ncp->numGetReqs % NC_REQUEST_CHUNK;
         if (rem) rem = NC_REQUEST_CHUNK - rem;
 
         if (ncp->get_list == NULL || add_reqs > rem) {
@@ -541,7 +544,6 @@ ncmpio_igetput_varm(NC               *ncp,
 
     if (stride == NULL) fSet(lead_req->flag, NC_REQ_STRIDE_NULL);
     else {
-        int i;
         for (i=0; i<varp->ndims; i++)
             if (stride[i] > 1) break;
         if (i == varp->ndims) { /* all 1s */
@@ -558,27 +560,38 @@ ncmpio_igetput_varm(NC               *ncp,
     else if (fIsSet(reqMode, NC_REQ_RD))
         MPI_Type_dup(buftype, &lead_req->buftype);
 
-    /* allocate a single array to store start/count/stride */
-    memChunk = (stride == NULL) ? 2 : 3;
-    memChunk *= varp->ndims * SIZEOF_MPI_OFFSET;
-    if (IS_RECVAR(varp) && count[0] > 1)
-        lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * count[0]);
-    else
-        lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk);
+    /* allocate a single array for non-leads to store start/count/stride */
+    if (stride == NULL) {
+        size_t memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
+        if (IS_RECVAR(varp) && count[0] > 1)
+            lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * count[0]);
+        else
+            lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2);
+        /* copy over start/count/stride */
+        req->start = lead_req->start;
+        ptr = req->start;
+        memcpy(ptr, start, memChunk);
+        ptr += varp->ndims;
+        memcpy(ptr, count, memChunk);
+    }
+    else {
+        size_t memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
+        if (IS_RECVAR(varp) && count[0] > 1)
+            lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 3 * count[0]);
+        else
+            lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 3);
+        /* copy over start/count/stride */
+        req->start = lead_req->start;
+        ptr = req->start;
+        memcpy(ptr, start, memChunk);
+        ptr += varp->ndims;
+        memcpy(ptr, count, memChunk);
+        ptr += varp->ndims;
+        memcpy(ptr, stride, memChunk);
+    }
 
     /* set the properties of non-lead request */
-    req->xbuf = xbuf;
-
-    /* copy over start/count/stride */
-    req->start = lead_req->start;
-    ptr = req->start;
-    memcpy(ptr, start, varp->ndims * SIZEOF_MPI_OFFSET);
-    ptr += varp->ndims;
-    memcpy(ptr, count, varp->ndims * SIZEOF_MPI_OFFSET);
-    if (stride != NULL) {
-        ptr += varp->ndims;
-        memcpy(ptr, stride, varp->ndims * SIZEOF_MPI_OFFSET);
-    }
+    req->xbuf   = xbuf;
     req->nelems = nelems;
 
     if (IS_RECVAR(varp)) {
