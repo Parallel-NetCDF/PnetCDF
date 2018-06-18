@@ -92,11 +92,14 @@ ncmpii_need_convert(int          format, /* 1, 2, or 5 (CDF format number) */
         return 0;
     }
 
+    /* check special case in CDF-1 and 2 between uchar and NC_BYTE */
     if (format < NC_FORMAT_CDF5 &&
         xtype == NC_BYTE && itype == MPI_UNSIGNED_CHAR) return 0;
 
 #if SIZEOF_LONG == SIZEOF_INT
-    if (itype == MPI_LONG) itype = MPI_INT;
+    if (itype == MPI_LONG) itype = MPI_INT; /* long is 4-byte int */
+#else
+    if (itype == MPI_LONG) itype = MPI_LONG_LONG_INT; /* long is 8-byte int */
 #endif
 
     return !( (xtype == NC_BYTE   && itype == MPI_SIGNED_CHAR)    ||
