@@ -157,7 +157,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         if (err != NC_NOERR){
             return err;
         }
-#endif                
+#endif
         err = MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
         if (err != NC_NOERR){
             DEBUG_RETURN_ERROR(NC_EMPI);
