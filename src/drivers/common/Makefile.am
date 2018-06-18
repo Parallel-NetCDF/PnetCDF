@@ -19,7 +19,7 @@ endif
 noinst_LTLIBRARIES = libcommon.la
 
 H_SRCS = utf8proc_data.h \
-         utf8proc.h 
+         utf8proc.h
 
 M4FLAGS += -I${top_srcdir}/m4
 if ENABLE_ERANGE_FILL
