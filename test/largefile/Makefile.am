@@ -92,7 +92,7 @@ ptest ptest4: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; fi ; \
@@ -107,7 +107,7 @@ ptest2: $(TESTPROGRAMS)
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	) ; fi ; \
