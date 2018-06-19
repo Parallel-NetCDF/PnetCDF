@@ -58,7 +58,7 @@ endif
 if RUN_LARGE_FILE_TEST
 TESTPROGRAMS = $(check_PROGRAMS)
 else
-TESTPROGRAMS = $(check_PROGRAMS)
+TESTPROGRAMS =
 endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
@@ -87,8 +87,11 @@ ptest ptest4: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS) ; do ( \
-	if [ -n "1" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_shared_logfs=enable;nc_burst_buf_overwrite=enable;nc_burst_buf_del_on_close=disable" ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
@@ -99,8 +102,11 @@ ptest2: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-    if [ -n "1" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_shared_logfs=enable;nc_burst_buf_overwrite=enable;nc_burst_buf_del_on_close=disable" ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+    if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
@@ -111,8 +117,11 @@ ptest6: $(TESTPROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
 	set -e ; for i in $(TESTPROGRAMS); do ( \
-	if [ -n "1" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_shared_logfs=enable;nc_burst_buf_overwrite=enable;nc_burst_buf_del_on_close=disable" ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
+	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
+	if [ -n "$(TESTBB)" ]; then ( \
+	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	unset PNETCDF_HINTS ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
