@@ -26,7 +26,7 @@
 #include <ncbbio_driver.h>
 
 
-unsigned int hash(char* key){
+unsigned int hash(const char* key){
     int i;
     unsigned int val = 0;
 
