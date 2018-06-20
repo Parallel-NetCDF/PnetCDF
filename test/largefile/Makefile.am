@@ -48,8 +48,10 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 
 if BUILD_DRIVER_BB
+if ENABLE_LARGE_REQ
 	TESTBB = 1
 	TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
 endif
 
 ../common/libtestutils.la:
