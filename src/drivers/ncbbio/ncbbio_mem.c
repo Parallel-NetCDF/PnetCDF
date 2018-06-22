@@ -8,6 +8,7 @@
 #include <config.h>
 #endif
 
+#include <common.h>
 #include <ncbbio_driver.h>
 
 #define LOG_BUFFER_SIZE 1024 /* Size of initial metadata buffer */

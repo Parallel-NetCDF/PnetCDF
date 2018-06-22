@@ -8,6 +8,7 @@
 #include <config.h>
 #endif
 
+#include <common.h>
 #include <string.h>
 #include <ncbbio_driver.h>
 
