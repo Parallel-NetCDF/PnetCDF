@@ -7,23 +7,11 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
-#include <dirent.h>
-#include <assert.h>
-#include <limits.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdint.h>
-#include <pnetcdf.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pnc_debug.h>
+
 #include <common.h>
-#include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <ncbbio_driver.h>
-#include <mpi.h>
 
 /* Convert from log type to MPI type used by pnetcdf library
  * Log spec has different enum of types than MPI
