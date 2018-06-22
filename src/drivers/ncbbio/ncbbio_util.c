@@ -7,14 +7,11 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
-#include "ncx.h"
-#include <limits.h>
+
 #include <stdlib.h>
 #include <string.h>
-#include <pnc_debug.h>
-#include <common.h>
-#include <pnetcdf.h>
+#include <stdio.h>
+#include <math.h>
 #include <ncbbio_driver.h>
 
 /*

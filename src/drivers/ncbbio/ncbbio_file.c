@@ -37,11 +37,13 @@
 # include <config.h>
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* strlen() */
-
-#include <mpi.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncbbio_driver.h>

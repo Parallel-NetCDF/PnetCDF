@@ -7,9 +7,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,9 +15,7 @@
 #define _XOPEN_SOURCE 500
 #include <unistd.h> /* pwrite() pread() */
 
-#include <pnc_debug.h>
 #include <common.h>
-#include <pnetcdf.h>
 #include <ncbbio_driver.h>
 
 #define BLOCK_SIZE 8388608
