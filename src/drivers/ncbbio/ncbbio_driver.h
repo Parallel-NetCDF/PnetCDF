@@ -238,7 +238,6 @@ int ncbbio_log_enddef(NC_bb *ncbbp);
 int ncbbio_init(NC_bb *ncbbp);
 
 int ncbbio_put_list_init(NC_bb *ncbbp);
-int ncbbio_put_list_resize(NC_bb *ncbbp);
 int ncbbio_put_list_free(NC_bb *ncbbp);
 int ncbbio_put_list_add(NC_bb *ncbbp, int *id);
 int ncbbio_put_list_remove(NC_bb *ncbbp, int reqid);

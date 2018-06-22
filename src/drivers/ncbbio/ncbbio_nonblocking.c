@@ -84,7 +84,7 @@ int ncbbio_put_list_init(NC_bb *ncbbp){
  * We simply enlarge ids and reqs array
  * We initialize the extended part as usual
  */
-int ncbbio_put_list_resize(NC_bb *ncbbp){
+static int ncbbio_put_list_resize(NC_bb *ncbbp){
     int i;
     size_t nsize;
     void *ptr;
