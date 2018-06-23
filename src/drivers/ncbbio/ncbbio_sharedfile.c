@@ -133,19 +133,23 @@ int ncbbio_sharedfile_close(NC_bb_sharedfile *f) {
 int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     int i, err;
     int sblock, eblock;   // start and end block
-    off_t offstart, offend; // Start and end offset to write for current block in physical file
+    off_t offstart, offend, wsize = 0; // Start and end offset to write for current block in physical file
     ssize_t ioret;
 
     // Write directly if not sharing
     if(f->nchanel == 1){
-        ioret = pwrite(f->fd, buf, count, offset);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("write");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EWRITE);
+        wsize = 0;
+        while(wsize < count){
+            ioret = pwrite(f->fd, buf + wsize, count - wsize, offset + wsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("write");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EWRITE);
+            }
+            wsize += ioret;
         }
         return NC_NOERR;
     }
@@ -189,14 +193,18 @@ int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f, void *buf, size_t count, off_t
         }
 
         // Write to file
-        ioret = pwrite(f->fd, buf, offend - offstart, offstart);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("write");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != offend - offstart){
-            DEBUG_RETURN_ERROR(NC_EWRITE);
+        wsize = 0;
+        while(wsize < offend - offstart){
+            ioret = pwrite(f->fd, buf + wsize, offend - offstart - wsize, offstart + wsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("write");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EWRITE);
+            }
+            wsize += ioret;
         }
 
         // We increase the buffer pointer by amount writen, so it always points to the data of next block
@@ -226,14 +234,19 @@ int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count){
     // Write directly if not sharing
     if(f->nchanel == 1){
         ssize_t ioret;
-        ioret = write(f->fd, buf, count);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("write");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EWRITE);
+        off_t wsize;
+        wsize = 0;
+        while(wsize < count){
+            ioret = write(f->fd, buf + wsize, count - wsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("write");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EWRITE);
+            }
+            wsize += ioret;
         }
     }
     else{
@@ -279,19 +292,23 @@ int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count){
 int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     int i, err;
     int sblock, eblock;   // start and end block
-    off_t offstart, offend; // Start and end offset to write for current block in physical file
+    off_t offstart, offend, rsize = 0; // Start and end offset to write for current block in physical file
     ssize_t ioret;
 
     // Read directly if not sharing
     if(f->nchanel == 1){
-        ioret = pread(f->fd, buf, count, offset);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("read");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EREAD);
+        rsize = 0;
+        while(rsize < count){
+            ioret = pread(f->fd, buf + rsize, count - rsize, offset + rsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("read");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EREAD);
+            }
+            rsize += ioret;
         }
         return NC_NOERR;
     }
@@ -335,14 +352,18 @@ int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t 
         }
 
         // Read from file
-        ioret = pread(f->fd, buf, offend - offstart, offstart);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("read");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != offend - offstart){
-            DEBUG_RETURN_ERROR(NC_EREAD);
+        rsize = 0;
+        while(rsize < offend - offstart){
+            ioret = pread(f->fd, buf + rsize, offend - offstart - rsize, offstart + rsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("read");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EREAD);
+            }
+            rsize += ioret;
         }
 
         // We increase the buffer pointer by amount readn, so it always points to the location for next block
@@ -372,14 +393,19 @@ int ncbbio_sharedfile_read(NC_bb_sharedfile *f, void *buf, size_t count){
     // Read directly if not sharing
     if(f->nchanel == 1){
         ssize_t ioret;
-        ioret = read(f->fd, buf, count);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("read");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EREAD);
+        off_t rsize;
+        rsize = 0;
+        while(rsize < count){
+            ioret = read(f->fd, buf + rsize, count - rsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("read");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EREAD);
+            }
+            rsize += ioret;
         }
     }
     else{
