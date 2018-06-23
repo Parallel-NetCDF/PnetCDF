@@ -7,6 +7,8 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include <pnc_debug.h>
 #include <stdlib.h>
 #include <string.h>
 #include <common.h>
@@ -38,8 +40,8 @@ int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm)
 
     hash_map_init(&map, 65535, hash);
 
-    myname = (char*)malloc(MPI_MAX_PROCESSOR_NAME * sizeof(char));
-    buf = (char*)malloc(MPI_MAX_PROCESSOR_NAME * sizeof(char) * np);
+    myname = (char*)NCI_Malloc(MPI_MAX_PROCESSOR_NAME * sizeof(char));
+    buf = (char*)NCI_Malloc(MPI_MAX_PROCESSOR_NAME * sizeof(char) * np);
 
     err = MPI_Get_processor_name(myname, &namelen);
     if (err != MPI_SUCCESS){

@@ -15,6 +15,8 @@
 #define _XOPEN_SOURCE 500
 #include <unistd.h> /* pwrite() pread() */
 
+#include <stdlib.h>
+#include <pnc_debug.h>
 #include <common.h>
 #include <ncbbio_driver.h>
 
