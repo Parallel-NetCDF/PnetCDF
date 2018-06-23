@@ -8,6 +8,8 @@
 #include <config.h>
 #endif
 
+#include <stdlib.h>
+#include <pnc_debug.h>
 #include <common.h>
 #include <sys/types.h>
 #include <sys/wait.h>

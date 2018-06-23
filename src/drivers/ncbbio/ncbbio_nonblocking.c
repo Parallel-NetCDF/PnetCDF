@@ -8,6 +8,8 @@
 #include <config.h>
 #endif
 
+#include <stdlib.h>
+#include <pnc_debug.h>
 #include <common.h>
 #include <stdio.h>
 #include <ncbbio_driver.h>
