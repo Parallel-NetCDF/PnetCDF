@@ -23,7 +23,7 @@
 
 int hash_map_init(hash_map *map, int size, unsigned int (*hash)(const char* key)){
     map->hash = hash;
-    map->table = (hash_map_node**)NCI_Malloc(sizeof(hash_map_node*) * size);
+    map->table = (hash_map_node**)NCI_Calloc(size, sizeof(hash_map_node*));
     if (map->table == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
