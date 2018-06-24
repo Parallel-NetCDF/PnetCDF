@@ -222,6 +222,7 @@ typedef struct NC_bb {
     struct PNC_driver *ncmpio_driver;
 } NC_bb;
 
+int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm);
 int ncbbio_log_buffer_init(NC_bb_buffer * bp);
 void ncbbio_log_buffer_free(NC_bb_buffer * bp);
 char* ncbbio_log_buffer_alloc(NC_bb_buffer *bp, size_t size);
@@ -237,7 +238,6 @@ int ncbbio_log_enddef(NC_bb *ncbbp);
 int ncbbio_init(NC_bb *ncbbp);
 
 int ncbbio_put_list_init(NC_bb *ncbbp);
-int ncbbio_put_list_resize(NC_bb *ncbbp);
 int ncbbio_put_list_free(NC_bb *ncbbp);
 int ncbbio_put_list_add(NC_bb *ncbbp, int *id);
 int ncbbio_put_list_remove(NC_bb *ncbbp, int reqid);

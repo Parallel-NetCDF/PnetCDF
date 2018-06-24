@@ -37,11 +37,13 @@
 # include <config.h>
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* strlen() */
-
-#include <mpi.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncbbio_driver.h>
@@ -86,6 +88,7 @@ ncbbio_create(MPI_Comm     comm,
     ncbbp->datalog_fd = NULL;
     ncbbp->metalog_fd = NULL;
     ncbbp->flag = NC_MODE_CREATE | NC_MODE_DEF;
+    ncbbp->logcomm = MPI_COMM_SELF;
     MPI_Comm_dup(comm, &(ncbbp->comm));
     MPI_Info_dup(info, &(ncbbp->info));
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
@@ -142,6 +145,7 @@ ncbbio_open(MPI_Comm     comm,
     ncbbp->recdimid = -1;   // Id of record dimension
     ncbbp->max_ndims = 0;   // Highest dimensionality among all variables
     ncbbp->flag = 0;
+    ncbbp->logcomm = MPI_COMM_SELF;
     MPI_Comm_dup(comm, &(ncbbp->comm));
     MPI_Info_dup(info, &(ncbbp->info));
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
