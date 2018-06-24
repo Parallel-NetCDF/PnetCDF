@@ -412,6 +412,11 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     ncbbio_log_buffer_free(&(ncbbp->metadata));
     ncbbio_log_sizearray_free(&(ncbbp->entrydatasize));
 
+    /* Close shared log communicator */
+    if (ncbbp->logcomm != MPI_COMM_SELF){
+        MPI_Comm_free(&(ncbbp->logcomm));
+    }    
+
 #ifdef PNETCDF_PROFILING
     t2 = MPI_Wtime();
     ncbbp->total_time += t2 - t1;
