@@ -8,7 +8,6 @@
 # include <config.h>
 #endif
 
-#include <dispatch.h>
 #include <ncbbio_driver.h>
 
 static PNC_driver ncbbio_driver = {

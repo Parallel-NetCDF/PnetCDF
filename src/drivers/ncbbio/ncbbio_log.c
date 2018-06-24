@@ -7,22 +7,15 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
 #include <dirent.h>
-#include <assert.h>
-#include "ncx.h"
-#include <limits.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdint.h>
-#include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <pnetcdf.h>
 #include <ncbbio_driver.h>
 
 /*
@@ -418,6 +411,11 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     /* Free meta data buffer and metadata offset list*/
     ncbbio_log_buffer_free(&(ncbbp->metadata));
     ncbbio_log_sizearray_free(&(ncbbp->entrydatasize));
+
+    /* Close shared log communicator */
+    if (ncbbp->logcomm != MPI_COMM_SELF){
+        MPI_Comm_free(&(ncbbp->logcomm));
+    }    
 
 #ifdef PNETCDF_PROFILING
     t2 = MPI_Wtime();

@@ -7,22 +7,12 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
-#include <dirent.h>
-#include <assert.h>
-#include "ncx.h"
-#include <limits.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdint.h>
-#include <sys/stat.h>
-#include <unistd.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <pnc_debug.h>
 #include <common.h>
-#include <pnetcdf.h>
+#include <pnc_debug.h>
 #include <ncbbio_driver.h>
 
 /*
@@ -158,7 +148,10 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
         itype = NC_LOG_TYPE_ULONGLONG;
     }
     else { /* Unrecognized type */
-        fprintf(stderr, "Rank: %d, Unrecognized type: %d\n", ncbbp->rank, buftype); fflush(stderr);
+        int name_len;
+        char type_name[MPI_MAX_OBJECT_NAME];
+        MPI_Type_get_name(buftype, type_name, &name_len);
+        fprintf(stderr, "Rank: %d, Unrecognized type: %s\n", ncbbp->rank, type_name); fflush(stderr);
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
 
