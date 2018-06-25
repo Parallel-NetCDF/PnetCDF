@@ -232,44 +232,6 @@ getput_vard(NC               *ncp,
                 goto err_check;
             }
         }
-#if 0
-        int in_place_swap = 0;
-        if (need_swap) {
-            if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
-                in_place_swap = 1;
-            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) { /* auto mode */
-                if (filetype_size > NC_BYTE_SWAP_BUFFER_SIZE)
-                    in_place_swap = 1;
-            }
-        }
-
-        /* determine whether a temp buffer is needed for swap/convert */
-        if (!buftype_is_contig || need_convert || in_place_swap == 0) {
-            xbuf = NCI_Malloc((size_t)filetype_size);
-            if (xbuf == NULL) {
-                DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-                goto err_check;
-            }
-            need_swap_back_buf = 0;
-        }
-        else {
-            /* when user buf is used as xbuf, we need to byte-swap buf back to
-             * its original contents, after MPI_File_write */
-            xbuf = buf;
-            need_swap_back_buf = 1;
-        }
-
-        /* pack user buffer, buf, to xbuf, which will be used in file write */
-        err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                               buftype_is_contig, bnelems, etype,
-                               MPI_DATATYPE_NULL, need_convert, need_swap,
-                               filetype_size, buf, xbuf);
-        if (err != NC_NOERR && err != NC_ERANGE) {
-            if (xbuf != buf) NCI_Free(xbuf);
-            xbuf = NULL;
-            goto err_check;
-        }
-#endif
     }
     else { /* read request */
         if (!need_convert && (!need_swap || buftype_is_contig)) {
@@ -283,17 +245,6 @@ getput_vard(NC               *ncp,
                 goto err_check;
             }
         }
-#if 0
-        if (buftype_is_contig && !need_convert)
-            xbuf = buf;
-        else { /* allocate xbuf for reading */
-            xbuf = NCI_Malloc((size_t)filetype_size);
-            if (xbuf == NULL) {
-                DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-                goto err_check;
-            }
-        }
-#endif
     }
 
     /* Set nelems and xtype which will be used in MPI read/write */
