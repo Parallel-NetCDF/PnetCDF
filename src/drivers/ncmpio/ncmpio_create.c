@@ -213,40 +213,6 @@ ncmpio_create(MPI_Comm     comm,
     /* extract I/O hints from user info */
     ncmpio_set_pnetcdf_hints(ncp, info);
 
-#if 0
-    ncp->safe_mode    = 0;
-    ncp->numGetReqs   = 0; /* number of pending non-blocking get requests */
-    ncp->numPutReqs   = 0; /* number of pending non-blocking put requests */
-    ncp->h_align      = 0; /* value 0 indicates the hint is not set */
-    ncp->v_align      = 0;
-    ncp->r_align      = 0;
-    ncp->h_minfree    = 0;
-    ncp->v_minfree    = 0;
-    ncp->get_list     = NULL;
-    ncp->put_list     = NULL;
-    ncp->abuf         = NULL;
-    ncp->old          = NULL;
-    ncp->put_size     = 0;    /* bytes written so far */
-    ncp->get_size     = 0;    /* bytes read    so far */
-
-#ifndef SEARCH_NAME_LINEARLY
-    for (i=0; i<HASH_TABLE_SIZE; i++) {
-        /* initialize dim name lookup table */
-        ncp->dims.nameT[i].num = 0;
-        ncp->dims.nameT[i].list = NULL;
-        /* initialize var name lookup table */
-        ncp->vars.nameT[i].num = 0;
-        ncp->vars.nameT[i].list = NULL;
-    }
-#endif
-
-#ifdef ENABLE_SUBFILING
-    ncp->subfile_mode = 0;
-    ncp->num_subfiles = 0;
-    ncp->ncp_sf       = NULL; /* pointer to subfile NC object */
-#endif
-#endif
-
     /* For file create, ignore if NC_NOWRITE set in cmode by user */
     ncp->iomode         = cmode | NC_WRITE;
     ncp->comm           = comm;  /* reuse comm duplicated in dispatch layer */

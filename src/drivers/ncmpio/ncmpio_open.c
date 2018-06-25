@@ -103,29 +103,6 @@ ncmpio_open(MPI_Comm     comm,
     /* extract I/O hints from user info */
     ncmpio_set_pnetcdf_hints(ncp, info);
 
-#if 0
-    ncp->safe_mode    = 0;
-    ncp->numGetReqs   = 0; /* number of pending non-blocking get requests */
-    ncp->numPutReqs   = 0; /* number of pending non-blocking put requests */
-    ncp->h_align      = 0; /* value 0 indicates the hint is not set */
-    ncp->v_align      = 0;
-    ncp->r_align      = 0;
-    ncp->h_minfree    = 0;
-    ncp->v_minfree    = 0;
-    ncp->get_list     = NULL;
-    ncp->put_list     = NULL;
-    ncp->abuf         = NULL;
-    ncp->old          = NULL;
-    ncp->put_size     = 0;    /* bytes written so far */
-    ncp->get_size     = 0;    /* bytes read    so far */
-
-#ifdef ENABLE_SUBFILING
-    ncp->subfile_mode = 0;
-    ncp->num_subfiles = 0;
-    ncp->ncp_sf       = NULL; /* pointer to subfile NC object */
-#endif
-#endif
-
     ncp->iomode         = omode;
     ncp->comm           = comm;  /* reuse comm duplicated in dispatch layer */
     ncp->mpiinfo        = info_used;
