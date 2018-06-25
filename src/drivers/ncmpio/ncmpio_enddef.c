@@ -97,7 +97,7 @@ move_file_block(NC         *ncp,
              * work around. See MPICH ticket:
              * https://trac.mpich.org/projects/mpich/ticket/2332
              *
-             * Note we cannot set bufcount to get_size, as the actural size
+             * Note we cannot set bufcount to get_size, as the actual size
              * read from a file may be less than bufcount. Because we are
              * moving whatever read to a new file offset, we must use the
              * amount actually read to call MPI_File_write_at_all below.
@@ -743,6 +743,33 @@ ncmpio_NC_check_vlens(NC *ncp)
 /*
  * Given a valid ncp, check whether the file starting offsets (begin) of all
  * variables follows the same increasing order as they were defined.
+ *
+ * In NetCDF User's Guide, Chapter "File Structure and Performance", Section
+ * "Parts of a NetCDF Class File", the following statement implies such
+ * checking. "The order in which the variable data appears in each data section
+ * is the same as the order in which the variables were defined, in increasing
+ * numerical order by netCDF variable ID." URLs are given below.
+ * https://www.unidata.ucar.edu/software/netcdf/documentation/historic/netcdf/Classic-File-Parts.html
+ * https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_file_parts
+ *
+ * However, the CDF file format specification does not require such order.
+ * NetCDF version 4.6.0 and priors do not enforce this checking, but all
+ * assume this requirement. See subroutine NC_computeshapes() in libsrc/v1hpg.c.
+ * Similarly for PnetCDF, this check was not enforced until 1.9.0. Therefore,
+ * it is important to keep this check to avoid potential problems.
+ *
+ * It appears that python scipy.netcdf does not follow this. An example can be
+ * found in the NetCDF discussion thread:
+ * https://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2018/msg00050.html
+ * A scipy.netcdf program opens a NetCDF file with a few variables already
+ * defined, enters define mode through redef call, and adds a new variable. The
+ * scipy.netcdf implementation probably chooses to insert the new variable
+ * entry in the front of "var_list" in file header. Technically speaking, this
+ * does not violate the classic file format specification, but may result in
+ * the file starting offsets ("begin" entry) of all variables defined in the
+ * file header failed to appear in an increasing order. To obtain the file
+ * header extent, one must scan the "begin" entry of all variables and find the
+ * minimum as the extent.
  */
 int
 ncmpio_NC_check_voffs(NC *ncp)
