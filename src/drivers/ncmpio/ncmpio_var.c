@@ -70,11 +70,6 @@ ncmpio_new_NC_var(char *name, int ndims)
     varp->name     = name;         /* name has been malloc-ed */
     varp->name_len = strlen(name); /* name has been NULL checked */
     varp->ndims    = ndims;
-#if 0
-    varp->xsz      = 0;
-    varp->len      = 0;
-    varp->begin    = 0;
-#endif
 
     return varp;
 }
@@ -195,22 +190,6 @@ ncmpio_dup_NC_vararray(NC_vararray       *ncap,
     return NC_NOERR;
 }
 
-#if 0
-/*----< elem_NC_vararray() >-------------------------------------------------*/
-inline static NC_var *
-elem_NC_vararray(const NC_vararray *ncap,
-                 int                varid)
-{
-    assert(ncap != NULL);
-    /* cast needed for braindead systems with signed MPI_Offset */
-    if ((varid < 0) ||  ncap->ndefined == 0 || varid >= ncap->ndefined)
-        return NULL;
-
-    assert(ncap->value != NULL);
-
-    return ncap->value[varid];
-}
-#endif
 
 /* End vararray per se */
 
@@ -355,25 +334,6 @@ out :
 
     return NC_NOERR;
 }
-
-#if 0
-/*----< ncmpio_NC_lookupvar() >----------------------------------------------*/
-/* Given valid ncp and varid, return varp */
-int
-ncmpio_NC_lookupvar(NC      *ncp,
-                    int      varid,
-                    NC_var **varp)
-{
-    if (varid == NC_GLOBAL) /* Global is error in this context */
-        DEBUG_RETURN_ERROR(NC_EGLOBAL)
-
-    *varp = elem_NC_vararray(&ncp->vars, varid);
-    if (*varp == NULL) /* could not find variable with varid */
-        DEBUG_RETURN_ERROR(NC_ENOTVAR)
-
-    return NC_NOERR;
-}
-#endif
 
 /*----< ncmpio_def_var() >---------------------------------------------------*/
 int
@@ -529,12 +489,7 @@ ncmpio_inq_var(void       *ncdp,
         return NC_NOERR;
     }
 
-#if 0
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
-#else
     varp = ncp->vars.value[varid];
-#endif
 
     if (name != NULL)
         /* in PnetCDF, name is always NULL character terminated */
