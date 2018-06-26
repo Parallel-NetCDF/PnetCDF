@@ -62,6 +62,10 @@ default configuration of PnetCDF up and running.
 
       make -j8
 
+   For quiet mode, use the command below will produce minimum output on screen.
+
+      make -s LIBTOOLFLAGS=--silent V=1 -j8
+
 (f) Install PnetCDF
 
       make install
@@ -118,16 +122,18 @@ Here lists a few important options:
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-debug          Enable PnetCDF internal debug mode. This also
                           enables safe mode. [default: disabled]
-  --disable-in-place-swap Disable memory in-place byte swap on Little Endian
-                          machines. [default: enabled]
+  --(en/dis)able-in-place-swap
+                          Enable/disable memory in-place byte swap on Little
+                          Endian machines. [default: auto]
   --enable-subfiling      Enable subfiling support. [default: disabled]
   --disable-erange-fill   Disable use of fill value when out-of-range type
                           conversion causes NC_ERANGE error. [default:
                           enabled]
-  --enable-relax-coord-bound
-                          Enable relaxed error NC_EINVALCOORDS to allow
-                          coordinate start argument equal to dimension size
-                          when argument count is zero. [default: disabled]
+  --disable-relax-coord-bound
+                          Use stricter rule for error NC_EINVALCOORDS to
+                          disallow coordinate start argument equal to
+                          dimension size when argument count is zero.
+                          [default: enabled]
   --enable-doxygen        Enable generation of documentation. [default:
                           disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
@@ -142,6 +148,11 @@ Here lists a few important options:
   --enable-null-byte-header-padding
                           Enable check for null-byte header padding when
                           reading files in classic formats. [default:
+                          disabled]
+  --enable-burst-buffering
+                          Enable burst buffer driver support. [default:
+                          disabled]
+  --enable-profiling      Enable time and memory profiling. [default:
                           disabled]
   --disable-versioning    Disable library versioning. [default: enabled]
 
@@ -208,17 +219,18 @@ Some influential environment variables:
 
 
 ----
-Note on configure option "--disable-in-place-swap"
+Note on configure option "--(en/dis)able-in-place-swap"
 ----
-   This option disables the byte-swap operations running in-place on the user's
-   write buffers.  The purpose of providing this option is to deal with the
-   problem when a Fortran program uses a immutable buffer for put APIs, e.g.
-   the buffer is declared as a PARAMETER, and in-place byte swap on this buffer
-   causes segmentation fault. See discussion threads of
+   This option enables/disables the byte-swap operations running in-place on
+   the user's write buffers. The purpose of providing this option is to deal
+   with the problem when a Fortran program uses a immutable buffer for put
+   APIs, e.g.  the buffer is declared as a PARAMETER, and in-place byte swap
+   on this buffer causes segmentation fault. See discussion threads of
    http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2013-July/001498.html
 
    Impacts:
-      1. It takes effect only on Little Endian machines.
+      1. It takes effect only on Little Endian machines, as no byte swap is
+         necessary on Big Endian machines.
       2. It only affects put/iput data APIs, but not attribute APIs.
       3. The INTENT of buffer arguments in all Fortran 90 put/iput APIs will be
          declared as "IN". Without this setting, the default is "INOUT".
@@ -226,9 +238,26 @@ Note on configure option "--disable-in-place-swap"
          will be allocated to copy data over from user's put buffer, so byte
          swap can be run on the temporary buffer.
 
-   The default setting is to enable in-place byte swap. PnetCDF tries not to
-   allocate additional memory space, due to performance concern. Users are
-   discouraged to use Fortran PARAMETER buffers in put APIs.
+   The default setting is auto. The three options are explained below.
+      --enable-in-place-swap : perform byte swap on user I/O buffers whenever
+      possible. This option results in the least amount of internal memory
+      usage. However, if an immutable user buffer is used, segmentation fault
+      may occur when byte swap is performed on user buffer in place.
+
+      --disable-in-place-swap : when byte swap is required, an internal memory
+      space will be allocated for byte swap without altering the contents of
+      user buffer. This option will increase internal memory footprint.
+
+      The default (neither the above option is used at the command line): an
+      internal buffer is allocated for byte swap only when the I/O request
+      size is less than 4 KiB. For larger requests, user buffers are used for
+      in-place byte swap.  The mode can also be changed at the run time by
+      setting the PnetCDF hint nc_in_place_swap.
+
+
+   PnetCDF tries not to allocate additional memory space, due to performance
+   concern. Users are discouraged to use Fortran PARAMETER buffers in put
+   APIs.
 
 ----
 Note on configure option "--disable-erange-fill"
@@ -264,6 +293,10 @@ Note on configure option "--enable-relax-coord-bound"
    only when count[i] is zero. The default of this feature is disabled. For
    more detailed information, see discussion in:
    http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
+
+   Starting from version 1.10.0, this option is enabled as the default
+   setting, in accord with NetCDF 4.7.0. See discussion in:
+   https://github.com/Unidata/netcdf-c/issues/1010
 
 -------------------------------------------------------------------------
 
