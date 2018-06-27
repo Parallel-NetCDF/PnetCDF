@@ -18,7 +18,9 @@
 #define PNETCDF_VERSION_SUB   @PNETCDF_VERSION_SUB@
 #define PNETCDF_RELEASE_DATE  "DIST_DATE"
 
-/* list of PnetCDF features enabled/disabled at configure time */
+/* List of PnetCDF features enabled/disabled at configure time.
+ * 0: disabled, 1: enabled, -1: auto
+ */
 #define PNETCDF_ERANGE_FILL              @ENABLE_ERANGE_FILL@
 #define PNETCDF_SUBFILING                @ENABLE_SUBFILING@
 #define PNETCDF_RELAX_COORD_BOUND        @RELAX_COORD_BOUND@
