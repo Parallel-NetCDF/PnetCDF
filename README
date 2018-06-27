@@ -18,8 +18,11 @@ More extensive installation guides can be found in file INSTALL.  Additional
 information regarding the contents of the release can be found in the
 RELEASE_NOTES file in the top-level directory.  Finally, the PnetCDF project
 web sites below contain information on bug fixes and software releases.
-    http://trac.mcs.anl.gov/projects/parallel-netcdf
+    https://parallel-netcdf.github.io
     http://cucis.ece.northwestern.edu/projects/PnetCDF
+
+The previous project web page is now retired and has been migrated to Github.
+http://trac.mcs.anl.gov/projects/parallel-netcdf
 
 
 Requirements:
