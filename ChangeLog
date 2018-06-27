@@ -3,51 +3,53 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * Burst Buffering is now available. Burst buffer driver is an I/O driver
-      that implements a log-based I/O aggregation for write requests with the
-      present of burst buffer storage devices. The design is to save write
-      requests in burst buffers and later flush the saved requests to the
-      destination file system. See doc/README.burst_buffering for more detailed
-      description.
+    * A new I/O layer that makes use of burst buffers is added. Burst buffer
+      is an I/O driver that implements a log-based I/O aggregation for write
+      requests with the present of burst buffer storage devices. The design is
+      to save first write requests in burst buffers and later flush the saved
+      requests to the destination file system. See doc/README.burst_buffering
+      for more detailed description.
 
   o New optimization
     * Internal memory management for nonblocking APIs has been improved further
       to reduce memory footprint. See r3763.
     * Both blocking and nonblocking varn APIs have been improved for better
-      performance and reduced memory footprint. See r3747-r3750.
+      performance and less memory footprint. See r3747-r3750.
     * Prior to this release, when buftype in flexible APIs indicates a
       noncontiguous layout in user buffer, PnetCDF packs the user buffer into
       a contiguous buffer allocated internally, which will later be used in
       MPI-IO calls. To reduce memory footprint, this release avoids the
       additional memory allocation and directly uses the user buffer in MPI-IO
-      calls when byte-swap and type-conversion are not required. See r3722 and
-      r3723.
+      calls when neither byte-swap nor type-conversion is required. See r3722
+      and r3723.
 
   o New Limitations
     * none
 
   o Update configure options
-    * The default option for relax-coord-bound is changed to "enable", in
-      accord with NetCDF 4.7.0. Users may use --disable-relax-coord-bound to
+    * The default setting for relax-coord-bound option is changed to "enable",
+      in accord with NetCDF 4.7.0. Users may use --disable-relax-coord-bound to
       disable this setting at configure time or at run time by setting the
       environment variable PNETCDF_RELAX_COORD_BOUND. See section "New run-time
       environment variables" below for more information.
-    * Option in-place byte-swap is expanded into the followings.
-      --enable-in-place-swap : perform byte swap on user I/O buffers whenever
-      possible. This option results in the least amount of internal memory
-      usage. However, if an immutable user buffer is used, segmentation fault
-      may occur when byte swap is performed on user buffer in place.
-      --disable-in-place-swap : when byte swap is required, an internal memory
-      space will be allocated for byte swap without altering the contents of
-      user buffer. This option will increase internal memory footprint. The
-      default (neither the above option is used at the command line): an
-      internal buffer is allocated for byte swap only when the I/O request size
-      is less than 4 KiB. For larger requests, user buffers are used for
-      in-place byte swap.
+    * Option in-place byte-swap is expanded into the following three settings.
+      --enable-in-place-swap : to perform byte swap on user I/O buffers
+        whenever possible. This option results in the least amount of internal
+        memory usage. However, if an immutable user buffer is used,
+        segmentation fault may occur when byte swap is performed on user
+        buffer in place.
+      --disable-in-place-swap : when byte swap is required, PnetCDF allocates
+        an internal memory to perform byte swap to avoid altering the contents
+        of user buffer. This option will increase internal memory footprint.
+      The default (neither the above option is used at the command line): an
+        internal buffer is allocated for byte swap only when the I/O request
+        size is less than 4 KiB. For larger requests, user buffers are used
+        for in-place byte swap.
       The mode can also be changed at the run time by setting the PnetCDF hint
-      nc_in_place_swap. See New hints below for more info.
-      Note -in-place-swap option only affect applications running on Little
-      Endian machines, as no byte swap is necessary on Big Endian machines.
+      nc_in_place_swap in the run-time environment variable PNETCDF_HINTS. See
+      New hints below for more info.  Note -in-place-swap option only affect
+      applications running on Little Endian machines, as no byte swap is
+      necessary on Big Endian machines.
 
   o New constants
     * none
@@ -77,8 +79,9 @@ This is essentially a placeholder for the next release note ...
          conform with the variable external NC data type. The element data
          types of all variables accessed in filetype must be the same.
          Otherwise, NC_EMULTITYPES will be returned.
-      4. buftype must contain only one element data type. Otherwise
-         NC_EMULTITYPES will be returned.
+      4. buftype must contain only one same element data type if it is used to
+	 read or write multiple variables from file. Otherwise NC_EMULTITYPES
+	 will be returned.
 
   o New error code precedence
     * none
@@ -89,38 +92,41 @@ This is essentially a placeholder for the next release note ...
   o New error code
     * NC_EFLUSHED when calling ncmpi_cancel() to cancel non-blocking requests
       but the requests have already flushed.
-    * NC_EBADLOG when the log files stored in the burst buffers are corrupted.
+    * NC_EBADLOG when the log files stored in the burst buffers are found
+      corrupted.
 
   o New PnetCDF hint
     * nc_in_place_swap -- to enable or disable in-place byte swap on Little
       Endian architectures. The default mode is auto. See in-place byte-swap
       option above for descriptions of the three modes. Below is an example
-      that changes the mode set at the configure time to "enable", by setting
-      the environment variable PNETCDF_HINTS with command:
+      that changes the mode to "enable" regardless the setting used at the
+      configure time, by setting the environment variable PNETCDF_HINTS with
+      command:
           export PNETCDF_HINTS="nc_in_place_swap=enable"
-    * nc_burst_buf -- to use the burst buffering feature. The default is 
-      disable. To enable at the run time, one can add the hint to environment
-      variable PNETCDF_HINTS, for example,
+    * nc_burst_buf -- to use the burst buffering feature. The default setting
+      is disable. To enable at the run time, one can set the hint to
+      environment variable PNETCDF_HINTS, for example,
           export PNETCDF_HINTS="nc_burst_buf=enable"
     * nc_burst_buf_dirname -- Name of directory on the burst buffer where the
       internal log files will be stored. This is usually set to the path where
       burst buffer is mounted. The default path is the same directory of the
       output file.
-    * nc_burst_buf_del_on_close -- Whether the log files stored in burst buffer
-      should be deleted when closing the NetCDF file. The default is enable. To
-      disable at the run time, one can add the hint to environment variable
+    * nc_burst_buf_del_on_close -- Whether the burst buffer log files should
+      be deleted when closing the NetCDF file. The default is enable. To
+      disable at the run time, one can set the hint to environment variable
       PNETCDF_HINTS, for example,
           export PNETCDF_HINTS="nc_burst_buf_del_on_close=disable"
-      Note that on some systems, e.g. DataWarp, the files stored in burst
-      buffers are purged when the user job is completed. In this case, users
-      who wish to keep the files to be used for other jobs must refer to the
-      burst buffer user guide for such setting. For DataWarp on Cori @NERSC,
-      the settings are described in
+      Note that on some systems, e.g. DataWarp, all files stored in burst
+      buffers may be purged when the user job is completed. In this case, users
+      who wish to keep the log files for other jobs must refer to the burst
+      buffer user guide for such setting. For DataWarp on Cori @NERSC, the
+      settings are described in
       http://www.nersc.gov/users/computational-systems/cori/burst-buffer/example-batch-scripts/
-    * nc_burst_buf_flush_buffer_size -- Amount of memory that can be used to 
-      flush the data stored in burst buffer. The unit is in bytes. 0 means
-      unlimited. Users are suggested to use a number that is at least the size
-      of largest individual requests. The default is unlimited.
+    * nc_burst_buf_flush_buffer_size -- Amount of memory allowed by users for
+      PnetCDF to allocate when flushing the burst buffer log files. The unit
+      is in bytes. Value 0 means unlimited. Users are suggested to use a
+      number that is at least the size of largest individual requests. The
+      default is unlimited.
 
   o New run-time environment variables
     * PNETCDF_RELAX_COORD_BOUND environment variable can be set to 0 to disable
@@ -132,12 +138,14 @@ This is essentially a placeholder for the next release note ...
   o Build recipes
     * doc/README.burst_buffering is added to describe the usage of the new
       feature of burst buffering.
-    * doc/README.IBM is revised as the compiler behavior has changed on BGQ
-      since the release of 1.9.0.
-    * doc/README.CRAY is revised as the compiler behavior has changed on CRAY
-      since the release of 1.9.0.
+    * doc/README.IBM is revised as the compiler behavior, particularly when
+      using GNU-based MPI compilers to build static-only libraries, has
+      changed on BGQ since the release of 1.9.0.
+    * doc/README.CRAY is revised as the compiler behavior, particularly when
+      using GNU-based MPI compilers to build static-only libraries, has
+      changed on CRAY since the release of 1.9.0.
     * doc/README.Ubuntu is revised and the fix of adding LDFLAGS is no longer
-      necessary.
+      necessary when building shared libraries.
 
   o New/updated utility program
     * ncvalidator adds a new option -t to turn on tracing mode which prints all
@@ -148,12 +156,12 @@ This is essentially a placeholder for the next release note ...
 
   o Other updates:
     * Inter-library dependencies among C, C++ and Fortran have been updated to
-      follow automake user guide: add FLIBS and FCLIBS to _LIBADD. This update
-      resolves problems of building shared libraries for some systems.
+      follow automake user guide: adding FLIBS and FCLIBS to _LIBADD. This
+      update resolves problems of building shared libraries for some systems.
     * Move the memory allocation trace feature out of --enable-debug into the
       new configure option --enable-profiling. By default, this is disabled.
     * Add a check for NC_EUNLIMIT in API ncmpi_open to detect whether two or
-      more unlimited dimensions are defined in a corrupted file.
+      more unlimited dimensions are defined to detect a corrupted file.
 
   o Bug fixes
     * Fix type_create_subarray64() for case when some dimensions of the global
@@ -161,7 +169,7 @@ This is essentially a placeholder for the next release note ...
       this fix, test/largefile/large_var.c will fail. Note prior to 1.9.1,
       type_create_subarray64() is always called with oldtype being MPI_BYTE.
     * Fix configure-time bug that configure fails to recognize the compilers
-      with full path names set in the environment variable MPICC, MPICXX,
+      with full-path names passed from the environment variable MPICC, MPICXX,
       MPIF77, or MPI_F90. See Ticket #35 for bug report and r3740 for fix.
     * Fix the bug that writing scalar attributes of type NF_INT64 was
       mistakenly casted to NF_INT. See r3730.
@@ -233,15 +241,15 @@ This is essentially a placeholder for the next release note ...
       PnetCDF requires the data type of attribute _FillValue be the same as
       the variable's.
 
-  o Conflict with NetCDF library
+  o New conflict with NetCDF library
     * none
 
-  o Issues related to MPI library vendors:
+  o New issues related to MPI library vendors:
     * none
 
-  o Issues related to Darshan library:
+  o New issues related to Darshan library:
     * none
 
-  o Clarifications
+  o New clarifications
     * none
 
