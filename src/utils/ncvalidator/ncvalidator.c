@@ -2200,14 +2200,14 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-t] [-x] [-q] input_file\n"
+    "Usage: %s [-h] | [-t] [-x] [-q] file\n"
     "       [-h] Print help\n"
     "       [-t] Turn on tracing mode, printing progress of validation\n"
     "       [-x] Repair in-place the null-byte padding in file header.\n"
     "       [-q] Quiet mode (exit 1 when fail, 0 success)\n"
-    "       filename: input netCDF file name\n";
+    "       file: Input netCDF file name\n"
+    "*PnetCDF library version PNETCDF_RELEASE_VERSION of PNETCDF_RELEASE_DATE\n";
     fprintf(stderr, help, argv0);
-    fprintf(stderr,"       PnetCDF library version PNETCDF_RELEASE_VERSION of PNETCDF_RELEASE_DATE\n");
 }
 
 int main(int argc, char **argv)
