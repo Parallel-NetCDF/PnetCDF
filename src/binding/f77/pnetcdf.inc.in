@@ -37,6 +37,7 @@
       parameter (PNETCDF_LARGE_REQ                = @ENABLE_LARGE_REQ@)
       parameter (PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@)
       parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
+      parameter (PNETCDF_BURST_BUFFERING          = @BUILD_DRIVER_BB@)
 
 !
 ! external netcdf data types: (must conform with netCDF release)
