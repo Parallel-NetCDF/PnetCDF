@@ -2207,7 +2207,7 @@ usage(char *argv0)
     "       [-q] Quiet mode (exit 1 when fail, 0 success)\n"
     "       filename: input netCDF file name\n";
     fprintf(stderr, help, argv0);
-    fprintf(stderr,"       PnetCDF library version PNETCDF_RELEASE_VERSION\n");
+    fprintf(stderr,"       PnetCDF library version PNETCDF_RELEASE_VERSION of PNETCDF_RELEASE_DATE\n");
 }
 
 int main(int argc, char **argv)
