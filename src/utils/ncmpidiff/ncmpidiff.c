@@ -177,7 +177,7 @@ usage(int rank, char *progname)
 
     if (rank == 0) {
         printf("  %s [-b] [-q] [-h] [-v ...] file1 file2\n%s", progname, USAGE);
-        printf("  PnetCDF library version %s\n", ncmpi_inq_libvers());
+        printf("*PnetCDF library version %s\n", ncmpi_inq_libvers());
     }
     MPI_Finalize();
     exit(1);
