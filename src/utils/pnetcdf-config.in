@@ -20,6 +20,7 @@ includedir="@includedir@"
 FC_DEFINE="@FC_DEFINE@"
 CPP="@CPP@"
 
+profiling_mode="@PNETCDF_PROFILING@"
 debug_mode="@PNETCDF_DEBUG@"
 
 CPPFLAGS="@CPPFLAGS@"
@@ -99,6 +100,7 @@ Available values for OPTION include:
   --large-req                 Whether to allow single large (>2GiB) MPI-IO requests
   --null-byte-header-padding  Whether to check null-byte padding in header
   --burst-buffering           Whether burst buffer driver is built or not
+  --profiling                 Whether internal profiling is enabled or not
   --debug                     Whether PnetCDF is built with debug mode
   --prefix                    Install prefix
   --includedir                Include directory
@@ -175,6 +177,11 @@ if test "x$enable_bbdriver" = x1; then
         echo "  --burst-buffering           -> enabled"
 else
         echo "  --burst-buffering           -> disabled"
+fi
+if test "x$profiling_mode" = x1; then
+        echo "  --profiling                 -> enabled"
+else
+        echo "  --profiling                 -> disabled"
 fi
 if test "x$debug_mode" = x1; then
         echo "  --debug                     -> enabled"
@@ -339,6 +346,14 @@ fi
 
     --burst-buffering)
 if test "x$enable_bbdriver" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --profiling)
+if test "x$profiling_mode" = x1; then
         echo "enabled"
 else
         echo "disabled"
