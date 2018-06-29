@@ -32,7 +32,6 @@ int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm)
     int rank, np;
     int namelen, color, nnode = 0;
     char *myname, *buf, *name;
-    char **names;
     hash_map map;
 
     MPI_Comm_rank(global_comm, &rank);

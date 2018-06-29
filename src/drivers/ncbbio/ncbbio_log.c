@@ -357,8 +357,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp){
  */
 int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     int err;
-#ifdef PNETCDF_PROFILING
-    double t1, t2;
+#ifdef PNETCDF_DEBUG
     unsigned long long total_data;
     unsigned long long total_meta;
     unsigned long long buffer_size;
@@ -379,6 +378,7 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     NC_bb_metadataheader* headerp;
 
 #ifdef PNETCDF_PROFILING
+    double t1, t2;
     t1 = MPI_Wtime();
 #endif
 

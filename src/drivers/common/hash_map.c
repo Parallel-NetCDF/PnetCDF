@@ -52,7 +52,6 @@ int hash_map_free(hash_map *map) {
 }
 
 int hash_map_add(hash_map *map, char *key, int val) {
-    int i;
     unsigned int idx;
     hash_map_node *pre = NULL, *cur;
     hash_map_node *new_node;
@@ -95,9 +94,8 @@ int hash_map_add(hash_map *map, char *key, int val) {
 
 
 int hash_map_find(hash_map *map, char *key, int *val) {
-    int i;
     unsigned int idx;
-    hash_map_node *pre = NULL, *cur;
+    hash_map_node *cur;
 
     /* Calculate has value */
     idx = map->hash(key) % map->size;
@@ -109,7 +107,6 @@ int hash_map_find(hash_map *map, char *key, int *val) {
             *val = cur->val;
             return NC_NOERR;
         }
-        pre = cur;
         cur = cur->next;
     }
 
