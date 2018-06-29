@@ -2186,7 +2186,7 @@ calculate_access_range(const NC         *ncp,
         if (stride == NULL) {
             /* first handle the least significant dimension */
             *start_off = start[ndims-1];
-            *end_off = start[ndims-1] + (count[ndims-1]-1);
+            *end_off   = start[ndims-1] + (count[ndims-1]-1);
             /* remaining dimensions till the most significant one */
             for (i=ndims-2; i>=0; i--) {
                 *start_off += start[i] * varp->dsizes[i+1];
