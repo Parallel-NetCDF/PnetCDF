@@ -800,4 +800,4 @@ This document is adopted from the
 the Unidata Program Center, University Corporation for Atmospheric
 Research, located in Boulder, Colorado.
 
-PnetCDF home page at http://cucis.ece.northwestern.edu/projects/PnetCDF/.
+PnetCDF home page at https://parallel-netcdf.github.io
