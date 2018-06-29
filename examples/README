@@ -22,7 +22,7 @@ with C, C++, F77, and F90 versions.
         Using non-blocking buffered write APIs
 
    Detailed descriptions for these programs can be found in
-   http://trac.mcs.anl.gov/projects/parallel-netcdf/wiki/QuickTutorial
+   https://parallel-netcdf.github.io/wiki/QuickTutorial.html
 
 
   ./C/block_cyclic.c

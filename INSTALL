@@ -113,27 +113,24 @@ Here lists a few important options:
                           [/usr/local]
   --exec-prefix=EPREFIX   install architecture-dependent files in EPREFIX
                           [PREFIX]
-
   --disable-cxx           Turn off support for the C++ interface, if you only
                           need the C interface. [default: enabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
                           only need the C interface. [default: enabled]
   --enable-shared[=PKGS]  build shared libraries [default=no]
   --enable-static[=PKGS]  build static libraries [default=yes]
-  --enable-debug          Enable PnetCDF internal debug mode. This also
-                          enables safe mode. [default: disabled]
+  --enable-debug          Enable PnetCDF internal debug mode. This also enables
+                          safe mode. [default: disabled]
   --(en/dis)able-in-place-swap
                           Enable/disable memory in-place byte swap on Little
                           Endian machines. [default: auto]
   --enable-subfiling      Enable subfiling support. [default: disabled]
   --disable-erange-fill   Disable use of fill value when out-of-range type
-                          conversion causes NC_ERANGE error. [default:
-                          enabled]
+                          conversion causes NC_ERANGE error. [default: enabled]
   --disable-relax-coord-bound
                           Use stricter rule for error NC_EINVALCOORDS to
-                          disallow coordinate start argument equal to
-                          dimension size when argument count is zero.
-                          [default: enabled]
+			  disallow coordinate start argument equal to dimension
+			  size when argument count is zero. [default: enabled]
   --enable-doxygen        Enable generation of documentation. [default:
                           disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
@@ -146,14 +143,12 @@ Here lists a few important options:
                           Note "make check" can run very slow. [default:
                           disabled]
   --enable-null-byte-header-padding
-                          Enable check for null-byte header padding when
-                          reading files in classic formats. [default:
-                          disabled]
+			  Enable check for null-byte header padding when
+			  reading files in classic formats. [default: disabled]
   --enable-burst-buffering
-                          Enable burst buffer driver support. [default:
-                          disabled]
-  --enable-profiling      Enable time and memory profiling. [default:
-                          disabled]
+			  Enable burst buffer driver support. [default:
+			  disabled]
+  --enable-profiling      Enable time and memory profiling. [default: disabled]
   --disable-versioning    Disable library versioning. [default: enabled]
 
 Optional Packages:
@@ -167,27 +162,26 @@ Some influential environment variables:
   MPICXX      MPI C++ compiler, [default: CXX]
   MPIF77      MPI Fortran 77 compiler, [default: F77]
   MPIF90      MPI Fortran 90 compiler, [default: FC]
-  CC          C compiler command
+  CC          C compiler command (used only if MPICC is not set)
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
   LIBS        libraries to pass to the linker, e.g. -l<library>
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
-  CXX         C++ compiler command
+  CXX         C++ compiler command (used only if MPICXX is not set)
   CXXFLAGS    C++ compiler flags
   LT_SYS_LIBRARY_PATH
               User-defined run-time library search path.
   CPP         C preprocessor
   CXXCPP      C++ preprocessor
-  FC          Fortran compiler command
+  FC          Fortran compiler command (used only if MPIF90 is not set)
   FCFLAGS     Fortran compiler flags
-  F77         Fortran 77 compiler command
+  F77         Fortran 77 compiler command (used only if MPIF77 is not set)
   FFLAGS      Fortran 77 compiler flags
   GCOV        name/path for the gcov utility
-  TESTSEQRUN  Run command (on one MPI process) for "make check" on
-              cross-compile environment. Example: "aprun -n 1". [default:
-              none]
+  TESTSEQRUN  Run command (on one MPI process) for "make check" on a cross-
+              compile environment. Example: "aprun -n 1". [default: none]
   TESTMPIRUN  MPI run command for "make ptest", [default: mpiexec -n NP]
   TESTOUTDIR  Output file directory for "make check" and "make ptest",
               [default: ./]
@@ -294,8 +288,8 @@ Note on configure option "--enable-relax-coord-bound"
    more detailed information, see discussion in:
    http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
 
-   Starting from version 1.10.0, this option is enabled as the default
-   setting, in accord with NetCDF 4.7.0. See discussion in:
+   Starting from version 1.10.0, the default of this option is changed to
+   enabled, in accord with NetCDF 4.7.0. See discussion in:
    https://github.com/Unidata/netcdf-c/issues/1010
 
 -------------------------------------------------------------------------
@@ -304,18 +298,23 @@ Note on configure option "--enable-relax-coord-bound"
 ==================================
 
 Two type of testings are implemented in PnetCDF: sequential and parallel.
-For testing sequential programs, the command is
+* For testing sequential programs, the command is
      make check
-For testing parallel programs, the command is
+* For testing parallel programs, the command is
      make ptest
-The parallel test uses up to 10 MPI processes.
+  which uses 4 MPI processes to run all test programs
+* For more elaborated parallel testing, command
+     make ptests
+  will use up to 10 MPI processes to run all test programs.
+
+Note the above commands can be run before "make install".
 
 Command "make tests" will build executables of all the test programs. This can
 be handy if testing must run through a batch job system. Having the testing
 executables built before submitting a batch job could save a lot of time.
 
-There are three environment variables that can be used to run make check/ptest
-on a cross compile platform.
+There are three environment variables that can be used to run "make check" and
+"make ptest" on a cross compile platform.
  - TESTMPIRUN : command to launch MPI jobs. default: mpiexec -n NP
  - TESTSEQRUN : command to run MPI executable sequentially. default: none
  - TESTOUTDIR : output directory. default: ./

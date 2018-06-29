@@ -101,8 +101,8 @@ install-data-hook:
 	@echo '|  Argonne National Laboratory.'
 	@echo '|'
 	@echo '|  Visit PnetCDF web sites for more information'
+	@echo '|      https://parallel-netcdf.github.io'
 	@echo '|      http://cucis.ece.northwestern.edu/projects/PnetCDF'
-	@echo '|      http://trac.mcs.anl.gov/projects/parallel-netcdf'
 	@echo '|'
 	@echo '+----------------------------------------------------------------------------+'
 
