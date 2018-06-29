@@ -65,10 +65,11 @@ Tasks immediately before a new release (must run in the following order)
                                  ^^^^^
 
  3. Update file "RELEASE_NOTES".
-    Copy the contents of file "ChangeLog" (file "sneak_peek" for v1.9.0 and
-    prior) into file "RELEASE_NOTES". Add the release version and date at the
-    top of file "RELEASE_NOTES". Clear up file "ChangeLog" (reset all items to
-    none).
+    Copy the contents of file "sneak_peek" into file "RELEASE_NOTES".  Clear up
+    file "sneak_peek" (reset all items to none). The release version and date
+    in "RELEASE_NOTES" will be automatically set when running command "make
+    dist". (For version 1.8.1 and prior, add the release version and date at
+    the top of file "RELEASE_NOTES".)
 
  4. Update the release date (skip this step for 1.9.0 and later)
     Below describe how to set the release date for 1.8.1 and prior.
@@ -78,7 +79,8 @@ Tasks immediately before a new release (must run in the following order)
     release date.
     svn commit -m "set release date of version 1.6.1 to today"
 
- 5. Run svn commit to commit the above changes to trunk branch.
+ 5. (skip for 1.10.0 and after) Run svn commit to commit the above changes to
+    trunk branch.
 
  6. Create a new SVN tag on svn repo (v1.9.0 and prior).
     Run command below to duplicate the current trunk to a new tag:
