@@ -1637,7 +1637,7 @@ if test "x${large_file_test}" = xyes; then
 fi
 if test "x${debug}" = xyes; then
    echo "\
-              PnetCDF internal debug mode                 - enabled"
+              Internal debug mode                         - enabled"
 fi
 if test "x${has_fortran}" = xyes -a "x${ac_f77_support_freeform}" = xno ; then
    echo "\
@@ -1657,7 +1657,7 @@ if test "x${enable_bbdriver}" = xyes ; then
 fi
 if test "x${enable_profiling}" = xyes ; then
    echo "\
-              PnetCDF internal profiling                  - enabled"
+              Internal profiling mode                     - enabled"
 fi
 
 echo "\
