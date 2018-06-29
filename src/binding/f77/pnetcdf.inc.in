@@ -29,6 +29,7 @@
       integer PNETCDF_LARGE_REQ
       integer PNETCDF_NULL_BYTE_HEADER_PADDING
       integer PNETCDF_BYTE_SWAP_IN_PLACE
+      integer PNETCDF_BURST_BUFFERING
 
       parameter (PNETCDF_ERANGE_FILL              = @ENABLE_ERANGE_FILL@)
       parameter (PNETCDF_SUBFILING                = @ENABLE_SUBFILING@)
