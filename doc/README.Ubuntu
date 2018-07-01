@@ -5,17 +5,17 @@
 # $Id$
 
 -----------------------------------------------------------------------------
- Build PnetCDF shared libraries on Ubuntu
+ Build PnetCDF on Ubuntu
 -----------------------------------------------------------------------------
 
-1. The following waning message may occur during "make". It is safe to ignore.
-   See http://gnu-automake.7480.n7.nabble.com/bug-20082-new-warning-from-ar-on-rawhide-systems-td21769.html
+The following waning message may occur during "make". It is safe to ignore.
+See http://gnu-automake.7480.n7.nabble.com/bug-20082-new-warning-from-ar-on-rawhide-systems-td21769.html
 
        ar: `u' modifier ignored since `D' is the default (see `U')
 
 
 -----------------------------------------------------------------------
-The following note applies to 1.9.0 only.
+The following note applies to 1.9.0 only, when building shared library.
 -----------------------------------------------------------------------
 
    Set LDFLAGS to the following at the configure command line, i.e.,
