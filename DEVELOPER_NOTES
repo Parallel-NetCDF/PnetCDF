@@ -66,10 +66,10 @@ Tasks immediately before a new release (must run in the following order)
 
  3. Update file "RELEASE_NOTES".
     Copy the contents of file "sneak_peek" into file "RELEASE_NOTES".  Clear up
-    file "sneak_peek" (reset all items to none). The release version and date
-    in "RELEASE_NOTES" will be automatically set when running command "make
-    dist". (For version 1.8.1 and prior, add the release version and date at
-    the top of file "RELEASE_NOTES".)
+    file "sneak_peek" (reset all items to none). Starting from 1.9.0, the
+    release version and date in "RELEASE_NOTES" will be automatically set when
+    running command "make dist". (For version 1.8.1 and prior, add the release
+    version and date at the top of file "RELEASE_NOTES".)
 
  4. Update the release date (skip this step for 1.9.0 and later)
     Below describe how to set the release date for 1.8.1 and prior.
@@ -84,19 +84,19 @@ Tasks immediately before a new release (must run in the following order)
 
  6. Create a new SVN tag on svn repo (v1.9.0 and prior).
     Run command below to duplicate the current trunk to a new tag:
-
         svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
                  https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
                  -m "Tagging release version 1.8.1"
 
-    To create a new tag on GitHub, use command (v1.10.0 and after):
+ 7. Create a new tag on GitHub, use command (v1.10.0 and after):
+    Run command below to duplicate the current master branch to a new tag:
         git tag -a v1.10.0 -m "Tagging release version 1.10.0"
         git push origin v1.10.0
 
- 7. Generate release tar balls
+ 8. Generate release tar balls
     a. Generate a new "configure" file
        * Run command "autoreconf" to generate file "configure" to be included
-         in the release (but ignored by the SVN repo).
+         in the release (but ignored by the SVN/Git repo).
        * Must use the bug-fixed autotools of version 2.69 or higher to run
          "autoreconf". See README.Fujitsu for the bug in autoconf 2.69 and
          patch.
@@ -114,7 +114,7 @@ Tasks immediately before a new release (must run in the following order)
        "make dist". This setting will be done automatically, unlike step 4
        above that manually update the release date.
 
- 8. Generate SHA1 checksums
+ 9. Generate SHA1 checksums
     Run command:
     openssl sha1 parallel-netcdf-1.6.1.tar.gz
     openssl sha1 parallel-netcdf-1.6.1.tar.bz2
@@ -830,5 +830,6 @@ Note on burst buffer driver
   the contents of log files stored in the burst buffer.
 
 * Known issues:
-  1.vard API is not supported. It will be carried out by ncmpio driver directly.
+  1. vard API is not supported. It will be carried out by blocking vard APIs
+     through the ncmpio driver directly.
 
