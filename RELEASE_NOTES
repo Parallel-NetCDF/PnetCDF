@@ -1,13 +1,14 @@
-Parallel NetCDF Release Notes:
+=====================================
+PnetCDF Release Notes
 =====================================
 
 -------------------------------------
-version  _PNETCDF_VERSION_  (_PNETCDF_RELEASE_DATE_)
+Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
   o New features
-    * A new I/O layer that makes use of burst buffers is added. Burst buffer
-      is an I/O driver that implements a log-based I/O aggregation for write
+    * A new I/O layer that makes use of burst buffers is added. Burst buffer is
+      an I/O driver that implements a log-based I/O aggregation for write
       requests with the present of burst buffer storage devices. The design is
       to save first write requests in burst buffers and later flush the saved
       requests to the destination file system. See doc/README.burst_buffering
@@ -83,8 +84,8 @@ version  _PNETCDF_VERSION_  (_PNETCDF_RELEASE_DATE_)
          types of all variables accessed in filetype must be the same.
          Otherwise, NC_EMULTITYPES will be returned.
       4. buftype must contain only one same element data type if it is used to
-	 read or write multiple variables from file. Otherwise NC_EMULTITYPES
-	 will be returned.
+         read or write multiple variables from file. Otherwise NC_EMULTITYPES
+         will be returned.
 
   o New error code precedence
     * none
@@ -258,7 +259,7 @@ version  _PNETCDF_VERSION_  (_PNETCDF_RELEASE_DATE_)
 
 
 -------------------------------------
-version  1.9.0 (December 19, 2017)
+Version 1.9.0 (December 19, 2017)
 -------------------------------------
 
   o New features
@@ -626,7 +627,7 @@ version  1.9.0 (December 19, 2017)
       ulonglong             ncmpi_put_var_ulonglong MPI_UNSIGNED_LONG_LONG
 
 -------------------------------------
-version  1.8.1 (January 28, 2017)
+Version 1.8.1 (January 28, 2017)
 -------------------------------------
 
   This release is mainly for fixing the following bug.
@@ -647,7 +648,7 @@ version  1.8.1 (January 28, 2017)
       suggested by sunpoet@FreeBSD.org. Ticket #25
 
 -------------------------------------
-version  1.8.0 (December 19, 2016)
+Version 1.8.0 (December 19, 2016)
 -------------------------------------
 
   o New features
@@ -838,7 +839,7 @@ version  1.8.0 (December 19, 2016)
 
 
 -------------------------------------
-version  1.7.0 (March 3, 2016)
+Version 1.7.0 (March 3, 2016)
 -------------------------------------
 
   o New features
@@ -992,7 +993,7 @@ version  1.7.0 (March 3, 2016)
       overflow happens. Overflow checking is now performed before I/O.
 
 -------------------------------------
-version  1.6.1 (June 1, 2015)
+Version 1.6.1 (June 1, 2015)
 -------------------------------------
 
   o New features
@@ -1021,7 +1022,7 @@ version  1.6.1 (June 1, 2015)
   o New error code
     * NC_ENOTRECVAR when attempting operation only for record variables
     * NC_ENOTFILL when attempting to fill a variable when its fill mode is off
-    * NC_EMULTIDEFINE_FILL_MODE	when inconsistent dataset fill mode is detected
+    * NC_EMULTIDEFINE_FILL_MODE when inconsistent dataset fill mode is detected
     * NC_EMULTIDEFINE_VAR_FILL_MODE when inconsistent variable fill mode is
       detected
     * NC_EMULTIDEFINE_VAR_FILL_VALUE when inconsistent variable fill value is
@@ -1058,7 +1059,7 @@ version  1.6.1 (June 1, 2015)
     * Fix C++ compile error for converting NULL to string. See r2039.
 
 -------------------------------------
-version  1.6.0 (February 2, 2015)
+Version 1.6.0 (February 2, 2015)
 -------------------------------------
 
   o Format conformation updates:
@@ -1242,7 +1243,7 @@ version  1.6.0 (February 2, 2015)
       for further detailed discussion.
 
 -------------------------------------
-version  1.5.0 (July 8, 2014)
+Version 1.5.0 (July 8, 2014)
 -------------------------------------
 
   o New features
@@ -1446,7 +1447,7 @@ version  1.5.0 (July 8, 2014)
       not the last record.
 
 -------------------------------------
-version  1.4.1 (December 23, 2013)
+Version 1.4.1 (December 23, 2013)
 -------------------------------------
 
   o Bug fix:
@@ -1477,7 +1478,7 @@ version  1.4.1 (December 23, 2013)
 
 
 -------------------------------------
-version  1.4.0 (November 17, 2013)
+Version 1.4.0 (November 17, 2013)
 -------------------------------------
 
   o New APIs
@@ -1703,7 +1704,7 @@ version  1.4.0 (November 17, 2013)
 
 
 -------------------------------------
-version  1.3.1 (September 24, 2012)
+Version 1.3.1 (September 24, 2012)
 -------------------------------------
 
     This release is primarily a bug-fix release, tidying up a few issues and
@@ -1722,7 +1723,7 @@ version  1.3.1 (September 24, 2012)
     - add the error string for error code NC_ENOENT.
 
 -------------------------------------
-version  1.3.0 (June 26, 2012)
+Version 1.3.0 (June 26, 2012)
 -------------------------------------
 
     - Bug fixes in new ncmpidiff tool.
@@ -1779,7 +1780,7 @@ version  1.3.0 (June 26, 2012)
       if built with the Fortran 90 compiler.
 
 -------------------------------------
-version  1.2.0 (August 19, 2010)
+Version 1.2.0 (August 19, 2010)
 -------------------------------------
 
     - Several bugs fixed, memory leaks reduced,
@@ -1806,7 +1807,7 @@ version  1.2.0 (August 19, 2010)
 
 
 -------------------------------------
-version  1.1.0 (November 2, 2009)
+Version 1.1.0 (November 2, 2009)
 -------------------------------------
 
     - A new file format, CDF-5, is introduced. This format allows defining
@@ -1830,7 +1831,7 @@ version  1.1.0 (November 2, 2009)
       addition to the older "big file" (CDF-2) files.
 
 -------------------------------------
-version  1.0.0 (July 27, 2005)
+Version 1.0.0 (July 27, 2005)
 -------------------------------------
 
     - The Parallel-NetCDF developers are quite happy to announce our 1.0.0

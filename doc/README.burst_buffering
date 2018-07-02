@@ -7,9 +7,8 @@
 -----------------------------------------------------------------------------
  Using Burst Buffers in PnetCDF
 -----------------------------------------------------------------------------
-Burst buffer driver implements a log-based I/O aggregation for write related
-I/O requests that is designed to work on a wide range of burst buffer
-architecture.
+Burst buffer driver implements a log-based I/O aggregation for write requests.
+It is designed to work on a wide range of burst buffer architecture.
 
 -----------------------------------------------------------------------------
  Build PnetCDF with burst buffer feature
@@ -43,20 +42,23 @@ nc_burst_buf_dirname            <Valid POSIX    ./       Directory where log
                                  Directory>              files will be stored.
                                                          This is the path burst
                                                          buffer is mounted.
-nc_burst_buf_del_on_close       enable/disable  enable   Whether log files
-                                                         should be deleted after
-                                                         the file is closed.
+nc_burst_buf_del_on_close       enable/disable  enable   Whether or not the log
+                                                         files should be
+                                                         deleted after the
+                                                         NetCDF file is closed.
                                                          Disabling allows other
                                                          programs to access the
                                                          file.
-nc_burst_buf_flush_buffer_size  <integer>       0        Amount of memory that
-                                                         can be used to flush
-                                                         the log. The unit is
-                                                         in bytes. 0 means
-                                                         unlimited. User must
-							 guarantee that it is
-							 larger than individual
-							 I/O requests.
+nc_burst_buf_flush_buffer_size  <integer>       0        Amount of memory per
+                                                         MPI process that allows
+                                                         PnetCDF to allocate to
+                                                         flush the logged data.
+                                                         The unit is in bytes.
+                                                         0 means unlimited.
+                                                         User must guarantee
+                                                         that it is larger than
+                                                         any individual I/O
+                                                         requests.
 
 -----------------------------------------------------------------------------
  Example job script using DataWarp on Cori @NERSC
