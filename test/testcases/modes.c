@@ -7,7 +7,7 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program tests if the correct error codes are returns given various
+ * This program tests if the correct error codes are returned given various
  * create/open modes.
  *
  * NC_EINVAL_CMODE should be returned when creating a file using
