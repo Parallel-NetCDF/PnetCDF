@@ -69,14 +69,10 @@ ncbbio_create(MPI_Comm     comm,
     if (err != NC_NOERR) return err;
 
     /* Create a NC_bb object and save its driver pointer */
-    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb));
+    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb) + strlen(path)+1);
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    ncbbp->path = (char*) (ncbbp + 1);
 
-    ncbbp->path = (char*) NCI_Malloc(strlen(path)+1);
-    if (ncbbp->path == NULL) {
-        NCI_Free(ncbbp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
     strcpy(ncbbp->path, path);
     ncbbp->mode = cmode;
     ncbbp->ncmpio_driver = driver;  // ncmpio driver
@@ -128,14 +124,10 @@ ncbbio_open(MPI_Comm     comm,
     if (err != NC_NOERR) return err;
 
     /* Create a NC_bb object and save its driver pointer */
-    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb));
+    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb) + strlen(path)+1);
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    ncbbp->path = (char*) (ncbbp + 1);
 
-    ncbbp->path = (char*) NCI_Malloc(strlen(path)+1);
-    if (ncbbp->path == NULL) {
-        NCI_Free(ncbbp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
     strcpy(ncbbp->path, path);
     ncbbp->mode = omode;
     ncbbp->ncmpio_driver = driver;  // ncmpio driver
@@ -213,7 +205,6 @@ ncbbio_close(void *ncdp)
     // Cleanup NC-bb object
     MPI_Comm_free(&(ncbbp->comm));
     MPI_Info_free(&(ncbbp->info));
-    NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
     return status;
@@ -434,7 +425,6 @@ ncbbio_abort(void *ncdp)
 
     MPI_Comm_free(&(ncbbp->comm));
     MPI_Info_free(&(ncbbp->info));
-    NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
     return status;

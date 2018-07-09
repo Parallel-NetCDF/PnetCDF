@@ -147,10 +147,12 @@ int log_flush(NC_bb *ncbbp) {
     }
 
     /* Allocate buffer */
-    databuffer = (char*)NCI_Malloc(databuffersize);
+    databuffer = (char*)NCI_Malloc(databuffersize + ncbbp->entrydatasize.nused * SIZEOF_INT * 2);
     if(databuffer == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
+    reqids = (int*)(databuffer + databuffersize);
+    stats = reqids + ncbbp->entrydatasize.nused;
 
     /* Seek to the start position of first data record */
     err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
@@ -161,9 +163,6 @@ int log_flush(NC_bb *ncbbp) {
     /* Initialize buffer status */
     databufferused = 0;
     dataread = 0;
-
-    reqids = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
-    stats = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
 
     /*
      * Iterate through meta log entries
@@ -336,8 +335,6 @@ int log_flush(NC_bb *ncbbp) {
 
     /* Free the data buffer */
     NCI_Free(databuffer);
-    NCI_Free(reqids);
-    NCI_Free(stats);
 
 #ifdef PNETCDF_PROFILING
     t4 = MPI_Wtime();
