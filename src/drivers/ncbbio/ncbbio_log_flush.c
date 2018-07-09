@@ -138,7 +138,9 @@ int log_flush(NC_bb *ncbbp) {
             }
         }
     }
-    nrounds++;
+    if (databufferused > 0){
+        nrounds++;
+    }
     if (!fIsSet(ncbbp->flag, NC_MODE_INDEP)){
         MPI_Allreduce(&nrounds, &nrounds_all, 1, MPI_INT, MPI_MAX, ncbbp->comm);
     }
