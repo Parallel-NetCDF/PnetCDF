@@ -23,7 +23,7 @@
  * IN      info:    MPI info passed to ncmpi_create/ncmpi_open
  * INOUT   ncbbp:   NC_bb object holding the log structure
  */
-int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
+int ncbbio_log_create(NC_bb* ncbbp) {
     int i, rank, np, err, flag, masterrank;
     char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
     char *abspath, *fname, *path, *fdir = NULL;

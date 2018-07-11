@@ -230,7 +230,7 @@ int ncbbio_log_sizearray_init(NC_bb_sizevector *sp);
 void ncbbio_log_sizearray_free(NC_bb_sizevector *sp);
 int ncbbio_log_sizearray_append(NC_bb_sizevector *sp, size_t size);
 int log_flush(NC_bb *ncbbp);
-int ncbbio_log_create(NC_bb *ncbbp, MPI_Info info);
+int ncbbio_log_create(NC_bb *ncbbp);
 int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[], const MPI_Offset count[], const MPI_Offset stride[], void *buf, MPI_Datatype buftype, MPI_Offset *putsize);
 int ncbbio_log_close(NC_bb *ncbbp, int replay);
 int ncbbio_log_flush(NC_bb *ncbbp);

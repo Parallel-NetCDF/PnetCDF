@@ -306,7 +306,7 @@ int ncbbio_bufferedfile_read(NC_bb_bufferedfile *f, void *buf, size_t count){
  * IN  offset:    New offset
  * IN  whence:    Meaning of new offset
  */
-int br(NC_bb_bufferedfile *f, off_t offset, int whence){
+int ncbbio_bufferedfile_seek(NC_bb_bufferedfile *f, off_t offset, int whence){
     int err;
 
     // Update file position
