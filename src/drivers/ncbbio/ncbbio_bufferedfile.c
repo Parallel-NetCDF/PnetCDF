@@ -14,7 +14,7 @@
 #include <string.h>
 #include <ncbbio_driver.h>
 
-#define BUFSIZE 0
+#define BUFSIZE 8388608
 
 /*
  * Open buffered file
@@ -133,6 +133,7 @@ int ncbbio_bufferedfile_write(NC_bb_bufferedfile *f, void *buf, size_t count){
         * The end position of mid section can be calculated as the last position on the block boundary within the write region
         * This can be incorrect when write region sits within a block where we will have start > end
         * In this case, we simply set start and end to 0, giving the entire region as tail
+        * f->pos can not be simplified out, or overflow may happen
         */
         midstart = f->pos + (f->bsize - f->pos % f->bsize) % f->bsize;
         midend = f->pos + count - (f->pos + count) % f->bsize;
