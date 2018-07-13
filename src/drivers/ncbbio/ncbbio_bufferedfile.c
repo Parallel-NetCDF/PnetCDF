@@ -24,12 +24,12 @@
  * IN      info:    File hint for opened file (currently unused)
  * OUT       fd:    File handler
  */
-int ncbbio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_bb_bufferedfile **fh) {
+int ncbbio_sharedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_bb_sharedfile **fh) {
     int err;
-    NC_bb_bufferedfile *f;
+    NC_bb_sharedfile *f;
 
     /* Allocate buffer */
-    f = (NC_bb_bufferedfile*)NCI_Malloc(sizeof(NC_bb_bufferedfile));
+    f = (NC_bb_sharedfile*)NCI_Malloc(sizeof(NC_bb_sharedfile));
 
     /* Initialize metadata associate with the file
      * We assum file system block (stripe) size is equal to buffer size
@@ -67,7 +67,7 @@ int ncbbio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info,
  * Close buffered file
  * OUT       fd:    File handler
  */
-int ncbbio_bufferedfile_close(NC_bb_bufferedfile *f) {
+int ncbbio_sharedfile_close(NC_bb_sharedfile *f) {
     int err;
 
     /* Close file */
@@ -123,7 +123,7 @@ int ncbbio_bufferedfile_close(NC_bb_bufferedfile *f) {
  * Data written to file: |0123|4567|
  * Buffer after write:             |89  |
  */
-int ncbbio_bufferedfile_write(NC_bb_bufferedfile *f, void *buf, size_t count){
+int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count){
     int err;
     size_t midstart, midend;    // Start and end offset of the mid section related the file position
 
@@ -223,7 +223,7 @@ int ncbbio_bufferedfile_write(NC_bb_bufferedfile *f, void *buf, size_t count){
  *
  * pwrite is not buffered, we write directly to the file
  */
-int ncbbio_bufferedfile_pwrite(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset){
+int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     // Record the file size as the largest location ever reach by IO operation
     if (f->fsize < offset + count){
         f->fsize = offset + count;
@@ -245,7 +245,7 @@ int ncbbio_bufferedfile_pwrite(NC_bb_bufferedfile *f, void *buf, size_t count, o
  * We flush the buffer before read so data in the buffer can be reflected
  * Read is not buffered, we read directly from the file
  */
-int ncbbio_bufferedfile_pread(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset){
+int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     int err;
 
     if (f->buffer != NULL){
@@ -278,13 +278,13 @@ int ncbbio_bufferedfile_pread(NC_bb_bufferedfile *f, void *buf, size_t count, of
  * OUT    buf:    Buffer of data to be written
  * IN   count:    Number of bytes to write
  *
- * We call ncbbio_bufferedfile_pread and then increase the file position by count
+ * We call ncbbio_sharedfile_pread and then increase the file position by count
  */
-int ncbbio_bufferedfile_read(NC_bb_bufferedfile *f, void *buf, size_t count){
+int ncbbio_sharedfile_read(NC_bb_sharedfile *f, void *buf, size_t count){
     int err;
 
     // Read from current file position
-    err = ncbbio_bufferedfile_pread(f, buf, count, f->pos);
+    err = ncbbio_sharedfile_pread(f, buf, count, f->pos);
     if (err != NC_NOERR){
         return err;
     }
@@ -306,7 +306,7 @@ int ncbbio_bufferedfile_read(NC_bb_bufferedfile *f, void *buf, size_t count){
  * IN  offset:    New offset
  * IN  whence:    Meaning of new offset
  */
-int ncbbio_bufferedfile_seek(NC_bb_bufferedfile *f, off_t offset, int whence){
+int ncbbio_sharedfile_seek(NC_bb_sharedfile *f, off_t offset, int whence){
     int err;
 
     // Update file position
