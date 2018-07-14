@@ -162,7 +162,7 @@ int ncbbio_log_create(NC_bb* ncbbp) {
         masterrank = rank;
     }
 
-    /* Extract file anme
+    /* Extract file name
      * Search for first / charactor from the tail
      * Absolute path should always contains one '/', return error otherwise
      * We return the string including '/' for convenience
