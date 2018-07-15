@@ -149,9 +149,9 @@ typedef struct NC_bb_put_list {
 /* Shared file object */
 typedef struct NC_bb_sharedfile {
     int fd; // POSIX file descriptor
-    int chanel; // Which chanel are we on (Usually according to the rank)
     int nchanel;    // How many chanel are there (how many process are sharing the file)
     size_t pos; // Logical file position within the fileview
+    int chanel; // Which chanel are we on (Usually according to the rank)
     size_t bsize;   // Dividing blocksize
     size_t fsize;   // Current file size
 } NC_bb_sharedfile;
@@ -171,26 +171,6 @@ typedef struct NC_bb_bufferedfile {
 
 /* Log structure */
 typedef struct NC_bb {
-    char metalogpath[PATH_MAX];    /* path of metadata log */
-    char datalogpath[PATH_MAX];    /* path of data log */
-    char logbase[PATH_MAX];        /* path of log files */
-    int rank;
-    int np;
-    NC_bb_sharedfile *metalog_fd;    /* file handle of metadata log */
-    NC_bb_bufferedfile *datalog_fd;    /* file handle of data log */
-    int recdimid;
-    int inited;
-    int hints;
-    size_t datalogsize;
-    NC_bb_buffer metadata; /* In memory metadata buffer that mirrors the metadata log */
-    NC_bb_metadataidx metaidx;
-    NC_bb_sizevector entrydatasize;    /* Array of metadata entries */
-    int isflushing;   /* If log is flushing */
-    MPI_Offset max_ndims;
-    NC_bb_put_list putlist;
-    MPI_Offset recdimsize;
-    MPI_Offset flushbuffersize;
-    MPI_Offset maxentrysize;
 #ifdef PNETCDF_PROFILING
     /* Profiling information */
     MPI_Offset total_data;
@@ -210,16 +190,36 @@ typedef struct NC_bb {
     double put_meta_wr_time;
     double put_num_wr_time;
 #endif
-
-    int                mode;        /* file _open/_create mode */
-    int                flag;        /* define/data/collective/indep mode */
     int                ncid;
-    char              *path;        /* path name */
-    MPI_Comm           comm;        /* MPI communicator */
-    MPI_Comm           logcomm;        /* MPI communicator */
-    MPI_Info           info;
+    size_t datalogsize;
     void              *ncp;         /* pointer to driver's internal object */
     struct PNC_driver *ncmpio_driver;
+    MPI_Offset maxentrysize;
+    NC_bb_sharedfile *metalog_fd;    /* file handle of metadata log */
+    NC_bb_bufferedfile *datalog_fd;    /* file handle of data log */
+    NC_bb_buffer metadata; /* In memory metadata buffer that mirrors the metadata log */
+    NC_bb_metadataidx metaidx;
+    NC_bb_sizevector entrydatasize;    /* Array of metadata entries */
+    MPI_Comm           logcomm;        /* MPI communicator */
+
+    MPI_Offset recdimsize;
+    NC_bb_put_list putlist;
+
+    int inited;
+    int hints;
+    int recdimid;
+    MPI_Offset max_ndims;  
+    MPI_Offset flushbuffersize;
+    int                flag;        /* define/data/collective/indep mode */
+    MPI_Comm           comm;        /* MPI communicator */
+
+    char metalogpath[PATH_MAX];    /* path of metadata log */
+    char datalogpath[PATH_MAX];    /* path of data log */
+    char logbase[PATH_MAX];        /* path of log files */
+    char              *path;        /* path name */
+    int rank;
+    int np;
+    int                mode;        /* file _open/_create mode */
 } NC_bb;
 
 int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm);
