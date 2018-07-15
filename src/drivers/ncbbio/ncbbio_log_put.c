@@ -250,13 +250,13 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
      * Note: metadata size will be updated after allocating metadata buffer
      *       space, substract esize for original location
      */
-
+/*
     err = ncbbio_sharedfile_seek(ncbbp->metalog_fd, ncbbp->metadata.nused - esize,
                            SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
-
+*/
     /* Write meta data log */
     err = ncbbio_sharedfile_write(ncbbp->metalog_fd, buffer, esize);
     if (err != NC_NOERR){
