@@ -220,8 +220,9 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
 
     /* Record data size */
     ncbbio_log_sizearray_append(&(ncbbp->entrydatasize), entryp->data_len);
-    // Record in index
-    // Entry address must be relative as metadata buffer can be reallocated
+    
+    // Record index
+    // NOTE: Entry address must be relative as metadata buffer can be reallocated
     ncbbio_metaidx_add(ncbbp, (NC_bb_metadataentry*)((char*)entryp -
                        (char*)(ncbbp->metadata.buffer)));
 
@@ -245,18 +246,6 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
     t3 = MPI_Wtime();
 #endif
 
-    /* Seek to the head of metadata
-     * Note: EOF may not be the place for next entry after a flush
-     * Note: metadata size will be updated after allocating metadata buffer
-     *       space, substract esize for original location
-     */
-/*
-    err = ncbbio_sharedfile_seek(ncbbp->metalog_fd, ncbbp->metadata.nused - esize,
-                           SEEK_SET);
-    if (err != NC_NOERR){
-        return err;
-    }
-*/
     /* Write meta data log */
     err = ncbbio_sharedfile_write(ncbbp->metalog_fd, buffer, esize);
     if (err != NC_NOERR){

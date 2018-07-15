@@ -539,13 +539,17 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
     ncbbp->entrydatasize.nused = 0;
     ncbbp->metaidx.nused = 0;
 
-    /* Rewind data log file descriptor and reset the size */
+    /* Rewind data log file descriptor*/
     err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
 
-    /* Rewind metadata log file descriptor and reset the size */
+    /* Rewind metadata log file descriptor
+     * Note: EOF may not be the place for next entry after a flush
+     * Note: metadata size will be updated after allocating metadata buffer
+     *       space, substract esize for original location
+     */
     err = ncbbio_sharedfile_seek(ncbbp->metalog_fd, ncbbp->metadata.nused,
                            SEEK_SET);
     if (err != NC_NOERR){
