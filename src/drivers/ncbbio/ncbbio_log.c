@@ -267,7 +267,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     if (err != NC_NOERR) {
         return err;
     }
-    err = ncbbio_bufferedfile_open(ncbbp->logcomm, ncbbp->datalogpath, flag,
+    err = ncbbio_sharedfile_open(ncbbp->logcomm, ncbbp->datalogpath, flag,
                            MPI_INFO_NULL, &(ncbbp->datalog_fd));
     if (err != NC_NOERR) {
         return err;
@@ -284,7 +284,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     /* Write data header to file
      * Data header consists of a fixed sized string PnetCDF0
      */
-    err = ncbbio_bufferedfile_write(ncbbp->datalog_fd, "PnetCDF0", 8);
+    err = ncbbio_sharedfile_write(ncbbp->datalog_fd, "PnetCDF0", 8);
     if (err != NC_NOERR){
         return err;
     }
@@ -396,7 +396,7 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
         if (err != NC_NOERR){
             return err;
         }
-        err = ncbbio_bufferedfile_close(ncbbp->datalog_fd);
+        err = ncbbio_sharedfile_close(ncbbp->datalog_fd);
         if (err != NC_NOERR){
             return err;
         }
@@ -540,7 +540,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
     ncbbp->metaidx.nused = 0;
 
     /* Rewind data log file descriptors and reset the size */
-    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
