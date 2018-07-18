@@ -6,7 +6,13 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New optimization
-    * none
+    * Burst buffer driver data log buffering layer removed. Buffering layer 
+      was intended to align data log write to 8MiB striping boundary on 
+      Cray DataWarp. However, experiment shows negligible performance 
+      improvement unless the I/O request is extremely small and fragment. 
+      Instead, it reduce performance on usual and larger request size. The 
+      buffering layer is removed. Data log now writes directly to the BB using 
+      POSIX API.
 
   o New Limitations
     * none
