@@ -3,11 +3,10 @@ dnl Copyright (C) 2017, Northwestern University and Argonne National Laboratory
 dnl See COPYRIGHT notice in top-level directory.
 dnl
 
-AC_REVISION([$Revision$])dnl
-dnl The above uses SVN keyword Revision to copy the unique revision number as
-dnl a stamp into configure script. When using git, use the following line
-dnl instead.
-dnl AC_REVISION([m4_esyscmd_s([git describe --always])])
+AC_REVISION([m4_esyscmd_s([git describe --always])])
+dnl When using svn, we use SVN keyword Revision to copy the unique revision
+dnl number as a stamp into configure script.
+dnl AC_REVISION([$Revision$])dnl
 
 dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
@@ -34,8 +33,8 @@ AM_INIT_AUTOMAKE([1.13])
 dnl enable silent rules by default
 AM_SILENT_RULES([yes])
 
-dnl if maintainer mode is disabled, make will *never* attempt to rebuild configure,
-dnl Makefile.ins, etc.
+dnl if maintainer mode is disabled, make will *never* attempt to rebuild
+dnl configure, Makefile.ins, etc.
 AM_MAINTAINER_MODE([enable])
 
 m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
