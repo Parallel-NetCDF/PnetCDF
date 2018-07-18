@@ -768,7 +768,7 @@ diff -u autoconf-2.69/lib/autoconf/status.m4 Origin/autoconf-2.69/lib/autoconf/s
  test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
 
  m4_ifdef([_AC_SEEN_CONFIG(HEADERS)], [DEFS=-DHAVE_CONFIG_H], [AC_OUTPUT_MAKE_DEFS()])
--if test "x$FC_DEFINE" != "x-D" ; then
+-if test "x$FC_DEFINE" != "x-D" -a "x$FC_DEFINE" != x ; then
 -   ac_fc_define_sed_str="s/-D/${FC_DEFINE}/g"
 -   FC_DEFS=`echo $DEFS | sed $ac_fc_define_sed_str`
 -else
