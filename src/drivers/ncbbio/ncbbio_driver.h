@@ -156,19 +156,6 @@ typedef struct NC_bb_sharedfile {
     size_t fsize;   // Current file size
 } NC_bb_sharedfile;
 
-/* File structure */
-typedef struct NC_bb_bufferedfile {
-    NC_bb_sharedfile *fd;    // Shared file
-    size_t pos; // File position
-    char *buffer;  // Buffer
-    // We require buffered region always maps to an aligned block boundary
-    // If we seek to an unaligned position, the region from the start of buffer to this region must be mark as unused to prevent being flushed to the file
-    size_t bunused;  // Unused amount of the buffer
-    size_t bused;     // Buffer used region
-    size_t bsize;   // Buffer size, also write block size
-    size_t fsize;   // Current file size
-} NC_bb_bufferedfile;
-
 /* Log structure */
 typedef struct NC_bb {
     char metalogpath[PATH_MAX];    /* path of metadata log */
@@ -177,7 +164,7 @@ typedef struct NC_bb {
     int rank;
     int np;
     NC_bb_sharedfile *metalog_fd;    /* file handle of metadata log */
-    NC_bb_bufferedfile *datalog_fd;    /* file handle of data log */
+    NC_bb_sharedfile *datalog_fd;    /* file handle of data log */
     int recdimid;
     int inited;
     int hints;
@@ -259,14 +246,6 @@ int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count);
 int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset);
 int ncbbio_sharedfile_read(NC_bb_sharedfile *f, void *buf, size_t count);
 int ncbbio_sharedfile_seek(NC_bb_sharedfile *f, off_t offset, int whence);
-
-int ncbbio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_bb_bufferedfile **fh);
-int ncbbio_bufferedfile_close(NC_bb_bufferedfile *f);
-int ncbbio_bufferedfile_pwrite(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset);
-int ncbbio_bufferedfile_write(NC_bb_bufferedfile *f, void *buf, size_t count);
-int ncbbio_bufferedfile_pread(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset);
-int ncbbio_bufferedfile_read(NC_bb_bufferedfile *f, void *buf, size_t count);
-int ncbbio_bufferedfile_seek(NC_bb_bufferedfile *f, off_t offset, int whence);
 
 void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info);
 void ncbbio_export_hint(NC_bb *ncbbp, MPI_Info info);
