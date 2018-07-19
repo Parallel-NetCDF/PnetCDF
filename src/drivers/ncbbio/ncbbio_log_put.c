@@ -237,7 +237,7 @@ int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[],
     /*
      * Write data log
      */
-    err = ncbbio_bufferedfile_write(ncbbp->datalog_fd, buf, size);
+    err = ncbbio_sharedfile_write(ncbbp->datalog_fd, buf, size);
     if (err != NC_NOERR){
         return err;
     }

@@ -121,7 +121,7 @@ int log_flush(NC_bb *ncbbp) {
     databufferused = 0;
     dataread = 0;
     nrounds = 0;
-    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
@@ -157,7 +157,7 @@ int log_flush(NC_bb *ncbbp) {
     stats = reqids + ncbbp->entrydatasize.nused;
 
     /* Seek to the start position of first data record */
-    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
@@ -192,7 +192,7 @@ int log_flush(NC_bb *ncbbp) {
 #ifdef PNETCDF_PROFILING
                     t2 = MPI_Wtime();
 #endif
-                    err = ncbbio_bufferedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
+                    err = ncbbio_sharedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
                     if (err != NC_NOERR){
                         return err;
                     }
@@ -204,7 +204,7 @@ int log_flush(NC_bb *ncbbp) {
                 }
 
                 // Skip canceled entry
-                err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, ncbbp->entrydatasize.values[ub], SEEK_CUR);
+                err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, ncbbp->entrydatasize.values[ub], SEEK_CUR);
                 if (err != NC_NOERR){
                     return err;
                 }
@@ -219,7 +219,7 @@ int log_flush(NC_bb *ncbbp) {
 #ifdef PNETCDF_PROFILING
             t2 = MPI_Wtime();
 #endif
-            err = ncbbio_bufferedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
+            err = ncbbio_sharedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
             if (err != NC_NOERR){
                 return err;
             }

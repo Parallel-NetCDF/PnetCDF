@@ -149,28 +149,35 @@ typedef struct NC_bb_put_list {
 /* Shared file object */
 typedef struct NC_bb_sharedfile {
     int fd; // POSIX file descriptor
+    int chanel; // Which chanel are we on (Usually according to the rank)
     int nchanel;    // How many chanel are there (how many process are sharing the file)
     size_t pos; // Logical file position within the fileview
-    int chanel; // Which chanel are we on (Usually according to the rank)
     size_t bsize;   // Dividing blocksize
     size_t fsize;   // Current file size
 } NC_bb_sharedfile;
 
-/* File structure */
-typedef struct NC_bb_bufferedfile {
-    NC_bb_sharedfile *fd;    // Shared file
-    size_t pos; // File position
-    char *buffer;  // Buffer
-    // We require buffered region always maps to an aligned block boundary
-    // If we seek to an unaligned position, the region from the start of buffer to this region must be mark as unused to prevent being flushed to the file
-    size_t bunused;  // Unused amount of the buffer
-    size_t bused;     // Buffer used region
-    size_t bsize;   // Buffer size, also write block size
-    size_t fsize;   // Current file size
-} NC_bb_bufferedfile;
-
 /* Log structure */
 typedef struct NC_bb {
+    char metalogpath[PATH_MAX];    /* path of metadata log */
+    char datalogpath[PATH_MAX];    /* path of data log */
+    char logbase[PATH_MAX];        /* path of log files */
+    int rank;
+    int np;
+    NC_bb_sharedfile *metalog_fd;    /* file handle of metadata log */
+    NC_bb_sharedfile *datalog_fd;    /* file handle of data log */
+    int recdimid;
+    int inited;
+    int hints;
+    size_t datalogsize;
+    NC_bb_buffer metadata; /* In memory metadata buffer that mirrors the metadata log */
+    NC_bb_metadataidx metaidx;
+    NC_bb_sizevector entrydatasize;    /* Array of metadata entries */
+    int isflushing;   /* If log is flushing */
+    MPI_Offset max_ndims;
+    NC_bb_put_list putlist;
+    MPI_Offset recdimsize;
+    MPI_Offset flushbuffersize;
+    MPI_Offset maxentrysize;
 #ifdef PNETCDF_PROFILING
     /* Profiling information */
     MPI_Offset total_data;
@@ -190,36 +197,16 @@ typedef struct NC_bb {
     double put_meta_wr_time;
     double put_num_wr_time;
 #endif
+
+    int                mode;        /* file _open/_create mode */
+    int                flag;        /* define/data/collective/indep mode */
     int                ncid;
-    size_t datalogsize;
+    char              *path;        /* path name */
+    MPI_Comm           comm;        /* MPI communicator */
+    MPI_Comm           logcomm;        /* MPI communicator */
+    MPI_Info           info;
     void              *ncp;         /* pointer to driver's internal object */
     struct PNC_driver *ncmpio_driver;
-    MPI_Offset maxentrysize;
-    NC_bb_sharedfile *metalog_fd;    /* file handle of metadata log */
-    NC_bb_bufferedfile *datalog_fd;    /* file handle of data log */
-    NC_bb_buffer metadata; /* In memory metadata buffer that mirrors the metadata log */
-    NC_bb_metadataidx metaidx;
-    NC_bb_sizevector entrydatasize;    /* Array of metadata entries */
-    MPI_Comm           logcomm;        /* MPI communicator */
-
-    MPI_Offset recdimsize;
-    NC_bb_put_list putlist;
-
-    int inited;
-    int hints;
-    int recdimid;
-    MPI_Offset max_ndims;  
-    MPI_Offset flushbuffersize;
-    int                flag;        /* define/data/collective/indep mode */
-    MPI_Comm           comm;        /* MPI communicator */
-
-    char metalogpath[PATH_MAX];    /* path of metadata log */
-    char datalogpath[PATH_MAX];    /* path of data log */
-    char logbase[PATH_MAX];        /* path of log files */
-    char              *path;        /* path name */
-    int rank;
-    int np;
-    int                mode;        /* file _open/_create mode */
 } NC_bb;
 
 int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm);
@@ -230,7 +217,7 @@ int ncbbio_log_sizearray_init(NC_bb_sizevector *sp);
 void ncbbio_log_sizearray_free(NC_bb_sizevector *sp);
 int ncbbio_log_sizearray_append(NC_bb_sizevector *sp, size_t size);
 int log_flush(NC_bb *ncbbp);
-int ncbbio_log_create(NC_bb *ncbbp);
+int ncbbio_log_create(NC_bb *ncbbp, MPI_Info info);
 int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[], const MPI_Offset count[], const MPI_Offset stride[], void *buf, MPI_Datatype buftype, MPI_Offset *putsize);
 int ncbbio_log_close(NC_bb *ncbbp, int replay);
 int ncbbio_log_flush(NC_bb *ncbbp);
@@ -259,14 +246,6 @@ int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count);
 int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset);
 int ncbbio_sharedfile_read(NC_bb_sharedfile *f, void *buf, size_t count);
 int ncbbio_sharedfile_seek(NC_bb_sharedfile *f, off_t offset, int whence);
-
-int ncbbio_bufferedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, NC_bb_bufferedfile **fh);
-int ncbbio_bufferedfile_close(NC_bb_bufferedfile *f);
-int ncbbio_bufferedfile_pwrite(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset);
-int ncbbio_bufferedfile_write(NC_bb_bufferedfile *f, void *buf, size_t count);
-int ncbbio_bufferedfile_pread(NC_bb_bufferedfile *f, void *buf, size_t count, off_t offset);
-int ncbbio_bufferedfile_read(NC_bb_bufferedfile *f, void *buf, size_t count);
-int ncbbio_bufferedfile_seek(NC_bb_bufferedfile *f, off_t offset, int whence);
 
 void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info);
 void ncbbio_export_hint(NC_bb *ncbbp, MPI_Info info);
