@@ -13,8 +13,8 @@
 #include <common.h>
 #include <ncbbio_driver.h>
 
-#define LOG_BUFFER_SIZE 1024 /* Size of initial metadata buffer */
-#define LOG_ARRAY_SIZE 32 /* Size of initial metadata offset list */
+#define LOG_BUFFER_SIZE 8388608 /* Size of initial metadata buffer */
+#define LOG_ARRAY_SIZE 1024 /* Size of initial metadata offset list */
 #define SIZE_MULTIPLIER 20    /* When metadata buffer is full, we'll NCI_Reallocate it to META_BUFFER_MULTIPLIER times the original size*/
 
 /*

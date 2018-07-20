@@ -69,14 +69,10 @@ ncbbio_create(MPI_Comm     comm,
     if (err != NC_NOERR) return err;
 
     /* Create a NC_bb object and save its driver pointer */
-    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb));
+    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb) + strlen(path)+1);
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    ncbbp->path = (char*) (ncbbp + 1);
 
-    ncbbp->path = (char*) NCI_Malloc(strlen(path)+1);
-    if (ncbbp->path == NULL) {
-        NCI_Free(ncbbp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
     strcpy(ncbbp->path, path);
     ncbbp->mode = cmode;
     ncbbp->ncmpio_driver = driver;  // ncmpio driver
@@ -90,7 +86,7 @@ ncbbio_create(MPI_Comm     comm,
     ncbbp->flag = NC_MODE_CREATE | NC_MODE_DEF;
     ncbbp->logcomm = MPI_COMM_SELF;
     MPI_Comm_dup(comm, &(ncbbp->comm));
-    MPI_Info_dup(info, &(ncbbp->info));
+
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
 
     /* Log init delayed to enddef */
@@ -128,14 +124,10 @@ ncbbio_open(MPI_Comm     comm,
     if (err != NC_NOERR) return err;
 
     /* Create a NC_bb object and save its driver pointer */
-    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb));
+    ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb) + strlen(path)+1);
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    ncbbp->path = (char*) (ncbbp + 1);
 
-    ncbbp->path = (char*) NCI_Malloc(strlen(path)+1);
-    if (ncbbp->path == NULL) {
-        NCI_Free(ncbbp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
     strcpy(ncbbp->path, path);
     ncbbp->mode = omode;
     ncbbp->ncmpio_driver = driver;  // ncmpio driver
@@ -147,7 +139,6 @@ ncbbio_open(MPI_Comm     comm,
     ncbbp->flag = 0;
     ncbbp->logcomm = MPI_COMM_SELF;
     MPI_Comm_dup(comm, &(ncbbp->comm));
-    MPI_Info_dup(info, &(ncbbp->info));
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
 
     /* Opened file is in data mode
@@ -155,7 +146,7 @@ ncbbio_open(MPI_Comm     comm,
      */
     if (omode != NC_NOWRITE ){
         /* Init log file */
-        err = ncbbio_log_create(ncbbp, info);
+        err = ncbbio_log_create(ncbbp);
         if (err != NC_NOERR) {
             NCI_Free(ncbbp);
             return err;
@@ -212,8 +203,6 @@ ncbbio_close(void *ncdp)
 
     // Cleanup NC-bb object
     MPI_Comm_free(&(ncbbp->comm));
-    MPI_Info_free(&(ncbbp->info));
-    NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
     return status;
@@ -268,7 +257,7 @@ ncbbio_init(NC_bb *ncbbp)
     /* If logfile are not initialized, we initialize the logfile */
     if (!ncbbp->inited){
         /* Init log file */
-        err = ncbbio_log_create(ncbbp, ncbbp->info);
+        err = ncbbio_log_create(ncbbp);
         if (err != NC_NOERR) {
             return err;
         }
@@ -321,7 +310,7 @@ ncbbio__enddef(void       *ncdp,
     }
     else {
         /* Init log file */
-        err = ncbbio_log_create(ncbbp, ncbbp->info);
+        err = ncbbio_log_create(ncbbp);
         if (err != NC_NOERR) {
             return err;
         }
@@ -433,8 +422,6 @@ ncbbio_abort(void *ncdp)
     if (status == NC_NOERR) status = err;
 
     MPI_Comm_free(&(ncbbp->comm));
-    MPI_Info_free(&(ncbbp->info));
-    NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
     return status;

@@ -23,7 +23,7 @@
  * IN      info:    MPI info passed to ncmpi_create/ncmpi_open
  * INOUT   ncbbp:   NC_bb object holding the log structure
  */
-int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
+int ncbbio_log_create(NC_bb* ncbbp) {
     int i, rank, np, err, flag, masterrank;
     char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
     char *abspath, *fname, *path, *fdir = NULL;
@@ -162,7 +162,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
         masterrank = rank;
     }
 
-    /* Extract file anme
+    /* Extract file name
      * Search for first / charactor from the tail
      * Absolute path should always contains one '/', return error otherwise
      * We return the string including '/' for convenience
@@ -541,6 +541,17 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
 
     /* Rewind data log file descriptors and reset the size */
     err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    if (err != NC_NOERR){
+        return err;
+    }
+
+    /* Rewind metadata log file descriptor
+     * Note: EOF may not be the place for next entry after a flush
+     * Note: metadata size will be updated after allocating metadata buffer
+     *       space, substract esize for original location
+     */
+    err = ncbbio_sharedfile_seek(ncbbp->metalog_fd, ncbbp->metadata.nused,
+                           SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }

@@ -39,8 +39,8 @@ int ncbbio_get_node_comm(MPI_Comm global_comm, MPI_Comm *node_comm)
 
     hash_map_init(&map, 65535, hash);
 
-    myname = (char*)NCI_Malloc(MPI_MAX_PROCESSOR_NAME * sizeof(char));
-    buf = (char*)NCI_Malloc(MPI_MAX_PROCESSOR_NAME * sizeof(char) * np);
+    myname = (char*)NCI_Malloc(MPI_MAX_PROCESSOR_NAME * sizeof(char) + MPI_MAX_PROCESSOR_NAME * sizeof(char) * np);
+    buf = myname + MPI_MAX_PROCESSOR_NAME;
 
     err = MPI_Get_processor_name(myname, &namelen);
     if (err != MPI_SUCCESS){
