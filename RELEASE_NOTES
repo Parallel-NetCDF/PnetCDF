@@ -296,7 +296,8 @@ Version 1.9.0 (December 19, 2017)
       support a single MPI-IO request of size larger then INT_MAX. A new
       configure command-line option "--enable-large-req" has been added
       available to disable the checking. Use this option is recommended only
-      when the underneath MPI-IO library supports large single requests.
+      when the underneath MPI-IO library supports large single requests made by
+      each MPI process.
 
   o New constants
     * NC_FORMAT_UNKNOWN, NF_FORMAT_UNKNOWN, and NF90_FORMAT_UNKNOWN are new
