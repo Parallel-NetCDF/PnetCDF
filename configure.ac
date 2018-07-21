@@ -117,6 +117,7 @@ AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([BUILD_DRIVER_BB],          [Define if to enable burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
+AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 
 AH_TOP([#ifndef _CONFIG_H
@@ -1462,6 +1463,48 @@ fi
 AC_SUBST(PNETCDF_PROFILING)
 AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
 
+AC_ARG_ENABLE([thread-safe],
+    [AS_HELP_STRING([--enable-thread-safe],
+                    [Enable thread-safe capability. @<:@default: disabled@:>@])],
+    [thread_safe=${enableval}], [thread_safe=no]
+)
+ENABLE_THREAD_SAFE=0
+if test "x${thread_safe}" = xyes ; then
+   AC_DEFINE(ENABLE_THREAD_SAFE)
+   ENABLE_THREAD_SAFE=1
+fi
+AC_SUBST(ENABLE_THREAD_SAFE)
+AM_CONDITIONAL(ENABLE_THREAD_SAFE, [test x$thread_safe = xyes])
+
+AC_ARG_WITH([pthread],
+    [AS_HELP_STRING([--with-pthread=DIR],
+                    [Specify alternative path to Pthreads library when
+                     thread-safe capability is enabled.])],,
+    [withval=check])
+
+if test "x${thread_safe}" = xyes ; then
+   if test "x${withval}" = xcheck -o "x${withval}" = x ; then
+      AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([Cannot find pthread.h])])
+      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library])])
+   else
+      case "$withval" in
+         *,*)
+            pthread_inc="`echo $withval | cut -f1 -d,`"
+            pthread_lib="`echo $withval | cut -f2 -d, -s`"
+            ;;
+         *)
+            # check $withval for empty is done above
+            pthread_inc="$withval/include"
+            pthread_lib="$withval/lib"
+            ;;
+      esac
+      CPPFLAGS="$CPPFLAGS -I$pthread_inc"
+      AC_CHECK_HEADER([pthread.h],, [AC_MSG_ERROR([Cannot find pthread.h under $withval])])
+      LDFLAGS="$LDFLAGS -L$pthread_lib"
+      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library under $withval])])
+   fi
+fi
+
 dnl build test programs and benchmark programs
 AM_CONDITIONAL(BUILD_TESTSETS, [true])
 AM_CONDITIONAL(BUILD_BENCHMARKS_IN_PNETCDF, [true])
@@ -1657,6 +1700,10 @@ fi
 if test "x${enable_profiling}" = xyes ; then
    echo "\
               Internal profiling mode                     - enabled"
+fi
+if test "x${thread_safe}" = xyes ; then
+   echo "\
+              Thread-safe capability                      - enabled"
 fi
 
 echo "\

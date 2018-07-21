@@ -28,39 +28,33 @@ if ENABLE_LARGE_REQ
    AM_CFLAGS += -DENABLE_LARGE_REQ
 endif
 
-check_PROGRAMS = large_files \
-                 large_var \
-                 large_dims_vars_attrs \
-                 high_dim_var \
-                 tst_cdf5_begin \
-                 large_coalesce
+TESTPROGRAMS = large_files \
+               large_var \
+               large_dims_vars_attrs \
+               high_dim_var \
+               tst_cdf5_begin \
+               large_coalesce
 
 if HAS_FORTRAN
-   check_PROGRAMS += bigrecords
+   TESTPROGRAMS += bigrecords
    AM_FFLAGS = -I$(top_builddir)/src/binding/f77
    bigrecords_SOURCES = bigrecords.f
 endif
 
 EXTRA_DIST = wrap_runs.sh
 
-NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
-
-if BUILD_DRIVER_BB
-if ENABLE_LARGE_REQ
-	TESTBB = 1
-	TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
-endif
-endif
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 if RUN_LARGE_FILE_TEST
-TESTPROGRAMS = $(check_PROGRAMS)
+   check_PROGRAMS = $(TESTPROGRAMS)
 else
-TESTPROGRAMS =
+   check_PROGRAMS =
+   CLEANFILES += $(TESTPROGRAMS)
 endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
@@ -72,11 +66,18 @@ TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
+if BUILD_DRIVER_BB
+if ENABLE_LARGE_REQ
+   TESTBB = 1
+   TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+endif
+endif
+
 TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-TESTS = $(TESTPROGRAMS)
+TESTS = $(check_PROGRAMS)
 
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well
@@ -85,10 +86,10 @@ TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
-ptest ptest4: $(TESTPROGRAMS)
+ptest ptest4: $(check_PROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS) ; do ( \
+	set -e ; for i in $(check_PROGRAMS) ; do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
@@ -100,10 +101,10 @@ ptest ptest4: $(TESTPROGRAMS)
 	) ; fi ; \
 	) ; done ; } ; done
 
-ptest2: $(TESTPROGRAMS)
+ptest2: $(check_PROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
+	set -e ; for i in $(check_PROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
@@ -115,10 +116,10 @@ ptest2: $(TESTPROGRAMS)
 	) ; fi ; \
 	) ; done ; } ; done
 
-ptest6: $(TESTPROGRAMS)
+ptest6: $(check_PROGRAMS)
 	for j in 0 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
+	set -e ; for i in $(check_PROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
@@ -134,7 +135,7 @@ ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:
 
 # build check targets but not invoke
-tests-local: all $(check_PROGRAMS)
+tests-local: all $(TESTPROGRAMS)
 
 .PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 

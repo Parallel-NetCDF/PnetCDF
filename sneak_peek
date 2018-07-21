@@ -3,16 +3,20 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * none
+    * Thread-safe capability is added to this release. It can be enabled with
+      configure option --enable-thread-safe. In addition, option --with-pthread
+      can be used to specify the path to the pthreads library. This feature
+      currently only supports one-thread-per-file I/O operation.
 
   o New optimization
-    * Burst buffer driver data log buffering layer removed. Buffering layer 
-      was intended to align data log write to 8MiB striping boundary on 
-      Cray DataWarp. However, experiment shows negligible performance 
-      improvement unless the I/O request is extremely small and fragment. 
-      Instead, it reduce performance on usual and larger request size. The 
-      buffering layer is removed. Data log now writes directly to the BB using 
-      POSIX API.
+    * The internal data buffering mechanism in the burst buffer driver is
+      removed. This mechanism caches the request data in memory until the
+      accumulated size is more than 8 MiB, so the write requests to burst
+      buffers can be aligned with 8 MiB boundaries. However, experiments on
+      Cray DataWarp show a negligible performance improvement unless the I/O
+      request is small and fragment. On the other hand, it can degrade
+      performance for mid- and large-sized requests. The burst buffer driver
+      now writes directly to the burst buffers for each user write request.
 
   o New Limitations
     * none
@@ -60,13 +64,14 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New example programs
-    * none
+    * examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
 
   o New programs for I/O benchmarks
     * none
 
   o New test program
-    * none
+    * test/testcases/tst_pthread.c - tests thread-safe capability for scenario
+      of each thread operating on a unique file.
 
   o Conformity with NetCDF library
     * none

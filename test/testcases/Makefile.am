@@ -116,6 +116,8 @@ if HAVE_MPI_MOD
 endif
 endif
 
+# all programs in TESTPROGRAMS will be run by wrap_runs.sh
+# others in check_PROGRAMS will be run by seq_runs.sh
 check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1 tst_vars_fill \
                  iput_all_kinds
 
@@ -134,6 +136,12 @@ LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
+
+if ENABLE_THREAD_SAFE
+   TESTS_ENVIRONMENT += TEST_THREAD_SAFE=1 ; export TEST_THREAD_SAFE;
+   check_PROGRAMS += tst_pthread
+   NC_FILES += $(TESTOUTDIR)/tst_pthread.nc.*
+endif
 
 if BUILD_DRIVER_BB
 TESTBB = 1
@@ -174,10 +182,10 @@ TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
-ptest ptest4: $(TESTPROGRAMS)
+ptest ptest4: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e; for i in $(TESTPROGRAMS); do ( \
+	set -e; for i in $(check_PROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
@@ -186,10 +194,10 @@ ptest ptest4: $(TESTPROGRAMS)
 	) ; fi ; \
 	) ; done ; } ; done
 
-ptest2: $(TESTPROGRAMS)
+ptest2: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e; for i in $(TESTPROGRAMS); do ( \
+	set -e; for i in $(check_PROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
 	if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
@@ -198,10 +206,10 @@ ptest2: $(TESTPROGRAMS)
 	) ; fi ; \
 	) ; done ; } ; done
 
-ptest6: $(TESTPROGRAMS)
+ptest6: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e; for i in $(TESTPROGRAMS); do ( \
+	set -e; for i in $(check_PROGRAMS); do ( \
 	$(TESTMPIRUN_6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \

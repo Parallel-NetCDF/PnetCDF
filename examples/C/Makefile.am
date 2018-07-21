@@ -36,6 +36,10 @@ check_PROGRAMS = collective_write \
                  req_all \
                  vard_mvars
 
+if ENABLE_THREAD_SAFE
+   check_PROGRAMS += pthread
+endif
+
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
@@ -49,7 +53,7 @@ endif
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(NC_FILES)
+             $(NC_FILES) $(TESTOUTDIR)/pthread.nc.*
 
 TESTMPIRUN3  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/3/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
