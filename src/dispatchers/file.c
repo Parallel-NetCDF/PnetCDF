@@ -16,6 +16,11 @@
 #include <assert.h>  /* assert() */
 #include <errno.h>   /* errno */
 
+#ifdef ENABLE_THREAD_SAFE
+#include<pthread.h>
+static pthread_mutex_t lock;
+#endif
+
 #include <pnetcdf.h>
 #include <dispatch.h>
 #include <pnc_debug.h>
@@ -41,47 +46,62 @@ static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
     }
 
 /*----< new_id_PNCList() >---------------------------------------------------*/
-/* get a new ID from the PNC list */
+/* Return a new ID (array index) from the PNC list, pnc_filelist[] that is
+ * not used. Note the used elements in pnc_filelist[] may not be contiguus.
+ * For example, some files created/opened later may be closed earlier than
+ * others, leaving those array elements NULL in the middle.
+ */
 static int
-new_id_PNCList(int *new_id)
+new_id_PNCList(int *new_id, PNC *pncp)
 {
-    int i;
+    int i, err;
 
+#ifdef ENABLE_THREAD_SAFE
+    err = pthread_mutex_lock(&lock);
+    if (err == EINVAL) { /* lock mutex has not been initialized */
+        pthread_mutex_init(&lock, NULL);
+        pthread_mutex_lock(&lock);
+    }
+#endif
     *new_id = -1;
-    for (i=0; i<NC_MAX_NFILES; i++) { /* find the first unused element */
-        if (pnc_filelist[i] == NULL) {
-            *new_id = i;
-            break;
+    if (pnc_numfiles == NC_MAX_NFILES) { /* Too many files open */
+        DEBUG_ASSIGN_ERROR(err, NC_ENFILE)
+    }
+    else {
+        err = NC_NOERR;
+        for (i=0; i<NC_MAX_NFILES; i++) { /* find the first unused element */
+            if (pnc_filelist[i] == NULL) {
+                *new_id = i;
+                pnc_filelist[i] = pncp;
+                pnc_numfiles++; /* increment number of files opened */
+                break;
+            }
         }
     }
-    if (*new_id == -1) /* Too many files open */
-        DEBUG_RETURN_ERROR(NC_ENFILE)
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
 
-    return NC_NOERR;
-}
-
-/*----< add_to_PNCList() >---------------------------------------------------*/
-static int
-add_to_PNCList(PNC *pncp,
-               int  new_id)
-{
-    /* these checks below are redundant */
-    assert(pncp != NULL);
-    assert(new_id >= 0);
-    if (new_id >= NC_MAX_NFILES) return NC_ENFILE;
-
-    pnc_filelist[new_id] = pncp;  /* store the pointer */
-    pnc_numfiles++;               /* increment number of files opened */
-    return NC_NOERR;
+    return err;
 }
 
 /*----< del_from_PNCList() >-------------------------------------------------*/
 static void
 del_from_PNCList(int ncid)
 {
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
+
     /* validity of ncid should have been checked already */
     pnc_filelist[ncid] = NULL;
     pnc_numfiles--;
+
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+    if (pnc_numfiles == 0) /* all files have been closed */
+        pthread_mutex_destroy(&lock);
+#endif
 }
 
 #if 0 /* refer to netCDF library's USE_REFCOUNT */
@@ -105,14 +125,24 @@ find_in_PNCList_by_name(const char* path)
 int
 PNC_check_id(int ncid, PNC **pncp)
 {
+    int err=NC_NOERR;
+
     assert(pncp != NULL);
 
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
+
     if (pnc_numfiles == 0 || ncid < 0 || ncid >= NC_MAX_NFILES)
-        DEBUG_RETURN_ERROR(NC_EBADID)
+        DEBUG_ASSIGN_ERROR(err, NC_EBADID)
+    else
+        *pncp = pnc_filelist[ncid];
 
-    *pncp = pnc_filelist[ncid];
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
 
-    return NC_NOERR;
+    return err;
 }
 
 /*----< construct_info() >---------------------------------------------------*/
@@ -354,8 +384,15 @@ ncmpi_create(MPI_Comm    comm,
     if (pncp != NULL) return NC_ENFILE;
 #endif
 
+    /* Create a PNC object */
+    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
+    if (pncp == NULL) {
+        *ncidp = -1;
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    }
+
     /* get a new ID from NCPList */
-    err = new_id_PNCList(ncidp);
+    err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) return err;
 
     /* calling the create subroutine */
@@ -363,22 +400,19 @@ ncmpi_create(MPI_Comm    comm,
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_CMODE) {
+        del_from_PNCList(*ncidp);
+        NCI_Free(pncp);
         *ncidp = -1;
         return status;
     }
 
-    /* Create a PNC object and save the driver pointer */
-    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
-    if (pncp == NULL) {
-        driver->close(ncp); /* close file and ignore error */
-        *ncidp = -1;
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
+    /* fill in pncp members */
     pncp->path = (char*) NCI_Malloc(strlen(path)+1);
     if (pncp->path == NULL) {
         driver->close(ncp); /* close file and ignore error */
-        *ncidp = -1;
+        del_from_PNCList(*ncidp);
         NCI_Free(pncp);
+        *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(pncp->path, path);
@@ -411,16 +445,6 @@ ncmpi_create(MPI_Comm    comm,
         pncp->format = default_format;
     }
 
-    /* add to PNCList */
-    err = add_to_PNCList(pncp, *ncidp);
-    if (err != NC_NOERR) {
-        driver->close(ncp); /* close file and ignore error */
-        *ncidp = -1;
-        MPI_Comm_free(&pncp->comm);
-        NCI_Free(pncp->path);
-        NCI_Free(pncp);
-        return err;
-    }
     return status;
 }
 
@@ -585,8 +609,15 @@ ncmpi_open(MPI_Comm    comm,
         }
     }
 
+    /* Create a PNC object */
+    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
+    if (pncp == NULL) {
+        *ncidp = -1;
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    }
+
     /* get a new ID from NCPList */
-    err = new_id_PNCList(ncidp);
+    err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) return err;
 
     /* calling the open subroutine */
@@ -597,22 +628,19 @@ ncmpi_open(MPI_Comm    comm,
         status != NC_ENULLPAD) {
         /* NC_EMULTIDEFINE_OMODE and NC_ENULLPAD are not fatal error. We
          * continue the rest open procedure */
+        del_from_PNCList(*ncidp);
+        NCI_Free(pncp);
         *ncidp = -1;
         return status;
     }
 
-    /* Create a PNC object and save its driver pointer */
-    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
-    if (pncp == NULL) {
-        driver->close(ncp); /* close file and ignore error */
-        *ncidp = -1;
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
+    /* fill in pncp members */
     pncp->path = (char*) NCI_Malloc(strlen(path)+1);
     if (pncp->path == NULL) {
         driver->close(ncp); /* close file and ignore error */
-        *ncidp = -1;
+        del_from_PNCList(*ncidp);
         NCI_Free(pncp);
+        *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(pncp->path, path);
@@ -636,12 +664,6 @@ ncmpi_open(MPI_Comm    comm,
      * for a driver to duplicate it again.
      */
     MPI_Comm_dup(comm, &pncp->comm);
-
-    /* add to the PNCList */
-    err = add_to_PNCList(pncp, *ncidp);
-    if (err != NC_NOERR) goto fn_exit;
-
-    /* construct pncp->vars[] */
 
     /* inquire number of dimensions, variables defined and rec dim ID */
     err = driver->inq(pncp->ncp, &pncp->ndims, &pncp->nvars, NULL,
@@ -692,10 +714,11 @@ ncmpi_open(MPI_Comm    comm,
 fn_exit:
     if (err != NC_NOERR) {
         driver->close(ncp); /* close file and ignore error */
-        *ncidp = -1;
         MPI_Comm_free(&pncp->comm);
+        del_from_PNCList(*ncidp);
         NCI_Free(pncp->path);
         NCI_Free(pncp);
+        *ncidp = -1;
         if (status == NC_NOERR) status = err;
     }
 
@@ -1400,6 +1423,16 @@ ncmpi_sync_numrecs(int ncid)
 int
 ncmpi_set_default_format(int format, int *old_formatp)
 {
+    int err;
+
+#ifdef ENABLE_THREAD_SAFE
+    err = pthread_mutex_lock(&lock);
+    if (err == EINVAL) { /* lock mutex has not been initialized */
+        pthread_mutex_init(&lock, NULL);
+        pthread_mutex_lock(&lock);
+    }
+#endif
+
     /* Return existing format if desired. */
     if (old_formatp != NULL)
         *old_formatp = ncmpi_default_create_format;
@@ -1408,11 +1441,18 @@ ncmpi_set_default_format(int format, int *old_formatp)
     if (format != NC_FORMAT_CLASSIC &&
         format != NC_FORMAT_CDF2 &&
         format != NC_FORMAT_CDF5) {
-        DEBUG_RETURN_ERROR(NC_EINVAL)
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
     }
-    ncmpi_default_create_format = format;
+    else {
+        ncmpi_default_create_format = format;
+        err = NC_NOERR;
+    }
 
-    return NC_NOERR;
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
+
+    return err;
 }
 
 /*----< ncmpi_inq_default_format() >-----------------------------------------*/
@@ -1424,7 +1464,15 @@ ncmpi_inq_default_format(int *formatp)
 {
     if (formatp == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
+
     *formatp = ncmpi_default_create_format;
+
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
 
     return NC_NOERR;
 }
@@ -1439,6 +1487,14 @@ ncmpi_inq_files_opened(int *num,    /* cannot be NULL */
 
     if (num == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
+#ifdef ENABLE_THREAD_SAFE
+    int err = pthread_mutex_lock(&lock);
+    if (err == EINVAL) { /* lock mutex has not been initialized */
+        pthread_mutex_init(&lock, NULL);
+        pthread_mutex_lock(&lock);
+    }
+#endif
+
     *num = pnc_numfiles;
 
     if (ncids != NULL) { /* ncids can be NULL */
@@ -1449,8 +1505,11 @@ ncmpi_inq_files_opened(int *num,    /* cannot be NULL */
                 (*num)++;
             }
         }
-        assert(*num == pnc_numfiles);
     }
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
+
     return NC_NOERR;
 }
 

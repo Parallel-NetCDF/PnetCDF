@@ -47,3 +47,12 @@ if [ -n "${TESTBB}" ]; then
    done
 fi
 
+if [ -n "${TEST_THREAD_SAFE}" ]; then
+   for j in 0 1 ; do
+       export PNETCDF_SAFE_MODE=$j
+       ${TESTSEQRUN} ./tst_pthread ${TESTOUTDIR}/tst_pthread.nc
+       for i in 0 1 2 3 4 5 ; do
+           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_pthread.nc.$i
+       done
+   done
+fi
