@@ -2011,7 +2011,7 @@ val_NC_check_voff(NC *ncp)
 
     if (ncp->begin_rec < prev_off) {
         if (verbose) printf("Error:\n");
-        if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fix-sized variable section end offset (%lld)\n", varp->begin, prev_off);
+        if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", varp->begin, prev_off);
         nerrs++;
         DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
     }
@@ -2303,7 +2303,7 @@ int main(int argc, char **argv)
         if (ncp->vars.ndefined == 0)
             expect_fsize = ncp->xsz;
         else
-            /* find the size of last fix-sized variable */
+            /* find the size of last fixed-size variable */
             expect_fsize = ncp->vars.value[ncp->vars.ndefined-1]->begin +
                            ncp->vars.value[ncp->vars.ndefined-1]->len;
         if (expect_fsize < ncfilestat.st_size) {
