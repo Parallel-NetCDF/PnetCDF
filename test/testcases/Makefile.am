@@ -117,7 +117,7 @@ endif
 endif
 
 # all programs in TESTPROGRAMS will be run by wrap_runs.sh
-# others in check_PROGRAMS will be run by seq_runs.sh
+# others in check_PROGRAMS but not in TESTPROGRAMS will be run by seq_runs.sh
 check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1 tst_vars_fill \
                  iput_all_kinds
 
