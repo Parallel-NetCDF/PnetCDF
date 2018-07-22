@@ -18,7 +18,7 @@
 
 #ifdef ENABLE_THREAD_SAFE
 #include<pthread.h>
-static pthread_mutex_t lock;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #include <pnetcdf.h>
@@ -57,11 +57,7 @@ new_id_PNCList(int *new_id, PNC *pncp)
     int i, err;
 
 #ifdef ENABLE_THREAD_SAFE
-    err = pthread_mutex_lock(&lock);
-    if (err == EINVAL) { /* lock mutex has not been initialized */
-        pthread_mutex_init(&lock, NULL);
-        pthread_mutex_lock(&lock);
-    }
+    pthread_mutex_lock(&lock);
 #endif
     *new_id = -1;
     if (pnc_numfiles == NC_MAX_NFILES) { /* Too many files open */
@@ -99,8 +95,6 @@ del_from_PNCList(int ncid)
 
 #ifdef ENABLE_THREAD_SAFE
     pthread_mutex_unlock(&lock);
-    if (pnc_numfiles == 0) /* all files have been closed */
-        pthread_mutex_destroy(&lock);
 #endif
 }
 
@@ -395,12 +389,23 @@ ncmpi_create(MPI_Comm    comm,
     err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) return err;
 
+    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
+     * collective. pncp->comm will be passed to drivers, so there is no need
+     * for a driver to duplicate it again.
+     */
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
+        MPI_Comm_dup(comm, &pncp->comm);
+    else
+        pncp->comm = comm;
+
     /* calling the create subroutine */
-    err = driver->create(comm, path, cmode, *ncidp, combined_info, &ncp);
+    err = driver->create(pncp->comm, path, cmode, *ncidp, combined_info, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_CMODE) {
         del_from_PNCList(*ncidp);
+        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+            MPI_Comm_free(&pncp->comm);
         NCI_Free(pncp);
         *ncidp = -1;
         return status;
@@ -411,6 +416,8 @@ ncmpi_create(MPI_Comm    comm,
     if (pncp->path == NULL) {
         driver->close(ncp); /* close file and ignore error */
         del_from_PNCList(*ncidp);
+        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+            MPI_Comm_free(&pncp->comm);
         NCI_Free(pncp);
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -428,15 +435,6 @@ ncmpi_create(MPI_Comm    comm,
     if (safe_mode)          pncp->flag |= NC_MODE_SAFE;
     if (!relax_coord_bound) pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
     /* if (enable_foo_driver) pncp->flag |= NC_MODE_BB; */
-
-    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
-     * collective. pncp->comm will be passed to drivers, so there is no need
-     * for a driver to duplicate it again.
-     */
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
-        MPI_Comm_dup(comm, &pncp->comm);
-    else
-        pncp->comm = comm;
 
     /* set the file format version based on the create mode, cmode */
     ncmpi_inq_default_format(&default_format);
@@ -623,8 +621,17 @@ ncmpi_open(MPI_Comm    comm,
     err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) return err;
 
+    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
+     * collective. pncp->comm will be passed to drivers, so there is no need
+     * for a driver to duplicate it again.
+     */
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
+        MPI_Comm_dup(comm, &pncp->comm);
+    else
+        pncp->comm = comm;
+
     /* calling the open subroutine */
-    err = driver->open(comm, path, omode, *ncidp, combined_info, &ncp);
+    err = driver->open(pncp->comm, path, omode, *ncidp, combined_info, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE &&
@@ -632,6 +639,8 @@ ncmpi_open(MPI_Comm    comm,
         /* NC_EMULTIDEFINE_OMODE and NC_ENULLPAD are not fatal error. We
          * continue the rest open procedure */
         del_from_PNCList(*ncidp);
+        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+            MPI_Comm_free(&pncp->comm);
         NCI_Free(pncp);
         *ncidp = -1;
         return status;
@@ -642,6 +651,8 @@ ncmpi_open(MPI_Comm    comm,
     if (pncp->path == NULL) {
         driver->close(ncp); /* close file and ignore error */
         del_from_PNCList(*ncidp);
+        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+            MPI_Comm_free(&pncp->comm);
         NCI_Free(pncp);
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -661,15 +672,6 @@ ncmpi_open(MPI_Comm    comm,
     if (safe_mode)                pncp->flag |= NC_MODE_SAFE;
     if (!relax_coord_bound)       pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
     /* if (enable_foo_driver)        pncp->flag |= NC_MODE_BB; */
-
-    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
-     * collective. pncp->comm will be passed to drivers, so there is no need
-     * for a driver to duplicate it again.
-     */
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
-        MPI_Comm_dup(comm, &pncp->comm);
-    else
-        pncp->comm = comm;
 
     /* inquire number of dimensions, variables defined and rec dim ID */
     err = driver->inq(pncp->ncp, &pncp->ndims, &pncp->nvars, NULL,
@@ -1437,11 +1439,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
     int err;
 
 #ifdef ENABLE_THREAD_SAFE
-    err = pthread_mutex_lock(&lock);
-    if (err == EINVAL) { /* lock mutex has not been initialized */
-        pthread_mutex_init(&lock, NULL);
-        pthread_mutex_lock(&lock);
-    }
+    pthread_mutex_lock(&lock);
 #endif
 
     /* Return existing format if desired. */
@@ -1499,11 +1497,7 @@ ncmpi_inq_files_opened(int *num,    /* cannot be NULL */
     if (num == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
 #ifdef ENABLE_THREAD_SAFE
-    int err = pthread_mutex_lock(&lock);
-    if (err == EINVAL) { /* lock mutex has not been initialized */
-        pthread_mutex_init(&lock, NULL);
-        pthread_mutex_lock(&lock);
-    }
+    pthread_mutex_lock(&lock);
 #endif
 
     *num = pnc_numfiles;

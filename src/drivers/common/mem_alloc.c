@@ -48,7 +48,7 @@ static size_t  ncmpii_max_mem_alloc;
 /* updating the binary tree used in tfind()/tsearch()/tdelete() is not
  * thread-safe, protect these subroutines with a mutex */
 #include<pthread.h>
-static pthread_mutex_t lock;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #if 0
@@ -98,11 +98,7 @@ void ncmpii_add_mem_entry(void       *buf,
                           const char *filename)
 {
 #ifdef ENABLE_THREAD_SAFE
-    int err = pthread_mutex_lock(&lock);
-    if (err == EINVAL) { /* lock mutex has not been initialized */
-        pthread_mutex_init(&lock, NULL);
-        pthread_mutex_lock(&lock);
-    }
+    pthread_mutex_lock(&lock);
 #endif
 
     /* use C tsearch utility */
