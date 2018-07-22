@@ -8,11 +8,11 @@
  * threads and each thread does the followings (one unique file per thread):
  * 1. creates a unique new file,
  * 2. writes 2 records to a record variable
- * 3. writes a fix-sized variable,
+ * 3. writes a fixed-size variable,
  * 4. closes the file,
  * 5. re-open the file,
  * 6. reads the record variable and check contents,
- * 7. reads the fix-sized variable and check contents,
+ * 7. reads the fixed-size variable and check contents,
  * 8. closes file.
  */
 
@@ -34,13 +34,15 @@
 #define NY 5
 #define NX 4
 
+/* pthread barrier object */
 static pthread_barrier_t barr;
 
 typedef struct {
-    int  id;
-    char fname[256];
+    int  id;         /* globally unique thread ID */
+    char fname[256]; /* output file name base */
 } thread_arg;
 
+/*----< thread_func() >------------------------------------------------------*/
 void* thread_func(void *arg)
 {
     char filename[256];
@@ -48,11 +50,13 @@ void* thread_func(void *arg)
     int *ibuf;
     double *dbuf;
     MPI_Offset start[2], count[2];
+    MPI_Info info;
 
+    /* make a unique file name for each thread */
     id = ((thread_arg*)arg)->id;
     sprintf(filename, "%s.%d", ((thread_arg*)arg)->fname, id);
 
-    /* allocate I/O buffers */
+    /* allocate I/O buffers and initialize their contents */
     ibuf = (int*)    malloc(NY * NX * sizeof(int));
     dbuf = (double*) malloc(NY * NX * sizeof(double));
     for (i=0; i<NY*NX; i++) {
@@ -60,60 +64,64 @@ void* thread_func(void *arg)
         dbuf[i] = 1.0 * id;
     }
 
-    /* create a file */
+    /* set an MPI-IO hint to disable file offset alignment for fixed-size
+     * variables */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_var_align_size", "1");
+
+    /* create a file, clobber it if already exits */
     cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, MPI_INFO_NULL, &ncid);
-    CHECK_ERR
+    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_ERR
+    MPI_Info_free(&info);
+
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
-    /* define a record variable ivar */
+    /* define a record variable ivar of integer type */
     err = ncmpi_def_var(ncid, "ivar", NC_INT, 2, dimid, &varid[0]); CHECK_ERR
-    /* define a fix-sized variable dvar */
+    /* define a fixed-size variable dvar of double type */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
     err = ncmpi_def_var(ncid, "dvar", NC_DOUBLE, 2, dimid, &varid[1]); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
     /* now we are in data mode */
 
     /* write a record to the record variable */
-    start[0] = 0;
+    start[0] = 0; /* first record */
     start[1] = 0;
     count[0] = 1;
     count[1] = NX;
     err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, ibuf); CHECK_ERR
 
     /* write another record to the record variable */
-    start[0] = 2;
+    start[0] = 2; /* third record */
     start[1] = 0;
     count[0] = 1;
     count[1] = NX;
     err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, ibuf); CHECK_ERR
 
-    /* write to the fix-sized variable */
+    /* write to the fixed-size variable */
     err = ncmpi_put_var_double_all(ncid, varid[1], dbuf); CHECK_ERR
 
-    err = ncmpi_sync(ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* synchronize all processes (only one thread per process participates) */
     if (id % NTHREADS == 0) MPI_Barrier(MPI_COMM_WORLD);
 
-    /* synchronize all threads in each process to ensure all threads to finish
-     * their file writes */
+    /* synchronize all threads within each process to ensure all threads to
+     * finish their file writes */
     pthread_barrier_wait(&barr);
 
-    /* open a different file (round-robin shift), read variables back, and
-     * check contents */
+    /* each thread opens a different file (round-robin shift), reads variables
+     * and check contents */
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     id = (id + 1) % (nprocs * NTHREADS);
     sprintf(filename, "%s.%d", ((thread_arg*)arg)->fname, id);
 
-    err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    CHECK_ERR
+    err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "ivar", &varid[0]); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "dvar", &varid[1]); CHECK_ERR
 
-    /* read first record of the record variable */
+    /* read the first record of the record variable */
     for (i=0; i<NX; i++) ibuf[i] = -1;
     start[0] = 0;
     start[1] = 0;
@@ -145,7 +153,7 @@ void* thread_func(void *arg)
         }
     }
 
-    /* read the fix-sized variable */
+    /* read the fixed-size variable */
     err = ncmpi_get_var_double_all(ncid, varid[1], dbuf); CHECK_ERR
     for (i=0; i<NY*NX; i++) {
         if (dbuf[i] != (double)id) {
@@ -224,7 +232,8 @@ int main(int argc, char **argv) {
         t_arg[i].id = i + rank * NTHREADS;
         sprintf(t_arg[i].fname, "%s",filename);
         if (pthread_create(&threads[i], NULL, thread_func, &t_arg[i])) {
-            fprintf(stderr, "Error creating thread %d\n", i);
+            fprintf(stderr, "Error in %s line %d creating thread %d\n",
+                    __FILE__, __LINE__, i);
             nerrs++;
         }
     }
@@ -233,11 +242,14 @@ int main(int argc, char **argv) {
     for (i=0; i<NTHREADS; i++) {
         void *ret;
         if (pthread_join(threads[i], (void**)&ret)) {
-            fprintf(stderr, "Error joining thread %d\n", i);
+            fprintf(stderr, "Error in %s line %d joining thread %d\n",
+                    __FILE__, __LINE__, i);
         }
         nerrs += *(int*)ret;
         free(ret);
     }
+
+    pthread_barrier_destroy(&barr);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
