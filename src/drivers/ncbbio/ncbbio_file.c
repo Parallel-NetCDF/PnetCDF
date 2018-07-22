@@ -89,10 +89,7 @@ ncbbio_create(MPI_Comm     comm,
     ncbbp->metalog_fd = NULL;
     ncbbp->flag = NC_MODE_CREATE | NC_MODE_DEF;
     ncbbp->logcomm = MPI_COMM_SELF;
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
-        MPI_Comm_dup(comm, &(ncbbp->comm));
-    else
-        ncbbp->comm = comm;
+    ncbbp->comm = comm;  /* reuse comm duplicated in dispatch layer */
     MPI_Info_dup(info, &(ncbbp->info));
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
 
@@ -149,10 +146,7 @@ ncbbio_open(MPI_Comm     comm,
     ncbbp->max_ndims = 0;   // Highest dimensionality among all variables
     ncbbp->flag = 0;
     ncbbp->logcomm = MPI_COMM_SELF;
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
-        MPI_Comm_dup(comm, &(ncbbp->comm));
-    else
-        ncbbp->comm = comm;
+    ncbbp->comm = comm;  /* reuse comm duplicated in dispatch layer */
     MPI_Info_dup(info, &(ncbbp->info));
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
 
@@ -217,8 +211,6 @@ ncbbio_close(void *ncdp)
     if (status == NC_NOERR) status = err;
 
     // Cleanup NC-bb object
-    if (ncbbp->comm != MPI_COMM_WORLD && ncbbp->comm != MPI_COMM_SELF)
-        MPI_Comm_free(&(ncbbp->comm));
     MPI_Info_free(&(ncbbp->info));
     NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
@@ -439,8 +431,6 @@ ncbbio_abort(void *ncdp)
     err = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
     if (status == NC_NOERR) status = err;
 
-    if (ncbbp->comm != MPI_COMM_WORLD && ncbbp->comm != MPI_COMM_SELF)
-        MPI_Comm_free(&(ncbbp->comm));
     MPI_Info_free(&(ncbbp->info));
     NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
