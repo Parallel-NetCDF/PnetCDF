@@ -433,7 +433,10 @@ ncmpi_create(MPI_Comm    comm,
      * collective. pncp->comm will be passed to drivers, so there is no need
      * for a driver to duplicate it again.
      */
-    MPI_Comm_dup(comm, &pncp->comm);
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
+        MPI_Comm_dup(comm, &pncp->comm);
+    else
+        pncp->comm = comm;
 
     /* set the file format version based on the create mode, cmode */
     ncmpi_inq_default_format(&default_format);
@@ -663,7 +666,10 @@ ncmpi_open(MPI_Comm    comm,
      * collective. pncp->comm will be passed to drivers, so there is no need
      * for a driver to duplicate it again.
      */
-    MPI_Comm_dup(comm, &pncp->comm);
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
+        MPI_Comm_dup(comm, &pncp->comm);
+    else
+        pncp->comm = comm;
 
     /* inquire number of dimensions, variables defined and rec dim ID */
     err = driver->inq(pncp->ncp, &pncp->ndims, &pncp->nvars, NULL,
@@ -714,7 +720,8 @@ ncmpi_open(MPI_Comm    comm,
 fn_exit:
     if (err != NC_NOERR) {
         driver->close(ncp); /* close file and ignore error */
-        MPI_Comm_free(&pncp->comm);
+        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+            MPI_Comm_free(&pncp->comm);
         del_from_PNCList(*ncidp);
         NCI_Free(pncp->path);
         NCI_Free(pncp);
@@ -744,7 +751,9 @@ ncmpi_close(int ncid)
     del_from_PNCList(ncid);
 
     /* free the PNC object */
-    MPI_Comm_free(&pncp->comm);
+    if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+        MPI_Comm_free(&pncp->comm);
+
     NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
         if (pncp->vars[i].shape != NULL)
@@ -942,7 +951,9 @@ ncmpi_abort(int ncid)
     del_from_PNCList(ncid);
 
     /* free the PNC object */
-    MPI_Comm_free(&pncp->comm);
+    if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+        MPI_Comm_free(&pncp->comm);
+
     NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
         if (pncp->vars[i].shape != NULL)
