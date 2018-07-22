@@ -804,7 +804,7 @@ ncmpio_NC_check_voffs(NC *ncp)
 
     if (ncp->begin_rec < prev_off) {
         if (ncp->safe_mode)
-            printf("Record variable section begin offset (%lld) is less than fix-sized variable section end offset (%lld)\n", varp->begin, prev_off);
+            printf("Record variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", varp->begin, prev_off);
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
@@ -870,7 +870,7 @@ ncmpio__enddef(void       *ncdp,
     }
     ncp->striping_unit = striping_unit;
 
-    all_fix_var_size = 0;  /* sum of all defined fix-sized variables */
+    all_fix_var_size = 0;  /* sum of all defined fixed-size variables */
     for (i=0; i<ncp->vars.ndefined; i++) {
         if (IS_RECVAR(ncp->vars.value[i])) continue;
         all_fix_var_size += ncp->vars.value[i]->len;
