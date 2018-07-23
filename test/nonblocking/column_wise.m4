@@ -304,7 +304,6 @@ TEST_COLUMN_WISE(ulonglong)
 
 int main(int argc, char** argv)
 {
-    extern int optind;
     char filename[256];
     int i, nerrs=0, rank, err;
     int cdf_formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, NC_FORMAT_CDF5};
