@@ -257,6 +257,12 @@ int main(int argc, char **argv) {
             default: printf("Error MPI_Init_thread()\n"); break;
         }
     }
+    if (providedT != MPI_THREAD_MULTIPLE) {
+        if (!rank)
+            printf("\nWarning: MPI provided thread support level is less than MPI_THREAD_MULTIPLE ---- skip this test\n");
+        MPI_Finalize();
+        return 0;
+    }
 
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
