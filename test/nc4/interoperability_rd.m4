@@ -94,7 +94,7 @@ define(`CALL_PNC_RD',dnl
 dnl
 /*
    This program tests the interoperability feature of PnetCDF and NetCDF
-   The data is writen using NetCDF and read by PnetCDF
+   The data is written using NetCDF and read by PnetCDF
    $Id$
 */
 

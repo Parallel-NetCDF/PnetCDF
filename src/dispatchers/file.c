@@ -1083,6 +1083,11 @@ ncmpi_inq_version(int ncid, int *nc_mode)
     } else if (pncp->format == 1) {
         *nc_mode = NC_CLASSIC_MODEL;
     }
+#ifdef BUILD_DRIVER_NC4 
+    else if (pncp->format == 3) {
+        *nc_mode = NC_NETCDF4;
+    }
+#endif
 
     return NC_NOERR;
 }
