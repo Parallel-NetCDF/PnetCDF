@@ -1373,6 +1373,17 @@ if test "x$enable_netcdf4" = "xyes" ; then
         fi
     )
 
+    ZLIB_INSTALL=""
+    AC_ARG_WITH(zlib,
+        [AS_HELP_STRING([--with-zlib=/path/to/implementation],
+                        [installation prefix for zlib implementation])],
+        if test "x${withval}" = xyes; then
+            AC_MSG_ERROR(--with-zlib must be given a pathname)
+        else
+            ZLIB_INSTALL=${withval}
+        fi
+    )
+
     if test "x${NETCDF_INSTALL}" != x ; then 
         CPPFLAGS+=" -I${NETCDF_INSTALL}/include"
         LDFLAGS+=" -L${NETCDF_INSTALL}/lib"
@@ -1383,6 +1394,12 @@ if test "x$enable_netcdf4" = "xyes" ; then
         CPPFLAGS+=" -I${HDF5_INSTALL}/include"
         LDFLAGS+=" -L${HDF5_INSTALL}/lib"
         LIBS+=" -lhdf5 -lhdf5_hl"
+    fi
+
+    if test "x${ZLIB_INSTALL}" != x ; then
+        CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
+        LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
+        LIBS+=" -lz "
     fi
 
     LIBS+=" -lm -ldl"
@@ -1409,7 +1426,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
             --with-hdf5=/path/to/implementation
         to specify the location of HDF5 build. In addition,
         please make sure the MPI C compiler is compatible with the
-        one used to build NetCDF. The HDF5 library used must be built with parallel support.
+        one used to build HDF5. The HDF5 library used must be built with parallel support.
         Stopping ...
         Check 'config.log' for more information.
         ------------------------------------------------------------])
