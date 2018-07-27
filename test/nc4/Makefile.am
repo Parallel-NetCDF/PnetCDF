@@ -25,7 +25,8 @@ endif
 NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
-TESTPROGRAMS =  simple_xy 
+TESTPROGRAMS =  simple_xy \
+				compressed
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4
 
