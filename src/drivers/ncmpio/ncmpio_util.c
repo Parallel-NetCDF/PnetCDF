@@ -153,9 +153,9 @@ ncmpio_first_offset(const NC         *ncp,
 int
 ncmpio_last_offset(const NC         *ncp,
                    const NC_var     *varp,
-                   const MPI_Offset  start[],   /* [varp->ndims] */
-                   const MPI_Offset  count[],   /* [varp->ndims] */
-                   const MPI_Offset  stride[],  /* [varp->ndims] */
+                   const MPI_Offset  start[],    /* [varp->ndims] */
+                   const MPI_Offset  count[],    /* [varp->ndims] */
+                   const MPI_Offset  stride[],   /* [varp->ndims] */
                    MPI_Offset       *offset_ptr) /* OUT: file offset */
 {
     int i, ndims;
@@ -190,33 +190,8 @@ ncmpio_last_offset(const NC         *ncp,
         last_indx = (MPI_Offset*) start;
     }
 
-    /* check NC_EINVALCOORDS and NC_EEDGE already done in dispatchers/var_getput.m4 */
-#if 0
-    /* check whether last_indx is valid */
-
-    int firstDim = 0;
-    /* check NC_EINVALCOORDS for record dimension */
-    if (varp->shape[0] == NC_UNLIMITED) {
-        if (ncp->format < 5 && last_indx[0] > NC_MAX_UINT) { /* CDF-1 and 2 */
-            if (count != NULL) NCI_Free(last_indx);
-            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-        }
-        /* for record variable, [0] is the NC_UNLIMITED dimension */
-        if (fIsSet(reqMode, NC_REQ_RD) && last_indx[0] >= ncp->numrecs) {
-            /* read cannot go beyond current numrecs */
-            if (count != NULL) NCI_Free(last_indx);
-            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-        }
-        firstDim = 1; /* done for checking the record dimension */
-    }
-    /* continue to check NC_EINVALCOORDS for the rest dimensions */
-    for (i=firstDim; i<ndims; i++) {
-        if (last_indx[i] < 0 || last_indx[i] >= varp->shape[i]) {
-            if (count != NULL) NCI_Free(last_indx);
-            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-        }
-    }
-#endif
+    /* Note check NC_EINVALCOORDS and NC_EEDGE already done in
+     * dispatchers/var_getput.m4 */
 
     if (varp->shape[0] == NC_UNLIMITED)
         offset += last_indx[0] * ncp->recsize;

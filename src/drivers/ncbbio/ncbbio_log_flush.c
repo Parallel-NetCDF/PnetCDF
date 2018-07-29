@@ -7,29 +7,18 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
-#include <dirent.h>
-#include <assert.h>
-#include <limits.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdint.h>
-#include <pnetcdf.h>
-#include <sys/stat.h>
-#include <unistd.h>
+
 #include <stdlib.h>
-#include <string.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <ncbbio_driver.h>
-#include <mpi.h>
 
 /* Convert from log type to MPI type used by pnetcdf library
  * Log spec has different enum of types than MPI
  */
-int logtype2mpitype(int type, MPI_Datatype *buftype);
-int logtype2mpitype(int type, MPI_Datatype *buftype){
+static int logtype2mpitype(int type, MPI_Datatype *buftype){
     /* Convert from log type to MPI type used by pnetcdf library
      * Log spec has different enum of types than MPI
      */
@@ -111,6 +100,13 @@ int log_flush(NC_bb *ncbbp) {
     if (ncbbp->flushbuffersize > 0 && databuffersize > ncbbp->flushbuffersize){
         databuffersize = ncbbp->flushbuffersize;
     }
+    /* Without enabling large_req, we can not post requests larger than 2GiB */
+#ifndef ENABLE_LARGE_REQ
+    if (databuffersize > 2147483648){
+        databuffersize = 2147483648;
+    }
+#endif
+    /* We assume user will not issue single request larger than 2GiB wwithout enabling large_req */
     if (databuffersize < ncbbp->maxentrysize){
         databuffersize = ncbbp->maxentrysize;
     }
@@ -125,7 +121,7 @@ int log_flush(NC_bb *ncbbp) {
     databufferused = 0;
     dataread = 0;
     nrounds = 0;
-    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
@@ -143,7 +139,7 @@ int log_flush(NC_bb *ncbbp) {
         }
     }
     nrounds++;
-    if (!ncbbp->isindep){
+    if (!fIsSet(ncbbp->flag, NC_MODE_INDEP)){
         MPI_Allreduce(&nrounds, &nrounds_all, 1, MPI_INT, MPI_MAX, ncbbp->comm);
     }
     else{
@@ -157,7 +153,7 @@ int log_flush(NC_bb *ncbbp) {
     }
 
     /* Seek to the start position of first data record */
-    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }
@@ -195,7 +191,7 @@ int log_flush(NC_bb *ncbbp) {
 #ifdef PNETCDF_PROFILING
                     t2 = MPI_Wtime();
 #endif
-                    err = ncbbio_bufferedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
+                    err = ncbbio_sharedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
                     if (err != NC_NOERR){
                         return err;
                     }
@@ -207,7 +203,7 @@ int log_flush(NC_bb *ncbbp) {
                 }
 
                 // Skip canceled entry
-                err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, ncbbp->entrydatasize.values[ub], SEEK_CUR);
+                err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, ncbbp->entrydatasize.values[ub], SEEK_CUR);
                 if (err != NC_NOERR){
                     return err;
                 }
@@ -222,7 +218,7 @@ int log_flush(NC_bb *ncbbp) {
 #ifdef PNETCDF_PROFILING
             t2 = MPI_Wtime();
 #endif
-            err = ncbbio_bufferedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
+            err = ncbbio_sharedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
             if (err != NC_NOERR){
                 return err;
             }
@@ -287,7 +283,7 @@ int log_flush(NC_bb *ncbbp) {
         /*
          * Wait must be called first or previous data will be corrupted
          */
-        if (ncbbp->isindep) {
+        if (fIsSet(ncbbp->flag, NC_MODE_INDEP)){
             err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, j, reqids, stats, NC_REQ_INDEP);
         }
         else{

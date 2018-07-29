@@ -272,12 +272,12 @@ A \fIbyte\fP constant is represented by a single character or multiple
 character escape sequence enclosed in single quotes.  For example,
 .RS
 .nf
- 'a'		// ASCII `a'
- '\\0'		// a zero byte
- '\\n'		// ASCII newline character
- '\\33'		// ASCII escape character (33 octal)
- '\\x2b'	// ASCII plus (2b hex)
- '\\377'	// 377 octal = 255 decimal, non-ASCII
+ 'a'           // ASCII `a'
+ '\\0'          // a zero byte
+ '\\n'          // ASCII newline character
+ '\\33'         // ASCII escape character (33 octal)
+ '\\x2b'        // ASCII plus (2b hex)
+ '\\377'        // 377 octal = 255 decimal, non-ASCII
 .fi
 .RE
 .LP
@@ -286,9 +286,9 @@ may be represented as a string enclosed in double quotes.  The usual C
 string escape conventions are honored.  For example
 .RS
 .nf
-"a"		// ASCII `a'
-"Two\\nlines\\n"	// a 10-character string with two embedded newlines
-"a bell:\\007"	// a string containing an ASCII bell
+"a"             // ASCII `a'
+"Two\\nlines\\n"  // a 10-character string with two embedded newlines
+"a bell:\\007"   // a string containing an ASCII bell
 .fi
 .RE
 Note that the netCDF character array "a" would fit in a one-element
@@ -307,9 +307,9 @@ begins with `0', it is interpreted as octal, except that if it begins with
 `0x', it is interpreted as a hexadecimal constant.  For example:
 .RS
 .nf
-\-2s	// a short -2
-0123s	// octal
-0x7ffs	//hexadecimal
+\-2s      // a short -2
+0123s    // octal
+0x7ffs   //hexadecimal
 .fi
 .RE
 .LP
@@ -323,8 +323,8 @@ constant.  Examples of valid \fIlong\fP constants include:
 .nf
 \-2
 1234567890L
-0123		// octal
-0x7ff		// hexadecimal
+0123i         // octal
+0x7ff         // hexadecimal
 .fi
 .RE
 .LP
@@ -336,7 +336,7 @@ are all acceptable \fIfloat\fP constants:
 .RS
 .nf
  \-2.0f
- 3.14159265358979f	// will be truncated to less precision
+ 3.14159265358979f    // will be truncated to less precision
  1.f
  .1f
 .fi

@@ -29,6 +29,8 @@
       integer PNETCDF_LARGE_REQ
       integer PNETCDF_NULL_BYTE_HEADER_PADDING
       integer PNETCDF_BYTE_SWAP_IN_PLACE
+      integer PNETCDF_BURST_BUFFERING
+      integer PNETCDF_THREAD_SAFE
 
       parameter (PNETCDF_ERANGE_FILL              = @ENABLE_ERANGE_FILL@)
       parameter (PNETCDF_SUBFILING                = @ENABLE_SUBFILING@)
@@ -37,6 +39,8 @@
       parameter (PNETCDF_LARGE_REQ                = @ENABLE_LARGE_REQ@)
       parameter (PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@)
       parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
+      parameter (PNETCDF_BURST_BUFFERING          = @BUILD_DRIVER_BB@)
+      parameter (PNETCDF_THREAD_SAFE              = @ENABLE_THREAD_SAFE@)
 
 !
 ! external netcdf data types:

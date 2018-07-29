@@ -7,17 +7,11 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <errno.h>
-#include <stdio.h>
+
 #include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <assert.h>
-#include <common.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <pnetcdf.h>
+#include <stdio.h>
 #include <ncbbio_driver.h>
 
 #define PUT_ARRAY_SIZE 128 /* Size of initial put list */
@@ -92,7 +86,7 @@ int ncbbio_put_list_init(NC_bb *ncbbp){
  * We simply enlarge ids and reqs array
  * We initialize the extended part as usual
  */
-int ncbbio_put_list_resize(NC_bb *ncbbp){
+static int ncbbio_put_list_resize(NC_bb *ncbbp){
     int i;
     size_t nsize;
     void *ptr;

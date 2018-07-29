@@ -29,7 +29,7 @@ rm -f ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
 ${TESTSEQRUN} ${NCMPIGEN} -v 2 -o ${TESTOUTDIR}/redef1.nc ${srcdir}/redef-good.ncdump
 ${TESTSEQRUN} ./redef1 ${TESTOUTDIR}/testfile.nc
 ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/testfile.nc ${TESTOUTDIR}/redef1.nc
-diff -q ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
+# diff -q ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
 
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
@@ -47,3 +47,12 @@ if [ -n "${TESTBB}" ]; then
    done
 fi
 
+if [ -n "${TEST_THREAD_SAFE}" ]; then
+   for j in 0 1 ; do
+       export PNETCDF_SAFE_MODE=$j
+       ${TESTSEQRUN} ./tst_pthread ${TESTOUTDIR}/tst_pthread.nc
+       for i in 0 1 2 3 4 5 ; do
+           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_pthread.nc.$i
+       done
+   done
+fi

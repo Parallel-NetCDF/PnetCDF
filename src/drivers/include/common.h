@@ -212,5 +212,23 @@ ncmpii_utf8_normalize(const char *str, char **normalp);
 extern int
 ncmpii_utf8_validate(const char* name);
 
+typedef struct hash_map_node {
+    char *key;
+    int val;
+    struct hash_map_node *next;
+} hash_map_node;
+
+
+typedef struct hash_map {
+    unsigned int (*hash)(const char* key);
+    hash_map_node **table;
+    unsigned int size;
+} hash_map;
+
+int hash_map_init(hash_map *map, int size, unsigned int (*hash)(const char* key));
+int hash_map_free(hash_map *map);
+int hash_map_add(hash_map *map, char *key, int val);
+int hash_map_find(hash_map *map, char *key, int *val);
+
 #endif
 

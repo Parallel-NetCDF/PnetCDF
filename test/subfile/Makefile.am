@@ -51,10 +51,10 @@ endif
 TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
-ptest ptest4: $(TESTPROGRAMS)
+ptest ptest4: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
+	set -e ; for i in $(check_PROGRAMS); do ( \
 	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
     if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
@@ -63,10 +63,10 @@ ptest ptest4: $(TESTPROGRAMS)
 	) ; fi ; \
 	) ; done ; } ; done
 
-ptest2: $(TESTPROGRAMS)
+ptest2: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
+	set -e ; for i in $(check_PROGRAMS); do ( \
 	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
     if [ -n "$(TESTBB)" ]; then ( \
 	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \

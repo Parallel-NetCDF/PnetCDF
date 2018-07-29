@@ -17,8 +17,7 @@
                          FourByteInt = selected_int_kind(9), &
                         EightByteInt = selected_int_kind(18)
 
-  integer, parameter ::                                          &
-                        FourByteReal = selected_real_kind(P =  6, R =  37), &
+  integer, parameter :: FourByteReal = selected_real_kind(P =  6, R =  37), &
                        EightByteReal = selected_real_kind(P = 13, R = 307)
 
   include "nfmpi_constants.fh"

@@ -49,7 +49,7 @@ igetput_varn(NC                *ncp,
              NC_var            *varp,
              int                num,
              MPI_Offset* const *starts,   /* [num][varp->ndims] */
-             MPI_Offset* const *counts,   /* [num][varp->ndims] */
+             MPI_Offset* const *counts,   /* [num][varp->ndims], can be NULL */
              void              *buf,
              MPI_Offset         bufcount,
              MPI_Datatype       buftype,  /* data type of the bufer */
@@ -101,16 +101,7 @@ igetput_varn(NC                *ncp,
     xtype = ncmpii_nc2mpitype(varp->xtype);
     MPI_Type_size(xtype, &xsize);
 
-    if (buftype == MPI_DATATYPE_NULL) {
-	/* In this case, bufcount is ignored and the internal buffer data type
-	 * match the external variable data type. No data conversion will be
-	 * done. In addition, it means buf is contiguous. Hereinafter, buftype
-         * is ignored.
-         */
-        itype = xtype;
-        isize = xsize;
-    }
-    else if (bufcount == -1) { /* buftype is an MPI primitive data type */
+    if (bufcount == -1) { /* buftype is an MPI primitive data type */
         /* In this case, this subroutine is called from a high-level API.
          * buftype is one of the MPI primitive data type. We set itype to
          * buftype. itype is the MPI element type in internal representation.
@@ -118,6 +109,15 @@ igetput_varn(NC                *ncp,
          */
         itype = buftype;
         MPI_Type_size(itype, &isize); /* buffer element size */
+    }
+    else if (buftype == MPI_DATATYPE_NULL) {
+	/* In this case, bufcount is ignored and the internal buffer data type
+	 * match the external variable data type. No data conversion will be
+	 * done. In addition, it means buf is contiguous. Hereinafter, buftype
+         * is ignored.
+         */
+        itype = xtype;
+        isize = xsize;
     }
     else { /* (bufcount > 0) */
         /* When bufcount > 0, this subroutine is called from a flexible API. If
@@ -214,9 +214,10 @@ igetput_varn(NC                *ncp,
                                  (ncp->numLeadPutReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
             /* non-lead requests must also update their member lead */
-            for (i=0; i<ncp->numPutReqs; i++)
-                ncp->put_list[i].lead = ncp->put_lead_list +
-                                        (ncp->put_list[i].lead - old);
+            if (old != ncp->put_lead_list)
+                for (i=0; i<ncp->numPutReqs; i++)
+                    ncp->put_list[i].lead = ncp->put_lead_list +
+                                            (ncp->put_list[i].lead - old);
         }
 
         lead_req = ncp->put_lead_list + ncp->numLeadPutReqs;
@@ -305,9 +306,10 @@ igetput_varn(NC                *ncp,
                                  (ncp->numLeadGetReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
             /* non-lead requests must also update their member lead */
-            for (i=0; i<ncp->numGetReqs; i++)
-                ncp->get_list[i].lead = ncp->get_lead_list +
-                                        (ncp->get_list[i].lead - old);
+            if (old != ncp->get_lead_list)
+                for (i=0; i<ncp->numGetReqs; i++)
+                    ncp->get_list[i].lead = ncp->get_lead_list +
+                                            (ncp->get_list[i].lead - old);
         }
 
         lead_req = ncp->get_lead_list + ncp->numLeadGetReqs;

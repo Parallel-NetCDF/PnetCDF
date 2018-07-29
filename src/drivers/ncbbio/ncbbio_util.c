@@ -7,14 +7,11 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
-#include "ncx.h"
-#include <limits.h>
+
 #include <stdlib.h>
 #include <string.h>
-#include <pnc_debug.h>
-#include <common.h>
-#include <pnetcdf.h>
+#include <stdio.h>
+#include <math.h>
 #include <ncbbio_driver.h>
 
 /*
@@ -41,7 +38,7 @@ void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info){
     if (flag && strcasecmp(value, "enable") == 0){
         ncbbp->hints |= NC_LOG_HINT_LOG_OVERWRITE;
     }
-#if MPI_VERSION >= 3
+
     /* Use shared logfiles among processes on the same compute node (default is
      * disabled). This feature depends on the availability of MPI constant
      * MPI_COMM_TYPE_SHARED, which is first defined in MPI standard version 3.0
@@ -51,7 +48,6 @@ void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info){
     if (flag && strcasecmp(value, "enable") == 0){
         ncbbp->hints |= NC_LOG_HINT_LOG_SHARE;
     }
-#endif
 
     // Delete the logfile after file closing (enable)
     MPI_Info_get(info, "nc_burst_buf_del_on_close", MPI_MAX_INFO_VAL - 1,

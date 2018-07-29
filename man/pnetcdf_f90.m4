@@ -1,7 +1,7 @@
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH PnetCDF 3 "PnetCDF PNETCDF_VERSION" "Printed: \n(yr.\n(mo.\n(dy" "LIBRARY FUNCTIONS"
+.TH PnetCDF 3f "PnetCDF PNETCDF_VERSION" "Printed: \n(yr.\n(mo.\n(dy" "LIBRARY FUNCTIONS"
 .SH NAME
 PnetCDF \- Parallel library for accessing files in Network Common Data Form (CDF, CDF-2 and CDF-5 formats)
 .SH SYNOPSIS
@@ -768,7 +768,7 @@ The fill mode for the entire file can be set by \fBnf90mpi_set_fill(\|)\fR.
 Per-variable fill mode setting is also available through
 \fBnf90mpi_def_var_fill(\|)\fR.
 In PnetCDF, changing fill mode must be done in define mode.
-In netCDF, it is true only for fix-sized variables.
+In netCDF, it is true only for fixed-size variables.
 For record variables, changing fill mode can be made at any time in netCDF.
 .SH "ENVIRONMENT VARIABLES"
 .TP 4
@@ -800,4 +800,4 @@ This document is adopted from the
 the Unidata Program Center, University Corporation for Atmospheric
 Research, located in Boulder, Colorado.
 
-PnetCDF home page at http://cucis.ece.northwestern.edu/projects/PnetCDF/.
+PnetCDF home page at https://parallel-netcdf.github.io

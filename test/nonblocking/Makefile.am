@@ -89,7 +89,7 @@ SH_LOG_COMPILER =
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/testfile*.nc $(NC_FILES)
+             $(TESTOUTDIR)/testfile*.nc $(NC_FILES) mcoll_perf.nc.*
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh
 
@@ -110,10 +110,10 @@ TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
 TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
 
-ptest ptest4: $(TESTPROGRAMS)
+ptest ptest4: $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
+	set -e ; for i in $(check_PROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
@@ -124,10 +124,10 @@ ptest ptest4: $(TESTPROGRAMS)
 	) ; fi ; \
 	) ; done ; } ; done
 
-ptest2 : $(TESTPROGRAMS)
+ptest2 : $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
+	set -e ; for i in $(check_PROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
@@ -138,10 +138,10 @@ ptest2 : $(TESTPROGRAMS)
 	) ; fi ; \
 	) ; done ; } ; done
 
-ptest6 : $(TESTPROGRAMS)
+ptest6 : $(check_PROGRAMS)
 	for j in 0 1 ; do { \
 	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
+	set -e ; for i in $(check_PROGRAMS); do ( \
 	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
 	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
     if [ -n "$(TESTBB)" ]; then ( \
