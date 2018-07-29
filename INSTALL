@@ -62,6 +62,10 @@ default configuration of PnetCDF up and running.
 
       make -j8
 
+   For quiet mode, use the command below will produce minimum output on screen.
+
+      make -s LIBTOOLFLAGS=--silent V=1 -j8
+
 (f) Install PnetCDF
 
       make install
@@ -109,25 +113,24 @@ Here lists a few important options:
                           [/usr/local]
   --exec-prefix=EPREFIX   install architecture-dependent files in EPREFIX
                           [PREFIX]
-
   --disable-cxx           Turn off support for the C++ interface, if you only
                           need the C interface. [default: enabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
                           only need the C interface. [default: enabled]
   --enable-shared[=PKGS]  build shared libraries [default=no]
   --enable-static[=PKGS]  build static libraries [default=yes]
-  --enable-debug          Enable PnetCDF internal debug mode. This also
-                          enables safe mode. [default: disabled]
-  --disable-in-place-swap Disable memory in-place byte swap on Little Endian
-                          machines. [default: enabled]
+  --enable-debug          Enable PnetCDF internal debug mode. This also enables
+                          safe mode. [default: disabled]
+  --(en/dis)able-in-place-swap
+                          Enable/disable memory in-place byte swap on Little
+                          Endian machines. [default: auto]
   --enable-subfiling      Enable subfiling support. [default: disabled]
   --disable-erange-fill   Disable use of fill value when out-of-range type
-                          conversion causes NC_ERANGE error. [default:
-                          enabled]
-  --enable-relax-coord-bound
-                          Enable relaxed error NC_EINVALCOORDS to allow
-                          coordinate start argument equal to dimension size
-                          when argument count is zero. [default: disabled]
+                          conversion causes NC_ERANGE error. [default: enabled]
+  --disable-relax-coord-bound
+                          Use stricter rule for error NC_EINVALCOORDS to
+			  disallow coordinate start argument equal to dimension
+			  size when argument count is zero. [default: enabled]
   --enable-doxygen        Enable generation of documentation. [default:
                           disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
@@ -140,9 +143,12 @@ Here lists a few important options:
                           Note "make check" can run very slow. [default:
                           disabled]
   --enable-null-byte-header-padding
-                          Enable check for null-byte header padding when
-                          reading files in classic formats. [default:
-                          disabled]
+			  Enable check for null-byte header padding when
+			  reading files in classic formats. [default: disabled]
+  --enable-burst-buffering
+			  Enable burst buffer driver support. [default:
+			  disabled]
+  --enable-profiling      Enable time and memory profiling. [default: disabled]
   --disable-versioning    Disable library versioning. [default: enabled]
 
 Optional Packages:
@@ -156,27 +162,26 @@ Some influential environment variables:
   MPICXX      MPI C++ compiler, [default: CXX]
   MPIF77      MPI Fortran 77 compiler, [default: F77]
   MPIF90      MPI Fortran 90 compiler, [default: FC]
-  CC          C compiler command
+  CC          C compiler command (used only if MPICC is not set)
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
   LIBS        libraries to pass to the linker, e.g. -l<library>
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
-  CXX         C++ compiler command
+  CXX         C++ compiler command (used only if MPICXX is not set)
   CXXFLAGS    C++ compiler flags
   LT_SYS_LIBRARY_PATH
               User-defined run-time library search path.
   CPP         C preprocessor
   CXXCPP      C++ preprocessor
-  FC          Fortran compiler command
+  FC          Fortran compiler command (used only if MPIF90 is not set)
   FCFLAGS     Fortran compiler flags
-  F77         Fortran 77 compiler command
+  F77         Fortran 77 compiler command (used only if MPIF77 is not set)
   FFLAGS      Fortran 77 compiler flags
   GCOV        name/path for the gcov utility
-  TESTSEQRUN  Run command (on one MPI process) for "make check" on
-              cross-compile environment. Example: "aprun -n 1". [default:
-              none]
+  TESTSEQRUN  Run command (on one MPI process) for "make check" on a cross-
+              compile environment. Example: "aprun -n 1". [default: none]
   TESTMPIRUN  MPI run command for "make ptest", [default: mpiexec -n NP]
   TESTOUTDIR  Output file directory for "make check" and "make ptest",
               [default: ./]
@@ -208,17 +213,18 @@ Some influential environment variables:
 
 
 ----
-Note on configure option "--disable-in-place-swap"
+Note on configure option "--(en/dis)able-in-place-swap"
 ----
-   This option disables the byte-swap operations running in-place on the user's
-   write buffers.  The purpose of providing this option is to deal with the
-   problem when a Fortran program uses a immutable buffer for put APIs, e.g.
-   the buffer is declared as a PARAMETER, and in-place byte swap on this buffer
-   causes segmentation fault. See discussion threads of
+   This option enables/disables the byte-swap operations running in-place on
+   the user's write buffers. The purpose of providing this option is to deal
+   with the problem when a Fortran program uses a immutable buffer for put
+   APIs, e.g.  the buffer is declared as a PARAMETER, and in-place byte swap
+   on this buffer causes segmentation fault. See discussion threads of
    http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2013-July/001498.html
 
    Impacts:
-      1. It takes effect only on Little Endian machines.
+      1. It takes effect only on Little Endian machines, as no byte swap is
+         necessary on Big Endian machines.
       2. It only affects put/iput data APIs, but not attribute APIs.
       3. The INTENT of buffer arguments in all Fortran 90 put/iput APIs will be
          declared as "IN". Without this setting, the default is "INOUT".
@@ -226,9 +232,26 @@ Note on configure option "--disable-in-place-swap"
          will be allocated to copy data over from user's put buffer, so byte
          swap can be run on the temporary buffer.
 
-   The default setting is to enable in-place byte swap. PnetCDF tries not to
-   allocate additional memory space, due to performance concern. Users are
-   discouraged to use Fortran PARAMETER buffers in put APIs.
+   The default setting is auto. The three options are explained below.
+      --enable-in-place-swap : perform byte swap on user I/O buffers whenever
+      possible. This option results in the least amount of internal memory
+      usage. However, if an immutable user buffer is used, segmentation fault
+      may occur when byte swap is performed on user buffer in place.
+
+      --disable-in-place-swap : when byte swap is required, an internal memory
+      space will be allocated for byte swap without altering the contents of
+      user buffer. This option will increase internal memory footprint.
+
+      The default (neither the above option is used at the command line): an
+      internal buffer is allocated for byte swap only when the I/O request
+      size is less than 4 KiB. For larger requests, user buffers are used for
+      in-place byte swap.  The mode can also be changed at the run time by
+      setting the PnetCDF hint nc_in_place_swap.
+
+
+   PnetCDF tries not to allocate additional memory space, due to performance
+   concern. Users are discouraged to use Fortran PARAMETER buffers in put
+   APIs.
 
 ----
 Note on configure option "--disable-erange-fill"
@@ -265,24 +288,33 @@ Note on configure option "--enable-relax-coord-bound"
    more detailed information, see discussion in:
    http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2016-March/001839.html
 
+   Starting from version 1.10.0, the default of this option is changed to
+   enabled, in accord with NetCDF 4.7.0. See discussion in:
+   https://github.com/Unidata/netcdf-c/issues/1010
+
 -------------------------------------------------------------------------
 
 3. Testing the PnetCDF installation
 ==================================
 
 Two type of testings are implemented in PnetCDF: sequential and parallel.
-For testing sequential programs, the command is
+* For testing sequential programs, the command is
      make check
-For testing parallel programs, the command is
+* For testing parallel programs, the command is
      make ptest
-The parallel test uses up to 10 MPI processes.
+  which uses 4 MPI processes to run all test programs
+* For more elaborated parallel testing, command
+     make ptests
+  will use up to 10 MPI processes to run all test programs.
+
+Note the above commands can be run before "make install".
 
 Command "make tests" will build executables of all the test programs. This can
 be handy if testing must run through a batch job system. Having the testing
 executables built before submitting a batch job could save a lot of time.
 
-There are three environment variables that can be used to run make check/ptest
-on a cross compile platform.
+There are three environment variables that can be used to run "make check" and
+"make ptest" on a cross compile platform.
  - TESTMPIRUN : command to launch MPI jobs. default: mpiexec -n NP
  - TESTSEQRUN : command to run MPI executable sequentially. default: none
  - TESTOUTDIR : output directory. default: ./

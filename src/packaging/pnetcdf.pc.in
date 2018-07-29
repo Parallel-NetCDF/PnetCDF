@@ -42,7 +42,7 @@ includedir=${prefix}/include
 
 Name: PnetCDF
 Description: Parallel-NetCDF (PnetCDF) provides parallel access to classic NetCDF files
-URL: http://cucis.ece.northwestern.edu/projects/PnetCDF/
+URL: https://parallel-netcdf.github.io
 Version: @PNETCDF_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lpnetcdf

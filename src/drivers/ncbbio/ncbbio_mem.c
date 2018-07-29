@@ -7,16 +7,10 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <errno.h>
-#include <stdio.h>
+
 #include <stdlib.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <assert.h>
-#include <common.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <pnetcdf.h>
 #include <ncbbio_driver.h>
 
 #define LOG_BUFFER_SIZE 1024 /* Size of initial metadata buffer */

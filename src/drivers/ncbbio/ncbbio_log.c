@@ -7,22 +7,15 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
 #include <dirent.h>
-#include <assert.h>
-#include "ncx.h"
-#include <limits.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdint.h>
-#include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <pnetcdf.h>
 #include <ncbbio_driver.h>
 
 /*
@@ -145,13 +138,25 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     }
 
     /* Communicator for processes sharing log files */
-#if MPI_VERSION >= 3
     if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE) {
-        MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
+#if MPI_VERSION >= 3
+        err = MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncbbp->logcomm));
-        MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
-    } else
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(NC_EMPI);
+        }
+#else
+        err = ncbbio_get_node_comm(ncbbp->comm, &ncbbp->logcomm);
+        if (err != NC_NOERR){
+            return err;
+        }
 #endif
+        err = MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(NC_EMPI);
+        }
+    }
+    else
     {
         ncbbp->logcomm = MPI_COMM_SELF;
         masterrank = rank;
@@ -220,7 +225,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
     /*
      * Allocate space for metadata header
-     * Header consists of a fixed size info and variable size basename
+     * Header consists of a fixed-size info and variable size basename
      */
     headersize = sizeof(NC_bb_metadataheader) + strlen(basename);
     if (headersize % 4 != 0){
@@ -262,7 +267,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     if (err != NC_NOERR) {
         return err;
     }
-    err = ncbbio_bufferedfile_open(ncbbp->logcomm, ncbbp->datalogpath, flag,
+    err = ncbbio_sharedfile_open(ncbbp->logcomm, ncbbp->datalogpath, flag,
                            MPI_INFO_NULL, &(ncbbp->datalog_fd));
     if (err != NC_NOERR) {
         return err;
@@ -277,9 +282,9 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     }
 
     /* Write data header to file
-     * Data header consists of a fixed sized string PnetCDF0
+     * Data header consists of a fixed-length string "PnetCDF0"
      */
-    err = ncbbio_bufferedfile_write(ncbbp->datalog_fd, "PnetCDF0", 8);
+    err = ncbbio_sharedfile_write(ncbbp->datalog_fd, "PnetCDF0", 8);
     if (err != NC_NOERR){
         return err;
     }
@@ -350,10 +355,9 @@ int ncbbio_log_enddef(NC_bb *ncbbp){
  * Used by ncmpi_close()
  * IN    ncbbp:    log structure
  */
-int ncbbio_log_close(NC_bb *ncbbp) {
+int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     int err;
-#ifdef PNETCDF_PROFILING
-    double t1, t2;
+#ifdef PNETCDF_DEBUG
     unsigned long long total_data;
     unsigned long long total_meta;
     unsigned long long buffer_size;
@@ -374,6 +378,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
     NC_bb_metadataheader* headerp;
 
 #ifdef PNETCDF_PROFILING
+    double t1, t2;
     t1 = MPI_Wtime();
 #endif
 
@@ -382,7 +387,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
     /* If log file is created, flush the log */
     if (ncbbp->metalog_fd != NULL){
         /* Commit to CDF file */
-        if (headerp->num_entries > 0 || !(ncbbp->isindep)){
+        if (replay && (headerp->num_entries > 0 || !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))){
             log_flush(ncbbp);
         }
 
@@ -391,7 +396,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
         if (err != NC_NOERR){
             return err;
         }
-        err = ncbbio_bufferedfile_close(ncbbp->datalog_fd);
+        err = ncbbio_sharedfile_close(ncbbp->datalog_fd);
         if (err != NC_NOERR){
             return err;
         }
@@ -406,6 +411,11 @@ int ncbbio_log_close(NC_bb *ncbbp) {
     /* Free meta data buffer and metadata offset list*/
     ncbbio_log_buffer_free(&(ncbbp->metadata));
     ncbbio_log_sizearray_free(&(ncbbp->entrydatasize));
+
+    /* Close shared log communicator */
+    if (ncbbp->logcomm != MPI_COMM_SELF){
+        MPI_Comm_free(&(ncbbp->logcomm));
+    }    
 
 #ifdef PNETCDF_PROFILING
     t2 = MPI_Wtime();
@@ -446,7 +456,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
                 MPI_SUM, 0, ncbbp->comm);
     MPI_Reduce(&(ncbbp->flushbuffersize), &buffer_size, 1,
                 MPI_UNSIGNED_LONG_LONG, MPI_MAX, 0, ncbbp->comm);
-
+#if 0
     if (ncbbp->rank == 0){
         printf("==========================================================\n");
         printf("File: %s\n", ncbbp->path);
@@ -468,6 +478,7 @@ int ncbbio_log_close(NC_bb *ncbbp) {
         printf("\t\tTime calling wait: %lf\n", flush_wait_time);
         printf("==========================================================\n");
     }
+#endif
 #endif
 #endif
 
@@ -498,7 +509,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
      * We still need to participate the flush in collective mode
      * We assume some processes will have things to flush to save communication cost
      */
-    if (headerp->num_entries == 0 && ncbbp->isindep){
+    if (headerp->num_entries == 0 && fIsSet(ncbbp->flag, NC_MODE_INDEP)){
         return NC_NOERR;
     }
 
@@ -530,7 +541,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
     ncbbp->metaidx.nused = 0;
 
     /* Rewind data log file descriptors and reset the size */
-    err = ncbbio_bufferedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
+    err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
     if (err != NC_NOERR){
         return err;
     }

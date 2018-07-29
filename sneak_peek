@@ -4,9 +4,21 @@ This is essentially a placeholder for the next release note ...
 
   o New features
     * NetCDF4 format classic mode support via netcdf. 
+    * Thread-safe capability is added to this release. It can be enabled with
+      configure option --enable-thread-safe. In addition, option --with-pthread
+      can be used to specify the path to the pthreads library. This feature
+      currently only supports one-thread-per-file I/O operation.
 
   o New optimization
-    * none
+    * The internal data buffering mechanism in the burst buffer driver is
+      removed. This mechanism caches the request data in memory until the
+      accumulated size is more than 8 MiB, so the write requests to burst
+      buffers can be aligned with 8 MiB boundaries. However, experiments on
+      Cray DataWarp show a negligible performance improvement unless the I/O
+      request is small and fragment. On the other hand, it can degrade
+      performance for mid- and large-sized requests. The burst buffer driver
+      now writes directly to the burst buffers for each user write request.
+
   o New Limitations
     * none
 
@@ -27,7 +39,6 @@ This is essentially a placeholder for the next release note ...
 
   o API semantics updates
     * none
-    
   o New error code precedence
     * none
 
@@ -57,7 +68,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New example programs
-    * none
+    * examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
+      When running on some parallel machines, users may need to set certain
+      environment variable to enable MPI multi-threading support, for example
+      on Cori @NERSC with command "export MPICH_MAX_THREAD_SAFETY=multiple".
 
   o New programs for I/O benchmarks
     * none
@@ -67,7 +81,9 @@ This is essentially a placeholder for the next release note ...
     * test/nc4/interoperability_rd.m4 - test whether NetCDF4 file written using NetCDF can be read by PnetCDF
     * test/nc4/interoperability_wr.m4 - test whether NetCDF4 file written using PnetCDF can be read by NetCDF
     * test/nc4/simple_xy.c - test reading the simple_xy example somes with NetCDF
-
+    * test/testcases/tst_pthread.c - tests thread-safe capability for scenario
+      of each thread operating on a unique file.
+      
   o Conformity with NetCDF library
     * NetCDF allow data operation in define mode and vice-versa in NetCDF4 format. PnetCDF does not.
 

@@ -9,7 +9,8 @@
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 
-bin_PROGRAMS = ncmpilogdump
+noinst_bindir =
+noinst_bin_PROGRAMS = ncmpilogdump
 nodist_ncmpilogdump_SOURCES = ncmpilogdump.c
 ncmpilogdump_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 

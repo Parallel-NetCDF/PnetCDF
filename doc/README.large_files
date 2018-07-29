@@ -4,8 +4,9 @@
 #
 # $Id$
 
-For latest information of large-file support, please visit:
-http://trac.mcs.anl.gov/projects/parallel-netcdf
+For latest information of large-file support, please visit PnetCDF home page:
+https://parallel-netcdf.github.io and refer to the Section "A Note About Large
+File Support".
 
 
 ==== BACKGROUND

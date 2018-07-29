@@ -21,9 +21,39 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h> /* basename() */
-#include <pnetcdf.h>
 
+/* This program can also be used to test NetCDF.
+ * Add #define TEST_NETCDF and compile with command:
+ * gcc -I/netcdf/path/include last_large_var.c -o last_large_var -L/netcdf/path/lib -lnetcdf
+ */
+#ifdef TEST_NETCDF
+#include <netcdf.h>
+#include <netcdf_meta.h>
+#define CHECK_ERR { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,nc_strerror(err)); \
+    } \
+}
+#define EXP_ERR(exp) { \
+    if (err != exp) { \
+        nerrs++; \
+        printf("Error at line %d in %s: expecting %d but got %d\n", \
+        __LINE__,__FILE__,exp, err); \
+    } \
+}
+#define FileOpen(a,b,c,d,e) nc_open(b,c,e)
+#define MPI_Init(a,b)
+#define MPI_Comm_rank(a,b)
+#define MPI_Bcast(a,b,c,d,e)
+#define MPI_Finalize()
+#else
+#include <mpi.h>
+#include <pnetcdf.h>
 #include <testutils.h>
+#define FileOpen ncmpi_open
+#endif
 
 int main(int argc, char** argv) {
     char *bad_xtype[3] ={"bad_xtype.nc1",  "bad_xtype.nc2",  "bad_xtype.nc5"};
@@ -32,11 +62,10 @@ int main(int argc, char** argv) {
     char *bad_nattrs[3]={"bad_nattrs.nc1", "bad_nattrs.nc2", "bad_nattrs.nc5"};
 
     char filename[512], dirname[512];
-    int i, rank, nprocs, err, ncid, nerrs=0;
+    int i, rank, err, ncid, nerrs=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (argc != 2) {
         if (!rank) printf("Usage: %s [directory name]\n",argv[0]);
@@ -68,7 +97,7 @@ int main(int argc, char** argv) {
      */
     for (i=0; i<3; i++) {
         sprintf(filename, "%s/%s", dirname, bad_xtype[i]);
-        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+        err = FileOpen(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                          &ncid);
         EXP_ERR(NC_EBADTYPE)
     }
@@ -84,7 +113,7 @@ int main(int argc, char** argv) {
      */
     for (i=0; i<3; i++) {
         sprintf(filename, "%s/%s", dirname, bad_ndims[i]);
-        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+        err = FileOpen(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                          &ncid);
         EXP_ERR(NC_EMAXDIMS)
     }
@@ -100,7 +129,7 @@ int main(int argc, char** argv) {
      */
     for (i=0; i<3; i++) {
         sprintf(filename, "%s/%s", dirname, bad_dimid[i]);
-        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+        err = FileOpen(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                          &ncid);
         EXP_ERR(NC_EBADDIM)
     }
@@ -116,11 +145,15 @@ int main(int argc, char** argv) {
      */
     for (i=0; i<3; i++) {
         sprintf(filename, "%s/%s", dirname, bad_nattrs[i]);
-        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+        err = FileOpen(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                          &ncid);
         EXP_ERR(NC_EMAXATTS)
     }
 
+#ifdef TEST_NETCDF
+    if (nerrs) printf("fail with %d mismatches\n",nerrs);
+    else       printf("pass\n");
+#else
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -138,6 +171,7 @@ int main(int argc, char** argv) {
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
+#endif
 
     MPI_Finalize();
     return (nerrs > 0);

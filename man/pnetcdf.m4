@@ -1258,7 +1258,7 @@ The fill mode for the entire file can be set by FREF(set_fill).
 Per-variable fill mode setting is also available through
 FREF(def_var_fill).
 In PnetCDF, changing fill mode must be done in define mode.
-In netCDF, it is true only for fix-sized variables.
+In netCDF, it is true only for fixed-size variables.
 For record variables, changing fill mode can be made at any time in netCDF.
 .SH "ENVIRONMENT VARIABLES"
 .TP 4
@@ -1290,4 +1290,4 @@ This document is adopted from the
 the Unidata Program Center, University Corporation for Atmospheric
 Research, located in Boulder, Colorado.
 
-PnetCDF home page at http://cucis.ece.northwestern.edu/projects/PnetCDF/.
+PnetCDF home page at https://parallel-netcdf.github.io

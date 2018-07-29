@@ -3,11 +3,10 @@ dnl Copyright (C) 2017, Northwestern University and Argonne National Laboratory
 dnl See COPYRIGHT notice in top-level directory.
 dnl
 
-AC_REVISION([$Revision$])dnl
-dnl The above uses SVN keyword Revision to copy the unique revision number as
-dnl a stamp into configure script. When using git, use the following line
-dnl instead.
-dnl AC_REVISION([m4_esyscmd_s([git describe --always])])
+AC_REVISION([m4_esyscmd_s([git describe --always])])
+dnl When using svn, we use SVN keyword Revision to copy the unique revision
+dnl number as a stamp into configure script.
+dnl AC_REVISION([$Revision$])dnl
 
 dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
@@ -15,7 +14,7 @@ dnl
 
 dnl autoconf v2.69 was released in 2012-04-24
 AC_PREREQ([2.69])
-AC_INIT([parallel-netcdf],[1.10.0.pre],[parallel-netcdf@mcs.anl.gov])
+AC_INIT([parallel-netcdf],[1.10.0],[parallel-netcdf@mcs.anl.gov])
 
 dnl config.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
@@ -34,8 +33,8 @@ AM_INIT_AUTOMAKE([1.13])
 dnl enable silent rules by default
 AM_SILENT_RULES([yes])
 
-dnl if maintainer mode is disabled, make will *never* attempt to rebuild configure,
-dnl Makefile.ins, etc.
+dnl if maintainer mode is disabled, make will *never* attempt to rebuild
+dnl configure, Makefile.ins, etc.
 AM_MAINTAINER_MODE([enable])
 
 m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
@@ -119,6 +118,7 @@ AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([BUILD_DRIVER_BB],          [Define if to enable burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
+AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 
 AH_TOP([#ifndef _CONFIG_H
@@ -611,6 +611,7 @@ if test "x${has_fortran}" = xyes ; then
          [valid_mpif90=yes],[valid_mpif90=no]
       )
    else
+      AC_MSG_WARN([Fortran module mpi.mod is not available or invalid. Use mpif.h instead.])
       dnl mpi.mod is not available, check if can use mpif.h
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
            include "mpif.h"
@@ -1576,6 +1577,48 @@ fi
 AC_SUBST(PNETCDF_PROFILING)
 AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
 
+AC_ARG_ENABLE([thread-safe],
+    [AS_HELP_STRING([--enable-thread-safe],
+                    [Enable thread-safe capability. @<:@default: disabled@:>@])],
+    [thread_safe=${enableval}], [thread_safe=no]
+)
+ENABLE_THREAD_SAFE=0
+if test "x${thread_safe}" = xyes ; then
+   AC_DEFINE(ENABLE_THREAD_SAFE)
+   ENABLE_THREAD_SAFE=1
+fi
+AC_SUBST(ENABLE_THREAD_SAFE)
+AM_CONDITIONAL(ENABLE_THREAD_SAFE, [test x$thread_safe = xyes])
+
+AC_ARG_WITH([pthread],
+    [AS_HELP_STRING([--with-pthread=DIR],
+                    [Specify alternative path to Pthreads library when
+                     thread-safe capability is enabled.])],,
+    [withval=check])
+
+if test "x${thread_safe}" = xyes ; then
+   if test "x${withval}" = xcheck -o "x${withval}" = x ; then
+      AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([Cannot find pthread.h])])
+      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library])])
+   else
+      case "$withval" in
+         *,*)
+            pthread_inc="`echo $withval | cut -f1 -d,`"
+            pthread_lib="`echo $withval | cut -f2 -d, -s`"
+            ;;
+         *)
+            # check $withval for empty is done above
+            pthread_inc="$withval/include"
+            pthread_lib="$withval/lib"
+            ;;
+      esac
+      CPPFLAGS="$CPPFLAGS -I$pthread_inc"
+      AC_CHECK_HEADER([pthread.h],, [AC_MSG_ERROR([Cannot find pthread.h under $withval])])
+      LDFLAGS="$LDFLAGS -L$pthread_lib"
+      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library under $withval])])
+   fi
+fi
+
 dnl build test programs and benchmark programs
 AM_CONDITIONAL(BUILD_TESTSETS, [true])
 AM_CONDITIONAL(BUILD_BENCHMARKS_IN_PNETCDF, [true])
@@ -1756,7 +1799,7 @@ if test "x${large_file_test}" = xyes; then
 fi
 if test "x${debug}" = xyes; then
    echo "\
-              PnetCDF internal debug mode                 - enabled"
+              Internal debug mode                         - enabled"
 fi
 if test "x${has_fortran}" = xyes -a "x${ac_f77_support_freeform}" = xno ; then
    echo "\
@@ -1776,7 +1819,11 @@ if test "x${enable_bbdriver}" = xyes ; then
 fi
 if test "x${enable_profiling}" = xyes ; then
    echo "\
-              PnetCDF internal profiling                  - enabled"
+              Internal profiling mode                     - enabled"
+fi
+if test "x${thread_safe}" = xyes ; then
+   echo "\
+              Thread-safe capability                      - enabled"
 fi
 
 echo "\

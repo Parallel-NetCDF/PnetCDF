@@ -140,7 +140,6 @@ ifelse(`$1', `NC_FORMAT_64BIT_DATA',
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    extern int optind;
     char filename[256], fname[512];
     int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0, cmode;
     int psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];

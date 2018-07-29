@@ -7,9 +7,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,9 +15,9 @@
 #define _XOPEN_SOURCE 500
 #include <unistd.h> /* pwrite() pread() */
 
+#include <stdlib.h>
 #include <pnc_debug.h>
 #include <common.h>
-#include <pnetcdf.h>
 #include <ncbbio_driver.h>
 
 #define BLOCK_SIZE 8388608
@@ -40,7 +38,7 @@ int ncbbio_sharedfile_open(MPI_Comm comm, char *path, int flag, MPI_Info info, N
     f = (NC_bb_sharedfile*)NCI_Malloc(sizeof(NC_bb_sharedfile));
 
     /* Initialize metadata associate with the file
-     * We assum all processes within the given communicator is sharing the file
+     * We assume all processes within the given communicator is sharing the file
      * Due to file sharing, actual file position differs than the logical file position within the file view
      * TODO: Adjustable bsize
      */
@@ -135,19 +133,23 @@ int ncbbio_sharedfile_close(NC_bb_sharedfile *f) {
 int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     int i, err;
     int sblock, eblock;   // start and end block
-    off_t offstart, offend; // Start and end offset to write for current block in physical file
+    off_t offstart, offend, wsize = 0; // Start and end offset to write for current block in physical file
     ssize_t ioret;
 
     // Write directly if not sharing
     if(f->nchanel == 1){
-        ioret = pwrite(f->fd, buf, count, offset);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("write");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EWRITE);
+        wsize = 0;
+        while(wsize < count){
+            ioret = pwrite(f->fd, (char*)buf + wsize, count - wsize, offset + wsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("write");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EWRITE);
+            }
+            wsize += ioret;
         }
         return NC_NOERR;
     }
@@ -172,8 +174,8 @@ int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f, void *buf, size_t count, off_t
         /* Block boundary are inclusive, as a result, final block is always partial (can be empty)
          * In this case, we can assume offend will always be larger than offstart
          */
-        // Compute physical offset of th eblock
-        offstart = i * f->nchanel * f->bsize;
+        // Compute physical offset of ith eblock
+        offstart = (i * f->nchanel + f->chanel) * f->bsize;
         // A block can be first and last block at the same time due to short write region
         // Last block must be partial
         // NOTE: offend must be computed before offstart, we reply on unadjusted offstart to mark the start position of the block
@@ -191,14 +193,18 @@ int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f, void *buf, size_t count, off_t
         }
 
         // Write to file
-        ioret = pwrite(f->fd, buf, offend - offstart, offstart);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("write");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != offend - offstart){
-            DEBUG_RETURN_ERROR(NC_EWRITE);
+        wsize = 0;
+        while(wsize < offend - offstart){
+            ioret = pwrite(f->fd, (char*)buf + wsize, offend - offstart - wsize, offstart + wsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("write");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EWRITE);
+            }
+            wsize += ioret;
         }
 
         // We increase the buffer pointer by amount writen, so it always points to the data of next block
@@ -228,14 +234,19 @@ int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count){
     // Write directly if not sharing
     if(f->nchanel == 1){
         ssize_t ioret;
-        ioret = write(f->fd, buf, count);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("write");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EWRITE);
+        off_t wsize;
+        wsize = 0;
+        while(wsize < count){
+            ioret = write(f->fd, (char*)buf + wsize, count - wsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("write");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EWRITE);
+            }
+            wsize += ioret;
         }
     }
     else{
@@ -281,19 +292,23 @@ int ncbbio_sharedfile_write(NC_bb_sharedfile *f, void *buf, size_t count){
 int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t offset){
     int i, err;
     int sblock, eblock;   // start and end block
-    off_t offstart, offend; // Start and end offset to write for current block in physical file
+    off_t offstart, offend, rsize = 0; // Start and end offset to write for current block in physical file
     ssize_t ioret;
 
     // Read directly if not sharing
     if(f->nchanel == 1){
-        ioret = pread(f->fd, buf, count, offset);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("read");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EREAD);
+        rsize = 0;
+        while(rsize < count){
+            ioret = pread(f->fd, (char*)buf + rsize, count - rsize, offset + rsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("read");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EREAD);
+            }
+            rsize += ioret;
         }
         return NC_NOERR;
     }
@@ -319,7 +334,7 @@ int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t 
          * In this case, we can assume offend will always be larger than offstart
          */
         // Compute physical offset of th eblock
-        offstart = i * f->nchanel * f->bsize;
+        offstart = (i * f->nchanel + f->chanel) * f->bsize;
         // A block can be first and last block at the same time due to short write region
         // Last block must be partial
         // NOTE: offend must be computed before offstart, we reply on unadjusted offstart to mark the start position of the block
@@ -337,14 +352,18 @@ int ncbbio_sharedfile_pread(NC_bb_sharedfile *f, void *buf, size_t count, off_t 
         }
 
         // Read from file
-        ioret = pread(f->fd, buf, offend - offstart, offstart);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("read");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != offend - offstart){
-            DEBUG_RETURN_ERROR(NC_EREAD);
+        rsize = 0;
+        while(rsize < offend - offstart){
+            ioret = pread(f->fd, (char*)buf + rsize, offend - offstart - rsize, offstart + rsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("read");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EREAD);
+            }
+            rsize += ioret;
         }
 
         // We increase the buffer pointer by amount readn, so it always points to the location for next block
@@ -374,14 +393,19 @@ int ncbbio_sharedfile_read(NC_bb_sharedfile *f, void *buf, size_t count){
     // Read directly if not sharing
     if(f->nchanel == 1){
         ssize_t ioret;
-        ioret = read(f->fd, buf, count);
-        if (ioret < 0){
-            err = ncmpii_error_posix2nc("read");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
-            DEBUG_RETURN_ERROR(err);
-        }
-        if (ioret != count){
-            DEBUG_RETURN_ERROR(NC_EREAD);
+        off_t rsize;
+        rsize = 0;
+        while(rsize < count){
+            ioret = read(f->fd, (char*)buf + rsize, count - rsize);
+            if (ioret < 0){
+                err = ncmpii_error_posix2nc("read");
+                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD);
+                DEBUG_RETURN_ERROR(err);
+            }
+            if (ioret == 0){
+                DEBUG_RETURN_ERROR(NC_EREAD);
+            }
+            rsize += ioret;
         }
     }
     else{

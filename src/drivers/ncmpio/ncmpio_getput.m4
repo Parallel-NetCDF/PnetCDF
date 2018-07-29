@@ -207,33 +207,6 @@ put_varm(NC               *ncp,
             goto err_check;
         }
     }
-#if 0
-    if (!buftype_is_contig || imaptype != MPI_DATATYPE_NULL || need_convert
-        || (need_swap && in_place_swap == 0)) {
-        xbuf = NCI_Malloc((size_t)nbytes);
-        if (xbuf == NULL) {
-            DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-            goto err_check;
-        }
-        need_swap_back_buf = 0;
-    }
-    else {
-        /* when user buf is used as xbuf, we need to byte-swap buf back to its
-         * original contents, after MPI_File_write */
-        xbuf = buf;
-        need_swap_back_buf = 1;
-    }
-
-    /* pack user buffer, buf, to xbuf, which will be used to write to file */
-    err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype,
-                           buftype_is_contig, bnelems, itype, el_size, imaptype,
-                           need_convert, need_swap, nbytes, buf, xbuf);
-    if (err != NC_NOERR && err != NC_ERANGE) {
-        if (xbuf != buf) NCI_Free(xbuf);
-        xbuf = NULL;
-        goto err_check;
-    }
-#endif
 
     /* Set nelems and xtype which will be used in MPI read/write */
     if (buf != xbuf) {

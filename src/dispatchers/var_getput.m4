@@ -213,16 +213,17 @@ int sanity_check(PNC          *pncp,
                  MPI_Datatype  itype,    /* internal data type */
                  int           isColl)   /* collective or indepdnent API */
 {
-    /* check file write permission for put APIs */
+    /* for put APIs */
     if (io == API_PUT || io == API_IPUT || io == API_BPUT)
+        /* check file write permission for put APIs */
         if (pncp->flag & NC_MODE_RDONLY) DEBUG_RETURN_ERROR(NC_EPERM)
 
-    /* blocking get/put APIs must be called in data mode */
-    if (io == API_PUT || io == API_GET)
-        if ((pncp->flag & NC_MODE_DEF)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
-
-    /* for blocking APIs, check if in collective or independent mode */
+    /* for blocking APIs */
     if (io == API_PUT || io == API_GET) {
+        /* blocking get/put APIs must be called in data mode */
+        if (pncp->flag & NC_MODE_DEF) DEBUG_RETURN_ERROR(NC_EINDEFINE)
+
+        /* for blocking APIs, check if in collective or independent mode */
         if (isColl) { /* check if file is currently in collective data mode */
             if (pncp->flag & NC_MODE_INDEP) DEBUG_RETURN_ERROR(NC_EINDEP)
         }

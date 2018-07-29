@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h> /* strcpy(), strlen() */
+#include <errno.h>  /* EINVAL */
 #include <assert.h>
 
 #include <pnetcdf.h>
@@ -42,6 +43,13 @@
 static void   *ncmpii_mem_root;
 static size_t  ncmpii_mem_alloc;
 static size_t  ncmpii_max_mem_alloc;
+
+#ifdef ENABLE_THREAD_SAFE
+/* updating the binary tree used in tfind()/tsearch()/tdelete() is not
+ * thread-safe, protect these subroutines with a mutex */
+#include<pthread.h>
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 #if 0
 /*----< ncmpii_init_malloc_tracing() >----------------------------------------*/
@@ -89,6 +97,10 @@ void ncmpii_add_mem_entry(void       *buf,
                           const char *func,
                           const char *filename)
 {
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
+
     /* use C tsearch utility */
     ncmpii_mem_entry *node = (ncmpii_mem_entry*) malloc(sizeof(ncmpii_mem_entry));
     node->self     = node;
@@ -107,10 +119,14 @@ void ncmpii_add_mem_entry(void       *buf,
     if (ret == NULL) {
         fprintf(stderr, "Error at line %d file %s: tsearch()\n",
                 __LINE__,__FILE__);
-        return;
     }
-    ncmpii_mem_alloc += size;
-    ncmpii_max_mem_alloc = MAX(ncmpii_max_mem_alloc, ncmpii_mem_alloc);
+    else {
+        ncmpii_mem_alloc += size;
+        ncmpii_max_mem_alloc = MAX(ncmpii_max_mem_alloc, ncmpii_mem_alloc);
+    }
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
 }
 
 /*----< ncmpii_del_mem_entry() >---------------------------------------------*/
@@ -118,6 +134,9 @@ void ncmpii_add_mem_entry(void       *buf,
 static
 void ncmpii_del_mem_entry(void *buf)
 {
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
     /* use C tsearch utility */
     if (ncmpii_mem_root != NULL) {
         ncmpii_mem_entry node;
@@ -127,7 +146,7 @@ void ncmpii_del_mem_entry(void *buf)
         if (ret == NULL) {
             fprintf(stderr, "Error at line %d file %s: tfind() buf=%p\n",
                     __LINE__,__FILE__,buf);
-            return;
+            goto fn_exit;
         }
         /* free space for func and filename */
         free((*found)->func);
@@ -140,13 +159,18 @@ void ncmpii_del_mem_entry(void *buf)
         if (ret == NULL) {
             fprintf(stderr, "Error at line %d file %s: tdelete() buf=%p\n",
                     __LINE__,__FILE__,buf);
-            return;
+            goto fn_exit;
         }
         free(tmp);
     }
     else
         fprintf(stderr, "Error at line %d file %s: ncmpii_mem_root is NULL\n",
                 __LINE__,__FILE__);
+fn_exit:
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
+    return;
 }
 #endif
 
@@ -251,7 +275,13 @@ void NCI_Free_fn(void       *ptr,
 int ncmpi_inq_malloc_size(MPI_Offset *size)
 {
 #ifdef PNC_MALLOC_TRACE
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
     *size = (MPI_Offset)ncmpii_mem_alloc;
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
     return NC_NOERR;
 #else
     DEBUG_RETURN_ERROR(NC_ENOTENABLED)
@@ -264,7 +294,13 @@ int ncmpi_inq_malloc_size(MPI_Offset *size)
 int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 {
 #ifdef PNC_MALLOC_TRACE
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
     *size = (MPI_Offset)ncmpii_max_mem_alloc;
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
     return NC_NOERR;
 #else
     DEBUG_RETURN_ERROR(NC_ENOTENABLED)
@@ -277,9 +313,15 @@ int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 int ncmpi_inq_malloc_list(void)
 {
 #ifdef PNC_MALLOC_TRACE
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_lock(&lock);
+#endif
     /* check if malloc tree is empty */
     if (ncmpii_mem_root != NULL)
         twalk(ncmpii_mem_root, walker);
+#ifdef ENABLE_THREAD_SAFE
+    pthread_mutex_unlock(&lock);
+#endif
     return NC_NOERR;
 #else
     DEBUG_RETURN_ERROR(NC_ENOTENABLED)

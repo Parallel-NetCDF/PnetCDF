@@ -45,11 +45,7 @@
 # include <config.h>
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
-
-#include <mpi.h>
-
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncbbio_driver.h>
