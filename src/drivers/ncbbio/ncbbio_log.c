@@ -388,7 +388,7 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     if (ncbbp->metalog_fd != NULL){
         /* Commit to CDF file */
         if (replay && (headerp->num_entries > 0 || !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))){
-            log_flush(ncbbp);
+            ncbbio_log_flush_core(ncbbp);
         }
 
         /* Close log file */
@@ -470,8 +470,8 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
         printf("\t\tTime writing data log: %lf\n", put_data_wr_time);
         printf("\t\tTime writing metadata log: %lf\n", put_meta_wr_time);
         printf("\t\tTime updating numrecs: %lf\n", put_num_wr_time);
-        printf("\tTime in log_flush: %lf\n", flush_time);
-        printf("\tTime in log_close: %lf\n", close_time);
+        printf("\tTime in ncbbio_log_flush_core: %lf\n", flush_time);
+        printf("\tTime in ncbbio_log_close: %lf\n", close_time);
         printf("\tTime replaying the log: %lf\n", flush_replay_time);
         printf("\t\tTime reading data log: %lf\n", flush_data_rd_time);
         printf("\t\tTime calling iput: %lf\n", flush_put_time);
@@ -514,7 +514,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
     }
 
     /* Replay log file */
-    err = log_flush(ncbbp);
+    err = ncbbio_log_flush_core(ncbbp);
     if (err != NC_NOERR) {
         if (status == NC_NOERR){
             DEBUG_ASSIGN_ERROR(status, err);
