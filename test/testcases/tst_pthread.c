@@ -180,18 +180,34 @@ void* thread_func(void *arg)
 /*----< main() >-------------------------------------------------------------*/
 int main(int argc, char **argv) {
     char filename[256];
-    int  i, err, nerrs=0, rank, nprocs, providedT, verbose=0;
+    int  i, err, nerrs=0, rank, providedT, verbose=0;
+
 #ifdef ENABLE_THREAD_SAFE
     pthread_t threads[NTHREADS];
-
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &providedT);
 #else
     MPI_Init(&argc, &argv);
 #endif
 
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for thread safety ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+#ifdef ENABLE_THREAD_SAFE
     if(rank == 0 && verbose) {
         switch (providedT) {
             case MPI_THREAD_SINGLE:      printf("Support MPI_THREAD_SINGLE\n");
@@ -205,24 +221,21 @@ int main(int argc, char **argv) {
             default: printf("Error MPI_Init_thread()\n"); break;
         }
     }
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+    if (providedT != MPI_THREAD_MULTIPLE) {
+        if (!rank) {
+            char fname[512];
+            printf("\nWarning: MPI provided thread support level is less than MPI_THREAD_MULTIPLE ---- skip this test\n");
+            for (i=0; i<NTHREADS; i++) { /* create dummy files for ncvalidator to check */
+                int ncid;
+                sprintf(fname, "%s.%d", filename, i);
+                ncmpi_create(MPI_COMM_SELF, fname, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+                ncmpi_close(ncid);
+            }
+        }
         MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for thread safety ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
+        return 0;
     }
 
-#ifdef ENABLE_THREAD_SAFE
     /* initialize thread barrier */
     pthread_barrier_init(&barr, NULL, NTHREADS);
 
