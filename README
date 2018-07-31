@@ -1,22 +1,22 @@
 
-Parallel netCDF (PnetCDF) is a library providing high-performance parallel I/O
-while still maintaining file-format compatibility with Unidata's NetCDF,
-specifically the classic CDF 1, 2, and 5 formats. Although NetCDF supports
-parallel I/O starting from version 4, it is built on top of HDF5 and thus its
-parallel feature requires files in HDF5 format. PnetCDF is currently the only
-option for parallel I/O on files in classic formats.
+PnetCDF (Parallel netCDF) is a high-performance parallel I/O library for
+accessing the classic Unidata's NetCDF files, specifically the CDF 1, 2, and 5
+formats. Although NetCDF supports parallel I/O starting from version 4, it is
+built on top of HDF5 and thus its parallel feature requires files in HDF5
+format. PnetCDF is currently the only option for performing parallel I/O on
+files in classic formats.
 
 Starting from version 1.1.0, PnetCDF supports the CDF-5 file format, an
 extension of CDF-2, that supports more atomic data types and allows users to
 define large dimensions, attributes, and variables (>2B array elements).
 
 NetCDF gives scientific programmers a space-efficient and portable means for
-storing data.  By making some small changes to the NetCDF APIs, PnetCDF can use
+storing data. By making some small changes to the NetCDF APIs, PnetCDF can use
 MPI-IO to achieve high-performance parallel I/O.
 
-More extensive installation guides can be found in file INSTALL.  Additional
+More extensive installation guides can be found in file INSTALL. Additional
 information regarding the contents of the release can be found in the
-RELEASE_NOTES file in the top-level directory.  Finally, the PnetCDF project
+RELEASE_NOTES file in the top-level directory. Finally, the PnetCDF project
 web sites below contain information on bug fixes and software releases.
     https://parallel-netcdf.github.io
     http://cucis.ece.northwestern.edu/projects/PnetCDF

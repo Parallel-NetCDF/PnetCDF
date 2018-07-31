@@ -257,8 +257,8 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int default_format, rank, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, root_cmode, relax_coord_bound;
+    int rank, nprocs, status=NC_NOERR, err;
+    int safe_mode=0, mpireturn, relax_coord_bound;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -272,6 +272,7 @@ ncmpi_create(MPI_Comm    comm,
 #endif
 
     MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nprocs);
 
 #ifdef PNETCDF_DEBUG
     safe_mode = 1;
@@ -310,24 +311,36 @@ ncmpi_create(MPI_Comm    comm,
      */
     if (path == NULL || *path == '\0') DEBUG_RETURN_ERROR(NC_EBAD_FILE)
 
-    /* Check cmode consistency */
-    root_cmode = cmode; /* only root's matters */
-    TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
-    NCMPII_HANDLE_ERROR("MPI_Bcast")
+    if (nprocs > 1) { /* Check cmode consistency */
+        int root_cmode = cmode; /* only root's matters */
+        TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
+        NCMPII_HANDLE_ERROR("MPI_Bcast")
 
-    /* Overwrite cmode with root's cmode */
-    if (root_cmode != cmode) {
-        cmode = root_cmode;
-        DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
-    }
+        /* Overwrite cmode with root's cmode */
+        if (root_cmode != cmode) {
+            cmode = root_cmode;
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
+        }
 
-    if (safe_mode) { /* sync status among all processes */
-        err = status;
-        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
-        NCMPII_HANDLE_ERROR("MPI_Allreduce")
+        if (cmode & NC_NETCDF4) {
+            fprintf(stderr,"NC_NETCDF4 is not yet supported\n");
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+
+        if (safe_mode) { /* sync status among all processes */
+            err = status;
+            TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
+            NCMPII_HANDLE_ERROR("MPI_Allreduce")
+        }
+        /* continue to use root's cmode to create the file, but will report
+         * cmode inconsistency error, if there is any */
     }
-    /* continue to use root's cmode to create the file, but will report cmode
-     * inconsistency error, if there is any */
+    else { /* nprocs == 1 */
+        if (cmode & NC_NETCDF4) {
+            fprintf(stderr,"NC_NETCDF4 is not yet supported\n");
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
+    }
 
     /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
@@ -370,6 +383,7 @@ ncmpi_create(MPI_Comm    comm,
         driver = ncbbio_inq_driver();
     else
 #endif
+        /* default is the driver built on top of MPI-IO */
         driver = ncmpio_inq_driver();
 
 #if 0 /* refer to netCDF library's USE_REFCOUNT */
@@ -378,27 +392,27 @@ ncmpi_create(MPI_Comm    comm,
     if (pncp != NULL) return NC_ENFILE;
 #endif
 
-    /* Create a PNC object */
+    /* allocate a new PNC object */
     pncp = (PNC*) NCI_Malloc(sizeof(PNC));
     if (pncp == NULL) {
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
-    /* get a new ID from NCPList */
+    /* get a new nc file ID from NCPList */
     err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) return err;
 
-    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
-     * collective. pncp->comm will be passed to drivers, so there is no need
-     * for a driver to duplicate it again.
+    /* Duplicate comm, because users may free it (though unlikely). Note
+     * MPI_Comm_dup() is collective. We pass pncp->comm to drivers, so there
+     * is no need for a driver to duplicate it again.
      */
     if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
         MPI_Comm_dup(comm, &pncp->comm);
     else
         pncp->comm = comm;
 
-    /* calling the create subroutine */
+    /* calling the driver's create subroutine */
     err = driver->create(pncp->comm, path, cmode, *ncidp, combined_info, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
@@ -434,16 +448,14 @@ ncmpi_create(MPI_Comm    comm,
 
     if (safe_mode)          pncp->flag |= NC_MODE_SAFE;
     if (!relax_coord_bound) pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
-    /* if (enable_foo_driver) pncp->flag |= NC_MODE_BB; */
 
     /* set the file format version based on the create mode, cmode */
-    ncmpi_inq_default_format(&default_format);
     if (cmode & NC_64BIT_DATA) {
         pncp->format = NC_FORMAT_CDF5;
     } else if (cmode & NC_64BIT_OFFSET) {
         pncp->format = NC_FORMAT_CDF2;
-    } else {
-        pncp->format = default_format;
+    } else { /* no format specific flag is used in cmode */
+        ncmpi_inq_default_format(&pncp->format);
     }
 
     return status;
@@ -458,8 +470,8 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)  /* OUT */
 {
-    int i, nalloc, rank, format, msg[2], status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, root_omode, relax_coord_bound;
+    int i, nalloc, rank, nprocs, format, status=NC_NOERR, err;
+    int safe_mode=0, mpireturn, relax_coord_bound;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -473,6 +485,7 @@ ncmpi_open(MPI_Comm    comm,
 #endif
 
     MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nprocs);
 
 #ifdef PNETCDF_DEBUG
     safe_mode = 1;
@@ -517,39 +530,50 @@ ncmpi_open(MPI_Comm    comm,
     format = NC_FORMAT_UNKNOWN;
     if (rank == 0) {
         err = ncmpi_inq_file_format(path, &format);
-        if (err != NC_NOERR) format = err;
-        else if (format == NC_FORMAT_UNKNOWN) format = NC_ENOTNC;
-    }
-    msg[0] = format; /* only root's matters */
-
-    /* Check omode consistency:
-     * Note if omode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
-     * In pnetcdf.h, they both are defined the same value, 0.
-     * Only root's omode matters.
-     */
-    msg[1] = omode; /* only root's matters */
-
-    TRACE_COMM(MPI_Bcast)(&msg, 2, MPI_INT, 0, comm);
-    NCMPII_HANDLE_ERROR("MPI_Bcast")
-
-    /* check format error (a fatal error, must return now) */
-    format = msg[0];
-    if (format < 0) return format; /* all netCDF errors are negative */
-
-    /* check omode consistency */
-    root_omode = msg[1];
-    if (root_omode != omode) {
-        omode = root_omode;
-        DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
+        if (err != NC_NOERR) {
+            if (nprocs == 1) return err;
+            format = err;
+        }
+        else if (format == NC_FORMAT_UNKNOWN) {
+            if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTNC)
+            format = NC_ENOTNC;
+        }
     }
 
-    if (safe_mode) { /* sync status among all processes */
-        err = status;
-        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
-        NCMPII_HANDLE_ERROR("MPI_Allreduce")
+    if (nprocs > 1) { /* root broadcasts format and omode */
+        int root_omode, msg[2];
+
+        msg[0] = format; /* only root's matters (format or error code) */
+
+        /* Check omode consistency:
+         * Note if omode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
+         * In pnetcdf.h, they both are defined the same value, 0.
+         * Only root's omode matters.
+         */
+        msg[1] = omode; /* only root's matters */
+
+        TRACE_COMM(MPI_Bcast)(&msg, 2, MPI_INT, 0, comm);
+        NCMPII_HANDLE_ERROR("MPI_Bcast")
+
+        /* check format error (a fatal error, must return now) */
+        format = msg[0];
+        if (format < 0) return format; /* all netCDF errors are negative */
+
+        /* check omode consistency */
+        root_omode = msg[1];
+        if (root_omode != omode) {
+            omode = root_omode;
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
+        }
+
+        if (safe_mode) { /* sync status among all processes */
+            err = status;
+            TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
+            NCMPII_HANDLE_ERROR("MPI_Allreduce")
+        }
+        /* continue to use root's omode to open the file, but will report omode
+         * inconsistency error, if there is any */
     }
-    /* continue to use root's omode to open the file, but will report omode
-     * inconsistency error, if there is any */
 
     /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
@@ -610,27 +634,27 @@ ncmpi_open(MPI_Comm    comm,
         }
     }
 
-    /* Create a PNC object */
+    /* allocate a PNC object */
     pncp = (PNC*) NCI_Malloc(sizeof(PNC));
     if (pncp == NULL) {
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
-    /* get a new ID from NCPList */
+    /* get a new nc file ID from NCPList */
     err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) return err;
 
-    /* Duplicate comm, because users may free it. Note MPI_Comm_dup is
-     * collective. pncp->comm will be passed to drivers, so there is no need
-     * for a driver to duplicate it again.
+    /* Duplicate comm, because users may free it (though unlikely). Note
+     * MPI_Comm_dup() is collective. We pass pncp->comm to drivers, so there
+     * is no need for a driver to duplicate it again.
      */
     if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
         MPI_Comm_dup(comm, &pncp->comm);
     else
         pncp->comm = comm;
 
-    /* calling the open subroutine */
+    /* calling the driver's open subroutine */
     err = driver->open(pncp->comm, path, omode, *ncidp, combined_info, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
@@ -671,14 +695,17 @@ ncmpi_open(MPI_Comm    comm,
     if (!fIsSet(omode, NC_WRITE)) pncp->flag |= NC_MODE_RDONLY;
     if (safe_mode)                pncp->flag |= NC_MODE_SAFE;
     if (!relax_coord_bound)       pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
-    /* if (enable_foo_driver)        pncp->flag |= NC_MODE_BB; */
 
     /* inquire number of dimensions, variables defined and rec dim ID */
     err = driver->inq(pncp->ncp, &pncp->ndims, &pncp->nvars, NULL,
                       &pncp->unlimdimid);
     if (err != NC_NOERR) goto fn_exit;
 
-    if (pncp->nvars == 0) return status; /* no variable defined */
+    if (pncp->nvars == 0) return status; /* no variable defined in the file */
+
+    /* make a copy of variable metadata at the dispatcher layer, because
+     * sanity check is done at the dispatcher layer
+     */
 
     /* allocate chunk size for pncp->vars[] */
     nalloc = _RNDUP(pncp->nvars, PNC_VARS_CHUNK);
