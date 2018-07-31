@@ -51,6 +51,9 @@ ncmpio_create(MPI_Comm     comm,
      * path consistency will be done in MPI_File_open */
 
     /* First, check whether cmode is valid or supported ---------------------*/
+    /* Try opening a netCDF4 file is not supported */
+    if (cmode & NC_NETCDF4) DEBUG_RETURN_ERROR(NC_ESTRICTNC3)
+
     /* NC_DISKLESS is not supported yet */
     if (cmode & NC_DISKLESS) DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
 
