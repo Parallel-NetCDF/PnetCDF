@@ -18,27 +18,41 @@ mpiexec -n np ncmpidiff
 .hy
 .ft
 .SH DESCRIPTION
-\fBncmpidiff\fP runs in parallel using np number of MPI processes to compare the
+\fBncmpidiff\fP runs in parallel on np number of MPI processes to compare the
 contents of the two files and reports the difference to the standard output.
 
 If neither argument -v nor -h is given besides the two file names, the entire
 files are compared.
+
+When comparing two files entirely, the difference between \fBncmpidiff\fP and the
+Unix command \fBdiff\fP is that \fBncmpidiff\fP skips the gaps between variables. The
+gaps may occur when the alignment feature is used to create a new file. This
+alignment allows to allocate a larger space for the file header and align the
+starting file offsets of fixed-size variables (see API \fBncmpi__enddef\fP and
+\fBPnetCDF hints\fP). Oftentimes, the contents of gaps are non-zero arbitrary
+bytes. Thus, two netCDF files (of same or different sizes) can be reported
+identical by \fBncmpidiff\fP but not by \fBdiff\fP.
+
 .SH OPTIONS
 .IP "\fB-b\fP"
-Verbose mode - print results (same or different) for all components (file, header, or variables) in comparison
+Verbose mode - print results (same or different) for all components (file,
+header, or variables) in comparison
 .IP "\fB-q\fP"
-Quiet mode - print nothing on the command-line output. This also disables verbose mode. When in quiet mode, users should check exit status. See below in "EXIT STATUS".
+Quiet mode - print nothing on the command-line output. This also disables
+verbose mode. When in quiet mode, users should check exit status. See below in
+"EXIT STATUS".
 .IP "\fB-h\fP"
 Compare file header only
 .IP "\fB-v\fP \fIvar1,...,varn\fP"
 Compare only the given list of variables
 .SH EXIT STATUS
-An exit status of 0 means no differences were found, and
-1 means some differences were found.
-Note on VMS-based system, the exit status values are reversed.
+An exit status of 0 means no differences were found, and 1 means some
+differences were found.  Note on VMS-based system, the exit status values are
+reversed.
 .SH "SEE ALSO"
 .LP
 .BR ncmpidump (1),
+.BR diff (1),
 .BR pnetcdf (3)
 .SH DATE
 PNETCDF_RELEASE_DATE

@@ -65,6 +65,9 @@ This is essentially a placeholder for the next release note ...
 
   o New example programs
     * examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
+      When running on some parallel machines, users may need to set certain
+      environment variable to enable MPI multi-threading support, for example
+      on Cori @NERSC with command "export MPICH_MAX_THREAD_SAFETY=multiple".
 
   o New programs for I/O benchmarks
     * none
