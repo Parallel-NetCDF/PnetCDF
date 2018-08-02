@@ -538,6 +538,11 @@ ncmpi_open(MPI_Comm    comm,
             if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTNC)
             format = NC_ENOTNC;
         }
+        else if (format == NC_FORMAT_NETCDF4) {
+            fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
+            if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            format = NC_ENOTSUPPORT;
+        }
     }
 
     if (nprocs > 1) { /* root broadcasts format and omode */
@@ -807,7 +812,7 @@ ncmpi_enddef(int ncid) {
 
     if (!(pncp->flag & NC_MODE_DEF)) DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
 
-    if (pncp->flag & NC_MODE_SAFE) {
+    if (pncp->flag & NC_MODE_SAFE) { /* safe mode */
         int minE, mpireturn;
         /* check the error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &minE, 1, MPI_INT, MPI_MIN, pncp->comm);
@@ -853,7 +858,7 @@ ncmpi__enddef(int        ncid,
     }
 
 err_check:
-    if (pncp->flag & NC_MODE_SAFE) {
+    if (pncp->flag & NC_MODE_SAFE) { /* safe mode */
         int minE, mpireturn;
         MPI_Offset root_args[4];
 
@@ -995,11 +1000,13 @@ ncmpi_abort(int ncid)
 }
 
 /*----< ncmpi_set_fill() >---------------------------------------------------*/
-/* This is a collective subroutine. */
+/* This is a collective subroutine.
+ * This subroutine serves both purposes of setting and inquiring the fill mode.
+ */
 int
 ncmpi_set_fill(int  ncid,
-               int  fill_mode,
-               int *old_fill_mode)
+               int  fill_mode,     /* mode to be changed by user */
+               int *old_fill_mode) /* current fill mode */
 {
     int err;
     PNC *pncp;
@@ -1012,7 +1019,11 @@ ncmpi_set_fill(int  ncid,
     err = pncp->driver->set_fill(pncp->ncp, fill_mode, old_fill_mode);
     if (err != NC_NOERR) return err;
 
-    fSet(pncp->flag, NC_MODE_FILL);
+    if (fill_mode == NC_FILL)
+        fSet(pncp->flag, NC_MODE_FILL);
+    else /* NC_NOFILL */
+        fClr(pncp->flag, NC_MODE_FILL);
+
     return NC_NOERR;
 }
 
