@@ -5,41 +5,42 @@
 # $Id$
 
 -----------------------------------------------------------------------------
- Accessing NetCDF 4 file with PnetCDF
+ Accessing NetCDF-4 file with PnetCDF
 -----------------------------------------------------------------------------
 
-Application can access NetCDF 4 formated file written in classic model
-using the PnetCDF library. The NetCDF 4 driver in PnetCDF is a wrapper of the
+Application can access NetCDF-4 formated file written in classic model
+using the PnetCDF library. The NetCDF-4 driver in PnetCDF is a wrapper of the
 NetCDF Library. It handles API calls by calling corresponding NetCDF APIs. It
-allow existing PnetCDF program to read/write NetCDF 4 format with minor
+allow existing PnetCDF program to read/write NetCDF-4 format with minor
 changes.
 
 
 -----------------------------------------------------------------------------
- Build PnetCDF with NetCDF 4 support
+ Build PnetCDF with NetCDF-4 support
 -----------------------------------------------------------------------------
 
-To build PnetCDF with NetCDF 4 support, set "--enable-netcdf4"
+To build PnetCDF with NetCDF-4 support, set "--enable-netcdf4"
 option at configure time.
-As the NetCDF 4 driver is a wrapper of the NetCDF library. A working NetCDF
-and HDF5 library that support parallel I/O and NetCDF 4 is needed. used
+As the NetCDF-4 driver is a wrapper of the NetCDF library. A working NetCDF
+and HDF5 library that support parallel I/O and NetCDF-4 is needed. used
 --with-netcdf and --with-hdf5 configure arguments to set path to NetCDF and
 HDF5 library.
 
-./configure --prefix=/path/to/install --enable-netcdf4 \
-            --with-netcdf=<Path to NetCDF installation> \
-            --with-hdf5=<Path to HDF5 installation> \
+./configure --prefix=/path/to/install \
+            --enable-netcdf4 \
+            --with-netcdf4=/path/to/NetCDF-4/installation \
+            --with-hdf5=/path/to/HDF5/installation
 
 -----------------------------------------------------------------------------
- Accessing NetCDF 4 file
+ Accessing NetCDF-4 file
 -----------------------------------------------------------------------------
 
-To create/open NetCDF 4 files, set the flag NC_NETCDF4 in cmode to
-ncmpi_create/ncmpi_open.
+To create/open NetCDF-4 files, add the flag NC_NETCDF4 in argument cmode when
+calling ncmpi_create/ncmpi_open.
 
 ncmpi_create(<Comm>, <Path>, NC_NETCDF4, <MPI_Info>, &ncid);
 
-NetCDF 4 format can also be made default by setting default format to
+NetCDF-4 format can also be made default by setting default format to
 NC_FORMAT_NETCDF4. In such case, NC_NETCDF4 flag is not needed in
 ncmpi_create/ncmpi_open.
 
@@ -48,7 +49,7 @@ ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
 -----------------------------------------------------------------------------
  Known Problems
 -----------------------------------------------------------------------------
-While we try to support as many NetCDF 4 and PnetCDF feature under NetCDF 4
+While we try to support as many NetCDF-4 and PnetCDF feature under NetCDF-4
 format. Some feature is not supported due to different set of API available
 on NetCDF and PnetCDF that are hard to translate. Some behaviors can change
 due to different semantic used by PnetCDF and NetCDF. Here's a list of known
@@ -63,11 +64,11 @@ issues based on NetCDF 4.6.2-development and HDF5 1.10.2:
    calls mush match under collective mode. It does not work under collective
    mode. As there is currently no efficient solution to support varn, we don't
    support varn at this time.
-2. Classic model only. PnetCDF only support NetCDF 4 format in classic model.
+2. Classic model only. PnetCDF only support NetCDF-4 format in classic model.
    Advanced features such as multiple record dimension is not supported.
    Due to limitations of existing PnetCDF API interface. The APIs must be
    changed significantly to make those advanced features available.
-   The NetCDF 4 driver is implemented under the classic model assumption.
+   The NetCDF-4 driver is implemented under the classic model assumption.
    If the application access files in non=classic model, the behavior
    is undefined.
 3. Collective API call should not have 0 size on part of processes.

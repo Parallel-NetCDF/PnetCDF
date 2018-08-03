@@ -3,7 +3,9 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * NetCDF4 format classic mode support via netcdf.
+    * Accessing HDF5-based NetCDF-4 files is supported. PnetCDF can now be
+      built on top of NetCDF-4, which allows PnetCDF to read and write a
+      NetCDF-4 file.
     * Thread-safe capability is added to this release. It can be enabled with
       configure option --enable-thread-safe. In addition, option --with-pthread
       can be used to specify the path to the pthreads library. This feature
@@ -23,10 +25,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Update configure options
-    * Enable netcdf4 support.
+    * Enable NetCDF-4 support.
       --enable-netcdf4 : enable NetCDF4 format classic mode support
-      --with-hdf5=<HDF5 install path> : set HDF5 install path
-      --with-netcdf=<NetCDF install path> : set NetCDF install path
+      --with-hdf5=/path/to/hdf5 : set HDF5 install path
+      --with-netcdf4=/path/to/netcdf-4: set NetCDF install path
 
   o New constants
     * none
@@ -55,8 +57,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Build recipes
-    * doc/README.NetrCDF4 is added to describe the usage of the new
-      feature of NetCDF 4 support.
+    * doc/README.NetCDF4 is added to describe the usage of the new
+      feature of NetCDF-4 support.
 
   o New/updated utility program
     * none
@@ -78,14 +80,16 @@ This is essentially a placeholder for the next release note ...
 
   o New test program
     * test/nc4/put_get_all_kinds.m4 - test all supported variable read/write API. Make sure they are properly wired up
-    * test/nc4/interoperability_rd.m4 - test whether NetCDF4 file written using NetCDF can be read by PnetCDF
-    * test/nc4/interoperability_wr.m4 - test whether NetCDF4 file written using PnetCDF can be read by NetCDF
-    * test/nc4/simple_xy.c - test reading the simple_xy example somes with NetCDF
+    * test/nc4/interoperability_rd.m4 - test whether NetCDF-4 file written using NetCDF can be read by PnetCDF
+    * test/nc4/interoperability_wr.m4 - test whether NetCDF-4 file written using PnetCDF can be read by NetCDF
+    * test/nc4/simple_xy.c - test reading the simple_xy example borrowed from NetCDF
     * test/testcases/tst_pthread.c - tests thread-safe capability for scenario
       of each thread operating on a unique file.
 
   o Conformity with NetCDF library
-    * NetCDF allow data operation in define mode and vice-versa in NetCDF4 format. PnetCDF does not.
+    * In contract to NetCDF-4 which allows to read/write variables in define
+      mode when the file format is in NetCDF-4 format, PnetCDF still requires
+      reading and writing variables in data mode.
 
   o Conflict with NetCDF library
     * none
