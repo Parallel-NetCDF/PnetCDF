@@ -84,11 +84,15 @@ nc4io_create(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(nc4p->path, path);
-    nc4p->mode   = cmode | NC_WRITE;
-    nc4p->flag   = NC_MODE_DEF;
-    nc4p->ncid  = ncid;
-    nc4p->comm   = comm;
+    nc4p->mode = cmode | NC_WRITE;
+    nc4p->flag = NC_MODE_DEF;
+    nc4p->ncid = ncid;
+    nc4p->comm = comm;
     nc4p->ncid = ncidtmp;
+    if (info == MPI_INFO_NULL)
+        MPI_Info_create(&nc4p->mpiinfo);
+    else
+        MPI_Info_dup(info, &nc4p->mpiinfo);
 
     *ncpp = nc4p;
 
@@ -124,14 +128,17 @@ nc4io_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(nc4p->path, path);
-    nc4p->mode   = omode;
-    nc4p->flag   = 0;
-    nc4p->ncid  = ncid;
-    nc4p->comm   = comm;
+    nc4p->mode = omode;
+    nc4p->flag = 0;
+    nc4p->ncid = ncid;
+    nc4p->comm = comm;
     nc4p->ncid = ncidtmp;
-    if (!fIsSet(omode, NC_WRITE)){
-        fSet(nc4p->flag, NC_MODE_RDONLY);
-    }
+    if (info == MPI_INFO_NULL)
+        MPI_Info_create(&nc4p->mpiinfo);
+    else
+        MPI_Info_dup(info, &nc4p->mpiinfo);
+
+    if (!fIsSet(omode, NC_WRITE)) fSet(nc4p->flag, NC_MODE_RDONLY);
 
     *ncpp = nc4p;
 
@@ -150,6 +157,8 @@ nc4io_close(void *ncdp)
     err = nc_close(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    MPI_Info_free(&nc4p->mpiinfo);
+
     NCI_Free(nc4p->path);
     NCI_Free(nc4p);
 
@@ -161,7 +170,7 @@ nc4io_enddef(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_enddef */
     err = nc_enddef(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -181,7 +190,7 @@ nc4io__enddef(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc__enddef */
     err = nc__enddef(nc4p->ncid, (size_t)h_minfree, (size_t)v_align, (size_t)v_minfree, (size_t)r_align);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -197,7 +206,7 @@ nc4io_redef(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_redef */
     err = nc_redef(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -213,7 +222,7 @@ nc4io_begin_indep_data(void *ncdp)
 {
     int i, err, nvar;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Make sure we are in data mode */
     if (fIsSet(nc4p->flag, NC_MODE_DEF)){
         DEBUG_RETURN_ERROR(NC_EINDEFINE);
@@ -240,7 +249,7 @@ nc4io_end_indep_data(void *ncdp)
 {
     int i, err, nvar;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Make sure we are in data mode */
     if (fIsSet(nc4p->flag, NC_MODE_DEF)){
         DEBUG_RETURN_ERROR(NC_EINDEFINE);
@@ -267,12 +276,14 @@ nc4io_abort(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     if (nc4p == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
 
     /* Call nc_abort */
     err = nc_abort(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+    MPI_Info_free(&nc4p->mpiinfo);
 
     NCI_Free(nc4p->path);
     NCI_Free(nc4p);
@@ -289,7 +300,7 @@ nc4io_inq(void *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_inq */
     err = nc_inq(nc4p->ncid, ndimsp, nvarsp, nattsp, xtendimp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -328,6 +339,8 @@ nc4io_inq_misc(void       *ncdp,
         if (pathlen != NULL) *pathlen = (int)strlen(nc4p->path);
         if (path    != NULL) strcpy(path, nc4p->path);
     }
+
+    if (info_used != NULL) MPI_Info_dup(nc4p->mpiinfo, info_used);
 
     /* Calculate number of record and fix sized variables
      * NOTE: We assume there are only 1 record dims in NetCDF 4 classic model
@@ -451,8 +464,8 @@ nc4io_cancel(void *ncdp,
 
     /* We do not support nonblocking I/O so far */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-    
-    /* Since we treat nonblocking IO as blocking IO 
+
+    /* Since we treat nonblocking IO as blocking IO
      * We don't need to wait for anything
      */
     return NC_NOERR;
@@ -470,8 +483,8 @@ nc4io_wait(void *ncdp,
 
     /* We do not support nonblocking I/O so far */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-    
-    /* Since we treat nonblocking IO as blocking IO 
+
+    /* Since we treat nonblocking IO as blocking IO
      * We don't need to wait for anything
      */
     return NC_NOERR;
@@ -484,7 +497,7 @@ nc4io_set_fill(void *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Not avaiable in read-only mode */
     if (fIsSet(nc4p->flag, NC_MODE_RDONLY)){
         DEBUG_RETURN_ERROR(NC_EPERM);
@@ -509,7 +522,7 @@ nc4io_fill_var_rec(void      *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* NetCDF does not support this natively */
     /* We assume NetCDF filled it automatically */
     // DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
@@ -525,7 +538,7 @@ nc4io_def_var_fill(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_def_var_fill */
     err = nc_def_var_fill(nc4p->ncid, varid, no_fill, fill_value);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -538,7 +551,7 @@ nc4io_sync_numrecs(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* We assume NetCDF will take care of this internally
      * Just pretend it's synced
      */
@@ -551,7 +564,7 @@ nc4io_sync(void *ncdp)
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Make sure we are in data mode */
     if (fIsSet(nc4p->flag, NC_MODE_DEF)){
         DEBUG_RETURN_ERROR(NC_EINDEFINE);

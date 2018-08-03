@@ -61,7 +61,7 @@ swapn(void       *buf,
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, rank, nprocs, err, nerrs=0, bufsize;
+    int i, j, rank, nprocs, err, nerrs=0, bufsize, expected;
     int ncid, cmode, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
     MPI_Offset offset, var_offset, start[3], count[3];
     MPI_File fh;
@@ -93,8 +93,8 @@ int main(int argc, char** argv)
     MPI_Info_set(info, "romio_ds_write", "disable");
     MPI_Info_set(info, "romio_ds_read", "disable");
 
-#ifdef BUILD_DRIVER_NC4
-    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+#ifdef ENABLE_NETCDF4
+    /* Test NetCDF-4 feature */
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_NETCDF4;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
@@ -158,10 +158,10 @@ int main(int argc, char** argv)
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* read back subarray written by the process (rank+1)%nprocs */
-    int expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
+    expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
 
     /* read back ((rank+1)%nprocs)'s 1st write:
-        *                      subarray of 1x2x10 at start 1x8x(2G+rank*10) */
+     *                      subarray of 1x2x10 at start 1x8x(2G+rank*10) */
     start[0] = 1;
     start[1] = 8;
     start[2] = TWO_G + ((rank == nprocs - 1) ? 0 : 10 * (rank + 1));
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 2nd write:
-        *                      subarray of 1x2x5 at start 3x8x(2G+rank*10) */
+     *                      subarray of 1x2x5 at start 3x8x(2G+rank*10) */
     start[0] = 3;
     count[2] = 5;
 
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 3rd write:
-                            subarray of 1x1x5 at start 3x8x(2G+rank*10+5) */
+     *                      subarray of 1x1x5 at start 3x8x(2G+rank*10+5) */
     start[2] += 5;
     count[1] = 1;
 
@@ -228,7 +228,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 4th write:
-                            subarray of 1x1x5 at start 3x9x(2G+rank*10+5) */
+     *                      subarray of 1x1x5 at start 3x9x(2G+rank*10+5) */
     start[1] = 9;
 
     /* initialize the contents of the array to a different value */
@@ -320,10 +320,10 @@ int main(int argc, char** argv)
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* read back subarray written by the process (rank+1)%nprocs */
-    int expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
+    expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
 
     /* read back ((rank+1)%nprocs)'s 1st write:
-        *                      subarray of 1x2x10 at start 1x8x(2G+rank*10) */
+     *                      subarray of 1x2x10 at start 1x8x(2G+rank*10) */
     start[0] = 1;
     start[1] = 8;
     start[2] = TWO_G + ((rank == nprocs - 1) ? 0 : 10 * (rank + 1));
@@ -348,7 +348,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 2nd write:
-        *                      subarray of 1x2x5 at start 3x8x(2G+rank*10) */
+     *                      subarray of 1x2x5 at start 3x8x(2G+rank*10) */
     start[0] = 3;
     count[2] = 5;
 
@@ -369,7 +369,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 3rd write:
-                            subarray of 1x1x5 at start 3x8x(2G+rank*10+5) */
+     *                      subarray of 1x1x5 at start 3x8x(2G+rank*10+5) */
     start[2] += 5;
     count[1] = 1;
 
@@ -390,7 +390,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 4th write:
-                            subarray of 1x1x5 at start 3x9x(2G+rank*10+5) */
+     *                      subarray of 1x1x5 at start 3x9x(2G+rank*10+5) */
     start[1] = 9;
 
     /* initialize the contents of the array to a different value */
@@ -542,7 +542,7 @@ int main(int argc, char** argv)
     }
 
     MPI_File_close(&fh);
-    
+
     free(buf);
     MPI_Info_free(&info);
 

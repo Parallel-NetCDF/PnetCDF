@@ -7,10 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netcdf.h>
 #include <libgen.h> /* basename() */
-#include <pnetcdf.h>
 #include <mpi.h>
+#include <netcdf.h>
+#include <pnetcdf.h>
+
 #include <testutils.h>
 
 #define FNAME "gzip_example.nc"

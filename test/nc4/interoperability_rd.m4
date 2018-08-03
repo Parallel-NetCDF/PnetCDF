@@ -28,7 +28,7 @@ int nc_wr_$2(int rank, int ncid, int* vid, int *did){
 
     /* Define variables */
     err = nc_def_var(ncid, "$1", $1, 2, did, vid); CHECK_ERR
-    
+
     /* Write data */
     start[0] = rank;
     start[1] = 0;
@@ -101,10 +101,12 @@ dnl
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netcdf.h>
 #include <libgen.h> /* basename() */
-#include <pnetcdf.h>
 #include <mpi.h>
+#include <netcdf.h>
+#include <netcdf_par.h>
+#include <pnetcdf.h>
+#
 #include <testutils.h>
 
 /* This is the name of the data file we will read. */
@@ -122,7 +124,7 @@ foreach(`dt', (`(`NC_BYTE', `schar', `char')', dnl
                `(`NC_INT64', `longlong', `long long')', dnl
                `(`NC_UINT64', `ulonglong', `unsigned long long')', dnl
                ), `NC_WR(translit(dt, `()'))')dnl
-               
+
 foreach(`dt', (`(`c', `schar', `char')', dnl
                `(`c', `uchar', `unsigned char')', dnl
                `(`d', `short', `short')', dnl
@@ -183,7 +185,7 @@ foreach(`dt', (`(`0', `schar', `char')', dnl
                `(`8', `longlong', `long long')', dnl
                `(`9', `ulonglong', `unsigned long long')', dnl
                ), `CALL_NC_WR(translit(dt, `()'))')dnl
-   
+
     /* Close file */
     nc_close(ncid);
 

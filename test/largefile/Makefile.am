@@ -24,14 +24,6 @@ if IS_BIGENDIAN
    # AM_FCFLAGS += $(FC_DEFINE)WORDS_BIGENDIAN
 endif
 
-if ENABLE_LARGE_REQ
-   AM_CFLAGS += -DENABLE_LARGE_REQ
-endif
-
-if BUILD_DRIVER_NC4
-   AM_CFLAGS += -DBUILD_DRIVER_NC4
-endif
-
 TESTPROGRAMS = large_files \
                large_var \
                large_dims_vars_attrs \

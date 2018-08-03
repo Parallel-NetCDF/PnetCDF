@@ -890,13 +890,13 @@
         do 1, j = 1, MAX_RANK
             start(j) = 1
 1       continue
-        
+
         err = nf90mpi_inq_default_format(format);
         if (err .ne. NF90_NOERR) then
             call errori( &
                 'Error calling nf90mpi_inq_default_format()')
         end if
-        
+
         if (format .eq. 4) then
         err = nf90mpi_begin_indep_data(ncid)
         do 2, i = 1, numVars
@@ -965,7 +965,7 @@
             end if
 2       continue
         err = nf90mpi_end_indep_data(ncid)
-        else 
+        else
         do 5, i = 1, numVars
             allInRange = .true.
             do 6, j = 1, var_nels(i)
@@ -1143,7 +1143,7 @@
             call errore('nf90mpi_close: ', err)
         end if
         end
-    
+
       ! Create & write all of specified file using global variables */
       subroutine write_file4(filename)
     use pnetcdf

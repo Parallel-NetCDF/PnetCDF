@@ -161,9 +161,9 @@ main(int argc, char *argv[])
 	case '2':
 	  cdf_format = 2;
 	  break;
-    case '4':
-      cdf_format = 4;
-	  break;  
+        case '4':
+          cdf_format = 4;
+	  break;
 	case '5':
 	  cdf_format = 5;
 	  break;
@@ -209,7 +209,10 @@ main(int argc, char *argv[])
     if (nfailsTotal > 0) goto fn_exit;
 
     cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-    sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
+    if (cdf_format == 4)
+        sprintf(cmd_str, "*** TESTING C   %s for NetCDF4 format ", basename(argv[0]));
+    else
+        sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
     printf("%-66s ------ ",cmd_str);
     free(cmd_str);
 

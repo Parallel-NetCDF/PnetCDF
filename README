@@ -40,9 +40,10 @@ Requirements:
              - either yacc or bison
 	     - either lex or flex
       These are usually part of your operating system's development tools.
-    - To build PnetCDF with NetCDF4 support, you will need the following additional programs:
-        - NetCDF: https://github.com/Unidata/netcdf-c
-        - HDF5: https://support.hdfgroup.org/downloads/index.html
+    - To build PnetCDF with NetCDF-4 support, you will need the following
+      additional libraries:
+        - NetCDF-4: https://github.com/Unidata/netcdf-c
+        - HDF5: https://portal.hdfgroup.org/display/support
 
 
 Build recipes:

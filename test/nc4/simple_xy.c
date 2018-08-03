@@ -7,18 +7,20 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program try reading the output from the NetCDF example program simple_xy_nc4_wr.c in examples/C
- * 
- * Code in simple_xy_nc4_wr.c is used to generate the file, we then read it back with PnetCDF
- * 
+ * This program try reading the output from the NetCDF example program
+ * simple_xy_nc4_wr.c
+ *
+ * Code in simple_xy_nc4_wr.c is used to generate the file, we then read it
+ * back with PnetCDF
+ *
  * Original description of the example:
- * 
+ *
  * Write the simple_xy file, with some of the features of netCDF-4.
- * 
+ *
  * This is a very simple example which is based on the simple_xy example,
  * but whch uses netCDF-4 features, such as compression. Please see the
  * simple_xy example to learn more about the netCDF-3 API.
- * 
+ *
  * Like simple_xy_wr.c, this program writes a 2D netCDF variable (calle
  * "data") and fills it with sample data.  It has two dimensions, "x" and
  * "y".
@@ -29,6 +31,7 @@
 #include <libgen.h> /* basename() */
 #include <mpi.h>
 #include <netcdf.h>
+#include <netcdf_par.h>
 #include <pnetcdf.h>
 
 #include <testutils.h>
@@ -78,13 +81,13 @@ int main(int argc, char** argv) {
     }
 
     /* Create some pretend data. If this wasn't an example program, we
-        * would have some real data to write, for example, model output. */
+     * would have some real data to write, for example, model output. */
     for (x = 0; x < NX; x++)
         for (y = 0; y < NY; y++)
             data_out[x][y] = x * NY + y;
 
     /* Create the file. The NC_NETCDF4 parameter tells netCDF to create
-        * a file in netCDF-4/HDF5 standard. */
+     * a file in netCDF-4/HDF5 standard. */
     if ((err = nc_create_par(filename, NC_NETCDF4 | NC_MPIIO, MPI_COMM_WORLD, MPI_INFO_NULL, &ncid)))
         CHECK_ERR
 

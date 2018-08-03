@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
     /* create a file if it does not exist */
     cmode = NC_CLOBBER | NC_NETCDF4;

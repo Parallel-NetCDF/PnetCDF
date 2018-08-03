@@ -105,7 +105,7 @@ program netcdfTest
       err = nf90mpi_set_default_format(nf90_format_netcdf4, old_format)
     else
       err = nf90mpi_set_default_format(nf90_format_classic, old_format)
-    end if 
+    end if
 
     call MPI_Info_create(info, ierr)
     ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",ierr)
@@ -196,7 +196,7 @@ program netcdfTest
     call check(nf90mpi_close(ncFileID))
     call MPI_Info_free(info, ierr)
   enddo
-  
+
     msg = '*** TESTING F90 '//trim(cmd)
   if (my_rank .eq. 0) call pass_fail(0, msg)
 

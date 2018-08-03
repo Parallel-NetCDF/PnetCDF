@@ -109,7 +109,7 @@ AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP],     [Define if to enable in-place byte swap])
 dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
-AH_TEMPLATE([BUILD_DRIVER_NC4],         [Define if to enable NetCDF4 feature])
+AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
@@ -1339,113 +1339,120 @@ AM_CONDITIONAL(ENABLE_SUBFILING, [test x$enable_subfiling = xyes])
 
 AC_ARG_ENABLE([netcdf4],
    [AS_HELP_STRING([--enable-netcdf4],
-                   [Enable NetCDF4 support. @<:@default: disabled@:>@])],
+                   [Enable NetCDF-4 support. @<:@default: disabled@:>@])],
    [enable_netcdf4=${enableval}], [enable_netcdf4=no]
 )
 
-BUILD_DRIVER_NC4=0
+ENABLE_NETCDF4=0
 if test "x$enable_netcdf4" = "xyes" ; then
-   AC_DEFINE(BUILD_DRIVER_NC4)
-   BUILD_DRIVER_NC4=1
+   AC_DEFINE(ENABLE_NETCDF4)
+   ENABLE_NETCDF4=1
 fi
-AC_SUBST(BUILD_DRIVER_NC4)
-AM_CONDITIONAL(BUILD_DRIVER_NC4, [test x$enable_netcdf4 = xyes])
+AC_SUBST(ENABLE_NETCDF4)
+AM_CONDITIONAL(ENABLE_NETCDF4, [test x$enable_netcdf4 = xyes])
 
 if test "x$enable_netcdf4" = "xyes" ; then
-    HDF5_INSTALL=""
-    AC_ARG_WITH(hdf5,
-        [AS_HELP_STRING([--with-hdf5=/path/to/implementation],
-                        [installation prefix for HDF5 implementation])],
-        if test "x${withval}" = xyes; then
-            AC_MSG_ERROR(--with-hdf5 must be given a pathname)
-        else
-            HDF5_INSTALL=${withval}
-        fi
-    )
+   HDF5_INSTALL=""
+   AC_ARG_WITH(hdf5,
+       [AS_HELP_STRING([--with-hdf5=/path/to/implementation],
+                       [installation prefix for HDF5 implementation])],
+       if test "x${withval}" = xyes; then
+          AC_MSG_ERROR(--with-hdf5 is set but the value is NULL)
+       else
+          HDF5_INSTALL=${withval}
+       fi
+   )
 
-    NETCDF_INSTALL=""
-    AC_ARG_WITH(netcdf,
-        [AS_HELP_STRING([--with-netcdf=/path/to/implementation],
-                        [installation prefix for NetCDF implementation])],
-        if test "x${withval}" = xyes; then
-            AC_MSG_ERROR(--with-netcdf must be given a pathname)
-        else
-            NETCDF_INSTALL=${withval}
-        fi
-    )
+   NETCDF4_INSTALL=""
+   AC_ARG_WITH(netcdf4,
+       [AS_HELP_STRING([--with-netcdf4=/path/to/implementation],
+                       [installation prefix for NetCDF-4 implementation])],
+       if test "x${withval}" = xyes; then
+          AC_MSG_ERROR(--with-netcdf4 is set but the value is NULL)
+       else
+          NETCDF4_INSTALL=${withval}
+       fi
+   )
 
-    ZLIB_INSTALL=""
-    AC_ARG_WITH(zlib,
-        [AS_HELP_STRING([--with-zlib=/path/to/implementation],
-                        [installation prefix for zlib implementation])],
-        if test "x${withval}" = xyes; then
-            AC_MSG_ERROR(--with-zlib must be given a pathname)
-        else
-            ZLIB_INSTALL=${withval}
-        fi
-    )
+   ZLIB_INSTALL=""
+   AC_ARG_WITH(zlib,
+       [AS_HELP_STRING([--with-zlib=/path/to/implementation],
+                       [installation prefix for zlib implementation])],
+       if test "x${withval}" = xyes; then
+          AC_MSG_ERROR(--with-zlib must be given a pathname)
+       else
+          ZLIB_INSTALL=${withval}
+       fi
+   )
 
-    if test "x${NETCDF_INSTALL}" != x ; then 
-        CPPFLAGS+=" -I${NETCDF_INSTALL}/include"
-        LDFLAGS+=" -L${NETCDF_INSTALL}/lib"
-        LIBS+=" -lnetcdf -lhdf5 -lhdf5_hl"
-    fi
+   if test "x${ZLIB_INSTALL}" != x ; then
+      CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
+      LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
+      LIBS="-lz $LIBS"
+   fi
 
-    if test "x${HDF5_INSTALL}" != x ; then
-        CPPFLAGS+=" -I${HDF5_INSTALL}/include"
-        LDFLAGS+=" -L${HDF5_INSTALL}/lib"
-        LIBS+=" -lhdf5 -lhdf5_hl"
-    fi
+   if test "x${HDF5_INSTALL}" != x ; then
+      CPPFLAGS+=" -I${HDF5_INSTALL}/include"
+      LDFLAGS+=" -L${HDF5_INSTALL}/lib"
+      LIBS="-lhdf5_hl -lhdf5 $LIBS"
+   fi
 
-    if test "x${ZLIB_INSTALL}" != x ; then
-        CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
-        LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
-        LIBS+=" -lz "
-    fi
+   if test "x${NETCDF4_INSTALL}" != x ; then
+      CPPFLAGS+=" -I${NETCDF4_INSTALL}/include"
+      LDFLAGS+=" -L${NETCDF4_INSTALL}/lib"
+      LIBS="-lnetcdf $LIBS"
+   fi
 
-    LIBS+=" -lm -ldl"
+   have_hdf5=no
+   AC_MSG_CHECKING(HDF5 library parallel I/O feature)
+   AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [have_hdf5=yes], [have_hdf5=no])
+   if test "x${have_hdf5}" = xyes; then
+      AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
+   fi
 
-    have_hdf5=no
-    AC_MSG_CHECKING(HDF5 library)
-    AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [have_hdf5=yes], [have_hdf5=no])
-    if test "x${have_hdf5}" = xyes; then
-        AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
-    fi
+   have_netcdf4=no
+   AC_MSG_CHECKING(NetCDF-4 library parallel I/O feature)
+   AC_SEARCH_LIBS([nc_create_par], [netcdf], [have_netcdf4=yes], [have_netcdf4=no])
+   if test "x${have_netcdf4}" = xyes; then
+      AC_CHECK_HEADERS([netcdf.h netcdf_par.h], [], [have_netcdf4=no])
+   fi
 
-    have_netcdf=no
-    AC_MSG_CHECKING(NetCDF library)
-    AC_SEARCH_LIBS([nc_create_par], [netcdf], [have_netcdf=yes], [have_netcdf=no])
-    if test "x${have_netcdf}" = xyes; then
-        AC_CHECK_HEADERS([netcdf.h], [], [have_netcdf=no])
-    fi
+   if test "x${have_hdf5}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      The HDF5 library and header file are required to build
+      PnetCDF with NetCDF-4 support. Use option
+          --with-hdf5=/path/to/implementation
+      to specify the location of HDF5 build. In addition, please
+      make sure the MPI C compiler is compatible with the one used
+      to build HDF5. The HDF5 library used must be built with
+      parallel support. Check 'config.log' for more information.
+      Stopping ...
+      ------------------------------------------------------------])
+   fi
 
-    if test "x${have_hdf5}" = xno; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        The HDF5 library and header file are required to build
-        PnetCDF with NetCDF 4 support. Use option
-            --with-hdf5=/path/to/implementation
-        to specify the location of HDF5 build. In addition,
-        please make sure the MPI C compiler is compatible with the
-        one used to build HDF5. The HDF5 library used must be built with parallel support.
-        Stopping ...
-        Check 'config.log' for more information.
-        ------------------------------------------------------------])
-    fi
+   if test "x${have_netcdf4}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      The NetCDF library and header file are required to build
+      PnetCDF with NetCDF-4 support. Use option
+          --with-netcdf=/path/to/implementation
+      to specify the location of NetCDF-4 build. In addition,
+      please make sure the MPI C compiler is compatible with the
+      one used to build NetCDF-4. The NetCDF-4 library used must
+      be built with parallel I/O and NETCDF-4 support. Check
+      'config.log' for more information. Stopping ...
+      ------------------------------------------------------------])
+   fi
 
-    if test "x${have_netcdf}" = xno; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        The NetCDF library and header file are required to build
-        PnetCDF with NetCDF 4 support. Use option
-            --with-netcdf=/path/to/implementation
-        to specify the location of NetCDF build. In addition,
-        please make sure the MPI C compiler is compatible with the
-        one used to build NetCDF. The NetCDF library used must be built with NetCDF 4 support.
-        Stopping ...
-        Check 'config.log' for more information.
-        ------------------------------------------------------------])
-    fi
+   AC_MSG_CHECKING([if relax-coord-bound is enabled in NetCDF-4])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+#include <netcdf_meta.h>
+#if !defined(NC_RELAX_COORD_BOUND) || NC_RELAX_COORD_BOUND == 0
+      choke me
+#endif
+   ]])], [nc_relax_coord_bound=yes], [nc_relax_coord_bound=no])
+   AC_MSG_RESULT([$nc_relax_coord_bound])
 fi
 
 AC_ARG_ENABLE([erange-fill],
@@ -1455,7 +1462,7 @@ AC_ARG_ENABLE([erange-fill],
    [enable_erange_fill=${enableval}], [enable_erange_fill=yes]
 )
 ENABLE_ERANGE_FILL=0
-if test "x$enable_erange_fill" = "xyes" ; then
+if test "x$enable_erange_fill" = xyes ; then
    ENABLE_ERANGE_FILL=1
 fi
 UD_MSG_DEBUG(enable_erange_fill=$enable_erange_fill)
@@ -1467,11 +1474,35 @@ AC_ARG_ENABLE([relax-coord-bound],
                    [Use stricter rule for error NC_EINVALCOORDS to disallow coordinate
                     start argument equal to dimension size when argument
                     count is zero. @<:@default: enabled@:>@])],
-   [relax_coord_bound=${enableval}], [relax_coord_bound=yes]
+   [relax_coord_bound=${enableval}], [relax_coord_bound=auto]
 )
 UD_MSG_DEBUG(relax_coord_bound=$relax_coord_bound)
+
+if test "x$enable_netcdf4" = xyes ; then
+   # check nc_relax_coord_bound set in NetCDF-4
+   if test "x$relax_coord_bound" = xauto ; then
+      relax_coord_bound=$nc_relax_coord_bound
+   else
+      if test "$relax_coord_bound" != "$nc_relax_coord_bound" ; then
+         # error out when the settings conflict
+         if test "x$relax_coord_bound" = xyes ; then
+             AC_MSG_ERROR([Enabling relax-coord-bound conflicts with NetCDF-4 setting])
+         else
+             AC_MSG_ERROR([Disabling relax-coord-bound conflicts with NetCDF-4 setting])
+         fi
+      fi
+      relax_coord_bound=$nc_relax_coord_bound
+   fi
+else
+   if test "x$relax_coord_bound" = xauto ; then
+      # default is yes
+      relax_coord_bound=yes
+   fi
+fi
+UD_MSG_DEBUG(enable_erange_fill=$enable_erange_fill)
+
 RELAX_COORD_BOUND=0
-if test "x$relax_coord_bound" = "xyes" ; then
+if test "x$relax_coord_bound" = xyes ; then
    RELAX_COORD_BOUND=1
    AC_DEFINE(RELAX_COORD_BOUND)
 fi
@@ -1778,7 +1809,7 @@ if test "x${enable_subfiling}" = xyes; then
 fi
 if test "x${enable_netcdf4}" = xyes; then
    echo "\
-              NetCDF4 support                             - enabled"
+              NetCDF-4 support                            - enabled"
 fi
 if test "x${relax_coord_bound}" = xno; then
    echo "\

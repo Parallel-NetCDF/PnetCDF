@@ -52,7 +52,7 @@ usage(void)
   [-l len]         Line length maximum in data section (default 80)\n\
   [-n name]        Name for netCDF (default derived from file name)\n\
   [-p n[,n]]       Display floating-point values with less precision\n\
-  [-V]             Print the file format (CDF-1, CDF-2, CDF-4, or CDF-5)\n\
+  [-V]             Print the file format (CDF-1, CDF-2, CDF-5, or NetCDF-4)\n\
   [-k]             Print kind of file (classic, 64-bit offset, or 64-bit data)\n\
   file             File name of input netCDF file\n"
 
@@ -393,7 +393,7 @@ do_ncdump(const char *path, struct fspec* specp)
             Printf ("%s file format: CDF-5 (big variables)\n", specp->name);
         else if (NC_mode == NC_64BIT_OFFSET)
             Printf ("%s file format: CDF-2 (large file)\n", specp->name);
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
         else if (NC_mode == NC_NETCDF4)
             Printf ("%s file format: CDF-4\n", specp->name);
 #endif
@@ -413,7 +413,7 @@ do_ncdump(const char *path, struct fspec* specp)
             Printf ("// file format: CDF-5 (big variables)\n");
         else if (NC_mode == NC_64BIT_OFFSET)
             Printf ("// file format: CDF-2 (large file)\n");
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
         else if (NC_mode == NC_NETCDF4)
             Printf ("// file format: CDF-4\n");
 #endif
@@ -880,7 +880,7 @@ main(int argc, char *argv[])
         else if (file_kind == HDF5) Printf ("NetCDF-4\n");
         goto fn_exit;
     }
-#ifndef BUILD_DRIVER_NC4
+#ifndef ENABLE_NETCDF4
     else if (file_kind == HDF5) {
         if (rank == 0) fprintf(stderr,"%s error: file %s is an HDF5 file. Please use ncdump instead.\n",progname,argv[0]);
         err = EXIT_FAILURE;
@@ -917,7 +917,7 @@ main(int argc, char *argv[])
             else if (file_kind == HDF5) Printf ("NetCDF-4\n");
             goto fn_exit;
         }
-#ifndef BUILD_DRIVER_NC4
+#ifndef ENABLE_NETCDF4
         else if (file_kind == HDF5) {
             if (rank == 0) fprintf(stderr,"%s error: file %s is an HDF5 file. Please use ncdump instead.\n",progname,argv[i]);
             err = EXIT_FAILURE;

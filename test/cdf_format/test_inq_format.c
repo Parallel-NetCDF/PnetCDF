@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     /* test CDF-4 -----------------------------------------------------------*/
     sprintf(filename,"%s/test_cdf4.nc",dir_name);
     err = ncmpi_open(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid); CHECK_ERR

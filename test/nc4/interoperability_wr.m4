@@ -103,10 +103,11 @@ dnl
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netcdf.h>
 #include <libgen.h> /* basename() */
-#include <pnetcdf.h>
 #include <mpi.h>
+#include <netcdf.h>
+#include <netcdf_par.h>
+#include <pnetcdf.h>
 #include <testutils.h>
 
 /* This is the name of the data file we will read. */
@@ -124,7 +125,7 @@ foreach(`dt', (`(`NC_BYTE', `schar', `char')', dnl
                `(`NC_INT64', `longlong', `long long')', dnl
                `(`NC_UINT64', `ulonglong', `unsigned long long')', dnl
                ), `PNC_WR(translit(dt, `()'))')dnl
-               
+
 foreach(`dt', (`(`c', `schar', `char')', dnl
                `(`c', `uchar', `unsigned char')', dnl
                `(`d', `short', `short')', dnl
@@ -188,7 +189,7 @@ foreach(`dt', (`(`0', `schar', `char')', dnl
                `(`8', `longlong', `long long')', dnl
                `(`9', `ulonglong', `unsigned long long')', dnl
                ), `CALL_PNC_WR(translit(dt, `()'))')dnl
-   
+
     /* Close file */
     ncmpi_close(ncid);
 

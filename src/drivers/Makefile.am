@@ -12,7 +12,7 @@ if BUILD_DRIVER_FOO
    SUBDIRS += ncfoo
 endif
 
-if BUILD_DRIVER_NC4
+if ENABLE_NETCDF4
    SUBDIRS += nc4io
 endif
 

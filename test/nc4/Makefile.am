@@ -25,8 +25,7 @@ endif
 NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
-TESTPROGRAMS =  simple_xy \
-				compressed
+TESTPROGRAMS = simple_xy
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4
 
@@ -52,7 +51,7 @@ TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
-TESTS = $(check_PROGRAMS) # seq_runs.sh
+TESTS = $(check_PROGRAMS) compressed # seq_runs.sh
 # TEST_EXTENSIONS = .sh
 # LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =

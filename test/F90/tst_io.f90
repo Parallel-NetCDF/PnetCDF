@@ -77,7 +77,7 @@ program tst_io
       err = nf90mpi_set_default_format(nf90_format_netcdf4, old_format)
     else
       err = nf90mpi_set_default_format(nf90_format_classic, old_format)
-    end if 
+    end if
 
     ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
     call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &

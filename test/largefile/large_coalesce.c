@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     setenv("PNETCDF_SAFE_MODE", "0", 1);
 #endif
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_cb_write", "enable");

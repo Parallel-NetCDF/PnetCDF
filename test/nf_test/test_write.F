@@ -546,7 +546,7 @@ C           /* try nfmpi_abort in data mode - should just close */
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
-        
+
         ! Flush the buffer to reveal potential error
         if (bb_enable) then
             if (err .eq. NF_NOERR) then
@@ -1764,10 +1764,10 @@ C *    close file & create again for test using attribute _FillValue
 
       err = nfmpi_inq_default_format(format);
       if (err .ne. NF_NOERR) then
-         call errori( 
+         call errori(
      +       'Error calling nf90mpi_inq_default_format()')
       end if
-    
+
       if (format .eq. 4) then
           format = 4
       else

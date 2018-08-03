@@ -14,7 +14,7 @@ C_SUBDIRS = common \
             header \
             testcases \
             nonblocking \
-            largefile 
+            largefile
 
 DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile burst_buffer
 
@@ -35,7 +35,7 @@ if ENABLE_SUBFILING
 SUBDIRS += subfile
 endif
 
-if BUILD_DRIVER_NC4
+if ENABLE_NETCDF4
 SUBDIRS += nc4
 endif
 
