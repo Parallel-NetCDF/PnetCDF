@@ -94,17 +94,19 @@
       nf_write = 1, &
       nf_clobber = 0, &
       nf_noclobber = 4, &
-      nf_fill = 0, &
-      nf_nofill = 256, &
       nf_lock = 1024, &
       nf_share = 2048, &
       nf_netcdf4 = 4096, &
+      nf_classic_model = 256, &
       nf_64bit_offset = 512, &
       nf_64bit_data = 32, &
       nf_32bit = 16777216, &
       nf_sizehint_default = 0, &
       nf_align_chunk = -1, &
       nf_format_classic = 1, &
+
+      nf_fill = 0, &
+      nf_nofill = 256, &
 
       nf_format_cdf2 = 2, &
       nf_format_netcdf4 = 3, &
