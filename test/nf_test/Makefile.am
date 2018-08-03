@@ -72,6 +72,7 @@ nf_test_SOURCES = $(F_SRCS) fortlib.c
 nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
 
 if ENABLE_NETCDF4
+AM_CPPFLAGS += $(FC_DEFINE)ENABLE_NETCDF4
 TESTNC4 = 1
 TESTS_ENVIRONMENT += TESTNC4=1 ; export TESTNC4;
 endif
