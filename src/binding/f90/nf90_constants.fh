@@ -58,20 +58,25 @@
     nf90_fill_int64  = -9223372036854775806_EightByteInt
 
   !
+  ! fill and no-fill modes
+  !
+  integer, parameter, public :: &
+    nf90_fill         = 0,      &
+    nf90_nofill       = 256
+  !
   ! mode flags for opening and creating a netcdf dataset:
   !
   integer, parameter, public :: &
-    nf90_nowrite      = 0,      &
-    nf90_write        = 1,      &
-    nf90_clobber      = 0,      &
-    nf90_noclobber    = 4,      &
-    nf90_fill         = 0,      &
-    nf90_nofill       = 256,    &
-    nf90_64bit_offset = 512,    &
-    nf90_64bit_data   = 32,     &
-    nf90_netcdf4      = 4096,   &
-    nf90_lock         = 1024,   &
-    nf90_share        = 2048
+    nf90_nowrite       = 0,      &
+    nf90_write         = 1,      &
+    nf90_clobber       = 0,      &
+    nf90_noclobber     = 4,      &
+    nf90_classic_model = 256,    &
+    nf90_64bit_offset  = 512,    &
+    nf90_64bit_data    = 32,     &
+    nf90_netcdf4       = 4096,   &
+    nf90_lock          = 1024,   &
+    nf90_share         = 2048
 
   integer, parameter, public ::  &
     nf90_sizehint_default = 0,   &
