@@ -46,7 +46,7 @@ define(`GETVAR',dnl
 `dnl
     ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2){
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
-               `(`MPI_SIGNED_CHAR', `schar', `char')', dnl
+               `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
                `(`MPI_SHORT', `short', `short')', dnl
                `(`MPI_UNSIGNED_SHORT', `ushort', `unsigned short')', dnl
@@ -65,7 +65,7 @@ define(`PUTVAR',dnl
 `dnl
     ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2){
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
-               `(`MPI_SIGNED_CHAR', `schar', `char')', dnl
+               `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
                `(`MPI_SHORT', `short', `short')', dnl
                `(`MPI_UNSIGNED_SHORT', `ushort', `unsigned short')', dnl
@@ -129,10 +129,10 @@ nc4io_get_att(void         *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_del_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
-               `(`MPI_SIGNED_CHAR', `schar', `char')', dnl
+               `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
                `(`MPI_SHORT', `short', `short')', dnl
                `(`MPI_UNSIGNED_SHORT', `ushort', `unsigned short')', dnl
@@ -161,13 +161,13 @@ nc4io_put_att(void         *ncdp,
     int err;
     size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Convert from MPI_Offset to size_t */
     len = (size_t)nelems;
 
     /* Call nc_del_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
-               `(`MPI_SIGNED_CHAR', `schar', `char')', dnl
+               `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
                `(`MPI_SHORT', `short', `short')', dnl
                `(`MPI_UNSIGNED_SHORT', `ushort', `unsigned short')', dnl
@@ -201,7 +201,7 @@ nc4io_get_var(void             *ncdp,
     int ndim;
     size_t *sstart, *scount, *sstride, *simap;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Inq variable dim */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -269,7 +269,7 @@ nc4io_put_var(void             *ncdp,
     int zero_req = 0;
     size_t *sstart, *scount, *sstride, *simap, putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Inq variable dim */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -332,7 +332,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
     if (err != NC_NOERR){
         DEBUG_RETURN_ERROR(err);
     }
-    
+
     /* Free buffers if needed */
     if(ndim > 0){
 foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl

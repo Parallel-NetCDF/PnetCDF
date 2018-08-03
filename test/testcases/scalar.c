@@ -49,7 +49,7 @@ int main(int argc, char **argv)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
 #endif
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_NETCDF4,
                     MPI_INFO_NULL, &ncid); CHECK_ERR
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE | NC_NETCDF4, MPI_INFO_NULL, &ncid); CHECK_ERR
-    
+
     err = ncmpi_inq_varid(ncid, "scalar_var", &varid); CHECK_ERR
 
     /* get */
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
-    
+
     err = ncmpi_inq_varid(ncid, "scalar_var", &varid); CHECK_ERR
 
     /* get */

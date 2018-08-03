@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         printf("Warning: %s is designed to run on 1 process\n",argv[0]);
 #endif
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
     err = ncmpi_create(comm, filename, NC_CLOBBER | NC_NETCDF4,
                             MPI_INFO_NULL, &ncid);

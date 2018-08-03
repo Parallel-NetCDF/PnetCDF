@@ -42,7 +42,7 @@ nc4io_inq_attname(void *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_inq_attname */
     err = nc_inq_attname(nc4p->ncid, varid, attid, name);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -58,7 +58,7 @@ nc4io_inq_attid(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_inq_attid */
     err = nc_inq_attid(nc4p->ncid, varid, name, attidp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -76,7 +76,7 @@ nc4io_inq_att(void       *ncdp,
     int err;
     size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_inq_att */
     err = nc_inq_att(nc4p->ncid, varid, name, datatypep, &len);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -103,7 +103,7 @@ nc4io_rename_att(void       *ncdp,
             DEBUG_RETURN_ERROR(NC_ENOTINDEFINE);
         }
     }
-    
+
     /* Call nc_rename_att */
     err = nc_rename_att(nc4p->ncid, varid, name, newname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -122,7 +122,7 @@ nc4io_copy_att(void       *ncdp_in,
     int err;
     NC_nc4 *nc4p_in  = (NC_nc4*)ncdp_in;
     NC_nc4 *nc4p_out = (NC_nc4*)ncdp_out;
-    
+
     /* Read only driver */
     //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
@@ -140,7 +140,7 @@ nc4io_del_att(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Read only driver */
     //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
@@ -152,10 +152,10 @@ nc4io_del_att(void       *ncdp,
 }
 
 
-/* 
+/*
 nc4io_get_att is implemented in ncmpio_get_put.m4
 */
 
-/* 
+/*
 nc4io_put_att is implemented in ncmpio_get_put.m4
 */

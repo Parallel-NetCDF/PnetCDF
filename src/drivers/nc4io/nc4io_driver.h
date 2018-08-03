@@ -23,6 +23,7 @@ struct NC_nc4 {
     int                flag;        /* define/data/collective/indep mode */
     char              *path;        /* path name */
     MPI_Comm           comm;        /* MPI communicator */
+    MPI_Info           mpiinfo;     /* MPI hints */
     int                ncid;        /* NetCDF file ID */
 };
 

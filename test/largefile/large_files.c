@@ -87,7 +87,7 @@ main(int argc, char **argv) {
    printf("\n*** Testing large files, slowly.\n");
    printf("*** Creating large file %s...", filename);
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
     /* enter define mode */
     stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_NETCDF4,

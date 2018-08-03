@@ -18,34 +18,34 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_nofill.nc.nofill
 # disable safe mode, as nc_test already runs slow
 export PNETCDF_SAFE_MODE=0
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc
+rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test    -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc
+rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc
+rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test -4 -d ${TESTOUTDIR}
 # Validator does not support nc4
 #${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc
+rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
 if [ -n "${TESTBB}" ]; then
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-    rm -f ${TESTOUTDIR}/tooth-fairy.nc
+    rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test    -d ${TESTOUTDIR}
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-    rm -f ${TESTOUTDIR}/tooth-fairy.nc
+    rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-    rm -f ${TESTOUTDIR}/tooth-fairy.nc
+    rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
     unset PNETCDF_HINTS

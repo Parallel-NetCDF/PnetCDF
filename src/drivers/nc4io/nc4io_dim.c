@@ -38,7 +38,7 @@ nc4io_def_dim(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_def_dim */
     err = nc_def_dim(nc4p->ncid, name, (size_t) size, dimidp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -53,7 +53,7 @@ nc4io_inq_dimid(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_inq_dimid */
     err = nc_inq_dimid(nc4p->ncid, name, dimid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -70,7 +70,7 @@ nc4io_inq_dim(void       *ncdp,
     int err;
     size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* Call nc_inq_dim */
     err = nc_inq_dim(nc4p->ncid, dimid, name, &len);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -90,7 +90,7 @@ nc4io_rename_dim(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-    
+
     /* New name can not be longer than old one in data mode */
     if (!fIsSet(nc4p->flag, NC_MODE_DEF)){
         char oldname[NC_MAX_NAME + 1];
@@ -106,6 +106,6 @@ nc4io_rename_dim(void       *ncdp,
     /* Call nc_rename_dim */
     err = nc_rename_dim(nc4p->ncid, dimid, newname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-    
+
     return NC_NOERR;
 }

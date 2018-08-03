@@ -20,7 +20,7 @@ libpnetcdf_la_LIBADD += ../drivers/ncmpio/libncmpio.la
 if BUILD_DRIVER_FOO
 libpnetcdf_la_LIBADD += ../drivers/ncfoo/libncfoo.la
 endif
-if BUILD_DRIVER_NC4
+if ENABLE_NETCDF4
 libpnetcdf_la_LIBADD += ../drivers/nc4io/libnc4io.la
 endif
 if BUILD_DRIVER_BB

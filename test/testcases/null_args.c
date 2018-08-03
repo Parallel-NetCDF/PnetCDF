@@ -52,7 +52,7 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_NETCDF4, MPI_INFO_NULL, &ncid);
     EXP_ERR_MSG(NC_NOERR, "create")
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
     EXP_ERR_MSG(NC_NOERR, "create")
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]);
     EXP_ERR_MSG(NC_NOERR,"def_dim Y")
-    
+
     err = ncmpi_def_dim(ncid, "X", 10, &dimid[1]);
     EXP_ERR_MSG(NC_NOERR,"def_dim X")
     err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid);

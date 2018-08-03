@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h> /* basename() */
+#include <mpi.h>
 #include <pnetcdf.h>
 
 #include <testutils.h>

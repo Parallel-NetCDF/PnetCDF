@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-
+    cmode = NC_CLOBBER;
     cmode |= NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,
                        &ncid); CHECK_ERR
@@ -107,8 +107,6 @@ int main(int argc, char** argv) {
     if (rank > 0) for (i=0; i<NDIMS; i++) count[i] = 0;
 
     for (i=0; i<NVARS; i++) {
-        MPI_Barrier(MPI_COMM_WORLD);
-
         start[0] = 0;
         err = ncmpi_put_vars_short_all(ncid, fvarid[i], start, count, stride,
                                        buffer); CHECK_ERR

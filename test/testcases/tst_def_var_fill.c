@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     char filename[256];
     int i, j, k, rank, nprocs, err, nerrs=0;
     int ncid, cmode, format, varid[2], dimid[2], expect, *buf;
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     int formats[4]={NC_FORMAT_NETCDF4, NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_CDF5};
 #else
     int formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_CDF5};
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     /* allocate I/O buffer */
     buf = (int*) malloc(NY*NX * sizeof(int));
 
-#ifdef BUILD_DRIVER_NC4
+#ifdef ENABLE_NETCDF4
     for (k=0; k<4; k++) {
 #else
     for (k=0; k<3; k++) {

@@ -508,7 +508,7 @@
 
 !       /* Initialize global variables defining test file */
         call init_gvars
-        
+
         call write_file(testfile)
         if (nfailsTotal .GT. 0) then
             call MPI_Info_free(info, err)
@@ -684,7 +684,7 @@
             call test('nf90mpi_create', test_nf90mpi_create)
             if (cdf_format .NE. 4) then
             call test('nf90mpi_redef', test_nf90mpi_redef)
-            call test('nf90mpi_enddef', test_nf90mpi_enddef) 
+            call test('nf90mpi_enddef', test_nf90mpi_enddef)
             else
             call test('nf90mpi_redef', test_nf90mpi_redef4)
 !           /* test_nf90mpi_enddef calls test_nf90mpi_redef, no need to repeaat */
