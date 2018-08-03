@@ -16,7 +16,8 @@ C_SUBDIRS = common \
             nonblocking \
             largefile
 
-DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile burst_buffer
+DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile \
+               burst_buffer nc4
 
 SUBDIRS = $(C_SUBDIRS)
 

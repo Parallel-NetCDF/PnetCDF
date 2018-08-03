@@ -17,38 +17,36 @@
 #define FNAME "gzip_example.nc"
 
 int main(int argc, char **argv) {
-    int i, err, nerrs = 0;
-    int rank, np;
-    int ncid;
-    int ndim, nvar;
-    int vid[32];
-    int did[2];
-    char *filename = FNAME;
+    int i, err, nerrs=0, rank, np;
+    int ncid, ndims, nvars;
+    char *dir_name=".", filename[512];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        if (!rank) printf("Usage: %s [dir_name]\n",argv[0]);
         MPI_Finalize();
         return 1;
     }
-    if (argc == 2) filename = argv[1];
+    if (argc == 2) dir_name = argv[1];
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for interoperability file", basename(argv[0]));
+        sprintf(cmd_str, "*** TESTING C   %s for reading compressed file", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
         free(cmd_str);
     }
+
+    sprintf(filename, "%s/%s", dir_name, FNAME);
 
     /* Read with PnetCDF */
     /* Open the file */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-    err = ncmpi_inq(ncid, &ndim, &nvar, NULL, NULL);
+    err = ncmpi_inq(ncid, &ndims, &nvars, NULL, NULL);
     CHECK_ERR
 
     /* Close file */

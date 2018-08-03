@@ -21,7 +21,7 @@
 
 int main(int argc, char **argv) {
     char filename[256];
-    int  err, nerrs=0, ncid, cmode, rank, nprocs;
+    int  err, nerrs=0, ncid, cmode, rank, nprocs, format;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -38,19 +38,21 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for NC_NOCLOBBER and NC_EEXIST ", basename(argv[0]));
+        sprintf(cmd_str, "*** TESTING C   %s for NC_NOCLOBBER and NC_EEXIST (NETCDF4)", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
 
+    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional
+     * file */
     /* create a file if it does not exist */
-    cmode = NC_CLOBBER | NC_NETCDF4;
+    cmode = NC_CLOBBER | NC_NETCDF4 | NC_MPIIO;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* now the file exists, test if PnetCDF can return correct error code */
-    cmode = NC_NOCLOBBER | NC_NETCDF4;
+    cmode = NC_NOCLOBBER | NC_NETCDF4 | NC_MPIIO;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
 
@@ -61,7 +63,8 @@ int main(int argc, char **argv) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
-                   sum_size);
+                sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
