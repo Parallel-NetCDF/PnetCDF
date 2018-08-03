@@ -72,7 +72,8 @@ program netcdfTest
   real (kind = FourByteReal), dimension(numLons) :: lonVarBuf
   character(LEN=256) filename, cmd, msg
   integer my_rank, p, info
-  integer format, old_format
+  integer i, nformats, old_format
+  integer formats(2)
 
   call MPI_Init(ierr)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
@@ -100,12 +101,12 @@ program netcdfTest
     stop
   end if
 
-  do format = 1, 2
-    if (format .eq. 1) then
-      err = nf90mpi_set_default_format(nf90_format_netcdf4, old_format)
-    else
-      err = nf90mpi_set_default_format(nf90_format_classic, old_format)
-    end if
+  formats = (/nf90_format_netcdf4, nf90_format_classic/)
+  nformats = 1
+  if (PNETCDF_DRIVER_NETCDF4 .EQ. 0) nformats = nformats + 1
+
+  do i = nformats, 2
+    call check(nf90mpi_set_default_format(formats(i), old_format))
 
     call MPI_Info_create(info, ierr)
     ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",ierr)
@@ -210,7 +211,7 @@ program netcdfTest
 
     if(status /= nf90_noerr) then
       print *, trim(nf90mpi_strerror(status))
-      stop 2
+      stop 3
     end if
   end subroutine check
 end program netcdfTest

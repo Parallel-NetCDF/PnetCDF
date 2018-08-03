@@ -26,10 +26,12 @@ rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.n
 ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
-${TESTSEQRUN} ./nc_test -4 -d ${TESTOUTDIR}
-# Validator does not support nc4
-#${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+if [ -n "${ENABLE_NETCDF4}" ]; then
+   rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+   ${TESTSEQRUN} ./nc_test -4 -d ${TESTOUTDIR}
+   # Validator does not support nc4
+   #${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+fi
 
 rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}

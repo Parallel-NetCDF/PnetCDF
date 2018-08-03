@@ -32,7 +32,8 @@ program tst_io
   ! integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
   character(LEN=256) dirpath, cmd, msg
   integer my_rank, p
-  integer format, old_format
+  integer i, nformats, old_format
+  integer formats(2)
 
   call MPI_Init(ierr)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
@@ -72,12 +73,12 @@ program tst_io
      enddo
   enddo
 
-  do format = 1, 2
-    if (format .eq. 1) then
-      err = nf90mpi_set_default_format(nf90_format_netcdf4, old_format)
-    else
-      err = nf90mpi_set_default_format(nf90_format_classic, old_format)
-    end if
+  formats = (/nf90_format_netcdf4, nf90_format_classic/)
+  nformats = 1
+  if (PNETCDF_DRIVER_NETCDF4 .EQ. 0) nformats = nformats + 1
+
+  do i = nformats, 2
+    call check(nf90mpi_set_default_format(formats(i), old_format), 10)
 
     ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
     call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
@@ -85,7 +86,7 @@ program tst_io
     call system_clock(start)
     call check(nfmpi_begin_indep_data(ncid), 11)
     call check (NF90MPI_PUT_VAR(ncid, vrid, x), 18)
-    call check(nfmpi_end_indep_data(ncid), 11)
+    call check(nfmpi_end_indep_data(ncid), 12)
     call system_clock(now)
     ncint1 = now - start
   !   print 3, size, "MB"," netcdf write = ", ncint1 * clockRate, &

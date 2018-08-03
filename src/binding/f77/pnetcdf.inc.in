@@ -31,6 +31,7 @@
       integer PNETCDF_BYTE_SWAP_IN_PLACE
       integer PNETCDF_BURST_BUFFERING
       integer PNETCDF_THREAD_SAFE
+      integer PNETCDF_DRIVER_NETCDF4
 
       parameter (PNETCDF_ERANGE_FILL              = @ENABLE_ERANGE_FILL@)
       parameter (PNETCDF_SUBFILING                = @ENABLE_SUBFILING@)
@@ -41,6 +42,7 @@
       parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
       parameter (PNETCDF_BURST_BUFFERING          = @BUILD_DRIVER_BB@)
       parameter (PNETCDF_THREAD_SAFE              = @ENABLE_THREAD_SAFE@)
+      parameter (PNETCDF_DRIVER_NETCDF4           = @ENABLE_NETCDF4@)
 
 !
 ! external netcdf data types: (must conform with netCDF release)

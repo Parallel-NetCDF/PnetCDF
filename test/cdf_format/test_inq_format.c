@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
     CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 #else
-    EXP_ERR(NC_ENOTSUPPORT)
+    EXP_ERR(NC_ENOTBUILT)
 #endif
 
     err = ncmpi_inq_file_format(filename, &format); CHECK_ERR

@@ -28,10 +28,17 @@ define([FileCreate],[ifdef([PNETCDF],[nf90mpi_create(comm,$1,$2,info,ncid)],[nf9
 define([FileDelete],[ifdef([PNETCDF],[nf90mpi_delete($1,$2)],[nf90_delete($1)])])dnl
 define([FileClose],[ifdef([PNETCDF],[nf90mpi_close($1)],[nf90_close($1)])])dnl
 
-define([PutVar],[ifdef([PNETCDF],[nf90mpi_put_var_all($*)], [nf90_put_var($*)])])dnl
+define([PutVarAll],[ifdef([PNETCDF],[nf90mpi_put_var_all($*)], [nf90_put_var($*)])])dnl
+define([GetVarAll],[ifdef([PNETCDF],[nf90mpi_get_var_all($*)],[nf90_get_var($*)])])dnl
+
+define([PutVar],[ifdef([PNETCDF],[nf90mpi_put_var($*)], [nf90_put_var($*)])])dnl
+define([GetVar],[ifdef([PNETCDF],[nf90mpi_get_var($*)],[nf90_get_var($*)])])dnl
+
 define([PutAtt],[ifdef([PNETCDF],[nf90mpi_put_att($*)],[nf90_put_att($*)])])dnl
 define([GetAtt],[ifdef([PNETCDF],[nf90mpi_get_att($*)],[nf90_get_att($*)])])dnl
-define([GetVar],[ifdef([PNETCDF],[nf90mpi_get_var_all($*)],[nf90_get_var($*)])])dnl
+
+define([BeginIndep],[ifdef([PNETCDF],[nf90mpi_begin_indep_data($1)],[nf90_var_par_access($1,NF90_GLOBAL,NC_INDEPENDENT])])dnl
+define([EndIndep],[ifdef([PNETCDF],[nf90mpi_end_indep_data($1)],[nf90_var_par_access($1,NF90_GLOBAL,NC_COLLECTIVE])])dnl
 
 undefine([index])dnl
 
@@ -262,12 +269,12 @@ define([CHECK_VARS],dnl
                         call error('error in index2indexes()')
                     expect = hash4( var_type(i), var_rank(i), index,  &
                                    NFT_ITYPE($1))
-                    err = GetVar(ncid, i, value, index)
+                    err = GetVarAll(ncid, i, value(1:1), index)
                     if (inRange3(expect,datatype,NFT_ITYPE($1)))  then
                         if (in_internal_range(NFT_ITYPE($1), expect)) then
                             if (err .ne. NF90_NOERR)  then
                                 call errore &
-                               ('GetVar: ', err)
+                               ('GetVarAll: ', err)
                             else
                                 val = MAKE_ARITH_VAR1($1,value)
                                 if (.not.equal( &
@@ -470,16 +477,16 @@ define([TEST_NFMPI_PUT_VAR1],dnl
             do 2, j = 1, var_rank(i)
                 index(j) = 1
 2           continue
-            err = PutVar(BAD_ID, i, value(1:1), index)
+            err = PutVarAll(BAD_ID, i, value(1:1), index)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value(1:1), index)
+            err = PutVarAll(ncid, BAD_VARID, value(1:1), index)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
                 index(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value(1:1), index)
+                err = PutVarAll(ncid, i, value(1:1), index)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -496,12 +503,12 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                 val = hash_$1(var_type(i),var_rank(i), &
                               index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, value, val)
-                err = PutVar(ncid, i, value(1:1), index)
+                err = PutVarAll(ncid, i, value(1:1), index)
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('PutVar: ', err)
+                            call errore('PutVarAll: ', err)
                     else
                         ! Flush the buffer to reveal potential error
                         if (bb_enable) then
@@ -584,15 +591,25 @@ define([TEST_NFMPI_PUT_VAR],dnl
         err = APIFunc(enddef)(ncid)
         if (err .ne. NF90_NOERR) &
             call errore('APIFunc(enddef): ', err)
+
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
-            err = PutVar(BAD_ID, i, value)
+            err = PutVarAll(BAD_ID, i, value)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value)
+            err = PutVarAll(ncid, BAD_VARID, value)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
+
+!
+! A bug in HDF5 that fails zero-length write requests in collective mode
+!
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
+                var_rank(i) .ge. 1 .and. &
+                var_dimid(var_rank(i),i) .eq. RECDIM) cycle
+
             nels = 1
             do 3, j = 1, var_rank(i)
                 nels = nels * var_shape(j,i)
@@ -609,11 +626,11 @@ define([TEST_NFMPI_PUT_VAR],dnl
                 allInExtRange = allInExtRange .and. &
                     inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
-            err = PutVar(ncid, i, VALUE3($1, value), count=var_shape(:,i))
+            err = PutVarAll(ncid, i, VALUE3($1, value), count=var_shape(:,i))
             if (canConvert) then
                 if (allInExtRange) then
                     if (err .ne. NF90_NOERR) &
-                        call errore('PutVar: ', err)
+                        call errore('PutVarAll: ', err)
                 else
                     ! Flush the buffer to reveal potential error
                     if (bb_enable) then
@@ -642,9 +659,9 @@ define([TEST_NFMPI_PUT_VAR],dnl
         if (err .ne. NF90_NOERR) &
             call errore('APIFunc(inq_varid): ', err)
         index(1) = NRECS
-        err = PutVar(ncid, vid, 'x', index)
+        err = PutVarAll(ncid, vid, 'x', index)
         if (err .ne. NF90_NOERR) &
-            call errore('PutVar: ', err)
+            call errore('PutVarAll: ', err)
 
         ! Flush the buffer to reveal potential error
         if (bb_enable) then
@@ -680,11 +697,11 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     allInExtRange = allInExtRange .and. &
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
-                err = PutVar(ncid, i, value, count=var_shape(:,i))
+                err = PutVarAll(ncid, i, value, count=var_shape(:,i))
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('PutVar: ', err)
+                            call errore('PutVarAll: ', err)
                     else
                         ! Flush the buffer to reveal potential error
                         if (bb_enable) then
@@ -785,16 +802,16 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 start(j) = 1
                 edge(j) = 1
 2           continue
-            err = PutVar(BAD_ID, i, value, start, edge)
+            err = PutVarAll(BAD_ID, i, value, start, edge)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value, start, edge)
+            err = PutVarAll(ncid, BAD_VARID, value, start, edge)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, edge)
+                err = PutVarAll(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -804,7 +821,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, edge)
+                err = PutVarAll(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -819,16 +836,25 @@ define([TEST_NFMPI_PUT_VARA],dnl
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
 4           continue
-            err = PutVar(BAD_ID, i, value, start, edge)
+            err = PutVarAll(BAD_ID, i, value, start, edge)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value, start, edge)
+            err = PutVarAll(ncid, BAD_VARID, value, start, edge)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
+!
+! A bug in HDF5 that fails zero-length write requests in collective mode
+!
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
+                var_rank(i) .ge. 1 .and. &
+                var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
+                ! make start() on the bounds and edge is zero
                 start(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, edge)
+                err = PutVarAll(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -841,8 +867,9 @@ define([TEST_NFMPI_PUT_VARA],dnl
                         call errore('bad start: ', err)
 #endif
                 endif
+                ! make start() way out of bounds
                 start(j) = var_shape(j,i) + 2
-                err = PutVar(ncid, i, value, start, edge)
+                err = PutVarAll(ncid, i, value, start, edge)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -853,7 +880,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 start(j) = 1
 5           continue
             MAKE_TYPE2($1, value, 0)
-            err = PutVar(ncid, i, value, start, edge)
+            err = PutVarAll(ncid, i, value, start, edge)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
                     call error(ErrFunc(err))
@@ -861,7 +888,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
             endif
-            do 6, j = 1, var_rank(i)
+99          do 6, j = 1, var_rank(i)
                 edge(j) = 1
 6           continue
 
@@ -907,7 +934,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                     allInExtRange = allInExtRange .and. &
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 10              continue
-                err = PutVar(ncid, i, value, start, edge)
+                err = PutVarAll(ncid, i, value, start, edge)
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR)  &
@@ -1020,16 +1047,17 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 edge(j) = 1
                 stride(j) = 1
 2           continue
-            err = PutVar(BAD_ID, i, value, start, edge, stride)
+            err = PutVarAll(BAD_ID, i, value, start, edge, stride)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value, start, edge, stride)
+            err = PutVarAll(ncid, BAD_VARID, value, start, edge, stride)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
+                ! make start() on the bounds and edge() is not zero
                 start(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, edge, stride)
+                err = PutVarAll(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1039,7 +1067,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, edge, stride)
+                err = PutVarAll(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1049,7 +1077,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                err = PutVar(ncid, i, value, start, edge, stride)
+                err = PutVarAll(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1064,16 +1092,25 @@ define([TEST_NFMPI_PUT_VARS],dnl
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
 4           continue
-            err = PutVar(BAD_ID, i, value, start, edge, stride)
+            err = PutVarAll(BAD_ID, i, value, start, edge, stride)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value, start, edge, stride)
+            err = PutVarAll(ncid, BAD_VARID, value, start, edge, stride)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
+!
+! A bug in HDF5 that fails zero-length write requests in collective mode
+!
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
+                var_rank(i) .ge. 1 .and. &
+                var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
+                ! make start() on the bounds and edge is zero
                 start(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, edge, stride)
+                err = PutVarAll(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1086,8 +1123,9 @@ define([TEST_NFMPI_PUT_VARS],dnl
                         call errore('bad start: ', err)
 #endif
                 endif
+                ! make start() way out of bounds
                 start(j) = var_shape(j,i) + 2
-                err = PutVar(ncid, i, value, start, edge, stride)
+                err = PutVarAll(ncid, i, value, start, edge, stride)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1098,7 +1136,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 start(j) = 1
 5           continue
             MAKE_TYPE2($1, value, 0)
-            err = PutVar(ncid, i, value, start, edge, stride)
+            err = PutVarAll(ncid, i, value, start, edge, stride)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
                     call error(ErrFunc(err))
@@ -1106,7 +1144,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
             endif
-            do 6, j = 1, var_rank(i)
+99          do 6, j = 1, var_rank(i)
                 edge(j) = 1
 6           continue
 
@@ -1181,7 +1219,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                             inRange3(val, var_type(i),  &
                                      NFT_ITYPE($1))
 12                  continue
-                    err = PutVar(ncid, i, value, index, &
+                    err = PutVarAll(ncid, i, value, index, &
                                          count, stride)
                     if (canConvert) then
                         if (allInExtRange) then
@@ -1300,18 +1338,19 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 stride(j) = 1
                 imap(j) = 1
 2           continue
-            err = PutVar(BAD_ID, i, value, start, &
+            err = PutVarAll(BAD_ID, i, value, start, &
                                  edge, stride, imap)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value, start, &
+            err = PutVarAll(ncid, BAD_VARID, value, start, &
                                       edge, stride, imap)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 3 ! skip record dim
+                ! make start() on the bounds and edge is not zero
                 start(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, &
+                err = PutVarAll(ncid, i, value, start, &
                                           edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
@@ -1322,7 +1361,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, &
+                err = PutVarAll(ncid, i, value, start, &
                                           edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
@@ -1333,7 +1372,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                err = PutVar(ncid, i, value, start, &
+                err = PutVarAll(ncid, i, value, start, &
                                           edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
@@ -1349,16 +1388,25 @@ define([TEST_NFMPI_PUT_VARM],dnl
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
 4           continue
-            err = PutVar(BAD_ID, i, value, start, edge, stride, imap)
+            err = PutVarAll(BAD_ID, i, value, start, edge, stride, imap)
             if (err .ne. NF90_EBADID)  &
                 call errore('bad ncid: ', err)
-            err = PutVar(ncid, BAD_VARID, value, start, edge, stride, imap)
+            err = PutVarAll(ncid, BAD_VARID, value, start, edge, stride, imap)
             if (err .ne. NF90_ENOTVAR)  &
                 call errore('bad var id: ', err)
+!
+! A bug in HDF5 that fails zero-length write requests in collective mode
+!
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
+                var_rank(i) .ge. 1 .and. &
+                var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
+                ! make start() on the bounds and edge is zero
                 start(j) = var_shape(j,i) + 1
-                err = PutVar(ncid, i, value, start, edge, stride, imap)
+                err = PutVarAll(ncid, i, value, start, edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1371,8 +1419,9 @@ define([TEST_NFMPI_PUT_VARM],dnl
                         call errore('bad start: ', err)
 #endif
                 endif
+                ! make start() way out of bounds
                 start(j) = var_shape(j,i) + 2
-                err = PutVar(ncid, i, value, start, edge, stride, imap)
+                err = PutVarAll(ncid, i, value, start, edge, stride, imap)
                 if (.not. canConvert) then
                     if (err .ne. NF90_ECHAR) &
                         call errore('wrong type: ', err)
@@ -1383,7 +1432,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 start(j) = 1
 5           continue
             MAKE_TYPE2($1, value, 0)
-            err = PutVar(ncid, i, value, start, edge, stride, imap)
+            err = PutVarAll(ncid, i, value, start, edge, stride, imap)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
                     call error(ErrFunc(err))
@@ -1391,7 +1440,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
             endif
-            do 6, j = 1, var_rank(i)
+99          do 6, j = 1, var_rank(i)
                 edge(j) = 1
 6           continue
 
@@ -1473,7 +1522,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                             inRange3(val, var_type(i),  &
                                      NFT_ITYPE($1))
 14                  continue
-                    err = PutVar(ncid,i,value,index,count, &
+                    err = PutVarAll(ncid,i,value,index,count, &
                                          stride,imap)
                     if (canConvert) then
                         if (allInExtRange) then

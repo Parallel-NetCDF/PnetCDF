@@ -35,6 +35,7 @@
         call error('   [-c] Create file test.nc (Do not do tests)' )
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
+        call error('   [-4] test NetCDF-4 format' )
         call error('   [-5] test CDF-5 format' )
         call error('   [-r] Just do read-only tests' )
         call error( &
@@ -49,8 +50,13 @@
         character*1024  msg
 #include "tests.inc"
 
-        write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
-                            ' for CDF-', cdf_format
+        if (cdf_format .EQ. 4) then
+          write(msg,"(A)") '*** TESTING F90 '//TRIM(PROGNAME)// &
+                              ' for NetCDF-4'
+        else
+          write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
+                              ' for CDF-', cdf_format
+        endif
         if (nfailsTotal .ne. 0) then
           write(*,*) trim(PROGNAME)//' expects to see 0 failure ... '//&
                      'Total number of failures: ', nfailsTotal

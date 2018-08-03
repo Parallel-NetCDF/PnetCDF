@@ -41,8 +41,8 @@ define([PutVarm],[ifdef([PNETCDF],[nfmpi_put_varm_$1],[nf_put_varm_$1])])dnl
 define([PutAtt], [ifdef([PNETCDF],[nfmpi_put_att_$1],[nf_put_att_$1])])dnl
 define([GetAtt], [ifdef([PNETCDF],[nfmpi_get_att_$1],[nf_get_att_$1])])dnl
 define([GetVar1],[ifdef([PNETCDF],[nfmpi_get_var1_$1_all],[nf_get_var1_$1])])dnl
-define([BeginIndep],[ifdef([PNETCDF],[nfmpi_begin_indep_data($1)],[nc_var_par_access($1,NF_GLOBAL,NC_INDEPENDENT])])dnl
-define([EndIndep],[ifdef([PNETCDF],[nfmpi_end_indep_data($1)],[nc_var_par_access($1,NF_GLOBAL,NC_COLLECTIVE])])dnl
+define([BeginIndep],[ifdef([PNETCDF],[nfmpi_begin_indep_data($1)],[nf_var_par_access($1,NF_GLOBAL,NF_INDEPENDENT])])dnl
+define([EndIndep],[ifdef([PNETCDF],[nfmpi_end_indep_data($1)],[nf_var_par_access($1,NF_GLOBAL,NF_COLLECTIVE])])dnl
 
 undefine([index])dnl
 
@@ -570,21 +570,23 @@ define([TEST_NFMPI_PUT_VAR],dnl
         if (err .ne. NF_NOERR)
      +      call errore('APIFunc(enddef): ', err)
 
-!
-! A bug in HDF5 that fails zero-length write requests in collective mode
-!
-        err = BeginIndep(ncid)
-        if (err .ne. NF_NOERR)
-     +      call errore('BeginIndep(ncid): ', err)
         do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
-            err = PutVar($1)(BAD_ID, i, value)
+            err = PutVarAll($1)(BAD_ID, i, value)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = PutVar($1)(ncid, BAD_VARID, value)
+            err = PutVarAll($1)(ncid, BAD_VARID, value)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
+!
+! A bug in HDF5 that fails zero-length write requests in collective mode
+!
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
+     +          var_rank(i) .ge. 1 .and.
+     +          var_dimid(var_rank(i),i) .eq. RECDIM) cycle
+
             nels = 1
             do 3, j = 1, var_rank(i)
                 nels = nels * int(var_shape(j,i))
@@ -602,7 +604,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                 allInExtRange = allInExtRange .and.
      +              inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
-            err = PutVar($1)(ncid, i, value)
+            err = PutVarAll($1)(ncid, i, value)
             if (canConvert) then
                 if (allInExtRange) then
                     if (err .ne. NF_NOERR)
@@ -624,10 +626,6 @@ define([TEST_NFMPI_PUT_VAR],dnl
      +              call errore('wrong type: ', err)
             endif
 1       continue
-
-        err = EndIndep(ncid)
-        if (err .ne. NF_NOERR)
-     +      call errore('EndIndep(ncid): ', err)
 
 C       The preceeding has written nothing for record variables, now try
 C       again with more than 0 records.
@@ -818,10 +816,6 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 edge(j) = 1
 3           continue
 
-!
-! A bug in HDF5 that fails zero-length write requests in collective mode
-!
-#ifndef ENABLE_NETCDF4
 C           /* Check correct error returned even when nothing to put */
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
@@ -834,6 +828,14 @@ C           /* Check correct error returned even when nothing to put */
      +                                  start, edge, value)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
+!
+! A bug in HDF5 that fails zero-length write requests in collective mode
+!
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
+     +          var_rank(i) .ge. 1 .and.
+     +          var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
                 start(j) = var_shape(j,i) + 1
@@ -873,8 +875,7 @@ C           /* Check correct error returned even when nothing to put */
                 if (err .ne. NF_ECHAR)
      +              call errore('wrong type: ', err)
             endif
-#endif
-            do 6, j = 1, var_rank(i)
+99          do 6, j = 1, var_rank(i)
                 edge(j) = 1
 6           continue
 
@@ -1083,7 +1084,11 @@ define([TEST_NFMPI_PUT_VARS],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-#ifndef ENABLE_NETCDF4
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
+     +          var_rank(i) .ge. 1 .and.
+     +          var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+
 C           /* Check correct error returned even when nothing to put */
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
@@ -1127,8 +1132,7 @@ C           /* Check correct error returned even when nothing to put */
                 if (err .ne. NF_ECHAR)
      +              call errore('wrong type: ', err)
             endif
-#endif
-            do 6, j = 1, var_rank(i)
+99          do 6, j = 1, var_rank(i)
                 edge(j) = 1
 6           continue
 
@@ -1371,7 +1375,11 @@ define([TEST_NFMPI_PUT_VARM],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-#ifndef ENABLE_NETCDF4
+            ! skip record variables for zero-length write requests
+            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
+     +          var_rank(i) .ge. 1 .and.
+     +          var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+
 C           /* Check correct error returned even when nothing to put */
             do 4, j = 1, var_rank(i)
                 edge(j) = 0
@@ -1415,8 +1423,7 @@ C           /* Check correct error returned even when nothing to put */
                 if (err .ne. NF_ECHAR)
      +              call errore('wrong type: ', err)
             endif
-#endif
-            do 6, j = 1, var_rank(i)
+99          do 6, j = 1, var_rank(i)
                 edge(j) = 1
 6           continue
 

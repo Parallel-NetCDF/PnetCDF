@@ -24,6 +24,7 @@ C implementation of the netCDF library.
         call error('       nf_test [-h] Print help' )
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
+        call error('   [-4] test NetCDF-4 format' )
         call error('   [-5] test CDF-5 format' )
         call error('   [-r] Just do read-only tests' )
         call error(
@@ -40,9 +41,15 @@ C implementation of the netCDF library.
 #include "tests.inc"
 
         integer MY_LEN_TRIM
-        write(msg,"(A,I1)") '*** TESTING F77 '//
-     +                      TRIM(PROGNAME)//
-     +                      ' for CDF-', cdf_format
+        if (cdf_format .EQ. 4) then
+          write(msg,"(A)") '*** TESTING F77 '//
+     +                     TRIM(PROGNAME)//
+     +                     ' for NetCDF-4'
+        else
+          write(msg,"(A,I1)") '*** TESTING F77 '//
+     +                        TRIM(PROGNAME)//
+     +                        ' for CDF-', cdf_format
+        endif
         if (nfailsTotal .ne. 0) then
           write(*,*) TRIM(PROGNAME)//
      +               ' expects to see 0 failure ... '//
