@@ -11,36 +11,25 @@
 !
 ! PnetCDF library version numbers
 !
-      integer PNETCDF_VERSION_MAJOR
-      integer PNETCDF_VERSION_MINOR
-      integer PNETCDF_VERSION_SUB
-
-      parameter (PNETCDF_VERSION_MAJOR = @PNETCDF_VERSION_MAJOR@)
-      parameter (PNETCDF_VERSION_MINOR = @PNETCDF_VERSION_MINOR@)
-      parameter (PNETCDF_VERSION_SUB   = @PNETCDF_VERSION_SUB@)
+      integer, parameter, public :: &
+      PNETCDF_VERSION_MAJOR = @PNETCDF_VERSION_MAJOR@, &
+      PNETCDF_VERSION_MINOR = @PNETCDF_VERSION_MINOR@, &
+      PNETCDF_VERSION_SUB   = @PNETCDF_VERSION_SUB@
 
 !
 ! list of PnetCDF options enabled/disabled at configure time
 !
-      integer PNETCDF_ERANGE_FILL
-      integer PNETCDF_SUBFILING
-      integer PNETCDF_RELAX_COORD_BOUND
-      integer PNETCDF_DEBUG_MODE
-      integer PNETCDF_LARGE_REQ
-      integer PNETCDF_NULL_BYTE_HEADER_PADDING
-      integer PNETCDF_BYTE_SWAP_IN_PLACE
-      integer PNETCDF_BURST_BUFFERING
-      integer PNETCDF_THREAD_SAFE
-
-      parameter (PNETCDF_ERANGE_FILL              = @ENABLE_ERANGE_FILL@)
-      parameter (PNETCDF_SUBFILING                = @ENABLE_SUBFILING@)
-      parameter (PNETCDF_RELAX_COORD_BOUND        = @RELAX_COORD_BOUND@)
-      parameter (PNETCDF_DEBUG_MODE               = @PNETCDF_DEBUG@)
-      parameter (PNETCDF_LARGE_REQ                = @ENABLE_LARGE_REQ@)
-      parameter (PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@)
-      parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
-      parameter (PNETCDF_BURST_BUFFERING          = @BUILD_DRIVER_BB@)
-      parameter (PNETCDF_THREAD_SAFE              = @ENABLE_THREAD_SAFE@)
+      integer, parameter, public :: &
+      PNETCDF_ERANGE_FILL              = @ENABLE_ERANGE_FILL@, &
+      PNETCDF_SUBFILING                = @ENABLE_SUBFILING@, &
+      PNETCDF_RELAX_COORD_BOUND        = @RELAX_COORD_BOUND@, &
+      PNETCDF_DEBUG_MODE               = @PNETCDF_DEBUG@, &
+      PNETCDF_LARGE_REQ                = @ENABLE_LARGE_REQ@, &
+      PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@, &
+      PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@, & ! -1 means auto
+      PNETCDF_BURST_BUFFERING          = @BUILD_DRIVER_BB@, &
+      PNETCDF_THREAD_SAFE              = @ENABLE_THREAD_SAFE@, &
+      PNETCDF_DRIVER_NETCDF4           = @ENABLE_NETCDF4@
 
 !
 ! external netcdf data types:
