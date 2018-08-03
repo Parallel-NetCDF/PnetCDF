@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
         sprintf(cmd_str,
         "*** TESTING C   %s for checking netcdf4 open",
         basename(argv[0]));
-        printf("%-66s --- ", cmd_str); fflush(stdout);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
 

@@ -57,16 +57,12 @@ nc4io_create(MPI_Comm     comm,
              MPI_Info     info,
              void       **ncpp)  /* OUT */
 {
-    int err, format;
-    int ncidtmp;
+    int err, ncidtmp;
     NC_nc4 *nc4p;
 
-    /* TODO: support NC4 write */
-    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
-    /* Create with netcdf */
-    err = nc_create_par(path, cmode | NC_NETCDF4 | NC_MPIIO, comm,
-             info, &ncidtmp);
+    /* Create */
+    cmode |= NC_MPIIO;
+    err = nc_create_par(path, cmode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Set fill mdoe to NC_NOFILL
@@ -107,15 +103,12 @@ nc4io_open(MPI_Comm     comm,
            MPI_Info     info,
            void       **ncpp)
 {
-    int err, format;
-    int ncidtmp;
+    int err, ncidtmp;
     NC_nc4 *nc4p;
 
-    err = ncmpi_inq_file_format(path, &format);
-    if (err != NC_NOERR) return err;
-
-    /* Open with netcdf */
-    err = nc_open_par(path, omode | NC_MPIIO, comm, info, &ncidtmp);
+    /* Open */
+    omode |= NC_MPIIO;
+    err = nc_open_par(path, omode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Create a NC_nc4 object and save its driver pointer */

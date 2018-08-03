@@ -388,9 +388,13 @@ ncmpi_create(MPI_Comm    comm,
         format = NC_FORMAT_NETCDF4;
     else if (fIsSet(cmode, NC_CLASSIC_MODEL))
         format = NC_FORMAT_CLASSIC;
-    else
+    else {
         /* if no file format flag is set in cmode, use default */
         ncmpi_inq_default_format(&format);
+             if (format == NC_FORMAT_CDF5)    cmode |= NC_64BIT_DATA;
+        else if (format == NC_FORMAT_CDF2)    cmode |= NC_64BIT_OFFSET;
+        else if (format == NC_FORMAT_NETCDF4) cmode |= NC_NETCDF4;
+    }
 
 #ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)

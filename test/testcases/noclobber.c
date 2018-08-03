@@ -43,20 +43,6 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-#ifdef ENABLE_NETCDF4
-    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
-    /* create a file if it does not exist */
-    cmode = NC_CLOBBER | NC_NETCDF4;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    CHECK_ERR
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* now the file exists, test if PnetCDF can return correct error code */
-    cmode = NC_NOCLOBBER | NC_NETCDF4;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
-#endif
-
     /* Test traditional format */
     /* create a file if it does not exist */
     cmode = NC_CLOBBER;
