@@ -546,26 +546,22 @@ define([TEST_NFMPI_PUT_VAR],dnl
 [dnl
         subroutine TestFunc(var_$1)
         use pnetcdf
-        implicit        none
+        implicit none
 #include "tests.inc"
         integer index2indexes
         double precision hash_$1
         logical inRange3
 
-        integer ncid
-        integer vid
-        integer i
-        integer j
-        integer err, flags
+        integer ncid, vid, i, j, err, flags, format
         integer(kind=MPI_OFFSET_KIND) nels
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -605,8 +601,13 @@ define([TEST_NFMPI_PUT_VAR],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
+            err = APIFunc(inquire)(ncid, formatNum=format)
+            if (err .ne. NF90_NOERR) &
+                call error('error in APIFunc(inquire)')
+
             ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
+            ! because no record has been written yet
+            if (format .EQ. NF90_FORMAT_NETCDF4 .AND. &
                 var_rank(i) .ge. 1 .and. &
                 var_dimid(var_rank(i),i) .eq. RECDIM) cycle
 
@@ -745,13 +746,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         double precision hash_$1
         logical inRange3
 
-        integer ncid
-        integer i
-        integer j
-        integer k
-        integer d
-        integer err, flags
-        integer nslabs
+        integer ncid, i, j, k, d, err, flags, nslabs, format
         integer(kind=MPI_OFFSET_KIND) nels
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
@@ -762,9 +757,9 @@ define([TEST_NFMPI_PUT_VARA],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -845,10 +840,12 @@ define([TEST_NFMPI_PUT_VARA],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-            ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
-                var_rank(i) .ge. 1 .and. &
-                var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+            err = APIFunc(inquire)(ncid, formatNum=format)
+            if (err .ne. NF90_NOERR) &
+                call error('error in APIFunc(inquire)')
+
+            ! skip zero-length write requests
+            if (format .EQ. NF90_FORMAT_NETCDF4) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -983,15 +980,8 @@ define([TEST_NFMPI_PUT_VARS],dnl
         logical inRange3
         integer roll, index2indexes
 
-        integer ncid
-        integer d
-        integer i
-        integer j
-        integer k
-        integer m
-        integer err, flags
+        integer ncid, d, i, j, k, m, err, flags, nslabs, format
         integer(kind=MPI_OFFSET_KIND) nels
-        integer nslabs
         integer(kind=MPI_OFFSET_KIND) nstarts        !/* number of different starts */
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
@@ -1006,9 +996,9 @@ define([TEST_NFMPI_PUT_VARS],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1101,10 +1091,12 @@ define([TEST_NFMPI_PUT_VARS],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-            ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
-                var_rank(i) .ge. 1 .and. &
-                var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+            err = APIFunc(inquire)(ncid, formatNum=format)
+            if (err .ne. NF90_NOERR) &
+                call error('error in APIFunc(inquire)')
+
+            ! skip zero-length write requests
+            if (format .EQ. NF90_FORMAT_NETCDF4) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -1272,15 +1264,8 @@ define([TEST_NFMPI_PUT_VARM],dnl
         double precision hash_$1
         logical inRange3
 
-        integer ncid
-        integer d
-        integer i
-        integer j
-        integer k
-        integer m
-        integer err, flags
+        integer ncid, d, i, j, k, m, err, flags, nslabs, format
         integer(kind=MPI_OFFSET_KIND) nels
-        integer nslabs
         integer(kind=MPI_OFFSET_KIND) nstarts        !/* number of different starts */
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
@@ -1296,9 +1281,9 @@ define([TEST_NFMPI_PUT_VARM],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1397,10 +1382,12 @@ define([TEST_NFMPI_PUT_VARM],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-            ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND. &
-                var_rank(i) .ge. 1 .and. &
-                var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+            err = APIFunc(inquire)(ncid, formatNum=format)
+            if (err .ne. NF90_NOERR) &
+                call error('error in APIFunc(inquire)')
+
+            ! skip zero-length write requests
+            if (format .EQ. NF90_FORMAT_NETCDF4) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim

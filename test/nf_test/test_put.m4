@@ -530,20 +530,15 @@ define([TEST_NFMPI_PUT_VAR],dnl
         double precision hash_$1
         logical inRange3
 
-        integer ncid
-        integer vid
-        integer i
-        integer j
-        integer err, flags
-        integer nels
+        integer i, j, ncid, vid, err, flags, nels, format
         integer*8 index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -582,8 +577,13 @@ define([TEST_NFMPI_PUT_VAR],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
+            err = nfmpi_inq_format(ncid, format)
+            if (err .ne. NF_NOERR)
+     +          call error('error in nfmpi_inq_format')
+
             ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
+            ! because no record has been written yet
+            if (format .EQ. NF_FORMAT_NETCDF4 .AND.
      +          var_rank(i) .ge. 1 .and.
      +          var_dimid(var_rank(i),i) .eq. RECDIM) cycle
 
@@ -725,14 +725,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         double precision hash_$1
         logical inRange3
 
-        integer ncid
-        integer i
-        integer j
-        integer k
-        integer d
-        integer err, flags
-        integer nslabs
-        integer nels
+        integer i, j, k, d, err, flags, nels, nslabs, ncid, format
         integer*8 start(MAX_RANK)
         integer*8 edge(MAX_RANK)
         integer*8 mid(MAX_RANK)
@@ -742,9 +735,9 @@ define([TEST_NFMPI_PUT_VARA],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -831,10 +824,12 @@ C           /* Check correct error returned even when nothing to put */
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-            ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
-     +          var_rank(i) .ge. 1 .and.
-     +          var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+            err = nfmpi_inq_format(ncid, format)
+            if (err .ne. NF_NOERR)
+     +          call error('error in nfmpi_inq_format')
+
+            ! skip zero-length write requests
+            if (format .EQ. NF_FORMAT_NETCDF4) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -971,15 +966,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         logical inRange3
         integer roll, index2indexes
 
-        integer ncid
-        integer d
-        integer i
-        integer j
-        integer k
-        integer m
-        integer err, flags
-        integer nels
-        integer nslabs
+        integer i, j, k, m, d, err, flags, ncid, nels, nslabs, format
         integer nstarts        !/* number of different starts */
         integer*8 start(MAX_RANK)
         integer*8 edge(MAX_RANK)
@@ -994,9 +981,9 @@ define([TEST_NFMPI_PUT_VARS],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1084,10 +1071,12 @@ define([TEST_NFMPI_PUT_VARS],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-            ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
-     +          var_rank(i) .ge. 1 .and.
-     +          var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+            err = nfmpi_inq_format(ncid, format)
+            if (err .ne. NF_NOERR)
+     +          call error('error in nfmpi_inq_format')
+
+            ! skip zero-length write requests
+            if (format .EQ. NF_FORMAT_NETCDF4) goto 99
 
 C           /* Check correct error returned even when nothing to put */
             do 4, j = 1, var_rank(i)
@@ -1261,15 +1250,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         double precision hash_$1
         logical inRange3
 
-        integer ncid
-        integer d
-        integer i
-        integer j
-        integer k
-        integer m
-        integer err, flags
-        integer nels
-        integer nslabs
+        integer i, j, k, m, d, err, flags, nels, nslabs, ncid, format
         integer nstarts        !/* number of different starts */
         integer*8 start(MAX_RANK)
         integer*8 edge(MAX_RANK)
@@ -1285,9 +1266,9 @@ define([TEST_NFMPI_PUT_VARM],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
+        integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1375,10 +1356,12 @@ define([TEST_NFMPI_PUT_VARM],dnl
 !
 ! A bug in HDF5 that fails zero-length write requests in collective mode
 !
-            ! skip record variables for zero-length write requests
-            if (PNETCDF_DRIVER_NETCDF4 .EQ. 1 .AND.
-     +          var_rank(i) .ge. 1 .and.
-     +          var_dimid(var_rank(i),i) .eq. RECDIM) goto 99
+            err = nfmpi_inq_format(ncid, format)
+            if (err .ne. NF_NOERR)
+     +          call error('error in nfmpi_inq_format')
+
+            ! skip zero-length write requests
+            if (format .EQ. NF_FORMAT_NETCDF4) goto 99
 
 C           /* Check correct error returned even when nothing to put */
             do 4, j = 1, var_rank(i)
