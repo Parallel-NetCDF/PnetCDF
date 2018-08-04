@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
     err = ncmpi_inq_format(ncid, &format); CHECK_ERR
     if (format != NC_FORMAT_NETCDF4) {
-        printf("Error at line %d in %s: expecting CDF-1 format for file %s but got %d\n",
+        printf("Error at line %d in %s: expecting NetCDF-4 format for file %s but got %d\n",
                __LINE__,__FILE__,filename,format);
         nerrs++;
     }
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
     err = ncmpi_inq_file_format(filename, &format); CHECK_ERR
     if (format != NC_FORMAT_NETCDF4) {
-        printf("Error at line %d in %s: expecting CDF-1 format for file %s but got %d\n",
+        printf("Error at line %d in %s: expecting NetCDF-4 format for file %s but got %d\n",
                __LINE__,__FILE__,filename,format);
         nerrs++;
     }
