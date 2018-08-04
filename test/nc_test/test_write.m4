@@ -1721,7 +1721,7 @@ edge1:
                 err = dbl2nc(value, var_type[i], p);
                 IF (err != NC_NOERR)
                     error("error in dbl2nc");
-                p += nctypelen(var_type[i]);
+                p += sizeof_nctype(var_type[i]);
             }
             err = PutVara(ncid, i, start, edge, buf, nels, datatype);
             IF (err != NC_NOERR)
@@ -1965,7 +1965,7 @@ edge1:
                     err = dbl2nc(value, var_type[i], p);
                     IF (err != NC_NOERR)
                         error("error in dbl2nc");
-                    p += nctypelen(var_type[i]);
+                    p += sizeof_nctype(var_type[i]);
                 }
                 err = PutVars(ncid, i, index, count, stride, buf, nels, datatype);
                 IF (err != NC_NOERR)
@@ -2162,8 +2162,8 @@ edge1:
 
         if (var_rank[i] > 0) {
             int jj = var_rank[i] - 1;
-            imap[jj] = nctypelen(var_type[i]); /*  netCDF considers imap in bytes */
-            imap[jj] = 1;                      /* PnetCDF considers imap in elements */
+            imap[jj] = sizeof_nctype(var_type[i]); /*  netCDF considers imap in bytes */
+            imap[jj] = 1;                          /* PnetCDF considers imap in elements */
             for (; jj > 0; jj--)
                 imap[jj-1] = imap[jj] * (PTRDType)var_shape[i][jj];
         }
@@ -2177,7 +2177,7 @@ edge1:
             err = dbl2nc(value, var_type[i], p);
             IF (err != NC_NOERR)
                 error("error in dbl2nc");
-            p += nctypelen(var_type[i]);
+            p += sizeof_nctype(var_type[i]);
         }
 
         /* Choose a random point dividing each dim into 2 parts */
@@ -2224,7 +2224,7 @@ edge1:
                     }
  */
                     j = fromMixedBase(var_rank[i], index, var_shape[i]);
-                    p = (char *) buf + (int)j * nctypelen(var_type[i]);
+                    p = (char *) buf + (int)j * sizeof_nctype(var_type[i]);
                     ifdef(`PNETCDF', `for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= count[j];')
                     err = PutVarm(ncid, i, index, count, stride, imap2, p, bufcount, datatype);
                 }
@@ -2475,7 +2475,7 @@ TestFunc(put_att)(AttVarArgs)
                 err = dbl2nc(value, datatype, p);
                 IF (err != NC_NOERR)
                     error("error in dbl2nc");
-                p += nctypelen(datatype);
+                p += sizeof_nctype(datatype);
             }
             err = APIFunc(put_att)(ncid, varid, name, datatype, length, buf);
             IF (err != NC_NOERR)

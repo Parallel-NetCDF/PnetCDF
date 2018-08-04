@@ -122,7 +122,7 @@ dbls2ncs(int nels, int var_type, double *inBuf, void *outBuf)
             default:
                 return NC_EBADTYPE;
         }
-        p += nctypelen(var_type);
+        p += sizeof_nctype(var_type);
     }
     return NC_NOERR;
 }
