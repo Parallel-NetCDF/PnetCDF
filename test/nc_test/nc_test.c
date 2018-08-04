@@ -75,6 +75,10 @@ usage(char *progname)
     error("   [-r] Just do read-only tests\n" );
     error("   [-v] Verbose mode\n" );
     error("   [-2] (with -c) create file with CDF-2 format\n" );
+    error("   [-5] (with -c) create file with CDF-5 format\n" );
+#ifdef ENABLE_NETCDF4
+    error("   [-4] (with -c) create file with NetCDF-4 format\n" );
+#endif
     error("   [-n <MAX_NMPT>] max. number of messages per test (Default: 8)\n");
     error("   [-d directory] directory for storing input/output files\n");
 }
@@ -174,8 +178,17 @@ main(int argc, char *argv[])
 	case 'h':
 	case '?':
 	  usage(argv[0]);
+          MPI_Finalize();
 	  return 1;
       }
+
+#ifndef ENABLE_NETCDF4
+    if (cdf_format == 4) {
+        printf("Error: NetCDF-4 support is not enabled at configure time\n");
+        MPI_Finalize();
+        return 1;
+    }
+#endif
 
     MPI_Info_create(&info);
     /* MPI_Info_set(info, "romio_pvfs2_posix_write", "enable"); */
