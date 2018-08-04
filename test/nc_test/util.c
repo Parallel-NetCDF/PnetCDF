@@ -1080,10 +1080,8 @@ s_nc_type(nc_type xtype)
     return "";
 }
 
-#ifndef ENABLE_NETCDF4
-/* NetCDF contains nctypelen, do not define if using nc4 */
 int
-nctypelen(nc_type xtype)
+sizeof_nctype(nc_type xtype)
 {
     switch(xtype){
         case NC_BYTE :
@@ -1100,7 +1098,6 @@ nctypelen(nc_type xtype)
         default:         return -1;
     }
 }
-#endif
 
 MPI_Datatype
 nc_mpi_type(nc_type xtype)

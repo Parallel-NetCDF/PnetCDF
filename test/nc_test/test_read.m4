@@ -1253,7 +1253,7 @@ ifdef(`PNETCDF',`dnl
             for (j = 0; j < nels; j++) {
                 double got;
                 char *p = (char *) buf;
-                p += j * (IntType)nctypelen(var_type[i]);
+                p += j * (IntType)sizeof_nctype(var_type[i]);
                 err = nc2dbl( var_type[i], p, & got );
                 IF (err) error("error in nc2dbl");
                 err = toMixedBase(j, var_rank[i], edge, index);
@@ -1466,7 +1466,7 @@ ifdef(`PNETCDF',`dnl
 
                 for (j = 0; j < nels; j++) {
                     p = (char *) buf;
-                    p += j * (IntType)nctypelen(var_type[i]);
+                    p += j * (IntType)sizeof_nctype(var_type[i]);
                     err = nc2dbl( var_type[i], p, & got );
                     IF (err != NC_NOERR)
                         error("error in nc2dbl");
@@ -1648,7 +1648,7 @@ ifdef(`PNETCDF',`dnl
 
         if (var_rank[i] > 0) {
             int jj = var_rank[i] - 1;
-            /* imap[jj] = nctypelen(var_type[i]); */
+            /* imap[jj] = sizeof_nctype(var_type[i]); */
             imap[jj] = 1; /* in numbers of elements */
             for (; jj > 0; jj--)
                 imap[jj-1] = imap[jj] * (PTRDType)var_shape[i][jj];
@@ -1700,7 +1700,7 @@ ifdef(`PNETCDF',`dnl
                     }
  */
                     j = fromMixedBase(var_rank[i], index, var_shape[i]);
-                    p = (char *) buf + j * (IntType)nctypelen(var_type[i]);
+                    p = (char *) buf + j * (IntType)sizeof_nctype(var_type[i]);
                     err = GetVarm(ncid, i, index, count, stride, imap2, p, nels, datatype);
                 }
                 IF (err != NC_NOERR)
@@ -1730,7 +1730,7 @@ ifdef(`PNETCDF',`dnl
                 }
                 ELSE_NOK
             }
-            p += nctypelen(var_type[i]);
+            p += sizeof_nctype(var_type[i]);
         }
     }
     err = APIFunc(close)(ncid);
@@ -1781,7 +1781,7 @@ TestFunc(get_att)(AttVarArgs)
                     ndx[0] = k;
                     expect = hash(ATT_TYPE(i,j), -1, ndx);
                     p = (char *) buf;
-                    p += k * (IntType)nctypelen(ATT_TYPE(i,j));
+                    p += k * (IntType)sizeof_nctype(ATT_TYPE(i,j));
                     err = nc2dbl( ATT_TYPE(i,j), p, &got );
                     IF (err != NC_NOERR)
                         error("error in nc2dbl");

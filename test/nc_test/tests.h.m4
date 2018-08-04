@@ -464,7 +464,7 @@ extern void
 check_file(char *filename, int numGatts, int numVars);
 
 extern int
-nctypelen(nc_type type);
+sizeof_nctype(nc_type type);
 
 extern MPI_Datatype
 nc_mpi_type(nc_type type);
