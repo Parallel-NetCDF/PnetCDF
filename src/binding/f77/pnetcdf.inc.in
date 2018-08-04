@@ -121,51 +121,69 @@
       integer nf_write
       integer nf_clobber
       integer nf_noclobber
-      integer nf_fill
-      integer nf_nofill
       integer nf_lock
       integer nf_share
-      integer nf_netcdf4
-      integer nf_classic_model
-      integer nf_64bit_offset
+
+      parameter (nf_nowrite   = 0)
+      parameter (nf_write     = 1)
+      parameter (nf_clobber   = 0)
+      parameter (nf_noclobber = 4)
+      parameter (nf_lock      = 1024)
+      parameter (nf_share     = 2048)
+
       integer nf_32bit
+      integer nf_classic_model
+      integer nf_cdf2
+      integer nf_64bit_offset
+      integer nf_cdf5
       integer nf_64bit_data
-      integer nf_sizehint_default
-      integer nf_align_chunk
+      integer nf_netcdf4
+
+      parameter (nf_32bit         = 16777216)
+      parameter (nf_classic_model = 256)
+      parameter (nf_cdf2          = 512)
+      parameter (nf_64bit_offset  = nf_cdf2)
+      parameter (nf_cdf5          = 32)
+      parameter (nf_64bit_data    = nf_cdf5)
+      parameter (nf_netcdf4       = 4096)
+
+      integer nf_mpiio
+      integer nf_pnetcdf
+
+      parameter (nf_mpiio   = 8192)
+      parameter (nf_pnetcdf = nf_mpiio)
+
       integer nf_format_classic
-      integer nf_format_64bit
-      integer nf_format_64bit_data
-      integer nf_format_64bit_offset
       integer nf_format_cdf2
+      integer nf_format_64bit
+      integer nf_format_64bit_offset
+      integer nf_format_cdf5
+      integer nf_format_64bit_data
       integer nf_format_netcdf4
       integer nf_format_netcdf4_classic
-      integer nf_format_cdf5
       integer nf_format_unknown
 
-      parameter (nf_nowrite = 0)
-      parameter (nf_write = 1)
-      parameter (nf_clobber = 0)
-      parameter (nf_noclobber = 4)
-      parameter (nf_fill = 0)
-      parameter (nf_nofill = 256)
-      parameter (nf_lock = 1024)
-      parameter (nf_share = 2048)
-      parameter (nf_netcdf4 = 4096)
-      parameter (nf_classic_model = 256)
-      parameter (nf_64bit_offset = 512)
-      parameter (nf_64bit_data = 32)
-      parameter (nf_32bit = 16777216)
-      parameter (nf_sizehint_default = 0)
-      parameter (nf_align_chunk = -1)
-      parameter (nf_format_classic = 1)
-      parameter (nf_format_netcdf4 = 3)
+      parameter (nf_format_classic         = 1)
+      parameter (nf_format_cdf2            = 2)
+      parameter (nf_format_64bit           = nf_format_cdf2)
+      parameter (nf_format_64bit_offset    = nf_format_cdf2)
+      parameter (nf_format_cdf5            = 5)
+      parameter (nf_format_64bit_data      = nf_format_cdf5)
+      parameter (nf_format_netcdf4         = 3)
       parameter (nf_format_netcdf4_classic = 4)
-      parameter (nf_format_cdf2 = 2)
-      parameter (nf_format_cdf5 = 5)
-      parameter (nf_format_64bit = nf_format_cdf2)
-      parameter (nf_format_64bit_offset = nf_format_cdf2)
-      parameter (nf_format_64bit_data = nf_format_cdf5)
-      parameter (nf_format_unknown = -1)
+      parameter (nf_format_unknown         = -1)
+
+      integer nf_fill
+      integer nf_nofill
+
+      parameter (nf_fill   = 0)
+      parameter (nf_nofill = 256)
+
+      integer nf_sizehint_default
+      integer nf_align_chunk
+
+      parameter (nf_sizehint_default = 0)
+      parameter (nf_align_chunk      = -1)
 
 !
 ! size argument for defining an unlimited dimension:
