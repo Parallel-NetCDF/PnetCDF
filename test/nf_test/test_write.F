@@ -1768,7 +1768,7 @@ C *    close file & create again for test using attribute _FillValue
      +       'Error calling nf90mpi_inq_default_format()')
       end if
 
-      if (nc_fmt .eq. NC_FORMAT_NETCDF4) then
+      if (nc_fmt .eq. NF_FORMAT_NETCDF4) then
           nformats = 4 ! test CDF-1, CDF-2, CDF-5 and NetCDF-4
       else
           nformats = 3 ! test CDF-1, CDF-2, and CDF-5
