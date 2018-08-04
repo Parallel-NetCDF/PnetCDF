@@ -24,8 +24,10 @@ C implementation of the netCDF library.
         call error('       nf_test [-h] Print help' )
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
-        call error('   [-4] test NetCDF-4 format' )
         call error('   [-5] test CDF-5 format' )
+#ifdef ENABLE_NETCDF4
+        call error('   [-4] test NetCDF-4 format' )
+#endif
         call error('   [-r] Just do read-only tests' )
         call error(
      +  '   [-d directory] directory for storing input/output files' )
@@ -495,6 +497,15 @@ C implementation of the netCDF library.
                 end if
             end if
 1       continue
+
+#ifndef ENABLE_NETCDF4
+        if (cdf_format .EQ. 4) then
+            call error(
+     +      "Error: NetCDF-4 support is not enabled at configure time")
+            call MPI_Finalize(err)
+            stop 1
+        endif
+#endif
 
         numGatts = 6
         numVars  = 136
