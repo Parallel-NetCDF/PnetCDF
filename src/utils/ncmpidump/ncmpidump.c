@@ -395,7 +395,7 @@ do_ncdump(const char *path, struct fspec* specp)
             Printf ("%s file format: CDF-2 (large file)\n", specp->name);
 #ifdef ENABLE_NETCDF4
         else if (NC_mode == NC_NETCDF4)
-            Printf ("%s file format: CDF-4\n", specp->name);
+            Printf ("%s file format: NetCDF-4\n", specp->name);
 #endif
         else
             Printf ("%s file format: CDF-1\n", specp->name);
@@ -415,7 +415,7 @@ do_ncdump(const char *path, struct fspec* specp)
             Printf ("// file format: CDF-2 (large file)\n");
 #ifdef ENABLE_NETCDF4
         else if (NC_mode == NC_NETCDF4)
-            Printf ("// file format: CDF-4\n");
+            Printf ("// file format: NetCDF-4\n");
 #endif
         else
             Printf ("// file format: CDF-1\n");
