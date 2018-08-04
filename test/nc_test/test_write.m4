@@ -1542,7 +1542,7 @@ ifdef(`PNETCDF',`dnl
 int
 TestFunc(put_vara)(VarArgs)
 {
-    int d, i, k, err, nslabs, ncid, nok=0;
+    int d, i, k, err, nslabs, ncid, nok=0, format;
     IntType j, nels;
     IntType start[MAX_RANK];
     IntType edge[MAX_RANK];
@@ -1660,6 +1660,13 @@ ifdef(`PNETCDF',`dnl
         /* Check correct error returned when nothing to put, when edge[*]==0 */
         for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
+        /* A bug in HDF5 that fails zero-length write requests in collective
+         * mode. skip record variables for zero-length write requests
+         */
+        err = ncmpi_inq_format(ncid, &format);
+        IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+        if (format == NC_FORMAT_NETCDF4) goto edge1;
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
             start[j] = var_shape[i][j];
@@ -1679,6 +1686,7 @@ ifdef(`PNETCDF',`dnl
             ELSE_NOK
             start[j] = 0;
         }
+edge1:
         for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
 
         /* Choose a random point dividing each dim into 2 parts */
@@ -1745,7 +1753,7 @@ ifdef(`PNETCDF',`dnl
 int
 TestFunc(put_vars)(VarArgs)
 {
-    int ncid, d, i, k, err, nslabs, nok=0;
+    int ncid, d, i, k, err, nslabs, nok=0, format;
     PTRDType nstarts;        /* number of different starts */
     IntType j, m, nels;
     IntType start[MAX_RANK];
@@ -1875,6 +1883,13 @@ ifdef(`PNETCDF',`dnl
         /* Check correct error returned even when nothing to put */
         for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
+        /* A bug in HDF5 that fails zero-length write requests in collective
+         * mode. skip record variables for zero-length write requests
+         */
+        err = ncmpi_inq_format(ncid, &format);
+        IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+        if (format == NC_FORMAT_NETCDF4) goto edge1;
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
             start[j] = var_shape[i][j];
@@ -1894,6 +1909,7 @@ ifdef(`PNETCDF',`dnl
             ELSE_NOK
             start[j] = 0;
         }
+edge1:
         for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
 
         /* Choose a random point dividing each dim into 2 parts */
@@ -1983,12 +1999,7 @@ ifdef(`PNETCDF',`dnl
 int
 TestFunc(put_varm)(VarArgs)
 {
-    int ncid, nok=0;
-    int i;
-    int k;
-    int err;
-    int nslabs;
-    IntType j, m;
+    int i, j, k, m, err, nslabs, ncid, nok=0, format;
     PTRDType nstarts;        /* number of different starts */
     IntType start[MAX_RANK];
     IntType edge[MAX_RANK];
@@ -2120,6 +2131,13 @@ ifdef(`PNETCDF',`dnl
         /* Check correct error returned even when nothing to put */
         for (j = 0; j < var_rank[i]; j++) edge[j] = 0;
 
+        /* A bug in HDF5 that fails zero-length write requests in collective
+         * mode. skip record variables for zero-length write requests
+         */
+        err = ncmpi_inq_format(ncid, &format);
+        IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+        if (format == NC_FORMAT_NETCDF4) goto edge1;
+
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
             start[j] = var_shape[i][j];
@@ -2139,6 +2157,7 @@ ifdef(`PNETCDF',`dnl
             ELSE_NOK
             start[j] = 0;
         }
+edge1:
         for (j = 0; j < var_rank[i]; j++) edge[j] = 1;
 
         if (var_rank[i] > 0) {

@@ -88,10 +88,10 @@ main(int argc, char **argv) {
    printf("*** Creating large file %s...", filename);
 
 #ifdef ENABLE_NETCDF4
-    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    /* Test NetCDF 4 first as ncvalidator checks only classic files */
     /* enter define mode */
     stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_NETCDF4,
-        MPI_INFO_NULL, &ncid);
+                        MPI_INFO_NULL, &ncid);
     check_err(stat,__LINE__,__FILE__);
 
     /* define dimensions */
@@ -119,6 +119,7 @@ main(int argc, char **argv) {
     x_dims[1] = n_dim;
     stat = ncmpi_def_var(ncid, "x", NC_BYTE, RANK_x, x_dims, &x_id);
     check_err(stat,__LINE__,__FILE__);
+
     /* don't initialize variables with fill values */
     stat = ncmpi_set_fill(ncid, NC_NOFILL, 0);
     check_err(stat,__LINE__,__FILE__);
@@ -134,19 +135,20 @@ main(int argc, char **argv) {
         static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
         static MPI_Offset x_start[RANK_x] = {0, 0};
         static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for(rec=0; rec<NUMRECS; rec++) {
-        var1_start[0] = rec;
-        x_start[0] = rec;
-        for(i=0; i<I_LEN; i++) {
-            for(j=0; j<J_LEN; j++) {
-            for (k=0; k<K_LEN; k++) {
-                var1[j][k] = n++;
+        for (rec=0; rec<NUMRECS; rec++) {
+            var1_start[0] = rec;
+            x_start[0] = rec;
+            for (i=0; i<I_LEN; i++) {
+                for (j=0; j<J_LEN; j++) {
+                    for (k=0; k<K_LEN; k++) {
+                        var1[j][k] = n++;
+                    }
+                }
+                var1_start[1] = i;
+                stat = ncmpi_put_vara_schar_all(ncid, var1_id, var1_start,
+                                                var1_count, &var1[0][0]);
+                check_err(stat,__LINE__,__FILE__);
             }
-            }
-            var1_start[1] = i;
-            stat = ncmpi_put_vara_schar_all(ncid, var1_id, var1_start, var1_count, &var1[0][0]);
-            check_err(stat,__LINE__,__FILE__);
-        }
         }
         stat = ncmpi_put_vara_schar_all(ncid, x_id, x_start, x_count, x);
         check_err(stat,__LINE__,__FILE__);
@@ -159,7 +161,7 @@ main(int argc, char **argv) {
     printf("*** Reading large file %s...", filename);
 
     stat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE,
-            MPI_INFO_NULL, &ncid);
+                      MPI_INFO_NULL, &ncid);
     check_err(stat,__LINE__,__FILE__);
 
     {			/* read var1 */
@@ -169,29 +171,30 @@ main(int argc, char **argv) {
         static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
         static MPI_Offset x_start[RANK_x] = {0, 0};
         static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for(rec=0; rec<NUMRECS; rec++) {
-        var1_start[0] = rec;
-        x_start[0] = rec;
-        for(i=0; i<I_LEN; i++) {
-            var1_start[1] = i;
-            stat = ncmpi_get_vara_schar_all(ncid, var1_id, var1_start, var1_count, &var1[0][0]);
-            check_err(stat,__LINE__,__FILE__);
-            for(j=0; j<J_LEN; j++) {
-            for (k=0; k<K_LEN; k++) {
-                if (var1[j][k] != (signed char) n) {
-                printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
-                    "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
-                nerrs++;
+        for (rec=0; rec<NUMRECS; rec++) {
+            var1_start[0] = rec;
+            x_start[0] = rec;
+            for (i=0; i<I_LEN; i++) {
+                var1_start[1] = i;
+                stat = ncmpi_get_vara_schar_all(ncid, var1_id, var1_start,
+                                                var1_count, &var1[0][0]);
+                check_err(stat,__LINE__,__FILE__);
+                for (j=0; j<J_LEN; j++) {
+                    for (k=0; k<K_LEN; k++) {
+                        if (var1[j][k] != (signed char) n) {
+                            printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
+                            "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
+                            nerrs++;
+                        }
+                        n++;
+                    }
                 }
-                n++;
             }
+            ncmpi_get_vara_schar_all(ncid, x_id, x_start, x_count, x);
+            if (x[0] != 42 || x[1] != 21) {
+                printf("Error on read, x[] = %d, %d\n", x[0], x[1]);
+                nerrs++;
             }
-        }
-        ncmpi_get_vara_schar_all(ncid, x_id, x_start, x_count, x);
-        if(x[0] != 42 || x[1] != 21) {
-            printf("Error on read, x[] = %d, %d\n", x[0], x[1]);
-            nerrs++;
-        }
         }
     }
     stat = ncmpi_close(ncid);
@@ -199,9 +202,8 @@ main(int argc, char **argv) {
 #endif
 
     /* Test traditional format */
-    /* enter define mode */
     stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_64BIT_DATA,
-        MPI_INFO_NULL, &ncid);
+                        MPI_INFO_NULL, &ncid);
     check_err(stat,__LINE__,__FILE__);
 
     /* define dimensions */
@@ -229,6 +231,7 @@ main(int argc, char **argv) {
     x_dims[1] = n_dim;
     stat = ncmpi_def_var(ncid, "x", NC_BYTE, RANK_x, x_dims, &x_id);
     check_err(stat,__LINE__,__FILE__);
+
     /* don't initialize variables with fill values */
     stat = ncmpi_set_fill(ncid, NC_NOFILL, 0);
     check_err(stat,__LINE__,__FILE__);
@@ -244,19 +247,20 @@ main(int argc, char **argv) {
         static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
         static MPI_Offset x_start[RANK_x] = {0, 0};
         static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for(rec=0; rec<NUMRECS; rec++) {
-        var1_start[0] = rec;
-        x_start[0] = rec;
-        for(i=0; i<I_LEN; i++) {
-            for(j=0; j<J_LEN; j++) {
-            for (k=0; k<K_LEN; k++) {
-                var1[j][k] = n++;
+        for (rec=0; rec<NUMRECS; rec++) {
+            var1_start[0] = rec;
+            x_start[0] = rec;
+            for (i=0; i<I_LEN; i++) {
+                for (j=0; j<J_LEN; j++) {
+                    for (k=0; k<K_LEN; k++) {
+                        var1[j][k] = n++;
+                    }
+                }
+                var1_start[1] = i;
+                stat = ncmpi_put_vara_schar_all(ncid, var1_id, var1_start,
+                                                var1_count, &var1[0][0]);
+                check_err(stat,__LINE__,__FILE__);
             }
-            }
-            var1_start[1] = i;
-            stat = ncmpi_put_vara_schar_all(ncid, var1_id, var1_start, var1_count, &var1[0][0]);
-            check_err(stat,__LINE__,__FILE__);
-        }
         }
         stat = ncmpi_put_vara_schar_all(ncid, x_id, x_start, x_count, x);
         check_err(stat,__LINE__,__FILE__);
@@ -269,7 +273,7 @@ main(int argc, char **argv) {
     printf("*** Reading large file %s...", filename);
 
     stat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE,
-            MPI_INFO_NULL, &ncid);
+                      MPI_INFO_NULL, &ncid);
     check_err(stat,__LINE__,__FILE__);
 
     {			/* read var1 */
@@ -279,38 +283,39 @@ main(int argc, char **argv) {
         static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
         static MPI_Offset x_start[RANK_x] = {0, 0};
         static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for(rec=0; rec<NUMRECS; rec++) {
-        var1_start[0] = rec;
-        x_start[0] = rec;
-        for(i=0; i<I_LEN; i++) {
-            var1_start[1] = i;
-            stat = ncmpi_get_vara_schar_all(ncid, var1_id, var1_start, var1_count, &var1[0][0]);
-            check_err(stat,__LINE__,__FILE__);
-            for(j=0; j<J_LEN; j++) {
-            for (k=0; k<K_LEN; k++) {
-                if (var1[j][k] != (signed char) n) {
-                printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
-                    "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
-                nerrs++;
+        for (rec=0; rec<NUMRECS; rec++) {
+            var1_start[0] = rec;
+            x_start[0] = rec;
+            for (i=0; i<I_LEN; i++) {
+                var1_start[1] = i;
+                stat = ncmpi_get_vara_schar_all(ncid, var1_id, var1_start,
+                                                var1_count, &var1[0][0]);
+                check_err(stat,__LINE__,__FILE__);
+                for (j=0; j<J_LEN; j++) {
+                    for (k=0; k<K_LEN; k++) {
+                        if (var1[j][k] != (signed char) n) {
+                            printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
+                            "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
+                            nerrs++;
+                        }
+                        n++;
+                    }
                 }
-                n++;
             }
+            ncmpi_get_vara_schar_all(ncid, x_id, x_start, x_count, x);
+            if (x[0] != 42 || x[1] != 21) {
+                printf("Error on read, x[] = %d, %d\n", x[0], x[1]);
+                nerrs++;
             }
-        }
-        ncmpi_get_vara_schar_all(ncid, x_id, x_start, x_count, x);
-        if(x[0] != 42 || x[1] != 21) {
-            printf("Error on read, x[] = %d, %d\n", x[0], x[1]);
-            nerrs++;
-        }
         }
     }
     stat = ncmpi_close(ncid);
     check_err(stat,__LINE__,__FILE__);
 
-   printf("ok\n");
-   printf("*** Tests successful!\n");
+    printf("ok\n");
+    printf("*** Tests successful!\n");
 
 fn_exit:
-   MPI_Finalize();
-   return (nerrs > 0);
+    MPI_Finalize();
+    return (nerrs > 0);
 }

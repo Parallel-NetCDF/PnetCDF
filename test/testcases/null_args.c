@@ -29,7 +29,7 @@
 int main(int argc, char **argv)
 {
     char filename[256];
-    int err, nerrs=0, ncid, dimid[2], varid, format;
+    int err, nerrs=0, ncid, dimid[2], varid;
     int nprocs, rank, buf[100];
     MPI_Offset start[2], count[2], stride[2], imap[2];
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     }
 
 #ifdef ENABLE_NETCDF4
-    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    /* Test NetCDF 4 first as ncvalidator checks only classic formats */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_NETCDF4, MPI_INFO_NULL, &ncid);
     EXP_ERR_MSG(NC_NOERR, "create")
     err = ncmpi_def_dim(ncid, "Y", 100, &dimid[0]);
@@ -68,10 +68,10 @@ int main(int argc, char **argv)
     err = ncmpi_begin_indep_data(ncid);
     EXP_ERR_MSG(NC_NOERR,"begin_indep_data")
 
-    start[0] =  start[1] = 0;
-    count[0] =  count[1] = 1;
+     start[0] =  start[1] = 0;
+     count[0] =  count[1] = 1;
     stride[0] = stride[1] = 1;
-    imap[0] =   imap[1] = 1;
+      imap[0] =   imap[1] = 1;
 
     memset(buf, 0, 100*sizeof(int));
 
@@ -261,7 +261,7 @@ int main(int argc, char **argv)
     EXP_ERR_MSG(NC_NOERR, "close")
 #endif
 
-    /* Test traditional format */
+    /* Test classic format */
     err = ncmpi_create(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid);
     EXP_ERR_MSG(NC_NOERR, "create")
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]);
@@ -276,10 +276,10 @@ int main(int argc, char **argv)
     err = ncmpi_begin_indep_data(ncid);
     EXP_ERR_MSG(NC_NOERR,"begin_indep_data")
 
-    start[0] =  start[1] = 0;
-    count[0] =  count[1] = 1;
+     start[0] =  start[1] = 0;
+     count[0] =  count[1] = 1;
     stride[0] = stride[1] = 1;
-    imap[0] =   imap[1] = 1;
+      imap[0] =   imap[1] = 1;
 
     memset(buf, 0, 100*sizeof(int));
 

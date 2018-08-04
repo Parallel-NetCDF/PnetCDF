@@ -24,6 +24,10 @@ if IS_BIGENDIAN
    # AM_FCFLAGS += $(FC_DEFINE)WORDS_BIGENDIAN
 endif
 
+if ENABLE_LARGE_REQ
+   AM_CFLAGS += -DENABLE_LARGE_REQ
+endif
+
 TESTPROGRAMS = large_files \
                large_var \
                large_dims_vars_attrs \
@@ -63,10 +67,8 @@ TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
 
 if BUILD_DRIVER_BB
-if ENABLE_LARGE_REQ
    TESTBB = 1
    TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
-endif
 endif
 
 TEST_EXTENSIONS = .sh

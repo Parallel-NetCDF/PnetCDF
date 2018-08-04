@@ -1403,19 +1403,9 @@ if test "x$enable_netcdf4" = "xyes" ; then
       LIBS="-lnetcdf $LIBS"
    fi
 
-   have_hdf5=no
+   AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
    AC_MSG_CHECKING(HDF5 library parallel I/O feature)
-   AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [have_hdf5=yes], [have_hdf5=no])
-   if test "x${have_hdf5}" = xyes; then
-      AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
-   fi
-
-   have_netcdf4=no
-   AC_MSG_CHECKING(NetCDF-4 library parallel I/O feature)
-   AC_SEARCH_LIBS([nc_create_par], [netcdf], [have_netcdf4=yes], [have_netcdf4=no])
-   if test "x${have_netcdf4}" = xyes; then
-      AC_CHECK_HEADERS([netcdf.h netcdf_par.h], [], [have_netcdf4=no])
-   fi
+   AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [], [have_hdf5=no])
 
    if test "x${have_hdf5}" = xno; then
       AC_MSG_ERROR([
@@ -1429,6 +1419,21 @@ if test "x$enable_netcdf4" = "xyes" ; then
       parallel support. Check 'config.log' for more information.
       Stopping ...
       ------------------------------------------------------------])
+   fi
+
+   AC_CHECK_HEADERS([netcdf.h netcdf_par.h netcdf_meta.h],
+                    [have_netcdf4=yes], [have_netcdf4=no])
+
+   if test "x${have_netcdf4}" = xyes; then
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+#include <netcdf_meta.h>
+#if !defined(NC_HAS_HDF5) || NC_HAS_HDF5 == 0
+      choke me
+#endif
+#if !defined(NC_HAS_PARALLEL) || NC_HAS_PARALLEL == 0
+      choke me
+#endif
+      ]])], [], [have_netcdf4=no])
    fi
 
    if test "x${have_netcdf4}" = xno; then

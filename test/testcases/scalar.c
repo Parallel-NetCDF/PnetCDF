@@ -20,7 +20,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int err, nerrs=0, rank, nprocs, ncid, varid, format;
+    int err, nerrs=0, rank, nprocs, ncid, varid;
     MPI_Offset start[1], count[1], stride[1], imap[1];
     int   buf;
     char filename[256];
@@ -50,9 +50,9 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef ENABLE_NETCDF4
-    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    /* Test NetCDF-4 first as ncvalidator checks only classic formats */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_NETCDF4,
-                    MPI_INFO_NULL, &ncid); CHECK_ERR
+                       MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define a scalar variable of integer type */
     err = ncmpi_def_var(ncid, "scalar_var", NC_INT, 0, NULL, &varid); CHECK_ERR
@@ -109,9 +109,9 @@ int main(int argc, char **argv)
     err = ncmpi_close(ncid); CHECK_ERR
 #endif
 
-    /* Test traditional format */
+    /* Test classic format */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA,
-                        MPI_INFO_NULL, &ncid); CHECK_ERR
+                       MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define a scalar variable of integer type */
     err = ncmpi_def_var(ncid, "scalar_var", NC_INT, 0, NULL, &varid); CHECK_ERR
