@@ -67,7 +67,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
              $(NC_FILES)
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh # redef-good.ncdump
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh gzip_example.nc
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
