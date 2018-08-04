@@ -49,8 +49,8 @@ CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 if ENABLE_NETCDF4
-TESTNC4 = 1
-TESTS_ENVIRONMENT += TESTNC4=1 ; export TESTNC4;
+TESTNETCDF4 = 1
+TESTS_ENVIRONMENT += TESTNETCDF4=1 ; export TESTNETCDF4;
 CLEANFILES += $(TESTOUTDIR)/pres_temp_4D_nc4.nc
 endif
 

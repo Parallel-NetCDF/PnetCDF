@@ -14,7 +14,7 @@ for j in 0 1 ; do
     # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
     ${TESTSEQRUN} $1              ${TESTOUTDIR}/pres_temp_4D.nc
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/pres_temp_4D.nc
-    if [ -n "${TESTNC4}" ]; then
+    if [ -n "${TESTNETCDF4}" ]; then
         ${TESTSEQRUN} $1              ${TESTOUTDIR}/pres_temp_4D_nc4.nc 4
         # Validator does not support nc4
         # ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/pres_temp_4D_nc4.nc 4
