@@ -1757,33 +1757,34 @@ C *    close file & create again for test using attribute _FillValue
       integer err, flags
       integer i
       integer version
-      integer old_format, format
+      integer nformats, old_format, nc_fmt
       integer*8 length  !/* of att */
       integer formats(4)
       integer nfmpi_get_file_version
 
-      err = nfmpi_inq_default_format(format);
+      err = nfmpi_inq_default_format(nc_fmt);
       if (err .ne. NF_NOERR) then
          call errori(
      +       'Error calling nf90mpi_inq_default_format()')
       end if
 
-      if (format .eq. 4) then
-          format = 4
+      if (nc_fmt .eq. NC_FORMAT_NETCDF4) then
+          nformats = 4 ! test CDF-1, CDF-2, CDF-5 and NetCDF-4
       else
-          format = 3
+          nformats = 3 ! test CDF-1, CDF-2, and CDF-5
       endif
-
-C     /* bad format */
-      err = nfmpi_set_default_format(10, old_format)
-      if (err .ne. NF_EINVAL)
-     +     call errore("bad default format: ", err)
       formats(1) = nf_format_classic
       formats(2) = nf_format_cdf2
       formats(3) = nf_format_cdf5
       formats(4) = nf_format_netcdf4
+
+C     /* bad format */
+      err = nfmpi_set_default_format(999, old_format)
+      if (err .ne. NF_EINVAL)
+     +     call errore("bad default format: ", err)
+
 C    /* Cycle through available formats. */
-      do 1 i=1, format
+      do 1 i=1, nformats
          err = nfmpi_set_default_format(formats(i), old_format)
          if (err .ne. NF_NOERR)
      +       call errore("setting classic format: ", err)
