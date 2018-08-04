@@ -34,8 +34,10 @@ TESTBB = 1
 TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
 endif
 
-TESTS = $(check_PROGRAMS)
-LOG_COMPILER = $(srcdir)/wrap_runs.sh
+TESTS = seq_runs.sh
+TEST_EXTENSIONS = .sh
+# LOG_COMPILER = $(srcdir)/wrap_runs.sh
+# SH_LOG_COMPILER =
 
 # Dependency: pres_temp_4D_rd reads the output file from pres_temp_4D_wr.
 # To support parallel "make -jN check", we add dependencies below and automake
@@ -43,7 +45,7 @@ LOG_COMPILER = $(srcdir)/wrap_runs.sh
 # listed in TEST_EXTENSIONS. $(EXEEXT) are appended to work around.
 pres_temp_4D_rd$(EXEEXT).log: pres_temp_4D_wr$(EXEEXT).log
 
-EXTRA_DIST = wrap_runs.sh
+EXTRA_DIST = seq_runs.sh
 
 CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
@@ -51,7 +53,6 @@ CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
 if ENABLE_NETCDF4
 TESTNETCDF4 = 1
 TESTS_ENVIRONMENT += TESTNETCDF4=1 ; export TESTNETCDF4;
-CLEANFILES += $(TESTOUTDIR)/pres_temp_4D_nc4.nc
 endif
 
 ../common/libtestutils.la:

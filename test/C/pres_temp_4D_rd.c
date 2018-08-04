@@ -67,7 +67,6 @@ int main(int argc, char **argv)
 {
     int rank, nprocs, ncid, pres_varid, temp_varid;
     int lat_varid, lon_varid;
-    int format = NC_FORMAT_CLASSIC;
 
     /* The start and count arrays will tell the netCDF library where to
       read our data. */
@@ -100,29 +99,25 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (argc > 1)
-        filename = argv[1];
-
-    if (argc > 2 && atoi(argv[2]) == 4)
-        format = NC_FORMAT_NETCDF4;
-
-    if (rank == 0) {
-        char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for reading file", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
-
-    /* Set format. */
-    err = ncmpi_set_default_format(format, NULL);
-    CHECK_ERR
+    if (argc > 1) filename = argv[1];
 
     /* Open the file. */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-    /* Get the varids of the latitude and longitude coordinate
-    * variables. */
+    if (rank == 0) {
+        char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
+        int format;
+        err = ncmpi_inq_format(ncid, &format); CHECK_ERR
+        if (format == NC_FORMAT_NETCDF4)
+            sprintf(cmd_str, "*** TESTING C   %s for reading NetCDF-4 file", basename(argv[0]));
+        else
+            sprintf(cmd_str, "*** TESTING C   %s for reading classic file", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str);
+        free(cmd_str);
+    }
+
+    /* Get the varids of the latitude and longitude coordinate variables. */
     err = ncmpi_inq_varid(ncid, LAT_NAME, &lat_varid);
     CHECK_ERR
     err = ncmpi_inq_varid(ncid, LON_NAME, &lon_varid);
@@ -139,13 +134,15 @@ int main(int argc, char **argv)
     /* Check the coordinate variable data. */
     for (lat = 0; lat < NLAT; lat++)
         if (lats[lat] != START_LAT + 5. * lat) {
-            printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__, __FILE__, START_LAT + 5. * lat, lats[lat]);
+            printf("\nError at line %d in %s: expect %e but got %e\n",
+            __LINE__, __FILE__, START_LAT + 5. * lat, lats[lat]);
             nerrs++;
             goto fn_exit;
         }
     for (lon = 0; lon < NLON; lon++)
         if (lons[lon] != START_LON + 5. * lon) {
-            printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__, __FILE__, START_LON + 5. * lon, lons[lon]);
+            printf("\nError at line %d in %s: expect %e but got %e\n",
+            __LINE__, __FILE__, START_LON + 5. * lon, lons[lon]);
             nerrs++;
             goto fn_exit;
         }

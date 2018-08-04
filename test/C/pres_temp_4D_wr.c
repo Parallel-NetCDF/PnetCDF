@@ -104,22 +104,25 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (argc > 1)
-        filename = argv[1];
+    if (argc > 1) filename = argv[1];
 
     if (argc > 2 && atoi(argv[2]) == 4)
         format = NC_FORMAT_NETCDF4;
 
     if (rank == 0) {
         char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for writing file", basename(argv[0]));
+        if (format == NC_FORMAT_NETCDF4)
+            sprintf(cmd_str, "*** TESTING C   %s for writing NetCDF-4 file", basename(argv[0]));
+        else
+            sprintf(cmd_str, "*** TESTING C   %s for writing classic file", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
         free(cmd_str);
     }
 
     /* Create some pretend data. If this wasn't an example program, we
-    * would have some real data to write, for example, model
-    * output. */
+     * would have some real data to write, for example, model
+     * output.
+     */
     for (lat = 0; lat < NLAT; lat++)
         lats[lat] = START_LAT + 5. * lat;
     for (lon = 0; lon < NLON; lon++)
