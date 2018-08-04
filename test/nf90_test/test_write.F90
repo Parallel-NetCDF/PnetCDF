@@ -368,7 +368,7 @@
     err = nf90mpi_enddef(ncid)
     if (err .ne. NF90_NOERR) &
         call errore('nf90mpi_enddef: ', err)
-    call put_vars4(ncid)
+    call put_vars(ncid)
     length = 8
     err = nf90mpi_def_dim(ncid, 'abc', length, dimid)
     if (err .ne. NF90_ENOTINDEFINE) &

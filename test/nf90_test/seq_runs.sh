@@ -24,6 +24,12 @@ rm -f ${TESTOUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nf90_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
 
+rm -f ${TESTOUTDIR}/test.nc
+rm -f ${TESTOUTDIR}/scratch.nc
+rm -f ${TESTOUTDIR}/tooth-fairy.nc
+${TESTSEQRUN} ./nf90_test -5 -d ${TESTOUTDIR}
+${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
+
 if [ -n "${TESTNETCDF4}" ]; then
     rm -f ${TESTOUTDIR}/test.nc
     rm -f ${TESTOUTDIR}/scratch.nc
@@ -32,12 +38,6 @@ if [ -n "${TESTNETCDF4}" ]; then
     # Validator does not support nc4
     # ${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
 fi
-
-rm -f ${TESTOUTDIR}/test.nc
-rm -f ${TESTOUTDIR}/scratch.nc
-rm -f ${TESTOUTDIR}/tooth-fairy.nc
-${TESTSEQRUN} ./nf90_test -5 -d ${TESTOUTDIR}
-${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
 
 if [ -n "${TESTBB}" ]; then
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"

@@ -853,7 +853,7 @@
 
 ! put variables defined by global variables */
         subroutine put_vars(ncid)
-      use pnetcdf
+        use pnetcdf
         implicit        none
         integer                 ncid
 #include "tests.inc"
@@ -870,10 +870,10 @@
         doubleprecision         value1
         character*(MAX_NELS+2)  text
         logical                 allInRange
-        integer format
         logical                 flag, bb_enable
         character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer                 infoused, nc_fmt
+        logical                 is_nc4
 
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
@@ -891,14 +891,20 @@
             start(j) = 1
 1       continue
 
-        err = nf90mpi_inq_default_format(format);
-        if (err .ne. NF90_NOERR) then
-            call errori( &
-                'Error calling nf90mpi_inq_default_format()')
-        end if
+        err = nf90mpi_inquire(ncid, formatNum=nc_fmt);
+        if (err .ne. NF90_NOERR) &
+            call errori('Error calling nf90mpi_inquire()')
 
-        if (format .eq. 4) then
-        err = nf90mpi_begin_indep_data(ncid)
+        if (nc_fmt .EQ. nf90_format_netcdf4 .OR. &
+            nc_fmt .EQ. nf90_format_netcdf4_classic) then
+            is_nc4 = .TRUE.
+        else
+            is_nc4 = .FALSE.
+            err = nf90mpi_begin_indep_data(ncid)
+            if (err .ne. NF90_NOERR) &
+                call errori('Error calling nf90mpi_begin_indep_data()')
+        endif
+
         do 2, i = 1, numVars
             allInRange = .true.
             do 3, j = 1, var_nels(i)
@@ -928,10 +934,17 @@
                 text(var_nels(i)+1:var_nels(i)+1) = char(1)
                 text(var_nels(i)+2:var_nels(i)+2) = char(0)
                 if (var_rank(i) .EQ. 0) then  ! scalar
-                    err = nf90mpi_put_var(ncid, i, text(1:1))
+                    if (is_nc4) then
+                        err = nf90mpi_put_var_all(ncid, i, text(1:1))
+                    else
+                        err = nf90mpi_put_var(ncid, i, text(1:1))
+                    endif
                 else
-                    err = nf90mpi_put_var(ncid, i, text, start, &
-                                          var_shape(:,i))
+                    if (is_nc4) then
+                        err = nf90mpi_put_var_all(ncid, i, text, start, var_shape(:,i))
+                    else
+                        err = nf90mpi_put_var(ncid, i, text, start, var_shape(:,i))
+                    endif
                 endif
                 if (err .ne. NF90_NOERR) then
                     call errore('nf90mpi_put_var: ', err)
@@ -939,10 +952,17 @@
             else
                 if (var_rank(i) .EQ. 0) then  ! scalar
                     value1 = value(1)
-                    err = nf90mpi_put_var(ncid, i, value1)
+                    if (is_nc4) then
+                        err = nf90mpi_put_var_all(ncid, i, value1)
+                    else
+                        err = nf90mpi_put_var(ncid, i, value1)
+                    endif
                 else
-                    err = nf90mpi_put_var(ncid, i, value, start, &
-                                          var_shape(:,i))
+                    if (is_nc4) then
+                        err = nf90mpi_put_var_all(ncid, i, value, start, var_shape(:,i))
+                    else
+                        err = nf90mpi_put_var(ncid, i, value, start, var_shape(:,i))
+                    endif
                 endif
                 if (allInRange) then
                     if (err .ne. NF90_NOERR) then
@@ -964,66 +984,10 @@
                 end if
             end if
 2       continue
-        err = nf90mpi_end_indep_data(ncid)
-        else
-        do 5, i = 1, numVars
-            allInRange = .true.
-            do 6, j = 1, var_nels(i)
-                err = index2indexes(j, var_rank(i), var_shape(1,i),  &
-                                    index)
-                if (err .ne. NF90_NOERR) then
-                    call errori( &
-                        'Error calling index2indexes() for var ', j)
-                end if
-                if (var_name(i)(1:1) .eq. 'c') then
-                    text(j:j) =  &
-                        char(int(hash(var_type(i), var_rank(i), index)))
-                else
-                    value(j)  = hash(var_type(i), var_rank(i), index)
-                    allInRange = allInRange .and. &
-                        inRange(value(j), var_type(i))
-                end if
-6           continue
-            if (var_name(i)(1:1) .eq. 'c') then
-!               /*
-!                * The following statement ensures that the first 4
-!                * characters in 'text' are not all zeros (which is
-!                * a cfortran.h NULL indicator) and that the string
-!                * contains a zero (which will cause the address of the
-!                * actual string buffer to be passed).
-!                */
-                text(var_nels(i)+1:var_nels(i)+1) = char(1)
-                text(var_nels(i)+2:var_nels(i)+2) = char(0)
-                if (var_rank(i) .EQ. 0) then  ! scalar
-                    err = nf90mpi_put_var_all(ncid, i, text(1:1))
-                else
-                    err = nf90mpi_put_var_all(ncid, i, text, start, &
-                                            var_shape(:,i))
-                endif
-                if (err .ne. NF90_NOERR) then
-                    call errore('nf90mpi_put_var: ', err)
-                end if
-            else
-                if (var_rank(i) .EQ. 0) then  ! scalar
-                    value1 = value(1)
-                    err = nf90mpi_put_var_all(ncid, i, value1)
-                else
-                    err = nf90mpi_put_var_all(ncid, i, value, start, &
-                                            var_shape(:,i))
-                endif
-                if (allInRange) then
-                    if (err .ne. NF90_NOERR) then
-                        call errore('nf90mpi_put_var: ', err)
-                    end if
-                else
-                    if (err .ne. NF90_ERANGE) then
-                        call errore( &
-                            'type-conversion range error: status = ',  &
-                            err)
-                    end if
-                end if
-            end if
-5       continue
+        if (.NOT. is_nc4) then
+            err = nf90mpi_end_indep_data(ncid)
+            if (err .ne. NF90_NOERR) &
+                call errori('Error calling nf90mpi_end_indep_data()')
         endif
         end
 
@@ -1169,7 +1133,7 @@
       if (err .ne. NF90_NOERR) then
           call errore('nf90mpi_enddef: ', err)
       end if
-      call put_vars4(ncid)
+      call put_vars(ncid)
 
       err = nf90mpi_close(ncid)
       if (err .ne. NF90_NOERR) then
