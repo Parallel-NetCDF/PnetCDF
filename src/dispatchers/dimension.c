@@ -61,10 +61,11 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
         if (size > NC_MAX_UINT - 3 || (size < 0))
             /* "-3" handles rounded-up size */
             err = NC_EDIMSIZE;
-    } else if (pncp->format == NC_FORMAT_CDF5) { /* CDF-5 format*/
+    } else if (pncp->format == NC_FORMAT_CDF5) { /* CDF-5 format */
         if (size < 0)
             err = NC_EDIMSIZE;
-    } else if (pncp->format == NC_FORMAT_NETCDF4 || pncp->format == NC_FORMAT_NETCDF4_CLASSIC) { /* CDF-4 format*/
+    } else if (pncp->format == NC_FORMAT_NETCDF4 ||
+               pncp->format == NC_FORMAT_NETCDF4_CLASSIC) { /* NetCDF-4 format */
         if (size < 0)
             err = NC_EDIMSIZE;
     } else { /* CDF-1 format, max is 2^31-4 */

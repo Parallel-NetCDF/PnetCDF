@@ -79,32 +79,39 @@
 ! mode flags for opening and creating a netcdf dataset:
 !
       integer, parameter, public :: &
-      nf_nowrite = 0, &
-      nf_write = 1, &
-      nf_clobber = 0, &
-      nf_noclobber = 4, &
-      nf_lock = 1024, &
-      nf_share = 2048, &
-      nf_netcdf4 = 4096, &
-      nf_classic_model = 256, &
-      nf_64bit_offset = 512, &
-      nf_64bit_data = 32, &
-      nf_32bit = 16777216, &
-      nf_sizehint_default = 0, &
-      nf_align_chunk = -1, &
-      nf_format_classic = 1, &
+      nf_nowrite                = 0,    &
+      nf_write                  = 1,    &
+      nf_clobber                = 0,    &
+      nf_noclobber              = 4,    &
+      nf_lock                   = 1024, &
+      nf_share                  = 2048, &
 
-      nf_fill = 0, &
-      nf_nofill = 256, &
+      nf_32bit                  = 16777216, &
+      nf_classic_model          = 256,      &
+      nf_cdf2                   = 512,      &
+      nf_64bit_offset           = nf_cdf2,  &
+      nf_cdf5                   = 32,       &
+      nf_64bit_data             = nf_cdf5,  &
+      nf_netcdf4                = 4096,     &
 
-      nf_format_cdf2 = 2, &
-      nf_format_netcdf4 = 3, &
-      nf_format_netcdf4_classic = 4, &
-      nf_format_cdf5 = 5, &
-      nf_format_64bit = nf_format_cdf2, &
-      nf_format_64bit_offset = nf_format_cdf2, &
-      nf_format_64bit_data = nf_format_cdf5, &
-      nf_format_unknown = -1
+      nf_mpiio                  = 8192,     &
+      nf_pnetcdf                = nf_mpiio, &
+
+      nf_sizehint_default       = 0,  &
+      nf_align_chunk            = -1, &
+
+      nf_fill                   = 0,   &
+      nf_nofill                 = 256, &
+
+      nf_format_classic         = 1,              &
+      nf_format_cdf2            = 2,              &
+      nf_format_64bit           = nf_format_cdf2, &
+      nf_format_64bit_offset    = nf_format_cdf2, &
+      nf_format_cdf5            = 5,              &
+      nf_format_64bit_data      = nf_format_cdf5, &
+      nf_format_netcdf4         = 3,              &
+      nf_format_netcdf4_classic = 4,              &
+      nf_format_unknown         = -1
 
 !
 ! size argument for defining an unlimited dimension:
