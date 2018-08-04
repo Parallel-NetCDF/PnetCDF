@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef ENABLE_NETCDF4
-    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    /* Test for NetCDF 4 first as ncvalidator checks only read classic files */
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_cb_write", "enable");
     MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
@@ -119,8 +119,8 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* make file access and write buffer of 3rd request contiguous from the 2nd
-    * request to check whether the internal fileview and buftype coalescing
-    * are skipped */
+     * request to check whether the internal fileview and buftype coalescing
+     * are skipped */
     start[1] = ONE_G;
     count[1] = ONE_G+1024;
     err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
@@ -191,8 +191,8 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* make file access and write buffer of 3rd request contiguous from the 2nd
-    * request to check whether the internal fileview and buftype coalescing
-    * are skipped */
+     * request to check whether the internal fileview and buftype coalescing
+     * are skipped */
     start[1] = ONE_G;
     count[1] = ONE_G+1024;
     err = ncmpi_iput_vara_uchar(ncid, varid, start, count, buf+ONE_G, &req[2]);
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
     for (i=0; i<20; i++) {
         if (buf[i] != 'a'+i) {
             printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
+                   rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
             nerrs++;
         }
     }
@@ -225,7 +225,7 @@ int main(int argc, char** argv)
     for (i=0; i<20; i++) {
         if (buf[i] != 'A'+i) {
             printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
+                   rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
             nerrs++;
         }
     }
@@ -258,7 +258,7 @@ int main(int argc, char** argv)
     for (i=0; i<20; i++) {
         if (buf[ONE_G-10+i] != 'a'+i) {
             printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
+                   rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
             nerrs++;
         }
     }
@@ -266,7 +266,7 @@ int main(int argc, char** argv)
     for (i=0; i<20; i++) {
         if (buf[TWO_G-10+i] != 'A'+i) {
             printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
-                rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
+                   rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
             nerrs++;
         }
     }

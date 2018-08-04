@@ -37,33 +37,6 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-#ifdef ENABLE_NETCDF4
-    /* test CDF-4 -----------------------------------------------------------*/
-    sprintf(filename,"%s/test_cdf4.nc",dir_name);
-    err = ncmpi_open(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncid); CHECK_ERR
-
-    /* test NULL argument */
-    err = ncmpi_inq_format(ncid, NULL); CHECK_ERR
-
-    err = ncmpi_inq_format(ncid, &format); CHECK_ERR
-    if (format != NC_FORMAT_NETCDF4) {
-        printf("Error at line %d in %s: expecting NetCDF-4 format for file %s but got %d\n",
-               __LINE__,__FILE__,filename,format);
-        nerrs++;
-    }
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* test NULL argument */
-    err = ncmpi_inq_file_format(filename, NULL); CHECK_ERR
-
-    err = ncmpi_inq_file_format(filename, &format); CHECK_ERR
-    if (format != NC_FORMAT_NETCDF4) {
-        printf("Error at line %d in %s: expecting NetCDF-4 format for file %s but got %d\n",
-               __LINE__,__FILE__,filename,format);
-        nerrs++;
-    }
-#endif
-
     /* test CDF-1 -----------------------------------------------------------*/
     sprintf(filename,"%s/test_cdf1.nc",dir_name);
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
@@ -138,20 +111,32 @@ int main(int argc, char **argv) {
 
     /* test NetCDF4 --------------------------------------------------------*/
     sprintf(filename,"%s/test_netcdf4.nc",dir_name);
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid);
-#ifdef ENABLE_NETCDF4
-    CHECK_ERR
-    err = ncmpi_close(ncid); CHECK_ERR
-#else
-    EXP_ERR(NC_ENOTBUILT)
-#endif
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    if (PNETCDF_DRIVER_NETCDF4 == 0)
+        EXP_ERR(NC_ENOTBUILT)
+    else { /* NetCDF-4 is enabled */
+        CHECK_ERR
 
-    err = ncmpi_inq_file_format(filename, &format); CHECK_ERR
-    if (format != NC_FORMAT_NETCDF4) {
-        printf("Error at line %d in %s: expecting NETCDF4 format for file %s but got %d\n",
-               __LINE__,__FILE__,filename,format);
-        nerrs++;
+        /* test NULL argument */
+        err = ncmpi_inq_format(ncid, NULL); CHECK_ERR
+
+        err = ncmpi_inq_format(ncid, &format); CHECK_ERR
+        if (format != NC_FORMAT_NETCDF4) {
+            printf("Error at line %d in %s: expecting NetCDF-4 format for file %s but got %d\n",
+                   __LINE__,__FILE__,filename,format);
+            nerrs++;
+        }
+        err = ncmpi_close(ncid); CHECK_ERR
+
+        /* test NULL argument */
+        err = ncmpi_inq_file_format(filename, NULL); CHECK_ERR
+
+        err = ncmpi_inq_file_format(filename, &format); CHECK_ERR
+        if (format != NC_FORMAT_NETCDF4) {
+            printf("Error at line %d in %s: expecting NETCDF4 format for file %s but got %d\n",
+                   __LINE__,__FILE__,filename,format);
+            nerrs++;
+        }
     }
 
     MPI_Offset malloc_size, sum_size;

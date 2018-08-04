@@ -52,3 +52,4 @@ if [ -n "${TESTBB}" ]; then
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
     unset PNETCDF_HINTS
 fi
+

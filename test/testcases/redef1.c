@@ -28,7 +28,7 @@
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, k, commsize, rank, ncid, err, nerrs=0, format;
+    int i, j, k, commsize, rank, ncid, err, nerrs=0;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
     int *data;
@@ -62,9 +62,9 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef ENABLE_NETCDF4
-    /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional file */
+    /* Test NetCDF 4 first as ncvalidator checks only classic formats */
     err = ncmpi_create(comm, filename, NC_CLOBBER | NC_NETCDF4,
-                            MPI_INFO_NULL, &ncid);
+                       MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
@@ -177,9 +177,9 @@ int main(int argc, char** argv)
     CHECK_ERR
 #endif
 
-    /* Test traditional format */
+    /* Test classic format */
     err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
-                            MPI_INFO_NULL, &ncid);
+                       MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);

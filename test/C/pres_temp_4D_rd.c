@@ -93,25 +93,20 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 3)
-    {
+    if (argc > 3) {
         if (!rank)
             printf("Usage: %s [filename]\n", argv[0]);
         MPI_Finalize();
         return 1;
     }
+
     if (argc > 1)
         filename = argv[1];
-    if (argc > 2)
-    {
-        if (atoi(argv[2]) == 4)
-        {
-            format = NC_FORMAT_NETCDF4;
-        }
-    }
 
-    if (rank == 0)
-    {
+    if (argc > 2 && atoi(argv[2]) == 4)
+        format = NC_FORMAT_NETCDF4;
+
+    if (rank == 0) {
         char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for reading file", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
@@ -143,15 +138,13 @@ int main(int argc, char **argv)
 
     /* Check the coordinate variable data. */
     for (lat = 0; lat < NLAT; lat++)
-        if (lats[lat] != START_LAT + 5. * lat)
-        {
+        if (lats[lat] != START_LAT + 5. * lat) {
             printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__, __FILE__, START_LAT + 5. * lat, lats[lat]);
             nerrs++;
             goto fn_exit;
         }
     for (lon = 0; lon < NLON; lon++)
-        if (lons[lon] != START_LON + 5. * lon)
-        {
+        if (lons[lon] != START_LON + 5. * lon) {
             printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__, __FILE__, START_LON + 5. * lon, lons[lon]);
             nerrs++;
             goto fn_exit;
@@ -176,13 +169,11 @@ int main(int argc, char **argv)
     /* divide NLVL dimension among processes */
     count[1] = NLVL / nprocs;
     start[1] = count[1] * rank;
-    if (rank < NLVL % nprocs)
-    {
+    if (rank < NLVL % nprocs) {
         start[1] += rank;
         count[1]++;
     }
-    else
-    {
+    else {
         start[1] += NLVL % nprocs;
     }
     if (count[1] == 0)
@@ -191,20 +182,17 @@ int main(int argc, char **argv)
     /* allocate read buffers */
     pres_in = (float **)malloc(count[1] * 2 * sizeof(float *));
     temp_in = pres_in + count[1];
-    if (count[1] > 0)
-    {
+    if (count[1] > 0) {
         pres_in[0] = (float *)malloc(count[1] * 2 * NLAT * NLON * sizeof(float));
         temp_in[0] = pres_in[0] + count[1] * NLAT * NLON;
-        for (i = 1; i < count[1]; i++)
-        {
+        for (i = 1; i < count[1]; i++) {
             pres_in[i] = pres_in[i - 1] + NLAT * NLON;
             temp_in[i] = temp_in[i - 1] + NLAT * NLON;
         }
     }
 
     /* Read and check one record at a time. */
-    for (rec = 0; rec < NREC; rec++)
-    {
+    for (rec = 0; rec < NREC; rec++) {
         start[0] = rec;
         err = ncmpi_get_vara_float_all(ncid, pres_varid, start, count, &pres_in[0][0]);
         CHECK_ERR
@@ -214,23 +202,22 @@ int main(int argc, char **argv)
         /* Check the data. */
         i = (int)start[1] * NLAT * NLON;
         for (lvl = 0; lvl < count[1]; lvl++)
-            for (lat = 0; lat < NLAT; lat++)
-                for (lon = 0; lon < NLON; lon++)
-                {
-                    if (pres_in[lvl][lat * NLON + lon] != SAMPLE_PRESSURE + i)
-                    {
-                        printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__, __FILE__, SAMPLE_PRESSURE + i, pres_in[lvl][lat * NLON + lon]);
-                        nerrs++;
-                        goto fn_exit;
-                    }
-                    if (temp_in[lvl][lat * NLON + lon] != SAMPLE_TEMP + i)
-                    {
-                        printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__, __FILE__, SAMPLE_TEMP + i, temp_in[lvl][lat * NLON + lon]);
-                        nerrs++;
-                        goto fn_exit;
-                    }
-                    i++;
-                }
+        for (lat = 0; lat < NLAT; lat++)
+        for (lon = 0; lon < NLON; lon++) {
+            if (pres_in[lvl][lat * NLON + lon] != SAMPLE_PRESSURE + i) {
+                printf("\nError at line %d in %s: expect %e but got %e\n",
+                __LINE__, __FILE__, SAMPLE_PRESSURE + i, pres_in[lvl][lat * NLON + lon]);
+                nerrs++;
+                goto fn_exit;
+            }
+            if (temp_in[lvl][lat * NLON + lon] != SAMPLE_TEMP + i) {
+                printf("\nError at line %d in %s: expect %e but got %e\n",
+                __LINE__, __FILE__, SAMPLE_TEMP + i, temp_in[lvl][lat * NLON + lon]);
+                nerrs++;
+                goto fn_exit;
+            }
+            i++;
+        }
 
     } /* next record */
 
@@ -239,8 +226,7 @@ fn_exit:
     err = ncmpi_close(ncid);
     CHECK_ERR
 
-    if (pres_in != NULL)
-    {
+    if (pres_in != NULL) {
         if (pres_in[0] != NULL)
             free(pres_in[0]);
         free(pres_in);
@@ -249,8 +235,7 @@ fn_exit:
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR)
-    {
+    if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
@@ -258,8 +243,7 @@ fn_exit:
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0)
-    {
+    if (rank == 0) {
         if (nerrs)
             printf(FAIL_STR, nerrs);
         else

@@ -97,25 +97,20 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 3)
-    {
+    if (argc > 3) {
         if (!rank)
             printf("Usage: %s [filename]\n", argv[0]);
         MPI_Finalize();
         return 1;
     }
+
     if (argc > 1)
         filename = argv[1];
-    if (argc > 2)
-    {
-        if (atoi(argv[2]) == 4)
-        {
-            format = NC_FORMAT_NETCDF4;
-        }
-    }
 
-    if (rank == 0)
-    {
+    if (argc > 2 && atoi(argv[2]) == 4)
+        format = NC_FORMAT_NETCDF4;
+
+    if (rank == 0) {
         char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for writing file", basename(argv[0]));
         printf("%-66s ------ ", cmd_str);
@@ -200,8 +195,7 @@ int main(int argc, char **argv)
     err = ncmpi_begin_indep_data(ncid);
     /* Write the coordinate variable data. This will put the latitudes
       and longitudes of our data grid into the netCDF file. */
-    if (rank == 0)
-    {
+    if (rank == 0) {
         err = ncmpi_put_var_float(ncid, lat_varid, &lats[0]);
         CHECK_ERR
         err = ncmpi_put_var_float(ncid, lon_varid, &lons[0]);
@@ -223,13 +217,11 @@ int main(int argc, char **argv)
     /* divide NLVL dimension among processes */
     count[1] = NLVL / nprocs;
     start[1] = count[1] * rank;
-    if (rank < NLVL % nprocs)
-    {
+    if (rank < NLVL % nprocs) {
         start[1] += rank;
         count[1]++;
     }
-    else
-    {
+    else {
         start[1] += NLVL % nprocs;
     }
     if (count[1] == 0)
@@ -238,12 +230,10 @@ int main(int argc, char **argv)
     /* allocate write buffers */
     pres_out = (float **)malloc(count[1] * 2 * sizeof(float *));
     temp_out = pres_out + count[1];
-    if (count[1] > 0)
-    {
+    if (count[1] > 0) {
         pres_out[0] = (float *)malloc(count[1] * 2 * NLAT * NLON * sizeof(float));
         temp_out[0] = pres_out[0] + count[1] * NLAT * NLON;
-        for (i = 1; i < count[1]; i++)
-        {
+        for (i = 1; i < count[1]; i++) {
             pres_out[i] = pres_out[i - 1] + NLAT * NLON;
             temp_out[i] = temp_out[i - 1] + NLAT * NLON;
         }
@@ -252,20 +242,18 @@ int main(int argc, char **argv)
     /* initialize write buffers */
     i = (int)start[1] * NLAT * NLON;
     for (lvl = 0; lvl < count[1]; lvl++)
-        for (lat = 0; lat < NLAT; lat++)
-            for (lon = 0; lon < NLON; lon++)
-            {
-                pres_out[lvl][lat * NLON + lon] = SAMPLE_PRESSURE + i;
-                temp_out[lvl][lat * NLON + lon] = SAMPLE_TEMP + i++;
-            }
+    for (lat = 0; lat < NLAT; lat++)
+    for (lon = 0; lon < NLON; lon++) {
+        pres_out[lvl][lat * NLON + lon] = SAMPLE_PRESSURE + i;
+        temp_out[lvl][lat * NLON + lon] = SAMPLE_TEMP + i++;
+    }
 
     /* Write the pretend data. This will write our surface pressure and
       surface temperature data. The arrays only hold one timestep worth
       of data. We will just rewrite the same data for each timestep. In
       a real application, the data would change between timesteps. */
 
-    for (rec = 0; rec < NREC; rec++)
-    {
+    for (rec = 0; rec < NREC; rec++) {
         start[0] = rec;
         err = ncmpi_put_vara_float_all(ncid, pres_varid, start, count, &pres_out[0][0]);
         CHECK_ERR
@@ -284,8 +272,7 @@ int main(int argc, char **argv)
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR)
-    {
+    if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
@@ -293,8 +280,7 @@ int main(int argc, char **argv)
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0)
-    {
+    if (rank == 0) {
         if (nerrs)
             printf(FAIL_STR, nerrs);
         else

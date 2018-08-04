@@ -153,7 +153,8 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validation */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
@@ -179,7 +180,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -200,7 +201,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -221,7 +222,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -241,7 +242,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -250,7 +251,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 #endif
 
-    /* Test traditional format */
+    /* Test classic format */
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
@@ -315,7 +316,8 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validation */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
@@ -341,7 +343,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -362,7 +364,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -383,7 +385,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -403,7 +405,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -449,7 +451,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -478,7 +480,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -507,7 +509,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
@@ -535,7 +537,7 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
             printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
-                    __FILE__, __LINE__, i, expected, buf[i]);
+                   __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
         expected++;
