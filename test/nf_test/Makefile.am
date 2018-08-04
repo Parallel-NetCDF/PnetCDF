@@ -67,6 +67,7 @@ TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
 endif
 
 TESTS = seq_runs.sh
+TEST_EXTENSIONS = .sh
 
 nf_test_SOURCES = $(F_SRCS) fortlib.c
 nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
