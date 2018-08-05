@@ -83,7 +83,7 @@ main(int argc, char **argv) {
     else           strcpy(filename, "testfile.nc");
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-   if (rank > 0) goto fn_exit;
+   if (rank > 0) goto fn_exit3;
    printf("\n*** Testing large files, slowly.\n");
    printf("*** Creating large file %s...", filename);
 
@@ -185,6 +185,7 @@ main(int argc, char **argv) {
                             printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
                             "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
                             nerrs++;
+                            goto fn_exit1;
                         }
                         n++;
                     }
@@ -197,6 +198,7 @@ main(int argc, char **argv) {
             }
         }
     }
+fn_exit1:
     stat = ncmpi_close(ncid);
     check_err(stat,__LINE__,__FILE__);
 #endif
@@ -297,6 +299,7 @@ main(int argc, char **argv) {
                             printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
                             "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
                             nerrs++;
+                            goto fn_exit2;
                         }
                         n++;
                     }
@@ -309,13 +312,18 @@ main(int argc, char **argv) {
             }
         }
     }
+fn_exit2:
     stat = ncmpi_close(ncid);
     check_err(stat,__LINE__,__FILE__);
 
-    printf("ok\n");
-    printf("*** Tests successful!\n");
+    if (nerrs == 0) {
+        printf("ok\n");
+        printf("*** Tests successful!\n");
+    }
+    else
+        printf("\n*** Tests failed!\n");
 
-fn_exit:
+fn_exit3:
     MPI_Finalize();
     return (nerrs > 0);
 }
