@@ -37,7 +37,11 @@ rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.n
 ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
+echo ""
+
 if [ -n "${TESTBB}" ]; then
+    echo "---- testing burst buffering"
+
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test    -d ${TESTOUTDIR}
@@ -50,6 +54,5 @@ if [ -n "${TESTBB}" ]; then
     rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
-    unset PNETCDF_HINTS
 fi
 

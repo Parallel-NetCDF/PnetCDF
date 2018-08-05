@@ -12,14 +12,20 @@ outfile=`basename $1`
 
 for j in 0 1 ; do
     export PNETCDF_SAFE_MODE=$j
-    # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+    echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+
     ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 done
 
+echo ""
+
 if [ -n "${TESTBB}" ]; then
+   echo "---- testing burst buffering"
    for j in 0 1 ; do
        export PNETCDF_SAFE_MODE=$j
+       echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+
        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
        ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
        unset PNETCDF_HINTS
