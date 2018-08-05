@@ -366,15 +366,25 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_NETCDF4
     /* It is illegal to have NC_64BIT_OFFSET & NC_64BIT_DATA & NC_NETCDF4 */
     if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA|NC_NETCDF4)) ==
-                 (NC_64BIT_OFFSET|NC_64BIT_DATA|NC_NETCDF4))
+                 (NC_64BIT_OFFSET|NC_64BIT_DATA|NC_NETCDF4)) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
         DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
+    }
 #else
     /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
     if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
-                 (NC_64BIT_OFFSET|NC_64BIT_DATA))
+                 (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
         DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
+    }
 
-    if (cmode & NC_NETCDF4) DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+    if (cmode & NC_NETCDF4) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
+        DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+    }
 #endif
 
     /* Check if cmode contains format specific flag */
@@ -402,8 +412,15 @@ ncmpi_create(MPI_Comm    comm,
     else
 #endif
 #ifdef BUILD_DRIVER_BB
-    if (enable_bb_driver)
+    if (enable_bb_driver) {
+        if (format == NC_FORMAT_NETCDF4) {
+            printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");
+            if (combined_info != MPI_INFO_NULL)
+                MPI_Info_free(&combined_info);
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
         driver = ncbbio_inq_driver();
+    }
     else
 #endif
 #ifdef ENABLE_NETCDF4
@@ -424,12 +441,18 @@ ncmpi_create(MPI_Comm    comm,
     pncp = (PNC*) NCI_Malloc(sizeof(PNC));
     if (pncp == NULL) {
         *ncidp = -1;
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
     /* get a new nc file ID from NCPList */
     err = new_id_PNCList(ncidp, pncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
+        return err;
+    }
 
     /* Duplicate comm, because users may free it (though unlikely). Note
      * MPI_Comm_dup() is collective. We pass pncp->comm to drivers, so there
@@ -636,8 +659,13 @@ ncmpi_open(MPI_Comm    comm,
     else
 #endif
 #ifdef BUILD_DRIVER_BB
-    if (enable_bb_driver)
+    if (enable_bb_driver) {
+        if (format == NC_FORMAT_NETCDF4) {
+            printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
         driver = ncbbio_inq_driver();
+    }
     else
 #endif
 #ifdef ENABLE_NETCDF4
