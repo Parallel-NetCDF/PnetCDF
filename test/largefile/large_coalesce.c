@@ -61,27 +61,27 @@ int main(int argc, char** argv)
 
     buf = (unsigned char*) calloc(TWO_G+1024,1);
     if (buf == NULL) {
-        printf("malloc falled for size %lld\n", TWO_G+1024);
+        printf("malloc failed for size %lld\n", TWO_G+1024);
         MPI_Finalize();
         return 1;
     }
 
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "romio_cb_write", "enable");
+    MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
+
 #ifndef ENABLE_LARGE_REQ
-    /* silence iternal debug messages */
+    /* silence internal debug messages */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
 #endif
 
 #ifdef ENABLE_NETCDF4
     /* Test for NetCDF 4 first as ncvalidator checks only read classic files */
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_cb_write", "enable");
-    MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_NETCDF4;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
-    MPI_Info_free(&info);
 
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "NPROCS", nprocs, &dimid[0]);
@@ -144,10 +144,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     CHECK_ERR
 #endif
-    /* Test traditional format */
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_cb_write", "enable");
-    MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
+    /* Test classic format */
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
