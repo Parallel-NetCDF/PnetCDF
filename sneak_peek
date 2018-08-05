@@ -5,6 +5,8 @@ This is essentially a placeholder for the next release note ...
 * New features
   + Accessing HDF5-based NetCDF-4 files is supported. PnetCDF can now be built
     on top of NetCDF-4, which allows PnetCDF to read and write a NetCDF-4 file.
+    Note NetCDF-4 file format is currently not supported by the burst buffering
+    driver.
   + Thread-safe capability is added to this release. It can be enabled with
     configure option `--enable-thread-safe`. In addition, option
     `--with-pthread` can be used to specify the path to the pthreads library.
