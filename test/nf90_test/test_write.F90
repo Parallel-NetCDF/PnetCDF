@@ -1935,22 +1935,27 @@
       implicit none
 #include "tests.inc"
 
-      integer ncid
-      integer err, flags
-      integer i
-      integer version
-      integer old_format, format
+      integer ncid, err, flags, i, version
+      integer old_format, nformats, nc_fmt
       integer formats(4)
       integer nf90mpi_get_file_version
 
-      if (format .eq. 4) then
-          format = 4
+      err = nf90mpi_inq_default_format(nc_fmt);
+      if (err .ne. NF90_NOERR) &
+         call errori('Error calling nf90mpi_inq_default_format()')
+
+      if (nc_fmt .eq. NF_FORMAT_NETCDF4) then
+          nformats = 4 ! test CDF-1, CDF-2, CDF-5 and NetCDF-4
       else
-          format = 3
+          nformats = 3 ! test CDF-1, CDF-2, and CDF-5
       endif
+      formats(1) = nf_format_classic
+      formats(2) = nf_format_cdf2
+      formats(3) = nf_format_cdf5
+      formats(4) = nf_format_netcdf4
 
 !     /* bad format */
-      err = nf90mpi_set_default_format(10, old_format)
+      err = nf90mpi_set_default_format(999, old_format)
       IF (err .ne. NF90_EINVAL) &
            call errore("bad default format: ", err)
       formats(1) = nf_format_classic
@@ -1958,7 +1963,7 @@
       formats(3) = nf_format_cdf5
       formats(4) = nf_format_netcdf4
 !    /* Cycle through available formats. */
-      do 1 i=1, format
+      do 1 i=1, nformats
          err = nf90mpi_set_default_format(formats(i), old_format)
          if (err .ne. NF90_NOERR)  &
              call errore("setting classic format: ", err)

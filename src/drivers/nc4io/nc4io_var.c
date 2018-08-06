@@ -120,10 +120,10 @@ nc4io_inq_var(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
-    /* Call NC_inq_var_all */
-    err = NC_inq_var_all(nc4p->ncid, varid, name, xtypep, ndimsp, dimids, nattsp,
-                        NULL, NULL, NULL, NULL, NULL, NULL,
-                        no_fillp, fill_valuep, NULL, NULL, NULL, NULL);
+    err = nc_inq_var(nc4p->ncid, varid, name, xtypep, ndimsp, dimids, nattsp);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+    err = nc_inq_var_fill(nc4p->ncid, varid, no_fillp, fill_valuep);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     return NC_NOERR;
@@ -346,7 +346,7 @@ nc4io_get_varn(void              *ncdp,
             DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
         }
 
-        elsize = nc4io_nc_type_size(type);
+        ncmpii_xlen_nc_type(type, &elsize);
     }
 
     if (!isindep){
@@ -484,7 +484,7 @@ nc4io_put_varn(void              *ncdp,
             DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
         }
 
-        elsize = nc4io_nc_type_size(type);
+        ncmpii_xlen_nc_type(type, &elsize);
     }
 
     if (!isindep){

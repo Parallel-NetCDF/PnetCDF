@@ -1168,6 +1168,7 @@ AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(unsigned long long)
+AC_CHECK_SIZEOF(ptrdiff_t)
 
 if test "$ac_cv_type_schar" = yes ; then
    AC_CHECK_SIZEOF(schar)
