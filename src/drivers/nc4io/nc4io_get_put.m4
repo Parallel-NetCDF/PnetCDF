@@ -84,14 +84,14 @@ define(`CONVERT',dnl
 `dnl
         if ($1 != NULL){
             /* Allocate s$1 */
-            s$1 = (size_t*)NCI_Malloc(sizeof(size_t) * ndim);
+            s$1 = ($2*)NCI_Malloc(sizeof($2) * ndim);
             if (s$1 == NULL){
                 DEBUG_RETURN_ERROR(NC_ENOMEM)
             }
 
             /* Convert to size_t */
-            for(i = 0; i < ndim; i++){
-                s$1[i] = (size_t) $1[i];
+            for (i=0; i<ndim; i++) {
+                s$1[i] = ($2) $1[i];
             }
         }
 ')dnl
@@ -199,7 +199,8 @@ nc4io_get_var(void             *ncdp,
     int i, err;
     int apikind;
     int ndim;
-    size_t *sstart, *scount, *sstride, *simap;
+    size_t *sstart, *scount;
+    ptrdiff_t *sstride, *simap;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
@@ -232,10 +233,12 @@ nc4io_get_var(void             *ncdp,
 
     /* Convert to MPI_Offset if not scalar */
     if(ndim > 0){
-foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
+foreach(`arg', `(start, count)', `CONVERT(arg, size_t)') dnl
+foreach(`arg', `(stride, imap)', `CONVERT(arg, ptrdiff_t)') dnl
     }
     else{
-        sstart = scount = sstride = simap = NULL;
+        sstart = scount = NULL;
+        sstride = simap = NULL;
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
@@ -267,7 +270,8 @@ nc4io_put_var(void             *ncdp,
     int apikind;
     int ndim;
     int zero_req = 0;
-    size_t *sstart, *scount, *sstride, *simap, putsize;
+    size_t *sstart, *scount, putsize;
+    ptrdiff_t *sstride, *simap;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
@@ -316,10 +320,12 @@ nc4io_put_var(void             *ncdp,
 
     /* Convert to MPI_Offset if not scalar */
     if(ndim > 0){
-foreach(`arg', `(start, count, stride, imap)', `CONVERT(arg)') dnl
+foreach(`arg', `(start, count)', `CONVERT(arg, size_t)') dnl
+foreach(`arg', `(stride, imap)', `CONVERT(arg, ptrdiff_t)') dnl
     }
     else{
-        sstart = scount = sstride = simap = NULL;
+        sstart = scount = NULL;
+        sstride = simap = NULL;
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
