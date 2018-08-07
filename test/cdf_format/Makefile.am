@@ -60,7 +60,7 @@ CLEANFILES = $(TESTOUTDIR)/cdf_type.nc $(TESTOUTDIR)/dim_cdf12.nc \
 
 EXTRA_DIST = wrap_runs.sh seq_runs.sh xfail_runs.sh \
              test_cdf1.nc test_cdf2.nc test_cdf5.nc \
-             $(BAD_FILES)
+             test_netcdf4.nc $(BAD_FILES)
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests

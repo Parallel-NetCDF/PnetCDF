@@ -174,7 +174,7 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
       type_create_subarray64() is always called with oldtype being MPI_BYTE.
     * Fix configure-time bug that configure fails to recognize the compilers
       with full-path names passed from the environment variable MPICC, MPICXX,
-      MPIF77, or MPI_F90. See Ticket #35 for bug report and r3740 for fix.
+      MPIF77, or MPIF90. See Ticket #35 for bug report and r3740 for fix.
     * Fix the bug that writing scalar attributes of type NF_INT64 was
       mistakenly casted to NF_INT. See r3730.
     * Fix test/testcases/erange_fill.m4 for the case of NC_LONG data type.
