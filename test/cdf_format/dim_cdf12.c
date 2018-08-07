@@ -37,9 +37,9 @@
  * no record variables, the last fixed-size variable can be any size supported
  * by the file system, e.g. terabytes.
  *
- * A 64-bit offset format netCDF file can have up to 2^32 - 1 fixed sized
+ * A 64-bit offset format netCDF file can have up to 2^32 - 1 fixed-size
  * variables, each under 4GiB in size. If there are no record variables in the
- * file the last fixed variable can be any size.
+ * file the last fixed-size variable can be any size.
  *
  * No record variable can require more than 2^32 - 4 bytes of storage for each
  * record's worth of data, unless it is the last record variable. A 64-bit

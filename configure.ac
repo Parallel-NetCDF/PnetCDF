@@ -610,6 +610,7 @@ if test "x${has_fortran}" = xyes ; then
          [valid_mpif90=yes],[valid_mpif90=no]
       )
    else
+      AC_MSG_WARN([Fortran module mpi.mod is not available or invalid. Use mpif.h instead.])
       dnl mpi.mod is not available, check if can use mpif.h
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
            include "mpif.h"

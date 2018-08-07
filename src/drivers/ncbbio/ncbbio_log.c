@@ -225,7 +225,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
     /*
      * Allocate space for metadata header
-     * Header consists of a fixed size info and variable size basename
+     * Header consists of a fixed-size info and variable size basename
      */
     headersize = sizeof(NC_bb_metadataheader) + strlen(basename);
     if (headersize % 4 != 0){
@@ -282,7 +282,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     }
 
     /* Write data header to file
-     * Data header consists of a fixed sized string PnetCDF0
+     * Data header consists of a fixed-length string "PnetCDF0"
      */
     err = ncbbio_sharedfile_write(ncbbp->datalog_fd, "PnetCDF0", 8);
     if (err != NC_NOERR){
@@ -456,7 +456,7 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
                 MPI_SUM, 0, ncbbp->comm);
     MPI_Reduce(&(ncbbp->flushbuffersize), &buffer_size, 1,
                 MPI_UNSIGNED_LONG_LONG, MPI_MAX, 0, ncbbp->comm);
-
+#if 0
     if (ncbbp->rank == 0){
         printf("==========================================================\n");
         printf("File: %s\n", ncbbp->path);
@@ -478,6 +478,7 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
         printf("\t\tTime calling wait: %lf\n", flush_wait_time);
         printf("==========================================================\n");
     }
+#endif
 #endif
 #endif
 
