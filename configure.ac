@@ -1801,6 +1801,26 @@ echo \
               Build shared libraries                      - ${enable_shared}
               Build Fortran APIs                          - ${has_fortran}
               Build C++ APIs                              - ${has_mpicxx}"
+if test "x${enable_netcdf4}" = xyes; then
+   echo "\
+              NetCDF-4 support                            - enabled"
+fi
+if test "x${enable_bbdriver}" = xyes ; then
+   echo "\
+              Burst buffering                             - enabled"
+fi
+if test "x${enable_subfiling}" = xyes; then
+   echo "\
+              Subfiling support                           - enabled"
+fi
+if test "x${large_req}" = xyes ; then
+   echo "\
+              Allow single large (> 2GiB) MPI-IO requests - enabled"
+fi
+if test "x${thread_safe}" = xyes ; then
+   echo "\
+              Thread-safe capability                      - enabled"
+fi
 if test "x${enable_aggreg}" = xno; then
    echo "\
               Request aggregation in nonblocking APIs     - disabled"
@@ -1808,14 +1828,6 @@ fi
 if test "x${enable_erange_fill}" = xno; then
    echo "\
               Fill variables when NC_ERANGE occurs        - disabled"
-fi
-if test "x${enable_subfiling}" = xyes; then
-   echo "\
-              Subfiling support                           - enabled"
-fi
-if test "x${enable_netcdf4}" = xyes; then
-   echo "\
-              NetCDF-4 support                            - enabled"
 fi
 if test "x${relax_coord_bound}" = xno; then
    echo "\
@@ -1834,33 +1846,21 @@ if test "x${large_file_test}" = xyes; then
    echo "\
               Testing large file/variable I/O             - enabled"
 fi
-if test "x${debug}" = xyes; then
-   echo "\
-              Internal debug mode                         - enabled"
-fi
 if test "x${has_fortran}" = xyes -a "x${ac_f77_support_freeform}" = xno ; then
    echo "\
               Support free form in Fortran 77             - disabled"
-fi
-if test "x${large_req}" = xyes ; then
-   echo "\
-              Allow single large (> 2GiB) MPI-IO requests - enabled"
 fi
 if test "x${null_byte_header_padding}" = xyes ; then
    echo "\
               Check null-byte header padding for reads    - enabled"
 fi
-if test "x${enable_bbdriver}" = xyes ; then
+if test "x${debug}" = xyes; then
    echo "\
-              Burst buffering                             - enabled"
+              Internal debug mode                         - enabled"
 fi
 if test "x${enable_profiling}" = xyes ; then
    echo "\
               Internal profiling mode                     - enabled"
-fi
-if test "x${thread_safe}" = xyes ; then
-   echo "\
-              Thread-safe capability                      - enabled"
 fi
 
 echo "\
