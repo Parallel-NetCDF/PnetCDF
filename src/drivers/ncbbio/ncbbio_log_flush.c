@@ -18,7 +18,7 @@
 /* Convert from log type to MPI type used by pnetcdf library
  * Log spec has different enum of types than MPI
  */
-inline static int logtype2mpitype(int type, MPI_Datatype *buftype){
+static int logtype2mpitype(int type, MPI_Datatype *buftype){
     /* Convert from log type to MPI type used by pnetcdf library
      * Log spec has different enum of types than MPI
      */
@@ -70,7 +70,7 @@ inline static int logtype2mpitype(int type, MPI_Datatype *buftype){
  * Meta data is stored in memory, metalog is only used for restoration after abnormal shutdown
  * IN    ncbbp:    log structure
  */
-int ncbbio_log_flush_core(NC_bb *ncbbp) {
+int log_flush(NC_bb *ncbbp) {
     int i, j, lb, ub, err, status = NC_NOERR;
     int *reqids, *stats;
     //int ready, ready_all = 0;
@@ -102,8 +102,8 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     }
     /* Without enabling large_req, we can not post requests larger than 2GiB */
 #ifndef ENABLE_LARGE_REQ
-    if (databuffersize > 2147483648){
-        databuffersize = 2147483648;
+    if (databuffersize > 2147483647){
+        databuffersize = 2147483647;
     }
 #endif
     /* We assume user will not issue single request larger than 2GiB wwithout enabling large_req */
@@ -158,9 +158,6 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
         return err;
     }
 
-    /* Initialize buffer status */
-    databufferused = 0;
-    dataread = 0;
 
     reqids = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
     stats = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
@@ -171,6 +168,10 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
     entryp = (NC_bb_metadataentry*)(((char*)ncbbp->metadata.buffer) + headerp->entry_begin);
     for (lb = 0; lb < ncbbp->metaidx.nused;){
+        /* Initialize buffer status */
+        databufferused = 0;
+        dataread = 0;
+        
         for (ub = lb; ub < ncbbp->metaidx.nused; ub++) {
             if (ncbbp->metaidx.entries[ub].valid){
                 if(ncbbp->entrydatasize.values[ub] + databufferused > databuffersize) {
