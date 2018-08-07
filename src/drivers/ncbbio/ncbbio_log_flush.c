@@ -70,7 +70,7 @@ static int logtype2mpitype(int type, MPI_Datatype *buftype){
  * Meta data is stored in memory, metalog is only used for restoration after abnormal shutdown
  * IN    ncbbp:    log structure
  */
-int log_flush(NC_bb *ncbbp) {
+int ncbbio_log_flush_core(NC_bb *ncbbp) {
     int i, j, lb, ub, err, status = NC_NOERR;
     int *reqids, *stats;
     //int ready, ready_all = 0;
