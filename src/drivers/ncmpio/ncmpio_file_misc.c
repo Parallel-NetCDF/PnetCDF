@@ -14,7 +14,7 @@
  * ncmpi_end_indep_data()   : dispatcher->end_indep_data()
  * ncmpi_inq()              : dispatcher->inq()
  * ncmpi_inq_xxx()          : dispatcher->inq_misc()
- * ncmpi_flush()             : dispatcher->flush()
+ * ncmpi_flush()            : dispatcher->flush()
  */
 
 #ifdef HAVE_CONFIG_H

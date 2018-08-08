@@ -49,7 +49,7 @@ inRange_uchar(const int     cdf_format,
 {
     /* check value of type xtype if within uchar range */
 
-    if (cdf_format < NC_FORMAT_CDF5 && xtype == NC_BYTE) {
+    if (cdf_format <= NC_FORMAT_CDF2 && xtype == NC_BYTE) {
         /* netCDF specification make a special case for type conversion between
          * uchar and NC_BYTE: do not check for range error. See
          * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
@@ -806,7 +806,9 @@ put_vars(int ncid, int numVars)
         char hint[MPI_MAX_INFO_VAL];
         MPI_Info infoused;
 
-        ncmpi_inq_file_info(ncid, &infoused);
+        err = ncmpi_inq_file_info(ncid, &infoused);
+        IF (err != NC_NOERR) error("ncmpi_inq_file_info");
+
         MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
             bb_enabled = 1;
@@ -905,7 +907,6 @@ check_dims(int  ncid)
             error("Unexpected length %d of dimension %d, expected %zu", length, i, dim_len[i]);
     }
 }
-
 
 /*
  * check variables of specified file have expected name, type, shape & values
@@ -1053,7 +1054,7 @@ check_file(char *filename, int numGatts, int numVars)
         check_dims(ncid);
         check_vars(ncid, numVars);
         check_atts(ncid, numGatts, numVars);
-        err = ncmpi_close (ncid);
+        err = ncmpi_close(ncid);
         IF (err != NC_NOERR)
             error("ncmpi_close: %s", ncmpi_strerror(err));
     }
@@ -1080,7 +1081,7 @@ s_nc_type(nc_type xtype)
 }
 
 int
-nctypelen(nc_type xtype)
+sizeof_nctype(nc_type xtype)
 {
     switch(xtype){
         case NC_BYTE :

@@ -224,15 +224,9 @@
 !        err = nf90mpi_end_indep_data(ncid)
 !        if (err .ne. NF90_ENOTINDEP) &
 !          call errore('nf90mpi_end_indep_data: in collective mode: ',err)
-        err = nf90mpi_begin_indep_data(ncid)
-        if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_begin_indep_data: ', err)
-        err = nf90mpi_put_var(ncid, vid, var, start)
+        err = nf90mpi_put_var_all(ncid, vid, var, start)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_put_var: ', err)
-        err = nf90mpi_end_indep_data(ncid)
-        if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_end_indep_data: ', err)
         err = nf90mpi_close(ncid)
         if (err .ne. NF90_NOERR)  &
             call errore('nf90mpi_close: ', err)
@@ -252,15 +246,13 @@
             intlen = INT(length)
             call errori('Unexpected dim length: ', intlen)
         end if
-        err = nf90mpi_begin_indep_data(ncid)
-        err = nf90mpi_get_var(ncid, vid, var, start)
+        err = nf90mpi_get_var_all(ncid, vid, var, start)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_get_var: ', err)
         if (var .ne. 1.0) &
             call errori( &
                 'nf90mpi_get_var: unexpected value in netCDF ' &
                 , ncid)
-        err = nf90mpi_end_indep_data(ncid)
         err = nf90mpi_close(ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
@@ -270,6 +262,182 @@
             call errori('delete failed for netCDF: ', err)
         call print_nok(nok)
         end
+
+! Test nf90mpi_redef for netcdf 4
+! (In fact also tests nf90mpi_enddef - called from test_nf90mpi_enddef)
+!    BAD_ID
+!    attempt redef (error) & enddef on read-only file
+!    create file, define dims & vars.
+!    attempt put var (error)
+!    attempt redef (error) & enddef.
+!    put vars
+!    attempt def new dims (error)
+!    redef
+!    def new dims, vars.
+!    put atts
+!    enddef
+!    put vars
+!    close
+!    check file: vars & atts
+    subroutine test_nf90mpi_redef4()
+    use pnetcdf
+    implicit        none
+#include "tests.inc"
+    integer         title_len
+    parameter       (title_len = 9)
+
+    integer                 ncid            !/* netcdf id */
+    integer                 dimid           !/* dimension id */
+    integer                 vid             !/* variable id */
+    integer                 err, flags
+    character*(title_len)   title
+    doubleprecision         var
+    character*(NF90_MAX_NAME) name
+    integer(kind=MPI_OFFSET_KIND)                 start(1)
+    integer(kind=MPI_OFFSET_KIND)                 length
+    integer                 intlen
+    integer                 dimids(1)
+    integer                 nok
+
+    nok = 0
+
+    title = 'Not funny'
+
+    ! BAD_ID tests
+    err = nf90mpi_redef(BAD_ID)
+    if (err .ne. NF90_EBADID) then
+        call errore('bad ncid: ', err)
+    endif
+    nok = nok + 1
+    err = nf90mpi_enddef(BAD_ID)
+    if (err .ne. NF90_EBADID) then
+        call errore('bad ncid: ', err)
+    endif
+    nok = nok + 1
+
+    ! read-only tests
+    err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
+                     ncid)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_open: ', err)
+    err = nf90mpi_redef(ncid)
+    if (err .ne. NF90_EPERM) then
+        call errore('nf90mpi_redef in NF90_NOWRITE mode: ', err)
+    endif
+    nok = nok + 1
+    err = nf90mpi_enddef(ncid)
+    if (err .ne. NF90_ENOTINDEFINE) then
+        call errore('nf90mpi_redef in NF90_NOWRITE mode: ', err)
+    endif
+    nok = nok + 1
+    err = nf90mpi_close(ncid)
+    if (err .ne. NF90_NOERR)  &
+        call errore('nf90mpi_close: ', err)
+
+!           /* tests using scratch file */
+    flags = IOR(NF90_NOCLOBBER, extra_flags)
+    err = nf90mpi_create(comm, scratch, flags, info, &
+                       ncid)
+    if (err .ne. NF90_NOERR) then
+        call errore('nf90mpi_create: ', err)
+        return
+    end if
+    call def_dims(ncid)
+    call def_vars(ncid)
+    call put_atts(ncid)
+    err = nf90mpi_inq_varid(ncid, 'd', vid)
+    if (err .ne. NF90_NOERR)  &
+        call errore('nf90mpi_inq_varid: ', err)
+    var = 1.0
+!       should not enter indep mode in define mode
+    err = nf90mpi_begin_indep_data(ncid)
+    if (err .ne. NF90_EINDEFINE) &
+      call errore('nf90mpi_begin_indep_data... in define mode: ', err)
+    start = 0
+    err = nf90mpi_put_var(ncid, vid, var, start)
+    if (err .ne. NF90_EINDEFINE) &
+        call errore('nf90mpi_put_var... in define mode: ', err)
+    err = nf90mpi_end_indep_data(ncid)
+    if (err .ne. NF90_EINDEFINE) &
+      call errore('nf90mpi_end_indep_data... in define mode: ', err)
+    err = nf90mpi_redef(ncid)
+    if (err .ne. NF90_EINDEFINE) then
+        call errore('nf90mpi_redef in define mode: ', err)
+    endif
+    nok = nok + 1
+    err = nf90mpi_enddef(ncid)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_enddef: ', err)
+    call put_vars(ncid)
+    length = 8
+    err = nf90mpi_def_dim(ncid, 'abc', length, dimid)
+    if (err .ne. NF90_ENOTINDEFINE) &
+        call errore('nf90mpi_def_dim in define mode: ', err)
+    err = nf90mpi_redef(ncid)
+    if (err .ne. NF90_NOERR) then
+        call errore('nf90mpi_redef: ', err)
+    endif
+    nok = nok + 1
+    length = 8
+    err = nf90mpi_def_dim(ncid, 'abc', length, dimid)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_def_dim: ', err)
+    dimids(1) = 0
+    err = nf90mpi_def_var(ncid, 'abc', NF90_INT, varid=vid)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_def_var: ', err)
+    length = len(title)
+    err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'title', &
+                          title)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_put_att: ', err)
+    err = nf90mpi_enddef(ncid)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_enddef: ', err)
+    var = 1.0
+!       calling end_indep_data in collective mode is no longer illegal since
+!       1.9.0
+!        err = nf90mpi_end_indep_data(ncid)
+!        if (err .ne. NF90_ENOTINDEP) &
+!          call errore('nf90mpi_end_indep_data: in collective mode: ',err)
+    err = nf90mpi_put_var_all(ncid, vid, var, start)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_put_var: ', err)
+    err = nf90mpi_close(ncid)
+    if (err .ne. NF90_NOERR)  &
+        call errore('nf90mpi_close: ', err)
+
+!           /* check scratch file written as expected */
+    call check_file(scratch)
+    err = nf90mpi_open(comm, scratch, NF90_NOWRITE, &
+          info, ncid)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_open: ', err)
+    err = nf90mpi_inquire_dimension(ncid, dimid, name, length)
+    if (err .ne. NF90_NOERR)  &
+        call errore('nf90mpi_inquire_dimension: ', err)
+    if (name .ne. "abc") &
+        call errori('Unexpected dim name in netCDF ', ncid)
+    if (length .ne. 8) then
+        intlen = INT(length)
+        call errori('Unexpected dim length: ', intlen)
+    end if
+    err = nf90mpi_get_var_all(ncid, vid, var, start)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_get_var: ', err)
+    if (var .ne. 1.0) &
+        call errori( &
+            'nf90mpi_get_var: unexpected value in netCDF ' &
+            , ncid)
+    err = nf90mpi_close(ncid)
+    if (err .ne. NF90_NOERR) &
+        call errore('nf90mpi_close: ', err)
+
+    err = nf90mpi_delete(scratch, info)
+    if (err .ne. NF90_NOERR) &
+        call errori('delete failed for netCDF: ', err)
+    call print_nok(nok)
+    end
 
 ! Test nf90mpi_enddef
 ! Simply calls test_nf90mpi_redef which tests both nf90mpi_redef & nf90mpi_enddef
@@ -1767,23 +1935,35 @@
       implicit none
 #include "tests.inc"
 
-      integer ncid
-      integer err, flags
-      integer i
-      integer version
-      integer old_format
-      integer formats(3)
+      integer ncid, err, flags, i, version
+      integer old_format, nformats, nc_fmt
+      integer formats(4)
       integer nf90mpi_get_file_version
 
+      err = nf90mpi_inq_default_format(nc_fmt);
+      if (err .ne. NF90_NOERR) &
+         call errori('Error calling nf90mpi_inq_default_format()')
+
+      if (nc_fmt .eq. NF_FORMAT_NETCDF4) then
+          nformats = 4 ! test CDF-1, CDF-2, CDF-5 and NetCDF-4
+      else
+          nformats = 3 ! test CDF-1, CDF-2, and CDF-5
+      endif
+      formats(1) = nf_format_classic
+      formats(2) = nf_format_cdf2
+      formats(3) = nf_format_cdf5
+      formats(4) = nf_format_netcdf4
+
 !     /* bad format */
-      err = nf90mpi_set_default_format(3, old_format)
+      err = nf90mpi_set_default_format(999, old_format)
       IF (err .ne. NF90_EINVAL) &
            call errore("bad default format: ", err)
       formats(1) = nf_format_classic
       formats(2) = nf_format_cdf2
       formats(3) = nf_format_cdf5
+      formats(4) = nf_format_netcdf4
 !    /* Cycle through available formats. */
-      do 1 i=1, 3
+      do 1 i=1, nformats
          err = nf90mpi_set_default_format(formats(i), old_format)
          if (err .ne. NF90_NOERR)  &
              call errore("setting classic format: ", err)

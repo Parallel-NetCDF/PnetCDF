@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
     buf = (unsigned char*) calloc(TWO_G+1024,1);
     if (buf == NULL) {
-        printf("malloc falled for size %lld\n", TWO_G+1024);
+        printf("malloc failed for size %lld\n", TWO_G+1024);
         MPI_Finalize();
         return 1;
     }
@@ -73,6 +73,77 @@ int main(int argc, char** argv)
     /* silence iternal debug messages */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
 #endif
+
+#ifdef ENABLE_NETCDF4
+    /* Test for NetCDF 4 first as ncvalidator checks only read classic files */
+
+    /* create a new file for writing ----------------------------------------*/
+    cmode = NC_CLOBBER | NC_NETCDF4;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    CHECK_ERR
+
+    /* define dimensions */
+    err = ncmpi_def_dim(ncid, "NPROCS", nprocs, &dimid[0]);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "X", TWO_G+1024, &dimid[1]);
+    CHECK_ERR
+
+    /* define a big 1D variable of ubyte type */
+    err = ncmpi_def_var(ncid, "big_var", NC_UBYTE, 2, dimid, &varid);
+    CHECK_ERR
+
+    /* do not forget to exit define mode */
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    /* now we are in data mode */
+#ifdef ENABLE_LARGE_REQ
+    for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
+    for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
+#endif
+
+    start[0] = rank;
+    count[0] = 1;
+
+    start[1] = 0;
+    count[1] = 10;
+    err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf);
+    CHECK_ERR
+
+    /* 2nd request is not contiguous from the first */
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+1024);
+    CHECK_ERR
+
+    /* make file access and write buffer of 3rd request contiguous from the 2nd
+     * request to check whether the internal fileview and buftype coalescing
+     * are skipped */
+    start[1] = ONE_G;
+    count[1] = ONE_G+1024;
+    err = ncmpi_put_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
+    CHECK_ERR
+
+    start[1] = 0;
+    count[1] = 10;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf);
+    CHECK_ERR
+
+    start[1] = 1024;
+    count[1] = ONE_G-1024;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+1024);
+    CHECK_ERR
+
+    start[1] = ONE_G;
+    count[1] = ONE_G+1024;
+    err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
+    CHECK_ERR
+
+    err = ncmpi_close(ncid);
+    CHECK_ERR
+#endif
+    /* Test classic format */
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;

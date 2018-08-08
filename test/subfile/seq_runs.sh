@@ -11,6 +11,8 @@ VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
 for j in 0 1 ; do
     export PNETCDF_SAFE_MODE=$j
+    echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+
     for i in $TESTPROGRAMS; do
         ${TESTSEQRUN} ./$i         -f ${TESTOUTDIR}/$i.nc -s 2
         ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
@@ -19,10 +21,14 @@ done
 
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test_subfile.nc.subfile_0.nc
 
+echo ""
 
 if [ -n "${TESTBB}" ]; then
+    echo "---- testing burst buffering"
     for j in 0 1 ; do
         export PNETCDF_SAFE_MODE=$j
+        echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+
         for i in $TESTPROGRAMS; do
             export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
             ${TESTSEQRUN} ./$i         -f ${TESTOUTDIR}/$i.nc -s 2
@@ -33,5 +39,4 @@ if [ -n "${TESTBB}" ]; then
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test_subfile.nc.subfile_0.nc
-    unset PNETCDF_HINTS
 fi

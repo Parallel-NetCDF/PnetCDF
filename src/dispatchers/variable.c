@@ -64,7 +64,7 @@ ncmpi_def_var(int         ncid,    /* IN:  file ID */
     }
 
     /* For CDF-1 and CDF-2 files, only classic types are allowed. */
-    if (pncp->format < NC_FORMAT_CDF5 && type > NC_DOUBLE) {
+    if (pncp->format < NC_FORMAT_NETCDF4 && type > NC_DOUBLE) {
         DEBUG_ASSIGN_ERROR(err, NC_ESTRICTCDF2)
         goto err_check;
     }

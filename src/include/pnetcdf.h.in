@@ -30,6 +30,7 @@
 #define PNETCDF_BYTE_SWAP_IN_PLACE       @IN_PLACE_SWAP@
 #define PNETCDF_BURST_BUFFERING          @BUILD_DRIVER_BB@
 #define PNETCDF_THREAD_SAFE              @ENABLE_THREAD_SAFE@
+#define PNETCDF_DRIVER_NETCDF4           @ENABLE_NETCDF4@
 
 #if defined(__cplusplus)
 extern "C" {

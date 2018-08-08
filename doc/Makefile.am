@@ -20,6 +20,7 @@ EXTRA_DIST = README.CRAY \
              README.Ubuntu \
              README.consistency \
              README.large_files \
+             README.NetCDF4 \
              README.burst_buffering \
              pbs.script
 
