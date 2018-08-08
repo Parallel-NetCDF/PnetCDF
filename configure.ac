@@ -40,7 +40,8 @@ AM_MAINTAINER_MODE([enable])
 m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
 
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
-m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
+dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
+AM_EXTRA_RECURSIVE_TARGETS([tests])
 
 dnl parse the version numbers to 4 env variables
 PNETCDF_VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
@@ -305,6 +306,18 @@ AC_CHECK_FUNC([MPI_File_open], [],
 dnl compute canonical system types
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
+
+dnl AM_PROG_AR is first recognized/traced in autoconf 2.68
+dnl Use it only if we want support for unusual archivers such as Microsoft
+dnl lib.. AM_PROG_AR must be called before LT_INIT
+AM_PROG_AR
+dnl UD_PROG_AR()
+dnl UD_PROG_NM()
+dnl We could use the PAC check for ranlib (it also makes sure that ranlib
+dnl works, which is not always true, particularly when GNU tools are
+dnl installed on a system that does not have (or need) ranlib
+dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
+dnl AC_PROG_RANLIB
 
 dnl libtool v2.4.6 was released in 2015-02-15
 dnl Travis CI only has v2.4.2
@@ -901,18 +914,6 @@ dnl fi
 UD_PROG_M4
 M4FLAGS+=" -DPNETCDF"
 M4FFLAGS+=" -DPNETCDF"
-
-dnl AM_PROG_AR is first recognized/traced in autoconf 2.68
-dnl Use it only if we want support for unusual archivers such as Microsoft
-dnl lib.
-dnl AM_PROG_AR
-dnl UD_PROG_AR()
-dnl UD_PROG_NM()
-dnl We could use the PAC check for ranlib (it also makes sure that ranlib
-dnl works, which is not always true, particularly when GNU tools are
-dnl installed on a system that does not have (or need) ranlib
-dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
-dnl AC_PROG_RANLIB
 
 dnl Check for <stdbool.h> that conforms to C99 requirements
 dnl this is also for using bool type in utf8proc.h/utf8proc.c to support
