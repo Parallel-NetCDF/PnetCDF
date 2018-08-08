@@ -18,10 +18,10 @@ endif
 EXTRA_DIST = README
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
-TESTS_DIRS = $(SUBDIRS:%=tests-%)
-tests: $(TESTS_DIRS)
-$(TESTS_DIRS):
-	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
+# TESTS_DIRS = $(SUBDIRS:%=tests-%)
+# tests: $(TESTS_DIRS)
+# $(TESTS_DIRS):
+# 	$(MAKE) $(MFLAGS) -C $(@:tests-%=%) tests
 
 if BUILD_COVERAGE
    PTEST_SUBDIRS =
