@@ -492,8 +492,12 @@ void dump(const MPI_Comm &comm, const char* path)
     cout << "}" << endl;
 }
 
-/* Test everything for classic, 64-bit offset, an 64-bit data files. */
+/* Test everything for classic, 64-bit offset, 64-bit data, and netCDF4 files. */
+#ifdef ENABLE_NETCDF4
+#define NUM_FORMATS (4)
+#else
 #define NUM_FORMATS (3)
+#endif
 
 int
 main(int argc, char* argv[])	// test new netCDF interface
@@ -522,7 +526,12 @@ main(int argc, char* argv[])	// test new netCDF interface
 
    // Set up the format constants.
    NcmpiFile::FileFormat format[NUM_FORMATS] =
-              {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::classic5};
+#ifdef ENABLE_NETCDF4
+       {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::nc4, NcmpiFile::classic5};
+#else
+       {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::classic5};
+#endif
+
 #ifdef DEBUG
    char format_name[NUM_FORMATS][NC_MAX_NAME] =
         {"classic", "classic2", "classic5"};

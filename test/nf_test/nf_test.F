@@ -25,6 +25,9 @@ C implementation of the netCDF library.
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
+#ifdef ENABLE_NETCDF4
+        call error('   [-4] test NetCDF-4 format' )
+#endif
         call error('   [-r] Just do read-only tests' )
         call error(
      +  '   [-d directory] directory for storing input/output files' )
@@ -40,9 +43,15 @@ C implementation of the netCDF library.
 #include "tests.inc"
 
         integer MY_LEN_TRIM
-        write(msg,"(A,I1)") '*** TESTING F77 '//
-     +                      TRIM(PROGNAME)//
-     +                      ' for CDF-', cdf_format
+        if (cdf_format .EQ. 4) then
+          write(msg,"(A)") '*** TESTING F77 '//
+     +                     TRIM(PROGNAME)//
+     +                     ' for NetCDF-4'
+        else
+          write(msg,"(A,I1)") '*** TESTING F77 '//
+     +                        TRIM(PROGNAME)//
+     +                        ' for CDF-', cdf_format
+        endif
         if (nfailsTotal .ne. 0) then
           write(*,*) TRIM(PROGNAME)//
      +               ' expects to see 0 failure ... '//
@@ -463,6 +472,9 @@ C implementation of the netCDF library.
                         else if (opt .eq. '2') then
                             cdf_format = 2
                             extra_flags = NF_64BIT_OFFSET
+                        else if (opt .eq. '4') then
+                            cdf_format = 4
+                            extra_flags = 4096
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF_64BIT_DATA
@@ -485,6 +497,15 @@ C implementation of the netCDF library.
                 end if
             end if
 1       continue
+
+#ifndef ENABLE_NETCDF4
+        if (cdf_format .EQ. 4) then
+            call error(
+     +      "Error: NetCDF-4 support is not enabled at configure time")
+            call MPI_Finalize(err)
+            stop 1
+        endif
+#endif
 
         numGatts = 6
         numVars  = 136
@@ -595,6 +616,7 @@ C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_get_varm_double', test_nfmpi_get_varm_double)
         call test('nfmpi_get_varm_int8', test_nfmpi_get_varm_int8)
 
+        if (cdf_format .ne. 4) then
         call test('nfmpi_iget_var1_text', test_nfmpi_iget_var1_text)
 #if defined(NF_INT1_T)
         call test('nfmpi_iget_var1_int1', test_nfmpi_iget_var1_int1)
@@ -654,6 +676,7 @@ C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_iget_varm_real', test_nfmpi_iget_varm_real)
         call test('nfmpi_iget_varm_double', test_nfmpi_iget_varm_double)
         call test('nfmpi_iget_varm_int8', test_nfmpi_iget_varm_int8)
+        end if
 
         call test('nfmpi_get_att_text', test_nfmpi_get_att_text)
 #if defined(NF_INT1_T)
@@ -745,6 +768,7 @@ C           /* Test write functions */
      +                 test_nfmpi_put_varm_double)
             call test('nfmpi_put_varm_int8', test_nfmpi_put_varm_int8)
 
+        if (cdf_format .ne. 4) then
             call test('nfmpi_iput_var1_text', test_nfmpi_iput_var1_text)
 #if defined(NF_INT1_T)
             call test('nfmpi_iput_var1_int1', test_nfmpi_iput_var1_int1)
@@ -809,6 +833,7 @@ C           /* Test write functions */
             call test('nfmpi_iput_varm_double',
      +                 test_nfmpi_iput_varm_double)
             call test('nfmpi_iput_varm_int8', test_nfmpi_iput_varm_int8)
+        end if
 
             call test('nfmpi_rename_var', test_nfmpi_rename_var)
             call test('nfmpi_put_att_text', test_nfmpi_put_att_text)
@@ -826,7 +851,9 @@ C           /* Test write functions */
             call test('nfmpi_copy_att', test_nfmpi_copy_att)
             call test('nfmpi_rename_att', test_nfmpi_rename_att)
             call test('nfmpi_del_att', test_nfmpi_del_att)
+            if (cdf_format .ne. 4) then
             call test('nfmpi_set_fill', test_nfmpi_set_fill)
+            end if
             call test('nfmpi_set_default_format',
      +                test_nfmpi_set_default_format)
         end if

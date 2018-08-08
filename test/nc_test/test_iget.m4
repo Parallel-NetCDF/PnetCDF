@@ -375,7 +375,7 @@ TestFunc(var)(VarArgs)
         for (j = 0; j < var_nels[i]; j++) {
             double got;
             char *p = (char *) value;
-            p += j * nctypelen(var_type[i]);
+            p += j * sizeof_nctype(var_type[i]);
             if (inRange(expect[j],var_type[i])) {
                 err = nc2dbl(var_type[i], p, &got);
                 IF (err != NC_NOERR)
@@ -695,7 +695,7 @@ ifdef(`PNETCDF',`dnl
             for (j = 0; j < nels; j++) {
                 double got;
                 char *p = (char *) value;
-                p += j * nctypelen(var_type[i]);
+                p += j * sizeof_nctype(var_type[i]);
                 if (inRange(expect[j],var_type[i])) {
                     err = nc2dbl(var_type[i], p, &got);
                     IF (err != NC_NOERR)
@@ -1196,7 +1196,7 @@ ifdef(`PNETCDF',`dnl
                 for (j = 0; j < nels; j++) {
                     double got;
                     char *p = (char *) value;
-                    p += j * nctypelen(var_type[i]);
+                    p += j * sizeof_nctype(var_type[i]);
                     if (inRange(expect[j],var_type[i])) {
                         err = nc2dbl(var_type[i], p, &got);
                         IF (err != NC_NOERR)
@@ -1737,7 +1737,7 @@ ifdef(`PNETCDF',`dnl
                 for (j = 0; j < nels; j++) {
                     double got;
                     char *p = (char *) value;
-                    p += j * nctypelen(var_type[i]);
+                    p += j * sizeof_nctype(var_type[i]);
                     if (inRange(expect[j],var_type[i])) {
                         err = nc2dbl(var_type[i], p, &got);
                         IF (err != NC_NOERR)

@@ -258,7 +258,7 @@ ncmpi_create(MPI_Comm    comm,
              int        *ncidp)
 {
     int rank, nprocs, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, relax_coord_bound;
+    int safe_mode=0, mpireturn, relax_coord_bound, format;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -322,11 +322,6 @@ ncmpi_create(MPI_Comm    comm,
             DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
         }
 
-        if (cmode & NC_NETCDF4) {
-            fprintf(stderr,"NC_NETCDF4 is not yet supported\n");
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-        }
-
         if (safe_mode) { /* sync status among all processes */
             err = status;
             TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
@@ -334,12 +329,6 @@ ncmpi_create(MPI_Comm    comm,
         }
         /* continue to use root's cmode to create the file, but will report
          * cmode inconsistency error, if there is any */
-    }
-    else { /* nprocs == 1 */
-        if (cmode & NC_NETCDF4) {
-            fprintf(stderr,"NC_NETCDF4 is not yet supported\n");
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-        }
     }
 
     /* combine user's MPI info and PNETCDF_HINTS env variable */
@@ -373,14 +362,70 @@ ncmpi_create(MPI_Comm    comm,
     /* Use environment variable and cmode to tell the file format
      * which is later used to select the right driver.
      */
+
+#ifdef ENABLE_NETCDF4
+    /* It is illegal to have NC_64BIT_OFFSET & NC_64BIT_DATA & NC_NETCDF4 */
+    if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA|NC_NETCDF4)) ==
+                 (NC_64BIT_OFFSET|NC_64BIT_DATA|NC_NETCDF4)) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
+        DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
+    }
+#else
+    /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
+    if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
+                 (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
+        DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
+    }
+
+    if (cmode & NC_NETCDF4) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
+        DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+    }
+#endif
+
+    /* Check if cmode contains format specific flag */
+    if (fIsSet(cmode, NC_64BIT_DATA))
+        format = NC_FORMAT_CDF5;
+    else if (fIsSet(cmode, NC_64BIT_OFFSET))
+        format = NC_FORMAT_CDF2;
+    else if (fIsSet(cmode, NC_NETCDF4))
+        format = NC_FORMAT_NETCDF4;
+    else if (fIsSet(cmode, NC_NETCDF4|NC_CLASSIC_MODEL))
+        format = NC_FORMAT_NETCDF4;
+    else if (fIsSet(cmode, NC_CLASSIC_MODEL))
+        format = NC_FORMAT_CLASSIC;
+    else {
+        /* if no file format flag is set in cmode, use default */
+        ncmpi_inq_default_format(&format);
+             if (format == NC_FORMAT_CDF5)    cmode |= NC_64BIT_DATA;
+        else if (format == NC_FORMAT_CDF2)    cmode |= NC_64BIT_OFFSET;
+        else if (format == NC_FORMAT_NETCDF4) cmode |= NC_NETCDF4;
+    }
+
 #ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
         driver = ncfoo_inq_driver();
     else
 #endif
 #ifdef BUILD_DRIVER_BB
-    if (enable_bb_driver)
+    if (enable_bb_driver) {
+        if (format == NC_FORMAT_NETCDF4) {
+            printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");
+            if (combined_info != MPI_INFO_NULL)
+                MPI_Info_free(&combined_info);
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
         driver = ncbbio_inq_driver();
+    }
+    else
+#endif
+#ifdef ENABLE_NETCDF4
+    if (format == NC_FORMAT_NETCDF4)
+        driver = nc4io_inq_driver();
     else
 #endif
         /* default is the driver built on top of MPI-IO */
@@ -396,12 +441,18 @@ ncmpi_create(MPI_Comm    comm,
     pncp = (PNC*) NCI_Malloc(sizeof(PNC));
     if (pncp == NULL) {
         *ncidp = -1;
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
     /* get a new nc file ID from NCPList */
     err = new_id_PNCList(ncidp, pncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        if (combined_info != MPI_INFO_NULL)
+            MPI_Info_free(&combined_info);
+        return err;
+    }
 
     /* Duplicate comm, because users may free it (though unlikely). Note
      * MPI_Comm_dup() is collective. We pass pncp->comm to drivers, so there
@@ -445,18 +496,10 @@ ncmpi_create(MPI_Comm    comm,
     pncp->vars       = NULL;
     pncp->flag       = NC_MODE_DEF | NC_MODE_CREATE;
     pncp->ncp        = ncp;
+    pncp->format     = format;
 
     if (safe_mode)          pncp->flag |= NC_MODE_SAFE;
     if (!relax_coord_bound) pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
-
-    /* set the file format version based on the create mode, cmode */
-    if (cmode & NC_64BIT_DATA) {
-        pncp->format = NC_FORMAT_CDF5;
-    } else if (cmode & NC_64BIT_OFFSET) {
-        pncp->format = NC_FORMAT_CDF2;
-    } else { /* no format specific flag is used in cmode */
-        ncmpi_inq_default_format(&pncp->format);
-    }
 
     return status;
 }
@@ -538,11 +581,12 @@ ncmpi_open(MPI_Comm    comm,
             if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTNC)
             format = NC_ENOTNC;
         }
+#ifndef ENABLE_NETCDF4
         else if (format == NC_FORMAT_NETCDF4) {
-            fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
-            if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-            format = NC_ENOTSUPPORT;
+            if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+            format = NC_ENOTBUILT;
         }
+#endif
     }
 
     if (nprocs > 1) { /* root broadcasts format and omode */
@@ -615,8 +659,22 @@ ncmpi_open(MPI_Comm    comm,
     else
 #endif
 #ifdef BUILD_DRIVER_BB
-    if (enable_bb_driver)
+    if (enable_bb_driver) {
+        if (format == NC_FORMAT_NETCDF4) {
+            printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
         driver = ncbbio_inq_driver();
+    }
+    else
+#endif
+#ifdef ENABLE_NETCDF4
+    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
+        driver = nc4io_inq_driver();
+    else
+#else
+    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
+        DEBUG_RETURN_ERROR(NC_ENOTBUILT)
     else
 #endif
     {
@@ -626,17 +684,8 @@ ncmpi_open(MPI_Comm    comm,
             format == NC_FORMAT_CDF5) {
             driver = ncmpio_inq_driver();
         }
-        else if (format == NC_FORMAT_NETCDF4_CLASSIC) {
-            fprintf(stderr,"NC_FORMAT_NETCDF4_CLASSIC is not yet supported\n");
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-        }
-        else if (format == NC_FORMAT_NETCDF4) {
-            fprintf(stderr,"NC_FORMAT_NETCDF4 is not yet supported\n");
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-        }
-        else { /* unrecognized file format */
+        else /* unrecognized file format */
             DEBUG_RETURN_ERROR(NC_ENOTNC)
-        }
     }
 
     /* allocate a PNC object */
@@ -1124,13 +1173,18 @@ ncmpi_inq_version(int ncid, int *nc_mode)
 
     if (nc_mode == NULL) return NC_NOERR;
 
-    if (pncp->format == 5) {
+    if (pncp->format == NC_FORMAT_CDF5) {
         *nc_mode = NC_64BIT_DATA;
-    } else if (pncp->format == 2) {
+    } else if (pncp->format == NC_FORMAT_CDF2) {
         *nc_mode = NC_64BIT_OFFSET;
-    } else if (pncp->format == 1) {
+    } else if (pncp->format == NC_FORMAT_CLASSIC) {
         *nc_mode = NC_CLASSIC_MODEL;
     }
+#ifdef ENABLE_NETCDF4
+    else if (pncp->format == NC_FORMAT_NETCDF4) {
+        *nc_mode = NC_NETCDF4;
+    }
+#endif
 
     return NC_NOERR;
 }
@@ -1487,6 +1541,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
     /* Make sure only valid format is set. */
     if (format != NC_FORMAT_CLASSIC &&
         format != NC_FORMAT_CDF2 &&
+        format != NC_FORMAT_NETCDF4 &&
         format != NC_FORMAT_CDF5) {
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
     }

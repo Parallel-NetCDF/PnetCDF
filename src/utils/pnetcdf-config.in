@@ -67,6 +67,7 @@ enable_relax_coord_bound="@RELAX_COORD_BOUND@"
 is_bigendian="@ac_cv_c_bigendian@"
 in_place_swap="@in_place_swap@"
 enable_bbdriver="@BUILD_DRIVER_BB@"
+enable_netcdf4="@ENABLE_NETCDF4@"
 
 config_date="@CONFIG_DATE@"
 release_date="PNETCDF_RELEASE_DATE"
@@ -94,6 +95,7 @@ Available values for OPTION include:
   --fcflags                   Fortran 9x compiler flags
   --ldflags                   Linker options
   --libs                      Libraries used to build PnetCDF
+  --netcdf4                   Whether NetCDF-4 support is enabled or disabled
   --relax-coord-bound         Whether using a relaxed coordinate boundary check
   --in-place-swap             Whether using buffer in-place Endianness byte swap
   --erange-fill               Whether using fill values for NC_ERANGE error
@@ -141,6 +143,11 @@ if test "x$has_fortran" = xyes ; then
 #        echo "  --fclibs                    -> $FCLIBS"
 fi
         echo
+if test "x$enable_netcdf4" = x1; then
+        echo "  --netcdf4                   -> enabled"
+else
+        echo "  --netcdf4                   -> disabled"
+fi
 if test "x$enable_relax_coord_bound" = x1; then
         echo "  --relax-coord-bound         -> enabled"
 else
@@ -298,6 +305,14 @@ while test $# -gt 0; do
 #    --fclibs)
 #        echo "$FCLIBS" | sed -e 's/^[ \t]*//'
 #        ;;
+
+    --netcdf4)
+if test "x$enable_netcdf4" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
 
     --relax-coord-bound)
 if test "x$enable_relax_coord_bound" = x1; then

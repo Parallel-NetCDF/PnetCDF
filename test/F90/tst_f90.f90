@@ -72,6 +72,8 @@ program netcdfTest
   real (kind = FourByteReal), dimension(numLons) :: lonVarBuf
   character(LEN=256) filename, cmd, msg
   integer my_rank, p, info
+  integer i, nformats, old_format
+  integer formats(2)
 
   call MPI_Init(ierr)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
@@ -99,101 +101,109 @@ program netcdfTest
     stop
   end if
 
-  call MPI_Info_create(info, ierr)
-  ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",ierr)
+  formats = (/nf90_format_netcdf4, nf90_format_classic/)
+  nformats = 1
+  if (PNETCDF_DRIVER_NETCDF4 .EQ. 0) nformats = nformats + 1
 
-  ! Create the file
-  call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, info, ncFileID))
+  do i = nformats, 2
+    call check(nf90mpi_set_default_format(formats(i), old_format))
 
-  ! Define the dimensions
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "lat",     len = numLats,           dimid = latDimID))
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "lon",     len = numLons,           dimid = lonDimID))
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "frtime",  len = nf90mpi_unlimited, dimid = frTimeDimID))
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "timelen", len = timeStringLen,     dimid = timeDimID))
+    call MPI_Info_create(info, ierr)
+    ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",ierr)
 
-  ! Create variables and attributes
-  call check(nf90mpi_def_var(ncid = ncFileID, name = "P", xtype = nf90_float,     &
-                     dimids = (/ lonDimID, latDimID, frTimeDimID /), varID = pressVarID) )
-  call check(nf90mpi_put_att(ncFileID, pressVarID, "long_name",   "pressure at maximum wind"))
-  call check(nf90mpi_put_att(ncFileID, pressVarID, "units",       "hectopascals") )
-  ! Use 4-byte reals explicitly, to match 4-byte attribute type in test file
-  validRange(1) = 0.
-  validRange(2) = 1500
-  call check(nf90mpi_put_att(ncFileID, pressVarID, "valid_range", validRange))
-  ! Use a 4-byte float constant, to match variable type
-  fillVal = -9999.0
-  call check(nf90mpi_put_att(ncFileID, pressVarID,  "_FillValue", fillVal ) )
+    ! Create the file
+    call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, info, ncFileID))
 
-  call check(nf90mpi_def_var(ncFileID, "lat", nf90_float, dimids = latDimID, varID = latVarID) )
-  call check(nf90mpi_put_att(ncFileID, latVarID, "long_name", "latitude"))
-  call check(nf90mpi_put_att(ncFileID, latVarID, "units", "degrees_north"))
+    ! Define the dimensions
+    call check(nf90mpi_def_dim(ncid = ncFileID, name = "lat",     len = numLats,           dimid = latDimID))
+    call check(nf90mpi_def_dim(ncid = ncFileID, name = "lon",     len = numLons,           dimid = lonDimID))
+    call check(nf90mpi_def_dim(ncid = ncFileID, name = "frtime",  len = nf90mpi_unlimited, dimid = frTimeDimID))
+    call check(nf90mpi_def_dim(ncid = ncFileID, name = "timelen", len = timeStringLen,     dimid = timeDimID))
 
-  call check(nf90mpi_def_var(ncFileID, "lon", nf90_float, lonDimID, lonVarID) )
-  call check(nf90mpi_put_att(ncFileID, lonVarID, "long_name", "longitude"))
-  call check(nf90mpi_put_att(ncFileID, lonVarID, "units",     "degrees_east"))
+    ! Create variables and attributes
+    call check(nf90mpi_def_var(ncid = ncFileID, name = "P", xtype = nf90_float,     &
+                      dimids = (/ lonDimID, latDimID, frTimeDimID /), varID = pressVarID) )
+    call check(nf90mpi_put_att(ncFileID, pressVarID, "long_name",   "pressure at maximum wind"))
+    call check(nf90mpi_put_att(ncFileID, pressVarID, "units",       "hectopascals") )
+    ! Use 4-byte reals explicitly, to match 4-byte attribute type in test file
+    validRange(1) = 0.
+    validRange(2) = 1500
+    call check(nf90mpi_put_att(ncFileID, pressVarID, "valid_range", validRange))
+    ! Use a 4-byte float constant, to match variable type
+    fillVal = -9999.0
+    call check(nf90mpi_put_att(ncFileID, pressVarID,  "_FillValue", fillVal ) )
 
-  call check(nf90mpi_def_var(ncFileID, "frtime", nf90_int, frTimeDimID, frTimeVarID) )
-  call check(nf90mpi_put_att(ncFileID, frTimeVarID, "long_name", "forecast time"))
-  call check(nf90mpi_put_att(ncFileID, frTimeVarID, "units",     "hours"))
+    call check(nf90mpi_def_var(ncFileID, "lat", nf90_float, dimids = latDimID, varID = latVarID) )
+    call check(nf90mpi_put_att(ncFileID, latVarID, "long_name", "latitude"))
+    call check(nf90mpi_put_att(ncFileID, latVarID, "units", "degrees_north"))
 
-  call check(nf90mpi_def_var(ncFileID, "reftime", nf90_char, timeDimID, refTimeVarID) )
-  call check(nf90mpi_put_att(ncFileID, refTimeVarID, "long_name", "reference time"))
-  call check(nf90mpi_put_att(ncFileID, refTimeVarID, "units",     "text_time"))
+    call check(nf90mpi_def_var(ncFileID, "lon", nf90_float, lonDimID, lonVarID) )
+    call check(nf90mpi_put_att(ncFileID, lonVarID, "long_name", "longitude"))
+    call check(nf90mpi_put_att(ncFileID, lonVarID, "units",     "degrees_east"))
 
-  ! In the C++ interface the define a scalar variable - do we know how to do this?
-  call check(nf90mpi_def_var(ncFileID, "ScalarVariable", nf90_real, scalarVarID))
+    call check(nf90mpi_def_var(ncFileID, "frtime", nf90_int, frTimeDimID, frTimeVarID) )
+    call check(nf90mpi_put_att(ncFileID, frTimeVarID, "long_name", "forecast time"))
+    call check(nf90mpi_put_att(ncFileID, frTimeVarID, "units",     "hours"))
 
-  ! Global attributes
-  call check(nf90mpi_put_att(ncFileID, nf90_global, "history", &
-                     "created by Unidata LDM from NPS broadcast"))
-  call check(nf90mpi_put_att(ncFileID, nf90_global, "title", &
-                     "NMC Global Product Set: Pressure at Maximum Wind"))
+    call check(nf90mpi_def_var(ncFileID, "reftime", nf90_char, timeDimID, refTimeVarID) )
+    call check(nf90mpi_put_att(ncFileID, refTimeVarID, "long_name", "reference time"))
+    call check(nf90mpi_put_att(ncFileID, refTimeVarID, "units",     "text_time"))
 
-  ! Leave define mode
-  call check(nf90mpi_enddef(ncfileID))
+    ! In the C++ interface the define a scalar variable - do we know how to do this?
+    call check(nf90mpi_def_var(ncFileID, "ScalarVariable", nf90_real, scalarVarID))
 
-  ! Write the dimension variables
-  latVarBuf = (/ -90., -87.5, -85., -82.5 /)
-  call check(nf90mpi_put_var_all(ncFileID, latVarID, latVarBuf))
-  lonVarBuf = (/ -180, -175, -170 /)
-  call check(nf90mpi_put_var_all(ncFileID, lonVarID, lonVarBuf))
-  ! Don't use anonymous array here, in case platform has 8-byte integers
-  frTimeVals(1) = 12
-  frTimeVals(2) = 18
-  call check(nf90mpi_put_var_all(ncFileID, frTimeVarID,  frTimeVals                  ) )
-  call check(nf90mpi_put_var_all(ncFileID, reftimeVarID, "1992-3-21 12:00"           ) )
+    ! Global attributes
+    call check(nf90mpi_put_att(ncFileID, nf90_global, "history", &
+                      "created by Unidata LDM from NPS broadcast"))
+    call check(nf90mpi_put_att(ncFileID, nf90_global, "title", &
+                      "NMC Global Product Set: Pressure at Maximum Wind"))
 
-  ! Write the pressure variable. Write a slab at a time to check incrementing.
-  pressure = 949. + real(reshape( (/ (counter, counter = 1, numLats * numLons * numFrTimes) /),  &
-                                    (/ numLons, numLats, numFrTimes /) ) )
-  call check(nf90mpi_put_var_all(ncFileID, pressVarID, pressure(:, :, 1:1)) )
-  call check(nf90mpi_put_var_all(ncFileID, pressVarID, pressure(:, :, 2:2), &
-                                 start = (/ 1_EightByteInt, 1_EightByteInt, 2_EightByteInt /)) )
+    ! Leave define mode
+    call check(nf90mpi_enddef(ncfileID))
 
-  call check(nfmpi_begin_indep_data(ncFileID))
-  scalarVarBuf = 10
-  call check(nf90mpi_put_var(ncFileID, scalarVarID, scalarVarBuf))
-  call check(nfmpi_end_indep_data(ncFileID))
+    ! Write the dimension variables
+    latVarBuf = (/ -90., -87.5, -85., -82.5 /)
+    call check(nf90mpi_put_var_all(ncFileID, latVarID, latVarBuf))
+    lonVarBuf = (/ -180, -175, -170 /)
+    call check(nf90mpi_put_var_all(ncFileID, lonVarID, lonVarBuf))
+    ! Don't use anonymous array here, in case platform has 8-byte integers
+    frTimeVals(1) = 12
+    frTimeVals(2) = 18
+    call check(nf90mpi_put_var_all(ncFileID, frTimeVarID,  frTimeVals                  ) )
+    call check(nf90mpi_put_var_all(ncFileID, reftimeVarID, "1992-3-21 12:00"           ) )
 
-  call check(nf90mpi_close(ncFileID))
+    ! Write the pressure variable. Write a slab at a time to check incrementing.
+    pressure = 949. + real(reshape( (/ (counter, counter = 1, numLats * numLons * numFrTimes) /),  &
+                                      (/ numLons, numLats, numFrTimes /) ) )
+    call check(nf90mpi_put_var_all(ncFileID, pressVarID, pressure(:, :, 1:1)) )
+    call check(nf90mpi_put_var_all(ncFileID, pressVarID, pressure(:, :, 2:2), &
+                                  start = (/ 1_EightByteInt, 1_EightByteInt, 2_EightByteInt /)) )
 
-  ! Now open the file to read and check a few values
-  call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, info, ncFileID))
-  call check(nf90mpi_inq_varid(ncFileID,"frtime",frTimeVarID))
-  call check(nf90mpi_get_att(ncFileID,frTimeVarID,"units",frTimeUnits))
-  if(frTimeUnits .ne. "hours") then
-     print *, 'Attribute value not what was written:', frTimeUnits
-     stop 2
-  endif
-  call check(nf90mpi_close(ncFileID))
-  call MPI_Info_free(info, ierr)
+    call check(nfmpi_begin_indep_data(ncFileID))
+    scalarVarBuf = 10
+    call check(nf90mpi_put_var(ncFileID, scalarVarID, scalarVarBuf))
+    call check(nfmpi_end_indep_data(ncFileID))
 
-  msg = '*** TESTING F90 '//trim(cmd)
+    call check(nf90mpi_close(ncFileID))
+
+    ! Now open the file to read and check a few values
+    call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, info, ncFileID))
+    call check(nf90mpi_inq_varid(ncFileID,"frtime",frTimeVarID))
+    call check(nf90mpi_get_att(ncFileID,frTimeVarID,"units",frTimeUnits))
+    if(frTimeUnits .ne. "hours") then
+      print *, 'Attribute value not what was written:', frTimeUnits
+      stop 2
+    endif
+    call check(nf90mpi_close(ncFileID))
+    call MPI_Info_free(info, ierr)
+  enddo
+
+    msg = '*** TESTING F90 '//trim(cmd)
   if (my_rank .eq. 0) call pass_fail(0, msg)
 
  999 call MPI_Finalize(ierr)
 
-contains
+ contains
   ! Internal subroutine - checks error status after each netcdf, prints out text message each time
   !   an error code is returned.
   subroutine check(status)
@@ -201,7 +211,7 @@ contains
 
     if(status /= nf90_noerr) then
       print *, trim(nf90mpi_strerror(status))
-      stop 2
+      stop 3
     end if
   end subroutine check
 end program netcdfTest

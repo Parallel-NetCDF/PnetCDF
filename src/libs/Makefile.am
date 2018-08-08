@@ -20,6 +20,9 @@ libpnetcdf_la_LIBADD += ../drivers/ncmpio/libncmpio.la
 if BUILD_DRIVER_FOO
 libpnetcdf_la_LIBADD += ../drivers/ncfoo/libncfoo.la
 endif
+if ENABLE_NETCDF4
+libpnetcdf_la_LIBADD += ../drivers/nc4io/libnc4io.la
+endif
 if BUILD_DRIVER_BB
 libpnetcdf_la_LIBADD += ../drivers/ncbbio/libncbbio.la
 endif
@@ -58,6 +61,9 @@ endif
 
 ../drivers/ncmpio/libncmpio.la:
 	set -e; cd ../drivers/ncmpio && $(MAKE) $(MFLAGS)
+
+../drivers/ncncio/libncncio.la:
+	set -e; cd ../drivers/ncncio && $(MAKE) $(MFLAGS)
 
 ../drivers/ncfoo/libncfoo.la:
 	set -e; cd ../drivers/ncfoo && $(MAKE) $(MFLAGS)

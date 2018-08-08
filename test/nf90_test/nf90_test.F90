@@ -36,6 +36,9 @@
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
+#ifdef ENABLE_NETCDF4
+        call error('   [-4] test NetCDF-4 format' )
+#endif
         call error('   [-r] Just do read-only tests' )
         call error( &
         '   [-d directory] directory for storing input/output files' )
@@ -49,8 +52,13 @@
         character*1024  msg
 #include "tests.inc"
 
-        write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
-                            ' for CDF-', cdf_format
+        if (cdf_format .EQ. 4) then
+          write(msg,"(A)") '*** TESTING F90 '//TRIM(PROGNAME)// &
+                              ' for NetCDF-4'
+        else
+          write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
+                              ' for CDF-', cdf_format
+        endif
         if (nfailsTotal .ne. 0) then
           write(*,*) trim(PROGNAME)//' expects to see 0 failure ... '//&
                      'Total number of failures: ', nfailsTotal
@@ -279,6 +287,7 @@
         external        test_nf90mpi_inq_atttype
         external        test_nf90mpi_create
         external        test_nf90mpi_redef
+        external        test_nf90mpi_redef4
         external        test_nf90mpi_enddef
         external        test_nf90mpi_sync
         external        test_nf90mpi_flush
@@ -469,6 +478,9 @@
                         else if (opt .eq. '2') then
                             cdf_format = 2
                             extra_flags = NF90_64BIT_OFFSET
+                        else if (opt .eq. '4') then
+                            cdf_format = 4
+                            extra_flags = NF90_NETCDF4
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF90_64BIT_DATA
@@ -489,6 +501,15 @@
                 end if
             end if
 1       continue
+
+#ifndef ENABLE_NETCDF4
+        if (cdf_format .EQ. 4) then
+            call error( &
+            "Error: NetCDF-4 support is not enabled at configure time")
+            call MPI_Finalize(err)
+            stop 1
+        endif
+#endif
 
         call MPI_Info_create(info, err)
         ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",err)
@@ -596,6 +617,7 @@
         call test('nf90mpi_get_varm_double', test_nf90mpi_get_varm_double)
         call test('nf90mpi_get_varm_int8', test_nf90mpi_get_varm_int8)
 
+        if (cdf_format .NE. 4) then
         call test('nf90mpi_iget_var1_text', test_nf90mpi_iget_var1_text)
 #if defined(NF_INT1_T)
         call test('nf90mpi_iget_var1_int1', test_nf90mpi_iget_var1_int1)
@@ -655,6 +677,7 @@
         call test('nf90mpi_iget_varm_real', test_nf90mpi_iget_varm_real)
         call test('nf90mpi_iget_varm_double', test_nf90mpi_iget_varm_double)
         call test('nf90mpi_iget_varm_int8', test_nf90mpi_iget_varm_int8)
+        endif
 
         call test('nf90mpi_get_att_text', test_nf90mpi_get_att_text)
 #if defined(NF_INT1_T)
@@ -676,8 +699,13 @@
 !           /* Test write functions */
         if (.not. readonly) then
             call test('nf90mpi_create', test_nf90mpi_create)
+            if (cdf_format .NE. 4) then
             call test('nf90mpi_redef', test_nf90mpi_redef)
             call test('nf90mpi_enddef', test_nf90mpi_enddef)
+            else
+            call test('nf90mpi_redef', test_nf90mpi_redef4)
+!           /* test_nf90mpi_enddef calls test_nf90mpi_redef, no need to repeaat */
+            endif
             call test('nf90mpi_sync', test_nf90mpi_sync)
             call test('nf90mpi_flush', test_nf90mpi_flush)
             call test('nf90mpi_abort', test_nf90mpi_abort)
@@ -746,6 +774,7 @@
                        test_nf90mpi_put_varm_double)
             call test('nf90mpi_put_varm_int8', test_nf90mpi_put_varm_int8)
 
+            if (cdf_format .NE. 4) then
             call test('nf90mpi_iput_var1_text', test_nf90mpi_iput_var1_text)
 #if defined(NF_INT1_T)
             call test('nf90mpi_iput_var1_int1', test_nf90mpi_iput_var1_int1)
@@ -810,6 +839,7 @@
             call test('nf90mpi_iput_varm_double', &
                        test_nf90mpi_iput_varm_double)
             call test('nf90mpi_iput_varm_int8', test_nf90mpi_iput_varm_int8)
+            endif
 
             call test('nf90mpi_rename_var', test_nf90mpi_rename_var)
             call test('nf90mpi_put_att_text', test_nf90mpi_put_att_text)
@@ -827,7 +857,9 @@
             call test('nf90mpi_copy_att', test_nf90mpi_copy_att)
             call test('nf90mpi_rename_att', test_nf90mpi_rename_att)
             call test('nf90mpi_del_att', test_nf90mpi_del_att)
-            call test('nf90mpi_set_fill', test_nf90mpi_set_fill)
+            if (cdf_format .NE. 4) then
+                call test('nf90mpi_set_fill', test_nf90mpi_set_fill)
+            endif
             call test('nf90mpi_set_default_format', &
                       test_nf90mpi_set_default_format)
         end if

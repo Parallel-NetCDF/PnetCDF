@@ -33,7 +33,11 @@ int main(int argc, char** argv) {
     char filename[256];
     int i, j, k, rank, nprocs, err, nerrs=0;
     int ncid, cmode, format, varid[2], dimid[2], expect, *buf;
+#ifdef ENABLE_NETCDF4
+    int formats[4]={NC_FORMAT_NETCDF4, NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_CDF5};
+#else
     int formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_CDF5};
+#endif
     MPI_Comm comm=MPI_COMM_WORLD;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Offset start[2], count[2];
@@ -60,7 +64,11 @@ int main(int argc, char** argv) {
     /* allocate I/O buffer */
     buf = (int*) malloc(NY*NX * sizeof(int));
 
+#ifdef ENABLE_NETCDF4
+    for (k=0; k<4; k++) {
+#else
     for (k=0; k<3; k++) {
+#endif
         ncmpi_set_default_format(formats[k], NULL);
 
         /* create a new file for writing ------------------------------------*/
@@ -110,7 +118,7 @@ int main(int argc, char** argv) {
         err = ncmpi_close(ncid); CHECK_ERR
 
         /* reopen the file and read data back */
-        err = ncmpi_open(comm, filename, NC_WRITE, info, &ncid); CHECK_ERR
+        err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
 
         err = ncmpi_inq_format(ncid, &format); CHECK_ERR
         if (format != formats[k]) {

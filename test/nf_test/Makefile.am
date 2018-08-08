@@ -67,9 +67,16 @@ TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
 endif
 
 TESTS = seq_runs.sh
+TEST_EXTENSIONS = .sh
 
 nf_test_SOURCES = $(F_SRCS) fortlib.c
 nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
+
+if ENABLE_NETCDF4
+AM_CPPFLAGS += $(FC_DEFINE)ENABLE_NETCDF4
+TESTNETCDF4 = 1
+TESTS_ENVIRONMENT += TESTNETCDF4=1 ; export TESTNETCDF4;
+endif
 
 $(M4SRCS:.m4=.F): Makefile
 

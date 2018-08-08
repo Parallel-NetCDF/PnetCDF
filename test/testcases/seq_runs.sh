@@ -33,7 +33,10 @@ ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/testfile.nc ${TESTOUTDIR}/redef1.nc
 
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
+echo ""
+
 if [ -n "${TESTBB}" ]; then
+   echo "---- testing burst buffering"
    # Run using burst buffer driver
    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
    ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds_bb.nc
@@ -47,9 +50,14 @@ if [ -n "${TESTBB}" ]; then
    done
 fi
 
+echo ""
+
 if [ -n "${TEST_THREAD_SAFE}" ]; then
+   echo "---- testing thread safety"
    for j in 0 1 ; do
        export PNETCDF_SAFE_MODE=$j
+       echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+
        ${TESTSEQRUN} ./tst_pthread ${TESTOUTDIR}/tst_pthread.nc
        for i in 0 1 2 3 4 5 ; do
            ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_pthread.nc.$i

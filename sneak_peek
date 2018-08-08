@@ -2,92 +2,115 @@
 This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
-  o New features
-    * Thread-safe capability is added to this release. It can be enabled with
-      configure option --enable-thread-safe. In addition, option --with-pthread
-      can be used to specify the path to the pthreads library. This feature
-      currently only supports one-thread-per-file I/O operation.
+* New features
+  + Accessing HDF5-based NetCDF-4 files is supported. PnetCDF can now be built
+    on top of NetCDF-4, which allows PnetCDF to read and write a NetCDF-4 file.
+    Note NetCDF-4 file format is currently not supported by the burst buffering
+    driver.
+  + Thread-safe capability is added to this release. It can be enabled with
+    configure option `--enable-thread-safe`. In addition, option
+    `--with-pthread` can be used to specify the path to the pthreads library.
+    This feature currently only supports one-thread-per-file I/O operation.
 
-  o New optimization
-    * The internal data buffering mechanism in the burst buffer driver is
-      removed. This mechanism caches the request data in memory until the
-      accumulated size is more than 8 MiB, so the write requests to burst
-      buffers can be aligned with 8 MiB boundaries. However, experiments on
-      Cray DataWarp show a negligible performance improvement unless the I/O
-      request is small and fragment. On the other hand, it can degrade
-      performance for mid- and large-sized requests. The burst buffer driver
-      now writes directly to the burst buffers for each user write request.
+* New optimization
+  + The internal data buffering mechanism in the burst buffer driver is
+    removed. This mechanism caches the request data in memory until the
+    accumulated size is more than 8 MiB, so the write requests to burst buffers
+    can be aligned with 8 MiB boundaries. However, experiments on Cray DataWarp
+    show a negligible performance improvement unless the I/O request is small
+    and fragment. On the other hand, it can degrade performance for mid- and
+    large-sized requests. The burst buffer driver now writes directly to the
+    burst buffers for each user write request.
 
-  o New Limitations
-    * none
+* New Limitations
+  + Due to a bug in HDF5 1.10.2 that fails zero-length write requests in the
+    collective mode, PnetCDF is not able to support such requests when NetCDF-4
+    feature is enabled.
 
-  o Update configure options
-    * none
+* Update configure options
+  + Enable NetCDF-4 support.
+    - `--enable-netcdf4`: enable NetCDF4 format classic mode support
+    - `--with-hdf5=/path/to/hdf5`: set HDF5 install path
+    - `--with-netcdf4=/path/to/netcdf-4`: set NetCDF install path
 
-  o New constants
-    * none
+* New constants
+  + none
 
-  o New APIs
-    * none
+* New APIs
+  + none
 
-  o API syntax changes
-    * none
+* API syntax changes
+  + none
 
-  o API semantics updates
-    * none
+* API semantics updates
+  + none
 
-  o New error code precedence
-    * none
+* New error code precedence
+  + none
 
-  o Updated error strings
-    * none
+* Updated error strings
+  + none
 
-  o New error code
-    * none
+* New error code
+  + none
 
-  o New PnetCDF hint
-    * none
+* New PnetCDF hint
+  + none
 
-  o New run-time environment variables
-    * none
+* New run-time environment variables
+  + none
 
-  o Build recipes
-    * none
+* Build recipes
+  + doc/README.NetCDF4 is added to describe the usage of the new feature of
+    NetCDF-4 support.
 
-  o New/updated utility program
-    * none
+* New/updated utility program
+  + none
 
-  o Other updates:
-    * none
+* Other updates:
+  + none
 
-  o Bug fixes
-    * none
+* Bug fixes
+  + none
 
-  o New example programs
-    * examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
-      When running on some parallel machines, users may need to set certain
-      environment variable to enable MPI multi-threading support, for example
-      on Cori @NERSC with command "export MPICH_MAX_THREAD_SAFETY=multiple".
+* New example programs
+  + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
+    When running on some parallel machines, users may need to set certain
+    environment variable to enable MPI multi-threading support, for example on
+    Cori @NERSC with command
+    ```
+    export MPICH_MAX_THREAD_SAFETY=multiple
+    ```
 
-  o New programs for I/O benchmarks
-    * none
+* New programs for I/O benchmarks
+  + none
 
-  o New test program
-    * test/testcases/tst_pthread.c - tests thread-safe capability for scenario
-      of each thread operating on a unique file.
+* New test program
+  + test/nc4/put_get_all_kinds.m4 - test all supported variable read/write API.
+    Make sure they are properly wired up
+  + test/nc4/interoperability_rd.m4 - test whether NetCDF-4 file written using
+    NetCDF can be read by PnetCDF
+  + test/nc4/interoperability_wr.m4 - test whether NetCDF-4 file written using
+    PnetCDF can be read by NetCDF
+  + test/nc4/simple_xy.c - test reading the simple_xy example borrowed from
+    NetCDF
+  + test/testcases/tst_pthread.c - tests thread-safe capability for scenario of
+    each thread operating on a unique file.
 
-  o Conformity with NetCDF library
-    * none
+* Conformity with NetCDF library
+  + In contract to NetCDF-4 which allows to read/write variables in define mode
+    when the file format is in NetCDF-4 format, PnetCDF still requires reading
+    and writing variables in data mode.
 
-  o New conflict with NetCDF library
-    * none
+* Conflict with NetCDF library
+  + none
 
-  o New issues related to MPI library vendors:
-    * none
+* Issues related to MPI library vendors:
+  + none
 
-  o New issues related to Darshan library:
-    * none
+* Issues related to Darshan library:
+  + none
 
-  o New clarifications
-    * none
+* Clarifications
+  + none
 

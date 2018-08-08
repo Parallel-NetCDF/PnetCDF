@@ -75,6 +75,10 @@ usage(char *progname)
     error("   [-r] Just do read-only tests\n" );
     error("   [-v] Verbose mode\n" );
     error("   [-2] (with -c) create file with CDF-2 format\n" );
+    error("   [-5] (with -c) create file with CDF-5 format\n" );
+#ifdef ENABLE_NETCDF4
+    error("   [-4] (with -c) create file with NetCDF-4 format\n" );
+#endif
     error("   [-n <MAX_NMPT>] max. number of messages per test (Default: 8)\n");
     error("   [-d directory] directory for storing input/output files\n");
 }
@@ -147,7 +151,7 @@ main(int argc, char *argv[])
     strcpy(testfile, "test.nc");    /* read-only testfile */
     strcpy(scratch, "scratch.nc");  /* writable scratch file */
 
-    while ((c = getopt(argc, argv, "25hrn:d:v")) != -1)
+    while ((c = getopt(argc, argv, "245hrn:d:v")) != -1)
       switch(c) {
 	case 'r':		/* just perform read-only tests */
 	  read_only = 1;
@@ -161,6 +165,9 @@ main(int argc, char *argv[])
 	case '2':
 	  cdf_format = 2;
 	  break;
+        case '4':
+          cdf_format = 4;
+	  break;
 	case '5':
 	  cdf_format = 5;
 	  break;
@@ -171,8 +178,17 @@ main(int argc, char *argv[])
 	case 'h':
 	case '?':
 	  usage(argv[0]);
+          MPI_Finalize();
 	  return 1;
       }
+
+#ifndef ENABLE_NETCDF4
+    if (cdf_format == 4) {
+        printf("Error: NetCDF-4 support is not enabled at configure time\n");
+        MPI_Finalize();
+        return 1;
+    }
+#endif
 
     MPI_Info_create(&info);
     /* MPI_Info_set(info, "romio_pvfs2_posix_write", "enable"); */
@@ -188,6 +204,8 @@ main(int argc, char *argv[])
 
     if (cdf_format == 2)
         ncmpi_set_default_format(NC_FORMAT_CDF2, NULL);
+    else if (cdf_format == 4)
+        ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
     else if (cdf_format == 5)
         ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
     else
@@ -204,7 +222,10 @@ main(int argc, char *argv[])
     if (nfailsTotal > 0) goto fn_exit;
 
     cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-    sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
+    if (cdf_format == 4)
+        sprintf(cmd_str, "*** TESTING C   %s for NetCDF4 format ", basename(argv[0]));
+    else
+        sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
     printf("%-66s ------ ",cmd_str);
     free(cmd_str);
 
@@ -312,6 +333,7 @@ main(int argc, char *argv[])
     NC_TEST2(ncmpi_inq_atttype, numGatts, numVars);
 
     /* nonblocking I/O */
+    if (cdf_format != 4){
     NC_TEST1(ncmpi_iget_var_text, numVars);
     NC_TEST1(ncmpi_iget_var_schar, numVars);
     NC_TEST1(ncmpi_iget_var_short, numVars);
@@ -377,6 +399,7 @@ main(int argc, char *argv[])
     NC_TEST1(ncmpi_iget_varm_longlong, numVars);
     NC_TEST1(ncmpi_iget_varm_ulonglong, numVars);
     NC_TEST1(ncmpi_iget_varm, numVars);
+    }
 
 	/* Test write functions */
     if (! read_only) {
@@ -473,10 +496,13 @@ main(int argc, char *argv[])
 	NC_TEST2(ncmpi_copy_att, numGatts, numVars);
 	NC_TEST2(ncmpi_rename_att, numGatts, numVars);
 	NC_TEST2(ncmpi_del_att, numGatts, numVars);
+    if (cdf_format != 4){
 	NC_TEST1(ncmpi_set_fill, numVars);
+    }
 	NC_TEST(ncmpi_delete);
 
         /* test nonblocking APIs */
+    if (cdf_format != 4){
 	NC_TEST1(ncmpi_iput_var_text, numVars);
 	NC_TEST1(ncmpi_iput_var_schar, numVars);
 	NC_TEST1(ncmpi_iput_var_short, numVars);
@@ -542,6 +568,7 @@ main(int argc, char *argv[])
 	NC_TEST1(ncmpi_iput_varm_longlong, numVars);
 	NC_TEST1(ncmpi_iput_varm_ulonglong, numVars);
 	NC_TEST1(ncmpi_iput_varm, numVars);
+    }
         NC_TEST(ncmpi_set_default_format);
     }
 

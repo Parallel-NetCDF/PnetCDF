@@ -60,3 +60,7 @@ after_failure:
 
 notifications:
   email: false
+
+branches:
+    only:
+        - master

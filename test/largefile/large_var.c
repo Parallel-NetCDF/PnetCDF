@@ -61,7 +61,7 @@ swapn(void       *buf,
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, rank, nprocs, err, nerrs=0, bufsize;
+    int i, j, rank, nprocs, err, nerrs=0, bufsize, expected;
     int ncid, cmode, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
     MPI_Offset offset, var_offset, start[3], count[3];
     MPI_File fh;
@@ -93,6 +93,165 @@ int main(int argc, char** argv)
     MPI_Info_set(info, "romio_ds_write", "disable");
     MPI_Info_set(info, "romio_ds_read", "disable");
 
+#ifdef ENABLE_NETCDF4
+    /* Test NetCDF-4 feature */
+    /* create a new file for writing ----------------------------------------*/
+    cmode = NC_CLOBBER | NC_NETCDF4;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    CHECK_ERR
+
+    /* define dimensions Z, Y, and X */
+    err = ncmpi_def_dim(ncid, "Z", NZ, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX, &dimid[2]); CHECK_ERR
+
+    /* define a big 1D variable of ubyte type, so there are 2 big variables */
+    err = ncmpi_def_var(ncid, "big_1D", NC_UBYTE, 1, &dimid[2], &varid);
+    CHECK_ERR
+
+    /* define a big 3D variable of integer type */
+    err = ncmpi_def_var(ncid, "var", NC_INT, 3, dimid, &varid); CHECK_ERR
+
+    /* do not forget to exit define mode */
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    /* get the beginning of file offset for the variable */
+    err = ncmpi_inq_varoffset(ncid, varid, &var_offset); CHECK_ERR
+
+    /* now we are in data mode */
+    start[0] = 1;
+    start[1] = 8;
+    start[2] = TWO_G + 10 * rank;
+    count[0] = 1;
+    count[1] = 2;
+    count[2] = 10;
+
+    buf = (int*) malloc(40 * sizeof(int));
+    for (i=0; i<40; i++) buf[i] = rank*100 + i;
+
+    /* write: subarray of 1 x 2 x 10 at start 1 x 8 x (2G + rank * 10) */
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    /* now test nonblocking put */
+    /* write: subarray of 1 x 2 x 5 at start 3 x 8 x (2G + rank * 10) */
+    start[0] = 3;
+    count[2] = 5;
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf+20);
+    CHECK_ERR
+
+    /* write: subarray of 1 x 1 x 5 at start 3 x 8 x (2G + rank * 10 + 5) */
+    start[2] += 5;
+    count[1]  = 1;
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf+30);
+    CHECK_ERR
+
+    /* write: subarray of 1 x 1 x 5 at start 3 x 9 x (2G + rank * 10 + 5) */
+    start[1] = 9;
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf+35);
+    CHECK_ERR
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* open the same file and read back for validation */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
+
+    /* read back subarray written by the process (rank+1)%nprocs */
+    expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
+
+    /* read back ((rank+1)%nprocs)'s 1st write:
+     *                      subarray of 1x2x10 at start 1x8x(2G+rank*10) */
+    start[0] = 1;
+    start[1] = 8;
+    start[2] = TWO_G + ((rank == nprocs - 1) ? 0 : 10 * (rank + 1));
+    count[0] = 1;
+    count[1] = 2;
+    count[2] = 10;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    /* read back ((rank+1)%nprocs)'s 2nd write:
+     *                      subarray of 1x2x5 at start 3x8x(2G+rank*10) */
+    start[0] = 3;
+    count[2] = 5;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    /* read back ((rank+1)%nprocs)'s 3rd write:
+     *                      subarray of 1x1x5 at start 3x8x(2G+rank*10+5) */
+    start[2] += 5;
+    count[1] = 1;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    /* read back ((rank+1)%nprocs)'s 4th write:
+     *                      subarray of 1x1x5 at start 3x9x(2G+rank*10+5) */
+    start[1] = 9;
+
+    /* initialize the contents of the array to a different value */
+    bufsize = count[0]*count[1]*count[2];
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        if (buf[i] != expected) {
+            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+                   __FILE__, __LINE__, i, expected, buf[i]);
+            nerrs++;
+        }
+        expected++;
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+#endif
+
+    /* Test classic format */
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
@@ -157,12 +316,13 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validation */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* read back subarray written by the process (rank+1)%nprocs */
-    int expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
+    expected = (rank == nprocs - 1) ? 0 : (rank+1)*100;
 
     /* read back ((rank+1)%nprocs)'s 1st write:
      *                      subarray of 1x2x10 at start 1x8x(2G+rank*10) */
@@ -211,7 +371,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 3rd write:
-                            subarray of 1x1x5 at start 3x8x(2G+rank*10+5) */
+     *                      subarray of 1x1x5 at start 3x8x(2G+rank*10+5) */
     start[2] += 5;
     count[1] = 1;
 
@@ -232,7 +392,7 @@ int main(int argc, char** argv)
     }
 
     /* read back ((rank+1)%nprocs)'s 4th write:
-                            subarray of 1x1x5 at start 3x9x(2G+rank*10+5) */
+     *                      subarray of 1x1x5 at start 3x9x(2G+rank*10+5) */
     start[1] = 9;
 
     /* initialize the contents of the array to a different value */
