@@ -6,7 +6,7 @@ driver, called the NetCDF-4 driver, is a wrapper of the NetCDF Library that
 translates PnetCDF APIs to their NetCDF APIs. It allows to call PnetCDF APIs to
 read/write files in NetCDF-4 format.
 
-# Enable NetCDF-4 support
+## Enable NetCDF-4 support
 
 PnetCDF requires a NetCDF library that is built with parallel HDF5 capability.
 An example build instruction for HDF5 and NetCDF-4 is given below.
@@ -32,16 +32,16 @@ An example build instruction for HDF5 and NetCDF-4 is given below.
                 LDFLAGS="-L/HDF5/install/path/lib"
     make install
     ```
-* To build PnetCDF with NetCDF-4 support, add `--enable-netcdf4` option at the
-  configure command line. Option `--with-hdf5` can be used to specify the
-  installation path of HDF5 and option `--with-netcdf` the path of NetCDF-4.
-  For example,
-  ```
-  ./configure --prefix=/PnetCDF/install/path \
-              --enable-netcdf4 \
-              --with-hdf5=/HDF5/install/path \
-              --with-netcdf4=/NetCDF4/install/path
-  ```
+* To build PnetCDF with NetCDF-4 support
+  + Add `--enable-netcdf4` option at the configure command line. Option
+    `--with-hdf5` can be used to specify the installation path of HDF5 and
+    option `--with-netcdf` for the installation path of NetCDF-4. For example,
+    ```
+    ./configure --prefix=/PnetCDF/install/path \
+                --enable-netcdf4 \
+                --with-hdf5=/HDF5/install/path \
+                --with-netcdf4=/NetCDF4/install/path
+    ```
 
 ## Accessing NetCDF-4 file
 
@@ -54,6 +54,7 @@ ncmpi_create(MPI_COMM_WORLD, "testfile.nc", cmode, MPI_INFO_NULL>, &ncid);
 
 NC_NETCDF4 flag is not required when opening an existing file in NetCDF-4
 format, as PnetCDF checks the file format and selects the proper I/O driver.
+
 Users can also set the default file format to NetCDF-4 by calling
 `ncmpi_set_default_format()` using argument `NC_FORMAT_NETCDF4C`. For example,
 ```
@@ -63,14 +64,10 @@ When no file format specific flag is set in argument cmode, PnetCDF will use
 the default.
 
 
-# Known Problems
+## Known Problems
 
 Some features are not supported due to the availability different of API between
 PnetCDF and NetCDF libraries. I/O semantics are also slightly different.
-
-on NetCDF and PnetCDF that are hard to translate. Some behaviors can change
-due to different semantic used by PnetCDF and NetCDF. Here's a list of known
-issues based on NetCDF 4.6.2-development and HDF5 1.10.2:
 
 * API families of `vard` and `varn` are not supported. This is because NetCDF
   does not have corresponding APIs. Error code `NC_ENOTSUPPORT` will be
@@ -97,5 +94,6 @@ issues based on NetCDF 4.6.2-development and HDF5 1.10.2:
   collective call when accessing a NetCDF-4 file.
 
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+
 See COPYRIGHT notice in top-level directory.
 
