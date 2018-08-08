@@ -61,7 +61,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Build recipes
-  + doc/README.NetCDF4 is added to describe the usage of the new feature of
+  + doc/README.NetCDF4.md is added to describe the usage of the new feature of
     NetCDF-4 support.
 
 * New/updated utility program
