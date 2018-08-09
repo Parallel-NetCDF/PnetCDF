@@ -35,6 +35,7 @@ int main(int argc, char** argv)
     MPI_Offset start[2], count[2];
     MPI_Info info;
     size_t i;
+    int bb_enabled=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -150,6 +151,17 @@ int main(int argc, char** argv)
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
     MPI_Info_free(&info);
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        MPI_Info_free(&infoused);
+    }
 
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "NPROCS", nprocs, &dimid[0]);
@@ -168,8 +180,14 @@ int main(int argc, char** argv)
 
     /* now we are in data mode */
 #if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
+#ifndef ENABLE_LARGE_REQ
+    if (bb_enabled) {
+#endif
     for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
     for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
+#ifndef ENABLE_LARGE_REQ
+    }
+#endif
 #endif
 
     start[0] = rank;
@@ -196,6 +214,9 @@ int main(int argc, char** argv)
 
     err = ncmpi_wait_all(ncid, 3, req, st);
 #if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
+#ifndef ENABLE_LARGE_REQ
+    if (bb_enabled) {
+#endif
     CHECK_ERR
 
     /* read back to check contents */
@@ -226,6 +247,12 @@ int main(int argc, char** argv)
 
     /* test the same pattern but for iget */
     for (i=0; i<TWO_G+1024; i++) buf[i] = 0;
+#ifndef ENABLE_LARGE_REQ
+    }
+    else{
+        EXP_ERR(NC_EMAX_REQ)
+    }
+#endif
 #else
     EXP_ERR(NC_EMAX_REQ)
 #endif
