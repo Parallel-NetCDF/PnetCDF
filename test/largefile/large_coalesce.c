@@ -34,9 +34,7 @@ int main(int argc, char** argv)
     int ncid, cmode, varid, dimid[2], req[3], st[3];
     MPI_Offset start[2], count[2];
     MPI_Info info;
-#ifdef ENABLE_LARGE_REQ
     size_t i;
-#endif
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -70,8 +68,9 @@ int main(int argc, char** argv)
     MPI_Info_set(info, "romio_cb_write", "enable");
     MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
 
-#ifndef ENABLE_LARGE_REQ
-    /* silence internal debug messages */
+#if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
+#else
+    /* silence iternal debug messages */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
 #endif
 
@@ -168,7 +167,7 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* now we are in data mode */
-#ifdef ENABLE_LARGE_REQ
+#if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
     for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
     for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
 #endif
@@ -196,9 +195,7 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     err = ncmpi_wait_all(ncid, 3, req, st);
-#ifndef ENABLE_LARGE_REQ
-    EXP_ERR(NC_EMAX_REQ)
-#else
+#if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
     CHECK_ERR
 
     /* read back to check contents */
@@ -229,6 +226,8 @@ int main(int argc, char** argv)
 
     /* test the same pattern but for iget */
     for (i=0; i<TWO_G+1024; i++) buf[i] = 0;
+#else
+    EXP_ERR(NC_EMAX_REQ)
 #endif
 
     start[1] = 0;
