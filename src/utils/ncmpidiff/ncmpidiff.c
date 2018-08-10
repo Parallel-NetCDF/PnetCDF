@@ -47,7 +47,7 @@
 #endif
 
 #define OOM_ERROR { \
-    fprintf(stderr, "Error: malloc() out of memory at line %d\n",__LINE__); \
+    fprintf(stderr, "Error: calloc() out of memory at line %d\n",__LINE__); \
     exit(1); \
 }
 
@@ -63,9 +63,9 @@
 #define CHECK_GLOBAL_ATT_DIFF(type, func, nctype) {                    \
     int pos;                                                           \
     size_t len = (size_t)attlen1 * sizeof(type);                       \
-    type *b1 = (type *)malloc(len);                                    \
+    type *b1 = (type *)calloc(attlen1, sizeof(type));                  \
     if (!b1) OOM_ERROR                                                 \
-    type *b2 = (type *)malloc(len);                                    \
+    type *b2 = (type *)calloc(attlen1, sizeof(type));                  \
     if (!b2) OOM_ERROR                                                 \
     err = func(ncid1, NC_GLOBAL, name1, b1);                           \
     HANDLE_ERROR                                                       \
@@ -86,9 +86,9 @@
 #define CHECK_VAR_ATT_DIFF(type, func, nctype) {                              \
     int pos;                                                                  \
     size_t len = (size_t)attlen1 * sizeof(type);                              \
-    type *b1 = (type *)malloc(len);                                           \
+    type *b1 = (type *)calloc(attlen1, sizeof(type));                         \
     if (!b1) OOM_ERROR                                                        \
-    type *b2 = (type *)malloc(len);                                           \
+    type *b2 = (type *)calloc(attlen1, sizeof(type));                         \
     if (!b2) OOM_ERROR                                                        \
     err = func(ncid1, i, attrname, b1);                                       \
     HANDLE_ERROR                                                              \
@@ -109,9 +109,9 @@
 #define CHECK_VAR_DIFF(type, func, nctype) {                                 \
     int pos, isDiff;                                                         \
     size_t len = (size_t)varsize * sizeof(type);                             \
-    type *b1 = (type *)malloc(len);                                          \
+    type *b1 = (type *)calloc(varsize, sizeof(type));                        \
     if (!b1) OOM_ERROR                                                       \
-    type *b2 = (type *)malloc(len);                                          \
+    type *b2 = (type *)calloc(varsize, sizeof(type));                        \
     if (!b2) OOM_ERROR                                                       \
     err = func(ncid1, varid1, start, shape, b1);                             \
     HANDLE_ERROR                                                             \
@@ -201,7 +201,7 @@ get_var_names(char *optarg, struct vspec* vspecp)
         if (*cp == ',')
             nvars++;
 
-    vspecp->names = (char **) malloc((size_t)nvars * sizeof(char*));
+    vspecp->names = (char **) calloc((size_t)nvars, sizeof(char*));
     if (!vspecp->names) OOM_ERROR
 
     cpp = vspecp->names;
@@ -210,7 +210,7 @@ get_var_names(char *optarg, struct vspec* vspecp)
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
 
-        *cpp = (char *) malloc(strlen(cp) + 1);
+        *cpp = (char *) calloc(strlen(cp) + 1, 1);
         if (!*cpp) OOM_ERROR
         strcpy(*cpp, cp);
         cpp++;
@@ -299,9 +299,9 @@ int main(int argc, char **argv)
         check_header      = 1;
     }
 
-    name1   = (char*) malloc(NC_MAX_NAME);
+    name1   = (char*) calloc(NC_MAX_NAME, 1);
     if (!name1) OOM_ERROR
-    name2   = (char*) malloc(NC_MAX_NAME);
+    name2   = (char*) calloc(NC_MAX_NAME, 1);
     if (!name2) OOM_ERROR
 
     /* Nov. 18, 2014 -- disable subfiling as it does not correctly handle the
@@ -451,7 +451,7 @@ int main(int argc, char **argv)
         for (i=0; i<nvars1; i++) {
             int varid;
             err = ncmpi_inq_varndims(ncid1, i, &ndims1); HANDLE_ERROR
-            dimids1 = (int*) malloc((size_t)ndims1 * SIZEOF_INT);
+            dimids1 = (int*) calloc((size_t)ndims1, SIZEOF_INT);
             if (!dimids1) OOM_ERROR
             err = ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
             HANDLE_ERROR
@@ -465,7 +465,7 @@ int main(int argc, char **argv)
                 continue;
             }
             err = ncmpi_inq_varndims(ncid2, varid, &ndims2); HANDLE_ERROR
-            dimids2 = (int*) malloc((size_t)ndims2 * SIZEOF_INT);
+            dimids2 = (int*) calloc((size_t)ndims2, SIZEOF_INT);
             if (!dimids2) OOM_ERROR
             err = ncmpi_inq_var(ncid2, varid, name2, &type2, &ndims2, dimids2, &natts2);
             HANDLE_ERROR
@@ -609,12 +609,12 @@ int main(int argc, char **argv)
     if (check_entire_file) { /* header has been checked */
         ncmpi_inq_nvars(ncid1, &nvars);
         var_list.nvars = nvars;
-        var_list.names = (char**) malloc((size_t)nvars * sizeof(char*));
+        var_list.names = (char**) calloc((size_t)nvars, sizeof(char*));
         if (!var_list.names) OOM_ERROR
         /* get all the variable names from file1 */
         for (i=0; i<nvars; i++) {
             ncmpi_inq_varname(ncid1, i, name1);
-            var_list.names[i] = (char *) malloc(strlen(name1) + 1);
+            var_list.names[i] = (char *) calloc(strlen(name1) + 1, 1);
             if (!var_list.names[i]) OOM_ERROR
             strcpy(var_list.names[i], name1);
         }
@@ -643,12 +643,12 @@ int main(int argc, char **argv)
             continue;
         }
         err = ncmpi_inq_varndims(ncid1, varid1, &ndims1); HANDLE_ERROR
-        dimids1 = (int*) malloc((size_t)ndims1 * SIZEOF_INT);
+        dimids1 = (int*) calloc((size_t)ndims1, SIZEOF_INT);
         if (!dimids1) OOM_ERROR
         err = ncmpi_inq_var(ncid1, varid1, name1, &type1, &ndims1, dimids1, &natts1);
         HANDLE_ERROR
         err = ncmpi_inq_varndims(ncid2, varid2, &ndims2); HANDLE_ERROR
-        dimids2 = (int*) malloc((size_t)ndims2 * SIZEOF_INT);
+        dimids2 = (int*) calloc((size_t)ndims2, SIZEOF_INT);
         if (!dimids2) OOM_ERROR
         err = ncmpi_inq_var(ncid2, varid2, name2, &type2, &ndims2, dimids2, &natts2);
         HANDLE_ERROR
