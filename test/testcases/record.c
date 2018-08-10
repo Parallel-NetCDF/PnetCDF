@@ -108,7 +108,7 @@ int test_only_record_var_3D(char *filename)
     err = ncmpi_def_var(ncid, "REC_VAR_3D", NC_INT, 3, dimid, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    start[1] = 0; start[2] = 0; count[0] = 1; count[1] = 2; count[2] = 5;
+    start[1] = 0; start[2] = 0; count[0] = 1; count[1] = 2; count[2] = 10;
 
     /* write the 2nd record first */
     for (i=0; i<20; i++) buf[i] = 91;
@@ -209,7 +209,7 @@ int test_two_record_var(char *filename)
     }
 
     /* REC_VAR_3D: write the 2nd record first */
-    start[1] = 0; start[2] = 0; count[0] = 1; count[1] = 2; count[2] = 5;
+    start[1] = 0; start[2] = 0; count[0] = 1; count[1] = 2; count[2] = 10;
 
     for (i=0; i<20; i++) buf[i] = 91;
     start[0] = 1;

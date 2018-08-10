@@ -7,26 +7,32 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+VALIDATOR=../../src/utils/ncvalidator/ncvalidator
+NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
+
+outfile=`basename $1`
+
 # header consistency tests are designed to run on more than one MPI process
 for j in 0 1 ; do
     export PNETCDF_SAFE_MODE=$j
     echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-    for i in ${TESTPROGRAMS} ; do
-        ${TESTSEQRUN} ./$i ${TESTOUTDIR}/$i.nc
-    done
+    ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
+    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 done
 
 echo ""
 
 if [ -n "${TESTBB}" ]; then
     echo "---- testing burst buffering"
-    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     for j in 0 1 ; do
         export PNETCDF_SAFE_MODE=$j
         echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-        for i in ${TESTPROGRAMS} ; do
-            ${TESTSEQRUN} ./$i ${TESTOUTDIR}/$i.nc
-        done
+        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+        ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.bb.nc
+        unset PNETCDF_HINTS
+        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.bb.nc
+
+        echo "--- ncmpidiff $outfile.nc $outfile.bb.nc ---"
+        ${TESTSEQRUN} ${NCMPIDIFF} ${TESTOUTDIR}/$outfile.nc ${TESTOUTDIR}/$outfile.bb.nc
     done
-    unset PNETCDF_HINTS
 fi

@@ -8,13 +8,19 @@
 set -e
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
+NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
 ${TESTSEQRUN} ./tst_io ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_io1.nc
+mv ${TESTOUTDIR}/tst_io1.nc ${TESTOUTDIR}/tst_io1.nc0
 
 if [ -n "${TESTBB}" ]; then
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     ${TESTSEQRUN} ./tst_io ${TESTOUTDIR}
     unset PNETCDF_HINTS
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_io1.nc
+
+    echo "--- ncmpidiff tst_io1.nc0 tst_io1.nc ---"
+    ${TESTSEQRUN} ${NCMPIDIFF} ${TESTOUTDIR}/tst_io1.nc0 ${TESTOUTDIR}/tst_io1.nc
+
 fi

@@ -32,6 +32,7 @@
           integer rank, err, ierr, ncid, cmode, get_args, xtype, varid
           integer(kind=MPI_OFFSET_KIND) :: buf
           integer,parameter :: INT2_KIND = selected_int_kind(4)
+          integer fillmode
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -87,6 +88,9 @@
               call pass_fail(1, msg)
               STOP 2
           endif
+
+          err = nf90mpi_set_fill(ncid, nf90_fill, fillmode)
+          call check(err, 'In nf90mpi_set_fill: ')
 
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')

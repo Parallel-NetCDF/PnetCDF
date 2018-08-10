@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> /* memset() */
 #include <libgen.h> /* basename() */
 #include <assert.h>
 #include <mpi.h>
@@ -342,14 +342,15 @@ int t_nc(char *filename, int cmode)
 
 	err = ncmpi_create(MPI_COMM_WORLD, filename,cmode, MPI_INFO_NULL, &id); ERR
 
-	err = ncmpi_put_att_text(id, NC_GLOBAL, "TITLE", 12, "another name"); ERR
-	err = ncmpi_get_att_text(id, NC_GLOBAL, "TITLE", buf); ERR
-/*	(void) printf("title 1 \"%s\"\n", buf); */
 	err = ncmpi_put_att_text(id, NC_GLOBAL, "TITLE", strlen(filename), filename); ERR
+	memset(buf, 0, 256);
 	err = ncmpi_get_att_text(id, NC_GLOBAL, "TITLE", buf); ERR
-	buf[strlen(filename)] = 0;
-/*	(void) printf("title 2 \"%s\"\n", buf); */
 	assert(strcmp(filename, buf) == 0);
+
+	err = ncmpi_put_att_text(id, NC_GLOBAL, "TITLE", 12, "another name"); ERR
+	memset(buf, 0, 256);
+	err = ncmpi_get_att_text(id, NC_GLOBAL, "TITLE", buf); ERR
+	assert(strcmp("another name", buf) == 0);
 
 	err = createtestdims(id, NUM_DIMS, sizes, dim_names); ERR
 	testdims(id, NUM_DIMS, sizes, dim_names);
@@ -363,6 +364,7 @@ int t_nc(char *filename, int cmode)
  	}
 
 #ifdef REDEF
+        err = ncmpi_set_fill(id, NC_FILL, NULL); ERR
 	err = ncmpi__enddef(id, 0, align, 0, 2*align); ERR
 	err = ncmpi_begin_indep_data(id); ERR
 	err = ncmpi_put_var1_int(id, Long_id, indices[3], &birthday); ERR
@@ -440,10 +442,10 @@ int t_nc(char *filename, int cmode)
 	assert(strcmp("TITLE",adesc->mnem) == 0);
 	err = ncmpi_inq_att(id, NC_GLOBAL, adesc->mnem, &(adesc->type), &(adesc->len)); ERR
 	assert( adesc->type == NC_CHAR );
-	assert( adesc->len == strlen(filename) );
+	assert( adesc->len == strlen("another name") );
+	memset(buf, 0, 256);
 	err = ncmpi_get_att_text(id, NC_GLOBAL, "TITLE", buf); ERR
-	buf[adesc->len] = 0;
-	assert( strcmp(filename, buf) == 0);
+	assert(strcmp("another name", buf) == 0);
 
 	/*	VAR	*/
 	/* (void) printf("VAR "); */

@@ -15,7 +15,7 @@ program tst_f90_nc4
   character (len = *), parameter :: FILE_NAME = "tst_f90_nc4.nc"
   integer(KIND=MPI_OFFSET_KIND) :: ten=10
   character(LEN=256) filename, cmd, msg
-  integer my_rank, p
+  integer my_rank, p, fillmode
 
   call MPI_Init(ierr)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
@@ -39,6 +39,7 @@ program tst_f90_nc4
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, fh))
   call check(nf90mpi_def_dim(fh, 'fred', ten, dimid))
   call check(nf90mpi_def_var(fh, 'john', NF90_INT, (/dimid/), varid))
+  call check(nf90mpi_set_fill(fh, NF90_FILL, fillmode))
   call check(nf90mpi_close(fh))
 
   ! Check the file.
@@ -50,6 +51,7 @@ program tst_f90_nc4
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, fh))
   call check(nf90mpi_def_dim(fh, 'fred', ten, dimid))
   call check(nf90mpi_def_var(fh, 'john', NF90_INT, (/dimid/), varid))
+  call check(nf90mpi_set_fill(fh, NF90_FILL, fillmode))
   call check(nf90mpi_close(fh))
 
   ! Check the file.
