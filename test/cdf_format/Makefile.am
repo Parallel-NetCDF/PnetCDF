@@ -55,7 +55,10 @@ BAD_FILES = bad_begin.nc5 \
 
 XFAIL_TESTS = xfail_runs.sh
 
-CLEANFILES = $(TESTOUTDIR)/cdf_type.nc $(TESTOUTDIR)/dim_cdf12.nc \
+CLEANFILES = $(TESTOUTDIR)/cdf_type.nc \
+             $(TESTOUTDIR)/cdf_type.bb.nc \
+             $(TESTOUTDIR)/dim_cdf12.nc \
+             $(TESTOUTDIR)/dim_cdf12.bb.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = wrap_runs.sh seq_runs.sh xfail_runs.sh \

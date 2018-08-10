@@ -48,6 +48,8 @@ pres_temp_4D_rd$(EXEEXT).log: pres_temp_4D_wr$(EXEEXT).log
 EXTRA_DIST = seq_runs.sh
 
 CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
+             $(TESTOUTDIR)/pres_temp_4D.nc4 \
+             $(TESTOUTDIR)/pres_temp_4D.bb.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 if ENABLE_NETCDF4

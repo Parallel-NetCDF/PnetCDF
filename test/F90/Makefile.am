@@ -60,10 +60,11 @@ SH_LOG_COMPILER =
 
 EXTRA_DIST = seq_runs.sh wrap_runs.sh
 
-NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = *.$(FC_MODEXT) core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/tst_io1.nc $(NC_FILES)
+             $(TESTOUTDIR)/tst_io1.nc $(TESTOUTDIR)/tst_io1.nc0 $(NC_FILES)
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests

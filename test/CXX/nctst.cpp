@@ -61,6 +61,7 @@ static float range[] = {0., 1500.};
 static float lats[NLATS] = {-90, -87.5, -85, -82.5};
 static float lons[NLONS] = {-180, -175, -170};
 static int frtimes[NFRTIMES] = {12, 18};
+static int iscalar = 99;
 static const char* s = "1992-3-21 12:00";
 static float fill_value = -9999.0;
 static float P_data[NFRTIMES][NLATS][NLONS] = {
@@ -317,6 +318,8 @@ int gen(const MPI_Comm        &comm,
         strcpy(str, s);
         reftime.putVar_all(str);
         free(str);
+
+        scalar.putVar_all(&iscalar);
 
         // we write one record at a time
         vector<MPI_Offset> startp,countp;

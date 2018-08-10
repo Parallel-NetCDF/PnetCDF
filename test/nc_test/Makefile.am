@@ -77,7 +77,8 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = tests.h $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/test.nc \
@@ -86,6 +87,7 @@ CLEANFILES = tests.h $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/tst_nofill.nc.fill \
              $(TESTOUTDIR)/tst_nofill.nc.nofill \
              $(TESTOUTDIR)/tst_atts3.nc.2 \
+             $(TESTOUTDIR)/tst_atts3.bb.nc.2 \
              core core.* *.gcda *.gcno *.gcov gmon.out $(NC_FILES)
 
 EXTRA_DIST = error.h $(M4_SRCS) $(M4_HFILES) README seq_runs.sh wrap_runs.sh

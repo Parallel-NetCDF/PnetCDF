@@ -213,11 +213,13 @@ int check_contents_for_fail_$1(int ncid, int *varid)
 
         /* check if the contents of buf are expected */
         for (j=0; j<NY*NX; j++) {
-            if (expected[i][j] >= nprocs) continue;
+            /* when nprocs is less than 4, skip the comparison */
+            if (expected[i][j] >= 10+nprocs) continue;
             if (r_buffer[j] != expected[i][j]) {
-                printf("Expected read buf[%d][%d]=IFMT($1), but got IFMT($1)\n",
-                       i,j,expected[i][j],r_buffer[j]);
+                printf("Expected read buf[%d][%d]=%d, but got %d\n",
+                       i,j,(int)expected[i][j],(int)r_buffer[j]);
                 nerrs++;
+                break;
             }
         }
     }
@@ -371,8 +373,9 @@ test_bput_varn_$1(char *filename, int cdf)
     else if (bufsize == 0) EXP_ERR(NC_ENULLABUF)
     else CHECK_ERR
 
-    /* write using varn API, one bput call per variable */
     nerrs += clear_file_contents_$1(ncid, varid);
+
+    /* write using varn API, one bput call per variable */
     for (i=0; i<nreqs; i++) {
         err = ncmpi_bput_varn_$1(ncid, varid[i], my_nsegs[i], starts[i],
                                  counts[i], buffer[i], &reqs[i]);
@@ -390,6 +393,7 @@ test_bput_varn_$1(char *filename, int cdf)
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     if (bb_enabled) {
+        /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
@@ -397,12 +401,9 @@ test_bput_varn_$1(char *filename, int cdf)
     }
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
-    if (bb_enabled) {
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
-    else{
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
+
+    /* now usgae of attached memory should be 0 */
+    nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);
@@ -434,6 +435,7 @@ test_bput_varn_$1(char *filename, int cdf)
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     if (bb_enabled) {
+        /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
@@ -442,12 +444,8 @@ test_bput_varn_$1(char *filename, int cdf)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    if (bb_enabled) {
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
-    else{
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
+    /* now usgae of attached memory should be 0 */
+    nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);
@@ -480,6 +478,7 @@ test_bput_varn_$1(char *filename, int cdf)
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     if (bb_enabled) {
+        /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
@@ -499,12 +498,8 @@ test_bput_varn_$1(char *filename, int cdf)
             }
         }
     }
-    if (bb_enabled) {
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
-    else{
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
+    /* now usgae of attached memory should be 0 */
+    nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);
@@ -541,6 +536,7 @@ test_bput_varn_$1(char *filename, int cdf)
     }
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     if (bb_enabled) {
+        /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
     }
     else{
@@ -559,12 +555,8 @@ test_bput_varn_$1(char *filename, int cdf)
             }
         }
     }
-    if (bb_enabled) {
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
-    else{
-        nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
-    }
+    /* now usgae of attached memory should be 0 */
+    nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail_$1(ncid, varid);

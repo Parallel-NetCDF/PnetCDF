@@ -86,7 +86,8 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/testfile*.nc $(NC_FILES) mcoll_perf.nc.*

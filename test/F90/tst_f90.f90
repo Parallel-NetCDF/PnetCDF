@@ -59,9 +59,11 @@ program netcdfTest
              pressVarID, latVarID, lonVarID, frTimeVarID, refTimeVarID, scalarVarID
 
   ! Local variables
-  integer (kind = EightByteInt), parameter :: numLats = 4, numLons = 3, &
-                        numFrTimes = 2, timeStringLen = 20
+  integer (kind = EightByteInt), parameter :: numLats = 4, numLons = 3
+  integer (kind = EightByteInt), parameter :: numFrTimes = 2
+  integer (kind = EightByteInt) :: timeStringLen
   character (len = *), parameter :: FILE_NAME = "tst_f90.nc"
+  character (len = *), parameter :: timeString = "1992-3-21 12:00"
   integer :: counter, err, ierr, get_args
   real, dimension(numLons, numLats, numFrTimes) :: pressure
   integer (kind = FourByteInt), dimension(numFrTimes) :: frTimeVals
@@ -113,6 +115,8 @@ program netcdfTest
 
     ! Create the file
     call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, info, ncFileID))
+
+    timeStringLen = LEN(timeString)
 
     ! Define the dimensions
     call check(nf90mpi_def_dim(ncid = ncFileID, name = "lat",     len = numLats,           dimid = latDimID))
@@ -170,7 +174,7 @@ program netcdfTest
     frTimeVals(1) = 12
     frTimeVals(2) = 18
     call check(nf90mpi_put_var_all(ncFileID, frTimeVarID,  frTimeVals                  ) )
-    call check(nf90mpi_put_var_all(ncFileID, reftimeVarID, "1992-3-21 12:00"           ) )
+    call check(nf90mpi_put_var_all(ncFileID, refTimeVarID, "1992-3-21 12:00"           ) )
 
     ! Write the pressure variable. Write a slab at a time to check incrementing.
     pressure = 949. + real(reshape( (/ (counter, counter = 1, numLats * numLons * numFrTimes) /),  &
