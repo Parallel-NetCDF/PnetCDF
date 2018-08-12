@@ -26,12 +26,11 @@ check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-TESTS_ENVIRONMENT  = TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+TESTS_ENVIRONMENT  = export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
 TESTS = seq_runs.sh
@@ -45,7 +44,7 @@ TEST_EXTENSIONS = .sh
 # listed in TEST_EXTENSIONS. $(EXEEXT) are appended to work around.
 pres_temp_4D_rd$(EXEEXT).log: pres_temp_4D_wr$(EXEEXT).log
 
-EXTRA_DIST = seq_runs.sh
+EXTRA_DIST = seq_runs.sh parallel_run.sh
 
 CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
              $(TESTOUTDIR)/pres_temp_4D.nc4 \
@@ -53,26 +52,18 @@ CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 if ENABLE_NETCDF4
-TESTNETCDF4 = 1
-TESTS_ENVIRONMENT += TESTNETCDF4=1 ; export TESTNETCDF4;
+   TESTS_ENVIRONMENT += export TESTNETCDF4=1;
 endif
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
 
 ptest ptests ptest4: $(TESTPROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pres_temp_4D.nc ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pres_temp_4D.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest2 ptest6 ptest8 ptest10:
 

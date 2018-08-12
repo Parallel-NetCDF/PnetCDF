@@ -35,7 +35,7 @@ if [ -n "${TESTBB}" ]; then
        ${TESTSEQRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.bb.nc
        ${TESTSEQRUN} ./pres_temp_4D_rd ${TESTOUTDIR}/pres_temp_4D.bb.nc
        unset PNETCDF_HINTS
-       echo "--- validating file ${TESTOUTDIR}/pres_temp_4D.nc"
+       echo "--- validating file ${TESTOUTDIR}/pres_temp_4D.bb.nc"
        ${TESTSEQRUN} ${VALIDATOR} -q   ${TESTOUTDIR}/pres_temp_4D.bb.nc
        echo ""
 
