@@ -712,7 +712,7 @@ int main(int argc, char **argv)
         if (j != ndims1)
             continue; /* skip this variable */
 
-        if (dimids1[0] == unlimdimid1) { /* record variable */
+        if (ndims1 > 0 && dimids1[0] == unlimdimid1) { /* record variable */
             err = ncmpi_inq_dimlen(ncid1, unlimdimid1, &shape[0]);
             HANDLE_ERROR
         }
