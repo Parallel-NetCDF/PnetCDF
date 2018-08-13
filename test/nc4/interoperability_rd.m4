@@ -18,7 +18,8 @@ define(`NC_WR',dnl
 `dnl
 int nc_wr_$2(int rank, int ncid, int* vid, int *did){
     int i, err, nerrs = 0;
-    size_t start[2], count[2], stride[2];
+    size_t start[2], count[2];
+    ptrdiff_t stride[2];
     $3 buf[5];
 
     /* Setup buffer */
@@ -113,7 +114,7 @@ dnl
 #define FILE_NAME "interoperability_rd.nc"
 
 
-foreach(`dt', (`(`NC_BYTE', `schar', `char')', dnl
+foreach(`dt', (`(`NC_BYTE', `schar', `signed char')', dnl
                `(`NC_UBYTE', `uchar', `unsigned char')', dnl
                `(`NC_SHORT', `short', `short')', dnl
                `(`NC_USHORT', `ushort', `unsigned short')', dnl
@@ -125,7 +126,7 @@ foreach(`dt', (`(`NC_BYTE', `schar', `char')', dnl
                `(`NC_UINT64', `ulonglong', `unsigned long long')', dnl
                ), `NC_WR(translit(dt, `()'))')dnl
 
-foreach(`dt', (`(`c', `schar', `char')', dnl
+foreach(`dt', (`(`c', `schar', `signed char')', dnl
                `(`c', `uchar', `unsigned char')', dnl
                `(`d', `short', `short')', dnl
                `(`u', `ushort', `unsigned short')', dnl

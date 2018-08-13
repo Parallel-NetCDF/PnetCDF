@@ -71,7 +71,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + ncmpidiff -- when comparing two scalar variables, error NC_EBADDIM may
+    mistakenly reported. See b4d2dda2362e0dc0926d2723bffffea61df7006d
 
 * New example programs
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.

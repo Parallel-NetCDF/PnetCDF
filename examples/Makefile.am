@@ -47,14 +47,12 @@ ptest:
 	done ) ;
 
 ptests:
-	for i in 3 4 8 ; do \
 	(echo "=============================================")  && \
 	(echo "    Parallel testing on $$i MPI processes")  && \
 	(echo "=============================================")  && \
 	( for d in $(PTEST_SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest$$i $$* ; \
-	done ) ; \
-	done ;
+		$(MAKE) $(MFLAGS) -C $$d ptests $$* ; \
+	done ) ;
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:

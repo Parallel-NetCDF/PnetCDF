@@ -27,18 +27,17 @@ check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-TESTS_ENVIRONMENT  = TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+TESTS_ENVIRONMENT  = export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
 TESTS = $(TESTPROGRAMS)
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 
-EXTRA_DIST = wrap_runs.sh
+EXTRA_DIST = wrap_runs.sh parallel_run.sh
 
 NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
            $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
@@ -49,19 +48,16 @@ CLEANFILES = $(NC_FILES) \
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 
 ptest ptests ptest4: $(TESTPROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest2 ptest6 ptest8 ptest10:
 

@@ -184,14 +184,23 @@ TESTS_ENVIRONMENT += export SED="$(SED)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
 	./parallel_run.sh 4
 
 ptest2: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 2 MPI processes"
+	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
 	./parallel_run.sh 2
 
 ptest6: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 6 MPI processes"
+	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
 	./parallel_run.sh 6
 

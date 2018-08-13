@@ -62,6 +62,9 @@ TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export SED="$(SED)";
 
 ptest ptests ptest4: $(TESTPROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
 	./parallel_run.sh 4
 
