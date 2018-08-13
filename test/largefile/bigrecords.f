@@ -229,7 +229,7 @@
 
         call MPI_Barrier (MPI_COMM_WORLD, iret)
 
-! todo: insert code to re-open dataset, read time variable all at onece
+! todo: insert code to re-open dataset, read time variable all at once
 !
       iret = nfmpi_open ( MPI_COMM_SELF,
      +                   filename,

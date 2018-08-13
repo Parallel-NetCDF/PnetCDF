@@ -14,10 +14,22 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
+let NTHREADS=$1*6-1
+
 for i in ${check_PROGRAMS} ; do
     for j in 0 1 ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+
+        if test "$i" = tst_pthread ; then
+           # each MPI process created 6 threads
+           ${MPIRUN} ./tst_pthread ${TESTOUTDIR}/tst_pthread.nc
+           for k in `seq 0 ${NTHREADS}` ; do
+               ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_pthread.nc.$k
+           done
+           continue
+        fi
+
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
 
         # put_all_kinds and iput_all_kinds output 3 files

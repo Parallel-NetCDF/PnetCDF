@@ -30,7 +30,7 @@ check_PROGRAMS = bb_bsize \
                  bb_nonblocking \
                  highdim
 
-EXTRA_DIST = wrap_runs.sh
+EXTRA_DIST = wrap_runs.sh parallel_run.sh
 
 NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
 META_FILES = $(NC_FILES:%=%_*.meta)
@@ -43,19 +43,19 @@ CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out \
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 if BUILD_DRIVER_BB
-TESTPROGRAMS = $(check_PROGRAMS)
+   TESTPROGRAMS = $(check_PROGRAMS)
 else
-TESTPROGRAMS =
+   TESTPROGRAMS =
 endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-# AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-# AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+# AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+# AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+# AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
@@ -66,60 +66,30 @@ TESTS = $(TESTPROGRAMS)
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well
 
-TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
-TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 
 ptest ptest4: $(TESTPROGRAMS)
-	for j in 0 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
-	set -e ; for i in $(TESTPROGRAMS) ; do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable" ; \
-	set -e ; for i in $(TESTPROGRAMS) ; do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; \
-	} ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest2: $(TESTPROGRAMS)
-	for j in 0 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable" ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; \
-	} ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 2 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest6: $(TESTPROGRAMS)
-	for j in 0 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable" ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable" ; \
-	set -e ; for i in $(TESTPROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; \
-	} ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 6 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

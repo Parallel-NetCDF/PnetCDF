@@ -49,12 +49,12 @@ check_PROGRAMS = $(TESTPROGRAMS) \
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-# AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-# AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+# AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+# AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+# AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 TESTS = $(TESTPROGRAMS) seq_runs.sh
 TEST_EXTENSIONS = .sh
@@ -67,7 +67,8 @@ CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
              $(NC_FILES)
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh gzip_example.nc
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh gzip_example.nc \
+             parallel_run.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
@@ -77,36 +78,31 @@ EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh gzip_example.nc
 # Some of these tests are designed to run on 4 processes,
 # Run them on 2, 4, and 6 processes to see if they can handle well
 
-TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
-TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
-ptest ptest4: $(TESTPROGRAMS)
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN4) ./compressed $(srcdir)
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN4) ./compressed $(srcdir)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; } ; done
+ptest ptests ptest4: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
-ptest2: $(TESTPROGRAMS)
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN2) ./compressed $(srcdir)
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN2) ./compressed $(srcdir)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; } ; done
+ptest2: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 2 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 2
 
-ptest6: $(TESTPROGRAMS)
-	export PNETCDF_SAFE_MODE=0 && $(TESTMPIRUN6) ./compressed $(srcdir)
-	export PNETCDF_SAFE_MODE=1 && $(TESTMPIRUN6) ./compressed $(srcdir)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e; for i in $(TESTPROGRAMS); do ( \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	) ; done ; } ; done
+ptest6: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 6 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 6
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

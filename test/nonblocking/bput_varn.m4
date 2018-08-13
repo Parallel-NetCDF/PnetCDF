@@ -80,6 +80,8 @@ dnl
 #define NY 4
 #define NX 10
 
+static int bb_enabled;
+
 typedef char text;
 
 include(`foreach.m4')dnl
@@ -175,6 +177,12 @@ int clear_file_contents_$1(int ncid, int *varid)
         CHECK_ERR
     }
     free(w_buffer);
+
+    if (bb_enabled) {
+        err = ncmpi_flush(ncid);
+        CHECK_ERR
+    }
+
     return nerrs;
 }
 
@@ -216,13 +224,14 @@ int check_contents_for_fail_$1(int ncid, int *varid)
             /* when nprocs is less than 4, skip the comparison */
             if (expected[i][j] >= 10+nprocs) continue;
             if (r_buffer[j] != expected[i][j]) {
-                printf("Expected read buf[%d][%d]=%d, but got %d\n",
+                printf("Expected read $1 buf[%d][%d]=%d, but got %d\n",
                        i,j,(int)expected[i][j],(int)r_buffer[j]);
                 nerrs++;
-                break;
+                goto fn_exit;
             }
         }
     }
+fn_exit:
     free(r_buffer);
     return nerrs;
 }
@@ -234,7 +243,6 @@ test_bput_varn_$1(char *filename, int cdf)
     int ncid, cmode, varid[NLOOPS], dimid[2], nreqs, reqs[NLOOPS], sts[NLOOPS];
     int req_lens[NLOOPS], my_nsegs[NLOOPS], num_segs[NLOOPS] = {4, 6, 5, 4};
     $1 *buffer[NLOOPS];
-    int bb_enabled=0;
 
     MPI_Offset **starts[NLOOPS], **counts[NLOOPS];
     MPI_Offset n_starts[NLOOPS][MAX_NREQS][2] =
@@ -290,6 +298,8 @@ test_bput_varn_$1(char *filename, int cdf)
         MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
         if (flag && strcasecmp(hint, "enable") == 0)
             bb_enabled = 1;
+        else
+            bb_enabled = 0;
         MPI_Info_free(&infoused);
     }
 

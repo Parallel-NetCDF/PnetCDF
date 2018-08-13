@@ -27,9 +27,9 @@ TESTPROGRAMS = test_subfile
 
 check_PROGRAMS = $(TESTPROGRAMS)
 
-TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 TESTS = seq_runs.sh
 TEST_EXTENSIONS = .sh
@@ -37,44 +37,37 @@ TEST_EXTENSIONS = .sh
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/test_subfile.nc \
              $(TESTOUTDIR)/test_subfile.nc.subfile_0.nc \
-             $(TESTOUTDIR)/test_subfile.nc.subfile_1.nc
+             $(TESTOUTDIR)/test_subfile.nc.subfile_1.nc \
+             $(TESTOUTDIR)/test_subfile.bb.nc \
+             $(TESTOUTDIR)/test_subfile.bb.nc.subfile_0.nc \
+             $(TESTOUTDIR)/test_subfile.bb.nc.subfile_1.nc
 
-EXTRA_DIST = README seq_runs.sh
+EXTRA_DIST = README seq_runs.sh parallel_run.sh
 
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN4) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest2: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN2) ./$$i -f $(TESTOUTDIR)/$$i.nc -s 2 ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 2 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 2
 
 ptests: ptest2 ptest4
 ptest6 ptest8 ptest10:

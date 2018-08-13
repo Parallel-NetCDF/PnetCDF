@@ -33,4 +33,3 @@ if [ -n "${TESTBB}" ]; then
        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
    done
 fi
-

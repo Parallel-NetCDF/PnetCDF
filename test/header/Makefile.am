@@ -27,55 +27,47 @@ check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-# AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-# AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+# AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+# AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+# AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
 # consistency check should be run on more than one process
 # TESTS = seq_runs.sh
 
-EXTRA_DIST = seq_runs.sh
+EXTRA_DIST = seq_runs.sh parallel_run.sh
 
-CLEANFILES = $(TESTOUTDIR)/header_consistency.nc \
-             core core.* *.gcda *.gcno *.gcov gmon.out
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
+
+CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest2: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 2 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 2
 
 ptests: ptest2 ptest4
 ptest6 ptest8 ptest10:

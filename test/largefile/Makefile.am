@@ -41,9 +41,10 @@ if HAS_FORTRAN
    bigrecords_SOURCES = bigrecords.f
 endif
 
-EXTRA_DIST = wrap_runs.sh
+EXTRA_DIST = wrap_runs.sh parallel_run.sh
 
-NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
+NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 
@@ -59,78 +60,42 @@ endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-# AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-# AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+# AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+# AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+# AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 if BUILD_DRIVER_BB
-   TESTBB = 1
-   TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
+if ENABLE_NETCDF4
+   TESTS_ENVIRONMENT += export TESTNETCDF4=1;
+endif
+
+TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-TESTS = $(check_PROGRAMS)
-
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well
 
-TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
-TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
-	for j in 0 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS) ; do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
-ptest2: $(check_PROGRAMS)
-	for j in 0 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; fi ; \
-	) ; done ; } ; done
-
-ptest6: $(check_PROGRAMS)
-	for j in 0 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	if [ -n "$(TESTBB)" ]; then ( \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	) ; fi ; \
-	) ; done ; } ; done
-
-ptests: ptest2 ptest4 ptest6
-ptest8 ptest10:
+ptests: ptest4
+ptest2 ptest6 ptest8 ptest10:
 
 # build check targets but not invoke
 tests-local: all $(TESTPROGRAMS)

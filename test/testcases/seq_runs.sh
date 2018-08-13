@@ -39,14 +39,14 @@ if [ -n "${TESTBB}" ]; then
    echo "---- testing burst buffering"
    # Run using burst buffer driver
    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-   ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds_bb.nc
-   ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds_bb.nc
+   ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.bb.nc
+   ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds.bb.nc
    unset PNETCDF_HINTS
 
    # Compare
    for i in 1 2 5 ; do
-       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf$i ${TESTOUTDIR}/put_all_kinds_bb.nc.cdf$i
-       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/iput_all_kinds.nc.cdf$i ${TESTOUTDIR}/iput_all_kinds_bb.nc.cdf$i
+       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/put_all_kinds.nc.cdf$i ${TESTOUTDIR}/put_all_kinds.bb.nc.cdf$i
+       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/iput_all_kinds.nc.cdf$i ${TESTOUTDIR}/iput_all_kinds.bb.nc.cdf$i
    done
 fi
 
