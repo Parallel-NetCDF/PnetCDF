@@ -442,13 +442,19 @@ int main(int argc, char **argv) {
     MPI_Type_commit(&ghost_buftype);
 
     MPI_Type_free(&rec_filetype);
+
+    /* construct rec_filetype for dummy_rec of type NC_BYTE */
+    for (i=0; i<count[0]; i++) {
+        array_of_blocklengths[i] = count[1];
+        array_of_displacements[i] = start[1]*sizeof(signed char) + recsize * i;
+    }
     MPI_Type_create_hindexed(2, array_of_blocklengths, array_of_displacements,
                              MPI_SIGNED_CHAR, &rec_filetype);
     MPI_Type_commit(&rec_filetype);
 
     signed char *schar_buf;
     schar_buf = (signed char*) malloc(array_of_sizes[0]*array_of_sizes[1]);
-    for (i=0; i<array_of_sizes[0]*array_of_sizes[1]; i++) schar_buf[i] = i;
+    for (i=0; i<array_of_sizes[0]*array_of_sizes[1]; i++) schar_buf[i] = i + rank*10;
 
     /* write to dummy_rec */
     err = ncmpi_put_vard_all(ncid, varid2, rec_filetype, schar_buf, 1,
@@ -460,7 +466,7 @@ int main(int argc, char **argv) {
                              ghost_buftype); CHECK_ERR
     for (i=0; i<array_of_sizes[0]; i++)
     for (j=0; j<array_of_sizes[1]; j++) {
-        signed char expected = i*array_of_sizes[1] + j;
+        signed char expected = i*array_of_sizes[1] + j + rank*10;
         if (i<2 || i >= 4)         expected = -1;
         else if (j<2 || j >= NX+2) expected = -1;
         if (schar_buf[i*array_of_sizes[1]+j] != expected) {
