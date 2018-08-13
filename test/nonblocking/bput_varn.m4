@@ -175,6 +175,12 @@ int clear_file_contents_$1(int ncid, int *varid)
         CHECK_ERR
     }
     free(w_buffer);
+
+#ifdef BUILD_DRIVER_BB
+    err = ncmpi_flush(ncid);
+        CHECK_ERR
+#endif
+
     return nerrs;
 }
 
