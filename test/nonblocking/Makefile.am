@@ -36,8 +36,8 @@ TESTPROGRAMS = test_bput \
                i_varn_indef \
                large_num_reqs
 
-M4_SRCS  = bput_varn.m4 \
-           column_wise.m4
+M4_SRCS      = bput_varn.m4 \
+               column_wise.m4
 
 TESTPROGRAMS += $(M4_SRCS:.m4=)
 
@@ -77,9 +77,9 @@ check_PROGRAMS = $(TESTPROGRAMS) mcoll_perf
 # AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 # AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 # AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
-TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
-TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
+TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
 
 TESTS = $(TESTPROGRAMS) seq_runs.sh
 TEST_EXTENSIONS = .sh
@@ -90,13 +90,13 @@ NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
            $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/testfile*.nc $(NC_FILES) mcoll_perf.nc.*
+             $(TESTOUTDIR)/testfile*.nc $(NC_FILES) \
+             mcoll_perf.nc.* mcoll_perf.bb.nc.*
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh parallel_run.sh
 
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT += TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
 ../common/libtestutils.la:
@@ -107,51 +107,21 @@ endif
 # Some of these tests are designed to run on 4 processes,
 # # Run them on 2, 4, and 6 processes to see if they can handle well
 
-TESTMPIRUN2  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/2/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
-TESTMPIRUN6  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/6/g'`
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest2 : $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN2) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 2
 
 ptest6 : $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	set -e ; for i in $(check_PROGRAMS); do ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-	$(RM) -f $(TESTOUTDIR)/$$i.nc ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-	$(TESTMPIRUN6) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-	unset PNETCDF_HINTS ; \
-	) ; fi ; \
-	) ; done ; } ; done
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 6
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

@@ -55,7 +55,7 @@ program f90tst_parallel3
   integer (kind=EightByteInt) :: int64_out(HALF_NY, HALF_NX), int64_in(HALF_NY, HALF_NX)
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
   integer :: x, y, v
-  integer :: p, my_rank, err, ierr, get_args
+  integer :: p, my_rank, err, ierr, get_args, old_mode
   integer(KIND=MPI_OFFSET_KIND) :: start(MAX_DIMS), count(MAX_DIMS)
   integer :: cmode
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
@@ -106,6 +106,9 @@ program f90tst_parallel3
   do v = 1, NUM_VARS
      call check(nf90mpi_def_var(ncid, var_name(v), var_type(v), dimids, varid(v)))
   end do
+
+  ! This will be the last collective operation.
+  call check(nf90mpi_set_fill(ncid, NF90_FILL, old_mode))
 
   ! This will be the last collective operation.
   call check(nf90mpi_enddef(ncid))
