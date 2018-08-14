@@ -24,7 +24,7 @@
  *    // file format: CDF-1
  *
  *    // global attributes:
- *                    :history = "Sun May  4 13:11:47 2014\n",
+ *                    :history = "Mon Aug 13 21:27:48 2018" ;
  *        "" ;
  *                    :digits = 0s, 1s, 2s, 3s, 4s, 5s, 6s, 7s, 8s, 9s ;
  *    }

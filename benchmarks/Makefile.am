@@ -30,12 +30,9 @@ else
 endif
 
 ptest ptests:
-	(echo "=============================================")  && \
-	(echo "    Parallel testing on 4 MPI processes")  && \
-	(echo "=============================================")  && \
-	( for d in $(PTEST_SUBDIRS) ; do \
+	for d in $(PTEST_SUBDIRS) ; do \
 		$(MAKE) $(MFLAGS) -C $$d ptest4 $$* ; \
-	done ) ;
+	done
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:

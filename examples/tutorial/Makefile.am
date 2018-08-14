@@ -45,66 +45,32 @@ endif
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
+TESTS_ENVIRONMENT =
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
-NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/pnetcdf-write-nfiles.*.nc \
              $(NC_FILES)
 
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+EXTRA_DIST = parallel_run.sh
+
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
-	@for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	for i in $(check_PROGRAMS); do { \
-        if [ $$i = "pnetcdf-read-from-master" ] ; then \
-           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-from-master.nc ; \
-        elif [ $$i = "pnetcdf-read-nfiles" ] ; then \
-           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nfiles.nc ; \
-        elif [ $$i = "pnetcdf-read-standard" ] ; then \
-           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-standard.nc ; \
-        elif [ $$i = "pnetcdf-read-flexible" ] ; then \
-           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-flexible.nc ; \
-        elif [ $$i = "pnetcdf-read-nb" ] ; then \
-           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nb.nc ; \
-        else \
-           $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-        fi ; \
-        if [ $$? = 0 ] ; then \
-           echo "PASS:     parallel run on 4 processes --------------- $$i"; \
-        else \
-           echo "FAILED:     parallel run on 4 processes ------------- $$i"; \
-           exit 1; \
-        fi ; \
-        if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-                if [ $$i = "pnetcdf-read-from-master" ] ; then \
-                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-from-master.nc ; \
-                elif [ $$i = "pnetcdf-read-nfiles" ] ; then \
-                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nfiles.nc ; \
-                elif [ $$i = "pnetcdf-read-standard" ] ; then \
-                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-standard.nc ; \
-                elif [ $$i = "pnetcdf-read-flexible" ] ; then \
-                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-flexible.nc ; \
-                elif [ $$i = "pnetcdf-read-nb" ] ; then \
-                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/pnetcdf-write-nb.nc ; \
-                else \
-                        $(TESTMPIRUN4) ./$$i $(TESTOUTDIR)/$$i.nc ; \
-                fi ; \
-                unset PNETCDF_HINTS ; \
-                if [ $$? = 0 ] ; then \
-                        echo "PASS:     parallel run on 4 processes --------------- $$i"; \
-                else \
-                        echo "FAILED:     parallel run on 4 processes ------------- $$i"; \
-                        exit 1; \
-                fi ; \
-	) ; fi ; \
-        } ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptests: ptest4
 ptest2 ptest3 ptest6 ptest8 ptest10:

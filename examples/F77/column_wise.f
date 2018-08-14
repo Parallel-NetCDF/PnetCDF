@@ -144,6 +144,9 @@
           err = nfmpi_put_vara_int_all(ncid, varid, start, count, buf)
           call check(err, 'In nfmpi_put_vara_int_all: ')
 
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
+
           ! initialize the buffer with rank ID
           do i=1, NY
           do j=1, NX

@@ -125,7 +125,7 @@ int main(int argc, char** argv)
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[optind+1]);
     }
 
     /* create a new file using clobber mode ----------------------------------*/

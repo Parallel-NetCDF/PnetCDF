@@ -115,9 +115,6 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
-	@echo "============================================="
-	@echo "    Parallel testing on 4 MPI processes"
-	@echo "============================================="
 	$(TESTS_ENVIRONMENT) \
 	./parallel_run.sh 4
 

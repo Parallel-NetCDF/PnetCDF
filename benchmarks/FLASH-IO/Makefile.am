@@ -61,11 +61,10 @@ CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/flash_io_test_ncmpi_plt_cnt_0000.nc
 
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT = export TESTBB=1;
 endif
 
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+TESTMPIRUN4 = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
 
 ptests ptest ptest4: $(check_PROGRAMS)
 	$(TESTMPIRUN4) ./$(check_PROGRAMS) $(RUN_QUIETLY) $(TESTOUTDIR)/flash_io_test_ ; \

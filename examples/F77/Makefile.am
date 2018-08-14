@@ -39,91 +39,45 @@ utils.o: $(srcdir)/utils.F90
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
+TESTS_ENVIRONMENT =
 if BUILD_DRIVER_BB
-TESTBB = 1
-TESTS_ENVIRONMENT = TESTBB=1 ; export TESTBB;
+   TESTS_ENVIRONMENT += export TESTBB=1;
 endif
 
-NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc)
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
-TESTMPIRUN3  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/3/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
-TESTMPIRUN8  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/8/g'`
+EXTRA_DIST += parallel_run.sh
+
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-        if [ $$? = 0 ] ; then \
-           echo "PASS: F77 parallel run on 4 processes --------------- $$i"; \
-        else \
-           echo "FAILED: F77 parallel run on 4 processes ------------- $$i"; \
-           exit 1; \
-        fi ; \
-        if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-                $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-                unset PNETCDF_HINTS ; \
-                if [ $$? = 0 ] ; then \
-                        echo "PASS: F77 parallel run on 4 processes --------------- $$i"; \
-                else \
-                        echo "FAILED: F77 parallel run on 4 processes ------------- $$i"; \
-                        exit 1; \
-                fi ; \
-	) ; fi ; \
-        } ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest8: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-        if [ $$? = 0 ] ; then \
-           echo "PASS: F77 parallel run on 8 processes --------------- $$i"; \
-        else \
-           echo "FAILED: F77 parallel run on 8 processes ------------- $$i"; \
-           exit 1; \
-        fi ; \
-        if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-                $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-                unset PNETCDF_HINTS ; \
-                if [ $$? = 0 ] ; then \
-                        echo "PASS: F77 parallel run on 8 processes --------------- $$i"; \
-                else \
-                        echo "FAILED: F77 parallel run on 8 processes ------------- $$i"; \
-                        exit 1; \
-                fi ; \
-	) ; fi ; \
-        } ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 8 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 8
 
 ptest3: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	for i in $(check_PROGRAMS); do { \
-        $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-        if [ $$? = 0 ] ; then \
-           echo "PASS: F77 parallel run on 3 processes --------------- $$i"; \
-        else \
-           echo "FAILED: F77 parallel run on 3 processes ------------- $$i"; \
-           exit 1; \
-        fi ; \
-        if [ -n "$(TESTBB)" ]; then ( \
-                export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-                $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-                unset PNETCDF_HINTS ; \
-                if [ $$? = 0 ] ; then \
-                        echo "PASS: F77 parallel run on 3 processes --------------- $$i"; \
-                else \
-                        echo "FAILED: F77 parallel run on 3 processes ------------- $$i"; \
-                        exit 1; \
-                fi ; \
-	) ; fi ; \
-        } ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 3 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 3
 
 ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:
