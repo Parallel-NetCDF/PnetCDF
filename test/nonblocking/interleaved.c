@@ -92,7 +92,6 @@ int main(int argc, char** argv)
     size_t len;
     MPI_Offset start[2], count[2];
     MPI_Info info;
-    int bb_enabled=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -129,18 +128,6 @@ int main(int argc, char** argv)
 
     MPI_Info_free(&info);
 
-    {
-        int flag;
-        char hint[MPI_MAX_INFO_VAL];
-        MPI_Info infoused;
-
-        ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag && strcasecmp(hint, "enable") == 0)
-            bb_enabled = 1;
-        MPI_Info_free(&infoused);
-    }
-
     /* define dimensions Y and X */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
@@ -162,11 +149,10 @@ int main(int argc, char** argv)
     for (i=0; i<NY*NX; i++) buf[i] = -1;
     err = ncmpi_put_var_int_all(ncid, varid[0], buf); CHECK_ERR
 
-    // Flush the log to prevent new value being skipped due to overlaping domain
-    if (bb_enabled) {
-        err = ncmpi_flush(ncid);
-        CHECK_ERR
-    }
+    /* When using burst buffering, flush the log to prevent new value being
+     * skipped due to overlaping domain
+     */
+    err = ncmpi_flush(ncid); CHECK_ERR
 
     /* write 8 x 2 elements so this only interleaves the next two
      * iput requests */
@@ -203,11 +189,10 @@ int main(int argc, char** argv)
     for (i=0; i<NY*NX; i++) buf[i] = -1;
     err = ncmpi_put_var_int_all(ncid, varid[1], buf); CHECK_ERR
 
-    // Flush the log to prevent new value being skipped due to overlaping domain
-    if (bb_enabled) {
-        err = ncmpi_flush(ncid);
-        CHECK_ERR
-    }
+    /* When using burst buffering, flush the log to prevent new value being
+     * skipped due to overlaping domain
+     */
+    err = ncmpi_flush(ncid); CHECK_ERR
 
     /* write 8 x 2 elements so this only interleaves the next two iput
      * requests */

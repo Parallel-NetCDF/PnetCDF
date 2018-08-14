@@ -121,19 +121,6 @@ int clear_file_contents(int ncid, int *varid)
 {
     int i, err, rank, nerrs=0;
     long long *w_buffer = (long long*) malloc(NY*NX * sizeof(long long));
-    int bb_enabled=0;
-
-    {
-        int flag;
-        char hint[MPI_MAX_INFO_VAL];
-        MPI_Info infoused;
-
-        ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag && strcasecmp(hint, "enable") == 0)
-            bb_enabled = 1;
-        MPI_Info_free(&infoused);
-    }
 
     for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
 
@@ -145,11 +132,10 @@ int clear_file_contents(int ncid, int *varid)
     }
     free(w_buffer);
 
-    // Flush the log to prevent new value being skipped due to overlaping domain
-    if (bb_enabled) {
-        err = ncmpi_flush(ncid);
-        CHECK_ERR
-    }
+    /* When using burst buffering, flush the log to prevent new value being
+     * skipped due to overlaping domain
+     */
+    err = ncmpi_flush(ncid); CHECK_ERR
 
     return nerrs;
 }

@@ -878,7 +878,7 @@
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -971,11 +971,10 @@
                 else
                     ! Flush the buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nfmpi_flush(ncid)
-                        endif
+                        if (err .ne. NF90_NOERR) &
+                            call errore('nf90mpi_put_var: ', err)
+                        err = nfmpi_flush(ncid)
                     endif
-
                     if (err .ne. NF90_ERANGE) then
                         call errore( &
                             'type-conversion range error: status = ',  &

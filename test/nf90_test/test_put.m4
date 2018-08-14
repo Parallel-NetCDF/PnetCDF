@@ -436,14 +436,13 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         integer ncid
         integer i
         integer j
-        integer err, flags
+        integer err, flags, infoused
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
         doubleprecision val
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -457,7 +456,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -510,13 +509,12 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                         if (err .ne. NF90_NOERR) &
                             call errore('PutVarAll: ', err)
                     else
-                        ! Flush the buffer to reveal potential error
                         if (bb_enable) then
-                            if (err .eq. NF_NOERR) then
-                                err = nfmpi_flush(ncid)
-                            endif
+                            ! Flush burst buffer to reveal potential error
+                            if (err .ne. NF90_NOERR) &
+                                call errore('PutVarAll: ', err)
+                            err = nfmpi_flush(ncid)
                         endif
-
                         if (err .ne. NF90_ERANGE) &
                             call errore('Range error: ', err)
                     end if
@@ -573,7 +571,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -633,13 +631,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     if (err .ne. NF90_NOERR) &
                         call errore('PutVarAll: ', err)
                 else
-                    ! Flush the buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nfmpi_flush(ncid)
-                        endif
+                        ! Flush burst buffer to reveal potential error
+                        if (err .ne. NF90_NOERR) &
+                            call errore('PutVarAll: ', err)
+                        err = nfmpi_flush(ncid)
                     endif
-
                     if (err .ne. NF90_ERANGE .and. &
                             var_dimid(var_rank(i),i) .ne. RECDIM) &
                         call errore('Range error: ', err)
@@ -664,11 +661,11 @@ define([TEST_NFMPI_PUT_VAR],dnl
         if (err .ne. NF90_NOERR) &
             call errore('PutVarAll: ', err)
 
-        ! Flush the buffer to reveal potential error
         if (bb_enable) then
-            if (err .eq. NF_NOERR) then
-                err = nfmpi_flush(ncid)
-            endif
+            ! Flush burst buffer to reveal potential error
+            err = nfmpi_flush(ncid)
+            if (err .ne. NF90_NOERR) &
+                call errore('PutVarAll: ', err)
         endif
 
         do 5 i = 1, numVars
@@ -704,13 +701,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
                         if (err .ne. NF90_NOERR) &
                             call errore('PutVarAll: ', err)
                     else
-                        ! Flush the buffer to reveal potential error
                         if (bb_enable) then
-                            if (err .eq. NF_NOERR) then
-                                err = nfmpi_flush(ncid)
-                            endif
+                            ! Flush burst buffer to reveal potential error
+                            if (err .ne. NF90_NOERR) &
+                                call errore('PutVarAll: ', err)
+                            err = nfmpi_flush(ncid)
                         endif
-
                         if (err .ne. NF90_ERANGE) &
                             call errore('range error: ', err)
                     endif
@@ -771,7 +767,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -889,11 +885,11 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 edge(j) = 1
 6           continue
 
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
-                endif
+                ! Flush burst buffer to reveal potential error
+                err = nfmpi_flush(ncid)
+                if (err .ne. NF90_NOERR) &
+                    call errore('PutVarAll: ', err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -937,13 +933,12 @@ define([TEST_NFMPI_PUT_VARA],dnl
                         if (err .ne. NF90_NOERR)  &
                             call error(ErrFunc(err))
                     else
-                        ! Flush the buffer to reveal potential error
                         if (bb_enable) then
-                            if (err .eq. NF_NOERR) then
-                                err = nfmpi_flush(ncid)
-                            endif
+                            ! Flush burst buffer to reveal potential error
+                            if (err .ne. NF90_NOERR) &
+                                call errore('PutVarAll: ', err)
+                            err = nfmpi_flush(ncid)
                         endif
-
                         if (err .ne. NF90_ERANGE) &
                             call errore('range error: ', err)
                     end if
@@ -1010,7 +1005,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -1140,11 +1135,11 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 edge(j) = 1
 6           continue
 
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
-                endif
+                ! Flush burst buffer to reveal potential error
+                err = nfmpi_flush(ncid)
+                if (err .ne. NF90_NOERR) &
+                    call errore('PutVarAll: ', err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1218,13 +1213,12 @@ define([TEST_NFMPI_PUT_VARS],dnl
                             if (err .ne. NF90_NOERR)  &
                                 call error(ErrFunc(err))
                         else
-                            ! Flush the buffer to reveal potential error
                             if (bb_enable) then
-                                if (err .eq. NF_NOERR) then
-                                    err = nfmpi_flush(ncid)
-                                endif
+                                ! Flush burst buffer to reveal potential error
+                                if (err .ne. NF90_NOERR) &
+                                    call errore('PutVarAll: ', err)
+                                err = nfmpi_flush(ncid)
                             endif
-
                             if (err .ne. NF90_ERANGE) &
                                 call errore('range error: ', err)
                         end if
@@ -1295,7 +1289,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -1431,11 +1425,11 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 edge(j) = 1
 6           continue
 
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
-                endif
+                ! Flush burst buffer to reveal potential error
+                err = nfmpi_flush(ncid)
+                if (err .ne. NF90_NOERR) &
+                    call errore('PutVarAll: ', err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1516,13 +1510,12 @@ define([TEST_NFMPI_PUT_VARM],dnl
                             if (err .ne. NF90_NOERR) &
                                 call error(ErrFunc(err))
                         else
-                            ! Flush the buffer to reveal potential error
                             if (bb_enable) then
-                                if (err .eq. NF_NOERR) then
-                                    err = nfmpi_flush(ncid)
-                                endif
+                                ! Flush burst buffer to reveal potential error
+                                if (err .ne. NF90_NOERR) &
+                                    call errore('PutVarAll: ', err)
+                                err = nfmpi_flush(ncid)
                             endif
-
                             if (err .ne. NF90_ERANGE) &
                                 call errore('range error: ', err)
                         end if

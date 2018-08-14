@@ -205,18 +205,15 @@ int test_erange_put_$1_$2(char* filename) {
     for (i=0; i<LEN; i++) wbuf[i] = ($2) ifelse(index(`$1',`u'), 0, `-1', `XTYPE_MAX($2)');
     err = PUT_VAR($2)(ncid, varid1, wbuf);
     if (bb_enabled) {
-        if (err == NC_NOERR){
-            err = ncmpi_flush(ncid);
-        }
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
     }
 
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')
     err = PUT_VAR($2)(ncid, varid2, wbuf);
-
     if (bb_enabled) {
-        if (err == NC_NOERR){
-            err = ncmpi_flush(ncid);
-        }
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
     }
 
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')

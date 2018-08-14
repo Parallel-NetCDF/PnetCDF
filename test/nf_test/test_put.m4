@@ -411,14 +411,13 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         integer ncid
         integer i
         integer j
-        integer err, flags
+        integer err, flags, infoused
         integer*8 index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
         doubleprecision val
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -488,13 +487,12 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                         if (err .ne. NF_NOERR)
      +                      call error(ErrFunc(err))
                     else
-                        ! Flush the buffer to reveal potential error
                         if (bb_enable) then
-                            if (err .eq. NF_NOERR) then
-                                err = nfmpi_flush(ncid)
-                            endif
+                            if (err .ne. NF_NOERR)
+     +                          call error(ErrFunc(err))
+                            ! Flush burst buffer to reveal potential error
+                            err = nfmpi_flush(ncid)
                         endif
-
                         if (err .ne. NF_ERANGE)
      +                      call errore('Range error: ', err)
                     end if
@@ -610,13 +608,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     if (err .ne. NF_NOERR)
      +                  call error(ErrFunc(err))
                 else
-                    ! Flush the buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nfmpi_flush(ncid)
-                        endif
+                        if (err .ne. NF_NOERR)
+     +                      call error(ErrFunc(err))
+                        ! Flush burst buffer to reveal potential error
+                        err = nfmpi_flush(ncid)
                     endif
-
                     if (err .ne. NF_ERANGE .and.
      +                      var_dimid(var_rank(i),i) .ne. RECDIM)
      +                  call errore('Range error: ', err)
@@ -641,11 +638,11 @@ C       Assumes variable cr is char vector with UNLIMITED dimension.
         if (err .ne. NF_NOERR)
      +      call errore('PutVar1All(text): ', err)
 
-        ! Flush the buffer to reveal potential error
         if (bb_enable) then
-            if (err .eq. NF_NOERR) then
-                err = nfmpi_flush(ncid)
-            endif
+            ! Flush burst buffer to reveal potential error
+            err = nfmpi_flush(ncid)
+            if (err .ne. NF_NOERR)
+     +          call errore('nfmpi_flush(text): ', err)
         endif
 
         do 5 i = 1, numVars
@@ -683,13 +680,12 @@ C           Only test record variables here
                         if (err .ne. NF_NOERR)
      +                      call error(ErrFunc(err))
                     else
-                        ! Flush the buffer to reveal potential error
                         if (bb_enable) then
-                            if (err .eq. NF_NOERR) then
-                                err = nfmpi_flush(ncid)
-                            endif
+                            if (err .ne. NF_NOERR)
+     +                          call error(ErrFunc(err))
+                            ! Flush burst buffer to reveal potential error
+                            err = nfmpi_flush(ncid)
                         endif
-
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
                     endif
@@ -862,7 +858,7 @@ C           /* Check correct error returned even when nothing to put */
 5           continue
             MAKE_TYPE2($1, value, 0)
             err = PutVaraAll($1)(ncid, i,
-     +                                  start, edge, value)
+     +            start, edge, value)
             if (canConvert) then
                 if (err .ne. NF_NOERR)
      +              call error(ErrFunc(err))
@@ -874,11 +870,11 @@ C           /* Check correct error returned even when nothing to put */
                 edge(j) = 1
 6           continue
 
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
-                endif
+                ! Flush burst buffer to reveal potential error
+                err = nfmpi_flush(ncid)
+                if (err .ne. NF_NOERR)
+     +              call errore('nfmpi_flush: ', err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -923,13 +919,12 @@ C           /* Check correct error returned even when nothing to put */
                         if (err .ne. NF_NOERR)
      +                      call error(ErrFunc(err))
                     else
-                        ! Flush the buffer to reveal potential error
                         if (bb_enable) then
-                            if (err .eq. NF_NOERR) then
-                                err = nfmpi_flush(ncid)
-                            endif
+                            if (err .ne. NF_NOERR)
+     +                          call error(ErrFunc(err))
+                            ! Flush burst buffer to reveal potential error
+                            err = nfmpi_flush(ncid)
                         endif
-
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
                     end if
@@ -1125,11 +1120,11 @@ C           /* Check correct error returned even when nothing to put */
                 edge(j) = 1
 6           continue
 
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
-                endif
+                ! Flush burst buffer to reveal potential error
+                err = nfmpi_flush(ncid)
+                if (err .ne. NF_NOERR)
+     +              call errore('nfmpi_flush : ', err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1204,13 +1199,12 @@ C*/
                             if (err .ne. NF_NOERR)
      +                          call error(ErrFunc(err))
                         else
-                            ! Flush the buffer to reveal potential error
                             if (bb_enable) then
-                                if (err .eq. NF_NOERR) then
-                                    err = nfmpi_flush(ncid)
-                                endif
+                                if (err .ne. NF_NOERR)
+     +                              call error(ErrFunc(err))
+                                ! Flush burst buffer to reveal potential error
+                                err = nfmpi_flush(ncid)
                             endif
-
                             if (err .ne. NF_ERANGE)
      +                          call errore('range error: ', err)
                         end if
@@ -1410,11 +1404,11 @@ C           /* Check correct error returned even when nothing to put */
                 edge(j) = 1
 6           continue
 
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
-                endif
+                ! Flush burst buffer to reveal potential error
+                err = nfmpi_flush(ncid)
+                if (err .ne. NF_NOERR)
+     +              call errore('nfmpi_flush: ', err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1496,13 +1490,12 @@ C*/
                             if (err .ne. NF_NOERR)
      +                          call error(ErrFunc(err))
                         else
-                            ! Flush the buffer to reveal potential error
                             if (bb_enable) then
-                                if (err .eq. NF_NOERR) then
-                                    err = nfmpi_flush(ncid)
-                                endif
+                                if (err .ne. NF_NOERR)
+     +                              call error(ErrFunc(err))
+                                ! Flush burst buffer to reveal potential error
+                                err = nfmpi_flush(ncid)
                             endif
-
                             if (err .ne. NF_ERANGE)
      +                          call errore('range error: ', err)
                         end if
