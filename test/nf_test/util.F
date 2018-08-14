@@ -931,17 +931,15 @@
                 err = nfmpi_put_vara_double_all(ncid, i, start,
      +                                      var_shape(1,i), value)
                 if (allInRange) then
-                    if (err .ne. NF_NOERR) then
-                        call errore('nfmpi_put_vara_double_all: ', err)
-                    end if
+                    if (err .ne. NF_NOERR)
+     +                  call errore('nfmpi_put_vara_double_all: ', err)
                 else
-                    ! Flush the buffer to reveal potential error
+                    ! Flush burst buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nfmpi_flush(ncid)
-                        endif
+                        if (err .ne. NF_NOERR) call
+     +                      errore('nfmpi_put_vara_double_all: ', err)
+                        err = nfmpi_flush(ncid)
                     endif
-                    
                     if (err .ne. NF_ERANGE) then
                         call errore('put_vars '//
      +                      'type-conversion range error: status = ',

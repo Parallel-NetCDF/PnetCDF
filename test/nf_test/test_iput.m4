@@ -162,10 +162,9 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
         doubleprecision val
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer reqid(1), st(1), err_w, infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -231,22 +230,30 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 MAKE_TYPE2($1, value, val)
                 err = iPutVar1($1)(ncid, i,
      +                index, value, reqid(1))
-
-                ! Flush the buffer to reveal potential error
                 if (bb_enable) then
-                    if (err .eq. NF_NOERR) then
-                        err = nfmpi_flush(ncid)
-                    endif
+                    if (err .NE. NF_ECHAR .AND. err .NE. NF_NOERR)
+     +                  call errore('iPutVar($1) : ', err)
+                endif
+                if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE) then
+                    ! NF_ERANGE is not a fatal error, still call wait
+                    ! Flush the burst buffer to reveal potential error
+                    err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                    if (bb_enable) then
+                        err = err_w
+                    else
+                        if (err_w .NE. NF_NOERR)
+     +                      call errore('APIFunc(wait_all) : ', err)
+                    end if
                 endif
 
-                if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
-     +              err_w = APIFunc(wait_all)(ncid,1,reqid,st)
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
-                        if (st(1) .ne. NF_NOERR)
-     +                      call error(ErrFunc(st(1)))
+                        ! put data is within conversion range
+                        if (err .ne. NF_NOERR)
+     +                      call error(ErrFunc(err))
                     else
+                        ! put data is NOT within conversion range
                         if (err .ne. NF_ERANGE)
      +                      call errore('Range error: ', err)
                     end if
@@ -293,10 +300,9 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -350,26 +356,29 @@ define([TEST_NFMPI_IPUT_VAR],dnl
      +              inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
             err = iPutVar($1)(ncid, i, value,reqid(1))
-            
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nfmpi_flush(ncid)
-                endif
+                if (err .NE. NF_ECHAR .AND. err .NE. NF_NOERR)
+     +              call errore('iPutVar($1) : ', err)
             endif
-
-            if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
-     +          err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
-                ! NF_ERANGE is not a fatal error
-
+            if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE) then
+                ! NF_ERANGE is not a fatal error, still call wait
+                ! Flush the burst buffer to reveal potential error
+                err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                if (bb_enable) then
+                    err = err_w
+                else
+                    if (err_w .NE. NF_NOERR)
+     +                  call errore('APIFunc(wait_all) : ', err)
+                end if
+            endif
             if (canConvert) then
                 if (allInExtRange) then
                     if (err .ne. NF_NOERR)
      +                  call error(ErrFunc(err))
                 else
-                    if (err .ne. NF_ERANGE .and.
-     +                      var_dimid(var_rank(i),i) .ne. RECDIM)
-     +                  call errore('Range error: ', err)
+                    if (err .ne. NF_ERANGE .AND.
+     +                  var_dimid(var_rank(i),i) .NE. RECDIM)
+     +                  call errore('range error: ', err)
                 endif
             else
                 if (err .ne. NF_ECHAR)
@@ -423,17 +432,21 @@ C           Only test record variables here
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
                 err = iPutVar($1)(ncid, i, value,reqid(1))
-
-                ! Flush the buffer to reveal potential error
                 if (bb_enable) then
-                    if (err .eq. NF_NOERR) then
-                        err = nfmpi_flush(ncid)
-                    endif
+                    if (err .NE. NF_ECHAR .AND. err .NE. NF_NOERR)
+     +                  call errore('iPutVar($1) : ', err)
                 endif
-
-                if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
-     +              err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
-                    ! NF_ERANGE is not a fatal error?
+                if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE) then
+                    ! NF_ERANGE is not a fatal error, still call wait
+                    ! Flush the burst buffer to reveal potential error
+                    err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                    if (bb_enable) then
+                        err = err_w
+                    else
+                        if (err_w .NE. NF_NOERR)
+     +                      call errore('APIFunc(wait_all) : ', err)
+                    end if
+                endif
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF_NOERR)
@@ -491,10 +504,9 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -663,21 +675,25 @@ C           /* Check correct error returned even when nothing to put */
 10              continue
                 err = iPutVara($1)(ncid, i, start,
      +                  edge, value,reqid(1))
-
-                ! Flush the buffer to reveal potential error
                 if (bb_enable) then
-                    if (err .eq. NF_NOERR) then
-                        err = nfmpi_flush(ncid)
-                    endif
+                    if (err .NE. NF_ECHAR .AND. err .NE. NF_NOERR)
+     +                  call errore('iPutVara($1) : ', err)
                 endif
-
-                if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
-     +              err_w = APIFunc(wait_all)(ncid,1,reqid,st)
-                    ! NF_ERANGE is not a fatal error?
+                if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE) then
+                    ! NF_ERANGE is not a fatal error, still call wait
+                    ! Flush the burst buffer to reveal potential error
+                    err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                    if (bb_enable) then
+                        err = err_w
+                    else
+                        if (err_w .NE. NF_NOERR)
+     +                      call errore('APIFunc(wait_all) : ', err)
+                    end if
+                endif
                 if (canConvert) then
                     if (allInExtRange) then
-                        if (st(1) .ne. NF_NOERR)
-     +                      call error(ErrFunc(st(1)))
+                        if (err .ne. NF_NOERR)
+     +                      call error(ErrFunc(err))
                     else
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
@@ -738,10 +754,9 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -948,19 +963,24 @@ C*/
                         allInExtRange = allInExtRange .and.
      +                      inRange3(val, var_type(i),
      +                               NFT_ITYPE($1))
-12                   continue
+12                  continue
                     err = iPutVars($1)(ncid, i,
      +                    index, count, stride, value,reqid(1))
-
-                    ! Flush the buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nfmpi_flush(ncid)
-                        endif
+                        if (err .NE. NF_ECHAR .AND. err .NE. NF_NOERR)
+     +                      call errore('iPutVars($1) : ',err)
                     endif
-
-                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
-     +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE) then
+                        ! NF_ERANGE is not a fatal error, still call wait
+                        ! Flush the burst buffer to reveal potential error
+                        err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                        if (bb_enable) then
+                            err = err_w
+                        else
+                            if (err_w .NE. NF_NOERR)
+     +                          call errore('APIFunc(wait_all) : ', err)
+                        end if
+                    endif
                     if (canConvert) then
                         if (allInExtRange) then
                             if (st(1) .ne. NF_NOERR)
@@ -1029,10 +1049,9 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1250,16 +1269,21 @@ C*/
 14                  continue
                     err = iPutVarm($1)(ncid,i,
      +                   index,count, stride,imap, value,reqid(1))
-
-                    ! Flush the buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nfmpi_flush(ncid)
-                        endif
+                        if (err .NE. NF_ECHAR .AND. err .NE. NF_NOERR)
+     +                      call errore('iPutVarm($1) : ',err)
                     endif
-
-                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
-     +                  err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE) then
+                        ! NF_ERANGE is not a fatal error, still call wait
+                        ! Flush the burst buffer to reveal potential error
+                        err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                        if (bb_enable) then
+                            err = err_w
+                        else
+                            if (err_w .NE. NF_NOERR)
+     +                          call errore('APIFunc(wait_all) : ', err)
+                        end if
+                    endif
                     if (canConvert) then
                         if (allInExtRange) then
                             if (st(1) .ne. NF_NOERR)

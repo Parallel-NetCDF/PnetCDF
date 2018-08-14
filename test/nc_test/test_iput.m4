@@ -357,36 +357,28 @@ ifdef(`PNETCDF',`dnl
                                    NCT_ITYPE($1));
             ifelse(`$1',`text',,`orig_value = value[0];')
             err = iPutVar1($1)(ncid, i, index, value, &reqid);
+            if (bb_enabled && err != NC_ECHAR && err != NC_NOERR)
+                error("iPutVar1($1): %s", APIFunc(strerror)(err));
+            if (err == NC_NOERR || err == NC_ERANGE) {
+                /* NF_ERANGE is not a fatal error, still call wait
+                 * Flush the burst buffer to reveal potential error
+                 */
+                int err_w = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                if (bb_enabled)
+                    err = err_w;
+                else if (err_w != NC_NOERR)
+                    error("wait_all: err=%s", APIFunc(strerror)(err));
+            }
             if (canConvert) {
                 if (CheckRange3($1, orig_value, var_type[i])) {
                     IF (err != NC_NOERR)
                         error("%s", APIFunc(strerror)(err));
-                    else {
-                        err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                        assert(err == status);
-                        IF (err != NC_NOERR)
-                            error("wait_all: err=%s", APIFunc(strerror)(err));
-                        else IF (status != NC_NOERR)
-                            error("wait_all: status=%s", APIFunc(strerror)(status));
-                    }
                 } else {
-                    if (bb_enabled){
-                        err = ncmpi_flush(ncid);
-                    }
                     IF (err != NC_ERANGE) {
                         EXPECT_ERR(NC_ERANGE, err)
                         error("\n\t\tfor type %s value %.17e %ld",
                                 s_nc_type(var_type[i]),
                                 (double)value[0], (long)value[0]);
-                    }
-                    else { /* NC_ERANGE does not invalidate the nonblocking
-                            * request, the request is still posted */
-                        err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                        assert(err == status);
-                        IF (err != NC_NOERR)
-                            error("wait_all: err=%s", APIFunc(strerror)(err));
-                        else IF (status != NC_NOERR)
-                            error("wait_all: status=%s", APIFunc(strerror)(status));
                     }
                 }
             } else {
@@ -603,36 +595,28 @@ TestFunc(var)_$1(VarArgs)
             }
         }
         err = iPutVar($1)(ncid, i, value, &reqid);
+        if (bb_enabled && err != NC_ECHAR && err != NC_NOERR)
+            error("iPutVar($1): %s", APIFunc(strerror)(err));
+        if (err == NC_NOERR || err == NC_ERANGE) {
+            /* NF_ERANGE is not a fatal error, still call wait
+             * Flush the burst buffer to reveal potential error
+             */
+            int err_w = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+            if (bb_enabled)
+                err = err_w;
+            else if (err_w != NC_NOERR)
+                error("wait_all: err=%s", APIFunc(strerror)(err));
+        }
         if (canConvert) {
             if (allInExtRange) {
                 IF (err != NC_NOERR)
                     error("%s", APIFunc(strerror)(err));
-                else {
-                    err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                    assert(err == status);
-                    IF (err != NC_NOERR)
-                        error("wait_all: err=%s", APIFunc(strerror)(err));
-                    else IF (status != NC_NOERR)
-                        error("wait_all: status=%s", APIFunc(strerror)(status));
-                }
             } else {
-                if (bb_enabled){
-                    err = ncmpi_flush(ncid);
-                }
                 IF (err != NC_ERANGE) {
                     EXPECT_ERR(NC_ERANGE, err)
                     error("\n\t\tfor type %s value %.17e %ld",
                           s_nc_type(var_type[i]),
                           (double)value[0], (long)value[0]);
-                }
-                else { /* NC_ERANGE does not invalidate the nonblocking
-                        * request, the request is still posted */
-                    err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                    assert(err == status);
-                    IF (err != NC_NOERR)
-                        error("wait_all: err=%s", APIFunc(strerror)(err));
-                    else IF (status != NC_NOERR)
-                        error("wait_all: status=%s", APIFunc(strerror)(status));
                 }
             }
         } else {
@@ -682,36 +666,28 @@ TestFunc(var)_$1(VarArgs)
             }
         }
         err = iPutVar($1)(ncid, i, value, &reqid);
+        if (bb_enabled && err != NC_ECHAR && err != NC_NOERR)
+            error("iPutVar($1): %s", APIFunc(strerror)(err));
+        if (err == NC_NOERR || err == NC_ERANGE) {
+            /* NF_ERANGE is not a fatal error, still call wait
+             * Flush the burst buffer to reveal potential error
+             */
+            int err_w = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+            if (bb_enabled)
+                err = err_w;
+            else if (err_w != NC_NOERR)
+                error("wait_all: err=%s", APIFunc(strerror)(err));
+        }
         if (canConvert) {
             if (allInExtRange) {
                 IF (err != NC_NOERR)
                     error("%s", APIFunc(strerror)(err));
-                else {
-                    err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                    assert(err == status);
-                    IF (err != NC_NOERR)
-                        error("wait_all: err=%s", APIFunc(strerror)(err));
-                    else IF (status != NC_NOERR)
-                        error("wait_all: status=%s", APIFunc(strerror)(status));
-                }
             } else {
-                if (bb_enabled){
-                    err = ncmpi_flush(ncid);
-                }
                 IF (err != NC_ERANGE) {
                     EXPECT_ERR(NC_ERANGE, err)
                     error("\n\t\tfor type %s value %.17e %ld",
                           s_nc_type(var_type[i]),
                           (double)value[0], (long)value[0]);
-                }
-                else { /* NC_ERANGE does not invalidate the nonblocking
-                        * request, the request is still posted */
-                    err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                    assert(err == status);
-                    IF (err != NC_NOERR)
-                        error("wait_all: err=%s", APIFunc(strerror)(err));
-                    else IF (status != NC_NOERR)
-                        error("wait_all: status=%s", APIFunc(strerror)(status));
                 }
             }
         } else {
@@ -1135,33 +1111,25 @@ ifdef(`PNETCDF',`dnl
                 }
             }
             err = iPutVara($1)(ncid, i, start, edge, value, &reqid);
+            if (bb_enabled && err != NC_ECHAR && err != NC_NOERR)
+                error("iPutVara($1): %s", APIFunc(strerror)(err));
+            if (err == NC_NOERR || err == NC_ERANGE) {
+                /* NF_ERANGE is not a fatal error, still call wait
+                 * Flush the burst buffer to reveal potential error
+                 */
+                int err_w = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                if (bb_enabled)
+                    err = err_w;
+                else if (err_w != NC_NOERR)
+                    error("wait_all: err=%s", APIFunc(strerror)(err));
+            }
             if (canConvert) {
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
                         EXPECT_ERR(NC_NOERR, err)
-                    else {
-                        err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                        assert(err == status);
-                        IF (err != NC_NOERR)
-                            error("wait_all: err=%s", APIFunc(strerror)(err));
-                        else IF (status != NC_NOERR)
-                            error("wait_all: status=%s", APIFunc(strerror)(status));
-                    }
                 } else {
-                    if (bb_enabled){
-                        err = ncmpi_flush(ncid);
-                    }
                     IF (err != NC_ERANGE)
                         EXPECT_ERR(NC_ERANGE, err)
-                    else { /* NC_ERANGE does not invalidate the nonblocking
-                            * request, the request is still posted */
-                        err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                        assert(err == status);
-                        IF (err != NC_NOERR)
-                            error("wait_all: err=%s", APIFunc(strerror)(err));
-                        else IF (status != NC_NOERR)
-                            error("wait_all: status=%s", APIFunc(strerror)(status));
-                    }
                 }
             } else {
                 IF (err != NC_ECHAR)
@@ -1644,33 +1612,25 @@ ifdef(`PNETCDF',`dnl
                     }
                 }
                 err = iPutVars($1)(ncid, i, index, count, stride, value, &reqid);
+                if (bb_enabled && err != NC_ECHAR && err != NC_NOERR)
+                    error("iPutVars($1): %s", APIFunc(strerror)(err));
+                if (err == NC_NOERR || err == NC_ERANGE) {
+                    /* NF_ERANGE is not a fatal error, still call wait
+                     * Flush the burst buffer to reveal potential error
+                     */
+                    int err_w = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                    if (bb_enabled)
+                        err = err_w;
+                    else if (err_w != NC_NOERR)
+                        error("wait_all: err=%s", APIFunc(strerror)(err));
+                }
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
                             error("%s", APIFunc(strerror)(err));
-                        else {
-                            err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                            assert(err == status);
-                            IF (err != NC_NOERR)
-                                error("wait_all: err=%s", APIFunc(strerror)(err));
-                            else IF (status != NC_NOERR)
-                                error("wait_all: status=%s", APIFunc(strerror)(status));
-                        }
                     } else {
-                        if (bb_enabled){
-                            err = ncmpi_flush(ncid);
-                        }
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
-                        else { /* NC_ERANGE does not invalidate the nonblocking
-                                * request, the request is still posted */
-                            err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                            assert(err == status);
-                            IF (err != NC_NOERR)
-                                error("wait_all: err=%s", APIFunc(strerror)(err));
-                            else IF (status != NC_NOERR)
-                                error("wait_all: status=%s", APIFunc(strerror)(status));
-                        }
                     }
                 } else {
                     IF (err != NC_ECHAR)
@@ -2168,33 +2128,25 @@ ifdef(`PNETCDF',`dnl
                     }
                 }
                 err = iPutVarm($1)(ncid, i, index, count, stride, imap, value, &reqid);
+                if (bb_enabled && err != NC_ECHAR && err != NC_NOERR)
+                    error("iPutVarm($1): %s", APIFunc(strerror)(err));
+                if (err == NC_NOERR || err == NC_ERANGE) {
+                    /* NF_ERANGE is not a fatal error, still call wait
+                     * Flush the burst buffer to reveal potential error
+                     */
+                    int err_w = APIFunc(wait_all)(ncid, 1, &reqid, &status);
+                    if (bb_enabled)
+                        err = err_w;
+                    else if (err_w != NC_NOERR)
+                        error("wait_all: err=%s", APIFunc(strerror)(err));
+                }
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
                             error("%s", APIFunc(strerror)(err));
-                        else {
-                            err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                            assert(err == status);
-                            IF (err != NC_NOERR)
-                                error("wait_all: err=%s", APIFunc(strerror)(err));
-                            else IF (status != NC_NOERR)
-                                error("wait_all: status=%s", APIFunc(strerror)(status));
-                        }
                     } else {
-                        if (bb_enabled){
-                            err = ncmpi_flush(ncid);
-                        }
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
-                        else { /* NC_ERANGE does not invalidate the nonblocking
-                                * request, the request is still posted */
-                            err = APIFunc(wait_all)(ncid, 1, &reqid, &status);
-                            assert(err == status);
-                            IF (err != NC_NOERR)
-                                error("wait_all: err=%s", APIFunc(strerror)(err));
-                            else IF (status != NC_NOERR)
-                                error("wait_all: status=%s", APIFunc(strerror)(status));
-                        }
                     }
                 } else {
                     IF (err != NC_ECHAR)

@@ -109,11 +109,9 @@ int test_cdf2(char *filename)
     si[0] = -129;
     err = ncmpi_put_var_int_all(ncid, vid, si);
     if (bb_enabled) {
-        if (err == NC_NOERR){
-            err = ncmpi_flush(ncid);
-        }
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
     }
-
     EXP_ERR(NC_ERANGE)
 
     if (si[0] != -129) { /* check if put buffer content is altered */
@@ -124,13 +122,10 @@ int test_cdf2(char *filename)
     /* expect NC_ERANGE */
     si[0] = 256;
     err = ncmpi_put_var_int_all(ncid, vid, si);
-
     if (bb_enabled) {
-        if (err == NC_NOERR){
-            err = ncmpi_flush(ncid);
-        }   
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
     }
-
     EXP_ERR(NC_ERANGE)
 
     if (si[0] != 256) { /* check if put buffer content is altered */
@@ -202,22 +197,17 @@ int test_cdf5(char *filename)
     sc[0] = -1; /* in CDF-5, put -1 to an uchar should result in NC_ERANGE */
     err = ncmpi_put_var_schar_all(ncid, uc_vid, sc);
     if (bb_enabled){
-        if (err == NC_NOERR){
-            err = ncmpi_flush(ncid);
-        }
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
     }
-
     EXP_ERR(NC_ERANGE)
 
     uc[0] = 255; /* in CDF-5, put 255 to a schar should result in NC_ERANGE */
     err = ncmpi_put_var_uchar_all(ncid, sc_vid, uc);
-
     if (bb_enabled){
-        if (err == NC_NOERR){
-            err = ncmpi_flush(ncid);
-        }
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
     }
-
     EXP_ERR(NC_ERANGE)
 
     sc[0] = -1;

@@ -80,8 +80,6 @@ dnl
 #define NY 4
 #define NX 10
 
-static int bb_enabled;
-
 typedef char text;
 
 include(`foreach.m4')dnl
@@ -178,10 +176,8 @@ int clear_file_contents_$1(int ncid, int *varid)
     }
     free(w_buffer);
 
-    if (bb_enabled) {
-        err = ncmpi_flush(ncid);
-        CHECK_ERR
-    }
+    err = ncmpi_flush(ncid);
+    CHECK_ERR
 
     return nerrs;
 }
@@ -239,7 +235,7 @@ fn_exit:
 static int
 test_bput_varn_$1(char *filename, int cdf)
 {
-    int i, j, k, rank, err, nerrs=0;
+    int i, j, k, rank, err, nerrs=0, bb_enabled;
     int ncid, cmode, varid[NLOOPS], dimid[2], nreqs, reqs[NLOOPS], sts[NLOOPS];
     int req_lens[NLOOPS], my_nsegs[NLOOPS], num_segs[NLOOPS] = {4, 6, 5, 4};
     $1 *buffer[NLOOPS];
@@ -302,7 +298,6 @@ test_bput_varn_$1(char *filename, int cdf)
             bb_enabled = 0;
         MPI_Info_free(&infoused);
     }
-
 
     /* create a global array of size NY * NX */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR

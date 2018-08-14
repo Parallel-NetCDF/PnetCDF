@@ -854,6 +854,10 @@ put_vars(int ncid, int numVars)
                  * http://www.unidata.ucar.edu/software/netcdf/docs/group__error.html
                  */
                 if (bb_enabled){
+                    /* when using burst buffering, NC_ERANGE is reported
+                       at the flushing time */
+                    IF (err != NC_NOERR)
+                        error("ncmpi_put_vara_double_all: %s", ncmpi_strerror(err));
                     err = ncmpi_flush(ncid);
                 }
                 IF (err != NC_ERANGE)

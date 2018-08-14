@@ -67,8 +67,9 @@ ifelse(`$1',`uchar',`ifdef(`PNETCDF',,`
                     else {
 ifelse(`$1',`schar',`ifdef(`PNETCDF',,``#'endif')')
                         if (bb_enabled) {
-                            if (err == NC_NOERR)
-                                err = ncmpi_flush(ncid);
+                            IF (err != NC_NOERR)
+                                EXPECT_ERR(NC_NOERR, err)
+                            err = ncmpi_flush(ncid);
                         }
                         IF (err != NC_ERANGE)
                             EXPECT_ERR(NC_ERANGE, err)
@@ -673,6 +674,10 @@ TestFunc(var)_$1(VarArgs)
                 ELSE_NOK
             } else {
                 if (bb_enabled){
+                    /* when using burst buffering, NC_ERANGE is reported
+                       at the flushing time */
+                    IF (err != NC_NOERR)
+                        error("%s", APIFunc(strerror)(err));
                     err = ncmpi_flush(ncid);
                 }
                 IF (err != NC_ERANGE)

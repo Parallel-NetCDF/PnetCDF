@@ -159,10 +159,9 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
         double precision val
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -176,7 +175,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -222,16 +221,21 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 val = hash_$1(var_type(i),var_rank(i), index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, value, val)
                 err = iPutVar(ncid, i, value(1:1), reqid(1), index)
-
-                ! Flush the buffer to reveal potential error
                 if (bb_enable) then
-                    if (err .eq. NF_NOERR) then
-                        err = nf90mpi_flush(ncid)
-                    endif
+                    if (err .NE. NF90_ECHAR .AND. err .NE. NF90_NOERR) &
+                        call errore('iPutVar($1) : ',err)
                 endif
-
-                if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) then
+                    ! NF90_ERANGE is not a fatal error, still call wait
+                    ! Flush the burst buffer to reveal potential error
                     err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                    if (bb_enable) then
+                        err = err_w
+                    else
+                        if (err_w .NE. NF90_NOERR) &
+                            call errore('APIFunc(wait_all) : ', err)
+                    end if
+                endif
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
@@ -284,10 +288,9 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -299,7 +302,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -339,18 +342,21 @@ define([TEST_NFMPI_IPUT_VAR],dnl
                     inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
             err = iPutVar(ncid, i, value, reqid(1), count=var_shape(:,i))
-
-            ! Flush the buffer to reveal potential error
             if (bb_enable) then
-                if (err .eq. NF_NOERR) then
-                    err = nf90mpi_flush(ncid)
-                endif
+                if (err .NE. NF90_ECHAR .AND. err .NE. NF90_NOERR) &
+                    call errore('iPutVar($1) : ',err)
             endif
-
-            if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
-                err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
-                ! NF90_ERANGE is not a fatal error
-
+            if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) then
+                ! NF90_ERANGE is not a fatal error, still call wait
+                ! Flush the burst buffer to reveal potential error
+                err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                if (bb_enable) then
+                    err = err_w
+                else
+                    if (err_w .NE. NF90_NOERR) &
+                        call errore('APIFunc(wait_all) : ', err)
+                end if
+            endif
             if (canConvert) then
                 if (allInExtRange) then
                     if (err .ne. NF90_NOERR) &
@@ -411,17 +417,21 @@ define([TEST_NFMPI_IPUT_VAR],dnl
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
                 err = iPutVar(ncid, i, value, reqid(1), count=var_shape(:,i))
-                
-                ! Flush the buffer to reveal potential error
                 if (bb_enable) then
-                    if (err .eq. NF_NOERR) then
-                        err = nf90mpi_flush(ncid)
-                    endif
+                    if (err .NE. NF90_ECHAR .AND. err .NE. NF90_NOERR) &
+                        call errore('iPutVar($1) : ',err)
                 endif
-
-                if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
-                    err_w = APIFunc(wait_all)(ncid, 1, reqid, st)
-                    ! NF90_ERANGE is not a fatal error
+                if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) then
+                    ! NF90_ERANGE is not a fatal error, still call wait
+                    ! Flush the burst buffer to reveal potential error
+                    err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                    if (bb_enable) then
+                        err = err_w
+                    else
+                        if (err_w .NE. NF90_NOERR) &
+                            call errore('APIFunc(wait_all) : ', err)
+                    end if
+                endif
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
@@ -479,10 +489,9 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -494,7 +503,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -638,17 +647,21 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                         inRange3(val, var_type(i), NFT_ITYPE($1))
 10              continue
                 err = iPutVar(ncid, i, value,reqid(1), start, edge)
-
-                ! Flush the buffer to reveal potential error
                 if (bb_enable) then
-                    if (err .eq. NF_NOERR) then
-                        err = nf90mpi_flush(ncid)
-                    endif
+                    if (err .NE. NF90_ECHAR .AND. err .NE. NF90_NOERR) &
+                        call errore('iPutVar($1) : ',err)
                 endif
-
-                if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) then
+                    ! NF90_ERANGE is not a fatal error, still call wait
+                    ! Flush the burst buffer to reveal potential error
                     err_w = APIFunc(wait_all)(ncid,1,reqid,st)
-                    ! NF90_ERANGE is not a fatal error
+                    if (bb_enable) then
+                        err = err_w
+                    else
+                        if (err_w .NE. NF90_NOERR) &
+                            call errore('APIFunc(wait_all) : ', err)
+                    end if
+                endif
                 if (canConvert) then
                     if (allInExtRange) then
                         if (st(1) .ne. 0)  &
@@ -713,10 +726,9 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -728,7 +740,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -912,16 +924,21 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                                      NFT_ITYPE($1))
 12                  continue
                     err = iPutVar(ncid, i, value,reqid(1), index, count, stride)
-
-                    ! Flush the buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nf90mpi_flush(ncid)
-                        endif
+                        if (err .NE. NF90_ECHAR .AND. err .NE. NF90_NOERR) &
+                            call errore('iPutVar($1) : ',err)
                     endif
-
-                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) then
+                        ! NF90_ERANGE is not a fatal error, still call wait
+                        ! Flush the burst buffer to reveal potential error
                         err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                        if (bb_enable) then
+                            err = err_w
+                        else
+                            if (err_w .NE. NF90_NOERR) &
+                                call errore('APIFunc(wait_all) : ', err)
+                        end if
+                    endif
                     if (canConvert) then
                         if (allInExtRange) then
                             if (st(1) .ne. 0)  &
@@ -990,10 +1007,9 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        integer err_w, reqid(1), st(1)
-        logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
-        integer                 infoused
+        integer err_w, reqid(1), st(1), infoused
+        logical flag, bb_enable
+        character*(MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1005,7 +1021,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -1197,16 +1213,21 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                                      NFT_ITYPE($1))
 14                  continue
                     err = iPutVar(ncid,i,value,reqid(1), index, count, stride, imap)
-
-                    ! Flush the buffer to reveal potential error
                     if (bb_enable) then
-                        if (err .eq. NF_NOERR) then
-                            err = nf90mpi_flush(ncid)
-                        endif
+                        if (err .NE. NF90_ECHAR .AND. err .NE. NF90_NOERR) &
+                            call errore('iPutVar($1) : ',err)
                     endif
-
-                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) then
+                        ! NF90_ERANGE is not a fatal error, still call wait
+                        ! Flush the burst buffer to reveal potential error
                         err_w = APIFunc(wait_all)(ncid,1,reqid,st)
+                        if (bb_enable) then
+                            err = err_w
+                        else
+                            if (err_w .NE. NF90_NOERR) &
+                                call errore('APIFunc(wait_all) : ', err)
+                        end if
+                    endif
                     if (canConvert) then
                         if (allInExtRange) then
                             if (st(1) .ne. 0) &
