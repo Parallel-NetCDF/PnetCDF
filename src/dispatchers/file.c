@@ -406,6 +406,11 @@ ncmpi_create(MPI_Comm    comm,
         else if (format == NC_FORMAT_NETCDF4) cmode |= NC_NETCDF4;
     }
 
+#ifdef ENABLE_NETCDF4
+    if (format == NC_FORMAT_NETCDF4)
+        driver = nc4io_inq_driver();
+    else
+#endif
 #ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
         driver = ncfoo_inq_driver();
@@ -421,11 +426,6 @@ ncmpi_create(MPI_Comm    comm,
         }
         driver = ncbbio_inq_driver();
     }
-    else
-#endif
-#ifdef ENABLE_NETCDF4
-    if (format == NC_FORMAT_NETCDF4)
-        driver = nc4io_inq_driver();
     else
 #endif
         /* default is the driver built on top of MPI-IO */
@@ -653,6 +653,15 @@ ncmpi_open(MPI_Comm    comm,
     }
 #endif
 
+#ifdef ENABLE_NETCDF4
+    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
+        driver = nc4io_inq_driver();
+    else
+#else
+    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
+        DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+    else
+#endif
 #ifdef BUILD_DRIVER_FOO
     if (enable_foo_driver)
         driver = ncfoo_inq_driver();
@@ -666,15 +675,6 @@ ncmpi_open(MPI_Comm    comm,
         }
         driver = ncbbio_inq_driver();
     }
-    else
-#endif
-#ifdef ENABLE_NETCDF4
-    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
-        driver = nc4io_inq_driver();
-    else
-#else
-    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
-        DEBUG_RETURN_ERROR(NC_ENOTBUILT)
     else
 #endif
     {
