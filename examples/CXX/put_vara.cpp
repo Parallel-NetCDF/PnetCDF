@@ -34,7 +34,7 @@
  *                var:str_att_name = "example attribute of type text." ;
  *                var:float_att_name = 0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f ;
  *    // global attributes:
- *                :history = "Wed Apr 30 11:18:58 2014\n",
+ *                :history = "Mon Aug 13 21:27:48 2018" ;
  *       "" ;
  *    data:
  *
@@ -122,6 +122,7 @@ int main(int argc, char** argv)
         /* add a global attribute: a time stamp at rank 0 */
         time_t ltime = time(NULL); /* get the current calendar time */
         asctime_r(localtime(&ltime), str_att);
+        sprintf(str_att, "Mon Aug 13 21:27:48 2018");
 
         /* make sure the time string are consistent among all processes */
         MPI_Bcast(str_att, 256, MPI_CHAR, 0, MPI_COMM_WORLD);

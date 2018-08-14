@@ -26,60 +26,34 @@ DATA_FILES = $(NC_FILES:%=%_*.data)
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(META_FILES) $(DATA_FILES)
 
-TESTMPIRUN3  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/3/g'`
-TESTMPIRUN4  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
-TESTMPIRUN8  = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/8/g'`
+EXTRA_DIST = parallel_run.sh
+
+TESTS_ENVIRONMENT  = export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export SED="$(SED)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptest4: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR}" ; \
-	for i in $(check_PROGRAMS); do { \
-        if [ $$i = "get_vara" ] ; then \
-           $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
-        else \
-           $(TESTMPIRUN4) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-        fi ; \
-        if [ $$? = 0 ] ; then \
-           echo "PASS:  C  parallel run on 4 processes --------------- $$i"; \
-        else \
-           echo "FAILED:  C  parallel run on 4 processes ------------- $$i"; \
-	   exit 1; \
-        fi ; } ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 4
 
 ptest8: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR}" ; \
-	for i in $(check_PROGRAMS); do { \
-        if [ $$i = "get_vara" ] ; then \
-           $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
-        else \
-           $(TESTMPIRUN8) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-        fi ; \
-        if [ $$? = 0 ] ; then \
-           echo "PASS:  C  parallel run on 8 processes --------------- $$i"; \
-        else \
-           echo "FAILED:  C  parallel run on 8 processes ------------- $$i"; \
-	   exit 1; \
-        fi ; } ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 8 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 8
 
 ptest3: $(check_PROGRAMS)
-	for j in 0 1 ; do { \
-	export PNETCDF_SAFE_MODE=$$j ; \
-	export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR}" ; \
-	for i in $(check_PROGRAMS) ; do { \
-        if [ $$i = "get_vara" ] ; then \
-           $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/put_vara.nc ; \
-        else \
-           $(TESTMPIRUN3) ./$$i -q $(TESTOUTDIR)/$$i.nc ; \
-        fi ; \
-        if [ $$? = 0 ] ; then \
-           echo "PASS:  C  parallel run on 3 processes --------------- $$i"; \
-        else \
-           echo "FAILED:  C  parallel run on 3 processes ------------- $$i"; \
-	   exit 1; \
-        fi ; } ; done ; } ; done
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 3 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	./parallel_run.sh 3
 
 ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:

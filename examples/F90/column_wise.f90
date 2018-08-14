@@ -139,6 +139,9 @@
           err = nf90mpi_put_var_all(ncid, varid, buf, start, count)
           call check(err, 'In nf90mpi_put_var_all: ')
 
+          err = nf90mpi_flush(ncid)
+          call check(err, 'In nf90mpi_flush: ')
+
           ! initialize the buffer with rank ID
           buf = rank
 

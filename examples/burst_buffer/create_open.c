@@ -99,16 +99,17 @@ int main(int argc, char** argv)
     MPI_Info_set(info, "nc_burst_buf", "enable");
     MPI_Info_set(info, "nc_burst_buf_del_on_close", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[optind+1]);
     }
 
     /* create a new file using clobber mode ----------------------------------*/
     cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
-    ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); ERR
 
     /* Info can be freed after file creation */
     MPI_Info_free(&info);
+
+    if (err != NC_NOERR) goto fn_exit;
 
     /* burst buffer initialize log files on the first time we enters data mode */
     err = ncmpi_enddef(ncid);
@@ -125,7 +126,7 @@ int main(int argc, char** argv)
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
     if (argc > 1) {
-        MPI_Info_set(info, "nc_burst_buf_dirname", argv[1]);
+        MPI_Info_set(info, "nc_burst_buf_dirname", argv[optind+1]);
     }
 
     /* open the newly created file for read only -----------------------------*/
@@ -135,6 +136,8 @@ int main(int argc, char** argv)
 
     /* Info can be freed after file opening */
     MPI_Info_free(&info);
+
+    if (err != NC_NOERR) goto fn_exit;
 
     /* close file */
     err = ncmpi_close(ncid);
@@ -150,6 +153,7 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
+fn_exit:
     MPI_Finalize();
     return (nerrs > 0);
 }

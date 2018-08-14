@@ -35,7 +35,7 @@
  *                var:float_att_name = 0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f ;
  *                var:int64_att_name = 10000000000L ;
  *    // global attributes:
- *                :history = "Wed Apr 30 11:18:58 2014\n",
+ *                :history = "Mon Aug 13 21:27:48 2018" ;
  *       "" ;
  *    data:
  *

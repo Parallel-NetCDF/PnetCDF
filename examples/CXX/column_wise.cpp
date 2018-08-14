@@ -138,8 +138,9 @@ int main(int argc, char** argv)
         count[0] = NY;  count[1] = myNX;
 
         var.putVar_all(start, count, &buf[0][0]);
-
         free(buf[0]);
+
+        nc.flush();
 
         /* initialize the buffer with rank ID. Also make the case interesting,
            by allocating buffers separately */

@@ -15,7 +15,7 @@ addons:
       description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
     build_command_prepend: ./configure
     notification_email: wkliao@eecs.northwestern.edu
-    build_command: make -s V=1 LIBTOOLFLAGS=--silent tests
+    build_command: make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent"
     branch_pattern: master
 
 before_install:
