@@ -125,9 +125,10 @@ int main(int argc, char** argv)
     /* add a global attribute: a time stamp at rank 0 */
     time_t ltime = time(NULL); /* get the current calendar time */
     asctime_r(localtime(&ltime), str_att);
+    sprintf(str_att, "Mon Aug 13 21:27:48 2018");
 
     /* make sure the time string are consistent among all processes */
-    MPI_Bcast(str_att, strlen(str_att), MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(str_att, sizeof(str_att), MPI_CHAR, 0, MPI_COMM_WORLD);
 
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "history", strlen(str_att),
                              &str_att[0]);
