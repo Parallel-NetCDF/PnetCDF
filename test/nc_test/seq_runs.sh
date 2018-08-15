@@ -26,7 +26,7 @@ rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.n
 ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-if [ -n "${ENABLE_NETCDF4}" ]; then
+if test "${ENABLE_NETCDF4}" = 1 ; then
    rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
    ${TESTSEQRUN} ./nc_test -4 -d ${TESTOUTDIR}
    # Validator does not support nc4
@@ -39,7 +39,7 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
 echo ""
 
-if [ -n "${TESTBB}" ]; then
+if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
     echo "---- testing burst buffering"
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"

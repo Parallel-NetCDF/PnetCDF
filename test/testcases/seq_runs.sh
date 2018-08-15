@@ -35,7 +35,7 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
 
 echo ""
 
-if [ -n "${TESTBB}" ]; then
+if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
    echo "---- testing burst buffering"
    # Run using burst buffer driver
    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
@@ -52,7 +52,7 @@ fi
 
 echo ""
 
-if [ -n "${ENABLE_THREAD_SAFE}" ]; then
+if test "${ENABLE_THREAD_SAFE}" = 1 ; then
    echo "---- testing thread safety"
    for j in 0 1 ; do
        export PNETCDF_SAFE_MODE=$j

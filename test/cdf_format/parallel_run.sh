@@ -34,7 +34,7 @@ for j in ${safe_modes} ; do
     # echo "--- validating file ${TESTOUTDIR}/dim_cdf12.nc"
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/dim_cdf12.nc
 
-    if test "x${TESTBB}" = x1 ; then
+    if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
        # echo "test burst buffering feature"
        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
        ${MPIRUN} ./test_inq_format ${srcdir}
@@ -50,7 +50,7 @@ for j in ${safe_modes} ; do
        # echo "--- ncmpidiff cdf_type.nc cdf_type.bb.nc ---"
        ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/cdf_type.nc ${TESTOUTDIR}/cdf_type.bb.nc
        # echo "--- ncmpidiff dim_cdf12.nc dim_cdf12.bb.nc ---"
-       ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/dim_cdf12.nc ${TESTOUTDIR}/dim_cdf12.bb.nc
+       # ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/dim_cdf12.nc ${TESTOUTDIR}/dim_cdf12.bb.nc
     fi
 done
 

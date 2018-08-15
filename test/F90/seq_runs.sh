@@ -14,7 +14,7 @@ ${TESTSEQRUN} ./tst_io ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_io1.nc
 mv ${TESTOUTDIR}/tst_io1.nc ${TESTOUTDIR}/tst_io1.nc0
 
-if [ -n "${TESTBB}" ]; then
+if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     ${TESTSEQRUN} ./tst_io ${TESTOUTDIR}
     unset PNETCDF_HINTS
