@@ -10,14 +10,14 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUFFIXES = .o .F90
 
-FC          = $(MPIF90)
+FC = $(MPIF90)
 
 if BUILD_BENCHMARKS_IN_PNETCDF
-AM_FCFLAGS = $(FC_MODINC)${top_builddir}/src/binding/f90
-AM_LDFLAGS = -L${top_builddir}/src/libs
+   AM_FCFLAGS = $(FC_MODINC)${top_builddir}/src/binding/f90
+   AM_LDFLAGS = -L${top_builddir}/src/libs
 else
-AM_FCFLAGS = $(FC_MODINC)$(PNETCDF_INC)
-AM_LDFLAGS = $(PNETCDF_LIB)
+   AM_FCFLAGS = $(FC_MODINC)$(PNETCDF_INC)
+   AM_LDFLAGS = $(PNETCDF_LIB)
 endif
 
 AM_FCFLAGS += -I$(srcdir) $(NAGf90FPPFLAGS)
@@ -27,14 +27,9 @@ AM_FCFLAGS += $(FC_DEFINE)N_DIM=3
 AM_FCFLAGS += $(FC_DEFINE)MAXBLOCKS=100
 AM_FCFLAGS += $(FC_DEFINE)IONMAX=13
 
-if !BUILD_TESTSETS
-noinst_PROGRAMS = flash_benchmark_io
-else
-RUN_QUIETLY = -q
-endif
 check_PROGRAMS = flash_benchmark_io
 
-TESTS =
+noinst_PROGRAMS = $(check_PROGRAMS)
 
 flash_benchmark_io_SOURCES = get_mfluid_property.F90 \
                              flash_release.F90 \
@@ -56,33 +51,30 @@ EXTRA_DIST = block_boundary_data.fh \
              configure.ac
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/flash_io_test_ncmpi_chk_0000.nc \
-             $(TESTOUTDIR)/flash_io_test_ncmpi_plt_crn_0000.nc \
-             $(TESTOUTDIR)/flash_io_test_ncmpi_plt_cnt_0000.nc
+             $(TESTOUTDIR)/flash_benchmark_io.ncmpi_chk_0000.nc \
+             $(TESTOUTDIR)/flash_benchmark_io.ncmpi_plt_crn_0000.nc \
+             $(TESTOUTDIR)/flash_benchmark_io.ncmpi_plt_cnt_0000.nc \
+             $(TESTOUTDIR)/flash_benchmark_io.bb.ncmpi_chk_0000.nc \
+             $(TESTOUTDIR)/flash_benchmark_io.bb.ncmpi_plt_crn_0000.nc \
+             $(TESTOUTDIR)/flash_benchmark_io.bb.ncmpi_plt_cnt_0000.nc
 
-if BUILD_DRIVER_BB
-   TESTS_ENVIRONMENT = export TESTBB=1;
-endif
+TESTS =
 
-TESTMPIRUN4 = `echo $(TESTMPIRUN) | $(SED) -e 's/NP/4/g'`
+TESTS_ENVIRONMENT  = export SED="$(SED)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
+TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
+TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER="$(ENABLE_BURST_BUFFER)";
 
-ptests ptest ptest4: $(check_PROGRAMS)
-	$(TESTMPIRUN4) ./$(check_PROGRAMS) $(RUN_QUIETLY) $(TESTOUTDIR)/flash_io_test_ ; \
-	if [ $$? = 0 ] ; then \
-	    echo "PASS: F90 parallel run on 4 processes --------------- FLASH_IO"; \
-	else \
-	    echo "FAILED: F90 parallel run on 4 processes ------------- FLASH_IO"; \
-	fi ; \
-    if [ -n "$(TESTBB)" ]; then ( \
-        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};" ; \
-        $(TESTMPIRUN4) ./$(check_PROGRAMS) $(RUN_QUIETLY) $(TESTOUTDIR)/flash_io_test_ ; \
-        unset PNETCDF_HINTS ; \
-        if [ $$? = 0 ] ; then \
-            echo "PASS: F90 parallel run on 4 processes --------------- FLASH_IO"; \
-        else \
-            echo "FAILED: F90 parallel run on 4 processes ------------- FLASH_IO"; \
-        fi ; \
-	) ; fi
+ptest ptests ptest4: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 4 MPI processes"
+	@echo "==========================================================="
+	$(TESTS_ENVIRONMENT) \
+	$(srcdir)/parallel_run.sh 4
 
 ptest2 ptest6 ptest8 ptest10:
 
