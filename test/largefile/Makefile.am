@@ -6,7 +6,7 @@
 #
 # @configure_input@
 
-SUFFIXES = .o .c .f
+SUFFIXES = .o .c .f .f90
 
 AM_DEFAULT_SOURCE_EXT = .c
 
@@ -37,8 +37,14 @@ TESTPROGRAMS = large_files \
 
 if HAS_FORTRAN
    TESTPROGRAMS += bigrecords
-   AM_FFLAGS = -I$(top_builddir)/src/binding/f77
    bigrecords_SOURCES = bigrecords.f
+   AM_FFLAGS = -I$(top_builddir)/src/binding/f77
+if HAVE_MPI_MOD
+   TESTPROGRAMS += tst_flarge
+   tst_flarge_SOURCES = tst_flarge.f90
+   AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
+                $(FC_MODINC)../common
+endif
 endif
 
 EXTRA_DIST = wrap_runs.sh parallel_run.sh
@@ -51,12 +57,7 @@ CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-if RUN_LARGE_FILE_TEST
-   check_PROGRAMS = $(TESTPROGRAMS)
-else
-   check_PROGRAMS =
-   CLEANFILES += $(TESTPROGRAMS)
-endif
+check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -71,14 +72,8 @@ TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
-
-if BUILD_DRIVER_BB
-   TESTS_ENVIRONMENT += export TESTBB=1;
-endif
-
-if ENABLE_NETCDF4
-   TESTS_ENVIRONMENT += export TESTNETCDF4=1;
-endif
+TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER="$(ENABLE_BURST_BUFFER)";
+TESTS_ENVIRONMENT += export ENABLE_NETCDF4="$(ENABLE_NETCDF4)";
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

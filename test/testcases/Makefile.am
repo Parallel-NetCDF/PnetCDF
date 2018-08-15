@@ -17,7 +17,8 @@ AM_FFLAGS    = -I$(top_builddir)/src/binding/f77
 AM_FCFLAGS   = $(FC_MODINC)$(top_builddir)/src/binding/f90
 AM_FCFLAGS  += $(FC_MODINC)$(srcdir)/../common
 AM_FCFLAGS  += -I$(top_builddir)/src/binding/f77
-LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
+LDADD        = ${top_builddir}/src/libs/libpnetcdf.la \
+               ../common/libtestutils.la -lm
 
 if SIZEOF_MPI_AINT_IS_4
    AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
@@ -30,9 +31,6 @@ if DECL_MPI_OFFSET
    AM_FFLAGS  += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
    AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
-
-NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
-NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
 TESTPROGRAMS = ncmpi_vars_null_stride \
                vectors \
@@ -72,7 +70,10 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                tst_def_var_fill \
                test_fillvalue
 
-M4_SRCS  = put_all_kinds.m4 erange_fill.m4 tst_vars_fill.m4 iput_all_kinds.m4
+M4_SRCS      = put_all_kinds.m4 \
+               erange_fill.m4 \
+               tst_vars_fill.m4 \
+               iput_all_kinds.m4
 
 nodist_put_all_kinds_SOURCES = put_all_kinds.c
 nodist_erange_fill_SOURCES = erange_fill.c
@@ -90,6 +91,9 @@ $(M4_SRCS:.m4=.c): Makefile
 
 .m4.c:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
+
+../common/libtestutils.la:
+	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 if HAS_FORTRAN
    TESTPROGRAMS += varn_intf \
@@ -118,7 +122,10 @@ endif
 
 # all programs in TESTPROGRAMS will be run by wrap_runs.sh
 # others in check_PROGRAMS but not in TESTPROGRAMS will be run by seq_runs.sh
-check_PROGRAMS = $(TESTPROGRAMS) put_all_kinds redef1 tst_vars_fill \
+check_PROGRAMS = $(TESTPROGRAMS) \
+                 put_all_kinds \
+                 redef1 \
+                 tst_vars_fill \
                  iput_all_kinds
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
@@ -134,6 +141,8 @@ TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
+TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER="$(ENABLE_BURST_BUFFER)";
+TESTS_ENVIRONMENT += export ENABLE_THREAD_SAFE="$(ENABLE_THREAD_SAFE)";
 
 TESTS = $(TESTPROGRAMS) seq_runs.sh
 TEST_EXTENSIONS = .sh
@@ -144,13 +153,11 @@ NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
            $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 if ENABLE_THREAD_SAFE
-   TESTS_ENVIRONMENT += export TEST_THREAD_SAFE=1;
    check_PROGRAMS += tst_pthread
    NC_FILES += $(TESTOUTDIR)/tst_pthread.nc.*
 endif
 
-if BUILD_DRIVER_BB
-   TESTS_ENVIRONMENT += export TESTBB=1;
+if ENABLE_BURST_BUFFER
    NC_FILES += $(TESTOUTDIR)/put_all_kinds.bb.nc.cdf1 \
                $(TESTOUTDIR)/put_all_kinds.bb.nc.cdf2 \
                $(TESTOUTDIR)/put_all_kinds.bb.nc.cdf5 \
@@ -175,9 +182,6 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump \
              wrap_runs.sh parallel_run.sh
-
-../common/libtestutils.la:
-	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
 # Some of these tests are designed to run on one process,
 # Run them on 4 processes to see if they can handle well

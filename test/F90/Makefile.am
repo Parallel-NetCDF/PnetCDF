@@ -9,7 +9,9 @@
 SUFFIXES = .o .f90
 
 AM_DEFAULT_SOURCE_EXT = .f90
-AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)../common
+AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 \
+             $(FC_MODINC)$(top_builddir)/src/binding/f90 \
+             $(FC_MODINC)../common
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 TESTPROGRAMS = tst_f90 \
@@ -29,12 +31,7 @@ PARALLEL_PROGS = f90tst_parallel \
 
 check_PROGRAMS = $(TESTPROGRAMS) \
                  $(PARALLEL_PROGS) \
-                 tst_io \
-                 tst_flarge
-
-if RUN_LARGE_FILE_TEST
-   TESTPROGRAMS += tst_flarge
-endif
+                 tst_io
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -49,10 +46,8 @@ TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
-
-if BUILD_DRIVER_BB
-   TESTS_ENVIRONMENT += export TESTBB=1;
-endif
+TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER="$(ENABLE_BURST_BUFFER)";
+TESTS_ENVIRONMENT += export PARALLEL_PROGS="$(PARALLEL_PROGS)";
 
 TESTS = $(TESTPROGRAMS) seq_runs.sh
 TEST_EXTENSIONS = .sh

@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     MPI_Info_set(info, "romio_cb_write", "enable");
     MPI_Info_set(info, "romio_ds_read", "disable"); /* run slow without it */
 
-#if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
+#if defined(ENABLE_LARGE_REQ) || defined(ENABLE_BURST_BUFFER)
 #else
     /* silence iternal debug messages */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* now we are in data mode */
-#if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
+#if defined(ENABLE_LARGE_REQ) || defined(ENABLE_BURST_BUFFER)
 #ifndef ENABLE_LARGE_REQ
     if (bb_enabled) {
 #endif
@@ -214,7 +214,7 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     err = ncmpi_wait_all(ncid, 3, req, st);
-#if defined(ENABLE_LARGE_REQ) || defined(BUILD_DRIVER_BB)
+#if defined(ENABLE_LARGE_REQ) || defined(ENABLE_BURST_BUFFER)
 #ifndef ENABLE_LARGE_REQ
     if (bb_enabled) {
 #endif

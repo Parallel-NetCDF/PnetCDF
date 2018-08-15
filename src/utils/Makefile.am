@@ -9,7 +9,7 @@
 SUBDIRS = ncmpigen ncmpidump ncmpidiff ncvalidator pnetcdf_version ncoffsets
 DIST_SUBDIRS = ncmpigen ncmpidump ncmpidiff ncvalidator pnetcdf_version ncoffsets ncmpilogdump
 
-if BUILD_DRIVER_BB
+if ENABLE_BURST_BUFFER
 SUBDIRS += ncmpilogdump
 endif
 

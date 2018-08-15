@@ -40,7 +40,7 @@ for j in ${safe_modes} ; do
     fi
     echo ""
 
-    if [ -n "${TESTNETCDF4}" ]; then
+    if [ -n "${ENABLE_NETCDF4}" ]; then
         ${TESTSEQRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.nc4 4
         ${TESTSEQRUN} ./pres_temp_4D_rd ${TESTOUTDIR}/pres_temp_4D.nc4
         # Validator does not support nc4

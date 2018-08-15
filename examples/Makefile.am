@@ -20,7 +20,7 @@ SUBDIRS += F90
 endif
 endif
 
-if BUILD_DRIVER_BB
+if ENABLE_BURST_BUFFER
 SUBDIRS += burst_buffer
 endif
 

@@ -117,7 +117,7 @@ AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is def
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
-AH_TEMPLATE([BUILD_DRIVER_BB],          [Define if to enable burst buffer feature])
+AH_TEMPLATE([ENABLE_BURST_BUFFER],      [Define if to enable burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
@@ -1586,13 +1586,13 @@ AC_ARG_ENABLE([burst-buffering],
    [enable_bbdriver=${enableval}], [enable_bbdriver=no]
 )
 
-BUILD_DRIVER_BB=0
+ENABLE_BURST_BUFFER=0
 if test "x$enable_bbdriver" = "xyes" ; then
-   AC_DEFINE(BUILD_DRIVER_BB)
-   BUILD_DRIVER_BB=1
+   AC_DEFINE(ENABLE_BURST_BUFFER)
+   ENABLE_BURST_BUFFER=1
 fi
-AC_SUBST(BUILD_DRIVER_BB)
-AM_CONDITIONAL(BUILD_DRIVER_BB, [test x$enable_bbdriver = xyes])
+AC_SUBST(ENABLE_BURST_BUFFER)
+AM_CONDITIONAL(ENABLE_BURST_BUFFER, [test x$enable_bbdriver = xyes])
 
 AC_ARG_ENABLE([profiling],
    [AS_HELP_STRING([--enable-profiling],
