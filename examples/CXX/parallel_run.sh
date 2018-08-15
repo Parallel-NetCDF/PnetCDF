@@ -51,7 +51,7 @@ for i in ${check_PROGRAMS} ; do
         fi
         # echo ""
 
-        if test "x${TESTBB}" = x1 ; then
+        if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
            # echo "test burst buffering feature"
            export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            if test $i = get_vara ; then

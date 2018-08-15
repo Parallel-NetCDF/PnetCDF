@@ -30,7 +30,7 @@ rm -f ${TESTOUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nf90_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
 
-if [ -n "${ENABLE_NETCDF4}" ]; then
+if test "${ENABLE_NETCDF4}" = 1 ; then
     rm -f ${TESTOUTDIR}/test.nc
     rm -f ${TESTOUTDIR}/scratch.nc
     rm -f ${TESTOUTDIR}/tooth-fairy.nc
@@ -39,7 +39,7 @@ if [ -n "${ENABLE_NETCDF4}" ]; then
     # ${TESTSEQRUN} ${VALIDATOR}   -q ${TESTOUTDIR}/test.nc
 fi
 
-if [ -n "${TESTBB}" ]; then
+if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
     echo "---- testing burst buffering"
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"

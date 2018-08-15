@@ -22,14 +22,14 @@ fi
 
 for j in ${safe_modes} ; do
     # export PNETCDF_SAFE_MODE=$j
-    echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+    # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
     ${MPIRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.nc
     ${MPIRUN} ./pres_temp_4D_rd ${TESTOUTDIR}/pres_temp_4D.nc
     # echo "--- validating file ${TESTOUTDIR}/pres_temp_4D.nc"
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/pres_temp_4D.nc
     # echo ""
 
-    if test "x${TESTBB}" = x1 ; then
+    if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
        # echo "test burst buffering feature"
        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
        ${MPIRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.bb.nc

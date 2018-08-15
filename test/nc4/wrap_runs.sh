@@ -21,7 +21,7 @@ for j in ${safe_modes} ; do
     # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
     ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
 
-    if [ -n "${TESTBB}" ]; then
+    if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
        ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
        unset PNETCDF_HINTS

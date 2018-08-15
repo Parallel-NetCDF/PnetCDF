@@ -25,7 +25,7 @@ for j in ${safe_modes} ; do
     ${TESTSEQRUN} ${VALIDATOR} -q   ${TESTOUTDIR}/pres_temp_4D.nc
     echo ""
 
-    if [ -n "${TESTBB}" ]; then
+    if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
        echo "test burst buffering feature"
        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
        ${TESTSEQRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.bb.nc
@@ -40,7 +40,7 @@ for j in ${safe_modes} ; do
     fi
     echo ""
 
-    if [ -n "${ENABLE_NETCDF4}" ]; then
+    if test "${ENABLE_NETCDF4}" = 1 ; then
         ${TESTSEQRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.nc4 4
         ${TESTSEQRUN} ./pres_temp_4D_rd ${TESTOUTDIR}/pres_temp_4D.nc4
         # Validator does not support nc4
