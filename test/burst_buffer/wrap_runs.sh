@@ -10,7 +10,14 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 outfile=`basename $1`
 
-for j in 0 1 ; do
+# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
+if test ${PNETCDF_DEBUG} = 1 ; then
+   safe_modes="0 1"
+else
+   safe_modes="0"
+fi
+
+for j in ${safe_modes} ; do
     export PNETCDF_SAFE_MODE=$j
     # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"

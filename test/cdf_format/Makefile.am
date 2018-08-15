@@ -32,9 +32,15 @@ check_PROGRAMS = $(TESTPROGRAMS) tst_open_cdf5 tst_corrupt
 # AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
 # AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 # AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
-TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
-TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT  = export SED="$(SED)";
+TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
+TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
+
 TESTS_ENVIRONMENT += export BAD_FILES="$(BAD_FILES)";
 
 TESTS = cdf_type dim_cdf12 seq_runs.sh xfail_runs.sh
@@ -66,11 +72,6 @@ EXTRA_DIST = wrap_runs.sh seq_runs.sh xfail_runs.sh parallel_run.sh \
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
-
-TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export SED="$(SED)";
-TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 
 ptest ptests ptest4: $(TESTPROGRAMS)
 	@echo "==========================================================="

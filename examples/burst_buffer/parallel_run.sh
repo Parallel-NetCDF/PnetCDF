@@ -16,9 +16,16 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 
 let NTHREADS=$1*6-1
 
+# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
+if test ${PNETCDF_DEBUG} = 1 ; then
+   safe_modes="0 1"
+else
+   safe_modes="0"
+fi
+
 for i in ${check_PROGRAMS} ; do
     # echo "---- exec=$i"
-    for j in 0 1 ; do
+    for j in ${safe_modes} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 

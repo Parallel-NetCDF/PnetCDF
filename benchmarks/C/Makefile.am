@@ -17,7 +17,15 @@ check_PROGRAMS = aggregation \
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
-TESTS_ENVIRONMENT =
+TESTS_ENVIRONMENT  = export SED="$(SED)";
+TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
+TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
+TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
+
 if BUILD_DRIVER_BB
    TESTS_ENVIRONMENT += export TESTBB=1;
 endif
@@ -29,12 +37,6 @@ CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
 EXTRA_DIST = parallel_run.sh
-
-TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
-TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
-TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export SED="$(SED)";
-TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="

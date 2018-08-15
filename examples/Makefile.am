@@ -40,7 +40,7 @@ endif
 
 ptest:
 	for d in $(PTEST_SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest4 $$* ; \
+		$(MAKE) $(MFLAGS) -C $$d ptest $$* ; \
 	done
 
 ptests:
