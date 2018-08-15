@@ -10,26 +10,19 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 outfile=`basename $1`
 
-for j in 0 ; do
-    # disable safe mode, as large tests already run slow
-    export PNETCDF_SAFE_MODE=$j
-    echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-    ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
-    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
-    rm -f ${TESTOUTDIR}/$outfile.nc
-done
+# disable safe mode, as large tests already run slow
+export PNETCDF_SAFE_MODE=0
+
+${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
+${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
+rm -f ${TESTOUTDIR}/$outfile.nc
 
 echo ""
 
 if [ -n "${TESTBB}" ]; then
    echo "---- testing burst buffering"
-   for j in 0 ; do
-       # disable safe mode, as large tests already run slow
-       export PNETCDF_SAFE_MODE=$j
-       echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-       export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-       ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
-       unset PNETCDF_HINTS
-       ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
-   done
+   export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+   ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
+   unset PNETCDF_HINTS
+   ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 fi

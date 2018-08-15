@@ -26,8 +26,14 @@ check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-TESTS_ENVIRONMENT  = export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT  = export SED="$(SED)";
+TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
+TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 if BUILD_DRIVER_BB
    TESTS_ENVIRONMENT += export TESTBB=1;
@@ -57,9 +63,6 @@ endif
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
-
-TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export SED="$(SED)";
 
 ptest ptests ptest4: $(TESTPROGRAMS)
 	@echo "==========================================================="

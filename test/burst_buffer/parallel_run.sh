@@ -14,8 +14,15 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "TESTPROGRAMS=${TESTPROGRAMS}"
 
+# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
+if test ${PNETCDF_DEBUG} = 1 ; then
+   safe_modes="0 1"
+else
+   safe_modes="0"
+fi
+
 for i in ${TESTPROGRAMS} ; do
-    for j in 0 1 ; do
+    for j in ${safe_modes} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 

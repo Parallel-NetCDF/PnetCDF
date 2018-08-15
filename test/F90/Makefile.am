@@ -32,11 +32,8 @@ check_PROGRAMS = $(TESTPROGRAMS) \
                  tst_io \
                  tst_flarge
 
-TESTS_ENVIRONMENT =
-
 if RUN_LARGE_FILE_TEST
    TESTPROGRAMS += tst_flarge
-   TESTS_ENVIRONMENT += export RUN_LARGE_FILE_TEST="yes";
 endif
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
@@ -44,9 +41,14 @@ endif
 # AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
 # AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 # AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(TESTOUTDIR)" ; export TESTOUTDIR;
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
-TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT  = export SED="$(SED)";
+TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(TESTOUTDIR)";
+TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
+TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
+TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 if BUILD_DRIVER_BB
    TESTS_ENVIRONMENT += export TESTBB=1;
@@ -67,10 +69,6 @@ CLEANFILES = *.$(FC_MODEXT) core core.* *.gcda *.gcno *.gcov gmon.out \
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
-
-TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export SED="$(SED)";
-TESTS_ENVIRONMENT += export PARALLEL_PROGS="$(PARALLEL_PROGS)";
 
 ptest ptest4: $(PARALLEL_PROGS)
 	@echo "==========================================================="

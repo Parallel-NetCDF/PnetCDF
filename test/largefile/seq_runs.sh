@@ -9,13 +9,10 @@ set -e
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
-for j in 0 ; do
-    # disable safe mode, as large tests already run slow
-    export PNETCDF_SAFE_MODE=$j
-    echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+# disable safe mode, as large tests already run slow
+export PNETCDF_SAFE_MODE=0
 
-    for i in ${TESTPROGRAMS}; do
-        ${TESTSEQRUN} ./$i            ${TESTOUTDIR}/$i.nc
-        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
-    done
+for i in ${TESTPROGRAMS}; do
+    ${TESTSEQRUN} ./$i            ${TESTOUTDIR}/$i.nc
+    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
 done

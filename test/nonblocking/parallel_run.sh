@@ -14,8 +14,15 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
+# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
+if test ${PNETCDF_DEBUG} = 1 ; then
+   safe_modes="0 1"
+else
+   safe_modes="0"
+fi
+
 for i in ${check_PROGRAMS} ; do
-    for j in 0 1 ; do
+    for j in ${safe_modes} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
@@ -45,12 +52,12 @@ for i in ${check_PROGRAMS} ; do
               ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}/$i.bb.nc
            fi
         fi
-    done
 
-    if test "x${TESTNETCDF4}" = x1 ; then
-       # echo "test netCDF-4 feature"
-       ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
-       # Validator does not support nc4
-    fi
+        if test "x${TESTNETCDF4}" = x1 ; then
+           # echo "test netCDF-4 feature"
+           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
+           # Validator does not support nc4
+        fi
+    done
 done
 
