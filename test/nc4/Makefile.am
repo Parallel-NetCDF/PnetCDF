@@ -88,21 +88,21 @@ ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	./parallel_run.sh 4
+	$(srcdir)/parallel_run.sh 4
 
 ptest2: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 2 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	./parallel_run.sh 2
+	$(srcdir)/parallel_run.sh 2
 
 ptest6: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 6 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	./parallel_run.sh 6
+	$(srcdir)/parallel_run.sh 6
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:
