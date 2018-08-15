@@ -18,39 +18,39 @@ libpnetcdf_la_LIBADD  = ../dispatchers/libdispatchers.la
 libpnetcdf_la_LIBADD += ../drivers/common/libcommon.la
 libpnetcdf_la_LIBADD += ../drivers/ncmpio/libncmpio.la
 if BUILD_DRIVER_FOO
-libpnetcdf_la_LIBADD += ../drivers/ncfoo/libncfoo.la
+   libpnetcdf_la_LIBADD += ../drivers/ncfoo/libncfoo.la
 endif
 if ENABLE_NETCDF4
-libpnetcdf_la_LIBADD += ../drivers/nc4io/libnc4io.la
+   libpnetcdf_la_LIBADD += ../drivers/nc4io/libnc4io.la
 endif
-if BUILD_DRIVER_BB
-libpnetcdf_la_LIBADD += ../drivers/ncbbio/libncbbio.la
+if ENABLE_BURST_BUFFER
+   libpnetcdf_la_LIBADD += ../drivers/ncbbio/libncbbio.la
 endif
 
 nodist_EXTRA_libpnetcdf_la_SOURCES = dummyc.c
 
 if HAS_MPICXX
-libpnetcdf_la_LIBADD += ../binding/cxx/libcxx.la
-# According Automake Manual, Section 8.3.5 Libtool Convenience Libraries,
-# using nodist_EXTRA to trick automake to use C++ compiler
-nodist_EXTRA_libpnetcdf_la_SOURCES += dummycxx.cxx
-libpnetcdf_la_LINK = $(CXXLINK)
+   libpnetcdf_la_LIBADD += ../binding/cxx/libcxx.la
+   # According Automake Manual, Section 8.3.5 Libtool Convenience Libraries,
+   # using nodist_EXTRA to trick automake to use C++ compiler
+   nodist_EXTRA_libpnetcdf_la_SOURCES += dummycxx.cxx
+   libpnetcdf_la_LINK = $(CXXLINK)
 else
-# From automake manual Section 8.14.3.1, "... if Fortran 77, C and C++ source
-# code is compiled into a program, then the C++ linker will be used." and "A
-# per-target _LINK variable will override the above selection"
-libpnetcdf_la_LINK = $(LINK)
+   # From automake manual Section 8.14.3.1, "... if Fortran 77, C and C++ source
+   # code is compiled into a program, then the C++ linker will be used." and "A
+   # per-target _LINK variable will override the above selection"
+   libpnetcdf_la_LINK = $(LINK)
 endif
 
 if HAS_FORTRAN
-libpnetcdf_la_LIBADD += ../binding/f77/libf77.la
-libpnetcdf_la_LIBADD += ../binding/f90/libf90.la
+   libpnetcdf_la_LIBADD += ../binding/f77/libf77.la
+   libpnetcdf_la_LIBADD += ../binding/f90/libf90.la
 if BUILD_SHARED_LIB
-# According to Automake Manual, Section 8.14.3, When building shared library
-# and mixing Fortran 77 With C and C++, adding $(FLIBS) is necessary
-libpnetcdf_la_LIBADD += $(FLIBS) $(FCLIBS)
+   # According to Automake Manual, Section 8.14.3, When building shared library
+   # and mixing Fortran 77 With C and C++, adding $(FLIBS) is necessary
+   libpnetcdf_la_LIBADD += $(FLIBS) $(FCLIBS)
 endif
-# nodist_EXTRA_libpnetcdf_la_SOURCES += dummyf90.f90
+   # nodist_EXTRA_libpnetcdf_la_SOURCES += dummyf90.f90
 endif
 
 ../dispatchers/libdispatchers.la:

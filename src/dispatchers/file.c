@@ -267,7 +267,7 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
-#ifdef BUILD_DRIVER_BB
+#ifdef ENABLE_BURST_BUFFER
     int enable_bb_driver=0;
 #endif
 
@@ -346,7 +346,7 @@ ncmpi_create(MPI_Comm    comm,
             enable_foo_driver = 1;
     }
 #endif
-#ifdef BUILD_DRIVER_BB
+#ifdef ENABLE_BURST_BUFFER
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
@@ -416,7 +416,7 @@ ncmpi_create(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef BUILD_DRIVER_BB
+#ifdef ENABLE_BURST_BUFFER
     if (enable_bb_driver) {
         if (format == NC_FORMAT_NETCDF4) {
             printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");
@@ -523,7 +523,7 @@ ncmpi_open(MPI_Comm    comm,
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
-#ifdef BUILD_DRIVER_BB
+#ifdef ENABLE_BURST_BUFFER
     int enable_bb_driver=0;
 #endif
 
@@ -640,7 +640,7 @@ ncmpi_open(MPI_Comm    comm,
 
     }
 #endif
-#ifdef BUILD_DRIVER_BB
+#ifdef ENABLE_BURST_BUFFER
     if (combined_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int flag;
@@ -667,7 +667,7 @@ ncmpi_open(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef BUILD_DRIVER_BB
+#ifdef ENABLE_BURST_BUFFER
     if (enable_bb_driver) {
         if (format == NC_FORMAT_NETCDF4) {
             printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");

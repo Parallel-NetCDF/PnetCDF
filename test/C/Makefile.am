@@ -34,10 +34,8 @@ TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
-
-if BUILD_DRIVER_BB
-   TESTS_ENVIRONMENT += export TESTBB=1;
-endif
+TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER="$(ENABLE_BURST_BUFFER)";
+TESTS_ENVIRONMENT += export ENABLE_NETCDF4="$(ENABLE_NETCDF4)";
 
 TESTS = seq_runs.sh
 TEST_EXTENSIONS = .sh
@@ -56,10 +54,6 @@ CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
              $(TESTOUTDIR)/pres_temp_4D.nc4 \
              $(TESTOUTDIR)/pres_temp_4D.bb.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
-
-if ENABLE_NETCDF4
-   TESTS_ENVIRONMENT += export TESTNETCDF4=1;
-endif
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests

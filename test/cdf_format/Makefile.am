@@ -40,17 +40,13 @@ TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
-
+TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER="$(ENABLE_BURST_BUFFER)";
 TESTS_ENVIRONMENT += export BAD_FILES="$(BAD_FILES)";
 
 TESTS = cdf_type dim_cdf12 seq_runs.sh xfail_runs.sh
 TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
-
-if BUILD_DRIVER_BB
-   TESTS_ENVIRONMENT += export TESTBB=1;
-endif
 
 BAD_FILES = bad_begin.nc5 \
             bad_xtype.nc1 bad_xtype.nc2 bad_xtype.nc5 \

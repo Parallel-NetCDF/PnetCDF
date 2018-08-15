@@ -43,7 +43,7 @@ for j in ${safe_modes} ; do
        ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/pres_temp_4D.nc ${TESTOUTDIR}/pres_temp_4D.bb.nc
     fi
 
-    if test "x${TESTNETCDF4}" = x1 ; then
+    if test "x${ENABLE_NETCDF4}" = x1 ; then
        # echo "test netCDF-4 feature"
        ${MPIRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.nc4 4
        ${MPIRUN} ./pres_temp_4D_rd ${TESTOUTDIR}/pres_temp_4D.nc4

@@ -16,7 +16,7 @@ if ENABLE_NETCDF4
    SUBDIRS += nc4io
 endif
 
-if BUILD_DRIVER_BB
+if ENABLE_BURST_BUFFER
    SUBDIRS += ncbbio
 endif
 

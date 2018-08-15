@@ -13,35 +13,38 @@ C_SUBDIRS = common \
             cdf_format \
             header \
             testcases \
-            nonblocking \
-            largefile
+            nonblocking
 
 DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile \
-               burst_buffer nc4
+               largefile burst_buffer nc4
 
 SUBDIRS = $(C_SUBDIRS)
 
 if HAS_MPICXX
-SUBDIRS += CXX
+   SUBDIRS += CXX
 endif
 
 if HAS_FORTRAN
-SUBDIRS += nf_test
+   SUBDIRS += nf_test
 if HAVE_MPI_MOD
-SUBDIRS += nf90_test F90
+   SUBDIRS += nf90_test F90
 endif
 endif
 
 if ENABLE_SUBFILING
-SUBDIRS += subfile
+   SUBDIRS += subfile
 endif
 
 if ENABLE_NETCDF4
-SUBDIRS += nc4
+   SUBDIRS += nc4
 endif
 
-if BUILD_DRIVER_BB
-SUBDIRS += burst_buffer
+if ENABLE_BURST_BUFFER
+   SUBDIRS += burst_buffer
+endif
+
+if RUN_LARGE_FILE_TEST
+   SUBDIRS += largefile
 endif
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined

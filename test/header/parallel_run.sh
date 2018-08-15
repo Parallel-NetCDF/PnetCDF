@@ -45,7 +45,7 @@ for i in ${check_PROGRAMS} ; do
            ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}/$i.bb.nc
         fi
 
-        if test "x${TESTNETCDF4}" = x1 ; then
+        if test "x${ENABLE_NETCDF4}" = x1 ; then
            # echo "test netCDF-4 feature"
            ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
            # Validator does not support nc4

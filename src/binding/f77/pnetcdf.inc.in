@@ -40,7 +40,7 @@
       parameter (PNETCDF_LARGE_REQ                = @ENABLE_LARGE_REQ@)
       parameter (PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@)
       parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
-      parameter (PNETCDF_BURST_BUFFERING          = @BUILD_DRIVER_BB@)
+      parameter (PNETCDF_BURST_BUFFERING          = @ENABLE_BURST_BUFFER@)
       parameter (PNETCDF_THREAD_SAFE              = @ENABLE_THREAD_SAFE@)
       parameter (PNETCDF_DRIVER_NETCDF4           = @ENABLE_NETCDF4@)
 

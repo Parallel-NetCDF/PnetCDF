@@ -52,7 +52,7 @@ fi
 
 echo ""
 
-if [ -n "${TEST_THREAD_SAFE}" ]; then
+if [ -n "${ENABLE_THREAD_SAFE}" ]; then
    echo "---- testing thread safety"
    for j in 0 1 ; do
        export PNETCDF_SAFE_MODE=$j
