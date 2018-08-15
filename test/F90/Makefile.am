@@ -75,28 +75,28 @@ ptest ptest4: $(PARALLEL_PROGS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	./parallel_run.sh 4
+	$(srcdir)/parallel_run.sh 4
 
 ptest2: $(PARALLEL_PROGS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 2 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	./parallel_run.sh 2
+	$(srcdir)/parallel_run.sh 2
 
 ptest8: $(PARALLEL_PROGS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 8 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	./parallel_run.sh 8
+	$(srcdir)/parallel_run.sh 8
 
 ptest10: $(PARALLEL_PROGS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 10 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	./parallel_run.sh 10
+	$(srcdir)/parallel_run.sh 10
 
 ptests: ptest2 ptest4 ptest8 ptest10
 ptest6:
