@@ -126,7 +126,7 @@ getput_vard(NC               *ncp,
         goto err_check;
     }
 
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     /* Not all MPI-IO libraries support single requests larger than 2 GiB */
     if (filetype_size > INT_MAX) {
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
@@ -175,7 +175,7 @@ getput_vard(NC               *ncp,
         if (err != NC_NOERR) goto err_check;
 
         bnelems *= bufcount;
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
         if (bnelems != (int)bnelems) {
             DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
             goto err_check;

@@ -1986,7 +1986,7 @@ req_aggregation(NC     *ncp,
 #if MPI_VERSION >= 3
     /* MPI_Type_size_x is introduced in MPI 3.0 */
     MPI_Type_size_x(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     if (buf_type_size > INT_MAX) {
         /* aggregated request size > 2 GiB, ROMIO currently does not support
          * a single request with amount > 2 GiB
@@ -2000,7 +2000,7 @@ req_aggregation(NC     *ncp,
 #endif
 #else
     MPI_Type_size(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     if (buf_type_size < 0) {
         /* In MPI 2.x and prior, argument "size" in MPI_Type_size is defined
          * as of type int. When int overflow occurs, the returned value in
@@ -2519,7 +2519,7 @@ mgetput(NC     *ncp,
 #if MPI_VERSION >= 3
     /* MPI_Type_size_x is introduced in MPI 3.0 */
     MPI_Type_size_x(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     if (buf_type_size > INT_MAX) {
         /* aggregated request size > 2 GiB, ROMIO currently does not support
          * a single request with amount > 2 GiB
@@ -2535,7 +2535,7 @@ mgetput(NC     *ncp,
 #endif
 #else
     MPI_Type_size(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     if (buf_type_size < 0) {
         /* In MPI 2.x and prior, argument "size" in MPI_Type_size is defined
          * as of type int. When int overflow occurs, the returned value in

@@ -135,9 +135,6 @@ Here lists a few important options:
                           disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
                           can provide data consistency. [default: enabled]
-  --enable-large-req      Enable large (> 2 GiB) request in a single MPI-IO
-                          call. Note some MPI-IO libraries may not support
-                          this. [default: disabled]
   --enable-large-file-test
                           Enable testing for large (>4GB) file/variable I/O.
                           Note "make check" can run very slow. [default:

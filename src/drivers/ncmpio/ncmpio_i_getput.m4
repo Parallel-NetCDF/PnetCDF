@@ -201,7 +201,7 @@ ncmpio_igetput_varm(NC               *ncp,
     /* nbytes is the amount of this vara request in bytes */
     nbytes = nelems * xsize;
 
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
 #endif
 
