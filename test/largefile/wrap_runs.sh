@@ -24,5 +24,8 @@ if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
    ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
    unset PNETCDF_HINTS
+
    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
+
+   rm -f ${TESTOUTDIR}/$outfile.nc
 fi
