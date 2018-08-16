@@ -145,7 +145,7 @@ igetput_varn(NC                *ncp,
     /* for nonblocking API, return now if request size is zero */
     if (nbytes == 0) return NC_NOERR;
 
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
 #endif
 

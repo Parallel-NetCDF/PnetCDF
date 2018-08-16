@@ -115,7 +115,7 @@ AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
-AH_TEMPLATE([ENABLE_LARGE_REQ],         [Define if to enable single large MPI-IO request])
+AH_TEMPLATE([ENABLE_LARGE_SINGLE_REQ],  [Define if to enable large single MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([ENABLE_BURST_BUFFER],      [Define if to enable burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
@@ -1542,20 +1542,20 @@ if test "x${file_sync}" = xno ; then
     AC_DEFINE(DISABLE_FILE_SYNC)
 fi
 
-AC_ARG_ENABLE([large-req],
-    [AS_HELP_STRING([--enable-large-req],
-                    [Enable large (> 2 GiB) request in a single MPI-IO call.
-                     Note some MPI-IO libraries may not support this.
+AC_ARG_ENABLE([large-single-req],
+    [AS_HELP_STRING([--enable-large-single-req],
+                    [Enable large (> 2 GiB) single request in individual MPI-IO
+                     calls. Note some MPI-IO libraries may not support this.
                      @<:@default: disabled@:>@])],
-    [large_req=${enableval}], [large_req=no]
+    [large_single_req=${enableval}], [large_single_req=no]
 )
-ENABLE_LARGE_REQ=0
-if test "x${large_req}" = xyes ; then
-    ENABLE_LARGE_REQ=1
-    AC_DEFINE(ENABLE_LARGE_REQ)
+ENABLE_LARGE_SINGLE_REQ=0
+if test "x${large_single_req}" = xyes ; then
+    ENABLE_LARGE_SINGLE_REQ=1
+    AC_DEFINE(ENABLE_LARGE_SINGLE_REQ)
 fi
-AM_CONDITIONAL(ENABLE_LARGE_REQ, [test x$large_req = xyes])
-AC_SUBST(ENABLE_LARGE_REQ)
+AM_CONDITIONAL(ENABLE_LARGE_SINGLE_REQ, [test x$large_single_req = xyes])
+AC_SUBST(ENABLE_LARGE_SINGLE_REQ)
 
 AC_ARG_ENABLE([large-file-test],
     [AS_HELP_STRING([--enable-large-file-test],
@@ -1814,9 +1814,9 @@ if test "x${enable_subfiling}" = xyes; then
    echo "\
               Subfiling support                           - enabled"
 fi
-if test "x${large_req}" = xyes ; then
+if test "x${large_single_req}" = xyes ; then
    echo "\
-              Allow single large (> 2GiB) MPI-IO requests - enabled"
+              Allow large (> 2GiB) single MPI-IO requests - enabled"
 fi
 if test "x${thread_safe}" = xyes ; then
    echo "\

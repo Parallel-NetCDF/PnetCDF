@@ -147,7 +147,7 @@ put_varm(NC               *ncp,
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         goto err_check;
     }
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     /* Not all MPI-IO libraries support single requests larger than 2 GiB */
     if (nbytes > INT_MAX) {
         DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
@@ -420,7 +420,7 @@ get_varm(NC               *ncp,
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         goto err_check;
     }
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     /* Not all MPI-IO libraries support single requests larger than 2 GiB */
     if (nbytes > INT_MAX) {
         DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)

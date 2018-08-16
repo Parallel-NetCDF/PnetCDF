@@ -989,7 +989,7 @@ ncmpio_put_att(void         *ncdp,
     xsz = x_len_NC_attrV(xtype, nelems);
     /* xsz is the total aligned size of this attribute */
 
-#ifndef ENABLE_LARGE_REQ
+#ifndef ENABLE_LARGE_SINGLE_REQ
     if (xsz > INT_MAX) {
         DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
         goto err_check;
