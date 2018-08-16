@@ -23,6 +23,7 @@ for i in ${check_PROGRAMS} ; do
 
     # echo "--- validating file ${TESTOUTDIR}/$i.nc"
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
+    rm -f ${TESTOUTDIR}/$i.nc
     # echo ""
 
     if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
@@ -34,5 +35,7 @@ for i in ${check_PROGRAMS} ; do
        # echo "--- validating file ${TESTOUTDIR}/$i.bb.nc"
        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc
     fi
+
+    rm -f ${TESTOUTDIR}/$i.bb.nc
 done
 
