@@ -287,7 +287,6 @@
         external        test_nf90mpi_inq_atttype
         external        test_nf90mpi_create
         external        test_nf90mpi_redef
-        external        test_nf90mpi_redef4
         external        test_nf90mpi_enddef
         external        test_nf90mpi_sync
         external        test_nf90mpi_flush
@@ -699,13 +698,8 @@
 !           /* Test write functions */
         if (.not. readonly) then
             call test('nf90mpi_create', test_nf90mpi_create)
-            if (cdf_format .NE. 4) then
             call test('nf90mpi_redef', test_nf90mpi_redef)
-            call test('nf90mpi_enddef', test_nf90mpi_enddef)
-            else
-            call test('nf90mpi_redef', test_nf90mpi_redef4)
-!           /* test_nf90mpi_enddef calls test_nf90mpi_redef, no need to repeaat */
-            endif
+!  test_nf90mpi_enddef calls test_nf90mpi_redef, no need to repeaat
             call test('nf90mpi_sync', test_nf90mpi_sync)
             call test('nf90mpi_flush', test_nf90mpi_flush)
             call test('nf90mpi_abort', test_nf90mpi_abort)
