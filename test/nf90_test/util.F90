@@ -1107,39 +1107,6 @@
         end if
         end
 
-      ! Create & write all of specified file using global variables */
-      subroutine write_file4(filename)
-    use pnetcdf
-      implicit        none
-      character*(*)   filename
-#include "tests.inc"
-
-      integer ncid            !/* netCDF id */
-      integer err             !/* netCDF status */
-      integer flags
-
-      flags = IOR(NF90_CLOBBER, extra_flags)
-      err = nf90mpi_create(comm, filename, flags, info, &
-                         ncid)
-      if (err .ne. NF90_NOERR) then
-          call errore('nf90mpi_create: ', err)
-      end if
-
-      call def_dims(ncid)
-      call def_vars(ncid)
-      call put_atts(ncid)
-      err = nf90mpi_enddef(ncid)
-      if (err .ne. NF90_NOERR) then
-          call errore('nf90mpi_enddef: ', err)
-      end if
-      call put_vars(ncid)
-
-      err = nf90mpi_close(ncid)
-      if (err .ne. NF90_NOERR) then
-          call errore('nf90mpi_close: ', err)
-      end if
-      end
-
 !
 ! check dimensions of specified file have expected name & length
 !
