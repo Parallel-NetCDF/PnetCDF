@@ -2514,6 +2514,7 @@ ifdef(`PNETCDF', `
     fill = 42;
     text = 42;
     for (i = 0; i < numVars; i++) {
+#ifndef ENABLE_NETCDF4
         if (var_type[i] == NC_CHAR) {
             err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
             IF (err != NC_NOERR)
@@ -2522,7 +2523,54 @@ ifdef(`PNETCDF', `
             err = APIFunc(put_att_double)(ncid, i, "_FillValue",var_type[i],1,&fill);
             IF (err != NC_NOERR)
                 error("put_att_double: %s", APIFunc(strerror)(err));
+#else
+	/* netcdf 4.6.1 and prior fail to support type conversion for attribute
+	 * _FillValue and calling nc_set_fill does not enable fill mode for all
+	 * variables.  Here we manually convert and call ncmpi_def_var_fill
+         * for individual variables.
+         */
+        signed char      fill_sc = (signed char)        fill;
+        unsigned char      fill_uc = (unsigned char)      fill;
+                 short     fill_sh = (short)              fill;
+                 int       fill_in = (int)                fill;
+                 float     fill_fl = (float)              fill;
+                 double    fill_db = (double)             fill;
+        unsigned short     fill_us = (unsigned short)     fill;
+        unsigned int       fill_ui = (unsigned int)       fill;
+                 long long fill_ll = (long long)          fill;
+        unsigned long long fill_ul = (unsigned long long) fill;
+
+        err = ncmpi_def_var_fill(ncid, i, 0, NULL);
+        IF (err != NC_NOERR)
+            error("def_var_fill: %s", APIFunc(strerror)(err));
+        switch (var_type[i]) {
+            case NC_CHAR:   err = APIFunc(put_att_text)     (ncid, i, "_FillValue", 1, &text);
+                            break;
+            case NC_BYTE:   err = APIFunc(put_att_schar)    (ncid,i,"_FillValue",var_type[i],1,&fill_sc);
+                            break;
+            case NC_SHORT:  err = APIFunc(put_att_short)    (ncid,i,"_FillValue",var_type[i],1,&fill_sh);
+                            break;
+            case NC_INT:    err = APIFunc(put_att_int)      (ncid,i,"_FillValue",var_type[i],1,&fill_in);
+                            break;
+            case NC_FLOAT:  err = APIFunc(put_att_float)    (ncid,i,"_FillValue",var_type[i],1,&fill_fl);
+                            break;
+            case NC_DOUBLE: err = APIFunc(put_att_double)   (ncid,i,"_FillValue",var_type[i],1,&fill_db);
+                            break;
+            case NC_UBYTE:  err = APIFunc(put_att_uchar)    (ncid,i,"_FillValue",var_type[i],1,&fill_uc);
+                            break;
+            case NC_USHORT: err = APIFunc(put_att_ushort)   (ncid,i,"_FillValue",var_type[i],1,&fill_us);
+                            break;
+            case NC_UINT:   err = APIFunc(put_att_uint)     (ncid,i,"_FillValue",var_type[i],1,&fill_ui);
+                            break;
+            case NC_INT64:  err = APIFunc(put_att_longlong) (ncid,i,"_FillValue",var_type[i],1,&fill_ll);
+                            break;
+            case NC_UINT64: err = APIFunc(put_att_ulonglong)(ncid,i,"_FillValue",var_type[i],1,&fill_ul);
+                            break;
+            default: assert(0);
         }
+        IF (err != NC_NOERR)
+            error("put_att_<type>: %s", APIFunc(strerror)(err));
+#endif
     }
 
 ifdef(`PNETCDF',`
@@ -2531,6 +2579,7 @@ ifdef(`PNETCDF',`
         error("set_fill: %s", APIFunc(strerror)(err));
     IF (old_fillmode != NC_NOFILL)
         error("Unexpected old fill mode: %d", old_fillmode);')dnl
+
 
     /* data mode. write records */
     err = APIFunc(enddef)(ncid);
@@ -2574,7 +2623,8 @@ ifdef(`PNETCDF', `
 
     /* it is not allowed to define fill value when variable already exists */
     err = APIFunc(def_var_fill)(ncid, 0, 0, &value);
-    IF (err != NC_ELATEFILL)
+    /* NetCDF-4 may return NC_ELATEDEF instead of NC_ELATEFILL */
+    IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
         EXPECT_ERR(NC_ELATEFILL, err)
     err = APIFunc(def_var)(ncid, "new_var", NC_INT, 0, NULL, &varid);
     IF (err != NC_NOERR)
@@ -2596,14 +2646,15 @@ ifdef(`PNETCDF', `
     IF (err != NC_NOERR)
         error("redef: %s", APIFunc(strerror)(err));
 
+    /* NetCDF-4 may return NC_ELATEDEF instead of NC_ELATEFILL */
     for (i = 0; i < numVars; i++) {
         if (var_type[i] == NC_CHAR) {
             err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
-            IF (err != NC_ELATEFILL)
+            IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
                 EXPECT_ERR(NC_ELATEFILL, err)
         } else {
             err = APIFunc(put_att_double)(ncid, i, "_FillValue",var_type[i],1,&fill);
-            IF (err != NC_ELATEFILL)
+            IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
                 EXPECT_ERR(NC_ELATEFILL, err)
         }
     }

@@ -495,8 +495,7 @@ main(int argc, char *argv[])
         NC_TEST2(ncmpi_copy_att, numGatts, numVars);
         NC_TEST2(ncmpi_rename_att, numGatts, numVars);
         NC_TEST2(ncmpi_del_att, numGatts, numVars);
-        if (cdf_format != 4)
-            NC_TEST1(ncmpi_set_fill, numVars);
+        NC_TEST1(ncmpi_set_fill, numVars);
         NC_TEST(ncmpi_delete);
 
         /* test nonblocking APIs */
