@@ -3384,7 +3384,7 @@ ifdef(`PNETCDF', `
 
 ifdef(`PNETCDF',`
     err = APIFunc(set_fill)(ncid, NC_FILL, &old_fillmode);
-    IF (err)
+    IF (err != NC_NOERR)
         error("set_fill: %s", APIFunc(strerror)(err));
     IF (old_fillmode != NC_NOFILL)
         error("Unexpected old fill mode: %d", old_fillmode);')dnl
