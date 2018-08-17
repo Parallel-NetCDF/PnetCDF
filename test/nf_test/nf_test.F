@@ -474,7 +474,7 @@ C implementation of the netCDF library.
                             extra_flags = NF_64BIT_OFFSET
                         else if (opt .eq. '4') then
                             cdf_format = 4
-                            extra_flags = 4096
+                            extra_flags = NF_NETCDF4
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF_64BIT_DATA
