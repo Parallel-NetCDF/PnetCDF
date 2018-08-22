@@ -16,35 +16,35 @@ define(`upcase', `translit(`$*', `a-z', `A-Z')')dnl
 dnl
 define(`GETATTTYPE',dnl
 `dnl
-    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1){
+    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1) {
         err = ifelse($1, `MPI_DATATYPE_NULL', `nc_get_att', `nc_get_att_')$2(nc4p->ncid, varid, name, ($3*) buf);
     }
 ')dnl
 dnl
 define(`PUTATTTYPE',dnl
 `dnl
-    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1){
+    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1) {
         err = ifelse($1, `MPI_DATATYPE_NULL', `nc_put_att', `nc_put_att_')$2(nc4p->ncid, varid, name, ifelse($1, `MPI_CHAR', , `xtype, ')len, ($3*) value);
     }
 ')dnl
 dnl
 define(`GETVARTYPE',dnl
 `dnl
-        ifelse($2, `MPI_CHAR', , `else ')if (buftype == $2){
+        ifelse($2, `MPI_CHAR', , `else ')if (buftype == $2) {
             err = nc_get_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `sstart, ', $1, `vara', `sstart, scount, ', $1, `vars', `sstart, scount, sstride, ', $1, `varm', `sstart, scount, sstride, simap, ')($4*) buf);
         }
 ')dnl
 dnl
 define(`PUTVARTYPE',dnl
 `dnl
-        ifelse($2, `MPI_CHAR', , `else ')if (buftype == $2){
+        ifelse($2, `MPI_CHAR', , `else ')if (buftype == $2) {
             err = nc_put_$1_$3(nc4p->ncid, varid, ifelse($1, `var1', `sstart, ', $1, `vara', `sstart, scount, ', $1, `vars', `sstart, scount, sstride, ', $1, `varm', `sstart, scount, sstride, simap, ')($4*) buf);
         }
 ')dnl
 dnl
 define(`GETVAR',dnl
 `dnl
-    ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2){
+    ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2) {
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
@@ -63,7 +63,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 dnl
 define(`PUTVAR',dnl
 `dnl
-    ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2){
+    ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2) {
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
@@ -82,26 +82,28 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 dnl
 define(`CONVERT',dnl
 `dnl
-        if ($1 != NULL){
+        if ($1 != NULL) {
             /* Allocate s$1 */
             s$1 = ($2*)NCI_Malloc(sizeof($2) * ndim);
-            if (s$1 == NULL){
+            if (s$1 == NULL) {
+                ifelse($1, `count', `if (sstart  != NULL) NCI_Free(sstart);',
+                       $1, `stride',`if (sstart  != NULL) NCI_Free(sstart);
+                                     if (scount  != NULL) NCI_Free(scount);',
+                       $1, `imap',  `if (sstart  != NULL) NCI_Free(sstart);
+                                     if (scount  != NULL) NCI_Free(scount);
+                                     if (sstride != NULL) NCI_Free(sstride);')
                 DEBUG_RETURN_ERROR(NC_ENOMEM)
             }
 
             /* Convert to size_t */
-            for (i=0; i<ndim; i++) {
+            for (i=0; i<ndim; i++)
                 s$1[i] = ($2) $1[i];
-            }
         }
 ')dnl
 dnl
 define(`FREE',dnl
 `dnl
-        if ($1 != NULL){
-            /* Free s$1 */
-            NCI_Free(s$1);
-        }
+        if ($1 != NULL) NCI_Free(s$1);
 ')dnl
 dnl
 
@@ -199,59 +201,54 @@ nc4io_get_var(void             *ncdp,
     int i, err;
     int apikind;
     int ndim;
-    size_t *sstart, *scount;
-    ptrdiff_t *sstride, *simap;
+    size_t *sstart=NULL, *scount=NULL;
+    ptrdiff_t *sstride=NULL, *simap=NULL;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+    if (err != NC_NOERR) goto fn_exit;
 
-    if (start == NULL){
-        apikind = NC4_API_KIND_VAR;
-        // VAR should be transformed to VARA by the dispatcher
-        if (ndim > 0){
-            DEBUG_RETURN_ERROR(NC_EINVAL);
-        }
-    }
-    else if (count == NULL){
-        apikind = NC4_API_KIND_VAR1;
-        // VAR1 should be transformed to VARA by the dispatcher
-        if (ndim > 0){
-            DEBUG_RETURN_ERROR(NC_EINVAL);
-        }
-    }
-    else if (stride == NULL){
+    if (reqMode & NC_REQ_ZERO) {
+        /* only collective put can arrive here.
+         * Warning: HDF5 may not like zero-length requests in collective
+         */
         apikind = NC4_API_KIND_VARA;
+        sstart = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
+        scount = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
+        for (i=0; i<ndim; i++)
+            sstart[i] = scount[i] = 0;
     }
-    else if (imap == NULL){
+    else if (start == NULL)
+        apikind = NC4_API_KIND_VAR;
+    else if (count == NULL)
+        apikind = NC4_API_KIND_VAR1;
+    else if (stride == NULL)
+        apikind = NC4_API_KIND_VARA;
+    else if (imap == NULL)
         apikind = NC4_API_KIND_VARS;
-    }
-    else{
+    else
         apikind = NC4_API_KIND_VARM;
-    }
 
     /* Convert to MPI_Offset if not scalar */
-    if(ndim > 0){
+    if (ndim > 0) {
 foreach(`arg', `(start, count)', `CONVERT(arg, size_t)') dnl
 foreach(`arg', `(stride, imap)', `CONVERT(arg, ptrdiff_t)') dnl
     }
-    else{
+    else {
         sstart = scount = NULL;
         sstride = simap = NULL;
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
-    if (err != NC_NOERR){
-        DEBUG_RETURN_ERROR(err);
-    }
 
+fn_exit:
     /* Free buffers if needed */
-    if(ndim > 0){
+    if (ndim > 0) {
 foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
     }
 
-    return NC_NOERR;
+    return err;
 }
 
 int
@@ -270,46 +267,42 @@ nc4io_put_var(void             *ncdp,
     int apikind;
     int ndim;
     int zero_req = 0;
-    size_t *sstart, *scount, putsize;
-    ptrdiff_t *sstride, *simap;
+    size_t *sstart=NULL, *scount=NULL, putsize;
+    ptrdiff_t *sstride=NULL, *simap=NULL;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
     err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+    if (err != NC_NOERR) goto fn_exit;
 
-    if (start == NULL){
+    if (reqMode & NC_REQ_ZERO) {
+        /* only collective put can arrive here.
+         * Warning: HDF5 may not like zero-length requests in collective
+         */
+        apikind = NC4_API_KIND_VARA;
+        sstart = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
+        scount = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
+        for (i=0; i<ndim; i++)
+            sstart[i] = scount[i] = 0;
+    }
+    else if (start == NULL)
         apikind = NC4_API_KIND_VAR;
-        // VAR should be transformed to VARA by the dispatcher
-        if (ndim > 0){
-            DEBUG_RETURN_ERROR(NC_EINVAL);
-        }
-    }
-    else if (count == NULL){
+    else if (count == NULL)
         apikind = NC4_API_KIND_VAR1;
-        // VAR1 should be transformed to VARA by the dispatcher
-        if (ndim > 0){
-            DEBUG_RETURN_ERROR(NC_EINVAL);
-        }
-    }
-    else{
-        if (stride == NULL){
+    else {
+        if (stride == NULL)
             apikind = NC4_API_KIND_VARA;
-        }
-        else if (imap == NULL){
+        else if (imap == NULL)
             apikind = NC4_API_KIND_VARS;
-        }
-        else{
+        else
             apikind = NC4_API_KIND_VARM;
-        }
 
-        // NetCDF/HDF5 does not allow 0 put size, skip it here */
-        if (ndim > 0){
+        /* NetCDF/HDF5 does not allow 0 put size, skip it here */
+        if (ndim > 0) {
             putsize = (size_t)count[0];
-            for(i = 1; i < ndim; i++){
+            for (i=1; i<ndim; i++)
                 putsize *= (size_t)count[i];
-            }
-            if (putsize <= 0){
+            if (putsize <= 0) {
                 /* Zero req will cause error in hdf5 layer under some unknown conditions
                  * We simply ignore the error code if request size is 0
                  */
@@ -319,30 +312,28 @@ nc4io_put_var(void             *ncdp,
     }
 
     /* Convert to MPI_Offset if not scalar */
-    if(ndim > 0){
+    if (ndim > 0) {
 foreach(`arg', `(start, count)', `CONVERT(arg, size_t)') dnl
 foreach(`arg', `(stride, imap)', `CONVERT(arg, ptrdiff_t)') dnl
     }
-    else{
+    else {
         sstart = scount = NULL;
         sstride = simap = NULL;
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
-    /* Zero req will cause error in hdf5 layer under some unknown conditions
-     * We simply ignore the error code if request size is 0
-     */
-    if (zero_req && err == NC_EHDFERR){
-        err = NC_NOERR;
-    }
-    if (err != NC_NOERR){
-        DEBUG_RETURN_ERROR(err);
-    }
 
+fn_exit:
     /* Free buffers if needed */
-    if(ndim > 0){
+    if (ndim > 0) {
 foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
     }
 
-    return NC_NOERR;
+    /* Zero req will cause error in hdf5 layer under some unknown conditions
+     * We simply ignore the error code if request size is 0
+     */
+    if (zero_req && err == NC_EHDFERR)
+        err = NC_NOERR;
+
+    return err;
 }
