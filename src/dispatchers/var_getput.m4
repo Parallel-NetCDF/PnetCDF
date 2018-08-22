@@ -343,8 +343,12 @@ APINAME($1,$2,$3,$4)(int ncid,
     else if (err == NC_EPERM || err == NC_EINDEFINE || err == NC_EINDEP ||
              err == NC_ENOTINDEP) /* cannot continue if fatal errors */
         return err;
-    else if (err != NC_NOERR) /* other errors, participate collective call */
-        reqMode |= NC_REQ_ZERO;')
+    else if (err != NC_NOERR) { /* other errors, participate collective call */
+        int nprocs;
+        MPI_Comm_size(pncp->comm, &nprocs);
+        if (nprocs == 1) return err;
+        reqMode |= NC_REQ_ZERO;
+    }')
 
     reqMode |= IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3) | COLL_MODE($4);
 
@@ -445,8 +449,12 @@ NAPINAME($1,$2,$3)(int                ncid,
     else if (err == NC_EPERM || err == NC_EINDEFINE || err == NC_EINDEP ||
              err == NC_ENOTINDEP) /* cannot continue if fatal errors */
         return err;
-    else if (err != NC_NOERR) /* other errors, participate collective call */
-        reqMode |= NC_REQ_ZERO;')
+    else if (err != NC_NOERR) { /* other errors, participate collective call */
+        int nprocs;
+        MPI_Comm_size(pncp->comm, &nprocs);
+        if (nprocs == 1) return err;
+        reqMode |= NC_REQ_ZERO;
+    }')
 
     reqMode |= IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2) | COLL_MODE($3);
 
@@ -791,8 +799,12 @@ ncmpi_$1_vard$2(int           ncid,
     else if (err == NC_EPERM || err == NC_EINDEFINE || err == NC_EINDEP ||
              err == NC_ENOTINDEP) /* cannot continue if fatal errors */
         return err;
-    else if (err != NC_NOERR) /* other errors, participate collective call */
-        reqMode |= NC_REQ_ZERO;')
+    else if (err != NC_NOERR) { /* other errors, participate collective call */
+        int nprocs;
+        MPI_Comm_size(pncp->comm, &nprocs);
+        if (nprocs == 1) return err;
+        reqMode |= NC_REQ_ZERO;
+    }')
 
     reqMode |= IO_MODE($1) | NC_REQ_BLK | NC_REQ_FLEX | COLL_MODE($2);
 
