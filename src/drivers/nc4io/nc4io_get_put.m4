@@ -130,7 +130,14 @@ nc4io_get_att(void         *ncdp,
               MPI_Datatype  itype)
 {
     int err;
+    size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* when attribute length is > 0, buf cannot be BULL */
+    err = nc_inq_attlen(nc4p->ncid, varid, name, &len);
+    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+    if (len && buf == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     /* Call nc_del_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
@@ -163,6 +170,11 @@ nc4io_put_att(void         *ncdp,
     int err;
     size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
+
+    /* zero-length attribute is allowed */
+    if (nelems == 0) return NC_NOERR;
+
+    if (value == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     /* Convert from MPI_Offset to size_t */
     len = (size_t)nelems;
