@@ -77,6 +77,17 @@ sanity_check_put(PNC        *pncp,
     err = ncmpii_check_name(name, pncp->format);
     if (err != NC_NOERR) return err;
 
+    return NC_NOERR;
+}
+
+/*----< check_EINVAL() >-------------------------------------------------*/
+static int
+check_EINVAL(PNC        *pncp,
+             MPI_Offset  nelems,
+             const void *buf)
+{
+    int err=NC_NOERR;
+
     /* nelems can be zero, i.e. an attribute with only its name */
     if (nelems > 0 && buf == NULL)
         DEBUG_RETURN_ERROR(NC_EINVAL) /* Null arg */
@@ -98,7 +109,7 @@ check_EBADTYPE_ECHAR(PNC *pncp, MPI_Datatype itype, nc_type xtype)
         DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
     /* For CDF-1 and CDF-2 files, only classic types are allowed. */
-    if (pncp->format < NC_FORMAT_CDF5 && xtype > NC_DOUBLE)
+    if (pncp->format <= NC_FORMAT_CDF2 && xtype > NC_DOUBLE)
         DEBUG_RETURN_ERROR(NC_ESTRICTCDF2)
 
     /* No character conversions are allowed. */
@@ -263,6 +274,10 @@ ifelse(`$2',`',`
 
     ifelse(`$1',`put',`ifelse(`$2',`text',`',`/* check NC_EBADTYPE/NC_ECHAR */
     if (err == NC_NOERR) err = check_EBADTYPE_ECHAR(pncp, itype, xtype);')
+
+    /* check for nelems against buf for NC_EINVAL */dnl
+    ifelse(`$1',`put',`
+    if (err == NC_NOERR) err = check_EINVAL(pncp, nelems, buf);')
 
     if (pncp->flag & NC_MODE_SAFE) /* put APIs are collective */
         err = check_consistency_put(pncp->comm, varid, name, xtype, nelems,
