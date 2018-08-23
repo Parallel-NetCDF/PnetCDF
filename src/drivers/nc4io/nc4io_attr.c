@@ -153,9 +153,9 @@ nc4io_del_att(void       *ncdp,
 
 
 /*
-nc4io_get_att is implemented in ncmpio_get_put.m4
+nc4io_get_att is implemented in nc4io_get_put.m4
 */
 
 /*
-nc4io_put_att is implemented in ncmpio_get_put.m4
+nc4io_put_att is implemented in nc4io_get_put.m4
 */
