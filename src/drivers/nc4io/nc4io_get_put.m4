@@ -63,7 +63,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 dnl
 define(`PUTVAR',dnl
 `dnl
-    ifelse($1, `var', , `else ')if (apikind == NC4_API_KIND_$2) {
+    ifelse($1,`var',,`else ')if (apikind == NC4_API_KIND_$2) {
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
@@ -79,33 +79,6 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                ), `PUTVARTYPE($1, translit(dt, `()'))')dnl
     }
 ')dnl
-dnl
-define(`CONVERT',dnl
-`dnl
-        if ($1 != NULL) {
-            /* Allocate s$1 */
-            s$1 = ($2*)NCI_Malloc(sizeof($2) * ndim);
-            if (s$1 == NULL) {
-                ifelse($1, `count', `if (sstart  != NULL) NCI_Free(sstart);',
-                       $1, `stride',`if (sstart  != NULL) NCI_Free(sstart);
-                                     if (scount  != NULL) NCI_Free(scount);',
-                       $1, `imap',  `if (sstart  != NULL) NCI_Free(sstart);
-                                     if (scount  != NULL) NCI_Free(scount);
-                                     if (sstride != NULL) NCI_Free(sstride);')
-                DEBUG_RETURN_ERROR(NC_ENOMEM)
-            }
-
-            /* Convert to size_t */
-            for (i=0; i<ndim; i++)
-                s$1[i] = ($2) $1[i];
-        }
-')dnl
-dnl
-define(`FREE',dnl
-`dnl
-        if ($1 != NULL) NCI_Free(s$1);
-')dnl
-dnl
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -131,15 +104,26 @@ nc4io_get_att(void         *ncdp,
 {
     int err;
     size_t len;
+    nc_type xtype;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* when attribute length is > 0, buf cannot be BULL */
-    err = nc_inq_attlen(nc4p->ncid, varid, name, &len);
+    err = nc_inq_att(nc4p->ncid, varid, name, &xtype, &len);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
+    /* zero-length attribute */
+    if (len == 0) return NC_NOERR;
+
+    if (itype != MPI_DATATYPE_NULL) {
+        /* No character conversions are allowed. */
+        err = (((xtype == NC_CHAR) == (itype != MPI_CHAR)) ? NC_ECHAR : NC_NOERR);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+    }
+
+    /* when len > 0, buf cannot be NULL */
     if (len && buf == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
-    /* Call nc_del_att_<type> */
+    /* Call nc_get_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
@@ -171,15 +155,14 @@ nc4io_put_att(void         *ncdp,
     size_t len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
-    /* zero-length attribute is allowed */
-    if (nelems == 0) return NC_NOERR;
-
-    if (value == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
+    /* zero-length attribute is allowed, but
+     * value cannot be NULL when nelems > 0 */
+    if (nelems && value == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     /* Convert from MPI_Offset to size_t */
     len = (size_t)nelems;
 
-    /* Call nc_del_att_<type> */
+    /* Call nc_put_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
                `(`MPI_UNSIGNED_CHAR', `uchar', `unsigned char')', dnl
@@ -210,57 +193,72 @@ nc4io_get_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err;
-    int apikind;
-    int ndim;
+    int i, err, status, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
-    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
-    if (err != NC_NOERR) goto fn_exit;
+    status = nc_inq_varndims(nc4p->ncid, varid, &ndims);
 
     if (reqMode & NC_REQ_ZERO) {
         /* only collective put can arrive here.
          * Warning: HDF5 may not like zero-length requests in collective
          */
         apikind = NC4_API_KIND_VARA;
-        sstart = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
-        scount = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
-        for (i=0; i<ndim; i++)
+        sstart = (size_t*) NCI_Calloc(ndims, sizeof(size_t));
+        scount = (size_t*) NCI_Calloc(ndims, sizeof(size_t));
+        for (i=0; i<ndims; i++)
             sstart[i] = scount[i] = 0;
     }
-    else if (start == NULL)
-        apikind = NC4_API_KIND_VAR;
-    else if (count == NULL)
-        apikind = NC4_API_KIND_VAR1;
-    else if (stride == NULL)
-        apikind = NC4_API_KIND_VARA;
-    else if (imap == NULL)
-        apikind = NC4_API_KIND_VARS;
-    else
-        apikind = NC4_API_KIND_VARM;
-
-    /* Convert to MPI_Offset if not scalar */
-    if (ndim > 0) {
-foreach(`arg', `(start, count)', `CONVERT(arg, size_t)') dnl
-foreach(`arg', `(stride, imap)', `CONVERT(arg, ptrdiff_t)') dnl
-    }
     else {
-        sstart = scount = NULL;
-        sstride = simap = NULL;
+        if (start == NULL)
+            apikind = NC4_API_KIND_VAR;
+        else if (count == NULL)
+            apikind = NC4_API_KIND_VAR1;
+        else if (stride == NULL)
+            apikind = NC4_API_KIND_VARA;
+        else if (imap == NULL)
+            apikind = NC4_API_KIND_VARS;
+        else
+            apikind = NC4_API_KIND_VARM;
+
+        /* Convert from MPI_Offset to size_t */
+        if (ndims > 0) {
+            if (start != NULL) {
+                sstart = (size_t*)NCI_Malloc(sizeof(size_t) * ndims);
+                for (i=0; i<ndims; i++) sstart[i] = (size_t)start[i];
+            }
+            if (count != NULL) {
+                scount = (size_t*)NCI_Malloc(sizeof(size_t) * ndims);
+                for (i=0; i<ndims; i++) scount[i] = (size_t)count[i];
+            }
+            if (stride != NULL) {
+                sstride = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
+                for (i=0; i<ndims; i++) sstride[i] = (ptrdiff_t)stride[i];
+            }
+            if (imap != NULL) {
+                simap = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
+                for (i=0; i<ndims; i++) simap[i] = (ptrdiff_t)imap[i];
+            }
+        }
+        else {
+            sstart = scount = NULL;
+            sstride = simap = NULL;
+        }
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
 
-fn_exit:
     /* Free buffers if needed */
-    if (ndim > 0) {
-foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
+    if (ndims > 0) {
+        if (sstart  != NULL) NCI_Free(sstart);
+        if (scount  != NULL) NCI_Free(scount);
+        if (sstride != NULL) NCI_Free(sstride);
+        if (simap   != NULL) NCI_Free(simap);
     }
 
-    return err;
+    return (status != NC_NOERR) ? status : err;
 }
 
 int
@@ -275,77 +273,68 @@ nc4io_put_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err;
-    int apikind;
-    int ndim;
-    int zero_req = 0;
-    size_t *sstart=NULL, *scount=NULL, putsize;
+    int i, err, status, apikind, ndims;
+    size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
-    err = nc_inq_varndims(nc4p->ncid, varid, &ndim);
-    if (err != NC_NOERR) goto fn_exit;
+    status = nc_inq_varndims(nc4p->ncid, varid, &ndims);
 
     if (reqMode & NC_REQ_ZERO) {
         /* only collective put can arrive here.
          * Warning: HDF5 may not like zero-length requests in collective
          */
         apikind = NC4_API_KIND_VARA;
-        sstart = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
-        scount = (size_t*) NCI_Malloc(ndim * sizeof(size_t));
-        for (i=0; i<ndim; i++)
-            sstart[i] = scount[i] = 0;
+        sstart = (size_t*) NCI_Calloc(ndims, sizeof(size_t));
+        scount = (size_t*) NCI_Calloc(ndims, sizeof(size_t));
     }
-    else if (start == NULL)
-        apikind = NC4_API_KIND_VAR;
-    else if (count == NULL)
-        apikind = NC4_API_KIND_VAR1;
     else {
-        if (stride == NULL)
+        if (start == NULL)
+            apikind = NC4_API_KIND_VAR;
+        else if (count == NULL)
+            apikind = NC4_API_KIND_VAR1;
+        else if (stride == NULL)
             apikind = NC4_API_KIND_VARA;
         else if (imap == NULL)
             apikind = NC4_API_KIND_VARS;
         else
             apikind = NC4_API_KIND_VARM;
 
-        /* NetCDF/HDF5 does not allow 0 put size, skip it here */
-        if (ndim > 0) {
-            putsize = (size_t)count[0];
-            for (i=1; i<ndim; i++)
-                putsize *= (size_t)count[i];
-            if (putsize <= 0) {
-                /* Zero req will cause error in hdf5 layer under some unknown conditions
-                 * We simply ignore the error code if request size is 0
-                 */
-                zero_req = 1;
+        /* Convert to MPI_Offset if not scalar */
+        if (ndims > 0) {
+            if (start != NULL) {
+                sstart = (size_t*)NCI_Malloc(sizeof(size_t) * ndims);
+                for (i=0; i<ndims; i++) sstart[i] = (size_t)start[i];
+            }
+            if (count != NULL) {
+                scount = (size_t*)NCI_Malloc(sizeof(size_t) * ndims);
+                for (i=0; i<ndims; i++) scount[i] = (size_t)count[i];
+            }
+            if (stride != NULL) {
+                sstride = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
+                for (i=0; i<ndims; i++) sstride[i] = (ptrdiff_t)stride[i];
+            }
+            if (imap != NULL) {
+                simap = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
+                for (i=0; i<ndims; i++) simap[i] = (ptrdiff_t)imap[i];
             }
         }
-    }
-
-    /* Convert to MPI_Offset if not scalar */
-    if (ndim > 0) {
-foreach(`arg', `(start, count)', `CONVERT(arg, size_t)') dnl
-foreach(`arg', `(stride, imap)', `CONVERT(arg, ptrdiff_t)') dnl
-    }
-    else {
-        sstart = scount = NULL;
-        sstride = simap = NULL;
+        else {
+            sstart = scount = NULL;
+            sstride = simap = NULL;
+        }
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
 
-fn_exit:
     /* Free buffers if needed */
-    if (ndim > 0) {
-foreach(`arg', `(start, count, stride, imap)', `FREE(arg)') dnl
+    if (ndims > 0) {
+        if (sstart  != NULL) NCI_Free(sstart);
+        if (scount  != NULL) NCI_Free(scount);
+        if (sstride != NULL) NCI_Free(sstride);
+        if (simap   != NULL) NCI_Free(simap);
     }
 
-    /* Zero req will cause error in hdf5 layer under some unknown conditions
-     * We simply ignore the error code if request size is 0
-     */
-    if (zero_req && err == NC_EHDFERR)
-        err = NC_NOERR;
-
-    return err;
+    return (status != NC_NOERR) ? status : err;
 }
