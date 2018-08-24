@@ -47,9 +47,7 @@ sanity_check_get(PNC        *pncp,
 static int
 sanity_check_put(PNC        *pncp,
                  int         varid,
-                 const char *name,
-                 MPI_Offset  nelems,
-                 const void *buf)
+                 const char *name)
 {
     int err=NC_NOERR;
 
@@ -270,14 +268,14 @@ ifelse(`$2',`',`
     ifelse(`$1',`get',
     `err = sanity_check_get(pncp, varid, name);
     if (err != NC_NOERR) return err;',
-    `err = sanity_check_put(pncp, varid, name, nelems, buf);')
+    `err = sanity_check_put(pncp, varid, name);')
 
     ifelse(`$1',`put',`ifelse(`$2',`text',`',`/* check NC_EBADTYPE/NC_ECHAR */
-    if (err == NC_NOERR) err = check_EBADTYPE_ECHAR(pncp, itype, xtype);')
+    if (err == NC_NOERR) err = check_EBADTYPE_ECHAR(pncp, itype, xtype);')')
 
     /* check for nelems against buf for NC_EINVAL */dnl
     ifelse(`$1',`put',`
-    if (err == NC_NOERR) err = check_EINVAL(pncp, nelems, buf);')
+    if (err == NC_NOERR) err = check_EINVAL(pncp, nelems, buf);
 
     if (pncp->flag & NC_MODE_SAFE) /* put APIs are collective */
         err = check_consistency_put(pncp->comm, varid, name, xtype, nelems,
