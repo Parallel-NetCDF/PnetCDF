@@ -31,7 +31,7 @@ endif
 
 ptest ptests:
 	for d in $(PTEST_SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest $$* ; \
+		$(MAKE) $(MFLAGS) -C $$d ptest $$* || exit 1 ; \
 	done
 
 # For VPATH build (parallel build), try delete all sub-directories
