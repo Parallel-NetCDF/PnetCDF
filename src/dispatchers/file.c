@@ -21,6 +21,10 @@
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
+#ifdef ENABLE_NETCDF4
+#include <netcdf.h>
+#endif
+
 #include <pnetcdf.h>
 #include <dispatch.h>
 #include <pnc_debug.h>
@@ -392,22 +396,29 @@ ncmpi_create(MPI_Comm    comm,
         format = NC_FORMAT_CDF5;
     else if (fIsSet(cmode, NC_64BIT_OFFSET))
         format = NC_FORMAT_CDF2;
-    else if (fIsSet(cmode, NC_NETCDF4))
-        format = NC_FORMAT_NETCDF4;
-    else if (fIsSet(cmode, NC_NETCDF4|NC_CLASSIC_MODEL))
-        format = NC_FORMAT_NETCDF4;
+    else if (fIsSet(cmode, NC_NETCDF4)) {
+        if (fIsSet(cmode, NC_CLASSIC_MODEL))
+            format = NC_FORMAT_NETCDF4_CLASSIC;
+        else
+            format = NC_FORMAT_NETCDF4;
+    }
     else if (fIsSet(cmode, NC_CLASSIC_MODEL))
         format = NC_FORMAT_CLASSIC;
     else {
         /* if no file format flag is set in cmode, use default */
         ncmpi_inq_default_format(&format);
-             if (format == NC_FORMAT_CDF5)    cmode |= NC_64BIT_DATA;
-        else if (format == NC_FORMAT_CDF2)    cmode |= NC_64BIT_OFFSET;
-        else if (format == NC_FORMAT_NETCDF4) cmode |= NC_NETCDF4;
+        if (format == NC_FORMAT_CDF5)
+            cmode |= NC_64BIT_DATA;
+        else if (format == NC_FORMAT_CDF2)
+            cmode |= NC_64BIT_OFFSET;
+        else if (format == NC_FORMAT_NETCDF4)
+            cmode |= NC_NETCDF4;
+        else if (format == NC_FORMAT_NETCDF4_CLASSIC)
+            cmode |= NC_NETCDF4 | NC_CLASSIC_MODEL;
     }
 
 #ifdef ENABLE_NETCDF4
-    if (format == NC_FORMAT_NETCDF4)
+    if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
         driver = nc4io_inq_driver();
     else
 #endif
@@ -418,7 +429,7 @@ ncmpi_create(MPI_Comm    comm,
 #endif
 #ifdef ENABLE_BURST_BUFFER
     if (enable_bb_driver) {
-        if (format == NC_FORMAT_NETCDF4) {
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
             printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");
             if (combined_info != MPI_INFO_NULL)
                 MPI_Info_free(&combined_info);
@@ -582,7 +593,7 @@ ncmpi_open(MPI_Comm    comm,
             format = NC_ENOTNC;
         }
 #ifndef ENABLE_NETCDF4
-        else if (format == NC_FORMAT_NETCDF4) {
+        else if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
             if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTBUILT)
             format = NC_ENOTBUILT;
         }
@@ -669,7 +680,7 @@ ncmpi_open(MPI_Comm    comm,
 #endif
 #ifdef ENABLE_BURST_BUFFER
     if (enable_bb_driver) {
-        if (format == NC_FORMAT_NETCDF4) {
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
             printf("Error: NetCDF-4 files are not supported in Burst Buffering feature yet\n");
             DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
         }
@@ -1064,6 +1075,13 @@ ncmpi_set_fill(int  ncid,
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
+    if (fIsSet(pncp->flag, NC_MODE_RDONLY)) /* read-only */
+        DEBUG_RETURN_ERROR(NC_EPERM)
+
+    /* not allowed to call in data mode for classic formats */
+    if ((pncp->format != NC_FORMAT_NETCDF4) && !(pncp->flag & NC_MODE_DEF))
+        DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+
     /* calling the subroutine that implements ncmpi_set_fill() */
     err = pncp->driver->set_fill(pncp->ncp, fill_mode, old_fill_mode);
     if (err != NC_NOERR) return err;
@@ -1149,7 +1167,15 @@ ncmpi_inq_file_format(const char *filename,
          * For now, we do not distinguish NC_CLASSIC_MODEL, but simply return
          * NETCDF4 format.
          */
+#ifdef ENABLE_NETCDF4
+        int err, ncid;
+        err = nc_open(filename, NC_NOWRITE, &ncid);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        err = nc_inq_format(ncid, formatp);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+#else
         *formatp = NC_FORMAT_NETCDF4;
+#endif
     }
     else if (memcmp(signature, cdf_signature, 3) == 0) {
              if (signature[3] == 5)  *formatp = NC_FORMAT_CDF5;
@@ -1173,17 +1199,18 @@ ncmpi_inq_version(int ncid, int *nc_mode)
 
     if (nc_mode == NULL) return NC_NOERR;
 
-    if (pncp->format == NC_FORMAT_CDF5) {
+    if (pncp->format == NC_FORMAT_CDF5)
         *nc_mode = NC_64BIT_DATA;
-    } else if (pncp->format == NC_FORMAT_CDF2) {
+    else if (pncp->format == NC_FORMAT_CDF2)
         *nc_mode = NC_64BIT_OFFSET;
-    } else if (pncp->format == NC_FORMAT_CLASSIC) {
+    else if (pncp->format == NC_FORMAT_CLASSIC)
         *nc_mode = NC_CLASSIC_MODEL;
-    }
+
 #ifdef ENABLE_NETCDF4
-    else if (pncp->format == NC_FORMAT_NETCDF4) {
+    else if (pncp->format == NC_FORMAT_NETCDF4)
         *nc_mode = NC_NETCDF4;
-    }
+    else if (pncp->format == NC_FORMAT_NETCDF4_CLASSIC)
+        *nc_mode = NC_NETCDF4 | NC_CLASSIC_MODEL;
 #endif
 
     return NC_NOERR;
@@ -1542,6 +1569,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
     if (format != NC_FORMAT_CLASSIC &&
         format != NC_FORMAT_CDF2 &&
         format != NC_FORMAT_NETCDF4 &&
+        format != NC_FORMAT_NETCDF4_CLASSIC &&
         format != NC_FORMAT_CDF5) {
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
     }

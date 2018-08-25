@@ -63,10 +63,17 @@ ncmpi_def_var(int         ncid,    /* IN:  file ID */
         goto err_check;
     }
 
-    /* For CDF-1 and CDF-2 files, only classic types are allowed. */
-    if (pncp->format < NC_FORMAT_NETCDF4 && type > NC_DOUBLE) {
-        DEBUG_ASSIGN_ERROR(err, NC_ESTRICTCDF2)
-        goto err_check;
+    /* For NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, and
+     * NC_FORMAT_NETCDF4_CLASSIC files, only classic types are allowed. */
+    if (type > NC_DOUBLE) {
+        if (pncp->format <= NC_FORMAT_64BIT_OFFSET) {
+            DEBUG_ASSIGN_ERROR(err, NC_ESTRICTCDF2)
+            goto err_check;
+        }
+        else if (pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
+            DEBUG_ASSIGN_ERROR(err, NC_ESTRICTNC3)
+            goto err_check;
+        }
     }
 
     /* Argument ndims is of type "int". Its max value will be less than
@@ -196,8 +203,6 @@ err_check:
     /* calling the subroutine that implements ncmpi_def_var() */
     err = pncp->driver->def_var(pncp->ncp, name, type, ndims, dimids, varidp);
     if (err != NC_NOERR) return err;
-
-    assert(*varidp == pncp->nvars);
 
     /* add new variable into pnc-vars[] */
     if (pncp->nvars % PNC_VARS_CHUNK == 0)
