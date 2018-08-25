@@ -78,14 +78,12 @@ sanity_check_put(PNC        *pncp,
     return NC_NOERR;
 }
 
-/*----< check_EINVAL() >-------------------------------------------------*/
+/*----< check_EINVAL() >-----------------------------------------------------*/
 static int
 check_EINVAL(PNC        *pncp,
              MPI_Offset  nelems,
              const void *buf)
 {
-    int err=NC_NOERR;
-
     /* nelems can be zero, i.e. an attribute with only its name */
     if (nelems > 0 && buf == NULL)
         DEBUG_RETURN_ERROR(NC_EINVAL) /* Null arg */
