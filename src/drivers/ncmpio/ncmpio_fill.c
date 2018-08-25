@@ -708,29 +708,16 @@ ncmpio_set_fill(void *ncdp,
                 int   fill_mode,
                 int  *old_fill_mode)
 {
-    int i, err=NC_NOERR, mpireturn, oldmode;
+    int i, mpireturn, oldmode;
     NC *ncp = (NC*)ncdp;
 
-    /* check whether file's write permission */
-    if (NC_readonly(ncp)) {
-        DEBUG_ASSIGN_ERROR(err, NC_EPERM)
-        goto err_check;
-    }
-
-    /* check if called in define mode */
-    if (!NC_indef(ncp)) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
-        goto err_check;
-    }
-
-err_check:
     if (ncp->safe_mode) {
-        int status, root_fill_mode=fill_mode;
+        int err, status, root_fill_mode=fill_mode;
 
         TRACE_COMM(MPI_Bcast)(&root_fill_mode, 1, MPI_INT, 0, ncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return  ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
-        if (err == NC_NOERR && fill_mode != root_fill_mode)
+        if (fill_mode != root_fill_mode)
             /* dataset's fill mode is inconsistent with root's */
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FILL_MODE)
 
@@ -739,8 +726,8 @@ err_check:
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
         if (err == NC_NOERR) err = status;
+        if (err != NC_NOERR) return err;
     }
-    if (err != NC_NOERR) return err;
 
     oldmode = fIsSet(ncp->flags, NC_MODE_FILL) ? NC_FILL : NC_NOFILL;
 
