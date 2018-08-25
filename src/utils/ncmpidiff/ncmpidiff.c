@@ -317,14 +317,15 @@ int main(int argc, char **argv)
 
     MPI_Info_free(&info);
 
+    err = ncmpi_inq(ncid1, &ndims1, &nvars1, &natts1, &unlimdimid1);
+    HANDLE_ERROR
+    err = ncmpi_inq(ncid2, &ndims2, &nvars2, &natts2, &unlimdimid2);
+    HANDLE_ERROR
+
     /* check header */
     if (check_header && rank == 0) { /* only root checks header */
         int attnump;
 
-        err = ncmpi_inq(ncid1, &ndims1, &nvars1, &natts1, &unlimdimid1);
-        HANDLE_ERROR
-        err = ncmpi_inq(ncid2, &ndims2, &nvars2, &natts2, &unlimdimid2);
-        HANDLE_ERROR
         if (ndims1 != ndims2) { /* check number of dimensions if equal */
             if (!quiet) printf("DIFF: number of dimensions (%d) != (%d)\n",ndims1, ndims2);
             numHeadDIFF++;
@@ -626,18 +627,20 @@ int main(int argc, char **argv)
 
         err = ncmpi_inq_varid(ncid1, var_list.names[i], &varid1);
         if (err == NC_ENOTVAR) {
-            if (!check_header && !rank) {
-                if (!quiet) printf("WARN: variable \"%s\" not found in file %s\n",
-                       var_list.names[i],argv[optind]);
+            if (!check_header) {
+                if (!rank && !quiet)
+                    printf("WARN: variable \"%s\" not found in file %s\n",
+                           var_list.names[i],argv[optind]);
                 numVarDIFF++;
             }
             continue;
         }
         err = ncmpi_inq_varid(ncid2, var_list.names[i], &varid2);
         if (err == NC_ENOTVAR) {
-            if (!check_header && !rank) {
-                if (!quiet) printf("WARN: variable \"%s\" not found in file %s\n",
-                       var_list.names[i],argv[optind+1]);
+            if (!check_header) {
+                if (!rank && !quiet)
+                    printf("WARN: variable \"%s\" not found in file %s\n",
+                           var_list.names[i],argv[optind+1]);
                 numVarDIFF++;
             }
             continue;
@@ -655,10 +658,10 @@ int main(int argc, char **argv)
 
         /* check data type */
         if (type1 != type2) {
-            if (!rank) {
-                if (!check_header) /* if header has not been checked */
-                    if (!quiet) printf("DIFF: variable \"%s\" data type (%s) != (%s)\n",
-                       name1,get_type(type1),get_type(type2));
+            if (!check_header) { /* if header has not been checked */
+                if (!rank && !quiet)
+                    printf("DIFF: variable \"%s\" data type (%s) != (%s)\n",
+                           name1,get_type(type1),get_type(type2));
                 numHeadDIFF++;
                 numVarDIFF++;
             }
@@ -671,10 +674,10 @@ int main(int argc, char **argv)
 
         /* check number of dimensions */
         if (ndims1 != ndims2) {
-            if (!rank) {
-                if (!check_header) /* if header has not been checked */
-                    if (!quiet) printf("DIFF: variable \"%s\" number of dimensions (%d) != (%d)\n",
-                       name1,ndims1,ndims2);
+            if (!check_header) { /* if header has not been checked */
+                if (!rank && !quiet)
+                    printf("DIFF: variable \"%s\" number of dimensions (%d) != (%d)\n",
+                           name1,ndims1,ndims2);
                 numHeadDIFF++;
                 numVarDIFF++;
             }
@@ -696,9 +699,9 @@ int main(int argc, char **argv)
             if (!check_header && !rank && verbose)
                 printf("\tDimension %d:\n",j);
             if (dimlen1 != dimlen2) {
-                if (!rank) {
-                    if (!check_header) /* if header has not been checked */
-                        if (!quiet) printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length (%lld) != (%lld)\n",
+                if (!check_header) { /* if header has not been checked */
+                    if (!rank && !quiet)
+                        printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length (%lld) != (%lld)\n",
                                name1,get_type(type1),j,(long long int)dimlen1,(long long int)dimlen2);
                     numHeadDIFF++;
                     numVarDIFF++;
@@ -709,12 +712,23 @@ int main(int argc, char **argv)
                 printf("\t\tSAME: length (%lld)\n",(long long int)dimlen1);
             shape[j] = dimlen1;
         }
-        if (j != ndims1)
+        if (j != ndims1) {
+            free(shape);
+            free(dimids1);
+            free(dimids2);
             continue; /* skip this variable */
+        }
 
         if (ndims1 > 0 && dimids1[0] == unlimdimid1) { /* record variable */
             err = ncmpi_inq_dimlen(ncid1, unlimdimid1, &shape[0]);
             HANDLE_ERROR
+            if (shape[0] == 0) {
+                /* No record has been written to the file, skip comparison */
+                free(shape);
+                free(dimids1);
+                free(dimids2);
+                continue;
+            }
         }
 
         for (j=0; j<ndims1; j++) {
@@ -736,9 +750,7 @@ int main(int argc, char **argv)
 
         varsize = 1;
         /* block partition the variable along the 1st dimension */
-        for (j=0; j<ndims1; j++) {
-            varsize *= shape[j];
-        }
+        for (j=0; j<ndims1; j++) varsize *= shape[j];
 
         /* compare the variable contents */
         switch (type1) {
