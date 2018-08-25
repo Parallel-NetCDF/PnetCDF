@@ -20,7 +20,7 @@ if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
     unset PNETCDF_HINTS
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_io1.nc
 
-    echo "--- ncmpidiff tst_io1.nc0 tst_io1.nc ---"
-    ${TESTSEQRUN} ${NCMPIDIFF} ${TESTOUTDIR}/tst_io1.nc0 ${TESTOUTDIR}/tst_io1.nc
+    # echo "--- ncmpidiff tst_io1.nc0 tst_io1.nc ---"
+    ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/tst_io1.nc0 ${TESTOUTDIR}/tst_io1.nc
 
 fi

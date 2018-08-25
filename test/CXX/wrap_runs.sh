@@ -21,19 +21,19 @@ fi
 
 for j in ${safe_modes} ; do
     export PNETCDF_SAFE_MODE=$j
-    echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+    # echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
     ${TESTSEQRUN} ./$1            ${TESTOUTDIR}/$outfile.nc
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
-    echo ""
+    # echo ""
 
     if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-       echo "---- testing burst buffering"
+       # echo "---- testing burst buffering"
        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
        ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.bb.nc
        unset PNETCDF_HINTS
        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.bb.nc
 
-       echo "--- ncmpidiff $outfile.nc $outfile.bb.nc ---"
-       ${TESTSEQRUN} ${NCMPIDIFF} ${TESTOUTDIR}/$outfile.nc ${TESTOUTDIR}/$outfile.bb.nc
+       # echo "--- ncmpidiff $outfile.nc $outfile.bb.nc ---"
+       ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$outfile.nc ${TESTOUTDIR}/$outfile.bb.nc
     fi
 done

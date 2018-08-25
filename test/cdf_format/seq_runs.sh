@@ -13,10 +13,10 @@ ${TESTSEQRUN} ./test_inq_format ${srcdir}
 ${TESTSEQRUN} ./tst_open_cdf5 ${srcdir}/bad_begin.nc5
 ${TESTSEQRUN} ./tst_corrupt ${srcdir}
 
-echo ""
+# echo ""
 
 if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-    echo "---- testing burst buffering"
+    # echo "---- testing burst buffering"
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
 
