@@ -115,8 +115,8 @@ typedef struct PNC_driver PNC_driver;
 
 struct PNC_var {
     int         ndims;
-    int         recdim;
-    nc_type     xtype;
+    int         recdim;   /* if >=0, this is a record variable */
+    nc_type     xtype;    /* external NC data type */
     MPI_Offset *shape;    /* [ndims] */
 };
 typedef struct PNC_var PNC_var;

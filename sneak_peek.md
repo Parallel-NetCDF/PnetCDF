@@ -71,8 +71,16 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
+  + For put and get APIs when buftype is MPI_DATATYPE_NULL, bufcount is
+    ignored. This is not implemented correctly for blocking put and get APIs.
+    See commit
+    [403e483](https://github.com/Parallel-NetCDF/PnetCDF/commit/403e4839cdfca6175bcb177f3efa16f7d5e602d2)
+  + ncmpidiff -- when comparing two files that contain record variables but
+    no record has been written. See commit
+    [2d2cacb](https://github.com/Parallel-NetCDF/PnetCDF/commit/2d2cacbad20b71c36a9442d9abb6c113f1838d28)
   + ncmpidiff -- when comparing two scalar variables, error NC_EBADDIM may
-    mistakenly reported. See b4d2dda2362e0dc0926d2723bffffea61df7006d
+    mistakenly reported. See commit
+    [b4d2dda](https://github.com/Parallel-NetCDF/PnetCDF/commit/b4d2dda2362e0dc0926d2723bffffea61df7006d)
 
 * New example programs
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
@@ -87,14 +95,16 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + test/nc4/put_get_all_kinds.m4 - test all supported variable read/write API.
-    Make sure they are properly wired up
-  + test/nc4/interoperability_rd.m4 - test whether NetCDF-4 file written using
+  + test/testcases/error_precedence.m4 - tests the error code reporting
+    precedence
+  + test/nc4/put_get_all_kinds.m4 - tests all supported variable read/write
+    API. Make sure they are properly wired up
+  + test/nc4/interoperability_rd.m4 - tests whether NetCDF-4 file written using
     NetCDF can be read by PnetCDF
-  + test/nc4/interoperability_wr.m4 - test whether NetCDF-4 file written using
+  + test/nc4/interoperability_wr.m4 - tests whether NetCDF-4 file written using
     PnetCDF can be read by NetCDF
-  + test/nc4/simple_xy.c - test reading the simple_xy example borrowed from
-    NetCDF
+  + test/nc4/simple_xy.c - tests reading NetCDF-4 files, borrowed the test
+    program simple_xy.c from NetCDF
   + test/testcases/tst_pthread.c - tests thread-safe capability for scenario of
     each thread operating on a unique file.
 
