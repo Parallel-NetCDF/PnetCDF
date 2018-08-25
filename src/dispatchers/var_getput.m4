@@ -135,13 +135,18 @@ int check_start_count_stride(PNC              *pncp,
     firstDim = 0;
     /* check NC_EINVALCOORDS for record dimension */
     if (pncp->vars[varid].recdim >= 0) {
-        if (pncp->format < NC_FORMAT_CDF5 && start[0] > NC_MAX_UINT)
-            DEBUG_RETURN_ERROR(NC_EINVALCOORDS) /* CDF-1 and 2 */
+        if ((pncp->format <= NC_FORMAT_CDF2 ||
+             pncp->format == NC_FORMAT_NETCDF4_CLASSIC) &&
+            start[0] > NC_MAX_UINT)
+            /* CDF-1, 2 and netcdf4 classic model */
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 
         /* for record variable, [0] is the NC_UNLIMITED dimension */
         /* read cannot go beyond current numrecs */
         if (isRead) {
             MPI_Offset len = (count == NULL) ? 1 : count[0];
+            if (shape[0] == 0 && len > 0) /* no record yet */
+                DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
             err = check_EINVALCOORDS(pncp->flag & NC_MODE_STRICT_COORD_BOUND,
                                      start[0], len, shape[0]);
             if (err != NC_NOERR) return err;
@@ -221,7 +226,8 @@ int sanity_check(PNC          *pncp,
     /* for blocking APIs */
     if (io == API_PUT || io == API_GET) {
         /* blocking get/put APIs must be called in data mode */
-        if (pncp->flag & NC_MODE_DEF) DEBUG_RETURN_ERROR(NC_EINDEFINE)
+        if (pncp->format != NC_FORMAT_NETCDF4 && (pncp->flag & NC_MODE_DEF))
+            DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
         /* for blocking APIs, check if in collective or independent mode */
         if (isColl) { /* check if file is currently in collective data mode */
@@ -334,7 +340,7 @@ APINAME($1,$2,$3,$4)(int ncid,
     if (err != NC_NOERR) return err;
     ifelse(`$3',`',`
     /* independent flexible API, return now if zero-length request */
-    if (bufcount == 0) return NC_NOERR;')',`
+    if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')',`
     /* collective APIs and safe mode enabled, check errors across all procs */
     if (pncp->flag & NC_MODE_SAFE) {
         err = allreduce_error(pncp, err);
@@ -645,7 +651,7 @@ IAPINAME($1,$2,$3)(int ncid,
         if (err != NC_NOERR) return err;
     }')
 
-    ifelse(`$3',`',`if (bufcount == 0) return NC_NOERR;')
+    ifelse(`$3',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
     reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3);
 
@@ -745,7 +751,7 @@ INAPINAME($1,$2)(int                ncid,
         }
     }
 
-    ifelse(`$2',`',`if (bufcount == 0) return NC_NOERR;')
+    ifelse(`$2',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
     reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2);
 
@@ -790,7 +796,7 @@ ncmpi_$1_vard$2(int           ncid,
     ifelse(`$2',`',
     `/* for independent API, return now if error encountered or zero request */
     if (err != NC_NOERR) return err;
-    if (bufcount == 0) return NC_NOERR;',
+    if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;',
     `/* In safe mode, check errors across all processes */
     if (pncp->flag & NC_MODE_SAFE) {
         err = allreduce_error(pncp, err);
