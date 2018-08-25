@@ -68,17 +68,21 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                tst_info \
                tst_vars_fill \
                tst_def_var_fill \
-               test_fillvalue
+               test_fillvalue \
+               tst_vars_fill \
+               error_precedence
 
 M4_SRCS      = put_all_kinds.m4 \
                erange_fill.m4 \
                tst_vars_fill.m4 \
-               iput_all_kinds.m4
+               iput_all_kinds.m4 \
+               error_precedence.m4
 
 nodist_put_all_kinds_SOURCES = put_all_kinds.c
 nodist_erange_fill_SOURCES = erange_fill.c
 nodist_tst_vars_fill_SOURCES = tst_vars_fill.c
 nodist_iput_all_kinds_SOURCES = iput_all_kinds.c
+nodist_error_precedence_SOURCES = error_precedence.c
 
 if ENABLE_ERANGE_FILL
    M4FLAGS += -DERANGE_FILL
@@ -122,10 +126,10 @@ endif
 
 # all programs in TESTPROGRAMS will be run by wrap_runs.sh
 # others in check_PROGRAMS but not in TESTPROGRAMS will be run by seq_runs.sh
+# Those are the ones need special treatment
 check_PROGRAMS = $(TESTPROGRAMS) \
                  put_all_kinds \
                  redef1 \
-                 tst_vars_fill \
                  iput_all_kinds
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
@@ -158,12 +162,12 @@ if ENABLE_THREAD_SAFE
 endif
 
 if ENABLE_BURST_BUFFER
-   NC_FILES += $(TESTOUTDIR)/put_all_kinds.bb.nc.cdf1 \
-               $(TESTOUTDIR)/put_all_kinds.bb.nc.cdf2 \
-               $(TESTOUTDIR)/put_all_kinds.bb.nc.cdf5 \
-               $(TESTOUTDIR)/iput_all_kinds.bb.nc.cdf1 \
-               $(TESTOUTDIR)/iput_all_kinds.bb.nc.cdf2 \
-               $(TESTOUTDIR)/iput_all_kinds.bb.nc.cdf5 \
+   NC_FILES += $(TESTOUTDIR)/put_all_kinds.bb.nc1 \
+               $(TESTOUTDIR)/put_all_kinds.bb.nc2 \
+               $(TESTOUTDIR)/put_all_kinds.bb.nc5 \
+               $(TESTOUTDIR)/iput_all_kinds.bb.nc1 \
+               $(TESTOUTDIR)/iput_all_kinds.bb.nc2 \
+               $(TESTOUTDIR)/iput_all_kinds.bb.nc5 \
                $(TESTOUTDIR)/redef1.bb.nc
 endif
 
@@ -172,12 +176,12 @@ BURST_BUFFER_FILES = $(NC_FILES:=_*.meta) $(NC_FILES:=_*.data)
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/testfile.nc \
              $(TESTOUTDIR)/redef1.nc \
-             $(TESTOUTDIR)/put_all_kinds.nc.cdf1 \
-             $(TESTOUTDIR)/put_all_kinds.nc.cdf2 \
-             $(TESTOUTDIR)/put_all_kinds.nc.cdf5 \
-             $(TESTOUTDIR)/iput_all_kinds.nc.cdf1 \
-             $(TESTOUTDIR)/iput_all_kinds.nc.cdf2 \
-             $(TESTOUTDIR)/iput_all_kinds.nc.cdf5 \
+             $(TESTOUTDIR)/put_all_kinds.nc1 \
+             $(TESTOUTDIR)/put_all_kinds.nc2 \
+             $(TESTOUTDIR)/put_all_kinds.nc5 \
+             $(TESTOUTDIR)/iput_all_kinds.nc1 \
+             $(TESTOUTDIR)/iput_all_kinds.nc2 \
+             $(TESTOUTDIR)/iput_all_kinds.nc5 \
              $(NC_FILES)
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump \
@@ -193,21 +197,21 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 4
+	$(srcdir)/parallel_run.sh 4 || exit 1
 
 ptest2: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 2 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 2
+	$(srcdir)/parallel_run.sh 2 || exit 1
 
 ptest6: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 6 MPI processes"
 	@echo "==========================================================="
 	$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 6
+	$(srcdir)/parallel_run.sh 6 || exit 1
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

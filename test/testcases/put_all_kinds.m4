@@ -106,7 +106,7 @@ define(`TEST_CDF_FORMAT',dnl
     ifelse(`$1', `NC_FORMAT_64BIT_OFFSET', `cmode |= NC_64BIT_OFFSET;',
            `$1', `NC_FORMAT_64BIT_DATA',   `cmode |= NC_64BIT_DATA;')
 
-    sprintf(fname, "%s.cdf%d",filename, $1);
+    sprintf(fname, "%s%d",filename, $1);
     err = ncmpi_create(MPI_COMM_WORLD, fname, cmode, info, &ncid);
     if (err != NC_NOERR) {
         printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
