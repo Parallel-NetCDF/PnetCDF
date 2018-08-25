@@ -141,6 +141,11 @@ put_varm(NC               *ncp,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) goto err_check;
 
+    if (buftype == MPI_DATATYPE_NULL) { /* buftype and bufcount are ignored */
+        bufcount = bnelems;
+        buftype = itype;
+    }
+
     /* because bnelems will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */
     if (bnelems > INT_MAX) {
@@ -413,6 +418,11 @@ get_varm(NC               *ncp,
                                 buftype, &itype, &el_size, &bnelems,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) goto err_check;
+
+    if (buftype == MPI_DATATYPE_NULL) { /* buftype and bufcount are ignored */
+        bufcount = bnelems;
+        buftype = itype;
+    }
 
     /* because bnelems will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */
