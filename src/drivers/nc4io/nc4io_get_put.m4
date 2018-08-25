@@ -159,6 +159,18 @@ nc4io_put_att(void         *ncdp,
      * value cannot be NULL when nelems > 0 */
     if (nelems && value == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
+    if (fIsSet(nc4p->mode, NC_NETCDF4) &&
+        fIsSet(nc4p->mode, NC_CLASSIC_MODEL) &&
+        !fIsSet(nc4p->flag, NC_MODE_DEF)) { /* when in data mode */
+        /* check if attribute already exists */
+        err = nc_inq_att(nc4p->ncid, varid, name, NULL, &len);
+        if (err == NC_ENOTATT) /* adding new attribute cannot be in data mode */
+            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+        if (err == NC_NOERR && nelems > len)
+            /* if attribute exists, nelems must be <= len */
+            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
+    }
+
     /* Convert from MPI_Offset to size_t */
     len = (size_t)nelems;
 
