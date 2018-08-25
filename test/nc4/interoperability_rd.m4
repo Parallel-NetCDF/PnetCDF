@@ -140,9 +140,9 @@ foreach(`dt', (`(`c', `schar', `signed char')', dnl
 
 
 int main(int argc, char **argv) {
-    int i, err, nerrs = 0;
+    int err, nerrs = 0;
     int rank, np;
-    int ncid, pncid;
+    int ncid;
     int vid[32];
     int did[2];
     char *filename = FILE_NAME;

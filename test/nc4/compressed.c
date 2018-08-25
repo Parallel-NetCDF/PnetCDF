@@ -17,7 +17,7 @@
 #define FNAME "gzip_example.nc"
 
 int main(int argc, char **argv) {
-    int i, err, nerrs=0, rank, np;
+    int err, nerrs=0, rank, np;
     int ncid, ndims, nvars;
     char *dir_name=".", filename[512];
 

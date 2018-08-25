@@ -21,7 +21,7 @@
 
 int main(int argc, char **argv) {
     char filename[256];
-    int  err, nerrs=0, ncid, cmode, rank, nprocs, format;
+    int  err, nerrs=0, ncid, cmode, rank, nprocs;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
