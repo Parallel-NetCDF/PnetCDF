@@ -61,6 +61,8 @@ create_file(char *filename, int cmode)
     MPI_Offset D3_len = 3;
     MPI_Offset D4_len = 4;
 
+    MPI_Offset num_records;
+
     /* variable ids */
     int c_id;
     int b_id;
@@ -2063,6 +2065,13 @@ create_file(char *filename, int cmode)
     err=ncmpi_put_vara(ncid, i444_id, i444_startset, i444_countset, i444_data, 0,MPI_DATATYPE_NULL); ERR
     }
 
+
+    err=ncmpi_inq_dimlen(ncid, Dr_dim, &num_records); ERR
+    if (num_records != 2) {
+        printf("Error at %s:%d expecting number of records = 2, but got %lld\n",
+               __FILE__,__LINE__,num_records);
+        return 1;
+    }
 
     err=ncmpi_close(ncid); ERR
     return 0;
