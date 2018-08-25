@@ -217,16 +217,15 @@ nc4io_begin_indep_data(void *ncdp)
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Make sure we are in data mode */
-    if (fIsSet(nc4p->flag, NC_MODE_DEF)){
+    if (fIsSet(nc4p->flag, NC_MODE_DEF))
         DEBUG_RETURN_ERROR(NC_EINDEFINE);
-    }
 
     /* Get number of variables */
     err = nc_inq(nc4p->ncid, NULL, &nvar, NULL, NULL);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Set all variables to indep mode */
-    for(i = 0; i < nvar; i++){
+    for (i=0; i<nvar; i++) {
         err = nc_var_par_access(nc4p->ncid, i, NC_INDEPENDENT);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
     }
@@ -244,16 +243,15 @@ nc4io_end_indep_data(void *ncdp)
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Make sure we are in data mode */
-    if (fIsSet(nc4p->flag, NC_MODE_DEF)){
+    if (fIsSet(nc4p->flag, NC_MODE_DEF))
         DEBUG_RETURN_ERROR(NC_EINDEFINE);
-    }
 
     /* Get number of variables */
     err = nc_inq(nc4p->ncid, NULL, &nvar, NULL, NULL);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Set all variables to coll mode */
-    for(i = 0; i < nvar; i++){
+    for (i=0; i<nvar; i++) {
         err = nc_var_par_access(nc4p->ncid, i, NC_COLLECTIVE);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
     }
@@ -319,8 +317,7 @@ nc4io_inq_misc(void       *ncdp,
                MPI_Offset *usage,
                MPI_Offset *buf_size)
 {
-    int i, err, flag, mpireturn;
-    char value[MPI_MAX_INFO_VAL];
+    int i, j, err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Get the file pathname which was used to open/create the ncid's file.
@@ -337,14 +334,15 @@ nc4io_inq_misc(void       *ncdp,
 
     /* Calculate number of record and fix sized variables
      * NOTE: We assume there are only 1 record dims in NetCDF 4 classic model
-     * NOTE: In NetCDF4 enhenced model, there can be multiple record dims, only the first one is considered as record dim here
+     * NOTE: In NetCDF4 enhenced model, there can be multiple record dims, only
+     * the first one is considered as record dim here
      */
     if (num_fix_varsp != NULL || num_rec_varsp != NULL || recsize != NULL) {
         int nvar, ndim;
         int *dims;
         int *vars;
         int unlimdim;
-        int nrec, nfix;
+        int nrec=0, nfix=0;
 
         /* Record dimid */
         err = nc_inq_unlimdim(nc4p->ncid, &unlimdim);
@@ -359,68 +357,47 @@ nc4io_inq_misc(void       *ncdp,
         }
 
         if (num_fix_varsp != NULL || num_rec_varsp != NULL){
-            int j;
 
             /* Get all variables */
             err = nc_inq_varids(nc4p->ncid, &nvar, NULL);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
             vars = NCI_Malloc(SIZEOF_INT * nvar);
-            if (vars == NULL){
-                DEBUG_RETURN_ERROR(NC_ENOMEM);
-            }
+            if (vars == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
             err = nc_inq_varids(nc4p->ncid, NULL, vars);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
             /* Iterate through all variables */
-            for (i = 0; i < nvar; i++){
+            for (i=0; i<nvar; i++) {
                 /* Get all dimensions */
                 err = nc_inq_varndims(nc4p->ncid, vars[i], &ndim);
                 if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
                 dims = NCI_Malloc(SIZEOF_INT * ndim);
-                if (dims == NULL){
-                    DEBUG_RETURN_ERROR(NC_ENOMEM);
-                }
+                if (dims == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
                 err = nc_inq_vardimid(nc4p->ncid, vars[i], dims);
                 if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
                 /* Iterate through all dimensions */
-                for (j = 0; j < ndim; j++){
-                    if (dims[j] == unlimdim){
+                for (j=0; j<ndim; j++)
+                    if (dims[j] == unlimdim)
                         break;
-                    }
-                }
 
                 NCI_Free(dims);
 
                 /* If non of the dimension is record dim, count as fixed var */
-                if (j == ndim){
-                    nfix += 1;
-                }
-                else{
-                    nrec += 1;
-                }
+                if (j == ndim) nfix += 1;
+                else           nrec += 1;
             }
-
             NCI_Free(vars);
 
-            if (num_fix_varsp != NULL){
-                *num_fix_varsp = nfix;
-            }
+            if (num_fix_varsp != NULL) *num_fix_varsp = nfix;
 
-            if (num_rec_varsp != NULL){
-                *num_rec_varsp = nrec;
-            }
+            if (num_rec_varsp != NULL) *num_rec_varsp = nrec;
         }
-
     }
 
     /* NetCDF does not expose any MPI related info */
-    if (striping_size != NULL) {
-        *striping_size = 0;
-    }
-    if (striping_count != NULL) {
-        *striping_count = 0;
-    }
+    if (striping_size  != NULL) *striping_size = 0;
+    if (striping_count != NULL) *striping_count = 0;
 
     /* Read only */
     if (put_size != NULL) *put_size = 0;
@@ -429,13 +406,11 @@ nc4io_inq_misc(void       *ncdp,
     if (get_size != NULL) *get_size = 0;
 
     /* NetCDF does not expose such info */
-    if (header_size != NULL) *header_size = 0;
+    if (header_size   != NULL) *header_size = 0;
     if (header_extent != NULL) *header_extent = 0;
 
     /* TODO: suporting nonblocking IO */
-    if (nreqs != NULL) {
-        *nreqs = 0;
-    }
+    if (nreqs != NULL) *nreqs = 0;
 
     /* We don't use user buffer */
     if (usage != NULL) *usage = 0;
@@ -452,16 +427,8 @@ nc4io_cancel(void *ncdp,
              int  *req_ids,
              int  *statuses)
 {
-    int err;
-    NC_nc4 *nc4p = (NC_nc4*)ncdp;
-
     /* We do not support nonblocking I/O so far */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    /* Since we treat nonblocking IO as blocking IO
-     * We don't need to wait for anything
-     */
-    return NC_NOERR;
 }
 
 int
@@ -471,16 +438,8 @@ nc4io_wait(void *ncdp,
            int  *statuses,
            int   reqMode)
 {
-    int err;
-    NC_nc4 *nc4p = (NC_nc4*)ncdp;
-
     /* We do not support nonblocking I/O so far */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    /* Since we treat nonblocking IO as blocking IO
-     * We don't need to wait for anything
-     */
-    return NC_NOERR;
 }
 
 int
@@ -490,16 +449,6 @@ nc4io_set_fill(void *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-
-    /* Not avaiable in read-only mode */
-    if (fIsSet(nc4p->flag, NC_MODE_RDONLY)){
-        DEBUG_RETURN_ERROR(NC_EPERM);
-    }
-
-    /* Make sure we are in define mode */
-    if (!fIsSet(nc4p->flag, NC_MODE_DEF)){
-        DEBUG_RETURN_ERROR(NC_ENOTINDEFINE);
-    }
 
     /* Call nc_set_fill */
     err = nc_set_fill(nc4p->ncid, fill_mode, old_fill_mode);
@@ -513,14 +462,8 @@ nc4io_fill_var_rec(void      *ncdp,
                    int        varid,
                    MPI_Offset recno)
 {
-    int err;
-    NC_nc4 *nc4p = (NC_nc4*)ncdp;
-
     /* NetCDF does not support this natively */
-    /* We assume NetCDF filled it automatically */
-    // DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
-    return NC_NOERR;
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 }
 
 int
@@ -542,14 +485,8 @@ nc4io_def_var_fill(void       *ncdp,
 int
 nc4io_sync_numrecs(void *ncdp)
 {
-    int err;
-    NC_nc4 *nc4p = (NC_nc4*)ncdp;
-
-    /* We assume NetCDF will take care of this internally
-     * Just pretend it's synced
-     */
-
-    return NC_NOERR;
+    /* Will NetCDF take care of this internally? */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 }
 
 int
@@ -559,9 +496,8 @@ nc4io_sync(void *ncdp)
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Make sure we are in data mode */
-    if (fIsSet(nc4p->flag, NC_MODE_DEF)){
+    if (fIsSet(nc4p->flag, NC_MODE_DEF))
         DEBUG_RETURN_ERROR(NC_EINDEFINE);
-    }
 
     /* Call nc_sync */
     err = nc_sync(nc4p->ncid);
@@ -574,6 +510,6 @@ int
 nc4io_flush(void *ncdp)
 {
     // NetCDF does not have flush
-    return NC_NOERR;
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 }
 
