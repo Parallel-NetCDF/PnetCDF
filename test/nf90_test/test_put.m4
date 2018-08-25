@@ -381,7 +381,7 @@ define([CHECK_ATTS],dnl
                     if (nInExtRange .eq. length .and.  &
                         nInIntRange .eq. length) then
                         if (err .ne. NF90_NOERR) &
-                            call error(ErrFunc(err))
+                            call errore('GetAtt($1): ',err)
                     else
                         if (err .ne. NF90_NOERR .and. err .ne. NF90_ERANGE) &
                             call errore('OK or Range error: ', err)
@@ -498,7 +498,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
             do 4, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), index)
                 if (err .ne. NF90_NOERR)  &
-                    call error('error in index2indexes 1')
+                    call errore('index2indexes 1: ',err)
                 val = hash_$1(var_type(i),var_rank(i), &
                               index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, value, val)
@@ -507,12 +507,12 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                     val = ARITH_VAR1($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('PutVarAll: ', err)
+                            call errore('PutVarAll($1): ',err)
                     else
                         if (bb_enable) then
                             ! Flush burst buffer to reveal potential error
                             if (err .ne. NF90_NOERR) &
-                                call errore('PutVarAll: ', err)
+                                call errore('PutVarAll($1): ',err)
                             err = nfmpi_flush(ncid)
                         endif
                         if (err .ne. NF90_ERANGE) &
@@ -601,11 +601,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
 !
             err = APIFunc(inquire)(ncid, formatNum=format)
             if (err .ne. NF90_NOERR) &
-                call error('error in APIFunc(inquire)')
+                call errore('APIFunc(inquire): ',err)
 
             ! skip record variables for zero-length write requests
             ! because no record has been written yet
-            if (format .EQ. NF90_FORMAT_NETCDF4 .AND. &
+            if ((format .EQ. NF90_FORMAT_NETCDF4 .OR. &
+                 format .EQ. NF90_FORMAT_NETCDF4_CLASSIC) .AND. &
                 var_rank(i) .ge. 1 .and. &
                 var_dimid(var_rank(i),i) .eq. RECDIM) cycle
 
@@ -617,7 +618,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
             do 4, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), index)
                 if (err .ne. NF90_NOERR)  &
-                    call error('error in index2indexes 1')
+                    call errore('index2indexes 1: ',err)
                 val = hash_$1(var_type(i), var_rank(i), &
                               index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
@@ -629,12 +630,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
             if (canConvert) then
                 if (allInExtRange) then
                     if (err .ne. NF90_NOERR) &
-                        call errore('PutVarAll: ', err)
+                        call errore('PutVarAll($1): ',err)
                 else
                     if (bb_enable) then
                         ! Flush burst buffer to reveal potential error
                         if (err .ne. NF90_NOERR) &
-                            call errore('PutVarAll: ', err)
+                            call errore('PutVarAll($1): ',err)
                         err = nfmpi_flush(ncid)
                     endif
                     if (err .ne. NF90_ERANGE .and. &
@@ -659,13 +660,13 @@ define([TEST_NFMPI_PUT_VAR],dnl
         index(1) = NRECS
         err = PutVarAll(ncid, vid, 'x', index)
         if (err .ne. NF90_NOERR) &
-            call errore('PutVarAll: ', err)
+            call errore('PutVarAll($1): ',err)
 
         if (bb_enable) then
             ! Flush burst buffer to reveal potential error
             err = nfmpi_flush(ncid)
             if (err .ne. NF90_NOERR) &
-                call errore('PutVarAll: ', err)
+                call errore('PutVarAll($1): ',err)
         endif
 
         do 5 i = 1, numVars
@@ -687,7 +688,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                 do 7, j = 1, INT(nels)
                     err = index2indexes(j, var_rank(i), var_shape(1,i), index)
                     if (err .ne. NF90_NOERR)  &
-                        call error('error in index2indexes()')
+                        call errore('index2indexes(): ',err)
                     val = hash_$1(var_type(i), var_rank(i), &
                                   index, NFT_ITYPE($1))
                     MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
@@ -699,12 +700,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('PutVarAll: ', err)
+                            call errore('PutVarAll($1): ',err)
                     else
                         if (bb_enable) then
                             ! Flush burst buffer to reveal potential error
                             if (err .ne. NF90_NOERR) &
-                                call errore('PutVarAll: ', err)
+                                call errore('PutVarAll($1): ',err)
                             err = nfmpi_flush(ncid)
                         endif
                         if (err .ne. NF90_ERANGE) &
@@ -838,10 +839,11 @@ define([TEST_NFMPI_PUT_VARA],dnl
 !
             err = APIFunc(inquire)(ncid, formatNum=format)
             if (err .ne. NF90_NOERR) &
-                call error('error in APIFunc(inquire)')
+                call errore('APIFunc(inquire): ',err)
 
             ! skip zero-length write requests
-            if (format .EQ. NF90_FORMAT_NETCDF4) goto 99
+            if (format .EQ. NF90_FORMAT_NETCDF4 .OR. &
+                format .EQ. NF90_FORMAT_NETCDF4_CLASSIC) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -854,7 +856,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 else
 #ifdef RELAX_COORD_BOUND
                     if (err .ne. NF90_NOERR) &
-                        call error(ErrFunc(err))
+                        call errore('PutVarAll($1): ',err)
 #else
                     if (err .ne. NF90_EINVALCOORDS) &
                         call errore('bad start: ', err)
@@ -876,7 +878,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
             err = PutVarAll(ncid, i, value, start, edge)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
-                    call error(ErrFunc(err))
+                    call errore('PutVarAll($1): ',err)
             else
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
@@ -889,7 +891,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 ! Flush burst buffer to reveal potential error
                 err = nfmpi_flush(ncid)
                 if (err .ne. NF90_NOERR) &
-                    call errore('PutVarAll: ', err)
+                    call errore('PutVarAll($1): ',err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -916,7 +918,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 do 10, j = 1, INT(nels)
                     err = index2indexes(j, var_rank(i), edge, index)
                     if (err .ne. NF90_NOERR)  &
-                        call error('error in index2indexes 1')
+                        call errore('index2indexes 1: ',err)
                     do 11, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
 11                  continue
@@ -931,12 +933,12 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR)  &
-                            call error(ErrFunc(err))
+                            call errore('PutVarAll($1): ',err)
                     else
                         if (bb_enable) then
                             ! Flush burst buffer to reveal potential error
                             if (err .ne. NF90_NOERR) &
-                                call errore('PutVarAll: ', err)
+                                call errore('PutVarAll($1): ',err)
                             err = nfmpi_flush(ncid)
                         endif
                         if (err .ne. NF90_ERANGE) &
@@ -1088,10 +1090,11 @@ define([TEST_NFMPI_PUT_VARS],dnl
 !
             err = APIFunc(inquire)(ncid, formatNum=format)
             if (err .ne. NF90_NOERR) &
-                call error('error in APIFunc(inquire)')
+                call errore('APIFunc(inquire): ',err)
 
             ! skip zero-length write requests
-            if (format .EQ. NF90_FORMAT_NETCDF4) goto 99
+            if (format .EQ. NF90_FORMAT_NETCDF4 .OR. &
+                format .EQ. NF90_FORMAT_NETCDF4_CLASSIC) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -1104,7 +1107,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 else
 #ifdef RELAX_COORD_BOUND
                     if (err .ne. NF90_NOERR) &
-                        call error(ErrFunc(err))
+                        call errore('PutVarAll($1): ',err)
 #else
                     if (err .ne. NF90_EINVALCOORDS) &
                         call errore('bad start: ', err)
@@ -1126,7 +1129,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
             err = PutVarAll(ncid, i, value, start, edge, stride)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
-                    call error(ErrFunc(err))
+                    call errore('PutVarAll($1): ',err)
             else
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
@@ -1139,7 +1142,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 ! Flush burst buffer to reveal potential error
                 err = nfmpi_flush(ncid)
                 if (err .ne. NF90_NOERR) &
-                    call errore('PutVarAll: ', err)
+                    call errore('PutVarAll($1): ',err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1172,7 +1175,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 do 10, m = 1, INT(nstarts)
                     err = index2indexes(m, var_rank(i), sstride, index)
                     if (err .ne. NF90_NOERR) &
-                        call error('error in index2indexes')
+                        call errore('index2indexes: ',err)
                     nels = 1
                     do 11, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
@@ -1193,7 +1196,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                         err = index2indexes(j, var_rank(i), count,  &
                                             index2)
                         if (err .ne. NF90_NOERR) &
-                            call error('error in index2indexes')
+                            call errore('index2indexes: ',err)
                         do 13, d = 1, var_rank(i)
                             index2(d) = index(d) +  &
                                         (index2(d)-1) * stride(d)
@@ -1211,12 +1214,12 @@ define([TEST_NFMPI_PUT_VARS],dnl
                     if (canConvert) then
                         if (allInExtRange) then
                             if (err .ne. NF90_NOERR)  &
-                                call error(ErrFunc(err))
+                                call errore('PutVarAll($1): ',err)
                         else
                             if (bb_enable) then
                                 ! Flush burst buffer to reveal potential error
                                 if (err .ne. NF90_NOERR) &
-                                    call errore('PutVarAll: ', err)
+                                    call errore('PutVarAll($1): ',err)
                                 err = nfmpi_flush(ncid)
                             endif
                             if (err .ne. NF90_ERANGE) &
@@ -1378,10 +1381,11 @@ define([TEST_NFMPI_PUT_VARM],dnl
 !
             err = APIFunc(inquire)(ncid, formatNum=format)
             if (err .ne. NF90_NOERR) &
-                call error('error in APIFunc(inquire)')
+                call errore('APIFunc(inquire): ',err)
 
             ! skip zero-length write requests
-            if (format .EQ. NF90_FORMAT_NETCDF4) goto 99
+            if (format .EQ. NF90_FORMAT_NETCDF4 .OR. &
+                format .EQ. NF90_FORMAT_NETCDF4_CLASSIC) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -1394,7 +1398,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 else
 #ifdef RELAX_COORD_BOUND
                     if (err .ne. NF90_NOERR) &
-                        call error(ErrFunc(err))
+                        call errore('PutVarAll($1): ',err)
 #else
                     if (err .ne. NF90_EINVALCOORDS) &
                         call errore('bad start: ', err)
@@ -1416,7 +1420,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
             err = PutVarAll(ncid, i, value, start, edge, stride, imap)
             if (canConvert) then
                 if (err .ne. NF90_NOERR)  &
-                    call error(ErrFunc(err))
+                    call errore('PutVarAll($1): ',err)
             else
                 if (err .ne. NF90_ECHAR) &
                     call errore('wrong type: ', err)
@@ -1429,7 +1433,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 ! Flush burst buffer to reveal potential error
                 err = nfmpi_flush(ncid)
                 if (err .ne. NF90_NOERR) &
-                    call errore('PutVarAll: ', err)
+                    call errore('PutVarAll($1): ',err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */
@@ -1462,7 +1466,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 do 10, m = 1, INT(nstarts)
                     err = index2indexes(m, var_rank(i), sstride, index)
                     if (err .ne. NF90_NOERR) &
-                        call error('error in index2indexes')
+                        call errore('index2indexes: ',err)
                     nels = 1
                     do 11, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
@@ -1490,7 +1494,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                         err = index2indexes(j, var_rank(i), count,  &
                                             index2)
                         if (err .ne. NF90_NOERR) &
-                            call error('error in index2indexes')
+                            call errore('index2indexes: ',err)
                         do 15, d = 1, var_rank(i)
                             index2(d) = index(d) +  &
                                 (index2(d)-1) * stride(d)
@@ -1508,12 +1512,12 @@ define([TEST_NFMPI_PUT_VARM],dnl
                     if (canConvert) then
                         if (allInExtRange) then
                             if (err .ne. NF90_NOERR) &
-                                call error(ErrFunc(err))
+                                call errore('PutVarAll($1): ',err)
                         else
                             if (bb_enable) then
                                 ! Flush burst buffer to reveal potential error
                                 if (err .ne. NF90_NOERR) &
-                                    call errore('PutVarAll: ', err)
+                                    call errore('PutVarAll($1): ',err)
                                 err = nfmpi_flush(ncid)
                             endif
                             if (err .ne. NF90_ERANGE) &
@@ -1606,7 +1610,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
                                            ATT_TYPE(j,i), ATT_LEN_LL, value)
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
-                            call errore('PutAtt: ', err)
+                            call errore('PutAtt($1): ', err)
                     else
                         if (err .ne. NF90_ERANGE) &
                             call errore('range error: ', err)
@@ -1771,7 +1775,7 @@ TEST_NFMPI_PUT_VARM(double)
 3                   continue
                     err = PutAtt(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN(j,i)))
                     if (err .ne. NF90_NOERR) &
-                        call error(ErrFunc(err))
+                        call errore('PutVarAll($1): ',err)
                 end if
 2           continue
 1       continue

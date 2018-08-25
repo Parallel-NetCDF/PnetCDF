@@ -2525,12 +2525,13 @@ ifdef(`PNETCDF', `
                 error("put_att_double: %s", APIFunc(strerror)(err));
         }
 #else
-	/* netcdf 4.6.1 and prior fail to support type conversion for attribute
-	 * _FillValue and calling nc_set_fill does not enable fill mode for all
-	 * variables.  Here we manually convert and call ncmpi_def_var_fill
-         * for individual variables.
+        /* Netcdf 4.6.1 and prior fail to support type conversion for attribute
+         * _FillValue. In addition, calling nc_set_fill() does not change the
+         * fill mode for all variables that have been defined. To avoid the
+         * conversion problem, we manually convert the fill values and call
+         * ncmpi_def_var_fill() to enable fill mode for individual variables.
          */
-        signed char      fill_sc = (signed char)        fill;
+        signed char        fill_sc = (signed char)        fill;
         unsigned char      fill_uc = (unsigned char)      fill;
                  short     fill_sh = (short)              fill;
                  int       fill_in = (int)                fill;

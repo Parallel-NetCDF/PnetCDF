@@ -456,8 +456,10 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = ncmpi_flush(ncid);
-            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -673,7 +675,7 @@ TestFunc(var)_$1(VarArgs)
                     EXPECT_ERR(NC_NOERR, err)
                 ELSE_NOK
             } else {
-                if (bb_enabled){
+                if (bb_enabled) {
                     /* when using burst buffering, NC_ERANGE is reported
                        at the flushing time */
                     IF (err != NC_NOERR)
@@ -802,8 +804,10 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = ncmpi_flush(ncid);
-            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -817,8 +821,10 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) {
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = ncmpi_flush(ncid);
-            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
@@ -858,7 +864,8 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4) goto edge1;
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+            goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
@@ -1053,8 +1060,10 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = ncmpi_flush(ncid);
-            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1068,8 +1077,10 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = ncmpi_flush(ncid);
-            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
@@ -1114,7 +1125,8 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4) goto edge1;
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+            goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
@@ -1332,8 +1344,10 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = ncmpi_flush(ncid);
-            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
         }
         else IF (err != NC_EINVALCOORDS) {
             EXPECT_ERR(NC_EINVALCOORDS, err)
@@ -1347,8 +1361,10 @@ ifdef(`PNETCDF',`dnl
         }
         else if (var_rank[i] == 0) { /* scalar variable */
             IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-            err = ncmpi_flush(ncid);
-            IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            if (bb_enabled) {
+                err = ncmpi_flush(ncid);
+                IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+            }
         }
         else IF (err != NC_EEDGE) {
             EXPECT_ERR(NC_EEDGE, err)
@@ -1393,7 +1409,8 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4) goto edge1;
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+            goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */

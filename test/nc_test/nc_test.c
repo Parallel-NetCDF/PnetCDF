@@ -77,7 +77,7 @@ usage(char *progname)
     error("   [-2] (with -c) create file with CDF-2 format\n" );
     error("   [-5] (with -c) create file with CDF-5 format\n" );
 #ifdef ENABLE_NETCDF4
-    error("   [-4] (with -c) create file with NetCDF-4 format\n" );
+    error("   [-4] (with -c) create file with NetCDF-4 classic-model format\n" );
 #endif
     error("   [-n <MAX_NMPT>] max. number of messages per test (Default: 8)\n");
     error("   [-d directory] directory for storing input/output files\n");
@@ -205,7 +205,7 @@ main(int argc, char *argv[])
     if (cdf_format == 2)
         ncmpi_set_default_format(NC_FORMAT_CDF2, NULL);
     else if (cdf_format == 4)
-        ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
+        ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, NULL);
     else if (cdf_format == 5)
         ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
     else
@@ -223,7 +223,7 @@ main(int argc, char *argv[])
 
     cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     if (cdf_format == 4)
-        sprintf(cmd_str, "*** TESTING C   %s for NetCDF4 format ", basename(argv[0]));
+        sprintf(cmd_str, "*** TESTING C   %s for NetCDF4 classic-model format ", basename(argv[0]));
     else
         sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", basename(argv[0]), cdf_format);
     printf("%-66s ------ ",cmd_str);
@@ -409,7 +409,8 @@ main(int argc, char *argv[])
         NC_TEST2(ncmpi_redef, numGatts, numVars);
         /* NC_TEST(ncmpi_enddef);  redundant, as it calls test_ncmpi_redef() */
         NC_TEST2(ncmpi_sync, numGatts, numVars);
-        NC_TEST2(ncmpi_flush, numGatts, numVars);
+        if (cdf_format != 4)
+            NC_TEST2(ncmpi_flush, numGatts, numVars);
         NC_TEST2(ncmpi_abort, numGatts, numVars);
         NC_TEST1(ncmpi_def_dim, numVars);
         NC_TEST(ncmpi_rename_dim);
