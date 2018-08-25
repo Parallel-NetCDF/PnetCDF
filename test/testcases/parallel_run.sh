@@ -42,8 +42,8 @@ for i in ${check_PROGRAMS} ; do
         # put_all_kinds and iput_all_kinds output 3 files
         if test "$i" = put_all_kinds -o "$i" = iput_all_kinds ; then
            for k in 1 2 5 ; do
-               # echo "--- validating file ${TESTOUTDIR}/$i.nc.cdf$k"
-               ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc.cdf$k
+               # echo "--- validating file ${TESTOUTDIR}/$i.nc$k"
+               ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc$k
            done
         else
            # echo "--- validating file ${TESTOUTDIR}/$i.nc"
@@ -60,10 +60,10 @@ for i in ${check_PROGRAMS} ; do
            # put_all_kinds and iput_all_kinds output 3 files
            if test "$i" = put_all_kinds -o "$i" = iput_all_kinds ; then
               for k in 1 2 5 ; do
-                  # echo "--- validating file ${TESTOUTDIR}/$i.bb.nc.cdf$k"
-                  ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc.cdf$k
-                  # echo "--- ncmpidiff $i.nc.cdf$k $i.bb.nc.cdf$k ---"
-                  ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc.cdf$k ${TESTOUTDIR}/$i.bb.nc.cdf$k
+                  # echo "--- validating file ${TESTOUTDIR}/$i.bb.nc$k"
+                  ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc$k
+                  # echo "--- ncmpidiff $i.nc$k $i.bb.nc$k ---"
+                  ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc$k ${TESTOUTDIR}/$i.bb.nc$k
               done
               continue
            else
