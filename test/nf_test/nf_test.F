@@ -26,7 +26,7 @@ C implementation of the netCDF library.
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
 #ifdef ENABLE_NETCDF4
-        call error('   [-4] test NetCDF-4 format' )
+        call error('   [-4] test NetCDF-4 classic-model format' )
 #endif
         call error('   [-r] Just do read-only tests' )
         call error(
@@ -474,7 +474,7 @@ C implementation of the netCDF library.
                             extra_flags = NF_64BIT_OFFSET
                         else if (opt .eq. '4') then
                             cdf_format = 4
-                            extra_flags = NF_NETCDF4
+                            extra_flags=IOR(NF_NETCDF4,NF_CLASSIC_MODEL)
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF_64BIT_DATA
@@ -701,7 +701,9 @@ C           /* Test write functions */
             call test('nfmpi_redef', test_nfmpi_redef)
             call test('nfmpi_enddef', test_nfmpi_enddef)
             call test('nfmpi_sync', test_nfmpi_sync)
-            call test('nfmpi_flush', test_nfmpi_flush)
+            if (cdf_format .ne. 4) then
+                call test('nfmpi_flush', test_nfmpi_flush)
+            endif
             call test('nfmpi_abort', test_nfmpi_abort)
             call test('nfmpi_def_dim', test_nfmpi_def_dim)
             call test('nfmpi_rename_dim', test_nfmpi_rename_dim)

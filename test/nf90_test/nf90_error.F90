@@ -76,5 +76,5 @@
 #include "tests.inc"
 
         nfails = nfails + 1
-        call errorc(msg, nf90mpi_strerror(err))
+        call errorc(msg, nf90mpi_strerrno(err))
         end

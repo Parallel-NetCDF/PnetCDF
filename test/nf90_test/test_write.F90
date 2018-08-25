@@ -699,7 +699,7 @@
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_delete(scratch, info)
         if (err .ne. NF90_NOERR) &
-            call errori('delete of scratch file failed: ', err)
+            call errore('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
 
@@ -828,9 +828,9 @@
         if (name .ne. 'abc') &
             call errorc('Unexpected name: ', name)
         if (datatype .ne. NF90_SHORT) &
-            call error('Unexpected datatype')
+            call errori('Unexpected datatype: ',datatype)
         if (ndims .ne. 0) &
-            call error('Unexpected rank')
+            call errori('Unexpected rank: ',ndims)
         err = nf90mpi_def_var(ncid, BAD_NAME, NF90_SHORT, varid=vid)
         if (err .ne. NF90_EBADNAME) then
             call errore('bad name: ', err)
@@ -883,7 +883,7 @@
                 nok = nok + 1
             endif
             if (vid .ne. i) &
-                call error('Unexpected varid')
+                call errori('Unexpected varid: ',vid)
 1       continue
 
 !           /* try bad dim ids */
@@ -966,7 +966,7 @@
             if (err .ne. NF90_NOERR) &
                 call errore('nf90mpi_inq_varid: ', err)
             if (vid .ne. i) &
-                call error('Unexpected varid')
+                call errori('Unexpected varid:',vid)
 1       continue
 
 !           /* Change to data mode */
@@ -992,7 +992,7 @@
             if (err .ne. NF90_NOERR) &
                 call errore('nf90mpi_inq_varid: ', err)
             if (vid .ne. i) &
-                call error('Unexpected varid')
+                call errori('Unexpected varid: ',vid)
 2       continue
 
         call put_vars(ncid)
@@ -1157,7 +1157,7 @@
                 if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_inquire_attribute: ', err)
                 if (datatype .ne. NF90_CHAR) &
-                    call error('Unexpected type')
+                    call errori('Unexpected type: ',datatype)
                 if (length .ne. 1) &
                     call error('Unexpected length')
                 err = nf90mpi_get_att(ncid_out, i, 'a', value)
@@ -1251,7 +1251,7 @@
                 if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_inquire_attribute: ', err)
                 if (attnum .ne. j) &
-                    call error('Unexpected attnum')
+                    call errori('Unexpected attnum: ',attnum)
 2           continue
 1       continue
 
@@ -1634,7 +1634,7 @@
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
                 if (err .ne. NF90_NOERR) &
-                    call error('error in index2indexes()')
+                    call errore('index2indexes(): ',err)
                 if (var_type(i) .eq. NF90_CHAR) then
                     err = nf90mpi_get_var_all(ncid, i, text, index)
                     if (err .ne. NF90_NOERR) &
@@ -1716,7 +1716,7 @@
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
                 if (err .ne. NF90_NOERR) &
-                    call error('error in index2indexes')
+                    call errore('index2indexes: ',err)
                 if (var_type(i) .eq. NF90_CHAR) then
                     err = nf90mpi_get_var_all(ncid, i, text, index)
                     if (err .ne. NF90_NOERR) &

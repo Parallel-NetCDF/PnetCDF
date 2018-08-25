@@ -37,7 +37,7 @@
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
 #ifdef ENABLE_NETCDF4
-        call error('   [-4] test NetCDF-4 format' )
+        call error('   [-4] test NetCDF-4 classic-model format' )
 #endif
         call error('   [-r] Just do read-only tests' )
         call error( &
@@ -479,7 +479,7 @@
                             extra_flags = NF90_64BIT_OFFSET
                         else if (opt .eq. '4') then
                             cdf_format = 4
-                            extra_flags = NF90_NETCDF4
+                            extra_flags = IOR(NF90_NETCDF4, NF90_CLASSIC_MODEL)
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF90_64BIT_DATA
@@ -701,7 +701,9 @@
             call test('nf90mpi_redef', test_nf90mpi_redef)
 !  test_nf90mpi_enddef calls test_nf90mpi_redef, no need to repeaat
             call test('nf90mpi_sync', test_nf90mpi_sync)
-            call test('nf90mpi_flush', test_nf90mpi_flush)
+            if (cdf_format .NE. 4) then
+                call test('nf90mpi_flush', test_nf90mpi_flush)
+            endif
             call test('nf90mpi_abort', test_nf90mpi_abort)
             call test('nf90mpi_def_dim', test_nf90mpi_def_dim)
             call test('nf90mpi_rename_dim', test_nf90mpi_rename_dim)

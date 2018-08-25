@@ -49,7 +49,8 @@ inRange_uchar(const int     cdf_format,
 {
     /* check value of type xtype if within uchar range */
 
-    if (cdf_format <= NC_FORMAT_CDF2 && xtype == NC_BYTE) {
+    if ((cdf_format <= NC_FORMAT_CDF2 ||
+         cdf_format == NC_FORMAT_NETCDF4_CLASSIC) && xtype == NC_BYTE) {
         /* netCDF specification make a special case for type conversion between
          * uchar and NC_BYTE: do not check for range error. See
          * http://www.unidata.ucar.edu/software/netcdf/docs/data_type.html#type_conversion
@@ -569,7 +570,8 @@ hash4(const int         cdf_format,
      * unsigned. Thus, no NC_ERANGE error can occur converting between NC_BYTE
      * and unsigned char.
      */
-    if (cdf_format < NC_FORMAT_CDF5 &&
+    if ((cdf_format <= NC_FORMAT_CDF2 ||
+         cdf_format == NC_FORMAT_NETCDF4_CLASSIC) &&
         itype == NCT_UCHAR && xtype == NC_BYTE &&
         result >= -128 && result < 0)
         result += 256;

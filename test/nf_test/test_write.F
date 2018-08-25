@@ -439,6 +439,10 @@ C    try after writing variable
         integer ngatts
         integer recdim
         integer nok, flags
+        integer infoused
+        logical flag
+        character*(MPI_MAX_INFO_VAL) hint
+
         nok = 0
 
 C           /* BAD_ID test */
@@ -533,9 +537,17 @@ C           /* try nfmpi_abort in data mode - should just close */
         call put_vars(ncid)
 
         ! Flush burst buffer to reveal potential error
-        err = nfmpi_flush(ncid)
-        if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_flush: ', err)
+        err = nfmpi_inq_file_info(ncid, infoused)
+        if (err .eq. NF_NOERR) then
+            call MPI_Info_get(infoused, "nc_burst_buf",
+     +           MPI_MAX_INFO_VAL, hint, flag, err)
+            if (flag) then
+                err = nfmpi_flush(ncid)
+                if (err .ne. NF_NOERR)
+     +              call errore('nfmpi_flush: ', err)
+            endif
+            call MPI_Info_free(infoused, err);
+        endif
 
         err = nfmpi_abort(ncid)
         if (err .ne. NF_NOERR) then

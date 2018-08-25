@@ -246,14 +246,14 @@ C
                 err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                              index)
                 if (err .ne. NF_NOERR)
-     +              call error('error in index2indexes()')
+     +              call errore('index2indexes(): ',err)
                 expect = hash4(var_type(i), var_rank(i), index)
                 err = GetVar1($1)(ncid, i, index, value)
                 if (.NOT. inRange3(expect,datatype,NFT_ITYPE($1)))
      +              go to 3
                 if (in_internal_range(NFT_ITYPE($1), expect)) then
                     if (err .ne. NF_NOERR) then
-                        call errore (
+                        call errore(
      +                  'GetVar1($1): ', err)
                     else
                         val = MAKE_ARITH_VAR1($1,value)
@@ -355,8 +355,8 @@ C
      +                                  ATT_NAME(j,i), value)
                     if (nInExtRange .eq. length .and.
      +                  nInIntRange .eq. length) then
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
+                        if (err .ne. NF_NOERR) call errore(
+     +                      'GetAtt($1): ',err)
                     else
                         if (err .ne. NF_NOERR .and. err .ne. NF_ERANGE)
      +                      call errore('OK or Range error: ', err)
@@ -476,7 +476,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                 err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                              index)
                 if (err .ne. NF_NOERR)
-     +              call error('error in index2indexes 1')
+     +              call errore('index2indexes 1: ',err)
                 val = hash_$1(var_type(i),var_rank(i),
      +                            index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, value, val)
@@ -484,12 +484,12 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
+                        if (err .ne. NF_NOERR) call errore(
+     +                      'PutVar1All($1): ', err)
                     else
                         if (bb_enable) then
-                            if (err .ne. NF_NOERR)
-     +                          call error(ErrFunc(err))
+                            if (err .ne. NF_NOERR) call errore(
+     +                          'PutVar1All($1): ', err)
                             ! Flush burst buffer to reveal potential error
                             err = nfmpi_flush(ncid)
                         endif
@@ -577,11 +577,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
 !
             err = nfmpi_inq_format(ncid, format)
             if (err .ne. NF_NOERR)
-     +          call error('error in nfmpi_inq_format')
+     +          call errore('nfmpi_inq_format: ',err)
 
             ! skip record variables for zero-length write requests
             ! because no record has been written yet
-            if (format .EQ. NF_FORMAT_NETCDF4 .AND.
+            if ((format .EQ. NF_FORMAT_NETCDF4 .OR.
+     +           format .EQ. NF_FORMAT_NETCDF4_CLASSIC) .AND.
      +          var_rank(i) .ge. 1 .and.
      +          var_dimid(var_rank(i),i) .eq. RECDIM) cycle
 
@@ -594,7 +595,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                 err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                              index)
                 if (err .ne. NF_NOERR)
-     +              call error('error in index2indexes 1')
+     +              call errore('index2indexes 1: ',err)
                 val = hash_$1(var_type(i), var_rank(i),
      +                        index, NFT_ITYPE($1))
                 MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
@@ -605,12 +606,12 @@ define([TEST_NFMPI_PUT_VAR],dnl
             err = PutVarAll($1)(ncid, i, value)
             if (canConvert) then
                 if (allInExtRange) then
-                    if (err .ne. NF_NOERR)
-     +                  call error(ErrFunc(err))
+                    if (err .ne. NF_NOERR) call errore(
+     +                  'PutVarAll($1): ',err)
                 else
                     if (bb_enable) then
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
+                        if (err .ne. NF_NOERR) call errore(
+     +                      'PutVarAll($1): ',err)
                         ! Flush burst buffer to reveal potential error
                         err = nfmpi_flush(ncid)
                     endif
@@ -666,7 +667,7 @@ C           Only test record variables here
                     err = index2indexes(j, var_rank(i), var_shape(1,i),
      +                              index)
                     if (err .ne. NF_NOERR)
-     +                  call error('error in index2indexes()')
+     +                  call errore('index2indexes(): ',err)
                     val = hash_$1(var_type(i), var_rank(i),
      +                            index, NFT_ITYPE($1))
                     MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
@@ -677,12 +678,12 @@ C           Only test record variables here
                 err = PutVarAll($1)(ncid, i, value)
                 if (canConvert) then
                     if (allInExtRange) then
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
+                        if (err .ne. NF_NOERR) call errore(
+     +                      'PutVarAll($1): ',err)
                     else
                         if (bb_enable) then
-                            if (err .ne. NF_NOERR)
-     +                          call error(ErrFunc(err))
+                            if (err .ne. NF_NOERR) call errore(
+     +                          'PutVarAll($1): ',err)
                             ! Flush burst buffer to reveal potential error
                             err = nfmpi_flush(ncid)
                         endif
@@ -822,10 +823,11 @@ C           /* Check correct error returned even when nothing to put */
 !
             err = nfmpi_inq_format(ncid, format)
             if (err .ne. NF_NOERR)
-     +          call error('error in nfmpi_inq_format')
+     +          call errore('nfmpi_inq_format: ',err)
 
             ! skip zero-length write requests
-            if (format .EQ. NF_FORMAT_NETCDF4) goto 99
+            if (format .EQ. NF_FORMAT_NETCDF4 .OR.
+     +          format .EQ. NF_FORMAT_NETCDF4_CLASSIC) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -860,8 +862,8 @@ C           /* Check correct error returned even when nothing to put */
             err = PutVaraAll($1)(ncid, i,
      +            start, edge, value)
             if (canConvert) then
-                if (err .ne. NF_NOERR)
-     +              call error(ErrFunc(err))
+                if (err .ne. NF_NOERR) call errore(
+     +              'PutVaraAll($1): ',err)
             else
                 if (err .ne. NF_ECHAR)
      +              call errore('wrong type: ', err)
@@ -901,7 +903,7 @@ C           /* Check correct error returned even when nothing to put */
                 do 10, j = 1, nels
                     err = index2indexes(j, var_rank(i), edge, index)
                     if (err .ne. NF_NOERR)
-     +                  call error('error in index2indexes 1')
+     +                  call errore('index2indexes 1: ',err)
                     do 11, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
 11                  continue
@@ -916,12 +918,12 @@ C           /* Check correct error returned even when nothing to put */
      +                  edge, value)
                 if (canConvert) then
                     if (allInExtRange) then
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
+                        if (err .ne. NF_NOERR) call errore(
+     +                      'PutVaraAll($1): ',err)
                     else
                         if (bb_enable) then
-                            if (err .ne. NF_NOERR)
-     +                          call error(ErrFunc(err))
+                            if (err .ne. NF_NOERR) call errore(
+     +                          'PutVaraAll($1): ',err)
                             ! Flush burst buffer to reveal potential error
                             err = nfmpi_flush(ncid)
                         endif
@@ -1068,10 +1070,11 @@ define([TEST_NFMPI_PUT_VARS],dnl
 !
             err = nfmpi_inq_format(ncid, format)
             if (err .ne. NF_NOERR)
-     +          call error('error in nfmpi_inq_format')
+     +          call errore('nfmpi_inq_format: ',err)
 
             ! skip zero-length write requests
-            if (format .EQ. NF_FORMAT_NETCDF4) goto 99
+            if (format .EQ. NF_FORMAT_NETCDF4 .OR.
+     +          format .EQ. NF_FORMAT_NETCDF4_CLASSIC) goto 99
 
 C           /* Check correct error returned even when nothing to put */
             do 4, j = 1, var_rank(i)
@@ -1110,8 +1113,8 @@ C           /* Check correct error returned even when nothing to put */
             err = PutVarsAll($1)(ncid, i,
      +                                  start, edge, stride, value)
             if (canConvert) then
-                if (err .ne. NF_NOERR)
-     +              call error(ErrFunc(err))
+                if (err .ne. NF_NOERR) call errore(
+     +              'PutVarsAll($1): ',err)
             else
                 if (err .ne. NF_ECHAR)
      +              call errore('wrong type: ', err)
@@ -1157,7 +1160,7 @@ C           /* Check correct error returned even when nothing to put */
                 do 10, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
                     if (err .ne. NF_NOERR)
-     +                  call error('error in index2indexes')
+     +                  call errore('index2indexes: ',err)
                     nels = 1
                     do 11, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
@@ -1178,7 +1181,7 @@ C*/
                         err = index2indexes(j, var_rank(i), count,
      +                                      index2)
                         if (err .ne. NF_NOERR)
-     +                      call error('error in index2indexes')
+     +                      call errore('index2indexes: ',err)
                         do 13, d = 1, var_rank(i)
                             index2(d) = index(d) +
      +                                  (index2(d)-1) * stride(d)
@@ -1196,12 +1199,12 @@ C*/
      +                                   value)
                     if (canConvert) then
                         if (allInExtRange) then
-                            if (err .ne. NF_NOERR)
-     +                          call error(ErrFunc(err))
+                            if (err .ne. NF_NOERR) call errore(
+     +                          'PutVarsAll($1): ',err)
                         else
                             if (bb_enable) then
-                                if (err .ne. NF_NOERR)
-     +                              call error(ErrFunc(err))
+                                if (err .ne. NF_NOERR) call errore(
+     +                              'PutVarsAll($1): ',err)
                                 ! Flush burst buffer to reveal potential error
                                 err = nfmpi_flush(ncid)
                             endif
@@ -1352,10 +1355,11 @@ define([TEST_NFMPI_PUT_VARM],dnl
 !
             err = nfmpi_inq_format(ncid, format)
             if (err .ne. NF_NOERR)
-     +          call error('error in nfmpi_inq_format')
+     +          call errore('nfmpi_inq_format: ',err)
 
             ! skip zero-length write requests
-            if (format .EQ. NF_FORMAT_NETCDF4) goto 99
+            if (format .EQ. NF_FORMAT_NETCDF4 .OR.
+     +          format .EQ. NF_FORMAT_NETCDF4_CLASSIC) goto 99
 
 C           /* Check correct error returned even when nothing to put */
             do 4, j = 1, var_rank(i)
@@ -1394,8 +1398,8 @@ C           /* Check correct error returned even when nothing to put */
             err = PutVarmAll($1)(ncid, i,
      +            start, edge, stride, imap, value)
             if (canConvert) then
-                if (err .ne. NF_NOERR)
-     +              call error(ErrFunc(err))
+                if (err .ne. NF_NOERR) call errore(
+     +              'PutVarmAll($1): ',err)
             else
                 if (err .ne. NF_ECHAR)
      +              call errore('wrong type: ', err)
@@ -1441,7 +1445,7 @@ C           /* Check correct error returned even when nothing to put */
                 do 10, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
                     if (err .ne. NF_NOERR)
-     +                  call error('error in index2indexes')
+     +                  call errore('index2indexes: ',err)
                     nels = 1
                     do 11, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
@@ -1469,7 +1473,7 @@ C*/
                         err = index2indexes(j, var_rank(i), count,
      +                                      index2)
                         if (err .ne. NF_NOERR)
-     +                      call error('error in index2indexes')
+     +                      call errore('index2indexes: ',err)
                         do 15, d = 1, var_rank(i)
                             index2(d) = index(d) +
      +                          (index2(d)-1) * stride(d)
@@ -1487,12 +1491,12 @@ C*/
      +                                   value)
                     if (canConvert) then
                         if (allInExtRange) then
-                            if (err .ne. NF_NOERR)
-     +                          call error(ErrFunc(err))
+                            if (err .ne. NF_NOERR) call errore(
+     +                          'PutVarmAll($1): ',err)
                         else
                             if (bb_enable) then
-                                if (err .ne. NF_NOERR)
-     +                              call error(ErrFunc(err))
+                                if (err .ne. NF_NOERR) call errore(
+     +                              'PutVarmAll($1): ',err)
                                 ! Flush burst buffer to reveal potential error
                                 err = nfmpi_flush(ncid)
                             endif
@@ -1591,8 +1595,8 @@ define([TEST_NFMPI_PUT_ATT],dnl
      +                                  ATT_TYPE(j,i), ATT_LEN_LL,
      +                                  value)
                     if (allInExtRange) then
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
+                        if (err .ne. NF_NOERR) call errore(
+     +                      'PutAtt($1): ',err)
                     else
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
@@ -1759,8 +1763,8 @@ TEST_NFMPI_PUT_VARM(double)
 3                   continue
                     err = PutAtt(text)(ncid, i, ATT_NAME(j,i),
      +                  ATT_LEN_LL, value)
-                    if (err .ne. NF_NOERR)
-     +                  call error(ErrFunc(err))
+                    if (err .ne. NF_NOERR) call errore(
+     +                  'PutAtt(text): ',err)
                 end if
 2           continue
 1       continue
