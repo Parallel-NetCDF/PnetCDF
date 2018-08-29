@@ -10,31 +10,29 @@ dnl
  *
  *********************************************************************/
 
+/* This program tests the error code precedence, which is defined below.
+ *   For put attribute APIs:
+ *       NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
+ *       NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE
+ *   For get attribute APIs:
+ *       NC_EBADID, NC_ENOTVAR, NC_EBADNAME, NC_ENOTATT, NC_ECHAR, NC_EINVAL,
+ *       NC_ERANGE
+ *   For put/get variable APIs:
+ *       NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_ENOTVAR, NC_ECHAR,
+ *       NC_EINVALCOORDS, NC_EEDGE, NC_ESTRIDE, NC_EINVAL, NC_ERANGE
+ *
+ * This program can also be used to test NetCDF library.
+ * First run m4 command below to generate C file.
+ *       m4 error_precedence.m4 > error_precedence.c
+ * Then compile the C file.
+ *       gcc -DTEST_NETCDF -I/netcdf/path/include error_precedence.c \
+ *           -o error_precedence -L/netcdf/path/lib -lnetcdf
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strcpy(), strncpy() */
+#include <string.h> /* strcpy() */
 #include <libgen.h> /* basename() */
-
-/* This program can also be used to test NetCDF.
- * Add #define TEST_NETCDF and compile with command:
- * gcc -I/netcdf/path/include last_large_var.c -o last_large_var -L/netcdf/path/lib -lnetcdf
- */
-define(`IntType', `ifdef(`TEST_NETCDF',`MPI_Offset',`size_t')')dnl
-define(`PTRDType',`ifdef(`TEST_NETCDF',`MPI_Offset',`ptrdiff_t')')dnl
-define(`API', `ifdef(`TEST_NETCDF',`nc_$1',`ncmpi_$1')')dnl
-
-define(`FileOpen',  `ifdef(`TEST_NETCDF',`nc_open($1,$2,$3)',`ncmpi_open(comm,$1,$2,info,$3)')')dnl
-define(`FileCreate',`ifdef(`TEST_NETCDF',`nc_create($1,$2,$3)',`ncmpi_create(comm, $1, $2, info, $3)')')dnl
-
-define(`GetVar1TYPE',`ifdef(`TEST_NETCDF',`ncmpi_get_var1_$1_all',`nc_get_var1_$1')')dnl
-define(`PutVar1TYPE',`ifdef(`TEST_NETCDF',`ncmpi_put_var1_$1_all',`nc_put_var1_$1')')dnl
-
-define(`PutVar1', `ifdef(`TEST_NETCDF',`ncmpi_put_var1_all($1,$2,$3,$4,$5,$6)',          `nc_put_var1($1,$2,$3,$4)')')dnl
-define(`PutVar',  `ifdef(`TEST_NETCDF',`ncmpi_put_var_all( $1,$2,$3,$4,$5)',             `nc_put_var( $1,$2,$3)')')dnl
-define(`PutVara', `ifdef(`TEST_NETCDF',`ncmpi_put_vara_all($1,$2,$3,$4,$5,$6,$7)',       `nc_put_vara($1,$2,$3,$4,$5)')')dnl
-define(`PutVars', `ifdef(`TEST_NETCDF',`ncmpi_put_vars_all($1,$2,$3,$4,$5,$6,$7,$8)',    `nc_put_vars($1,$2,$3,$4,$5,$6)')')dnl
-define(`PutVarm', `ifdef(`TEST_NETCDF',`ncmpi_put_varm_all($1,$2,$3,$4,$5,$6,$7,$8,$9)', `nc_put_varm($1,$2,$3,$4,$5,$6,$7)')')dnl
-
 
 #ifdef TEST_NETCDF
 #include <netcdf.h>
@@ -49,8 +47,8 @@ define(`PutVarm', `ifdef(`TEST_NETCDF',`ncmpi_put_varm_all($1,$2,$3,$4,$5,$6,$7,
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting %d but got %d\n", \
-        __LINE__,__FILE__,exp, err); \
+        printf("Error at line %d in %s: expecting " #exp " but got %d\n", \
+        __LINE__,__FILE__, err); \
     } \
 }
 #define SetFill                 nc_set_fill
@@ -59,30 +57,36 @@ define(`PutVarm', `ifdef(`TEST_NETCDF',`ncmpi_put_varm_all($1,$2,$3,$4,$5,$6,$7,
 #define _EndDef                 nc__enddef
 #define FileClose               nc_close
 #define StrError                nc_strerror
+#define API(kind)               nc_##kind
+#define API_ALL(kind)           nc_##kind
+#define FileCreate(a,b,c)       nc_create(a,b,c)
+#define FileOpen(a,b,c)         nc_open(a,b,c)
+#define MPI_Offset              size_t
 #define MPI_Init(a,b)
 #define MPI_Comm_rank(a,b)
 #define MPI_Comm_size(a,b)
 #define MPI_Finalize()
 #define MPI_Bcast(a,b,c,d,e)
+#define MPI_Abort(a,b)
 #else
 #include <pnetcdf.h>
 #include <testutils.h>
-#define SetFill         ncmpi_set_fill
-#define ReDef           ncmpi_redef
-#define EndDef          ncmpi_enddef
-#define _EndDef         ncmpi__enddef
-#define FileClose       ncmpi_close
-#define StrError        ncmpi_strerror
+#define SetFill                 ncmpi_set_fill
+#define ReDef                   ncmpi_redef
+#define EndDef                  ncmpi_enddef
+#define _EndDef                 ncmpi__enddef
+#define FileClose               ncmpi_close
+#define StrError                ncmpi_strerror
+#define FileCreate(a,b,c)       ncmpi_create(MPI_COMM_WORLD,a,b,MPI_INFO_NULL,c)
+#define FileOpen(a,b,c)         ncmpi_open(MPI_COMM_WORLD,a,b,MPI_INFO_NULL,c)
+#define API(kind)               ncmpi_##kind
+#define API_ALL(kind)           ncmpi_##kind##_all
 #endif
-
 
 #define Y_LEN 7
 #define X_LEN 5
 
 static int verbose;
-
-include(`foreach.m4')dnl
-include(`utils.m4')dnl
 
 #define text char
 #ifndef schar
@@ -104,6 +108,22 @@ include(`utils.m4')dnl
 #define ulonglong unsigned long long
 #endif
 
+define(`NC_TYPE',`ifelse(
+       `$1',`text',    `NC_CHAR',  `$1',`schar',    `NC_BYTE',
+       `$1',`uchar',   `NC_UBYTE', `$1',`short',    `NC_SHORT',
+       `$1',`ushort',  `NC_USHORT',`$1',`int',      `NC_INT',
+       `$1',`long',    `NC_LONG',  `$1',`uint',     `NC_UINT',
+       `$1',`float',   `NC_FLOAT', `$1',`double',   `NC_DOUBLE',
+       `$1',`longlong',`NC_INT64', `$1',`ulonglong',`NC_UINT64')')dnl
+dnl
+define(`_CAT', `$1$2')dnl  concatenate two strings
+divert(`-1')
+define(`foreach', `pushdef(`$1')_foreach($@)popdef(`$1')')
+define(`_arg1', `$1')
+define(`_foreach', `ifelse(`$2', `()', `',
+  `define(`$1', _arg1$2)$3`'$0(`$1', (shift$2), `$3')')')
+divert`'dnl
+
 define(`CDF5_ITYPES',`schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong')dnl
 define(`CDF2_ITYPES',`schar,short,int,long,float,double')dnl
 define(`EXTRA_ITYPES',`uchar,ushort,uint,longlong,ulonglong')dnl
@@ -114,9 +134,12 @@ static int
 test_format_nc$1(char *filename)
 {
     int err, nerrs=0, ncid, cmode, dimids[2];
-    MPI_Comm comm=MPI_COMM_WORLD;
-    MPI_Info info=MPI_INFO_NULL;
-    MPI_Offset start[2], count[2], stride[2], imap[2];
+    MPI_Offset start[2], count[2];
+#ifdef TEST_NETCDF
+    ptrdiff_t stride[2];
+#else
+    MPI_Offset stride[2];
+#endif
 
     /* NC_FORMAT_NETCDF4_CLASSIC does not support extended data types, i.e. NC_UINT, NC_INT64 etc. */
     define(`TYPE_LIST',`ifelse(`$1',`5',`CDF5_ITYPES',`$1',`3',`CDF5_ITYPES',`CDF2_ITYPES')')dnl
@@ -127,7 +150,7 @@ test_format_nc$1(char *filename)
 
     /* variable buffers */dnl
     foreach(`itype',(text,TYPE_LIST),`
-    _CAT(itype itype,`_buf[3];')')dnl
+    _CAT(itype itype,`_buf[4];')')dnl
 
     dnl constants defined in netcdf.h and pnetcdf.h
     dnl #define NC_FORMAT_CLASSIC         (1)
@@ -173,26 +196,24 @@ test_format_nc$1(char *filename)
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
     err=API(def_var)(ncid,"var_'itype`",NC_TYPE(itype),2,dimids,&vid_',itype`); CHECK_ERR')')
 
-/*
-      For put attribute APIs:
-          NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
-          NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE
-      For get attribute APIs:
-          NC_EBADID, NC_ENOTVAR, NC_EBADNAME, NC_ENOTATT, NC_ECHAR, NC_EINVAL,
-          NC_ERANGE
-      For put/get variable APIs:
-          NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_ENOTVAR, NC_ECHAR,
-          NC_EINVALCOORDS, NC_EEDGE, NC_ESTRIDE, NC_EINVAL, NC_ERANGE
-*/
-
+    /* For put attribute APIs, the error precedence is the following:
+     *    NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
+     *    NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE
+     * For get attribute APIs, the error precedence is the following:
+     *    NC_EBADID, NC_ENOTVAR, NC_EBADNAME, NC_ENOTATT, NC_ECHAR, NC_EINVAL,
+     *    NC_ERANGE
+     */
     /* test attribute APIs */
+    strcpy(text_buf, "abc");
+    err=API(put_att_text) (-999,-999,NULL,-999,NULL);           EXP_ERR(NC_EBADID)
+    err=API(put_att_text) (-999,-999,NULL,-999,NULL);           EXP_ERR(NC_EBADID)
     err=API(put_att_text) (-999,-999,NULL,-999,NULL);           EXP_ERR(NC_EBADID)
     err=API(put_att_text) (ncid,-999,NULL,-999,NULL);           EXP_ERR(NC_ENOTVAR)
     err=API(put_att_text) (ncid,vid_text,NULL,-999,NULL);       EXP_ERR(NC_EBADNAME)
     err=API(put_att_text) (ncid,vid_text,"att_text",-999,NULL); EXP_ERR(NC_EINVAL)
     err=API(put_att_text) (ncid,vid_text,"att_text",3,NULL);    EXP_ERR(NC_EINVAL)
     err=API(put_att_text) (ncid,vid_text,"att_text",0,NULL);    CHECK_ERR
-    err=API(put_att_text) (ncid,vid_text,"att_text",3,"abc");   CHECK_ERR
+    err=API(put_att_text) (ncid,vid_text,"att_text",3,text_buf);CHECK_ERR
 
     err=API(get_att)      (-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
     err=API(get_att_text) (-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
@@ -248,20 +269,20 @@ test_format_nc$1(char *filename)
     /* test put_var APIs in define mode */
     ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(put_var_'itype`_all) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
-    err=API(put_var1_'itype`_all)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
-    err=API(put_vara_'itype`_all)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
-    err=API(put_vars_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
-    err=API(put_varm_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
 
     /* test put_var APIs in define mode */
     ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(get_var_'itype`_all) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
-    err=API(get_var1_'itype`_all)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
-    err=API(get_vara_'itype`_all)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
-    err=API(get_vars_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
-    err=API(get_varm_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    err=API_ALL(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
+    err=API_ALL(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
 
     /* test NC_EBADID */
     err=EndDef(-999); EXP_ERR(NC_EBADID)
@@ -289,57 +310,63 @@ test_format_nc$1(char *filename)
     err=API(def_var)(ncid,"var",NC_INT, 2,dimids,NULL); EXP_ERR(NC_ENOTINDEFINE)
 
     /* NC_FORMAT_NETCDF4 allows defining new attributes in data mode, but not classic formats */
-    err=API(put_att_text) (ncid,vid_text,"att_text",0,NULL);  EXP_ERR(NC_ENOTINDEFINE)
-    err=API(put_att_text) (ncid,vid_text,"att_text",3,"abc"); EXP_ERR(NC_ENOTINDEFINE)')
+    err=API(put_att_text) (ncid,vid_text,"att_text",0,NULL);     EXP_ERR(NC_ENOTINDEFINE)
+    err=API(put_att_text) (ncid,vid_text,"att_text",3,text_buf); EXP_ERR(NC_ENOTINDEFINE)')
+
+    /*
+     *  For put/get variable APIs, the error precedence is the following:
+     *    NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_ENOTVAR, NC_ECHAR,
+     *    NC_EINVALCOORDS, NC_EEDGE, NC_ESTRIDE, NC_EINVAL, NC_ERANGE
+     */
 
     /* test NC_EBADID */dnl
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(put_var_'itype`_all) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
-    err=API(put_var1_'itype`_all)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
-    err=API(put_vara_'itype`_all)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
-    err=API(put_vars_'itype`_all)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
-    err=API(put_varm_'itype`_all)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
-    err=API(get_var_'itype`_all) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
-    err=API(get_var1_'itype`_all)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
-    err=API(get_vara_'itype`_all)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
-    err=API(get_vars_'itype`_all)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
-    err=API(get_varm_'itype`_all)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
+    err=API_ALL(put_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
+    err=API_ALL(put_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
+    err=API_ALL(put_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
+    err=API_ALL(put_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
+    err=API_ALL(put_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
+    err=API_ALL(get_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
+    err=API_ALL(get_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
+    err=API_ALL(get_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
+    err=API_ALL(get_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
+    err=API_ALL(get_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
 ')')
 
     /* test NC_ENOTVAR */dnl
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(put_var_'itype`_all) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
-    err=API(put_var1_'itype`_all)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
-    err=API(put_vara_'itype`_all)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
-    err=API(put_vars_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
-    err=API(put_varm_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
-    err=API(get_var_'itype`_all) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
-    err=API(get_var1_'itype`_all)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
-    err=API(get_vara_'itype`_all)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
-    err=API(get_vars_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
-    err=API(get_varm_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
+    err=API_ALL(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
 ')')
 
     /* test NC_EINVALCOORDS */
     start[0] = Y_LEN;
     start[1] = X_LEN;
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(put_var1_'itype`_all)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
-    err=API(put_vara_'itype`_all)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
-    err=API(put_vars_'itype`_all)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
-    err=API(put_varm_'itype`_all)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
-    err=API(put_var1_'itype`_all)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
-    err=API(put_vara_'itype`_all)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
-    err=API(put_vars_'itype`_all)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
-    err=API(put_varm_'itype`_all)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_var1_'itype`_all)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_vara_'itype`_all)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_vars_'itype`_all)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_varm_'itype`_all)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_var1_'itype`_all)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_vara_'itype`_all)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_vars_'itype`_all)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
-    err=API(get_varm_'itype`_all)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
+    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
 ')')
 
     /* test NC_EEDGE */
@@ -348,18 +375,18 @@ test_format_nc$1(char *filename)
     count[0] = Y_LEN;
     count[1] = X_LEN + 1;
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(put_vara_'itype`_all)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
-    err=API(put_vars_'itype`_all)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API(put_varm_'itype`_all)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
-    err=API(put_vara_'itype`_all)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
-    err=API(put_vars_'itype`_all)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API(put_varm_'itype`_all)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
-    err=API(get_vara_'itype`_all)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
-    err=API(get_vars_'itype`_all)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API(get_varm_'itype`_all)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
-    err=API(get_vara_'itype`_all)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
-    err=API(get_vars_'itype`_all)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API(get_varm_'itype`_all)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
+    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
+    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
+    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
+    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
+    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
+    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
+    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
+    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
 ')')
 
     /* test NC_ESTRIDE */
@@ -369,10 +396,10 @@ test_format_nc$1(char *filename)
     stride[0] = -1;
     stride[1] = -1;
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(put_vars_'itype`_all)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
-    err=API(put_varm_'itype`_all)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
-    err=API(get_vars_'itype`_all)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
-    err=API(get_varm_'itype`_all)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
+    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
+    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
+    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
+    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
 ')')
 
     /* close the file */
@@ -413,23 +440,11 @@ test_format_nc$1(char *filename)
 
     /* test NC_EPERM */dnl
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API(put_var_'itype`_all) (ncid,-999,NULL);                     EXP_ERR(NC_EPERM)
-    err=API(put_var1_'itype`_all)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EPERM)
-    err=API(put_vara_'itype`_all)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EPERM)
-    err=API(put_vars_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EPERM)
-    err=API(put_varm_'itype`_all)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EPERM)')')
-
-/*
-      For put attribute APIs:
-          NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
-          NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE
-      For get attribute APIs:
-          NC_EBADID, NC_ENOTVAR, NC_EBADNAME, NC_ENOTATT, NC_ECHAR, NC_EINVAL,
-          NC_ERANGE
-      For put/get variable APIs:
-          NC_EBADID, NC_EPERM, NC_EINDEFINE, NC_ENOTVAR, NC_ECHAR,
-          NC_EINVALCOORDS, NC_EEDGE, NC_ESTRIDE, NC_EINVAL, NC_ERANGE
-*/
+    err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EPERM)
+    err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EPERM)
+    err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EPERM)
+    err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EPERM)
+    err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EPERM)')')
 
     /* close the file */
     err=FileClose(-999); EXP_ERR(NC_EBADID)
@@ -460,22 +475,10 @@ TEST_FORMAT(4)
 int main(int argc, char **argv)
 {
     char filename[256];
-    int rank, nprocs, err, nerrs=0;
-/*
-    int   fflags[4]={0, NC_64BIT_OFFSET, NC_64BIT_DATA, NC_NETCDF4};
-    char *fmats[4]={"NC_FORMAT_CLASSIC",
-                    "NC_FORMAT_64BIT_OFFSET",
-                    "NC_FORMAT_CDF5",
-                    "NC_FORMAT_NETCDF4"};
-    int formats[4]={NC_FORMAT_CLASSIC,
-                    NC_FORMAT_64BIT_OFFSET,
-                    NC_FORMAT_CDF5,
-                    NC_FORMAT_NETCDF4};
-*/
+    int rank=0, nerrs=0;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -497,15 +500,16 @@ int main(int argc, char **argv)
     /* test all file formats separately */
     nerrs += test_format_nc1(filename);
     nerrs += test_format_nc2(filename);
-#ifdef ENABLE_NETCDF4
+#if defined(ENABLE_NETCDF4) || defined(TEST_NETCDF)
     nerrs += test_format_nc3(filename); /* NC_FORMAT_NETCDF4 */
     nerrs += test_format_nc4(filename); /* NC_FORMAT_NETCDF4_CLASSIC */
 #endif
     nerrs += test_format_nc5(filename);
 
+#ifndef TEST_NETCDF
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
+    int err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
@@ -519,7 +523,7 @@ int main(int argc, char **argv)
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
-
+#endif
     MPI_Finalize();
     return (nerrs > 0);
 }
