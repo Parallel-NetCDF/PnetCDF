@@ -292,11 +292,13 @@ inq_env_hint(char *hint_key, char **hint_value)
             }
             if (strcasecmp(key,hint_key) == 0) {
                 /* inquired hint is found */
-                *hint_value = (char*) malloc(strlen(val)+1);
-                strcpy(*hint_value, val);
+                if (val != NULL) {
+                    *hint_value = (char*) malloc(strlen(val)+1);
+                    strcpy(*hint_value, val);
+                }
                 if (hint_saved != NULL) free(hint_saved);
                 free(env_str_cpy);
-                return 1;
+                return (val == NULL) ? 0 : 1;
             }
         } while (*next_hint != '\0');
 
