@@ -45,10 +45,10 @@ PnetCDF is a parallel I/O library for accessing [NetCDF](http://www.unidata.ucar
   + The past discussions in the mailing list are available in: http://lists.mcs.anl.gov/pipermail/parallel-netcdf/.
 
 ### Project funding supports:
-* Ongoing development and maintenance of PnetCDF is supported by the Exascale
-  Computing Project (17-SC-20-SC), a joint project of the U.S. Department of
-  Energy's Office of Science and National Nuclear Security Administration,
-  responsible for delivering a capable exascale ecosystem, including software,
-  applications, and hardware technology, to support the nation's exascale
-  computing imperative.
+* Ongoing development and maintenance of PnetCDF is supported by the [Exascale
+  Computing Project](https://www.exascaleproject.org) (17-SC-20-SC), a joint
+  project of the U.S. Department of Energy's Office of Science and National
+  Nuclear Security Administration, responsible for delivering a capable
+  exascale ecosystem, including software, applications, and hardware
+  technology, to support the nation's exascale computing imperative.
 
