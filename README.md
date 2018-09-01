@@ -6,8 +6,8 @@ PnetCDF is a parallel I/O library for accessing [NetCDF](http://www.unidata.ucar
 * https://parallel-netcdf.github.io
 
 ### PnetCDF official releases of source codes
-* All official released version can be found in http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html
-* Note the github link marked "releases" in this page contains only tagded versions. They are by no means official releases, but simply checkpoints. Users are recommended to use the official releases, not tagged versions.
+* All official released versions can be found in http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html
+* Note the github link marked "releases" in this page contains only tagged versions. They are by no means official releases, but simply checkpoints. Users are recommended to use the official releases, not tagged versions.
 
 ### Build PnetCDF using source codes of this repository
 * The source codes in this repository are under development. They should not be used for production runs.
@@ -45,4 +45,10 @@ PnetCDF is a parallel I/O library for accessing [NetCDF](http://www.unidata.ucar
   + The past discussions in the mailing list are available in: http://lists.mcs.anl.gov/pipermail/parallel-netcdf/.
 
 ### Project funding supports:
-* Ongoing development and maintenance of PnetCDF is funded by the Exascale Computing Project (​ECP) under the DOE Office of Science.
+* Ongoing development and maintenance of PnetCDF is supported by the Exascale
+  Computing Project (17-SC-20-SC), a joint project of the U.S. Department of
+  Energy's Office of Science and National Nuclear Security Administration,
+  responsible for delivering a capable exascale ecosystem, including software,
+  applications, and hardware technology, to support the nation's exascale
+  computing imperative.
+
