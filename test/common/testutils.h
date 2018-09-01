@@ -43,6 +43,7 @@ typedef struct {
 
 void parse_read_args(int argc, char **argv, int rank, params *p);
 void parse_write_args(int argc, char **argv, int rank, params *p);
+int inq_env_hint(char *hint_key, char **hint_value);
 
 #ifdef PNETCDF_DEBUG
 #define PASS_STR "\x1b[32mpass\x1b[0m\n"
