@@ -28,33 +28,26 @@
 
 #include <testutils.h>
 
-int main(int argc, char** argv) {
-    char filename[256], var_name[NC_MAX_NAME];
-    int i, nvars, rank, nprocs, err, nerrs=0;
+static int
+tst_fmt(char *filename, int cmode)
+{
+    char fname[256], var_name[256];
+    int i, nvars, err, nerrs=0;
     int ncid, varid, dimid[2];
-    MPI_Offset prev_off, off;
+    MPI_Offset prev_off;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for checking offsets of new variables ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
+    if (cmode == 0) sprintf(fname,"%s",filename);
+    else if (cmode & NC_64BIT_OFFSET) sprintf(fname,"%s%d",filename,2);
+    else if (cmode & NC_64BIT_DATA)   sprintf(fname,"%s%d",filename,5);
+    else if (cmode & NC_NETCDF4) {
+        if (cmode & NC_CLASSIC_MODEL)
+            sprintf(fname,"%s%d",filename,4);
+        else
+            sprintf(fname,"%s%d",filename,3);
     }
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, fname, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "dim_1", 5, &dimid[0]); CHECK_ERR
@@ -80,19 +73,58 @@ int main(int argc, char** argv) {
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     err = ncmpi_inq_nvars(ncid, &nvars); CHECK_ERR
-    err = ncmpi_inq_varoffset(ncid, 0, &prev_off); CHECK_ERR
-    for (i=1; i<nvars; i++) {
-        err = ncmpi_inq_varoffset(ncid, i, &off); CHECK_ERR
-        if (off < prev_off + 5*4*4) { /* each variable is of size 5*4*4 bytes */
-            err = ncmpi_inq_varname(ncid, i, var_name); CHECK_ERR
-            printf("Error at line %d in %s: variable %s offset is set incorrectly\n",
-                   __LINE__,__FILE__,var_name);
-            nerrs++;
+    if (cmode & NC_NETCDF4) {
+        err = ncmpi_inq_varoffset(ncid, 0, &prev_off); EXP_ERR(NC_ENOTSUPPORT)
+    }
+    else {
+        err = ncmpi_inq_varoffset(ncid, 0, &prev_off); CHECK_ERR
+        for (i=1; i<nvars; i++) {
+            MPI_Offset off;
+            err = ncmpi_inq_varoffset(ncid, i, &off); CHECK_ERR
+            if (off < prev_off + 5*4*4) { /* each variable is of size 5*4*4 bytes */
+                err = ncmpi_inq_varname(ncid, i, var_name); CHECK_ERR
+                printf("Error at line %d in %s: variable %s offset is set incorrectly\n",
+                       __LINE__,__FILE__,var_name);
+                nerrs++;
+            }
+            prev_off = off;
         }
-        prev_off = off;
+    }
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    return nerrs;
+}
+
+int main(int argc, char** argv) {
+    char filename[256];
+    int rank, err, nerrs=0;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for checking offsets of new variables ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
     }
 
-    err = ncmpi_close(ncid); CHECK_ERR
+    nerrs += tst_fmt(filename, 0);
+    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    nerrs += tst_fmt(filename, NC_NETCDF4);
+    nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+#endif
+    nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
