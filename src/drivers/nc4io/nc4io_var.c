@@ -119,6 +119,8 @@ nc4io_inq_var(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
+    if (offsetp != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
     err = nc_inq_var(nc4p->ncid, varid, name, xtypep, ndimsp, dimids, nattsp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
