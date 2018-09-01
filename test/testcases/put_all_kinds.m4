@@ -103,8 +103,10 @@ define(`TEST_CDF_FORMAT',dnl
 `dnl
     /* create a new file */
     cmode = NC_CLOBBER;
-    ifelse(`$1', `NC_FORMAT_64BIT_OFFSET', `cmode |= NC_64BIT_OFFSET;',
-           `$1', `NC_FORMAT_64BIT_DATA',   `cmode |= NC_64BIT_DATA;')
+    ifelse(`$1',`NC_FORMAT_64BIT_OFFSET',   `cmode |= NC_64BIT_OFFSET;',
+           `$1',`NC_FORMAT_64BIT_DATA',     `cmode |= NC_64BIT_DATA;',
+           `$1',`NC_FORMAT_NETCDF4_CLASSIC',`cmode |= NC_NETCDF4 | NC_CLASSIC_MODEL;',
+           `$1',`NC_FORMAT_NETCDF4',        `cmode |= NC_NETCDF4;')
 
     sprintf(fname, "%s%d",filename, $1);
     err = ncmpi_create(MPI_COMM_WORLD, fname, cmode, info, &ncid);
@@ -140,8 +142,9 @@ ifelse(`$1', `NC_FORMAT_64BIT_DATA',
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    char filename[256], fname[512];
+    char filename[256], fname[512], *hint_value;
     int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0, cmode;
+    int hint_set=0, bb_enabled=0;
     int psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
     double *buf;
     MPI_Offset gsize[NDIMS], stride[NDIMS], imap[NDIMS];
@@ -168,6 +171,13 @@ int main(int argc, char **argv)
         sprintf(cmd_str, "*** TESTING C   %s for all kinds put APIs ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
+    }
+
+    /* check whether burst buffering is enabled */
+    hint_set = inq_env_hint("nc_burst_buf", &hint_value);
+    if (hint_set) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
     }
 
     /* calculate number of processes along each dimension */
@@ -223,6 +233,12 @@ int main(int argc, char **argv)
     TEST_CDF_FORMAT(NC_FORMAT_CLASSIC)
     TEST_CDF_FORMAT(NC_FORMAT_64BIT_OFFSET)
     TEST_CDF_FORMAT(NC_FORMAT_64BIT_DATA)
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        TEST_CDF_FORMAT(NC_FORMAT_NETCDF4_CLASSIC)
+        TEST_CDF_FORMAT(NC_FORMAT_NETCDF4)
+    }
+#endif
 
     free(buf);
     MPI_Info_free(&info);

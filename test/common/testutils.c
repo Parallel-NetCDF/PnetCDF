@@ -227,3 +227,82 @@ char* nc_err_code_name(int err)
     return unknown_str;
 }
 
+/*----< inq_env_hint() >-----------------------------------------------------*/
+int
+inq_env_hint(char *hint_key, char **hint_value)
+{
+    char *warn_str="Warning: skip ill-formed hint set in PNETCDF_HINTS";
+    char *env_str;
+
+    /* read hints set in the environment variable PNETCDF_HINTS, a string of
+     * hints separated by ";" and each hint is in the form of hint=value. E.g.
+     * "cb_nodes=16;cb_config_list=*:6". If this environment variable is set,
+     * this subroutine allocates char array for hint_value, copy the hint
+     * value to it, and return 1. Otherwise it returns 0 with *value set to
+     * NULL.
+     */
+
+    *hint_value = NULL;
+
+    /* get environment variable PNETCDF_HINTS */
+    if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
+        char *env_str_cpy, *hint, *next_hint, *key, *val, *deli;
+        char *hint_saved=NULL;
+
+        env_str_cpy = strdup(env_str);
+        next_hint = env_str_cpy;
+
+        do {
+            hint = next_hint;
+            deli = strchr(hint, ';');
+            if (deli != NULL) {
+                *deli = '\0'; /* add terminate char */
+                next_hint = deli + 1;
+            }
+            else next_hint = "\0";
+            if (hint_saved != NULL) free(hint_saved);
+
+            /* skip all-blank hint */
+            hint_saved = strdup(hint);
+            if (strtok(hint, " \t") == NULL) continue;
+
+            free(hint_saved);
+            hint_saved = strdup(hint); /* save hint for error message */
+
+            deli = strchr(hint, '=');
+            if (deli == NULL) { /* ill-formed hint */
+                printf("%s: '%s'\n", warn_str, hint_saved);
+                continue;
+            }
+            *deli = '\0';
+
+            /* hint key */
+            key = strtok(hint, "= \t");
+            if (key == NULL || NULL != strtok(NULL, "= \t")) {
+                /* expect one token before = */
+                printf("%s: '%s'\n", warn_str, hint_saved);
+                continue;
+            }
+
+            /* hint value */
+            val = strtok(deli+1, "= \t");
+            if (NULL != strtok(NULL, "= \t")) { /* expect one token before = */
+                printf("%s: '%s'\n", warn_str, hint_saved);
+                continue;
+            }
+            if (strcasecmp(key,hint_key) == 0) {
+                /* inquired hint is found */
+                *hint_value = (char*) malloc(strlen(val)+1);
+                strcpy(*hint_value, val);
+                if (hint_saved != NULL) free(hint_saved);
+                free(env_str_cpy);
+                return 1;
+            }
+        } while (*next_hint != '\0');
+
+        if (hint_saved != NULL) free(hint_saved);
+        free(env_str_cpy);
+    }
+    return 0;
+}
+

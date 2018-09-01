@@ -178,6 +178,8 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/redef1.nc \
              $(TESTOUTDIR)/put_all_kinds.nc1 \
              $(TESTOUTDIR)/put_all_kinds.nc2 \
+             $(TESTOUTDIR)/put_all_kinds.nc3 \
+             $(TESTOUTDIR)/put_all_kinds.nc4 \
              $(TESTOUTDIR)/put_all_kinds.nc5 \
              $(TESTOUTDIR)/iput_all_kinds.nc1 \
              $(TESTOUTDIR)/iput_all_kinds.nc2 \
