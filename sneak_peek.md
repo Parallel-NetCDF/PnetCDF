@@ -114,7 +114,16 @@ This is essentially a placeholder for the next release note ...
     and writing variables in data mode.
 
 * Conflict with NetCDF library
-  + none
+  + In contrast to nc_set_fill() in NetCDF, ncmpi_set_fill() changes the fill
+    mode of all variables newly defined in the current scope of defined mode.
+    Variables affected include the ones created before and after the call to
+    ncmpi_set_fill(). Note this API has no effect on the existing variables
+    defined in the previous define mode. This behavior follows the convention
+    adopted by NetCDF-3, but not NetCDF-4. To change fill mode for individual
+    variables after the call to ncmpi_set_fill(), API ncmpi_def_var_fill() can
+    be used for this purpose. Reference of NetCDF 4.1.3 user guide for
+    (nc_set_fill())[https://www.unidata.ucar.edu/software/netcdf/documentation/historic/netcdf-c/nc_005fset_005ffill.html]
+  + The error code precedence can be different between NetCDF and PnetCDF.
 
 * Issues related to MPI library vendors:
   + none

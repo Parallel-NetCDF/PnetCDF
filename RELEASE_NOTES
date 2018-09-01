@@ -237,13 +237,20 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 
   o Conformity with NetCDF library
     * NetCDF allows to put attribute _FillValue of any NC data type to the
-      global variable, NC_GLOBAL. PnetCDF conforms with this behavior.
+      global variable, NC_GLOBAL. Note this is allowed for classic files, but
+      not for the HDF5-based NetCDF-4 files. PnetCDF conforms with this
+      behavior from this release on. Reference of NetCDF 4.1.3 user guide for
+      nc_put_att_type() at https://www.unidata.ucar.edu/software/netcdf/documentation/historic/netcdf-c/nc_005fput_005fatt_005f-type.html
     * For non-global variables, NetCDF treats the classic and HDF5 files
       differently. For classic files, it allows to create attribute _FillValue
       of a data type that is different from the variable's. For HDF5 files, the
-      data type of attribute _FillValue must be the same as the variable.
-      PnetCDF requires the data type of attribute _FillValue be the same as
+      data type of attribute _FillValue must be the same as the variable. Note
+      this behavior for classic files is against the convention specified in
+      the NetCDF user guide and NetCDF plans to revise the user guide to
+      describe the new convention. As for PnetCDF, we decided to enforce the
+      rule that requires the data type of attribute _FillValue be the same as
       the variable's.
+
 
   o New conflict with NetCDF library
     * none
