@@ -65,12 +65,12 @@ test_vars_$1(char *filename)
 
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", nprocs*NX, &dimid[1]); CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     for (k=0; k<NVARS; k++) {
         sprintf(var_name,"var%d",k);
         err = ncmpi_def_var(ncid, var_name, NC_TYPE($1), 2, dimid, &varid[k]);
         CHECK_ERR
     }
-    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     for (k=0; k<NVARS; k++) {
@@ -98,6 +98,7 @@ test_vars_$1(char *filename)
                             printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
                                    __LINE__,__FILE__, i,j, ($1)rank, buf[i][j]);
                             nerrs++;
+                            goto fn_exit;
                         }
                     }
                     else {
@@ -105,6 +106,7 @@ test_vars_$1(char *filename)
                             printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
                                    __LINE__,__FILE__, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                             nerrs++;
+                            goto fn_exit;
                         }
                     }
                 }
@@ -115,12 +117,14 @@ test_vars_$1(char *filename)
                         printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
                                __LINE__,__FILE__, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                         nerrs++;
+                        goto fn_exit;
                     }
                 }
             }
         }
     }
 
+fn_exit:
     err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }
@@ -151,8 +155,23 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-    ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
+    ncmpi_set_default_format(NC_FORMAT_CLASSIC, NULL);
+    foreach(`itype', (schar,short,int,float,double), `
+    _CAT(`nerrs += test_vars_',itype)'`(filename);')
 
+    ncmpi_set_default_format(NC_FORMAT_CDF2, NULL);
+    foreach(`itype', (schar,short,int,float,double), `
+    _CAT(`nerrs += test_vars_',itype)'`(filename);')
+
+    ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, NULL);
+    foreach(`itype', (schar,short,int,float,double), `
+    _CAT(`nerrs += test_vars_',itype)'`(filename);')
+
+    ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
+    foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
+    _CAT(`nerrs += test_vars_',itype)'`(filename);')
+
+    ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
     foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
     _CAT(`nerrs += test_vars_',itype)'`(filename);')
 

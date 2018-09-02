@@ -37,33 +37,14 @@
 
 #include <testutils.h>
 
-int main(int argc, char **argv) {
-    char filename[256];
-    int  err, nerrs=0, ncid, cmode, varid, int_buf, rank, nprocs;
+static int
+tst_fmt(char *filename, int cmode)
+{
+    int  err, nerrs=0, ncid, varid, int_buf;
     float flt_buf;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for _FillValue for NC_GLOBAL ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
     /* create a file */
-    cmode = NC_CLOBBER;
+    cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
@@ -84,6 +65,50 @@ int main(int argc, char **argv) {
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+    return nerrs;
+}
+
+int main(int argc, char **argv) {
+    char filename[256], *hint_value;
+    int  err, nerrs=0, rank, hint_set, bb_enabled;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for _FillValue for NC_GLOBAL ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    /* check whether burst buffering is enabled */
+    hint_set = inq_env_hint("nc_burst_buf", &hint_value);
+    bb_enabled = 0;
+    if (hint_set) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
+    nerrs += tst_fmt(filename, 0);
+    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += tst_fmt(filename, NC_NETCDF4);
+        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
+#endif
+    nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

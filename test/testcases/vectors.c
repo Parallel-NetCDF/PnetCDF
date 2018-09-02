@@ -3,6 +3,9 @@
  *  See COPYRIGHT notice in top-level directory.
  *
  *  $Id$
+ *
+ *  Test flexible API ncmpi_put_vara()
+ *
  */
 
 #include <stdio.h>
@@ -15,7 +18,7 @@
 #include <testutils.h>
 
 #define VECCOUNT 4
-#define BLOCKLEN  3
+#define BLOCKLEN 3
 #define STRIDE   5
 
 int main(int argc, char ** argv)
