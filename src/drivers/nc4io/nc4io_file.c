@@ -338,61 +338,99 @@ nc4io_inq_misc(void       *ncdp,
      * the first one is considered as record dim here
      */
     if (num_fix_varsp != NULL || num_rec_varsp != NULL || recsize != NULL) {
-        int nvar, ndim;
-        int *dims;
-        int *vars;
-        int unlimdim;
-        int nrec=0, nfix=0;
+        int nvar, ndim, *dims, *vars, unlimdim, nrec=0, nfix=0;
 
-        /* Record dimid */
-        err = nc_inq_unlimdim(nc4p->ncid, &unlimdim);
-        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+	/* Record dimid (TODO: non-classic model NetCDF4 file may have more
+         * than one unlimited dimension) */
+	err = nc_inq_unlimdim(nc4p->ncid, &unlimdim);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-        /* Record size */
-        if (recsize != NULL){
-            size_t udlen;
-            err = nc_inq_dimlen(nc4p->ncid, unlimdim, &udlen);
-            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-            *recsize = (MPI_Offset)udlen;
-        }
 
-        if (num_fix_varsp != NULL || num_rec_varsp != NULL){
+        /* numner of variables */
+        err = nc_inq_varids(nc4p->ncid, &nvar, NULL);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-            /* Get all variables */
-            err = nc_inq_varids(nc4p->ncid, &nvar, NULL);
-            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-            vars = NCI_Malloc(SIZEOF_INT * nvar);
-            if (vars == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
-            err = nc_inq_varids(nc4p->ncid, NULL, vars);
-            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+        vars = NCI_Malloc(SIZEOF_INT * nvar);
+        if (vars == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-            /* Iterate through all variables */
-            for (i=0; i<nvar; i++) {
-                /* Get all dimensions */
-                err = nc_inq_varndims(nc4p->ncid, vars[i], &ndim);
-                if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-                dims = NCI_Malloc(SIZEOF_INT * ndim);
-                if (dims == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
-                err = nc_inq_vardimid(nc4p->ncid, vars[i], dims);
-                if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-
-                /* Iterate through all dimensions */
-                for (j=0; j<ndim; j++)
-                    if (dims[j] == unlimdim)
-                        break;
-
-                NCI_Free(dims);
-
-                /* If non of the dimension is record dim, count as fixed var */
-                if (j == ndim) nfix += 1;
-                else           nrec += 1;
-            }
+        /* IDs of all variables */
+        err = nc_inq_varids(nc4p->ncid, NULL, vars);
+        if (err != NC_NOERR) {
             NCI_Free(vars);
-
-            if (num_fix_varsp != NULL) *num_fix_varsp = nfix;
-
-            if (num_rec_varsp != NULL) *num_rec_varsp = nrec;
+            DEBUG_RETURN_ERROR(err)
         }
+
+        if (recsize != NULL) *recsize = 0;
+
+        /* Iterate through all variables */
+        for (i=0; i<nvar; i++) {
+            /* number of dimensions */
+            err = nc_inq_varndims(nc4p->ncid, vars[i], &ndim);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+
+            dims = NCI_Malloc(SIZEOF_INT * ndim);
+            if (dims == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
+
+            /* IDs of dimensions */
+            err = nc_inq_vardimid(nc4p->ncid, vars[i], dims);
+            if (err != NC_NOERR) {
+                NCI_Free(vars);
+                NCI_Free(dims);
+                DEBUG_RETURN_ERROR(err)
+            }
+
+            /* Iterate through all dimensions */
+            for (j=0; j<ndim; j++)
+                if (dims[j] == unlimdim)
+                    break;
+            /* If none of the dimension is record dim, count as fixed var */
+            if (j == ndim) nfix += 1;
+            else           nrec += 1;
+
+            if (recsize == NULL || j == ndim) {
+                NCI_Free(dims);
+                continue;
+            }
+
+            /* calculate sum of all individual record sizes */
+            nc_type xtype;
+            int xtype_size;
+            MPI_Offset var_size;
+
+            /* variable external data type */
+            err = nc_inq_vartype(nc4p->ncid, vars[i], &xtype);
+            if (err != NC_NOERR) {
+                NCI_Free(vars);
+                NCI_Free(dims);
+                DEBUG_RETURN_ERROR(err)
+            }
+            /* size of variable external data type */
+            err = ncmpii_xlen_nc_type(xtype, &xtype_size);
+            if (err != NC_NOERR) {
+                NCI_Free(vars);
+                NCI_Free(dims);
+                DEBUG_RETURN_ERROR(err)
+            }
+            var_size = xtype_size;
+            for (j=0; j<ndim; j++) {
+                size_t dim_size;
+                if (dims[j] == unlimdim) continue;
+                err = nc_inq_dimlen(nc4p->ncid, dims[j], &dim_size);
+                if (err != NC_NOERR) {
+                    NCI_Free(vars);
+                    NCI_Free(dims);
+                    DEBUG_RETURN_ERROR(err)
+                }
+                var_size *= dim_size;
+            }
+            *recsize += var_size;
+
+            NCI_Free(dims);
+        }
+        NCI_Free(vars);
+
+        if (num_fix_varsp != NULL) *num_fix_varsp = nfix;
+        if (num_rec_varsp != NULL) *num_rec_varsp = nrec;
     }
 
     /* NetCDF does not expose any MPI related info */
