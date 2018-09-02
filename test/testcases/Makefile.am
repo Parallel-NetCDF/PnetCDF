@@ -153,37 +153,28 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
-           $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
+NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc1) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc2) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc3) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc4) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc5) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc1) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc2) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc3) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc4) \
+           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc5)
 
 if ENABLE_THREAD_SAFE
    check_PROGRAMS += tst_pthread
-   NC_FILES += $(TESTOUTDIR)/tst_pthread.nc.*
-endif
-
-if ENABLE_BURST_BUFFER
-   NC_FILES += $(TESTOUTDIR)/put_all_kinds.bb.nc1 \
-               $(TESTOUTDIR)/put_all_kinds.bb.nc2 \
-               $(TESTOUTDIR)/put_all_kinds.bb.nc5 \
-               $(TESTOUTDIR)/iput_all_kinds.bb.nc1 \
-               $(TESTOUTDIR)/iput_all_kinds.bb.nc2 \
-               $(TESTOUTDIR)/iput_all_kinds.bb.nc5 \
-               $(TESTOUTDIR)/redef1.bb.nc
 endif
 
 BURST_BUFFER_FILES = $(NC_FILES:=_*.meta) $(NC_FILES:=_*.data)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/testfile.nc \
-             $(TESTOUTDIR)/redef1.nc \
-             $(TESTOUTDIR)/put_all_kinds.nc1 \
-             $(TESTOUTDIR)/put_all_kinds.nc2 \
-             $(TESTOUTDIR)/put_all_kinds.nc3 \
-             $(TESTOUTDIR)/put_all_kinds.nc4 \
-             $(TESTOUTDIR)/put_all_kinds.nc5 \
-             $(TESTOUTDIR)/iput_all_kinds.nc1 \
-             $(TESTOUTDIR)/iput_all_kinds.nc2 \
-             $(TESTOUTDIR)/iput_all_kinds.nc5 \
+             $(TESTOUTDIR)/redef1.nc $(TESTOUTDIR)/redef1.bb.nc \
+             $(TESTOUTDIR)/tst_pthread.nc.* $(TESTOUTDIR)/testfile.nc* \
              $(NC_FILES)
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump \
