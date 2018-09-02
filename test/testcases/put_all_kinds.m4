@@ -65,7 +65,7 @@ blocking_put_$1(int         rank,
     int err, nerrs=0;
     int var1_id, vara_id, vars_id, varm_id;
     int dimid, dimidsT[NDIMS];
-    MPI_Offset start1;
+    MPI_Offset start1[1];
 
     /* re-enter define mode, so we can add more variables */
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -82,8 +82,8 @@ blocking_put_$1(int         rank,
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* write the whole variable in parallel */
-    start1 = rank;
-    err = `ncmpi_put_var1_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, var1_id, &start1, buf); CHECK_ERR
+    start1[0] = rank;
+    err = `ncmpi_put_var1_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, var1_id, start1, buf); CHECK_ERR
 
     err = `ncmpi_put_vara_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, vara_id, start, count, buf); CHECK_ERR
 
