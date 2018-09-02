@@ -60,7 +60,7 @@ blocking_put_$1(int         rank,
                 MPI_Offset *startM,
                 MPI_Offset *countM,
                 MPI_Offset *imap,
-                double     *buf)
+                ifelse(`$1',`text',`char',`double') *buf)
 {
     int err, nerrs=0;
     int var1_id, vara_id, vars_id, varm_id;
@@ -83,25 +83,23 @@ blocking_put_$1(int         rank,
 
     /* write the whole variable in parallel */
     start1 = rank;
-    err = ncmpi_put_var1_double_all(ncid, var1_id, &start1, buf); CHECK_ERR
+    err = `ncmpi_put_var1_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, var1_id, &start1, buf); CHECK_ERR
 
-    err = ncmpi_put_vara_double_all(ncid, vara_id, start, count, buf); CHECK_ERR
+    err = `ncmpi_put_vara_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, vara_id, start, count, buf); CHECK_ERR
 
-    err = ncmpi_put_vars_double_all(ncid, vars_id, startS, countS, stride, buf);
-    CHECK_ERR
+    err = `ncmpi_put_vars_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, vars_id, startS, countS, stride, buf); CHECK_ERR
 
-    err = ncmpi_put_varm_double_all(ncid, varm_id, startM, countM, NULL, imap, buf);
-    CHECK_ERR
+    err = `ncmpi_put_varm_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, varm_id, startM, countM, NULL, imap, buf); CHECK_ERR
 
     return nerrs;
 }
 ')dnl
 
-foreach(`itype', (`schar, uchar, short, ushort, int, uint, long, float, double, longlong, ulonglong'), `TEST_BLOCKING_PUT(itype)')
+foreach(`itype',(`text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong'),`TEST_BLOCKING_PUT(itype)')
 
 define(`TEST_CDF_FORMAT',dnl
 `dnl
-    /* create a new file */
+/* create a new $1 file */
     cmode = NC_CLOBBER;
     ifelse(`$1',`NC_FORMAT_64BIT_OFFSET',   `cmode |= NC_64BIT_OFFSET;',
            `$1',`NC_FORMAT_64BIT_DATA',     `cmode |= NC_64BIT_DATA;',
@@ -124,15 +122,19 @@ define(`TEST_CDF_FORMAT',dnl
     err = ncmpi_def_dim(ncid, "X",      gsize[2], &dimids[2]); CHECK_ERR
     err = ncmpi_enddef(ncid);
 
-ifelse(`$1', `NC_FORMAT_64BIT_DATA',
-    foreach(`itype',
-    (`schar, uchar, short, ushort, int, uint, long, float, double, longlong, ulonglong'),`
+    nerrs += blocking_put_text(rank, ncid, dimids, start, count,
+             startS, countS, stride, startM, countM, imap, cbuf);
+    foreach(`itype',(`schar,short,int,long,float,double'),`
     _CAT(`nerrs += blocking_put_',itype)'`(rank, ncid, dimids, start, count,
-             startS, countS, stride, startM, countM, imap, buf);'),
+             startS, countS, stride, startM, countM, imap, buf);')
+
+ifelse(`$1', `NC_FORMAT_CLASSIC',`',
+       `$1', `NC_FORMAT_64BIT_OFFSET',`',
+       `$1', `NC_FORMAT_NETCDF4_CLASSIC',`',`
     foreach(`itype',
-    (`schar, short, int, long, float, double'),`
+    (`uchar,ushort,uint,longlong,ulonglong'),`
     _CAT(`nerrs += blocking_put_',itype)'`(rank, ncid, dimids, start, count,
-             startS, countS, stride, startM, countM, imap, buf);'))
+             startS, countS, stride, startM, countM, imap, buf);')')
 
     /* close the file */
     err = ncmpi_close(ncid);
@@ -142,10 +144,9 @@ ifelse(`$1', `NC_FORMAT_64BIT_DATA',
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    char filename[256], fname[512], *hint_value;
+    char filename[256], fname[512], *hint_value, *cbuf;
     int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0, cmode;
-    int hint_set=0, bb_enabled=0;
-    int psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
+    int bb_enabled, psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
     double *buf;
     MPI_Offset gsize[NDIMS], stride[NDIMS], imap[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS];
@@ -174,8 +175,8 @@ int main(int argc, char **argv)
     }
 
     /* check whether burst buffering is enabled */
-    hint_set = inq_env_hint("nc_burst_buf", &hint_value);
-    if (hint_set) {
+    bb_enabled = 0;
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
         if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
         free(hint_value);
     }
@@ -211,6 +212,8 @@ int main(int argc, char **argv)
                      j*count[2] + i] = (start[0]+k)*gsize[1]*gsize[2]
                                      + (start[1]+j)*gsize[2]
                                      + (start[2]+i); // + 1000*(rank+1);
+    cbuf = (char *) malloc(bufsize);
+    for (i=0; i<bufsize; i++) cbuf[i] = '0'+rank;
 
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */
@@ -240,6 +243,7 @@ int main(int argc, char **argv)
     }
 #endif
 
+    free(cbuf);
     free(buf);
     MPI_Info_free(&info);
 
