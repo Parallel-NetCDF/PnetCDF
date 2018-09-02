@@ -34,14 +34,14 @@
 #include <testutils.h>
 
 static
-int test_only_record_var_1D(char *filename)
+int test_only_record_var_1D(char *filename, int cmode)
 {
-    int ncid, cmode, varid, dimid, buf[20], err, nerrs=0;
+    int ncid, varid, dimid, buf[20], err, nerrs=0;
     MPI_Offset start[1], count[1], length;
     MPI_Info info=MPI_INFO_NULL;
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
+    cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
@@ -66,7 +66,7 @@ int test_only_record_var_1D(char *filename)
         nerrs++;
     }
 
-    if (nerrs == 0) { /* test independent data mode */
+    if (nerrs == 0 && !(cmode & NC_NETCDF4)) { /* test independent data mode */
         err = ncmpi_begin_indep_data(ncid); CHECK_ERR
         /* write the 4th record */
         buf[0] = 93;
@@ -91,14 +91,14 @@ int test_only_record_var_1D(char *filename)
 }
 
 static
-int test_only_record_var_3D(char *filename)
+int test_only_record_var_3D(char *filename, int cmode)
 {
-    int i, ncid, cmode, varid, dimid[3], buf[20], err, nerrs=0;
+    int i, ncid, varid, dimid[3], buf[20], err, nerrs=0;
     MPI_Offset start[3], count[3], length;
     MPI_Info info=MPI_INFO_NULL;
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
+    cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
@@ -127,7 +127,7 @@ int test_only_record_var_3D(char *filename)
         nerrs++;
     }
 
-    if (nerrs == 0) { /* test independent data mode */
+    if (nerrs == 0 && !(cmode & NC_NETCDF4)) { /* test independent data mode */
         err = ncmpi_begin_indep_data(ncid); CHECK_ERR
         /* write the 4th record */
         for (i=0; i<20; i++) buf[i] = 93;
@@ -152,14 +152,14 @@ int test_only_record_var_3D(char *filename)
 }
 
 static
-int test_two_record_var(char *filename)
+int test_two_record_var(char *filename, int cmode)
 {
-    int i, ncid, cmode, varid[2], dimid[3], buf[20], err, nerrs=0;
+    int i, ncid, varid[2], dimid[3], buf[20], err, nerrs=0;
     MPI_Offset start[3], count[3], length;
     MPI_Info info=MPI_INFO_NULL;
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
+    cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
@@ -188,16 +188,28 @@ int test_two_record_var(char *filename)
     }
 
     if (nerrs == 0) { /* test independent data mode */
-        err = ncmpi_begin_indep_data(ncid); CHECK_ERR
+        /* writing new records, HDF5 requires collective I/O */
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_begin_indep_data(ncid); CHECK_ERR
+        }
+
         /* write the 4th record */
         buf[0] = 93;
         start[0] = 3; count[0] = 1;
-        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); CHECK_ERR
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); CHECK_ERR
+        } else {
+            err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
+        }
 
         /* write the 3rd and 4th records */
         buf[0] = 92; buf[1] = 93;
         start[0] = 2; count[0] = 2;
-        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); CHECK_ERR
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf); CHECK_ERR
+        } else {
+            err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
+        }
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
@@ -205,7 +217,9 @@ int test_two_record_var(char *filename)
                    __LINE__,__FILE__,length);
             nerrs++;
         }
-        err = ncmpi_end_indep_data(ncid); CHECK_ERR
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_end_indep_data(ncid); CHECK_ERR
+        }
     }
 
     /* REC_VAR_3D: write the 2nd record first */
@@ -228,16 +242,28 @@ int test_two_record_var(char *filename)
     }
 
     if (nerrs == 0) { /* test independent data mode */
-        err = ncmpi_begin_indep_data(ncid); CHECK_ERR
+        /* writing new records, HDF5 requires collective I/O */
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_begin_indep_data(ncid); CHECK_ERR
+        }
+
         /* write the 4th record */
         for (i=0; i<20; i++) buf[i] = 93;
         start[0] = 3;
-        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); CHECK_ERR
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); CHECK_ERR
+        } else {
+            err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
+        }
 
         /* write the 3rd record */
         for (i=0; i<20; i++) buf[i] = 92;
         start[0] = 2;
-        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); CHECK_ERR
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf); CHECK_ERR
+        } else {
+            err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
+        }
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
@@ -245,15 +271,17 @@ int test_two_record_var(char *filename)
                    __LINE__,__FILE__,length);
             nerrs++;
         }
-        err = ncmpi_end_indep_data(ncid); CHECK_ERR
+        if (!(cmode & NC_NETCDF4)) {
+            err = ncmpi_end_indep_data(ncid); CHECK_ERR
+        }
     }
     err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }
 
 int main(int argc, char** argv) {
-    char filename[256];
-    int nerrs=0, rank, nprocs, err;
+    char filename[256], *hint_value;
+    int nerrs=0, rank, nprocs, err, bb_enabled;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -275,14 +303,51 @@ int main(int argc, char** argv) {
 
     if (rank >= 1) goto fn_exit; /* this test is for running 1 process */
 
-    /* test only one 1D record variable */
-    nerrs += test_only_record_var_1D(filename);
+    /* check whether burst buffering is enabled */
+    bb_enabled = 0;
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
 
-    /* test only one 3D record variable */
-    nerrs += test_only_record_var_3D(filename);
+    /* CDF-1: test only one 1D record variable */
+    nerrs += test_only_record_var_1D(filename, 0);
+    /* CDF-1: test only one 3D record variable */
+    nerrs += test_only_record_var_3D(filename, 0);
+    /* CDF-1: test two record variables */
+    nerrs += test_two_record_var(filename, 0);
 
-    /* test two record variables */
-    nerrs += test_two_record_var(filename);
+    /* CDF-2: test only one 1D record variable */
+    nerrs += test_only_record_var_1D(filename, NC_64BIT_OFFSET);
+    /* CDF-2: test only one 3D record variable */
+    nerrs += test_only_record_var_3D(filename, NC_64BIT_OFFSET);
+    /* CDF-2: test two record variables */
+    nerrs += test_two_record_var(filename, NC_64BIT_OFFSET);
+
+#ifdef USE_NETCDF4
+    if (!bb_enabled) {
+        /* NETCDF4: test only one 1D record variable */
+        nerrs += test_only_record_var_1D(filename, NC_NETCDF4);
+        /* NETCDF4: test only one 3D record variable */
+        nerrs += test_only_record_var_3D(filename, NC_NETCDF4);
+        /* NETCDF4: test two record variables */
+        nerrs += test_two_record_var(filename, NC_NETCDF4);
+
+        /* NETCDF4_CLASSIC: test only one 1D record variable */
+        nerrs += test_only_record_var_1D(filename, NC_NETCDF4|NC_CLASSIC_MODEL);
+        /* NETCDF4_CLASSIC: test only one 3D record variable */
+        nerrs += test_only_record_var_3D(filename, NC_NETCDF4|NC_CLASSIC_MODEL);
+        /* NETCDF4_CLASSIC: test two record variables */
+        nerrs += test_two_record_var(filename, NC_NETCDF4|NC_CLASSIC_MODEL);
+    }
+#endif
+
+    /* CDF-5: test only one 1D record variable */
+    nerrs += test_only_record_var_1D(filename, NC_64BIT_DATA);
+    /* CDF-5: test only one 3D record variable */
+    nerrs += test_only_record_var_3D(filename, NC_64BIT_DATA);
+    /* CDF-5: test two record variables */
+    nerrs += test_two_record_var(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size;
