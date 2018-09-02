@@ -13,44 +13,21 @@
 
 #include <testutils.h>
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
+static int
+tst_fmt(char *filename, int cmode)
 {
     int i, j, err, nerrs=0, rank, nprocs;
     int ncid, dimid[2], varid, req, status;
-
     MPI_Offset start[2], count[2], stride[2], imap[2];
     int   var[6][4];
     float k, rh[4][6];
     signed char  varT[4][6];
-    char filename[256];
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for get/put varm ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-#ifdef DEBUG
-    if (nprocs > 1 && rank == 0)
-        printf("Warning: %s is designed to run on 1 process\n", argv[0]);
-#endif
-
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA,
-                       MPI_INFO_NULL, &ncid); CHECK_ERR
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define a variable of a 6 x 4 integer array in the nc file */
     err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); CHECK_ERR
@@ -88,10 +65,17 @@ int main(int argc, char **argv)
 
     for (i=0; i<6; i++) for (j=0; j<4; j++) rh[j][i] = -1.0;
 
-    err = ncmpi_iget_varm_float(ncid, varid, start, count, stride, imap, &rh[0][0], &req); CHECK_ERR
+    if (cmode & NC_NETCDF4) {
+        err = ncmpi_get_varm_float_all(ncid, varid, start, count, stride, imap,
+                                       &rh[0][0]); CHECK_ERR
+    }
+    else {
+        err = ncmpi_iget_varm_float(ncid, varid, start, count, stride, imap,
+                                    &rh[0][0], &req); CHECK_ERR
 
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
-    err = status; CHECK_ERR
+        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+        err = status; CHECK_ERR
+    }
 
     /* check the contents of read */
     k = 0.0;
@@ -190,10 +174,17 @@ int main(int argc, char **argv)
     imap[0]   = 1; imap[1]   = 6;   /* would be {4, 1} if not transposing */
     if (rank > 0) count[0] = count[1] = 0;
 
-    err = ncmpi_iput_varm_schar(ncid, varid, start, count, stride, imap, &varT[0][0], &req); CHECK_ERR
+    if (cmode & NC_NETCDF4) {
+        err = ncmpi_put_varm_schar_all(ncid, varid, start, count, stride,
+                                       imap, &varT[0][0]); CHECK_ERR
+    }
+    else {
+        err = ncmpi_iput_varm_schar(ncid, varid, start, count, stride,
+                                    imap, &varT[0][0], &req); CHECK_ERR
 
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
-    err = status; CHECK_ERR
+        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+        err = status; CHECK_ERR
+    }
 
     /* the output from command "ncmpidump -v var test.nc" should be:
            var =
@@ -237,6 +228,57 @@ int main(int argc, char **argv)
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+    return nerrs;
+}
+
+/*----< main() >------------------------------------------------------------*/
+int main(int argc, char **argv)
+{
+    char filename[256], *hint_value;
+    int err, nerrs=0, rank, nprocs, hint_set, bb_enabled;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for get/put varm ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+#ifdef DEBUG
+    if (nprocs > 1 && rank == 0)
+        printf("Warning: %s is designed to run on 1 process\n", argv[0]);
+#endif
+
+    /* check whether burst buffering is enabled */
+    hint_set = inq_env_hint("nc_burst_buf", &hint_value);
+    bb_enabled = 0;
+    if (hint_set) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
+    nerrs += tst_fmt(filename, 0);
+    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += tst_fmt(filename, NC_NETCDF4);
+        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
+#endif
+    nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
