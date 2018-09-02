@@ -10,7 +10,8 @@ PnetCDF is a parallel I/O library for accessing [NetCDF](http://www.unidata.ucar
 * Note the github link marked "releases" in this page contains only tagged versions. They are by no means official releases, but simply checkpoints. Users are recommended to use the official releases, not tagged versions.
 
 ### Build PnetCDF using source codes of this repository
-* The source codes in this repository are under development. They should not be used for production runs.
+* The source codes in this repository are constantly under development. They should not be used for production runs.
+* Use the source codes in this repository only if you are interested in contributing the project. We welcome such contribution and are appreciated.
 * To clone this repository, run command
   ```
   git clone https://github.com/Parallel-NetCDF/PnetCDF.git

@@ -214,8 +214,10 @@ err_check:
     pncp->vars[*varidp].recdim = -1;   /* if fixed-size variable */
     pncp->vars[*varidp].shape  = NULL;
     if (ndims > 0) {
-        if (dimids[0] == pncp->unlimdimid) /* record variable */
+        if (dimids[0] == pncp->unlimdimid) { /* record variable */
             pncp->vars[*varidp].recdim = pncp->unlimdimid;
+            pncp->nrec_vars++;
+        }
 
         pncp->vars[*varidp].shape = (MPI_Offset*)
                                     NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);

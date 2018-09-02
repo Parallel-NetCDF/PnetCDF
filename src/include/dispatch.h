@@ -133,6 +133,7 @@ struct PNC {
     int                ndims;       /* number of dimensions defined */
     int                unlimdimid;  /* dim ID of NC_UNLIMITED */
     int                nvars;       /* number of variables */
+    int                nrec_vars;   /* number of record variables */
     struct PNC_var    *vars;        /* array of variable objects */
     void              *ncp;         /* pointer to driver internal object */
     struct PNC_driver *driver;
