@@ -97,7 +97,7 @@ tst_fmt(char *filename, int cmode)
 
 int main(int argc, char** argv) {
     char filename[256], *hint_value;
-    int rank, err, nerrs=0, hint_set, bb_enabled;
+    int rank, err, nerrs=0, bb_enabled;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -119,9 +119,8 @@ int main(int argc, char** argv) {
     }
 
     /* check whether burst buffering is enabled */
-    hint_set = inq_env_hint("nc_burst_buf", &hint_value);
     bb_enabled = 0;
-    if (hint_set) {
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
         if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
         free(hint_value);
     }

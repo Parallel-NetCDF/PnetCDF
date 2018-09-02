@@ -340,11 +340,10 @@ nc4io_inq_misc(void       *ncdp,
     if (num_fix_varsp != NULL || num_rec_varsp != NULL || recsize != NULL) {
         int nvar, ndim, *dims, *vars, unlimdim, nrec=0, nfix=0;
 
-	/* Record dimid (TODO: non-classic model NetCDF4 file may have more
+        /* Record dimid (TODO: non-classic model NetCDF4 file may have more
          * than one unlimited dimension) */
-	err = nc_inq_unlimdim(nc4p->ncid, &unlimdim);
+        err = nc_inq_unlimdim(nc4p->ncid, &unlimdim);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-
 
         /* numner of variables */
         err = nc_inq_varids(nc4p->ncid, &nvar, NULL);
