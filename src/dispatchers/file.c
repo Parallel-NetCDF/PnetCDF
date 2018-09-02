@@ -504,6 +504,7 @@ ncmpi_create(MPI_Comm    comm,
     pncp->ndims      = 0;
     pncp->unlimdimid = -1;
     pncp->nvars      = 0;
+    pncp->nrec_vars  = 0;
     pncp->vars       = NULL;
     pncp->flag       = NC_MODE_DEF | NC_MODE_CREATE;
     pncp->ncp        = ncp;
@@ -1315,10 +1316,14 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
 
     if (num_fix_varsp == NULL) return NC_NOERR;
 
+    *num_fix_varsp = pncp->nvars - pncp->nrec_vars;
+    return NC_NOERR;
+#if 0
     /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, num_fix_varsp, NULL,
                                   NULL, NULL, NULL, NULL, NULL, NULL,
                                   NULL, NULL, NULL, NULL, NULL);
+#endif
 }
 
 /*----< ncmpi_inq_num_rec_vars() >-------------------------------------------*/
@@ -1335,10 +1340,14 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
 
     if (num_rec_varsp == NULL) return NC_NOERR;
 
+    *num_rec_varsp = pncp->nrec_vars;
+    return NC_NOERR;
+#if 0
     /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */
     return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, num_rec_varsp,
                                   NULL, NULL, NULL, NULL, NULL, NULL,
                                   NULL, NULL, NULL, NULL, NULL);
+#endif
 }
 
 /*----< ncmpi_inq_striping() >-----------------------------------------------*/
