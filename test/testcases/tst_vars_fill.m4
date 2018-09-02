@@ -134,8 +134,8 @@ foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulongl
 
 int main(int argc, char **argv)
 {
-    char filename[256];
-    int err, nerrs=0, rank;
+    char filename[256], *hint_value;
+    int err, nerrs=0, rank, bb_enabled;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -155,6 +155,13 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
+    /* check whether burst buffering is enabled */
+    bb_enabled = 0;
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
     ncmpi_set_default_format(NC_FORMAT_CLASSIC, NULL);
     foreach(`itype', (schar,short,int,float,double), `
     _CAT(`nerrs += test_vars_',itype)'`(filename);')
@@ -163,13 +170,17 @@ int main(int argc, char **argv)
     foreach(`itype', (schar,short,int,float,double), `
     _CAT(`nerrs += test_vars_',itype)'`(filename);')
 
-    ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, NULL);
-    foreach(`itype', (schar,short,int,float,double), `
-    _CAT(`nerrs += test_vars_',itype)'`(filename);')
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, NULL);
+        foreach(`itype', (schar,short,int,float,double), `
+        _CAT(`nerrs += test_vars_',itype)'`(filename);')
 
-    ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
-    foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_vars_',itype)'`(filename);')
+        ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
+        foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
+        _CAT(`nerrs += test_vars_',itype)'`(filename);')
+    }
+#endif
 
     ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
     foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
