@@ -37,26 +37,15 @@
 #include <testutils.h>
 
 static
-int test_cdf2(char *filename)
+int test_cdf12(char *filename, int bb_enabled, int cmode)
 {
     int err, nerrs=0, ncid, vid, dimid;
     unsigned char uc[1];
     signed char sc[1];
     int si[1];
-    int bb_enabled=0;
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
-
-    {
-        int flag;
-        char hint[MPI_MAX_INFO_VAL];
-        MPI_Info infoused;
-        ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag && strcasecmp(hint, "enable") == 0)
-            bb_enabled = 1;
-        MPI_Info_free(&infoused);
-    }
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* for CDF-1 and CDF-2, a special case is made: there is no NC_ERANGE
      * error can occur converting between NC_BYTE and unsigned char.
@@ -149,25 +138,14 @@ int test_cdf2(char *filename)
 }
 
 static
-int test_cdf5(char *filename)
+int test_cdf345(char *filename, int bb_enabled, int cmode)
 {
     int err, nerrs=0, ncid, uc_vid, sc_vid, dimid;
     unsigned char uc[1];
     signed char sc[1];
-    int bb_enabled=0;
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid); CHECK_ERR
-
-    {
-        int flag;
-        char hint[MPI_MAX_INFO_VAL];
-        MPI_Info infoused;
-        ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag && strcasecmp(hint, "enable") == 0)
-            bb_enabled = 1;
-        MPI_Info_free(&infoused);
-    }
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* CDF-5 considers NC_BYTE a signed 1-byte integer and NC_UBYTE an
      * unsigned 1-byte integer. The special case in CDF-2 for skipping
@@ -196,7 +174,7 @@ int test_cdf5(char *filename)
 
     sc[0] = -1; /* in CDF-5, put -1 to an uchar should result in NC_ERANGE */
     err = ncmpi_put_var_schar_all(ncid, uc_vid, sc);
-    if (bb_enabled){
+    if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
@@ -204,7 +182,7 @@ int test_cdf5(char *filename)
 
     uc[0] = 255; /* in CDF-5, put 255 to a schar should result in NC_ERANGE */
     err = ncmpi_put_var_uchar_all(ncid, sc_vid, uc);
-    if (bb_enabled){
+    if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
@@ -222,8 +200,8 @@ int test_cdf5(char *filename)
 
 int main(int argc, char* argv[])
 {
-    char filename[256];
-    int err, nerrs=0, rank;
+    char filename[256], *hint_value;
+    int err, nerrs=0, rank, hint_set, bb_enabled;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -244,8 +222,23 @@ int main(int argc, char* argv[])
         free(cmd_str);
     }
 
-    nerrs += test_cdf2(filename);
-    nerrs += test_cdf5(filename);
+    /* check whether burst buffering is enabled */
+    hint_set = inq_env_hint("nc_burst_buf", &hint_value);
+    bb_enabled = 0;
+    if (hint_set) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
+    nerrs += test_cdf12(filename, bb_enabled, 0);
+    nerrs += test_cdf12(filename, bb_enabled, NC_64BIT_OFFSET);
+#if ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += test_cdf12(filename, bb_enabled, NC_NETCDF4 | NC_CLASSIC_MODEL);
+        nerrs += test_cdf345(filename, bb_enabled, NC_NETCDF4);
+    }
+#endif
+    nerrs += test_cdf345(filename, bb_enabled, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

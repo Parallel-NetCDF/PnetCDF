@@ -96,8 +96,8 @@ tst_fmt(char *filename, int cmode)
 }
 
 int main(int argc, char** argv) {
-    char filename[256];
-    int rank, err, nerrs=0;
+    char filename[256], *hint_value;
+    int rank, err, nerrs=0, hint_set, bb_enabled;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -118,11 +118,21 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
+    /* check whether burst buffering is enabled */
+    hint_set = inq_env_hint("nc_burst_buf", &hint_value);
+    bb_enabled = 0;
+    if (hint_set) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
     nerrs += tst_fmt(filename, 0);
     nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
 #ifdef ENABLE_NETCDF4
-    nerrs += tst_fmt(filename, NC_NETCDF4);
-    nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    if (!bb_enabled) {
+        nerrs += tst_fmt(filename, NC_NETCDF4);
+        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
 #endif
     nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
