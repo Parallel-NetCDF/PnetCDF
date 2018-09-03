@@ -1174,6 +1174,8 @@ ncmpi_inq_file_format(const char *filename,
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
         err = nc_inq_format(ncid, formatp);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        err = nc_close(ncid);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 #else
         *formatp = NC_FORMAT_NETCDF4;
 #endif
