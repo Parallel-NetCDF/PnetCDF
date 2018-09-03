@@ -31,7 +31,7 @@
 #include <testutils.h>
 
 static
-int test_collective_error(char *filename, int safe_mode)
+int test_collective_error(char *filename, int safe_mode, int cmode)
 {
     int rank, nproc, ncid, err, nerrs=0, varid, dimids[1], req, status;
     double buf[2];
@@ -42,7 +42,8 @@ int test_collective_error(char *filename, int safe_mode)
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     /* Create a 2 element vector of doubles */
-    err = ncmpi_create(comm, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "dim", 2, &dimids[0]); CHECK_ERR
     err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 1, dimids, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
@@ -99,24 +100,26 @@ int test_collective_error(char *filename, int safe_mode)
         nerrs++;
     }
 
-    err = ncmpi_iput_vara_double(ncid, varid, start, count, buf, &req);
-    if (rank == 1)
-        EXP_ERR(NC_EINVALCOORDS)
-    else
-        EXP_ERR(NC_NOERR)
+    if (!(cmode & NC_NETCDF4)) {
+        err = ncmpi_iput_vara_double(ncid, varid, start, count, buf, &req);
+        if (rank == 1)
+            EXP_ERR(NC_EINVALCOORDS)
+        else
+            EXP_ERR(NC_NOERR)
 
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
 
-    /* check if user put buffer contents altered */
-    if (buf[0] != 1.0) {
-        printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
-               __LINE__,__FILE__,0, 1.0, buf[0]);
-        nerrs++;
-    }
-    if (buf[1] != 2.0) {
-        printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
-               __LINE__,__FILE__,1, 2.0, buf[1]);
-        nerrs++;
+        /* check if user put buffer contents altered */
+        if (buf[0] != 1.0) {
+            printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+                   __LINE__,__FILE__,0, 1.0, buf[0]);
+            nerrs++;
+        }
+        if (buf[1] != 2.0) {
+            printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+                   __LINE__,__FILE__,1, 2.0, buf[1]);
+            nerrs++;
+        }
     }
 
     err = ncmpi_get_vara_all(ncid, varid, start, count,
@@ -128,13 +131,15 @@ int test_collective_error(char *filename, int safe_mode)
     if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
     else                                       EXP_ERR(NC_NOERR)
 
-    err = ncmpi_iget_vara_double(ncid, varid, start, count, buf, &req);
-    if (rank == 1)
-        EXP_ERR(NC_EINVALCOORDS)
-    else
-        EXP_ERR(NC_NOERR)
+    if (!(cmode & NC_NETCDF4)) {
+        err = ncmpi_iget_vara_double(ncid, varid, start, count, buf, &req);
+        if (rank == 1)
+            EXP_ERR(NC_EINVALCOORDS)
+        else
+            EXP_ERR(NC_NOERR)
 
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    }
 
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -143,8 +148,8 @@ int test_collective_error(char *filename, int safe_mode)
 
 int main(int argc, char *argv[])
 {
-    char filename[256];
-    int rank, err, nerrs=0;
+    char filename[256], *hint_value;
+    int rank, err, nerrs=0, bb_enabled;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -164,13 +169,36 @@ int main(int argc, char *argv[])
         free(cmd_str);
     }
 
+    /* check whether burst buffering is enabled */
+    bb_enabled = 0;
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
     /* test in non-safe mode */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
-    nerrs += test_collective_error(filename, 0);
+    nerrs += test_collective_error(filename, 0, 0);
+    nerrs += test_collective_error(filename, 0, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += test_collective_error(filename, 0, NC_NETCDF4);
+        nerrs += test_collective_error(filename, 0, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
+#endif
+    nerrs += test_collective_error(filename, 0, NC_64BIT_DATA);
 
     /* test in safe mode */
     setenv("PNETCDF_SAFE_MODE", "1", 1);
-    nerrs += test_collective_error(filename, 1);
+    nerrs += test_collective_error(filename, 1, 0);
+    nerrs += test_collective_error(filename, 1, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += test_collective_error(filename, 1, NC_NETCDF4);
+        nerrs += test_collective_error(filename, 1, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
+#endif
+    nerrs += test_collective_error(filename, 1, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

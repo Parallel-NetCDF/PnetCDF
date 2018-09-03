@@ -495,7 +495,7 @@ int main(int argc, char **argv)
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
-    verbose = 1;
+    verbose = 0;
 
     /* test all file formats separately */
     nerrs += test_format_nc1(filename);

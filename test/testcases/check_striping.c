@@ -28,31 +28,13 @@
 
 #include <testutils.h>
 
-int main(int argc, char** argv) {
-    char filename[256];
-    int rank, nprocs, err, nerrs=0, ncid, cmode;
+static int
+tst_fmt(char *filename, int cmode)
+{
+    int err, nerrs=0, ncid;
     int striping_size, striping_count, root_striping_size, root_striping_count;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for striping info ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    cmode = NC_CLOBBER;
+    cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
@@ -74,12 +56,50 @@ int main(int argc, char** argv) {
                __LINE__,__FILE__, root_striping_count, striping_count);
         nerrs++;
     }
-/*
-    if (nerrs == 0 && rank == 0)
-        printf("Success: striping_size=%d striping_count=%d\n",striping_size,striping_count);
-*/
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+    return nerrs;
+}
+
+int main(int argc, char** argv) {
+    char filename[256], *hint_value;
+    int rank, err, nerrs=0, bb_enabled;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for striping info ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    /* check whether burst buffering is enabled */
+    bb_enabled = 0;
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
+    nerrs += tst_fmt(filename, 0);
+    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += tst_fmt(filename, NC_NETCDF4);
+        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
+#endif
+    nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
