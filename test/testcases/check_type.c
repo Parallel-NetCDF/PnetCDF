@@ -52,31 +52,19 @@ static char* etype_name(nc_type etype) {
     }
 }
 
-int main(int argc, char* argv[])
+static int
+tst_fmt(char *filename, int cmode)
 {
-    char filename[256], *varname[12], buf[1024], attname[256];
-    int i, err, nerrs=0, rank, ncid, dimid, varid[12];
+    char *varname[12], buf[1024], attname[256];
+    int i, err, nerrs=0, ncid, dimid, varid[12], max_type;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (cmode == 0 || cmode == NC_64BIT_OFFSET || cmode & NC_CLASSIC_MODEL)
+        max_type = NC_DOUBLE;
+    else
+        max_type = NC_UINT64;
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for checking for type conflict ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid); CHECK_ERR
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "x", 2, &dimid); CHECK_ERR
 
     varname[0]  = "var_nat";
@@ -91,16 +79,18 @@ int main(int argc, char* argv[])
     varname[9]  = "var_uint";
     varname[10] = "var_int64";
     varname[11] = "var_uint64";
-    for (i=NC_BYTE; i<=NC_UINT64; i++) {
+    for (i=NC_BYTE; i<=max_type; i++) {
         err = ncmpi_def_var(ncid, varname[i], i, 1, &dimid, &varid[i]); CHECK_ERR
     }
 
     for (i=0; i<1024; i++) buf[i]=i;
+
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "att_text", 3, (char*)buf); CHECK_ERR
     EXP_ERR_N_TYPE(NC_NOERR, "text", NC_CHAR)
 
     for (i=0; i<1024; i++) buf[i]=0;
-    for (i=NC_BYTE; i<=NC_UINT64; i++) {
+
+    for (i=NC_BYTE; i<=max_type; i++) {
         int expect_err = NC_NOERR;
 
         if (i == NC_CHAR) expect_err = NC_ECHAR;
@@ -137,7 +127,7 @@ int main(int argc, char* argv[])
         EXP_ERR_N_TYPE(expect_err, "ulonglong", i)
     }
 
-    for (i=NC_BYTE; i<=NC_UINT64; i++) {
+    for (i=NC_BYTE; i<=max_type; i++) {
         int expect_err = NC_NOERR;
 
         if (i == NC_CHAR) continue;
@@ -175,6 +165,50 @@ int main(int argc, char* argv[])
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+    return nerrs;
+}
+
+int main(int argc, char* argv[])
+{
+    char filename[256], *hint_value;
+    int err, nerrs=0, rank, bb_enabled;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for checking for type conflict ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    /* check whether burst buffering is enabled */
+    bb_enabled = 0;
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
+    nerrs += tst_fmt(filename, 0);
+    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += tst_fmt(filename, NC_NETCDF4);
+        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
+#endif
+    nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

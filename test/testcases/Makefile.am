@@ -176,6 +176,7 @@ BURST_BUFFER_FILES = $(NC_FILES:=_*.meta) $(NC_FILES:=_*.data)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/redef1.nc $(TESTOUTDIR)/redef1.bb.nc \
+             $(TESTOUTDIR)/redef2.nc \
              $(TESTOUTDIR)/tst_pthread.nc.* $(TESTOUTDIR)/testfile.nc* \
              $(NC_FILES)
 

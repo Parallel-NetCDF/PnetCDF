@@ -65,34 +65,14 @@ int check_num_vars(int  ncid,
     return nerrs;
 }
 
-int main(int argc, char** argv) {
-    char filename[256];
-    int nerrs=0, rank, nprocs, err;
-    int ncid, cmode, varid[7], dimid[3];
+static int
+tst_fmt(char *filename, int cmode)
+{
+    int nerrs=0, err, ncid, varid[7], dimid[3];
     MPI_Info info=MPI_INFO_NULL;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        goto fn_exit;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for no. record/fixed variables", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* printf("PnetCDF version string: \"%s\"\n", ncmpi_inq_libvers()); */
-
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
+    cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
@@ -126,6 +106,49 @@ int main(int argc, char** argv) {
     nerrs += check_num_vars(ncid, 7, 4, 3);
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+    return nerrs;
+}
+
+int main(int argc, char** argv) {
+    char filename[256], *hint_value;
+    int nerrs=0, rank, err, bb_enabled;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        goto fn_exit;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for no. record/fixed variables", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    /* printf("PnetCDF version string: \"%s\"\n", ncmpi_inq_libvers()); */
+
+    /* check whether burst buffering is enabled */
+    bb_enabled = 0;
+    if (inq_env_hint("nc_burst_buf", &hint_value)) {
+        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        free(hint_value);
+    }
+
+    nerrs += tst_fmt(filename, 0);
+    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+#ifdef ENABLE_NETCDF4
+    if (!bb_enabled) {
+        nerrs += tst_fmt(filename, NC_NETCDF4);
+        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+    }
+#endif
+    nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

@@ -24,6 +24,8 @@ tst_fmt(char *filename, int flag)
 {
     int err, nerrs=0, ncid, cmode;
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     /* create a file if it does not exist */
     cmode = NC_CLOBBER | flag;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
