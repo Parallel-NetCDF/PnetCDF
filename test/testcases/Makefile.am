@@ -76,13 +76,15 @@ M4_SRCS      = put_all_kinds.m4 \
                erange_fill.m4 \
                tst_vars_fill.m4 \
                iput_all_kinds.m4 \
-               error_precedence.m4
+               error_precedence.m4 \
+               null_args.m4
 
 nodist_put_all_kinds_SOURCES = put_all_kinds.c
 nodist_erange_fill_SOURCES = erange_fill.c
 nodist_tst_vars_fill_SOURCES = tst_vars_fill.c
 nodist_iput_all_kinds_SOURCES = iput_all_kinds.c
 nodist_error_precedence_SOURCES = error_precedence.c
+nodist_null_args_SOURCES = null_args.c
 
 if ENABLE_ERANGE_FILL
    M4FLAGS += -DERANGE_FILL
