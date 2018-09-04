@@ -1127,7 +1127,7 @@ C           /* Check correct error returned even when nothing to put */
                 ! Flush burst buffer to reveal potential error
                 err = nfmpi_flush(ncid)
                 if (err .ne. NF_NOERR)
-     +              call errore('nfmpi_flush : ', err)
+     +              call errore('nfmpi_flush: ', err)
             endif
 
             !/* Choose a random point dividing each dim into 2 parts */

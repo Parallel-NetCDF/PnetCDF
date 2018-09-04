@@ -874,18 +874,18 @@
         doubleprecision         value(MAX_NELS)
         character*(MAX_NELS+2)  text
         logical                 allInRange
-        logical                 flag, bb_enable
+        logical                 flag, bb_enabled
         character*(MPI_MAX_INFO_VAL)     hint
         integer                 infoused
 
         ! Determine if burst buffer driver is being used
-        bb_enable = .FALSE.
+        bb_enabled = .FALSE.
         err = nfmpi_inq_file_info(ncid, infoused)
         if (err .eq. NF_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf",
      +            MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
-                bb_enable = (hint .eq. 'enable')
+                bb_enabled = (hint .eq. 'enable')
             endif
             call MPI_Info_free(infoused, err);
         endif
@@ -935,7 +935,7 @@
      +                  call errore('nfmpi_put_vara_double_all: ', err)
                 else
                     ! Flush burst buffer to reveal potential error
-                    if (bb_enable) then
+                    if (bb_enabled) then
                         if (err .ne. NF_NOERR) call
      +                      errore('nfmpi_put_vara_double_all: ', err)
                         err = nfmpi_flush(ncid)
