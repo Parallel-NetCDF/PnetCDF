@@ -1,16 +1,17 @@
 # Support NetCDF-4 files
 
-PnetCDF supports data access to HDF5-based NetCDF-4 files. This format is also
-referred the enhanced data model, versus to the classic model. The new I/O
-driver, called the NetCDF-4 driver, is a wrapper of the NetCDF Library that
-translates PnetCDF APIs to their NetCDF APIs. It allows to call PnetCDF APIs to
-read/write files in NetCDF-4 format.
+Starting from version 1.11.0, PnetCDF supports data access to HDF5-based
+NetCDF-4 files. This format is also referred the enhanced data model, versus to
+the classic model (in NetCDF language). The new I/O driver, called the NetCDF-4
+driver, is a wrapper of the NetCDF Library that translates PnetCDF APIs to
+their NetCDF APIs. It allows applications to call PnetCDF APIs to read/write
+files in NetCDF-4 format.
 
 ## Enable NetCDF-4 support
 
 PnetCDF requires a NetCDF library that is built with parallel HDF5 capability.
 An example build instruction for HDF5 and NetCDF-4 is given below.
-* Build parallel HDF5
+* To build parallel HDF5 (version 1.10.2 or later is recommended)
   + Source tar ball of HDF5 can be downloaded from URL:
     https://www.hdfgroup.org/downloads/hdf5/source-code/
   + Build commands:
@@ -20,7 +21,7 @@ An example build instruction for HDF5 and NetCDF-4 is given below.
                 CC=mpicc FC=mpifort CXX=mpicxx
     make install
     ```
-* Build NetCDF-4
+* To build NetCDF-4 (version 4.6.1 or later is recommended)
   + Source tar ball of NetCDF-4 can be downloaded from URL:
     https://github.com/Unidata/netcdf-c/releases
   + Build commands:
@@ -48,20 +49,26 @@ An example build instruction for HDF5 and NetCDF-4 is given below.
 To create a NetCDF-4 file, add the flag NC_NETCDF4 into argument cmode when
 calling `ncmpi_create()`. For example,
 ```
-int cmode = NC_CLOBBER | NC_NETCDF4;
+int cmode;
+cmode = NC_CLOBBER | NC_NETCDF4;
+or
+cmode = NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL;
 ncmpi_create(MPI_COMM_WORLD, "testfile.nc", cmode, MPI_INFO_NULL>, &ncid);
 ```
 
 NC_NETCDF4 flag is not required when opening an existing file in NetCDF-4
 format, as PnetCDF checks the file format and selects the proper I/O driver.
 
-Users can also set the default file format to NetCDF-4 by calling
-`ncmpi_set_default_format()` using argument `NC_FORMAT_NETCDF4C`. For example,
+Users can also set the default file format to NetCDF-4 by calling API
+`ncmpi_set_default_format()` with argument `NC_FORMAT_NETCDF4C` or
+`NC_FORMAT_NETCDF4_CLASSIC`. For example,
 ```
 ncmpi_set_default_format(NC_FORMAT_NETCDF4, &old_formatp);
+or
+ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, &old_formatp);
 ```
 When no file format specific flag is set in argument cmode, PnetCDF will use
-the default.
+the default setting.
 
 
 ## Known Problems
@@ -77,16 +84,17 @@ PnetCDF and NetCDF libraries. I/O semantics are also slightly different.
   solution must deal with the situation when the numbers of requests are
   different among processes in the collective data mode. Supporting `varn` is
   thus a future work.
-* For writing, only the classic model `NC_FORMAT_NETCDF4_CLASSIC` is supported.
-  This is mainly because the current PnetCDF APIs do not include those for
-  operating enhanced data objects, such as groups, compound data types,
-  compression etc. As for reading a NetCDF-4 file created by NetCDF-4, PnetCDF
-  supports the classic way of reading variables, attributes, and dimensions.
-  Inquiry APIs for enhanced metadata is currently not supported.
-* Due to a bug in HDF5 (1.10.2 and prior at the time of this writing),
-  collective I/O on variables with zero-length requests in some participating
-  processes will cause an HDF5 error and the program may hang. Refer to the
-  HDF issue HDFFV-10501.
+* Although a new file of format NC_FORMAT_NETCDF4 or NC_FORMAT_NETCDF4_CLASSIC
+  can be created, the I/O operations are limited to the NetCDF classic model
+  I/O, This is because PnetCDF APIs do not include those for operating enhanced
+  data objects, such as groups, compound data types, compression etc. As for
+  reading a NetCDF-4 file created by NetCDF-4, PnetCDF supports the classic way
+  of reading variables, attributes, and dimensions. Inquiry APIs for enhanced
+  metadata is currently not supported.
+* Due to a bug in HDF5 version 1.10.2 and prior, collective I/O on record
+  variables with a subset of participating processes making zero-length
+  requests may cause an HDF5 error and the program to hang. Readers refer to
+  the HDF bug issue HDFFV-10501.
 * PnetCDF allows different kinds of APIs called by different processes in a
   collective I/O. For example, `ncmpi_put_vara_int_all()` is called at process
   0 and `ncmpi_put_vars_float_int()` is called at process 1. However, this is
