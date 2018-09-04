@@ -633,12 +633,20 @@ IAPINAME($1,$2,$3)(int ncid,
     err = sanity_check(pncp, varid, IO_TYPE($1), ITYPE2MPI($3), 0);
     if (err != NC_NOERR) return err;
 
-    ifelse(`$1',`bput',`/* check if buffer has been attached */
-    MPI_Offset buf_size;
-    err = pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
-                                 NULL, NULL, NULL, NULL, NULL, NULL,
-                                 NULL, NULL, NULL, NULL, &buf_size);
-    if (err != NC_NOERR) return err;')
+    ifelse(`$1',`bput',`dnl
+#ifdef ENABLE_BURST_BUFFER
+    if (pncp->driver == ncbbio_inq_driver())
+        reqMode = NC_REQ_NBI;
+    else
+#endif
+    { /* check if buffer has been attached */
+        MPI_Offset buf_size;
+        reqMode = NC_REQ_NBB;
+        err = pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
+                                     NULL, NULL, NULL, NULL, NULL, NULL,
+                                     NULL, NULL, NULL, NULL, &buf_size);
+        if (err != NC_NOERR) return err;
+    }')
 
     ifelse(`$2',`m',`if (imap == NULL && stride != NULL) api_kind = API_VARS;
     else if (imap == NULL && stride == NULL) api_kind = API_VARA;',
@@ -653,7 +661,8 @@ IAPINAME($1,$2,$3)(int ncid,
 
     ifelse(`$3',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
-    reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3);
+    ifelse(`$1',`bput',`reqMode |= IO_MODE($1) | FLEX_MODE($3);',`
+    reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3);')
 
     ifelse(`$2',`',
     `GET_FULL_DIMENSIONS(pncp, pncp->vars[varid], start, count)
@@ -732,12 +741,20 @@ INAPINAME($1,$2)(int                ncid,
 
     if (num == 0) return NC_NOERR;
 
-    ifelse(`$1',`bput',`/* check if buffer has been attached */
-    MPI_Offset buf_size;
-    err = pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
-                                 NULL, NULL, NULL, NULL, NULL, NULL,
-                                 NULL, NULL, NULL, NULL, &buf_size);
-    if (err != NC_NOERR) return err;')
+    ifelse(`$1',`bput',`dnl
+#ifdef ENABLE_BURST_BUFFER
+    if (pncp->driver == ncbbio_inq_driver())
+        reqMode = NC_REQ_NBI;
+    else
+#endif
+    { /* check if buffer has been attached */
+        MPI_Offset buf_size;
+        reqMode = NC_REQ_NBB;
+        err = pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, NULL,
+                                     NULL, NULL, NULL, NULL, NULL, NULL,
+                                     NULL, NULL, NULL, NULL, &buf_size);
+        if (err != NC_NOERR) return err;
+    }')
 
     if (num > 0 && starts == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
 
@@ -753,7 +770,8 @@ INAPINAME($1,$2)(int                ncid,
 
     ifelse(`$2',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
-    reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2);
+    ifelse(`$1',`bput',`reqMode |= IO_MODE($1) | FLEX_MODE($2);',`
+    reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2);')
 
     /* calling the subroutine that implements INAPINAME($1,$2)() */
     return pncp->driver->`$1'_varn(pncp->ncp, varid, num, starts, counts,
