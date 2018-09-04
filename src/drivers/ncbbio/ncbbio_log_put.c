@@ -24,7 +24,7 @@
  * IN    count:  count in put_var* call
  * IN    stride: stride in put_var* call
  * IN    bur:    buffer of data to write
- * IN    itype:  user buffer's internal data type, an MPI primitive type
+ * IN    buftype: user buffer's internal data type, an MPI primitive type
  * OUT   putsize: number of internal bytes of this requests
  */
 int ncbbio_log_put_var(NC_bb            *ncbbp,
@@ -33,10 +33,10 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
                        const MPI_Offset  count[],  /* may be NULL */
                        const MPI_Offset  stride[],
                        void             *buf,
-                       MPI_Datatype      itype,
+                       MPI_Datatype      buftype,
                        MPI_Offset       *putsize)
 {
-    int err, i, ndims, isize;
+    int err, i, ndims, elsize, itype;
     char *buffer;
     PNC *pncp;
 #ifdef PNETCDF_PROFILING
@@ -60,9 +60,9 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     ndims = pncp->vars[varid].ndims;
 
     /* Calcalate submatrix size */
-    MPI_Type_size(itype, &isize); /* itype is never MPI_DATATYPE_NULL */
+    MPI_Type_size(buftype, &elsize); /* buftype is never MPI_DATATYPE_NULL */
 
-    size = isize;
+    size = elsize;
     if (count != NULL) {
         for (i=0; i<ndims; i++)
             size *= count[i];
@@ -101,35 +101,35 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     /* Convert to log types
      * Log spec has different enum of types than MPI
      */
-    if (itype == MPI_CHAR)                     /* put_*_text */
+    if (buftype == MPI_CHAR)                     /* put_*_text */
         itype = NC_LOG_TYPE_TEXT;
-    else if (itype == MPI_SIGNED_CHAR)         /* put_*_schar */
+    else if (buftype == MPI_SIGNED_CHAR)         /* put_*_schar */
         itype = NC_LOG_TYPE_SCHAR;
-    else if (itype == MPI_UNSIGNED_CHAR)       /* put_*_uchar */
+    else if (buftype == MPI_UNSIGNED_CHAR)       /* put_*_uchar */
         itype = NC_LOG_TYPE_UCHAR;
-    else if (itype == MPI_SHORT)               /* put_*_ushort */
+    else if (buftype == MPI_SHORT)               /* put_*_ushort */
         itype = NC_LOG_TYPE_SHORT;
-    else if (itype == MPI_UNSIGNED_SHORT)      /* put_*_ushort */
+    else if (buftype == MPI_UNSIGNED_SHORT)      /* put_*_ushort */
         itype = NC_LOG_TYPE_USHORT;
-    else if (itype == MPI_INT)                 /* put_*_int */
+    else if (buftype == MPI_INT)                 /* put_*_int */
         itype = NC_LOG_TYPE_INT;
-    else if (itype == MPI_UNSIGNED)            /* put_*_uint */
+    else if (buftype == MPI_UNSIGNED)            /* put_*_uint */
         itype = NC_LOG_TYPE_UINT;
-    else if (itype == MPI_LONG)                /* put_*_int */
+    else if (buftype == MPI_LONG)                /* put_*_int */
         itype = NC_LOG_TYPE_LONG;
-    else if (itype == MPI_FLOAT)               /* put_*_float */
+    else if (buftype == MPI_FLOAT)               /* put_*_float */
         itype = NC_LOG_TYPE_FLOAT;
-    else if (itype == MPI_DOUBLE)              /* put_*_double */
+    else if (buftype == MPI_DOUBLE)              /* put_*_double */
         itype = NC_LOG_TYPE_DOUBLE;
-    else if (itype == MPI_LONG_LONG_INT)       /* put_*_longlong */
+    else if (buftype == MPI_LONG_LONG_INT)       /* put_*_longlong */
         itype = NC_LOG_TYPE_LONGLONG;
-    else if (itype == MPI_UNSIGNED_LONG_LONG)  /* put_*_ulonglong */
+    else if (buftype == MPI_UNSIGNED_LONG_LONG)  /* put_*_ulonglong */
         itype = NC_LOG_TYPE_ULONGLONG;
     else { /* Unrecognized type */
         int name_len;
         char type_name[MPI_MAX_OBJECT_NAME];
-        MPI_Type_get_name(itype, type_name, &name_len);
-        fprintf(stderr, "Rank: %d, Unrecognized type: %s\n", ncbbp->rank,
+        MPI_Type_get_name(buftype, type_name, &name_len);
+        fprintf(stderr, "Rank: %d, Unrecognized buftype %s\n", ncbbp->rank,
                 type_name);
         fflush(stderr);
         DEBUG_RETURN_ERROR(NC_EINVAL);
