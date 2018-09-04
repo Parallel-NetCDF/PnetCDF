@@ -16,6 +16,7 @@ dnl
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h> /* strcasecmp() */
 #include <libgen.h> /* basename() */
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -321,7 +322,7 @@ TEST_FORMAT(4)
 int main(int argc, char **argv)
 {
     char filename[256], *hint_value;;
-    int err, nerrs=0, rank, bb_enabled;
+    int err, nerrs=0, rank, bb_enabled=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -342,9 +343,8 @@ int main(int argc, char **argv)
     }
 
     /* check whether burst buffering is enabled */
-    bb_enabled = 0;
     if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
         free(hint_value);
     }
 

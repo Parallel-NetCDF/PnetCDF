@@ -1506,7 +1506,7 @@ else
       relax_coord_bound=yes
    fi
 fi
-UD_MSG_DEBUG(enable_erange_fill=$enable_erange_fill)
+UD_MSG_DEBUG(relax_coord_bound=$relax_coord_bound)
 
 RELAX_COORD_BOUND=0
 if test "x$relax_coord_bound" = xyes ; then
