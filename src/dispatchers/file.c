@@ -1319,6 +1319,16 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
     if (num_fix_varsp == NULL) return NC_NOERR;
 
     *num_fix_varsp = pncp->nvars - pncp->nrec_vars;
+
+    /* number of fixed-size variables can also be calculated below.
+    int i;
+    *num_fix_varsp = 0;
+    for (i=0; i<pncp->nvars; i++) {
+        if (pncp->vars[i].recdim < 0)
+            (*num_fix_varsp)++;
+    }
+    */
+
     return NC_NOERR;
 #if 0
     /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
@@ -1343,6 +1353,16 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
     if (num_rec_varsp == NULL) return NC_NOERR;
 
     *num_rec_varsp = pncp->nrec_vars;
+
+    /* number of record variables can also be calculated below.
+    int i;
+    *num_rec_varsp = 0;
+    for (i=0; i<pncp->nvars; i++) {
+        if (pncp->vars[i].recdim >= 0)
+            (*num_rec_varsp)++;
+    }
+    */
+
     return NC_NOERR;
 #if 0
     /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */
