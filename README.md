@@ -1,17 +1,27 @@
 ## PnetCDF source code repository
 
-PnetCDF is a parallel I/O library for accessing [NetCDF](http://www.unidata.ucar.edu/software/netcdf) files. The software development is a collaborative work of Northwestern University and Argonne National Laboratory.
+PnetCDF is a parallel I/O library for accessing
+[NetCDF](http://www.unidata.ucar.edu/software/netcdf) files. The software
+development is a collaborative work of Northwestern University and Argonne
+National Laboratory.
 
 ### PnetCDF project web page
 * https://parallel-netcdf.github.io
 
 ### PnetCDF official releases of source codes
-* All official released versions can be found in http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html
-* Note the github link marked "releases" in this page contains only tagged versions. They are by no means official releases, but simply checkpoints. Users are recommended to use the official releases, not tagged versions.
+* All official released versions can be found in
+  http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html
+* Note the github link marked
+  ["releases"](https://github.com/Parallel-NetCDF/PnetCDF/releases) in this
+  page contains only tagged versions. They are by no means official releases,
+  but simply checkpoints. Users are recommended to use the official releases,
+  not tagged versions.
 
 ### Build PnetCDF using source codes of this repository
-* The source codes in this repository are constantly under development. They should not be used for production runs.
-* Use the source codes in this repository only if you are interested in contributing the project. We welcome such contribution and are appreciated.
+* The source codes in this repository are constantly under development. They
+  should not be used for production runs.
+* Use the source codes in this repository only if you are interested in
+  contributing the project and we welcome and appreciate any contribution.
 * To clone this repository, run command
   ```
   git clone https://github.com/Parallel-NetCDF/PnetCDF.git
@@ -30,7 +40,11 @@ PnetCDF is a parallel I/O library for accessing [NetCDF](http://www.unidata.ucar
   + [m4](https://www.gnu.org/software/m4/m4.html) version 1.4.17
 
 ### Build instructions and recipes
-* Please read file INSTALL for build instructions. There are also several build recipes under folder `doc` for a few popular systems.
+* Please read file
+  [INSTALL](https://github.com/Parallel-NetCDF/PnetCDF/blob/master/INSTALL) for
+  build instructions. There are also several build recipes under folder
+  [doc](https://github.com/Parallel-NetCDF/PnetCDF/tree/master/doc) for a few
+  popular systems.
 
 ### Current build status
 * [Travis CI ![Build Status](https://travis-ci.org/Parallel-NetCDF/PnetCDF.svg?branch=master)](https://travis-ci.org/Parallel-NetCDF/PnetCDF)
@@ -42,8 +56,10 @@ PnetCDF is a parallel I/O library for accessing [NetCDF](http://www.unidata.ucar
 
 ### Mailing List
 * parallel-netcdf@mcs.anl.gov
-  + To subscribe, please visit the list information page https://lists.mcs.anl.gov/mailman/listinfo/parallel-netcdf
-  + The past discussions in the mailing list are available in: http://lists.mcs.anl.gov/pipermail/parallel-netcdf/.
+  + To subscribe, please visit the list information page
+    https://lists.mcs.anl.gov/mailman/listinfo/parallel-netcdf
+  + The past discussions in the mailing list are available in:
+    http://lists.mcs.anl.gov/pipermail/parallel-netcdf/.
 
 ### Project funding supports:
 * Ongoing development and maintenance of PnetCDF is supported by the [Exascale
