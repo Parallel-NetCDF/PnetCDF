@@ -204,6 +204,8 @@ err_check:
     err = pncp->driver->def_var(pncp->ncp, name, type, ndims, dimids, varidp);
     if (err != NC_NOERR) return err;
 
+    assert(*varidp == pncp->nvars);
+
     /* add new variable into pnc-vars[] */
     if (pncp->nvars % PNC_VARS_CHUNK == 0)
         pncp->vars = NCI_Realloc(pncp->vars,
@@ -386,9 +388,14 @@ ncmpi_inq_vartype(int      ncid,    /* IN:  file ID */
     /* check whether variable ID is valid */
     if (varid < 0 || varid >= pncp->nvars) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
+    *xtypep = pncp->vars[varid].xtype;
+    return NC_NOERR;
+
+#if 0
     /* calling the subroutine that implements ncmpi_inq_vartype() */
     return pncp->driver->inq_var(pncp->ncp, varid, NULL, xtypep, NULL,
                                  NULL, NULL, NULL, NULL, NULL);
+#endif
 }
 
 /*----< ncmpi_inq_varndims() >-----------------------------------------------*/
@@ -413,9 +420,14 @@ ncmpi_inq_varndims(int  ncid,    /* IN:  file ID */
     /* check whether variable ID is valid */
     if (varid < 0 || varid >= pncp->nvars) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
+    *ndimsp = pncp->vars[varid].ndims;
+    return NC_NOERR;
+
+#if 0
     /* calling the subroutine that implements ncmpi_inq_varndims() */
     return pncp->driver->inq_var(pncp->ncp, varid, NULL, NULL, ndimsp,
                                  NULL, NULL, NULL, NULL, NULL);
+#endif
 }
 
 /*----< ncmpi_inq_vardimid() >-----------------------------------------------*/
