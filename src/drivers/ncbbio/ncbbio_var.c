@@ -304,14 +304,14 @@ int
 ncbbio_buffer_attach(void       *ncdp,
                      MPI_Offset  bufsize)
 {
-    /* bput behaves like iput in burst buffering */
+    /* bput calls iput in burst buffer driver */
     return NC_NOERR;
 }
 
 int
 ncbbio_buffer_detach(void *ncdp)
 {
-    /* bput behaves like iput in burst buffering */
+    /* bput calls iput in burst buffer driver */
     return NC_NOERR;
 }
 
@@ -328,7 +328,7 @@ ncbbio_bput_var(void             *ncdp,
                 int              *reqid,
                 int               reqMode)
 {
-    /* bput behaves like iput in burst buffering */
+    /* bput calls iput in burst buffer driver */
     return ncbbio_iput_var(ncdp, varid, start, count, stride, imap, buf,
                            bufcount, buftype, reqid, reqMode);
 }
@@ -556,7 +556,7 @@ ncbbio_bput_varn(void               *ncdp,
                  int                *reqid,
                  int                 reqMode)
 {
-    /* bput same as iput in bb driver */
+    /* bput calls iput in burst buffer driver */
     return ncbbio_iput_varn(ncdp, varid, num, starts, counts, buf,
                             bufcount, buftype, reqid, reqMode);
 }
