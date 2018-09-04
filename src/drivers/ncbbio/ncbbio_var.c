@@ -52,74 +52,63 @@
 
 int
 ncbbio_def_var(void       *ncdp,
-              const char *name,
-              nc_type     xtype,
-              int         ndims,
-              const int  *dimids,
-              int        *varidp)
+               const char *name,
+               nc_type     xtype,
+               int         ndims,
+               const int  *dimids,
+               int        *varidp)
 {
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->def_var(ncbbp->ncp, name, xtype, ndims, dimids, varidp);
+    err = ncbbp->ncmpio_driver->def_var(ncbbp->ncp, name, xtype, ndims,
+                                        dimids, varidp);
     if (err != NC_NOERR) return err;
 
     /* Update max_ndims */
-    if (ndims > ncbbp->max_ndims) {
+    if (ndims > ncbbp->max_ndims)
         ncbbp->max_ndims = ndims;
-    }
 
     return NC_NOERR;
 }
 
 int
 ncbbio_inq_varid(void       *ncdp,
-                const char *name,
-                int        *varid)
+                 const char *name,
+                 int        *varid)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->inq_varid(ncbbp->ncp, name, varid);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->inq_varid(ncbbp->ncp, name, varid);
 }
 
 int
 ncbbio_inq_var(void       *ncdp,
-              int         varid,
-              char       *name,
-              nc_type    *xtypep,
-              int        *ndimsp,
-              int        *dimids,
-              int        *nattsp,
-              MPI_Offset *offsetp,
-              int        *no_fillp,
-              void       *fill_valuep)
+               int         varid,
+               char       *name,
+               nc_type    *xtypep,
+               int        *ndimsp,
+               int        *dimids,
+               int        *nattsp,
+               MPI_Offset *offsetp,
+               int        *no_fillp,
+               void       *fill_valuep)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->inq_var(ncbbp->ncp, varid, name, xtypep, ndimsp, dimids,
-                               nattsp, offsetp, no_fillp, fill_valuep);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->inq_var(ncbbp->ncp, varid, name, xtypep,
+                                         ndimsp, dimids, nattsp, offsetp,
+                                         no_fillp, fill_valuep);
 }
 
 int
 ncbbio_rename_var(void       *ncdp,
-                 int         varid,
-                 const char *newname)
+                  int         varid,
+                  const char *newname)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->rename_var(ncbbp->ncp, varid, newname);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->rename_var(ncbbp->ncp, varid, newname);
 }
 
 int
@@ -138,17 +127,14 @@ ncbbio_get_var(void             *ncdp,
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     /* Flush on read */
-    if (ncbbp->inited) {
-        err = ncbbio_log_flush(ncbbp);
-        if (status == NC_NOERR) status = err;
-    }
+    if (ncbbp->inited)
+        status = ncbbio_log_flush(ncbbp);
 
     err = ncbbp->ncmpio_driver->get_var(ncbbp->ncp, varid, start, count,
                                         stride, imap, buf, bufcount, buftype,
                                         reqMode);
-    if (status == NC_NOERR) status = err;
 
-    return status;
+    return (status == NC_NOERR) ? err : status;
 }
 
 int
@@ -166,7 +152,8 @@ ncbbio_put_var(void             *ncdp,
     int err, ndims;
     void *cbuf=(void*)buf;
     nc_type xtype;
-    NC_bb *ncbbp = (NC_bb*)ncdp;
+    MPI_Datatype itype=buftype;
+    NC_bb *ncbbp=(NC_bb*)ncdp;
 
     /* Skip ZERO request */
     if (reqMode & NC_REQ_ZERO) return NC_NOERR;
@@ -178,7 +165,7 @@ ncbbio_put_var(void             *ncdp,
     if (buftype == MPI_DATATYPE_NULL) {
         /* both buftype and bufcount are ignored */
         bufcount = -1; /* make this like a high-level API call */
-        buftype = ncmpii_nc2mpitype(xtype);
+        itype = ncmpii_nc2mpitype(xtype);
     }
 
     /* pack buf into cbuf based on imap and buftype */
@@ -191,16 +178,15 @@ ncbbio_put_var(void             *ncdp,
          * itypes in buftype * bufcount)
          */
         MPI_Offset nelems;
-        MPI_Datatype itype;
 
         err = ncmpii_pack(ndims, count, imap, (void*)buf, bufcount, buftype,
                           &nelems, &itype, &cbuf);
         if (err != NC_NOERR) return err;
-        buftype = itype; /* an MPI primitive type */
     }
 
     /* Add log entry */
-    err = ncbbio_log_put_var(ncbbp, varid, start, count, stride, cbuf, buftype, NULL);
+    err = ncbbio_log_put_var(ncbbp, varid, start, count, stride, cbuf, itype,
+                             NULL);
 
     if (cbuf != buf) NCI_Free(cbuf);
 
@@ -223,11 +209,12 @@ ncbbio_iget_var(void             *ncdp,
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->iget_var(ncbbp->ncp, varid, start, count, stride, imap,
-                                buf, bufcount, buftype, reqid, reqMode);
+    err = ncbbp->ncmpio_driver->iget_var(ncbbp->ncp, varid, start, count,
+                                         stride, imap, buf, bufcount, buftype,
+                                         reqid, reqMode);
     if (err != NC_NOERR) return err;
 
-    /* Translate from ncmpio id to ncbbio id */
+    /* Translate ncmpio request ID to ncbbio ID */
     if (reqid != NULL) *reqid = *reqid * 2 + 1;
 
     return NC_NOERR;
@@ -241,16 +228,16 @@ ncbbio_iget_var(void             *ncdp,
  */
 int
 ncbbio_iput_var(void             *ncdp,
-               int               varid,
-               const MPI_Offset *start,
-               const MPI_Offset *count,
-               const MPI_Offset *stride,
-               const MPI_Offset *imap,
-               const void       *buf,
-               MPI_Offset        bufcount,
-               MPI_Datatype      buftype,
-               int              *reqid,
-               int               reqMode)
+                int               varid,
+                const MPI_Offset *start,
+                const MPI_Offset *count,
+                const MPI_Offset *stride,
+                const MPI_Offset *imap,
+                const void       *buf,
+                MPI_Offset        bufcount,
+                MPI_Datatype      buftype,
+                int              *reqid,
+                int               reqMode)
 {
     int i, err, id;
     NC_bb *ncbbp = (NC_bb*)ncdp;
@@ -264,11 +251,11 @@ ncbbio_iput_var(void             *ncdp,
         if (err != NC_NOERR) return err;
     }
 
-    // Create a new put request with id
+    /* Create a new put request with provided id */
     err = ncbbio_put_list_add(ncbbp, &id);
     if (err != NC_NOERR) return err;
 
-    /* Translate putlist id to ncbbio id */
+    /* Translate ncmpio id to ncbbio id */
     if (reqid != NULL) *reqid = id * 2;
 
     /* We must link the request object to corresponding log entries
@@ -283,7 +270,6 @@ ncbbio_iput_var(void             *ncdp,
      */
 
     /* Number of log entries before recording current operation to log */
-    ncbbp->putlist.reqs[id].entrystart = ncbbp->metaidx.nused;
     ncbbp->putlist.reqs[id].entrystart = ncbbp->metaidx.nused;
 
     err = ncbbio_put_var(ncdp, varid, start, count, stride, imap, buf,
@@ -302,9 +288,9 @@ ncbbio_iput_var(void             *ncdp,
      * If there are no entry created, we mark this request as completed
      */
     if (ncbbp->putlist.reqs[id].entryend > ncbbp->putlist.reqs[id].entrystart) {
-        for (i = ncbbp->putlist.reqs[id].entrystart; i < ncbbp->putlist.reqs[id].entryend; i++) {
+        for (i=ncbbp->putlist.reqs[id].entrystart;
+             i<ncbbp->putlist.reqs[id].entryend; i++)
             ncbbp->metaidx.entries[i].reqid = id;
-        }
     }
     else {
         ncbbp->putlist.reqs[id].ready = 1;
@@ -318,24 +304,14 @@ int
 ncbbio_buffer_attach(void       *ncdp,
                      MPI_Offset  bufsize)
 {
-    int err;
-    NC_bb *ncbbp = (NC_bb*)ncdp;
-
-    err = ncbbp->ncmpio_driver->buffer_attach(ncbbp->ncp, bufsize);
-    if (err != NC_NOERR) return err;
-
+    /* bput behaves like iput in burst buffering */
     return NC_NOERR;
 }
 
 int
 ncbbio_buffer_detach(void *ncdp)
 {
-    int err;
-    NC_bb *ncbbp = (NC_bb*)ncdp;
-
-    err = ncbbp->ncmpio_driver->buffer_detach(ncbbp->ncp);
-    if (err != NC_NOERR) return err;
-
+    /* bput behaves like iput in burst buffering */
     return NC_NOERR;
 }
 
@@ -352,14 +328,9 @@ ncbbio_bput_var(void             *ncdp,
                 int              *reqid,
                 int               reqMode)
 {
-    int err;
-
-    /* bput same as iput in bb driver */
-    err = ncbbio_iput_var(ncdp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid, reqMode);
-
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    /* bput behaves like iput in burst buffering */
+    return ncbbio_iput_var(ncdp, varid, start, count, stride, imap, buf,
+                           bufcount, buftype, reqid, reqMode);
 }
 
 int
@@ -377,27 +348,24 @@ ncbbio_get_varn(void              *ncdp,
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     /* Flush on read */
-    if (ncbbp->inited) {
-        err = ncbbio_log_flush(ncbbp);
-        if (status == NC_NOERR) status = err;
-    }
+    if (ncbbp->inited)
+        status = ncbbio_log_flush(ncbbp);
 
-    err = ncbbp->ncmpio_driver->get_varn(ncbbp->ncp, varid, num, starts, counts, buf,
-                                bufcount, buftype, reqMode);
-    if (status == NC_NOERR) status = err;
-
-    return status;
+    err = ncbbp->ncmpio_driver->get_varn(ncbbp->ncp, varid, num, starts,
+                                         counts, buf, bufcount, buftype,
+                                         reqMode);
+    return (status == NC_NOERR) ? err : status;
 }
 
 /*
- * We treate varn operation as n of var operation
+ * We treat varn as n of vara
  */
 int
 ncbbio_put_varn(void              *ncdp,
                 int                varid,
                 int                num,
-                MPI_Offset* const *starts,
-                MPI_Offset* const *counts,
+                MPI_Offset* const *starts, /* not NULL */
+                MPI_Offset* const *counts, /* may be NULL */
                 const void        *buf,
                 MPI_Offset         bufcount,
                 MPI_Datatype       buftype,
@@ -406,37 +374,47 @@ ncbbio_put_varn(void              *ncdp,
     int i, err, status = NC_NOERR;
     MPI_Offset size;
     void *cbuf = (void*)buf;
-    void *bufp;
+    char *bufp;
     NC_bb *ncbbp = (NC_bb*)ncdp;
-    MPI_Datatype ptype = buftype;
+    MPI_Datatype itype;
 
     /* Skip ZERO request */
     if (reqMode & NC_REQ_ZERO) return NC_NOERR;
 
-    /* It is illegal for starts to be NULL unless num is 0*/
-    if (num > 0 && starts == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
-
-    if (buftype == MPI_DATATYPE_NULL) {
+    if (bufcount == -1) { /* buftype is an MPI primitive data type */
+        /* In this case, this subroutine is called from a high-level API.
+         * buftype is one of the MPI primitive data type. We set itype to
+         * buftype. itype is the MPI element type in internal representation.
+         * In addition, it means the user buf is contiguous.
+         */
+        itype = buftype;
+    }
+    else if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and the internal buffer data type
+         * match the external variable data type. No data conversion will be
+         * done. In addition, it means buf is contiguous. Hereinafter, buftype
+         * is ignored.
+         */
         nc_type xtype;
         err = ncbbp->ncmpio_driver->inq_var(ncbbp->ncp, varid, NULL, &xtype,
                                             NULL, NULL, NULL, NULL, NULL, NULL);
         if (err != NC_NOERR) return err;;
 
         /* both buftype and bufcount are ignored */
-        bufcount = -1; /* make this like a high-level API call */
-        buftype = ncmpii_nc2mpitype(xtype);
+        itype = ncmpii_nc2mpitype(xtype);
     }
-
-    /* Resolve flexible api so we can calculate size of each put_var */
-    if (bufcount != -1) {
-        int isderived, iscontig_of_ptypes, elsize, position = 0;
+    else { /* (bufcount > 0) */
+        /* When bufcount > 0, this subroutine is called from a flexible API. If
+         * buftype is noncontiguous, we pack buf into cbuf, a contiguous buffer.
+         */
+        int isderived, iscontig, elsize, position = 0;
         MPI_Offset bnelems;
 
-        err = ncmpii_dtype_decode(buftype, &ptype, &elsize, &bnelems,
-                                  &isderived, &iscontig_of_ptypes);
+        err = ncmpii_dtype_decode(buftype, &itype, &elsize, &bnelems,
+                                  &isderived, &iscontig);
         if (err != NC_NOERR) return err;
 
-        if (!iscontig_of_ptypes) { /* pack only if non-contiguous */
+        if (!iscontig) { /* pack only if non-contiguous */
             bnelems *= elsize;
             if (bnelems != (int)bnelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
@@ -446,39 +424,14 @@ ncbbio_put_varn(void              *ncdp,
         }
     }
 
-    /* Decompose it into num put_vara calls */
-    bufp = cbuf;
-    if (counts != NULL) {
-        for(i = 0; i < num; i++) {
-            err = ncbbio_log_put_var(ncbbp, varid, starts[i], counts[i], NULL, bufp, ptype, &size);
-            if (status == NC_NOERR) status = err;
-            bufp = (void*)(((char*)bufp) + size);
-        }
-    }
-    else{
-        MPI_Offset *count;
-        PNC *pncp;
-        int dim;
-
-        /* Get PNC */
-        err = PNC_check_id(ncbbp->ncid, &pncp);
-        if (err != NC_NOERR) return err;
-
-        /* Get ndims */
-        dim = pncp->vars[varid].ndims;
-
-        /* Create dummy count */
-        count = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * dim);
-        for(i = 0; i < dim; i++)  count[i] = 1;
-
-        for(i = 0; i < num; i++) {
-            err = ncbbio_log_put_var(ncbbp, varid, starts[i], count, NULL, bufp, ptype, &size);
-            if (status == NC_NOERR) status = err;
-            bufp = (void*)(((char*)bufp) + size);
-        }
-
-        /* Free dummy count */
-        NCI_Free(count);
+    /* make num put_vara requests */
+    bufp = (char*)cbuf;
+    for (i=0; i<num; i++) {
+        err = ncbbio_log_put_var(ncbbp, varid, starts[i],
+                                 (counts == NULL) ? NULL : counts[i],
+                                 NULL, bufp, itype, &size);
+        if (status == NC_NOERR) status = err;
+        bufp += size;
     }
 
     if (cbuf != buf) NCI_Free(cbuf);
@@ -501,11 +454,12 @@ ncbbio_iget_varn(void               *ncdp,
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->iget_varn(ncbbp->ncp, varid, num, starts, counts, buf,
-                                 bufcount, buftype, reqid, reqMode);
+    err = ncbbp->ncmpio_driver->iget_varn(ncbbp->ncp, varid, num, starts,
+                                          counts, buf, bufcount, buftype,
+                                          reqid, reqMode);
     if (err != NC_NOERR) return err;
 
-    /* Translate form ncmpio id to ncbbio id */
+    /* Translate ncmpio id to ncbbio id */
     if (reqid != NULL) *reqid = *reqid * 2 + 1;
 
     return NC_NOERR;
@@ -522,7 +476,7 @@ ncbbio_iput_varn(void               *ncdp,
                  int                 varid,
                  int                 num,
                  MPI_Offset* const  *starts,
-                 MPI_Offset* const  *counts,
+                 MPI_Offset* const  *counts, /* can be NULL */
                  const void         *buf,
                  MPI_Offset          bufcount,
                  MPI_Datatype        buftype,
@@ -531,9 +485,6 @@ ncbbio_iput_varn(void               *ncdp,
 {
     int i, err, id;
     NC_bb *ncbbp = (NC_bb*)ncdp;
-
-    /* It is illegal for starts to be NULL unless num is 0*/
-    if (num > 0 && starts == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
 
     /* Initialize driver if not yet initialized
      * Since PnetCDF allow nonblocking requests in define mode, we must
@@ -548,7 +499,7 @@ ncbbio_iput_varn(void               *ncdp,
     err = ncbbio_put_list_add(ncbbp, &id);
     if (err != NC_NOERR) return err;
 
-    /* Translate putlist id to ncbbio id */
+    /* Translate ncmpio id to ncbbio id */
     if (reqid != NULL) *reqid = id * 2;
 
     /* We must link the request object to corresponding log entries
@@ -566,7 +517,8 @@ ncbbio_iput_varn(void               *ncdp,
     ncbbp->putlist.reqs[id].entrystart = ncbbp->metaidx.nused;
 
     // Handle the IO operation same as blocking one
-    err = ncbbio_put_varn(ncdp, varid, num, starts, counts, buf, bufcount, buftype, reqMode);
+    err = ncbbio_put_varn(ncdp, varid, num, starts, counts, buf, bufcount,
+                          buftype, reqMode);
     if (err != NC_NOERR) {
         ncbbio_put_list_remove(ncbbp, id);
         return err;
@@ -580,11 +532,11 @@ ncbbio_iput_varn(void               *ncdp,
      * If there are no entry created, we mark this request as completed
      */
     if (ncbbp->putlist.reqs[id].entryend > ncbbp->putlist.reqs[id].entrystart) {
-        for (i = ncbbp->putlist.reqs[id].entrystart; i < ncbbp->putlist.reqs[id].entryend; i++) {
+        for (i=ncbbp->putlist.reqs[id].entrystart;
+             i<ncbbp->putlist.reqs[id].entryend; i++)
             ncbbp->metaidx.entries[i].reqid = id;
-        }
     }
-    else{
+    else {
         ncbbp->putlist.reqs[id].ready = 1;
         ncbbp->putlist.reqs[id].status = NC_NOERR;
     }
@@ -604,14 +556,9 @@ ncbbio_bput_varn(void               *ncdp,
                  int                *reqid,
                  int                 reqMode)
 {
-    int err;
-
     /* bput same as iput in bb driver */
-    err = ncbbio_iput_varn(ncdp, varid, num, starts, counts, buf,
-                           bufcount, buftype, reqid, reqMode);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbio_iput_varn(ncdp, varid, num, starts, counts, buf,
+                            bufcount, buftype, reqid, reqMode);
 }
 
 int
@@ -627,16 +574,12 @@ ncbbio_get_vard(void         *ncdp,
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     /* Flush on read */
-    if (ncbbp->inited) {
-        err = ncbbio_log_flush(ncbbp);
-        if (status == NC_NOERR) status = err;
-    }
+    if (ncbbp->inited)
+        status = ncbbio_log_flush(ncbbp);
 
-    err = ncbbp->ncmpio_driver->get_vard(ncbbp->ncp, varid, filetype, buf, bufcount,
-                                buftype, reqMode);
-    if (status == NC_NOERR) status = err;
-
-    return status;
+    err = ncbbp->ncmpio_driver->get_vard(ncbbp->ncp, varid, filetype, buf,
+                                         bufcount, buftype, reqMode);
+    return (status == NC_NOERR) ? err : status;
 }
 
 int
@@ -648,14 +591,10 @@ ncbbio_put_vard(void         *ncdp,
                 MPI_Datatype  buftype,
                 int           reqMode)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     /* BB driver does not support vard */
-    err = ncbbp->ncmpio_driver->put_vard(ncbbp->ncp, varid, filetype, buf,
-                                         bufcount, buftype, reqMode);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->put_vard(ncbbp->ncp, varid, filetype, buf,
+                                          bufcount, buftype, reqMode);
 }
 
