@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h> /* strcasecmp() */
 #include <libgen.h> /* basename() */
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -281,7 +282,7 @@ int test_two_record_var(char *filename, int cmode)
 
 int main(int argc, char** argv) {
     char filename[256], *hint_value;
-    int nerrs=0, rank, nprocs, err, bb_enabled;
+    int nerrs=0, rank, nprocs, err, bb_enabled=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -304,9 +305,8 @@ int main(int argc, char** argv) {
     if (rank >= 1) goto fn_exit; /* this test is for running 1 process */
 
     /* check whether burst buffering is enabled */
-    bb_enabled = 0;
     if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
         free(hint_value);
     }
 

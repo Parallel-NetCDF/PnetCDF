@@ -14,6 +14,7 @@ dnl
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* strcpy(), strncpy() */
+#include <strings.h> /* strcasecmp() */
 #include <libgen.h> /* basename() */
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -146,7 +147,7 @@ int main(int argc, char **argv)
 {
     char filename[256], fname[512], *hint_value, *cbuf;
     int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0, cmode;
-    int bb_enabled, psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
+    int bb_enabled=0, psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
     double *buf;
     MPI_Offset gsize[NDIMS], stride[NDIMS], imap[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS];
@@ -175,9 +176,8 @@ int main(int argc, char **argv)
     }
 
     /* check whether burst buffering is enabled */
-    bb_enabled = 0;
     if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcmp(hint_value, "enable") == 0) bb_enabled = 1;
+        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
         free(hint_value);
     }
 

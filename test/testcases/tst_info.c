@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h> /* putenv() */
 #include <string.h> /* strerror() */
+#include <strings.h> /* strcasecmp() */
 #include <errno.h>  /* errno */
 #include <libgen.h> /* basename() */
 #include <assert.h>
@@ -136,17 +137,17 @@ int main(int argc, char** argv) {
     MPI_Info_get_valuelen(info_used, "romio_ds_write", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, "romio_ds_write", len+1, value, &flag);
-        if (strcmp("disable", value))
+        if (strcasecmp("disable", value))
             printf("Error: romio_ds_write expect \"disable\" but got \"%s\"\n", value);
     }
     MPI_Info_get_valuelen(info_used, "pnetcdf_subfiling", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, "pnetcdf_subfiling", len+1, value, &flag);
 #ifdef ENABLE_SUBFILING
-        if (strcmp("enable", value))
+        if (strcasecmp("enable", value))
             printf("Error: pnetcdf_subfiling expect \"enable\" but got \"%s\"\n", value);
 #else
-        if (strcmp("disable", value))
+        if (strcasecmp("disable", value))
             printf("Error: pnetcdf_subfiling expect \"disable\" but got \"%s\"\n", value);
 #endif
     }
