@@ -541,7 +541,7 @@ C           /* try nfmpi_abort in data mode - should just close */
         if (err .eq. NF_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf",
      +           MPI_MAX_INFO_VAL, hint, flag, err)
-            if (flag) then
+            if (flag .AND. hint .EQ. 'enable') then
                 err = nfmpi_flush(ncid)
                 if (err .ne. NF_NOERR)
      +              call errore('nfmpi_flush: ', err)
