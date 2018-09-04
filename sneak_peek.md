@@ -3,14 +3,15 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
 * New features
-  + Accessing HDF5-based NetCDF-4 files is supported. PnetCDF can now be built
-    on top of NetCDF-4, which allows PnetCDF to read and write a NetCDF-4 file.
-    Note NetCDF-4 file format is currently not supported by the burst buffering
-    driver.
-  + Thread-safe capability is added to this release. It can be enabled with
-    configure option `--enable-thread-safe`. In addition, option
-    `--with-pthread` can be used to specify the path to the pthreads library.
-    This feature currently only supports one-thread-per-file I/O operation.
+  + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
+    PnetCDF can be built on top of NetCDF-4, which allows PnetCDF to read and
+    write a NetCDF-4 file. However, the burst buffering currently do not
+    support NetCDF-4 file formats.
+  + Thread-safe capability is added to this release. It can be enabled by
+    command-line option `--enable-thread-safe` at configure time. In addition,
+    option `--with-pthread` can be used to specify the path to the pthreads
+    library. This feature currently only supports one-thread-per-file I/O
+    operation.
 
 * New optimization
   + The internal data buffering mechanism in the burst buffer driver is
@@ -23,9 +24,10 @@ This is essentially a placeholder for the next release note ...
     burst buffers for each user write request.
 
 * New Limitations
-  + Due to a bug in HDF5 1.10.2 that fails zero-length write requests in the
-    collective mode, PnetCDF is not able to support such requests when NetCDF-4
-    feature is enabled.
+  + Due to a bug in HDF5 1.10.2 that fails zero-length write requests to record
+    variables in the collective mode, PnetCDF is not able to support such
+    requests when NetCDF-4 feature is enabled. New HDF5 releases are expected
+    to contain the fix.
 
 * Update configure options
   + Enable NetCDF-4 support.
