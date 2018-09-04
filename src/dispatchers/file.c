@@ -418,8 +418,16 @@ ncmpi_create(MPI_Comm    comm,
     }
 
 #ifdef ENABLE_NETCDF4
-    if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+    if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
         driver = nc4io_inq_driver();
+#ifdef ENABLE_BURST_BUFFER
+        /* if nc_burst_buf is enabled in combined_info, disable it */
+        if (combined_info != MPI_INFO_NULL && enable_bb_driver) {
+            MPI_Info_set(combined_info, "nc_burst_buf", "disable");
+            enable_bb_driver = 0;
+        }
+#endif
+    }
     else
 #endif
 #ifdef BUILD_DRIVER_FOO
@@ -666,8 +674,16 @@ ncmpi_open(MPI_Comm    comm,
 #endif
 
 #ifdef ENABLE_NETCDF4
-    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
+    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4) {
         driver = nc4io_inq_driver();
+#ifdef ENABLE_BURST_BUFFER
+        /* if nc_burst_buf is enabled in combined_info, disable it */
+        if (combined_info != MPI_INFO_NULL && enable_bb_driver) {
+            MPI_Info_set(combined_info, "nc_burst_buf", "disable");
+            enable_bb_driver = 0;
+        }
+#endif
+    }
     else
 #else
     if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
