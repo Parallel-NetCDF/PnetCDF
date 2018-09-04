@@ -73,14 +73,11 @@ This is essentially a placeholder for the next release note ...
 * Bug fixes
   + For put and get APIs when buftype is MPI_DATATYPE_NULL, bufcount is
     ignored. This is not implemented correctly for blocking put and get APIs.
-    See commit
-    [403e483](https://github.com/Parallel-NetCDF/PnetCDF/commit/403e4839cdfca6175bcb177f3efa16f7d5e602d2)
+    See bug fix committed on Aug. 25, 2018.
   + ncmpidiff -- when comparing two files that contain record variables but
-    no record has been written. See commit
-    [2d2cacb](https://github.com/Parallel-NetCDF/PnetCDF/commit/2d2cacbad20b71c36a9442d9abb6c113f1838d28)
+    no record has been written. See bug fix committed on Aug. 25, 2018.
   + ncmpidiff -- when comparing two scalar variables, error NC_EBADDIM may
-    mistakenly reported. See commit
-    [b4d2dda](https://github.com/Parallel-NetCDF/PnetCDF/commit/b4d2dda2362e0dc0926d2723bffffea61df7006d)
+    mistakenly reported. See bug fix committed on Aug. 12, 2018.
 
 * New example programs
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
@@ -113,7 +110,7 @@ This is essentially a placeholder for the next release note ...
     when the file format is in NetCDF-4 format, PnetCDF still requires reading
     and writing variables in data mode.
 
-* Conflict with NetCDF library
+* Discrepancy from NetCDF library
   + In contrast to nc_set_fill() in NetCDF, ncmpi_set_fill() changes the fill
     mode of all variables newly defined in the current scope of defined mode.
     Variables affected include the ones created before and after the call to
