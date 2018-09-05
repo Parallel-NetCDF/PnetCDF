@@ -1555,6 +1555,20 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
 dnl Check if Fortran 77 compiler is pgf77
 dnl According to pgf77 manual the command-line option to should version is -V
 dnl
+dnl % pgf77 -V
+dnl
+dnl pgf77 16.9-0 64-bit target on x86-64 Linux -tp p7
+dnl The Portland Group - PGI Compilers and Tools
+dnl Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+dnl
+dnl % pgfortran -V
+dnl
+dnl pgfortran 16.9-0 64-bit target on x86-64 Linux -tp p7
+dnl The Portland Group - PGI Compilers and Tools
+dnl Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+dnl
+dnl Note the checking below may be obsolete
+dnl
 AC_DEFUN([UD_CHECK_PGF77],[
     AC_CACHE_CHECK([if Fortran 77 compiler is pgf77], [ac_cv_fc_compiler_pgf77],
     [ac_cv_fc_compiler_pgf77=no
@@ -1575,15 +1589,15 @@ dnl NAG Fortran Compiler Release 6.1(Tozai) Build 6106
 dnl Product NPL6A61NA for x86-64 Linux
 dnl Copyright 1990-2016 The Numerical Algorithms Group Ltd., Oxford, U.K.
 dnl
+dnl Note "nagfor -V" prints the version info on stderr, instead of stdout
+dnl
 AC_DEFUN([UD_CHECK_FC_NAG],[
     AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
     [ac_cv_fc_compiler_nag=no
-     eval $MPIF90 -V </dev/null >& conftest.ver
-     _FC_VENDOR=`head -c 3 conftest.ver`
+     _FC_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
      if test "x${_FC_VENDOR}" = xNAG ; then
         ac_cv_fc_compiler_nag=yes
      fi
-     ${RM} -f conftest.ver
      unset _FC_VENDOR
     ])
 ])
