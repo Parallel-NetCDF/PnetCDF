@@ -73,6 +73,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
+  + Shell ksh has a different way to redirect stdout and stderr from bash.
+    PnetCDF configure.ac and acinclude.m4 have been developed mainly on bash.
+    This bug can cause configure command to fail when using ksh. Thanks to
+    @poohRui for reporting the bug. See Issue #21 and PR #22.
   + For put and get APIs when buftype is MPI_DATATYPE_NULL, bufcount is
     ignored. This is not implemented correctly for blocking put and get APIs.
     See bug fix committed on Aug. 25, 2018.
@@ -96,6 +100,9 @@ This is essentially a placeholder for the next release note ...
 * New test program
   + test/testcases/error_precedence.m4 - tests the error code reporting
     precedence
+  + test/nc4/tst_zero_req.c - tests a HDF5 1.10.2 bug that causes test program
+    to hang when writing to and reading back a 2D record variable in collective
+    mode with some of the processes making zero-length requests.
   + test/nc4/put_get_all_kinds.m4 - tests all supported variable read/write
     API. Make sure they are properly wired up
   + test/nc4/interoperability_rd.m4 - tests whether NetCDF-4 file written using

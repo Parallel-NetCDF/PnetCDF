@@ -29,7 +29,8 @@ TESTPROGRAMS = simple_xy \
                put_get_all_kinds \
                interoperability_rd \
                interoperability_wr \
-               noclobber
+               noclobber \
+               tst_zero_req
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4
 
@@ -70,7 +71,7 @@ NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
-             $(NC_FILES)
+             $(NC_FILES) testfile.nc
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh gzip_example.nc \
              parallel_run.sh
