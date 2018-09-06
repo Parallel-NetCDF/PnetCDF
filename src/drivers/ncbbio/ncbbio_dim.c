@@ -21,9 +21,9 @@
 
 int
 ncbbio_def_dim(void       *ncdp,
-              const char *name,
-              MPI_Offset  size,
-              int        *dimidp)
+               const char *name,
+               MPI_Offset  size,
+               int        *dimidp)
 {
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
@@ -35,32 +35,26 @@ ncbbio_def_dim(void       *ncdp,
      * Record record dimension
      * Note: Assume only 1 rec dim
      */
-    if (size == NC_UNLIMITED){
-        ncbbp->recdimid = *dimidp;
-    }
+    if (size == NC_UNLIMITED) ncbbp->recdimid = *dimidp;
 
     return NC_NOERR;
 }
 
 int
 ncbbio_inq_dimid(void       *ncdp,
-                const char *name,
-                int        *dimid)
+                 const char *name,
+                 int        *dimid)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->inq_dimid(ncbbp->ncp, name, dimid);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->inq_dimid(ncbbp->ncp, name, dimid);
 }
 
 int
 ncbbio_inq_dim(void       *ncdp,
-              int         dimid,
-              char       *name,
-              MPI_Offset *sizep)
+               int         dimid,
+               char       *name,
+               MPI_Offset *sizep)
 {
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
@@ -73,11 +67,8 @@ ncbbio_inq_dim(void       *ncdp,
      * Note: Assume only 1 rec dim
      */
     if (sizep != NULL) {
-        if (dimid == ncbbp->recdimid){
-            if (*sizep < ncbbp->recdimsize){
-                *sizep = ncbbp->recdimsize;
-            }
-        }
+        if (dimid == ncbbp->recdimid && *sizep < ncbbp->recdimsize)
+            *sizep = ncbbp->recdimsize;
     }
 
     return NC_NOERR;
@@ -85,14 +76,10 @@ ncbbio_inq_dim(void       *ncdp,
 
 int
 ncbbio_rename_dim(void       *ncdp,
-                 int         dimid,
-                 const char *newname)
+                  int         dimid,
+                  const char *newname)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->rename_dim(ncbbp->ncp, dimid, newname);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->rename_dim(ncbbp->ncp, dimid, newname);
 }

@@ -56,7 +56,7 @@
  * Initialize the put list
  *
  */
-int ncbbio_put_list_init(NC_bb *ncbbp){
+int ncbbio_put_list_init(NC_bb *ncbbp) {
     int i;
     NC_bb_put_list *lp = &(ncbbp->putlist);
 
@@ -65,14 +65,14 @@ int ncbbio_put_list_init(NC_bb *ncbbp){
     lp->nalloc = PUT_ARRAY_SIZE;
     lp->reqs = (NC_bb_put_req*)NCI_Malloc(lp->nalloc * sizeof(NC_bb_put_req));
     lp->ids = (int*)NCI_Malloc(lp->nalloc * SIZEOF_INT);
-    if (lp->reqs == NULL || lp->ids == NULL){
+    if (lp->reqs == NULL || lp->ids == NULL) {
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
 
     /* Initialize values of ids and reqs
      * Assign increasing unique id
      */
-    for(i = 0; i < lp->nalloc; i++){
+    for (i=0; i<lp->nalloc; i++) {
         lp->ids[i] = i; // Unique ids
         lp->reqs[i].valid = 0;  // Not in use
     }
@@ -86,7 +86,8 @@ int ncbbio_put_list_init(NC_bb *ncbbp){
  * We simply enlarge ids and reqs array
  * We initialize the extended part as usual
  */
-static int ncbbio_put_list_resize(NC_bb *ncbbp){
+static int ncbbio_put_list_resize(NC_bb *ncbbp)
+{
     int i;
     size_t nsize;
     void *ptr;
@@ -96,22 +97,19 @@ static int ncbbio_put_list_resize(NC_bb *ncbbp){
     nsize = lp->nalloc * SIZE_MULTIPLIER;
 
     /* Realloc reqs and ids */
-    ptr = NCI_Realloc(lp->reqs,
-                            nsize * sizeof(NC_bb_put_req));
-    if (ptr == NULL){
-        DEBUG_RETURN_ERROR(NC_ENOMEM);
-    }
+    ptr = NCI_Realloc(lp->reqs, nsize * sizeof(NC_bb_put_req));
+    if (ptr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
+
     lp->reqs = (NC_bb_put_req*)ptr;
     ptr = NCI_Realloc(lp->ids, nsize * SIZEOF_INT);
-    if (ptr == NULL){
-        DEBUG_RETURN_ERROR(NC_ENOMEM);
-    }
+    if (ptr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
+
     lp->ids = (int*)ptr;
 
     /* Initialize values of ids and reqs
      * Assign increasing unique id
      */
-    for(i = lp->nalloc; i < nsize; i++){
+    for (i=lp->nalloc; i<nsize; i++) {
         lp->ids[i] = i; // Unique ids
         lp->reqs[i].valid = 0; // Not in use
     }
@@ -124,11 +122,10 @@ static int ncbbio_put_list_resize(NC_bb *ncbbp){
 /*
  * Clean up the put list
  */
-int ncbbio_put_list_free(NC_bb *ncbbp){
-    NC_bb_put_list *lp = &(ncbbp->putlist);
-
-    NCI_Free(lp->reqs);
-    NCI_Free(lp->ids);
+int ncbbio_put_list_free(NC_bb *ncbbp)
+{
+    NCI_Free(ncbbp->putlist.reqs);
+    NCI_Free(ncbbp->putlist.ids);
 
     return NC_NOERR;
 }
@@ -139,16 +136,15 @@ int ncbbio_put_list_free(NC_bb *ncbbp){
  * We increase the size of pool, bringing in new ids if there aren't
  * Then we issue the ids at position nused and increase it by 1
  */
-int ncbbio_put_list_add(NC_bb *ncbbp, int *id) {
+int ncbbio_put_list_add(NC_bb *ncbbp, int *id)
+{
     int err;
     NC_bb_put_list *lp = &(ncbbp->putlist);
 
     /* Increase size if necessary */
-    if (lp->nused == lp->nalloc){
+    if (lp->nused == lp->nalloc) {
         err = ncbbio_put_list_resize(ncbbp);
-        if (err != NC_NOERR){
-            return err;
-        }
+        if (err != NC_NOERR) return err;
     }
 
     /* Get the first unused id marked by nused */
@@ -167,7 +163,7 @@ int ncbbio_put_list_add(NC_bb *ncbbp, int *id) {
  * We put it at the empty slot right before position marked by nused
  * Decrease nused by 1 to mark the recycled id as unused
  */
-int ncbbio_put_list_remove(NC_bb *ncbbp, int reqid){
+int ncbbio_put_list_remove(NC_bb *ncbbp, int reqid) {
     NC_bb_put_list *lp = &(ncbbp->putlist);
 
     /* Mark entry as invalid
@@ -191,7 +187,8 @@ int ncbbio_put_list_remove(NC_bb *ncbbp, int reqid){
  * Log module is responsible to fill up the status of corresponding request object
  * The request should be ready after log flush
  */
-int ncbbio_handle_put_req(NC_bb *ncbbp, int reqid, int *stat){
+int ncbbio_handle_put_req(NC_bb *ncbbp, int reqid, int *stat)
+{
     int err, status = NC_NOERR;
     NC_bb_put_list *lp = &(ncbbp->putlist);
     NC_bb_put_req *req;
@@ -200,9 +197,7 @@ int ncbbio_handle_put_req(NC_bb *ncbbp, int reqid, int *stat){
      * Valid id range from 0 ~ nalloc - 1
      */
     if (reqid >= lp->nalloc || reqid < 0) {
-        if (stat != NULL) {
-            *stat = NC_EINVAL_REQUEST;
-        }
+        if (stat != NULL) *stat = NC_EINVAL_REQUEST;
         return status;
     }
 
@@ -213,10 +208,8 @@ int ncbbio_handle_put_req(NC_bb *ncbbp, int reqid, int *stat){
      * The request object must be in used
      * If not, the id is not yet issued, and hence invalid
      */
-    if (!req->valid){
-        if (stat != NULL) {
-            *stat = NC_EINVAL_REQUEST;
-        }
+    if (!req->valid) {
+        if (stat != NULL) *stat = NC_EINVAL_REQUEST;
         return status;
     }
 
@@ -225,21 +218,17 @@ int ncbbio_handle_put_req(NC_bb *ncbbp, int reqid, int *stat){
      * This should never happen
      * If it do, we have mising log entry or corrupt metadata index
      */
-    if (!req->ready){
+    if (!req->ready) {
         printf("Fatal error: nonblocking request not in log file\n");
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
 
     // Return status to the user
-    if (stat != NULL){
-        *stat = req->status;
-    }
+    if (stat != NULL) *stat = req->status;
 
     // Recycle req object to the pool
     err = ncbbio_put_list_remove(ncbbp, reqid);
-    if (status == NC_NOERR){
-        status = err;
-    }
+    if (status == NC_NOERR) status = err;
 
     return status;
 }
@@ -249,17 +238,15 @@ int ncbbio_handle_put_req(NC_bb *ncbbp, int reqid, int *stat){
  * We didbn't keep track of issued ids
  * To process all issued ids, we need to do a linear search on reqs and process all request object that is in use
  */
-int ncbbio_handle_all_put_req(NC_bb *ncbbp){
+int ncbbio_handle_all_put_req(NC_bb *ncbbp) {
     int i, err, status = NC_NOERR;
     NC_bb_put_list *lp = &(ncbbp->putlist);
 
     // Search through req object array for object in use */
-    for(i = 0; i < lp->nalloc; i++){
-        if (lp->reqs[i].valid){
+    for (i=0; i<lp->nalloc; i++) {
+        if (lp->reqs[i].valid) {
             err = ncbbio_handle_put_req(ncbbp, i, NULL);
-            if (status == NC_NOERR){
-                status = err;
-            }
+            if (status == NC_NOERR) status = err;
         }
     }
 
@@ -272,7 +259,7 @@ int ncbbio_handle_all_put_req(NC_bb *ncbbp){
  * If not, we mark those log entries as invalid, preventing them from being flushed
  * After processing the request, we simply recycle the id
  */
-int ncbbio_cancel_put_req(NC_bb *ncbbp, int reqid, int *stat){
+int ncbbio_cancel_put_req(NC_bb *ncbbp, int reqid, int *stat) {
     int i, err, status = NC_NOERR;
     NC_bb_put_list *lp = &(ncbbp->putlist);
     NC_bb_put_req *req;
@@ -281,9 +268,7 @@ int ncbbio_cancel_put_req(NC_bb *ncbbp, int reqid, int *stat){
      * Valid id range from 0 ~ nalloc - 1
      */
     if (reqid >= lp->nalloc || reqid < 0) {
-        if (stat != NULL) {
-            *stat = NC_EINVAL_REQUEST;
-        }
+        if (stat != NULL) *stat = NC_EINVAL_REQUEST;
         return status;
     }
 
@@ -294,36 +279,27 @@ int ncbbio_cancel_put_req(NC_bb *ncbbp, int reqid, int *stat){
      * The request object must be in used
      * If not, the id is not yet issued, and hence invalid
      */
-    if (!req->valid){
-        if (stat != NULL) {
-            *stat = NC_EINVAL_REQUEST;
-        }
+    if (!req->valid) {
+        if (stat != NULL) *stat = NC_EINVAL_REQUEST;
         return status;
     }
 
     /* If log entry is already flushed, it's too late to cancel
      */
-    if (req->ready){
-        if (stat != NULL) {
-            *stat = NC_EFLUSHED;    // Fail
-        }
+    if (req->ready) {
+        if (stat != NULL) *stat = NC_EFLUSHED;    // Fail
     }
-    else{
-        if (stat != NULL){
-            *stat = NC_NOERR;   // Success
-        }
+    else {
+        if (stat != NULL) *stat = NC_NOERR;   // Success
 
         // Mark log entries as invalid
-        for(i = req->entrystart; i < req->entryend; i++) {
+        for (i=req->entrystart; i<req->entryend; i++)
             ncbbp->metaidx.entries[i].valid = 0;
-        }
     }
 
     // Recycle req object to the pool
     err = ncbbio_put_list_remove(ncbbp, reqid);
-    if (status == NC_NOERR){
-        status = err;
-    }
+    if (status == NC_NOERR) status = err;
 
     return status;
 }
@@ -333,17 +309,15 @@ int ncbbio_cancel_put_req(NC_bb *ncbbp, int reqid, int *stat){
  * We didbn't keep track of issued ids
  * To process all issued ids, we need to do a linear search on reqs and process all request object that is in use
  */
-int ncbbio_cancel_all_put_req(NC_bb *ncbbp){
+int ncbbio_cancel_all_put_req(NC_bb *ncbbp) {
     int i, err, status = NC_NOERR;
     NC_bb_put_list *lp = &(ncbbp->putlist);
 
     // Search through req object list for valid objects */
-    for(i = 0; i < lp->nalloc; i++){
-        if (lp->reqs[i].valid){
+    for (i=0; i<lp->nalloc; i++) {
+        if (lp->reqs[i].valid) {
             err = ncbbio_cancel_put_req(ncbbp, i, NULL);
-            if (status == NC_NOERR){
-                status = err;
-            }
+            if (status == NC_NOERR) status = err;
         }
     }
 

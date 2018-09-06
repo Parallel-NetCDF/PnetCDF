@@ -28,7 +28,7 @@
  * ncmpi_inq_var_fill()     : dispatcher->inq()
  *
  * ncmpi_sync()             : dispatcher->sync()
- * ncmpi_flush()             : dispatcher->flush()
+ * ncmpi_flush()            : dispatcher->flush()
  * ncmpi_sync_numrecs()     : dispatcher->sync_numrecs()
  *
  */
@@ -50,11 +50,11 @@
 
 int
 ncbbio_create(MPI_Comm     comm,
-             const char  *path,
-             int          cmode,
-             int          ncid,
-             MPI_Info     info,
-             void       **ncpp)  /* OUT */
+              const char  *path,
+              int          cmode,
+              int          ncid,
+              MPI_Info     info,
+              void       **ncpp)  /* OUT */
 {
     int err;
     void *ncp=NULL;
@@ -78,19 +78,19 @@ ncbbio_create(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(ncbbp->path, path);
-    ncbbp->mode = cmode;
+    ncbbp->mode          = cmode;
     ncbbp->ncmpio_driver = driver;  // ncmpio driver
-    ncbbp->ncid = ncid;
-    ncbbp->ncp = ncp;   // NC object used by ncmpio driver
-    ncbbp->recdimsize = 0;
-    ncbbp->recdimid = -1;   // Id of record dimension
-    ncbbp->max_ndims = 0;   // Highest dimensionality among all variables
-    ncbbp->datalog_fd = NULL;
-    ncbbp->metalog_fd = NULL;
-    ncbbp->flag = NC_MODE_CREATE | NC_MODE_DEF;
-    ncbbp->logcomm = MPI_COMM_SELF;
-    ncbbp->comm = comm;  /* reuse comm duplicated in dispatch layer */
-    MPI_Info_dup(info, &(ncbbp->info));
+    ncbbp->ncid          = ncid;
+    ncbbp->ncp           = ncp;   // NC object used by ncmpio driver
+    ncbbp->recdimsize    = 0;
+    ncbbp->recdimid      = -1;   // Id of record dimension
+    ncbbp->max_ndims     = 0;   // Highest dimensionality among all variables
+    ncbbp->datalog_fd    = NULL;
+    ncbbp->metalog_fd    = NULL;
+    ncbbp->flag          = NC_MODE_CREATE | NC_MODE_DEF;
+    ncbbp->logcomm       = MPI_COMM_SELF;
+    ncbbp->comm          = comm;  /* reuse comm duplicated in dispatch layer */
+    MPI_Info_dup(info, &ncbbp->info);
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
 
     /* Log init delayed to enddef */
@@ -103,11 +103,11 @@ ncbbio_create(MPI_Comm     comm,
 
 int
 ncbbio_open(MPI_Comm     comm,
-           const char  *path,
-           int          omode,
-           int          ncid,
-           MPI_Info     info,
-           void       **ncpp)
+            const char  *path,
+            int          omode,
+            int          ncid,
+            MPI_Info     info,
+            void       **ncpp)
 {
     int err, format;
     void *ncp=NULL;
@@ -137,23 +137,23 @@ ncbbio_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(ncbbp->path, path);
-    ncbbp->mode = omode;
+    ncbbp->mode          = omode;
     ncbbp->ncmpio_driver = driver;  // ncmpio driver
-    ncbbp->ncid = ncid;
-    ncbbp->ncp = ncp;   // NC object used by ncmpio driver
-    ncbbp->recdimsize = 0;
-    ncbbp->recdimid = -1;   // Id of record dimension
-    ncbbp->max_ndims = 0;   // Highest dimensionality among all variables
-    ncbbp->flag = 0;
-    ncbbp->logcomm = MPI_COMM_SELF;
-    ncbbp->comm = comm;  /* reuse comm duplicated in dispatch layer */
+    ncbbp->ncid          = ncid;
+    ncbbp->ncp           = ncp;   // NC object used by ncmpio driver
+    ncbbp->recdimsize    = 0;
+    ncbbp->recdimid      = -1;   // Id of record dimension
+    ncbbp->max_ndims     = 0;   // Highest dimensionality among all variables
+    ncbbp->flag          = 0;
+    ncbbp->logcomm       = MPI_COMM_SELF;
+    ncbbp->comm          = comm;  /* reuse comm duplicated in dispatch layer */
     MPI_Info_dup(info, &(ncbbp->info));
     ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
 
     /* Opened file is in data mode
      * We must initialize the log for if file is not opened for read only
      */
-    if (omode != NC_NOWRITE ){
+    if (omode != NC_NOWRITE) {
         /* Init log file */
         err = ncbbio_log_create(ncbbp, info);
         if (err != NC_NOERR) {
@@ -163,17 +163,19 @@ ncbbio_open(MPI_Comm     comm,
         // Initialize put list for nonblocking put operation
         ncbbio_put_list_init(ncbbp);
         if (err != NC_NOERR) {
+            NCI_Free(ncbbp);
             return err;
         }
         // Initialize metadata index for log entries
         ncbbio_metaidx_init(ncbbp);
         if (err != NC_NOERR) {
+            NCI_Free(ncbbp);
             return err;
         }
         // Mark as initialized
         ncbbp->inited = 1;
     }
-    else{
+    else {
         fSet(ncbbp->flag, NC_MODE_RDONLY);
         ncbbp->inited = 0;
     }
@@ -197,7 +199,7 @@ ncbbio_close(void *ncdp)
     /* If log is initialized, we must close the log file
      * Putlist and metadata index also needs to be cleaned up
      */
-    if (ncbbp->inited){
+    if (ncbbp->inited) {
         // Close log file
         status = ncbbio_log_close(ncbbp, 1);
         // Clean up put list
@@ -233,18 +235,17 @@ ncbbio_enddef(void *ncdp)
     err = ncbbp->ncmpio_driver->enddef(ncbbp->ncp);
     if (err != NC_NOERR) return err;
 
-    /* If logfile are not initialized, we initialize the logfile
-     * The file is newly created
-     * If the log is already initialized, user must have called redef to define new structure
-     * We update the information in logfile header accordingly
+    /* If logfile are not initialized, we initialize the logfile. The file is
+     * newly created.  If the log is already initialized, user must have called
+     * redef to define new structure.  We update the information in logfile
+     * header accordingly.
      */
-    if (ncbbp->inited){
+    if (ncbbp->inited)
         /* Update log with new information */
         err = ncbbio_log_enddef(ncbbp);
-    }
-    else {
+    else
         err = ncbbio_init(ncbbp);
-    }
+
     if (err != NC_NOERR) return err;
 
     fClr(ncbbp->flag, NC_MODE_DEF);
@@ -265,22 +266,19 @@ ncbbio_init(NC_bb *ncbbp)
     int err;
 
     /* If logfile are not initialized, we initialize the logfile */
-    if (!ncbbp->inited){
+    if (!ncbbp->inited) {
         /* Init log file */
         err = ncbbio_log_create(ncbbp, ncbbp->info);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (err != NC_NOERR) return err;
+
         // Initialize put list for nonblocking put operation
         ncbbio_put_list_init(ncbbp);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (err != NC_NOERR) return err;
+
         // Initialize metadata index for log entries
         ncbbio_metaidx_init(ncbbp);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (err != NC_NOERR) return err;
+
         // Mark as initialized
         ncbbp->inited = 1;
     }
@@ -295,25 +293,25 @@ ncbbio_init(NC_bb *ncbbp)
  */
 int
 ncbbio__enddef(void       *ncdp,
-              MPI_Offset  h_minfree,
-              MPI_Offset  v_align,
-              MPI_Offset  v_minfree,
-              MPI_Offset  r_align)
+               MPI_Offset  h_minfree,
+               MPI_Offset  v_align,
+               MPI_Offset  v_minfree,
+               MPI_Offset  r_align)
 {
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     // Call ncmpio enddef
-    err = ncbbp->ncmpio_driver->_enddef(ncbbp->ncp, h_minfree, v_align, v_minfree,
-                               r_align);
+    err = ncbbp->ncmpio_driver->_enddef(ncbbp->ncp, h_minfree, v_align,
+                                        v_minfree, r_align);
     if (err != NC_NOERR) return err;
 
-    /* If logfile are not initialized, we initialize the logfile
-     * The file is newly created
-     * If the log is already initialized, user must have called redef to define new structure
-     * We update the information in logfile header accordingly
+    /* If logfile are not initialized, we initialize the logfile.  The file is
+     * newly created.  If the log is already initialized, user must have called
+     * redef to define new structure.  We update the information in logfile
+     * header accordingly.
      */
-    if (ncbbp->inited){
+    if (ncbbp->inited) {
         /* Update log with new information */
         err = ncbbio_log_enddef(ncbbp);
         if (err != NC_NOERR) return err;
@@ -321,19 +319,16 @@ ncbbio__enddef(void       *ncdp,
     else {
         /* Init log file */
         err = ncbbio_log_create(ncbbp, ncbbp->info);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (err != NC_NOERR) return err;
+
         // Initialize put list for nonblocking put operation
         ncbbio_put_list_init(ncbbp);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (err != NC_NOERR) return err;
+
         // Initialize metadata index for log entries
         ncbbio_metaidx_init(ncbbp);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (err != NC_NOERR) return err;
+
         // Mark as initialized
         ncbbp->inited = 1;
     }
@@ -350,9 +345,9 @@ ncbbio_redef(void *ncdp)
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     /*
-     * Flush log entries to the file system on redefine
-     * After redef, our record in the log can become out dated due to change in varid, dimsize ... etc.
-     * Flush the log to ensure we have a fresh start
+     * Flush log entries to the file system on redefine.  After redef, our
+     * record in the log can become out dated due to change in varid, dimsize
+     * ... etc.  Flush the log to ensure we have a fresh start.
      */
 
     if (ncbbp->inited) {
@@ -378,7 +373,8 @@ ncbbio_begin_indep_data(void *ncdp)
     if (err != NC_NOERR) return err;
 
     /* Independent mode
-     * We keep track of current IO mode so we know what mode to use when flushing the log
+     * We keep track of current IO mode so we know what mode to use when
+     * flushing the log
      */
     fSet(ncbbp->flag, NC_MODE_INDEP);
 
@@ -395,7 +391,8 @@ ncbbio_end_indep_data(void *ncdp)
     if (err != NC_NOERR) return err;
 
     /* Collective mode
-     * We keep track of current IO mode so we know what mode to use when flushing the log
+     * We keep track of current IO mode so we know what mode to use when
+     * flushing the log
      */
     fClr(ncbbp->flag, NC_MODE_INDEP);
 
@@ -414,11 +411,11 @@ ncbbio_abort(void *ncdp)
     /* If log is initialized, we must close the log file
      * Putlist and metadata index also needs to be cleaned up
      */
-    if (ncbbp->inited){
+    if (ncbbp->inited) {
         /* No flushing on abort if in define mode */
-        if (fIsSet(ncbbp->flag, NC_MODE_DEF)){
+        if (fIsSet(ncbbp->flag, NC_MODE_DEF))
             replay = 0;
-        }
+
         // Close log file
         status = ncbbio_log_close(ncbbp, replay);
         // Clean up put list
@@ -440,18 +437,15 @@ ncbbio_abort(void *ncdp)
 
 int
 ncbbio_inq(void *ncdp,
-          int  *ndimsp,
-          int  *nvarsp,
-          int  *nattsp,
-          int  *xtendimp)
+           int  *ndimsp,
+           int  *nvarsp,
+           int  *nattsp,
+           int  *xtendimp)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->inq(ncbbp->ncp, ndimsp, nvarsp, nattsp, xtendimp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->inq(ncbbp->ncp, ndimsp, nvarsp, nattsp,
+                                     xtendimp);
 }
 
 int
@@ -475,35 +469,33 @@ ncbbio_inq_misc(void       *ncdp,
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->inq_misc(ncbbp->ncp, pathlen, path, num_fix_varsp,
-                                num_rec_varsp, striping_size, striping_count,
-                                header_size, header_extent, recsize, put_size,
-                                get_size, info_used, nreqs, usage, buf_size);
+    err = ncbbp->ncmpio_driver->inq_misc(ncbbp->ncp, pathlen, path,
+                                         num_fix_varsp, num_rec_varsp,
+                                         striping_size, striping_count,
+                                         header_size, header_extent, recsize,
+                                         put_size, get_size, info_used, nreqs,
+                                         usage, buf_size);
     if (err != NC_NOERR) return err;
 
-    /* Data that is pending in the log is not counted by the ncmpio driver, we add the size of data in the log to put size
-     * ncmpio driver does not handle put requests, we add number of pending put requests to ureqs
+    /* Data that is pending in the log is not counted by the ncmpio driver, we
+     * add the size of data in the log to put size.  ncmpio driver does not
+     * handle put requests, we add number of pending put requests to ureqs
      */
     if (ncbbp->inited) {
         /* Add the size of data log to reflect pending put in the log */
-        if (put_size != NULL){
+        if (put_size != NULL)
             *put_size += (MPI_Offset)ncbbp->datalogsize - 8;
 
-        }
-
         /* Add number of write requests to nreqs */
-        if (nreqs != NULL){
+        if (nreqs != NULL)
             *nreqs += ncbbp->putlist.nused;
-
-        }
     }
 
     /* Export bb related settings
      * ncbbio driver has it's own hints that is not handled by ncmpio driver
      */
-    if (info_used != NULL){
+    if (info_used != NULL)
         ncbbio_export_hint(ncbbp, *info_used);
-    }
 
     return NC_NOERR;
 }
@@ -515,21 +507,22 @@ ncbbio_inq_misc(void       *ncdp,
  * IN    req_ids:    Reqest ids to be canceled
  * OUT  statuses:    Result of cancelation
  *
- * We only keep track of put requests, get requests are handled by the ncmpio driver
- * Given an array of request ids, we separate them into put and get request ids
- * Put requests are handled by the ncbbio driver, get requests are forwarded to the ncmpio driver
- * Put requests have odd ids, get request have even ids
- * We first reorder req_ids so that the first part contains all put requests and the second part contains only get requests
- * We call ncmpio_wait using the first part, then we handle the second part
- * After handling the requests, we restore the original order
- * We keep track of every swap operation we used to reorder req_ids
- * We apply them in reverse order to restore the original order
+ * We only keep track of put requests, get requests are handled by the ncmpio
+ * driver.  Given an array of request ids, we separate them into put and get
+ * request ids.  Put requests are handled by the ncbbio driver, get requests
+ * are forwarded to the ncmpio driver.  Put requests have odd ids, get request
+ * have even ids.  We first reorder req_ids so that the first part contains all
+ * put requests and the second part contains only get requests.  We call
+ * ncmpio_wait using the first part, then we handle the second part.  After
+ * handling the requests, we restore the original order.  We keep track of
+ * every swap operation we used to reorder req_ids.  We apply them in reverse
+ * order to restore the original order.
  */
 int
 ncbbio_cancel(void *ncdp,
-             int   num_req,
-             int  *req_ids,
-             int  *statuses)
+              int   num_req,
+              int  *req_ids,
+              int  *statuses)
 {
     int i, j, err, status = NC_NOERR;
     int tmp, stat;
@@ -540,42 +533,41 @@ ncbbio_cancel(void *ncdp,
    /*
     * If num_req is one of all requests, we don't need to handle request ids
     */
-    if (num_req == NC_REQ_ALL || num_req == NC_PUT_REQ_ALL || num_req == NC_GET_REQ_ALL){
+    if (num_req == NC_REQ_ALL || num_req == NC_PUT_REQ_ALL ||
+                                 num_req == NC_GET_REQ_ALL) {
         // Cancel all put requests
-        if (num_req == NC_REQ_ALL || num_req == NC_PUT_REQ_ALL){
+        if (num_req == NC_REQ_ALL || num_req == NC_PUT_REQ_ALL) {
             /* Only handle put reqs in wr mode */
-            if (ncbbp->inited){
+            if (ncbbp->inited) {
                 err = ncbbio_cancel_all_put_req(ncbbp);
-                if (status == NC_NOERR){
-                    status = err;
-                }
+                if (status == NC_NOERR) status = err;
             }
         }
         // Cancel all get requests
-        if (num_req == NC_REQ_ALL || num_req == NC_GET_REQ_ALL){
+        if (num_req == NC_REQ_ALL || num_req == NC_GET_REQ_ALL) {
             err = ncbbp->ncmpio_driver->cancel(ncbbp->ncp, num_req, NULL, NULL);
-            if (status == NC_NOERR){
-                status = err;
-            }
+            if (status == NC_NOERR) status = err;
         }
-
         return status;
     }
 
-    /* Allocate buffer for tracking swap operation
-     * swapidx stores the target location that swaps with current location
-     * if swapidx[i] = j, it means the i-th entry is swapped with j-th entry in req_ids
-     * We do onw swap for each put request, so there are at most num_req swaps
+    /* Allocate buffer for tracking swap operation.
+     * swapidx stores the target location that swaps with current location.  if
+     * swapidx[i] = j, it means the i-th entry is swapped with j-th entry in
+     * req_ids.  We do onw swap for each put request, so there are at most
+     * num_req swaps.
      */
     swapidx = (int*)NCI_Malloc(SIZEOF_INT * num_req);
 
-    /* Count the number of put requests and swap it to the first section
-     * nput is number of put request known so far, it also mark the end of the first section
-     * When we find one put reqeust, we swap it with the entry at nput and increase nput by 1
+    /* Count the number of put requests and swap it to the first section.  nput
+     * is number of put request known so far, it also mark the end of the first
+     * section.  When we find one put reqeust, we swap it with the entry at
+     * nput and increase nput by 1.
      */
     nput = 0;
-    for(i = 0; i < num_req; i++){
-        if ((req_ids[i] & 1) == 0 || req_ids[i] == NC_REQ_NULL){    // Even id means a put request or NULL request
+    for (i=0; i<num_req; i++) {
+        if ((req_ids[i] & 1) == 0 || req_ids[i] == NC_REQ_NULL) {
+            // Even id means a put request or NULL request
             // We are swapping req_ids[nput] with req_ids[i]
             swapidx[nput] = i;
             // Perform swap
@@ -586,82 +578,78 @@ ncbbio_cancel(void *ncdp,
     }
 
     /* If we have put requests
-     * The internal put list uses a continuous id, so we translate it by dividing the id by 2
+     * The internal put list uses a continuous id, so we translate it by
+     * dividing the id by 2
      */
-    if (nput > 0){
+    if (nput > 0) {
         /* Only handle put reqs in wr mode */
-        if (ncbbp->inited){
-            for(i = 0; i < nput; i++){
+        if (ncbbp->inited) {
+            for (i=0; i<nput; i++) {
                 // Skip NULL requests
-                if (req_ids[i] == NC_REQ_NULL){
-                    stat = NC_NOERR;
-                }
-                else{
+                if (req_ids[i] == NC_REQ_NULL)
+		    stat = NC_NOERR;
+                else {
                     /* Try canceling the request
-                    * Cancelation can fail if the request is already flushed to the file
+		    * Cancelation can fail if the request is already flushed to
+		    * the file
                     */
                     err = ncbbio_cancel_put_req(ncbbp, (req_ids[i] / 2), &stat);
-                    if (status == NC_NOERR){
-                        status = err;
-                    }
+                    if (status == NC_NOERR) status = err;
                 }
 
-                if (statuses != NULL){
-                    statuses[i] = stat;
-                }
+                if (statuses != NULL) statuses[i] = stat;
             }
         }
-        else{
-            for(i = 0; i < nput; i++){
+        else {
+            for (i=0; i<nput; i++) {
                 /* Any put req other than NULL req is invalid in rdonly mode */
-                if (req_ids[i] == NC_REQ_NULL){
+                if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
-                }
-                else{
-                    // Waiting can fail if there's problem writing request to file
-                    stat = NC_EINVAL_REQUEST;
-                }
+                else
+		    // Waiting can fail if there's problem writing request to
+		    // file
+		    stat = NC_EINVAL_REQUEST;
 
-                if (statuses != NULL){
-                    statuses[i] = stat;
-                }
+                if (statuses != NULL) statuses[i] = stat;
             }
         }
     }
 
     /* If we have get requests
-     * ncmpio driver has it's own request id management, so we translate it by dividing the id by 2
+     * ncmpio driver has it's own request id management, so we translate it by
+     * dividing the id by 2
      */
-    if (num_req > nput){
+    if (num_req > nput) {
         // Translate reqid to ncmpio reqid
-        for(i = nput; i < num_req; i++){
+        for (i=nput; i<num_req; i++)
             req_ids[i] /= 2;
-        }
+
         // Call ncmpio cancel
-        err = ncbbp->ncmpio_driver->cancel(ncbbp->ncp, num_req - nput, req_ids + nput, statuses + nput);
-        if (status == NC_NOERR){
-            status = err;
-        }
+        err = ncbbp->ncmpio_driver->cancel(ncbbp->ncp, num_req - nput,
+	                                   req_ids + nput, statuses + nput);
+        if (status == NC_NOERR) status = err;
+
         // Translate reqid back to ncbbio reqid
-        for(i = nput; i < num_req; i++){
+        for (i=nput; i<num_req; i++)
             req_ids[i] *= 2;
-        }
     }
 
     /* After processing the requests, we need to resotre the original order
      * We read swapsidx in reverse order
      * There are exactly nput swaps
-     * Since req_ids[i] was swapped with req_ids[swapidx[i]], we must repeat it to swap it back
+     * Since req_ids[i] was swapped with req_ids[swapidx[i]], we must repeat it
+     * to swap it back
      */
-    for(i = nput - 1; i > -1; i--){
+    for (i=nput-1; i>-1; i--) {
         j = swapidx[i];
         tmp = req_ids[i];
         req_ids[i] = req_ids[j];
         req_ids[j] = tmp;
     }
-    // the order of statuses must be restored as well since they are recorded after reordering
-    if (statuses != NULL){
-        for(i = nput - 1; i > -1; i--){
+    // the order of statuses must be restored as well since they are recorded
+    // after reordering
+    if (statuses != NULL) {
+        for (i=nput-1; i>-1; i--) {
             j = swapidx[i];
             tmp = statuses[i];
             statuses[i] = statuses[j];
@@ -670,10 +658,9 @@ ncbbio_cancel(void *ncdp,
     }
 
     /* If no error happened, set req_ids to NC_REQ_NULL */
-    if (status == NC_NOERR && req_ids != NULL){
-        for(i = 0; i < num_req; i++){
+    if (status == NC_NOERR && req_ids != NULL) {
+        for (i=0; i<num_req; i++)
             req_ids[i] = NC_REQ_NULL;
-        }
     }
 
     // Free the tracking buffer
@@ -689,15 +676,16 @@ ncbbio_cancel(void *ncdp,
  * IN    req_ids:    Reqest ids to be canceled
  * OUT  statuses:    Result of cancelation
  *
- * We only keep track of put requests, get requests are handled by the ncmpio driver
- * Given an array of request ids, we separate them into put and get request ids
- * Put requests are handled by the ncbbio driver, get requests are forwarded to the ncmpio driver
- * Put requests have odd ids, get request have even ids
- * We first reorder req_ids so that the first part contains all put requests and the second part contains only get requests
- * We call ncmpio_wait using the first part, then we handle the second part
- * After handling the requests, we restore the original order
- * We keep track of every swap operation we used to reorder req_ids
- * We apply them in reverse order to restore the original order
+ * We only keep track of put requests, get requests are handled by the ncmpio
+ * driver.  Given an array of request ids, we separate them into put and get
+ * request ids.  Put requests are handled by the ncbbio driver, get requests
+ * are forwarded to the ncmpio driver.  Put requests have odd ids, get request
+ * have even ids.  We first reorder req_ids so that the first part contains all
+ * put requests and the second part contains only get requests.  We call
+ * ncmpio_wait using the first part, then we handle the second part.  After
+ * handling the requests, we restore the original order.  We keep track of
+ * every swap operation we used to reorder req_ids.  We apply them in reverse
+ * order to restore the original order.
  *
  * Here we give an example of reordering:
  * Initial:
@@ -711,10 +699,10 @@ ncbbio_cancel(void *ncdp,
  */
 int
 ncbbio_wait(void *ncdp,
-           int   num_reqs,
-           int  *req_ids,
-           int  *statuses,
-           int   reqMode)
+            int   num_reqs,
+            int  *req_ids,
+            int  *statuses,
+            int   reqMode)
 {
     int i, j, err, status = NC_NOERR;
     int tmp, stat;
@@ -723,9 +711,9 @@ ncbbio_wait(void *ncdp,
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
     // Flush the log if log is initialized
-    if (ncbbp->inited){
+    if (ncbbp->inited) {
         err = ncbbio_log_flush(ncbbp);
-        if (status == NC_NOERR){
+        if (status == NC_NOERR) {
             status = err;
         }
     }
@@ -733,23 +721,21 @@ ncbbio_wait(void *ncdp,
    /*
     * If num_reqs is one of all requests, we don't need to handle request ids
     */
-    if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
+    if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL ||
+                                  num_reqs == NC_GET_REQ_ALL) {
         // Wait all put requests
-        if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL){
+        if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL) {
             /* Only handle put reqs in wr mode */
-            if (ncbbp->inited){
+            if (ncbbp->inited) {
                 err = ncbbio_handle_all_put_req(ncbbp);
-                if (status == NC_NOERR){
-                    status = err;
-                }
+                if (status == NC_NOERR) status = err;
             }
         }
         // Wait all get requests
-        if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
-            err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, num_reqs, NULL, NULL, reqMode);
-            if (status == NC_NOERR){
-                status = err;
-            }
+        if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL) {
+            err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, num_reqs, NULL, NULL,
+	                                     reqMode);
+            if (status == NC_NOERR) status = err;
         }
 
         return status;
@@ -757,18 +743,21 @@ ncbbio_wait(void *ncdp,
 
     /* Allocate buffer for tracking swap operation
      * swapidx stores the target location that swaps with current location
-     * if swapidx[i] = j, it means the i-th entry is swapped with j-th entry in req_ids
-     * We do onw swap for each put request, so there are at most num_reqs swaps
+     * if swapidx[i] = j, it means the i-th entry is swapped with j-th entry in
+     * req_ids.  We do onw swap for each put request, so there are at most
+     * num_reqs swaps
      */
     swapidx = (int*)NCI_Malloc(SIZEOF_INT * num_reqs);
 
     /* Count the number of put requests and swap it to the first section
-     * nput is number of put request known so far, it also mark the end of the first section
-     * When we find one put reqeust, we swap it with the entry at nput and increase nput by 1
+     * nput is number of put request known so far, it also mark the end of the
+     * first section When we find one put reqeust, we swap it with the entry at
+     * nput and increase nput by 1
      */
     nput = 0;
-    for(i = 0; i < num_reqs; i++){
-        if ((req_ids[i] & 1) == 0 || req_ids[i] == NC_REQ_NULL){    // Even id means a put request or NULL request
+    for (i=0; i<num_reqs; i++) {
+        if ((req_ids[i] & 1) == 0 || req_ids[i] == NC_REQ_NULL) {
+	    // Even id means a put request or NULL request
             // We are swapping req_ids[nput] with req_ids[i]
             swapidx[nput] = i;
             // Perform swap
@@ -779,82 +768,76 @@ ncbbio_wait(void *ncdp,
     }
 
     /* If we have put requests
-     * The internal put list uses a continuous id, so we translate it by dividing the id by 2
+     * The internal put list uses a continuous id, so we translate it by
+     * dividing the id by 2
      */
-    if (nput > 0){
+    if (nput > 0) {
         /* Handle requests if in wr mode */
-        if (ncbbp->inited){
+        if (ncbbp->inited) {
             /* Handle the request one by one */
-            for(i = 0; i < nput; i++){
+            for (i=0; i<nput; i++) {
                 // Handle request, skiping NULL requests
-                if (req_ids[i] == NC_REQ_NULL){
+                if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
-                }
-                else{
-                    // Waiting can fail if there's problem writing request to file
+                else {
+                    // Wait can fail if there's problem writing request to file
                     err = ncbbio_handle_put_req(ncbbp, (req_ids[i] / 2), &stat);
-                    if (status == NC_NOERR){
-                        status = err;
-                    }
+                    if (status == NC_NOERR) status = err;
                 }
 
-                if (statuses != NULL){
-                    statuses[i] = stat;
-                }
+                if (statuses != NULL) statuses[i] = stat;
             }
         }
-        else{
-            for(i = 0; i < nput; i++){
+        else {
+            for (i=0; i<nput; i++) {
                 /* Any put req other than NULL req is invalid in rdonly mode */
-                if (req_ids[i] == NC_REQ_NULL){
+                if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
-                }
-                else{
-                    // Waiting can fail if there's problem writing request to file
+                else
+                    // Wait can fail if there's problem writing request to file
                     stat = NC_EINVAL_REQUEST;
-                }
 
-                if (statuses != NULL){
+                if (statuses != NULL)
                     statuses[i] = stat;
-                }
             }
         }
     }
 
     /* If we have get requests
-     * ncmpio driver has it's own request id management, so we translate it by dividing the id by 2
-     * We need to flush the log so new data can be read
+     * ncmpio driver has it's own request id management, so we translate it by
+     * dividing the id by 2.  We need to flush the log so new data can be read
      */
-    if (num_reqs > nput || !(fIsSet(ncbbp->flag, NC_MODE_INDEP))){
+    if (num_reqs > nput || !(fIsSet(ncbbp->flag, NC_MODE_INDEP))) {
         // Translate reqid to ncmpio reqid
-        for(i = nput; i < num_reqs; i++){
+        for (i=nput; i<num_reqs; i++)
             req_ids[i] /= 2;
-        }
+
         // Call ncmpio wait
-        err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, num_reqs - nput, req_ids + nput, statuses + nput, reqMode);
-        if (status == NC_NOERR){
-            status = err;
-        }
+        err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, num_reqs - nput,
+	                                 req_ids + nput, statuses + nput,
+					 reqMode);
+        if (status == NC_NOERR) status = err;
+
         // Translate reqid back to ncbbio reqid
-        for(i = nput; i < num_reqs; i++){
-            req_ids[i] *= 2;
-        }
+        for (i=nput; i<num_reqs; i++) req_ids[i] *= 2;
     }
 
     /* After processing the requests, we need to resotre the original order
      * We read swapsidx in reverse order
      * There are exactly nput swaps
-     * Since req_ids[i] was swapped with req_ids[swapidx[i]], we must repeat it to swap it back
+     * Since req_ids[i] was swapped with req_ids[swapidx[i]], we must repeat it
+     * to swap it back
      */
-    for(i = nput - 1; i > -1; i--){
+    for (i=nput-1; i>-1; i--) {
         j = swapidx[i];
         tmp = req_ids[i];
         req_ids[i] = req_ids[j];
         req_ids[j] = tmp;
     }
-    // the order of statuses must be restored as well since they are recorded after reordering
-    if (statuses != NULL){
-        for(i = nput - 1; i > -1; i--){
+    // the order of statuses must be restored as well since they are recorded
+    // after reordering
+    if (statuses != NULL) {
+        for (i=nput-1; i>-1; i--) {
             j = swapidx[i];
             tmp = statuses[i];
             statuses[i] = statuses[j];
@@ -863,10 +846,9 @@ ncbbio_wait(void *ncdp,
     }
 
     /* If no error happened, set req_ids to NC_REQ_NULL */
-    if (status == NC_NOERR && req_ids != NULL){
-        for(i = 0; i < num_reqs; i++){
+    if (status == NC_NOERR && req_ids != NULL) {
+        for (i=0; i<num_reqs; i++)
             req_ids[i] = NC_REQ_NULL;
-        }
     }
 
     // Free the tracking buffer
@@ -877,57 +859,42 @@ ncbbio_wait(void *ncdp,
 
 int
 ncbbio_set_fill(void *ncdp,
-               int   fill_mode,
-               int  *old_fill_mode)
+                int   fill_mode,
+                int  *old_fill_mode)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->set_fill(ncbbp->ncp, fill_mode, old_fill_mode);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->set_fill(ncbbp->ncp, fill_mode, old_fill_mode);
 }
 
 int
 ncbbio_fill_var_rec(void      *ncdp,
-                   int        varid,
-                   MPI_Offset recno)
+                    int        varid,
+                    MPI_Offset recno)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->fill_var_rec(ncbbp->ncp, varid, recno);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->fill_var_rec(ncbbp->ncp, varid, recno);
 }
 
 int
 ncbbio_def_var_fill(void       *ncdp,
-                   int         varid,
-                   int         no_fill,
-                   const void *fill_value)
+                    int         varid,
+                    int         no_fill,
+                    const void *fill_value)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->def_var_fill(ncbbp->ncp, varid, no_fill, fill_value);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->def_var_fill(ncbbp->ncp, varid, no_fill,
+                                              fill_value);
 }
 
 int
 ncbbio_sync_numrecs(void *ncdp)
 {
-    int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    err = ncbbp->ncmpio_driver->sync_numrecs(ncbbp->ncp);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
+    return ncbbp->ncmpio_driver->sync_numrecs(ncbbp->ncp);
 }
 
 int

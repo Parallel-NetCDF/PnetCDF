@@ -39,9 +39,6 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     int err, i, ndims, elsize, itype;
     char *buffer;
     PNC *pncp;
-#ifdef PNETCDF_PROFILING
-    double t1, t2, t3, t4, t5;
-#endif
     MPI_Offset esize, dataoff, recsize;
     MPI_Offset *Start, *Count, *Stride;
     MPI_Offset size;
@@ -49,6 +46,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     NC_bb_metadataheader *headerp;
 
 #ifdef PNETCDF_PROFILING
+    double t1, t2, t3, t4, t5;
     t1 = MPI_Wtime();
 #endif
 
