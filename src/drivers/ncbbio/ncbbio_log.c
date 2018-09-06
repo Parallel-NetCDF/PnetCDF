@@ -23,7 +23,9 @@
  * IN      info:    MPI info passed to ncmpi_create/ncmpi_open
  * INOUT   ncbbp:   NC_bb object holding the log structure
  */
-int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
+int ncbbio_log_create(NC_bb* ncbbp,
+                      MPI_Info info)
+{
     int i, rank, np, err, flag, masterrank;
     char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
     char *abspath, *fname, *path, *fdir = NULL;
@@ -62,49 +64,49 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
     /* Read environment variable for burst buffer path */
 
-    /* Remove romio driver specifier form the begining of path */
+    /* Remove romio driver specifier form the beginning of path */
     path = strchr(ncbbp->path, ':');
-    if (path == NULL){
+    if (path == NULL) {
         /* No driver specifier, use full path */
         path = ncbbp->path;
     }
-    else{
+    else {
         /* Skip until after the first ':' */
         path += 1;
     }
 
     /* Determine log base */
-    if (ncbbp->logbase[0] != '\0'){
+    if (ncbbp->logbase[0] != '\0') {
         /* We don't need driver specifier in logbase as well */
         logbasep = strchr(ncbbp->logbase, ':');
-        if (logbasep == NULL){
+        if (logbasep == NULL) {
             /* No driver specifier, use full path */
             logbasep = ncbbp->logbase;
         }
-        else{
+        else {
             /* Skip until after the first ':' */
             logbasep += 1;
         }
     }
-    else{
+    else {
         i = strlen(path);
         fdir = (char*)NCI_Malloc((i + 1) * sizeof(char));
         strncpy(fdir, path, i + 1);
         /* Search for first '\' from the back */
-        for(i--; i > -1; i--){
-            if (fdir[i] == '/'){
+        for (i--; i > -1; i--) {
+            if (fdir[i] == '/') {
                 fdir[i + 1] = '\0';
                 break;
             }
         }
 
         /* If directory is fund, use it as logbase */
-        if (i >= 0){
+        if (i >= 0) {
             logbasep = fdir;
         }
 
         /* Warn if log base not set by user */
-        if (rank == 0){
+        if (rank == 0) {
             printf("Warning: Log directory not set. Using %s\n", logbasep);
             fflush(stdout);
         }
@@ -123,17 +125,17 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
     /* Resolve absolute path */
     abspath = realpath(path, basename);
-    if (abspath == NULL){
+    if (abspath == NULL) {
         /* Can not resolve absolute path */
         DEBUG_RETURN_ERROR(NC_EBAD_FILE);
     }
     abspath = realpath(logbasep, logbase);
-    if (abspath == NULL){
+    if (abspath == NULL) {
         /* Can not resolve absolute path */
         DEBUG_RETURN_ERROR(NC_EBAD_FILE);
     }
 
-    if (fdir != NULL){
+    if (fdir != NULL) {
         NCI_Free(fdir);
     }
 
@@ -142,17 +144,17 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 #if MPI_VERSION >= 3
         err = MPI_Comm_split_type(ncbbp->comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
                         &(ncbbp->logcomm));
-        if (err != NC_NOERR){
+        if (err != NC_NOERR) {
             DEBUG_RETURN_ERROR(NC_EMPI);
         }
 #else
         err = ncbbio_get_node_comm(ncbbp->comm, &ncbbp->logcomm);
-        if (err != NC_NOERR){
+        if (err != NC_NOERR) {
             return err;
         }
 #endif
         err = MPI_Bcast(&masterrank, 1, MPI_INT, 0, ncbbp->logcomm);
-        if (err != NC_NOERR){
+        if (err != NC_NOERR) {
             DEBUG_RETURN_ERROR(NC_EMPI);
         }
     }
@@ -163,12 +165,12 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
     }
 
     /* Extract file anme
-     * Search for first / charactor from the tail
+     * Search for last / character
      * Absolute path should always contains one '/', return error otherwise
      * We return the string including '/' for convenience
      */
     fname = strrchr(basename, '/');
-    if (fname == NULL){
+    if (fname == NULL) {
         DEBUG_RETURN_ERROR(NC_EBAD_FILE);
     }
 
@@ -183,13 +185,13 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
 
     /* Initialize metadata buffer */
     err = ncbbio_log_buffer_init(&(ncbbp->metadata));
-    if (err != NC_NOERR){
+    if (err != NC_NOERR) {
         return err;
     }
 
     /* Initialize metadata entry array */
     err = ncbbio_log_sizearray_init(&(ncbbp->entrydatasize));
-    if (err != NC_NOERR){
+    if (err != NC_NOERR) {
         return err;
     }
 
@@ -228,7 +230,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
      * Header consists of a fixed-size info and variable size basename
      */
     headersize = sizeof(NC_bb_metadataheader) + strlen(basename);
-    if (headersize % 4 != 0){
+    if (headersize % 4 != 0) {
         headersize += 4 - (headersize % 4);
     }
     headerp = (NC_bb_metadataheader*)ncbbio_log_buffer_alloc(&(ncbbp->metadata),
@@ -242,9 +244,9 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
             headersize - sizeof(NC_bb_metadataheader) + 1);
     headerp->rank_id = rank;   /* Rank */
     headerp->num_ranks = np;   /* Number of processes */
-    /* Without convertion before logging, data in native representation */
+    /* Without conversion before logging, data in native representation */
     headerp->is_external = 0;
-    /* Determine endianess */
+    /* Determine Endianness */
 #ifdef WORDS_BIGENDIAN
     headerp->big_endian = NC_LOG_TRUE;
 #else
@@ -277,7 +279,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
      * Write from the memory buffer to file
      */
     err = ncbbio_sharedfile_write(ncbbp->metalog_fd, headerp, headersize);
-    if (err != NC_NOERR){
+    if (err != NC_NOERR) {
         return err;
     }
 
@@ -285,7 +287,7 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
      * Data header consists of a fixed-length string "PnetCDF0"
      */
     err = ncbbio_sharedfile_write(ncbbp->datalog_fd, "PnetCDF0", 8);
-    if (err != NC_NOERR){
+    if (err != NC_NOERR) {
         return err;
     }
 
@@ -307,14 +309,13 @@ int ncbbio_log_create(NC_bb* ncbbp, MPI_Info info) {
  * Update information used by bb layer on enddef
  * IN    ncbbp:    NC_bb structure
  */
-int ncbbio_log_enddef(NC_bb *ncbbp){
+int ncbbio_log_enddef(NC_bb *ncbbp)
+{
     int err;
-#ifdef PNETCDF_PROFILING
-    double t1, t2;
-#endif
     NC_bb_metadataheader *headerp;
 
 #ifdef PNETCDF_PROFILING
+    double t1, t2;
     t1 = MPI_Wtime();
 #endif
 
@@ -324,7 +325,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp){
      * Update the header if max ndim increased
      * For now, max_ndims is the only field that can change
      */
-    if (ncbbp->max_ndims > headerp->max_ndims){
+    if (ncbbp->max_ndims > headerp->max_ndims) {
         headerp->max_ndims = ncbbp->max_ndims;
 
         /* Overwrite maxndims
@@ -336,7 +337,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp){
                                sizeof(headerp->basenamelen) -
                                sizeof(headerp->num_entries) -
                                sizeof(headerp->max_ndims));
-        if (err != NC_NOERR){
+        if (err != NC_NOERR) {
             return err;
         }
     }
@@ -355,9 +356,13 @@ int ncbbio_log_enddef(NC_bb *ncbbp){
  * Used by ncmpi_close()
  * IN    ncbbp:    log structure
  */
-int ncbbio_log_close(NC_bb *ncbbp, int replay) {
+int ncbbio_log_close(NC_bb *ncbbp,
+                     int    replay)
+{
     int err;
-#ifdef PNETCDF_DEBUG
+    NC_bb_metadataheader* headerp;
+
+#ifdef PNETCDF_PROFILING
     unsigned long long total_data;
     unsigned long long total_meta;
     unsigned long long buffer_size;
@@ -374,10 +379,6 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     double put_data_wr_time;
     double put_meta_wr_time;
     double put_num_wr_time;
-#endif
-    NC_bb_metadataheader* headerp;
-
-#ifdef PNETCDF_PROFILING
     double t1, t2;
     t1 = MPI_Wtime();
 #endif
@@ -385,24 +386,24 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
 
     /* If log file is created, flush the log */
-    if (ncbbp->metalog_fd != NULL){
+    if (ncbbp->metalog_fd != NULL) {
         /* Commit to CDF file */
-        if (replay && (headerp->num_entries > 0 || !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))){
+        if (replay && (headerp->num_entries > 0 || !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))) {
             ncbbio_log_flush_core(ncbbp);
         }
 
         /* Close log file */
         err = ncbbio_sharedfile_close(ncbbp->metalog_fd);
-        if (err != NC_NOERR){
+        if (err != NC_NOERR) {
             return err;
         }
         err = ncbbio_sharedfile_close(ncbbp->datalog_fd);
-        if (err != NC_NOERR){
+        if (err != NC_NOERR) {
             return err;
         }
 
         /* Delete log files if delete flag is set */
-        if (ncbbp->hints & NC_LOG_HINT_DEL_ON_CLOSE){
+        if (ncbbp->hints & NC_LOG_HINT_DEL_ON_CLOSE) {
             unlink(ncbbp->datalogpath);
             unlink(ncbbp->metalogpath);
         }
@@ -413,7 +414,7 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     ncbbio_log_sizearray_free(&(ncbbp->entrydatasize));
 
     /* Close shared log communicator */
-    if (ncbbp->logcomm != MPI_COMM_SELF){
+    if (ncbbp->logcomm != MPI_COMM_SELF) {
         MPI_Comm_free(&(ncbbp->logcomm));
     }    
 
@@ -422,7 +423,6 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     ncbbp->total_time += t2 - t1;
     ncbbp->close_time += t2 - t1;
 
-#ifdef PNETCDF_DEBUG
     /* Print accounting info in debug build */
     MPI_Reduce(&(ncbbp->total_time), &total_time, 1, MPI_DOUBLE, MPI_MAX, 0,
                 ncbbp->comm);
@@ -457,7 +457,7 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     MPI_Reduce(&(ncbbp->flushbuffersize), &buffer_size, 1,
                 MPI_UNSIGNED_LONG_LONG, MPI_MAX, 0, ncbbp->comm);
 #if 0
-    if (ncbbp->rank == 0){
+    if (ncbbp->rank == 0) {
         printf("==========================================================\n");
         printf("File: %s\n", ncbbp->path);
         printf("Data writen to variable: %llu\n", total_data);
@@ -480,7 +480,6 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
     }
 #endif
 #endif
-#endif
 
     return NC_NOERR;
 }
@@ -491,15 +490,13 @@ int ncbbio_log_close(NC_bb *ncbbp, int replay) {
  * It work by flush and re-initialize the log structure
  * IN    ncbbp:    log structure
  */
-int ncbbio_log_flush(NC_bb* ncbbp) {
+int ncbbio_log_flush(NC_bb* ncbbp)
+{
     int err, status = NC_NOERR;
-#ifdef PNETCDF_PROFILING
-    double t1, t2;
-#endif
-    //NC_req *putlist;
     NC_bb_metadataheader *headerp;
 
 #ifdef PNETCDF_PROFILING
+    double t1, t2;
     t1 = MPI_Wtime();
 #endif
 
@@ -509,14 +506,14 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
      * We still need to participate the flush in collective mode
      * We assume some processes will have things to flush to save communication cost
      */
-    if (headerp->num_entries == 0 && fIsSet(ncbbp->flag, NC_MODE_INDEP)){
+    if (headerp->num_entries == 0 && fIsSet(ncbbp->flag, NC_MODE_INDEP)) {
         return NC_NOERR;
     }
 
     /* Replay log file */
     err = ncbbio_log_flush_core(ncbbp);
     if (err != NC_NOERR) {
-        if (status == NC_NOERR){
+        if (status == NC_NOERR) {
             DEBUG_ASSIGN_ERROR(status, err);
         }
     }
@@ -531,7 +528,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
      */
     err = ncbbio_sharedfile_pwrite(ncbbp->metalog_fd, &headerp->num_entries,
                             SIZEOF_MPI_OFFSET, 56);
-    if (err != NC_NOERR){
+    if (err != NC_NOERR) {
         return err;
     }
 
@@ -542,7 +539,7 @@ int ncbbio_log_flush(NC_bb* ncbbp) {
 
     /* Rewind data log file descriptors and reset the size */
     err = ncbbio_sharedfile_seek(ncbbp->datalog_fd, 8, SEEK_SET);
-    if (err != NC_NOERR){
+    if (err != NC_NOERR) {
         return err;
     }
 

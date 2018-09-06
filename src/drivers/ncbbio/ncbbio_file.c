@@ -61,7 +61,7 @@ ncbbio_create(MPI_Comm     comm,
     NC_bb *ncbbp;
     PNC_driver *driver=NULL;
 
-    /* TODO: use comde to determine the true driver */
+    /* TODO: use cmode to determine the true driver */
     driver = ncmpio_inq_driver();
     if (driver == NULL) return NC_ENOTNC;
 
@@ -479,7 +479,7 @@ ncbbio_inq_misc(void       *ncdp,
 
     /* Data that is pending in the log is not counted by the ncmpio driver, we
      * add the size of data in the log to put size.  ncmpio driver does not
-     * handle put requests, we add number of pending put requests to ureqs
+     * handle put requests, we add number of pending put requests to nreqs
      */
     if (ncbbp->inited) {
         /* Add the size of data log to reflect pending put in the log */
@@ -505,7 +505,7 @@ ncbbio_inq_misc(void       *ncdp,
  * IN       ncdp:    NC_bb object
  * IN    num_req:    Number of request to be canceled
  * IN    req_ids:    Reqest ids to be canceled
- * OUT  statuses:    Result of cancelation
+ * OUT  statuses:    Result of cancellation
  *
  * We only keep track of put requests, get requests are handled by the ncmpio
  * driver.  Given an array of request ids, we separate them into put and get
@@ -561,7 +561,7 @@ ncbbio_cancel(void *ncdp,
 
     /* Count the number of put requests and swap it to the first section.  nput
      * is number of put request known so far, it also mark the end of the first
-     * section.  When we find one put reqeust, we swap it with the entry at
+     * section.  When we find one put request, we swap it with the entry at
      * nput and increase nput by 1.
      */
     nput = 0;
@@ -590,7 +590,7 @@ ncbbio_cancel(void *ncdp,
 		    stat = NC_NOERR;
                 else {
                     /* Try canceling the request
-		    * Cancelation can fail if the request is already flushed to
+		    * Cancellation can fail if the request is already flushed to
 		    * the file
                     */
                     err = ncbbio_cancel_put_req(ncbbp, (req_ids[i] / 2), &stat);
@@ -602,7 +602,7 @@ ncbbio_cancel(void *ncdp,
         }
         else {
             for (i=0; i<nput; i++) {
-                /* Any put req other than NULL req is invalid in rdonly mode */
+                /* Any put req other than NULL req is invalid in rd only mode */
                 if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
                 else
@@ -634,7 +634,7 @@ ncbbio_cancel(void *ncdp,
             req_ids[i] *= 2;
     }
 
-    /* After processing the requests, we need to resotre the original order
+    /* After processing the requests, we need to restore the original order
      * We read swapsidx in reverse order
      * There are exactly nput swaps
      * Since req_ids[i] was swapped with req_ids[swapidx[i]], we must repeat it
@@ -674,7 +674,7 @@ ncbbio_cancel(void *ncdp,
  * IN       ncdp:    NC_bb object
  * IN    num_req:    Number of request to be canceled
  * IN    req_ids:    Reqest ids to be canceled
- * OUT  statuses:    Result of cancelation
+ * OUT  statuses:    Result of cancellation
  *
  * We only keep track of put requests, get requests are handled by the ncmpio
  * driver.  Given an array of request ids, we separate them into put and get
@@ -751,7 +751,7 @@ ncbbio_wait(void *ncdp,
 
     /* Count the number of put requests and swap it to the first section
      * nput is number of put request known so far, it also mark the end of the
-     * first section When we find one put reqeust, we swap it with the entry at
+     * first section When we find one put request, we swap it with the entry at
      * nput and increase nput by 1
      */
     nput = 0;
@@ -776,7 +776,7 @@ ncbbio_wait(void *ncdp,
         if (ncbbp->inited) {
             /* Handle the request one by one */
             for (i=0; i<nput; i++) {
-                // Handle request, skiping NULL requests
+                // Handle request, skipping NULL requests
                 if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
                 else {
@@ -790,7 +790,7 @@ ncbbio_wait(void *ncdp,
         }
         else {
             for (i=0; i<nput; i++) {
-                /* Any put req other than NULL req is invalid in rdonly mode */
+                /* Any put req other than NULL req is invalid in rd only mode */
                 if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
                 else
@@ -822,7 +822,7 @@ ncbbio_wait(void *ncdp,
         for (i=nput; i<num_reqs; i++) req_ids[i] *= 2;
     }
 
-    /* After processing the requests, we need to resotre the original order
+    /* After processing the requests, we need to restore the original order
      * We read swapsidx in reverse order
      * There are exactly nput swaps
      * Since req_ids[i] was swapped with req_ids[swapidx[i]], we must repeat it

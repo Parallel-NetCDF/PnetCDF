@@ -158,12 +158,13 @@ ncbbio_put_var(void             *ncdp,
     /* Skip ZERO request */
     if (reqMode & NC_REQ_ZERO) return NC_NOERR;
 
+    /* inquire variable's external type and number dimensions */
     err = ncbbp->ncmpio_driver->inq_var(ncbbp->ncp, varid, NULL, &xtype,
                                         &ndims, NULL, NULL, NULL, NULL, NULL);
     if (err != NC_NOERR) return err;;
 
     if (buftype == MPI_DATATYPE_NULL) {
-        /* both buftype and bufcount are ignored */
+        /* itype matches xtype, both buftype and bufcount are ignored */
         bufcount = -1; /* make this like a high-level API call */
         itype = ncmpii_nc2mpitype(xtype);
     }
@@ -358,7 +359,7 @@ ncbbio_get_varn(void              *ncdp,
 }
 
 /*
- * We treat varn as n of vara
+ * varn is implemented as making n calls to vara
  */
 int
 ncbbio_put_varn(void              *ncdp,

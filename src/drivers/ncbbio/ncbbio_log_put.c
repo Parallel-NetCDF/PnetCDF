@@ -25,7 +25,7 @@
  * IN    stride: stride in put_var* call
  * IN    bur:    buffer of data to write
  * IN    buftype: user buffer's internal data type, an MPI primitive type
- * OUT   putsize: number of internal bytes of this requests
+ * OUT   put_size: number of internal bytes of this requests
  */
 int ncbbio_log_put_var(NC_bb            *ncbbp,
                        int               varid,
@@ -34,14 +34,13 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
                        const MPI_Offset  stride[],
                        void             *buf,
                        MPI_Datatype      buftype,
-                       MPI_Offset       *putsize)
+                       MPI_Offset       *put_sizep)
 {
     int err, i, ndims, elsize, itype;
     char *buffer;
     PNC *pncp;
-    MPI_Offset esize, dataoff, recsize;
+    MPI_Offset esize, dataoff, recsize, put_size;
     MPI_Offset *Start, *Count, *Stride;
-    MPI_Offset size;
     NC_bb_metadataentry *entryp;
     NC_bb_metadataheader *headerp;
 
@@ -57,34 +56,27 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     /* Get ndims */
     ndims = pncp->vars[varid].ndims;
 
-    /* Calcalate submatrix size */
+    /* Calcalate put request size */
     MPI_Type_size(buftype, &elsize); /* buftype is never MPI_DATATYPE_NULL */
-
-    size = elsize;
-    if (count != NULL) {
+    put_size = elsize;
+    if (count != NULL) { /* if count == NULL, this is var1 request */
         for (i=0; i<ndims; i++)
-            size *= count[i];
+            put_size *= count[i];
     }
+    if (put_sizep != NULL) *put_sizep = put_size;
 
-    /* Return size */
-    if (putsize != NULL) *putsize = size;
+    /* Skip zero-length request */
+    if (put_size == 0) return NC_NOERR;
 
-    /* Skip empty entries
-     * Other arguments form upper layer may be invalid in case of 0 size
-     * request skip to prevent unnecessary error
+    /* Update the largest request size
+     * This is used later to determine minimal buffer size for flushing
      */
-    if (size == 0) return NC_NOERR;
-
-    /* Record largest entry size
-     * This is used later to determine minimal buffer size required to flush
-     * the log
-     */
-    if (ncbbp->maxentrysize < size)
-        ncbbp->maxentrysize = size;
+    if (ncbbp->maxentrysize < put_size)
+        ncbbp->maxentrysize = put_size;
 
     /* Update record dimension size if is record variable */
     if (pncp->vars[varid].recdim >= 0) {
-        /* Dim size after the put operation */
+        /* Dim size after this put request */
         if (stride == NULL)
             recsize = start[0] + ((count == NULL) ? 1 : count[0]);
         else if (count == NULL)
@@ -96,7 +88,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
             ncbbp->recdimsize = recsize;
     }
 
-    /* Convert to log types
+    /* Convert MPI datatype to ncbb log types
      * Log spec has different enum of types than MPI
      */
     if (buftype == MPI_CHAR)                     /* put_*_text */
@@ -133,10 +125,10 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
 
-    /* Prepare metadata entry header */
+    /* Prepare log metadata entry header */
 
     /* Find out the location of data in datalog
-     * Which is current possition in data log
+     * Which is the current position in data log
      * Datalog descriptor should always points to the end of file
      * Position must be recorded first before writing
      */
@@ -155,7 +147,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     entryp->varid = varid;  /* Variable id */
     entryp->ndims = ndims;  /* Number of dimensions of the variable*/
     /* The size of data in bytes. The size that will be write to data log */
-    entryp->data_len = size;
+    entryp->data_len = put_size;
     entryp->data_off = dataoff;
 
     /* Determine the api kind of original call
@@ -173,33 +165,30 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     Stride = Count + ndims;
 
     /* Fill up start, count, and stride */
-    memcpy(Start, start, ndims * SIZEOF_MPI_OFFSET);
-    if (count == NULL) {
-        for (i=0; i<ndims; i++) Count[i] = 1;
+    for (i=0; i<ndims; i++) {
+        Start[i]  = start[i];
+        Count[i]  = (count  == NULL) ? 1 :  count[i];
+        Stride[i] = (stride == NULL) ? 0 : stride[i];
     }
-    else
-        memcpy(Count, count, ndims * SIZEOF_MPI_OFFSET);
-    if (stride != NULL)
-        memcpy(Stride, stride, ndims * SIZEOF_MPI_OFFSET);
-    else
-        memset(Stride, 0, ndims * SIZEOF_MPI_OFFSET);
 
-    /* Increase number of entry
-     * This must be the final step of a log record
-     * Increasing num_entries marks the completion of the record
+    /* Increment number of entry
+     * This must be the final step of creating a log entry
+     * Increasing num_entries marks the completion of the creation
      */
 
-    /* Increase num_entries in the metadata buffer */
+    /* Increment num_entries in the metadata buffer */
     headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
     headerp->num_entries++;
 
-    //We only increase datalogsize by amount actually write
-    ncbbp->datalogsize += size;
+    /* We only increase datalogsize by amount actually write */
+    ncbbp->datalogsize += put_size;
 
     /* Record data size */
     ncbbio_log_sizearray_append(&(ncbbp->entrydatasize), entryp->data_len);
-    // Record in index
-    // Entry address must be relative as metadata buffer can be reallocated
+
+    /* Record in index
+     * Entry address must be relative as metadata buffer can be reallocated
+     */
     ncbbio_metaidx_add(ncbbp, (NC_bb_metadataentry*)((char*)entryp -
                        (char*)(ncbbp->metadata.buffer)));
 
@@ -207,31 +196,28 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     t2 = MPI_Wtime();
 #endif
 
-    /* Writing to data log
-     * Note: Metadata record indicate completion, so data must go first
-     */
-
     /*
      * Write data log
+     * Note: Metadata record indicate completion, so data must go first
      */
-    err = ncbbio_sharedfile_write(ncbbp->datalog_fd, buf, size);
+    err = ncbbio_sharedfile_write(ncbbp->datalog_fd, buf, put_size);
     if (err != NC_NOERR) return err;
 
 #ifdef PNETCDF_PROFILING
     t3 = MPI_Wtime();
 #endif
 
-    /* Seek to the head of metadata
+    /* Seek to the head of metadata file
      * Note: EOF may not be the place for next entry after a flush
      * Note: metadata size will be updated after allocating metadata buffer
-     *       space, substract esize for original location
+     *       space, subtract esize to get the starting offset
      */
 
     err = ncbbio_sharedfile_seek(ncbbp->metalog_fd,
                                  ncbbp->metadata.nused - esize, SEEK_SET);
     if (err != NC_NOERR) return err;
 
-    /* Write meta data log */
+    /* Write the new entry to metadata log file */
     err = ncbbio_sharedfile_write(ncbbp->metalog_fd, buffer, esize);
     if (err != NC_NOERR) return err;
 
@@ -239,8 +225,8 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     t4 = MPI_Wtime();
 #endif
 
-    /* Overwrite num_entries
-     * This marks the completion of the record
+    /* Update num_entries
+     * This marks the completion of the new entry creation
      */
     err = ncbbio_sharedfile_pwrite(ncbbp->metalog_fd, &headerp->num_entries,
                                    SIZEOF_MPI_OFFSET, 56);
@@ -254,7 +240,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     ncbbp->total_time += t5 - t1;
     ncbbp->put_time += t5 - t1;
 
-    ncbbp->total_data += size;
+    ncbbp->total_data += put_size;
     ncbbp->total_meta += esize;
 #endif
 
