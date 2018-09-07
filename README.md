@@ -5,6 +5,10 @@ PnetCDF is a parallel I/O library for accessing
 development is a collaborative work of Northwestern University and Argonne
 National Laboratory.
 
+* The original repository: https://svn.mcs.anl.gov/repos/parallel-netcdf
+* Since June 1, 2018, PnetCDF repository has been migrated to
+  [github](https://github.com/Parallel-NetCDF/PnetCDF).
+
 ### PnetCDF project web page
 * https://parallel-netcdf.github.io
 
