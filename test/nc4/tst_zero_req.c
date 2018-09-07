@@ -39,7 +39,7 @@ tst_fmt(char *filename, int cmode)
     }
 
     buf = (int*)malloc(Y_LEN*X_LEN*sizeof(int));
-    for (j=0; j<Y_LEN*X_LEN; j++) buf[j] = rank;
+    for (i=0; i<Y_LEN*X_LEN; i++) buf[i] = rank*100+i;
 
     /* To test HDF5 1.10.2 bug, it must use a record variable, fixed-size
      * variable will not work. In addition, the varialble must be 2D. 1D
@@ -82,20 +82,45 @@ tst_fmt(char *filename, int cmode)
         nerrs++;
     }
 
+    /* test zero-length read from all processes */
+    count[0] = 0;
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
     /* only one process reads back what it wrote */
-    if (rank > 0) count[0] = 0;
+    for (i=0; i<Y_LEN*X_LEN; i++) buf[i] = -1;
+    if (rank == 0) count[0] = Y_LEN;
     err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
 
     if (rank == 0) {
-        for (i=0; i<Y_LEN; i++)
-        for (j=0; j<X_LEN; j++)
-            if (buf[i*X_LEN+j] != rank) {
+        for (i=0; i<Y_LEN; i++) for (j=0; j<X_LEN; j++) {
+            int k= i*X_LEN+j;
+            int expect=k+(rank * 100);
+            if (buf[k] != expect) {
                 printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
-                       __FILE__,__LINE__,i*X_LEN+j,rank,buf[i*X_LEN+j]);
+                       __FILE__,__LINE__,k,expect,buf[k]);
                 nerrs++;
                 i = Y_LEN;
                 break;
             }
+        }
+    }
+
+    /* process i reads data written by process i+1 */
+    for (i=0; i<Y_LEN*X_LEN; i++) buf[i] = -1;
+    start[1] = X_LEN * ((rank+1) % nprocs);
+    count[0] = Y_LEN;
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+    for (i=0; i<Y_LEN; i++) for (j=0; j<X_LEN; j++) {
+        int k=i*X_LEN+j;
+        int expect=k+((rank+1)%nprocs * 100);
+        if (buf[k] != expect) {
+            printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
+                   __FILE__,__LINE__,k,expect,buf[k]);
+            nerrs++;
+            i = Y_LEN;
+            break;
+        }
     }
 
     /* expect program to hang at ncmpi_close() if HDF5 1.10.2 is used */
