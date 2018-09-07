@@ -76,7 +76,9 @@ This is essentially a placeholder for the next release note ...
   + Shell ksh has a different way to redirect stdout and stderr from bash.
     PnetCDF configure.ac and acinclude.m4 have been developed mainly on bash.
     This bug can cause configure command to fail when using ksh. Thanks to
-    @poohRui for reporting the bug. See Issue #21 and PR #22.
+    @poohRui for reporting the bug. See
+    [Issue #21](https://github.com/Parallel-NetCDF/PnetCDF/issues/21) and
+    [PR #22](https://github.com/Parallel-NetCDF/PnetCDF/pull/22).
   + For put and get APIs when buftype is MPI_DATATYPE_NULL, bufcount is
     ignored. This is not implemented correctly for blocking put and get APIs.
     See bug fix committed on Aug. 25, 2018.
