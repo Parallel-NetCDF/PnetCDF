@@ -29,6 +29,7 @@
  *            int var(y, x) ;
  *                var:str_att_name = "example attribute of type text." ;
  *                var:float_att_name = 0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f ;
+ *                var:short_att_name = 1000s ;
  *    // global attributes:
  *                :history = "Mon Aug 13 21:27:48 2018" ;
  *       "" ;
@@ -60,13 +61,9 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define CHECK_ERR { \
-    if (err!=NC_NOERR) { \
-        printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err)); \
-        nerrs++; \
-        goto fn_exit; \
-    } \
-}
+static int verbose;
+
+#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -79,79 +76,86 @@ usage(char *argv0)
     fprintf(stderr, help, argv0);
 }
 
-int main(int argc, char** argv)
+/*----< pnetcdf_check_mem_usage() >------------------------------------------*/
+/* check PnetCDF library internal memory usage */
+static int
+pnetcdf_check_mem_usage(MPI_Comm comm)
 {
-    extern int optind;
-    char filename[256], str_att[NC_MAX_NAME];
-    int i, rank, nprocs, err, nerrs=0, verbose=1, ncid, varid, dimid[2], *buf;
+    int err, nerrs=0, rank;
+    MPI_Offset malloc_size, sum_size;
+
+    MPI_Comm_rank(comm, &rank);
+
+    /* print info about PnetCDF internal malloc usage */
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && verbose)
+            printf("maximum heap memory allocated by PnetCDF internally is %lld bytes\n",
+                   sum_size);
+
+        /* check if there is any PnetCDF internal malloc residue */
+        err = ncmpi_inq_malloc_size(&malloc_size);
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+    else {
+        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        nerrs++;
+    }
+    return nerrs;
+}
+
+/*----< pnetcdf_io() >-------------------------------------------------------*/
+static int
+pnetcdf_io(MPI_Comm comm, char *filename)
+{
+    char str_att[NC_MAX_NAME];
+    int rank, nprocs, err, nerrs=0, ncid, varid, dimid[2], *buf;
     float *float_att;
     MPI_Offset len, global_ny, global_nx, local_ny, local_nx;
     MPI_Offset start[2], count[2];
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hq")) != EOF)
-        switch(i) {
-            case 'q': verbose = 0;
-                      break;
-            case 'h':
-            default:  if (rank==0) usage(argv[0]);
-                      MPI_Finalize();
-                      return 1;
-        }
-    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
-    else                      snprintf(filename, 256, "%s", argv[optind]);
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nprocs);
 
     /* open an existing file for reading -------------------------------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    CHECK_ERR
+    err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 
     /* get global attribute named "history" */
-    err = ncmpi_get_att_text(ncid, NC_GLOBAL, "history", str_att);
-    CHECK_ERR
-    err = ncmpi_inq_attlen(ncid, NC_GLOBAL, "history", &len);
-    CHECK_ERR
+    err = ncmpi_get_att_text(ncid, NC_GLOBAL, "history", str_att); ERR
+    err = ncmpi_inq_attlen(ncid, NC_GLOBAL, "history", &len); ERR
     str_att[len] = '\0'; /* add a NULL char at the end */
     if (rank == 0 && verbose)
         printf("global attribute \"history\" of text: %s\n",str_att);
 
     /* get dimension IDs for dimensions Y and X */
-    err = ncmpi_inq_dimid(ncid, "Y", &dimid[0]);
-    CHECK_ERR
-    err = ncmpi_inq_dimid(ncid, "X", &dimid[1]);
-    CHECK_ERR
+    err = ncmpi_inq_dimid(ncid, "Y", &dimid[0]); ERR
+    err = ncmpi_inq_dimid(ncid, "X", &dimid[1]); ERR
 
     /* get dimension lengths for dimensions Y and X */
-    err = ncmpi_inq_dimlen(ncid, dimid[0], &global_ny);
-    CHECK_ERR
-    err = ncmpi_inq_dimlen(ncid, dimid[1], &global_nx);
-    CHECK_ERR
+    err = ncmpi_inq_dimlen(ncid, dimid[0], &global_ny); ERR
+    err = ncmpi_inq_dimlen(ncid, dimid[1], &global_nx); ERR
 
     /* get the variable ID of a 2D variable of integer type */
-    err = ncmpi_inq_varid(ncid, "var", &varid);
-    CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "var", &varid); ERR
 
     /* get variable's attribute named "str_att_name" */
-    err = ncmpi_get_att_text(ncid, varid, "str_att_name", str_att);
-    CHECK_ERR
-    err = ncmpi_inq_attlen(ncid, varid, "str_att_name", &len);
-    CHECK_ERR
+    err = ncmpi_get_att_text(ncid, varid, "str_att_name", str_att); ERR
+    err = ncmpi_inq_attlen(ncid, varid, "str_att_name", &len); ERR
     str_att[len] = '\0'; /* add a NULL char at the end */
     if (rank == 0 && verbose)
         printf("variable attribute \"str_att_name\" of type text = \"%s\"\n",
                str_att);
 
     /* get the length of variable's attribute named "float_att_name" */
-    err = ncmpi_inq_attlen(ncid, varid, "float_att_name", &len);
-    CHECK_ERR
+    err = ncmpi_inq_attlen(ncid, varid, "float_att_name", &len); ERR
 
     /* get attribute contents */
     float_att = (float*) malloc(len * sizeof(float));
-    err = ncmpi_get_att_float(ncid, varid, "float_att_name", float_att);
-    CHECK_ERR
+    err = ncmpi_get_att_float(ncid, varid, "float_att_name", float_att); ERR
     free(float_att);
 
     /* the local array size */
@@ -166,24 +170,42 @@ int main(int argc, char** argv)
     count[1] = local_nx;
 
     /* read a subarray in collective mode */
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf);
-    CHECK_ERR
+    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); ERR
     free(buf);
 
-    err = ncmpi_close(ncid);
-    CHECK_ERR
+    err = ncmpi_close(ncid); ERR
 
-    /* check if there is any PnetCDF internal malloc residue */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
-                   sum_size);
-    }
+    return nerrs;
+}
 
-fn_exit:
+int main(int argc, char** argv)
+{
+    extern int optind;
+    char filename[256];
+    int i, rank, nerrs=0;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    verbose = 1;
+
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
+
+    nerrs += pnetcdf_io(MPI_COMM_WORLD, filename);
+
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
+
     MPI_Finalize();
     return (nerrs > 0);
 }

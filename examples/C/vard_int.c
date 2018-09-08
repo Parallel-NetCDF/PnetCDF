@@ -51,7 +51,10 @@
 
 #define NY 2
 #define NX 3
-#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
+
+static int verbose;
+
+#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -64,12 +67,44 @@ usage(char *argv0)
     fprintf(stderr, help, argv0);
 }
 
+/*----< pnetcdf_check_mem_usage() >------------------------------------------*/
+/* check PnetCDF library internal memory usage */
+static int
+pnetcdf_check_mem_usage(MPI_Comm comm)
+{
+    int err, nerrs=0, rank;
+    MPI_Offset malloc_size, sum_size;
+
+    MPI_Comm_rank(comm, &rank);
+
+    /* print info about PnetCDF internal malloc usage */
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && verbose)
+            printf("maximum heap memory allocated by PnetCDF internally is %lld bytes\n",
+                   sum_size);
+
+        /* check if there is any PnetCDF internal malloc residue */
+        err = ncmpi_inq_malloc_size(&malloc_size);
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+    else {
+        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        nerrs++;
+    }
+    return nerrs;
+}
+
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
     extern int optind;
     char         filename[256];
-    int          i, j, err, nerrs=0, ncid, verbose=1, varid0, varid1, dimids[2];
+    int          i, j, err, nerrs=0, ncid, varid0, varid1, dimids[2];
     int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     MPI_Offset   start[2], count[2], recsize, bufcount, len;
@@ -79,6 +114,8 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    verbose = 1;
 
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
@@ -176,15 +213,7 @@ int main(int argc, char **argv) {
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
 
-    /* check if there is any PnetCDF internal malloc residue */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
-                   sum_size);
-    }
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
 
     MPI_Finalize();
     return (nerrs > 0);

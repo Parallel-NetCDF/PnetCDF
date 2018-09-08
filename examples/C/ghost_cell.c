@@ -74,51 +74,67 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
+static int verbose;
+
+#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [-l len] [file_name]\n"
+    "Usage: %s [-h] | [-q] [-k format] [-l len] [file_name]\n"
     "       [-h] Print this help\n"
     "       [-q] quiet mode\n"
+    "       [-k format] file format: 1 for CDF-1, 2 for CDF-2, 3 for NetCDF4,\n"
+    "                                4 for NetCDF4 classic model, 5 for CDF-5\n"
     "       [-l len] size of each dimension of the local array\n"
     "       [filename] output netCDF file name\n";
     fprintf(stderr, help, argv0);
 }
 
-
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
+/*----< pnetcdf_check_mem_usage() >------------------------------------------*/
+/* check PnetCDF library internal memory usage */
+static int
+pnetcdf_check_mem_usage(MPI_Comm comm)
 {
-    extern int optind;
-    char filename[256];
-    int i, j, rank, nprocs, ncid, bufsize, verbose=1, err, nerrs=0;
+    int err, nerrs=0, rank;
+    MPI_Offset malloc_size, sum_size;
+
+    MPI_Comm_rank(comm, &rank);
+
+    /* print info about PnetCDF internal malloc usage */
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && verbose)
+            printf("maximum heap memory allocated by PnetCDF internally is %lld bytes\n",
+                   sum_size);
+
+        /* check if there is any PnetCDF internal malloc residue */
+        err = ncmpi_inq_malloc_size(&malloc_size);
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+    else {
+        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        nerrs++;
+    }
+    return nerrs;
+}
+
+/*----< pnetcdf_io() >-------------------------------------------------------*/
+static int
+pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
+{
+    int i, j, rank, nprocs, ncid, bufsize, err, nerrs=0;
     int psizes[2], local_rank[2], dimids[2], varid, nghosts;
     int *buf, *buf_ptr;
-    MPI_Offset len=0, gsizes[2], starts[2], counts[2], imap[2];
+    MPI_Offset gsizes[2], starts[2], counts[2], imap[2];
 
-    MPI_Init(&argc,&argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hql:")) != EOF)
-        switch(i) {
-            case 'q': verbose = 0;
-                      break;
-            case 'l': len = atoi(optarg);
-                      break;
-            case 'h':
-            default:  if (rank==0) usage(argv[0]);
-                      MPI_Finalize();
-                      return 1;
-        }
-    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
-    else                      snprintf(filename, 256, "%s", argv[optind]);
-
-    len = (len <= 0) ? 4 : len;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nprocs);
 
     /* calculate number of processes along each dimension */
     psizes[0] = psizes[1] = 0;
@@ -158,12 +174,12 @@ int main(int argc, char **argv)
     }
 
     /* create the file */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
-                       MPI_INFO_NULL, &ncid);
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
         printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
         __LINE__,__FILE__,filename,ncmpi_strerror(err));
-        MPI_Abort(MPI_COMM_WORLD, -1);
+        MPI_Abort(comm, -1);
         exit(1);
     }
 
@@ -191,6 +207,59 @@ int main(int argc, char **argv)
     err = ncmpi_close(ncid); ERR
 
     free(buf);
+
+    return nerrs;
+}
+
+/*----< main() >------------------------------------------------------------*/
+int main(int argc, char **argv)
+{
+    extern int optind;
+    char filename[256];
+    int i, rank, cmode, kind=0, len=0, nerrs=0;
+
+    MPI_Init(&argc,&argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    verbose = 1;
+
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hqk:l:")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'k': kind = atoi(optarg);
+                      break;
+            case 'l': len = atoi(optarg);
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
+
+    len = (len <= 0) ? 4 : len;
+
+    switch (kind) {
+        case(2): cmode = NC_64BIT_OFFSET;             break;
+        case(3): cmode = NC_NETCDF4;                  break;
+        case(4): cmode = NC_NETCDF4|NC_CLASSIC_MODEL; break;
+        case(5): cmode = NC_64BIT_DATA;               break;
+        default: cmode = 0;
+    }
+
+#ifndef PNETCDF_DRIVER_NETCDF4
+    /* netcdf4 driver is not enabled, skip */
+    if (kind == 3 || kind == 4) {
+        MPI_Finalize();
+        return 0;
+    }
+#endif
+    nerrs += pnetcdf_io(MPI_COMM_WORLD, filename, cmode, len);
+
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
 
     MPI_Finalize();
     return (nerrs > 0);

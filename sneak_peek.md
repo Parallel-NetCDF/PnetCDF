@@ -95,6 +95,7 @@ This is essentially a placeholder for the next release note ...
     ```
     export MPICH_MAX_THREAD_SAFETY=multiple
     ```
+  + examples/C/transpose2D.c - a 2D version of examples/C/transpose.c
 
 * New programs for I/O benchmarks
   + none
@@ -130,8 +131,12 @@ This is essentially a placeholder for the next release note ...
     adopted by NetCDF-3, but not NetCDF-4. To change fill mode for individual
     variables after the call to ncmpi_set_fill(), API ncmpi_def_var_fill() can
     be used for this purpose. Reference of NetCDF 4.1.3 user guide for
-    (nc_set_fill())[https://www.unidata.ucar.edu/software/netcdf/documentation/historic/netcdf-c/nc_005fset_005ffill.html]
-  + The error code precedence can be different between NetCDF and PnetCDF.
+    [nc_set_fill()](https://www.unidata.ucar.edu/software/netcdf/documentation/historic/netcdf-c/nc_005fset_005ffill.html)
+  + The error code return precedence are different between NetCDF and PnetCDF.
+    A test program for error code return precedence is available in
+    test/testcases/error_precedence.m4. This program can be used to test both
+    PnetCDF and NetCDF programs, When testing NetCDF programs, because NetCDF
+    does not follow the same precedence, failures are expected.
 
 * Issues related to MPI library vendors:
   + none

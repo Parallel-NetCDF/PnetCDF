@@ -8,9 +8,8 @@
 
 /*
  *    This example mimics the coll_perf.c from ROMIO.
- *    It creates a netcdf file in CD-5 format and writes a number of
- *    3D integer non-record variables. The measured write bandwidth is reported
- *    at the end. Usage:
+ *    It creates a netcdf file and writes a number of 3D integer non-record
+ *    variables. The measured write bandwidth is reported at the end.
  *    To compile:
  *        mpicc -O2 collective_write.c -o collective_write -lpnetcdf
  *    To run:
@@ -44,15 +43,19 @@
 #define NDIMS    3
 #define NUM_VARS 10
 
-#define ERR {if(err!=NC_NOERR){printf("Error at line %d in %s: %s\n", __LINE__,__FILE__, ncmpi_strerror(err));nerrs++;}}
+static int verbose;
+
+#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [-l len] [file_name]\n"
+    "Usage: %s [-h] | [-q] [-k format] [-l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
+    "       [-k format] file format: 1 for CDF-1, 2 for CDF-2, 3 for NetCDF4,\n"
+    "                                4 for NetCDF4 classic model, 5 for CDF-5\n"
     "       [-l len] size of each dimension of the local array\n"
     "       [filename] output netCDF file name\n";
     fprintf(stderr, help, argv0);
@@ -82,38 +85,52 @@ void print_info(MPI_Info *info_used)
     printf("MPI hint: striping_unit   = %s\n", info_striping_unit);
 }
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
+/*----< pnetcdf_check_mem_usage() >------------------------------------------*/
+/* check PnetCDF library internal memory usage */
+static int
+pnetcdf_check_mem_usage(MPI_Comm comm)
 {
-    extern int optind;
-    char filename[256], str[512];
-    int i, j, rank, nprocs, len=0, ncid, bufsize, verbose=1, err, nerrs=0;
+    int err, nerrs=0, rank;
+    MPI_Offset malloc_size, sum_size;
+
+    MPI_Comm_rank(comm, &rank);
+
+    /* print info about PnetCDF internal malloc usage */
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && verbose)
+            printf("maximum heap memory allocated by PnetCDF internally is %lld bytes\n",
+                   sum_size);
+
+        /* check if there is any PnetCDF internal malloc residue */
+        err = ncmpi_inq_malloc_size(&malloc_size);
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+    else {
+        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        nerrs++;
+    }
+    return nerrs;
+}
+
+/*----< pnetcdf_io() >-------------------------------------------------------*/
+static int
+pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
+{
+    char str[512];
+    int i, j, rank, nprocs, ncid, bufsize, err, nerrs=0;
     int *buf[NUM_VARS], psizes[NDIMS], dimids[NDIMS], varids[NUM_VARS];
     double write_timing, max_write_timing, write_bw;
     MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS];
     MPI_Offset write_size, sum_write_size;
     MPI_Info info_used;
 
-    MPI_Init(&argc,&argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hql:")) != EOF)
-        switch(i) {
-            case 'q': verbose = 0;
-                      break;
-            case 'l': len = atoi(optarg);
-                      break;
-            case 'h':
-            default:  if (rank==0) usage(argv[0]);
-                      MPI_Finalize();
-                      return 1;
-        }
-    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
-    else                      snprintf(filename, 256, "%s", argv[optind]);
-
-    len = (len <= 0) ? 10 : len;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nprocs);
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;
@@ -137,40 +154,36 @@ int main(int argc, char **argv)
         for (j=0; j<bufsize; j++) buf[i][j] = rank * i + 123 + j;
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(comm);
     write_timing = MPI_Wtime();
 
     /* create the file */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
-                       MPI_INFO_NULL, &ncid);
+    cmode |= NC_CLOBBER;
+    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
-               __LINE__,__FILE__,filename,ncmpi_strerror(err));
-        MPI_Abort(MPI_COMM_WORLD, -1);
+        printf("Error at %s:%d ncmpi_create() file %s (%s)\n",
+               __FILE__,__LINE__,filename,ncmpi_strerror(err));
+        MPI_Abort(comm, -1);
         exit(1);
     }
 
     /* define dimensions */
     for (i=0; i<NDIMS; i++) {
         sprintf(str, "%c", 'x'+i);
-        err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i]);
-        ERR
+        err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i]); ERR
     }
 
     /* define variables */
     for (i=0; i<NUM_VARS; i++) {
         sprintf(str, "var%d", i);
-        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids, &varids[i]);
-        ERR
+        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids, &varids[i]); ERR
     }
 
     /* exit the define mode */
-    err = ncmpi_enddef(ncid);
-    ERR
+    err = ncmpi_enddef(ncid); ERR
 
     /* get all the hints used */
-    err = ncmpi_inq_file_info(ncid, &info_used);
-    ERR
+    err = ncmpi_inq_file_info(ncid, &info_used); ERR
 
     /* write one variable at a time */
     for (i=0; i<NUM_VARS; i++) {
@@ -179,16 +192,15 @@ int main(int argc, char **argv)
     }
 
     /* close the file */
-    err = ncmpi_close(ncid);
-    ERR
+    err = ncmpi_close(ncid); ERR
 
     write_timing = MPI_Wtime() - write_timing;
 
     write_size = bufsize * NUM_VARS * sizeof(int);
     for (i=0; i<NUM_VARS; i++) free(buf[i]);
 
-    MPI_Reduce(&write_size, &sum_write_size, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-    MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&write_size, &sum_write_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
+    MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
 
     if (rank == 0 && verbose) {
         float subarray_size = (float)bufsize*sizeof(int)/1048576.0;
@@ -201,27 +213,63 @@ int main(int argc, char **argv)
         write_bw = sum_write_size/max_write_timing;
         printf(" procs    Global array size  exec(sec)  write(MB/s)\n");
         printf("-------  ------------------  ---------  -----------\n");
-        printf(" %4d    %4lld x %4lld x %4lld %8.2f  %10.2f\n", nprocs,
+        printf(" %4d    %4lld x %4lld x %4lld %8.2f  %10.2f\n\n", nprocs,
                gsizes[0], gsizes[1], gsizes[2], max_write_timing, write_bw);
     }
     MPI_Info_free(&info_used);
 
-    /* print info about PnetCDF internal malloc usage */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_max_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && verbose)
-            printf("maximum heap memory allocted by PnetCDF internally is %lld bytes\n",
-                   sum_size);
+    return nerrs;
+}
 
-        /* check if there is any PnetCDF internal malloc residue */
-        err = ncmpi_inq_malloc_size(&malloc_size);
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
-                   sum_size);
+/*----< main() >------------------------------------------------------------*/
+int main(int argc, char **argv)
+{
+    extern int optind;
+    char filename[256];
+    int i, nerrs=0, kind=0, rank, cmode, len=0;
+
+    MPI_Init(&argc,&argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    verbose = 1;
+
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hqk:l:")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'k': kind = atoi(optarg);
+                      break;
+            case 'l': len = atoi(optarg);
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
+
+    len = (len <= 0) ? 10 : len;
+
+    switch (kind) {
+        case(2): cmode = NC_64BIT_OFFSET;             break;
+        case(3): cmode = NC_NETCDF4;                  break;
+        case(4): cmode = NC_NETCDF4|NC_CLASSIC_MODEL; break;
+        case(5): cmode = NC_64BIT_DATA;               break;
+        default: cmode = 0;
     }
+
+#ifndef PNETCDF_DRIVER_NETCDF4
+    /* netcdf4 driver is not enabled, skip */
+    if (kind == 3 || kind == 4) {
+        MPI_Finalize();
+        return 0;
+    }
+#endif
+    nerrs += pnetcdf_io(MPI_COMM_WORLD, filename, cmode, len);
+
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD);
 
     MPI_Finalize();
     return (nerrs > 0);
