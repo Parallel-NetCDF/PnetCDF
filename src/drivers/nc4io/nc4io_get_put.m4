@@ -228,12 +228,12 @@ nc4io_get_var(void             *ncdp,
             apikind = NC4_API_KIND_VAR;
         else if (count == NULL)
             apikind = NC4_API_KIND_VAR1;
-        else if (stride == NULL)
-            apikind = NC4_API_KIND_VARA;
-        else if (imap == NULL)
+        else if (imap != NULL) /* stride may be NULL */
+            apikind = NC4_API_KIND_VARM;
+        else if (stride != NULL)
             apikind = NC4_API_KIND_VARS;
         else
-            apikind = NC4_API_KIND_VARM;
+            apikind = NC4_API_KIND_VARA;
 
         /* Convert from MPI_Offset to size_t */
         if (ndims > 0) {
@@ -306,12 +306,12 @@ nc4io_put_var(void             *ncdp,
             apikind = NC4_API_KIND_VAR;
         else if (count == NULL)
             apikind = NC4_API_KIND_VAR1;
-        else if (stride == NULL)
-            apikind = NC4_API_KIND_VARA;
-        else if (imap == NULL)
+        else if (imap != NULL) /* stride may be NULL */
+            apikind = NC4_API_KIND_VARM;
+        else if (stride != NULL)
             apikind = NC4_API_KIND_VARS;
         else
-            apikind = NC4_API_KIND_VARM;
+            apikind = NC4_API_KIND_VARA;
 
         /* Convert to MPI_Offset if not scalar */
         if (ndims > 0) {
