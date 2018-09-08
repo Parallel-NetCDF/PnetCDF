@@ -27,6 +27,7 @@ check_PROGRAMS = collective_write \
                  put_vara \
                  get_vara \
                  transpose \
+                 transpose2D \
                  vard_int \
                  i_varn_int64 \
                  bput_varn_uint \
@@ -59,7 +60,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
            $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(NC_FILES) $(TESTOUTDIR)/pthread.nc.*
+             $(NC_FILES) $(TESTOUTDIR)/pthread.nc.* $(TESTOUTDIR)/testfile.nc
 
 EXTRA_DIST = parallel_run.sh
 
