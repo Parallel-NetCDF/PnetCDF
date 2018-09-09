@@ -142,8 +142,8 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     if (verbose && rank == 0)
         printf("psizes=%d %d\n", psizes[0], psizes[1]);
 
-    gsizes[0] = len     * psizes[0]; /* global array size */
-    gsizes[1] = (len+1) * psizes[1];
+    gsizes[0] = (MPI_Offset)len     * psizes[0]; /* global array size */
+    gsizes[1] = (MPI_Offset)(len+1) * psizes[1];
     if (verbose && rank == 0)
         printf("global variable shape: %lld %lld\n", gsizes[0],gsizes[1]);
 
