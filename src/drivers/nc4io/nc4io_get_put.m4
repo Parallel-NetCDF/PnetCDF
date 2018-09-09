@@ -249,6 +249,10 @@ nc4io_get_var(void             *ncdp,
                 sstride = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
                 for (i=0; i<ndims; i++) sstride[i] = (ptrdiff_t)stride[i];
             }
+            else if (apikind == NC4_API_KIND_VARM) {
+                sstride = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
+                for (i=0; i<ndims; i++) sstride[i] = 1;
+            }
             if (imap != NULL) {
                 simap = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
                 for (i=0; i<ndims; i++) simap[i] = (ptrdiff_t)imap[i];
@@ -326,6 +330,10 @@ nc4io_put_var(void             *ncdp,
             if (stride != NULL) {
                 sstride = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
                 for (i=0; i<ndims; i++) sstride[i] = (ptrdiff_t)stride[i];
+            }
+            else if (apikind == NC4_API_KIND_VARM) {
+                sstride = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
+                for (i=0; i<ndims; i++) sstride[i] = 1;
             }
             if (imap != NULL) {
                 simap = (ptrdiff_t*)NCI_Malloc(sizeof(ptrdiff_t) * ndims);
