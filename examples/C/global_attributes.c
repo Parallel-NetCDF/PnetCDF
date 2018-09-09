@@ -127,82 +127,61 @@ int main(int argc, char** argv)
     MPI_Bcast(str_att, strlen(str_att), MPI_CHAR, 0, MPI_COMM_WORLD);
 
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "history", strlen(str_att),
-                             &str_att[0]);
-    ERR
+                             &str_att[0]); ERR
     if (rank == 0 && verbose)
-        printf("writing global attribute \"history\" of text %s\n",
-               str_att);
+        printf("writing global attribute \"history\" of text %s\n", str_att);
 
     /* add another global attribute named "digits": an array of short type */
     err = ncmpi_put_att_short(ncid, NC_GLOBAL, "digits", NC_SHORT, 10,
-                             &digit[0]);
-    ERR
+                             &digit[0]); ERR
     if (rank == 0 && verbose)
         printf("writing global attribute \"digits\" of 10 short integers\n");
 
     /* close file */
-    err = ncmpi_close(ncid);
-    ERR
+    err = ncmpi_close(ncid); ERR
 
     /* open the newly created file for read only -----------------------------*/
     omode = NC_NOWRITE;
-    err = ncmpi_open(MPI_COMM_WORLD, filename, omode, MPI_INFO_NULL, &ncid);
-    ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, omode, MPI_INFO_NULL, &ncid); ERR
 
     /* find the number of global attributes */
-    err = ncmpi_inq_natts(ncid, &ngatts);
-    ERR
+    err = ncmpi_inq_natts(ncid, &ngatts); ERR
 
-    err = 0;
     if (ngatts != 2) {
         printf("Error at line %d in %s: expected number of global attributes is 2, but got %d\n",
                __LINE__,__FILE__,ngatts);
-        err = -1;
+        nerrs++;
     }
-    MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    if (err < 0) { nerrs++; goto fn_exit; }
 
     /* find the name of first global attribute */
-    err = ncmpi_inq_attname(ncid, NC_GLOBAL, 0, att_name);
-    ERR
+    err = ncmpi_inq_attname(ncid, NC_GLOBAL, 0, att_name); ERR
 
-    err = 0;
     if (strncmp(att_name, "history", strlen("history"))) {
         printf("Error at line %d in %s: expected attribute name \"history\", but got %s\n",
                __LINE__,__FILE__,att_name);
-        err = -1;
+        nerrs++;
     }
-    MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    if (err < 0) { nerrs++; goto fn_exit; }
 
     /* read attribute value */
-    err = ncmpi_get_att_text(ncid, NC_GLOBAL, att_name, &str_att[0]);
-    ERR
+    err = ncmpi_get_att_text(ncid, NC_GLOBAL, att_name, &str_att[0]); ERR
 
     /* find the name of second global attribute */
-    err = ncmpi_inq_attname(ncid, NC_GLOBAL, 1, att_name);
-    ERR
+    err = ncmpi_inq_attname(ncid, NC_GLOBAL, 1, att_name); ERR
 
-    err = 0;
     if (strncmp(att_name, "digits", strlen("digits"))) {
         printf("Error at line %d in %s: expected attribute name \"digits\", but got %s\n",
                __LINE__,__FILE__,att_name);
-        err = -1;
+        nerrs++;
     }
-    MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    if (err < 0) { nerrs++; goto fn_exit; }
 
     /* read attribute value */
-    err = ncmpi_get_att_short(ncid, NC_GLOBAL, att_name, &short_att[0]);
-    ERR
+    err = ncmpi_get_att_short(ncid, NC_GLOBAL, att_name, &short_att[0]); ERR
 
     /* close file */
-    err = ncmpi_close(ncid);
-    ERR
+    err = ncmpi_close(ncid); ERR
 
     nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
 
-fn_exit:
     MPI_Finalize();
     return (nerrs > 0);
 }
