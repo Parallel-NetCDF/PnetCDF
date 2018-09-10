@@ -220,8 +220,6 @@ nc4io_get_var(void             *ncdp,
         apikind = NC4_API_KIND_VARA;
         sstart = (size_t*) NCI_Calloc(ndims, sizeof(size_t));
         scount = (size_t*) NCI_Calloc(ndims, sizeof(size_t));
-        for (i=0; i<ndims; i++)
-            sstart[i] = scount[i] = 0;
     }
     else {
         if (start == NULL)

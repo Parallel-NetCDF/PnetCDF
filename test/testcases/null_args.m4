@@ -54,8 +54,8 @@ define(`TEST_NULL_ARGS',dnl
 #define EXP_ERR_MSG(exp,msg) { \
     if (err != exp) { \
         nerrs++; \
-        fprintf(stderr, "Error at line %d in %s: (%s) expect %s but got %s\n", \
-                __LINE__, __FILE__, msg, \
+        fprintf(stderr, "Error at %s:%d: (%s) expect %s but got %s\n", \
+                __FILE__,__LINE__, msg, \
                 ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
     } \
 }
