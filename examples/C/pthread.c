@@ -265,7 +265,7 @@ void* thread_func(void *arg)
 int main(int argc, char **argv) {
     extern int optind;
     char filename[256];
-    int  i, err, nerrs=0, rank, providedT;
+    int  i, nerrs=0, rank, providedT;
     pthread_t threads[NTHREADS];
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &providedT);
