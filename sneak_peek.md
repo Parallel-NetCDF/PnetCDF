@@ -4,14 +4,13 @@ This is essentially a placeholder for the next release note ...
 
 * New features
   + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
-    PnetCDF can be built on top of NetCDF-4, which allows PnetCDF to read and
-    write a NetCDF-4 file. However, the burst buffering currently do not
-    support NetCDF-4 file formats.
-  + Thread-safe capability is added to this release. It can be enabled by
-    command-line option `--enable-thread-safe` at configure time. In addition,
-    option `--with-pthread` can be used to specify the path to the pthreads
-    library. This feature currently only supports one-thread-per-file I/O
-    operation.
+    PnetCDF can be built on top of NetCDF-4 library to allow PnetCDF to read
+    and write a NetCDF-4 file.
+  + Per-file thread-safe capability is added. This feature can be enabled by
+    adding command-line option `--enable-thread-safe` at configure time. In
+    addition, option `--with-pthread` can be used to specify the path to the
+    pthreads library. This feature currently only supports one-thread-per-file
+    I/O operations.
 
 * New optimization
   + The internal data buffering mechanism in the burst buffer driver is
@@ -24,16 +23,23 @@ This is essentially a placeholder for the next release note ...
     burst buffers for each user write request.
 
 * New Limitations
+  + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
+    classic model I/O operations. Advanced NetCDF-4 features, such as chunking,
+    compression, etc. are not supported. This is due to the unavailability of
+    the APIs for those operations.
+  + The burst buffering driver does not support NetCDF-4 file formats.
   + Due to a bug in HDF5 1.10.2 that fails zero-length write requests to record
     variables in the collective mode, PnetCDF is not able to support such
     requests when NetCDF-4 feature is enabled. New HDF5 releases are expected
-    to contain the fix.
+    to contain the fix. See discussion in https://github.com/NCAR/ParallelIO/pull/1304
 
 * Update configure options
   + Enable NetCDF-4 support.
     - `--enable-netcdf4`: enable NetCDF4 format classic mode support
-    - `--with-hdf5=/path/to/hdf5`: set HDF5 install path
-    - `--with-netcdf4=/path/to/netcdf-4`: set NetCDF install path
+    - `--with-hdf5=/path/to/hdf5`: path to HDF5 library installation
+    - `--with-netcdf4=/path/to/netcdf-4`: path to NetCDF-4 library installation
+    - `--enable-thread-safe`: enable per-file thread-safe support
+    - `--with-pthread`: path to the pthread library installation
 
 * New constants
   + none
