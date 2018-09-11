@@ -107,6 +107,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/F90/test_fill.f90 - another test for bug fix r3730.
   + test/testcases/error_precedence.m4 - tests the error code reporting
     precedence
   + test/nc4/tst_zero_req.c - tests a HDF5 1.10.2 bug that causes test program

@@ -22,7 +22,8 @@ TESTPROGRAMS = tst_f90 \
                f90tst_vars3 \
                f90tst_vars4 \
                test_intent \
-               test_attr_int64
+               test_attr_int64 \
+               test_fill
 
 PARALLEL_PROGS = f90tst_parallel \
                  f90tst_parallel2 \
@@ -60,7 +61,8 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
            $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = *.$(FC_MODEXT) core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/tst_io1.nc $(TESTOUTDIR)/tst_io1.nc0 $(NC_FILES)
+             $(TESTOUTDIR)/tst_io1.nc $(TESTOUTDIR)/tst_io1.nc0 \
+             $(TESTOUTDIR)/testfile.nc $(NC_FILES)
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
