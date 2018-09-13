@@ -13,14 +13,7 @@ This is essentially a placeholder for the next release note ...
     I/O operations.
 
 * New optimization
-  + The internal data buffering mechanism in the burst buffer driver is
-    removed. This mechanism caches the request data in memory until the
-    accumulated size is more than 8 MiB, so the write requests to burst buffers
-    can be aligned with 8 MiB boundaries. However, experiments on Cray DataWarp
-    show a negligible performance improvement unless the I/O request is small
-    and fragment. On the other hand, it can degrade performance for mid- and
-    large-sized requests. The burst buffer driver now writes directly to the
-    burst buffers for each user write request.
+  +
 
 * New Limitations
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
@@ -76,7 +69,14 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
-  + none
+  + The internal data buffering mechanism in the burst buffer driver is
+    removed. This mechanism caches the request data in memory until the
+    accumulated size is more than 8 MiB, so the write requests to burst buffers
+    can be aligned with 8 MiB boundaries. However, experiments on Cray DataWarp
+    show a negligible performance improvement unless the I/O request is small
+    and fragment. On the other hand, it can degrade performance for mid- and
+    large-sized requests. The burst buffer driver now writes directly to the
+    burst buffers for each user write request.
 
 * Bug fixes
   + Shell ksh has a different way to redirect stdout and stderr from bash.
@@ -85,6 +85,10 @@ This is essentially a placeholder for the next release note ...
     @poohRui for reporting the bug. See
     [Issue #21](https://github.com/Parallel-NetCDF/PnetCDF/issues/21) and
     [PR #22](https://github.com/Parallel-NetCDF/PnetCDF/pull/22).
+    However, running configure under ksh is still buggy. A GNU automake bug
+    report of hanging problem can be found in
+    https://lists.gnu.org/archive/html/bug-automake/2015-04/msg00000.html
+    PnetCDF users are recommended to run configure under other shells.
   + For put and get APIs when buftype is MPI_DATATYPE_NULL, bufcount is
     ignored. This is not implemented correctly for blocking put and get APIs.
     See bug fix committed on Aug. 25, 2018.

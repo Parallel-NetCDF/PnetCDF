@@ -1,4 +1,4 @@
-## PnetCDF source code repository
+## PnetCDF source code development repository
 
 PnetCDF is a parallel I/O library for accessing
 [NetCDF](http://www.unidata.ucar.edu/software/netcdf) files. The software
@@ -7,23 +7,23 @@ National Laboratory.
 
 * The original repository: https://svn.mcs.anl.gov/repos/parallel-netcdf
 * Since June 1, 2018, PnetCDF repository has been migrated to
-  [github](https://github.com/Parallel-NetCDF/PnetCDF).
+  here, https://github.com/Parallel-NetCDF/PnetCDF, on github.com.
 
 ### PnetCDF project web page
 * https://parallel-netcdf.github.io
 
-### PnetCDF official releases of source codes
+### PnetCDF official software releases
 * All official released versions can be found in
   http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html
-* Note the github link marked
-  ["releases"](https://github.com/Parallel-NetCDF/PnetCDF/releases) in this
-  page contains only tagged versions. They are by no means official releases,
-  but simply checkpoints. Users are recommended to use the official releases,
-  not tagged versions.
+* Note the ["releases"](https://github.com/Parallel-NetCDF/PnetCDF/releases)
+  link on this page above contains only tagged versions. They are by no means
+  official releases, but simply checkpoints. They contain unused historical
+  files. Users are recommended to download the official releases, not tagged
+  versions.
 
-### Build PnetCDF using source codes of this repository
+### Build PnetCDF using source codes of this development repository
 * The source codes in this repository are constantly under development. They
-  should not be used for production runs.
+  should **NOT** be used for production runs.
 * Use the source codes in this repository only if you are interested in
   contributing the project and we welcome and appreciate any contribution.
 * To clone this repository, run command
@@ -31,13 +31,14 @@ National Laboratory.
   git clone https://github.com/Parallel-NetCDF/PnetCDF.git
   ```
   This will create a new folder named `PnetCDF`.
-* Before running configure command to build PnetCDF, please run command below first.
+* Before running configure command to build PnetCDF, please run commands below
+  first.
   ```
   cd PnetCDF
   autoreconf -i
   ```
-  Several autotools files will be created to be used by configure command.
-  The minimum versions of GNU autotools required are:
+  Several files, e.g. configure and Makefile.in, will be created for running the
+  configure command. The minimum versions of GNU autotools required are:
   + [autoconfig](https://www.gnu.org/software/autoconf/autoconf.html) version 2.69
   + [automake](https://www.gnu.org/software/automake) version 1.13
   + [libtool](https://www.gnu.org/software/libtool) version 2.4.2
