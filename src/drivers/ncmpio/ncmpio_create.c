@@ -51,14 +51,14 @@ ncmpio_create(MPI_Comm     comm,
      * path consistency will be done in MPI_File_open */
 
     /* First, check whether cmode is valid or supported ---------------------*/
-    /* Try opening a netCDF4 file is not supported */
-    if (cmode & NC_NETCDF4) DEBUG_RETURN_ERROR(NC_ESTRICTNC3)
 
     /* NC_DISKLESS is not supported yet */
     if (cmode & NC_DISKLESS) DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
 
     /* NC_MMAP is not supported yet */
     if (cmode & NC_MMAP) DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
+
+    /* Check cmode for other illegal flags already done in dispatcher layer */
 
     /* Get default format, in case cmode does not include either
      * NC_64BIT_OFFSET or NC_64BIT_DATA */
@@ -75,11 +75,6 @@ ncmpio_create(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ESMALL)
     }
 #endif
-
-    /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
-    if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
-                 (NC_64BIT_OFFSET|NC_64BIT_DATA))
-        DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
 
     /* Handle file clobber --------------------------------------------------*/
     MPI_Comm_rank(comm, &rank);
