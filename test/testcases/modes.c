@@ -53,19 +53,17 @@ int check_modes(char *filename)
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* create a new file and test various cmodes ----------------------------*/
-    cmode = NC_CLOBBER;
 
     /* It is illegal to use both NC_64BIT_OFFSET and NC_64BIT_DATA together */
-    cmode |= NC_64BIT_OFFSET | NC_64BIT_DATA;
-
+    cmode = NC_CLOBBER | NC_64BIT_OFFSET | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     EXP_ERR(NC_EINVAL_CMODE)
 
     /* The file should not be created */
     if (rank == 0) {
         if (access(path, F_OK) == 0) {
-            printf("Error at line %d in %s: file (%s) should not be created\n",
-                   __LINE__,__FILE__, filename);
+            printf("Error at %s:%d : file (%s) should not be created\n",
+                   __FILE__,__LINE__, filename);
             nerrs++;
             /* delete the file and ignore error */
             unlink(path);
@@ -73,6 +71,44 @@ int check_modes(char *filename)
         /* else : file does not exist */
     }
     MPI_Barrier(MPI_COMM_WORLD);
+
+#ifdef ENABLE_NETCDF4
+    /* It is illegal to use both NC_64BIT_OFFSET and NC_NETCDF4 together */
+    cmode = NC_CLOBBER | NC_64BIT_OFFSET | NC_NETCDF4;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    EXP_ERR(NC_EINVAL_CMODE)
+
+    /* The file should not be created */
+    if (rank == 0) {
+        if (access(path, F_OK) == 0) {
+            printf("Error at %s:%d : file (%s) should not be created\n",
+                   __FILE__,__LINE__, filename);
+            nerrs++;
+            /* delete the file and ignore error */
+            unlink(path);
+        }
+        /* else : file does not exist */
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* It is illegal to use both NC_64BIT_DATA and NC_NETCDF4 together */
+    cmode = NC_CLOBBER | NC_64BIT_DATA | NC_NETCDF4;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    EXP_ERR(NC_EINVAL_CMODE)
+
+    /* The file should not be created */
+    if (rank == 0) {
+        if (access(path, F_OK) == 0) {
+            printf("Error at %s:%d : file (%s) should not be created\n",
+                   __FILE__,__LINE__, filename);
+            nerrs++;
+            /* delete the file and ignore error */
+            unlink(path);
+        }
+        /* else : file does not exist */
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
     /* Collectively opening a non-existing file for read, expect error code
      * NC_ENOENT on all processes */
