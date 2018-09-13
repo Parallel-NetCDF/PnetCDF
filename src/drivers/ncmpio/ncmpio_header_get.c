@@ -1386,18 +1386,8 @@ ncmpio_hdr_get_NC(NC *ncp)
         getbuf.version = ncp->format = 1;
     } else if (magic[3] == 0x2) {
         getbuf.version = ncp->format = 2;
-#if SIZEOF_MPI_OFFSET < 8
-        /* take the easy way out: if we can't support all CDF-2
-         * files, return immediately */
-        NCI_Free(getbuf.base);
-        DEBUG_RETURN_ERROR(NC_ESMALL)
-#endif
     } else if (magic[3] == 0x5) {
         getbuf.version = ncp->format = 5;
-#if SIZEOF_MPI_OFFSET < 8
-        NCI_Free(getbuf.base);
-        DEBUG_RETURN_ERROR(NC_ESMALL)
-#endif
     } else {
         NCI_Free(getbuf.base);
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file */

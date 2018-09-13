@@ -64,18 +64,6 @@ ncmpio_create(MPI_Comm     comm,
      * NC_64BIT_OFFSET or NC_64BIT_DATA */
     ncmpi_inq_default_format(&default_format);
 
-#if SIZEOF_MPI_OFFSET <  8
-    /* check cmode */
-    if (fIsSet(cmode, NC_64BIT_DATA)     || fIsSet(cmode, NC_64BIT_OFFSET)   ||
-        default_format == NC_FORMAT_CDF5 || default_format == NC_FORMAT_CDF2) {
-        /* unlike serial netcdf, we will not bother to support
-         * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
-         * serial netcdf has proven it's possible if datasets are small, but
-         * that's a hassle we don't want to worry about */
-        DEBUG_RETURN_ERROR(NC_ESMALL)
-    }
-#endif
-
     /* Handle file clobber --------------------------------------------------*/
     MPI_Comm_rank(comm, &rank);
 
