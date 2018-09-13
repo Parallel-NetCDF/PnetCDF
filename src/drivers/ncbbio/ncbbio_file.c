@@ -63,7 +63,7 @@ ncbbio_create(MPI_Comm     comm,
 
     /* TODO: use cmode to determine the true driver */
     driver = ncmpio_inq_driver();
-    if (driver == NULL) return NC_ENOTNC;
+    if (driver == NULL) DEBUG_RETURN_ERROR(NC_ENOTNC)
 
     err = driver->create(comm, path, cmode, ncid, info, &ncp);
     if (err != NC_NOERR) return err;
@@ -109,20 +109,13 @@ ncbbio_open(MPI_Comm     comm,
             MPI_Info     info,
             void       **ncpp)
 {
-    int err, format;
+    int err;
     void *ncp=NULL;
     NC_bb *ncbbp;
     PNC_driver *driver=NULL;
 
-    err = ncmpi_inq_file_format(path, &format);
-    if (err != NC_NOERR) return err;
-
-    if (format == NC_FORMAT_CLASSIC ||
-        format == NC_FORMAT_CDF2 ||
-        format == NC_FORMAT_CDF5) {
-        driver = ncmpio_inq_driver();
-    }
-    if (driver == NULL) return NC_ENOTNC;
+    driver = ncmpio_inq_driver();
+    if (driver == NULL) DEBUG_RETURN_ERROR(NC_ENOTNC)
 
     err = driver->open(comm, path, omode, ncid, info, &ncp);
     if (err != NC_NOERR) return err;
