@@ -45,15 +45,15 @@
 # include <config.h>
 #endif
 
-/* Note, netcdf header must come first due to conflicting constant definition */
-#include <netcdf.h>
-#include <netcdf_par.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <mpi.h>
+
+/* Note, netcdf header must come first due to conflicting constant definition */
+#include <netcdf.h>
+#include <netcdf_par.h>
 
 #include <pnc_debug.h>
 #include <common.h>
@@ -88,8 +88,7 @@ nc4io_inq_varid(void       *ncdp,
                 const char *name,
                 int        *varid)
 {
-    int err;
-    int vid;
+    int err, vid;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Call nc_inq_varid */

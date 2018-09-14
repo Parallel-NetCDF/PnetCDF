@@ -16,16 +16,14 @@ define(`upcase', `translit(`$*', `a-z', `A-Z')')dnl
 dnl
 define(`GETATTTYPE',dnl
 `dnl
-    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1) {
-        err = ifelse($1, `MPI_DATATYPE_NULL', `nc_get_att', `nc_get_att_')$2(nc4p->ncid, varid, name, ($3*) buf);
-    }
+    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1)
+        return ifelse($1, `MPI_DATATYPE_NULL', `nc_get_att', `nc_get_att_')$2(nc4p->ncid, varid, name, ($3*) buf);
 ')dnl
 dnl
 define(`PUTATTTYPE',dnl
 `dnl
-    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1) {
-        err = ifelse($1, `MPI_DATATYPE_NULL', `nc_put_att', `nc_put_att_')$2(nc4p->ncid, varid, name, ifelse($1, `MPI_CHAR', , `xtype, ')len, ($3*) value);
-    }
+    ifelse($1, `MPI_CHAR', , `else ')if (itype == $1)
+        return ifelse($1, `MPI_DATATYPE_NULL', `nc_put_att', `nc_put_att_')$2(nc4p->ncid, varid, name, ifelse($1, `MPI_CHAR', , `xtype, ')len, ($3*) value);
 ')dnl
 dnl
 define(`GETVARTYPE',dnl
@@ -137,9 +135,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `GETATTTYPE(translit(dt, `()'))')dnl
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
-    return NC_NOERR;
+    DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
 }
 
 int
@@ -188,9 +185,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `PUTATTTYPE(translit(dt, `()'))')dnl
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
-    return NC_NOERR;
+    DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
 }
 
 int

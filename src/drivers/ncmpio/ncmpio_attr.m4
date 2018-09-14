@@ -568,7 +568,7 @@ ncmpio_copy_att(void       *ncdp_in,
             goto err_check;
         }
     }
-    else { /* attribute does not exit in ncdp_out */
+    else { /* attribute does not exist in ncdp_out */
         if (!NC_indef(ncp_out)) {
             /* add new attribute is not allowed in data mode */
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
@@ -628,7 +628,7 @@ err_check:
         attrp->xtype  = iattrp->xtype;
         attrp->nelems = iattrp->nelems;
     }
-    else { /* attribute does not exit in ncdp_out */
+    else { /* attribute does not exist in ncdp_out */
         err = ncmpio_new_NC_attr(nname, iattrp->xtype, iattrp->nelems, &attrp);
         if (err != NC_NOERR) return err;
 
@@ -1016,7 +1016,7 @@ ncmpio_put_att(void         *ncdp,
             goto err_check;
         }
     }
-    else { /* attribute does not exit in ncid */
+    else { /* attribute does not exist in ncid */
         if (!NC_indef(ncp)) {
             /* add new attribute is not allowed in data mode */
             DEBUG_ASSIGN_ERROR(err, NC_ENOTINDEFINE)
@@ -1069,7 +1069,7 @@ err_check:
         attrp->xtype  = xtype;
         attrp->nelems = nelems;
     }
-    else { /* attribute does not exit in ncid */
+    else { /* attribute does not exist in ncid */
         err = ncmpio_new_NC_attr(nname, xtype, nelems, &attrp);
         if (err != NC_NOERR) return err;
 

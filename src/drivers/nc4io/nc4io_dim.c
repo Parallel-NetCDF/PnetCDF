@@ -17,15 +17,14 @@
 # include <config.h>
 #endif
 
-/* Note, netcdf header must come first due to conflicting constant definition */
-#include <netcdf.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <mpi.h>
 
+/* netcdf.h must come before pnetcdf headers */
+#include <netcdf.h>
 #include <pnc_debug.h>
 #include <common.h>
 #include <nc4io_driver.h>
@@ -76,9 +75,7 @@ nc4io_inq_dim(void       *ncdp,
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Convert to MPI_Offset */
-    if (sizep != NULL){
-        *sizep = (MPI_Offset)len;
-    }
+    if (sizep != NULL) *sizep = (MPI_Offset)len;
 
     return NC_NOERR;
 }

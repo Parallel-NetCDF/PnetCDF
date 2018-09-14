@@ -81,9 +81,7 @@ nc4io_inq_att(void       *ncdp,
     err = nc_inq_att(nc4p->ncid, varid, name, datatypep, &len);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
-    if (lenp != NULL){
-        *lenp = (MPI_Offset)len;
-    }
+    if (lenp != NULL) *lenp = (MPI_Offset)len;
 
     return NC_NOERR;
 }
@@ -123,9 +121,6 @@ nc4io_copy_att(void       *ncdp_in,
     NC_nc4 *nc4p_in  = (NC_nc4*)ncdp_in;
     NC_nc4 *nc4p_out = (NC_nc4*)ncdp_out;
 
-    /* Read only driver */
-    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
     /* Call nc_copy_att */
     err = nc_copy_att(nc4p_in->ncid, varid_in, name, nc4p_out->ncid, varid_out);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -140,9 +135,6 @@ nc4io_del_att(void       *ncdp,
 {
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
-
-    /* Read only driver */
-    //DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 
     /* Call nc_del_att */
     err = nc_del_att(nc4p->ncid, varid, name);
