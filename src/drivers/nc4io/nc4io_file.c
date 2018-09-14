@@ -184,6 +184,10 @@ nc4io__enddef(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
+    if (h_minfree != (size_t)h_minfree || v_align != (size_t)v_align ||
+        v_minfree != (size_t)v_minfree || r_align != (size_t)r_align)
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
     /* Call nc__enddef */
     err = nc__enddef(nc4p->ncid, (size_t)h_minfree, (size_t)v_align, (size_t)v_minfree, (size_t)r_align);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
