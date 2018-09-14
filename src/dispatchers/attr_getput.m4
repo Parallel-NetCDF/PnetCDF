@@ -95,6 +95,10 @@ check_EINVAL(PNC        *pncp,
 }
 
 /*----< check_EBADTYPE_ECHAR() >---------------------------------------------*/
+/* This subroutine is called by att_put APIs only. For att_get APIs, NC_ECHAR
+ * is checked at the driver, because it involves attribute name look up which
+ * can be called twice if NC_ECHAR is checked here.
+ */
 static int
 check_EBADTYPE_ECHAR(PNC *pncp, MPI_Datatype itype, nc_type xtype)
 {
@@ -268,7 +272,9 @@ ifelse(`$2',`',`
     if (err != NC_NOERR) return err;',
     `err = sanity_check_put(pncp, varid, name);')
 
-    ifelse(`$1',`put',`ifelse(`$2',`text',`',`/* check NC_EBADTYPE/NC_ECHAR */
+    ifelse(`$1',`get', `/* check NC_ECHAR will be done at the driver */',dnl
+                       `ifelse(`$2',`text',`',`
+    /* check NC_EBADTYPE/NC_ECHAR */
     if (err == NC_NOERR) err = check_EBADTYPE_ECHAR(pncp, itype, xtype);')')
 
     /* check for nelems against buf for NC_EINVAL */dnl
