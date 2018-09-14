@@ -138,16 +138,6 @@ nc4io_rename_var(void       *ncdp,
     int err;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
-    /* New name can not be longer than old one in data mode */
-    if (!fIsSet(nc4p->flag, NC_MODE_DEF)){
-        char oldname[NC_MAX_NAME + 1];
-        err = nc_inq_varname(nc4p->ncid, varid, oldname);
-        if (err != NC_NOERR)
-            DEBUG_RETURN_ERROR(err);
-        if (strlen(newname) > strlen(oldname))
-            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE);
-    }
-
     /* Call nc_rename_var */
     err = nc_rename_var(nc4p->ncid, varid, newname);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
