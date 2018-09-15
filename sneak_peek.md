@@ -13,7 +13,7 @@ This is essentially a placeholder for the next release note ...
     I/O operations.
 
 * New optimization
-  +
+  + none
 
 * New Limitations
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
@@ -134,20 +134,25 @@ This is essentially a placeholder for the next release note ...
     and writing variables in data mode.
 
 * Discrepancy from NetCDF library
-  + In contrast to nc_set_fill() in NetCDF, ncmpi_set_fill() changes the fill
-    mode of all variables newly defined in the current scope of defined mode.
-    Variables affected include the ones created before and after the call to
-    ncmpi_set_fill(). Note this API has no effect on the existing variables
-    defined in the previous define mode. This behavior follows the convention
-    adopted by NetCDF-3, but not NetCDF-4. To change fill mode for individual
-    variables after the call to ncmpi_set_fill(), API ncmpi_def_var_fill() can
-    be used for this purpose. Reference of NetCDF 4.1.3 user guide for
-    [nc_set_fill()](https://www.unidata.ucar.edu/software/netcdf/documentation/historic/netcdf-c/nc_005fset_005ffill.html)
-  + The error code return precedence are different between NetCDF and PnetCDF.
-    A test program for error code return precedence is available in
-    test/testcases/error_precedence.m4. This program can be used to test both
-    PnetCDF and NetCDF programs, When testing NetCDF programs, because NetCDF
-    does not follow the same precedence, failures are expected.
+  + In contrast to the semantics of nc_set_fill() defined in NetCDF-4,
+    ncmpi_set_fill() changes the fill mode of all variables newly defined in
+    the current scope of defined mode. Variables affected include the ones
+    defined before and after the call to ncmpi_set_fill(). Note this API has no
+    effect on the already existing variables created in the previous define
+    mode. This behavior follows the convention adopted by NetCDF-3. To change
+    fill mode for individual variables after the call to ncmpi_set_fill(), API
+    ncmpi_def_var_fill() can be used for this purpose. Refer NetCDF 4.1.3 user
+    guide for semantics of
+    [nc_set_fill()](https://www.unidata.ucar.edu/software/netcdf/documentation/historic/netcdf-c/nc_005fset_005ffill.html).
+    A discussion with NetCDF developers regarding this issue can be found in
+    [1114](https://github.com/Unidata/netcdf-c/pull/1114).
+  + The error code return precedence can be different between NetCDF and
+    PnetCDF in some cases. A test program for error code return precedence is
+    available in test/testcases/error_precedence.m4. This program can be used
+    to test both PnetCDF and NetCDF libraries. Note when testing NetCDF
+    programs, because NetCDF does not follow the same precedence, failures are
+    expected. A discussion with NetCDF developers regarding this issue can be
+    found in [334](https://github.com/Unidata/netcdf-c/issues/334).
 
 * Issues related to MPI library vendors:
   + none
