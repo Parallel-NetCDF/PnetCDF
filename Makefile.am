@@ -42,14 +42,14 @@ else
 endif
 
 ptest:
-	( for d in $(PTEST_SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptest $$* ; \
-	done ) ;
+	for d in $(PTEST_SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest $$* || exit 1 ; \
+	done
 
 ptests:
-	( for d in $(PTEST_SUBDIRS) ; do \
-		$(MAKE) $(MFLAGS) -C $$d ptests $$* ; \
-	done ) ;
+	for d in $(PTEST_SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptests $$* || exit 1 ; \
+	done
 
 tests-local:
 	@echo '|'
