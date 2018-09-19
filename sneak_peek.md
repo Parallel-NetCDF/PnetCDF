@@ -96,6 +96,11 @@ This is essentially a placeholder for the next release note ...
     no record has been written. See bug fix committed on Aug. 25, 2018.
   + ncmpidiff -- when comparing two scalar variables, error NC_EBADDIM may
     mistakenly reported. See bug fix committed on Aug. 12, 2018.
+  + When the MPI communicator used in ncmpi_create or ncmpi_open is freed by
+    the user after the call and before file is closed, programs would crash at
+    ncmpi_close with MPI error of "Invalid communicator". The fix moves the
+    duplication of MPI communicator to the place before calling driver create
+    and open subroutines. See bug fix committed on Jul 21, 2018.
 
 * New example programs
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
@@ -127,6 +132,8 @@ This is essentially a placeholder for the next release note ...
     program simple_xy.c from NetCDF
   + test/testcases/tst_pthread.c - tests thread-safe capability for scenario of
     each thread operating on a unique file.
+  + test/testcases/tst_free_comm.c - free MPI communicator right after calling
+    ncmpi_create to see if PnetCDF duplicates the communicator correctly.
 
 * Conformity with NetCDF library
   + In contract to NetCDF-4 which allows to read/write variables in define mode
