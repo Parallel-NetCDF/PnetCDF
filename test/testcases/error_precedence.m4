@@ -468,8 +468,10 @@ test_format_nc$1(char *filename)
 TEST_FORMAT(1)
 TEST_FORMAT(2)
 TEST_FORMAT(5)
+#if defined(ENABLE_NETCDF4) || defined(TEST_NETCDF)
 TEST_FORMAT(3)
 TEST_FORMAT(4)
+#endif
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)

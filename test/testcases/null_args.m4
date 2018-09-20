@@ -316,8 +316,10 @@ test_format_nc$1(char *filename)
 TEST_FORMAT(1)
 TEST_FORMAT(2)
 TEST_FORMAT(5)
+#ifdef ENABLE_NETCDF4
 TEST_FORMAT(3)
 TEST_FORMAT(4)
+#endif
 
 int main(int argc, char **argv)
 {

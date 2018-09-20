@@ -16,11 +16,13 @@ AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 $(FC_MODINC)$(top_builddir)/src/b
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 if RELAX_COORD_BOUND
-   AM_CPPFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
+   AM_CFLAGS += -DRELAX_COORD_BOUND
+   AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
 endif
 
 if ENABLE_NETCDF4
-   AM_CPPFLAGS += $(FC_DEFINE)ENABLE_NETCDF4
+   AM_CFLAGS += -DENABLE_NETCDF4
+   AM_FCFLAGS += $(FC_DEFINE)ENABLE_NETCDF4
 endif
 
 M4SRCS      = test_get.m4 \

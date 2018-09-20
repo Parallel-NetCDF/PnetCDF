@@ -893,7 +893,7 @@
 
         err = nf90mpi_inquire(ncid, formatNum=nc_fmt);
         if (err .ne. NF90_NOERR) &
-            call errori('Error calling nf90mpi_inquire()')
+            call errori('Error calling nf90mpi_inquire()',err)
 
         if (nc_fmt .EQ. nf90_format_netcdf4 .OR. &
             nc_fmt .EQ. nf90_format_netcdf4_classic) then
@@ -902,7 +902,7 @@
             is_nc4 = .FALSE.
             err = nf90mpi_begin_indep_data(ncid)
             if (err .ne. NF90_NOERR) &
-                call errori('Error calling nf90mpi_begin_indep_data()')
+                call errori('Error calling nf90mpi_begin_indep_data()',err)
         endif
 
         do 2, i = 1, numVars
@@ -986,7 +986,7 @@
         if (.NOT. is_nc4) then
             err = nf90mpi_end_indep_data(ncid)
             if (err .ne. NF90_NOERR) &
-                call errori('Error calling nf90mpi_end_indep_data()')
+                call errori('Error calling nf90mpi_end_indep_data()',err)
         endif
         end
 
@@ -1196,8 +1196,7 @@
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                         index)
                 if (err .ne. NF90_NOERR)  then
-                    call errori('error in index2indexes() 2, variable ', &
-                                i)
+                    call errori('error in index2indexes() 2, variable ',i)
                 end if
                 expect = hash(var_type(i), var_rank(i), index )
                 if (isChar) then

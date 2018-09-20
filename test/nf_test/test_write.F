@@ -1760,7 +1760,7 @@ C *    close file & create again for test using attribute _FillValue
       err = nfmpi_inq_default_format(nc_fmt);
       if (err .ne. NF_NOERR) then
          call errori(
-     +       'Error calling nfmpi_inq_default_format()')
+     +       'Error calling nfmpi_inq_default_format()',err)
       end if
 
       if (nc_fmt .eq. NF_FORMAT_NETCDF4) then

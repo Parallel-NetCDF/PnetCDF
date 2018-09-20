@@ -1766,7 +1766,7 @@
 
       err = nf90mpi_inq_default_format(nc_fmt);
       if (err .ne. NF90_NOERR) &
-         call errori('Error calling nf90mpi_inq_default_format()')
+         call errori('Error calling nf90mpi_inq_default_format()',err)
 
       if (nc_fmt .eq. NF_FORMAT_NETCDF4) then
           nformats = 4 ! test CDF-1, CDF-2, CDF-5 and NetCDF-4
