@@ -1210,27 +1210,27 @@ if test "x${has_fortran}" = xyes ; then
    AC_SUBST(NF_INT2_T)
    AC_SUBST(NF_INT8_T)
 
-   NFMPI_OFFSET="integer*$ac_cv_sizeof_MPI_Offset"
-   AC_MSG_CHECKING([for Fortran NFMPI_OFFSET "$NFMPI_OFFSET"])
-   dnl "
-   AC_LANG_PUSH([Fortran 77])
-   AC_COMPILE_IFELSE(
-      [AC_LANG_SOURCE([
-            subroutine sub(value)
-            $NFMPI_OFFSET value
-            end
-      ])],
-      [ac_cv_NFMPI_OFFSET=yes], [ac_cv_NFMPI_OFFSET=no]
-   )
-   AC_LANG_POP([Fortran 77])
-   if test "$ac_cv_NFMPI_OFFSET" = yes ; then
-      AC_MSG_RESULT(yes)
-   else
-      AC_MSG_RESULT(no)
-      AC_MSG_ERROR([F77 does not support "$NFMPI_OFFSET"])
-      dnl "
-   fi
-   ${RM} -rf conftest*
+   dnl NFMPI_OFFSET="integer*$ac_cv_sizeof_MPI_Offset"
+   dnl AC_MSG_CHECKING([for Fortran NFMPI_OFFSET "$NFMPI_OFFSET"])
+   dnl dnl "
+   dnl AC_LANG_PUSH([Fortran 77])
+   dnl AC_COMPILE_IFELSE(
+   dnl    [AC_LANG_SOURCE([
+   dnl          subroutine sub(value)
+   dnl          $NFMPI_OFFSET value
+   dnl          end
+   dnl    ])],
+   dnl    [ac_cv_NFMPI_OFFSET=yes], [ac_cv_NFMPI_OFFSET=no]
+   dnl )
+   dnl AC_LANG_POP([Fortran 77])
+   dnl if test "$ac_cv_NFMPI_OFFSET" = yes ; then
+   dnl    AC_MSG_RESULT(yes)
+   dnl else
+   dnl    AC_MSG_RESULT(no)
+   dnl    AC_MSG_ERROR([F77 does not support "$NFMPI_OFFSET"])
+   dnl    dnl "
+   dnl fi
+   dnl ${RM} -rf conftest*
 fi
 
 SIZEOF_MPI_OFFSET=$ac_cv_sizeof_MPI_Offset
