@@ -168,5 +168,6 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Clarifications
-  + none
+  + PnetCDF currently does not support Fortran default integer type set to 8
+    bytes.
 

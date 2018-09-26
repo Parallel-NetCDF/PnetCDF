@@ -1191,6 +1191,14 @@ if test "$ac_cv_type_ulonglong" = yes ; then
 fi
 
 if test "x${has_fortran}" = xyes ; then
+   dnl check Fortran default integer size
+   dnl PnetCDF currently does not support the default integer of size 8
+   AC_CHECK_SIZEOF([MPI_Fint], [], [#include <mpi.h>])
+   UD_MSG_DEBUG(["sizeof(MPI_Fint) = $ac_cv_sizeof_MPI_Fint"])
+   if test "$ac_cv_sizeof_MPI_Fint" = 8 ; then
+      AC_MSG_ERROR([PnetCDF does not support Fortran default integer size of 8 bytes])
+   fi
+
    if test "$cross_compiling" = yes; then
       UD_CHECK_FORTRAN_TYPE([NF_INT1_T], [integer*1 byte "integer(kind=1)"])
       UD_CHECK_FORTRAN_TYPE([NF_INT2_T], [integer*2 "integer(kind=2)"])
