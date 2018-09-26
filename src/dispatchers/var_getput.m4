@@ -633,7 +633,7 @@ IAPINAME($1,$2,$3)(int ncid,
     err = sanity_check(pncp, varid, IO_TYPE($1), ITYPE2MPI($3), 0);
     if (err != NC_NOERR) return err;
 
-    ifelse(`$1',`bput',`dnl
+    ifelse(`$1',`bput',`
 #ifdef ENABLE_BURST_BUFFER
     if (pncp->driver == ncbbio_inq_driver())
         reqMode = NC_REQ_NBI;
@@ -741,7 +741,7 @@ INAPINAME($1,$2)(int                ncid,
 
     if (num == 0) return NC_NOERR;
 
-    ifelse(`$1',`bput',`dnl
+    ifelse(`$1',`bput',`
 #ifdef ENABLE_BURST_BUFFER
     if (pncp->driver == ncbbio_inq_driver())
         reqMode = NC_REQ_NBI;

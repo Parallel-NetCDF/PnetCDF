@@ -376,7 +376,7 @@ test_bput_varn_$1(char *filename, int cdf)
 
     /* test error code: NC_ENULLSTART */
     err = ncmpi_bput_varn_$1(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
-    if (rank < 4) EXP_ERR(NC_ENULLSTART)
+    if (rank < 4 || bb_enabled) EXP_ERR(NC_ENULLSTART)
     else if (bufsize == 0) EXP_ERR(NC_ENULLABUF)
     else CHECK_ERR
 
