@@ -1402,7 +1402,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    fi
 
    if test "x${HDF5_INSTALL}" != x ; then
-      CPPFLAGS+=" -I${HDF5_INSTALL}/include"
+      dnl CPPFLAGS+=" -I${HDF5_INSTALL}/include"
       LDFLAGS+=" -L${HDF5_INSTALL}/lib"
       LIBS="-lhdf5_hl -lhdf5 -ldl $LIBS -lm"
    fi
@@ -1413,20 +1413,21 @@ if test "x$enable_netcdf4" = "xyes" ; then
       LIBS="-lnetcdf $LIBS"
    fi
 
-   AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
-   AC_MSG_CHECKING(HDF5 library parallel I/O feature)
+   dnl There is no need to check HDF5 header, as PnetCDF does not use it
+   dnl AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
+   AC_MSG_CHECKING(HDF5 library)
    AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [], [have_hdf5=no])
 
    if test "x${have_hdf5}" = xno; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
-      The HDF5 library and header file are required to build
-      PnetCDF with NetCDF-4 support. Use option
+      The HDF5 library is required to build PnetCDF with NetCDF-4
+      support. Use option
           --with-hdf5=/path/to/implementation
-      to specify the location of HDF5 build. In addition, please
+      to specify the install location of HDF5. In addition, please
       make sure the MPI C compiler is compatible with the one used
-      to build HDF5. The HDF5 library used must be built with
-      parallel support. Check 'config.log' for more information.
+      to build HDF5. The HDF5 library must be built with parallel
+      support. Check 'config.log' for more information.
       Stopping ...
       ------------------------------------------------------------])
    fi
