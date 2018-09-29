@@ -367,7 +367,6 @@
 #include "tests.inc"
 
         integer ncidw         !/* netcdf id for writing */
-        integer ncidr         !/* netcdf id for reading */
         integer err, flags
         integer nok
 

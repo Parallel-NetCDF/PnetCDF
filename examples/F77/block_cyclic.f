@@ -74,7 +74,7 @@
           integer*8 G_NY, myOff, block_start, global_nx, global_ny
           integer*8 start(2), count(2)
           integer*8 malloc_size, sum_size
-          logical verbose, flag
+          logical verbose
           integer dummy, info
 
           call MPI_Init(err)
