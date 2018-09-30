@@ -430,19 +430,21 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_att_int(ncid, varid, name, xtype, len, IVALS)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      CHARACTER(len=*),              INTENT(IN)  :: name
                      INTEGER,                       INTENT(IN)  :: xtype
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                     INTEGER,                       INTENT(IN)  :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(IN)  :: ivals(*)
     END     FUNCTION nfmpi_put_att_int
 
     INTEGER FUNCTION nfmpi_get_att_int(ncid, varid, name, IVALS)
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      CHARACTER(len=*),              INTENT(IN)  :: name
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_att_int
 
     INTEGER FUNCTION nfmpi_put_att_real(ncid, varid, name, xtype, len, RVALS)
@@ -682,21 +684,24 @@ INTERFACE
     END     FUNCTION nfmpi_get_var_int2_all
 
     INTEGER FUNCTION nfmpi_put_var_int(ncid, varid, ivals)
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER (KIND=FourByteInt),    INTENT(@INTENTV@) :: ivals(*)
     END     FUNCTION nfmpi_put_var_int
 
     INTEGER FUNCTION nfmpi_get_var_int(ncid, varid, ivals)
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_var_int
 
     INTEGER FUNCTION nfmpi_get_var_int_all(ncid, varid, ivals)
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_var_int_all
 
     INTEGER FUNCTION nfmpi_put_var_real(ncid, varid, rvals)
@@ -905,34 +910,38 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_var1_int(ncid, varid, index, ival)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ival
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ival
     END     FUNCTION nfmpi_put_var1_int
 
     INTEGER FUNCTION nfmpi_put_var1_int_all(ncid, varid, index, ival)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ival
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ival
     END     FUNCTION nfmpi_put_var1_int_all
 
     INTEGER FUNCTION nfmpi_get_var1_int(ncid, varid, index, ival)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                     INTEGER,                       INTENT(OUT) :: ival
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ival
     END     FUNCTION nfmpi_get_var1_int
 
     INTEGER FUNCTION nfmpi_get_var1_int_all(ncid, varid, index, ival)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                     INTEGER,                       INTENT(OUT) :: ival
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ival
     END     FUNCTION nfmpi_get_var1_int_all
 
     INTEGER FUNCTION nfmpi_put_var1_real(ncid, varid, index, rval)
@@ -1200,38 +1209,42 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_vara_int(ncid, varid, start, count, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END     FUNCTION nfmpi_put_vara_int
 
     INTEGER FUNCTION nfmpi_put_vara_int_all(ncid, varid, start, count, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END     FUNCTION nfmpi_put_vara_int_all
 
     INTEGER FUNCTION nfmpi_get_vara_int(ncid, varid, start, count, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_vara_int
 
     INTEGER FUNCTION nfmpi_get_vara_int_all(ncid, varid, start, count, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_vara_int_all
 
     INTEGER FUNCTION nfmpi_put_vara_real(ncid, varid, start, count, rvals)
@@ -1527,42 +1540,46 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_vars_int(ncid, varid, start, count, stride, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END     FUNCTION nfmpi_put_vars_int
 
     INTEGER FUNCTION nfmpi_put_vars_int_all(ncid, varid, start, count, stride, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END     FUNCTION nfmpi_put_vars_int_all
 
     INTEGER FUNCTION nfmpi_get_vars_int(ncid, varid, start, count, stride, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_vars_int
 
     INTEGER FUNCTION nfmpi_get_vars_int_all(ncid, varid, start, count, stride, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_vars_int_all
 
     INTEGER FUNCTION nfmpi_put_vars_real(ncid, varid, start, count, stride, rvals)
@@ -1886,46 +1903,50 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_varm_int (ncid, varid, start, count, stride, imap, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END     FUNCTION nfmpi_put_varm_int
 
     INTEGER FUNCTION nfmpi_put_varm_int_all(ncid, varid, start, count, stride, imap, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END     FUNCTION nfmpi_put_varm_int_all
 
     INTEGER FUNCTION nfmpi_get_varm_int (ncid, varid, start, count, stride, imap, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_varm_int
 
     INTEGER FUNCTION nfmpi_get_varm_int_all(ncid, varid, start, count, stride, imap, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END     FUNCTION nfmpi_get_varm_int_all
 
     INTEGER FUNCTION nfmpi_put_varm_real(ncid, varid, start, count, stride, imap, rvals)
@@ -2141,16 +2162,18 @@ INTERFACE
     END     FUNCTION nfmpi_iget_var_int2
 
     INTEGER FUNCTION nfmpi_iput_var_int(ncid, varid, ivals, req)
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iput_var_int
 
     INTEGER FUNCTION nfmpi_iget_var_int(ncid, varid, ivals, req)
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iget_var_int
 
@@ -2285,19 +2308,21 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iput_var1_int(ncid, varid, index, ival, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ival
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ival
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iput_var1_int
 
     INTEGER FUNCTION nfmpi_iget_var1_int(ncid, varid, index, ival, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                     INTEGER,                       INTENT(OUT) :: ival
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ival
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iget_var1_int
 
@@ -2452,21 +2477,23 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iput_vara_int(ncid, varid, start, count, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iput_vara_int
 
     INTEGER FUNCTION nfmpi_iget_vara_int(ncid, varid, start, count, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iget_vara_int
 
@@ -2635,23 +2662,25 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iput_vars_int(ncid, varid, start, count, stride, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iput_vars_int
 
     INTEGER FUNCTION nfmpi_iget_vars_int(ncid, varid, start, count, stride, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iget_vars_int
 
@@ -2834,25 +2863,27 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iput_varm_int (ncid, varid, start, count, stride, imap, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iput_varm_int
 
     INTEGER FUNCTION nfmpi_iget_varm_int (ncid, varid, start, count, stride, imap, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_iget_varm_int
 
@@ -2979,9 +3010,10 @@ INTERFACE
     END     FUNCTION nfmpi_bput_var_int2
 
     INTEGER FUNCTION nfmpi_bput_var_int(ncid, varid, ivals, req)
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
-                     INTEGER,                       INTENT(IN)  :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(IN)  :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_bput_var_int
 
@@ -3061,10 +3093,11 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_bput_var1_int(ncid, varid, index, ival, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                     INTEGER,                       INTENT(IN)  :: ival
+                     INTEGER(KIND=FourByteInt),     INTENT(IN)  :: ival
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_bput_var1_int
 
@@ -3155,11 +3188,12 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_bput_vara_int(ncid, varid, start, count, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                     INTEGER,                       INTENT(IN)  :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(IN)  :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_bput_vara_int
 
@@ -3258,12 +3292,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_bput_vars_int(ncid, varid, start, count, stride, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                     INTEGER,                       INTENT(IN)  :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(IN)  :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_bput_vars_int
 
@@ -3370,13 +3405,14 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_bput_varm_int (ncid, varid, start, count, stride, imap, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                     INTEGER,                       INTENT(IN)  :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(IN)  :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END     FUNCTION nfmpi_bput_varm_int
 
@@ -3525,12 +3561,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_get_varn_int(ncid, varid, num, starts, counts, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END FUNCTION nfmpi_get_varn_int
 
     INTEGER FUNCTION nfmpi_get_varn_real(ncid, varid, num, starts, counts, rvals)
@@ -3598,12 +3635,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_get_varn_int_all(ncid, varid, num, starts, counts, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
     END FUNCTION nfmpi_get_varn_int_all
 
     INTEGER FUNCTION nfmpi_get_varn_real_all(ncid, varid, num, starts, counts, rvals)
@@ -3672,12 +3710,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_varn_int(ncid, varid, num, starts, counts, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION nfmpi_put_varn_int
 
     INTEGER FUNCTION nfmpi_put_varn_real(ncid, varid, num, starts, counts, rvals)
@@ -3745,12 +3784,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_varn_int_all(ncid, varid, num, starts, counts, ivals)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
     END FUNCTION nfmpi_put_varn_int_all
 
     INTEGER FUNCTION nfmpi_put_varn_real_all(ncid, varid, num, starts, counts, rvals)
@@ -3848,12 +3888,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iget_varn_int(ncid, varid, num, starts, counts, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(OUT) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iget_varn_int
 
@@ -3928,12 +3969,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iput_varn_int(ncid, varid, num, starts, counts, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_int
 
@@ -4020,12 +4062,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_bput_varn_int(ncid, varid, num, starts, counts, ivals, req)
                      @USE_MPIF_HEADER@
+                     integer, parameter :: FourByteInt = selected_int_kind(9)
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER,                       INTENT(@INTENTV@) :: ivals(*)
+                     INTEGER(KIND=FourByteInt),     INTENT(@INTENTV@) :: ivals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_int
 

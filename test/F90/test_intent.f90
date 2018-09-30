@@ -46,7 +46,7 @@
           character(LEN=3)           cbuf
           integer(KIND=OneByteInt)   i1buf(3)
           integer(KIND=TwoByteInt)   sbuf(3)
-          integer                    ibuf(3)
+          integer(KIND=FourByteInt)  ibuf(3)
           real                       rbuf(3)
           double precision           dbuf(3)
           integer(KIND=EightByteInt) i8buf(3)

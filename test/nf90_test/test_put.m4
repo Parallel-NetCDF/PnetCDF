@@ -112,7 +112,7 @@ dnl ifelse($1, text, character(len=MAX_NELS) $2,
 ifelse($1, text, character(len=$3) $2,
 ifelse($1, int1, NF_INT1_T $2($3),
 ifelse($1, int2, NF_INT2_T $2($3),
-ifelse($1, int, integer $2($3),
+ifelse($1, int, integer*4 $2($3),
 ifelse($1, int8, NF_INT8_T $2($3),
 ifelse($1, real, real $2($3),
 ifelse($1, double, doubleprecision $2($3))[]dnl

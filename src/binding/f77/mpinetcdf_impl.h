@@ -27,15 +27,15 @@
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines */
 #ifdef USE_FORT_MIXED_STR_LEN
-#define FORT_MIXED_LEN_DECL   , MPI_Fint
+#define FORT_MIXED_LEN_DECL   , int
 #define FORT_END_LEN_DECL
-#define FORT_MIXED_LEN(a)     , MPI_Fint a
+#define FORT_MIXED_LEN(a)     , int a
 #define FORT_END_LEN(a)
 #else
 #define FORT_MIXED_LEN_DECL
-#define FORT_END_LEN_DECL     , MPI_Fint
+#define FORT_END_LEN_DECL     , int
 #define FORT_MIXED_LEN(a)
-#define FORT_END_LEN(a)       , MPI_Fint a
+#define FORT_END_LEN(a)       , int a
 #endif
 
 /* Support Windows extension to specify which functions are exported from

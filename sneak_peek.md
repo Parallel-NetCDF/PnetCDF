@@ -169,5 +169,7 @@ This is essentially a placeholder for the next release note ...
 
 * Clarifications
   + PnetCDF currently does not support Fortran default integer type set to 8
-    bytes.
+    bytes (for GNU Fortran compiler, this change of default setting is done by
+    using compile option -fdefault-integer-8). Checking this has been added
+    and configure command will fail, once default 8-byte integer is detected.
 

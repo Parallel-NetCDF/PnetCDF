@@ -205,7 +205,7 @@
     character(len = *),                         intent(in)  :: name
     integer (kind = FourByteInt), dimension(:), intent(out) :: values
     integer                                                 :: nf90mpi_get_att_FourByteInt
-    integer, dimension(size(values))                        :: defaultInteger
+    integer (kind = FourByteInt), dimension(size(values))   :: defaultInteger
 
     nf90mpi_get_att_FourByteInt = nfmpi_get_att_int(ncid, varid, name, defaultInteger)
     values(:) = defaultInteger(:)
@@ -216,7 +216,7 @@
     character(len = *),                         intent(in)  :: name
     integer (kind = FourByteInt),               intent(out) :: values
     integer                                                 :: nf90mpi_get_att_one_FourByteInt
-    integer, dimension(1)                                   :: defaultInteger
+    integer (kind = FourByteInt), dimension(1)              :: defaultInteger
 
     nf90mpi_get_att_one_FourByteInt = nfmpi_get_att_int(ncid, varid, name, defaultInteger)
     values = defaultInteger(1)

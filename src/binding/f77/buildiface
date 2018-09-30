@@ -1809,7 +1809,7 @@ sub blankpadonflag_ctof {
 # We must make a copy
 sub addnull_in_decl {
     my $count = $_[0];
-    print $OUTFD "    char *p$count;\n";
+    print $OUTFD "    char *p$count, *pt$count;\n";
 }
 sub addnull_in_arg {
     my $count = $_[0];
@@ -1825,16 +1825,15 @@ sub addnull_ftoc {
     $strlen = "v$count";
     $strlen =~ s/^v/d/;
     print $OUTFD "\
-    {
-        char *p = v$count + $strlen - 1; /* point to the end of string v$count */
-        while (*p == ' ' && p > v$count) p--; /* find the last non-blank */
-        p++;
-        p$count = (char *) $malloc((size_t)(p-v$count) + 1);
-        memcpy(p$count, v$count, (size_t)(p-v$count));
-        p$count\[p-v$count\] = 0;
-    }
+    pt$count = v$count + $strlen - 1; /* point to the end of string v$count */
+    while (*pt$count == ' ' && pt$count > v$count) pt$count--; /* find the last non-blank */
+    pt$count++;
+    /* it is possible character array v$count is of exact lenght $strlen */
+    p$count = (char *) $malloc((size_t)(pt$count-v$count) + 1);
+    memcpy(p$count, v$count, (size_t)(pt$count-v$count));
+    p$count\[pt$count-v$count\] = '\\0';
 ";
-    $clean_up .= "    $free( p$count );\n";
+    $clean_up .= "    $free(p$count);\n";
 }
 # ----------------------------------------------------------------------------
 # Add null to input strings, also trim all LEADING and trailing blanks.
@@ -1867,10 +1866,10 @@ sub addnullandtrim_ftoc {
         while (*pin == ' ' && pin < p) pin++;
         p$count = (char *)$malloc( (size_t)(p-pin) + 1 );
         for (li=0; li<(p-pin); li++) { p$count\[li\] = pin\[li\]; }
-        p$count\[li\] = 0;
+        p$count\[li\] = '\\0';
     }
 ";
-    $clean_up .= "    $free( p$count );\n";
+    $clean_up .= "    $free(p$count);\n";
 }
 
 # ----------------------------------------------------------------------------
@@ -1933,10 +1932,10 @@ sub chararray_ftoc {
           while (*pin == ' ' && pin > p) pin--;
           /* Copy and then null terminate */
           for (j=0; j<(pin-p)+1; j++) { pdest\[j\] = p\[j\]; }
-          pdest\[j\] = 0;
+          pdest\[j\] = '\\0';
           }
     /* Null terminate the array */
-    p$count\[asize$count-1\] = 0;
+    p$count\[asize$count-1\] = '\\0';
     }\n";
     $clean_up .= "    $free( p$count\[0\] ); $free( p$count );\n";
 }
@@ -2035,7 +2034,7 @@ sub chararray2_ftoc {
         pargs = (char **)$malloc( (size_t)(argcnt+1)*sizeof(char *) );
         pdata = (char *)$malloc( (size_t)arglen );
         p$count\[k\] = pargs;
-        pargs\[argcnt\] = 0;  /* Null terminate end */
+        pargs\[argcnt\] = '\\0';  /* Null terminate end */
         /* Copy each argument to consequtive locations in pdata,
            and set the corresponding pointer entry */
         p = v$count + k * d$count;
@@ -2053,7 +2052,7 @@ sub chararray2_ftoc {
             p += ($Array_size) * d$count;
         }
 	/* Set the terminator */
-        p3[k][i] = 0;
+        p$count\[k\]\[i\] = '\\0';
        }
     }\n";
 
@@ -3261,7 +3260,7 @@ sub inq_file_info {
     int ierr;
     MPI_Info info;
 
-    ierr = ncmpi_inq_file_info( *v1, &info );
+    ierr = ncmpi_inq_file_info( (int)(*v1), &info );
     *v2 = MPI_Info_c2f(info);
     return ierr;
 }\n";
@@ -3272,7 +3271,7 @@ sub get_file_info {
     int ierr;
     MPI_Info info;
 
-    ierr = ncmpi_get_file_info( *v1, &info );
+    ierr = ncmpi_get_file_info( (int)(*v1), &info );
     *v2 = MPI_Info_c2f(info);
     return ierr;
 }\n";
@@ -3357,6 +3356,8 @@ sub ReadAndProcessInterface {
 	    # some libraries (such as NetCDF) use "real" in Fortran
 	    # where C uses "float".
 	    $lcname = lc($routine_name);
+	    # $isIntAPI = ((substr($lcname, -3) eq "int") || (substr($lcname, -7) eq "int_all"));
+	    $isIntAPI = 0; # should keep _int API for buffer of type integer*4
 	    if (defined($CtoFName{$lcname})) {
 		$lcname = $CtoFName{$lcname};
 	    }
@@ -3421,6 +3422,61 @@ sub ReadAndProcessInterface {
                 }
                 elsif ($lcname eq "get_file_info") {
                     &get_file_info( );
+                }
+                elsif ($isIntAPI) {
+		    #&print_attr;
+		    print $OUTFD "{\n";
+		    &specialInitClear;
+		    &print_special_decls( $routine_name );
+print $OUTFD "#if SIZEOF_MPI_FINT == 8\n";
+		    if (defined($ChangeCall{$routine_name})) {
+		        my ($newName,$extraArgs) =
+			    split(/:/,$ChangeCall{$routine_name} );
+	                if (substr($newName, -7) eq "int_all") {
+                            $int_api = $newName;
+                            substr($int_api, -7) = "longlong_all";
+                        }
+                        else {
+                            $int_api = $newName;
+                            substr($int_api, -3) = "longlong";
+                        }
+		        print $OUTFD "   $errparmlval = $int_api";
+		        my $largs = $args . "," . $extraArgs;
+		        &print_call_args( $largs );
+		    }
+		    else {
+	                if (substr($routine_name, -7) eq "int_all") {
+                            $int_api = $routine_name;
+                            substr($int_api, -7) = "longlong_all";
+                        }
+                        else {
+                            $int_api = $routine_name;
+                            substr($int_api, -3) = "longlong";
+                        }
+		        print $OUTFD "    $errparmlval = $routine_prefix$int_api";
+		        print "Printing call arguments for mpi_${lcname}_\n" if $debug;
+		        &print_call_args( $args );
+		    }
+print $OUTFD "#else\n";
+		    if (defined($ChangeCall{$routine_name})) {
+		        my ($newName,$extraArgs) =
+			    split(/:/,$ChangeCall{$routine_name} );
+		        print $OUTFD "   $errparmlval = $newName";
+		        my $largs = $args . "," . $extraArgs;
+		        &print_call_args( $largs );
+		    }
+		    else {
+		        print $OUTFD "    $errparmlval = $routine_prefix$routine_name";
+		        print "Printing call arguments for mpi_${lcname}_\n" if $debug;
+		        &print_call_args( $args );
+		    }
+print $OUTFD "#endif\n";
+		    # Print any post call processing
+		    &print_post_call( $routine_name, $args );
+		    if ($returnErrval) {
+		        print $OUTFD "    return $errparmrval;\n";
+		    }
+		    print $OUTFD "}\n";
                 }
                 else {
 		    #&print_attr;
