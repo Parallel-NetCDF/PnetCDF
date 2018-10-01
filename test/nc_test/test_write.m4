@@ -1170,7 +1170,7 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4) goto edge1;
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
@@ -1393,7 +1393,7 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4) goto edge1;
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
@@ -1641,7 +1641,7 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4) goto edge1;
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == 0) continue; /* skip record dim */

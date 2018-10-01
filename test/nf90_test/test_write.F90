@@ -462,7 +462,7 @@
         ! Determine if burst buffer driver is being used
         bb_enable = .FALSE.
         err = nf90mpi_inq_file_info(ncid, infoused)
-        if (err .eq. NF_NOERR) then
+        if (err .eq. NF90_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf", &
                 MPI_MAX_INFO_VAL, hint, flag, err)
             if (flag) then
@@ -551,7 +551,7 @@
 
         ! Flush the buffer to reveal potential error
         if (bb_enable) then
-            if (err .eq. NF_NOERR) then
+            if (err .eq. NF90_NOERR) then
                 err = nfmpi_flush(ncid)
             endif
         endif
@@ -1767,24 +1767,24 @@
       if (err .ne. NF90_NOERR) &
          call errori('Error calling nf90mpi_inq_default_format()',err)
 
-      if (nc_fmt .eq. NF_FORMAT_NETCDF4) then
+      if (nc_fmt .eq. NF90_FORMAT_NETCDF4_CLASSIC) then
           nformats = 4 ! test CDF-1, CDF-2, CDF-5 and NetCDF-4
       else
           nformats = 3 ! test CDF-1, CDF-2, and CDF-5
       endif
-      formats(1) = nf_format_classic
-      formats(2) = nf_format_cdf2
-      formats(3) = nf_format_cdf5
-      formats(4) = nf_format_netcdf4
+      formats(1) = NF90_FORMAT_CLASSIC
+      formats(2) = NF90_FORMAT_CDF2
+      formats(3) = NF90_FORMAT_CDF5
+      formats(4) = NF90_FORMAT_NETCDF4_CLASSIC
 
 !     /* bad format */
       err = nf90mpi_set_default_format(999, old_format)
       IF (err .ne. NF90_EINVAL) &
            call errore("bad default format: ", err)
-      formats(1) = nf_format_classic
-      formats(2) = nf_format_cdf2
-      formats(3) = nf_format_cdf5
-      formats(4) = nf_format_netcdf4
+      formats(1) = NF90_FORMAT_CLASSIC
+      formats(2) = NF90_FORMAT_CDF2
+      formats(3) = NF90_FORMAT_CDF5
+      formats(4) = NF90_FORMAT_NETCDF4_CLASSIC
 !    /* Cycle through available formats. */
       do 1 i=1, nformats
          err = nf90mpi_set_default_format(formats(i), old_format)
@@ -1842,13 +1842,13 @@
       if (index(magic, 'CDF') .eq. 1) then
          ver = ichar(magic(4:4))
          if (ver .eq. 1) then
-            version = nf_format_classic
+            version = NF90_FORMAT_CLASSIC
             nf90mpi_get_file_version = NF90_NOERR
          elseif (ver .eq. 2) then
-            version = nf_format_cdf2
+            version = NF90_FORMAT_CDF2
             nf90mpi_get_file_version = NF90_NOERR
          elseif (ver .eq. 5) then
-            version = nf_format_cdf5
+            version = NF90_FORMAT_CDF5
             nf90mpi_get_file_version = NF90_NOERR
          endif
       endif

@@ -107,7 +107,7 @@
         end
 #endif
 
-        program nf_test
+        program nf90_test
         use pnetcdf
 #if defined(VISUAL_CPLUSPLUS)
 !       DIGITAL Visual Fortran needs DFLIB for getarg

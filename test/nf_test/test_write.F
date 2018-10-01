@@ -1762,15 +1762,15 @@ C *    close file & create again for test using attribute _FillValue
      +       'Error calling nfmpi_inq_default_format()',err)
       end if
 
-      if (nc_fmt .eq. NF_FORMAT_NETCDF4) then
+      if (nc_fmt .eq. NF_FORMAT_NETCDF4_CLASSIC) then
           nformats = 4 ! test CDF-1, CDF-2, CDF-5 and NetCDF-4
       else
           nformats = 3 ! test CDF-1, CDF-2, and CDF-5
       endif
-      formats(1) = nf_format_classic
-      formats(2) = nf_format_cdf2
-      formats(3) = nf_format_cdf5
-      formats(4) = nf_format_netcdf4
+      formats(1) = NF_FORMAT_CLASSIC
+      formats(2) = NF_FORMAT_CDF2
+      formats(3) = NF_FORMAT_CDF5
+      formats(4) = NF_FORMAT_NETCDF4_CLASSIC
 
 C     /* bad format */
       err = nfmpi_set_default_format(999, old_format)
@@ -1837,17 +1837,17 @@ C     If the first three characters are not "CDF" we're done.
       if (index(magic, 'CDF') .eq. 1) then
          ver = ichar(magic(4:4))
          if (ver .eq. 1) then
-            version = nf_format_classic
+            version = NF_FORMAT_CLASSIC
             nfmpi_get_file_version = NF_NOERR
          elseif (ver .eq. 2) then
-            version = nf_format_cdf2
+            version = NF_FORMAT_CDF2
             nfmpi_get_file_version = NF_NOERR
          elseif (ver .eq. 5) then
-            version = nf_format_cdf5
+            version = NF_FORMAT_CDF5
             nfmpi_get_file_version = NF_NOERR
          endif
       elseif (index(magic, 'HDF') .eq. 2) then
-            version = nf_format_netcdf4
+            version = NF_FORMAT_NETCDF4
             nfmpi_get_file_version = NF_NOERR
       endif
 

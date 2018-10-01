@@ -623,14 +623,13 @@
 !
 
         subroutine init_gvars
-      use pnetcdf
-        implicit        none
+        use pnetcdf
+        implicit none
 #include "tests.inc"
-        integer index2ncindexes
-
-        integer(kind=MPI_OFFSET_KIND)         max_dim_len(MAX_RANK)
-        character*1     type_letter(NTYPES)
-        character*1     digit(10)
+        integer                       index2ncindexes
+        integer(kind=MPI_OFFSET_KIND) max_dim_len(MAX_RANK)
+        character*1                   type_letter(NTYPES)
+        character*1                   digit(10)
 
         integer rank
         integer vn              !/* var number */
@@ -895,8 +894,8 @@
         if (err .ne. NF90_NOERR) &
             call errori('Error calling nf90mpi_inquire()',err)
 
-        if (nc_fmt .EQ. nf90_format_netcdf4 .OR. &
-            nc_fmt .EQ. nf90_format_netcdf4_classic) then
+        if (nc_fmt .EQ. NF90_FORMAT_NETCDF4 .OR. &
+            nc_fmt .EQ. NF90_FORMAT_NETCDF4_CLASSIC) then
             is_nc4 = .TRUE.
         else
             is_nc4 = .FALSE.
@@ -992,9 +991,9 @@
 
       ! put variables defined by global variables */
       subroutine put_vars4(ncid)
-    use pnetcdf
-      implicit        none
-      integer                 ncid
+      use pnetcdf
+      implicit none
+      integer ncid
 #include "tests.inc"
       integer index2indexes
       double precision hash
@@ -1076,18 +1075,17 @@
 
 ! Create & write all of specified file using global variables */
         subroutine write_file(filename)
-      use pnetcdf
-        implicit        none
-        character*(*)   filename
+        use pnetcdf
+        implicit none
 #include "tests.inc"
 
+        character*(*) filename
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
         integer flags
 
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, filename, flags, info, &
-                           ncid)
+        err = nf90mpi_create(comm, filename, flags, info, ncid)
         if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
         end if

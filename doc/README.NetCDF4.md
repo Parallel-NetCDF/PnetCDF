@@ -16,6 +16,8 @@ An example build instruction for HDF5 and NetCDF-4 is given below.
     https://www.hdfgroup.org/downloads/hdf5/source-code/
   + Build commands:
     ```
+    gzip -dc hdf5-1.10.2.tar.gz | tar -xf -
+    cd hdf5-1.10.2
     ./configure --prefix=/HDF5/install/path \
                 --enable-parallel=yes \
                 CC=mpicc FC=mpifort CXX=mpicxx
@@ -26,6 +28,8 @@ An example build instruction for HDF5 and NetCDF-4 is given below.
     https://github.com/Unidata/netcdf-c/releases
   + Build commands:
     ```
+    gzip -dc v4.6.1.tar.gz | tar -xf -
+    cd netcdf-c-4.6.1
     ./configure --prefix=/NetCDF4/install/path \
                 --enable-netcdf-4 \
                 CC=mpicc \
@@ -38,6 +42,8 @@ An example build instruction for HDF5 and NetCDF-4 is given below.
     `--with-hdf5` can be used to specify the installation path of HDF5 and
     option `--with-netcdf` for the installation path of NetCDF-4. For example,
     ```
+    gzip -dc parallel-netcdf-1.10.0.tar.gz | tar -xf -
+    cd parallel-netcdf-1.10.0
     ./configure --prefix=/PnetCDF/install/path \
                 --enable-netcdf4 \
                 --with-hdf5=/HDF5/install/path \

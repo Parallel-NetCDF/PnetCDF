@@ -156,8 +156,12 @@ int main(int argc, char **argv) {
     /* test all file formats separately */
     nerrs += tst_fmt(filename, 0);
     nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+/* #if defined(HDF5_VERSION) && (H5_VERS_MAJOR > 1 || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR > 10) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR >= 10 && H5_VERS_RELEASE >= 4)) */
+#if defined(HDF5_VER_GE_1_10_4) && HDF5_VER_GE_1_10_4 == 1
+    /* this test requires a bug fix in HDF5 1.11 */
     nerrs += tst_fmt(filename, NC_MPIIO | NC_NETCDF4);
     nerrs += tst_fmt(filename, NC_MPIIO | NC_NETCDF4 | NC_CLASSIC_MODEL);
+#endif
     nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */

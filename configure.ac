@@ -107,10 +107,14 @@ AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
-dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP],     [Define if to enable in-place byte swap])
-dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
+dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP], [Define if to enable in-place byte swap])
+dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
+dnl AH_TEMPLATE([H5_VERS_MAJOR],        [HDF5 version major])
+dnl AH_TEMPLATE([H5_VERS_MINOR],        [HDF5 version minor])
+dnl AH_TEMPLATE([H5_VERS_RELEASE],      [HDF5 version release])
+AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
 AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
@@ -1384,37 +1388,82 @@ if test "x$enable_netcdf4" = "xyes" ; then
        fi
    )
 
-   ZLIB_INSTALL=""
-   AC_ARG_WITH(zlib,
-       [AS_HELP_STRING([--with-zlib=/path/to/implementation],
-                       [installation prefix for zlib implementation])],
-       if test "x${withval}" = xyes; then
-          AC_MSG_ERROR(--with-zlib must be given a pathname)
-       else
-          ZLIB_INSTALL=${withval}
-       fi
-   )
+   AC_PATH_PROG([nc_config],[nc-config],,[$NETCDF4_INSTALL/bin])
+   UD_MSG_DEBUG([nc_config=$nc_config])
 
-   if test "x${ZLIB_INSTALL}" != x ; then
-      CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
-      LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
-      LIBS="-lz $LIBS"
+   if test "x$ac_cv_path_nc_config" != x ; then
+      netcdf_inc=`$nc_config --includedir`
+      UD_MSG_DEBUG([netcdf_inc=$netcdf_inc])
+      CPPFLAGS+=" -I${netcdf_inc}"
+
+      netcdf_lib=`$nc_config --libs`
+      UD_MSG_DEBUG([netcdf_lib=$netcdf_lib])
+      dnl separate -L and -l
+      netcdf_ldflags=`echo $netcdf_lib | $SED "s/-l[[^ ]]*//g"`
+      netcdf_libs=`echo $netcdf_lib | $SED "s/-L[[^ ]]*//g"`
+      dnl remove extra whitespace
+      netcdf_ldflags=`echo $netcdf_ldflags | $SED "s/[[ ]]* / /g"`
+      netcdf_libs=`echo $netcdf_libs | $SED "s/[[ ]]* / /g"`
+      UD_MSG_DEBUG([netcdf_ldflags=$netcdf_ldflags])
+      UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
+      LDFLAGS+=" ${netcdf_ldflags}"
+      LIBS+=" ${netcdf_libs}"
+   else
+      ZLIB_INSTALL=""
+      AC_ARG_WITH(zlib,
+          [AS_HELP_STRING([--with-zlib=/path/to/implementation],
+                          [installation prefix for zlib implementation])],
+          if test "x${withval}" = xyes; then
+             AC_MSG_ERROR(--with-zlib must be given a pathname)
+          else
+             ZLIB_INSTALL=${withval}
+          fi
+      )
+
+      if test "x${ZLIB_INSTALL}" != x ; then
+         CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
+         LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
+         LIBS+="-lz $LIBS"
+      fi
+
+      if test "x${HDF5_INSTALL}" != x ; then
+         dnl CPPFLAGS+=" -I${HDF5_INSTALL}/include"
+         LDFLAGS+=" -L${HDF5_INSTALL}/lib"
+         LIBS+="-lhdf5_hl -lhdf5 -ldl $LIBS -lm"
+      fi
+
+      if test "x${NETCDF4_INSTALL}" != x ; then
+         CPPFLAGS+=" -I${NETCDF4_INSTALL}/include"
+         LDFLAGS+=" -L${NETCDF4_INSTALL}/lib"
+         LIBS+="-lnetcdf $LIBS"
+      fi
    fi
 
    if test "x${HDF5_INSTALL}" != x ; then
-      dnl CPPFLAGS+=" -I${HDF5_INSTALL}/include"
-      LDFLAGS+=" -L${HDF5_INSTALL}/lib"
-      LIBS="-lhdf5_hl -lhdf5 -ldl $LIBS -lm"
+      dnl AC_MSG_CHECKING([Check HDF5 version])
+      dnl hdf5_ver_major=`grep -m 1 H5_VERS_MAJOR $HDF5_INSTALL/include/H5public.h | cut -f2`
+      dnl hdf5_ver_minor=`grep -m 1 H5_VERS_MINOR $HDF5_INSTALL/include/H5public.h | cut -f2`
+      dnl hdf5_ver_release=`grep -m 1 H5_VERS_RELEASE $HDF5_INSTALL/include/H5public.h | cut -f2`
+      dnl AC_MSG_RESULT([$hdf5_ver_major.$hdf5_ver_minor,$hdf5_ver_release])
+      dnl AC_DEFINE_UNQUOTED([H5_VERS_MAJOR], [$hdf5_ver_major])
+      dnl AC_DEFINE_UNQUOTED([H5_VERS_MINOR], [$hdf5_ver_minor])
+      dnl AC_DEFINE_UNQUOTED([H5_VERS_RELEASE], [$hdf5_ver_release])
+
+      dnl Note PnetCDF does not use hdf5.h
+      CPPFLAGS+=" -I${HDF5_INSTALL}/include"
+      AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
+      AC_MSG_CHECKING([Check if HDF5 version 1.10.4 or later])
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hdf5.h>]], [[
+#if (H5_VERS_MAJOR*1000000 + H5_VERS_MINOR*1000 + H5_VERS_RELEASE < 1010004)
+      choke me
+#endif
+      ]])], [hdf5_1_10_4=yes], [hdf5_1_10_4=no])
+      AC_MSG_RESULT([$hdf5_1_10_4])
+      if test x$hdf5_1_10_4 = xyes; then
+         AC_DEFINE([HDF5_VER_GE_1_10_4])
+      fi
    fi
 
-   if test "x${NETCDF4_INSTALL}" != x ; then
-      CPPFLAGS+=" -I${NETCDF4_INSTALL}/include"
-      LDFLAGS+=" -L${NETCDF4_INSTALL}/lib"
-      LIBS="-lnetcdf $LIBS"
-   fi
-
-   dnl There is no need to check HDF5 header, as PnetCDF does not use it
-   dnl AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
    AC_MSG_CHECKING(HDF5 library)
    AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [], [have_hdf5=no])
 
