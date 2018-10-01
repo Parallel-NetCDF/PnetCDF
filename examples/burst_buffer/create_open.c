@@ -16,10 +16,8 @@
  * Example commands for MPI run and outputs from running ncmpidump on the
  * netCDF file produced by this example program:
  *
- *    % mpiexec -n 4 ./create_open testfile.nc
+ *    % mpiexec -n 4 ./create_open -b /scratch testfile.nc
  *    create_open.c: example of file create and open
- *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/burst buffer.
- *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/burst buffer.
  *
  *    % ncmpidump testfile.nc
  *    netcdf testfile {
@@ -36,7 +34,7 @@
  * #SBATCH -o create_open_example.txt
  * #SBATCH -L scratch
  * #DW jobdw capacity=1289GiB access_mode=private type=scratch pool=sm_pool
- * srun -n 4 ./create_open ${SCRATCH}/testfile.nc
+ * srun -n 4 ./create_open -b $DW_JOB_PRIVATE $SCRATCH/testfile.nc
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -53,17 +51,18 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [file_name, bb_dir]\n"
+    "Usage: %s [-h] | [-q] [-b bb_dir] file_name\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
-    "       [filename, bb_dir] output netCDF file name. Path to burst buffer\n";
+    "       [-b bb_dir] Path to burst buffer\n"
+    "       filename: output netCDF file name\n";
     fprintf(stderr, help, argv0);
 }
 
 int main(int argc, char** argv)
 {
     extern int optind;
-    char filename[256];
+    char filename[256], bb_dir[256];
     int i, rank, verbose=1, err, nerrs=0;
     int ncid, cmode, omode;
     MPI_Info info;
@@ -72,11 +71,14 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hq")) != EOF)
+    strcpy(bb_dir, ".");
+    while ((i = getopt(argc, argv, "hqb:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
             case 'h':
+            case 'b': strcpy(bb_dir, optarg);
+                      break;
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
                       return 1;
@@ -98,9 +100,7 @@ int main(int argc, char** argv)
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
     MPI_Info_set(info, "nc_burst_buf_del_on_close", "enable");
-    if (argc > 1) {
-        MPI_Info_set(info, "nc_burst_buf_dirname", argv[optind+1]);
-    }
+    MPI_Info_set(info, "nc_burst_buf_dirname", bb_dir);
 
     /* create a new file using clobber mode ----------------------------------*/
     cmode = NC_CLOBBER;
@@ -125,9 +125,7 @@ int main(int argc, char** argv)
      */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
-    if (argc > 1) {
-        MPI_Info_set(info, "nc_burst_buf_dirname", argv[optind+1]);
-    }
+    MPI_Info_set(info, "nc_burst_buf_dirname", bb_dir);
 
     /* open the newly created file for read only -----------------------------*/
     omode = NC_WRITE;

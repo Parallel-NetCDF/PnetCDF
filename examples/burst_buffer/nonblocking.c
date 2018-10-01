@@ -19,16 +19,15 @@
  *    To compile:
  *        mpicc -O2 nonblocking.c -o nonblocking -lpnetcdf
  *
- *
  * Example commands for MPI run and outputs from running ncmpidump on the
  * netCDF file produced by this example program:
  *
- *    % mpiexec -n 4 ./nonblocking testfile.nc
+ *    % mpiexec -n 4 ./nonblocking -b /scratch testfile.nc
  *    nonblocking.c: example of nonblocking IO
- *    Warning: Log directory not set. Using /mnt/c/Users/x3276/Desktop/parallel-netcdf/examples/burst buffer.
  *    Canceling write on variable A, get 0 (No error)
  *    Waiting on variable B, get 0 (No error)
  *    Canceling write on variable C, get -306 (Nonblocking requests already flushed.)
+ *
  *    % ncmpidump testfile.nc
  *    netcdf test {
  *    // file format: CDF-1
@@ -61,7 +60,7 @@
  * #SBATCH -o nonblocking_example.txt
  * #SBATCH -L scratch
  * #DW jobdw capacity=1289GiB access_mode=private type=scratch pool=sm_pool
- * srun -n 4 ./nonblocking ${SCRATCH}/testfile.nc
+ * srun -n 4 ./nonblocking -b $DW_JOB_PRIVATE ${SCRATCH}/testfile.nc
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -78,17 +77,18 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [file_name, bb_dir]\n"
+    "Usage: %s [-h] | [-q] [-b bb_dir] file_name\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
-    "       [filename, bb_dir] output netCDF file name. Path to burst buffer\n";
+    "       [-b bb_dir] Path to burst buffer\n"
+    "       filename: output netCDF file name\n";
     fprintf(stderr, help, argv0);
 }
 
 int main(int argc, char** argv)
 {
     extern int optind;
-    char filename[256];
+    char filename[256], bb_dir[256];
     int i, rank, np, verbose=1, err, nerrs=0;
     int dimid[2];
     int varid[3];
@@ -104,8 +104,11 @@ int main(int argc, char** argv)
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hq")) != EOF)
+    strcpy(bb_dir, ".");
+    while ((i = getopt(argc, argv, "hqb:")) != EOF)
         switch(i) {
+            case 'b': strcpy(bb_dir, optarg);
+                      break;
             case 'q': verbose = 0;
                       break;
             case 'h':
@@ -124,9 +127,7 @@ int main(int argc, char** argv)
      */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
-    if (argc > 1) {
-        MPI_Info_set(info, "nc_burst_buf_dirname", argv[optind+1]);
-    }
+    MPI_Info_set(info, "nc_burst_buf_dirname", bb_dir);
 
     /* create a new file using clobber mode ----------------------------------*/
     cmode = NC_CLOBBER;

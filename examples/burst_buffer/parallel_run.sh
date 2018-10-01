@@ -29,8 +29,8 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
-        # echo "${MPIRUN} ./$i -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}"
-        ${MPIRUN} ./$i -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}
+        # echo "${MPIRUN} ./$i -q -b ${TESTOUTDIR} ${TESTOUTDIR}/$i.nc"
+        ${MPIRUN} ./$i -q -b ${TESTOUTDIR} ${TESTOUTDIR}/$i.nc
         if test $? = 0 ; then
            echo "PASS:  C  parallel run on $1 processes --------------- $i"
         fi
