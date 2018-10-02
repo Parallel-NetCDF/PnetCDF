@@ -734,7 +734,7 @@ TestFunc(vara)_$1(VarArgs)
     IntType start[MAX_RANK], edge[MAX_RANK];
     IntType mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
-    int bb_enabled=0;
+    int bb_enabled=0, skip_zero_len_test=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
@@ -864,8 +864,12 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+
+#ifndef HDF5_VER_GE_1_10_4
         if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
-            goto edge1;
+            skip_zero_len_test = 1;
+#endif
+        if (skip_zero_len_test) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
@@ -990,7 +994,7 @@ TestFunc(vars)_$1(VarArgs)
     PTRDType nstarts;   /* number of different starts */
     PTRDType stride[MAX_RANK];
     $1 value[MAX_NELS];
-    int bb_enabled=0;
+    int bb_enabled=0, skip_zero_len_test=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
@@ -1125,8 +1129,12 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+
+#ifndef HDF5_VER_GE_1_10_4
         if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
-            goto edge1;
+            skip_zero_len_test = 1;
+#endif
+        if (skip_zero_len_test) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
@@ -1272,7 +1280,7 @@ TestFunc(varm)_$1(VarArgs)
     PTRDType nstarts;   /* number of different starts */
     PTRDType stride[MAX_RANK], imap[MAX_RANK];
     $1 value[MAX_NELS];
-    int bb_enabled=0;
+    int bb_enabled=0, skip_zero_len_test=0;
 
     err = FileCreate(scratch, NC_CLOBBER);
     IF (err != NC_NOERR) {
@@ -1409,8 +1417,12 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+
+#ifndef HDF5_VER_GE_1_10_4
         if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
-            goto edge1;
+            skip_zero_len_test = 1;
+#endif
+        if (skip_zero_len_test) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */

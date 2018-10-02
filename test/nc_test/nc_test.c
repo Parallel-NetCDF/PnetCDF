@@ -69,9 +69,12 @@ MPI_Info info;
 static void
 usage(char *progname)
 {
-    error("%s [-c | -hrv -n <MAX_NMPT>]\n", progname);
+#ifdef ENABLE_NETCDF4
+    error("%s [-hrv245] [-n <MAX_NMPT>]\n", progname);
+#else
+    error("%s [-hrv25] [-n <MAX_NMPT>]\n", progname);
+#endif
     error("   [-h] Print help\n" );
-    error("   [-c] Create file test.nc (Do not do tests)\n" );
     error("   [-r] Just do read-only tests\n" );
     error("   [-v] Verbose mode\n" );
     error("   [-2] (with -c) create file with CDF-2 format\n" );

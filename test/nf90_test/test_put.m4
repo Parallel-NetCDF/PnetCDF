@@ -754,7 +754,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical flag, bb_enable
+        logical flag, bb_enable, skip_zero_len_test
         character*(MPI_MAX_INFO_VAL) hint
         integer infoused
 
@@ -841,9 +841,14 @@ define([TEST_NFMPI_PUT_VARA],dnl
             if (err .ne. NF90_NOERR) &
                 call errore('APIFunc(inquire): ',err)
 
+            skip_zero_len_test = .FALSE.
+#ifndef HDF5_VER_GE_1_10_4
             ! skip zero-length write requests
-            if (format .EQ. NF90_FORMAT_NETCDF4 .OR. &
-                format .EQ. NF90_FORMAT_NETCDF4_CLASSIC) goto 99
+            if (format .EQ. NF_FORMAT_NETCDF4 .OR. &
+                format .EQ. NF_FORMAT_NETCDF4_CLASSIC) &
+                skip_zero_len_test = .TRUE.
+#endif
+            if (skip_zero_len_test) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -993,7 +998,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical flag, bb_enable
+        logical flag, bb_enable, skip_zero_len_test
         character*(MPI_MAX_INFO_VAL) hint
         integer infoused
 
@@ -1092,9 +1097,14 @@ define([TEST_NFMPI_PUT_VARS],dnl
             if (err .ne. NF90_NOERR) &
                 call errore('APIFunc(inquire): ',err)
 
+            skip_zero_len_test = .FALSE.
+#ifndef HDF5_VER_GE_1_10_4
             ! skip zero-length write requests
-            if (format .EQ. NF90_FORMAT_NETCDF4 .OR. &
-                format .EQ. NF90_FORMAT_NETCDF4_CLASSIC) goto 99
+            if (format .EQ. NF_FORMAT_NETCDF4 .OR. &
+                format .EQ. NF_FORMAT_NETCDF4_CLASSIC) &
+                skip_zero_len_test = .TRUE.
+#endif
+            if (skip_zero_len_test) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim
@@ -1278,7 +1288,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
-        logical flag, bb_enable
+        logical flag, bb_enable, skip_zero_len_test
         character*(MPI_MAX_INFO_VAL) hint
         integer infoused
 
@@ -1383,9 +1393,14 @@ define([TEST_NFMPI_PUT_VARM],dnl
             if (err .ne. NF90_NOERR) &
                 call errore('APIFunc(inquire): ',err)
 
+            skip_zero_len_test = .FALSE.
+#ifndef HDF5_VER_GE_1_10_4
             ! skip zero-length write requests
-            if (format .EQ. NF90_FORMAT_NETCDF4 .OR. &
-                format .EQ. NF90_FORMAT_NETCDF4_CLASSIC) goto 99
+            if (format .EQ. NF_FORMAT_NETCDF4 .OR. &
+                format .EQ. NF_FORMAT_NETCDF4_CLASSIC) &
+                skip_zero_len_test = .TRUE.
+#endif
+            if (skip_zero_len_test) goto 99
 
             do 5, j = 1, var_rank(i)
                 if (var_dimid(j,i) .EQ. RECDIM) goto 5 ! skip record dim

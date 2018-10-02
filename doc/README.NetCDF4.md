@@ -57,7 +57,10 @@ calling `ncmpi_create()`. For example,
 ```
 int cmode;
 cmode = NC_CLOBBER | NC_NETCDF4;
+ncmpi_create(MPI_COMM_WORLD, "testfile.nc", cmode, MPI_INFO_NULL>, &ncid);
+```
 or
+```
 cmode = NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL;
 ncmpi_create(MPI_COMM_WORLD, "testfile.nc", cmode, MPI_INFO_NULL>, &ncid);
 ```
@@ -70,7 +73,9 @@ Users can also set the default file format to NetCDF-4 by calling API
 `NC_FORMAT_NETCDF4_CLASSIC`. For example,
 ```
 ncmpi_set_default_format(NC_FORMAT_NETCDF4, &old_formatp);
+```
 or
+```
 ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, &old_formatp);
 ```
 When no file format specific flag is set in argument cmode, PnetCDF will use

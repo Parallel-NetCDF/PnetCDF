@@ -1057,7 +1057,7 @@ TestFunc(put_vara)(VarArgs)
     char *p;                      /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
-    int bb_enabled=0;
+    int bb_enabled=0, skip_zero_len_test=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
@@ -1170,7 +1170,12 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) goto edge1;
+
+#ifndef HDF5_VER_GE_1_10_4
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+            skip_zero_len_test = 1;
+#endif
+        if (skip_zero_len_test) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
@@ -1273,7 +1278,7 @@ TestFunc(put_vars)(VarArgs)
     char *p;              /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
-    int bb_enabled=0;
+    int bb_enabled=0, skip_zero_len_test=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
@@ -1393,7 +1398,12 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) goto edge1;
+
+#ifndef HDF5_VER_GE_1_10_4
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+            skip_zero_len_test = 1;
+#endif
+        if (skip_zero_len_test) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
@@ -1520,7 +1530,7 @@ TestFunc(put_varm)(VarArgs)
     char *p;                    /* (void *) pointer */
     double value;
     ifdef(`PNETCDF', `MPI_Datatype datatype;')
-    int bb_enabled=0;
+    int bb_enabled=0, skip_zero_len_test=0;
 
     err = FileCreate(scratch, NC_NOCLOBBER, &ncid);
     IF (err != NC_NOERR) {
@@ -1641,7 +1651,12 @@ ifdef(`PNETCDF',`dnl
          */
         err = ncmpi_inq_format(ncid, &format);
         IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
-        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) goto edge1;
+
+#ifndef HDF5_VER_GE_1_10_4
+        if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+            skip_zero_len_test = 1;
+#endif
+        if (skip_zero_len_test) goto edge1;
 
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] == 0) continue; /* skip record dim */

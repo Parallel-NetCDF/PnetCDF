@@ -31,6 +31,7 @@ This is essentially a placeholder for the next release note ...
     - `--enable-netcdf4`: enable NetCDF4 format classic mode support
     - `--with-hdf5=/path/to/hdf5`: path to HDF5 library installation
     - `--with-netcdf4=/path/to/netcdf-4`: path to NetCDF-4 library installation
+  + Enable multi-threading support.
     - `--enable-thread-safe`: enable per-file thread-safe support
     - `--with-pthread`: path to the pthread library installation
 
