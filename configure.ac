@@ -111,9 +111,6 @@ dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP], [Define if to enable in-place byte swap]
 dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
-dnl AH_TEMPLATE([H5_VERS_MAJOR],        [HDF5 version major])
-dnl AH_TEMPLATE([H5_VERS_MINOR],        [HDF5 version minor])
-dnl AH_TEMPLATE([H5_VERS_RELEASE],      [HDF5 version release])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
@@ -1366,17 +1363,6 @@ AC_SUBST(ENABLE_NETCDF4)
 AM_CONDITIONAL(ENABLE_NETCDF4, [test x$enable_netcdf4 = xyes])
 
 if test "x$enable_netcdf4" = "xyes" ; then
-   HDF5_INSTALL=""
-   AC_ARG_WITH(hdf5,
-       [AS_HELP_STRING([--with-hdf5=/path/to/implementation],
-                       [installation prefix for HDF5 implementation])],
-       if test "x${withval}" = xyes; then
-          AC_MSG_ERROR(--with-hdf5 is set but the value is NULL)
-       else
-          HDF5_INSTALL=${withval}
-       fi
-   )
-
    NETCDF4_INSTALL=""
    AC_ARG_WITH(netcdf4,
        [AS_HELP_STRING([--with-netcdf4=/path/to/implementation],
@@ -1387,120 +1373,19 @@ if test "x$enable_netcdf4" = "xyes" ; then
           NETCDF4_INSTALL=${withval}
        fi
    )
+   UD_MSG_DEBUG([NETCDF4_INSTALL=$NETCDF4_INSTALL])
 
-   AC_PATH_PROG([nc_config],[nc-config],,[$NETCDF4_INSTALL/bin])
-   UD_MSG_DEBUG([nc_config=$nc_config])
-
-   if test "x$ac_cv_path_nc_config" != x ; then
-      netcdf_inc=`$nc_config --includedir`
-      UD_MSG_DEBUG([netcdf_inc=$netcdf_inc])
-      CPPFLAGS+=" -I${netcdf_inc}"
-
-      netcdf_lib=`$nc_config --libs`
-      UD_MSG_DEBUG([netcdf_lib=$netcdf_lib])
-      dnl separate -L and -l
-      netcdf_ldflags=`echo $netcdf_lib | $SED "s/-l[[^ ]]*//g"`
-      netcdf_libs=`echo $netcdf_lib | $SED "s/-L[[^ ]]*//g"`
-      dnl remove extra whitespace
-      netcdf_ldflags=`echo $netcdf_ldflags | $SED "s/[[ ]]* / /g"`
-      netcdf_libs=`echo $netcdf_libs | $SED "s/[[ ]]* / /g"`
-      UD_MSG_DEBUG([netcdf_ldflags=$netcdf_ldflags])
-      UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
-      LDFLAGS+=" ${netcdf_ldflags}"
-      LIBS+=" ${netcdf_libs}"
+   if test "x$NETCDF4_INSTALL" = x ; then
+      AC_PATH_PROG([nc_config],[nc-config],,[$PATH])
    else
-      ZLIB_INSTALL=""
-      AC_ARG_WITH(zlib,
-          [AS_HELP_STRING([--with-zlib=/path/to/implementation],
-                          [installation prefix for zlib implementation])],
-          if test "x${withval}" = xyes; then
-             AC_MSG_ERROR(--with-zlib must be given a pathname)
-          else
-             ZLIB_INSTALL=${withval}
-          fi
-      )
-
-      if test "x${ZLIB_INSTALL}" != x ; then
-         CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
-         LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
-         LIBS+="-lz $LIBS"
-      fi
-
-      if test "x${HDF5_INSTALL}" != x ; then
-         dnl CPPFLAGS+=" -I${HDF5_INSTALL}/include"
-         LDFLAGS+=" -L${HDF5_INSTALL}/lib"
-         LIBS+="-lhdf5_hl -lhdf5 -ldl $LIBS -lm"
-      fi
-
-      if test "x${NETCDF4_INSTALL}" != x ; then
-         CPPFLAGS+=" -I${NETCDF4_INSTALL}/include"
-         LDFLAGS+=" -L${NETCDF4_INSTALL}/lib"
-         LIBS+="-lnetcdf $LIBS"
-      fi
+      AC_PATH_PROG([nc_config],[nc-config],,[$NETCDF4_INSTALL/bin])
    fi
-
-   if test "x${HDF5_INSTALL}" != x ; then
-      dnl AC_MSG_CHECKING([Check HDF5 version])
-      dnl hdf5_ver_major=`grep -m 1 H5_VERS_MAJOR $HDF5_INSTALL/include/H5public.h | cut -f2`
-      dnl hdf5_ver_minor=`grep -m 1 H5_VERS_MINOR $HDF5_INSTALL/include/H5public.h | cut -f2`
-      dnl hdf5_ver_release=`grep -m 1 H5_VERS_RELEASE $HDF5_INSTALL/include/H5public.h | cut -f2`
-      dnl AC_MSG_RESULT([$hdf5_ver_major.$hdf5_ver_minor,$hdf5_ver_release])
-      dnl AC_DEFINE_UNQUOTED([H5_VERS_MAJOR], [$hdf5_ver_major])
-      dnl AC_DEFINE_UNQUOTED([H5_VERS_MINOR], [$hdf5_ver_minor])
-      dnl AC_DEFINE_UNQUOTED([H5_VERS_RELEASE], [$hdf5_ver_release])
-
-      dnl Note PnetCDF does not use hdf5.h
-      CPPFLAGS+=" -I${HDF5_INSTALL}/include"
-      AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
-      AC_MSG_CHECKING([Check if HDF5 version 1.10.4 or later])
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hdf5.h>]], [[
-#if (H5_VERS_MAJOR*1000000 + H5_VERS_MINOR*1000 + H5_VERS_RELEASE < 1010004)
-      choke me
-#endif
-      ]])], [hdf5_1_10_4=yes], [hdf5_1_10_4=no])
-      AC_MSG_RESULT([$hdf5_1_10_4])
-      if test x$hdf5_1_10_4 = xyes; then
-         AC_DEFINE([HDF5_VER_GE_1_10_4])
-      fi
-   fi
-
-   AC_MSG_CHECKING(HDF5 library)
-   AC_SEARCH_LIBS([H5Dcreate1], [hdf5 hdf5_hl], [], [have_hdf5=no])
-
-   if test "x${have_hdf5}" = xno; then
+   if test "x$nc_config" = x ; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
-      The HDF5 library is required to build PnetCDF with NetCDF-4
-      support. Use option
-          --with-hdf5=/path/to/implementation
-      to specify the install location of HDF5. In addition, please
-      make sure the MPI C compiler is compatible with the one used
-      to build HDF5. The HDF5 library must be built with parallel
-      support. Check 'config.log' for more information.
-      Stopping ...
-      ------------------------------------------------------------])
-   fi
-
-   AC_CHECK_HEADERS([netcdf.h netcdf_par.h netcdf_meta.h],
-                    [have_netcdf4=yes], [have_netcdf4=no])
-
-   if test "x${have_netcdf4}" = xyes; then
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
-#include <netcdf_meta.h>
-#if !defined(NC_HAS_HDF5) || NC_HAS_HDF5 == 0
-      choke me
-#endif
-#if !defined(NC_HAS_PARALLEL) || NC_HAS_PARALLEL == 0
-      choke me
-#endif
-      ]])], [], [have_netcdf4=no])
-   fi
-
-   if test "x${have_netcdf4}" = xno; then
-      AC_MSG_ERROR([
-      ------------------------------------------------------------
-      The NetCDF library and header file are required to build
-      PnetCDF with NetCDF-4 support. Use option
+      Cannot find command nc_config. The NetCDF library and header
+      file are required to build PnetCDF with NetCDF-4 support.
+      Use option
           --with-netcdf=/path/to/implementation
       to specify the location of NetCDF-4 build. In addition,
       please make sure the MPI C compiler is compatible with the
@@ -1509,6 +1394,102 @@ if test "x$enable_netcdf4" = "xyes" ; then
       'config.log' for more information. Stopping ...
       ------------------------------------------------------------])
    fi
+   UD_MSG_DEBUG([nc_config=$nc_config])
+
+   dnl Check if NetCDF is built with HDF5 enabled
+   netcdf_hdf5=`$nc_config --has-hdf5`
+   if test "x$netcdf_hdf5" = xno ; then
+      AC_MSG_ERROR([NetCDF library is not built with HDF5 enabled])
+   fi
+
+   dnl Get directory path of netcdf header files
+   netcdf_inc=`$nc_config --includedir`
+   UD_MSG_DEBUG([netcdf_inc=$netcdf_inc])
+   CPPFLAGS+=" -I${netcdf_inc}"
+
+   AC_CHECK_HEADERS([netcdf.h netcdf_par.h netcdf_meta.h],
+                    [have_netcdf4=yes], [have_netcdf4=no])
+   if test "x${have_netcdf4}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      Missing NetCDF header files (netcdf.h netcdf_par.h netcdf_meta.h)
+      These header files are required to build PnetCDF with NetCDF-4
+      support. Use option
+          --with-netcdf=/path/to/implementation
+      to specify the location of NetCDF-4 build. In addition,
+      please make sure the MPI C compiler is compatible with the
+      one used to build NetCDF-4. The NetCDF-4 library used must
+      be built with parallel I/O and NETCDF-4 support. Check
+      'config.log' for more information. Stopping ...
+      ------------------------------------------------------------])
+   fi
+
+   dnl Check if NetCDF version is 4.6.2 or later
+   AC_MSG_CHECKING([Check if NetCDF version 4.6.2 or later])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netcdf_meta.h>]], [[
+#if (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH < 4006002)
+      choke me
+#endif
+   ]])], [netcdf_ge_4_6_2=yes], [netcdf_ge_4_6_2=no])
+   AC_MSG_RESULT([$netcdf_ge_4_6_2])
+
+   dnl Check if NetCDF is built with parallel I/O enabled
+   AC_MSG_CHECKING([Check if NetCDF library is built with parallel I/O enabled])
+   if test x$netcdf_ge_4_6_2 = xyes; then
+      netcdf_parallel4=`$nc_config --has-parallel4`
+      if test "x$netcdf_parallel4" = xno ; then
+         AC_MSG_ERROR([NetCDF library is not built with HDF5 parallel I/O enabled])
+      fi
+   else
+      dnl NetCDF 4.6.1 and earlier do not have --has-parallel4 configure option.
+      dnl The test below checking whether HDF5 parallel feature is enabled will
+      dnl miss the case when NetCDF is built with parallel HDF5 disabled and
+      dnl PnetCDF enabled, i.e. configured with options --enable-pnetcdf
+      dnl --enable-netcdf-4 --disable-parallel4, which will make command
+      dnl "nc-config --has-parallel" return yes.
+      netcdf_parallel=`$nc_config --has-parallel`
+      if test "x$netcdf_parallel" = xno ; then
+         AC_MSG_ERROR([NetCDF library is not built with parallel I/O enabled])
+      fi
+   fi
+   AC_MSG_RESULT([yes])
+
+   # Get directory path of netcdf library files
+   netcdf_lib=`$nc_config --libs`
+   UD_MSG_DEBUG([netcdf_lib=$netcdf_lib])
+   dnl separate -L and -l
+   netcdf_ldflags=`echo $netcdf_lib | $SED "s/-l[[^ ]]*//g"`
+   netcdf_libs=`echo $netcdf_lib | $SED "s/-L[[^ ]]*//g"`
+   dnl remove -lpnetcdf if it contains it
+   netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
+   dnl remove extra whitespace
+   netcdf_ldflags=`echo $netcdf_ldflags | $SED "s/[[ ]]* / /g"`
+   netcdf_libs=`echo $netcdf_libs | $SED "s/[[ ]]* / /g"`
+   UD_MSG_DEBUG([netcdf_ldflags=$netcdf_ldflags])
+   UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
+   LDFLAGS+=" ${netcdf_ldflags}"
+   LIBS+=" ${netcdf_libs}"
+
+   dnl check if HDF5 version 1.10.4 or later is used to build NetCDF
+   netcdf_cflags=`$nc_config --cflags`
+   CPPFLAGS_save=$CPPFLAGS
+   CPPFLAGS+=" $netcdf_cflags"
+   dnl AC_CHECK_HEADERS uses CPPFLAGS, not CFLAGS
+   AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
+   if test "x$have_hdf5" = xyes ; then
+      AC_MSG_CHECKING([Check if HDF5 version 1.10.4 or later])
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hdf5.h>]], [[
+#if (H5_VERS_MAJOR*1000000 + H5_VERS_MINOR*1000 + H5_VERS_RELEASE < 1010004)
+      choke me
+#endif
+      ]])], [hdf5_ge_1_10_4=yes], [hdf5_ge_1_10_4=no])
+      AC_MSG_RESULT([$hdf5_ge_1_10_4])
+      if test x$hdf5_ge_1_10_4 = xyes; then
+         AC_DEFINE([HDF5_VER_GE_1_10_4])
+      fi
+   fi
+   # restore CPPFLAGS
+   CPPFLAGS=$CPPFLAGS_save
 
    AC_MSG_CHECKING([if relax-coord-bound is enabled in NetCDF-4])
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[

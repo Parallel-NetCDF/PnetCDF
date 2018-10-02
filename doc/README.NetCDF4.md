@@ -39,14 +39,13 @@ An example build instruction for HDF5 and NetCDF-4 is given below.
     ```
 * To build PnetCDF with NetCDF-4 support
   + Add `--enable-netcdf4` option at the configure command line. Option
-    `--with-hdf5` can be used to specify the installation path of HDF5 and
-    option `--with-netcdf` for the installation path of NetCDF-4. For example,
+    `--with-netcdf` can be used to specify the installation path of NetCDF-4.
+    For example,
     ```
     gzip -dc parallel-netcdf-1.10.0.tar.gz | tar -xf -
     cd parallel-netcdf-1.10.0
     ./configure --prefix=/PnetCDF/install/path \
                 --enable-netcdf4 \
-                --with-hdf5=/HDF5/install/path \
                 --with-netcdf4=/NetCDF4/install/path
     ```
 
