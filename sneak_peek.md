@@ -5,7 +5,9 @@ This is essentially a placeholder for the next release note ...
 * New features
   + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
     PnetCDF can be built on top of NetCDF-4 library to allow PnetCDF to read
-    and write a NetCDF-4 file.
+    and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag to create
+    NetCDF-4 files. For opening NetCDF-4 files, no additional flag is needed,
+    as PnetCDF can automatically detect the file format.
   + Per-file thread-safe capability is added. This feature can be enabled by
     adding command-line option `--enable-thread-safe` at configure time. In
     addition, option `--with-pthread` can be used to specify the path to the
@@ -25,11 +27,11 @@ This is essentially a placeholder for the next release note ...
     variables in the collective mode, PnetCDF is not able to support such
     requests when NetCDF-4 feature is enabled. New HDF5 releases are expected
     to contain the fix. See discussion in https://github.com/NCAR/ParallelIO/pull/1304
+    The bug fix will appear in HDF5 1.10.4 release.
 
 * Update configure options
   + Enable NetCDF-4 support.
     - `--enable-netcdf4`: enable NetCDF4 format classic mode support
-    - `--with-hdf5=/path/to/hdf5`: path to HDF5 library installation
     - `--with-netcdf4=/path/to/netcdf-4`: path to NetCDF-4 library installation
   + Enable multi-threading support.
     - `--enable-thread-safe`: enable per-file thread-safe support
@@ -70,7 +72,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
-  + The internal data buffering mechanism in the burst buffer driver is
+  + The internal data buffering mechanism used in the burst buffer driver is
     removed. This mechanism caches the request data in memory until the
     accumulated size is more than 8 MiB, so the write requests to burst buffers
     can be aligned with 8 MiB boundaries. However, experiments on Cray DataWarp
@@ -91,7 +93,7 @@ This is essentially a placeholder for the next release note ...
     https://lists.gnu.org/archive/html/bug-automake/2015-04/msg00000.html
     PnetCDF users are recommended to run configure under other shells.
   + For put and get APIs when buftype is MPI_DATATYPE_NULL, bufcount is
-    ignored. This is not implemented correctly for blocking put and get APIs.
+    ignored. This is not implemented correctly in blocking put and get APIs.
     See bug fix committed on Aug. 25, 2018.
   + ncmpidiff -- when comparing two files that contain record variables but
     no record has been written. See bug fix committed on Aug. 25, 2018.
@@ -137,11 +139,12 @@ This is essentially a placeholder for the next release note ...
     ncmpi_create to see if PnetCDF duplicates the communicator correctly.
 
 * Conformity with NetCDF library
+  + none
+
+* Discrepancy from NetCDF library
   + In contract to NetCDF-4 which allows to read/write variables in define mode
     when the file format is in NetCDF-4 format, PnetCDF still requires reading
     and writing variables in data mode.
-
-* Discrepancy from NetCDF library
   + In contrast to the semantics of nc_set_fill() defined in NetCDF-4,
     ncmpi_set_fill() changes the fill mode of all variables newly defined in
     the current scope of defined mode. Variables affected include the ones
