@@ -1666,77 +1666,91 @@ rm -f conftest.$ac_ext
 AC_LANG_PUSH([C])
 ])
 
+dnl
 dnl check the availability of one MPI executable in $2
-dnl Note $2 can be a compiler name followed by compile options. In this case
-dnl we check the first string token, the compiler name.
-dnl In addition, $2 can contain the full path of the compiler.
+dnl
+dnl $2 can be a single command, This is the case when user set the environment.
+dnl The variable may contain the executable name followed by zeor or more
+dnl command-line options. In the latter case, we check the first string token,
+dnl the command name, and ignore the rest command-line options. For example,
+dnl UD_MPI_PATH_PROG([MPICC], [mpicc -O2])
+dnl
+dnl In addition, the first token of $2 may contain the full path of
+dnl the command. For example, UD_MPI_PATH_PROG([MPICC], [/usr/bin/mpicc -O2])
+dnl
 AC_DEFUN([UD_MPI_PATH_PROG], [
    if test "x$2" = x ; then
       AC_MSG_ERROR("2nd argument cannot be NULL")
-   else
-      AC_MSG_CHECKING($2)
    fi
 
    dnl 1st token in $2 must be the program name, rests are command-line options
    ac_first_token=`echo $2 | cut -d" " -f1`
    ac_rest_tokens=`echo $2 | cut -d" " -s -f2-`
-   UD_MSG_DEBUG(ac_first_token=$ac_first_token)
-   UD_MSG_DEBUG(ac_rest_tokens=$ac_rest_tokens)
+   UD_MSG_DEBUG(ac_first_token=$ac_first_token) dnl executable name
+   UD_MSG_DEBUG(ac_rest_tokens=$ac_rest_tokens) dnl command-line option
 
-   ac_mpi_prog_$1=
-   if test "x$MPI_INSTALL" != x ; then
-      dnl Check if MPI_INSTALL is a substring of first_token
-      if test "$ac_first_token" != "${ac_first_token%$MPI_INSTALL*}" ; then
-         UD_MSG_DEBUG("MPI_INSTALL is a substring of ac_first_token")
-         ac_prog=`echo $ac_first_token | rev | cut -d"/" -f1 |rev`
+   dnl First check if ac_first_token contain a full path
+   dnl If yes, check, check if the file exists. Need not check MPI_INSTALL.
+   ac_mpi_prog_path=`dirname $ac_first_token`
+   if test "x$ac_mpi_prog_path" != "x." ; then
+      AC_MSG_CHECKING([if $ac_first_token exists and is executable])
+      if test -x "$ac_first_token" ; then
+         AC_MSG_RESULT([yes])
+         $1="$2"
       else
-         ac_prog=$ac_first_token
-      fi
-      UD_MSG_DEBUG(ac_prog=$ac_prog)
-      UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
-      if test -d "${MPI_INSTALL}/bin" ; then
-         UD_MSG_DEBUG(search $ac_prog under $MPI_INSTALL/bin)
-         AC_PATH_PROG([ac_mpi_prog_$1], [$ac_prog], [], [$MPI_INSTALL/bin])
-      else
-         dnl ${MPI_INSTALL}/bin does not exist, search $MPI_INSTALL
-         UD_MSG_DEBUG(search $ac_prog under $MPI_INSTALL)
-         AC_PATH_PROG([ac_mpi_prog_$1], [$ac_prog], [], [$MPI_INSTALL])
+         AC_MSG_RESULT([no])
+         $1=
       fi
    else
-      UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is NOT used)
-      UD_MSG_DEBUG(search $ac_first_token under $PATH)
-      AC_PATH_PROG([ac_mpi_prog_$1], [$ac_first_token])
-   fi
-   UD_MSG_DEBUG([ac_mpi_prog_$1=${ac_mpi_prog_$1}])
-
-   dnl In case ac_first_token is a full path, the above test may still set
-   dnl ac_mpi_prog_$1 to NULL
-   if test "x${ac_mpi_prog_$1}" = x ; then
-      dnl Note we cannot use AC_CHECK_FILE because it fails for cross compiling
-      dnl with error: cannot check for file existence when cross compiling
-      ac_mpi_prog_path=`dirname $ac_first_token`
-      ac_mpi_prog_name=`basename $ac_first_token`
-      UD_MSG_DEBUG(ac_mpi_prog_path=$ac_mpi_prog_path)
-      UD_MSG_DEBUG(ac_mpi_prog_name=$ac_mpi_prog_name)
-      if (! test -d "${ac_mpi_prog_path}") ; then
-         AC_MSG_ERROR(Directory '${ac_mpi_prog_path}' does not exist)
+      dnl ac_first_token does not contain a full path
+      ac_mpi_prog_$1=
+      if test "x$MPI_INSTALL" != x ; then
+         dnl First, check if it can be found under $MPI_INSTALL, i.e.
+         dnl --with-mpi is used on configure command line
+         if test -d "${MPI_INSTALL}/bin" ; then
+            AC_MSG_CHECKING([$ac_first_token under ${MPI_INSTALL}/bin])
+            if test -x "$MPI_INSTALL/bin/$ac_first_token" ; then
+               AC_MSG_RESULT([yes])
+               ac_mpi_prog_$1=$MPI_INSTALL/bin/$ac_first_token
+            else
+               AC_MSG_RESULT([no])
+            fi
+         else
+            dnl ${MPI_INSTALL}/bin does not exist, search $MPI_INSTALL
+            AC_MSG_CHECKING([$ac_first_token under ${MPI_INSTALL}])
+            if test -x "$MPI_INSTALL/$ac_first_token" ; then
+               AC_MSG_RESULT([yes])
+               ac_mpi_prog_$1=$MPI_INSTALL/$ac_first_token
+            else
+               AC_MSG_RESULT([no])
+            fi
+         fi
+         if test "x$ac_mpi_prog_$1" != x ; then
+            $1="${ac_mpi_prog_$1} $ac_rest_tokens"
+         else
+            $1=
+         fi
+      else
+         dnl MPI_INSTALL is not set, i.e. --with-mpi is not used
+         AC_PATH_PROG([ac_mpi_prog_$1], [$ac_first_token])
+         if test "x$ac_mpi_prog_$1" != x ; then
+            $1="${ac_mpi_prog_$1} $ac_rest_tokens"
+         else
+            $1=
+         fi
       fi
-
-      AC_PATH_PROG([ac_mpi_prog_$1], [$ac_mpi_prog_name], [], [$ac_mpi_prog_path])
-      if test "x$ac_mpi_prog_$1" = x ; then
-         AC_MSG_ERROR($ac_mpi_prog_name cannot be found under $ac_mpi_prog_path)
-      fi
    fi
-
-   dnl add back the compile options if there is any
-   if test "x$ac_rest_tokens" != x ; then
-      ac_mpi_prog_$1="$ac_mpi_prog_$1 $ac_rest_tokens"
-   fi
-
-   $1=${ac_mpi_prog_$1}
 ])
 
+dnl
 dnl check the availability of a list of MPI executables
+dnl
+dnl Note $2 can be a list of executable commands to be searched with each
+dnl command being the executable file name without command-line option. This is
+dnl the case when user does not set the environment variable, for example
+dnl MPICC, and we must search one from the candidate list. For example,
+dnl UD_MPI_PATH_PROGS([MPICC], [mpicc mpixlc mpifccpx mpipgcc])
+dnl
 AC_DEFUN([UD_MPI_PATH_PROGS], [
    ac_mpi_prog_$1=
    if test "x$MPI_INSTALL" != x ; then

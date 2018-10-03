@@ -260,7 +260,7 @@ if test "x${MPICC}" = x ; then
      $ERR_MSG
      Parallel netCDF requires a working MPI C compiler. Please specify the
      location of an MPI C compiler, either in the MPICC environment variable
-     or through --with-mpi configure flag. Abort.
+     (not CC variable) or through --with-mpi configure flag. Abort.
    -----------------------------------------------------------------------])
 fi
 UD_MSG_DEBUG([MPICC=$MPICC])
@@ -289,8 +289,8 @@ AC_CHECK_FUNC([MPI_Comm_rank], [],
    -----------------------------------------------------------------------
      Invalid MPI compiler specified or detected: "${MPICC}"
      A working MPI C compiler is required. Please specify the location
-     of one either in the MPICC environment variable or through
-     --with-mpi configure flag. Abort.
+     of one either in the MPICC environment variable (not CC variable) or
+     through --with-mpi configure flag. Abort.
    -----------------------------------------------------------------------])
 ])])
 
