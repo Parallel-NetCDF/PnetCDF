@@ -171,7 +171,7 @@ typedef struct bufferinfo {
     int        version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
     void      *base;     /* beginning of read/write buffer */
     void      *pos;      /* current position in buffer */
-    long long  size;     /* size of the buffer */
+    size_t     size;     /* size of the buffer */
 } bufferinfo;
 
 #define NC_NOERR        0       /**< No Error */
@@ -339,8 +339,8 @@ free_NC_vararray(NC_vararray *ncap)
 
 /*----< hdr_len_NC_name() >--------------------------------------------------*/
 static long long
-hdr_len_NC_name(int nchars,
-                int sizeof_t)     /* NON_NEG */
+hdr_len_NC_name(size_t nchars,
+                int    sizeof_t)     /* NON_NEG */
 {
     /* netCDF file format:
      * name       = nelems  namestring
@@ -1159,7 +1159,7 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap, long long numrec
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
             if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
@@ -1291,7 +1291,7 @@ val_get_NC_attrV(int         fd,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             /* This is considered not a fatal error, we continue to validate */
-            if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+            if (verbose) printf("Error @ [0x%8.8zx]:\n", ERR_ADDR);
             if (verbose) printf("\t%s: value padding is non-null byte\n", loc);
             DEBUG_ASSIGN_ERROR(status, NC_ENULLPAD)
             if (repair) {
@@ -1499,7 +1499,7 @@ val_get_NC_attrarray(int           fd,
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
             if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
@@ -1663,7 +1663,7 @@ val_get_NC_var(int          fd,
         err = val_check_buffer(fd, gbp, (gbp->version < 5 ? 4 : 8));
         if (err != NC_NOERR) {
             if (trace) printf("\n");
-            if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+            if (verbose) printf("Error @ [0x%8.8zx]:\n", ERR_ADDR);
             if (verbose) printf("\t%s: Fail to read dimid[%d]\n",xloc,dim);
             free_NC_var(varp);
             return err;
@@ -1725,7 +1725,7 @@ val_get_NC_var(int          fd,
 
     err = val_check_buffer(fd, gbp, (gbp->version == 1 ? 4 : 8));
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8Lx]:\n", ERR_ADDR);
+        if (verbose) printf("Error @ [0x%8.8zx]:\n", ERR_ADDR);
         if (verbose) printf("\t%s: Fail to read begin\n",xloc);
         free_NC_var(varp);
         return err;
@@ -1805,7 +1805,7 @@ val_get_NC_vararray(int          fd,
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            if (verbose) printf("Error @ [0x%8.8Lx]:\n", err_addr);
+            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
             if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }

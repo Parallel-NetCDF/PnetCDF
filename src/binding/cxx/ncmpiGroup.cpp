@@ -103,7 +103,7 @@ string NcmpiGroup::getName(bool fullName) const {
     char* charName= new char[lenp+1];
     ncmpiCheck(ncmpi_inq_grpname_full(myId,&lenp,charName),__FILE__,__LINE__);
     groupName = charName;
-    delete charName;
+    delete [] charName;
   }
   else {
     // return the (local) name of this group.
