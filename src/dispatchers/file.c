@@ -30,6 +30,10 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #include <pnc_debug.h>
 #include <common.h>
 
+#ifdef ENABLE_ADIOS
+#include "adios_read.h" 
+#endif 
+
 /* TODO: the following 3 global variables make PnetCDF not thread safe */
 
 /* static variables are initialized to NULLs */
@@ -704,6 +708,11 @@ ncmpi_open(MPI_Comm    comm,
             format == NC_FORMAT_CDF5) {
             driver = ncmpio_inq_driver();
         }
+#ifdef ENABLE_ADIOS 
+        else if (format == NC_FORMAT_BP) { 
+            driver = ncadio_inq_driver(); 
+        } 
+#endif 
         else /* unrecognized file format */
             DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
@@ -1193,6 +1202,17 @@ ncmpi_inq_file_format(const char *filename,
         else if (signature[3] == 2)  *formatp = NC_FORMAT_CDF2;
         else if (signature[3] == 1)  *formatp = NC_FORMAT_CLASSIC;
     }
+#ifdef ENABLE_ADIOS 
+    else{ 
+        ADIOS_FILE *fp = NULL; 
+        /* Try to open with ADIOS */ 
+        fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
+        if (fp != NULL) { 
+            *formatp = NC_FORMAT_BP; 
+            adios_read_close(fp); 
+        } 
+    } 
+#endif 
 
     return NC_NOERR;
 }

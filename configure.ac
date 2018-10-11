@@ -111,6 +111,7 @@ dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP], [Define if to enable in-place byte swap]
 dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
+AH_TEMPLATE([ENABLE_ADIOS],             [Define if to enable ADIOS BP read feature])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
@@ -1633,6 +1634,65 @@ fi
 AC_SUBST(ENABLE_BURST_BUFFER)
 AM_CONDITIONAL(ENABLE_BURST_BUFFER, [test x$enable_bbdriver = xyes])
 
+AC_ARG_ENABLE([adios],
+   [AS_HELP_STRING([--enable-adios],
+                   [Enable ADIOS BP read support. @<:@default: disabled@:>@])],
+   [enable_adios=${enableval}], [enable_adios=no]
+)
+
+ENABLE_ADIOS=0
+if test "x$enable_adios" = "xyes" ; then
+   AC_DEFINE(ENABLE_ADIOS)
+   ENABLE_ADIOS=1
+fi
+AC_SUBST(ENABLE_ADIOS)
+AM_CONDITIONAL(ENABLE_ADIOS, [test x$enable_adios = xyes])
+
+if test "x$enable_adios" = "xyes" ; then
+    ADIOS_INSTALL=""
+    AC_ARG_WITH(adios,
+        [AS_HELP_STRING([--with-adios=/path/to/implementation],
+                        [installation prefix for ADIOS implementation])],
+        if test "x${withval}" = xyes; then
+            AC_MSG_ERROR(--with-adios must be given a pathname)
+        else
+            ADIOS_INSTALL=${withval}
+        fi
+    )
+
+    if test "x${ADIOS_INSTALL}" != x ; then
+        CPPFLAGS+=" -I${ADIOS_INSTALL}/include"
+        LDFLAGS+=" -L${ADIOS_INSTALL}/lib"
+        LIBS+=" -ladiosread -ladios"
+    fi
+
+    LIBS+=" -lm -ldl"
+
+    have_adios=no
+    AC_MSG_CHECKING(ADIOS library)
+    AC_SEARCH_LIBS([adios_read_open_file], [adiosread], [have_adios=yes], [have_adios=no])
+    if test "x${have_adios}" = xyes; then
+        AC_SEARCH_LIBS([adios_posix_open_read_internal], [adios], [have_adios=yes], [have_adios=no])
+        if test "x${have_adios}" = xyes; then
+            AC_CHECK_HEADERS([adios_read.h], [], [have_adios=no])
+        fi
+    fi
+
+    if test "x${have_adios}" = xno; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        The ADIOS library and header file are required to build
+        PnetCDF with ADIOS BP read support. Use option
+            --with-adios=/path/to/implementation
+        to specify the location of ADIOS build. In addition,
+        please make sure the MPI C compiler is compatible with the
+        one used to build ADIOS.
+        Stopping ...
+        Check 'config.log' for more information.
+        ------------------------------------------------------------])
+    fi
+fi
+
 AC_ARG_ENABLE([profiling],
    [AS_HELP_STRING([--enable-profiling],
                    [Enable time and memory profiling. @<:@default: disabled@:>@])],
@@ -1765,6 +1825,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
                 src/drivers/nc4io/Makefile \
+                src/drivers/ncadios/Makefile \
                 src/drivers/ncbbio/Makefile \
                 src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
@@ -1845,6 +1906,10 @@ if test "x${enable_netcdf4}" = xyes; then
    echo "\
               NetCDF-4 support                            - enabled"
 fi
+if test "x${enable_adios}" = xyes; then 
+   echo "\ 
+              ADIOS BP read support                       - enabled" 
+fi 
 if test "x${enable_bbdriver}" = xyes ; then
    echo "\
               Burst buffering                             - enabled"
