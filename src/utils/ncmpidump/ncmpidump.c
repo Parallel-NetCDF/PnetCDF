@@ -720,11 +720,11 @@ enum FILE_KIND check_file_signature(char *path)
              if (signature[3] == 5)  return CDF5;
         else if (signature[3] == 2)  return CDF2;
         else if (signature[3] == 1)  return CDF1;
-        else{
-            return BP; 
-        } 
     }
-
+    else{
+        return BP; 
+    } 
+    
     return UNKNOWN; /* unknown format */
 }
 
