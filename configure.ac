@@ -2003,6 +2003,7 @@ if test "x$enable_adios" = "xyes" ; then
         ------------------------------------------------------------])
     fi
 
+<<<<<<< HEAD
     dnl Check if ADIOS version is 1.13.2 or later
     AC_MSG_CHECKING([Check if ADIOS version is 1.13.2 or later])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
@@ -2024,6 +2025,29 @@ if test "x$enable_adios" = "xyes" ; then
     AC_SUBST([ADIOS_LDFLAGS], ["$adios_ldflag"])
     AC_SUBST([ADIOS_LIBS], [""])
     AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
+=======
+    CPPFLAGSTMP=${CPPFLAGS}
+    CPPFLAGS+=" -I${ADIOS_SRC}"
+
+    have_adios_src=no
+    AC_CHECK_HEADERS([adios_internals.h], [have_adios_src=yes], [have_adios=no], [])
+
+    CPPFLAGS=${CPPFLAGSTMP}
+
+    if test "x${have_adios_src}" = xno; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        The ADIOS source are required to build
+        PnetCDF with ADIOS BP read support. Use option
+            --with-adios_src=/path/to/source
+        to specify the location of ADIOS source code. In addition,
+        please make sure the MPI C compiler is compatible with the
+        one used to build ADIOS.
+        Stopping ...
+        Check 'config.log' for more information.
+        ------------------------------------------------------------])
+    fi
+>>>>>>> 49f28e6... adios driver follow bp2nc
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)
