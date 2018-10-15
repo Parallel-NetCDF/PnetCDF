@@ -1666,6 +1666,21 @@ if test "x$enable_adios" = "xyes" ; then
         LIBS+=" -ladiosread -ladios"
     fi
 
+    ADIOS_SRC=""
+    AC_ARG_WITH(adios_src,
+        [AS_HELP_STRING([--with-adios_src=/path/to/implementation],
+                        [path to ADIOS source code])],
+        if test "x${withval}" = xyes; then
+            AC_MSG_ERROR(--with-adios_src must be given a pathname)
+        else
+            ADIOS_SRC=${withval}
+        fi
+    )
+
+    if test "x${ADIOS_SRC}" != x ; then
+        CPPFLAGS+=" -I${ADIOS_SRC}/src -I${ADIOS_SRC}/src/core"
+    fi
+
     LIBS+=" -lm -ldl"
 
     have_adios=no
@@ -1685,6 +1700,28 @@ if test "x$enable_adios" = "xyes" ; then
         PnetCDF with ADIOS BP read support. Use option
             --with-adios=/path/to/implementation
         to specify the location of ADIOS build. In addition,
+        please make sure the MPI C compiler is compatible with the
+        one used to build ADIOS.
+        Stopping ...
+        Check 'config.log' for more information.
+        ------------------------------------------------------------])
+    fi
+
+    CPPFLAGSTMP=${CPPFLAGS}
+    CPPFLAGS+=" -I${ADIOS_SRC}"
+
+    have_adios_src=no
+    AC_CHECK_HEADERS([adios_internals.h], [have_adios_src=yes], [have_adios=no], [])
+
+    CPPFLAGS=${CPPFLAGSTMP}
+
+    if test "x${have_adios_src}" = xno; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        The ADIOS source are required to build
+        PnetCDF with ADIOS BP read support. Use option
+            --with-adios_src=/path/to/source
+        to specify the location of ADIOS source code. In addition,
         please make sure the MPI C compiler is compatible with the
         one used to build ADIOS.
         Stopping ...
@@ -1867,6 +1904,7 @@ AC_CONFIG_FILES(Makefile \
                 test/nc_test/Makefile \
                 test/cdf_format/Makefile \
                 test/nc4/Makefile \
+                test/adios/Makefile \
                 test/header/Makefile \
                 test/testcases/Makefile \
                 test/nonblocking/Makefile \
