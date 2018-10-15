@@ -39,6 +39,10 @@ if ENABLE_NETCDF4
    SUBDIRS += nc4
 endif
 
+if ENABLE_ADIOS
+   SUBDIRS += adios
+endif
+
 if ENABLE_BURST_BUFFER
    SUBDIRS += burst_buffer
 endif

@@ -718,7 +718,7 @@ ncmpi_open(MPI_Comm    comm,
         }
 #ifdef ENABLE_ADIOS 
         else if (format == NC_FORMAT_BP) { 
-            driver = ncadio_inq_driver(); 
+            driver = ncadios_inq_driver(); 
         } 
 #endif 
         else /* unrecognized file format */

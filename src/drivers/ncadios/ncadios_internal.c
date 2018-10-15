@@ -1,0 +1,87 @@
+/*
+ *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <mpi.h>
+
+#include <pnc_debug.h>
+#include <common.h>
+#include <ncadios_driver.h>
+
+#include "ncadios_internal.h"
+
+int ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id) {
+    int i;
+
+    if (id != NULL){
+        *id = ncadiosi_var_list_find(&(ncadp->vars), name);
+    }
+
+    return NC_NOERR;
+}
+
+int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
+    int i;
+
+    if (id != NULL){
+        if (vid == NC_GLOBAL){
+           *id = ncadiosi_att_list_find(&(ncadp->atts), name);
+        }
+        else{
+            *id = ncadiosi_att_list_find(&(ncadp->vars.data[vid].atts), name);
+        }
+    }
+    
+    return NC_NOERR;
+}
+
+int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
+    int i;
+
+    if (id != NULL){
+        *id = ncadiosi_dim_list_find(&(ncadp->dims), name);
+    }
+
+    return NC_NOERR;
+}
+
+int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimids, int *id) {
+    NC_ad_var var;
+
+    if (CHECK_NAME(name)){
+        var.type = type;
+        var.ndim = ndim;
+        var.dimids = NCI_Malloc(sizeof(int) * ndim);
+        memcpy(var.dimids, dimids, sizeof(int) * ndim);
+        var.name = NCI_Malloc(strlen(name) + 1);
+        strcpy(var.name, name);
+        ncadiosi_att_list_init(&(var.atts));
+
+        *id = ncadiosi_var_list_add(&(ncadp->vars), var);
+    }
+
+    return NC_NOERR;
+}
+
+int ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id) {
+    NC_ad_dim dim;
+    
+    if (CHECK_NAME(name)){
+        dim.len = len;
+        dim.name = NCI_Malloc(strlen(name) + 1);
+        strcpy(dim.name, name);
+    
+        *id = ncadiosi_dim_list_add(&(ncadp->dims), dim);
+    }
+
+    return NC_NOERR;
+}
