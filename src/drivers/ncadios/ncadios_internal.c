@@ -23,6 +23,8 @@
 int ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id) {
     int tmp;
 
+    //return NC_NOERR;
+
     if (id != NULL){
         tmp = ncadiosi_var_list_find(&(ncadp->vars), name);
         if (tmp < 0){
@@ -68,6 +70,8 @@ int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
 int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
     int tmp;
 
+    //return NC_NOERR;
+
     if (id != NULL){
         tmp = ncadiosi_dim_list_find(&(ncadp->dims), name);
         if (tmp < 0){
@@ -82,6 +86,8 @@ int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
 int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, 
                         int *dimids, int *id) {
     NC_ad_var var;
+
+    //return NC_NOERR;
 
     if (CHECK_NAME(name)){
         var.type = type;

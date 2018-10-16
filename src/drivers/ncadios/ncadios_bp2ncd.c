@@ -689,9 +689,8 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
                                                 );
             }
             else {
-                /* alloc size +1 to remove valgrind complaint */
                 var_payload.payload = malloc (var_header.payload_size + 1);
-                err = adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
+                adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
                                                 );
                 err = ncd_dataset(ncid,&var_header, &var_payload,b_1,var_dims,var_dims_count);

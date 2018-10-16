@@ -2002,6 +2002,7 @@ if test "x$enable_adios" = "xyes" ; then
         PnetCDF with ADIOS BP read support. 
         ------------------------------------------------------------])
     fi
+<<<<<<< HEAD
 
 <<<<<<< HEAD
     dnl Check if ADIOS version is 1.13.2 or later
@@ -2048,6 +2049,8 @@ if test "x$enable_adios" = "xyes" ; then
         ------------------------------------------------------------])
     fi
 >>>>>>> 49f28e6... adios driver follow bp2nc
+=======
+>>>>>>> 88955e9... embeded header files
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)
