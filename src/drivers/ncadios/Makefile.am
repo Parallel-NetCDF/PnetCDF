@@ -12,6 +12,10 @@ AM_CPPFLAGS  = -I${top_srcdir}/src/include
 AM_CPPFLAGS += -I${top_builddir}/src/include
 AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/include
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core/transforms
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/transforms
 
 if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
@@ -24,7 +28,8 @@ if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS = ncadios_convert.m4
+M4_SRCS = ncadios_convert.m4 \
+          ncadios_internal_atts.m4
 
 H_SRCS = ncadios_driver.h \
          ncadios_internal.h \

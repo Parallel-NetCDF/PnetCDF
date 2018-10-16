@@ -74,6 +74,8 @@ int ncadiosi_att_list_free(NC_ad_att_list *list) {
 int ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data) {
     int id;
 
+ //   return 0;
+
     id = list->cnt;
 
     if (list->nalloc == 0){
@@ -94,6 +96,8 @@ int ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data) {
 int ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data) {
     int id;
 
+//    return 0;
+
     id = list->cnt;
 
     if (list->nalloc == 0){
@@ -113,6 +117,8 @@ int ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data) {
 
 int ncadiosi_att_list_add(NC_ad_att_list *list, NC_ad_att data) {
     int id;
+
+ //   return 0;
 
     id = list->cnt;
 

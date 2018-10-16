@@ -13,6 +13,10 @@ AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core/transforms
+AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/transforms
 LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
 
@@ -25,7 +29,8 @@ endif
 NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
-TESTPROGRAMS = open
+TESTPROGRAMS = open \
+			   bp2ncd
 
 M4_SRCS  = 
 

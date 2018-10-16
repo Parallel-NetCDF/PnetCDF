@@ -106,7 +106,7 @@ ncadios_open(MPI_Comm     comm,
     ncadp = (NC_ad*) NCI_Malloc(sizeof(NC_ad));
     if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     
-    ncadp->path = (char*) NCI_Malloc(strlen(path)+1);
+    ncadp->path = (char*) NCI_Malloc(strlen(path) + 1);
     if (ncadp->path == NULL) {
         NCI_Free(ncadp);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -278,7 +278,7 @@ ncadios_inq(void *ncdp,
     }
 
     if (nattsp != NULL){
-        *nattsp = ncadp->fp->nattrs;
+        *nattsp = ncadp->atts.cnt;
     }
 
     if (xtendimp != NULL){
