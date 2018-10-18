@@ -22,6 +22,8 @@ int
 ncadiosiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype outtype, int N) {
     int i;
 
+    return 0;
+
     switch (intype) {
             case MPI_CHAR:
         switch (outtype){

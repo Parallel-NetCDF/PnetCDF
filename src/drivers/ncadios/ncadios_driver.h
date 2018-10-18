@@ -27,7 +27,7 @@ typedef struct NC_ad_dim_list {
 typedef struct NC_ad_att {
     char *name;
     nc_type type;
-    size_t size;
+    MPI_Offset len;
     void* data;
 } NC_ad_att;
 
@@ -41,8 +41,6 @@ typedef struct NC_ad_var {
     char *name;
     int ndim;
     int *dimids;
-    int natt;
-    int attnalloc;
     nc_type type;
     NC_ad_att_list atts;
 } NC_ad_var;

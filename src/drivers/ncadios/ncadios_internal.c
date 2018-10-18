@@ -22,6 +22,8 @@
 int ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id) {
     int i;
 
+    //return NC_NOERR;
+
     if (id != NULL){
         *id = ncadiosi_var_list_find(&(ncadp->vars), name);
     }
@@ -31,14 +33,28 @@ int ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id) {
 
 int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
     int i;
+    int attid;
+
+    //*id = -1;
+
+    //return NC_EINVAL;
+
+    if (vid == NC_GLOBAL){
+        attid = ncadiosi_att_list_find(&(ncadp->atts), name);
+    }
+    else{
+        if (vid >= ncadp->vars.cnt){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+        attid = ncadiosi_att_list_find(&(ncadp->vars.data[vid].atts), name);
+    }
+
+    if (attid < 0){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
 
     if (id != NULL){
-        if (vid == NC_GLOBAL){
-           *id = ncadiosi_att_list_find(&(ncadp->atts), name);
-        }
-        else{
-            *id = ncadiosi_att_list_find(&(ncadp->vars.data[vid].atts), name);
-        }
+        *id = attid;
     }
     
     return NC_NOERR;
@@ -46,6 +62,8 @@ int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
 
 int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
     int i;
+
+    //return NC_NOERR;
 
     if (id != NULL){
         *id = ncadiosi_dim_list_find(&(ncadp->dims), name);
@@ -56,6 +74,8 @@ int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
 
 int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimids, int *id) {
     NC_ad_var var;
+
+    //return NC_NOERR;
 
     if (CHECK_NAME(name)){
         var.type = type;
@@ -75,6 +95,8 @@ int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimi
 int ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id) {
     NC_ad_dim dim;
     
+    //return NC_NOERR;
+
     if (CHECK_NAME(name)){
         dim.len = len;
         dim.name = NCI_Malloc(strlen(name) + 1);

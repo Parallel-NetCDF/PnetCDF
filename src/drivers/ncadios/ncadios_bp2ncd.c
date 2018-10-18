@@ -139,68 +139,39 @@ int ncd_attr_str_ds (NC_ad* ncid
             } 
             vars_root = vars_root->next;
         }
-#if 0
-        for ( i = 0; i < count; i++) {
-            adios_parse_var_data_header_v1 (ptr_buffer, &var_header);
-            if ( var_header.id == attribute->var_id) {
-                struct  adios_dimension_struct_v1 * dims = var_header.dims; 
-                while (dims) {
-                      if ( dims->dimension.var_id != 0 ) {
-                           for (i = 0; i < var_dims_count; i++) {
-                                if (var_dims [i].id == dims->dimension.var_id ){
-                                    len *= var_dims [i]. rank;
-                                    break;
-                                } 
-                           }
-                      }
-                      else
-                         len *= dims->dimension.rank;
-                      dims = dims->next;
-                 }
-                 type = var_header.type;
-                 var_payload.payload = malloc (var_header.payload_size);
-                 adios_parse_var_data_payload_v1 (ptr_buffer, &var_header, &var_payload, var_header.payload_size);
-                 value = var_payload.payload;
-              }
-              else
-                  adios_parse_var_data_payload_v1 (ptr_buffer, &var_header, NULL, 0);
-
-         }
-#endif
     }
-    else
         //printf("\t      XML: ");   
     switch (type) {
          case adios_unsigned_byte:
-            //retval=ncadiosi_put_att_uchar(ncid,valid,fullname,NC_BYTE,len,value);
+            retval=ncadiosi_put_att_uchar(ncid,valid,fullname,NC_BYTE,len,value);
             break;
          case adios_byte:
-            //retval=ncadiosi_put_att_schar(ncid,valid,fullname,NC_BYTE,len,value);
+            retval=ncadiosi_put_att_schar(ncid,valid,fullname,NC_BYTE,len,value);
             break;
          case adios_string:
             //printf("%s\n", (char *) value);    
-            //retval=ncadiosi_put_att_text(ncid,valid,fullname, strlen(value),value);
+            retval=ncadiosi_put_att_text(ncid,valid,fullname, strlen(value),value);
             break;
          case adios_short:
             //printf("\tvaule: %s\n", *(short *) value);    
-            //retval=ncadiosi_put_att_short(ncid,valid,fullname,NC_SHORT,len,value);
+            retval=ncadiosi_put_att_short(ncid,valid,fullname,NC_SHORT,len,value);
             ERR(retval); 
             break;
          case adios_integer:
             //printf("%d\n", *((int *) value));    
-            //retval=ncadiosi_put_att_int(ncid,valid,fullname,NC_INT,len,value);
+            retval=ncadiosi_put_att_int(ncid,valid,fullname,NC_INT,len,value);
             break;
          case adios_long:
             //printf("\tvaule: %s\n", *(long *) value);    
-            //retval=ncadiosi_put_att_long(ncid,valid,fullname,NC_LONG,len,value);
+            retval=ncadiosi_put_att_long(ncid,valid,fullname,NC_LONG,len,value);
             break;
          case adios_real:
             //printf("\tvaule: %s\n", *(float *) value);    
-            //retval=ncadiosi_put_att_float(ncid,valid,fullname,NC_FLOAT,len,value);
+            retval=ncadiosi_put_att_float(ncid,valid,fullname,NC_FLOAT,len,value);
             break;
          case adios_double:
             //printf("\tvaule: %s\n", *(double *) value);    
-            //retval=ncadiosi_put_att_double(ncid,valid,fullname,NC_DOUBLE,len,value);
+            retval=ncadiosi_put_att_double(ncid,valid,fullname,NC_DOUBLE,len,value);
             break;
          default:
             break;
