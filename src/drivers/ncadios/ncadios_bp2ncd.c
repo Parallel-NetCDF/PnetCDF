@@ -772,7 +772,7 @@ int ncadiosi_parse_header (NC_ad *ncid)
                                                 );
             }
             else {
-                var_payload.payload = malloc (var_header.payload_size);
+                var_payload.payload = malloc (var_header.payload_size + 1);
                 adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
                                                 );
@@ -819,8 +819,8 @@ int ncadiosi_parse_header (NC_ad *ncid)
         for (i = 0; i < attrs_header.count; i++)
         {
 
-            adios_parse_attribute_v1 (b, &attribute);
-            ncd_attr_str_ds (ncid, &attribute, b_0, vars_header.count, var_dims, var_dims_count);
+            //adios_parse_attribute_v1 (b, &attribute);
+            //ncd_attr_str_ds (ncid, &attribute, b_0, vars_header.count, var_dims, var_dims_count);
         }
 
         var_dims_count = 0;

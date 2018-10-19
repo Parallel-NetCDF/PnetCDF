@@ -116,7 +116,7 @@ ncadios_inq_att(void       *ncdp,
     }
 
     if (lenp != NULL){
-        att.len;
+        *lenp = att.len;
     }
 
     return NC_NOERR;
