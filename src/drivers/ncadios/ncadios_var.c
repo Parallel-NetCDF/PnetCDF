@@ -115,7 +115,8 @@ ncadios_inq_var(void       *ncdp,
     }
 
     if (nattsp != NULL){
-        *nattsp = var.atts.cnt;
+        // Every atts are global despite the path
+        *nattsp = 0;
     }
 
     if (name != NULL){

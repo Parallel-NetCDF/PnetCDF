@@ -337,12 +337,12 @@ int ncd_dataset (NC_ad* ncid
                             retval=ncadiosi_def_dim (ncid, dimname,dims->dimension.rank,&dimids[rank]);
                         start_dims[rank] = 0;
                         count_dims[rank] = dims->dimension.rank;
-                        fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
+                        /*fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
                                 ,rank 
                                 ,count_dims[rank] 
                                 ,start_dims[rank]
                                 ,dimids[rank]
-                               );
+                               );*/
 
                     }
                     else {
@@ -365,12 +365,12 @@ int ncd_dataset (NC_ad* ncid
                                     start_dims[rank] = 0;
                                     count_dims[rank] = var_dims[i].rank;
                                     dimids[rank]=var_dims[i].nc_dimid;
-                                    fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
+                                    /*fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
                                             ,rank
                                             ,count_dims[rank]
                                             ,start_dims[rank]
                                             ,dimids[rank]
-                                           ); 
+                                           ); */
                                 } 
                                 break;
                             }
@@ -820,8 +820,8 @@ int ncadiosi_parse_header (NC_ad *ncid)
         for (i = 0; i < attrs_header.count; i++)
         {
 
-            adios_parse_attribute_v1 (b, &attribute);
-            ncd_attr_str_ds (ncid, &attribute, b_0, vars_header.count, var_dims, var_dims_count);
+            //adios_parse_attribute_v1 (b, &attribute);
+            //ncd_attr_str_ds (ncid, &attribute, b_0, vars_header.count, var_dims, var_dims_count);
         }
 
         var_dims_count = 0;

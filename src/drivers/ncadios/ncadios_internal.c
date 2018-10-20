@@ -35,7 +35,7 @@ int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
     int i;
     int attid;
 
-    //*id = -1;
+    *id = -1;
 
     //return NC_EINVAL;
 

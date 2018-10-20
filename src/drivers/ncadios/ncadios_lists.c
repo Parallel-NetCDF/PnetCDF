@@ -41,7 +41,7 @@ int ncadiosi_var_list_free(NC_ad_var_list *list) {
         for(i = 0; i < list->cnt; i++){
             NCI_Free(list->data[i].name);
             NCI_Free(list->data[i].dimids);
-            ncadiosi_att_list_free(&(list->data[i].atts));
+            //ncadiosi_att_list_free(&(list->data[i].atts));
         }
         NCI_Free(list->data);
     }
@@ -74,7 +74,7 @@ int ncadiosi_att_list_free(NC_ad_att_list *list) {
 int ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data) {
     int id;
 
-    return 0;
+ //   return 0;
 
     id = list->cnt;
 
@@ -96,7 +96,7 @@ int ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data) {
 int ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data) {
     int id;
 
-    return 0;
+//    return 0;
 
     id = list->cnt;
 
@@ -118,7 +118,7 @@ int ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data) {
 int ncadiosi_att_list_add(NC_ad_att_list *list, NC_ad_att data) {
     int id;
 
-    return 0;
+ //   return 0;
 
     id = list->cnt;
 

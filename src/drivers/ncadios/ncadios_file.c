@@ -101,7 +101,6 @@ ncadios_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
     }
 
-
     /* Create a NC_ad object and save its driver pointer */
     ncadp = (NC_ad*) NCI_Malloc(sizeof(NC_ad));
     if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -115,14 +114,18 @@ ncadios_open(MPI_Comm     comm,
     ncadp->mode   = omode;
     ncadp->flag   = 0;
     ncadp->comm   = comm;
+    MPI_Comm_rank(ncadp->comm, &(ncadp->rank));
 
     *ncpp = ncadp;
 
     ncadiosi_var_list_init(&(ncadp->vars));
-    ncadiosi_att_list_init(&(ncadp->atts));
+    //ncadiosi_att_list_init(&(ncadp->atts));
     ncadiosi_dim_list_init(&(ncadp->dims));
 
-    ncadiosi_parse_header(ncadp);
+    if (ncadp->rank == 0) {
+        ncadiosi_parse_header(ncadp);
+    }
+    ncadios_sync_header(ncadp);
 
     /* Open with adios */
     ncadp->fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, comm);
@@ -150,7 +153,7 @@ ncadios_close(void *ncdp)
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     ncadiosi_var_list_free(&(ncadp->vars));
-    ncadiosi_att_list_free(&(ncadp->atts));
+    //ncadiosi_att_list_free(&(ncadp->atts));
     ncadiosi_dim_list_free(&(ncadp->dims));
 
     if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
@@ -278,7 +281,7 @@ ncadios_inq(void *ncdp,
     }
 
     if (nattsp != NULL){
-        *nattsp = ncadp->atts.cnt;
+        *nattsp = ncadp->fp->nattrs;
     }
 
     if (xtendimp != NULL){

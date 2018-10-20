@@ -59,6 +59,7 @@ struct NC_ad {
     MPI_Comm           comm;        /* MPI communicator */
     ADIOS_FILE          *fp;        /* ADIOS file pointer */
     int              *ndims;        /* Number of dims in each var */
+    int                rank;
     NC_ad_var_list     vars;
     NC_ad_att_list     atts;
     NC_ad_dim_list     dims;
