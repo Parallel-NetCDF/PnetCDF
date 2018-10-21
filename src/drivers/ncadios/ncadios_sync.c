@@ -108,7 +108,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
 
         ndim = *((int*)cur);
         cur += 4;
-        printf("ndim = %d\n", ndim);
+        //printf("ndim = %d\n", ndim);
         for(i = 0; i < ndim; i++){
             len = *((int*)cur);
             cur += sizeof(int);
@@ -117,7 +117,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
             name = cur;
             cur += namelen + 1;
             ncadiosi_def_dim(ncadp, name, len, &id);
-            printf("def_dim(%s, %d), namelen = %d\n", name, len, namelen);
+            //printf("def_dim(%s, %d), namelen = %d\n", name, len, namelen);
         }
 
         
@@ -135,7 +135,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
             name = cur;
             cur += namelen + 1;   
             ncadiosi_def_var(ncadp, name, type, ndim, dimids, &id);
-            printf("def_var(%s, %d, %d), namelen = %d\n", name, type, ndim, namelen);
+            //printf("def_var(%s, %d, %d), namelen = %d\n", name, type, ndim, namelen);
         }
         
     }
