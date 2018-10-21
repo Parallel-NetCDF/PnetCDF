@@ -30,6 +30,7 @@ NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
 TESTPROGRAMS = open \
+<<<<<<< HEAD
 			   header \
 			   var \
 			   ivar \
@@ -39,6 +40,9 @@ TESTPROGRAMS = open \
 			   ivarm \
 			   ivars \
 			   indep
+=======
+			   header
+>>>>>>> 272f00a... header sync test
 
 M4_SRCS  = 
 
