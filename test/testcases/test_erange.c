@@ -162,7 +162,12 @@ int test_cdf12(char *filename, int bb_enabled, int cmode)
 
     /* expect NC_ERANGE */
     dbuf = NC_MAX_DOUBLE/2.0;
-    err = ncmpi_put_var_double_all(ncid, fvid, &dbuf); EXP_ERR(NC_ERANGE)
+    err = ncmpi_put_var_double_all(ncid, fvid, &dbuf);
+    if (bb_enabled) {
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
+    }
+    EXP_ERR(NC_ERANGE)
 
     /* write a value > NC_MAX_FLOAT */
     err = ncmpi_put_var_double_all(ncid, dvid, &dbuf); CHECK_ERR
