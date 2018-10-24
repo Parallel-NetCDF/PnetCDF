@@ -40,10 +40,11 @@
 static
 int test_cdf12(char *filename, int bb_enabled, int cmode)
 {
-    int err, nerrs=0, ncid, vid, dimid;
+    int err, nerrs=0, ncid, vid, fvid, dvid, dimid;
     unsigned char uc[1];
     signed char sc[1];
     int si[1];
+    double dbuf;
 
     cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
@@ -71,8 +72,34 @@ int test_cdf12(char *filename, int bb_enabled, int cmode)
         nerrs++;
     }
 
+    /* expect NC_ERANGE */
+    dbuf=NC_MAX_DOUBLE/2.0;
+    err = ncmpi_put_att_double(ncid, NC_GLOBAL, "attf", NC_FLOAT, 1, &dbuf);
+    EXP_ERR(NC_ERANGE)
+
+    /* add a new attribute of NC_DOUBLE with a value > NC_MAX_FLOAT */
+    err = ncmpi_put_att_double(ncid, NC_GLOBAL, "attd", NC_DOUBLE, 1, &dbuf);
+    CHECK_ERR
+
+#if defined(PNETCDF_ERANGE_FILL) && PNETCDF_ERANGE_FILL == 1
+    if (! (cmode & NC_NETCDF4)) {
+        float fbuf;
+        /* read back attf and expect NC_FILL_FLOAT */
+        dbuf = 0.0;
+        err = ncmpi_get_att_double(ncid, NC_GLOBAL, "attf", &dbuf); CHECK_ERR
+        if (dbuf != NC_FILL_FLOAT) {
+            printf("Error at line %d: unexpected read value %f (expecting %f)\n",__LINE__,dbuf,NC_FILL_FLOAT);
+            nerrs++;
+        }
+        /* read back attd as float and expect NC_ERANGE */
+        err = ncmpi_get_att_float(ncid, NC_GLOBAL, "attd", &fbuf); EXP_ERR(NC_ERANGE)
+    }
+#endif
+
     err = ncmpi_def_dim(ncid, "x", 1, &dimid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_byte", NC_BYTE, 1, &dimid, &vid); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var_flt", NC_FLOAT, 1, &dimid, &fvid); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var_dbl", NC_DOUBLE, 1, &dimid, &dvid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* No NC_ERANGE should be returned for CDF-1 and 2 */
@@ -132,6 +159,34 @@ int test_cdf12(char *filename, int bb_enabled, int cmode)
         printf("Error at line %d: unexpected read value %d (expecting -128)\n",__LINE__,si[0]);
         nerrs++;
     }
+
+    /* expect NC_ERANGE */
+    dbuf = NC_MAX_DOUBLE/2.0;
+    err = ncmpi_put_var_double_all(ncid, fvid, &dbuf);
+    if (bb_enabled) {
+        CHECK_ERR
+        err = ncmpi_flush(ncid);
+    }
+    EXP_ERR(NC_ERANGE)
+
+    /* write a value > NC_MAX_FLOAT */
+    err = ncmpi_put_var_double_all(ncid, dvid, &dbuf); CHECK_ERR
+
+#if defined(PNETCDF_ERANGE_FILL) && PNETCDF_ERANGE_FILL == 1
+    if (! (cmode & NC_NETCDF4)) {
+        float fbuf;
+        /* read back and expect NC_FILL_FLOAT */
+        dbuf = 0.0;
+        err = ncmpi_get_var_double_all(ncid, fvid, &dbuf); CHECK_ERR
+        if (dbuf != NC_FILL_FLOAT) {
+            printf("Error at line %d: unexpected read value %f (expecting %f)\n",__LINE__,dbuf,NC_FILL_FLOAT);
+            nerrs++;
+        }
+
+        /* read back dvid as float and expect NC_ERANGE */
+        err = ncmpi_get_var_float_all(ncid, dvid, &fbuf); EXP_ERR(NC_ERANGE)
+    }
+#endif
 
     err = ncmpi_close(ncid); CHECK_ERR
 

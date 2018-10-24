@@ -18,7 +18,7 @@
 #include <string.h> /* contains prototype for ansi libc function strerror() */
 #else
 /* provide a strerror function for older unix systems */
-inline static char *
+static char *
 strerror(int errnum)
 {
     extern int sys_nerr;

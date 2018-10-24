@@ -43,6 +43,13 @@ C_SRCS    = utf8proc.c \
 libcommon_la_SOURCES = $(C_SRCS) $(H_SRCS)
 nodist_libcommon_la_SOURCES = $(M4_SRCS:.m4=.c)
 
+# Thanks to Rafik Zurob to provide the fix and point out when using the IBM xlc
+# compilers, ncx.c breaks strict ANSI C aliasing rules in regards to how
+# put_ix_float / get_ix_float are used. That's why the file was miscompiled.
+# The file should either be changed to follow strict ANSI C aliasing, or
+# -fno-strict-aliasing should be used to compile.
+ncx.lo: LTCOMPILE += -fno-strict-aliasing
+
 $(M4_SRCS:.m4=.c): Makefile
 
 .m4.c:
