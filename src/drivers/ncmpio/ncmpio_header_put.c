@@ -30,7 +30,7 @@ static const char ncmagic2[] = {'C', 'D', 'F', 0x02};
 static const char ncmagic5[] = {'C', 'D', 'F', 0x05};
 
 /*----< hdr_put_NC_name() >--------------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_name(bufferinfo *pbp,
                 const char *name)
 {
@@ -60,7 +60,7 @@ hdr_put_NC_name(bufferinfo *pbp,
 }
 
 /*----< hdr_put_NC_dim() >---------------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_dim(bufferinfo   *pbp,
                const NC_dim *dimp)
 {
@@ -90,7 +90,7 @@ hdr_put_NC_dim(bufferinfo   *pbp,
 }
 
 /*----< hdr_put_NC_dimarray() >----------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_dimarray(bufferinfo        *pbp,
                     const NC_dimarray *ncap)
 {
@@ -147,7 +147,7 @@ hdr_put_NC_dimarray(bufferinfo        *pbp,
 /*
  * Put the values of an attribute
  */
-inline static int
+static int
 hdr_put_NC_attrV(bufferinfo    *pbp,
                  const NC_attr *attrp)
 {
@@ -188,7 +188,7 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
 }
 
 /*----< hdr_put_NC_attr() >--------------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_attr(bufferinfo    *pbp,
                 const NC_attr *attrp)
 {
@@ -228,7 +228,7 @@ hdr_put_NC_attr(bufferinfo    *pbp,
 }
 
 /*----< hdr_put_NC_attrarray() >---------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_attrarray(bufferinfo         *pbp,
                      const NC_attrarray *ncap)
 {

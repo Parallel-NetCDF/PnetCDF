@@ -49,7 +49,7 @@ include(`utils.m4')dnl
 /* How much space will 'nelems' of 'xtype' take in external representation.
  * Note the space is aligned in 4-byte boundary.
  */
-inline static MPI_Offset
+static MPI_Offset
 x_len_NC_attrV(nc_type    xtype,
                MPI_Offset nelems)
 {

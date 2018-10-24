@@ -34,7 +34,7 @@
 
 /*----< ncmpio_free_NC_var() >-----------------------------------------------*/
 /* Free NC_var object */
-inline void
+void
 ncmpio_free_NC_var(NC_var *varp)
 {
     if (varp == NULL) return;
@@ -117,7 +117,7 @@ dup_NC_var(const NC_var *rvarp)
 /* vararray */
 
 /*----< ncmpio_free_NC_vararray() >------------------------------------------*/
-inline void
+void
 ncmpio_free_NC_vararray(NC_vararray *ncap)
 {
     int i;
