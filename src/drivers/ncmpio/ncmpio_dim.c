@@ -112,7 +112,7 @@ NC_finddim(const NC_dimarray *ncap,
 /* dimarray */
 
 /*----< ncmpio_free_NC_dimarray() >------------------------------------------*/
-inline void
+void
 ncmpio_free_NC_dimarray(NC_dimarray *ncap)
 {
     int i;

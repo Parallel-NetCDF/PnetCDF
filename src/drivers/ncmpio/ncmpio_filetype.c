@@ -32,7 +32,7 @@
  * record variables, the stride across two records of a variable can be too
  * large for a 4-byte integer to represent.
  */
-inline static int
+static int
 check_recsize_too_big(MPI_Offset recsize)
 {
     int ret = NC_NOERR;

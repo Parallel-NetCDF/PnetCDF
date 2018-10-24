@@ -119,7 +119,7 @@ hdr_len_NC_name(const NC_string *ncstrp, int sizeof_NON_NEG)
 #endif
 
 /*----< hdr_len_NC_dim() >---------------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_dim(const NC_dim *dimp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
@@ -172,7 +172,7 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap, int sizeof_NON_NEG)
 }
 
 /*----< hdr_len_NC_attr() >--------------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_attr(const NC_attr *attrp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
