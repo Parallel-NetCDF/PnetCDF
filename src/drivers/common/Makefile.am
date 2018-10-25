@@ -48,7 +48,11 @@ nodist_libcommon_la_SOURCES = $(M4_SRCS:.m4=.c)
 # put_ix_float / get_ix_float are used. That's why the file was miscompiled.
 # The file should either be changed to follow strict ANSI C aliasing, or
 # -fno-strict-aliasing should be used to compile.
+if MPICC_IS_PGCC
+ncx.lo: LTCOMPILE += -alias=traditional
+else
 ncx.lo: LTCOMPILE += -fno-strict-aliasing
+endif
 
 $(M4_SRCS:.m4=.c): Makefile
 

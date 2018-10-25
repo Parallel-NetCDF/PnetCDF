@@ -279,6 +279,10 @@ AC_SYS_LARGEFILE
 
 dnl UD_PROG_CC_MAKEDEPEND
 
+dnl Check if MPICC compiler is pgcc based
+UD_CHECK_PGCC
+AM_CONDITIONAL(MPICC_IS_PGCC, [test "x${ac_cv_cc_compiler_pgcc}" = xyes])
+
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([malloc.h])
 
