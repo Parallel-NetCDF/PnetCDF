@@ -12,7 +12,7 @@ This is essentially a placeholder for the next release note ...
     adding command-line option `--enable-thread-safe` at configure time. In
     addition, option `--with-pthread` can be used to specify the path to the
     pthreads library. This feature currently only supports one-thread-per-file
-    I/O operations.
+    I/O operations and the classic CDF-1, 2, and 5 files.
 
 * New optimization
   + none
@@ -82,6 +82,12 @@ This is essentially a placeholder for the next release note ...
     burst buffers for each user write request.
 
 * Bug fixes
+  + When building PnetCDF using the IBM xlc compiler with -O optimization
+    option on Little Endian platforms, users may encounter errors related to
+    strict ANSI C aliasing rules. Thanks to Jim Edwards for reporting and Rafik
+    Zurob for providing the fix. See
+    [Issue #23](https://github.com/Parallel-NetCDF/PnetCDF/issues/23) and
+    [Pull Request #24](https://github.com/Parallel-NetCDF/PnetCDF/issues/24).
   + Shell ksh has a different way to redirect stdout and stderr from bash.
     PnetCDF configure.ac and acinclude.m4 have been developed mainly on bash.
     This bug can cause configure command to fail when using ksh. Thanks to

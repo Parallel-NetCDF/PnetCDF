@@ -283,6 +283,10 @@ dnl Check if MPICC compiler is pgcc based
 UD_CHECK_PGCC
 AM_CONDITIONAL(MPICC_IS_PGCC, [test "x${ac_cv_cc_compiler_pgcc}" = xyes])
 
+dnl Check if MPICC compiler is Fujitsu fccpx based
+UD_CHECK_FCCPX
+AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_cc_compiler_fccpx}" = xyes])
+
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([malloc.h])
 
