@@ -1552,6 +1552,24 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
     AC_LANG_POP([Fortran 77])
 ])
 
+dnl Check if MPI compiler is Fujitsu fccpx based
+dnl According to mpifccpx manual the command-line option to should version is
+dnl -showme
+dnl
+dnl % mpifccpx --showme
+dnl /opt/FJSVtclang/GM-1.2.0-24/bin/fccpx -Kident_mpi -mt ...
+dnl
+AC_DEFUN([UD_CHECK_FCCPX],[
+    AC_CACHE_CHECK([if C compiler is Fujitsu fccpx], [ac_cv_cc_compiler_fccpx],
+    [ac_cv_cc_compiler_fccpx=no
+     _CC_VENDOR=`$MPICC --showme 2> /dev/null | cut -d' ' -f1 | xargs -r basename`
+     if test "x${_CC_VENDOR}" = xfccpx ; then
+        ac_cv_cc_compiler_fccpx=yes
+     fi
+     unset _CC_VENDOR
+    ])
+])
+
 dnl Check if MPI compiler is pgcc based
 dnl According to pgcc manual the command-line option to should version is -V
 dnl
@@ -1564,13 +1582,13 @@ dnl
 AC_DEFUN([UD_CHECK_PGCC],[
     AC_CACHE_CHECK([if C compiler is pgcc], [ac_cv_cc_compiler_pgcc],
     [ac_cv_cc_compiler_pgcc=no
-     _PGCC_VER=`$MPICC -V -c </dev/null`
-     _PGCC_VENDOR=`echo $_PGCC_VER | cut -d' ' -f1`
-     if test "x${_PGCC_VENDOR}" = xpgcc ; then
+     _CC_VER=`$MPICC -V -c 2> /dev/null`
+     _CC_VENDOR=`echo $_PGCC_VER | cut -d' ' -f1`
+     if test "x${_CC_VENDOR}" = xpgcc ; then
         ac_cv_cc_compiler_pgcc=yes
      fi
-     unset _PGCC_VER
-     unset _PGCC_VENDOR
+     unset _CC_VER
+     unset _CC_VENDOR
     ])
 ])
 

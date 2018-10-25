@@ -51,7 +51,13 @@ nodist_libcommon_la_SOURCES = $(M4_SRCS:.m4=.c)
 if MPICC_IS_PGCC
 ncx.lo: LTCOMPILE += -alias=traditional
 else
+if MPICC_IS_FCCPX
+# Fujitsu fccpx and mpifccpx uses -Knomemalias, or -Xg -fno-strict-aliasing
+ncx.lo: LTCOMPILE += -Knomemalias
+else
+# GNU gcc, Intel icc, IBM xlc
 ncx.lo: LTCOMPILE += -fno-strict-aliasing
+endif
 endif
 
 $(M4_SRCS:.m4=.c): Makefile
