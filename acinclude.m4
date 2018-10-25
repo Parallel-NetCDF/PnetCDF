@@ -1552,6 +1552,28 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
     AC_LANG_POP([Fortran 77])
 ])
 
+dnl Check if MPI compiler is pgcc based
+dnl According to pgcc manual the command-line option to should version is -V
+dnl
+dnl % pgcc -V
+dnl
+dnl pgcc 16.9-0 64-bit target on x86-64 Linux -tp p7 
+dnl The Portland Group - PGI Compilers and Tools
+dnl Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+dnl
+AC_DEFUN([UD_CHECK_PGCC],[
+    AC_CACHE_CHECK([if C compiler is pgcc], [ac_cv_cc_compiler_pgcc],
+    [ac_cv_cc_compiler_pgcc=no
+     _PGCC_VER=`$MPICC -V -c </dev/null`
+     _PGCC_VENDOR=`echo $_PGCC_VER | cut -d' ' -f1`
+     if test "x${_PGCC_VENDOR}" = xpgcc ; then
+        ac_cv_cc_compiler_pgcc=yes
+     fi
+     unset _PGCC_VER
+     unset _PGCC_VENDOR
+    ])
+])
+
 dnl Check if Fortran 77 compiler is pgf77
 dnl According to pgf77 manual the command-line option to should version is -V
 dnl
