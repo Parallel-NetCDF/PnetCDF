@@ -35,7 +35,8 @@ check_PROGRAMS = collective_write \
                  fill_mode \
                  ghost_cell \
                  req_all \
-                 vard_mvars
+                 vard_mvars \
+                 time_var
 
 if ENABLE_THREAD_SAFE
    check_PROGRAMS += pthread

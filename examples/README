@@ -332,3 +332,7 @@ with C, C++, F77, and F90 versions.
   This program shows an example of using one-file-per-thread I/O operation when
   the thread-safe capability is enabled.
 
+  ./C/time_var.c
+./F77/time_var.f
+  These examples show how to define, write, and read record variables.
+

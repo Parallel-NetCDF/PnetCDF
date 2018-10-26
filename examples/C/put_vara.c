@@ -7,9 +7,9 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use ncmpi_put_vara_int_all() to write a 2D
- * 4-byte integer array in parallel. It first defines a netCDF variable of
- * size global_nx * global_ny where
+ * This example shows how to use ncmpi_put_vara_int_all() to write a 2D 4-byte
+ * integer array in parallel. It first defines a netCDF variable of size
+ * global_ny * global_nx where
  *    global_ny == NY and
  *    global_nx == (NX * number of MPI processes).
  * The data partitioning pattern is a column-wise partitioning across all
@@ -19,7 +19,7 @@
  *        mpicc -O2 put_vara.c -o put_vara -lpnetcdf
  *
  * Example commands for MPI run and outputs from running ncmpidump on the
- * NC file produced by this example program:
+ * output netCDF file produced by this example program:
  *
  *    % mpiexec -n 4 ./put_vara /pvfs2/wkliao/testfile.nc
  *
