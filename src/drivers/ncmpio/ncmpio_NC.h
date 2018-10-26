@@ -346,10 +346,11 @@ struct NC {
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
 #endif
-    int           striping_unit; /* file stripe size of the file */
+    int           striping_unit; /* stripe size of the file */
     int           chunk;       /* chunk size for reading header */
-    MPI_Offset    h_align;     /* file alignment for header */
-    MPI_Offset    v_align;     /* file alignment for each fixed variable */
+    MPI_Offset    h_align;     /* file alignment for header size */
+    MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
+    MPI_Offset    fx_v_align;  /* file alignment for each fixed-size variable */
     MPI_Offset    r_align;     /* file alignment for record variable section */
     MPI_Offset    h_minfree;   /* pad at the end of the header section */
     MPI_Offset    v_minfree;   /* pad at the end of the data section for fixed-size variables */

@@ -72,6 +72,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
+  + The automatic file layout alignment for fixed-size variables is disabled.
+    This is because modern MPI-IO implementations have already aligned the file
+    access with the file lock boundaries and the automatic alignment can create
+    a file view with "holes" in between variables, which can adversely degrade
+    I/O performance.
   + The internal data buffering mechanism used in the burst buffer driver is
     removed. This mechanism caches the request data in memory until the
     accumulated size is more than 8 MiB, so the write requests to burst buffers
