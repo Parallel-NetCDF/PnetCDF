@@ -236,12 +236,12 @@ int main(int argc, char **argv)
     TEST_CDF_FORMAT(NC_FORMAT_CLASSIC)
     TEST_CDF_FORMAT(NC_FORMAT_64BIT_OFFSET)
     TEST_CDF_FORMAT(NC_FORMAT_64BIT_DATA)
-#ifdef ENABLE_NETCDF4
     if (!bb_enabled) {
+#ifdef ENABLE_NETCDF4
         TEST_CDF_FORMAT(NC_FORMAT_NETCDF4_CLASSIC)
         TEST_CDF_FORMAT(NC_FORMAT_NETCDF4)
-    }
 #endif
+    }
 
     free(cbuf);
     free(buf);
