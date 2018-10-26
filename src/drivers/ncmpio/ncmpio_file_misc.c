@@ -388,7 +388,7 @@ ncmpio_inq_misc(void       *ncdp,
         sprintf(value, "%lld", ncp->h_align);
         MPI_Info_set(*info_used, "nc_header_align_size", value);
 
-        sprintf(value, "%lld", ncp->v_align);
+        sprintf(value, "%lld", ncp->fx_v_align);
         MPI_Info_set(*info_used, "nc_var_align_size", value);
 
         sprintf(value, "%lld", ncp->r_align);
