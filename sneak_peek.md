@@ -117,6 +117,8 @@ This is essentially a placeholder for the next release note ...
     and open subroutines. See bug fix committed on Jul 21, 2018.
 
 * New example programs
+  + examples/C/time_var.c and examples/F77/time_var.f - show how to define,
+    write, and read record variables.
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
     When running on some parallel machines, users may need to set certain
     environment variable to enable MPI multi-threading support, for example on
