@@ -37,7 +37,7 @@
 
 int main(int argc, char** argv) {
     char filename[256], value[MPI_MAX_INFO_VAL], stderr_buf[BUFSIZ];
-    int ncid1, ncid2, rank, err, nerrs=0, len, flag;
+    int ncid1, ncid2, rank, err, nerrs=0, len, flag, varid;
     MPI_Offset header_size, header_extent, expect;
     MPI_Info info, info_used;
 
@@ -88,7 +88,11 @@ int main(int argc, char** argv) {
 
     MPI_Info_free(&info);
 
-    /* calling ncmpi_enddef() to actually create the file */
+    err = ncmpi_def_var(ncid1, "var", NC_INT, 0, NULL, &varid); CHECK_ERR
+
+    err = ncmpi_def_var(ncid2, "var", NC_INT, 0, NULL, &varid); CHECK_ERR
+
+    /* calling ncmpi_enddef() to write the file header */
     err = ncmpi_enddef(ncid2); CHECK_ERR
 
     /* NULL argument test */

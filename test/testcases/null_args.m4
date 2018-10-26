@@ -352,12 +352,12 @@ int main(int argc, char **argv)
 
     nerrs += test_format_nc1(filename);
     nerrs += test_format_nc2(filename);
-#ifdef ENABLE_NETCDF4
     if (!bb_enabled) {
+#ifdef ENABLE_NETCDF4
         nerrs += test_format_nc3(filename);
         nerrs += test_format_nc4(filename);
-    }
 #endif
+    }
     nerrs += test_format_nc5(filename);
 
     /* check if PnetCDF freed all internal malloc */

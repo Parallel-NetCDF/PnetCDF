@@ -180,24 +180,24 @@ int main(int argc, char *argv[])
     setenv("PNETCDF_SAFE_MODE", "0", 1);
     nerrs += test_collective_error(filename, 0, 0);
     nerrs += test_collective_error(filename, 0, NC_64BIT_OFFSET);
-#ifdef ENABLE_NETCDF4
     if (!bb_enabled) {
+#ifdef ENABLE_NETCDF4
         nerrs += test_collective_error(filename, 0, NC_NETCDF4);
         nerrs += test_collective_error(filename, 0, NC_NETCDF4 | NC_CLASSIC_MODEL);
-    }
 #endif
+    }
     nerrs += test_collective_error(filename, 0, NC_64BIT_DATA);
 
     /* test in safe mode */
     setenv("PNETCDF_SAFE_MODE", "1", 1);
     nerrs += test_collective_error(filename, 1, 0);
     nerrs += test_collective_error(filename, 1, NC_64BIT_OFFSET);
-#ifdef ENABLE_NETCDF4
     if (!bb_enabled) {
+#ifdef ENABLE_NETCDF4
         nerrs += test_collective_error(filename, 1, NC_NETCDF4);
         nerrs += test_collective_error(filename, 1, NC_NETCDF4 | NC_CLASSIC_MODEL);
-    }
 #endif
+    }
     nerrs += test_collective_error(filename, 1, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */

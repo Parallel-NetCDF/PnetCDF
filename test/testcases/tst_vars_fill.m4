@@ -170,8 +170,8 @@ int main(int argc, char **argv)
     foreach(`itype', (schar,short,int,float,double), `
     _CAT(`nerrs += test_vars_',itype)'`(filename);')
 
-#ifdef ENABLE_NETCDF4
     if (!bb_enabled) {
+#ifdef ENABLE_NETCDF4
         ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, NULL);
         foreach(`itype', (schar,short,int,float,double), `
         _CAT(`nerrs += test_vars_',itype)'`(filename);')
@@ -179,8 +179,8 @@ int main(int argc, char **argv)
         ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
         foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
         _CAT(`nerrs += test_vars_',itype)'`(filename);')
-    }
 #endif
+    }
 
     ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
     foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
