@@ -122,7 +122,9 @@ ncadios_open(MPI_Comm     comm,
     ncadiosi_att_list_init(&(ncadp->atts));
     ncadiosi_dim_list_init(&(ncadp->dims));
 
-    ncadiosi_parse_header(ncadp);
+    if (ncadp->rank == 0) {
+        ncadiosi_parse_header(ncadp);
+    }
 
     /* Open with adios */
     ncadp->fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, comm);
@@ -131,6 +133,13 @@ ncadios_open(MPI_Comm     comm,
         printf ("%s\n", adios_errmsg());
         return -1;
     }
+
+    if (ncadp->rank == 0) {
+        // This require fp be opened
+        ncadiosi_parse_attrs(ncadp);
+    }
+    ncadios_sync_header(ncadp);
+
 
     /* Build dimensionality list */
     ncadp->ndims = (int*)NCI_Malloc(sizeof(int) * ncadp->fp->nvars);

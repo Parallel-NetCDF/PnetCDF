@@ -50,7 +50,7 @@ ncadios_inq_dimid(void       *ncdp,
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    return ncadiosi_inq_dimid(ncadp, name, dimid);
+    return ncadiosi_inq_dimid(ncadp, (char*)name, dimid);
 }
 
 int

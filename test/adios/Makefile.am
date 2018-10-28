@@ -30,7 +30,9 @@ NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
 TESTPROGRAMS = open \
-			   header
+			   header \
+			   var \
+			   att
 
 M4_SRCS  = 
 

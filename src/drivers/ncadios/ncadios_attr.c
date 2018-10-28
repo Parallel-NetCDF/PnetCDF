@@ -78,7 +78,51 @@ ncadios_inq_attid(void       *ncdp,
     int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    return ncadiosi_inq_attid(ncadp, varid, name, attidp);
+    if (varid == NC_GLOBAL){
+        for(i = 0; i < ncadp->fp->nattrs; i++){
+            if (strcmp(name, ncadp->fp->attr_namelist[i]) == 0){
+                if (attidp != NULL){
+                    *attidp = i;
+                }
+                break;
+            }
+        }
+
+        // Name not found
+        if (i >= ncadp->fp->nattrs){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+    }
+    else{
+        char attname[1024];
+        NC_ad_var var;
+
+        if (varid > ncadp->vars.cnt){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+        var = ncadp->vars.data[varid];
+
+        sprintf(attname, "/%s/%s", var.name, name);
+
+
+        for (i = 0; i < ncadp->fp->nattrs; i++){
+            if (strcmp(ncadp->fp->attr_namelist[i], attname) == 0){
+                if (attidp != NULL){
+                    *attidp = ncadiosi_att_list_find(&(var.atts), i);
+                }
+                break;
+            }
+        }
+        
+        // Name not found
+        if (i >= ncadp->fp->nattrs){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+    }
+
+    return NC_NOERR;
+
+    //return ncadiosi_inq_attid(ncadp, varid, name, attidp);
 }
 
 int
@@ -94,29 +138,35 @@ ncadios_inq_att(void       *ncdp,
     NC_ad_att att;
     
     if (varid == NC_GLOBAL){
-        attid = ncadiosi_att_list_find(&(ncadp->atts), name);
-        if (attid < 0){
-            DEBUG_RETURN_ERROR(NC_EINVAL);
-        }
-        att = ncadp->atts.data[attid];
+        err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
     }
     else{
+        char attname[1024];
         if (varid >= ncadp->vars.cnt){
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
-        attid = ncadiosi_att_list_find(&(ncadp->vars.data[varid].atts), name);
-        if (attid < 0){
-            DEBUG_RETURN_ERROR(NC_EINVAL);
-        }
-        att = ncadp->vars.data[varid].atts.data[attid];
+        sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
+        err = adios_get_attr(ncadp->fp, attname, &atype, &asize, &adata);
     }
 
+    if (err != 0){
+        //TODO: translate adios error
+        return err;
+    }
+
+    tsize = adios_type_size(atype, adata);
+
     if (datatypep != NULL){
-        *datatypep = att.type;
+        *datatypep = ncadios_to_nc_type(atype);
     }
 
     if (lenp != NULL){
-        *lenp = att.len;
+        if (atype == adios_string){
+            *lenp = (MPI_Offset)asize;
+        }
+        else{
+            *lenp = (MPI_Offset)asize / tsize;
+        }
     }
 
     return NC_NOERR;
@@ -182,6 +232,33 @@ ncadios_get_att(void         *ncdp,
     NC_ad_att att;
     MPI_Datatype xtype;
     
+    if (varid == NC_GLOBAL){
+        err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
+    }
+    else{
+        char attname[1024];
+        if (varid >= ncadp->vars.cnt){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+        sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
+        err = adios_get_attr(ncadp->fp, attname, &atype, &asize, &adata);
+    }
+    if (err != 0){
+        //TODO: translate adios error
+        return err;
+    }
+
+    xtype = ncadios_to_mpi_type(atype);
+    if (xtype != itype){
+        esize = adios_type_size (atype, adata);
+        nelems = asize / esize;
+        ncadiosiconvert(adata, buf, xtype, itype, nelems);
+    }
+    else{
+        memcpy(buf, adata, asize);
+    }
+
+    /*
     if (varid == NC_GLOBAL){
         attid = ncadiosi_att_list_find(&(ncadp->atts), name);
         if (attid < 0){
