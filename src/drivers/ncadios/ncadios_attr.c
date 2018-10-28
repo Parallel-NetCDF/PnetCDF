@@ -97,6 +97,9 @@ ncadios_inq_attid(void       *ncdp,
     NC_ad *ncadp = (NC_ad*)ncdp;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 23ad299... parse var attributes
     if (varid == NC_GLOBAL){
         for(i = 0; i < ncadp->fp->nattrs; i++){
             if (strcmp(name, ncadp->fp->attr_namelist[i]) == 0){
@@ -107,7 +110,11 @@ ncadios_inq_attid(void       *ncdp,
             }
         }
 
+<<<<<<< HEAD
         /* Name not found */
+=======
+        // Name not found
+>>>>>>> 23ad299... parse var attributes
         if (i >= ncadp->fp->nattrs){
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
@@ -121,6 +128,7 @@ ncadios_inq_attid(void       *ncdp,
         }
         var = ncadp->vars.data[varid];
 
+<<<<<<< HEAD
         /* ADIOS read expose all attributes as global attributes
          * Variable attributes are represented by path starting with variable 
          * name
@@ -128,6 +136,10 @@ ncadios_inq_attid(void       *ncdp,
          * full path or as variable attributes using only attribute name
          */
         sprintf(attname, "%s/%s", var.name, name);
+=======
+        sprintf(attname, "/%s/%s", var.name, name);
+
+>>>>>>> 23ad299... parse var attributes
 
         for (i = 0; i < ncadp->fp->nattrs; i++){
             if (strcmp(ncadp->fp->attr_namelist[i], attname) == 0){
@@ -138,7 +150,11 @@ ncadios_inq_attid(void       *ncdp,
             }
         }
         
+<<<<<<< HEAD
         /* Name not found */
+=======
+        // Name not found
+>>>>>>> 23ad299... parse var attributes
         if (i >= ncadp->fp->nattrs){
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
@@ -164,7 +180,30 @@ ncadios_inq_att(void       *ncdp,
     
     if (varid == NC_GLOBAL){
 <<<<<<< HEAD
+<<<<<<< HEAD
         err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
+=======
+        err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
+    }
+    else{
+        char attname[1024];
+        if (varid >= ncadp->vars.cnt){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+        sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
+        err = adios_get_attr(ncadp->fp, attname, &atype, &asize, &adata);
+    }
+
+    if (err != 0){
+        //TODO: translate adios error
+        return err;
+    }
+
+    tsize = adios_type_size(atype, adata);
+
+    if (datatypep != NULL){
+        *datatypep = ncadios_to_nc_type(atype);
+>>>>>>> 23ad299... parse var attributes
     }
     else{
         char attname[1024];
@@ -181,6 +220,7 @@ ncadios_inq_att(void       *ncdp,
         sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
         err = adios_get_attr(ncadp->fp, attname, &atype, &asize, &adata);
     }
+<<<<<<< HEAD
     if (err != 0){
         err = ncmpii_error_adios2nc(adios_errno, "get_attr");
         DEBUG_RETURN_ERROR(err);
@@ -212,6 +252,8 @@ ncadios_inq_att(void       *ncdp,
     }
 
     free(adata);
+=======
+>>>>>>> 23ad299... parse var attributes
 
     return NC_NOERR;
 }
@@ -259,6 +301,36 @@ ncadios_get_att(void         *ncdp,
     NC_ad *ncadp = (NC_ad*)ncdp;
     MPI_Datatype xtype;
     
+<<<<<<< HEAD
+=======
+    if (varid == NC_GLOBAL){
+        err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
+    }
+    else{
+        char attname[1024];
+        if (varid >= ncadp->vars.cnt){
+            DEBUG_RETURN_ERROR(NC_EINVAL);
+        }
+        sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
+        err = adios_get_attr(ncadp->fp, attname, &atype, &asize, &adata);
+    }
+    if (err != 0){
+        //TODO: translate adios error
+        return err;
+    }
+
+    xtype = ncadios_to_mpi_type(atype);
+    if (xtype != itype){
+        esize = adios_type_size (atype, adata);
+        nelems = asize / esize;
+        ncadiosiconvert(adata, buf, xtype, itype, nelems);
+    }
+    else{
+        memcpy(buf, adata, asize);
+    }
+
+    /*
+>>>>>>> 23ad299... parse var attributes
     if (varid == NC_GLOBAL){
         err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
     }

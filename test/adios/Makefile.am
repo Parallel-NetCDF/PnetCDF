@@ -31,6 +31,7 @@ NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
 TESTPROGRAMS = open \
 <<<<<<< HEAD
+<<<<<<< HEAD
 			   header \
 			   var \
 			   ivar \
@@ -43,6 +44,11 @@ TESTPROGRAMS = open \
 =======
 			   header
 >>>>>>> 272f00a... header sync test
+=======
+			   header \
+			   var \
+			   att
+>>>>>>> 23ad299... parse var attributes
 
 M4_SRCS  = 
 

@@ -59,9 +59,13 @@ int ncadios_sync_header(NC_ad *ncadp) {
             bsize += strlen(ncadp->dims.data[i].name) + 1 + SIZEOF_INT * 2;
         }
         for(i = 0; i < ncadp->vars.cnt; i++){
+<<<<<<< HEAD
             bsize += strlen(ncadp->vars.data[i].name) + 1 + 
             SIZEOF_INT * 3 + ncadp->vars.data[i].ndim * SIZEOF_INT + 
             ncadp->vars.data[i].atts.cnt * SIZEOF_INT + sizeof(nc_type);
+=======
+            bsize += strlen(ncadp->vars.data[i].name) + 1 + sizeof(int) * 3 + ncadp->vars.data[i].ndim * sizeof(int) + ncadp->vars.data[i].atts.cnt * sizeof(int) + sizeof(nc_type);
+>>>>>>> 23ad299... parse var attributes
         }
     }
     
@@ -88,17 +92,27 @@ int ncadios_sync_header(NC_ad *ncadp) {
             *((nc_type*)cur) = ncadp->vars.data[i].type;
             cur += sizeof(nc_type);
             *((int*)cur) = ncadp->vars.data[i].ndim;
+<<<<<<< HEAD
             cur += SIZEOF_INT;
             *((int*)cur) = ncadp->vars.data[i].atts.cnt;
             cur += SIZEOF_INT;
+=======
+            cur += sizeof(int);
+            *((int*)cur) = ncadp->vars.data[i].atts.cnt;
+            cur += sizeof(int);
+>>>>>>> 23ad299... parse var attributes
             namelen = strlen(ncadp->vars.data[i].name);
             *((int*)cur) = namelen;
             cur += SIZEOF_INT;
             memcpy(cur, ncadp->vars.data[i].dimids, 
                     ncadp->vars.data[i].ndim * SIZEOF_INT);
             cur += ncadp->vars.data[i].ndim * 4;
+<<<<<<< HEAD
             memcpy(cur, ncadp->vars.data[i].atts.data, 
                     ncadp->vars.data[i].atts.cnt * SIZEOF_INT);
+=======
+            memcpy(cur, ncadp->vars.data[i].atts.data, ncadp->vars.data[i].atts.cnt * sizeof(int));
+>>>>>>> 23ad299... parse var attributes
             cur += ncadp->vars.data[i].atts.cnt * 4;
             strcpy(cur, ncadp->vars.data[i].name);
             cur += namelen + 1;         
@@ -134,21 +148,37 @@ int ncadios_sync_header(NC_ad *ncadp) {
             type = *((nc_type*)cur);
             cur += sizeof(nc_type);
             ndim = *((int*)cur);
+<<<<<<< HEAD
             cur += SIZEOF_INT;
             natt = *((int*)cur);
             cur += SIZEOF_INT;
+=======
+            cur += sizeof(int);
+            natt = *((int*)cur);
+            cur += sizeof(int);
+>>>>>>> 23ad299... parse var attributes
             namelen = *((int*)cur);
             cur += SIZEOF_INT;
             dimids = (int*)cur;
+<<<<<<< HEAD
             cur += ndim * SIZEOF_INT;
             attids = (int*)cur;
             cur += natt * SIZEOF_INT;
+=======
+            cur += ndim * sizeof(int);
+            attids = (int*)cur;
+            cur += natt * sizeof(int);
+>>>>>>> 23ad299... parse var attributes
             name = cur;
             cur += namelen + 1;   
             ncadiosi_def_var(ncadp, name, type, ndim, dimids, &id);
             for(j = 0; j < natt; j++){
                 ncadiosi_att_list_add(&(ncadp->vars.data[id].atts), attids[j]);
             }
+<<<<<<< HEAD
+=======
+            //printf("def_var(%s, %d, %d), namelen = %d\n", name, type, ndim, namelen);
+>>>>>>> 23ad299... parse var attributes
         }
         
     }

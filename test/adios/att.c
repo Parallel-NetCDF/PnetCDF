@@ -28,15 +28,28 @@
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 
 int main(int argc, char** argv) {
+<<<<<<< HEAD
     int nerrs=0, rank, nprocs, err;
     int ncid, vid, natt;
     char data[1024];
 
+=======
+    int i, j, nerrs=0, rank, nprocs, err;
+    int ncid, vid, natt;
+    int dimids[2];
+    MPI_Offset start[2], count[2];
+    char data[1024];
+
+    MPI_Offset dlen;
+    char tmp[1024];
+    int x, y;
+>>>>>>> 23ad299... parse var attributes
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+<<<<<<< HEAD
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str,
@@ -48,6 +61,9 @@ int main(int argc, char** argv) {
 
     err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, 
                         &ncid);
+=======
+    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+>>>>>>> 23ad299... parse var attributes
     CHECK_ERR
 
     err = ncmpi_inq_natts(ncid, &natt); CHECK_ERR
@@ -55,6 +71,7 @@ int main(int argc, char** argv) {
         printf("Rank %d: Expect global atts = %d, but got %d\n", rank, 4, natt);
         nerrs++;
     }
+<<<<<<< HEAD
     err = ncmpi_get_att_int(ncid, NC_GLOBAL, "temperature/number of levels", 
                             (int*)data); CHECK_ERR
     if (*((int*)data) != 1){
@@ -81,6 +98,26 @@ int main(int argc, char** argv) {
     if (strcmp(data, "Nov, 2009") != 0){
         printf("Rank %d: Expect global att 3 = %s, but got %s\n", rank, 
                 "Nov, 2009", data);
+=======
+    err = ncmpi_get_att_int(ncid, NC_GLOBAL, "temperature/number of levels", (int*)data); CHECK_ERR
+    if (*((int*)data) != 1){
+        printf("Rank %d: Expect global att 0 = %d, but got %d\n", rank, 1, *((int*)data));
+        nerrs++;
+    }
+    err = ncmpi_get_att_text(ncid, NC_GLOBAL, "temperature/description",  data); CHECK_ERR
+    if (strcmp(data, "Global array written from 'size' processes") != 0){
+        printf("Rank %d: Expect global att 1 = %s, but got %s\n", rank, "Global array written from 'size' processes", data);
+        nerrs++;
+    }
+    err = ncmpi_get_att_double(ncid, NC_GLOBAL, "temperature/mean value", (double*)data); CHECK_ERR
+    if (*((double*)data) != 4.5){
+        printf("Rank %d: Expect global att 2 = %lf, but got %lf\n", rank, 4.5, *((double*)data));
+        nerrs++;
+    }
+    err = ncmpi_get_att_text(ncid, NC_GLOBAL, "temperature/date of coding",  data); CHECK_ERR
+    if (strcmp(data, "Nov, 2009") != 0){
+        printf("Rank %d: Expect global att 3 = %s, but got %s\n", rank, "Nov, 2009", data);
+>>>>>>> 23ad299... parse var attributes
         nerrs++;
     }
 
@@ -88,6 +125,7 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_varnatts(ncid, vid, &natt); CHECK_ERR
     if (natt != 4){
+<<<<<<< HEAD
         printf("Rank %d: Expect var %d atts = %d, but got %d\n", rank, vid, 4, 
                 natt);
         nerrs++;
@@ -97,10 +135,19 @@ int main(int argc, char** argv) {
     if (*((int*)data) != 1){
         printf("Rank %d: Expect var %d att 0 = %d, but got %d\n", rank, vid, 1, 
                 *((int*)data));
+=======
+        printf("Rank %d: Expect var %d atts = %d, but got %d\n", rank, vid, 4, natt);
+        nerrs++;
+    }
+    err = ncmpi_get_att_int(ncid, vid, "number of levels", (int*)data); CHECK_ERR
+    if (*((int*)data) != 1){
+        printf("Rank %d: Expect var %d att 0 = %d, but got %d\n", rank, vid, 1, *((int*)data));
+>>>>>>> 23ad299... parse var attributes
         nerrs++;
     }
     err = ncmpi_get_att_text(ncid, vid, "description",  data); CHECK_ERR
     if (strcmp(data, "Global array written from 'size' processes") != 0){
+<<<<<<< HEAD
         printf("Rank %d: Expect var %d att 1 = %s, but got %s\n", rank, vid, 
                 "Global array written from 'size' processes", data);
         nerrs++;
@@ -110,17 +157,33 @@ int main(int argc, char** argv) {
     if (*((double*)data) != 4.5){
         printf("Rank %d: Expect var %d att 2 = %lf, but got %lf\n", rank, vid, 
                 4.5, *((double*)data));
+=======
+        printf("Rank %d: Expect var %d att 1 = %s, but got %s\n", rank, vid, "Global array written from 'size' processes", data);
+        nerrs++;
+    }
+    err = ncmpi_get_att_double(ncid, vid, "mean value", (double*)data); CHECK_ERR
+    if (*((double*)data) != 4.5){
+        printf("Rank %d: Expect var %d att 2 = %lf, but got %lf\n", rank, vid, 4.5, *((double*)data));
+>>>>>>> 23ad299... parse var attributes
         nerrs++;
     }
     err = ncmpi_get_att_text(ncid, vid, "date of coding",  data); CHECK_ERR
     if (strcmp(data, "Nov, 2009") != 0){
+<<<<<<< HEAD
         printf("Rank %d: Expect var %d att 3 = %s, but got %s\n", rank, vid, 
                 "Nov, 2009", data);
+=======
+        printf("Rank %d: Expect var %d att 3 = %s, but got %s\n", rank, vid, "Nov, 2009", data);
+>>>>>>> 23ad299... parse var attributes
         nerrs++;
     }
 
     ncmpi_close(ncid);
 
+<<<<<<< HEAD
+=======
+fn_exit:
+>>>>>>> 23ad299... parse var attributes
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);

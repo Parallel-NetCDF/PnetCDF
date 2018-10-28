@@ -108,6 +108,10 @@ ncadios_inq_var(void       *ncdp,
     }
 
     if (nattsp != NULL){
+<<<<<<< HEAD
+=======
+        // Every atts are global despite the path
+>>>>>>> 23ad299... parse var attributes
         *nattsp = var.atts.cnt;
     }
 

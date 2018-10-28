@@ -120,11 +120,19 @@ int ncadiosi_att_list_add(NC_ad_att_list *list, int data) {
 
     if (list->nalloc == 0){
         list->nalloc = 16;
+<<<<<<< HEAD
         list->data = NCI_Malloc(list->nalloc * SIZEOF_INT);
     }
     else if (list->nalloc == id){
         list->nalloc *= 2;
         list->data = NCI_Realloc(list->data, list->nalloc * SIZEOF_INT);
+=======
+        list->data = NCI_Malloc(list->nalloc * sizeof(int));
+    }
+    else if (list->nalloc == id){
+        list->nalloc *= 2;
+        list->data = NCI_Realloc(list->data, list->nalloc * sizeof(int));
+>>>>>>> 23ad299... parse var attributes
     }
 
     list->data[id] = data;

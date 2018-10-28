@@ -8,6 +8,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
 <<<<<<< HEAD
+<<<<<<< HEAD
  * This program check whether BP file header information are synbced accross 
  * processes properly
 =======
@@ -23,6 +24,10 @@
  *
  *    % mpiexec -l -n 1 add_var testfile.nc
 >>>>>>> 272f00a... header sync test
+=======
+ * This program check whether BP file header information are synbced accross 
+ * processes properly
+>>>>>>> 23ad299... parse var attributes
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include <stdio.h>
