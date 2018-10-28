@@ -41,7 +41,7 @@ int ncadiosi_var_list_free(NC_ad_var_list *list) {
         for(i = 0; i < list->cnt; i++){
             NCI_Free(list->data[i].name);
             NCI_Free(list->data[i].dimids);
-            //ncadiosi_att_list_free(&(list->data[i].atts));
+            ncadiosi_att_list_free(&(list->data[i].atts));
         }
         NCI_Free(list->data);
     }
@@ -62,10 +62,6 @@ int ncadiosi_dim_list_free(NC_ad_dim_list *list) {
 int ncadiosi_att_list_free(NC_ad_att_list *list) {
     int i, j;
     if (list->nalloc > 0){
-        for(i = 0; i < list->cnt; i++){
-            NCI_Free(list->data[i].name);
-            NCI_Free(list->data[i].data);
-        }
         NCI_Free(list->data);
     }
     return NC_NOERR;
@@ -115,7 +111,7 @@ int ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data) {
     return id;
 }
 
-int ncadiosi_att_list_add(NC_ad_att_list *list, NC_ad_att data) {
+int ncadiosi_att_list_add(NC_ad_att_list *list, int data) {
     int id;
 
  //   return 0;
@@ -124,11 +120,11 @@ int ncadiosi_att_list_add(NC_ad_att_list *list, NC_ad_att data) {
 
     if (list->nalloc == 0){
         list->nalloc = 16;
-        list->data = NCI_Malloc(list->nalloc * sizeof(NC_ad_att));
+        list->data = NCI_Malloc(list->nalloc * sizeof(int));
     }
     else if (list->nalloc == id){
         list->nalloc *= 2;
-        list->data = NCI_Realloc(list->data, list->nalloc * sizeof(NC_ad_att));
+        list->data = NCI_Realloc(list->data, list->nalloc * sizeof(int));
     }
 
     list->data[id] = data;
@@ -161,11 +157,12 @@ int ncadiosi_dim_list_find(NC_ad_dim_list *list, char *name) {
     return -1;
 }
 
-int ncadiosi_att_list_find(NC_ad_att_list *list, char *name) {
+
+int ncadiosi_att_list_find(NC_ad_att_list *list, int data) {
     int i;
 
     for(i = 0; i < list->cnt; i++){
-        if (strcmp(name, list->data[i].name) == 0){
+        if (list->data[i] == data){
             return i;
         }
     }

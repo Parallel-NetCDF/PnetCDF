@@ -98,7 +98,7 @@ int ncd_attr_str_ds (NC_ad* ncid
         //    ncd_gen_name (fullname, path,name);
         //printf("\t attr_name:%s %d\n",fullname,valid);
     }
-    retval=ncadiosi_inq_attid(ncid,valid,fullname,&attid);
+    //retval=ncadiosi_inq_attid(ncid,valid,fullname,&attid);
     //printf("\tretval:%d attid=%d\n",retval,attid);
     //printf(DIVIDER);
     if (retval == NC_NOERR ) {
@@ -143,35 +143,35 @@ int ncd_attr_str_ds (NC_ad* ncid
         //printf("\t      XML: ");   
     switch (type) {
          case adios_unsigned_byte:
-            retval=ncadiosi_put_att_uchar(ncid,valid,fullname,NC_BYTE,len,value);
+            //retval=ncadiosi_put_att_uchar(ncid,valid,fullname,NC_BYTE,len,value);
             break;
          case adios_byte:
-            retval=ncadiosi_put_att_schar(ncid,valid,fullname,NC_BYTE,len,value);
+            //retval=ncadiosi_put_att_schar(ncid,valid,fullname,NC_BYTE,len,value);
             break;
          case adios_string:
             //printf("%s\n", (char *) value);    
-            retval=ncadiosi_put_att_text(ncid,valid,fullname, strlen(value),value);
+            //retval=ncadiosi_put_att_text(ncid,valid,fullname, strlen(value),value);
             break;
          case adios_short:
             //printf("\tvaule: %s\n", *(short *) value);    
-            retval=ncadiosi_put_att_short(ncid,valid,fullname,NC_SHORT,len,value);
+            //retval=ncadiosi_put_att_short(ncid,valid,fullname,NC_SHORT,len,value);
             ERR(retval); 
             break;
          case adios_integer:
             //printf("%d\n", *((int *) value));    
-            retval=ncadiosi_put_att_int(ncid,valid,fullname,NC_INT,len,value);
+            //retval=ncadiosi_put_att_int(ncid,valid,fullname,NC_INT,len,value);
             break;
          case adios_long:
             //printf("\tvaule: %s\n", *(long *) value);    
-            retval=ncadiosi_put_att_long(ncid,valid,fullname,NC_LONG,len,value);
+            //retval=ncadiosi_put_att_long(ncid,valid,fullname,NC_LONG,len,value);
             break;
          case adios_real:
             //printf("\tvaule: %s\n", *(float *) value);    
-            retval=ncadiosi_put_att_float(ncid,valid,fullname,NC_FLOAT,len,value);
+            //retval=ncadiosi_put_att_float(ncid,valid,fullname,NC_FLOAT,len,value);
             break;
          case adios_double:
             //printf("\tvaule: %s\n", *(double *) value);    
-            retval=ncadiosi_put_att_double(ncid,valid,fullname,NC_DOUBLE,len,value);
+            //retval=ncadiosi_put_att_double(ncid,valid,fullname,NC_DOUBLE,len,value);
             break;
          default:
             break;

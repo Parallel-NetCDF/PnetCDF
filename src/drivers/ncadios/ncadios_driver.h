@@ -24,15 +24,17 @@ typedef struct NC_ad_dim_list {
     int nalloc;
 } NC_ad_dim_list;
 
+/*
 typedef struct NC_ad_att {
     char *name;
     nc_type type;
     MPI_Offset len;
     void* data;
 } NC_ad_att;
+*/
 
 typedef struct NC_ad_att_list {
-    NC_ad_att *data;
+    int *data;
     int cnt;
     int nalloc;
 } NC_ad_att_list;
@@ -90,7 +92,7 @@ extern int
 ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data);
 
 extern int 
-ncadiosi_att_list_add(NC_ad_att_list *list, NC_ad_att data);
+ncadiosi_att_list_add(NC_ad_att_list *list, int data);
 
 extern int 
 ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data);
@@ -99,7 +101,7 @@ extern int
 ncadiosi_var_list_find(NC_ad_var_list *list, char *name);
 
 extern int 
-ncadiosi_att_list_find(NC_ad_att_list *list, char *name);
+ncadiosi_att_list_find(NC_ad_att_list *list, int data);
 
 extern int 
 ncadiosi_dim_list_find(NC_ad_dim_list *list, char *name);
@@ -118,6 +120,12 @@ ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimids, 
 
 extern int 
 ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id);
+
+extern int 
+ncadios_sync_header(NC_ad *ncadp);
+
+extern int 
+ncadiosi_parse_attrs(NC_ad *ncadp);
 
 extern int 
 ncadiosiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype outtype, int N);

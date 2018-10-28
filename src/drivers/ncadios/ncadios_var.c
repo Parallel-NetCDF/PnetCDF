@@ -80,7 +80,7 @@ ncadios_inq_varid(void       *ncdp,
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    return ncadiosi_inq_varid(ncadp, name, varid);
+    return ncadiosi_inq_varid(ncadp, (char*)name, varid);
 }
 
 int
@@ -116,7 +116,7 @@ ncadios_inq_var(void       *ncdp,
 
     if (nattsp != NULL){
         // Every atts are global despite the path
-        *nattsp = 0;
+        *nattsp = var.atts.cnt;
     }
 
     if (name != NULL){

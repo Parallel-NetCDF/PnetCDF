@@ -7,7 +7,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program try openiing a simple adios BP file
+ * This program verify variable read capability of adios driver
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include <stdio.h>

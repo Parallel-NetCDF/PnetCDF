@@ -47,7 +47,7 @@
 #include <ncadios_driver.h>
 
 int ncadios_sync_header(NC_ad *ncadp) {
-    int i;
+    int i, j;
     int bsize;
     int namelen;
     char *buf, *cur;
@@ -58,7 +58,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
             bsize += strlen(ncadp->dims.data[i].name) + 1 + sizeof(int) * 2;
         }
         for(i = 0; i < ncadp->vars.cnt; i++){
-            bsize += strlen(ncadp->vars.data[i].name) + 1 + sizeof(int) * 2 + ncadp->vars.data[i].ndim * sizeof(int) + sizeof(nc_type);
+            bsize += strlen(ncadp->vars.data[i].name) + 1 + sizeof(int) * 3 + ncadp->vars.data[i].ndim * sizeof(int) + ncadp->vars.data[i].atts.cnt * sizeof(int) + sizeof(nc_type);
         }
     }
     
@@ -86,11 +86,15 @@ int ncadios_sync_header(NC_ad *ncadp) {
             cur += sizeof(nc_type);
             *((int*)cur) = ncadp->vars.data[i].ndim;
             cur += sizeof(int);
+            *((int*)cur) = ncadp->vars.data[i].atts.cnt;
+            cur += sizeof(int);
             namelen = strlen(ncadp->vars.data[i].name);
             *((int*)cur) = namelen;
             cur += sizeof(int);
             memcpy(cur, ncadp->vars.data[i].dimids, ncadp->vars.data[i].ndim * sizeof(int));
             cur += ncadp->vars.data[i].ndim * 4;
+            memcpy(cur, ncadp->vars.data[i].atts.data, ncadp->vars.data[i].atts.cnt * sizeof(int));
+            cur += ncadp->vars.data[i].atts.cnt * 4;
             strcpy(cur, ncadp->vars.data[i].name);
             cur += namelen + 1;         
         }
@@ -100,10 +104,10 @@ int ncadios_sync_header(NC_ad *ncadp) {
 
 
     if (ncadp->rank != 0){
-        int ndim, nvar;
+        int ndim, nvar, natt;
         int id, len;
         nc_type type;
-        int *dimids;
+        int *dimids, *attids;
         char *name;
 
         ndim = *((int*)cur);
@@ -128,13 +132,20 @@ int ncadios_sync_header(NC_ad *ncadp) {
             cur += sizeof(nc_type);
             ndim = *((int*)cur);
             cur += sizeof(int);
+            natt = *((int*)cur);
+            cur += sizeof(int);
             namelen = *((int*)cur);
             cur += sizeof(int);
             dimids = (int*)cur;
             cur += ndim * sizeof(int);
+            attids = (int*)cur;
+            cur += natt * sizeof(int);
             name = cur;
             cur += namelen + 1;   
             ncadiosi_def_var(ncadp, name, type, ndim, dimids, &id);
+            for(j = 0; j < natt; j++){
+                ncadiosi_att_list_add(&(ncadp->vars.data[id].atts), attids[j]);
+            }
             //printf("def_var(%s, %d, %d), namelen = %d\n", name, type, ndim, namelen);
         }
         

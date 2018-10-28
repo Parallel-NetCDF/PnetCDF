@@ -28,8 +28,7 @@ if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS = ncadios_convert.m4 \
-          ncadios_internal_atts.m4
+M4_SRCS = ncadios_convert.m4 
 
 H_SRCS = ncadios_driver.h \
          ncadios_internal.h \

@@ -31,6 +31,7 @@ int ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id) {
     return NC_NOERR;
 }
 
+/*
 int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
     int i;
     int attid;
@@ -59,6 +60,7 @@ int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
     
     return NC_NOERR;
 }
+*/
 
 int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
     int i;
@@ -85,7 +87,6 @@ int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimi
         var.name = NCI_Malloc(strlen(name) + 1);
         strcpy(var.name, name);
         ncadiosi_att_list_init(&(var.atts));
-
         *id = ncadiosi_var_list_add(&(ncadp->vars), var);
     }
 
@@ -103,6 +104,44 @@ int ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id) {
         strcpy(dim.name, name);
     
         *id = ncadiosi_dim_list_add(&(ncadp->dims), dim);
+    }
+
+    return NC_NOERR;
+}
+
+int ncadiosi_parse_attrs(NC_ad* ncadp) {
+    int i, j;
+    int vid;
+    char path[1024];
+    char *aname = NULL;
+    char *vname = NULL;
+
+
+    NC_ad_var *var;
+    NC_ad_dim dim;
+
+    for (i = 0; i < ncadp->fp->nattrs; i++) {
+        strcpy(path, ncadp->fp->attr_namelist[i]);
+
+        for(j = 0; path[j] != '\0'; j++){
+            if (j > 0 && path[j] == '/'){
+                path[j] = '\0';
+                aname = path + j + 1;
+                if (path[0] == '/'){
+                    vname = path + 1;
+                }
+                else{
+                    vname = path;
+                }
+
+                vid = ncadiosi_var_list_find(&(ncadp->vars), vname);
+                if (vid > -1){
+                    ncadiosi_att_list_add(&(ncadp->vars.data[vid].atts), i);
+                }
+
+                break;
+            }
+        }
     }
 
     return NC_NOERR;
