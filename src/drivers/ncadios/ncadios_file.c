@@ -129,9 +129,8 @@ ncadios_open(MPI_Comm     comm,
     /* Open with adios */
     ncadp->fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, comm);
     if (ncadp->fp == NULL) {
-        DEBUG_RETURN_ERROR(NC_EADIOS);
-        printf ("%s\n", adios_errmsg());
-        return -1;
+        err = ncmpii_error_adios2nc(adios_errno, "Open");
+        DEBUG_RETURN_ERROR(err);
     }
 
     if (ncadp->rank == 0) {
@@ -166,7 +165,8 @@ ncadios_close(void *ncdp)
 
     err = adios_read_close(ncadp->fp);
     if (err != 0){
-        DEBUG_RETURN_ERROR(NC_EADIOS)
+        err = ncmpii_error_adios2nc(adios_errno, "open");
+        DEBUG_RETURN_ERROR(err);
     }
 
     NCI_Free(ncadp->ndims);

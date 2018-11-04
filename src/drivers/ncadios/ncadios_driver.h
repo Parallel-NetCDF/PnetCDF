@@ -10,7 +10,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 #include <dispatch.h>
-#include "adios_read.h"
+#include <adios_read.h>
 
 
 typedef struct NC_ad_dim {

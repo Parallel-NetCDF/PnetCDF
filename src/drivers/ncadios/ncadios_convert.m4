@@ -40,8 +40,8 @@ define(`SWIN',dnl
                 `(`MPI_UNSIGNED_LONG_LONG', `unsigned long long')', dnl
                 ), `SWOUT(translit(dt, `()'), $2)')dnl
             default:
-                printf("Error in type out %d\n", intype);
-                return -1;
+                printf("Error: outtype %d not recognized\n", outtype);
+                DEBUG_RETURN_ERROR(NC_EBADTYPE);;
         }
         break;
 ')dnl
@@ -76,8 +76,8 @@ ncadiosiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype out
                `(`MPI_UNSIGNED_LONG_LONG', `unsigned long long')', dnl
                ), `SWIN(translit(dt, `()'))')dnl
         default:
-            printf("Error in type in %d\n", intype);
-            return -1;
+            printf("Error: intype %d not recognized\n", intype);
+            DEBUG_RETURN_ERROR(NC_EBADTYPE);;
     }
 
     return NC_NOERR;
