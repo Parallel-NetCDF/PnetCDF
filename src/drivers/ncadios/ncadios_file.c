@@ -150,7 +150,6 @@ ncadios_open(MPI_Comm     comm,
     }
 
     if (ncadp->rank == 0) {
-<<<<<<< HEAD
         if (!parse_done){
 #ifdef PNETCDF_DEBUG
             printf("Warning: bp2ncd fails to parse header, presenting virtual dimensions\n");
@@ -165,14 +164,11 @@ ncadios_open(MPI_Comm     comm,
             ncadiosi_parse_header_readall(ncadp);
         }
 
-=======
->>>>>>> 23ad299... parse var attributes
         // This require fp be opened
         ncadiosi_parse_attrs(ncadp);
     }
     ncadios_sync_header(ncadp);
 
-<<<<<<< HEAD
     // Parse information regarding record dim
     ncadiosi_parse_rec_dim(ncadp);
 
@@ -184,11 +180,6 @@ ncadios_open(MPI_Comm     comm,
      */
     /*
     ncadp->ndims = (int*)NCI_Malloc(SIZEOF_INT * ncadp->fp->nvars);
-=======
-
-    /* Build dimensionality list */
-    ncadp->ndims = (int*)NCI_Malloc(sizeof(int) * ncadp->fp->nvars);
->>>>>>> 23ad299... parse var attributes
     for (i = 0; i < ncadp->fp->nvars; i++) {
         ADIOS_VARINFO *v = adios_inq_var_byid (ncadp->fp, i);
         if (v == NULL){

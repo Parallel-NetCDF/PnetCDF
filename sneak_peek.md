@@ -16,9 +16,6 @@ This is essentially a placeholder for the next release note ...
   + ADIOS driver -- Read ADIOS 1.x BP formated file. 
     ADIOS_READ_METHOD_BP must be set when open BP file.
     Does not support low-level and non blocking API.
-  + ADIOS driver -- Reading ADIOS 1.x BP formated file. 
-    PnetCDF will detected BP file format automatically. No additional flag needed when opening a BP formated file.
-    CUrrently, the ADIOS driver does not support low-level API.
 
 * New optimization
   + none
@@ -35,7 +32,6 @@ This is essentially a placeholder for the next release note ...
     to contain the fix. See discussion in https://github.com/NCAR/ParallelIO/pull/1304
     The bug fix will appear in HDF5 1.10.4 release.
   + ADIOS driver are ready only. No vard, varn, low-level, and nonblocking support.
-  + ADIOS driver is ready only. There is also no vard, varn and low-level API support.
 
 * Update configure options
   + Enable NetCDF-4 support.
