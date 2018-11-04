@@ -47,8 +47,14 @@ TESTPROGRAMS = open \
 =======
 			   header \
 			   var \
+<<<<<<< HEAD
 			   att
 >>>>>>> 23ad299... parse var attributes
+=======
+			   att \
+			   varm\
+			   vars
+>>>>>>> 64fbfab... vars and varm
 
 M4_SRCS  = 
 

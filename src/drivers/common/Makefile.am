@@ -39,6 +39,7 @@ C_SRCS    = utf8proc.c \
             pack_unpack.c \
             utils.c \
             error_posix2nc.c \
+            error_adios2nc.c \
             hash_map.c
 
 if ENABLE_ADIOS

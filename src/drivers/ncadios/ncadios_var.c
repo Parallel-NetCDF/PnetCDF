@@ -108,10 +108,6 @@ ncadios_inq_var(void       *ncdp,
     }
 
     if (nattsp != NULL){
-<<<<<<< HEAD
-=======
-        // Every atts are global despite the path
->>>>>>> 23ad299... parse var attributes
         *nattsp = var.atts.cnt;
     }
 
@@ -154,6 +150,7 @@ ncadios_get_var(void             *ncdp,
               int               reqMode)
 {
     int err;
+    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
     NC_ad_get_req r;
     ADIOS_VARINFO *v;
@@ -174,6 +171,21 @@ ncadios_get_var(void             *ncdp,
 
     /* Handle the request */
     err = ncadiosi_handle_get_req(ncadp, &r);
+
+    if (imap != NULL){
+        int position;
+        MPI_Datatype imaptype;
+
+        err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, &imaptype);
+        if (err != NC_NOERR) {
+            return err;
+        }
+        position = 0;
+        MPI_Unpack(cbuf, cesize * (int)ecnt, &position, buf, 1, imaptype, MPI_COMM_SELF);
+        MPI_Type_free(&imaptype);
+
+        NCI_Free(cbuf);
+    }
 
     return NC_NOERR;
 }
