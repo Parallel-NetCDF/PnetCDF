@@ -100,7 +100,7 @@ extern int
 ncmpii_error_posix2nc(char *err_msg);
 
 extern int
-ncmpii_error_adios2nc(int adios_errno, char *err_msg) 
+ncmpii_error_adios2nc(int adios_errno, char *err_msg);
 
 extern int
 ncmpii_check_name(const char *name, int file_ver);
