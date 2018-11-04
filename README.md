@@ -14,7 +14,7 @@ National Laboratory.
 
 ### PnetCDF official software releases
 * All official released versions can be found in
-  http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html
+  https://parallel-netcdf.github.io/wiki/Download.html
 * Note the ["releases"](https://github.com/Parallel-NetCDF/PnetCDF/releases)
   link on this page above contains only tagged versions. They are by no means
   official releases, but simply checkpoints. They contain unused historical
