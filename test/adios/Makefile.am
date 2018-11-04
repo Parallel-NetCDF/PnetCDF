@@ -32,7 +32,9 @@ NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 TESTPROGRAMS = open \
 			   header \
 			   var \
-			   att
+			   att \
+			   varm\
+			   vars
 
 M4_SRCS  = 
 

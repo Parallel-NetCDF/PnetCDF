@@ -165,39 +165,113 @@ ncadios_get_var(void             *ncdp,
               int               reqMode)
 {
     int err;
+    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
     ADIOS_VARINFO * v;
     ADIOS_SELECTION *sel;
     MPI_Datatype    vtype;
-    size_t esize, ecnt;
-    void *xbuf;
+    size_t esize, ecnt = 0;
+    int cesize;
+    void *xbuf, *cbuf;
+    uint64_t *points;
 
     v = adios_inq_var(ncadp->fp, ncadp->vars.data[varid].name);
-    //adios_inq_var_stat (f, v, 0, 0);
+    if (v == NULL){
+        err = ncmpii_error_adios2nc(adios_errno, "get_var");
+        DEBUG_RETURN_ERROR(err);
+    }
+
+    ecnt = 1;
+    for(i = 0; i < v->ndim; i++){
+        ecnt *= (size_t)count[i];
+    }
+
+    if (imap == NULL){
+        cbuf = buf;
+    }
+    else{
+        MPI_Type_size(buftype, &cesize);
+        cbuf = NCI_Malloc((size_t)cesize * ecnt);
+    }
 
     vtype = ncadios_to_mpi_type(v->type);
     if (vtype == buftype){
-        xbuf = buf;
+        xbuf = cbuf;
     }
     else{
-        int i;
-
         esize = (size_t)adios_type_size(v->type, NULL);
-        ecnt = 1;
-        for(i = 0; i < v->ndim; i++){
-            ecnt *= (size_t)count[i];
-        }
-
         xbuf = NCI_Malloc(esize * ecnt);
     }
 
-    sel = adios_selection_boundingbox (v->ndim, start, count);
-    adios_schedule_read_byid (ncadp->fp, sel, v->varid, v->nsteps - 1, 1, xbuf);
-    adios_perform_reads (ncadp->fp, 1);
+    if (stride == NULL){
+        sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
+    }
+    else{
+        uint64_t *p, *cur;
+
+        points = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * ecnt * v->ndim);
+        p = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * v->ndim);
+        cur = points;
+
+        memset(p, 0, sizeof(uint64_t) * v->ndim);
+
+        while(p[0] < count[0]) {
+            for(i = 0; i < v->ndim; i++){
+                *cur = p[i] * (uint64_t)stride[i];
+                cur++;
+            }
+
+            p[v->ndim - 1]++;
+            for(i = v->ndim - 1; i > 0; i--){
+                if (p[i] >= count[i]){
+                    p[i - 1]++;
+                    p[i] = 0;
+                }
+            }
+        }
+
+        sel = adios_selection_points(v->ndim, (uint64_t)ecnt, points);
+    }
+    if (sel == NULL){
+        err = ncmpii_error_adios2nc(adios_errno, "select");
+        DEBUG_RETURN_ERROR(err);
+    }
+    err = adios_schedule_read_byid (ncadp->fp, sel, v->varid, v->nsteps - 1, 1, xbuf);
+    if (err != 0){
+        err = ncmpii_error_adios2nc(adios_errno, "Open");
+        DEBUG_RETURN_ERROR(err);
+    }
+    err = adios_perform_reads (ncadp->fp, 1);
+    if (err != 0){
+        err = ncmpii_error_adios2nc(adios_errno, "Open");
+        DEBUG_RETURN_ERROR(err);
+    }
+
+    if (stride != NULL){
+        NCI_Free(points);
+    }
 
     if (vtype != buftype){
-        ncadiosiconvert(xbuf, buf, vtype, buftype, (int)ecnt);
+        err = ncadiosiconvert(xbuf, cbuf, vtype, buftype, (int)ecnt);
+        if (err != NC_NOERR){
+            return err;
+        }
         NCI_Free(xbuf);
+    }
+
+    if (imap != NULL){
+        int position;
+        MPI_Datatype imaptype;
+
+        err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, &imaptype);
+        if (err != NC_NOERR) {
+            return err;
+        }
+        position = 0;
+        MPI_Unpack(cbuf, cesize * (int)ecnt, &position, buf, 1, imaptype, MPI_COMM_SELF);
+        MPI_Type_free(&imaptype);
+
+        NCI_Free(cbuf);
     }
 
     return NC_NOERR;

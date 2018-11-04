@@ -1848,6 +1848,7 @@ AC_CONFIG_FILES(Makefile \
                 src/packaging/Makefile \
                 src/packaging/pnetcdf.pc \
                 examples/Makefile \
+                examples/adios/Makefile \
                 examples/C/Makefile \
                 examples/tutorial/Makefile \
                 examples/CXX/Makefile \
