@@ -144,7 +144,15 @@ ncadios_open(MPI_Comm     comm,
     ncadp->ndims = (int*)NCI_Malloc(sizeof(int) * ncadp->fp->nvars);
     for (i = 0; i < ncadp->fp->nvars; i++) {
         ADIOS_VARINFO *v = adios_inq_var_byid (ncadp->fp, i);
-        adios_inq_var_stat (ncadp->fp, v, 0, 0);
+        if (v == NULL){
+            err = ncmpii_error_adios2nc(adios_errno, "inq_var");
+            DEBUG_RETURN_ERROR(err);
+        }
+        err = adios_inq_var_stat (ncadp->fp, v, 0, 0);
+        if (err != 0){
+            err = ncmpii_error_adios2nc(adios_errno, "inq_var_stat");
+            DEBUG_RETURN_ERROR(err);
+        }
         ncadp->ndims[i] = v->ndim;
     }
 

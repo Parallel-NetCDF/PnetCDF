@@ -11,6 +11,7 @@
 #include <pnetcdf.h>
 #include <dispatch.h>
 #include <adios_read.h>
+#include <adios_error.h>
 
 
 typedef struct NC_ad_dim {

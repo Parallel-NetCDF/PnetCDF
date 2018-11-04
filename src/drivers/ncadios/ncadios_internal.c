@@ -20,12 +20,16 @@
 #include "ncadios_internal.h"
 
 int ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id) {
-    int i;
+    int tmp;
 
     //return NC_NOERR;
 
     if (id != NULL){
-        *id = ncadiosi_var_list_find(&(ncadp->vars), name);
+        tmp = ncadiosi_var_list_find(&(ncadp->vars), name);
+        if (tmp < 0){
+            DEBUG_RETURN_ERROR(NC_ENOTVAR)
+        }
+        *id = tmp;
     }
 
     return NC_NOERR;
@@ -63,12 +67,16 @@ int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
 */
 
 int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
-    int i;
+    int tmp;
 
     //return NC_NOERR;
 
     if (id != NULL){
-        *id = ncadiosi_dim_list_find(&(ncadp->dims), name);
+        tmp = ncadiosi_dim_list_find(&(ncadp->dims), name);
+        if (tmp < 0){
+            DEBUG_RETURN_ERROR(NC_EBADDIM)
+        }
+        *id = tmp;
     }
 
     return NC_NOERR;
