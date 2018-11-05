@@ -4,15 +4,16 @@ This is essentially a placeholder for the next release note ...
 
 * New features
   + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
-    PnetCDF can be built on top of NetCDF-4 library to allow PnetCDF to read
-    and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag to create
-    NetCDF-4 files. For opening NetCDF-4 files, no additional flag is needed,
-    as PnetCDF can automatically detect the file format.
-  + Per-file thread-safe capability is added. This feature can be enabled by
-    adding command-line option `--enable-thread-safe` at configure time. In
-    addition, option `--with-pthread` can be used to specify the path to the
-    pthreads library. This feature currently only supports one-thread-per-file
-    I/O operations and the classic CDF-1, 2, and 5 files.
+    PnetCDF can be built on top of NetCDF-4 library to let users to use PnetCDF
+    APIs to read and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag
+    when calling ncmpi_create() to create NetCDF-4 files. For opening NetCDF-4
+    files, no additional flag is needed, as PnetCDF automatically detects the
+    file format and uses the corresponding I/O driver underneath.
+  + Per-file thread-safe capability is added. This feature can be enabled at
+    configure time by adding command-line option `--enable-thread-safe`. In
+    addition, option `--with-pthread` can be used to specify the install path
+    to the pthreads library. This feature currently only supports
+    one-thread-per-file I/O operations and the classic CDF-1, 2, and 5 files.
 
 * New optimization
   + none
