@@ -13,6 +13,9 @@ This is essentially a placeholder for the next release note ...
     addition, option `--with-pthread` can be used to specify the path to the
     pthreads library. This feature currently only supports one-thread-per-file
     I/O operations.
+  + ADIOS driver -- Read ADIOS 1.x BP formated file. 
+    ADIOS_READ_METHOD_BP must be set when open BP file.
+    Does not support low-level and non blocking API.
 
 * New optimization
   + none
@@ -28,11 +31,15 @@ This is essentially a placeholder for the next release note ...
     requests when NetCDF-4 feature is enabled. New HDF5 releases are expected
     to contain the fix. See discussion in https://github.com/NCAR/ParallelIO/pull/1304
     The bug fix will appear in HDF5 1.10.4 release.
+  + ADIOS driver are ready only. No vard, varn, low-level, and nonblocking support.
 
 * Update configure options
   + Enable NetCDF-4 support.
     - `--enable-netcdf4`: enable NetCDF4 format classic mode support
     - `--with-netcdf4=/path/to/netcdf-4`: path to NetCDF-4 library installation
+  + Enable ADIOS support.
+    - `--enable-adios`: enable NetCDF4 format classic mode support
+    - `--with-adios=/path/to/netcdf-4`: path to NetCDF-4 library installation
   + Enable multi-threading support.
     - `--enable-thread-safe`: enable per-file thread-safe support
     - `--with-pthread`: path to the pthread library installation
@@ -114,6 +121,7 @@ This is essentially a placeholder for the next release note ...
     export MPICH_MAX_THREAD_SAFETY=multiple
     ```
   + examples/C/transpose2D.c - a 2D version of examples/C/transpose.c
+  + examples/adios/read_all.c - Dump all metadata in a ADIOS BP file.
 
 * New programs for I/O benchmarks
   + none
@@ -137,6 +145,12 @@ This is essentially a placeholder for the next release note ...
     each thread operating on a unique file.
   + test/testcases/tst_free_comm.c - free MPI communicator right after calling
     ncmpi_create to see if PnetCDF duplicates the communicator correctly.
+  + test/adios/open.c - tests if PnetCDF recognize ADIOS file.
+  + test/adios/header.c - tests if PnetCDF can parse ADIOS header.
+  + test/adios/var.c - tests if PnetCDF can access ADIOS variables.
+  + test/adios/varm.c - tests if PnetCDF can access ADIOS variables with discontiguous memory.
+  + test/adios/vars.c - tests if PnetCDF access ADIOS variables with stride.
+  + test/adios/atts.c - tests if PnetCDF access ADIOS attributes.
 
 * Conformity with NetCDF library
   + none

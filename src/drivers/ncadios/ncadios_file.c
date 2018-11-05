@@ -299,7 +299,12 @@ ncadios_inq(void *ncdp,
     }
 
     if (xtendimp != NULL){
-        *xtendimp = -1;
+        for(i = 0; i < ncadp->dims.cnt; i++){
+            if (ncadp->dims.data[i].len == NC_UNLIMITED){
+                *xtendimp = i;
+                break;
+            }
+        }
     }
 
     return NC_NOERR;
@@ -339,7 +344,16 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (num_rec_varsp != NULL){
+        int i, j;
         *num_rec_varsp = 0;
+        for(i = 0; i < ncadp->vars.cnt; i++){
+            for(j = 0; j < ncadp->vars.data[i].ndim; j++){
+                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len == NC_UNLIMITED){
+                    *num_rec_varsp += 1;
+                    break;
+                }
+            }
+        }
     }
 
     if (striping_size != NULL){
