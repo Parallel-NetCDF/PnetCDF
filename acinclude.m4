@@ -1583,7 +1583,7 @@ AC_DEFUN([UD_CHECK_PGCC],[
     AC_CACHE_CHECK([if C compiler is pgcc], [ac_cv_cc_compiler_pgcc],
     [ac_cv_cc_compiler_pgcc=no
      _CC_VER=`$MPICC -V -c 2> /dev/null`
-     _CC_VENDOR=`echo $_PGCC_VER | cut -d' ' -f1`
+     _CC_VENDOR=`echo $_CC_VER | cut -d' ' -f1`
      if test "x${_CC_VENDOR}" = xpgcc ; then
         ac_cv_cc_compiler_pgcc=yes
      fi
