@@ -16,7 +16,11 @@ This is essentially a placeholder for the next release note ...
     one-thread-per-file I/O operations and the classic CDF-1, 2, and 5 files.
 
 * New optimization
-  + none
+  + In `ncmpi_wait()` and `ncmpi_wait_all()`, when the size of aggregated I/O
+    buffer is less than 16 MiB and the aggregated buffer type is noncontiguous,
+    a temporary contiguous buffer is allocated to copy the data over and used
+    in the MPI read or write calls. On some systems, such as Cori, using a
+    contiguous buffer in MPI-IO calls may perform better.
 
 * New Limitations
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
