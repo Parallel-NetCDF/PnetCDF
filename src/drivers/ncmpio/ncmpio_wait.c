@@ -535,12 +535,12 @@ construct_buffertypes(int           num_reqs,
                       int          *blocklens,    /* [num_reqs] temp buffer */
                       MPI_Aint     *disps,        /* [num_reqs] temp buffer */
                       NC_req       *reqs,         /* [num_reqs] */
-                      MPI_Datatype *buffer_type)  /* OUT */
+                      MPI_Datatype *buf_type)     /* OUT */
 {
     int i, j, k, status=NC_NOERR, mpireturn;
     MPI_Aint a0, ai;
 
-    *buffer_type = MPI_BYTE;
+    *buf_type = MPI_BYTE;
     if (num_reqs == 0) return NC_NOERR;
 
     /* create the I/O buffer derived data type */
@@ -581,10 +581,10 @@ construct_buffertypes(int           num_reqs,
         /* concatenate buffer addresses into a single buffer type */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
         mpireturn = MPI_Type_create_hindexed(num_reqs, blocklens, disps,
-                                             MPI_BYTE, buffer_type);
+                                             MPI_BYTE, buf_type);
 #else
         mpireturn = MPI_Type_hindexed(num_reqs, blocklens, disps, MPI_BYTE,
-                                      buffer_type);
+                                      buf_type);
 #endif
         if (mpireturn != MPI_SUCCESS) {
             int err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hindexed");
@@ -592,7 +592,7 @@ construct_buffertypes(int           num_reqs,
             if (status == NC_NOERR) status = err;
         }
         else
-            MPI_Type_commit(buffer_type);
+            MPI_Type_commit(buf_type);
     }
 
     return status;
@@ -1504,8 +1504,8 @@ merge_requests(NC          *ncp,
 static int
 type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
                     off_len      *segs,     /* [nsegs] off-len pairs (sorted) */
-                    MPI_Datatype *filetype,
-                    MPI_Datatype *buf_type)
+                    MPI_Datatype *filetype, /* OUT */
+                    MPI_Datatype *buf_type) /* OUT */
 {
     int i, j, *blocklens, mpireturn;
     MPI_Offset next_off, next_len, true_nsegs;
@@ -2040,8 +2040,11 @@ req_aggregation(NC     *ncp,
         int           xlen=buf_len;
         MPI_Datatype  xbuf_type=buf_type;
 
+        /* if the read buffer is noncontiguous and size is < 16 MiB, allocate a
+         * temporary buffer and use it to read, as some MPI, e.g. Cray on KNL,
+         * can be significantly slow when read buffer is noncontiguous.
+         */
         if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            /* use a contiguous buffer to read */
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
             xbuf_type = MPI_BYTE;
@@ -2080,7 +2083,7 @@ req_aggregation(NC     *ncp,
             ncp->get_size += buf_len * buf_type_size;
 #endif
         }
-        if (xbuf != buf) { /* unpack xbuf to buf */
+        if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
             int pos=0;
             MPI_Unpack(xbuf, xlen, &pos, buf, buf_len, buf_type, MPI_COMM_SELF);
             NCI_Free(xbuf);
@@ -2090,11 +2093,15 @@ req_aggregation(NC     *ncp,
         int           xlen=buf_len;
         MPI_Datatype  xbuf_type=buf_type;
 
+        /* if the write buffer is noncontiguous and size is < 16 MiB, allocate a
+         * temporary buffer and use it to write, as some MPI, e.g. Cray on KNL,
+         * can be significantly slow when write buffer is noncontiguous.
+         */
         if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            /* use a contiguous buffer to write */
             int pos=0;
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
+            /* pack noncontiguous buf to contiguous xbuf */
             MPI_Pack(buf, buf_len, buf_type, xbuf, xlen, &pos, MPI_COMM_SELF);
             xbuf_type = MPI_BYTE;
         }
@@ -2596,8 +2603,11 @@ mpi_io:
         int           xlen=len;
         MPI_Datatype  xbuf_type=buf_type;
 
+        /* if the read buffer is noncontiguous and size is < 16 MiB, allocate a
+         * temporary buffer and use it to read, as some MPI, e.g. Cray on KNL,
+         * can be significantly slow when read buffer is noncontiguous.
+         */
         if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            /* use a contiguous buffer to read */
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
             xbuf_type = MPI_BYTE;
@@ -2636,7 +2646,7 @@ mpi_io:
             ncp->get_size += len * buf_type_size;
 #endif
         }
-        if (xbuf != buf) { /* unpack xbuf to buf */
+        if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
             int pos=0;
             MPI_Unpack(xbuf, xlen, &pos, buf, len, buf_type, MPI_COMM_SELF);
             NCI_Free(xbuf);
@@ -2646,8 +2656,11 @@ mpi_io:
         int           xlen=len;
         MPI_Datatype  xbuf_type=buf_type;
 
+        /* if the write buffer is noncontiguous and size is < 16 MiB, allocate a
+         * temporary buffer and use it to write, as some MPI, e.g. Cray on KNL,
+         * can be significantly slow when write buffer is noncontiguous.
+         */
         if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            /* use a contiguous buffer to write */
             int pos=0;
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
