@@ -2036,8 +2036,19 @@ req_aggregation(NC     *ncp,
 #endif
 
     if (rw_flag == NC_REQ_RD) {
+        void         *xbuf=buf;
+        int           xlen=buf_len;
+        MPI_Datatype  xbuf_type=buf_type;
+
+        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
+            /* use a contiguous buffer to read */
+            xlen *= buf_type_size;
+            xbuf = NCI_Malloc(xlen);
+            xbuf_type = MPI_BYTE;
+        }
+
         if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, buf, buf_len, buf_type,
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, xlen, xbuf_type,
                                            &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
@@ -2048,7 +2059,7 @@ req_aggregation(NC     *ncp,
                 }
             }
         } else {
-            TRACE_IO(MPI_File_read_at)(fh, offset, buf, buf_len, buf_type,
+            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, xlen, xbuf_type,
                                        &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
@@ -2069,9 +2080,27 @@ req_aggregation(NC     *ncp,
             ncp->get_size += buf_len * buf_type_size;
 #endif
         }
+        if (xbuf != buf) { /* unpack xbuf to buf */
+            int pos=0;
+            MPI_Unpack(xbuf, xlen, &pos, buf, buf_len, buf_type, MPI_COMM_SELF);
+            NCI_Free(xbuf);
+        }
     } else { /* NC_REQ_WR */
+        void         *xbuf=buf;
+        int           xlen=buf_len;
+        MPI_Datatype  xbuf_type=buf_type;
+
+        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
+            /* use a contiguous buffer to write */
+            int pos=0;
+            xlen *= buf_type_size;
+            xbuf = NCI_Malloc(xlen);
+            MPI_Pack(buf, buf_len, buf_type, xbuf, xlen, &pos, MPI_COMM_SELF);
+            xbuf_type = MPI_BYTE;
+        }
+
         if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, buf_len, buf_type,
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, xlen, xbuf_type,
                                             &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
@@ -2082,7 +2111,7 @@ req_aggregation(NC     *ncp,
                 }
             }
         } else {
-            TRACE_IO(MPI_File_write_at)(fh, offset, buf, buf_len, buf_type,
+            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, xlen, xbuf_type,
                                         &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
@@ -2102,6 +2131,7 @@ req_aggregation(NC     *ncp,
             ncp->put_size += buf_len * buf_type_size;
 #endif
         }
+        if (xbuf != buf) NCI_Free(xbuf);
     }
 
 fn_exit:
@@ -2562,8 +2592,19 @@ mpi_io:
 #endif
 
     if (rw_flag == NC_REQ_RD) {
+        void         *xbuf=buf;
+        int           xlen=len;
+        MPI_Datatype  xbuf_type=buf_type;
+
+        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
+            /* use a contiguous buffer to read */
+            xlen *= buf_type_size;
+            xbuf = NCI_Malloc(xlen);
+            xbuf_type = MPI_BYTE;
+        }
+
         if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, buf, len, buf_type,
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, xlen, xbuf_type,
                                            &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
@@ -2574,7 +2615,7 @@ mpi_io:
                 }
             }
         } else {
-            TRACE_IO(MPI_File_read_at)(fh, offset, buf, len, buf_type,
+            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, xlen, xbuf_type,
                                        &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
@@ -2595,9 +2636,27 @@ mpi_io:
             ncp->get_size += len * buf_type_size;
 #endif
         }
+        if (xbuf != buf) { /* unpack xbuf to buf */
+            int pos=0;
+            MPI_Unpack(xbuf, xlen, &pos, buf, len, buf_type, MPI_COMM_SELF);
+            NCI_Free(xbuf);
+        }
     } else { /* NC_REQ_WR */
+        void         *xbuf=buf;
+        int           xlen=len;
+        MPI_Datatype  xbuf_type=buf_type;
+
+        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
+            /* use a contiguous buffer to write */
+            int pos=0;
+            xlen *= buf_type_size;
+            xbuf = NCI_Malloc(xlen);
+            MPI_Pack(buf, len, buf_type, xbuf, xlen, &pos, MPI_COMM_SELF);
+            xbuf_type = MPI_BYTE;
+        }
+
         if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, len, buf_type,
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, xlen, xbuf_type,
                                             &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
@@ -2608,7 +2667,7 @@ mpi_io:
                 }
             }
         } else {
-            TRACE_IO(MPI_File_write_at)(fh, offset, buf, len, buf_type,
+            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, xlen, xbuf_type,
                                         &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
@@ -2629,6 +2688,7 @@ mpi_io:
             ncp->put_size += len * buf_type_size;
 #endif
         }
+        if (xbuf != buf) NCI_Free(xbuf);
     }
 
     if (buf_type != MPI_BYTE) /* free user buffer type */
