@@ -91,12 +91,12 @@
                 make tests LDFLAGS=-all-static
                 make check LDFLAGS=-all-static
 
-  Without adding LDFLAGS, you may encounter the following error messages. 
-    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libgfortran.la' seems to be moved 
-    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libquadmath.la' seems to be moved 
-    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libstdc++.la' seems to be moved 
-    /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/6.3.0/snos/lib/../lib64/libgfortran.so' 
-    collect2: error: ld returned 1 exit status 
+  Without adding LDFLAGS, you may encounter the following error messages.
+    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libgfortran.la' seems to be moved
+    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libquadmath.la' seems to be moved
+    libtool: warning: '/opt/gcc/6.3.0/snos/lib/gcc/x86_64-suse-linux/6.3.0/../../../../lib64/libstdc++.la' seems to be moved
+    /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/6.3.0/snos/lib/../lib64/libgfortran.so'
+    collect2: error: ld returned 1 exit status
 
   * Building shared libraries:
 
@@ -180,10 +180,10 @@ For Cray compilers, i.e.
 
 2 May 2005
 
-I performed the following steps to get Parallel-NetCDF to build on the Cray X1
-at Oak Ridge (phoenix.ccs.ornl.gov).   Note that out-of-tree (or VPATH) builds
-do not work for the Fortran interface as of 1.0.0-pre2, but we will try to
-address this issue in a future release.  
+I (Rob Latham) performed the following steps to get PnetCDF to build on the
+Cray X1 at Oak Ridge (phoenix.ccs.ornl.gov).  Note that out-of-tree (or VPATH)
+builds do not work for the Fortran interface as of 1.0.0-pre2, but we will try
+to address this issue in a future release.
 
 prompt:$ module load mpt
 prompt:$ export CC=cc
@@ -192,26 +192,27 @@ prompt:$ export MPIF77=$FC
 prompt:$ export MPICC=$CC
 prompt:$ export FFLAGS="-eh"
 prompt:$ ./configure --prefix=/path/to/install
-# note: configure takes a fairly long time. 
+# note: configure takes a fairly long time.
 prompt:$ make
 
 The "nc_test" test will exhaust the available MPI datatypes on the X1.  Your
 application might see this error:
 
-   MPI has run out of internal datatype entries.                  
+   MPI has run out of internal datatype entries.
    Please set the environment variable MPI_TYPE_MAX for additional space.
-   The current value of MPI_TYPE_MAX is 2098                      
+   The current value of MPI_TYPE_MAX is 2098
 
 I did as asked and nc_test completed with MPI_TYPE_MAX set to 4096
 
 If you run on the login node, expect to see a lot of these messages:
 
   Process [nc_test] 89345 generated trap, but has signal 8 held or ignored
-        epc 0x1219bb4 ra 0x1219b94 badvaddr 0x40004f0004000020 
+        epc 0x1219bb4 ra 0x1219b94 badvaddr 0x40004f0004000020
 
 The messages don't *appear* to impact the program results, and additionally do
 not show up if you submit the job to PBS.
 
 Fortran codes should use '-eh' so that the Cray ftn compiler will use 1 byte
 for int*1 and 2 bytes for int*2.  Otherwise, our Fortran bindings will pass
-incorrect values to the C routines.   
+incorrect values to the C routines.
+

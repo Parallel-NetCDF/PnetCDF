@@ -1,8 +1,8 @@
-Parallel-netCDF is a joint effort between Northwestern University and Argonne
+PnetCDF is a joint effort between Northwestern University and Argonne
 National Laboratory.  We have also been fortunate to receive a great deal of
 help from the community.  A partial list follows.  Thanks everyone!
 
-- Parallel-NetCDF uses a great deal of NetCDF code, so the project would not
+- PnetCDF uses a great deal of NetCDF code, so the project would not
   have gotten as far as it did as quickly as it did without the efforts of the
   Unidata group.
 

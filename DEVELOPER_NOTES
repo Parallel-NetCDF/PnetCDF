@@ -61,8 +61,9 @@ Tasks immediately before a new release (must run in the following order)
     In file "configure.ac", variable $PNETCDF_VERSION indicates the version.
     It is automatically generated from the 2nd argument of AC_INIT call.
     Revise that string to the right release version. For example,
-      AC_INIT([parallel-netcdf],[1.8.1],[parallel-netcdf@mcs.anl.gov])
-                                 ^^^^^
+      AC_INIT([pnetcdf],[1.11.0],[parallel-netcdf@mcs.anl.gov])
+                         ^^^^^
+    For setting shared library version (ABI versioning), see below.
 
  3. Update file "RELEASE_NOTES".
     Copy the contents of file "sneak_peek" into file "RELEASE_NOTES".  Clear up
@@ -71,7 +72,7 @@ Tasks immediately before a new release (must run in the following order)
     running command "make dist". (For version 1.8.1 and prior, add the release
     version and date at the top of file "RELEASE_NOTES".)
 
- 4. Update the release date (skip this step for 1.9.0 and later)
+ 4. (skip this step for 1.9.0 and later) Update the release date
     Below describe how to set the release date for 1.8.1 and prior.
     For more info, see below section "Setting PnetCDF software release date".
     Run command "svn commit" to get the svn property \$LastChangedDate\$
@@ -82,7 +83,7 @@ Tasks immediately before a new release (must run in the following order)
  5. (skip for 1.10.0 and after) Run svn commit to commit the above changes to
     trunk branch.
 
- 6. Create a new SVN tag on svn repo (v1.9.0 and prior).
+ 6. (skip for 1.10.0 and after) Create a new SVN tag on svn repo
     Run command below to duplicate the current trunk to a new tag:
         svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
                  https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-8-1 \
@@ -90,8 +91,8 @@ Tasks immediately before a new release (must run in the following order)
 
  7. Create a new tag on GitHub, use command (v1.10.0 and after):
     Run command below to duplicate the current master branch to a new tag:
-        git tag -a v1.10.0 -m "Tagging release version 1.10.0"
-        git push origin v1.10.0
+        git tag -a tag.v1.10.0 -m "Tag right before release version 1.10.0"
+        git push origin tag.v1.10.0
 
  8. Generate release tar balls
     a. Generate a new "configure" file
@@ -107,8 +108,8 @@ Tasks immediately before a new release (must run in the following order)
 
     c. Create tar balls.
        Run command "make dist" to produce two tar balls for PnetCDF release:
-         parallel-netcdf-$(PNETCDF_VERSION).tar.gz
-         parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
+         pnetcdf-$(PNETCDF_VERSION).tar.gz
+         pnetcdf-$(PNETCDF_VERSION).tar.bz2
        (Version 1.9.0 and later will only create .gz file.)
        Starting from 1.9.0, the release date will be the date running command
        "make dist". This setting will be done automatically, unlike step 4
@@ -116,11 +117,11 @@ Tasks immediately before a new release (must run in the following order)
 
  9. Generate SHA1 checksums
     Run command:
-    openssl sha1 parallel-netcdf-1.6.1.tar.gz
-    openssl sha1 parallel-netcdf-1.6.1.tar.bz2
+    openssl sha1 pnetcdf-1.11.0.tar.gz
+    openssl sha1 pnetcdf-1.11.0.tar.bz2
 
     Example command-line output:
-    SHA1(parallel-netcdf-1.6.1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+    SHA1(pnetcdf-1.11.0.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
 
 =====================================================
 Convention of setting version numbers.
@@ -529,11 +530,11 @@ TRACE-MPI-IO:   FILE nonblocking.c FUNC ncmpii_mgetput() LINE 1875 calling MPI_F
 TRACE-MPI-IO:   FILE mpincio.c FUNC ncmpiio_close() LINE 410 calling MPI_File_close()
 
 ==============================================================================
-Mirror SVN repo to Github
+Mirror SVN repo to Github (obsolete)
 ==============================================================================
-PnetCDF svn repo is currently mirrored to GitHub daily under the project named
-Parallel NetCDF: https://github.com/Parallel-NetCDF/PnetCDF
-built.
+PnetCDF svn repo is currently mirrored to GitHub daily in
+https://github.com/wkliao/parallel-netcdf
+(This repo is no longer maintained after the office repo migrated to github)
 
 Below are Commands for creating a mirror on GitHub:
   cd /path/to/your/git/clone/of/parallel-netcdf
@@ -858,5 +859,5 @@ Note on NetCDF 4 Support
 
 Nonblocking IO not supported
 Accounting information not supported
-File info inquery not supported
+File info inquiry not supported
 

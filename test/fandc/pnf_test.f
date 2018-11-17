@@ -19,10 +19,6 @@
 ! ROUTINES
 !   Pnf_Test (Program)
 !
-! The purpose of this program is to test the Fortran interface to the
-! parallel netCDF library being developed at Argonne National Lab and
-! Northwestern Univ.
-!
 ! This code writes the array, tt(k)(j)(i), into the file 'pnf_test.nc'. It
 ! then reads the array from the file, and compares it with the original
 ! values.

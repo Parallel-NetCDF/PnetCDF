@@ -28,7 +28,7 @@ of the interface are not designed to allow for high performance parallel
 access.
 
 In this work we present a new API for creating and reading NetCDF datasets,
-the \emph{Parallel NetCDF API}.  This interface builds on the original NetCDF
+the \emph{PnetCDF API}.  This interface builds on the original NetCDF
 interface and defines semantics for parallel access to NetCDF datasets.  The
 interface is built on top of MPI-IO, allowing for further performance gains
 through the use of collective I/O optimizations that already exist in MPI-IO
@@ -67,14 +67,14 @@ types we support and any functions that we might be leaving out.}
 \section{Preliminaries}
 
 In MPI, communicators are typically used to describe collections of processes
-to MPI calls (e.g. the collective MPI-1 calls).  In our parallel NetCDF API we
+to MPI calls (e.g. the collective MPI-1 calls).  In our PnetCDF API we
 will similarly use a communicator to denote a collection of MPI processes that
 will access a NetCDF file.  By describing this collection of processes, we
-provide the underlying implementation (of our parallel NetCDF API) with
+provide the underlying implementation (of our PnetCDF API) with
 information that it can use to ensure that the file is kept in a consistent
 state.
 
-Further, by using the collective operations provided in our parallel NetCDF
+Further, by using the collective operations provided in our PnetCDF
 API (ones in which all processes in this collection participate), application
 programmers provide the underlying implementation with an opportunity to
 further optimize access to the NetCDF file.  These optimizations are performed
@@ -84,7 +84,7 @@ exactly the kinds of accesses used in NetCDF.
 
 All this said, the original NetCDF interface is made available with a minimum
 of changes so that users migrating from the original NetCDF interface will
-have little trouble moving to this new, parallel NetCDF interface.
+have little trouble moving to this new, PnetCDF interface.
 
 The decision to slightly modify the API was not made lightly.  It is
 relatively trivial to port NetCDF to use MPI-IO through the use of the MPI-IO
@@ -99,7 +99,7 @@ requirements mandated these small adjustments.
 % allow one to describe noncontiguous regions of data (in this case memory
 % regions) as an endpoint of a data transfer.
 
-\section{Parallel NetCDF API}
+\section{PnetCDF API}
 
 The NetCDF interface breaks access into two \emph{modes}, ``define'' mode and
 ``data'' mode.  The define mode is used to describe the data set to be stored,
@@ -189,7 +189,7 @@ enddef, or sync.}
 % In the original NetCDF interface the inquiry functions could be called from
 % either data or define mode.  To aid in the implementation of these functions
 % in a parallel library, \emph{inquiry functions may only be called in data mode
-% in the parallel NetCDF API}.  They return information stored prior to the last
+% in the PnetCDF API}.  They return information stored prior to the last
 % open, enddef, or sync.  This ensures that the NetCDF metadata need only be
 % kept up-to-date on all nodes when in data mode.
 %
@@ -245,7 +245,7 @@ and independent operations.
 We have chosen to implement two collections of data mode functions.  The first
 collection closely mimics the original NetCDF access functions and is intended
 to serve as an easy path of migration from the original NetCDF interface to
-the parallel NetCDF interface.  We call this subset of our parallel NetCDF
+the PnetCDF interface.  We call this subset of our PnetCDF
 interface the \emph{high level data mode} interface.
 
 The second collection uses more MPI functionality in order to provide better

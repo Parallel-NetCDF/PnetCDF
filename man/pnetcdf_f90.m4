@@ -20,8 +20,7 @@ f90 -dp -i64 ... -lpnetcdf
 .hy
 .SH "LIBRARY VERSION"
 .LP
-This document describes Parallel netCDF APIs
-for the Fortran-90 programming language.
+This document describes PnetCDF APIs for the Fortran-90 programming language.
 .HP
 \fBcharacter*80 nf90mpi_inq_libvers(\|)
 .RS

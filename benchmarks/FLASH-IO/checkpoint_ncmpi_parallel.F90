@@ -162,20 +162,20 @@
 
       double precision function checkpoint_wr_ncmpi_par (filenum, simtime)
 !
-! Do parallel i/o using Parallel netCDF
+! Do parallel i/o using PnetCDF
 !
 ! MZ -- 2-20-00
 ! Jianwei -- 11/15/02
 !
-! This version of checkpoint uses Parallel netCDF to store the PARAMESH data.
+! This version of checkpoint uses PnetCDF to store the PARAMESH data.
 ! The IO is done in parallel -- no copying of the data to a single processor
 ! to do the writing is performed.
 !
-! Parallel netCDF uses MPI-IO (via ROMIO) to support parallel IO. Each
+! PnetCDF uses MPI-IO (via ROMIO) to support parallel IO. Each
 ! processor must open the file, define the dataspaces for each netCDF
 ! variables.
 !
-! A single record for each of the PARAMESH data structures is created.  A
+! A single record for each of the PARAMESH data structures is created. A
 ! processor only writes to a subset of this record.  Each record has a
 ! dimension with length = tot_blocks.  The offset of a processor into this
 ! dimension is computed by looking at the total number of blocks that are

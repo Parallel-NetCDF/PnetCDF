@@ -320,7 +320,7 @@ $ configure --prefix=/path/to/install \
 5. Building PnetCDF on IBM SP
 -------------------------------------------------------------------------------
 # John Tannahill <tannahill1@llnl.gov> reported success building
-# parallel-netcdf on the 'seaborg' cluster (an IBM-SP at NERSC) and Tyce
+# PnetCDF on the 'seaborg' cluster (an IBM-SP at NERSC) and Tyce
 # Mclarty <mclarty3@llnl.gov> reported success on LLNL's 'frost' cluster by
 # setting these environment variables:
 

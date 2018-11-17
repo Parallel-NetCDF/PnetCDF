@@ -41,7 +41,7 @@ libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
 Name: PnetCDF
-Description: Parallel-NetCDF (PnetCDF) provides parallel access to classic NetCDF files
+Description: A parallel I/O library for accessing NetCDF files in classic formats.
 URL: https://parallel-netcdf.github.io
 Version: @PNETCDF_VERSION@
 Cflags: -I${includedir}

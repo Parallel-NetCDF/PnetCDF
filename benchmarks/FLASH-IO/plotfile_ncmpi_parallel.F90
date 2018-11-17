@@ -156,12 +156,12 @@
 
       double precision function plotfile_ncmpi_par(filenum, simtime, corners)
 !
-! plotfile using parallel i/o using Parallel netCDF
+! plotfile using parallel i/o using PnetCDF
 !
 ! MZ -- 4-29-00
 ! Jianwei -- 11/15/02
 !
-! This version of the plotfile routine is based on the Parallel netCDF
+! This version of the plotfile routine is based on the PnetCDF
 ! checkpoint.  The IO is done in parallel -- no copying of the data to
 ! a single processor to do the writing is performed.
 !
@@ -175,7 +175,7 @@
 ! on the parallel filesystems.  The overhead for storing an entire
 ! variable (with corners) is small, <~ 1%.
 !
-! Parallel netCDF uses MPI-IO (via ROMIO) to support parallel IO.  Each
+! PnetCDF uses MPI-IO (via ROMIO) to support parallel IO.  Each
 ! processor must open the file, define the dataspaces for each netCDF variable.
 !
 ! A single record for each of the PARAMESH data structures is created.  A

@@ -43,8 +43,8 @@ Example build instructions for HDF5 and NetCDF-4 are given below.
     `--with-netcdf` can be used to specify the installation path of NetCDF-4.
     For example,
     ```
-    gzip -dc parallel-netcdf-1.11.0.tar.gz | tar -xf -
-    cd parallel-netcdf-1.11.0
+    gzip -dc pnetcdf-1.11.0.tar.gz | tar -xf -
+    cd pnetcdf-1.11.0
     ./configure --prefix=/PnetCDF/install/path \
                 --enable-netcdf4 \
                 --with-netcdf4=/NetCDF4/install/path

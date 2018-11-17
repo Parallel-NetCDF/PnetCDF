@@ -4496,8 +4496,8 @@ ncmpi_mget_varm_ulonglong_all(int ncid, int num, int *varids,
 
 
 /* Macros below are defined in serial netcdf (3.5.0) for backwards
- * compatibility with older netcdf code.   We aren't concerned with backwards
- * compatibility, so if your code doesn't compile with parallel-netcdf, maybe
+ * compatibility with older netcdf code. We aren't concerned with backwards
+ * compatibility, so if your code doesn't compile with PnetCDF, maybe
  * this is why:
  *
  *

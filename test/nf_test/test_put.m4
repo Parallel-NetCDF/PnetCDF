@@ -1243,8 +1243,7 @@ C*/
 ])dnl
 
 
-dnl  since parallel-netcdf doesn't have varm type, we haven't completed the
-dnl  parallel-netcdf-ification of these routines
+dnl
 dnl TEST_NFMPI_PUT_VARM(TYPE)
 dnl
 define([TEST_NFMPI_PUT_VARM],dnl
