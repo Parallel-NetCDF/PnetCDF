@@ -452,7 +452,7 @@ Complete documentation for the PnetCDF libraries can be found at the PnetCDF web
 .sp
 .SH "LIBRARY VERSION"
 .LP
-This document describes Parallel netCDF APIs
+This document describes PnetCDF APIs
 for the LANGUAGE() programming language.
 .HP
 DECL(RETSTR(), inq_libvers, (VOID_ARG))
@@ -1259,7 +1259,7 @@ Per-variable fill mode setting is also available through
 FREF(def_var_fill).
 In PnetCDF, changing fill mode must be done in define mode.
 In netCDF, it is true only for fixed-size variables.
-For record variables, changing fill mode can be made at any time in netCDF.
+For record variables, changing fill mode can be made at any time in NetCDF.
 .SH "ENVIRONMENT VARIABLES"
 .TP 4
 .B PNETCDF_SAFE_MODE

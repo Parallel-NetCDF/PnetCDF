@@ -1,10 +1,10 @@
 
-PnetCDF (Parallel netCDF) is a high-performance parallel I/O library for
-accessing the classic Unidata's NetCDF files, specifically the CDF 1, 2, and 5
-formats. Although NetCDF supports parallel I/O starting from version 4, it is
-built on top of HDF5 and thus its parallel feature requires files in HDF5
-format. PnetCDF is currently the only option for performing parallel I/O on
-files in classic formats.
+PnetCDF is a high-performance parallel I/O library for accessing the classic
+Unidata's NetCDF files, specifically the CDF 1, 2, and 5 formats. Although
+NetCDF supports parallel I/O starting from version 4, it is built on top of
+HDF5 and thus its parallel feature requires files in HDF5 format. PnetCDF is
+currently the only option for performing parallel I/O on files in classic
+formats.
 
 Starting from version 1.1.0, PnetCDF supports the CDF-5 file format, an
 extension of CDF-2, that supports more atomic data types and allows users to
@@ -16,8 +16,8 @@ MPI-IO to achieve high-performance parallel I/O.
 
 More extensive installation guides can be found in file INSTALL. Additional
 information regarding the contents of the release can be found in the
-RELEASE_NOTES file in the top-level directory. Finally, the PnetCDF project
-web sites below contain information on bug fixes and software releases.
+RELEASE_NOTES file in the top-level directory. Finally, the PnetCDF project web
+sites below contain information on bug fixes and software releases.
     https://parallel-netcdf.github.io
 
 The previous project web page is now retired and has been migrated to Github.
@@ -39,7 +39,7 @@ Requirements:
              - either yacc or bison
 	     - either lex or flex
       These are usually part of your operating system's development tools.
-    - To build PnetCDF with NetCDF-4 support, you will need the following
+    - To build PnetCDF with NetCDF-4 feature, you will need the following
       additional libraries:
         - NetCDF-4: https://github.com/Unidata/netcdf-c
         - HDF5: https://portal.hdfgroup.org/display/support

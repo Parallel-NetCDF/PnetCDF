@@ -8,7 +8,9 @@ This is essentially a placeholder for the next release note ...
     APIs to read and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag
     when calling ncmpi_create() to create NetCDF-4 files. For opening NetCDF-4
     files, no additional flag is needed, as PnetCDF automatically detects the
-    file format and uses the corresponding I/O driver underneath.
+    file format and uses the HDF5 I/O driver underneath. This feature is
+    provided for convenience purpose. The parallel I/O performance to NetCDF-4
+    files is expected no difference from using NetCDF-4 library directly.
   + Per-file thread-safe capability is added. This feature can be enabled at
     configure time by adding command-line option `--enable-thread-safe`. In
     addition, option `--with-pthread` can be used to specify the install path
@@ -16,10 +18,10 @@ This is essentially a placeholder for the next release note ...
     one-thread-per-file I/O operations and the classic CDF-1, 2, and 5 files.
 
 * New optimization
-  + On some systems, e.g. Cori @NERSC, collective MPI-IO may perform
-    significantly poor when the I/O buffer is noncontiguous, compared against a
-    contiguous one. To avoid, `ncmpi_wait()` and `ncmpi_wait_all()` checks if
-    the buffer is noncontiguous and size is less than 16 MiB. If yes, a
+  + On some systems, e.g. Cori @NERSC, collective MPI-IO may perform poorly
+    when the I/O buffer is noncontiguous, compared to a contiguous one. To
+    avoid this, `ncmpi_wait()` and `ncmpi_wait_all()` now check whether the
+    buffer is noncontiguous and size is less than 16 MiB. If both are true, a
     temporary contiguous buffer is allocated to copy the data over and used in
     the MPI read or write calls. See
     [PR #26](https://github.com/Parallel-NetCDF/PnetCDF/pull/26). Programs

@@ -207,7 +207,7 @@ static int
 pnetcdf_read(MPI_Comm comm, char *filename)
 {
     int i, rank, nprocs, err, nerrs=0, local_nx;
-    int ncid, dimids[2], dim_t, dim_y, dim_x, rec_var, fix_var;
+    int ncid, dim_t, dim_y, dim_x, rec_var, fix_var;
     double *buf;
     char *str_att;
     MPI_Offset time_len, global_ny, global_nx, str_len;

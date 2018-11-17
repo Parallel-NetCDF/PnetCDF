@@ -1496,8 +1496,6 @@
         call print_nok(nok)
         end
 
-! parallel-netcdf doesn't implement set_fill, so i have not
-!    parallel-netcdfified this subroutine
 ! Test nf90mpi_set_fill
 !    try with bad netCDF handle, check error
 !    try in read-only mode, check error

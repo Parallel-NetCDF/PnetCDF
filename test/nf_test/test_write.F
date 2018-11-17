@@ -1482,8 +1482,6 @@ C           /* restore attributes. change to data mode. try to delete */
         call print_nok(nok)
         end
 
-C parallel-netcdf doesn't implement set_fill, so i have not
-C    parallel-netcdfified this subroutine
 C Test nfmpi_set_fill
 C    try with bad netCDF handle, check error
 C    try in read-only mode, check error

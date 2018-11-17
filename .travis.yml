@@ -40,7 +40,7 @@ before_install:
   # Below is for Ubuntu
   # - DateStr=`date -r configure.ac +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
   # dump the Coverity Scan SCM log file
-  # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/scm_log.txt
+  # - cat /home/travis/build/wkliao/pnetcdf/cov-int/scm_log.txt
 
 script: ./travis-run-tests.sh
   # continue the above "build_command" for static library only (default)
@@ -56,7 +56,7 @@ after_success:
 after_failure:
   - cat ./config.log
   - make -s distclean
-  # - cat /home/travis/build/wkliao/parallel-netcdf/cov-int/build-log.txt
+  # - cat /home/travis/build/wkliao/pnetcdf/cov-int/build-log.txt
 
 notifications:
   email: false
