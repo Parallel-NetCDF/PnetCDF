@@ -2270,18 +2270,17 @@ wait_getput(NC         *ncp,
         if (req->lead->varp->ndims == 0) { /* scalar variable */
             req->offset_start = req->lead->varp->begin;
             req->offset_end   = req->lead->varp->begin + req->lead->varp->xsz;
-            continue;
         }
+        else {
+            /* start/count/stride are in the same contiguously allocated array */
+            count  = req->start + req->lead->varp->ndims;
+            stride = (fIsSet(req->lead->flag, NC_REQ_STRIDE_NULL)) ? NULL :
+                     count + req->lead->varp->ndims;
 
-        /* start/count/stride are in the same contiguously allocated array */
-        count  = req->start + req->lead->varp->ndims;
-        stride = (fIsSet(req->lead->flag, NC_REQ_STRIDE_NULL)) ? NULL :
-                 count + req->lead->varp->ndims;
-
-        /* calculate access range of this request */
-        calculate_access_range(ncp, req->lead->varp, req->start, count, stride,
-                               &req->offset_start, &req->offset_end);
-
+            /* calculate access range of this request */
+            calculate_access_range(ncp, req->lead->varp, req->start, count, stride,
+                                   &req->offset_start, &req->offset_end);
+        }
         if (i > 0) {
             /* check for interleaved requests */
             if (req->offset_start < reqs[i-1].offset_end) {
