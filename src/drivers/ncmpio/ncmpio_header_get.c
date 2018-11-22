@@ -362,6 +362,13 @@ hdr_fetch(bufferinfo *gbp) {
     MPI_Comm_rank(gbp->comm, &rank);
     if (rank == 0) {
         MPI_Status mpistatus;
+        /* explicitly initialize mpistatus object to 0. For zero-length read,
+         * MPI_Get_count may report incorrect result for some MPICH version,
+         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+         * Thus we initialize it above to work around.
+         */
+        memset(&mpistatus, 0, sizeof(MPI_Status));
+
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
         TRACE_IO(MPI_File_read_at)(gbp->collective_fh,

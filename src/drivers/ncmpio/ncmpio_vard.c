@@ -54,13 +54,12 @@ getput_vard(NC               *ncp,
             int               reqMode)
 {
     void *xbuf=NULL;
-    int mpireturn, status=NC_NOERR, err=NC_NOERR;
+    int mpireturn, status=NC_NOERR, err=NC_NOERR, xtype_is_contig;
     int el_size, buftype_is_contig=0, need_swap_back_buf=0;
-    int nelems=0, need_convert=0, need_swap=0;
+    int nelems=0, need_convert=0, need_swap=0, coll_indep, rw_flag;
+    MPI_File fh;
     MPI_Offset fnelems=0, bnelems=0, offset=0;
-    MPI_Status mpistatus;
     MPI_Datatype etype=MPI_DATATYPE_NULL, xtype;
-    MPI_File fh=MPI_FILE_NULL;
 #if MPI_VERSION >= 3
     MPI_Count filetype_size=0;
     MPI_Count true_lb=0, true_ub=0, true_extent=0;
@@ -188,6 +187,7 @@ getput_vard(NC               *ncp,
             goto err_check;
         }
     }
+    xtype_is_contig = buftype_is_contig;
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, etype);
@@ -219,6 +219,7 @@ getput_vard(NC               *ncp,
                 goto err_check;
             }
             need_swap_back_buf = 0;
+            xtype_is_contig = 1;
 
             /* pack buf to xbuf, byte-swap and type-convert on xbuf, which
              * will later be used in MPI file write */
@@ -244,6 +245,7 @@ getput_vard(NC               *ncp,
                 DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
                 goto err_check;
             }
+            xtype_is_contig = 1;
         }
     }
 
@@ -292,66 +294,26 @@ err_check:
     }
     status = err;
 
-    fh = (reqMode & NC_REQ_COLL) ? ncp->collective_fh : ncp->independent_fh;
+    if (fIsSet(reqMode, NC_REQ_COLL)) {
+        fh = ncp->collective_fh;
+        coll_indep = NC_REQ_COLL;
+    } else {
+        fh = ncp->independent_fh;
+        coll_indep = NC_REQ_INDEP;
+    }
 
-    /* set the file view */
+    /* set the MPI-IO fileview, this is a collective call */
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
-        bufcount = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
+        nelems = 0; /* skip this request */
     }
 
-#ifdef _USE_MPI_GET_COUNT
-    /* explicitly initialize mpistatus object to 0, see comments below */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
+    rw_flag = (fIsSet(reqMode, NC_REQ_RD)) ? NC_REQ_RD : NC_REQ_WR;
 
-    if (fIsSet(reqMode, NC_REQ_WR)) {
-        if (fIsSet(reqMode, NC_REQ_COLL)) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, nelems, xtype,
-                                            &mpistatus);
-            if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
-        }
-        else { /* independent API */
-            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, nelems, xtype,
-                                        &mpistatus);
-            if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
-        }
-        if (mpireturn == MPI_SUCCESS) {
-#ifdef _USE_MPI_GET_COUNT
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            ncp->put_size += put_size;
-#else
-            ncp->put_size += filetype_size;
-#endif
-        }
-    }
-    else {  /* read request */
-        if (fIsSet(reqMode, NC_REQ_COLL)) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, nelems, xtype,
-                                           &mpistatus);
-            if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
-        }
-        else { /* independent API */
-            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, nelems, xtype,
-                                       &mpistatus);
-            if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
-        }
-        if (mpireturn == MPI_SUCCESS) {
-#ifdef _USE_MPI_GET_COUNT
-            int get_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-            ncp->get_size += get_size;
-#else
-            ncp->get_size += filetype_size;
-#endif
-        }
-    }
+    err = ncmpio_read_write(ncp, rw_flag, coll_indep, offset, nelems,
+                            xtype, xbuf, xtype_is_contig);
+    if (status == NC_NOERR) status = err;
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.

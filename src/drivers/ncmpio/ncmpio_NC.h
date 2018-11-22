@@ -572,4 +572,10 @@ ncmpio_unpack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
                  MPI_Datatype etype, MPI_Datatype imaptype, int need_convert,
                  int need_swap, void *buf, void *xbuf);
 
+/* Begin defined in ncmpio_file_io.c ----------------------------------------*/
+extern int
+ncmpio_read_write(NC *ncp, int rw_flag, int coll_indep, MPI_Offset offset,
+                  int len, MPI_Datatype buf_type, void *buf,
+                  int buftype_is_contig);
+
 #endif /* _NC_H */
