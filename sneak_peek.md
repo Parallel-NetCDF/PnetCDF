@@ -98,7 +98,8 @@ This is essentially a placeholder for the next release note ...
     burst buffers for each user write request.
 
 * Bug fixes
-  + Fix bug of checking interleaved requests for scalar variables.
+  + Fix bug of checking interleaved requests for scalar variables. See
+    [PR #27](https://github.com/Parallel-NetCDF/PnetCDF/pull/27).
   + When building PnetCDF using the IBM xlc compiler with -O optimization
     option on Little Endian platforms, users may encounter errors related to
     strict ANSI C aliasing rules. Thanks to Jim Edwards for reporting and Rafik
