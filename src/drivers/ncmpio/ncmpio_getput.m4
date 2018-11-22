@@ -119,8 +119,8 @@ put_varm(NC               *ncp,
     void *xbuf=NULL;
     int mpireturn, err=NC_NOERR, status=NC_NOERR, nelems, buftype_is_contig;
     int el_size, need_convert, need_swap, in_place_swap, need_swap_back_buf=0;
+    int coll_indep, xtype_is_contig;
     MPI_Offset bnelems=0, nbytes=0, offset=0;
-    MPI_Status mpistatus;
     MPI_Datatype itype, xtype, imaptype, filetype=MPI_BYTE;
     MPI_File fh;
 
@@ -140,6 +140,7 @@ put_varm(NC               *ncp,
                                 buftype, &itype, &el_size, &bnelems,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) goto err_check;
+    xtype_is_contig = buftype_is_contig;
 
     if (buftype == MPI_DATATYPE_NULL) { /* buftype and bufcount are ignored */
         bufcount = bnelems;
@@ -199,6 +200,7 @@ put_varm(NC               *ncp,
             goto err_check;
         }
         need_swap_back_buf = 0;
+        xtype_is_contig = 1;
 
         /* pack buf to xbuf, byte-swap and type-convert on xbuf, which
          * will later be used in MPI file write */
@@ -263,58 +265,29 @@ err_check:
      * have to process this one record at a time.
      */
 
-    fh = (reqMode & NC_REQ_COLL) ? ncp->collective_fh : ncp->independent_fh;
+    if (fIsSet(reqMode, NC_REQ_COLL)) {
+        fh = ncp->collective_fh;
+        coll_indep = NC_REQ_COLL;
+    } else {
+        fh = ncp->independent_fh;
+        coll_indep = NC_REQ_INDEP;
+    }
 
     /* MPI_File_set_view is collective */
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
-        nbytes = 0; /* skip this request */
+        nelems = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
     }
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
-
-#ifdef _USE_MPI_GET_COUNT
-    /* explicitly initialize mpistatus object to 0, see comments below */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
 
     /* xtype is the element data type (MPI primitive type) in xbuf to be
      * written to the variable defined in file. Note data stored in xbuf is in
      * the external data type, ready to be written to file.
      */
-    if (fIsSet(reqMode, NC_REQ_COLL)) {
-        TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, nelems, xtype,
-                                        &mpistatus);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) {
-                err = (err == NC_EFILE) ? NC_EWRITE : err;
-                DEBUG_ASSIGN_ERROR(status, err)
-            }
-        }
-    }
-    else {  /* reqMode == NC_REQ_INDEP */
-        TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, nelems, xtype,
-                                    &mpistatus);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) {
-                err = (err == NC_EFILE) ? NC_EWRITE : err;
-                DEBUG_ASSIGN_ERROR(status, err)
-            }
-        }
-    }
-    if (mpireturn == MPI_SUCCESS) {
-#ifdef _USE_MPI_GET_COUNT
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->put_size += put_size;
-#else
-        ncp->put_size += nbytes;
-#endif
-    }
+    err = ncmpio_read_write(ncp, NC_REQ_WR, coll_indep, offset, nelems, xtype,
+                            xbuf, xtype_is_contig);
+    if (status == NC_NOERR) status = err;
 
     /* done with xbuf */
     if (xbuf != NULL && xbuf != buf) NCI_Free(xbuf);
@@ -395,10 +368,9 @@ get_varm(NC               *ncp,
          int               reqMode)   /* WR/RD/COLL/INDEP */
 {
     void *xbuf=NULL;
-    int mpireturn, err=NC_NOERR, status=NC_NOERR;
+    int err=NC_NOERR, status=NC_NOERR, coll_indep, xtype_is_contig;
     int nelems, el_size, buftype_is_contig, need_swap=0, need_convert=0;
     MPI_Offset bnelems=0, nbytes=0, offset=0;
-    MPI_Status mpistatus;
     MPI_Datatype itype, xtype, filetype=MPI_BYTE, imaptype=MPI_DATATYPE_NULL;
     MPI_File fh;
 
@@ -418,6 +390,7 @@ get_varm(NC               *ncp,
                                 buftype, &itype, &el_size, &bnelems,
                                 &nbytes, &buftype_is_contig);
     if (err != NC_NOERR) goto err_check;
+    xtype_is_contig = buftype_is_contig;
 
     if (buftype == MPI_DATATYPE_NULL) { /* buftype and bufcount are ignored */
         bufcount = bnelems;
@@ -453,9 +426,9 @@ get_varm(NC               *ncp,
 
     /* If we want to use user buffer, buf, to read data from the file,
      * following 3 conditions must be true.
-     * 1. buftype is a contiguous MPI datatype and
-     * 2. imap is either NULL or indicates a contiguous memory access.
-     * 3. xtype and itype matches (need_convert is false)
+     * 1. xtype and itype matches (need_convert is false) and
+     * 2. imap is either NULL or indicates a contiguous memory access. and
+     * 3. need no swap OR buftype is a contiguous MPI datatype.
      * For condition 1, buftype is decoded in ncmpii_buftype_decode()
      * For condition 2, imap is checked in ncmpii_create_imaptype()
      */
@@ -466,6 +439,7 @@ get_varm(NC               *ncp,
     }
     else { /* allocate xbuf for reading */
         xbuf = NCI_Malloc((size_t)nbytes);
+        xtype_is_contig = 1;
         if (xbuf == NULL) {
             DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
             goto err_check;
@@ -523,66 +497,37 @@ err_check:
      * have to process this one record at a time.
      */
 
-    fh = (reqMode & NC_REQ_COLL) ? ncp->collective_fh : ncp->independent_fh;
+    if (fIsSet(reqMode, NC_REQ_COLL)) {
+        fh = ncp->collective_fh;
+        coll_indep = NC_REQ_COLL;
+    } else {
+        fh = ncp->independent_fh;
+        coll_indep = NC_REQ_INDEP;
+    }
 
     /* MPI_File_set_view is collective */
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
-        nbytes = 0; /* skip this request */
+        nelems = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
     }
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
-
-#ifdef _USE_MPI_GET_COUNT
-    /* explicitly initialize mpistatus object to 0, see comments below */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
 
     /* xtype is the element data type (MPI primitive type) in xbuf to be
      * read from the variable defined in file. Note xbuf will contain data read
      * from the file and hence is in the external data type.
      */
-    if (fIsSet(reqMode, NC_REQ_COLL)) {
-        TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, nelems, xtype,
-                                       &mpistatus);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) {
-                err = (err == NC_EFILE) ? NC_EREAD : err;
-                DEBUG_ASSIGN_ERROR(status, err)
-            }
-        }
-    }
-    else {  /* reqMode == NC_REQ_INDEP */
-        TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, nelems, xtype,
-                                   &mpistatus);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) {
-                err = (err == NC_EFILE) ? NC_EREAD : err;
-                DEBUG_ASSIGN_ERROR(status, err)
-            }
-        }
-    }
-    if (mpireturn == MPI_SUCCESS) {
-#ifdef _USE_MPI_GET_COUNT
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        ncp->get_size += get_size;
-#else
-        ncp->get_size += nbytes;
-#endif
-    }
-
-    if (nbytes == 0) return status;
-
-    /* unpack xbuf into user buffer, buf */
-    err = ncmpio_unpack_xbuf(ncp->format, varp, bufcount, buftype,
-                             buftype_is_contig, bnelems, itype, imaptype,
-                             need_convert, need_swap, buf, xbuf);
+    err = ncmpio_read_write(ncp, NC_REQ_RD, coll_indep, offset, nelems, xtype,
+                            xbuf, xtype_is_contig);
     if (status == NC_NOERR) status = err;
+
+    if (nelems > 0) {
+        /* unpack xbuf into user buffer, buf */
+        err = ncmpio_unpack_xbuf(ncp->format, varp, bufcount, buftype,
+                                 buftype_is_contig, bnelems, itype, imaptype,
+                                 need_convert, need_swap, buf, xbuf);
+        if (status == NC_NOERR) status = err;
+    }
 
     if (xbuf != buf) NCI_Free(xbuf);
 

@@ -1675,13 +1675,7 @@ req_aggregation(NC     *ncp,
     MPI_Aint      b_begin, b_addr, *f_disps, *b_disps;
     MPI_Datatype  filetype, buf_type, *ftypes, *btypes;
     MPI_File fh;
-    MPI_Status mpistatus;
     MPI_Offset max_end, offset;
-#if MPI_VERSION >= 3
-    MPI_Count buf_type_size=0;
-#else
-    int buf_type_size=0;
-#endif
 
     if (num_reqs == 0) { /* only NC_REQ_COLL can reach here for 0 request */
         assert(coll_indep == NC_REQ_COLL);
@@ -1968,6 +1962,9 @@ req_aggregation(NC     *ncp,
             if (btypes[i] != MPI_BYTE) MPI_Type_free(&btypes[i]);
         }
     }
+    NCI_Free(ftypes);
+    NCI_Free(f_blocklens);
+    NCI_Free(f_disps);
 
     /* non-lead request list is no longer used once fileview and buftype have
      * been constructed. Free the start arrays allocated at lead requests.
@@ -1983,166 +1980,26 @@ req_aggregation(NC     *ncp,
     }
     NCI_Free(reqs);
 
-#if MPI_VERSION >= 3
-    /* MPI_Type_size_x is introduced in MPI 3.0 */
-    MPI_Type_size_x(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (buf_type_size > INT_MAX) {
-        /* aggregated request size > 2 GiB, ROMIO currently does not support
-         * a single request with amount > 2 GiB
-         */
-        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
-        if (ncp->safe_mode)
-            printf("Error at line %d file %s: size of aggregated nonblocking requests (%lld) > INT_MAX\n", __LINE__,__FILE__,(long long)buf_type_size);
-        if (coll_indep == NC_REQ_INDEP) goto fn_exit;
-        buf_len = 0; /* allow this process to participate collective call */
-    }
-#endif
-#else
-    MPI_Type_size(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (buf_type_size < 0) {
-        /* In MPI 2.x and prior, argument "size" in MPI_Type_size is defined
-         * as of type int. When int overflow occurs, the returned value in
-         * "size" argument may be a negative. This means the aggregated request
-         * size > 2 GiB. However, ROMIO currently does not support a single
-         * request with amount > 2 GiB
-         */
-        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
-        if (ncp->safe_mode)
-            printf("Error at line %d file %s: size of aggregated nonblocking requests > INT_MAX\n", __LINE__,__FILE__);
-        if (coll_indep == NC_REQ_INDEP) goto fn_exit;
-        buf_len = 0; /* allow this process to participate collective call */
-    }
-#endif
-#endif
-
     if (coll_indep == NC_REQ_COLL)
         fh = ncp->collective_fh;
     else
         fh = ncp->independent_fh;
 
-    /* set the file view */
+    /* set the MPI-IO fileview, this is a collective call */
     offset = 0;
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
-    if (err != NC_NOERR) {
-        buf_len = 0; /* skip this request */
-        if (status == NC_NOERR) status = err;
-    }
-
-#ifdef _USE_MPI_GET_COUNT
-        /* explicitly initialize mpistatus object to 0, see comments below */
-        memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
-
-    if (rw_flag == NC_REQ_RD) {
-        void         *xbuf=buf;
-        int           xlen=buf_len;
-        MPI_Datatype  xbuf_type=buf_type;
-
-        /* if the read buffer is noncontiguous and size is < 16 MiB, allocate a
-         * temporary buffer and use it to read, as some MPI, e.g. Cray on KNL,
-         * can be significantly slow when read buffer is noncontiguous.
-         */
-        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            xlen *= buf_type_size;
-            xbuf = NCI_Malloc(xlen);
-            xbuf_type = MPI_BYTE;
-        }
-
-        if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, xlen, xbuf_type,
-                                           &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        } else {
-            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, xlen, xbuf_type,
-                                       &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        }
-        if (mpireturn == MPI_SUCCESS) {
-            /* update the number of bytes read since file open */
-#ifdef _USE_MPI_GET_COUNT
-            int get_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-            ncp->get_size += get_size;
-#else
-            ncp->get_size += buf_len * buf_type_size;
-#endif
-        }
-        if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
-            int pos=0;
-            MPI_Unpack(xbuf, xlen, &pos, buf, buf_len, buf_type, MPI_COMM_SELF);
-            NCI_Free(xbuf);
-        }
-    } else { /* NC_REQ_WR */
-        void         *xbuf=buf;
-        int           xlen=buf_len;
-        MPI_Datatype  xbuf_type=buf_type;
-
-        /* if the write buffer is noncontiguous and size is < 16 MiB, allocate a
-         * temporary buffer and use it to write, as some MPI, e.g. Cray on KNL,
-         * can be significantly slow when write buffer is noncontiguous.
-         */
-        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            int pos=0;
-            xlen *= buf_type_size;
-            xbuf = NCI_Malloc(xlen);
-            /* pack noncontiguous buf to contiguous xbuf */
-            MPI_Pack(buf, buf_len, buf_type, xbuf, xlen, &pos, MPI_COMM_SELF);
-            xbuf_type = MPI_BYTE;
-        }
-
-        if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, xlen, xbuf_type,
-                                            &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        } else {
-            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, xlen, xbuf_type,
-                                        &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        }
-        if (mpireturn == MPI_SUCCESS) {
-#ifdef _USE_MPI_GET_COUNT
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            ncp->put_size += put_size;
-#else
-            ncp->put_size += buf_len * buf_type_size;
-#endif
-        }
-        if (xbuf != buf) NCI_Free(xbuf);
-    }
-
-fn_exit:
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
+    if (err != NC_NOERR) {
+        if (status == NC_NOERR) status = err;
+        if (coll_indep == NC_REQ_INDEP) return status;
+        buf_len = 0;
+    }
+
+    /* call MPI_File_read/MPI_File_write */
+    err = ncmpio_read_write(ncp, rw_flag, coll_indep, offset, buf_len, buf_type,
+                            buf, ((buf_type == MPI_BYTE) ? 1 : 0));
+    if (status == NC_NOERR) status = err;
+
     if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
 
     /* No longer need to reset the file view, as the root's fileview includes
@@ -2150,10 +2007,6 @@ fn_exit:
      TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                  MPI_INFO_NULL);
      */
-
-    NCI_Free(ftypes);
-    NCI_Free(f_blocklens);
-    NCI_Free(f_disps);
 
     return status;
 }
@@ -2369,21 +2222,10 @@ mgetput(NC     *ncp,
     int i, j, len=0, numLeadReqs, status=NC_NOERR, mpireturn, err, *blocklens;
     void *buf=NULL;
     NC_lead_req *lead_list;
-    MPI_Status mpistatus;
     MPI_Datatype filetype, buf_type=MPI_BYTE;
-    MPI_File fh;
     MPI_Offset offset=0;
+    MPI_File fh;
     MPI_Aint *disps;
-#if MPI_VERSION >= 3
-    MPI_Count buf_type_size=0;
-#else
-    int buf_type_size=0;
-#endif
-
-    if (coll_indep == NC_REQ_COLL)
-        fh = ncp->collective_fh;
-    else
-        fh = ncp->independent_fh;
 
     blocklens = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
     disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_AINT);
@@ -2402,26 +2244,10 @@ mgetput(NC     *ncp,
         /* For collective I/O, we still need to participate the successive
            collective calls: setview/read/write */
         filetype = MPI_BYTE;
-    }
-
-    /* set the MPI-IO fileview, this is a collective call */
-    offset = 0;
-    err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
-    if (err != NC_NOERR) {
-        if (coll_indep == NC_REQ_INDEP) {
-            NCI_Free(blocklens);
-            NCI_Free(disps);
-            NCI_Free(reqs);
-            return status;
-        }
-        if (status == NC_NOERR) status = err;
-    }
-    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
-
-    /* when error, participate the collective I/O with zero-length request */
-    if (status != NC_NOERR || num_reqs == 0) {
         buf = NULL;
         len = 0;
+        NCI_Free(disps);
+        NCI_Free(blocklens);
         goto mpi_io;
     }
 
@@ -2550,161 +2376,30 @@ mgetput(NC     *ncp,
         NCI_Free(lead_list[i].start);
         lead_list[i].start = NULL;
     }
-    NCI_Free(reqs);
-
-#if MPI_VERSION >= 3
-    /* MPI_Type_size_x is introduced in MPI 3.0 */
-    MPI_Type_size_x(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (buf_type_size > INT_MAX) {
-        /* aggregated request size > 2 GiB, ROMIO currently does not support
-         * a single request with amount > 2 GiB
-         */
-        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
-        if (ncp->safe_mode)
-            printf("Error at line %d file %s: size of aggregated nonblocking requests (%lld) > INT_MAX\n", __LINE__,__FILE__,(long long)buf_type_size);
-        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
-        if (coll_indep == NC_REQ_INDEP) return status;
-        buf_type = MPI_BYTE;
-        len = 0; /* allow this process to participate collective call */
-    }
-#endif
-#else
-    MPI_Type_size(buf_type, &buf_type_size);
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (buf_type_size < 0) {
-        /* In MPI 2.x and prior, argument "size" in MPI_Type_size is defined
-         * as of type int. When int overflow occurs, the returned value in
-         * "size" argument may be a negative. This means the aggregated request
-         * size > 2 GiB. However, ROMIO currently does not support a single
-         * request with amount > 2 GiB
-         */
-        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
-        if (ncp->safe_mode)
-            printf("Error at line %d file %s: size of aggregated nonblocking requests > INT_MAX\n", __LINE__,__FILE__);
-        if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
-        if (coll_indep == NC_REQ_INDEP) return status;
-        buf_type = MPI_BYTE;
-        len = 0; /* allow this process to participate collective call */
-    }
-#endif
-#endif
 
 mpi_io:
+    NCI_Free(reqs);
 
-#ifdef _USE_MPI_GET_COUNT
-    /* explicitly initialize mpistatus object to 0, see comments below */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
+    if (coll_indep == NC_REQ_COLL)
+        fh = ncp->collective_fh;
+    else
+        fh = ncp->independent_fh;
 
-    if (rw_flag == NC_REQ_RD) {
-        void         *xbuf=buf;
-        int           xlen=len;
-        MPI_Datatype  xbuf_type=buf_type;
-
-        /* if the read buffer is noncontiguous and size is < 16 MiB, allocate a
-         * temporary buffer and use it to read, as some MPI, e.g. Cray on KNL,
-         * can be significantly slow when read buffer is noncontiguous.
-         */
-        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            xlen *= buf_type_size;
-            xbuf = NCI_Malloc(xlen);
-            xbuf_type = MPI_BYTE;
-        }
-
-        if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, xlen, xbuf_type,
-                                           &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        } else {
-            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, xlen, xbuf_type,
-                                       &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        }
-        if (mpireturn == MPI_SUCCESS) {
-            /* update the number of bytes read since file open */
-#ifdef _USE_MPI_GET_COUNT
-            int get_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-            ncp->get_size += get_size;
-#else
-            ncp->get_size += len * buf_type_size;
-#endif
-        }
-        if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
-            int pos=0;
-            MPI_Unpack(xbuf, xlen, &pos, buf, len, buf_type, MPI_COMM_SELF);
-            NCI_Free(xbuf);
-        }
-    } else { /* NC_REQ_WR */
-        void         *xbuf=buf;
-        int           xlen=len;
-        MPI_Datatype  xbuf_type=buf_type;
-
-        /* if the write buffer is noncontiguous and size is < 16 MiB, allocate a
-         * temporary buffer and use it to write, as some MPI, e.g. Cray on KNL,
-         * can be significantly slow when write buffer is noncontiguous.
-         */
-        if (buf_type != MPI_BYTE && buf_type_size <= 16777216) {
-            int pos=0;
-            xlen *= buf_type_size;
-            xbuf = NCI_Malloc(xlen);
-            MPI_Pack(buf, len, buf_type, xbuf, xlen, &pos, MPI_COMM_SELF);
-            xbuf_type = MPI_BYTE;
-        }
-
-        if (coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, xlen, xbuf_type,
-                                            &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        } else {
-            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, xlen, xbuf_type,
-                                        &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
-        }
-        if (mpireturn == MPI_SUCCESS) {
-            /* update the number of bytes written since file open */
-#ifdef _USE_MPI_GET_COUNT
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            ncp->put_size += put_size;
-#else
-            ncp->put_size += len * buf_type_size;
-#endif
-        }
-        if (xbuf != buf) NCI_Free(xbuf);
+    /* set the MPI-IO fileview, this is a collective call */
+    err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
+    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
+    if (err != NC_NOERR) {
+        if (status == NC_NOERR) status = err;
+        if (coll_indep == NC_REQ_INDEP) return status;
+        len = 0;
     }
 
-    if (buf_type != MPI_BYTE) /* free user buffer type */
-        mpireturn = MPI_Type_free(&buf_type);
+    /* call MPI_File_read/MPI_File_write */
+    err = ncmpio_read_write(ncp, rw_flag, coll_indep, offset, len, buf_type,
+                            buf, ((buf_type == MPI_BYTE) ? 1 : 0));
+    if (status == NC_NOERR) status = err;
+
+    if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.

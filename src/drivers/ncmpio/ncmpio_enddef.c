@@ -79,7 +79,11 @@ move_file_block(NC         *ncp,
             nbytes -= chunk_size*nprocs;
         }
 
-        /* explicitly initialize mpistatus object to 0, see comments below */
+	/* explicitly initialize mpistatus object to 0. For zero-length read,
+	 * MPI_Get_count may report incorrect result for some MPICH version,
+	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+	 * Thus we initialize it above to work around.
+         */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         /* read the original data @ from+nbytes+rank*chunk_size */
@@ -130,7 +134,11 @@ move_file_block(NC         *ncp,
          * that have not been written before. Below uses the former option.
          */
 #ifdef _USE_MPI_GET_COUNT
-        /* explicitly initialize mpistatus object to 0, see comments below */
+	/* explicitly initialize mpistatus object to 0. For zero-length read,
+	 * MPI_Get_count may report incorrect result for some MPICH version,
+	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+	 * Thus we initialize it above to work around.
+         */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
         TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh,
@@ -142,11 +150,6 @@ move_file_block(NC         *ncp,
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
-            /* for zero-length read, MPI_Get_count may report incorrect result
-             * for some MPICH version, due to the uninitialized MPI_Status
-             * object passed to MPI-IO calls. Thus we initialize it above to
-             * work around.
-             */
 #ifdef _USE_MPI_GET_COUNT
             int put_size;
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
@@ -562,7 +565,11 @@ write_NC(NC *ncp)
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
 #ifdef _USE_MPI_GET_COUNT
-        /* explicitly initialize mpistatus object to 0, see comments below */
+	/* explicitly initialize mpistatus object to 0. For zero-length read,
+	 * MPI_Get_count may report incorrect result for some MPICH version,
+	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+	 * Thus we initialize it above to work around.
+         */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
         TRACE_IO(MPI_File_write_at)(ncp->collective_fh, 0, buf,
