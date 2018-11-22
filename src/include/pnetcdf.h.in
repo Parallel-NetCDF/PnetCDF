@@ -63,12 +63,12 @@ typedef int nc_type;
 /*
  *  The netcdf external data types
  */
-#define	NC_NAT 	        0	/**< Not A Type */
-#define	NC_BYTE         1	/**< signed 1 byte integer */
+#define	NC_NAT		0	/**< Not A Type */
+#define	NC_BYTE		1	/**< signed 1 byte integer */
 #define	NC_CHAR 	2	/**< ISO/ASCII character */
 #define	NC_SHORT 	3	/**< signed 2 byte integer */
-#define	NC_INT 	        4	/**< signed 4 byte integer */
-#define NC_LONG         NC_INT  /**< \deprecated required for backward compatibility. */
+#define	NC_INT		4	/**< signed 4 byte integer */
+#define	NC_LONG		NC_INT	/**< \deprecated required for backward compatibility. */
 #define	NC_FLOAT 	5	/**< single precision floating point number */
 #define	NC_DOUBLE 	6	/**< double precision floating point number */
 #define	NC_UBYTE 	7	/**< unsigned 1 byte int */
@@ -102,12 +102,12 @@ typedef int nc_type;
 #define NC_FILL_INT	(-2147483647)
 #define NC_FILL_FLOAT	(9.9692099683868690e+36f) /* near 15 * 2^119 */
 #define NC_FILL_DOUBLE	(9.9692099683868690e+36)
-#define NC_FILL_UBYTE   (255)
-#define NC_FILL_USHORT  (65535)
-#define NC_FILL_UINT    (4294967295U)
-#define NC_FILL_INT64   ((long long)-9223372036854775806LL)
-#define NC_FILL_UINT64  ((unsigned long long)18446744073709551614ULL)
-#define NC_FILL_STRING  ((char *)"")
+#define NC_FILL_UBYTE	(255)
+#define NC_FILL_USHORT	(65535)
+#define NC_FILL_UINT	(4294967295U)
+#define NC_FILL_INT64	((long long)-9223372036854775806LL)
+#define NC_FILL_UINT64	((unsigned long long)18446744073709551614ULL)
+#define NC_FILL_STRING	((char *)"")
 /**@}*/
 
 /*! Max or min values for a type. Nothing greater/smaller can be
@@ -118,23 +118,23 @@ typedef int nc_type;
  * NC_INT. But since NC_INT is an external format, it has to mean the
  * same thing everywhere. */
 /**@{*/
-#define NC_MAX_BYTE 127
-#define NC_MIN_BYTE (-NC_MAX_BYTE-1)
-#define NC_MAX_CHAR 255
-#define NC_MAX_SHORT 32767
-#define NC_MIN_SHORT (-NC_MAX_SHORT - 1)
-#define NC_MAX_INT 2147483647
-#define NC_MIN_INT (-NC_MAX_INT - 1)
-#define NC_MAX_FLOAT 3.402823466e+38f
-#define NC_MIN_FLOAT (-NC_MAX_FLOAT)
-#define NC_MAX_DOUBLE 1.7976931348623157e+308
-#define NC_MIN_DOUBLE (-NC_MAX_DOUBLE)
-#define NC_MAX_UBYTE NC_MAX_CHAR
-#define NC_MAX_USHORT 65535U
-#define NC_MAX_UINT 4294967295U
-#define NC_MAX_INT64 (9223372036854775807LL)
-#define NC_MIN_INT64 (-9223372036854775807LL-1LL)
-#define NC_MAX_UINT64 (18446744073709551615ULL)
+#define NC_MAX_BYTE	127
+#define NC_MIN_BYTE	(-NC_MAX_BYTE-1)
+#define NC_MAX_CHAR	255
+#define NC_MAX_SHORT	32767
+#define NC_MIN_SHORT	(-NC_MAX_SHORT - 1)
+#define NC_MAX_INT	2147483647
+#define NC_MIN_INT	(-NC_MAX_INT - 1)
+#define NC_MAX_FLOAT	3.402823466e+38f
+#define NC_MIN_FLOAT	(-NC_MAX_FLOAT)
+#define NC_MAX_DOUBLE	1.7976931348623157e+308
+#define NC_MIN_DOUBLE	(-NC_MAX_DOUBLE)
+#define NC_MAX_UBYTE	NC_MAX_CHAR
+#define NC_MAX_USHORT	65535U
+#define NC_MAX_UINT	4294967295U
+#define NC_MAX_INT64	(9223372036854775807LL)
+#define NC_MIN_INT64	(-9223372036854775807LL-1LL)
+#define NC_MAX_UINT64	(18446744073709551615ULL)
 /**@}*/
 
 /** Name of fill value attribute.  If you wish a variable to use a
@@ -149,24 +149,25 @@ typedef int nc_type;
 /* Define the ioflags bits for nc_create and nc_open.
    currently unused:
         0x0002
-	0x0040
-	0x0080
    and the whole upper 16 bits
 */
 
-#define NC_NOWRITE	 0x0000	/**< Set read-only access for nc_open(). */
-#define NC_WRITE    	 0x0001	/**< Set read-write access for nc_open(). */
-#define NC_CLOBBER	 0x0000 /**< Destroy existing file. Mode flag for nc_create(). */
-#define NC_NOCLOBBER     0x0004	/**< Don't destroy existing file. Mode flag for nc_create(). */
+#define NC_NOWRITE	0x0000	/**< Set read-only access for nc_open(). */
+#define NC_WRITE	0x0001	/**< Set read-write access for nc_open(). */
+#define NC_CLOBBER	0x0000	/**< Destroy existing file. Mode flag for nc_create(). */
+#define NC_NOCLOBBER	0x0004	/**< Don't destroy existing file. Mode flag for nc_create(). */
 
-#define NC_DISKLESS      0x0008  /**< Use diskless file. Mode flag for nc_open() or nc_create(). */
-#define NC_MMAP          0x0010  /**< Use diskless file with mmap. Mode flag for nc_open() or nc_create(). */
+#define NC_DISKLESS	0x0008	/**< Use diskless file. Mode flag for nc_open() or nc_create(). */
+#define NC_MMAP		0x0010	/**< \deprecated Use diskless file with mmap. Mode flag for nc_open() or nc_create()*/
 
-#define NC_64BIT_DATA    0x0020  /**< CDF-5 format: classic model but 64 bit dimensions and sizes */
-#define NC_CDF5          NC_64BIT_DATA  /**< Alias NC_CDF5 to NC_64BIT_DATA */
+#define NC_64BIT_DATA	0x0020	/**< CDF-5 format: classic model but 64 bit dimensions and sizes */
+#define NC_CDF5		NC_64BIT_DATA  /**< Alias NC_CDF5 to NC_64BIT_DATA */
 
-#define NC_CLASSIC_MODEL 0x0100 /**< Enforce classic model on netCDF-4. Mode flag for nc_create(). */
-#define NC_64BIT_OFFSET  0x0200  /**< Use large (64-bit) file offsets. Mode flag for nc_create(). */
+#define NC_UDF0		0x0040	/**< User-defined format 0. */
+#define NC_UDF1		0x0080	/**< User-defined format 1. */
+
+#define NC_CLASSIC_MODEL 0x0100	/**< Enforce classic model on netCDF-4. Mode flag for nc_create(). */
+#define NC_64BIT_OFFSET  0x0200	/**< Use large (64-bit) file offsets. Mode flag for nc_create(). */
 
 /** \deprecated The following flag currently is ignored, but use in
  * nc_open() or nc_create() may someday support use of advisory
@@ -182,14 +183,17 @@ Use this in mode flags for both nc_create() and nc_open(). */
 
 /** Turn on MPI I/O.
 Use this in mode flags for both nc_create() and nc_open(). */
-#define NC_MPIIO         0x2000
+#define NC_MPIIO         0x2000 /**< \deprecated */
 /** Turn on MPI POSIX I/O.
 Use this in mode flags for both nc_create() and nc_open(). */
-#define NC_MPIPOSIX      0x4000 /**< \deprecated As of libhdf5 1.8.13. */
+#define NC_MPIPOSIX      NC_MPIIO /**< \deprecated As of libhdf5 1.8.13. Now an alias */
 
-#define NC_INMEMORY      0x8000  /**< Read from memory. Mode flag for nc_open() or nc_create() => NC_DISKLESS */
+#define NC_PERSIST       0x4000  /**< Save diskless contents to disk. Mode flag for nc_open() or nc_create() */
+#define NC_INMEMORY      0x8000  /**< Read from memory. Mode flag for nc_open() or nc_create() */
 
-#define NC_PNETCDF       (NC_MPIIO) /**< Use parallel-netcdf library; alias for NC_MPIIO. */
+#define NC_PNETCDF       (NC_MPIIO) /**< \deprecated Use PnetCDF library; alias for NC_MPIIO. */
+
+#define NC_MAX_MAGIC_NUMBER_LEN 8 /**< Max len of user-defined format magic number. */
 
 /** Format specifier for nc_set_default_format() and returned
  *  by nc_inq_format. This returns the format as provided by
@@ -241,6 +245,8 @@ Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_FORMATX_PNETCDF   (4)
 #define NC_FORMATX_DAP2      (5)
 #define NC_FORMATX_DAP4      (6)
+#define NC_FORMATX_UDF0      (8)
+#define NC_FORMATX_UDF1      (9)
 #define NC_FORMATX_UNDEFINED (0)
 
   /* To avoid breaking compatibility (such as in the python library),
@@ -354,7 +360,7 @@ there. */
 #define NC_ISSYSERR(err)	((err) > 0)
 
 #define	NC_NOERR	0   /**< No Error */
-#define NC2_ERR         (-1)       /**< Returned for all errors in the v2 API. */
+#define	NC2_ERR         (-1)       /**< Returned for all errors in the v2 API. */
 
 /** Not a netcdf id.
 
@@ -460,6 +466,7 @@ by the desired type. */
 #define NC_ENOTFOUND     (-90)      /**< No such file */
 #define NC_ECANTREMOVE   (-91)      /**< Can't remove file */
 #define NC_EINTERNAL     (-92)      /**< NetCDF Library Internal Error */
+#define NC_EPNETCDF      (-93)      /**< Error at PnetCDF layer */
 
 /* The following was added in support of netcdf-4. Make all netcdf-4
    error codes < -100 so that errors can be added to netcdf-3 if
@@ -512,7 +519,7 @@ by the desired type. */
  * size_t. Doh! */
 #define NC_HAVE_NEW_CHUNKING_API 1
 
-/*Errors for all remote access methods(e.g. DAP and CDMREMOTE)*/
+/* Errors for all remote access methods(e.g. DAP and CDMREMOTE)*/
 #define NC_EURL		(NC_EDAPURL)   /**< Malformed URL */
 #define NC_ECONSTRAINT  (NC_EDAPCONSTRAINT)   /**< Malformed Constraint*/
 
