@@ -173,6 +173,8 @@ ncadios_inq_att(void       *ncdp,
         }
     }
 
+    free(adata);
+
     return NC_NOERR;
 }
 
@@ -264,6 +266,8 @@ ncadios_get_att(void         *ncdp,
     else{
         memcpy(buf, adata, asize);
     }
+
+    free(adata);
 
     return NC_NOERR;
 }

@@ -154,6 +154,8 @@ ncadios_open(MPI_Comm     comm,
             DEBUG_RETURN_ERROR(err);
         }
         ncadp->ndims[i] = v->ndim;
+
+        adios_free_varinfo(v);
     }
 
     return NC_NOERR;
