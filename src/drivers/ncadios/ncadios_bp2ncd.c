@@ -65,6 +65,7 @@ int ncd_gen_name (char *fullname, char *path, char *name) {
     }
     else
         strcpy (fullname, name);
+    free(new_path);
     return 0;
 }
 int ncd_attr_str_ds (NC_ad* ncid
