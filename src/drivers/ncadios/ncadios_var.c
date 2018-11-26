@@ -274,6 +274,8 @@ ncadios_get_var(void             *ncdp,
         NCI_Free(cbuf);
     }
 
+    adios_free_varinfo (v);
+
     return NC_NOERR;
 }
 
