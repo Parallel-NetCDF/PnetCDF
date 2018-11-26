@@ -118,6 +118,14 @@ ncadios_open(MPI_Comm     comm,
 
     *ncpp = ncadp;
 
+    /*
+     * Use a modified bp2ncd utility to parse header related information
+     * to guarantee the driver conforms to the converted nc file
+     * Attributes parsing is currently broken, we rely on ADIOS read 
+     * API for attributes
+     * Rank 0 parse the header and boardcast to other ranks
+     */
+
     ncadiosi_var_list_init(&(ncadp->vars));
     ncadiosi_att_list_init(&(ncadp->atts));
     ncadiosi_dim_list_init(&(ncadp->dims));
@@ -126,7 +134,7 @@ ncadios_open(MPI_Comm     comm,
         ncadiosi_parse_header(ncadp);
     }
 
-    /* Open with adios */
+    /* Open with ADIOS read API */
     ncadp->fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, comm);
     if (ncadp->fp == NULL) {
         err = ncmpii_error_adios2nc(adios_errno, "Open");
@@ -140,7 +148,13 @@ ncadios_open(MPI_Comm     comm,
     ncadios_sync_header(ncadp);
 
 
-    /* Build dimensionality list */
+    /* 
+     * Build dimensionality list 
+     * Another way to provide dimension information is to create our 
+     * own dimension for each variable
+     * It is currently not used
+     */
+    /*
     ncadp->ndims = (int*)NCI_Malloc(sizeof(int) * ncadp->fp->nvars);
     for (i = 0; i < ncadp->fp->nvars; i++) {
         ADIOS_VARINFO *v = adios_inq_var_byid (ncadp->fp, i);
@@ -157,6 +171,7 @@ ncadios_open(MPI_Comm     comm,
 
         adios_free_varinfo(v);
     }
+    */
 
     return NC_NOERR;
 }
@@ -179,7 +194,7 @@ ncadios_close(void *ncdp)
         DEBUG_RETURN_ERROR(err);
     }
 
-    NCI_Free(ncadp->ndims);
+    //NCI_Free(ncadp->ndims);
     NCI_Free(ncadp->path);
     NCI_Free(ncadp);
 
@@ -342,10 +357,12 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (num_fix_varsp != NULL){
+        // For now, we include all variable as fix variable
         *num_fix_varsp = ncadp->vars.cnt;
     }
 
     if (num_rec_varsp != NULL){
+        // Still, we count those variable with unlimited dim as rec variable
         int i, j;
         *num_rec_varsp = 0;
         for(i = 0; i < ncadp->vars.cnt; i++){
