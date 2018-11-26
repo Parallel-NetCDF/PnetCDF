@@ -196,6 +196,9 @@ ncmpio_create(MPI_Comm     comm,
     /* initialize unlimited_id as no unlimited dimension yet defined */
     ncp->dims.unlimited_id = -1;
 
+    /* buffer to pack noncontiguous user buffers when calling wait() */
+    ncp->ibuf_size = NC_DEFAULT_IBUF_SIZE;
+
     /* extract I/O hints from user info */
     ncmpio_set_pnetcdf_hints(ncp, info);
 

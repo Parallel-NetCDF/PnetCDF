@@ -47,7 +47,7 @@ ncmpio_read_write(NC           *ncp,
 #ifndef ENABLE_LARGE_SINGLE_REQ
 #if MPI_VERSION >= 3
     if (buf_type_size > INT_MAX)
-	/* I/O request size > 2 GiB, ROMIO currently does not support a single
+        /* I/O request size > 2 GiB, ROMIO currently does not support a single
          * read/write call of amount > 2 GiB
          */
 #else
@@ -94,11 +94,12 @@ ncmpio_read_write(NC           *ncp,
         int           xlen=len;
         MPI_Datatype  xbuf_type=buf_type;
 
-        /* if the read buffer is noncontiguous and size is < 16 MiB, allocate a
-         * temporary buffer and use it to read, as some MPI, e.g. Cray on KNL,
-         * can be significantly slow when read buffer is noncontiguous.
+        /* if the read buffer is noncontiguous and size is < ncp->ibuf_size,
+         * allocate a temporary buffer and use it to read, as some MPI, e.g.
+         * Cray on KNL, can be significantly slow when read buffer is
+         * noncontiguous.
          */
-        if (!buftype_is_contig && buf_type_size <= 16777216) {
+        if (!buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
             xbuf_type = MPI_BYTE;
@@ -147,11 +148,12 @@ ncmpio_read_write(NC           *ncp,
         int           xlen=len;
         MPI_Datatype  xbuf_type=buf_type;
 
-        /* if the write buffer is noncontiguous and size is < 16 MiB, allocate a
-         * temporary buffer and use it to write, as some MPI, e.g. Cray on KNL,
-         * can be significantly slow when write buffer is noncontiguous.
+        /* if the write buffer is noncontiguous and size is < ncp->ibuf_size,
+         * allocate a temporary buffer and use it to write, as some MPI, e.g.
+         * Cray on KNL, can be significantly slow when write buffer is
+         * noncontiguous.
          */
-        if (!buftype_is_contig && buf_type_size <= 16777216) {
+        if (!buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
             int pos=0;
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
