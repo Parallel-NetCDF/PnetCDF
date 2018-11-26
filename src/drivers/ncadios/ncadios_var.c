@@ -115,7 +115,6 @@ ncadios_inq_var(void       *ncdp,
     }
 
     if (nattsp != NULL){
-        // Every atts are global despite the path
         *nattsp = var.atts.cnt;
     }
 
@@ -186,6 +185,7 @@ ncadios_get_var(void             *ncdp,
         ecnt *= (size_t)count[i];
     }
 
+    // If user buffer is contiguous
     if (imap == NULL){
         cbuf = buf;
     }
@@ -194,6 +194,8 @@ ncadios_get_var(void             *ncdp,
         cbuf = NCI_Malloc((size_t)cesize * ecnt);
     }
 
+    // PnetCDF allows accessing in different type
+    // Check if we need to convert
     vtype = ncadios_to_mpi_type(v->type);
     if (vtype == buftype){
         xbuf = cbuf;
@@ -203,6 +205,8 @@ ncadios_get_var(void             *ncdp,
         xbuf = NCI_Malloc(esize * ecnt);
     }
 
+    // If stride is not used, we can use bounding box selection
+    // Otherwise, we need to specify every points
     if (stride == NULL){
         sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
     }
@@ -215,6 +219,7 @@ ncadios_get_var(void             *ncdp,
 
         memset(p, 0, sizeof(uint64_t) * v->ndim);
 
+        // Iterate through every cells accessed
         while(p[0] < count[0]) {
             for(i = 0; i < v->ndim; i++){
                 *cur = p[i] * (uint64_t)stride[i];
