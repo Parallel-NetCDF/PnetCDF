@@ -30,7 +30,7 @@ static const char ncmagic2[] = {'C', 'D', 'F', 0x02};
 static const char ncmagic5[] = {'C', 'D', 'F', 0x05};
 
 /*----< hdr_put_NC_name() >--------------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_name(bufferinfo *pbp,
                 const char *name)
 {
@@ -60,7 +60,7 @@ hdr_put_NC_name(bufferinfo *pbp,
 }
 
 /*----< hdr_put_NC_dim() >---------------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_dim(bufferinfo   *pbp,
                const NC_dim *dimp)
 {
@@ -90,7 +90,7 @@ hdr_put_NC_dim(bufferinfo   *pbp,
 }
 
 /*----< hdr_put_NC_dimarray() >----------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_dimarray(bufferinfo        *pbp,
                     const NC_dimarray *ncap)
 {
@@ -147,7 +147,7 @@ hdr_put_NC_dimarray(bufferinfo        *pbp,
 /*
  * Put the values of an attribute
  */
-inline static int
+static int
 hdr_put_NC_attrV(bufferinfo    *pbp,
                  const NC_attr *attrp)
 {
@@ -188,7 +188,7 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
 }
 
 /*----< hdr_put_NC_attr() >--------------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_attr(bufferinfo    *pbp,
                 const NC_attr *attrp)
 {
@@ -228,7 +228,7 @@ hdr_put_NC_attr(bufferinfo    *pbp,
 }
 
 /*----< hdr_put_NC_attrarray() >---------------------------------------------*/
-inline static int
+static int
 hdr_put_NC_attrarray(bufferinfo         *pbp,
                      const NC_attrarray *ncap)
 {
@@ -537,7 +537,11 @@ int ncmpio_write_header(NC *ncp)
         }
 
 #ifdef _USE_MPI_GET_COUNT
-        /* explicitly initialize mpistatus object to 0, see comments below */
+        /* explicitly initialize mpistatus object to 0. For zero-length read,
+         * MPI_Get_count may report incorrect result for some MPICH version,
+         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+         * Thus we initialize it above to work around.
+         */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
         TRACE_IO(MPI_File_write_at)(fh, 0, buf, (int)ncp->xsz, MPI_BYTE, &mpistatus);

@@ -4,21 +4,32 @@ This is essentially a placeholder for the next release note ...
 
 * New features
   + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
-    PnetCDF can be built on top of NetCDF-4 library to allow PnetCDF to read
-    and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag to create
-    NetCDF-4 files. For opening NetCDF-4 files, no additional flag is needed,
-    as PnetCDF can automatically detect the file format.
-  + Per-file thread-safe capability is added. This feature can be enabled by
-    adding command-line option `--enable-thread-safe` at configure time. In
-    addition, option `--with-pthread` can be used to specify the path to the
-    pthreads library. This feature currently only supports one-thread-per-file
-    I/O operations.
+    PnetCDF can be built on top of NetCDF-4 library to let users to use PnetCDF
+    APIs to read and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag
+    when calling ncmpi_create() to create NetCDF-4 files. For opening NetCDF-4
+    files, no additional flag is needed, as PnetCDF automatically detects the
+    file format and uses the HDF5 I/O driver underneath. This feature is
+    provided for convenience purpose. The parallel I/O performance to NetCDF-4
+    files is expected no difference from using NetCDF-4 library directly.
+  + Per-file thread-safe capability is added. This feature can be enabled at
+    configure time by adding command-line option `--enable-thread-safe`. In
+    addition, option `--with-pthread` can be used to specify the install path
+    to the pthreads library. This feature currently only supports
+    one-thread-per-file I/O operations and the classic CDF-1, 2, and 5 files.
   + ADIOS driver -- Read ADIOS 1.x BP formated file. 
     ADIOS_READ_METHOD_BP must be set when open BP file.
     Does not support low-level and non blocking API.
 
 * New optimization
-  + none
+  + On some systems, e.g. Cori @NERSC, collective MPI-IO may perform poorly
+    when the I/O buffer is noncontiguous, compared to a contiguous one. To
+    avoid this, `ncmpi_wait()` and `ncmpi_wait_all()` now check whether the
+    buffer is noncontiguous and size is less than 16 MiB. If both are true, a
+    temporary contiguous buffer is allocated to copy the data over and used in
+    the MPI read or write calls. See
+    [PR #26](https://github.com/Parallel-NetCDF/PnetCDF/pull/26). Programs
+    developed to test this issue is available in
+    https://github.com/Parallel-NetCDF/E3SM-IO/tree/master/mpi_io_test
 
 * New Limitations
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
@@ -79,6 +90,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
+  + The automatic file layout alignment for fixed-size variables is disabled.
+    This is because modern MPI-IO implementations have already aligned the file
+    access with the file lock boundaries and the automatic alignment can create
+    a file view with "holes" in between variables, which can adversely degrade
+    I/O performance.
   + The internal data buffering mechanism used in the burst buffer driver is
     removed. This mechanism caches the request data in memory until the
     accumulated size is more than 8 MiB, so the write requests to burst buffers
@@ -89,6 +105,14 @@ This is essentially a placeholder for the next release note ...
     burst buffers for each user write request.
 
 * Bug fixes
+  + Fix bug of checking interleaved requests for scalar variables. See
+    [PR #27](https://github.com/Parallel-NetCDF/PnetCDF/pull/27).
+  + When building PnetCDF using the IBM xlc compiler with -O optimization
+    option on Little Endian platforms, users may encounter errors related to
+    strict ANSI C aliasing rules. Thanks to Jim Edwards for reporting and Rafik
+    Zurob for providing the fix. See
+    [Issue #23](https://github.com/Parallel-NetCDF/PnetCDF/issues/23) and
+    [Pull Request #24](https://github.com/Parallel-NetCDF/PnetCDF/issues/24).
   + Shell ksh has a different way to redirect stdout and stderr from bash.
     PnetCDF configure.ac and acinclude.m4 have been developed mainly on bash.
     This bug can cause configure command to fail when using ksh. Thanks to
@@ -113,6 +137,8 @@ This is essentially a placeholder for the next release note ...
     and open subroutines. See bug fix committed on Jul 21, 2018.
 
 * New example programs
+  + examples/C/time_var.c and examples/F77/time_var.f - show how to define,
+    write, and read record variables.
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
     When running on some parallel machines, users may need to set certain
     environment variable to enable MPI multi-threading support, for example on

@@ -29,7 +29,8 @@ check_PROGRAMS = nonblocking_write \
                  i_varn_real \
                  bput_varn_int8 \
                  fill_mode \
-                 vard_int
+                 vard_int \
+                 time_var
 
 EXTRA_DIST = utils.F90
 

@@ -712,10 +712,10 @@ AC_DEFUN([UD_CHECK_FORTRAN_CTYPE],
         endif
         end
        ])],
-       [found_f2c=yes], [found_f2c=no]
+       [ac_found_f2c=yes], [ac_found_f2c=no]
     )
     AC_LANG_POP([Fortran])
-    if test "x${found_f2c}" = xyes ; then
+    if test "x${ac_found_f2c}" = xyes ; then
 dnl     cat >conftest.f <<EOF
 dnl         subroutine sub(values, minval, maxval)
 dnl         implicit        none
@@ -761,7 +761,7 @@ EOF
 	AC_MSG_ERROR(Could not compile conftest.f)
     fi
     ${RM} -f conftest*
-    unset found_f2c
+    unset ac_found_f2c
 ])
 
 
@@ -1552,6 +1552,46 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
     AC_LANG_POP([Fortran 77])
 ])
 
+dnl Check if MPI compiler is Fujitsu fccpx based
+dnl According to mpifccpx manual the command-line option to should version is
+dnl -showme
+dnl
+dnl % mpifccpx --showme
+dnl /opt/FJSVtclang/GM-1.2.0-24/bin/fccpx -Kident_mpi -mt ...
+dnl
+AC_DEFUN([UD_CHECK_FCCPX],[
+    AC_CACHE_CHECK([if C compiler is Fujitsu fccpx], [ac_cv_cc_compiler_fccpx],
+    [ac_cv_cc_compiler_fccpx=no
+     ac_CC_VENDOR=`$MPICC --showme 2> /dev/null | cut -d' ' -f1 | xargs -r basename`
+     if test "x${ac_CC_VENDOR}" = xfccpx ; then
+        ac_cv_cc_compiler_fccpx=yes
+     fi
+     unset ac_CC_VENDOR
+    ])
+])
+
+dnl Check if MPI compiler is pgcc based
+dnl According to pgcc manual the command-line option to should version is -V
+dnl
+dnl % pgcc -V
+dnl
+dnl pgcc 16.9-0 64-bit target on x86-64 Linux -tp p7 
+dnl The Portland Group - PGI Compilers and Tools
+dnl Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+dnl
+AC_DEFUN([UD_CHECK_PGCC],[
+    AC_CACHE_CHECK([if C compiler is pgcc], [ac_cv_cc_compiler_pgcc],
+    [ac_cv_cc_compiler_pgcc=no
+     ac_PGCC_VER=`$MPICC -V -c 2> /dev/null`
+     ac_PGCC_VENDOR=`echo $ac_PGCC_VER | cut -d' ' -f1`
+     if test "x${ac_PGCC_VENDOR}" = xpgcc ; then
+        ac_cv_cc_compiler_pgcc=yes
+     fi
+     unset ac_PGCC_VER
+     unset ac_PGCC_VENDOR
+    ])
+])
+
 dnl Check if Fortran 77 compiler is pgf77
 dnl According to pgf77 manual the command-line option to should version is -V
 dnl
@@ -1573,12 +1613,12 @@ AC_DEFUN([UD_CHECK_PGF77],[
     AC_CACHE_CHECK([if Fortran 77 compiler is pgf77], [ac_cv_fc_compiler_pgf77],
     [ac_cv_fc_compiler_pgf77=no
      eval $MPIF77 -V </dev/null >& conftest.ver
-     _F77_VENDOR=`head -c 5 conftest.ver`
+     ac_F77_VENDOR=`head -c 5 conftest.ver`
      if test "x${_F77_VENDOR}" = xpgf77 ; then
         ac_cv_fc_compiler_pgf77=yes
      fi
      ${RM} -f conftest.ver
-     unset _F77_VENDOR
+     unset ac_F77_VENDOR
     ])
 ])
 
@@ -1594,11 +1634,11 @@ dnl
 AC_DEFUN([UD_CHECK_FC_NAG],[
     AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
     [ac_cv_fc_compiler_nag=no
-     _FC_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
+     ac_FC_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
      if test "x${_FC_VENDOR}" = xNAG ; then
         ac_cv_fc_compiler_nag=yes
      fi
-     unset _FC_VENDOR
+     unset ac_FC_VENDOR
     ])
 ])
 

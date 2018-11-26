@@ -127,12 +127,12 @@ int main(int argc, char** argv) {
 
     nerrs += tst_fmt(filename, 0);
     nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
-#ifdef ENABLE_NETCDF4
     if (!bb_enabled) {
+#ifdef ENABLE_NETCDF4
         nerrs += tst_fmt(filename, NC_NETCDF4);
         nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
-    }
 #endif
+    }
     nerrs += tst_fmt(filename, NC_64BIT_DATA);
 
     /* check if PnetCDF freed all internal malloc */

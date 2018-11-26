@@ -1821,7 +1821,7 @@ Version 1.1.0 (November 2, 2009)
     - A new file format, CDF-5, is introduced. This format allows defining
       large array variables with more than 2^32 elements.
 
-    - A new optimization in parallel-netcdf with this release. If the hint
+    - A new optimization in PnetCDF with this release. If the hint
       "striping_unit" is set, then PnetCDF will align the start of non-record
       variables to a multiple of that value.
 
@@ -1842,9 +1842,9 @@ Version 1.1.0 (November 2, 2009)
 Version 1.0.0 (July 27, 2005)
 -------------------------------------
 
-    - The Parallel-NetCDF developers are quite happy to announce our 1.0.0
-      release.  This release reflects the culmination of several years of
-      work and lots of community feedback.
+    - The PnetCDF developers are quite happy to announce our 1.0.0 release.
+      This release reflects the culmination of several years of work and lots
+      of community feedback.
 
       A brief list of the major changes since 0.9.4:
 

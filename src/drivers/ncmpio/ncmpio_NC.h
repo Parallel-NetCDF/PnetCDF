@@ -346,10 +346,11 @@ struct NC {
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
 #endif
-    int           striping_unit; /* file stripe size of the file */
+    int           striping_unit; /* stripe size of the file */
     int           chunk;       /* chunk size for reading header */
-    MPI_Offset    h_align;     /* file alignment for header */
-    MPI_Offset    v_align;     /* file alignment for each fixed variable */
+    MPI_Offset    h_align;     /* file alignment for header size */
+    MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
+    MPI_Offset    fx_v_align;  /* file alignment for each fixed-size variable */
     MPI_Offset    r_align;     /* file alignment for record variable section */
     MPI_Offset    h_minfree;   /* pad at the end of the header section */
     MPI_Offset    v_minfree;   /* pad at the end of the data section for fixed-size variables */
@@ -570,5 +571,11 @@ ncmpio_unpack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
                  MPI_Datatype buftype, int buftype_is_contig, MPI_Offset nelems,
                  MPI_Datatype etype, MPI_Datatype imaptype, int need_convert,
                  int need_swap, void *buf, void *xbuf);
+
+/* Begin defined in ncmpio_file_io.c ----------------------------------------*/
+extern int
+ncmpio_read_write(NC *ncp, int rw_flag, int coll_indep, MPI_Offset offset,
+                  int len, MPI_Datatype buf_type, void *buf,
+                  int buftype_is_contig);
 
 #endif /* _NC_H */

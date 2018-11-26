@@ -79,7 +79,11 @@ move_file_block(NC         *ncp,
             nbytes -= chunk_size*nprocs;
         }
 
-        /* explicitly initialize mpistatus object to 0, see comments below */
+	/* explicitly initialize mpistatus object to 0. For zero-length read,
+	 * MPI_Get_count may report incorrect result for some MPICH version,
+	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+	 * Thus we initialize it above to work around.
+         */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         /* read the original data @ from+nbytes+rank*chunk_size */
@@ -130,7 +134,11 @@ move_file_block(NC         *ncp,
          * that have not been written before. Below uses the former option.
          */
 #ifdef _USE_MPI_GET_COUNT
-        /* explicitly initialize mpistatus object to 0, see comments below */
+	/* explicitly initialize mpistatus object to 0. For zero-length read,
+	 * MPI_Get_count may report incorrect result for some MPICH version,
+	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+	 * Thus we initialize it above to work around.
+         */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
         TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh,
@@ -142,11 +150,6 @@ move_file_block(NC         *ncp,
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
-            /* for zero-length read, MPI_Get_count may report incorrect result
-             * for some MPICH version, due to the uninitialized MPI_Status
-             * object passed to MPI-IO calls. Thus we initialize it above to
-             * work around.
-             */
 #ifdef _USE_MPI_GET_COUNT
             int put_size;
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
@@ -307,7 +310,7 @@ NC_begins(NC *ncp)
         /* this will pad out non-record variables with zero to the
          * requested alignment.  record variables are a bit trickier.
          * we don't do anything special with them */
-        ncp->vars.value[i]->begin = D_RNDUP(end_var, ncp->v_align);
+        ncp->vars.value[i]->begin = D_RNDUP(end_var, ncp->fx_v_align);
 
         if (ncp->old != NULL) {
             /* move to the next fixed variable */
@@ -336,12 +339,12 @@ NC_begins(NC *ncp)
      * begin_rec as is (in case some non-record variables are deleted)
      */
     if (ncp->begin_rec < end_var ||
-        ncp->begin_rec != D_RNDUP(ncp->begin_rec, ncp->v_align))
-        ncp->begin_rec = D_RNDUP(end_var, ncp->v_align);
+        ncp->begin_rec != D_RNDUP(ncp->begin_rec, ncp->fx_v_align))
+        ncp->begin_rec = D_RNDUP(end_var, ncp->fx_v_align);
 
     /* expand free space for fixed variable section */
     if (ncp->begin_rec < end_var + ncp->v_minfree)
-        ncp->begin_rec = D_RNDUP(end_var + ncp->v_minfree, ncp->v_align);
+        ncp->begin_rec = D_RNDUP(end_var + ncp->v_minfree, ncp->fx_v_align);
 
     /* align the starting offset for record variable section */
     if (ncp->r_align > 1)
@@ -562,7 +565,11 @@ write_NC(NC *ncp)
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
 #ifdef _USE_MPI_GET_COUNT
-        /* explicitly initialize mpistatus object to 0, see comments below */
+	/* explicitly initialize mpistatus object to 0. For zero-length read,
+	 * MPI_Get_count may report incorrect result for some MPICH version,
+	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+	 * Thus we initialize it above to work around.
+         */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
         TRACE_IO(MPI_File_write_at)(ncp->collective_fh, 0, buf,
@@ -836,7 +843,15 @@ ncmpio_NC_check_voffs(NC *ncp)
 }
 
 /*----< ncmpio__enddef() >---------------------------------------------------*/
-/* This is a collective subroutine. */
+/* This is a collective subroutine.
+ * h_minfree  Sets the pad at the end of the "header" section.
+ * v_align    Controls the alignment of the beginning of the data section for
+ *            fixed size variables.
+ * v_minfree  Sets the pad at the end of the data section for fixed size
+ *            variables.
+ * r_align    Controls the alignment of the beginning of the data section for
+ *            variables which have an unlimited dimension (record variables).
+ */
 int
 ncmpio__enddef(void       *ncdp,
                MPI_Offset  h_minfree,
@@ -880,7 +895,11 @@ ncmpio__enddef(void       *ncdp,
      * set during file create/open */
 
     if (ncp->h_align == 0) { /* user info does not set nc_header_align_size */
-        if (striping_unit &&
+        if (v_align > 0)
+            ncp->h_align = v_align;
+        else if (all_fix_var_size > 0 && r_align > 0) /* no fixed-size variable */
+            ncp->h_align = r_align;
+        else if (striping_unit &&
             all_fix_var_size > FILE_ALIGNMENT_LB * striping_unit)
             /* if striping_unit is available and file size sufficiently large */
             ncp->h_align = striping_unit;
@@ -892,37 +911,46 @@ ncmpio__enddef(void       *ncdp,
     if (ncp->v_align == 0) { /* user info does not set nc_var_align_size */
         if (v_align > 0) /* else respect user hint */
             ncp->v_align = v_align;
+#ifdef USE_AGGRESSIVE_ALIGN
         else if (striping_unit &&
                  all_fix_var_size > FILE_ALIGNMENT_LB * striping_unit)
             /* if striping_unit is available and file size sufficiently large */
             ncp->v_align = striping_unit;
         else
             ncp->v_align = FILE_ALIGNMENT_DEFAULT;
+#endif
     }
 
-    if (ncp->r_align == 0) { /* user info does not set nc_record_align_size */
+    if (ncp->r_align == 0) { /* user info/env does not set nc_record_align_size */
         if (r_align > 0) /* else respect user hint */
             ncp->r_align = r_align;
+#ifdef USE_AGGRESSIVE_ALIGN
         if (striping_unit)
             ncp->r_align = striping_unit;
         else
             ncp->r_align = FILE_ALIGNMENT_DEFAULT;
+#endif
     }
+    /* else ncp->r_align is already set by user/env, ignore the one passed by
+     * the argument r_align of this subroutine.
+     */
 
     /* all CDF formats require 4-bytes alignment */
-    if (ncp->h_align == 0) ncp->h_align = 4;
-    else                   ncp->h_align = D_RNDUP(ncp->h_align, 4);
-    if (ncp->v_align == 0) ncp->v_align = 4;
-    else                   ncp->v_align = D_RNDUP(ncp->v_align, 4);
-    if (ncp->r_align == 0) ncp->r_align = 4;
-    else                   ncp->r_align = D_RNDUP(ncp->r_align, 4);
+    if (ncp->h_align == 0)    ncp->h_align = 4;
+    else                      ncp->h_align = D_RNDUP(ncp->h_align, 4);
+    if (ncp->v_align == 0)    ncp->v_align = 4;
+    else                      ncp->v_align = D_RNDUP(ncp->v_align, 4);
+    if (ncp->fx_v_align == 0) ncp->fx_v_align = 4;
+    else                      ncp->fx_v_align = D_RNDUP(ncp->fx_v_align, 4);
+    if (ncp->r_align == 0)    ncp->r_align = 4;
+    else                      ncp->r_align = D_RNDUP(ncp->r_align, 4);
 
     /* reflect the hint changes to the MPI info object, so the user can inquire
      * what the true hint values are being used
      */
     sprintf(value, "%lld", ncp->h_align);
     MPI_Info_set(ncp->mpiinfo, "nc_header_align_size", value);
-    sprintf(value, "%lld", ncp->v_align);
+    sprintf(value, "%lld", ncp->fx_v_align);
     MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
     sprintf(value, "%lld", ncp->r_align);
     MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);

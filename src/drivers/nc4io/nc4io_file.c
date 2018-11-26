@@ -60,7 +60,7 @@ nc4io_create(MPI_Comm     comm,
     int err, ncidtmp;
     NC_nc4 *nc4p;
 
-    /* add NC_MPIIO to make sure we are calling parallel netCDF-4 */
+    /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used */
     cmode |= NC_MPIIO;
     err = nc_create_par(path, cmode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -106,7 +106,7 @@ nc4io_open(MPI_Comm     comm,
     int err, ncidtmp;
     NC_nc4 *nc4p;
 
-    /* add NC_MPIIO to make sure we are calling parallel netCDF-4 */
+    /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used */
     omode |= NC_MPIIO;
     err = nc_open_par(path, omode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);

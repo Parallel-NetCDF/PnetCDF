@@ -324,8 +324,8 @@ int main(int argc, char** argv) {
     /* CDF-2: test two record variables */
     nerrs += test_two_record_var(filename, NC_64BIT_OFFSET);
 
-#ifdef USE_NETCDF4
     if (!bb_enabled) {
+#ifdef USE_NETCDF4
         /* NETCDF4: test only one 1D record variable */
         nerrs += test_only_record_var_1D(filename, NC_NETCDF4);
         /* NETCDF4: test only one 3D record variable */
@@ -339,8 +339,8 @@ int main(int argc, char** argv) {
         nerrs += test_only_record_var_3D(filename, NC_NETCDF4|NC_CLASSIC_MODEL);
         /* NETCDF4_CLASSIC: test two record variables */
         nerrs += test_two_record_var(filename, NC_NETCDF4|NC_CLASSIC_MODEL);
-    }
 #endif
+    }
 
     /* CDF-5: test only one 1D record variable */
     nerrs += test_only_record_var_1D(filename, NC_64BIT_DATA);

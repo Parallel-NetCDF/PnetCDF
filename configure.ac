@@ -3,18 +3,18 @@ dnl Copyright (C) 2017, Northwestern University and Argonne National Laboratory
 dnl See COPYRIGHT notice in top-level directory.
 dnl
 
+dnl -*- Mode: shell-script-mode; -*-
+dnl Process this file with GNU autoconf(1) to produce a configure script.
+dnl
+
 AC_REVISION([m4_esyscmd_s([git describe --always])])
 dnl When using svn, we use SVN keyword Revision to copy the unique revision
 dnl number as a stamp into configure script.
 dnl AC_REVISION([$Revision$])dnl
 
-dnl -*- Mode: shell-script-mode; -*-
-dnl Process this file with GNU autoconf(1) to produce a configure script.
-dnl
-
 dnl autoconf v2.69 was released in 2012-04-24
 AC_PREREQ([2.69])
-AC_INIT([parallel-netcdf],[1.10.0.develop],[parallel-netcdf@mcs.anl.gov])
+AC_INIT([PnetCDF],[1.10.0.develop],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://parallel-netcdf.github.io])
 
 dnl config.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
@@ -259,8 +259,8 @@ if test "x${MPICC}" = x ; then
    AC_MSG_ERROR([
    -----------------------------------------------------------------------
      $ERR_MSG
-     Parallel netCDF requires a working MPI C compiler. Please specify the
-     location of an MPI C compiler, either in the MPICC environment variable
+     PnetCDF requires a working MPI C compiler. Please specify the location
+     of an MPI C compiler, either in the MPICC environment variable
      (not CC variable) or through --with-mpi configure flag. Abort.
    -----------------------------------------------------------------------])
 fi
@@ -278,6 +278,14 @@ dnl enable large file support
 AC_SYS_LARGEFILE
 
 dnl UD_PROG_CC_MAKEDEPEND
+
+dnl Check if MPICC compiler is pgcc based
+UD_CHECK_PGCC
+AM_CONDITIONAL(MPICC_IS_PGCC, [test "x${ac_cv_cc_compiler_pgcc}" = xyes])
+
+dnl Check if MPICC compiler is Fujitsu fccpx based
+UD_CHECK_FCCPX
+AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_cc_compiler_fccpx}" = xyes])
 
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([malloc.h])
@@ -977,9 +985,9 @@ fi
 if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
    AC_MSG_ERROR([
    -----------------------------------------------------------------------
-     Building of Parallel NetCDF cannot continue due to the size of
-     MPI_Offset being less than 8 bytes. Please use an MPI library that
-     supports large files. Abort.
+     Building of PnetCDF cannot continue due to the size of MPI_Offset
+     being less than 8 bytes. Please use an MPI library that supports
+     large files. Abort.
    -----------------------------------------------------------------------])
 fi
 

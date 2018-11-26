@@ -63,7 +63,7 @@ int  max_nmpt;                /* max. number of messages per test */
 int  nfails;                /* number of failures in specific test */
 char testfile[256];
 char scratch[256];
-MPI_Comm comm = MPI_COMM_WORLD; /* mpi communicator for parallel-netcdf */
+MPI_Comm comm = MPI_COMM_WORLD; /* mpi communicator */
 MPI_Info info;
 
 static void

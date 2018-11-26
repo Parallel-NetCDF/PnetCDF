@@ -294,7 +294,7 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
                    (((a) & 0xFF00000000000000ULL) >> 56) )
 
 
-inline static void
+static void
 swapn2b(void *dst, const void *src, IntType nn)
 {
     /* it is OK if dst == src */
@@ -338,7 +338,7 @@ swapn2b(void *dst, const void *src, IntType nn)
 }
 
 # ifndef vax
-inline static void
+static void
 swap4b(void *dst, const void *src)
 {
     /* copy over, make the below swap in-place */
@@ -383,7 +383,7 @@ swap4b(void *dst, const void *src)
 }
 # endif /* !vax */
 
-inline static void
+static void
 swapn4b(void *dst, const void *src, IntType nn)
 {
     int i;
@@ -445,7 +445,7 @@ swapn4b(void *dst, const void *src, IntType nn)
 }
 
 # ifndef vax
-inline static void
+static void
 swap8b(void *dst, const void *src)
 {
 #ifdef FLOAT_WORDS_BIGENDIAN
@@ -495,7 +495,7 @@ swap8b(void *dst, const void *src)
 # endif /* !vax */
 
 # ifndef vax
-inline static void
+static void
 swapn8b(void *dst, const void *src, IntType nn)
 {
 #if 0
@@ -1204,7 +1204,7 @@ NCX_PUT1F(uint, double)
 
 #if X_SIZEOF_FLOAT == SIZEOF_FLOAT && !defined(NO_IEEE_FLOAT)
 
-inline static void
+static void
 get_ix_float(const void *xp, float *ip)
 {
 #ifdef WORDS_BIGENDIAN
@@ -1214,7 +1214,7 @@ get_ix_float(const void *xp, float *ip)
 #endif
 }
 
-inline static void
+static void
 put_ix_float(void *xp, const float *ip)
 {
 #ifdef WORDS_BIGENDIAN

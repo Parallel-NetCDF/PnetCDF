@@ -119,7 +119,7 @@ hdr_len_NC_name(const NC_string *ncstrp, int sizeof_NON_NEG)
 #endif
 
 /*----< hdr_len_NC_dim() >---------------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_dim(const NC_dim *dimp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
@@ -172,7 +172,7 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap, int sizeof_NON_NEG)
 }
 
 /*----< hdr_len_NC_attr() >--------------------------------------------------*/
-inline static MPI_Offset
+static MPI_Offset
 hdr_len_NC_attr(const NC_attr *attrp, int sizeof_NON_NEG)
 {
     /* netCDF file format:
@@ -362,6 +362,13 @@ hdr_fetch(bufferinfo *gbp) {
     MPI_Comm_rank(gbp->comm, &rank);
     if (rank == 0) {
         MPI_Status mpistatus;
+        /* explicitly initialize mpistatus object to 0. For zero-length read,
+         * MPI_Get_count may report incorrect result for some MPICH version,
+         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+         * Thus we initialize it above to work around.
+         */
+        memset(&mpistatus, 0, sizeof(MPI_Status));
+
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
         TRACE_IO(MPI_File_read_at)(gbp->collective_fh,
