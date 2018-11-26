@@ -99,7 +99,7 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
     * NC_EBADLOG when the log files stored in the burst buffers are found
       corrupted.
 
-  o New PnetCDF hint
+  o New PnetCDF hints
     * nc_in_place_swap -- to enable or disable in-place byte swap on Little
       Endian architectures. The default mode is auto. See in-place byte-swap
       option above for descriptions of the three modes. Below is an example

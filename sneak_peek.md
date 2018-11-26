@@ -70,7 +70,15 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New PnetCDF hint
-  + none
+  + `nc_ibuf_size` -- to set the size of a temporal buffer to be allocated by
+    PnetCDF internally to pack noncontiguous user write buffers supplied to the
+    nonblocking requests into a contiguous space. Similarly for read case to
+    unpack the temporal buffer to user read buffers. This affects both blocking
+    and nonblocking APIs. On some systems, using noncontiguous user buffers in
+    MPI collective read/write functions performs significantly worse than using
+    contiguous buffers. Note if the size of aggregated user buffers is larger
+    than `nc_ibuf_size`, packing/unpacking will be disabled to save memory
+    footprint. The default value is 16 MiB.
 
 * New run-time environment variables
   + none

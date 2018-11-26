@@ -30,11 +30,11 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
 
     if (info == MPI_INFO_NULL) return;
 
-    /* nc_header_align_size, nc_var_align_size, and r_align * take effect when
-     * a file is created or opened and later adding more header or variable
+    /* nc_header_align_size, nc_var_align_size, and r_align take effect when
+     * a file is created, or opened and later adding more metadata or variable
      * data */
 
-    /* extract PnetCDF hints from user info object */
+    /* aligns the size of header extent of a newly created file */
     MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
                  &flag);
     if (flag) {
@@ -44,6 +44,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
         else if (ncp->h_align < 0) ncp->h_align = 0;
     }
 
+    /* aligns starting file offsets of individual fixed-size variables */
     MPI_Info_get(info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
@@ -52,6 +53,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
         else if (ncp->fx_v_align < 0) ncp->fx_v_align = 0;
     }
 
+    /* aligns starting file offset of the record variable section */
     MPI_Info_get(info, "nc_record_align_size", MPI_MAX_INFO_VAL-1, value,
                  &flag);
     if (flag) {
@@ -61,7 +63,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
         else if (ncp->r_align < 0) ncp->r_align = 0;
     }
 
-    /* get header reading chunk size from info */
+    /* header reading chunk size */
     MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1, value,
                  &flag);
     if (flag) {
@@ -71,7 +73,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
         else if (ncp->chunk < 0) ncp->chunk = 0;
     }
 
-    /* hint on setting in-place byte swap (matters only for Little Endian) */
+    /* setting in-place byte swap (matters only for Little Endian) */
     MPI_Info_get(info, "nc_in_place_swap", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag) {
         if (strcasecmp(value, "enable") == 0) {
@@ -86,6 +88,17 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
             fClr(ncp->flags, NC_MODE_SWAP_ON);
             fClr(ncp->flags, NC_MODE_SWAP_OFF);
         }
+    }
+
+    /* temporal buffer size used to pack noncontiguous aggregated user buffers
+     * when calling ncmpi_wait/wait_all, Default 16 MiB
+     */
+    MPI_Info_get(info, "nc_ibuf_size", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        MPI_Offset ibuf_size;
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        ibuf_size = strtoll(value,NULL,10);
+        if (errno == 0 && ncp->ibuf_size > 0) ncp->ibuf_size = ibuf_size;
     }
 
 #ifdef ENABLE_SUBFILING

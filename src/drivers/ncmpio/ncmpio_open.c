@@ -100,6 +100,10 @@ ncmpio_open(MPI_Comm     comm,
 
     /* chunk size for reading header (set default before check hints) */
     ncp->chunk = NC_DEFAULT_CHUNKSIZE;
+
+    /* buffer to pack noncontiguous user buffers when calling wait() */
+    ncp->ibuf_size = NC_DEFAULT_IBUF_SIZE;
+
     /* extract I/O hints from user info */
     ncmpio_set_pnetcdf_hints(ncp, info);
 

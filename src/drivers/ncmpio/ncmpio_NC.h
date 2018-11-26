@@ -40,6 +40,12 @@
  * in an entire climate header in one go */
 #define NC_DEFAULT_CHUNKSIZE 262144
 
+/* default size of temporal buffer to pack noncontiguous user buffers for MPI
+ * collective read and write during ncmpi_wait/wait_all(). On some systems,
+ * e.g. Cray KNL, using contiguous user buffers in collective I/O is much
+ * faster than noncontiguous. */
+#define NC_DEFAULT_IBUF_SIZE 16777216
+
 /* when variable's nctype is NC_CHAR, I/O buffer's MPI type must be MPI_CHAR
  * and vice versa */
 #define NCMPII_ECHAR(nctype, mpitype) ((((nctype) == NC_CHAR) == ((mpitype) != MPI_CHAR)) ? NC_ECHAR : NC_NOERR)
@@ -354,6 +360,8 @@ struct NC {
     MPI_Offset    r_align;     /* file alignment for record variable section */
     MPI_Offset    h_minfree;   /* pad at the end of the header section */
     MPI_Offset    v_minfree;   /* pad at the end of the data section for fixed-size variables */
+    MPI_Offset    ibuf_size;   /* packing buffer size for flushing noncontig
+                                  user buffer during wait */
     MPI_Offset    xsz;       /* external size of this header, <= var[0].begin */
     MPI_Offset    begin_var; /* file offset of the first (non-record) var */
     MPI_Offset    begin_rec; /* file offset of the first 'record' */
