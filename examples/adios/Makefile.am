@@ -13,10 +13,6 @@ LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 
 check_PROGRAMS = read_all
 
-if ENABLE_THREAD_SAFE
-   check_PROGRAMS += pthread
-endif
-
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
@@ -36,7 +32,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
            $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(NC_FILES) $(TESTOUTDIR)/pthread.nc.* $(TESTOUTDIR)/testfile.nc
+             $(NC_FILES)
 
 EXTRA_DIST = parallel_run.sh
 

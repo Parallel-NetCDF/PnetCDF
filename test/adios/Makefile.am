@@ -72,8 +72,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
              $(NC_FILES) testfile.nc
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh gzip_example.nc \
-             parallel_run.sh
+EXTRA_DIST = $(M4_SRCS) wrap_runs.sh parallel_run.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests

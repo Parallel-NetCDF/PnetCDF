@@ -1,4 +1,4 @@
-# Support NetCDF-4 files
+# Support ADIOS BP files
 
 Starting from version 1.11.0, PnetCDF supports data access to ADIOS 1.x BP files. 
 Through calling PnetCDF APIs, this feature allows applications to
@@ -26,11 +26,15 @@ calling `ncmpi_open()`. For example,
 ```
 int cmode;
 cmode = NC_NOWRITE;
-ncmpi_create(MPI_COMM_WORLD, "testfile.bp", cmode, MPI_INFO_NULL, &ncid);
+ncmpi_open(MPI_COMM_WORLD, "testfile.bp", cmode, MPI_INFO_NULL, &ncid);
 ```
 
 Setting NC_WRITE flag will result in error. PnetCDF will recognize ADIOS BP file aumatically and selects the proper I/O driver.
 No flag regarding file format is required.
+
+## Example programs
+
+An example program is avaiable at /examples/adios/read_all.c
 
 ## Known Problems
 
@@ -46,13 +50,6 @@ different.
   vara calls. However, such solution must deal with the situation when the
   numbers of requests are different among processes in the collective data
   mode. Supporting `varn` is thus a future work.
-* Although a new file of format NC_FORMAT_NETCDF4 or NC_FORMAT_NETCDF4_CLASSIC
-  can be created, the I/O operations are limited to the NetCDF classic model
-  I/O, This is because PnetCDF APIs do not include those for operating enhanced
-  data objects, such as groups, compound data types, compression etc. As for
-  reading a NetCDF-4 file created by NetCDF-4, PnetCDF supports the classic way
-  of reading variables, attributes, and dimensions. Inquiry APIs for enhanced
-  metadata is currently not supported.
 * PnetCDF current does not recognize record dimension. Variable with record dimension can 
   still be read, but PnetCDF will not return information regarding number of records.
 
