@@ -32,6 +32,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef ENABLE_ADIOS
 #include "adios_read.h" 
+#define BP_MINIFOOTER_SIZE 28
 #endif 
 
 /* TODO: the following 3 global variables make PnetCDF not thread safe */
@@ -1213,13 +1214,53 @@ ncmpi_inq_file_format(const char *filename,
     }
 #ifdef ENABLE_ADIOS 
     else{ 
-        ADIOS_FILE *fp = NULL; 
+        
         /* Try to open with ADIOS */ 
+        ADIOS_FILE *fp = NULL; 
         fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
         if (fp != NULL) { 
             *formatp = NC_FORMAT_BP; 
             adios_read_close(fp); 
         } 
+        
+
+        // Alternatively, we can test if the mini footer of the BP file follows BP specification
+        /*
+        off_t off;
+        char footer[BP_MINIFOOTER_SIZE];
+        unsigned long long *h1, *h2, *h3;
+        if ((fd = open(path, O_RDONLY, 00400)) == -1) { 
+            if (errno == ENOENT)       DEBUG_RETURN_ERROR(NC_ENOENT)
+            else if (errno == EACCES)       DEBUG_RETURN_ERROR(NC_EACCESS)
+            else if (errno == ENAMETOOLONG) DEBUG_RETURN_ERROR(NC_EBAD_FILE)
+            else {
+                fprintf(stderr,"Error on opening file %s (%s)\n",
+                        filename,strerror(errno));
+                DEBUG_RETURN_ERROR(NC_EFILE)
+            }
+        }
+
+        // Seek to end
+        off = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+
+        // get footer 
+        rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
+        if (rlen != BP_MINIFOOTER_SIZE) {
+            close(fd); 
+            DEBUG_RETURN_ERROR(NC_EFILE)
+        }
+        if (close(fd) == -1) {
+            DEBUG_RETURN_ERROR(NC_EFILE)
+        }
+        
+        h1 = (unsigned long long*)footer;
+        h2 = (unsigned long long*)(footer + 8);
+        h3 = (unsigned long long*)(footer + 16);
+
+        if (h1 < h2 && h2 < h3){
+            *formatp = NC_FORMAT_BP; 
+        }
+        */
     } 
 #endif 
 

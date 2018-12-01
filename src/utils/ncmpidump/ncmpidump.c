@@ -25,6 +25,7 @@
  
 #ifdef ENABLE_ADIOS 
 #include "adios_read.h" 
+#define BP_MINIFOOTER_SIZE 28
 #endif 
 
 static void usage(void);
@@ -722,7 +723,40 @@ enum FILE_KIND check_file_signature(char *path)
         else if (signature[3] == 1)  return CDF1;
     }
     else{
-        return BP; 
+        off_t off;
+        char footer[BP_MINIFOOTER_SIZE];
+        unsigned long long *h1, *h2, *h3;
+
+        if ((fd = open(path, O_RDONLY, 0700)) == -1) {
+            fprintf(stderr,"%s error at opening file %s (%s)\n",progname,path,strerror(errno));
+            return UNKNOWN;
+        }
+
+        // Seek to end
+        off = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+
+        /* get footer */
+        rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
+        if (rlen != BP_MINIFOOTER_SIZE) {
+            if (rlen < 0)
+                fprintf(stderr,"%s error at reading file %s (%s)\n",progname,path,strerror(errno));
+            else
+                fprintf(stderr,"%s error: unknown file format\n",progname);
+            close(fd); /* ignore error */
+            return UNKNOWN;
+        }
+        if (close(fd) == -1) {
+            fprintf(stderr,"%s error at closing file %s (%s)\n",progname,path,strerror(errno));
+            return UNKNOWN;
+        }
+
+        h1 = (unsigned long long*)footer;
+        h2 = (unsigned long long*)(footer + 8);
+        h3 = (unsigned long long*)(footer + 16);
+
+        if (h1 < h2 && h2 < h3){
+            return BP; 
+        }
     } 
     
     return UNKNOWN; /* unknown format */
