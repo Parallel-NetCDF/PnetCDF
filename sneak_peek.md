@@ -23,7 +23,8 @@ This is essentially a placeholder for the next release note ...
     avoid this, `ncmpi_wait()` and `ncmpi_wait_all()` now check whether the
     buffer is noncontiguous and size is less than 16 MiB. If both are true, a
     temporary contiguous buffer is allocated to copy the data over and used in
-    the MPI read or write calls. See
+    the MPI read or write calls. The size of the buffer can be adjusted through
+    a new hint `nc_ibuf_size`. See `New PnetCDF hint` below and
     [PR #26](https://github.com/Parallel-NetCDF/PnetCDF/pull/26). Programs
     developed to test this issue is available in
     https://github.com/Parallel-NetCDF/E3SM-IO/tree/master/mpi_io_test
@@ -73,12 +74,12 @@ This is essentially a placeholder for the next release note ...
   + `nc_ibuf_size` -- to set the size of a temporal buffer to be allocated by
     PnetCDF internally to pack noncontiguous user write buffers supplied to the
     nonblocking requests into a contiguous space. Similarly for read case to
-    unpack the temporal buffer to user read buffers. This affects both blocking
-    and nonblocking APIs. On some systems, using noncontiguous user buffers in
-    MPI collective read/write functions performs significantly worse than using
-    contiguous buffers. Note if the size of aggregated user buffers is larger
-    than `nc_ibuf_size`, packing/unpacking will be disabled to save memory
-    footprint. The default value is 16 MiB.
+    unpack the temporal buffer to user read buffers, if they are noncontiguous.
+    This affects both blocking and nonblocking APIs. On some systems, using
+    noncontiguous user buffers in MPI collective read/write functions performs
+    significantly worse than using contiguous buffers. Note if the size of
+    aggregated user buffers is larger than `nc_ibuf_size`, packing/unpacking
+    will be disabled to save memory footprint. The default value is 16 MiB.
 
 * New run-time environment variables
   + none
