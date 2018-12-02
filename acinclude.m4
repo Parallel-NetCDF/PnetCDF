@@ -1635,7 +1635,7 @@ AC_DEFUN([UD_CHECK_FC_NAG],[
     AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
     [ac_cv_fc_compiler_nag=no
      ac_FC_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
-     if test "x${_FC_VENDOR}" = xNAG ; then
+     if test "x${ac_FC_VENDOR}" = xNAG ; then
         ac_cv_fc_compiler_nag=yes
      fi
      unset ac_FC_VENDOR
