@@ -1614,7 +1614,7 @@ AC_DEFUN([UD_CHECK_PGF77],[
     [ac_cv_fc_compiler_pgf77=no
      eval $MPIF77 -V </dev/null >& conftest.ver
      ac_F77_VENDOR=`head -c 5 conftest.ver`
-     if test "x${_F77_VENDOR}" = xpgf77 ; then
+     if test "x${ac_F77_VENDOR}" = xpgf77 ; then
         ac_cv_fc_compiler_pgf77=yes
      fi
      ${RM} -f conftest.ver
