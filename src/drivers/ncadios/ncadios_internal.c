@@ -126,28 +126,14 @@ int ncadiosi_parse_attrs(NC_ad* ncadp) {
     int i, j;
     int vid;
     char path[1024];
-<<<<<<< HEAD
     char *vname = NULL;
 
-=======
-    char *aname = NULL;
-    char *vname = NULL;
-
-
-    NC_ad_var *var;
-    NC_ad_dim dim;
-
->>>>>>> 23ad299... parse var attributes
     for (i = 0; i < ncadp->fp->nattrs; i++) {
         strcpy(path, ncadp->fp->attr_namelist[i]);
 
         for(j = 0; path[j] != '\0'; j++){
             if (j > 0 && path[j] == '/'){
                 path[j] = '\0';
-<<<<<<< HEAD
-=======
-                aname = path + j + 1;
->>>>>>> 23ad299... parse var attributes
                 if (path[0] == '/'){
                     vname = path + 1;
                 }
@@ -167,6 +153,7 @@ int ncadiosi_parse_attrs(NC_ad* ncadp) {
 
     return NC_NOERR;
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
@@ -264,3 +251,44 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
 }
 =======
 >>>>>>> 23ad299... parse var attributes
+=======
+
+int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
+    int err;
+    int i, j;
+    
+    // Find record dimension
+    ncadp->recdim = -1;
+    for(i = 0; i < ncadp->dims.cnt; i++){
+        if (ncadp->dims.data[i].len == NC_UNLIMITED){
+            ncadp->recdim = i;
+            break;
+        }
+    }
+
+    // Find record dimension size
+    ncadp->nrec = 0;
+    for(i = 0; i < ncadp->vars.cnt; i++){
+        for(j = 0; j < ncadp->vars.data[i].ndim; j++){
+            // Found a record variable
+            if (ncadp->vars.data[i].dimids[j] == ncadp->recdim){
+                ADIOS_VARINFO * v;
+
+                // Get var info
+                v = adios_inq_var(ncadp->fp, ncadp->vars.data[i].name);
+                if (v == NULL){
+                    err = ncmpii_error_adios2nc(adios_errno, "get_var");
+                    DEBUG_RETURN_ERROR(err);
+                }
+
+                // Update record dim size
+                if (ncadp->nrec < v->dims[j]){
+                    ncadp->nrec = v->dims[j];
+                }
+
+                adios_free_varinfo(v);
+            }
+        }
+    }
+}
+>>>>>>> bbf925e... parse unlimit dim
