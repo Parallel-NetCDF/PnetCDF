@@ -180,7 +180,7 @@
 
           ! local variables
           integer i, j, err, nprocs, rank, str_len
-          integer ncid, rec_var, fix_var, dimid(2), dim_t, dim_y, dim_x
+          integer ncid, rec_var, fix_var, dim_t, dim_y, dim_x
           integer*8 nx, ny, global_nx, global_ny, time_len, local_nx
           integer*8 start(2), count(2)
           PARAMETER(nx=3, ny=4)
@@ -312,7 +312,7 @@
           include 'pnetcdf.inc'
 
           character*256 filename, cmd
-          integer err, ierr, rank, get_args, dummy, cmode
+          integer err, ierr, rank, get_args, dummy
           integer*8 malloc_size, sum_size
           logical verbose
 
