@@ -138,16 +138,10 @@ ncadios_inq_att(void       *ncdp,
               MPI_Offset *lenp)
 {
     int err;
-<<<<<<< HEAD
-    int attid;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-    NC_ad_att att;
-=======
     NC_ad *ncadp = (NC_ad*)ncdp;
     enum ADIOS_DATATYPES atype;
     int  asize, tsize;
     void *adata;
->>>>>>> f9a47bc... comments
     
     if (varid == NC_GLOBAL){
         err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
@@ -246,13 +240,7 @@ ncadios_get_att(void         *ncdp,
               MPI_Datatype  itype)
 {
     int err;
-<<<<<<< HEAD
-    int attid, esize;
     NC_ad *ncadp = (NC_ad*)ncdp;
-    NC_ad_att att;
-=======
-    NC_ad *ncadp = (NC_ad*)ncdp;
->>>>>>> f9a47bc... comments
     MPI_Datatype xtype;
     
     if (varid == NC_GLOBAL){

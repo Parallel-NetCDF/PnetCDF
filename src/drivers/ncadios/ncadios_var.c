@@ -133,7 +133,6 @@ ncadios_inq_var(void       *ncdp,
         //*fill_valuep = 0;
     }
 
-
     return NC_NOERR;
 }
 

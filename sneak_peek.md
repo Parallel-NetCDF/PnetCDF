@@ -3,9 +3,6 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
 * New features
-<<<<<<< HEAD
-  + none
-=======
   + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
     PnetCDF can be built on top of NetCDF-4 library to allow PnetCDF to read
     and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag to create
@@ -19,18 +16,11 @@ This is essentially a placeholder for the next release note ...
   + ADIOS driver -- Read ADIOS 1.x BP formated file. 
     ADIOS_READ_METHOD_BP must be set when open BP file.
     Does not support low-level and non blocking API.
->>>>>>> cf8c344... readme
 
 * New optimization
   + none
 
 * New Limitations
-<<<<<<< HEAD
-  + none
-
-* Update configure options
-  + none
-=======
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
     classic model I/O operations. Advanced NetCDF-4 features, such as chunking,
     compression, etc. are not supported. This is due to the unavailability of
@@ -53,7 +43,6 @@ This is essentially a placeholder for the next release note ...
   + Enable multi-threading support.
     - `--enable-thread-safe`: enable per-file thread-safe support
     - `--with-pthread`: path to the pthread library installation
->>>>>>> cf8c344... readme
 
 * New constants
   + none
@@ -99,9 +88,6 @@ This is essentially a placeholder for the next release note ...
     [pull request #46](https://github.com/Parallel-NetCDF/PnetCDF/pull/46).
 
 * New example programs
-<<<<<<< HEAD
-  + none
-=======
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
     When running on some parallel machines, users may need to set certain
     environment variable to enable MPI multi-threading support, for example on
@@ -111,20 +97,17 @@ This is essentially a placeholder for the next release note ...
     ```
   + examples/C/transpose2D.c - a 2D version of examples/C/transpose.c
   + examples/adios/read_all.c - Dump all metadata in a ADIOS BP file.
->>>>>>> cf8c344... readme
 
 * New programs for I/O benchmarks
   + none
 
 * New test program
-<<<<<<< HEAD
   + test/nc4/notsupport - Test if error code NC_ENOTSUPPORT is properly
     returned when calling APIs for unsupported NetCDF-4 feature.
   + test/nc4/rec - Test creating and reading a NetCDF-4 file with 1 unlimited
     dimension. 
   + test/nc4/rec2 - Test opening a NetCDF-4 file with more than 1 unlimited
     dimensions.
-=======
   + test/F90/test_fill.f90 - another test for bug fix r3730.
   + test/testcases/error_precedence.m4 - tests the error code reporting
     precedence
@@ -149,7 +132,6 @@ This is essentially a placeholder for the next release note ...
   + test/adios/varm.c - tests if PnetCDF can access ADIOS variables with discontiguous memory.
   + test/adios/vars.c - tests if PnetCDF access ADIOS variables with stride.
   + test/adios/atts.c - tests if PnetCDF access ADIOS attributes.
->>>>>>> cf8c344... readme
 
 * Conformity with NetCDF library
   + none

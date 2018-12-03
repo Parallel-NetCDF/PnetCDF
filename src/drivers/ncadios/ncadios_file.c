@@ -147,6 +147,8 @@ ncadios_open(MPI_Comm     comm,
     }
     ncadios_sync_header(ncadp);
 
+    // Parse information regarding record dim
+    ncadiosi_parse_rec_dim(ncadp);
 
     /* 
      * Build dimensionality list 
@@ -316,12 +318,7 @@ ncadios_inq(void *ncdp,
     }
 
     if (xtendimp != NULL){
-        for(i = 0; i < ncadp->dims.cnt; i++){
-            if (ncadp->dims.data[i].len == NC_UNLIMITED){
-                *xtendimp = i;
-                break;
-            }
-        }
+        *xtendimp = ncadp->recdim;
     }
 
     return NC_NOERR;
@@ -357,12 +354,21 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (num_fix_varsp != NULL){
-        // For now, we include all variable as fix variable
+        // All variables - number of record variables
+        int i, j;
         *num_fix_varsp = ncadp->vars.cnt;
+        for(i = 0; i < ncadp->vars.cnt; i++){
+            for(j = 0; j < ncadp->vars.data[i].ndim; j++){
+                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len == NC_UNLIMITED){
+                    *num_rec_varsp -= 1;
+                    break;
+                }
+            }
+        }
     }
 
     if (num_rec_varsp != NULL){
-        // Still, we count those variable with unlimited dim as rec variable
+        // We count those variable with unlimited dim as rec variable
         int i, j;
         *num_rec_varsp = 0;
         for(i = 0; i < ncadp->vars.cnt; i++){
@@ -392,7 +398,7 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (recsize != NULL){
-        *recsize = 0;
+        *recsize = ncadp->nrec;
     }
 
     if (put_size != NULL){

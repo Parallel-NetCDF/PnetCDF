@@ -154,3 +154,42 @@ int ncadiosi_parse_attrs(NC_ad* ncadp) {
 
     return NC_NOERR;
 }
+
+int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
+    int err;
+    int i, j;
+    
+    // Find record dimension
+    ncadp->recdim = -1;
+    for(i = 0; i < ncadp->dims.cnt; i++){
+        if (ncadp->dims.data[i].len == NC_UNLIMITED){
+            ncadp->recdim = i;
+            break;
+        }
+    }
+
+    // Find record dimension size
+    ncadp->nrec = 0;
+    for(i = 0; i < ncadp->vars.cnt; i++){
+        for(j = 0; j < ncadp->vars.data[i].ndim; j++){
+            // Found a record variable
+            if (ncadp->vars.data[i].dimids[j] == ncadp->recdim){
+                ADIOS_VARINFO * v;
+
+                // Get var info
+                v = adios_inq_var(ncadp->fp, ncadp->vars.data[i].name);
+                if (v == NULL){
+                    err = ncmpii_error_adios2nc(adios_errno, "get_var");
+                    DEBUG_RETURN_ERROR(err);
+                }
+
+                // Update record dim size
+                if (ncadp->nrec < v->dims[j]){
+                    ncadp->nrec = v->dims[j];
+                }
+
+                adios_free_varinfo(v);
+            }
+        }
+    }
+}
