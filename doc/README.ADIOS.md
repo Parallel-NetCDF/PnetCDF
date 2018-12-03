@@ -1,6 +1,6 @@
 # Support ADIOS BP files
 
-Starting from version 1.11.0, PnetCDF supports data access to ADIOS 1.x BP files. 
+Starting from version 1.12.0, PnetCDF supports reading data from ADIOS 1.x BP files. 
 Through calling PnetCDF APIs, this feature allows applications to
 read files in BP format. For now, PnetCDF cannot write to BP formated files.
 
@@ -15,7 +15,7 @@ PnetCDF requires a ADIOS library that is built with parallel I/O support.
     gzip -dc parallel-netcdf-1.11.0.tar.gz | tar -xf -
     cd parallel-netcdf-1.11.0
     ./configure --prefix=/PnetCDF/install/path \
-                --enable-adioss \
+                --enable-adios \
                 --with-adios=/ADIOS/install/path
     ```
 
@@ -42,6 +42,9 @@ Some features are not supported due to the availability of APIs different
 between PnetCDF and ADIOS libraries. I/O semantics are also slightly
 different.
 
+* The ADIOS driver is ready only driver. It does not support any API that creates or modifies 
+  objects within the BP file.
+* The ADIOS driver does not work with burst buffer driver due to its ready only nature.
 * API families of `vard`, `varn`, derived type, and nonblocking I/O are not supported. This
   is because ADIOS does not have corresponding APIs. Error code
   `NC_ENOTSUPPORT` will be returned. For vard APIs, ADIOS does not have APIs
