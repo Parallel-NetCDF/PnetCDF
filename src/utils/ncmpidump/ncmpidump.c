@@ -25,16 +25,12 @@
  
 #ifdef ENABLE_ADIOS 
 #include "adios_read.h" 
-<<<<<<< HEAD
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
 #define ADIOS_VERSION_NUM_MASK                       0x000000FF
 #define BUFREAD64(buf,var) var = *(off_t *) (buf); \
                          if (diff_endian) \
                              swap_64(&var);
-=======
-#define BP_MINIFOOTER_SIZE 28
->>>>>>> c7806ac... identify bp mini footer
 #endif 
 
 static void usage(void);
@@ -779,33 +775,20 @@ enum FILE_KIND check_file_signature(char *path)
     }
 #ifdef ENABLE_ADIOS 
     else{
-<<<<<<< HEAD
         off_t fsize;
         int diff_endian;
         char footer[BP_MINIFOOTER_SIZE];
         off_t h1, h2, h3;
-=======
-        off_t off;
-        char footer[BP_MINIFOOTER_SIZE];
-        unsigned long long *h1, *h2, *h3;
->>>>>>> c7806ac... identify bp mini footer
 
         if ((fd = open(path, O_RDONLY, 0700)) == -1) {
             fprintf(stderr,"%s error at opening file %s (%s)\n",progname,path,strerror(errno));
             return UNKNOWN;
         }
 
-<<<<<<< HEAD
         /* Seek to footer */
         fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
         /* Get footer */
-=======
-        // Seek to end
-        off = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
-
-        /* get footer */
->>>>>>> c7806ac... identify bp mini footer
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
         if (rlen != BP_MINIFOOTER_SIZE) {
             if (rlen < 0)
@@ -820,7 +803,6 @@ enum FILE_KIND check_file_signature(char *path)
             return UNKNOWN;
         }
 
-<<<<<<< HEAD
         adios_parse_version(footer, &bp_ver, &diff_endian);
         bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
 
@@ -836,13 +818,6 @@ enum FILE_KIND check_file_signature(char *path)
             0 < h2 && h2 < fsize &&
             0 < h3 && h3 < fsize &&
             h1 < h2 && h2 < h3){ 
-=======
-        h1 = (unsigned long long*)footer;
-        h2 = (unsigned long long*)(footer + 8);
-        h3 = (unsigned long long*)(footer + 16);
-
-        if (h1 < h2 && h2 < h3){
->>>>>>> c7806ac... identify bp mini footer
             return BP; 
         }
     } 
