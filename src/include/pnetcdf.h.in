@@ -181,6 +181,8 @@ Use this in mode flags for both nc_create() and nc_open(). */
 
 #define NC_NETCDF4       0x1000  /**< Use netCDF-4/HDF5 format. Mode flag for nc_create(). */
 
+#define NC_BP           0x10000  /**< Use ADIOS BP format. */
+
 /** Turn on MPI I/O.
 Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_MPIIO         0x2000 /**< \deprecated */

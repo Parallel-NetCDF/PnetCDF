@@ -402,6 +402,10 @@ do_ncdump(const char *path, struct fspec* specp)
         else if (NC_mode == NC_NETCDF4)
             Printf ("%s file format: NetCDF-4\n", specp->name);
 #endif
+#ifdef ENABLE_ADIOS
+        else if (NC_mode == NC_BP)
+            Printf ("%s file format: ADIOS BP\n", specp->name);
+#endif
         else
             Printf ("%s file format: CDF-1\n", specp->name);
     } else if (specp->kind) {
@@ -421,6 +425,10 @@ do_ncdump(const char *path, struct fspec* specp)
 #ifdef ENABLE_NETCDF4
         else if (NC_mode == NC_NETCDF4)
             Printf ("// file format: NetCDF-4\n");
+#endif
+#ifdef ENABLE_ADIOS
+        else if (NC_mode == NC_BP)
+            Printf ("// file format: ADIOS BP\n");
 #endif
         else
             Printf ("// file format: CDF-1\n");
@@ -920,6 +928,7 @@ main(int argc, char *argv[])
         else if (file_kind == CDF2) Printf ("64-bit offset\n");
         else if (file_kind == CDF1) Printf ("classic\n");
         else if (file_kind == HDF5) Printf ("NetCDF-4\n");
+        else if (file_kind == BP)   Printf ("ADIOS BP\n");
         goto fn_exit;
     }
 #ifndef ENABLE_NETCDF4
@@ -957,6 +966,7 @@ main(int argc, char *argv[])
             else if (file_kind == CDF2) Printf ("64-bit offset\n");
             else if (file_kind == CDF1) Printf ("classic\n");
             else if (file_kind == HDF5) Printf ("NetCDF-4\n");
+            else if (file_kind == BP)   Printf ("ADIOS BP\n");
             goto fn_exit;
         }
 #ifndef ENABLE_NETCDF4

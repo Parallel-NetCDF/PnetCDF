@@ -1214,21 +1214,12 @@ ncmpi_inq_file_format(const char *filename,
     }
 #ifdef ENABLE_ADIOS 
     else{ 
-        
-        /* Try to open with ADIOS */ 
         ADIOS_FILE *fp = NULL; 
-        fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
-        if (fp != NULL) { 
-            *formatp = NC_FORMAT_BP; 
-            adios_read_close(fp); 
-        } 
-        
-
-        // Alternatively, we can test if the mini footer of the BP file follows BP specification
-        /*
         off_t off;
         char footer[BP_MINIFOOTER_SIZE];
         unsigned long long *h1, *h2, *h3;
+        
+        // First, we test if the mini footer of the BP file follows BP specification
         if ((fd = open(path, O_RDONLY, 00400)) == -1) { 
             if (errno == ENOENT)       DEBUG_RETURN_ERROR(NC_ENOENT)
             else if (errno == EACCES)       DEBUG_RETURN_ERROR(NC_EACCESS)
@@ -1260,7 +1251,13 @@ ncmpi_inq_file_format(const char *filename,
         if (h1 < h2 && h2 < h3){
             *formatp = NC_FORMAT_BP; 
         }
-        */
+
+        /* Then, we try to open with ADIOS */ 
+        fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
+        if (fp != NULL) { 
+            *formatp = NC_FORMAT_BP; 
+            adios_read_close(fp); 
+        } 
     } 
 #endif 
 
@@ -1292,6 +1289,11 @@ ncmpi_inq_version(int ncid, int *nc_mode)
         *nc_mode = NC_NETCDF4;
     else if (pncp->format == NC_FORMAT_NETCDF4_CLASSIC)
         *nc_mode = NC_NETCDF4 | NC_CLASSIC_MODEL;
+#endif
+
+#ifdef ENABLE_ADIOS
+    else if (pncp->format == NC_FORMAT_BP)
+        *nc_mode = NC_BP;
 #endif
 
     return NC_NOERR;
