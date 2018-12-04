@@ -55,8 +55,13 @@ if MPICC_IS_FCCPX
 # Fujitsu fccpx and mpifccpx uses -Knomemalias, or -Xg -fno-strict-aliasing
 ncx.lo: LTCOMPILE += -Knomemalias
 else
-# GNU gcc, Intel icc, IBM xlc
+if MPICC_IS_XLC
+# IBM xlc
+ncx.lo: LTCOMPILE += -qalias=noansi
+else
+# GNU gcc, Intel icc
 ncx.lo: LTCOMPILE += -fno-strict-aliasing
+endif
 endif
 endif
 
