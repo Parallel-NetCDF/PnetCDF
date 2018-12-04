@@ -1580,11 +1580,12 @@ dnl
 AC_DEFUN([UD_CHECK_XLC],[
     AC_CACHE_CHECK([if C compiler is IBM XLC], [ac_cv_cc_compiler_xlc],
     [ac_cv_cc_compiler_xlc=no
-     ac_XLC_VER=`$MPICC -qversion`
-     ac_XLC_VENDOR=`echo $ac_XLC_VER | cut -d' ' -f1,2`
+     ac_XLC_VER=`$MPICC -qversion >& conftest.ver`
+     ac_XLC_VENDOR=`head -c 6 conftest.ver`
      if test "x${ac_XLC_VENDOR}" = "xIBM XL" ; then
         ac_cv_cc_compiler_xlc=yes
      fi
+     ${RM} -f conftest.ver
      unset ac_XLC_VER
      unset ac_XLC_VENDOR
     ])
