@@ -25,7 +25,9 @@
  
 #ifdef ENABLE_ADIOS 
 #include "adios_read.h" 
+#include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
+#define ADIOS_VERSION_NUM_MASK                       0x000000FF
 #endif 
 
 static void usage(void);
@@ -44,6 +46,8 @@ int main(int argc, char** argv);
 #define    STREQ(a, b)    (*(a) == *(b) && strcmp((a), (b)) == 0)
 
 char *progname;
+
+uint32_t bp_ver;
 
 static void
 usage(void)
@@ -404,7 +408,7 @@ do_ncdump(const char *path, struct fspec* specp)
 #endif
 #ifdef ENABLE_ADIOS
         else if (NC_mode == NC_BP)
-            Printf ("%s file format: ADIOS BP\n", specp->name);
+            Printf ("%s file format: ADIOS BP Ver. %u\n", specp->name, bp_ver);
 #endif
         else
             Printf ("%s file format: CDF-1\n", specp->name);
@@ -428,7 +432,7 @@ do_ncdump(const char *path, struct fspec* specp)
 #endif
 #ifdef ENABLE_ADIOS
         else if (NC_mode == NC_BP)
-            Printf ("// file format: ADIOS BP\n");
+            Printf ("// file format: ADIOS BP Ver. %u\n", bp_ver);
 #endif
         else
             Printf ("// file format: CDF-1\n");
@@ -763,6 +767,7 @@ enum FILE_KIND check_file_signature(char *path)
         h3 = (unsigned long long*)(footer + 16);
 
         if (h1 < h2 && h2 < h3){
+            bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
             return BP; 
         }
     } 
