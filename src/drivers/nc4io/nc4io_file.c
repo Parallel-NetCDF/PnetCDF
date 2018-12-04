@@ -57,12 +57,21 @@ nc4io_create(MPI_Comm     comm,
              MPI_Info     info,
              void       **ncpp)  /* OUT */
 {
+    char *filename;
     int err, ncidtmp;
     NC_nc4 *nc4p;
 
+    /* remove the file system type prefix name if there is any.
+     * For example, path=="lustre:/home/foo/testfile.nc",
+     * use "/home/foo/testfile.nc" when calling nc_create_par()
+     */
+    filename = strchr(path, ':');
+    if (filename == NULL) filename = (char*)path; /* no prefix */
+    else                  filename++;
+
     /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used */
     cmode |= NC_MPIIO;
-    err = nc_create_par(path, cmode, comm, info, &ncidtmp);
+    err = nc_create_par(filename, cmode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Set fill mdoe to NC_NOFILL
@@ -74,12 +83,12 @@ nc4io_create(MPI_Comm     comm,
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
     if (nc4p == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    nc4p->path = (char*) NCI_Malloc(strlen(path)+1);
+    nc4p->path = (char*) NCI_Malloc(strlen(filename)+1);
     if (nc4p->path == NULL) {
         NCI_Free(nc4p);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
-    strcpy(nc4p->path, path);
+    strcpy(nc4p->path, filename);
     nc4p->mode = cmode | NC_WRITE;
     nc4p->flag = NC_MODE_DEF;
     nc4p->ncid = ncid;
@@ -103,8 +112,17 @@ nc4io_open(MPI_Comm     comm,
            MPI_Info     info,
            void       **ncpp)
 {
+    char *filename;
     int err, ncidtmp;
     NC_nc4 *nc4p;
+
+    /* remove the file system type prefix name if there is any.
+     * For example, path=="lustre:/home/foo/testfile.nc",
+     * use "/home/foo/testfile.nc" when calling nc_open_par()
+     */
+    filename = strchr(path, ':');
+    if (filename == NULL) filename = (char*)path; /* no prefix */
+    else                  filename++;
 
     /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used */
     omode |= NC_MPIIO;
@@ -115,12 +133,12 @@ nc4io_open(MPI_Comm     comm,
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
     if (nc4p == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    nc4p->path = (char*) NCI_Malloc(strlen(path)+1);
+    nc4p->path = (char*) NCI_Malloc(strlen(filename)+1);
     if (nc4p->path == NULL) {
         NCI_Free(nc4p);
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
-    strcpy(nc4p->path, path);
+    strcpy(nc4p->path, filename);
     nc4p->mode = omode;
     nc4p->flag = 0;
     nc4p->ncid = ncid;

@@ -1178,7 +1178,7 @@ ncmpi_inq_file_format(const char *filename,
          */
 #ifdef ENABLE_NETCDF4
         int err, ncid;
-        err = nc_open(filename, NC_NOWRITE, &ncid);
+        err = nc_open(path, NC_NOWRITE, &ncid);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
         err = nc_inq_format(ncid, formatp);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
