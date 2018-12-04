@@ -48,7 +48,8 @@ EXTRA_DIST = block_boundary_data.fh \
              tree.fh \
              README \
              acinclude.m4 \
-             configure.ac
+             configure.ac \
+             parallel_run.sh
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/flash_benchmark_io.ncmpi_chk_0000.nc \
