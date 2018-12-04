@@ -203,7 +203,9 @@
   ! Misc. additional errors
   integer, parameter, public :: &
     NF90_ENOTFOUND      = NF_ENOTFOUND     , & ! No such file
-    NF90_ECANTREMOVE    = NF_ECANTREMOVE       ! Can't remove file
+    NF90_ECANTREMOVE    = NF_ECANTREMOVE   , & ! Can't remove file
+    NF90_EINTERNAL      = NF_EINTERNAL     , & ! NetCDF Library Internal Error
+    NF90_EPNETCDF       = NF_EPNETCDF          ! Error at PnetCDF layer
 
   ! netCDF-4 error codes (copied from netCDF release)
   integer, parameter, public :: &
