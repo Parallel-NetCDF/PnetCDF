@@ -200,7 +200,9 @@
 ! Misc. additional errors
       integer, parameter, public :: &
       NF_ENOTFOUND      = -90, & ! No such file
-      NF_ECANTREMOVE    = -91    ! Can't remove file
+      NF_ECANTREMOVE    = -91, & ! Can't remove file
+      NF_EINTERNAL      = -92, & ! NetCDF Library Internal Error
+      NF_EPNETCDF       = -93    ! Error at PnetCDF layer
 
 ! netCDF-4 error codes (copied from netCDF release)
       integer, parameter, public :: &

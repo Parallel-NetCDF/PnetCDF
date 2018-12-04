@@ -272,6 +272,8 @@
       integer NF_EAUTH
       integer NF_ENOTFOUND
       integer NF_ECANTREMOVE
+      integer NF_EINTERNAL
+      integer NF_EPNETCDF
 
       PARAMETER (NF_NOERR        = 0)     ! No Error
       PARAMETER (NF2_ERR         = -1)    ! Returned for all errors in the v2 API
@@ -329,6 +331,8 @@
 ! Misc. additional errors
       PARAMETER (NF_ENOTFOUND    = -90)   ! No such file
       PARAMETER (NF_ECANTREMOVE  = -91)   ! Can't remove file
+      PARAMETER (NF_EINTERNAL    = -92)   ! NetCDF Library Internal Error
+      PARAMETER (NF_EPNETCDF     = -93)   ! Error at PnetCDF layer
 
 !
 ! netCDF-4 error codes (copied from netCDF release)
