@@ -3,8 +3,9 @@ $Id$
 ==============================================================================
 Tasks immediately before a new release (must run in the following order)
 ==============================================================================
- 0. Match NetCDF header file, netcdf.h, for defined constants and error codes.
-    See "Conform with netCDF" below.
+ 0. Sync with NetCDF header file, netcdf.h, for defined constants and error codes.
+    PnetCDF uses the same constants and error codes as NetCDF. See
+    "Conform with netCDF" below.
 
  1. Make sure build is successful
     * build and test under the same directory as source
@@ -35,7 +36,7 @@ Tasks immediately before a new release (must run in the following order)
             TESTSEQRUN="valgrind --quiet --leak-check=full" \
             TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
 
-      - make ptests
+      - run "make ptests" to test programs in parallel
       - run "make ptests" with valgrind.
         * For using valgrind, set TESTSEQRUN and TESTMPIRUN as described above.
       - make distcheck
@@ -50,12 +51,12 @@ Tasks immediately before a new release (must run in the following order)
 
     * build and test on different platforms with various compilers:
       - login.mcs.anl.gov : Intel, NAG Fortran, PGI, Solaris Studio compilers
-      - edison.nersc.gov : Cray, Intel compilers
-      - cetus.alcf.anl.gov : IBM BGQ, XL compilers, cross-compiling, Big Endian
+      - cori.nersc.gov : Cray, Intel compilers
+      - mira.alcf.anl.gov : IBM BGQ, XL compilers, cross-compiling, Big Endian
       - k.aics.riken.jp : Fujitsu compilers, cross-compiling, Big Endian
     * build benchmarks/FLASH-IO separately from PnetCDF (it has its own build
       script, i.e. configure.ac)
-    * build netCDF latest release against PnetCDF
+    * build netCDF latest release with PnetCDF feature enabled
 
  2. Set the release version
     In file "configure.ac", variable $PNETCDF_VERSION indicates the version.
@@ -91,8 +92,8 @@ Tasks immediately before a new release (must run in the following order)
 
  7. Create a new tag on GitHub, use command (v1.10.0 and after):
     Run command below to duplicate the current master branch to a new tag:
-        git tag -a tag.v1.10.0 -m "Tag right before release version 1.10.0"
-        git push origin tag.v1.10.0
+        git tag -a tag.v1.11.0 -m "Tag (not release) right before 1.11.0"
+        git push origin tag.v1.11.0
 
  8. Generate release tar balls
     a. Generate a new "configure" file
