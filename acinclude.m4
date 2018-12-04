@@ -1570,6 +1570,26 @@ AC_DEFUN([UD_CHECK_FCCPX],[
     ])
 ])
 
+dnl Check if MPI compiler is IBM XL based
+dnl According to xlc manual the command-line option to should version is
+dnl
+dnl % xlc -qversion
+dnl IBM XL C/C++ for Blue Gene, V12.1
+dnl Version: 12.01.0000.0011
+dnl
+AC_DEFUN([UD_CHECK_XLC],[
+    AC_CACHE_CHECK([if C compiler is IBM XLC], [ac_cv_cc_compiler_xlc],
+    [ac_cv_cc_compiler_xlc=no
+     ac_XLC_VER=`$MPICC -qversion`
+     ac_XLC_VENDOR=`echo $ac_XLC_VER | cut -d' ' -f1,2`
+     if test "x${ac_XLC_VENDOR}" = "xIBM XL" ; then
+        ac_cv_cc_compiler_xlc=yes
+     fi
+     unset ac_XLC_VER
+     unset ac_XLC_VENDOR
+    ])
+])
+
 dnl Check if MPI compiler is pgcc based
 dnl According to pgcc manual the command-line option to should version is -V
 dnl
