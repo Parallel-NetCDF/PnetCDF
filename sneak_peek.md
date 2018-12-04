@@ -32,14 +32,14 @@ This is essentially a placeholder for the next release note ...
 * New Limitations
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
     classic model I/O operations. Advanced NetCDF-4 features, such as chunking,
-    compression, etc. are not supported. This is due to the unavailability of
-    the APIs for those operations.
+    compression, etc. are not supported in PnetCDF. This is due to the
+    unavailability of PnetCDF APIs for those operations.
   + The burst buffering driver does not support NetCDF-4 file formats.
   + Due to a bug in HDF5 1.10.2 that fails zero-length write requests to record
     variables in the collective mode, PnetCDF is not able to support such
     requests when NetCDF-4 feature is enabled. New HDF5 releases are expected
     to contain the fix. See discussion in https://github.com/NCAR/ParallelIO/pull/1304
-    The bug fix will appear in HDF5 1.10.4 release.
+    The bug fix has appeared in HDF5 1.10.4 release.
 
 * Update configure options
   + Enable NetCDF-4 support.
@@ -96,7 +96,9 @@ This is essentially a placeholder for the next release note ...
     This is because modern MPI-IO implementations have already aligned the file
     access with the file lock boundaries and the automatic alignment can create
     a file view with "holes" in between variables, which can adversely degrade
-    I/O performance.
+    I/O performance. Users can still set hints `nc_header_align_size`,
+    `nc_var_align_size`, and `nc_record_align_size` to use customized alignment
+    sizes.
   + The internal data buffering mechanism used in the burst buffer driver is
     removed. This mechanism caches the request data in memory until the
     accumulated size is more than 8 MiB, so the write requests to burst buffers
