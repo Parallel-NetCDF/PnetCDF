@@ -32,26 +32,25 @@ ncmpio_read_write(NC           *ncp,
     MPI_Status mpistatus;
     MPI_File fh;
 #if MPI_VERSION >= 3
-    MPI_Count buf_type_size=0;
+    MPI_Count req_size;
+    /* MPI_Type_size_x is introduced in MPI 3.0 */
+    MPI_Type_size_x(buf_type, &req_size);
 #else
-    int buf_type_size=0;
+    int req_size;
+    MPI_Type_size(buf_type, &req_size);
 #endif
 
-#if MPI_VERSION >= 3
-    /* MPI_Type_size_x is introduced in MPI 3.0 */
-    MPI_Type_size_x(buf_type, &buf_type_size);
-#else
-    MPI_Type_size(buf_type, &buf_type_size);
-#endif
+    /* request size in bytes */
+    req_size *= len;
 
 #ifndef ENABLE_LARGE_SINGLE_REQ
 #if MPI_VERSION >= 3
-    if (buf_type_size > INT_MAX)
+    if (req_size > INT_MAX)
         /* I/O request size > 2 GiB, ROMIO currently does not support a single
          * read/write call of amount > 2 GiB
          */
 #else
-    if (buf_type_size < 0)
+    if (req_size < 0)
         /* In MPI 2.x and prior, argument "size" in MPI_Type_size is defined
          * as of type int. When int overflow occurs, the returned value in
          * "size" argument may be a negative. This means the aggregated request
@@ -63,10 +62,10 @@ ncmpio_read_write(NC           *ncp,
         if (ncp->safe_mode) {
             if (rw_flag == NC_REQ_RD)
                 printf("Error at %s at %d: size of read request (%lld) > INT_MAX\n",
-                       __FILE__,__LINE__,(long long)buf_type_size);
+                       __FILE__,__LINE__,(long long)req_size);
             else
                 printf("Error at %s at %d: size of write request (%lld) > INT_MAX\n",
-                       __FILE__,__LINE__,(long long)buf_type_size);
+                       __FILE__,__LINE__,(long long)req_size);
         }
         if (coll_indep == NC_REQ_INDEP) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
         DEBUG_ASSIGN_ERROR(status, NC_EMAX_REQ)
@@ -99,8 +98,8 @@ ncmpio_read_write(NC           *ncp,
          * Cray on KNL, can be significantly slow when read buffer is
          * noncontiguous.
          */
-        if (len > 0 && !buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
-            xlen *= buf_type_size;
+        if (len > 0 && !buftype_is_contig && req_size <= ncp->ibuf_size) {
+            xlen = req_size;
             xbuf = NCI_Malloc(xlen);
             xbuf_type = MPI_BYTE;
         }
@@ -135,7 +134,7 @@ ncmpio_read_write(NC           *ncp,
             MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
             ncp->get_size += get_size;
 #else
-            ncp->get_size += len * buf_type_size;
+            ncp->get_size += req_size;
 #endif
         }
         if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
@@ -153,9 +152,9 @@ ncmpio_read_write(NC           *ncp,
          * Cray on KNL, can be significantly slow when write buffer is
          * noncontiguous.
          */
-        if (len > 0 && !buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
+        if (len > 0 && !buftype_is_contig && req_size <= ncp->ibuf_size) {
             int pos=0;
-            xlen *= buf_type_size;
+            xlen = req_size;
             xbuf = NCI_Malloc(xlen);
             MPI_Pack(buf, len, buf_type, xbuf, xlen, &pos, MPI_COMM_SELF);
             xbuf_type = MPI_BYTE;
@@ -191,7 +190,7 @@ ncmpio_read_write(NC           *ncp,
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             ncp->put_size += put_size;
 #else
-            ncp->put_size += len * buf_type_size;
+            ncp->put_size += req_size;
 #endif
         }
         if (xbuf != buf) NCI_Free(xbuf);
