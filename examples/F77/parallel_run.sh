@@ -14,7 +14,8 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
-let NTHREADS=$1*6-1
+# let NTHREADS=$1*6-1
+NTHREADS=`expr $1 \* 6 - 1`
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test ${PNETCDF_DEBUG} = 1 ; then
