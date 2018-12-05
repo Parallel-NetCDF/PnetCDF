@@ -63,16 +63,16 @@
           end if
       end ! subroutine check
 
-      subroutine pnetcdf_write(filename, cmode)
+      subroutine pnetcdf_write(filename, mode)
           implicit none
           include 'mpif.h'
           include 'pnetcdf.inc'
 
           character*256 filename
-          integer cmode
+          integer mode
 
           ! local variables
-          integer i, j, err, nprocs, rank
+          integer i, j, err, nprocs, rank, cmode
           integer ncid, rec_var, fix_var, dimid(2), dim_t, dim_y, dim_x
           integer*8 nx, ny, global_nx, global_ny, attr_len
           integer*8 start(2), count(2)
@@ -83,7 +83,7 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! create file, clobber it if exists
-          cmode = IOR(NF_CLOBBER, cmode)
+          cmode = IOR(NF_CLOBBER, mode)
           err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
      +                       MPI_INFO_NULL, ncid)
           call check(err, 'In nfmpi_create: ')
