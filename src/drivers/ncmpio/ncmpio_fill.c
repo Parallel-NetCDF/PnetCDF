@@ -720,6 +720,8 @@ ncmpio_set_fill(void *ncdp,
         if (fill_mode != root_fill_mode)
             /* dataset's fill mode is inconsistent with root's */
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FILL_MODE)
+        else
+            err = NC_NOERR;
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->comm);
