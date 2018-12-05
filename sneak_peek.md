@@ -37,8 +37,8 @@ This is essentially a placeholder for the next release note ...
   + The burst buffering driver does not support NetCDF-4 file formats.
   + Due to a bug in HDF5 1.10.2 that fails zero-length write requests to record
     variables in the collective mode, PnetCDF is not able to support such
-    requests when NetCDF-4 feature is enabled. New HDF5 releases are expected
-    to contain the fix. See discussion in https://github.com/NCAR/ParallelIO/pull/1304
+    requests when NetCDF-4 feature is enabled. See discussion in
+    https://github.com/NCAR/ParallelIO/pull/1304
     The bug fix has appeared in HDF5 1.10.4 release.
 
 * Update configure options
