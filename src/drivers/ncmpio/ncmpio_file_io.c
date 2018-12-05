@@ -99,7 +99,7 @@ ncmpio_read_write(NC           *ncp,
          * Cray on KNL, can be significantly slow when read buffer is
          * noncontiguous.
          */
-        if (!buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
+        if (len > 0 && !buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
             xbuf_type = MPI_BYTE;
@@ -153,7 +153,7 @@ ncmpio_read_write(NC           *ncp,
          * Cray on KNL, can be significantly slow when write buffer is
          * noncontiguous.
          */
-        if (!buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
+        if (len > 0 && !buftype_is_contig && buf_type_size <= ncp->ibuf_size) {
             int pos=0;
             xlen *= buf_type_size;
             xbuf = NCI_Malloc(xlen);
