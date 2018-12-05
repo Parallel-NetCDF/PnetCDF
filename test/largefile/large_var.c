@@ -115,9 +115,6 @@ int main(int argc, char** argv)
     /* do not forget to exit define mode */
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    /* get the beginning of file offset for the variable */
-    err = ncmpi_inq_varoffset(ncid, varid, &var_offset); CHECK_ERR
-
     /* now we are in data mode */
     start[0] = 1;
     start[1] = 8;
