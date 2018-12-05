@@ -37,7 +37,7 @@ program f90tst
 !     print *, 'Warning: ',trim(cmd),' is design to run on 8 processes.'
 !  endif
 
-  nmode = ior(NF90_CLOBBER,NF90_64BIT_DATA)
+  nmode = IOR(NF90_CLOBBER,NF90_64BIT_DATA)
 
   call handle_err(nf90mpi_create(MPI_COMM_WORLD, filename, nmode, MPI_INFO_NULL, fh))
 

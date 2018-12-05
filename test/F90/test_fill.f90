@@ -23,14 +23,14 @@
           end if
       end subroutine check
 
-      integer function tst_fmt(filename, cmode)
+      integer function tst_fmt(filename, mode)
           use mpi
           use pnetcdf
           implicit none
 
           character(LEN=256) filename
           integer i, err, ierr, rank
-          integer :: ncid, cmode, dimid(1), varid
+          integer :: ncid, mode, cmode, dimid(1), varid
           integer(kind=MPI_OFFSET_KIND) :: start(1)
           integer(kind=MPI_OFFSET_KIND) :: count(1)
           integer(kind=MPI_OFFSET_KIND), parameter :: len = 3
@@ -46,7 +46,7 @@
           end do
 
           ! create netcdf file
-          cmode = IOR(cmode, NF90_CLOBBER)
+          cmode = IOR(mode, NF90_CLOBBER)
           err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
           tst_fmt = tst_fmt + err
