@@ -1790,12 +1790,9 @@ if test "x${TESTOUTDIR}" = x ; then
    TESTOUTDIR=.
 fi
 
-dnl find if gcc is available for compiling ncoffsets to run in sequential
-if test "$cross_compiling" = yes; then
-   SEQ_CC=$MPICC
-else
-   AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
-fi
+# SEQ_CC is used to compile programs to be run sequentially, such as
+# pnetcdf_version, ncoffsets, and ncvalidator
+AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
 AC_SUBST(SEQ_CC)
 
 dnl Configuration Date
