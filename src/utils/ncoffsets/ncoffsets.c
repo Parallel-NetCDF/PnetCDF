@@ -1838,6 +1838,7 @@ usage(char *cmd)
 int main(int argc, char *argv[])
 {
     extern int optind;
+    extern char *optarg;
     char *filename, *env_str;
     int i, j, err, opt;
     int print_var_size=0, print_gap=0, check_gap=0, print_all_rec=0;

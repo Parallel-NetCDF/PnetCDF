@@ -315,6 +315,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
 int main(int argc, char** argv)
 {
     extern int optind;
+    extern char *optarg;
     char filename[256];
     int i, rank, kind=0, cmode=0, nerrs=0;
 

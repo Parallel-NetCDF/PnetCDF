@@ -16,6 +16,8 @@
 #include <assert.h>  /* assert() */
 #include <errno.h>   /* errno */
 
+extern char *strdup(const char *s);
+
 #ifdef ENABLE_THREAD_SAFE
 #include<pthread.h>
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
