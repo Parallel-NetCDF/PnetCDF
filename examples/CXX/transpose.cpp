@@ -67,6 +67,7 @@ usage(char *argv0)
 int main(int argc, char **argv)
 {
     extern int optind;
+    extern char *optarg;
     char filename[256], str[512];
     int i, j, k, rank, nprocs, len=0, bufsize, verbose=1;
     int *buf, psizes[NDIMS];

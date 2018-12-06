@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
+#include <getopt.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -119,6 +120,7 @@ void print_info(MPI_Info *info_used)
 int main(int argc, char **argv)
 {
     extern int optind;
+    extern char *optarg;
     int i, j, err, nerrs=0;
     int nprocs, len=0, *buf[NUM_VARS], bufsize, rank;
     int gsizes[NDIMS], psizes[NDIMS];

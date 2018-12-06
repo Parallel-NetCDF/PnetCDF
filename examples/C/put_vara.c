@@ -188,6 +188,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode)
 int main(int argc, char** argv)
 {
     extern int optind;
+    extern char *optarg;
     char filename[256];
     int i, rank, kind=0, cmode=0, nerrs=0;
 

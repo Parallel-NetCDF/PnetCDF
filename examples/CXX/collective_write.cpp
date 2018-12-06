@@ -89,6 +89,7 @@ void print_info(MPI_Info *info_used)
 int main(int argc, char **argv)
 {
     extern int optind;
+    extern char *optarg;
     char filename[256], str[512];
     int i, j, rank, nprocs, len=0, bufsize, verbose=1;
     int *buf[NUM_VARS], psizes[NDIMS];

@@ -331,6 +331,7 @@ usage(char *argv0)
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char** argv) {
     extern int optind;
+    extern char *optarg;
     char filename[256];
     int i, rank, nprocs, verbose=1, nerrs=0;
     double timing[10], max_t[10];

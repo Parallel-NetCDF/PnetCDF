@@ -62,6 +62,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
+    extern char *optarg;
     char filename[256], bb_dir[256];
     int i, rank, verbose=1, err, nerrs=0;
     int ncid, cmode, omode;
