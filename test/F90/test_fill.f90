@@ -91,7 +91,7 @@
           use pnetcdf
           implicit none
           character(LEN=256) filename, cmd, msg
-          integer i, err, ierr, nerrs, rank, get_args, tst_fmt
+          integer err, ierr, nerrs, rank, get_args, tst_fmt
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
