@@ -266,6 +266,9 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_BURST_BUFFER
     int enable_bb_driver=0;
 #endif
+#ifdef ENABLE_COMPRESSION
+    int enable_zip_driver = 0;
+#endif
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
@@ -358,6 +361,18 @@ ncmpi_create(MPI_Comm    comm,
             enable_bb_driver = 1;
     }
 #endif
+#ifdef ENABLE_COMPRESSION
+    if (combined_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int flag;
+
+        /* check if nc_burst_buf is enabled */
+        MPI_Info_get(combined_info, "nc_compression", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "enable") == 0)
+            enable_zip_driver = 1;
+    }
+#endif
 
     /* Use environment variable and cmode to tell the file format
      * which is later used to select the right driver.
@@ -437,6 +452,11 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_BURST_BUFFER
     if (enable_bb_driver)
         driver = ncbbio_inq_driver();
+    else
+#endif
+#ifdef ENABLE_COMPRESSION
+    if (enable_zip_driver)
+        driver = nczipio_inq_driver();
     else
 #endif
         /* default is the driver built on top of MPI-IO */
