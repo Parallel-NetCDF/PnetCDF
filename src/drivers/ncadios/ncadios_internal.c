@@ -90,8 +90,8 @@ int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimi
     if (CHECK_NAME(name)){
         var.type = type;
         var.ndim = ndim;
-        var.dimids = NCI_Malloc(sizeof(int) * ndim);
-        memcpy(var.dimids, dimids, sizeof(int) * ndim);
+        var.dimids = NCI_Malloc(SIZEOF_INT * ndim);
+        memcpy(var.dimids, dimids, SIZEOF_INT * ndim);
         var.name = NCI_Malloc(strlen(name) + 1);
         strcpy(var.name, name);
         ncadiosi_att_list_init(&(var.atts));

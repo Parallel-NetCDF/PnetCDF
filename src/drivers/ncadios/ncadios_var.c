@@ -111,7 +111,7 @@ ncadios_inq_var(void       *ncdp,
     }
 
     if (dimids != NULL){
-        memcpy(dimids, var.dimids, var.ndim * sizeof(int));
+        memcpy(dimids, var.dimids, var.ndim * SIZEOF_INT);
     }
 
     if (nattsp != NULL){

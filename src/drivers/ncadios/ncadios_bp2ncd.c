@@ -207,7 +207,7 @@ int ncd_dataset (NC_ad* ncid
     //int time_index, time_dimrank=0;
     struct adios_index_attribute_struct_v1 * atts_root = 0;
     
-    memset(dimids,-1,10*sizeof(int));
+    memset(dimids,-1,10*SIZEOF_INT);
     if(!strcmp(path,"") && !strcmp(name,""))
         return 0;
     ncd_gen_name (fullname, path, name);

@@ -157,7 +157,7 @@ ncadios_open(MPI_Comm     comm,
      * It is currently not used
      */
     /*
-    ncadp->ndims = (int*)NCI_Malloc(sizeof(int) * ncadp->fp->nvars);
+    ncadp->ndims = (int*)NCI_Malloc(SIZEOF_INT * ncadp->fp->nvars);
     for (i = 0; i < ncadp->fp->nvars; i++) {
         ADIOS_VARINFO *v = adios_inq_var_byid (ncadp->fp, i);
         if (v == NULL){
