@@ -64,12 +64,8 @@ foreach(`dt', (`(`MPI_CHAR', `uchar')', dnl
                 `(`MPI_DOUBLE', `double')', dnl
                 ), `PUTATT(translit(dt, `()'), $2)')dnl
 
-<<<<<<< HEAD
 int ncadiosi_put_att_text(NC_ad *ncadp, int valid, char *name, int len, 
                             void *value){
-=======
-int ncadiosi_put_att_text(NC_ad *ncadp, int valid, char *name, int len, void *value){
->>>>>>> e9cafd8... debug
     double *buf;
     NC_ad_att att;
     MPI_Datatype itype;
@@ -82,11 +78,15 @@ int ncadiosi_put_att_text(NC_ad *ncadp, int valid, char *name, int len, void *va
 =======
     //return NC_NOERR;
 
-    att.data = NCI_Malloc(len * sizeof(char ));
+    att.data = NCI_Malloc(len * SIZEOF_CHAR);
     att.len = len;
     // Convert is not needed becuase bp2ncd never use incompetible type
+<<<<<<< HEAD
     memcpy(att.data, value, len * sizeof( char ));
 >>>>>>> e9cafd8... debug
+=======
+    memcpy(att.data, value, len * SIZEOF_CHAR);
+>>>>>>> 0446641... use config.h size
 
     att.name = NCI_Malloc(strlen(name) + 1);
     strcpy(att.name, name);

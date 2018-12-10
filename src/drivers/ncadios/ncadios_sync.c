@@ -60,12 +60,16 @@ int ncadios_sync_header(NC_ad *ncadp) {
         }
         for(i = 0; i < ncadp->vars.cnt; i++){
 <<<<<<< HEAD
+<<<<<<< HEAD
             bsize += strlen(ncadp->vars.data[i].name) + 1 + 
             SIZEOF_INT * 3 + ncadp->vars.data[i].ndim * SIZEOF_INT + 
             ncadp->vars.data[i].atts.cnt * SIZEOF_INT + sizeof(nc_type);
 =======
             bsize += strlen(ncadp->vars.data[i].name) + 1 + sizeof(int) * 3 + ncadp->vars.data[i].ndim * sizeof(int) + ncadp->vars.data[i].atts.cnt * sizeof(int) + sizeof(nc_type);
 >>>>>>> 23ad299... parse var attributes
+=======
+            bsize += strlen(ncadp->vars.data[i].name) + 1 + SIZEOF_INT * 3 + ncadp->vars.data[i].ndim * SIZEOF_INT + ncadp->vars.data[i].atts.cnt * SIZEOF_INT + sizeof(nc_type);
+>>>>>>> 0446641... use config.h size
         }
     }
     
@@ -93,6 +97,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
             cur += sizeof(nc_type);
             *((int*)cur) = ncadp->vars.data[i].ndim;
 <<<<<<< HEAD
+<<<<<<< HEAD
             cur += SIZEOF_INT;
             *((int*)cur) = ncadp->vars.data[i].atts.cnt;
             cur += SIZEOF_INT;
@@ -113,6 +118,17 @@ int ncadios_sync_header(NC_ad *ncadp) {
 =======
             memcpy(cur, ncadp->vars.data[i].atts.data, ncadp->vars.data[i].atts.cnt * sizeof(int));
 >>>>>>> 23ad299... parse var attributes
+=======
+            cur += SIZEOF_INT;
+            *((int*)cur) = ncadp->vars.data[i].atts.cnt;
+            cur += SIZEOF_INT;
+            namelen = strlen(ncadp->vars.data[i].name);
+            *((int*)cur) = namelen;
+            cur += SIZEOF_INT;
+            memcpy(cur, ncadp->vars.data[i].dimids, ncadp->vars.data[i].ndim * SIZEOF_INT);
+            cur += ncadp->vars.data[i].ndim * 4;
+            memcpy(cur, ncadp->vars.data[i].atts.data, ncadp->vars.data[i].atts.cnt * SIZEOF_INT);
+>>>>>>> 0446641... use config.h size
             cur += ncadp->vars.data[i].atts.cnt * 4;
             strcpy(cur, ncadp->vars.data[i].name);
             cur += namelen + 1;         
@@ -149,6 +165,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
             cur += sizeof(nc_type);
             ndim = *((int*)cur);
 <<<<<<< HEAD
+<<<<<<< HEAD
             cur += SIZEOF_INT;
             natt = *((int*)cur);
             cur += SIZEOF_INT;
@@ -169,6 +186,17 @@ int ncadios_sync_header(NC_ad *ncadp) {
             attids = (int*)cur;
             cur += natt * sizeof(int);
 >>>>>>> 23ad299... parse var attributes
+=======
+            cur += SIZEOF_INT;
+            natt = *((int*)cur);
+            cur += SIZEOF_INT;
+            namelen = *((int*)cur);
+            cur += SIZEOF_INT;
+            dimids = (int*)cur;
+            cur += ndim * SIZEOF_INT;
+            attids = (int*)cur;
+            cur += natt * SIZEOF_INT;
+>>>>>>> 0446641... use config.h size
             name = cur;
             cur += namelen + 1;   
             ncadiosi_def_var(ncadp, name, type, ndim, dimids, &id);
