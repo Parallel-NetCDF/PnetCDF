@@ -44,14 +44,6 @@ static int mpitype2logtype(MPI_Datatype buftype, int *logtype){
     else if (buftype == MPI_UNSIGNED_LONG_LONG)  /* put_*_ulonglong */
         *logtype = NC_LOG_TYPE_ULONGLONG;
     else { /* Unrecognized type */
-#ifdef PNETCDF_DEBUG
-        int name_len;
-        char type_name[MPI_MAX_OBJECT_NAME];
-        MPI_Type_get_name(buftype, type_name, &name_len);
-        fprintf(stderr, "Rank: %d, Unrecognized buftype %s\n", ncbbp->rank,
-                type_name);
-        fflush(stderr);
-#endif
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
 
@@ -129,6 +121,14 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
 
     err = mpitype2logtype(buftype, &itype);
     if (err != NC_NOERR){
+#ifdef PNETCDF_DEBUG
+        int name_len;
+        char type_name[MPI_MAX_OBJECT_NAME];
+        MPI_Type_get_name(buftype, type_name, &name_len);
+        fprintf(stderr, "Rank: %d, Unrecognized buftype %s\n", ncbbp->rank,
+                type_name);
+        fflush(stderr);
+#endif
         return err;
     }
 
@@ -258,7 +258,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
  * Prepare a n log entry to be write to log
  * IN    ncbbp:  log structure to log this entry
  * IN    varp:   NC_var structure associate to this entry
- * IN    n:      Number of locations
+ * IN    num:      Number of locations
  * IN    start:  start in put_var* call
  * IN    count:  count in put_var* call
  * IN    bur:    buffer of data to write
@@ -266,18 +266,18 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
  */
 int ncbbio_log_put_varn(NC_bb            *ncbbp,
                        int               varid,
-                       int               n,
+                       int               num,
                        const MPI_Offset  *starts[],  /* must not be NULL */
                        const MPI_Offset  *counts[],  /* may be NULL */
                        void              *buf,
                        MPI_Datatype      buftype)
 {
-    int err, i, r, ndims, elsize, itype;
+    int err, i, j, ndims, elsize, itype;
     char *buffer;
     PNC *pncp;
     MPI_Offset *start, *count;
-    MPI_Offset esize, dataoff, recsize, put_size, old_datasize;
-    MPI_Offset *Start, *Count, *Stride;
+    MPI_Offset esize, dataoff, recsize, put_size, total_put_size;
+    MPI_Offset *Start, *Count;
     NC_bb_metadataentry *entryp;
     NC_bb_metadataheader *headerp;
 
@@ -285,8 +285,6 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     double t1, t2, t3, t4, t5;
     t1 = MPI_Wtime();
 #endif
-
-    old_datasize = (MPI_Offset)ncbbp->datalogsize;;
 
     /* Get PNC */
     err = PNC_check_id(ncbbp->ncid, &pncp);
@@ -301,13 +299,21 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     /* Convert to ext type */
     err = mpitype2logtype(buftype, &itype);
     if (err != NC_NOERR){
-        return err;
+#ifdef PNETCDF_DEBUG
+        int name_len;
+        char type_name[MPI_MAX_OBJECT_NAME];
+        MPI_Type_get_name(buftype, type_name, &name_len);
+        fprintf(stderr, "Rank: %d, Unrecognized buftype %s\n", ncbbp->rank,
+                type_name);
+        fflush(stderr);
+#endif
     }
 
-    for(r = 0; r < n; r++){
-        start = starts[r];
+    total_put_size = 0;
+    for(j = 0; j < num; j++){
+        start = (MPI_Offset*)starts[j];
         if (counts != NULL){
-            count =  counts[r];
+            count = (MPI_Offset*)counts[j];
         }
         else{
             count = NULL;
@@ -319,15 +325,10 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
             for (i=0; i<ndims; i++)
                 put_size *= count[i];
         }
+        total_put_size += put_size;
 
         /* Skip zero-length request */
         if (put_size == 0) continue;
-
-        /* Update the largest request size
-        * This is used later to determine minimal buffer size for flushing
-        */
-        if (ncbbp->maxentrysize < put_size)
-            ncbbp->maxentrysize = put_size;
 
         /* Update record dimension size if is record variable */
         if (pncp->vars[varid].recdim >= 0) {
@@ -336,72 +337,91 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
             if (recsize > ncbbp->recdimsize)
                 ncbbp->recdimsize = recsize;
         }
-
-        /* Prepare log metadata entry header */
-
-        /* Find out the location of data in datalog
-        * Which is the current position in data log
-        * Datalog descriptor should always points to the end of file
-        * Position must be recorded first before writing
-        */
-        dataoff = (MPI_Offset)ncbbp->datalogsize;
-
-        /* Size of metadata entry
-        * Include metadata entry header and variable size additional data
-        * (start, count, stride)
-        */
-        esize = sizeof(NC_bb_metadataentry) + ndims * 3 * SIZEOF_MPI_OFFSET;
-        /* Allocate space for metadata entry header */
-        buffer = (char*)ncbbio_log_buffer_alloc(&(ncbbp->metadata), esize);
-        entryp = (NC_bb_metadataentry*)buffer;
-        entryp->esize = esize;  /* Entry size */
-        entryp->itype = itype;  /* element data type in internal representation */
-        entryp->varid = varid;  /* Variable id */
-        entryp->ndims = ndims;  /* Number of dimensions of the variable*/
-        entryp->api_kind = NC_LOG_API_KIND_VARA; /* Each entry is a vara entry */
-        /* The size of data in bytes. The size that will be write to data log */
-        entryp->data_len = put_size;
-        entryp->data_off = (MPI_Offset)ncbbp->datalogsize;;
-        
-
-        /* Calculate location of start, count, stride in metadata buffer */
-        Start = (MPI_Offset*)(buffer + sizeof(NC_bb_metadataentry));
-        Count = Start + ndims;
-        Stride = Count + ndims;
-
-        /* Fill up start, count, and stride */
-        for (i=0; i<ndims; i++) {
-            Start[i]  = start[i];
-            Count[i]  = (count  == NULL) ? 1 :  count[i];
-            Stride[i] = 0;
-        }
-
-        /* Increment number of entry
-        * This must be the final step of creating a log entry
-        * Increasing num_entries marks the completion of the creation
-        */
-
-        /* Increment num_entries in the metadata buffer */
-        headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
-        headerp->num_entries++;
-
-        /* We only increase datalogsize by amount actually write */
-        ncbbp->datalogsize += put_size;
-        total_put_size += put_size;
-
-        /* Record data size */
-        ncbbio_log_sizearray_append(&(ncbbp->entrydatasize), entryp->data_len);
-
-        /* Record in index
-        * Entry address must be relative as metadata buffer can be reallocated
-        */
-        ncbbio_metaidx_add(ncbbp, (NC_bb_metadataentry*)((char*)entryp -
-                        (char*)(ncbbp->metadata.buffer)));
     }
+
+    /* Prepare log metadata entry header */
+
+    /* Find out the location of data in datalog
+    * Which is the current position in data log
+    * Datalog descriptor should always points to the end of file
+    * Position must be recorded first before writing
+    */
+
+    /* Size of metadata entry
+    * Include metadata entry header and variable size additional data
+    * (start, count, stride)
+    */
+    esize = sizeof(NC_bb_metadataentry) + ndims * 2 * SIZEOF_MPI_OFFSET * num;
+    /* Allocate space for metadata entry header */
+    buffer = (char*)ncbbio_log_buffer_alloc(&(ncbbp->metadata), esize);
+    entryp = (NC_bb_metadataentry*)buffer;
+    entryp->esize = esize;  /* Entry size */
+    entryp->itype = itype;  /* element data type in internal representation */
+    entryp->varid = varid;  /* Variable id */
+    entryp->ndims = ndims;  /* Number of dimensions of the variable*/
+    entryp->api_kind = num; /* Positive number indicate varn */
+    /* The size of data in bytes. The size that will be write to data log */
+    entryp->data_len = total_put_size;
+    /* Find out the location of data in datalog
+    * Which is the current position in data log
+    * Datalog descriptor should always points to the end of file
+    * Position must be recorded first before writing
+    */
+    entryp->data_off = (MPI_Offset)ncbbp->datalogsize;
+    
+
+    /* Calculate location of start, count, stride in metadata buffer */
+    Start = (MPI_Offset*)(buffer + sizeof(NC_bb_metadataentry));
+    Count = Start + ndims * num;
+
+    /* Fill up start, count, and stride */
+    for(i = 0; i < num; i++) {
+        memcpy(Start + i * ndims, starts[i], ndims * sizeof(MPI_Offset));
+    }
+    if (counts != NULL){
+        for(i = 0; i < num; i++) {
+            if (counts[i] != NULL){
+                memcpy(Count + i * ndims, counts[i], ndims * sizeof(MPI_Offset));
+            }
+            else{
+                memset(Count + i * ndims, 0, ndims * sizeof(MPI_Offset));
+            }
+        }
+    }
+    else{
+        memset(Count, 0, ndims * num * sizeof(MPI_Offset));
+    }
+    
+    /* Increment number of entry
+    * This must be the final step of creating a log entry
+    * Increasing num_entries marks the completion of the creation
+    */
+
+    /* Increment num_entries in the metadata buffer */
+    headerp = (NC_bb_metadataheader*)ncbbp->metadata.buffer;
+    headerp->num_entries++;
+
+    /* We only increase datalogsize by amount actually write */
+    ncbbp->datalogsize += total_put_size;
+
+    /* Record data size */
+    ncbbio_log_sizearray_append(&(ncbbp->entrydatasize), entryp->data_len);
+
+    /* Record in index
+    * Entry address must be relative as metadata buffer can be reallocated
+    */
+    ncbbio_metaidx_add(ncbbp, (NC_bb_metadataentry*)((char*)entryp -
+                    (char*)(ncbbp->metadata.buffer)));
 
 #ifdef PNETCDF_PROFILING
     t2 = MPI_Wtime();
 #endif
+
+    /* Update the largest request size
+    * This is used later to determine minimal buffer size for flushing
+    */
+    if (ncbbp->maxentrysize < total_put_size)
+        ncbbp->maxentrysize = total_put_size;
 
     /*
      * Write data log
@@ -447,7 +467,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     ncbbp->total_time += t5 - t1;
     ncbbp->put_time += t5 - t1;
 
-    ncbbp->total_data += put_size;
+    ncbbp->total_data += total_put_size;
     ncbbp->total_meta += esize;
 #endif
 

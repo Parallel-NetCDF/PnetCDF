@@ -75,9 +75,11 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     int *reqids, *stats;
     //int ready, ready_all = 0;
     int nrounds, nrounds_all;
+    int len = 0;
     size_t databufferused, databuffersize, dataread;
     NC_bb_metadataentry *entryp;
     MPI_Offset *start, *count, *stride;
+    MPI_Offset **starts, **counts;
     MPI_Datatype buftype;
     char *databuffer, *databufferoff;
     NC_bb_metadataheader *headerp;
@@ -238,36 +240,85 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
             ip = ncbbp->metaidx.entries + i;
 
             if (ip->valid) {
-                /* start, count, stride */
-                start = (MPI_Offset*)(entryp + 1);
-                count = start + entryp->ndims;
-                stride = count + entryp->ndims;
+                if (entryp->api_kind < 0){ // VARA or VARS
+                    /* start, count, stride */
+                    start = (MPI_Offset*)(entryp + 1);
+                    count = start + entryp->ndims;
+                    stride = count + entryp->ndims;
 
-                // Convert from log type to MPI type
-                err = logtype2mpitype(entryp->itype, &buftype);
-                if (err != NC_NOERR){
-                    return err;
-                }
+                    // Convert from log type to MPI type
+                    err = logtype2mpitype(entryp->itype, &buftype);
+                    if (err != NC_NOERR){
+                        return err;
+                    }
 
-                /* Determine API_Kind */
-                if (entryp->api_kind == NC_LOG_API_KIND_VARA){
-                    stride = NULL;
-                }
-
-#ifdef PNETCDF_PROFILING
-                t2 = MPI_Wtime();
-#endif
-
-                /* Replay event with non-blocking call */
-                err = ncbbp->ncmpio_driver->iput_var(ncbbp->ncp, entryp->varid, start, count, stride, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
-                if (status == NC_NOERR) {
-                    status = err;
-                }
+                    /* Determine API_Kind */
+                    if (entryp->api_kind == NC_LOG_API_KIND_VARA){
+                        stride = NULL;
+                    }
 
 #ifdef PNETCDF_PROFILING
-                t3 = MPI_Wtime();
-                ncbbp->flush_put_time += t3 - t2;
+                    t2 = MPI_Wtime();
 #endif
+
+                    /* Replay event with non-blocking call */
+                    err = ncbbp->ncmpio_driver->iput_var(ncbbp->ncp, entryp->varid, start, count, stride, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+                    if (status == NC_NOERR) {
+                        status = err;
+                    }
+
+#ifdef PNETCDF_PROFILING
+                    t3 = MPI_Wtime();
+                    ncbbp->flush_put_time += t3 - t2;
+#endif
+                }
+                else {  // VARN
+                    int k;
+                    int num;
+
+                    num = entryp->api_kind;
+
+                    /* Allocate starts and counts array 
+                     * Try to reuse allocated array if long enough
+                     * Don't realloc because old data is not needed
+                     */
+                    if(len < num){
+                        if (len > 0){
+                            NCI_Free(starts);
+                            NCI_Free(counts);
+                        }
+                        starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * num);
+                        counts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * num);
+                        len = num;
+                    }
+                    start = (MPI_Offset*)(entryp + 1);
+                    count = start + entryp->ndims * num;
+                    for(k = 0; k < num; k++){
+                        starts[k] = start + entryp->ndims * k;
+                        counts[k] = count + entryp->ndims * k;
+                    }
+
+                    // Convert from log type to MPI type
+                    err = logtype2mpitype(entryp->itype, &buftype);
+                    if (err != NC_NOERR){
+                        return err;
+                    }
+
+#ifdef PNETCDF_PROFILING
+                    t2 = MPI_Wtime();
+#endif
+
+                    /* Replay event with non-blocking call */
+                    err = ncbbp->ncmpio_driver->iput_varn(ncbbp->ncp, entryp->varid, num, starts, counts, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+                    if (status == NC_NOERR) {
+                        status = err;
+                    }
+
+#ifdef PNETCDF_PROFILING
+                    t3 = MPI_Wtime();
+                    ncbbp->flush_put_time += t3 - t2;
+#endif
+                }
 
                 // Move to next data location
                 databufferoff += entryp->data_len;
@@ -339,6 +390,10 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     NCI_Free(databuffer);
     NCI_Free(reqids);
     NCI_Free(stats);
+    if (len > 0){
+        NCI_Free(starts);
+        NCI_Free(counts);
+    }
 
 #ifdef PNETCDF_PROFILING
     t4 = MPI_Wtime();
