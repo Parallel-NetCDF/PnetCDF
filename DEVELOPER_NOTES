@@ -67,11 +67,13 @@ Tasks immediately before a new release (must run in the following order)
     For setting shared library version (ABI versioning), see below.
 
  3. Update file "RELEASE_NOTES".
-    Copy the contents of file "sneak_peek" into file "RELEASE_NOTES".  Clear up
-    file "sneak_peek" (reset all items to none). Starting from 1.9.0, the
-    release version and date in "RELEASE_NOTES" will be automatically set when
-    running command "make dist". (For version 1.8.1 and prior, add the release
-    version and date at the top of file "RELEASE_NOTES".)
+    Copy the contents of file "sneak_peek.md" to the top of file "RELEASE_NOTES".
+    Copy sneak_peek.md to Parallel-NetCDF.github.io/Release_notes/1.11.0.md.
+    Clear up file "sneak_peek.md" (reset all items to none). Starting from
+    1.9.0, the release version and date in "RELEASE_NOTES" will be
+    automatically set when running command "make dist". (For version 1.8.1 and
+    prior, add the release version and date at the top of file
+    "RELEASE_NOTES".)
 
  4. (skip this step for 1.9.0 and later) Update the release date
     Below describe how to set the release date for 1.8.1 and prior.
@@ -92,7 +94,7 @@ Tasks immediately before a new release (must run in the following order)
 
  7. Create a new tag on GitHub, use command (v1.10.0 and after):
     Run command below to duplicate the current master branch to a new tag:
-        git tag -a tag.v1.11.0 -m "Tag (not release) right before 1.11.0"
+        git tag -a tag.v1.11.0 -m "Tag (not official release) right before 1.11.0"
         git push origin tag.v1.11.0
 
  8. Generate release tar balls
@@ -117,12 +119,16 @@ Tasks immediately before a new release (must run in the following order)
        above that manually update the release date.
 
  9. Generate SHA1 checksums
-    Run command:
-    openssl sha1 pnetcdf-1.11.0.tar.gz
-    openssl sha1 pnetcdf-1.11.0.tar.bz2
-
+    Run command: openssl sha1 pnetcdf-1.11.0.tar.gz
     Example command-line output:
     SHA1(pnetcdf-1.11.0.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+
+10. Update PnetCDF Web Page
+    https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io
+    Add a news item in index.html to announce the new release version.
+    Copy the release tar ball into folder Release.
+    Add a new item to wiki/Download.html with link to tar ball, release note,
+    tar ball size, and SHA1 checksum.
 
 =====================================================
 Convention of setting version numbers.
