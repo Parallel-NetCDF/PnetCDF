@@ -28,10 +28,11 @@
 #define NC_LOG_TYPE_ULONGLONG 11
 #define NC_LOG_TYPE_NATIVE 12
 
-#define NC_LOG_API_KIND_VAR 1
-#define NC_LOG_API_KIND_VAR1 2
-#define NC_LOG_API_KIND_VARA 3
-#define NC_LOG_API_KIND_VARS 4
+#define NC_LOG_API_KIND_VAR -1
+#define NC_LOG_API_KIND_VAR1 -2
+#define NC_LOG_API_KIND_VARA -3
+#define NC_LOG_API_KIND_VARS -4
+#define NC_LOG_API_KIND_VARN 1  // VARN are indicated by nay positive number of n reqs
 
 #define NC_LOG_MAGIC_SIZE 8
 #define NC_LOG_MAGIC "PnetCDF0"
@@ -219,7 +220,7 @@ int ncbbio_log_sizearray_append(NC_bb_sizevector *sp, size_t size);
 int ncbbio_log_flush_core(NC_bb *ncbbp);
 int ncbbio_log_create(NC_bb *ncbbp, MPI_Info info);
 int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[], const MPI_Offset count[], const MPI_Offset stride[], void *buf, MPI_Datatype buftype);
-int ncbbio_log_put_varn(NC_bb *ncbbp, int varid, int n, const MPI_Offset *start[], const MPI_Offset *count[], void *buf, MPI_Datatype buftype);
+int ncbbio_log_put_varn(NC_bb *ncbbp, int varid, int num, const MPI_Offset *start[], const MPI_Offset *count[], void *buf, MPI_Datatype buftype);
 int ncbbio_log_close(NC_bb *ncbbp, int replay);
 int ncbbio_log_flush(NC_bb *ncbbp);
 int ncbbio_log_enddef(NC_bb *ncbbp);
