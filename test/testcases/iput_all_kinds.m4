@@ -73,6 +73,7 @@ non_blocking_put_$1(int         rank,
     err = ncmpi_def_var(ncid, "var1_$1", NC_TYPE($1),     1, &dimid, &var1_id); CHECK_ERR
     err = ncmpi_def_var(ncid, "vara_$1", NC_TYPE($1), NDIMS, dimids, &vara_id); CHECK_ERR
     err = ncmpi_def_var(ncid, "vars_$1", NC_TYPE($1), NDIMS, dimids, &vars_id); CHECK_ERR
+    err = ncmpi_def_var_fill(ncid, var1_id, 0, NULL); CHECK_ERR
 
     /* define variable with transposed file layout: ZYX -> YXZ */
     dimidsT[0] = dimids[1]; dimidsT[1] = dimids[2]; dimidsT[2] = dimids[0];
@@ -114,7 +115,8 @@ define(`TEST_CDF_FORMAT',dnl
     }
 
     /* define dimensions */
-    err = ncmpi_def_dim(ncid, "nprocs", nprocs,   &dimids[0]); CHECK_ERR
+    _nprocs = ((nprocs + 3) / 4) * 4; /* round up 4 bytes */
+    err = ncmpi_def_dim(ncid, "nprocs", _nprocs,  &dimids[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "Z",      gsize[0], &dimids[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "Y",      gsize[1], &dimids[1]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X",      gsize[2], &dimids[2]); CHECK_ERR
@@ -147,6 +149,7 @@ int main(int argc, char **argv)
     int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0, cmode;
     int psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
     double *buf;
+    MPI_Offset _nprocs;
     MPI_Offset gsize[NDIMS], stride[NDIMS], imap[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS];
     MPI_Offset startS[NDIMS], countS[NDIMS];

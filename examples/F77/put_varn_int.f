@@ -71,6 +71,7 @@
           character*256 filename, cmd
           integer i, j, err, ierr, nprocs, rank, get_args, dummy
           integer cmode, ncid, varid, dimid(NDIMS), num_reqs
+          integer old_fillmode
 
           integer*8 w_len, w_req_len
           integer*8 starts(NDIMS,5)
@@ -116,6 +117,11 @@
           ! define a 2D variable of integer type
           err = nfmpi_def_var(ncid, "var", NF_INT, NDIMS, dimid, varid)
           call check(err, 'In nfmpi_def_var: ')
+
+          if (nprocs .LT. 4) then
+              err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
+              call check(err, 'In nfmpi_set_fill: ')
+          endif
 
           ! do not forget to exit define mode
           err = nfmpi_enddef(ncid)

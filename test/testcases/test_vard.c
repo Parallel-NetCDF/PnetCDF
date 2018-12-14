@@ -237,7 +237,14 @@ int main(int argc, char **argv) {
     err = ncmpi_def_var(ncid, "dummy_rec", NC_BYTE, 2, dimids, &varid2); CHECK_ERR
     err = ncmpi_def_dim(ncid, "FIX_DIM", 2, &dimids[0]); CHECK_ERR
     err = ncmpi_def_var(ncid, "fix_var", NC_INT, 2, dimids, &varid1); CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR /* enable fill mode */
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    /* fill 2 records with default fill values */
+    err = ncmpi_fill_var_rec(ncid, varid0, 0); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid0, 1); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid2, 0); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid2, 1); CHECK_ERR
 
     /* create a file type for the record variable */
     int *array_of_blocklengths=(int*) malloc(count[0]*sizeof(int));
@@ -273,8 +280,10 @@ int main(int argc, char **argv) {
     expected_put_size = buftype_size;
 
     /* for writing a record variable, root process will update numrec to the
-     * file header */
+     * file header, However, because the first 2 records have been filled
+     * above, root process need not write to file header.
     if (rank == 0) expected_put_size += (format == NC_FORMAT_CDF5) ? 8 : 4;
+     */
     if (expected_put_size != new_put_size - put_size) {
         printf("Error at line %d in %s: unexpected put size (%lld) reported, expecting %d\n",
                __LINE__,__FILE__,new_put_size-put_size, expected_put_size);

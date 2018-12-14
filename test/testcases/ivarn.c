@@ -202,7 +202,20 @@ int main(int argc, char** argv)
     err = ncmpi_def_var(ncid, "vari0002", NC_INT, 2, dimid, &vari0002); CHECK_ERR
     err = ncmpi_def_var(ncid, "varr0002", NC_FLOAT, 2, dimid, &varr0002); CHECK_ERR
     err = ncmpi_def_var(ncid, "vard0002", NC_DOUBLE, 2, dimid, &vard0002); CHECK_ERR
+    if (nprocs < 4) { /* need 4 processes to fill the variables */
+        err = ncmpi_set_fill(ncid, NC_FILL, NULL);
+        CHECK_ERR
+    }
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (nprocs < 4) { /* need 4 processes to fill the variables */
+        err = ncmpi_fill_var_rec(ncid, vari0001, 0); CHECK_ERR
+        err = ncmpi_fill_var_rec(ncid, varr0001, 0); CHECK_ERR
+        err = ncmpi_fill_var_rec(ncid, vard0001, 0); CHECK_ERR
+        err = ncmpi_fill_var_rec(ncid, vari0002, 0); CHECK_ERR
+        err = ncmpi_fill_var_rec(ncid, varr0002, 0); CHECK_ERR
+        err = ncmpi_fill_var_rec(ncid, vard0002, 0); CHECK_ERR
+    }
 
     starts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));
     counts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));

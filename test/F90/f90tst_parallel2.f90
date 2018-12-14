@@ -57,7 +57,7 @@ program f90tst_parallel
   integer :: ncid, varid, dimids(MAX_DIMS)
   integer :: x_dimid, y_dimid
   integer :: data_out(NY / 4, NX / 4), data_in(NY / 4, NX / 4)
-  integer :: mode_flag
+  integer :: mode_flag, old_fillmode
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
   integer :: x, y
   integer :: p, my_rank, err, ierr, get_args
@@ -103,6 +103,8 @@ program f90tst_parallel
 
   ! Define the variable.
   call handle_err(nf90mpi_def_var(ncid, "data", NF90_INT, dimids, varid))
+
+  call handle_err(nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode))
 
   ! With classic model netCDF-4 file, enddef must be called.
   call handle_err(nf90mpi_enddef(ncid))
