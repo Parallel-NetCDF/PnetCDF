@@ -213,3 +213,16 @@ void NcmpiFile::Inq_path(int *pathlen, char *path)
     ncmpiCheck(ncmpi_inq_path(myId, pathlen, path),__FILE__,__LINE__);
 }
 
+void NcmpiFile::set_fill(FillMode fillmode, FillMode *old_modep)
+{
+    int mode = (fillmode == Fill) ? NC_FILL : NC_NOFILL;
+
+    if (old_modep == NULL)
+        ncmpiCheck(ncmpi_set_fill(myId, mode, NULL),__FILE__,__LINE__);
+    else {
+        int old_mode;
+        ncmpiCheck(ncmpi_set_fill(myId, mode, &old_mode),__FILE__,__LINE__);
+        *old_modep = (old_mode == NC_FILL) ? Fill : NoFill;
+    }
+}
+
