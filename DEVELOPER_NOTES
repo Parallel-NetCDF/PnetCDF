@@ -165,6 +165,28 @@ http://semver.org/
    6. If any interfaces have been removed or changed since the last public
       release, then set age to 0.
 
+   libtool Chapter 7.1 What are library interfaces?
+      Interfaces for libraries may be any of the following (and more):
+      global variables: both names and types
+      global functions: argument types and number, return types, and function names
+      standard input, standard output, standard error, and file formats
+      sockets, pipes, and other inter-process communication protocol formats
+
+      The following explanation may help to understand the above rules a bit
+      better: consider that there are three possible kinds of reactions from
+      users of your library to changes in a shared library:
+      1. Programs using the previous version may use the new version as drop-in
+      replacement, and programs using the new version can also work with the
+      previous one. In other words, no recompiling nor relinking is needed. In
+      this case, bump revision only, don't touch current nor age.
+      2. Programs using the previous version may use the new version as drop-in
+      replacement, but programs using the new version may use APIs not present
+      in the previous one. In other words, a program linking against the new
+      version may fail with 'unresolved symbols' if linking against the old
+      version at runtime: set revision to 0, bump current and age.
+      3. Programs may need to be changed, recompiled, and relinked in order to
+      use the new version. Bump current, set revision and age to 0.
+
 =====================================================
 Note on adding new MPI compiler candidates
 =====================================================
