@@ -35,6 +35,12 @@ namespace PnetCDF
             BadFormat
          };
 
+      enum FillMode
+         {
+            Fill = NC_FILL,      // prefill
+            NoFill = NC_NOFILL,  // don't prefill
+            Bad
+         };
 
       /*! Constructor generates a \ref isNull "null object". */
       NcmpiFile();
@@ -111,6 +117,8 @@ namespace PnetCDF
       void Inq_header_extent(MPI_Offset *header_extent);
 
       void Inq_path(int *pathlen, char *path);
+
+      void set_fill(FillMode fillmode, FillMode *old_modep=NULL);
 
    private:
 	/* Do not allow definition of NcmpiFile involving copying any NcmpiFile
