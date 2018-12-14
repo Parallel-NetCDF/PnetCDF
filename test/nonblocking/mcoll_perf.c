@@ -452,7 +452,7 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "romio_no_indep_rw", "true");
     MPI_Info_set(info, "romio_cb_write", "true");
  */
-    for (k=0; k<=9; k++){
+    for (k=0; k<=9; k++) {
         sprintf(filename, "%s.%d.%d.%d.nc", fbasename, length, nvars, k);
         if (k==0)
             strcpy(filename1, filename);
@@ -481,23 +481,25 @@ int main(int argc, char **argv)
 
         /* define variables */
         if (k<7){
-            for (i=0; i<2; i++){
+            for (i=0; i<2; i++){ /* define fixed-size variables */
                 sprintf(varname, "var0_%d", i);
                 err = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
                 CHECK_ERR
             }
-            for (i=2; i<nvars; i++){
+            for (i=2; i<nvars; i++){  /* define record variables */
                 sprintf(varname, "var1_%d", i);
                 err = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids1, &varid[i]);
                 CHECK_ERR
             }
         } else {
-            for (i=0; i<nprocs; i++){
+            for (i=0; i<nprocs; i++){ /* define fixed-size variables */
                 sprintf(varname, "var0_%d", i);
                 err = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
                 CHECK_ERR
             }
         }
+        if (k == 0)
+            err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
 
         err = ncmpi_enddef(ncid);
         CHECK_ERR
@@ -623,12 +625,12 @@ int main(int argc, char **argv)
         err = ncmpi_close(ncid);
         CHECK_ERR
 
-        if (err == NC_NOERR){
-            if ((k>0)&&(k<7)){
-            err = ncmpi_diff(filename1, filename3);
-            if (rank == 0 && err == NC_NOERR && verbose)
-                printf("\t OK\n");
-            } else if (k>7){
+        if (err == NC_NOERR) {
+            if (k > 0 && k < 7) {
+                err = ncmpi_diff(filename1, filename3);
+                if (rank == 0 && err == NC_NOERR && verbose)
+                    printf("\t OK\n");
+            } else if (k > 7) {
 /*
 printf("filename2=%s filename3=%s\n",filename2, filename3);
                 err = ncmpi_diff(filename2, filename3);
@@ -687,7 +689,6 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
         }
     }
 
-ncmpi_inq_malloc_list();
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);

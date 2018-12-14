@@ -185,13 +185,13 @@
           character(LEN=256) filename, cmd, msg
           integer err, ierr, nprocs, rank, i, j, get_args
           integer cmode, ncid, varid0, varid1, varid2, dimid(2), nerrs
-          integer NX, NY
+          integer NX, NY, old_fillmode
           PARAMETER(NX=5, NY=2)
           integer buf(NX, NY)
           integer buftype, ghost_buftype, rec_filetype, fix_filetype
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2), blocklengths(2)
-          integer(kind=MPI_OFFSET_KIND) start(2), count(2)
+          integer(kind=MPI_OFFSET_KIND) start(2), count(2), recno
           integer(kind=MPI_OFFSET_KIND) len, malloc_size, sum_size, recsize
           integer(kind=MPI_ADDRESS_KIND) a0, a1, disps(2)
 
@@ -283,11 +283,28 @@
           err = nf90mpi_def_var(ncid, "fix_var", NF90_INT, dimid, varid1)
           call check(err, 'In nf90mpi_def_var: fix_var ')
 
+          err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
+          call check(err, 'In nf90mpi_set_fill: ')
+
           ! do not forget to exit define mode
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 
           ! now we are in data mode
+
+          ! fill 2 records with default fill values
+          recno = 1
+          err = nf90mpi_fill_var_rec(ncid, varid0, recno)
+          call check(err, 'In nf90mpi_fill_var_rec: varid0, 1 ')
+          recno = 2
+          err = nf90mpi_fill_var_rec(ncid, varid0, recno)
+          call check(err, 'In nf90mpi_fill_var_rec: varid0, 2 ')
+          recno = 1
+          err = nf90mpi_fill_var_rec(ncid, varid2, recno)
+          call check(err, 'In nf90mpi_fill_var_rec: varid2, 1 ')
+          recno = 2
+          err = nf90mpi_fill_var_rec(ncid, varid2, recno)
+          call check(err, 'In nf90mpi_fill_var_rec: varid2, 2 ')
 
           ! create a file type for the record variable */
           err = nf90mpi_inq_recsize(ncid, recsize)

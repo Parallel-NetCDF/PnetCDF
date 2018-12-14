@@ -55,7 +55,7 @@
 
           character*256 filename, cmd
           integer rank, nprocs, err, num_reqs, ierr, get_args, dummy
-          integer i, j, ncid, cmode, varid, dimid(2), y, x
+          integer i, j, ncid, cmode, varid, dimid(2), y, x, old_fillmode
           real buffer(13)
           integer*8 NY, NX
           integer*8 starts(NDIMS, 13)
@@ -102,6 +102,12 @@
           err = nfmpi_def_var(ncid, "var", NF_FLOAT, NDIMS, dimid,
      +                        varid)
           call check(err, 'In nfmpi_def_var var: ')
+
+          if (nprocs .LT. 4) then
+              err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
+              call check(err, 'In nfmpi_set_fill: ')
+          endif
+
           err = nfmpi_enddef(ncid)
           call check(err, 'In nfmpi_enddef: ')
 

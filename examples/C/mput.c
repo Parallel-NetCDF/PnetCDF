@@ -150,6 +150,10 @@ int main(int argc, char** argv)
     ERR
     err = ncmpi_def_var(ncid, "var", NC_INT, NDIMS, dimid, &varid);
     ERR
+    if (nprocs < 4) { /* need 4 processes to fill the variables */
+        err = ncmpi_set_fill(ncid, NC_FILL, NULL);
+        ERR
+    }
     err = ncmpi_enddef(ncid);
     ERR
 

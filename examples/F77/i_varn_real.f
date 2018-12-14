@@ -113,7 +113,7 @@
           integer*8 malloc_size, sum_size, two
           real buffer(NX*NY,4)
           logical verbose
-          integer dummy, info
+          integer dummy, info, old_fillmode
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -170,6 +170,11 @@
           err = nfmpi_def_var(ncid, "var3", NF_REAL, two,
      +                        dimid,varid(4))
           call check(err, 'In nfmpi_def_var var3: ')
+
+          if (nprocs .LT. 4) then
+              err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
+              call check(err, 'In nfmpi_set_fill: ')
+          endif
 
           ! do not forget to exit define mode
           err = nfmpi_enddef(ncid)

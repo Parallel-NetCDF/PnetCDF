@@ -60,6 +60,7 @@
           character(LEN=256) filename, cmd, msg
           integer rank, nprocs, err, ierr, num_reqs, get_args
           integer ncid, cmode, varid, dimid(2), y, x, i, j, nerrs
+          integer old_fillmode
           integer, allocatable :: req_lens(:)
           real, allocatable :: buffer(:), buffer2D(:,:)
           real oneReal
@@ -105,6 +106,10 @@
           call check(err, 'In nf90mpi_def_dim X: ')
           err = nf90mpi_def_var(ncid, "var", NF90_FLOAT, dimid, varid)
           call check(err, 'In nf90mpi_def_var var: ')
+
+          err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
+          call check(err, 'In nf90mpi_set_fill: ')
+
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 

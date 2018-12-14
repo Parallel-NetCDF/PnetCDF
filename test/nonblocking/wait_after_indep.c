@@ -65,9 +65,9 @@ int main(int argc, char** argv)
 
     for (i=0; i<NY; i++) for (j=0; j<NX; j++) buffer[i][j] = rank+10;
 
-     start[0] = 0;     start[1] = NX*rank;
-     count[0] = NY/2;  count[1] = NX/2;
-    stride[0] = 2;    stride[1] = 2;
+     start[0] = 0;   start[1] = rank;
+     count[0] = NY;  count[1] = NX;
+    stride[0] = 1;  stride[1] = nprocs;
     err = ncmpi_buffer_attach(ncid, NY*NX); CHECK_ERR
 
     err = ncmpi_begin_indep_data(ncid); CHECK_ERR

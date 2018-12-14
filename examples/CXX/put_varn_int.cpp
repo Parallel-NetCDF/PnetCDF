@@ -111,6 +111,9 @@ int main(int argc, char** argv)
         /* define a 2D variable of integer type */
         NcmpiVar var = nc.addVar("var", ncmpiInt, dimid);
 
+        if (nprocs < 4) /* need 4 processes to fill the variables */
+            nc.set_fill(NcmpiFile::Fill, NULL);
+
         /* pick arbitrary numbers of requests for 4 processes */
         num_reqs = 0;
         if (rank == 0)      num_reqs = 4;
