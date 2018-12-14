@@ -73,7 +73,11 @@ igetput_varn(NC                *ncp,
     /* validity of starts and counts has been checked at dispatcher layer */
 
     /* calculate nelems and max_nreqs */
-    if (counts != NULL) {
+    if (num == 0) {
+        nelems = 0;
+        max_nreqs = 0;
+    }
+    else if (counts != NULL) {
         /* nelems will be the total number of array elements of this varn */
         nelems = 0;
         max_nreqs = 0;

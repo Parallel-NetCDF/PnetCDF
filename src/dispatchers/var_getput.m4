@@ -433,7 +433,7 @@ NAPINAME($1,$2,$3)(int                ncid,
 
     if (num > 0 && starts == NULL) DEBUG_ASSIGN_ERROR(err, NC_ENULLSTART)
 
-    if (err == NC_NOERR && pncp->vars[varid].ndims > 0) {
+    if (err == NC_NOERR && num > 0 && pncp->vars[varid].ndims > 0) {
         NC_api api = (counts == NULL) ? API_VAR1 : API_VARA;
         for (i=0; i<num; i++) {
             MPI_Offset *len = (counts == NULL) ? NULL : counts[i];
