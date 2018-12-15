@@ -85,7 +85,16 @@ int main(int argc, char **argv) {
     err = ncmpi_def_var(ncid, "var_int", NC_INT, 2, dimids, &varid1); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_dbl", NC_DOUBLE, 2, dimids, &varid2); CHECK_ERR
     err = ncmpi_def_var(ncid, "var_byte", NC_BYTE, 2, dimids, &varid3); CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR /* enable fill mode */
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    /* fill 2 records with default fill values */
+    err = ncmpi_fill_var_rec(ncid, varid1, 0); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid1, 1); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid2, 0); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid2, 1); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid3, 0); CHECK_ERR
+    err = ncmpi_fill_var_rec(ncid, varid3, 1); CHECK_ERR
 
     /* initialize the contents of the array */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j+10;

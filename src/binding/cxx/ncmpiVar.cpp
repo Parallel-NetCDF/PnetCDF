@@ -558,20 +558,9 @@ void NcmpiVar::getChunkingParameters(ChunkMode& chunkMode, vector<MPI_Offset>& c
 
 
 // Sets the fill parameters
-void NcmpiVar::setFill(bool fillMode, void* fillValue) const {
-  // If fillMode is enabled, check that fillValue has a legal pointer.
-  // if(fillMode && fillValue == NULL)
-    // throw NcmpiException("FillMode was set to zero but fillValue has invalid pointer",__FILE__,__LINE__);
-
+void NcmpiVar::setFill(bool fillMode, const void* fillValue) const {
   ncmpiCheck(ncmpi_def_var_fill(groupId,myId,static_cast<int> (!fillMode),fillValue),__FILE__,__LINE__);
 }
-
-// Sets the fill parameters
-/*
-void NcmpiVar::setFill(bool fillMode, const void* fillValue) const {
-  setFill(fillMode,const_cast<void*>(fillValue));
-}
-*/
 
 
 // Gets the fill parameters

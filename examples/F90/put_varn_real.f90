@@ -55,7 +55,7 @@
 
           character(LEN=256) filename, cmd
           integer rank, nprocs, err, num_reqs, ierr, get_args, dummy
-          integer ncid, cmode, varid, dimid(2), y, x
+          integer ncid, cmode, varid, dimid(2), y, x, old_fillmode
           real buffer(13)
           integer(kind=MPI_OFFSET_KIND) NY, NX
           integer(kind=MPI_OFFSET_KIND) starts(NDIMS, 13)
@@ -99,6 +99,10 @@
           call check(err, 'In nf90mpi_def_dim X: ')
           err = nf90mpi_def_var(ncid, "var", NF90_FLOAT, dimid, varid)
           call check(err, 'In nf90mpi_def_var var: ')
+
+          err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
+          call check(err, 'In nf90mpi_set_fill: ')
+
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 

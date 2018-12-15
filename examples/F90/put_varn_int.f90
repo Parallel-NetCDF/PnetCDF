@@ -71,6 +71,7 @@
           character(LEN=256) filename, cmd
           integer i, j, err, nprocs, rank, ierr, get_args, dummy
           integer cmode, ncid, varid, dimid(NDIMS), num_reqs
+          integer old_fillmode
 
           integer(kind=MPI_OFFSET_KIND) w_len, w_req_len
           integer(kind=MPI_OFFSET_KIND), allocatable :: starts(:,:)
@@ -114,6 +115,9 @@
           ! define a 2D variable of integer type
           err = nf90mpi_def_var(ncid, "var", NF90_INT, dimid, varid)
           call check(err, 'In nf90mpi_def_var: ')
+
+          err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
+          call check(err, 'In nf90mpi_set_fill: ')
 
           ! do not forget to exit define mode
           err = nf90mpi_enddef(ncid)

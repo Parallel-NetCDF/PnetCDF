@@ -53,7 +53,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New APIs
-  + none
+  + C++ API `NcmpiFile::set_fill()` is added for setting and inquiring the
+    fill mode of an opened NetCDF file.
 
 * API syntax changes
   + none

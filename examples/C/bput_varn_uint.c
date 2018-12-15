@@ -239,6 +239,10 @@ int main(int argc, char** argv)
     err = ncmpi_def_var(ncid, "var1", NC_UINT, NDIMS, dimid, &varid[1]); ERR
     err = ncmpi_def_var(ncid, "var2", NC_UINT, NDIMS, dimid, &varid[2]); ERR
     err = ncmpi_def_var(ncid, "var3", NC_UINT, NDIMS, dimid, &varid[3]); ERR
+    if (nprocs < 4) { /* need 4 processes to fill the variables */
+        err = ncmpi_set_fill(ncid, NC_FILL, NULL);
+        ERR
+    }
     err = ncmpi_enddef(ncid); ERR
 
     /* allocate space for starts and counts */

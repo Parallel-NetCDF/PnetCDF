@@ -32,7 +32,12 @@ dnl
 
 #include <testutils.h>
 
-#define LEN 10
+/* Set LEN to a value of multiple of 4. Otherwise, for single-byte types, such
+ * as NC_BYTE, "holes" can appear between two consecutive fixed-size variables.
+ * The classic NetCDF formats require zero padding for those "holes", but
+ * PnetCDF does not implement that requirement.
+ */
+#define LEN 12
 
 include(`foreach.m4')dnl
 include(`utils.m4')dnl

@@ -91,6 +91,7 @@
           integer*8 counts(NDIMS, 13)
           integer*8 malloc_size, sum_size
           integer buffer(13)
+          integer old_fillmode
 
           call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
@@ -128,6 +129,11 @@
           ! define a 2D variable of integer type
           err = nfmpi_def_var(ncid, "var", NF_INT, NDIMS, dimid, varid)
           call check(err, 'In nfmpi_def_var: ')
+
+          if (nprocs .LT. 4) then ! need 4 processes to fill the variables
+              err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
+              call check(err, 'In nfmpi_set_fill: ')
+          endif
 
           ! do not forget to exit define mode
           err = nfmpi_enddef(ncid)

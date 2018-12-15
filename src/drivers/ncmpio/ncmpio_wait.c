@@ -2019,9 +2019,9 @@ req_aggregation(NC     *ncp,
 static int
 calculate_access_range(const NC         *ncp,
                        const NC_var     *varp,
-                       const MPI_Offset  start[],   /* [varp->ndims] */
-                       const MPI_Offset  count[],   /* [varp->ndims] */
-                       const MPI_Offset  stride[],  /* [varp->ndims] */
+                       const MPI_Offset *start,     /* [varp->ndims] */
+                       const MPI_Offset *count,     /* [varp->ndims] */
+                       const MPI_Offset *stride,    /* [varp->ndims] */
                        MPI_Offset       *start_off, /* OUT: start offset */
                        MPI_Offset       *end_off)   /* OUT: end   offset */
 {
@@ -2049,7 +2049,7 @@ calculate_access_range(const NC         *ncp,
             }
             *start_off *= varp->xsz;  /* offset in bytes */
             *end_off   *= varp->xsz;
-            /* handle the unlimited, most significant one */
+            /* handle the unlimited, most significant dimension */
             *start_off += start[0] * ncp->recsize;
             *end_off   += (start[0]+(count[0]-1)) * ncp->recsize;
         }
@@ -2067,7 +2067,7 @@ calculate_access_range(const NC         *ncp,
             }
             *start_off *= varp->xsz;  /* offset in bytes */
             *end_off   *= varp->xsz;
-            /* handle the unlimited, most significant one */
+            /* handle the unlimited, most significant dimension */
             *start_off += start[0] * ncp->recsize;
             *end_off   += (start[0]+(count[0]-1)*stride[0]) * ncp->recsize;
         }
@@ -2077,7 +2077,7 @@ calculate_access_range(const NC         *ncp,
             /* first handle the least significant dimension */
             *start_off = start[ndims-1];
             *end_off   = start[ndims-1] + (count[ndims-1]-1);
-            /* remaining dimensions till the most significant one */
+            /* remaining dimensions till the most significant dimension */
             for (i=ndims-2; i>=0; i--) {
                 *start_off += start[i] * varp->dsizes[i+1];
                 *end_off += (start[i]+(count[i]-1)) * varp->dsizes[i+1];
@@ -2087,7 +2087,7 @@ calculate_access_range(const NC         *ncp,
             /* first handle the least significant dimension */
             *start_off = start[ndims-1];
             *end_off   = start[ndims-1]+(count[ndims-1]-1)*stride[ndims-1];
-            /* remaining dimensions till the most significant one */
+            /* remaining dimensions till the most significant dimension */
             for (i=ndims-2; i>=0; i--) {
                 *start_off += start[i] * varp->dsizes[i+1];
                 *end_off += (start[i]+(count[i]-1)*stride[i])*varp->dsizes[i+1];
@@ -2117,37 +2117,47 @@ wait_getput(NC         *ncp,
      * such that posting a nonblocking request can be made in define mode
      */
     for (i=0; i<num_reqs; i++) {
-        MPI_Offset *count, *stride;
-        NC_req     *req=reqs+i;
+        NC_var *varp=reqs[i].lead->varp;
 
-        if (req->lead->varp->ndims == 0) { /* scalar variable */
-            req->offset_start = req->lead->varp->begin;
-            req->offset_end   = req->lead->varp->begin + req->lead->varp->xsz;
+        if (reqs[i].lead->varp->ndims == 0) { /* scalar variable */
+            reqs[i].offset_start = varp->begin;
+            reqs[i].offset_end   = varp->begin + varp->xsz;
         }
         else {
-            /* start/count/stride are in the same contiguously allocated array */
-            count  = req->start + req->lead->varp->ndims;
-            stride = (fIsSet(req->lead->flag, NC_REQ_STRIDE_NULL)) ? NULL :
-                     count + req->lead->varp->ndims;
+            /* start/count/stride have been allocated in a contiguous array */
+            MPI_Offset *count, *stride;
+            count  = reqs[i].start + varp->ndims;
+            stride = (fIsSet(reqs[i].lead->flag, NC_REQ_STRIDE_NULL)) ? NULL :
+                     count + varp->ndims;
 
             /* calculate access range of this request */
-            calculate_access_range(ncp, req->lead->varp, req->start, count, stride,
-                                   &req->offset_start, &req->offset_end);
+            calculate_access_range(ncp, varp, reqs[i].start, count, stride,
+                                   &reqs[i].offset_start, &reqs[i].offset_end);
         }
         if (i > 0) {
-            /* check for interleaved requests */
-            if (req->offset_start < reqs[i-1].offset_end) {
-                interleaved = 1;
-                /* check if offset_start are in monotonic nondecreasing order */
-                if (req->offset_start < reqs[i-1].offset_start)
-                    descreasing = 1;
-            }
+            /* check if offset_start are in a monotonic nondecreasing order */
+            if (reqs[i].offset_start < reqs[i-1].offset_start)
+                descreasing = interleaved = 1; /* possible interleaved */
+            else if (reqs[i].offset_start < reqs[i-1].offset_end)
+                interleaved = 1; /* possible interleaved */
         }
     }
 
-    if (descreasing) /* a decreasing order is found */
-        /* sort reqs[] based on reqs[].offset_start */
+    /* If a decreasing order is found, sort reqs[] based on reqs[].offset_start
+     * into an increasing order */
+    if (descreasing)
         qsort(reqs, (size_t)num_reqs, sizeof(NC_req), req_compare);
+
+    /* check sorted requests for true interleaved */
+    if (interleaved) { /* only if possible interleaved */
+        interleaved = 0;
+        for (i=1; i<num_reqs; i++) { /* reqs[].offset_start has been sorted */
+            if (reqs[i].offset_start < reqs[i-1].offset_end) {
+                interleaved = 1;
+                break;
+            }
+        }
+    }
 
     /* aggregate requests and carry out the I/O (reqs will be freed in
      * req_aggregation() */
