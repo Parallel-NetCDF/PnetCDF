@@ -1360,6 +1360,47 @@ fi
 AC_SUBST(ENABLE_SUBFILING)
 AM_CONDITIONAL(ENABLE_SUBFILING, [test x$enable_subfiling = xyes])
 
+AC_ARG_ENABLE([thread-safe],
+    [AS_HELP_STRING([--enable-thread-safe],
+                    [Enable thread-safe capability. @<:@default: disabled@:>@])],
+    [thread_safe=${enableval}], [thread_safe=no]
+)
+ENABLE_THREAD_SAFE=0
+if test "x${thread_safe}" = xyes ; then
+   AC_DEFINE(ENABLE_THREAD_SAFE)
+   ENABLE_THREAD_SAFE=1
+fi
+AC_SUBST(ENABLE_THREAD_SAFE)
+AM_CONDITIONAL(ENABLE_THREAD_SAFE, [test x$thread_safe = xyes])
+
+AC_ARG_WITH([pthread],
+    [AS_HELP_STRING([--with-pthread=DIR],
+                    [Specify alternative path to Pthreads library when
+                     thread-safe capability is enabled.])],,
+    [withval=check])
+
+if test "x${thread_safe}" = xyes ; then
+   if test "x${withval}" = xcheck -o "x${withval}" = x ; then
+      AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([Cannot find pthread.h])])
+      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library])])
+   else
+      case "$withval" in
+         *,*)
+            pthread_inc="`echo $withval | cut -f1 -d,`"
+            pthread_lib="`echo $withval | cut -f2 -d, -s`"
+            ;;
+         *)
+            # check $withval for empty is done above
+            pthread_inc="$withval/include"
+            pthread_lib="$withval/lib"
+            ;;
+      esac
+      CPPFLAGS="$CPPFLAGS -I$pthread_inc"
+      AC_CHECK_HEADER([pthread.h],, [AC_MSG_ERROR([Cannot find pthread.h under $withval])])
+      LDFLAGS="$LDFLAGS -L$pthread_lib"
+      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library under $withval])])
+   fi
+fi
 
 AC_ARG_ENABLE([netcdf4],
    [AS_HELP_STRING([--enable-netcdf4],
@@ -1410,15 +1451,16 @@ if test "x$enable_netcdf4" = "xyes" ; then
    UD_MSG_DEBUG([nc_config=$nc_config])
 
    dnl Check if NetCDF is built with HDF5 enabled
-   netcdf_hdf5=`$nc_config --has-hdf5`
-   if test "x$netcdf_hdf5" = xno ; then
+   netcdf_has_hdf5=`$nc_config --has-hdf5`
+   if test "x$netcdf_has_hdf5" = xno ; then
       AC_MSG_ERROR([NetCDF library is not built with HDF5 enabled])
    fi
 
-   dnl Get directory path of netcdf header files
-   netcdf_inc=`$nc_config --includedir`
-   UD_MSG_DEBUG([netcdf_inc=$netcdf_inc])
-   CPPFLAGS+=" -I${netcdf_inc}"
+   dnl Get installation directory path of netcdf header files
+   dnl Add the path to CPPFLAGS, as it is needed to compile PnetCDF codes
+   netcdf_includedir=`$nc_config --includedir`
+   UD_MSG_DEBUG([netcdf_includedir=$netcdf_includedir])
+   CPPFLAGS="-I${netcdf_includedir} ${CPPFLAGS}"
 
    AC_CHECK_HEADERS([netcdf.h netcdf_par.h netcdf_meta.h],
                     [have_netcdf4=yes], [have_netcdf4=no])
@@ -1449,8 +1491,8 @@ if test "x$enable_netcdf4" = "xyes" ; then
    dnl Check if NetCDF is built with parallel I/O enabled
    AC_MSG_CHECKING([Check if NetCDF library is built with parallel I/O enabled])
    if test x$netcdf_ge_4_6_2 = xyes; then
-      netcdf_parallel4=`$nc_config --has-parallel4`
-      if test "x$netcdf_parallel4" = xno ; then
+      netcdf_has_parallel4=`$nc_config --has-parallel4`
+      if test "x$netcdf_has_parallel4" = xno ; then
          AC_MSG_ERROR([NetCDF library is not built with HDF5 parallel I/O enabled])
       fi
    else
@@ -1460,31 +1502,44 @@ if test "x$enable_netcdf4" = "xyes" ; then
       dnl PnetCDF enabled, i.e. configured with options --enable-pnetcdf
       dnl --enable-netcdf-4 --disable-parallel4, which will make command
       dnl "nc-config --has-parallel" return yes.
-      netcdf_parallel=`$nc_config --has-parallel`
-      if test "x$netcdf_parallel" = xno ; then
+      netcdf_has_parallel=`$nc_config --has-parallel`
+      if test "x$netcdf_has_parallel" = xno ; then
          AC_MSG_ERROR([NetCDF library is not built with parallel I/O enabled])
       fi
    fi
    AC_MSG_RESULT([yes])
 
-   # Get directory path of netcdf library files
-   netcdf_lib=`$nc_config --libs`
-   UD_MSG_DEBUG([netcdf_lib=$netcdf_lib])
-   dnl separate -L and -l
-   netcdf_ldflags=`echo $netcdf_lib | $SED "s/-l[[^ ]]*//g"`
-   netcdf_libs=`echo $netcdf_lib | $SED "s/-L[[^ ]]*//g"`
-   dnl remove -lpnetcdf if it contains it
-   netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
-   dnl remove extra whitespace
-   netcdf_ldflags=`echo $netcdf_ldflags | $SED "s/[[ ]]* / /g"`
-   netcdf_libs=`echo $netcdf_libs | $SED "s/[[ ]]* / /g"`
-   UD_MSG_DEBUG([netcdf_ldflags=$netcdf_ldflags])
+   # Get installation directory path of netcdf library files
+   netcdf_libdir=`$nc_config --libdir`
+   UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+   # Get extra libraries used by netcdf library (dependent libraries)
+   netcdf_libs=`$nc_config --libs`
    UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
-   LDFLAGS+=" ${netcdf_ldflags}"
-   LIBS+=" ${netcdf_libs}"
+   LDFLAGS="-L${netcdf_libdir} ${LDFLAGS}"
+   LIBS="${netcdf_libs} ${LIBS}"
+   # Validate netcdf library
+   AC_CHECK_LIB([netcdf], [nc_open],, [AC_MSG_ERROR([Cannot find nc_open in NetCDF library])])
+
+   # Get directory path of netcdf library files
+   # netcdf_lib=`$nc_config --libs`
+   # UD_MSG_DEBUG([netcdf_lib=$netcdf_lib])
+   # dnl separate -L and -l
+   # netcdf_ldflags=`echo $netcdf_lib | $SED "s/-l[[^ ]]*//g"`
+   # netcdf_libs=`echo $netcdf_lib | $SED "s/-L[[^ ]]*//g"`
+   # dnl remove -lpnetcdf if it contains it
+   # netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
+   # dnl remove extra whitespace
+   # netcdf_ldflags=`echo $netcdf_ldflags | $SED "s/[[ ]]* / /g"`
+   # netcdf_libs=`echo $netcdf_libs | $SED "s/[[ ]]* / /g"`
+   # UD_MSG_DEBUG([netcdf_ldflags=$netcdf_ldflags])
+   # UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
+   # LDFLAGS+=" ${netcdf_ldflags}"
+   # LIBS+=" ${netcdf_libs}"
 
    dnl check if HDF5 version 1.10.4 or later is used to build NetCDF
    netcdf_cflags=`$nc_config --cflags`
+   dnl No need to add the include paths used to build NetCDF to CPPFLAGS
+   dnl permanently, as it is not needed to compile PnetCDF codes
    CPPFLAGS_save=$CPPFLAGS
    CPPFLAGS+=" $netcdf_cflags"
    dnl AC_CHECK_HEADERS uses CPPFLAGS, not CFLAGS
@@ -1667,48 +1722,6 @@ fi
 AC_SUBST(PNETCDF_PROFILING)
 AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
 
-AC_ARG_ENABLE([thread-safe],
-    [AS_HELP_STRING([--enable-thread-safe],
-                    [Enable thread-safe capability. @<:@default: disabled@:>@])],
-    [thread_safe=${enableval}], [thread_safe=no]
-)
-ENABLE_THREAD_SAFE=0
-if test "x${thread_safe}" = xyes ; then
-   AC_DEFINE(ENABLE_THREAD_SAFE)
-   ENABLE_THREAD_SAFE=1
-fi
-AC_SUBST(ENABLE_THREAD_SAFE)
-AM_CONDITIONAL(ENABLE_THREAD_SAFE, [test x$thread_safe = xyes])
-
-AC_ARG_WITH([pthread],
-    [AS_HELP_STRING([--with-pthread=DIR],
-                    [Specify alternative path to Pthreads library when
-                     thread-safe capability is enabled.])],,
-    [withval=check])
-
-if test "x${thread_safe}" = xyes ; then
-   if test "x${withval}" = xcheck -o "x${withval}" = x ; then
-      AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([Cannot find pthread.h])])
-      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library])])
-   else
-      case "$withval" in
-         *,*)
-            pthread_inc="`echo $withval | cut -f1 -d,`"
-            pthread_lib="`echo $withval | cut -f2 -d, -s`"
-            ;;
-         *)
-            # check $withval for empty is done above
-            pthread_inc="$withval/include"
-            pthread_lib="$withval/lib"
-            ;;
-      esac
-      CPPFLAGS="$CPPFLAGS -I$pthread_inc"
-      AC_CHECK_HEADER([pthread.h],, [AC_MSG_ERROR([Cannot find pthread.h under $withval])])
-      LDFLAGS="$LDFLAGS -L$pthread_lib"
-      AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library under $withval])])
-   fi
-fi
-
 dnl build test programs and benchmark programs
 AM_CONDITIONAL(BUILD_TESTSETS, [true])
 AM_CONDITIONAL(BUILD_BENCHMARKS_IN_PNETCDF, [true])
@@ -1839,6 +1852,8 @@ AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 
 AC_SUBST(enable_static)
 AC_SUBST(enable_shared)
+AC_SUBST(enable_netcdf4)
+AC_SUBST(netcdf_libdir)
 AM_CONDITIONAL(BUILD_SHARED_LIB, [test x${enable_shared} = xyes])
 
 AC_OUTPUT
