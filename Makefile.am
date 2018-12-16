@@ -76,31 +76,33 @@ install-data-hook:
 	@echo '|  * PnetCDF man pages have been installed in'
 	@echo '|          $(DESTDIR)$(prefix)/share/man'
 	@echo '|'
-	@if test 'x$(has_fortran)' = xyes -a 'x$(FC_MODINC)' = 'x-I' ; then \
-	 echo '|  To compile your PnetCDF programs, please add the following to the command' ; \
-	else \
-	 echo '|  To compile your PnetCDF C programs, please add the following to the command' ; \
-	fi
+	@echo '|  To compile your PnetCDF programs, please add the following to the command'
 	@echo '|  line, so the compiler can find the PnetCDF header files:'
 	@echo '|      -I$(DESTDIR)$(prefix)/include'
-	@if test "x$(has_fortran)" = xyes -a 'x$(FC_MODINC)' != 'x-I' ; then \
-	 echo '|  Use the following line to compile your Fortran programs'; \
-	 echo '|      $(FC_MODINC)$(DESTDIR)$(prefix)/include' ; \
-	fi
 	@echo '|'
+	@if test "x$(has_fortran)" = xyes -a 'x$(FC_MODINC)' != 'x-I' ; then \
+	 echo '|  Add the following line to compile your Fortran programs' ; \
+	 echo '|      $(FC_MODINC)$(DESTDIR)$(prefix)/include' ; \
+	 echo '|' ; \
+	fi
 	@echo '|  Add the following line to link your program to PnetCDF library:'
 	@echo '|      -L$(DESTDIR)$(exec_prefix)/lib -lpnetcdf'
 	@echo '|'
 	@if test "x$(enable_shared)" = xyes ; then \
 	 echo '|  Add the following to your run-time environment variable LD_LIBRARY_PATH,' ; \
-	 echo '|  if your executable is linked with the PnetCDF shared libraries.' ; \
+	 echo '|  when linking your executable with the PnetCDF shared libraries.' ; \
+         if test "x$(enable_netcdf4)" = xyes ; then \
+         echo '|      $(DESTDIR)$(exec_prefix)/lib:$(netcdf_libdir)' ; \
+         else \
 	 echo '|      $(DESTDIR)$(exec_prefix)/lib' ; \
+	 fi ; \
 	 echo '|' ; \
 	fi
+	@echo '|'
 	@echo '|  PnetCDF is jointly developed by a team at Northwestern University and'
 	@echo '|  Argonne National Laboratory.'
 	@echo '|'
-	@echo '|  Visit PnetCDF web sites for more information'
+	@echo '|  Visit PnetCDF project web site for more information'
 	@echo '|      https://parallel-netcdf.github.io'
 	@echo '|'
 	@echo '+----------------------------------------------------------------------------+'
