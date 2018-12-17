@@ -262,23 +262,13 @@ namespace PnetCDF
     ////////////////////
 
     // Sets the fill parameters
-    /*!
-      \param fillMode   Setting to true, turns on fill mode.
-      \param fillValue  Pointer to fill value.
-      Must be the same type as the variable. Ignored if fillMode=.false.
-    */
-    void setFill(bool fillMode,const void* fillValue=NULL) const;
 
     /*! Sets the fill parameters
       \param fillMode   Setting to true, turns on fill mode.
       \param fillValue  Fill value for the variable.
       Must be the same type as the variable. Ignored if fillMode=.false.
     */
-    template<class T>
-      void setFill(bool fillMode, T fillValue) const
-      {
-	ncmpiCheck(ncmpi_def_var_fill(groupId,myId,static_cast<int> (!fillMode),&fillValue),__FILE__,__LINE__);
-      }
+    void setFill(bool fillMode,const void* fillValue=NULL) const;
 
 
     /*!

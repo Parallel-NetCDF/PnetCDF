@@ -556,9 +556,9 @@ void NcmpiVar::getChunkingParameters(ChunkMode& chunkMode, vector<MPI_Offset>& c
 
 ////////////////////
 
-
 // Sets the fill parameters
 void NcmpiVar::setFill(bool fillMode, const void* fillValue) const {
+  // when fillValue == NULL, use the default fill value
   ncmpiCheck(ncmpi_def_var_fill(groupId,myId,static_cast<int> (!fillMode),fillValue),__FILE__,__LINE__);
 }
 
