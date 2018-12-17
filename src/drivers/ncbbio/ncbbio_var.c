@@ -186,8 +186,7 @@ ncbbio_put_var(void             *ncdp,
     }
 
     /* Add log entry */
-    err = ncbbio_log_put_var(ncbbp, varid, start, count, stride, cbuf, itype,
-                             NULL);
+    err = ncbbio_log_put_var(ncbbp, varid, start, count, stride, cbuf, itype);
 
     if (cbuf != buf) NCI_Free(cbuf);
 
@@ -375,7 +374,6 @@ ncbbio_put_varn(void              *ncdp,
     int i, err, status = NC_NOERR;
     MPI_Offset size;
     void *cbuf = (void*)buf;
-    char *bufp;
     NC_bb *ncbbp = (NC_bb*)ncdp;
     MPI_Datatype itype;
 
@@ -426,14 +424,8 @@ ncbbio_put_varn(void              *ncdp,
     }
 
     /* make num put_vara requests */
-    bufp = (char*)cbuf;
-    for (i=0; i<num; i++) {
-        err = ncbbio_log_put_var(ncbbp, varid, starts[i],
-                                 (counts == NULL) ? NULL : counts[i],
-                                 NULL, bufp, itype, &size);
-        if (status == NC_NOERR) status = err;
-        bufp += size;
-    }
+    err = ncbbio_log_put_varn(ncbbp, varid, num, starts,
+                                counts, cbuf, itype);
 
     if (cbuf != buf) NCI_Free(cbuf);
 
