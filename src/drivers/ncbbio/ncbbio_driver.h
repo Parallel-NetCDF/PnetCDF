@@ -220,7 +220,7 @@ int ncbbio_log_sizearray_append(NC_bb_sizevector *sp, size_t size);
 int ncbbio_log_flush_core(NC_bb *ncbbp);
 int ncbbio_log_create(NC_bb *ncbbp, MPI_Info info);
 int ncbbio_log_put_var(NC_bb *ncbbp, int varid, const MPI_Offset start[], const MPI_Offset count[], const MPI_Offset stride[], void *buf, MPI_Datatype buftype);
-int ncbbio_log_put_varn(NC_bb *ncbbp, int varid, int num, const MPI_Offset *start[], const MPI_Offset *count[], void *buf, MPI_Datatype buftype);
+int ncbbio_log_put_varn(NC_bb *ncbbp, int varid, int num, MPI_Offset* const *starts, MPI_Offset* const *counts, void *buf, MPI_Datatype buftype);
 int ncbbio_log_close(NC_bb *ncbbp, int replay);
 int ncbbio_log_flush(NC_bb *ncbbp);
 int ncbbio_log_enddef(NC_bb *ncbbp);

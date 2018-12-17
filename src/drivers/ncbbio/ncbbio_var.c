@@ -371,8 +371,7 @@ ncbbio_put_varn(void              *ncdp,
                 MPI_Datatype       buftype,
                 int                reqMode)
 {
-    int i, err, status = NC_NOERR;
-    MPI_Offset size;
+    int err, status = NC_NOERR;
     void *cbuf = (void*)buf;
     NC_bb *ncbbp = (NC_bb*)ncdp;
     MPI_Datatype itype;
