@@ -265,18 +265,18 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
  * IN    buftype: user buffer's internal data type, an MPI primitive type
  */
 int ncbbio_log_put_varn(NC_bb            *ncbbp,
-                       int               varid,
-                       int               num,
-                       const MPI_Offset  *starts[],  /* must not be NULL */
-                       const MPI_Offset  *counts[],  /* may be NULL */
+                       int                varid,
+                       int                num,
+                       MPI_Offset* const *starts,  /* must not be NULL */
+                       MPI_Offset* const *counts,  /* may be NULL */
                        void              *buf,
-                       MPI_Datatype      buftype)
+                       MPI_Datatype       buftype)
 {
     int err, i, j, ndims, elsize, itype;
     char *buffer;
     PNC *pncp;
     MPI_Offset *start, *count;
-    MPI_Offset esize, dataoff, recsize, put_size, total_put_size;
+    MPI_Offset esize, recsize, put_size, total_put_size;
     MPI_Offset *Start, *Count;
     NC_bb_metadataentry *entryp;
     NC_bb_metadataheader *headerp;
