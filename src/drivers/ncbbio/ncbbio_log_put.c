@@ -351,7 +351,12 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     * Include metadata entry header and variable size additional data
     * (start, count, stride)
     */
-    esize = sizeof(NC_bb_metadataentry) + ndims * 2 * SIZEOF_MPI_OFFSET * num;
+    if (counts != NULL){
+        esize = sizeof(NC_bb_metadataentry) + ndims * 2 * SIZEOF_MPI_OFFSET * num;
+    }
+    else{
+        esize = sizeof(NC_bb_metadataentry) + ndims * SIZEOF_MPI_OFFSET * num;
+    }
     /* Allocate space for metadata entry header */
     buffer = (char*)ncbbio_log_buffer_alloc(&(ncbbp->metadata), esize);
     entryp = (NC_bb_metadataentry*)buffer;
@@ -384,12 +389,11 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
                 memcpy(Count + i * ndims, counts[i], ndims * sizeof(MPI_Offset));
             }
             else{
-                memset(Count + i * ndims, 0, ndims * sizeof(MPI_Offset));
+                for(j = 0; j < ndims; j++){
+                    Count[i * ndims + j] = 1;
+                }
             }
         }
-    }
-    else{
-        memset(Count, 0, ndims * num * sizeof(MPI_Offset));
     }
     
     /* Increment number of entry
