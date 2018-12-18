@@ -26,8 +26,9 @@
 int ncbbio_log_create(NC_bb* ncbbp,
                       MPI_Info info)
 {
-    int i, rank, np, err, flag, masterrank;
+    int i, rank, np, err, flag, masterrank, procname_len;
     char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
+    char procname[MPI_MAX_PROCESSOR_NAME];
     char *abspath, *fname, *path, *fdir = NULL;
     char *logbasep = ".";
 #ifdef PNETCDF_PROFILING
@@ -53,6 +54,12 @@ int ncbbio_log_create(NC_bb* ncbbp,
         DEBUG_RETURN_ERROR(err);
     }
     masterrank = rank;
+
+    err = MPI_Get_processor_name(procname, &procname_len);
+    if (err != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(err, "MPI_Get_processor_name");
+        DEBUG_RETURN_ERROR(err);
+    }
 
     /* Initialize log structure */
 
@@ -229,7 +236,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
      * Allocate space for metadata header
      * Header consists of a fixed-size info and variable size basename
      */
-    headersize = sizeof(NC_bb_metadataheader) + strlen(basename);
+    headersize = sizeof(NC_bb_metadataheader) + strlen(basename) + 1 + SIZEOF_INT + procname_len + 1;
     if (headersize % 4 != 0) {
         headersize += 4 - (headersize % 4);
     }
@@ -241,7 +248,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
     memcpy(headerp->magic, NC_LOG_MAGIC, sizeof(headerp->magic));
     memcpy(headerp->format, NC_LOG_FORMAT_CDF_MAGIC, sizeof(headerp->format));
     strncpy((char*)headerp->basename, basename,
-            headersize - sizeof(NC_bb_metadataheader) + 1);
+            headersize - SIZEOF_INT - sizeof(NC_bb_metadataheader) - 1);
     headerp->rank_id = rank;   /* Rank */
     headerp->num_ranks = np;   /* Number of processes */
     /* Without conversion before logging, data in native representation */
@@ -258,6 +265,11 @@ int ncbbio_log_create(NC_bb* ncbbp,
     /* Location of the first entry */
     headerp->entry_begin = ncbbp->metadata.nused;
     headerp->basenamelen = strlen(basename);
+
+    /* Process anme */
+    *(int*)((char*)headerp->basename + headerp->basenamelen + 1) = procname_len;
+    strncpy((char*)headerp->basename + headerp->basenamelen + 5, 
+            procname, procname_len + 1);
 
     /* Create log files */
     flag = O_RDWR | O_CREAT;

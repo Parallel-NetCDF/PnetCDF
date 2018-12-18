@@ -76,9 +76,9 @@ typedef struct NC_bb_metadataheader {
     int is_external;
     MPI_Offset num_ranks;
     MPI_Offset rank_id;
-    MPI_Offset entry_begin;
     MPI_Offset max_ndims;
     MPI_Offset num_entries;
+    MPI_Offset entry_begin;    
     int basenamelen;
     char basename[1];   /* The hack to keep basename inside the structure */
 } NC_bb_metadataheader;
