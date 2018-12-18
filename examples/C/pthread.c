@@ -130,6 +130,7 @@ typedef struct {
 } thread_arg;
 
 /*----< thread_func() >------------------------------------------------------*/
+static
 void* thread_func(void *arg)
 {
     char filename[256];
@@ -258,7 +259,8 @@ void* thread_func(void *arg)
     /* return number of errors encountered */
     ret = (int*)malloc(sizeof(int));
     *ret = nerrs;
-    pthread_exit(ret);
+
+    return ret; /* same as pthread_exit(ret); */
 }
 
 /*----< main() >-------------------------------------------------------------*/
