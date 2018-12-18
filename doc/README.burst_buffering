@@ -122,72 +122,102 @@ The data stored in the burst buffer is flushed when:
    flush must be explicitly called before the second write to the same
    variable.
 
+
 -----------------------------------------------------------------------------
- Log file format
+ Metadata file format
+ (file format using the Backus Normal Form (BNF) grammar notation)
 -----------------------------------------------------------------------------
 
-data_log = magic data_list
-    magic = 'P' 'n' 'e' 't' 'C' 'D' 'F' '0'
-    data_list = [data ...]
-        data = <raw binary data form each write request>
-
-metadata_log = header [entry ...]
-    header		= magic format endianness is_external num_ranks rank_id entries_offset max_dimension num_entries basename
-        magic		= "PnetCDF0"	// case sensitive
-        format		= CDF_MAGIC | HDF5_MAGIC | BP_MAGIC
-            CDF_MAGIC	= 'C' 'D' 'F' VERSION ZERO
-            HDF5_MAGIC	= "\211HDF\r\n\032\n"
-            BP_MAGIC	= 'B' 'P' VERSION padding ZERO
-            VERSION		= '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
-        endianness	= BIG_ENDIAN | LITTLE_ENDIAN
-            BIG_ENDIAN	= \x00 \x00 \x00 \x00
-            LITTLE_ENDIAN	= \x00 \x00 \x00 \x01
-        is_external	= TRUE | FALSE		// whether data saved in data file is in external representation
-        num_ranks	= MPI_OFFSET	// number of MPI processes
-        rank_id		= MPI_OFFSET	// MPI process rank ID
-        entries_offset	= MPI_OFFSET	// starting offsset of the first metadata entry (not used)
-        max_dimension	= MPI_OFFSET	// max dimensionality amond all entries recorded (not used)
-        num_entries	= MPI_OFFSET	// number of write requests
-        basename = STRING
-    entry		= esize api_kind itype varid ndims data_off data_len starts counts stride
-        esize		= MPI_OFFSET		// size of an entry
-        api_kind	= NC_API_VARA | NC_API_VARS | INT32 // A positive INT32 indicates varn
-            NC_API_VARA = -3
-            NC_API_VARS = -4
-        itype		= NC_TYPE_TEXT | NC_TYPE_UCHAR | NC_TYPE_SCHAR | NC_TYPE_SHORT | NC_TYPE_USHORT | NC_TYPE_INT | NC_TYPE_UINT | NC_TYPE_FLOAT | NC_TYPE_DOUBLE | NC_TYPE_LONGLONG | NC_TYPE_ULONGLONG // in-memory buffer type
-            NC_TYPE_TEXT = 1
-            NC_TYPE_UCHAR = 2
-            NC_TYPE_SCHAR = 3
-            NC_TYPE_SHORT = 4
-            NC_TYPE_USHORT = 5
-            NC_TYPE_INT = 6
-            NC_TYPE_UINT = 7
-            NC_TYPE_FLOAT = 8
-            NC_TYPE_DOUBLE = 9
-            NC_TYPE_LONGLONG = 10
-            NC_TYPE_ULONGLONG = 11
-        varid		= MPI_OFFSET	// variable ID
-        nreqs		= MPI_OFFSET	// number of requests (if > 1, it's for varn APIs)
-        ndims		= MPI_OFFSET	// variable's number of dimensions
-        data_off	= MPI_OFFSET	// variable's starting offset in data file
-        data_len	= MPI_OFFSET	// length of variable occupied in data file
-        starts = [start ...]    // N start when api_kind is non-negative N, otherwise, 1 start
-            start  = [MPI_OFFSET ...] // ndims of INT64
-        counts = [count ...]    // N count when api_kind is non-negative N, otherwise, 1 start
-            count  = [MPI_OFFSET ...] // ndims of INT64
-        stride = [MPI_OFFSET ...] // ndims of INT64
-
+metadata_file	= header [entry ...]	// two sections: header and entry
+header		= magic format big_endian is_external num_ranks rank_id max_ndims num_entries entry_begin basename proc_name
+magic		= "PnetCDF" VERSION	// case sensitive 8-byte string
+format		= CDF_MAGIC | HDF5_MAGIC | BP_MAGIC
+big_endian	= TRUE | FALSE		// Endianness of values stored in this
+					// metadata file. TRUE means big Endian
+is_external	= TRUE | FALSE		// whether data saved in the data file is
+					// already in external representation
+					// TRUE means type-convert/byte-swap is
+					// already done
+num_ranks	= INT64			// number of MPI processes
+rank_id		= INT64			// MPI process rank ID
+max_ndims	= INT64			// max ndims of all variables, this can
+					// be calculated at enddef() and makes
+					// fix-sized entries
+num_entries	= INT64			// number of write requests
+entry_begin	= INT64			// starting file offset of entry section
+basename	= name			// base file name supplied by users
+proc_name	= name			// MPI processor name, obtained from MPI_Get_processor_name()
+					// can be used like constructing cb_nodes in ROMIO
+name		= name_len namestring	
+name_len	= INT32
+namestring	= CHAR [CHAR ...] padding
+padding		= <0, 1, 2, or 3 bytes to next 4-byte boundary>	// padding uses null (\x00) bytes
+CDF_MAGIC	= 'C' 'D' 'F' VERSION ZERO	// 8-byte string
+HDF5_MAGIC	= "\211HDF\r\n\032\n"		// 8-byte string
+BP_MAGIC	= 'B' 'P' VERSION padding ZERO	// 8-byte string
+VERSION		= '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
+TRUE		= ONE
+FALSE		= ZERO
 CHAR		= <8-bit byte>	
-ZERO		= \x00 \x00 \x00 \x00	//32-bit zero
 INT32		= <32-bit signed integer, native representation>
 INT64		= <64-bit signed integer, native representation>
-TRUE		= 1		// 32-integer value 1 in native representation
-FALSE		= 0		// 32-integer value 0 in native representation
-SIZE_T								= <std::size_t defined in c++, Default endian, 2s complement>
-INT									= <32 bit integer, Default endian, 2s complement>
-MPI_OFFSET							= <MPI_Offset defined in MPICH, Default endian, 2s complement>
-STRING = strlen [CHAR ...] padding_4b
-    strlen = INT32
-    padding_4b	= <0, 1, 2, or 3 bytes to next 4-byte boundary>
 
 
+entry		= esize api_kind itype varid ndims data_off data_len start count stride
+esize		= INT64				// byte size of an entry
+api_kind	= VAR | VAR1 | VARA | VARS | INT32	// PnetCDF API kinds, positive INT represent varn with the number itself represent number of request
+itype		= TEXT | SCHAR | UCHAR | SHORT |
+		  USHORT | INT | UINT  | FLOAT |
+		  DOUBLE | LONGLONG | ULONGLONG	// in-memory buffer data types
+varid		= INT32				// variable ID
+ndims		= INT32				// variable's number of dimensions
+data_off	= INT64				// request's starting offset in data file
+data_len	= INT64				// length of request occupied in data file
+start		= [INT64 ...]			// number of elements == ndims * num_requests
+count		= [INT64 ...]			// number of elements == ndims * num_requests or 0 (if counts is NULL)
+stride		= [INT64 ...]			// number of elements == ndims or 0 (if not vars)
+
+VAR		    = NEGONE
+VAR1		= NEGTWO
+VARA		= NEGTHREE
+VARS		= NEGFOUR
+
+TEXT		= ONE
+SCHAR		= TWO
+UCHAR		= THREE
+SHORT		= FOUR
+USHORT		= FIVE
+INT		= SIX
+UINT		= SEVEN
+FLOAT		= EIGHT
+DOUBLE		= NINE
+LONGLONG	= TEN
+ULONGLONG	= ELEVEN
+ZERO		= 0		// 4-byte integer in native representation
+ONE		= 1		// 4-byte integer in native representation
+TWO		= 2		// 4-byte integer in native representation
+THREE		= 3		// 4-byte integer in native representation
+FOUR		= 4		// 4-byte integer in native representation
+FIVE		= 5		// 4-byte integer in native representation
+SIX		= 6		// 4-byte integer in native representation
+SEVEN		= 7		// 4-byte integer in native representation
+EIGHT		= 8		// 4-byte integer in native representation
+NINE		= 9		// 4-byte integer in native representation
+TEN		= 10		// 4-byte integer in native representation
+ELEVEN		= 11		// 4-byte integer in native representation
+NEGONE		= -1		// 4-byte integer in native representation
+NEGTWO		= -2		// 4-byte integer in native representation
+NEGTHREE	= -3		// 4-byte integer in native representation
+NEGFOUR		= -4		// 4-byte integer in native representation
+
+* Metadata log file size:
+	header size = 80 bytes + strlen(basename) + strlen(proc_name)
+        each entry size = 48 bytes + ndims * 24 bytes
+
+-----------------------------------------------------------------------------
+data file format
+-----------------------------------------------------------------------------
+
+data_file	= magic [entry ...]
+magic		= "PnetCDF" VERSION	// case sensitive 8-byte string
+entry		= <data>
