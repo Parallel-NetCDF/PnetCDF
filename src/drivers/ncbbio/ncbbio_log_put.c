@@ -383,17 +383,17 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     for(i = 0; i < num; i++) {
         memcpy(Start + i * ndims, starts[i], ndims * sizeof(MPI_Offset));
     }
-    if (counts != NULL){
-        for(i = 0; i < num; i++) {
-            if (counts[i] != NULL){
+    if (counts != NULL) {
+        for (i=0; i<num; i++) {
+            if (counts[i] != NULL)
                 memcpy(Count + i * ndims, counts[i], ndims * sizeof(MPI_Offset));
-            }
-            else{
-                for(j = 0; j < ndims; j++){
-                    Count[i * ndims + j] = 1;
-                }
+            else {
+                for (j=0; j<ndims; j++) Count[i*ndims + j] = 1;
             }
         }
+    }
+    else {
+        for (i=0; i<num*ndims; i++) Count[i] = 1;
     }
     
     /* Increment number of entry
