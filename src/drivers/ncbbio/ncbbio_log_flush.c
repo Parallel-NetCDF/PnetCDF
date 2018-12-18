@@ -285,10 +285,9 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
                     if(len < num){
                         if (len > 0){
                             NCI_Free(starts);
-                            NCI_Free(counts);
                         }
-                        starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * num);
-                        counts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * num);
+                        starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * num * 2);
+                        counts = starts + num;
                         len = num;
                     }
                     start = (MPI_Offset*)(entryp + 1);
@@ -309,7 +308,12 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
 #endif
 
                     /* Replay event with non-blocking call */
-                    err = ncbbp->ncmpio_driver->iput_varn(ncbbp->ncp, entryp->varid, num, starts, counts, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+                    if (entryp->esize == sizeof(NC_bb_metadataentry) + entryp->ndims * SIZEOF_MPI_OFFSET * num){
+                        err = ncbbp->ncmpio_driver->iput_varn(ncbbp->ncp, entryp->varid, num, starts, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+                    }
+                    else{
+                        err = ncbbp->ncmpio_driver->iput_varn(ncbbp->ncp, entryp->varid, num, starts, counts, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+                    }
                     if (status == NC_NOERR) {
                         status = err;
                     }
@@ -392,7 +396,6 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     NCI_Free(stats);
     if (len > 0){
         NCI_Free(starts);
-        NCI_Free(counts);
     }
 
 #ifdef PNETCDF_PROFILING
