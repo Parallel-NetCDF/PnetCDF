@@ -94,8 +94,8 @@ Tasks immediately before a new release (must run in the following order)
 
  7. Create a new tag on GitHub, use command (v1.10.0 and after):
     Run command below to duplicate the current master branch to a new tag:
-        git tag -a tag.v1.11.0 -m "Tag (not official release) right before 1.11.0"
-        git push origin tag.v1.11.0
+        git tag -a checkpoint.1.11.0 -m "Checkpoint right before 1.11.0 release"
+        git push origin checkpoint.1.11.0
 
  8. Generate release tar balls
     a. Generate a new "configure" file
