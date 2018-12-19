@@ -28,6 +28,12 @@ This is essentially a placeholder for the next release note ...
     [PR #26](https://github.com/Parallel-NetCDF/PnetCDF/pull/26). Programs
     developed to test this issue is available in
     https://github.com/Parallel-NetCDF/E3SM-IO/tree/master/mpi_io_test
+  + Burst buffer driver is updated to run varn APIs more efficiently. Previous
+    implementation breaks a single varn request into multiple vara requests,
+    which can be slow and require a large amount of meta data. It has changed
+    to consider each varn request a single entity. See
+    [PR #30](https://github.com/Parallel-NetCDF/PnetCDF/pull/30) and
+    [PR #31](https://github.com/Parallel-NetCDF/PnetCDF/pull/31).
 
 * New Limitations
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
