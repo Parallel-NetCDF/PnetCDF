@@ -1767,7 +1767,7 @@ dnl Update the version information only immediately before a public release.
 dnl PnetCDF starts with 1:0:0 (shared library is first supported in 1.9.0)
 dnl because some package distributors, such as Debian, may have already built
 dnl PnetCDF with shared libraries.
-ABIVERSION="2:1:0"
+ABIVERSION="3:0:0"
 AC_SUBST(ABIVERSION)
 if test "$enable_versioning" = "yes" ; then
    ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
@@ -1940,12 +1940,12 @@ if test "${has_fortran}" = yes ; then
               MPIF77   = ${MPIF77}
               MPIF90   = ${MPIF90}"
 fi
-echo "\
-              CFLAGS   = ${CFLAGS}"
 if test "x${CPPFLAGS}" != x ; then
    echo "\
               CPPFLAGS = ${CPPFLAGS}"
 fi
+echo "\
+              CFLAGS   = ${CFLAGS}"
 if test "${has_mpicxx}" = yes ; then
    echo "\
               CXXFLAGS = ${CXXFLAGS}"
