@@ -229,7 +229,7 @@ int main(int argc, char** argv)
 
     /* allocate I/O buffer and initialize its contents */
     buffer = (float*) malloc(num_reqs * sizeof(float));
-    for (i=0; i<num_reqs; i++) buffer[i] =  (float)rank;
+    for (i=0; i<num_reqs; i++) buffer[i] = (float)rank;
 
     /* set the buffer pointers to different offsets to the I/O buffer */
     err = ncmpi_put_varn_float_all(ncid, varid, num_reqs, starts, NULL, buffer);
