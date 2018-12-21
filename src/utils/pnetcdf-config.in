@@ -75,40 +75,43 @@ release_date="PNETCDF_RELEASE_DATE"
 usage()
 {
     cat <<EOF
+pnetcdf-config is a utility program to display the build and installation
+information of the PnetCDF library.
+
 Usage: pnetcdf-config [OPTION]
 
 Available values for OPTION include:
 
   --help                      display this help message and exit
   --all                       display all options
-  --cc                        C compiler
-  --cflags                    C compiler flags
-  --cppflags                  C pre-processor flags
+  --cc                        C compiler used to build PnetCDF
+  --cflags                    C compiler flags used to build PnetCDF
+  --cppflags                  C pre-processor flags used to build PnetCDF
   --has-c++                   whether C++ API is installed
-  --c++                       C++ compiler
-  --cxxflags                  C++ compiler flags
+  --c++                       C++ compiler used to build PnetCDF
+  --cxxflags                  C++ compiler flags used to build PnetCDF
   --has-fortran               whether Fortran API is installed
-  --f77                       Fortran 77 compiler
-  --fflags                    Fortran 77 compiler flags
-  --fppflags                  Fortran pre-processor flags
-  --fc                        Fortran 9x compiler
-  --fcflags                   Fortran 9x compiler flags
-  --ldflags                   Linker options
-  --libs                      Libraries used to build PnetCDF
+  --f77                       Fortran 77 compiler used to build PnetCDF
+  --fflags                    Fortran 77 compiler flags used to build PnetCDF
+  --fppflags                  Fortran pre-processor flags used to build PnetCDF
+  --fc                        Fortran 9x compiler used to build PnetCDF
+  --fcflags                   Fortran 9x compiler flags used to build PnetCDF
+  --ldflags                   Linker flags used to build PnetCDF
+  --libs                      Extra libraries used to build PnetCDF
   --netcdf4                   Whether NetCDF-4 support is enabled or disabled
   --relax-coord-bound         Whether using a relaxed coordinate boundary check
   --in-place-swap             Whether using buffer in-place Endianness byte swap
   --erange-fill               Whether using fill values for NC_ERANGE error
   --subfiling                 Whether subfiling is enabled or disabled
-  --large-single-req          Whether to allow large (>2GiB) single MPI-IO requests
+  --large-single-req          Whether to allow single >2GiB MPI-IO requests
   --null-byte-header-padding  Whether to check null-byte padding in header
   --burst-buffering           Whether burst buffer driver is built or not
   --profiling                 Whether internal profiling is enabled or not
   --thread-safe               Whether thread-safe capability is enabled or not
   --debug                     Whether PnetCDF is built with debug mode
-  --prefix                    Install prefix
-  --includedir                Include directory
-  --libdir                    Library directory
+  --prefix                    Installation directory
+  --includedir                Installation directory containing header files
+  --libdir                    Installation directory containing library files
   --version                   Library version
   --release-date              Date of PnetCDF source was released
   --config-date               Date of PnetCDF library was configured
@@ -119,30 +122,10 @@ EOF
 all()
 {
         echo
-        echo "This $version has been built with the following features: "
-        echo
-        echo "  --cc                        -> $MPICC"
-        echo "  --cflags                    -> $CFLAGS"
-        echo "  --cppflags                  -> $CPPFLAGS"
-        echo "  --ldflags                   -> $LDFLAGS"
-        echo "  --libs                      -> $LIBS"
+        echo "This $version was built with the following features:"
         echo
         echo "  --has-c++                   -> $has_cxx"
-if test "x$has_cxx" = xyes ; then
-        echo "  --cxx                       -> $MPICXX"
-        echo "  --cxxflags                  -> $CXXFLAGS"
-fi
-        echo
         echo "  --has-fortran               -> $has_fortran"
-if test "x$has_fortran" = xyes ; then
-        echo "  --f77                       -> $MPIF77"
-        echo "  --fflags                    -> $FFLAGS"
-        echo
-        echo "  --fc                        -> $MPIF90"
-        echo "  --fcflags                   -> $FCFLAGS"
-#        echo "  --fclibs                    -> $FCLIBS"
-fi
-        echo
 if test "x$enable_netcdf4" = x1; then
         echo "  --netcdf4                   -> enabled"
 else
@@ -203,12 +186,40 @@ else
         echo "  --debug                     -> disabled"
 fi
         echo
-        echo "  --prefix                    -> $prefix"
-        echo "  --includedir                -> $includedir"
-        echo "  --libdir                    -> $libdir"
-        echo "  --version                   -> $version"
-        echo "  --release-date              -> $release_date"
-        echo "  --config-date               -> $config_date"
+        echo "This $version was built using the following compilers and flags:"
+        echo
+        echo "  --cc            -> $MPICC"
+if test "x$has_cxx" = xyes ; then
+        echo "  --cxx           -> $MPICXX"
+fi
+if test "x$has_fortran" = xyes ; then
+        echo "  --f77           -> $MPIF77"
+        echo "  --fc            -> $MPIF90"
+fi
+        echo "  --cppflags      -> $CPPFLAGS"
+        echo "  --cflags        -> $CFLAGS"
+if test "x$has_cxx" = xyes ; then
+        echo "  --cxxflags      -> $CXXFLAGS"
+fi
+if test "x$has_fortran" = xyes ; then
+        echo "  --fflags        -> $FFLAGS"
+        echo "  --fcflags       -> $FCFLAGS"
+#        echo "  --fclibs                    -> $FCLIBS"
+fi
+        echo "  --ldflags       -> $LDFLAGS"
+        echo "  --libs          -> $LIBS"
+        echo
+        echo "This $version has been installed under the following directories:"
+        echo
+        echo "  --prefix        -> $prefix"
+        echo "  --includedir    -> $includedir"
+        echo "  --libdir        -> $libdir"
+        echo
+        echo "Additional information:"
+        echo
+        echo "  --version       -> $version"
+        echo "  --release-date  -> $release_date"
+        echo "  --config-date   -> $config_date"
 }
 
 if test $# -eq 0; then
