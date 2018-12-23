@@ -498,8 +498,10 @@ int main(int argc, char **argv)
                 CHECK_ERR
             }
         }
-        if (k == 0)
+
+        if (k == 0) {
             err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
+        }
 
         err = ncmpi_enddef(ncid);
         CHECK_ERR
