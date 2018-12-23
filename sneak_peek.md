@@ -9,7 +9,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New Limitations
-  + none
+  + When building with NetCDF-4 feature, using NetCDF-4 library built with
+    PnetCDF enabled, i.e. --enable-pnetcdf, is not supported.
 
 * Update configure options
   + none
