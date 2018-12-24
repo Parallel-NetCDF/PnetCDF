@@ -1,8 +1,9 @@
 #define NC_ZIP_DRIVER_DUMMY 0
 
+
 struct NCZIP_driver {
     int (*init)(MPI_Info);
-    int (*finalize)(MPI_Comm, const char*, int, int, MPI_Info, void**);
+    int (*finalize)();
     int (*compress)(void*, MP_Offset, void*, MP_Offset*, int, int*, MPI_Datatype);
     int (*decompress)(void*, MP_Offset, void*, MP_Offset*, int, int*, MPI_Datatype);
 };

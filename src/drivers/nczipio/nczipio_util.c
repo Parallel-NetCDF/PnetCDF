@@ -35,6 +35,21 @@ void nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
     else {
         nczipp->zipdriver = NC_ZIP_DRIVER_DUMMY;    
     }
+
+    // Block assignment
+    MPI_Info_get(info, "nc_zip_block_mapping", MPI_MAX_INFO_VAL - 1,
+                 value, &flag);
+    if (flag) {
+        if (strcmp(value, "static") == 0){
+            nczipp->blockmapping = NC_ZIP_MAPPING_STATIC;  
+        }
+        else{
+            printf("Warning: Unknown zip method %s, using dummy\n", value);
+        }
+    }
+    else {
+        nczipp->blockmapping = NC_ZIP_MAPPING_STATIC;    
+    }
 }
 
 /*

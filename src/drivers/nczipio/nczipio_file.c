@@ -90,8 +90,7 @@ nczipio_create(MPI_Comm     comm,
     err = driver->put_att(nczipp->ncp, NC_GLOBAL, "_comressed", NC_INT, 1, 1, MPI_INT); // Mark this file as compressed
     if (err != NC_NOERR) return err;
 
-    err = nczipioi_var_list_init(nczipp);
-    if (err != NC_NOERR) return err;
+
 
     *ncpp = nczipp;
 
@@ -405,4 +404,17 @@ nczipio_flush(void *ncdp)
 }
 
 int
-nczipioi_
+nczipioi_init(NC_zip *nczipp){
+    int err;
+
+    /* Initialize var list */
+    err = nczipioi_var_list_init(nczipp);
+    if (err != NC_NOERR) return err;
+
+    /* Select compression driver based on hint */
+    switch (nczipp->zipdriver){
+        case NC_ZIP_DRIVER_DUMMY:
+            nczipp = nczip_dummy_inq_driver();
+        break;
+    }
+}

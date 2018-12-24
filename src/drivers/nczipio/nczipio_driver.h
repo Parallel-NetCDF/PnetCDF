@@ -10,22 +10,24 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 #include <dispatch.h>
+#include <zip_driver.h>
 
 #define NC_ZIP_VAR_RAW 0
 #define NC_ZIP_VAR_COMPRESSED 1
 #define NC_ZIP_VAR_DATA 2
+
+#define NC_ZIP_MAPPING_STATIC 0
 
 typedef struct NC_zip_var {
     int var_type;
     int varid;
     int datavarid;
     int ndim;
-    MPI_Offset *size;
-    MPI_Offset *blocksize;
+    MPI_Offset *dimsize;
+    MPI_Offset *stripesize;
     int nblocks;
     int *owner;
-    int *offset;
-    void **cache;
+    MPI_Offset *offset;
 } NC_ad_var;
 
 typedef struct NC_zip_var_list {
@@ -46,6 +48,7 @@ struct NC_zip {
     struct PNC_driver *driver;
     NCZIP_driver      *zip;         /* Compression driver */
     int                zipdriver;
+    int                blockmapping;
 };
 
 extern int

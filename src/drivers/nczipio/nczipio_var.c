@@ -67,7 +67,7 @@ nczipio_def_var(void       *ncdp,
     NC_zip_var var;
 
     var.ndims = ndims;
-    var.blocksize = NULL;
+    var.stripesize = NULL;
     var.offset = NULL;
     var.owner = NULL;
 
@@ -79,16 +79,16 @@ nczipio_def_var(void       *ncdp,
         if (err != NC_NOERR) return err;
 
         var.type = NC_ZIP_VAR_RAW;
-        var.size = NULL;
+        var.dimsize = NULL;
     }
     else{
         err = nczipp->driver->def_var(nczipp->ncp, name, NC_INT, 0, NULL, &var.varid);  // We use it to save the id of data variable
         if (err != NC_NOERR) return err;
         
         var.type = NC_ZIP_VAR_COMPRESSED;
-        var.size = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndims);
+        var.dimsize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndims);
         for(i = 0; i < ndims; i++){
-            nczipp->driver->inq_dim(nczipp->ncp, dimids[i], NULL, var.size + i);
+            nczipp->driver->inq_dim(nczipp->ncp, dimids[i], NULL, var.dimsize + i);
         }
 
         err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_ndim", NC_INT, 1, &ndims, MPI_INT); // Original dimensions
@@ -112,11 +112,20 @@ nczipio_inq_varid(void       *ncdp,
                 const char *name,
                 int        *varid)
 {
-    int err;
+    int i, vid, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    err = nczipp->driver->inq_varid(nczipp->ncp, name, varid);
-    if (err != NC_NOERR) return err;
+    if (varid != NULL){
+        err = nczipp->driver->inq_varid(nczipp->ncp, name, &vid);
+        if (err != NC_NOERR) return err;
+
+        for(i = 0; i < nczipp->vars.cnt; i++){
+            if (nczipp->vars.data[i].varid == vid){
+                *varid = i;
+                break;
+            }
+        }
+    }
 
     return NC_NOERR;
 }
@@ -135,10 +144,25 @@ nczipio_inq_var(void       *ncdp,
 {
     int err;
     NC_zip *nczipp = (NC_zip*)ncdp;
+    NC_var *varp;
 
-    err = nczipp->driver->inq_var(nczipp->ncp, varid, name, xtypep, ndimsp, dimids,
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+
+    varp = nczipp->vars.data + varid;
+
+    err = nczipp->driver->inq_var(nczipp->ncp, varp->varid, name, xtypep, ndimsp, dimids,
                                nattsp, offsetp, no_fillp, fill_valuep);
     if (err != NC_NOERR) return err;
+
+    if (ndimsp != NULL){
+        *ndimsp = varp->ndim;
+    }
+
+    if (dimids != NULL){
+        memcpy(dimids, varp->dimids, sizeof(int) * varp->ndim);
+    }
 
     return NC_NOERR;
 }
@@ -150,87 +174,17 @@ nczipio_rename_var(void       *ncdp,
 {
     int err;
     NC_zip *nczipp = (NC_zip*)ncdp;
+    NC_var *varp;
 
-    err = nczipp->driver->rename_var(nczipp->ncp, varid, newname);
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+    varp = nczipp->vars.data + varid;
+
+    err = nczipp->driver->rename_var(nczipp->ncp, varp->varid, newname);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
-}
-
-int
-nczipio_get_var(void             *ncdp,
-              int               varid,
-              const MPI_Offset *start,
-              const MPI_Offset *count,
-              const MPI_Offset *stride,
-              const MPI_Offset *imap,
-              void             *buf,
-              MPI_Offset        bufcount,
-              MPI_Datatype      buftype,
-              int               reqMode)
-{
-    int err;
-    NC_zip *nczipp = (NC_zip*)ncdp;
-
-    err = nczipp->driver->get_var(nczipp->ncp, varid, start, count, stride, imap,
-                               buf, bufcount, buftype, reqMode);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
-}
-
-int
-nczipio_put_var(void             *ncdp,
-              int               varid,
-              const MPI_Offset *start,
-              const MPI_Offset *count,
-              const MPI_Offset *stride,
-              const MPI_Offset *imap,
-              const void       *buf,
-              MPI_Offset        bufcount,
-              MPI_Datatype      buftype,
-              int               reqMode)
-{
-    int err=NC_NOERR, status;
-    void *cbuf=(void*)buf;
-    NC_zip *nczipp = (NC_zip*)ncdp;
-
-    if (imap != NULL || bufcount != -1) {
-        /* pack buf to cbuf -------------------------------------------------*/
-        /* If called from a true varm API or a flexible API, ncmpii_pack()
-         * packs user buf into a contiguous cbuf (need to be freed later).
-         * Otherwise, cbuf is simply set to buf. ncmpii_pack() also returns
-         * etype (MPI primitive datatype in buftype), and nelems (number of
-         * etypes in buftype * bufcount)
-         */
-        int ndims;
-        MPI_Offset nelems;
-        MPI_Datatype etype;
-
-        err = nczipp->driver->inq_var(nczipp->ncp, varid, NULL, NULL, &ndims, NULL,
-                                   NULL, NULL, NULL, NULL);
-        if (err != NC_NOERR) goto err_check;
-
-        err = ncmpii_pack(ndims, count, imap, (void*)buf, bufcount, buftype,
-                          &nelems, &etype, &cbuf);
-        if (err != NC_NOERR) goto err_check;
-
-        imap     = NULL;
-        bufcount = (nelems == 0) ? 0 : -1;  /* make it a high-level API */
-        buftype  = etype;                   /* an MPI primitive type */
-    }
-
-err_check:
-    if (err != NC_NOERR) {
-        if (reqMode & NC_REQ_INDEP) return err;
-        reqMode |= NC_REQ_ZERO; /* participate collective call */
-    }
-
-    status = nczipp->driver->put_var(nczipp->ncp, varid, start, count, stride, imap,
-                                  cbuf, bufcount, buftype, reqMode);
-    if (cbuf != buf) NCI_Free(cbuf);
-
-    return (err == NC_NOERR) ? status : err; /* first error encountered */
 }
 
 int
