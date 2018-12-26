@@ -10,7 +10,8 @@ This is essentially a placeholder for the next release note ...
 
 * New Limitations
   + When building with NetCDF-4 feature, using NetCDF-4 library built with
-    PnetCDF enabled, i.e. --enable-pnetcdf, is not supported.
+    PnetCDF enabled, i.e. --enable-pnetcdf, is not supported. See
+    [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33)
 
 * Update configure options
   + none
