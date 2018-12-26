@@ -67,7 +67,7 @@
 #define LEN 16
 
 static
-int check_int_buf(int *buffer)
+int check_int_buf(int *buffer, int lineno)
 {
     int i, nprocs;
     int expected[LEN];
@@ -87,8 +87,8 @@ int check_int_buf(int *buffer)
         else if (nprocs == 3) { if (i == 12) break; }
 
         if (buffer[i] != expected[i]) {
-            printf("Expected read buf[%d]=%d, but got %d\n",
-                   i,expected[i],buffer[i]);
+            printf("Error at line %d: expected read buf[%d]=%d, but got %d\n",
+                   lineno,i,expected[i],buffer[i]);
             return 1;
         }
     }
@@ -96,7 +96,7 @@ int check_int_buf(int *buffer)
 }
 
 static
-int check_flt_buf(float *buffer, float extra)
+int check_flt_buf(float *buffer, float extra, int lineno)
 {
     int i, nprocs;
     float expected[LEN];
@@ -116,8 +116,8 @@ int check_flt_buf(float *buffer, float extra)
         else if (nprocs == 3) { if (i == 12) break; }
 
         if (buffer[i] != expected[i]) {
-            printf("Expected read buf[%d]=%.1f, but got %.1f\n",
-                   i,expected[i],buffer[i]);
+            printf("Error at line %d: expected read buf[%d]=%.1f, but got %.1f\n",
+                   lineno,i,expected[i],buffer[i]);
             return 1;
         }
     }
@@ -125,7 +125,7 @@ int check_flt_buf(float *buffer, float extra)
 }
 
 static
-int check_dbl_buf(double *buffer, double extra)
+int check_dbl_buf(double *buffer, double extra, int lineno)
 {
     int i, nprocs;
     double expected[LEN];
@@ -145,8 +145,8 @@ int check_dbl_buf(double *buffer, double extra)
         else if (nprocs == 3) { if (i == 12) break; }
 
         if (buffer[i] != expected[i]) {
-            printf("Expected read buf[%d]=%.1f, but got %.1f\n",
-                   i,expected[i],buffer[i]);
+            printf("Error at line %d: expected read buf[%d]=%.1f, but got %.1f\n",
+                   lineno,i,expected[i],buffer[i]);
             return 1;
         }
     }
@@ -417,27 +417,27 @@ int main(int argc, char** argv)
 
     for (i=0; i<LEN; i++) ibuf1[i] = -1;
     err = ncmpi_get_var_int_all(ncid, vari0001, ibuf1); CHECK_ERR
-    nerrs += check_int_buf(ibuf1);
+    nerrs += check_int_buf(ibuf1, __LINE__);
 
     for (i=0; i<LEN; i++) ibuf2[i] = -1;
     err = ncmpi_get_var_int_all(ncid, vari0002, ibuf2); CHECK_ERR
-    nerrs += check_int_buf(ibuf2);
+    nerrs += check_int_buf(ibuf2, __LINE__);
 
     for (i=0; i<LEN; i++) rbuf1[i] = -1;
     err = ncmpi_get_var_float_all(ncid, varr0001, rbuf1); CHECK_ERR
-    nerrs += check_flt_buf(rbuf1, 0.1);
+    nerrs += check_flt_buf(rbuf1, 0.1, __LINE__);
 
     for (i=0; i<LEN; i++) rbuf2[i] = -1;
     err = ncmpi_get_var_float_all(ncid, varr0002, rbuf2); CHECK_ERR
-    nerrs += check_flt_buf(rbuf2, 0.2);
+    nerrs += check_flt_buf(rbuf2, 0.2, __LINE__);
 
     for (i=0; i<LEN; i++) dbuf1[i] = -1;
     err = ncmpi_get_var_double_all(ncid, vard0001, dbuf1); CHECK_ERR
-    nerrs += check_dbl_buf(dbuf1, 0.3);
+    nerrs += check_dbl_buf(dbuf1, 0.3, __LINE__);
 
     for (i=0; i<LEN; i++) dbuf2[i] = -1;
     err = ncmpi_get_var_double_all(ncid, vard0002, dbuf2); CHECK_ERR
-    nerrs += check_dbl_buf(dbuf2, 0.4);
+    nerrs += check_dbl_buf(dbuf2, 0.4, __LINE__);
 
     err = ncmpi_close(ncid); CHECK_ERR
 
