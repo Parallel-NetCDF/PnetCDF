@@ -309,7 +309,7 @@ typedef struct NC_req {
     MPI_Offset    nelems;       /* number of array elements requested */
     MPI_Offset   *start;        /* [varp->ndims*3] for start/count/stride */
     void         *xbuf;         /* buffer in external type, used in file I/O calls */
-    NC_lead_req  *lead;         /* point to lead request */
+    int           lead_off;     /* start index in the lead queue */
 } NC_req;
 
 #define NC_ABUF_DEFAULT_TABLE_SIZE 128
@@ -381,6 +381,8 @@ struct NC {
     NC_attrarray  attrs;    /* global attributes defined */
     NC_vararray   vars;     /* variables defined */
 
+    int           maxGetReqID;    /* max get request ID */
+    int           maxPutReqID;    /* max put request ID */
     int           numLeadGetReqs; /* number of pending lead get requests */
     int           numLeadPutReqs; /* number of pending lead put requests */
     NC_lead_req  *get_lead_list;  /* list of lead nonblocking read requests */
@@ -479,8 +481,8 @@ extern int
 ncmpio_abuf_dealloc(NC *ncp, int abuf_index);
 
 extern int
-ncmpio_add_record_requests(NC_req *reqs, MPI_Offset num_recs,
-                           const MPI_Offset *stride);
+ncmpio_add_record_requests(NC_lead_req *lead_list, NC_req *reqs,
+                           MPI_Offset num_recs, const MPI_Offset *stride);
 
 extern int
 ncmpio_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
