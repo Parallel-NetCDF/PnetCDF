@@ -57,7 +57,8 @@ igetput_varn(NC                *ncp,
              int                reqMode)
 {
     int i, j, err, free_xbuf=0, isize, xsize, abuf_index=-1, max_nreqs;
-    int isContig=1, need_convert, need_swap, need_swap_back_buf=0;
+    int isContig=1, need_convert, need_swap, need_swap_back_buf=0, lead_off;
+    int rem, new_nreqs;
     size_t memChunk;
     void *xbuf=NULL;
     char *xbufp;
@@ -81,15 +82,17 @@ igetput_varn(NC                *ncp,
         /* nelems will be the total number of array elements of this varn */
         nelems = 0;
         max_nreqs = 0;
-        for (j=0; j<num; j++) {
+        for (i=0; i<num; i++) {
             MPI_Offset nlen = 1;
-            for (i=0; i<varp->ndims; i++)
-                nlen *= counts[j][i];
+            if (counts[i] != NULL)
+                for (j=0; j<varp->ndims; j++)
+                    nlen *= counts[i][j];
             nelems += nlen;
 
             /* calculate the max number of requests to be added to queue */
-            if (IS_RECVAR(varp)) /* each record will be a separate request */
-                max_nreqs += counts[j][0];
+            if (IS_RECVAR(varp) && counts[i] != NULL)
+                /* each record will be a separate request */
+                max_nreqs += counts[i][0];
             else
                 max_nreqs++;
         }
@@ -211,39 +214,95 @@ igetput_varn(NC                *ncp,
             return err;
         }
 
-        /* allocate or expand the size of lead write request queue */
-        if (ncp->numLeadPutReqs % NC_REQUEST_CHUNK == 0) {
-            NC_lead_req *old = ncp->put_lead_list;
+        /* allocate or expand the lead write request queue */
+        if (ncp->numLeadPutReqs % NC_REQUEST_CHUNK == 0)
             ncp->put_lead_list = (NC_lead_req*) NCI_Realloc(ncp->put_lead_list,
                                  (ncp->numLeadPutReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
-            /* non-lead requests must also update their member lead */
-            if (old != ncp->put_lead_list)
-                for (i=0; i<ncp->numPutReqs; i++)
-                    ncp->put_list[i].lead = ncp->put_lead_list +
-                                            (ncp->put_list[i].lead - old);
+
+        /* calculate the number of new non-lead and non-zero requests */
+        new_nreqs = 0;
+        if (counts != NULL) {
+            for (i=0; i<num; i++) {
+                if (counts[i] != NULL) {
+                    for (j=0; j<varp->ndims && counts[i][j]>0; j++) ;
+                    if (j < varp->ndims)
+                        continue; /* ignore this 0-length request i */
+                    new_nreqs += (IS_RECVAR(varp)) ? (int)counts[i][0] : 1;
+                }
+                else /* counts[i] == NULL, equivalent to all 1s */
+                    new_nreqs++;
+            }
+        } else { /* counts == NULL, equivalent to all 1s */
+            new_nreqs = num;
         }
 
+        /* allocate or expand the non-lead write request queue */
+        rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
+        if (rem) rem = NC_REQUEST_CHUNK - rem;
+
+        if (ncp->put_list == NULL || new_nreqs > rem) {
+            size_t req_alloc, nChunks;
+            req_alloc = ncp->numPutReqs + new_nreqs;
+            nChunks = req_alloc / NC_REQUEST_CHUNK;
+            if (req_alloc % NC_REQUEST_CHUNK) nChunks++;
+            req_alloc = nChunks * NC_REQUEST_CHUNK * sizeof(NC_req);
+            ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list, req_alloc);
+        }
+
+#define SORT_LEAD_LIST_BASED_ON_VARID
+#ifdef SORT_LEAD_LIST_BASED_ON_VARID
+        /* add the new request to put_lead_list and keep put_lead_list sorted,
+         * in an increasing order of variable IDs
+         */
+        for (i=ncp->numLeadPutReqs-1; i>=0; i--) {
+            if (ncp->put_lead_list[i].varp->varid <= varp->varid)
+                break;
+            /* make space for new lead request */
+            ncp->put_lead_list[i+1] = ncp->put_lead_list[i];
+            ncp->put_lead_list[i+1].nonlead_off += new_nreqs;
+        }
+        lead_off = i + 1;
+        lead_req = ncp->put_lead_list + lead_off;
+
+        if (lead_off < ncp->numLeadPutReqs) {
+            /* req is starting location to insert new non-lead requests */
+            req = ncp->put_list + lead_req->nonlead_off;
+            /* make space for new non-lead requests */
+            for (i=ncp->numPutReqs-1; i>=lead_req->nonlead_off; i--) {
+                ncp->put_list[i+new_nreqs] = ncp->put_list[i];
+                ncp->put_list[i+new_nreqs].lead_off++;
+            }
+        }
+        else {
+            /* append new lead request at the end of ncp->put_lead_list */
+            lead_req->nonlead_off = ncp->numPutReqs;
+            /* append new non-lead requests at the end of ncp->put_list */
+            req = ncp->put_list + ncp->numPutReqs;
+        }
+#else
+        /* append new lead request at the end of ncp->put_lead_list */
         lead_req = ncp->put_lead_list + ncp->numLeadPutReqs;
+        lead_req->nonlead_off = ncp->numPutReqs;
+        /* append new non-lead requests at the end of ncp->put_list */
+        req = ncp->put_list + ncp->numPutReqs;
+        lead_off = ncp->numLeadPutReqs;
+#endif
 
         /* the new request ID will be an even number (max of write ID + 2) */
-        lead_req->id = 0;
-        if (ncp->numLeadPutReqs > 0)
-            lead_req->id = ncp->put_lead_list[ncp->numLeadPutReqs-1].id + 2;
+        if (ncp->numLeadPutReqs == 0) {
+            lead_req->id = 0;
+            ncp->maxPutReqID = 0;
+        } else {
+            ncp->maxPutReqID += 2;
+            lead_req->id = ncp->maxPutReqID;
+        }
 
         ncp->numLeadPutReqs++;
 
-        lead_req->flag        = 0;
-        lead_req->varp        = varp;
-        lead_req->itype       = itype;
-        lead_req->xbuf        = xbuf;
-        lead_req->buf         = buf;
-        lead_req->abuf_index  = -1;
-        lead_req->nelems      = nelems;
-        lead_req->bufcount    = 0;
-        lead_req->buftype     = MPI_DATATYPE_NULL;
-        lead_req->imaptype    = MPI_DATATYPE_NULL;
-        lead_req->status      = NULL;
+        lead_req->flag     = 0;
+        lead_req->bufcount = 0;
+        lead_req->buftype  = MPI_DATATYPE_NULL;
 
         /* Only lead requests may free xbuf. For write, when xbuf == buf,
          * the user buffer, buf, may have been byte-swapped. In this case,
@@ -252,42 +311,8 @@ igetput_varn(NC                *ncp,
         if (need_swap_back_buf) fSet(lead_req->flag, NC_REQ_BUF_BYTE_SWAP);
         if (free_xbuf)          fSet(lead_req->flag, NC_REQ_XBUF_TO_BE_FREED);
 
-        /* varn APIs have no argument stride */
-        fSet(lead_req->flag, NC_REQ_STRIDE_NULL);
-
-        /* Lead request allocates a single array to store num start/count
-         * for all non-lead requests, including individual record requests if
-         * record variable.
-         */
-        lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * max_nreqs);
-
         /* when abuf_index >= 0 means called by bput_varn */
         lead_req->abuf_index = abuf_index; /* to mark space in abuf free */
-
-        /* starting offset in the non-lead write queue */
-        lead_req->nonlead_off = ncp->numPutReqs;
-
-        /* calculate the number of new non-lead requests to add to the queue */
-        int add_reqs=0;
-        if (IS_RECVAR(varp) && counts != NULL) {
-            for (i=0; i<num; i++)
-                add_reqs += (int)counts[i][0];
-        }
-        else
-            add_reqs = num;
-
-        /* allocate or expand the size of non-lead write request queue */
-        int rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
-        if (rem) rem = NC_REQUEST_CHUNK - rem;
-
-        if (ncp->put_list == NULL || add_reqs > rem) {
-            size_t req_alloc, nChunks;
-            req_alloc = ncp->numPutReqs + add_reqs;
-            nChunks = req_alloc / NC_REQUEST_CHUNK;
-            if (req_alloc % NC_REQUEST_CHUNK) nChunks++;
-            req_alloc = nChunks * NC_REQUEST_CHUNK * sizeof(NC_req);
-            ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list, req_alloc);
-        }
     }
     else { /* read request */
         /* Type conversion and byte swap for read, if necessary, will be done
@@ -303,39 +328,95 @@ igetput_varn(NC                *ncp,
             free_xbuf = 1;
         }
 
-        /* allocate or expand the size of lead read request queue */
-        if (ncp->numLeadGetReqs % NC_REQUEST_CHUNK == 0) {
-            NC_lead_req *old = ncp->get_lead_list;
+        /* allocate or expand the lead read request queue */
+        if (ncp->numLeadGetReqs % NC_REQUEST_CHUNK == 0)
             ncp->get_lead_list = (NC_lead_req*) NCI_Realloc(ncp->get_lead_list,
                                  (ncp->numLeadGetReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
-            /* non-lead requests must also update their member lead */
-            if (old != ncp->get_lead_list)
-                for (i=0; i<ncp->numGetReqs; i++)
-                    ncp->get_list[i].lead = ncp->get_lead_list +
-                                            (ncp->get_list[i].lead - old);
+
+        /* calculate the number of new non-lead and non-zero requests */
+        new_nreqs = 0;
+        if (counts != NULL) {
+            for (i=0; i<num; i++) {
+                if (counts[i] != NULL) {
+                    for (j=0; j<varp->ndims && counts[i][j]>0; j++) ;
+                    if (j < varp->ndims)
+                        continue; /* ignore this 0-length request i */
+                    new_nreqs += (IS_RECVAR(varp)) ? (int)counts[i][0] : 1;
+                }
+                else /* counts[i] == NULL, equivalent to all 1s */
+                    new_nreqs++;
+            }
+        } else { /* counts == NULL, equivalent to all 1s */
+            new_nreqs = num;
         }
 
+        /* allocate or expand the non-lead read request queue */
+        rem = ncp->numGetReqs % NC_REQUEST_CHUNK;
+        if (rem) rem = NC_REQUEST_CHUNK - rem;
+
+        if (ncp->get_list == NULL || new_nreqs > rem) {
+            size_t req_alloc, nChunks;
+            req_alloc = ncp->numGetReqs + new_nreqs;
+            nChunks = req_alloc / NC_REQUEST_CHUNK;
+            if (req_alloc % NC_REQUEST_CHUNK) nChunks++;
+            req_alloc = nChunks * NC_REQUEST_CHUNK * sizeof(NC_req);
+            ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list, req_alloc);
+        }
+
+#ifdef SORT_LEAD_LIST_BASED_ON_VARID
+        /* add the new request to get_lead_list and keep get_lead_list sorted,
+         * in an increasing order of variable IDs
+         */
+        for (i=ncp->numLeadGetReqs-1; i>=0; i--) {
+            if (ncp->get_lead_list[i].varp->varid <= varp->varid)
+                break;
+            /* make space for new lead request */
+            ncp->get_lead_list[i+1] = ncp->get_lead_list[i];
+            ncp->get_lead_list[i+1].nonlead_off += new_nreqs;
+        }
+        lead_off = i + 1;
+        lead_req = ncp->get_lead_list + lead_off;
+
+        if (lead_off < ncp->numLeadGetReqs) {
+            /* req is starting location to insert new non-lead requests */
+            req = ncp->get_list + lead_req->nonlead_off;
+            /* make space for new non-lead requests */
+            for (i=ncp->numGetReqs-1; i>=lead_req->nonlead_off; i--) {
+                ncp->get_list[i+new_nreqs] = ncp->get_list[i];
+                ncp->get_list[i+new_nreqs].lead_off++;
+            }
+        }
+        else {
+            /* append new lead request at the end of ncp->get_lead_list */
+            lead_req->nonlead_off = ncp->numGetReqs;
+            /* append new non-lead request at the end of ncp->get_list */
+            req = ncp->get_list + ncp->numGetReqs;
+        }
+#else
+        /* append new request at the end of ncp->get_lead_list */
         lead_req = ncp->get_lead_list + ncp->numLeadGetReqs;
+        lead_req->nonlead_off = ncp->numGetReqs;
+        /* append new non-lead requests at the end of ncp->get_list */
+        req = ncp->get_list + ncp->numGetReqs;
+        lead_off = ncp->numLeadGetReqs;
+#endif
 
         /* the new request ID will be an odd number (max of read ID + 2) */
-        lead_req->id = 1;
-        if (ncp->numLeadGetReqs > 0)
-            lead_req->id = ncp->get_lead_list[ncp->numLeadGetReqs-1].id + 2;
+        if (ncp->numLeadGetReqs == 0) {
+            lead_req->id = 1;
+            ncp->maxGetReqID = 1;
+        } else {
+            ncp->maxGetReqID += 2;
+            lead_req->id = ncp->maxGetReqID;
+        }
 
         ncp->numLeadGetReqs++;
 
-        lead_req->flag        = 0;
-        lead_req->varp        = varp;
-        lead_req->itype       = itype;
-        lead_req->xbuf        = xbuf;
-        lead_req->buf         = buf;
-        lead_req->abuf_index  = -1;
-        lead_req->nelems      = nelems;
-        lead_req->bufcount    = 0;
-        lead_req->buftype     = MPI_DATATYPE_NULL;
-        lead_req->imaptype    = MPI_DATATYPE_NULL;
-        lead_req->status      = NULL;
+        lead_req->flag       = 0;
+        lead_req->bufcount   = 0;
+        lead_req->buftype    = MPI_DATATYPE_NULL;
+        lead_req->abuf_index = -1;
 
         /* Only lead requests may free xbuf. For read, only the lead requests
          * perform byte-swap, type-conversion, imap unpack, and buftype
@@ -344,15 +425,6 @@ igetput_varn(NC                *ncp,
         if (need_convert) fSet(lead_req->flag, NC_REQ_BUF_TYPE_CONVERT);
         if (need_swap)    fSet(lead_req->flag, NC_REQ_BUF_BYTE_SWAP);
         if (free_xbuf)    fSet(lead_req->flag, NC_REQ_XBUF_TO_BE_FREED);
-
-        /* varn APIs have no argument stride */
-        fSet(lead_req->flag, NC_REQ_STRIDE_NULL);
-
-        /* Lead request allocates a single array to store num start/count
-         * for all non-lead requests, including individual record requests if
-         * record variable.
-         */
-        lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * max_nreqs);
 
         if (isContig)
             fSet(lead_req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
@@ -363,44 +435,34 @@ igetput_varn(NC                *ncp,
             MPI_Type_dup(buftype, &lead_req->buftype);
             lead_req->bufcount = (int)bufcount;
         }
-
-        /* starting offset in the non-lead read queue */
-        lead_req->nonlead_off = ncp->numGetReqs;
-
-        /* calculate the number of new non-lead requests to add to the queue */
-        int add_reqs=0;
-        if (IS_RECVAR(varp) && counts != NULL) {
-            for (i=0; i<num; i++)
-                add_reqs += (int)counts[i][0];
-        }
-        else
-            add_reqs = num;
-
-        /* allocate or expand the size of non-lead read request queue */
-        int rem = ncp->numGetReqs % NC_REQUEST_CHUNK;
-        if (rem) rem = NC_REQUEST_CHUNK - rem;
-
-        if (ncp->get_list == NULL || add_reqs > rem) {
-            size_t req_alloc, nChunks;
-            req_alloc = ncp->numGetReqs + add_reqs;
-            nChunks = req_alloc / NC_REQUEST_CHUNK;
-            if (req_alloc % NC_REQUEST_CHUNK) nChunks++;
-            req_alloc = nChunks * NC_REQUEST_CHUNK * sizeof(NC_req);
-            ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list, req_alloc);
-        }
     }
 
-    /* break varn into multiple non-lead requests and buf/xbuf accordingly */
-    if (fIsSet(reqMode, NC_REQ_WR)) req = ncp->put_list + ncp->numPutReqs;
-    else                            req = ncp->get_list + ncp->numGetReqs;
+    lead_req->varp     = varp;
+    lead_req->itype    = itype;
+    lead_req->xbuf     = xbuf;
+    lead_req->buf      = buf;
+    lead_req->nelems   = nelems;
+    lead_req->imaptype = MPI_DATATYPE_NULL;
+    lead_req->status   = NULL;
 
+    /* varn APIs have no argument stride */
+    fSet(lead_req->flag, NC_REQ_STRIDE_NULL);
+
+    /* Lead request allocates a single array to store num start/count for all
+     * non-lead requests, including individual record requests if
+     * record variable.
+     */
+    lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * max_nreqs);
+
+    /* break varn into multiple non-lead requests and buf/xbuf accordingly */
     lead_req->nonlead_num = 0;
     lead_req->max_rec     = -1;
     start_ptr = lead_req->start;
     xbufp = (char*)xbuf;
+
     for (i=0; i<num; i++) {
         MPI_Offset req_nelems=1; /* calculate size of request i */
-        if (counts != NULL) {
+        if (counts != NULL && counts[i] != NULL) {
             for (j=0; j<varp->ndims; j++)
                 req_nelems *= counts[i][j];
             if (req_nelems == 0) continue; /* ignore this 0-length request i */
@@ -408,16 +470,16 @@ igetput_varn(NC                *ncp,
 
         lead_req->nonlead_num++;
 
-        req->lead    = lead_req;
-        req->nelems  = req_nelems;
-        req->xbuf    = xbufp;
-        xbufp       += req_nelems * xsize;
+        req->lead_off  = lead_off;
+        req->nelems    = req_nelems;
+        req->xbuf      = xbufp;
+        xbufp         += req_nelems * xsize;
 
         /* copy starts[i] and counts[i] over to req */
         req->start = start_ptr;
         memcpy(start_ptr, starts[i], memChunk);
         start_ptr += varp->ndims;
-        if (counts == NULL) {
+        if (counts == NULL || counts[i] == NULL) {
             for (j=0; j<varp->ndims; j++)
                  start_ptr[j] = 1;
         }
@@ -427,20 +489,26 @@ igetput_varn(NC                *ncp,
 
         if (IS_RECVAR(varp)) {
             /* save the last record number accessed */
-            MPI_Offset max_rec = starts[i][0] + ((counts) ? counts[i][0] : 1);
+            MPI_Offset max_rec;
+
+            max_rec = starts[i][0] + ((counts == NULL || counts[i] == NULL) ?
+                                     1 : counts[i][0]);
             lead_req->max_rec = MAX(lead_req->max_rec, max_rec);
 
-            if (counts != NULL && counts[i][0] > 1) {
+            if (counts != NULL && counts[i] != NULL && counts[i][0] > 1) {
                 /* If the number of requested records is more than 1, we split
                  * this request into multiple requests, one for each record.
                  * The number of records is only preserved in the lead request
                  * max_rec. All non-lead record-variable requests counts[i][0]
                  * are set to 1.
                  */
+                NC_lead_req *lead_list;
+                lead_list = (fIsSet(reqMode, NC_REQ_WR)) ? ncp->put_lead_list
+                                                         : ncp->get_lead_list;
                 lead_req->nonlead_num += counts[i][0] - 1;
 
                 /* append (counts[i][0]-1) number of requests to the queue */
-                ncmpio_add_record_requests(req, counts[i][0], NULL);
+                ncmpio_add_record_requests(lead_list, req, counts[i][0], NULL);
                 start_ptr += (counts[i][0] - 1) * 2 * varp->ndims;
                 req += counts[i][0];
             }
