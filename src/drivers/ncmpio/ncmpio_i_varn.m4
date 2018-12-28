@@ -82,15 +82,17 @@ igetput_varn(NC                *ncp,
         /* nelems will be the total number of array elements of this varn */
         nelems = 0;
         max_nreqs = 0;
-        for (j=0; j<num; j++) {
+        for (i=0; i<num; i++) {
             MPI_Offset nlen = 1;
-            for (i=0; i<varp->ndims; i++)
-                nlen *= counts[j][i];
+            if (counts[i] != NULL)
+                for (j=0; j<varp->ndims; j++)
+                    nlen *= counts[i][j];
             nelems += nlen;
 
             /* calculate the max number of requests to be added to queue */
-            if (IS_RECVAR(varp)) /* each record will be a separate request */
-                max_nreqs += counts[j][0];
+            if (IS_RECVAR(varp) && counts[i] != NULL)
+                /* each record will be a separate request */
+                max_nreqs += counts[i][0];
             else
                 max_nreqs++;
         }
@@ -250,7 +252,9 @@ igetput_varn(NC                *ncp,
 
 #define SORT_LEAD_LIST_BASED_ON_VARID
 #ifdef SORT_LEAD_LIST_BASED_ON_VARID
-        /* add the new request to put_lead_list in increasing order of variable IDs */
+        /* add the new request to put_lead_list and keep put_lead_list sorted,
+         * in an increasing order of variable IDs
+         */
         for (i=ncp->numLeadPutReqs-1; i>=0; i--) {
             if (ncp->put_lead_list[i].varp->varid <= varp->varid)
                 break;
@@ -262,7 +266,7 @@ igetput_varn(NC                *ncp,
         lead_req = ncp->put_lead_list + lead_off;
 
         if (lead_off < ncp->numLeadPutReqs) {
-            /* find starting location to insert new non-lead requests */
+            /* req is starting location to insert new non-lead requests */
             req = ncp->put_list + lead_req->nonlead_off;
             /* make space for new non-lead requests */
             for (i=ncp->numPutReqs-1; i>=lead_req->nonlead_off; i--) {
@@ -271,15 +275,16 @@ igetput_varn(NC                *ncp,
             }
         }
         else {
-            /* append new non-lead request at the end of ncp->put_list */
-            req = ncp->put_list + ncp->numPutReqs;
+            /* append new lead request at the end of ncp->put_lead_list */
             lead_req->nonlead_off = ncp->numPutReqs;
+            /* append new non-lead requests at the end of ncp->put_list */
+            req = ncp->put_list + ncp->numPutReqs;
         }
 #else
-        /* add the new request at the end of ncp->put_lead_list */
+        /* append new lead request at the end of ncp->put_lead_list */
         lead_req = ncp->put_lead_list + ncp->numLeadPutReqs;
         lead_req->nonlead_off = ncp->numPutReqs;
-        /* add the new non-lead requests at the end of ncp->put_list */
+        /* append new non-lead requests at the end of ncp->put_list */
         req = ncp->put_list + ncp->numPutReqs;
         lead_off = ncp->numLeadPutReqs;
 #endif
@@ -360,7 +365,9 @@ igetput_varn(NC                *ncp,
         }
 
 #ifdef SORT_LEAD_LIST_BASED_ON_VARID
-        /* add the new request to get_lead_list in increasing order of variable IDs */
+        /* add the new request to get_lead_list and keep get_lead_list sorted,
+         * in an increasing order of variable IDs
+         */
         for (i=ncp->numLeadGetReqs-1; i>=0; i--) {
             if (ncp->get_lead_list[i].varp->varid <= varp->varid)
                 break;
@@ -372,7 +379,7 @@ igetput_varn(NC                *ncp,
         lead_req = ncp->get_lead_list + lead_off;
 
         if (lead_off < ncp->numLeadGetReqs) {
-            /* find starting location to insert new non-lead requests */
+            /* req is starting location to insert new non-lead requests */
             req = ncp->get_list + lead_req->nonlead_off;
             /* make space for new non-lead requests */
             for (i=ncp->numGetReqs-1; i>=lead_req->nonlead_off; i--) {
@@ -381,15 +388,16 @@ igetput_varn(NC                *ncp,
             }
         }
         else {
+            /* append new lead request at the end of ncp->get_lead_list */
+            lead_req->nonlead_off = ncp->numGetReqs;
             /* append new non-lead request at the end of ncp->get_list */
             req = ncp->get_list + ncp->numGetReqs;
-            lead_req->nonlead_off = ncp->numGetReqs;
         }
 #else
-        /* add the new request at the end of ncp->get_lead_list */
+        /* append new request at the end of ncp->get_lead_list */
         lead_req = ncp->get_lead_list + ncp->numLeadGetReqs;
         lead_req->nonlead_off = ncp->numGetReqs;
-        /* add the new non-lead requests at the end of ncp->get_list */
+        /* append new non-lead requests at the end of ncp->get_list */
         req = ncp->get_list + ncp->numGetReqs;
         lead_off = ncp->numLeadGetReqs;
 #endif
@@ -471,7 +479,7 @@ igetput_varn(NC                *ncp,
         req->start = start_ptr;
         memcpy(start_ptr, starts[i], memChunk);
         start_ptr += varp->ndims;
-        if (counts == NULL) {
+        if (counts == NULL || counts[i] == NULL) {
             for (j=0; j<varp->ndims; j++)
                  start_ptr[j] = 1;
         }
@@ -481,10 +489,13 @@ igetput_varn(NC                *ncp,
 
         if (IS_RECVAR(varp)) {
             /* save the last record number accessed */
-            MPI_Offset max_rec = starts[i][0] + ((counts) ? counts[i][0] : 1);
+            MPI_Offset max_rec;
+
+            max_rec = starts[i][0] + ((counts == NULL || counts[i] == NULL) ?
+                                     1 : counts[i][0]);
             lead_req->max_rec = MAX(lead_req->max_rec, max_rec);
 
-            if (counts != NULL && counts[i][0] > 1) {
+            if (counts != NULL && counts[i] != NULL && counts[i][0] > 1) {
                 /* If the number of requested records is more than 1, we split
                  * this request into multiple requests, one for each record.
                  * The number of records is only preserved in the lead request
