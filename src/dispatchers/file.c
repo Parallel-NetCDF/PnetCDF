@@ -1300,6 +1300,7 @@ ncmpi_inq_unlimdim(int  ncid,
 
 /*----< ncmpi_inq_path() >---------------------------------------------------*/
 /* Get the file pathname which was used to open/create the ncid's file.
+ * pathlen and path must already be allocated. Ignored if NULL.
  * This is an independent subroutine.
  */
 int
@@ -1320,14 +1321,13 @@ ncmpi_inq_path(int   ncid,
                                   NULL, NULL, NULL, NULL, NULL, NULL,
                                   NULL, NULL, NULL, NULL, NULL);
 #endif
-    /* Get the file pathname which was used to open/create the ncid's file.
-     * path must already be allocated. Ignored if NULL */
-    if (pncp->path == NULL) {
-        if (pathlen != NULL) *pathlen = 0;
-        if (path    != NULL) *path = '\0';
-    } else {
-        if (pathlen != NULL) *pathlen = (int)strlen(pncp->path);
-        if (path    != NULL) strcpy(path, pncp->path);
+    if (pathlen != NULL) {
+        if (pncp->path == NULL) *pathlen = 0;
+        else                    *pathlen = (int)strlen(pncp->path);
+    }
+    if (path != NULL) {
+        if (pncp->path == NULL) *path = '\0';
+        else                    strcpy(path, pncp->path);
     }
     return NC_NOERR;
 }
