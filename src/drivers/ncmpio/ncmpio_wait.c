@@ -2161,7 +2161,6 @@ wait_getput(NC         *ncp,
         }
     }
 
-if (descreasing) printf("%s: descreasing ORDER detected --------- qsort-ing\n",__func__);
     /* If a decreasing order is found, sort reqs[] based on reqs[].offset_start
      * into an increasing order */
     if (descreasing)

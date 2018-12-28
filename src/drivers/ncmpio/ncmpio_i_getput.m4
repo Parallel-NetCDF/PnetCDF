@@ -290,13 +290,13 @@ ncmpio_igetput_varm(NC               *ncp,
     /* add a new nonblocking request to the request queue */
 
     if (fIsSet(reqMode, NC_REQ_WR)) {
-        /* allocate or expand the size of lead write request queue */
+        /* allocate or expand the lead write request queue */
         if (ncp->numLeadPutReqs % NC_REQUEST_CHUNK == 0)
             ncp->put_lead_list = (NC_lead_req*) NCI_Realloc(ncp->put_lead_list,
                                  (ncp->numLeadPutReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
 
-        /* allocate or expand the size of non-lead write request queue */
+        /* allocate or expand the non-lead write request queue */
         add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
         rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
         if (rem) rem = NC_REQUEST_CHUNK - rem;
@@ -313,51 +313,37 @@ ncmpio_igetput_varm(NC               *ncp,
 #define SORT_LEAD_LIST_BASED_ON_VARID
 #ifdef SORT_LEAD_LIST_BASED_ON_VARID
         /* add the new request to put_lead_list in increasing order of variable IDs */
-        for (i=ncp->numLeadPutReqs-1; i>=0; i--)
+        for (i=ncp->numLeadPutReqs-1; i>=0; i--) {
             if (ncp->put_lead_list[i].varp->varid <= varp->varid)
                 break;
-
-        int j;
-        for (j=ncp->numLeadPutReqs-1; j>i; j--) {
             /* make space for new lead request */
-            ncp->put_lead_list[j+1] = ncp->put_lead_list[j];
-            ncp->put_lead_list[j+1].nonlead_off += add_reqs;
+            ncp->put_lead_list[i+1] = ncp->put_lead_list[i];
+            ncp->put_lead_list[i+1].nonlead_off += add_reqs;
         }
-        lead_req = ncp->put_lead_list + i + 1;
+        int lead_off = i + 1;
+        lead_req = ncp->put_lead_list + lead_off;
 
-        if (i < ncp->numLeadPutReqs - 1) {
-            /* location to insert new non-lead requests */
+        if (lead_off < ncp->numLeadPutReqs) {
+            /* find starting location to insert new non-lead requests */
             req = ncp->put_list + lead_req->nonlead_off;
             /* make space for new non-lead requests */
-            for (j=ncp->numPutReqs-1; j>=lead_req->nonlead_off; j--) {
-                ncp->put_list[j+add_reqs] = ncp->put_list[j];
-                ncp->put_list[j+add_reqs].lead_off++;
+            for (i=ncp->numPutReqs-1; i>=lead_req->nonlead_off; i--) {
+                ncp->put_list[i+add_reqs] = ncp->put_list[i];
+                ncp->put_list[i+add_reqs].lead_off++;
             }
-#if 0
-            /* insert new non-lead request in location pointed by src */
-            NC_req *src=ncp->put_list + lead_req->nonlead_off;
-            NC_req *dest=src+add_reqs;
-            memmove(dest, src,
-                    (ncp->numPutReqs - lead_req->nonlead_off) * sizeof(NC_req));
-            req = src;
-            /* update lead_off for non-lead requests */
-            for (k=0; k<ncp->numPutReqs - lead_req->nonlead_off; k++) {
-                dest->lead_off++;
-                dest++;
-            }
-#endif
         }
         else {
             /* append new non-lead request at the end of ncp->put_list */
             req = ncp->put_list + ncp->numPutReqs;
             lead_req->nonlead_off = ncp->numPutReqs;
         }
-        req->lead_off = i + 1;
+        req->lead_off = lead_off;
 #else
-        /* add the new request at the end of put_lead_list */
+        /* add the new lead request at the end of ncp->put_lead_list */
         lead_req = ncp->put_lead_list + ncp->numLeadPutReqs;
-        req = ncp->put_list + ncp->numPutReqs;
         lead_req->nonlead_off = ncp->numPutReqs;
+        /* add the new non-lead request at the end of ncp->put_list */
+        req = ncp->put_list + ncp->numPutReqs;
         req->lead_off = ncp->numLeadPutReqs;
 #endif
 
@@ -377,13 +363,13 @@ ncmpio_igetput_varm(NC               *ncp,
         ncp->numLeadPutReqs++;
     }
     else {  /* read request */
-        /* allocate or expand the size of lead read request queue */
+        /* allocate or expand the lead read request queue */
         if (ncp->numLeadGetReqs % NC_REQUEST_CHUNK == 0)
             ncp->get_lead_list = (NC_lead_req*) NCI_Realloc(ncp->get_lead_list,
                                  (ncp->numLeadGetReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
 
-        /* allocate or expand the size of non-lead read request queue */
+        /* allocate or expand the non-lead read request queue */
         add_reqs = IS_RECVAR(varp) ? (int)count[0] : 1;
         rem = ncp->numGetReqs % NC_REQUEST_CHUNK;
         if (rem) rem = NC_REQUEST_CHUNK - rem;
@@ -399,51 +385,37 @@ ncmpio_igetput_varm(NC               *ncp,
 
 #ifdef SORT_LEAD_LIST_BASED_ON_VARID
         /* add the new request to get_lead_list in increasing order of variable IDs */
-        for (i=ncp->numLeadGetReqs-1; i>=0; i--)
+        for (i=ncp->numLeadGetReqs-1; i>=0; i--) {
             if (ncp->get_lead_list[i].varp->varid <= varp->varid)
                 break;
-
-        int j;
-        for (j=ncp->numLeadGetReqs-1; j>i; j--) {
             /* make space for new lead request */
-            ncp->get_lead_list[j+1] = ncp->get_lead_list[j];
-            ncp->get_lead_list[j+1].nonlead_off += add_reqs;
+            ncp->get_lead_list[i+1] = ncp->get_lead_list[i];
+            ncp->get_lead_list[i+1].nonlead_off += add_reqs;
         }
-        lead_req = ncp->get_lead_list + i + 1;
+        int lead_off = i + 1;
+        lead_req = ncp->get_lead_list + lead_off;
 
-        if (i < ncp->numLeadGetReqs - 1) {
-            /* location to insert new non-lead requests */
+        if (lead_off < ncp->numLeadGetReqs) {
+            /* find starting location to insert new non-lead requests */
             req = ncp->get_list + lead_req->nonlead_off;
             /* make space for new non-lead requests */
-            for (j=ncp->numGetReqs-1; j>=lead_req->nonlead_off; j--) {
-                ncp->get_list[j+add_reqs] = ncp->get_list[j];
-                ncp->get_list[j+add_reqs].lead_off++;
+            for (i=ncp->numGetReqs-1; i>=lead_req->nonlead_off; i--) {
+                ncp->get_list[i+add_reqs] = ncp->get_list[i];
+                ncp->get_list[i+add_reqs].lead_off++;
             }
-#if 0
-            /* insert new non-lead request in location pointed by src */
-            NC_req *src=ncp->get_list + lead_req->nonlead_off;
-            NC_req *dest=src+add_reqs;
-            memmove(dest, src,
-                    (ncp->numGetReqs - lead_req->nonlead_off) * sizeof(NC_req));
-            req = src;
-            /* update lead_off for non-lead requests */
-            for (k=0; k<ncp->numGetReqs - lead_req->nonlead_off; k++) {
-                dest->lead_off++;
-                dest++;
-            }
-#endif
         }
         else {
             /* append new non-lead request at the end of ncp->get_list */
             req = ncp->get_list + ncp->numGetReqs;
             lead_req->nonlead_off = ncp->numGetReqs;
         }
-        req->lead_off = i + 1;
+        req->lead_off = lead_off;
 #else
-        /* add the new request at the end of get_lead_list */
+        /* add the new lead request at the end of ncp->get_lead_list */
         lead_req = ncp->get_lead_list + ncp->numLeadGetReqs;
-        req = ncp->get_list + ncp->numGetReqs;
         lead_req->nonlead_off = ncp->numGetReqs;
+        /* add the new non-lead request at the end of ncp->get_list */
+        req = ncp->get_list + ncp->numGetReqs;
         req->lead_off = ncp->numLeadGetReqs;
 #endif
 
