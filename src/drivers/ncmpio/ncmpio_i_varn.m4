@@ -250,13 +250,13 @@ igetput_varn(NC                *ncp,
             ncp->put_list = (NC_req*) NCI_Realloc(ncp->put_list, req_alloc);
         }
 
-#define SORT_LEAD_LIST_BASED_ON_VARID
-#ifdef SORT_LEAD_LIST_BASED_ON_VARID
+#define SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
+#ifdef SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
         /* add the new request to put_lead_list and keep put_lead_list sorted,
-         * in an increasing order of variable IDs
+         * in an increasing order of variable begin offsets
          */
         for (i=ncp->numLeadPutReqs-1; i>=0; i--) {
-            if (ncp->put_lead_list[i].varp->varid <= varp->varid)
+            if (ncp->put_lead_list[i].varp->begin <= varp->begin)
                 break;
             /* make space for new lead request */
             ncp->put_lead_list[i+1] = ncp->put_lead_list[i];
@@ -364,12 +364,12 @@ igetput_varn(NC                *ncp,
             ncp->get_list = (NC_req*) NCI_Realloc(ncp->get_list, req_alloc);
         }
 
-#ifdef SORT_LEAD_LIST_BASED_ON_VARID
+#ifdef SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
         /* add the new request to get_lead_list and keep get_lead_list sorted,
-         * in an increasing order of variable IDs
+         * in an increasing order of variable begin offsets
          */
         for (i=ncp->numLeadGetReqs-1; i>=0; i--) {
-            if (ncp->get_lead_list[i].varp->varid <= varp->varid)
+            if (ncp->get_lead_list[i].varp->begin <= varp->begin)
                 break;
             /* make space for new lead request */
             ncp->get_lead_list[i+1] = ncp->get_lead_list[i];

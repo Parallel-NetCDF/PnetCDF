@@ -7,9 +7,9 @@ This is essentially a placeholder for the next release note ...
 
 * New optimization
   + When inserting nonblocking requests into pending queues, keep the queues
-    sorted (insert sort) in the increasing order of variable IDs. This can
-    avoid a sorting (quick sort) when flushing the pending requests. See
-    [pull request #36](https://github.com/Parallel-NetCDF/PnetCDF/pull/36).
+    sorted (insert sort) in the increasing order of variable starting file
+    offsets. This can avoid a sorting (quick sort) when flushing the pending
+    requests. See [pull request #37](https://github.com/Parallel-NetCDF/PnetCDF/pull/37).
 
 * New Limitations
   + When building with NetCDF-4 feature, using NetCDF-4 library built with
