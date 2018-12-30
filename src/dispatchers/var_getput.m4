@@ -418,7 +418,7 @@ NAPINAME($1,$2,$3)(int                ncid,
                    MPI_Offset* const *counts,
                    BufArgs($1,$2))
 {
-    int i, err, status, reqMode=0;
+    int i, err, status, reqMode=0, isScalar=0;
     PNC *pncp;
 
     /* check if ncid is valid.
@@ -430,19 +430,43 @@ NAPINAME($1,$2,$3)(int                ncid,
     if (err != NC_NOERR) return err;
 
     err = sanity_check(pncp, varid, IO_TYPE($1), ITYPE2MPI($2), IS_COLL($3));
+    if (err != NC_NOERR) goto err_check;
 
-    if (num > 0 && starts == NULL) DEBUG_ASSIGN_ERROR(err, NC_ENULLSTART)
+    if (num == 0) goto err_check;
 
-    if (err == NC_NOERR && num > 0 && pncp->vars[varid].ndims > 0) {
-        NC_api api = (counts == NULL) ? API_VAR1 : API_VARA;
-        for (i=0; i<num; i++) {
-            MPI_Offset *len = (counts == NULL) ? NULL : counts[i];
+    if (pncp->vars[varid].ndims == 0) { /* scalar variable */
+        isScalar = 1;
+        if (num != 1) DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
+    }
+    else { /* non-scalar variables */
+        /* starts can be NULL. If not starts[0][0] should be 0 */
+        if (starts == NULL) {
+            DEBUG_ASSIGN_ERROR(err, NC_ENULLSTART)
+            goto err_check;
+        }
+
+        for (i=0; i<num; i++) { /* check starts and counts */
+            NC_api api;
+            MPI_Offset *count;
+            if (starts[i] == NULL) {
+                DEBUG_ASSIGN_ERROR(err, NC_ENULLSTART)
+                break;
+            }
+
+            if (counts == NULL || counts[i] == NULL) {
+                api = API_VAR1;
+                count = NULL;
+            } else {
+                api = API_VARA;
+                count = counts[i];
+            }
             err = check_start_count_stride(pncp, varid, IS_READ($1),
-                                           api, starts[i], len, NULL);
+                                           api, starts[i], count, NULL);
             if (err != NC_NOERR) break;
         }
     }
 
+err_check:
     ifelse(`$3',`',`/* for independent API, return now if error encountered */
     if (err != NC_NOERR) return err;
     /* for independent API, return now if zero-length request */
@@ -464,10 +488,17 @@ NAPINAME($1,$2,$3)(int                ncid,
 
     reqMode |= IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2) | COLL_MODE($3);
 
-    /* calling the subroutine that implements NAPINAME($1,$2,$3)() */
-    status = pncp->driver->`$1'_varn(pncp->ncp, varid, num, starts, counts,
-                                     buf, FLEX_ARG($2), reqMode);
-
+    if (isScalar) {
+        MPI_Offset start[1]={0}, count[1]={1};
+        /* calling the subroutine that implements `$1'_var1 */
+        status = pncp->driver->`$1'_var(pncp->ncp, varid, start, count, NULL,
+                                        NULL, buf, FLEX_ARG($2), reqMode);
+    }
+    else {
+        /* calling the subroutine that implements NAPINAME($1,$2,$3)() */
+        status = pncp->driver->`$1'_varn(pncp->ncp, varid, num, starts, counts,
+                                         buf, FLEX_ARG($2), reqMode);
+    }
     return ifelse(`$3',`',`status;',`(err != NC_NOERR) ? err : status; /* first error encountered */')
 }
 ')dnl
@@ -756,22 +787,41 @@ INAPINAME($1,$2)(int                ncid,
         if (err != NC_NOERR) return err;
     }')
 
-    if (num > 0 && starts == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
-
-    if (pncp->vars[varid].ndims > 0) {
-        NC_api api = (counts == NULL) ? API_VAR1 : API_VARA;
-        for (i=0; i<num; i++) {
-            MPI_Offset *len = (counts == NULL) ? NULL : counts[i];
-            err = check_start_count_stride(pncp, varid, IS_READ($1),
-                                           api, starts[i], len, NULL);
-            if (err != NC_NOERR) return err;
-        }
-    }
-
     ifelse(`$2',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
     ifelse(`$1',`bput',`reqMode |= IO_MODE($1) | FLEX_MODE($2);',`
     reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2);')
+
+    if (pncp->vars[varid].ndims == 0) { /* scalar variable */
+        MPI_Offset start[1]={0}, count[1]={1};
+
+        if (num != 1) DEBUG_RETURN_ERROR(NC_EINVAL)
+
+        /* starts can be NULL. If not starts[0][0] should be 0 */
+        /* calling the subroutine that implements `$1'_var1 */
+        return pncp->driver->`$1'_var(pncp->ncp, varid, start, count, NULL,
+                                      NULL, buf, FLEX_ARG($2), reqid, reqMode);
+    }
+    else { /* non-scalar variables */
+        if (starts == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
+
+        for (i=0; i<num; i++) { /* check starts and counts */
+            NC_api api;
+            MPI_Offset *count;
+            if (starts[i] == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
+
+            if (counts == NULL || counts[i] == NULL) {
+                api = API_VAR1;
+                count = NULL;
+            } else {
+                api = API_VARA;
+                count = counts[i];
+            }
+            err = check_start_count_stride(pncp, varid, IS_READ($1),
+                                           api, starts[i], count, NULL);
+            if (err != NC_NOERR) return err;
+        }
+    }
 
     /* calling the subroutine that implements INAPINAME($1,$2)() */
     return pncp->driver->`$1'_varn(pncp->ncp, varid, num, starts, counts,
