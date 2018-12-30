@@ -48,58 +48,58 @@ static int
 igetput_varn(NC                *ncp,
              NC_var            *varp,
              int                num,
-             MPI_Offset* const *starts,   /* [num][varp->ndims] */
-             MPI_Offset* const *counts,   /* [num][varp->ndims], can be NULL */
+             MPI_Offset* const *starts, /* [num][varp->ndims], cannot be NULL */
+             MPI_Offset* const *counts, /* [num][varp->ndims], may be NULL */
              void              *buf,
              MPI_Offset         bufcount,
              MPI_Datatype       buftype,  /* data type of the bufer */
              int               *reqid,    /* OUT: request ID */
              int                reqMode)
 {
-    int i, j, err, free_xbuf=0, isize, xsize, abuf_index=-1, max_nreqs;
+    int i, j, err=NC_NOERR, free_xbuf=0, isize, xsize, abuf_index=-1;
     int isContig=1, need_convert, need_swap, need_swap_back_buf=0, lead_off;
     int rem, new_nreqs;
     size_t memChunk;
     void *xbuf=NULL;
     char *xbufp;
-    MPI_Offset nelems, nbytes, *start_ptr;
+    MPI_Offset nelems, *req_nelems=NULL, nbytes, *start_ptr;
     MPI_Datatype itype, xtype;
     NC_lead_req *lead_req;
     NC_req *req;
 
     /* if called from a bput API, check if buffer has been attached */
-    if (fIsSet(reqMode, NC_REQ_NBB) && ncp->abuf == NULL)
-        DEBUG_RETURN_ERROR(NC_ENULLABUF)
+    if (fIsSet(reqMode, NC_REQ_NBB) && ncp->abuf == NULL) {
+        DEBUG_ASSIGN_ERROR(err, NC_ENULLABUF)
+        goto fn_exit;
+    }
 
     /* validity of starts and counts has been checked at dispatcher layer */
 
-    /* calculate nelems and max_nreqs */
-    if (num == 0) {
-        nelems = 0;
-        max_nreqs = 0;
-    }
-    else if (counts != NULL) {
-        /* nelems will be the total number of array elements of this varn */
-        nelems = 0;
-        max_nreqs = 0;
+    /* calculate nelems and the number of new non-lead and non-zero requests */
+    req_nelems = (MPI_Offset*) NCI_Malloc(num * SIZEOF_MPI_OFFSET);
+    new_nreqs = 0;
+    nelems    = 0;
+    if (counts != NULL) {
         for (i=0; i<num; i++) {
-            MPI_Offset nlen = 1;
-            if (counts[i] != NULL)
+            req_nelems[i] = 1;
+            if (counts[i] != NULL) {
                 for (j=0; j<varp->ndims; j++)
-                    nlen *= counts[i][j];
-            nelems += nlen;
-
-            /* calculate the max number of requests to be added to queue */
-            if (IS_RECVAR(varp) && counts[i] != NULL)
-                /* each record will be a separate request */
-                max_nreqs += counts[i][0];
-            else
-                max_nreqs++;
+                    req_nelems[i] *= counts[i][j];
+                if (req_nelems[i] == 0)
+                    continue; /* ignore this 0-length request i */
+                nelems += req_nelems[i];
+                new_nreqs += (IS_RECVAR(varp)) ? (int)counts[i][0] : 1;
+            }
+            else { /* counts[i] == NULL, equivalent to all 1s */
+                nelems++;
+                new_nreqs++;
+            }
         }
-    }
-    else { /* when counts == NULL, it means all counts[] are 1s */
-        nelems = num;
-        max_nreqs = num;
+    } else { /* counts == NULL, equivalent to all 1s */
+        for (i=0; i<num; i++)
+            req_nelems[i] = 1;
+        new_nreqs = num;
+        nelems    = num;
     }
 
     /* xtype is the MPI element type in external representation, xsize is its
@@ -132,7 +132,10 @@ igetput_varn(NC                *ncp,
          */
         MPI_Offset bnelems=0;
 
-        if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (bufcount > INT_MAX) {
+            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+            goto fn_exit;
+        }
 
         /* itype (primitive MPI data type) from buftype
          * isize is the size of itype in bytes
@@ -140,20 +143,26 @@ igetput_varn(NC                *ncp,
          */
         err = ncmpii_dtype_decode(buftype, &itype, &isize, &bnelems,
                                   NULL, &isContig);
-        if (err != NC_NOERR) return err;
+        if (err != NC_NOERR) goto fn_exit;
 
         /* size in bufcount * buftype must match with counts[] */
-        if (bnelems * bufcount != nelems) DEBUG_RETURN_ERROR(NC_EIOMISMATCH)
+        if (bnelems * bufcount != nelems) {
+            DEBUG_ASSIGN_ERROR(err, NC_EIOMISMATCH)
+            goto fn_exit;
+        }
     }
 
     /* nbytes is the amount of this varn request in bytes */
     nbytes = nelems * xsize;
 
     /* for nonblocking API, return now if request size is zero */
-    if (nbytes == 0) return NC_NOERR;
+    if (nbytes == 0) goto fn_exit;
 
 #ifndef ENABLE_LARGE_SINGLE_REQ
-    if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
+    if (nbytes > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
+        goto fn_exit;
+    }
 #endif
 
     memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
@@ -183,10 +192,12 @@ igetput_varn(NC                *ncp,
              * to accommodate this varn request. If yes, allocate a space for
              * xbuf.
              */
-            if (ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes)
-                DEBUG_RETURN_ERROR(NC_EINSUFFBUF)
+            if (ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINSUFFBUF)
+                goto fn_exit;
+            }
             err = ncmpio_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
-            if (err != NC_NOERR) return err;
+            if (err != NC_NOERR) goto fn_exit;
         }
         else if (!need_convert && in_place_swap && isContig) {
             /* reuse buf and break it into multiple vara requests */
@@ -196,7 +207,10 @@ igetput_varn(NC                *ncp,
         else { /* must allocate a buffer to convert/swap/pack */
             xbuf = NCI_Malloc((size_t)nbytes);
             free_xbuf = 1;
-            if (xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+            if (xbuf == NULL) {
+                DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+                goto fn_exit;
+            }
         }
 
         /* when necessary, pack buf to xbuf and perform byte-swap and
@@ -211,7 +225,7 @@ igetput_varn(NC                *ncp,
                 ncmpio_abuf_dealloc(ncp, abuf_index);
             else if (free_xbuf)
                 NCI_Free(xbuf);
-            return err;
+            goto fn_exit;
         }
 
         /* allocate or expand the lead write request queue */
@@ -219,23 +233,6 @@ igetput_varn(NC                *ncp,
             ncp->put_lead_list = (NC_lead_req*) NCI_Realloc(ncp->put_lead_list,
                                  (ncp->numLeadPutReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
-
-        /* calculate the number of new non-lead and non-zero requests */
-        new_nreqs = 0;
-        if (counts != NULL) {
-            for (i=0; i<num; i++) {
-                if (counts[i] != NULL) {
-                    for (j=0; j<varp->ndims && counts[i][j]>0; j++) ;
-                    if (j < varp->ndims)
-                        continue; /* ignore this 0-length request i */
-                    new_nreqs += (IS_RECVAR(varp)) ? (int)counts[i][0] : 1;
-                }
-                else /* counts[i] == NULL, equivalent to all 1s */
-                    new_nreqs++;
-            }
-        } else { /* counts == NULL, equivalent to all 1s */
-            new_nreqs = num;
-        }
 
         /* allocate or expand the non-lead write request queue */
         rem = ncp->numPutReqs % NC_REQUEST_CHUNK;
@@ -253,7 +250,10 @@ igetput_varn(NC                *ncp,
 #define SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
 #ifdef SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
         /* add the new request to put_lead_list and keep put_lead_list sorted,
-         * in an increasing order of variable begin offsets
+         * in an increasing order of variable begin offsets. The best is when
+         * user makes varn API calls in an increasing order of variable begin
+         * offsets, i.e. fixed-size variables first followed by record
+         * variables and in an increasing order of variables IDs.
          */
         for (i=ncp->numLeadPutReqs-1; i>=0; i--) {
             if (ncp->put_lead_list[i].varp->begin <= varp->begin)
@@ -299,6 +299,7 @@ igetput_varn(NC                *ncp,
         }
 
         ncp->numLeadPutReqs++;
+        ncp->numPutReqs += new_nreqs;
 
         lead_req->flag     = 0;
         lead_req->bufcount = 0;
@@ -324,7 +325,10 @@ igetput_varn(NC                *ncp,
         }
         else { /* must allocate a buffer for read/convert/swap/unpack */
             xbuf = NCI_Malloc((size_t)nbytes);
-            if (xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+            if (xbuf == NULL) {
+                DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+                goto fn_exit;
+            }
             free_xbuf = 1;
         }
 
@@ -333,23 +337,6 @@ igetput_varn(NC                *ncp,
             ncp->get_lead_list = (NC_lead_req*) NCI_Realloc(ncp->get_lead_list,
                                  (ncp->numLeadGetReqs + NC_REQUEST_CHUNK) *
                                  sizeof(NC_lead_req));
-
-        /* calculate the number of new non-lead and non-zero requests */
-        new_nreqs = 0;
-        if (counts != NULL) {
-            for (i=0; i<num; i++) {
-                if (counts[i] != NULL) {
-                    for (j=0; j<varp->ndims && counts[i][j]>0; j++) ;
-                    if (j < varp->ndims)
-                        continue; /* ignore this 0-length request i */
-                    new_nreqs += (IS_RECVAR(varp)) ? (int)counts[i][0] : 1;
-                }
-                else /* counts[i] == NULL, equivalent to all 1s */
-                    new_nreqs++;
-            }
-        } else { /* counts == NULL, equivalent to all 1s */
-            new_nreqs = num;
-        }
 
         /* allocate or expand the non-lead read request queue */
         rem = ncp->numGetReqs % NC_REQUEST_CHUNK;
@@ -366,7 +353,10 @@ igetput_varn(NC                *ncp,
 
 #ifdef SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
         /* add the new request to get_lead_list and keep get_lead_list sorted,
-         * in an increasing order of variable begin offsets
+         * in an increasing order of variable begin offsets. The best is when
+         * user makes varn API calls in an increasing order of variable begin
+         * offsets, i.e. fixed-size variables first followed by record
+         * variables and in an increasing order of variables IDs.
          */
         for (i=ncp->numLeadGetReqs-1; i>=0; i--) {
             if (ncp->get_lead_list[i].varp->begin <= varp->begin)
@@ -412,6 +402,7 @@ igetput_varn(NC                *ncp,
         }
 
         ncp->numLeadGetReqs++;
+        ncp->numGetReqs += new_nreqs;
 
         lead_req->flag       = 0;
         lead_req->bufcount   = 0;
@@ -437,13 +428,15 @@ igetput_varn(NC                *ncp,
         }
     }
 
-    lead_req->varp     = varp;
-    lead_req->itype    = itype;
-    lead_req->xbuf     = xbuf;
-    lead_req->buf      = buf;
-    lead_req->nelems   = nelems;
-    lead_req->imaptype = MPI_DATATYPE_NULL;
-    lead_req->status   = NULL;
+    lead_req->varp        = varp;
+    lead_req->itype       = itype;
+    lead_req->xbuf        = xbuf;
+    lead_req->buf         = buf;
+    lead_req->nelems      = nelems;
+    lead_req->imaptype    = MPI_DATATYPE_NULL;
+    lead_req->status      = NULL;
+    lead_req->max_rec     = -1;
+    lead_req->nonlead_num = new_nreqs;
 
     /* varn APIs have no argument stride */
     fSet(lead_req->flag, NC_REQ_STRIDE_NULL);
@@ -452,36 +445,27 @@ igetput_varn(NC                *ncp,
      * non-lead requests, including individual record requests if
      * record variable.
      */
-    lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * max_nreqs);
+    lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * new_nreqs);
 
     /* break varn into multiple non-lead requests and buf/xbuf accordingly */
-    lead_req->nonlead_num = 0;
-    lead_req->max_rec     = -1;
     start_ptr = lead_req->start;
     xbufp = (char*)xbuf;
 
     for (i=0; i<num; i++) {
-        MPI_Offset req_nelems=1; /* calculate size of request i */
-        if (counts != NULL && counts[i] != NULL) {
-            for (j=0; j<varp->ndims; j++)
-                req_nelems *= counts[i][j];
-            if (req_nelems == 0) continue; /* ignore this 0-length request i */
-        }
-
-        lead_req->nonlead_num++;
+        if (req_nelems[i] == 0) continue; /* ignore this 0-length request i */
 
         req->lead_off  = lead_off;
-        req->nelems    = req_nelems;
+        req->nelems    = req_nelems[i];
         req->xbuf      = xbufp;
-        xbufp         += req_nelems * xsize;
+        xbufp         += req_nelems[i] * xsize;
 
         /* copy starts[i] and counts[i] over to req */
         req->start = start_ptr;
         memcpy(start_ptr, starts[i], memChunk);
-        start_ptr += varp->ndims;
+        start_ptr += varp->ndims; /* count[] */
         if (counts == NULL || counts[i] == NULL) {
             for (j=0; j<varp->ndims; j++)
-                 start_ptr[j] = 1;
+                 start_ptr[j] = 1; /* start_ptr is now counts[] */
         }
         else
             memcpy(start_ptr, counts[i], memChunk);
@@ -505,7 +489,6 @@ igetput_varn(NC                *ncp,
                 NC_lead_req *lead_list;
                 lead_list = (fIsSet(reqMode, NC_REQ_WR)) ? ncp->put_lead_list
                                                          : ncp->get_lead_list;
-                lead_req->nonlead_num += counts[i][0] - 1;
 
                 /* append (counts[i][0]-1) number of requests to the queue */
                 ncmpio_add_record_requests(lead_list, req, counts[i][0], NULL);
@@ -519,13 +502,11 @@ igetput_varn(NC                *ncp,
             req++;
     }
 
-    /* update number of non-lead requests */
-    if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs += lead_req->nonlead_num;
-    else                            ncp->numGetReqs += lead_req->nonlead_num;
-
     if (reqid != NULL) *reqid = lead_req->id;
 
-    return NC_NOERR;
+fn_exit:
+    if (req_nelems != NULL) NCI_Free(req_nelems);
+    return err;
 }
 
 
@@ -544,8 +525,8 @@ int
 ncmpio_$1_varn(void               *ncdp,
                int                 varid,
                int                 num,
-               MPI_Offset* const  *starts,
-               MPI_Offset* const  *counts,
+               MPI_Offset* const  *starts, /* cannot be NULL */
+               MPI_Offset* const  *counts, /* may be NULL */
                BufConst(substr($1,1)) void  *buf,
                MPI_Offset          bufcount,
                MPI_Datatype        buftype,
