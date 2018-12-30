@@ -134,8 +134,8 @@ ncmpio_igetput_varm(NC               *ncp,
                     NC_var           *varp,
                     const MPI_Offset  start[],  /* not NULL */
                     const MPI_Offset  count[],  /* not NULL */
-                    const MPI_Offset  stride[], /* can be NULL */
-                    const MPI_Offset  imap[],   /* can be NULL */
+                    const MPI_Offset  stride[], /* may be NULL */
+                    const MPI_Offset  imap[],   /* may be NULL */
                     void             *buf,      /* user buffer */
                     MPI_Offset        bufcount,
                     MPI_Datatype      buftype,
@@ -187,7 +187,10 @@ ncmpio_igetput_varm(NC               *ncp,
          */
         MPI_Offset bnelems=0;
 
-        if (bufcount > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (bufcount > INT_MAX) {
+            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+            goto fn_exit;
+        }
 
         /* itype (primitive MPI data type) from buftype
          * isize is the size of itype in bytes
@@ -195,23 +198,29 @@ ncmpio_igetput_varm(NC               *ncp,
          */
         err = ncmpii_dtype_decode(buftype, &itype, &isize, &bnelems,
                                   NULL, &buftype_is_contig);
-        if (err != NC_NOERR) return err;
+        if (err != NC_NOERR) goto fn_exit;
 
         /* size in bufcount * buftype must match with counts[] */
-        if (bnelems * bufcount != nelems) DEBUG_RETURN_ERROR(NC_EIOMISMATCH)
+        if (bnelems * bufcount != nelems) {
+            DEBUG_ASSIGN_ERROR(err, NC_EIOMISMATCH)
+            goto fn_exit;
+        }
     }
 
     /* nbytes is the amount of this vara request in bytes */
     nbytes = nelems * xsize;
 
 #ifndef ENABLE_LARGE_SINGLE_REQ
-    if (nbytes > INT_MAX) DEBUG_RETURN_ERROR(NC_EMAX_REQ)
+    if (nbytes > INT_MAX) {
+        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
+        goto fn_exit;
+    }
 #endif
 
     /* for nonblocking API, return now if request size is zero */
     if (nbytes == 0) {
         *reqid = NC_REQ_NULL; /* mark this as a NULL request */
-        return NC_NOERR;
+        goto fn_exit;
     }
 
     /* check if type conversion and Endianness byte swap is needed */
@@ -235,17 +244,19 @@ ncmpio_igetput_varm(NC               *ncp,
      * it is set to MPI_DATATYPE_NULL
      */
     err = ncmpii_create_imaptype(varp->ndims, count, imap, itype, &imaptype);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) goto fn_exit;
 
     if (fIsSet(reqMode, NC_REQ_WR)) { /* pack request to xbuf */
         if (fIsSet(reqMode, NC_REQ_NBB)) {
             /* for bput call, check if the remaining buffer space is sufficient
              * to accommodate this request and allocate a space for xbuf
              */
-            if (ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes)
-                DEBUG_RETURN_ERROR(NC_EINSUFFBUF)
+            if (ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINSUFFBUF)
+                goto fn_exit;
+            }
             err = ncmpio_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
-            if (err != NC_NOERR) return err;
+            if (err != NC_NOERR) goto fn_exit;
         }
         else {
             if (!buftype_is_contig || imaptype != MPI_DATATYPE_NULL ||
@@ -253,7 +264,10 @@ ncmpio_igetput_varm(NC               *ncp,
                 /* cannot use buf for I/O, must allocate xbuf */
                 xbuf = NCI_Malloc((size_t)nbytes);
                 free_xbuf = 1;
-                if (xbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+                if (xbuf == NULL) {
+                    DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+                    goto fn_exit;
+                }
             }
             else { /* when user buf is used as xbuf, we need to byte-swap buf
                     * back to its original contents */
@@ -274,7 +288,7 @@ ncmpio_igetput_varm(NC               *ncp,
                 ncmpio_abuf_dealloc(ncp, abuf_index);
             else if (free_xbuf)
                 NCI_Free(xbuf);
-            return err;
+            goto fn_exit;
         }
     }
     else { /* read request */
@@ -313,7 +327,10 @@ ncmpio_igetput_varm(NC               *ncp,
 #define SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
 #ifdef SORT_LEAD_LIST_BASED_ON_VAR_BEGIN
         /* add the new request to put_lead_list and keep put_lead_list sorted,
-         * in an increasing order of variable begin offsets
+         * in an increasing order of variable begin offsets. The best is when
+         * user makes varn API calls in an increasing order of variable begin
+         * offsets, i.e. fixed-size variables first followed by record
+         * variables and in an increasing order of variables IDs.
          */
         for (i=ncp->numLeadPutReqs-1; i>=0; i--) {
             if (ncp->put_lead_list[i].varp->begin <= varp->begin)
@@ -362,8 +379,8 @@ ncmpio_igetput_varm(NC               *ncp,
             lead_req->id = ncp->maxPutReqID;
         }
 
-        ncp->numPutReqs++;
         ncp->numLeadPutReqs++;
+        ncp->numPutReqs += new_nreqs;
     }
     else {  /* read request */
         /* allocate or expand the lead read request queue */
@@ -387,8 +404,11 @@ ncmpio_igetput_varm(NC               *ncp,
         }
 
 #ifdef SORT_LEAD_LIST_BASED_ON_VARID
-        /* add the new request to get_lead_list and keep put_lead_list sorted,
-         * in an increasing order of variable IDs
+        /* add the new request to get_lead_list and keep get_lead_list sorted,
+         * in an increasing order of variable begin offsets. The best is when
+         * user makes varn API calls in an increasing order of variable begin
+         * offsets, i.e. fixed-size variables first followed by record
+         * variables and in an increasing order of variables IDs.
          */
         for (i=ncp->numLeadGetReqs-1; i>=0; i--) {
             if (ncp->get_lead_list[i].varp->begin <= varp->begin)
@@ -438,8 +458,8 @@ ncmpio_igetput_varm(NC               *ncp,
             lead_req->id = ncp->maxGetReqID;
         }
 
-        ncp->numGetReqs++;
         ncp->numLeadGetReqs++;
+        ncp->numGetReqs += new_nreqs;
     }
 
     /* set other properties for the lead request */
@@ -454,6 +474,7 @@ ncmpio_igetput_varm(NC               *ncp,
     lead_req->nelems      = nelems;
     lead_req->xbuf        = xbuf;
     lead_req->buftype     = MPI_DATATYPE_NULL;
+    lead_req->nonlead_num = new_nreqs;
 
     /* only lead request free xbuf (when xbuf != buf) */
     if (free_xbuf) fSet(lead_req->flag, NC_REQ_XBUF_TO_BE_FREED);
@@ -512,7 +533,6 @@ ncmpio_igetput_varm(NC               *ncp,
 
     if (IS_RECVAR(varp)) {
         /* save the last record number accessed */
-        lead_req->nonlead_num = count[0];
         if (stride == NULL)
             lead_req->max_rec = start[0] + count[0];
         else
@@ -533,19 +553,16 @@ ncmpio_igetput_varm(NC               *ncp,
 
             /* add (count[0]-1) number of (sub)requests */
             ncmpio_add_record_requests(lead_list, req, count[0], stride);
-
-            if (fIsSet(reqMode, NC_REQ_WR)) ncp->numPutReqs += count[0] - 1;
-            else                            ncp->numGetReqs += count[0] - 1;
         }
     }
     else { /* fixed-size variable */
-        lead_req->max_rec     = -1;
-        lead_req->nonlead_num = 1;
+        lead_req->max_rec = -1;
     }
 
     /* return the request ID */
     if (reqid != NULL) *reqid = lead_req->id;
 
+fn_exit:
     return err;
 }
 
@@ -575,8 +592,8 @@ define(`IGETPUT_API',dnl
 int
 ncmpio_i$1_var(void             *ncdp,
                int               varid,
-               const MPI_Offset *start,
-               const MPI_Offset *count,
+               const MPI_Offset *start, /* cannot be NULL */
+               const MPI_Offset *count, /* cannot be NULL */
                const MPI_Offset *stride,
                const MPI_Offset *imap,
                ifelse(`$1',`put',`const') void *buf,
