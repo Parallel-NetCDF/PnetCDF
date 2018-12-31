@@ -405,8 +405,6 @@ igetput_varn(NC                *ncp,
         ncp->numGetReqs += new_nreqs;
 
         lead_req->flag       = 0;
-        lead_req->bufcount   = 0;
-        lead_req->buftype    = MPI_DATATYPE_NULL;
         lead_req->abuf_index = -1;
 
         /* Only lead requests may free xbuf. For read, only the lead requests
@@ -417,9 +415,11 @@ igetput_varn(NC                *ncp,
         if (need_swap)    fSet(lead_req->flag, NC_REQ_BUF_BYTE_SWAP);
         if (free_xbuf)    fSet(lead_req->flag, NC_REQ_XBUF_TO_BE_FREED);
 
-        if (isContig)
+        if (isContig) {
             fSet(lead_req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
-        else {
+            lead_req->bufcount = 0;
+            lead_req->buftype  = MPI_DATATYPE_NULL;
+        } else {
             /* When read buftype is not contiguous, we duplicate buftype for
              * later used in the wait call to unpack xbuf using buftype to buf.
              */
@@ -454,8 +454,8 @@ igetput_varn(NC                *ncp,
     for (i=0; i<num; i++) {
         if (req_nelems[i] == 0) continue; /* ignore this 0-length request i */
 
-        req->lead_off  = lead_off;
         req->nelems    = req_nelems[i];
+        req->lead_off  = lead_off;
         req->xbuf      = xbufp;
         xbufp         += req_nelems[i] * xsize;
 
@@ -473,13 +473,15 @@ igetput_varn(NC                *ncp,
 
         if (IS_RECVAR(varp)) {
             /* save the last record number accessed */
-            MPI_Offset max_rec;
+            MPI_Offset max_rec, num_rec;
 
-            max_rec = starts[i][0] + ((counts == NULL || counts[i] == NULL) ?
-                                     1 : counts[i][0]);
+            if (counts == NULL || counts[i] == NULL) num_rec = 1;
+            else                                     num_rec = counts[i][0];
+
+            max_rec = starts[i][0] + num_rec;
             lead_req->max_rec = MAX(lead_req->max_rec, max_rec);
 
-            if (counts != NULL && counts[i] != NULL && counts[i][0] > 1) {
+            if (num_rec > 1) {
                 /* If the number of requested records is more than 1, we split
                  * this request into multiple requests, one for each record.
                  * The number of records is only preserved in the lead request
@@ -506,6 +508,7 @@ igetput_varn(NC                *ncp,
 
 fn_exit:
     if (req_nelems != NULL) NCI_Free(req_nelems);
+
     return err;
 }
 
