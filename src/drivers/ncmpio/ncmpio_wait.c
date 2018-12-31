@@ -28,7 +28,6 @@
 #include <common.h>
 #include "ncmpio_NC.h"
 
-
 /* buffer layers:
 
         User Level              buf     (user defined buffer of MPI_Datatype)
@@ -2137,7 +2136,7 @@ wait_getput(NC         *ncp,
         lead = lead_list + reqs[i].lead_off;
         varp = lead->varp;
 
-        if (lead->varp->ndims == 0) { /* scalar variable */
+        if (varp->ndims == 0) { /* scalar variable */
             reqs[i].offset_start = varp->begin;
             reqs[i].offset_end   = varp->begin + varp->xsz;
         }
