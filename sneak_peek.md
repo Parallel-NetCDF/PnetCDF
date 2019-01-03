@@ -67,7 +67,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + none
+  + test/burst_buffer/varn.c
+    Test varn API in burst buffer driver. The test includes cases when counts is NULL or some of the count in counts is NULL.
 
 * Conformity with NetCDF library
   + none
