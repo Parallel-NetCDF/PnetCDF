@@ -229,7 +229,8 @@ void *NCI_Calloc_fn(size_t      nelem,
  * to malloc(size), for all values of size; if size is equal to zero, and ptr
  * is not NULL, then the call is equivalent to free(ptr). Unless ptr is NULL,
  * it must have been returned by an earlier call to malloc(), calloc() or
- * realloc().
+ * realloc(). If size was equal to 0, either NULL or a pointer suitable to be
+ * passed to free() is returned.
  */
 void *NCI_Realloc_fn(void       *ptr,
                      size_t      size,
@@ -239,7 +240,10 @@ void *NCI_Realloc_fn(void       *ptr,
 {
     if (ptr == NULL) return NCI_Malloc_fn(size, lineno, func, filename);
 
-    if (size == 0) NCI_Free_fn(ptr,  lineno, func, filename);
+    if (size == 0) {
+        NCI_Free_fn(ptr, lineno, func, filename);
+        return NCI_Malloc_fn(0, lineno, func, filename);
+    }
 
 #ifdef PNC_MALLOC_TRACE
     ncmpii_del_mem_entry(ptr);

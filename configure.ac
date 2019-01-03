@@ -1437,9 +1437,9 @@ if test "x$enable_netcdf4" = "xyes" ; then
    if test "x$nc_config" = x ; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
-      Cannot find command nc_config. The NetCDF library and header
-      file are required to build PnetCDF with NetCDF-4 support.
-      Use option
+      Cannot find nc_config, a utility command to show the
+      configuration of the NetCDF-4 library. It is required to
+      build PnetCDF with NetCDF-4 support. Use option
           --with-netcdf=/path/to/implementation
       to specify the location of NetCDF-4 build. In addition,
       please make sure the MPI C compiler is compatible with the
@@ -1453,7 +1453,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    dnl Check if NetCDF is built with HDF5 enabled
    netcdf_has_hdf5=`$nc_config --has-hdf5`
    if test "x$netcdf_has_hdf5" = xno ; then
-      AC_MSG_ERROR([NetCDF library is not built with HDF5 enabled])
+      AC_MSG_ERROR([NetCDF-4 library is not built with HDF5 enabled])
    fi
 
    dnl Get installation directory path of netcdf header files
@@ -1467,9 +1467,9 @@ if test "x$enable_netcdf4" = "xyes" ; then
    if test "x${have_netcdf4}" = xno; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
-      Missing NetCDF header files (netcdf.h netcdf_par.h netcdf_meta.h)
-      These header files are required to build PnetCDF with NetCDF-4
-      support. Use option
+      Missing NetCDF-4 header files (netcdf.h, netcdf_par.h, or
+      netcdf_meta.h). These header files are required to build
+      PnetCDF with NetCDF-4 support. Use option
           --with-netcdf=/path/to/implementation
       to specify the location of NetCDF-4 build. In addition,
       please make sure the MPI C compiler is compatible with the
@@ -1493,7 +1493,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    if test x$netcdf_ge_4_6_2 = xyes; then
       netcdf_has_parallel4=`$nc_config --has-parallel4`
       if test "x$netcdf_has_parallel4" = xno ; then
-         AC_MSG_ERROR([NetCDF library is not built with HDF5 parallel I/O enabled])
+         AC_MSG_ERROR([NetCDF-4 library is not built with HDF5 parallel I/O enabled])
       fi
    else
       dnl NetCDF 4.6.1 and earlier do not have --has-parallel4 configure option.
@@ -1504,10 +1504,16 @@ if test "x$enable_netcdf4" = "xyes" ; then
       dnl "nc-config --has-parallel" return yes.
       netcdf_has_parallel=`$nc_config --has-parallel`
       if test "x$netcdf_has_parallel" = xno ; then
-         AC_MSG_ERROR([NetCDF library is not built with parallel I/O enabled])
+         AC_MSG_ERROR([NetCDF-4 library is not built with parallel I/O enabled])
       fi
    fi
    AC_MSG_RESULT([yes])
+
+   # Build on top of NetCDF4 with PnetCDF already enabled is not supported
+   netcdf_has_pnetcdf=`$nc_config --has-pnetcdf`
+   if test x$netcdf_has_pnetcdf = xyes; then
+      AC_MSG_ERROR([NetCDF-4 built with PnetCDF enabled is not supported])
+   fi
 
    # Get installation directory path of netcdf library files
    netcdf_libdir=`$nc_config --libdir`
@@ -1515,10 +1521,13 @@ if test "x$enable_netcdf4" = "xyes" ; then
    # Get extra libraries used by netcdf library (dependent libraries)
    netcdf_libs=`$nc_config --libs`
    UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
+   dnl remove -lpnetcdf if it contains it
+   netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
+
    LDFLAGS="-L${netcdf_libdir} ${LDFLAGS}"
    LIBS="${netcdf_libs} ${LIBS}"
    # Validate netcdf library
-   AC_CHECK_LIB([netcdf], [nc_open],, [AC_MSG_ERROR([Cannot find nc_open in NetCDF library])])
+   AC_CHECK_LIB([netcdf], [nc_open],, [AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])])
 
    # Get directory path of netcdf library files
    # netcdf_lib=`$nc_config --libs`

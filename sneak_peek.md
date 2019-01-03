@@ -6,10 +6,15 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New optimization
-  + none
+  + When inserting nonblocking requests into pending queues, keep the queues
+    sorted (insert sort) in the increasing order of variable starting file
+    offsets. This can avoid a sorting (quick sort) when flushing the pending
+    requests. See [pull request #37](https://github.com/Parallel-NetCDF/PnetCDF/pull/37).
 
 * New Limitations
-  + none
+  + When building with NetCDF-4 feature, using NetCDF-4 library built with
+    PnetCDF enabled, i.e. --enable-pnetcdf, is not supported. See
+    [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33).
 
 * Update configure options
   + none
@@ -51,7 +56,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + Fix error checking for programs in examples/C to ignore NC_ENOTENABLED
+    if PnetCDF was not built with --enable-profiling. Thanks to Bruno Pagani
+    and see [Issue #34](https://github.com/Parallel-NetCDF/PnetCDF/issues/34).
 
 * New example programs
   + none

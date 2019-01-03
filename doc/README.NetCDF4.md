@@ -38,6 +38,8 @@ Example build instructions for HDF5 and NetCDF-4 are given below.
                 LDFLAGS="-L/HDF5/install/path/lib"
     make install
     ```
+  + Note NetCDF-4 library built with PnetCDF feature enabled, i.e. option
+    `--enable-pnetcf`, is not supported.
 * To build PnetCDF with NetCDF-4 support
   + Add `--enable-netcdf4` option at the configure command line. Option
     `--with-netcdf` can be used to specify the installation path of NetCDF-4.

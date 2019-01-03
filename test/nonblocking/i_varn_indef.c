@@ -562,6 +562,8 @@ int main(int argc, char** argv)
     }
 
     nerrs += check_num_pending_reqs(ncid, nreqs*3, __LINE__);
+
+    /* flush nonblocking write requests */
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
     ERRS(nreqs, sts)

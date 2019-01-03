@@ -308,12 +308,13 @@ ncmpio_inq_misc(void       *ncdp,
 
     /* Get the file pathname which was used to open/create the ncid's file.
      * path must already be allocated. Ignored if NULL */
-    if (ncp->path == NULL) {
-        if (pathlen != NULL) *pathlen = 0;
-        if (path    != NULL) *path = '\0';
-    } else {
-        if (pathlen != NULL) *pathlen = (int)strlen(ncp->path);
-        if (path    != NULL) strcpy(path, ncp->path);
+    if (pathlen != NULL) {
+        if (ncp->path == NULL) *pathlen = 0;
+        else                   *pathlen = (int)strlen(ncp->path);
+    }
+    if (path != NULL) {
+        if (ncp->path == NULL) *path = '\0';
+        else                   strcpy(path, ncp->path);
     }
 
     /* obtain the number of fixed-size variables */
