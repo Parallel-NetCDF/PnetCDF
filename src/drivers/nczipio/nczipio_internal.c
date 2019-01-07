@@ -60,7 +60,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
 
             // Calculate block size
             bsize = 1;
-            for(i = 0; i < nblocks; i++){
+            for(i = 0; i < varp->ndim; i++){
                 bsize *= varp->stripesize[i];
             }
 
@@ -89,15 +89,17 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             }
 
             // Determine block offset
-            varp->offset = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nblocks + 1);
+            varp->offset = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nblocks);
+            varp->lens = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nblocks);
             // Try if there are offset recorded in attributes, it can happen after opening a file
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_offsets", NULL, &len);
             if (err == NC_NOERR && varp->nblocks == len - 1){
                 err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_offsets", varp->offset, &len);
             }
-            // If not, -1 indicates no data avaiable
+            // If not, 0 len no data avaiable
             if (err != NC_NOERR{
-                memset(varp->offset, -1, sizeof(MPI_Offset) * varp->nblocks);
+                memset(varp->offset, 0, sizeof(MPI_Offset) * varp->nblocks);
+                memset(varp->lens, 0, sizeof(MPI_Offset) * varp->nblocks);
             }
         }   
     }

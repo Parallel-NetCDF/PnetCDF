@@ -14,6 +14,37 @@
 #include <math.h>
 #include <ncbbio_driver.h>
 
+/* return internal size for values of specified netCDF type */
+MPI_Offset NC_Type_size(nc_type type){			/* netCDF type code */
+    switch (type) {
+      case NC_BYTE:
+	return sizeof(char);
+      case NC_CHAR:
+	return sizeof(char);
+      case NC_SHORT:
+	return sizeof(short);
+      case NC_INT:
+	return sizeof(int);
+      case NC_FLOAT:
+	return sizeof(float);
+      case NC_DOUBLE:
+	return sizeof(double);
+      case NC_UBYTE:
+	return sizeof(unsigned char);
+      case NC_USHORT:
+	return sizeof(unsigned short);
+      case NC_UINT:
+	return sizeof(unsigned int);
+      case NC_INT64:
+	return sizeof(long long);
+      case NC_UINT64:
+	return sizeof(unsigned long long);
+      default:
+	derror("nctypesize: bad type code");
+	return 0;
+    }
+}
+
 /*
  * Extract mpi hints and set up the flags
  */

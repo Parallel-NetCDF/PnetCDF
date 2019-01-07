@@ -28,6 +28,7 @@ typedef struct NC_zip_var {
     int nblocks;
     int *owner;
     MPI_Offset *offset;
+    MPI_Offset *lens;
 } NC_ad_var;
 
 typedef struct NC_zip_var_list {

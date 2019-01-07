@@ -71,11 +71,11 @@ nczipio_def_var(void       *ncdp,
     var.offset = NULL;
     var.owner = NULL;
 
-    if (ndims > 3) { // Does not support higher dimensional vars
+    if (ndims > 3 || ndims < 1) { // Does not support higher dimensional vars
         err = nczipp->driver->def_var(nczipp->ncp, name, xtype, ndims, dimids, &var.varid);  // We use it to save the id of data variable
         if (err != NC_NOERR) return err;
         
-        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_vartype", NC_INT, 1, NC_ZIP_VAR_RAW, MPI_INT);   // Comressed var?
+        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_vartype", NC_INT, 1, NC_ZIP_VAR_RAW, MPI_INT);   // Comressed var?
         if (err != NC_NOERR) return err;
 
         var.type = NC_ZIP_VAR_RAW;
@@ -91,13 +91,13 @@ nczipio_def_var(void       *ncdp,
             nczipp->driver->inq_dim(nczipp->ncp, dimids[i], NULL, var.dimsize + i);
         }
 
-        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_ndim", NC_INT, 1, &ndims, MPI_INT); // Original dimensions
+        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_ndim", NC_INT, 1, &ndims, MPI_INT); // Original dimensions
         if (err != NC_NOERR) return err;
-        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_dimids", NC_INT, ndims, dimids, MPI_INT);   // Dimensiona IDs
+        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_dimids", NC_INT, ndims, dimids, MPI_INT);   // Dimensiona IDs
         if (err != NC_NOERR) return err;
-        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_datatype", NC_INT, 1, &xtype, MPI_INT); // Original datatype
+        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_datatype", NC_INT, 1, &xtype, MPI_INT); // Original datatype
         if (err != NC_NOERR) return err;
-        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_vartype", NC_INT, 1, NC_ZIP_VAR_COMPRESSED, MPI_INT);   // Comressed var?
+        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_vartype", NC_INT, 1, NC_ZIP_VAR_COMPRESSED, MPI_INT);   // Comressed var?
         if (err != NC_NOERR) return err;
     }
 
