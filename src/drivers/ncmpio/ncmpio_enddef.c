@@ -79,10 +79,10 @@ move_file_block(NC         *ncp,
             nbytes -= chunk_size*nprocs;
         }
 
-	/* explicitly initialize mpistatus object to 0. For zero-length read,
-	 * MPI_Get_count may report incorrect result for some MPICH version,
-	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-	 * Thus we initialize it above to work around.
+        /* explicitly initialize mpistatus object to 0. For zero-length read,
+         * MPI_Get_count may report incorrect result for some MPICH version,
+         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+         * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
@@ -134,10 +134,10 @@ move_file_block(NC         *ncp,
          * that have not been written before. Below uses the former option.
          */
 #ifdef _USE_MPI_GET_COUNT
-	/* explicitly initialize mpistatus object to 0. For zero-length read,
-	 * MPI_Get_count may report incorrect result for some MPICH version,
-	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-	 * Thus we initialize it above to work around.
+        /* explicitly initialize mpistatus object to 0. For zero-length read,
+         * MPI_Get_count may report incorrect result for some MPICH version,
+         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+         * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
@@ -280,7 +280,11 @@ NC_begins(NC *ncp)
      * Note ncp->xsz is header size and ncp->begin_var is header extent.
      * Add the minimum header free space requested by user.
      */
-    ncp->begin_var = D_RNDUP(ncp->xsz + ncp->h_minfree, ncp->h_align);
+    if (ncp->vars.ndefined > 0)
+        ncp->begin_var = D_RNDUP(ncp->xsz + ncp->h_minfree, ncp->h_align);
+    else /* no variable defined, ignore alignment and set header extent to
+          * header size */
+        ncp->begin_var = ncp->xsz;
 
     if (ncp->old != NULL) {
         /* If this define mode was entered from a redef(), we check whether
@@ -448,132 +452,65 @@ NC_begins(NC *ncp)
  * This function is collective and only called by enddef().
  * Write out the header
  * 1. Call ncmpio_hdr_put_NC() to copy the header object, ncp, to a buffer.
- * 2. Call NC_check_header() to check if header is consistent across all
- *    processes.
- * 3. Process rank 0 writes the header to file.
- * This is a collective call.
+ * 2. Process rank 0 writes the header to file.
  */
 static int
 write_NC(NC *ncp)
 {
-    void *buf;
-    int status, mpireturn, err, rank;
-    MPI_Offset local_xsz;
+    void *buf=NULL;
+    int status=NC_NOERR, mpireturn, err, rank, header_wlen;
+    MPI_Status mpistatus;
 
     assert(!NC_readonly(ncp));
 
-    /* In NC_begins(), root's ncp->xsz, root's header size, has been
-     * broadcast, so ncp->xsz is now root's header size. To check any
-     * inconsistency in file header, we need to calculate local header
-     * size by calling ncmpio_hdr_len_NC()./
-     */
-    local_xsz = ncmpio_hdr_len_NC(ncp);
-
-    /* Note valgrind will complain about uninitialized buf below, but buf will
-     * be first filled with header of size ncp->xsz and later write to file.
-     * So, no need to change to NCI_Calloc for the sake of valgrind.
-     */
-    buf = NCI_Malloc((size_t)local_xsz); /* buffer for local header object */
-
-    /* copy the entire local header object to buf */
-    status = ncmpio_hdr_put_NC(ncp, buf);
-    if (status != NC_NOERR) { /* a fatal error */
-        NCI_Free(buf);
-        return status;
-    }
+    if (ncp->begin_var > X_INT_MAX) /* a fatal error */
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     MPI_Comm_rank(ncp->comm, &rank);
 
-#ifdef _DIFF_HEADER
-    if (ncp->safe_mode == 0) {
-        int h_size=(int)ncp->xsz;
-        void *root_header;
-
-        /* check header against root's */
-        if (rank == 0) root_header = buf;
-        else           root_header = (void*) NCI_Malloc((size_t)h_size);
-
-        TRACE_COMM(MPI_Bcast)(root_header, h_size, MPI_BYTE, 0, ncp->comm);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
-            DEBUG_RETURN_ERROR(err)
-        }
-
-        if (rank > 0) {
-            if (h_size != local_xsz || memcmp(buf, root_buf, h_size))
-                status = NC_EMULTIDEFINE;
-            NCI_Free(root_buf);
-        }
-
-        /* report error if header is inconsistency */
-        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN,ncp->comm);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
-            DEBUG_RETURN_ERROR(err)
-        }
-        if (err != NC_NOERR) {
-            /* TODO: this error return is harsh. Maybe relax for inconsistent
-             * attribute contents? */
-            if (status == NC_NOERR) status = err;
-            NCI_Free(buf);
-            return status;
-        }
-    }
-#endif
-
-#ifdef _CHECK_HEADER_CONSISTENCY
-    /* check the header consistency across all processes and sync header.
-     * When safe_mode is on:
-     *   The returned status on root can be either NC_NOERR (all headers are
-     *   consistent) or NC_EMULTIDEFINE (some headers are inconsistent).
-     *   The returned status on non-root processes can be NC_NOERR, fatal
-     *   error (>-250), or inconsistency error (-250 to -269).
-     * When safe_mode is off:
-     *   The returned status on root is always NC_NOERR
-     *   The returned status on non-root processes can be NC_NOERR, fatal
-     *   error (>-250), or inconsistency error (-250 to -269).
-     * For fatal error, we should stop. For others, we can continue.
-     */
-    int max_err;
-    status = NC_check_header(ncp, buf, local_xsz);
-
-    /* check for fatal error */
-    err =  (status != NC_NOERR && !ErrIsHeaderDiff(status)) ? 1 : 0;
-    max_err = err;
-
-    if (ncp->safe_mode == 1) {
-        TRACE_COMM(MPI_Allreduce)(&err, &max_err, 1, MPI_INT, MPI_MAX,
-                                  ncp->comm);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn,"MPI_Allreduce");
-            DEBUG_RETURN_ERROR(err)
-        }
-    }
-    if (max_err == 1) { /* some processes encounter a fatal error */
-        NCI_Free(buf);
-        return status;
-    }
-#endif
-    /* For non-fatal error, we continue to write header to the file, as now the
-     * header object in memory has been sync-ed across all processes. */
-
     /* only rank 0's header gets written to the file */
     if (rank == 0) {
+
+        /* In NC_begins(), root's ncp->xsz and ncp->begin)var, root's header
+         * size and extent, have been broadcast (sync-ed) among processes.
+         */
+#ifdef ENABLE_NULL_BYTE_HEADER_PADDING
+        /* NetCDF classic file formats require the file header null-byte
+         * padded. Thus we must calloc a buffer of size equal to file header
+         * extent.
+         */
+        header_wlen = (int) ncp->begin_var;
+        buf = NCI_Calloc(1, (size_t)header_wlen);
+#else
+        /* Do not write padding area */
+        header_wlen = (int) ncp->xsz;
+        buf = NCI_Malloc((size_t)header_wlen);
+#endif
+
+        /* copy the entire local header object to buf */
+        status = ncmpio_hdr_put_NC(ncp, buf);
+        if (status != NC_NOERR) /* a fatal error */
+            goto fn_exit;
+
+        /* For non-fatal error, we continue to write header to the file, as now
+         * the header object in memory has been sync-ed across all processes.
+         */
+
         /* rank 0's fileview already includes the file header */
-        MPI_Status mpistatus;
-        if (ncp->xsz != (int)ncp->xsz)
-            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
 #ifdef _USE_MPI_GET_COUNT
-	/* explicitly initialize mpistatus object to 0. For zero-length read,
-	 * MPI_Get_count may report incorrect result for some MPICH version,
-	 * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-	 * Thus we initialize it above to work around.
+        /* explicitly initialize mpistatus object to 0. For zero-length read,
+         * MPI_Get_count may report incorrect result for some MPICH version,
+         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
+         * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
+        /* write the header extent, not just header size, because NetCDF file
+         * format specification requires null byte padding for header.
+         */
         TRACE_IO(MPI_File_write_at)(ncp->collective_fh, 0, buf,
-                                    (int)ncp->xsz, MPI_BYTE, &mpistatus);
+                                    header_wlen, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
             /* write has failed, which is more serious than inconsistency */
@@ -585,10 +522,13 @@ write_NC(NC *ncp)
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             ncp->put_size += put_size;
 #else
-            ncp->put_size += ncp->xsz;
+            ncp->put_size += header_wlen;
 #endif
         }
     }
+
+fn_exit:
+    if (buf != NULL) NCI_Free(buf);
 
     if (ncp->safe_mode == 1) {
         /* broadcast root's status, because only root writes to the file */
@@ -599,7 +539,6 @@ write_NC(NC *ncp)
     }
 
     fClr(ncp->flags, NC_NDIRTY);
-    NCI_Free(buf);
 
     return status;
 }
