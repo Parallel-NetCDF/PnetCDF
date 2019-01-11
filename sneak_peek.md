@@ -8,8 +8,11 @@ This is essentially a placeholder for the next release note ...
 * New optimization
   + When inserting nonblocking requests into pending queues, keep the queues
     sorted (insert sort) in the increasing order of variable starting file
-    offsets. This can avoid a sorting (quick sort) when flushing the pending
-    requests. See [pull request #37](https://github.com/Parallel-NetCDF/PnetCDF/pull/37).
+    offsets. This can avoid a quick sort when flushing the pending requests.
+    See [pull request #37](https://github.com/Parallel-NetCDF/PnetCDF/pull/37).
+    To avoid internal sorting completely, users are recommended to post
+    nonblocking requests in the increasing order of variable IDs and
+    fixed-size variables followed by record variables.
 
 * New Limitations
   + When building with NetCDF-4 feature, using NetCDF-4 library built with
@@ -53,7 +56,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
-  + none
+  + File header extent area between end of header and first variable is padded
+    with null bytes if PnetCDF is configured with option
+    `--enable-null-byte-header-padding`.
 
 * Bug fixes
   + Fix error checking for programs in examples/C to ignore NC_ENOTENABLED
@@ -67,8 +72,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + test/burst_buffer/varn.c
-    Test varn API in burst buffer driver. The test includes cases when counts is NULL or some of the count in counts is NULL.
+  + test/burst_buffer/varn.c -- to test varn API when burst buffer driver is
+    used. The test includes cases when argument counts is NULL or some of the
+    elements in counts are NULL.
 
 * Conformity with NetCDF library
   + none
