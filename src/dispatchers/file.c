@@ -489,7 +489,7 @@ ncmpi_create(MPI_Comm    comm,
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_CMODE) {
         del_from_PNCList(*ncidp);
         if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-            MPI_Comm_free(&pncp->comm);
+            MPI_Comm_free(&pncp->comm); /* a collective call */
         NCI_Free(pncp);
         *ncidp = -1;
         return status;
@@ -501,7 +501,7 @@ ncmpi_create(MPI_Comm    comm,
         driver->close(ncp); /* close file and ignore error */
         del_from_PNCList(*ncidp);
         if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-            MPI_Comm_free(&pncp->comm);
+            MPI_Comm_free(&pncp->comm); /* a collective call */
         NCI_Free(pncp);
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -747,7 +747,7 @@ ncmpi_open(MPI_Comm    comm,
          * continue the rest open procedure */
         del_from_PNCList(*ncidp);
         if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-            MPI_Comm_free(&pncp->comm);
+            MPI_Comm_free(&pncp->comm); /* a collective call */
         NCI_Free(pncp);
         *ncidp = -1;
         return status;
@@ -759,7 +759,7 @@ ncmpi_open(MPI_Comm    comm,
         driver->close(ncp); /* close file and ignore error */
         del_from_PNCList(*ncidp);
         if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-            MPI_Comm_free(&pncp->comm);
+            MPI_Comm_free(&pncp->comm); /* a collective call */
         NCI_Free(pncp);
         *ncidp = -1;
         DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -833,7 +833,7 @@ fn_exit:
     if (err != NC_NOERR) {
         driver->close(ncp); /* close file and ignore error */
         if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-            MPI_Comm_free(&pncp->comm);
+            MPI_Comm_free(&pncp->comm); /* a collective call */
         del_from_PNCList(*ncidp);
         NCI_Free(pncp->path);
         NCI_Free(pncp);
@@ -864,7 +864,7 @@ ncmpi_close(int ncid)
 
     /* free the PNC object */
     if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-        MPI_Comm_free(&pncp->comm);
+        MPI_Comm_free(&pncp->comm); /* a collective call */
 
     NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
@@ -1064,7 +1064,7 @@ ncmpi_abort(int ncid)
 
     /* free the PNC object */
     if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-        MPI_Comm_free(&pncp->comm);
+        MPI_Comm_free(&pncp->comm); /* a collective call */
 
     NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
