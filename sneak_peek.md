@@ -89,5 +89,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Clarifications
-  + none
+  + Padding -- NetCDF classic file format specification states "Header padding
+    uses null (\x00) bytes. In data, padding uses variable's fill value."
+    PnetCDF implements the header padding specification but only enforces it
+    when the configure option `--enable-null-byte-header-padding` is set. Note
+    PnetCDF has not yet implemented the padding for data section.
+
 
