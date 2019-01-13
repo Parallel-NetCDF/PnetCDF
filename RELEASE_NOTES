@@ -410,7 +410,7 @@ Version 1.10.0 (July  2, 2018)
       include the number of records of a record variable, as such request is
       split into multiple additional requests, one for each record. See r3651.
     * Remove freeing name object because NC_ENULLPAD is not a fatal error. See
-      r3644. This bug only appears when --enable-null-byte-header-padding is
+      r3644. This bug only appears when "--enable-null-byte-header-padding" is
       set at configure time and opening files whose headers are not padded with
       null bytes.
     * Member "value" of NC_dimarray, NC_attrarray, and NC_vararray can still be

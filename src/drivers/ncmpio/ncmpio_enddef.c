@@ -482,7 +482,7 @@ write_NC(NC *ncp)
         header_wlen = (int) ncp->begin_var;
         buf = NCI_Calloc(1, (size_t)header_wlen);
 #else
-        /* Do not write padding area */
+        /* Do not write padding area (between ncp->xsz and ncp->begin_var) */
         header_wlen = (int) ncp->xsz;
         buf = NCI_Malloc((size_t)header_wlen);
 #endif
