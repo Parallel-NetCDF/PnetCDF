@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
-#include "netcdf.h"
+//#include "netcdf.h"
 #include "adios_types.h"
 #include "adios_transport_hooks.h"
 #include "adios_bp_v1.h"
