@@ -188,6 +188,70 @@ nczipio_rename_var(void       *ncdp,
 }
 
 int
+nczipio_put_var(void             *ncdp,
+              int               varid,
+              const MPI_Offset *start,
+              const MPI_Offset *count,
+              const MPI_Offset *stride,
+              const MPI_Offset *imap,
+              const void       *buf,
+              MPI_Offset        bufcount,
+              MPI_Datatype      buftype,
+              int               reqMode)
+{
+    int err=NC_NOERR, status;
+    void *cbuf=(void*)buf;
+    NC_var *varp;
+    NC_zip *nczipp = (NC_zip*)ncdp;
+
+    if (reqMode == NC_REQ_INDEP){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    }
+
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+    varp = nczipp->vars.data + varid;
+
+    if (imap != NULL || bufcount != -1) {
+        /* pack buf to cbuf -------------------------------------------------*/
+        /* If called from a true varm API or a flexible API, ncmpii_pack()
+         * packs user buf into a contiguous cbuf (need to be freed later).
+         * Otherwise, cbuf is simply set to buf. ncmpii_pack() also returns
+         * etype (MPI primitive datatype in buftype), and nelems (number of
+         * etypes in buftype * bufcount)
+         */
+        int ndims;
+        MPI_Offset nelems;
+        MPI_Datatype etype;
+
+        err = nczipp->driver->inq_var(nczipp->ncp, varid, NULL, NULL, &ndims, NULL,
+                                   NULL, NULL, NULL, NULL);
+        if (err != NC_NOERR) goto err_check;
+
+        err = ncmpii_pack(ndims, count, imap, (void*)buf, bufcount, buftype,
+                          &nelems, &etype, &cbuf);
+        if (err != NC_NOERR) goto err_check;
+
+        imap     = NULL;
+        bufcount = (nelems == 0) ? 0 : -1;  /* make it a high-level API */
+        buftype  = etype;                   /* an MPI primitive type */
+    }
+
+err_check:
+    if (err != NC_NOERR) {
+        if (reqMode & NC_REQ_INDEP) return err;
+        reqMode |= NC_REQ_ZERO; /* participate collective call */
+    }
+
+    status = nczipioi_put_var(nczipp, varp, start, count, stride, cbuf);
+    if (cbuf != buf) NCI_Free(cbuf);
+
+    return (err == NC_NOERR) ? status : err; /* first error encountered */
+}
+
+
+int
 nczipio_iget_var(void             *ncdp,
                int               varid,
                const MPI_Offset *start,
