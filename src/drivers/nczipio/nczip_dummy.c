@@ -22,7 +22,7 @@ int nczip_dummy_finalize() {
  * If out is NULL, out_len is assigned an estimate compreseed size given the input
  * If out_len is NULL, we assume out is large enough for compressed data
  */
-int nczip_dummy_compress(void *in, MP_Offset in_len, void *out, MP_Offset *out_len, int ndim, int *dims, MPI_Datatype dtype) {
+int nczip_dummy_compress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     if (out_len != NULL){
         *out_len = in_len;
     }
@@ -36,7 +36,7 @@ int nczip_dummy_compress(void *in, MP_Offset in_len, void *out, MP_Offset *out_l
  * If out is NULL, out_len is assigned an estimate decompreseed size given the input
  * If out_len is NULL, we assume out is large enough for decompressed data
  */
-int nczip_dummy_decompress(void *in, MP_Offset in_len, void *out, MP_Offset *out_len, int ndim, int *dims, MPI_Datatype dtype) {
+int nczip_dummy_decompress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     if (out_len != NULL){
         if (*out_len < in_len){
             DEBUG_RETURN_ERROR(NC_EINVAL)

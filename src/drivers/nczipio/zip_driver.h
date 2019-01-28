@@ -4,8 +4,8 @@
 struct NCZIP_driver {
     int (*init)(MPI_Info);
     int (*finalize)();
-    int (*compress)(void*, MP_Offset, void*, MP_Offset*, int, int*, MPI_Datatype);
-    int (*decompress)(void*, MP_Offset, void*, MP_Offset*, int, int*, MPI_Datatype);
+    int (*compress)(void*, int, void*, int*, int, int*, MPI_Datatype);
+    int (*decompress)(void*, int, void*, int*, int, int*, MPI_Datatype);
 };
 
 typedef struct NCZIP_driver NCZIP_driver;
