@@ -19,23 +19,24 @@
 #define NC_ZIP_MAPPING_STATIC 0
 
 typedef struct NC_zip_var {
-    int var_type;
+    int vartype;
     int varid;
     int datavarid;
     int ndim;
+    int *dimids;
     MPI_Offset *dimsize;
     MPI_Offset *stripesize;
     int nblocks;
     int *owner;
     MPI_Offset *offset;
     MPI_Offset *lens;
-} NC_ad_var;
+} NC_zip_var;
 
 typedef struct NC_zip_var_list {
-    NC_ad_var *data;
+    NC_zip_var *data;
     int cnt;
     int nalloc;
-} NC_ad_var_list;
+} NC_zip_var_list;
 
 typedef struct NC_zip NC_zip; /* forward reference */
 struct NC_zip {
@@ -50,6 +51,7 @@ struct NC_zip {
     NCZIP_driver      *zip;         /* Compression driver */
     int                zipdriver;
     int                blockmapping;
+    NC_zip_var_list    vars;
 };
 
 extern int

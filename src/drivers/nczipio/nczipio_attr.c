@@ -29,6 +29,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <nczipio_driver.h>
+#include "nczipio_internal.h"
 
 int
 nczipio_inq_attname(void *ncdp,

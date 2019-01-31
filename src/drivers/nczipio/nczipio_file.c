@@ -45,6 +45,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <nczipio_driver.h>
+#include "nczipio_internal.h"
 
 int
 nczipio_create(MPI_Comm     comm,
@@ -55,6 +56,7 @@ nczipio_create(MPI_Comm     comm,
              void       **ncpp)  /* OUT */
 {
     int err;
+    int one = 1;
     void *ncp=NULL;
     NC_zip *nczipp;
     PNC_driver *driver=NULL;
@@ -84,10 +86,10 @@ nczipio_create(MPI_Comm     comm,
     nczipp->ncp    = ncp;
     nczipp->comm   = comm;
 
-    err = nczipio_extract_hint(nczipp, info);
+    err = nczipioi_extract_hint(nczipp, info);
     if (err != NC_NOERR) return err;
 
-    err = driver->put_att(nczipp->ncp, NC_GLOBAL, "_comressed", NC_INT, 1, 1, MPI_INT); // Mark this file as compressed
+    err = driver->put_att(nczipp->ncp, NC_GLOBAL, "_comressed", NC_INT, 1, &one, MPI_INT); // Mark this file as compressed
     if (err != NC_NOERR) return err;
 
 
@@ -154,7 +156,7 @@ nczipio_close(void *ncdp)
 
     err = nczipp->driver->close(nczipp->ncp);
 
-    err = nczipioi_var_list_free(nczipp);
+    err = nczipioi_var_list_free(&(nczipp->vars));
 
     NCI_Free(nczipp->path);
     NCI_Free(nczipp);
@@ -165,10 +167,12 @@ nczipio_close(void *ncdp)
 int
 nczipio_enddef(void *ncdp)
 {
-    int err;
+    int i, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
-
-    nczipioi_var_init(&(nczipp->vars));
+    
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        nczipioi_var_init(nczipp, nczipp->vars.data + i);
+    }
 
     err = nczipp->driver->enddef(nczipp->ncp);
     if (err != NC_NOERR) return err;
@@ -183,10 +187,12 @@ nczipio__enddef(void       *ncdp,
               MPI_Offset  v_minfree,
               MPI_Offset  r_align)
 {
-    int err;
+    int i, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    nczipioi_var_init(&(nczipp->vars));
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        nczipioi_var_init(nczipp, nczipp->vars.data + i);
+    }
 
     err = nczipp->driver->_enddef(nczipp->ncp, h_minfree, v_align, v_minfree,
                                r_align);
@@ -408,13 +414,13 @@ nczipioi_init(NC_zip *nczipp){
     int err;
 
     /* Initialize var list */
-    err = nczipioi_var_list_init(nczipp);
+    err = nczipioi_var_list_init(&(nczipp->vars));
     if (err != NC_NOERR) return err;
 
     /* Select compression driver based on hint */
     switch (nczipp->zipdriver){
         case NC_ZIP_DRIVER_DUMMY:
-            nczipp = nczip_dummy_inq_driver();
+            nczipp->zip = nczip_dummy_inq_driver();
         break;
     }
 }

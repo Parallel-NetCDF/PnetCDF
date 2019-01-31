@@ -35,7 +35,9 @@ C_SRCS = nczipio_attr.c \
          nczipio_var.c \
          nczipio_lists.c \
          nczipio_internal.c \
-         nczipio_util.c
+         nczipio_util.c \
+         nczipioi_getput.c \
+         nczip_dummy.c
 
 $(M4_SRCS:.m4=.c): Makefile
 
