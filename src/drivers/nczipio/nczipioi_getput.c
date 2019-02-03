@@ -485,7 +485,7 @@ nczipioi_put_var(NC_zip        *nczipp,
 
 
 #ifdef PNETCDF_DEBUG
-    if (rank == 0){
+    if (nczipp->rank == 0){
         printf("Rank %d: sendcount = {", nczipp->rank);
         for(i = 0; i < nczipp->np; i++){
             printf("%d, ", sendcounts[i]);
@@ -560,7 +560,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     }
 
 #ifdef PNETCDF_DEBUG
-    if (rank == 0){
+    if (nczipp->rank == 0){
         printf("Rank %d: xbuf = {", nczipp->rank);
         for(i = 0; i < nmyblocks * bsize; i++){
             printf("%x ", xbuf[i]);
@@ -606,7 +606,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     }
 
 #ifdef PNETCDF_DEBUG
-    if (rank == 0){
+    if (nczipp->rank == 0){
         printf("Rank %d: zipsize = {", nczipp->rank);
         for(i = 0; i < nmyblocks; i++){
             printf("%x ", zipsize[i]);
@@ -658,7 +658,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     }
 
 #ifdef PNETCDF_DEBUG
-    if (rank == 0){
+    if (nczipp->rank == 0){
         printf("Rank %d: zsize_all = {", nczipp->rank);
         for(i = 0; i < varp->nblocks; i++){
             printf("%x ", zsize_all[i]);
