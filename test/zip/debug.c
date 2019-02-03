@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     // Write variable
     start = rank;
     count = 1;
-    buf = 0x25252525;
+    buf = rank + 1;
     err = ncmpi_put_vara_int_all(ncid, varid, &start, &count, &buf);
 
     /* Close the file. */

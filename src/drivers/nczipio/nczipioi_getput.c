@@ -723,6 +723,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     NCI_Free(sdispls);
     NCI_Free(recvcounts);
     NCI_Free(rdispls);
+    NCI_Free(packoff);
     NCI_Free(zipsize);
     NCI_Free(zdispls);
     NCI_Free(zsize_local);
