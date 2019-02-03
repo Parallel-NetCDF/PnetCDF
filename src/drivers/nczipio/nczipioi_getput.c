@@ -199,10 +199,14 @@ nczipioi_get_var(NC_zip        *nczipp,
         tstart[i] = start[i] % varp->stripesize[i];
     }
     MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &subarytype);
+    MPI_Type_commit(&subarytype);
 
     // Pack data into user buffer
     tpos = 0;
     MPI_Pack(rbuffer, bsize * nb, subarytype, buf, bsize * nb, &tpos, nczipp->comm);
+    
+    // Free datatype
+    MPI_Type_free(&subarytype);
 
     return NC_NOERR;
 }
@@ -300,22 +304,26 @@ nczipioi_put_var(NC_zip        *nczipp,
 
     // Call allgather
 
-    err = MPI_Allgather(start, varp->ndim, MPI_LONG_LONG_INT, start_all[0], nczipp->np * varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
+    err = MPI_Allgather(start, varp->ndim, MPI_LONG_LONG_INT, start_all[0], varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
     if (err != MPI_SUCCESS){
         err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
         DEBUG_RETURN_ERROR(err);
     }
 
-    err = MPI_Allgather(count, varp->ndim, MPI_LONG_LONG_INT, count_all[0], nczipp->np * varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
-    if (err != MPI_SUCCESS){
-        err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
-        DEBUG_RETURN_ERROR(err);
+    if (count != NULL){
+        err = MPI_Allgather(count, varp->ndim, MPI_LONG_LONG_INT, count_all[0], varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
+        if (err != MPI_SUCCESS){
+            err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
+            DEBUG_RETURN_ERROR(err);
+        }
     }
 
-    err = MPI_Allgather(stride, varp->ndim, MPI_LONG_LONG_INT, stride_all[0], nczipp->np * varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
-    if (err != MPI_SUCCESS){
-        err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
-        DEBUG_RETURN_ERROR(err);
+    if (stride != NULL){
+        err = MPI_Allgather(stride, varp->ndim, MPI_LONG_LONG_INT, stride_all[0], varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
+        if (err != MPI_SUCCESS){
+            err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
+            DEBUG_RETURN_ERROR(err);
+        }
     }
 
     /* 
@@ -329,7 +337,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     for(i = 0; i < varp->ndim; i++){
         bstart[i] = start[i] / varp->stripesize[i];
         if (stride == NULL){
-            bend[i] = (start[i] + count[i] - 1) / varp->stripesize[i];
+            bend[i] = (start[i] + count[i] - 1) / varp->stripesize[i] + 1;
         }
         else{
             bend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->stripesize[i] + 1;
@@ -348,7 +356,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     overlapsize = 0;
     memcpy(bcord, bstart, sizeof(int) * varp->ndim);
     while(bcord[0] < bend[0]){
-        j = get_block_idx(varp, bcord);   
+        j = varp->owner[get_block_idx(varp, bcord)];    
         
         // Overlapping size of this block
         get_block_overlap(varp, bcord, start, count, stride, tstart, tssize);
@@ -387,7 +395,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     overlapsize = 0;
     memcpy(bcord, bstart, sizeof(int) * varp->ndim);
     while(bcord[0] < bend[0]){
-        j = get_block_idx(varp, bcord);   
+        j = varp->owner[get_block_idx(varp, bcord)];   
         
         // Overlapping region of this block
         get_block_overlap(varp, bcord, start, count, stride, tstart, tssize);
@@ -397,9 +405,13 @@ nczipioi_put_var(NC_zip        *nczipp,
 
         // Pack type
         MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
+        MPI_Type_commit(&ptype);
         
         // Pack data
         MPI_Pack(buf, 1, ptype, sbuf + sdispls[j], sendcounts[j], packoff + j, nczipp->comm);
+    
+        // Free datatype
+        MPI_Type_free(&ptype);
 
         // move on to next block
         bcord[varp->ndim - 1]++;
@@ -440,7 +452,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     // Calculate the amount we need to receive from other process
     recvcounts = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
     rdispls = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    memset(sendcounts, 0, sizeof(int) * nczipp->np);
+    memset(recvcounts, 0, sizeof(int) * nczipp->np);
     memset(packoff, 0, sizeof(int) * nczipp->np);
     for(i = 0; i < varp->nblocks; i++){
         if (varp->owner[i] == nczipp->rank){
@@ -470,6 +482,38 @@ nczipioi_put_var(NC_zip        *nczipp,
 
     // Send the data to destination
     MPI_Alltoallv(sbuf, sendcounts, sdispls, MPI_BYTE, rbuf, recvcounts, rdispls, MPI_BYTE, nczipp->comm);
+
+
+#ifdef PNETCDF_DEBUG
+    if (rank == 0){
+        printf("Rank %d: sendcount = {", nczipp->rank);
+        for(i = 0; i < nczipp->np; i++){
+            printf("%d, ", sendcounts[i]);
+        }
+        printf("}, sdispls = {");
+        for(i = 0; i < nczipp->np; i++){
+            printf("%d, ", sdispls[i]);
+        }
+        printf("}, recvcounts = {");
+        for(i = 0; i < nczipp->np; i++){
+            printf("%d, ", recvcounts[i]);
+        }
+        printf("}, rdispls = {");
+        for(i = 0; i < nczipp->np; i++){
+            printf("%d, ", rdispls[i]);
+        }
+        printf("}, sbuf = {");
+        for(i = 0; i < sdispls[nczipp->np - 1] + sendcounts[nczipp->np - 1]; i++){
+            printf("%x ", sbuf[i]);
+        }
+        printf("}, rbuf = {");
+        for(i = 0; i < rdispls[nczipp->np - 1] + recvcounts[nczipp->np - 1]; i++){
+            printf("%x ", rbuf[i]);
+        }
+        printf("}\n");
+        fflush(stdout);
+    }
+#endif
 
     /*
      * Next step is to pack data to block buffer
@@ -515,6 +559,17 @@ nczipioi_put_var(NC_zip        *nczipp,
         }
     }
 
+#ifdef PNETCDF_DEBUG
+    if (rank == 0){
+        printf("Rank %d: xbuf = {", nczipp->rank);
+        for(i = 0; i < nmyblocks * bsize; i++){
+            printf("%x ", xbuf[i]);
+        }
+        printf("}\n");
+        fflush(stdout);
+    }
+#endif
+
     /* 
      * The buffer is now filled with data coming from all processes, it's time to compress
      */
@@ -533,7 +588,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     }
 
     // Calculate total size
-    for(i = 0; i < nmyblocks; i++){
+    for(i = 1; i < nmyblocks; i++){
         zdispls[0] += zipsize[i];
     }
 
@@ -549,6 +604,25 @@ nczipioi_put_var(NC_zip        *nczipp,
         // Calculate offset
         zdispls[i + 1] = zdispls[i] + zipsize[i];
     }
+
+#ifdef PNETCDF_DEBUG
+    if (rank == 0){
+        printf("Rank %d: zipsize = {", nczipp->rank);
+        for(i = 0; i < nmyblocks; i++){
+            printf("%x ", zipsize[i]);
+        }
+        printf("}, zdispls = {");
+        for(i = 0; i < nmyblocks; i++){
+            printf("%d, ", zdispls[i]);
+        }
+        printf("}, zbuf = {");
+        for(i = 0; i < zdispls[nmyblocks- 1] + zipsize[nmyblocks - 1]; i++){
+            printf("%x ", zbuf[i]);
+        }
+        printf("}\n");
+        fflush(stdout);
+    }
+#endif
 
     /*
      * Now it is time for a collective write
@@ -583,22 +657,41 @@ nczipioi_put_var(NC_zip        *nczipp,
         zdispls_all[i] = zsize_all[i - 1] + zdispls_all[i - 1];
     }
 
+#ifdef PNETCDF_DEBUG
+    if (rank == 0){
+        printf("Rank %d: zsize_all = {", nczipp->rank);
+        for(i = 0; i < varp->nblocks; i++){
+            printf("%x ", zsize_all[i]);
+        }
+        printf("}, zdispls_all = {");
+        for(i = 0; i < varp->nblocks; i++){
+            printf("%d, ", zdispls_all[i]);
+        }
+        printf("}\n");
+        fflush(stdout);
+    }
+#endif
+
     // Enter redefine mode
     nczipp->driver->redef(nczipp->ncp);
 
     // Define dimension  for data variable
     sprintf(name, "_compressed_data_dim_%d", varp->varid);
-    nczipp->driver->def_dim(nczipp->ncp, name, zdispls_all[varp->nblocks - 1] + zsize_all[varp->nblocks - 1], &zdimid);
+    err = nczipp->driver->def_dim(nczipp->ncp, name, zdispls_all[varp->nblocks - 1] + zsize_all[varp->nblocks - 1], &zdimid);
+    if (err != NC_NOERR) return err;
 
     // Define variable
-    nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(varp->datavarid));
+    sprintf(name, "_compressed_data_%d", varp->varid);
+    err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(varp->datavarid));
+    if (err != NC_NOERR) return err;
 
     // Record offset in data variable
     err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_blockoffset", NC_INT, varp->nblocks, zdispls_all, MPI_INT); // Original datatype
     if (err != NC_NOERR) return err;
 
     // Switch to data mode
-    nczipp->driver->enddef(nczipp->ncp);
+    err = nczipp->driver->enddef(nczipp->ncp);
+    if (err != NC_NOERR) return err;
 
     //Now, we generate a varn call to write out compressed data
     zstarts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmyblocks);
@@ -611,8 +704,13 @@ nczipioi_put_var(NC_zip        *nczipp,
         zstarts[i][0] = zdispls_all[myblocks[i]];
         zcounts[i][0] = zsize_all[myblocks[i]];
     }
-    nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmyblocks, zstarts, zcounts, zbuf, zdispls[nmyblocks - 1] + zipsize[nmyblocks - 1], MPI_BYTE, NC_REQ_COLL);
+    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmyblocks, zstarts, zcounts, zbuf, zdispls[nmyblocks - 1] + zipsize[nmyblocks - 1], MPI_UNSIGNED_CHAR, NC_REQ_COLL);
+    if (err != NC_NOERR) return err;
 
+    // Record datavar id
+    err = nczipp->driver->put_var(nczipp->ncp, varp->varid, NULL, NULL, NULL, NULL, &(varp->datavarid), 1, MPI_INT, NC_REQ_COLL);
+    if (err != NC_NOERR) return err;
+    
     //  Free up buffers
     NCI_Free(bstart);
     NCI_Free(bend);

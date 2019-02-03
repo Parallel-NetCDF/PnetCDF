@@ -108,6 +108,8 @@ nczipio_def_var(void       *ncdp,
     err = nczipioi_var_list_add(&(nczipp->vars), var);
     if (err != NC_NOERR) return err;
 
+    *varidp = nczipp->vars.cnt - 1;
+
     return NC_NOERR;
 }
 
@@ -119,15 +121,18 @@ nczipio_inq_varid(void       *ncdp,
     int i, vid, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    if (varid != NULL){
-        err = nczipp->driver->inq_varid(nczipp->ncp, name, &vid);
-        if (err != NC_NOERR) return err;
+    err = nczipp->driver->inq_varid(nczipp->ncp, name, &vid);
+    if (err != NC_NOERR) return err;
 
+    if (varid != NULL){
         for(i = 0; i < nczipp->vars.cnt; i++){
             if (nczipp->vars.data[i].varid == vid){
                 *varid = i;
                 break;
             }
+        }
+        if (i >= nczipp->vars.cnt){
+            DEBUG_RETURN_ERROR(NC_ENOTVAR)
         }
     }
 

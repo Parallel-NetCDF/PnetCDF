@@ -4,6 +4,9 @@
 #include "nczipio_driver.h"
 
 extern int 
+nczipioi_init(NC_zip*);
+
+extern int 
 nczipioi_var_list_init(NC_zip_var_list*);
 
 extern int 

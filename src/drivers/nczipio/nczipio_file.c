@@ -85,6 +85,8 @@ nczipio_create(MPI_Comm     comm,
     nczipp->flag   = 0;
     nczipp->ncp    = ncp;
     nczipp->comm   = comm;
+    MPI_Comm_rank(comm, &(nczipp->rank));
+    MPI_Comm_size(comm, &(nczipp->np));
 
     err = nczipioi_extract_hint(nczipp, info);
     if (err != NC_NOERR) return err;
@@ -92,7 +94,7 @@ nczipio_create(MPI_Comm     comm,
     err = driver->put_att(nczipp->ncp, NC_GLOBAL, "_comressed", NC_INT, 1, &one, MPI_INT); // Mark this file as compressed
     if (err != NC_NOERR) return err;
 
-
+    nczipioi_init(nczipp);
 
     *ncpp = nczipp;
 
@@ -140,6 +142,10 @@ nczipio_open(MPI_Comm     comm,
     nczipp->flag   = 0;
     nczipp->ncp    = ncp;
     nczipp->comm   = comm;
+    MPI_Comm_rank(comm, &(nczipp->rank));
+    MPI_Comm_size(comm, &(nczipp->np));
+
+    nczipioi_init(nczipp);
 
     *ncpp = nczipp;
 
