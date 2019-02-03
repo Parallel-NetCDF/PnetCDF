@@ -47,7 +47,9 @@ int main(int argc, char** argv);
 
 char *progname;
 
+#ifdef ENABLE_ADIOS 
 uint32_t bp_ver;
+#endif
 
 static void
 usage(void)
