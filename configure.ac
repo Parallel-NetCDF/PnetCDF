@@ -2048,9 +2048,30 @@ if test "x$enable_adios" = "xyes" ; then
         Check 'config.log' for more information.
         ------------------------------------------------------------])
     fi
+<<<<<<< HEAD
 >>>>>>> 49f28e6... adios driver follow bp2nc
 =======
 >>>>>>> 88955e9... embeded header files
+=======
+
+   dnl Check if ADIOS version is 1.12.0 or later
+   AC_MSG_CHECKING([Check if ADIOS version is 1.12.0 or later])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+#if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1012000)
+      choke me
+#endif
+   ]])], [adios_ge_1_12_0=yes], [adios_ge_1_12_0=no])
+   AC_MSG_RESULT([$adios_ge_1_12_0])
+
+   if test "x${adios_ge_1_12_0}" = xno; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        ADIOS version 1.12.0 or later is required to build
+        PnetCDF with ADIOS BP read support. 
+        ------------------------------------------------------------])
+    fi
+
+>>>>>>> 1882c45... version check
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)

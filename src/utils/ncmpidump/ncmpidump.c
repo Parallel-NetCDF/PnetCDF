@@ -51,7 +51,11 @@ int main(int argc, char** argv);
 char *progname;
 
 #ifdef ENABLE_ADIOS 
+<<<<<<< HEAD
 unsigned int bp_ver;
+=======
+uint32_t bp_ver;
+>>>>>>> 1882c45... version check
 #endif
 
 static void
