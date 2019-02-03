@@ -734,6 +734,7 @@ enum FILE_KIND check_file_signature(char *path)
         else if (signature[3] == 2)  return CDF2;
         else if (signature[3] == 1)  return CDF1;
     }
+#ifdef ENABLE_ADIOS 
     else{
         off_t off;
         char footer[BP_MINIFOOTER_SIZE];
@@ -771,6 +772,7 @@ enum FILE_KIND check_file_signature(char *path)
             return BP; 
         }
     } 
+#endif
     
     return UNKNOWN; /* unknown format */
 }
