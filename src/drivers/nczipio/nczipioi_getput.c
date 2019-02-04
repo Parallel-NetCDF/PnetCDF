@@ -29,8 +29,8 @@
 #include <nczipio_driver.h>
 #include "nczipio_internal.h"
 
-#define max(a, b) (a) > (b) ? (a): (b)
-#define min(a, b) (a) < (b) ? (a): (b)
+#define min(a,b) (((a)<(b))?(a):(b))
+#define max(a,b) (((a)>(b))?(a):(b))
 
 static int get_block_idx(NC_zip_var *varp, int* cord){
     int i, ret;
@@ -62,7 +62,7 @@ static int get_block_cord(NC_zip_var *varp, int idx, int* cord){
 
 static int get_block_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, int *ostart, int *ocount){
     int i, ret;
-    
+
     for(i = 0; i < varp->ndim; i++){
         ostart[i] = max(start[i], cord[i] * varp->stripesize[i]);
         ocount[i] = min(start[i] + count[i], (cord[i] + 1) * varp->stripesize[i]) - ostart[i];
@@ -483,7 +483,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     // Send the data to destination
     MPI_Alltoallv(sbuf, sendcounts, sdispls, MPI_BYTE, rbuf, recvcounts, rdispls, MPI_BYTE, nczipp->comm);
 
-
+/*
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: sendcount = {", nczipp->rank);
@@ -514,6 +514,7 @@ nczipioi_put_var(NC_zip        *nczipp,
         fflush(stdout);
     }
 #endif
+*/
 
     /*
      * Next step is to pack data to block buffer
@@ -545,7 +546,7 @@ nczipioi_put_var(NC_zip        *nczipp,
                 for(k = 0; k < varp->ndim; k++){
                     tstart[k] -= bcord[k] * varp->stripesize[k];
                 }
-                
+
                 // Pack type
                 MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
                 MPI_Type_commit(&ptype);
@@ -559,6 +560,7 @@ nczipioi_put_var(NC_zip        *nczipp,
         }
     }
 
+/*
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: xbuf = {", nczipp->rank);
@@ -569,6 +571,7 @@ nczipioi_put_var(NC_zip        *nczipp,
         fflush(stdout);
     }
 #endif
+*/
 
     /* 
      * The buffer is now filled with data coming from all processes, it's time to compress
@@ -605,6 +608,7 @@ nczipioi_put_var(NC_zip        *nczipp,
         zdispls[i + 1] = zdispls[i] + zipsize[i];
     }
 
+/*
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: zipsize = {", nczipp->rank);
@@ -623,6 +627,7 @@ nczipioi_put_var(NC_zip        *nczipp,
         fflush(stdout);
     }
 #endif
+*/
 
     /*
      * Now it is time for a collective write
@@ -657,6 +662,7 @@ nczipioi_put_var(NC_zip        *nczipp,
         zdispls_all[i] = zsize_all[i - 1] + zdispls_all[i - 1];
     }
 
+/*
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: zsize_all = {", nczipp->rank);
@@ -667,10 +673,13 @@ nczipioi_put_var(NC_zip        *nczipp,
         for(i = 0; i < varp->nblocks; i++){
             printf("%d, ", zdispls_all[i]);
         }
+        printf("}, varid = { %d", varp->varid);
+        printf("}, datavarid = { %d", varp->datavarid);
         printf("}\n");
         fflush(stdout);
     }
 #endif
+*/
 
     // Enter redefine mode
     nczipp->driver->redef(nczipp->ncp);
@@ -704,11 +713,11 @@ nczipioi_put_var(NC_zip        *nczipp,
         zstarts[i][0] = zdispls_all[myblocks[i]];
         zcounts[i][0] = zsize_all[myblocks[i]];
     }
-    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmyblocks, zstarts, zcounts, zbuf, zdispls[nmyblocks - 1] + zipsize[nmyblocks - 1], MPI_UNSIGNED_CHAR, NC_REQ_COLL);
+    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmyblocks, zstarts, zcounts, zbuf, zdispls[nmyblocks - 1] + zipsize[nmyblocks - 1], MPI_UNSIGNED_CHAR, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
     if (err != NC_NOERR) return err;
 
     // Record datavar id
-    err = nczipp->driver->put_var(nczipp->ncp, varp->varid, NULL, NULL, NULL, NULL, &(varp->datavarid), 1, MPI_INT, NC_REQ_COLL);
+    err = nczipp->driver->put_var(nczipp->ncp, varp->varid, NULL, NULL, NULL, NULL, &(varp->datavarid), 1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
     if (err != NC_NOERR) return err;
     
     //  Free up buffers
