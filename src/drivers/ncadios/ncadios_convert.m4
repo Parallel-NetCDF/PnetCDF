@@ -27,9 +27,10 @@ define(`SWIN',dnl
 `dnl
     case $1:
         switch (outtype){
-            foreach(`dt', (`(`MPI_CHAR', `char')', dnl
-                    `(`MPI_SIGNED_CHAR', `signed char')', dnl
-                    `(`MPI_UNSIGNED_CHAR', `unsigned char')', dnl
+            foreach(`dt', (`(`MPI_BYTE', `char')', dnl
+                `(`MPI_CHAR', `char')', dnl
+                `(`MPI_SIGNED_CHAR', `signed char')', dnl
+                `(`MPI_UNSIGNED_CHAR', `unsigned char')', dnl
                 `(`MPI_SHORT', `short')', dnl
                 `(`MPI_UNSIGNED_SHORT', `unsigned short')', dnl
                 `(`MPI_INT', `int')', dnl
@@ -63,9 +64,10 @@ ncadiosiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype out
     int i;
 
     switch (intype) {
-        foreach(`dt', (`(`MPI_CHAR', `char')', dnl
-                `(`MPI_SIGNED_CHAR', `signed char')', dnl
-                `(`MPI_UNSIGNED_CHAR', `unsigned char')', dnl
+        foreach(`dt', (`(`MPI_BYTE', `char')', dnl
+               `(`MPI_CHAR', `char')', dnl
+               `(`MPI_SIGNED_CHAR', `signed char')', dnl
+               `(`MPI_UNSIGNED_CHAR', `unsigned char')', dnl
                `(`MPI_SHORT', `short')', dnl
                `(`MPI_UNSIGNED_SHORT', `unsigned short')', dnl
                `(`MPI_INT', `int')', dnl
