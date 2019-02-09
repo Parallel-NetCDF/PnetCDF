@@ -193,3 +193,47 @@ int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
         }
     }
 }
+
+int ncadiosi_parse_header_readall (NC_ad *ncadp) {
+    int err;
+    int i, j;
+    int varid;
+    int *dimids = NULL;
+    int maxndim = 0;
+    char name[1024];
+
+    /* For all variables */
+    for (i = 0; i < ncadp->fp->nvars; i++) {
+        ADIOS_VARINFO * v = adios_inq_var_byid (ncadp->fp, i);
+        adios_inq_var_stat (ncadp->fp, v, 0, 0);
+
+        if (maxndim < v->ndim){
+            maxndim = v->ndim;
+            if (dimids != NULL){
+                NCI_Free(dimids);
+            }
+            dimids = (int*)NCI_Malloc(sizeof(int) * maxndim);
+        }
+        
+        // Record every dimensions
+        for (j = 0; j < v->ndim; j++){
+            sprintf(name, "var_%d_dim_%d", i, j);
+            err = ncadiosi_def_dim(ncadp, name, v->dims[j], dimids + j);
+            if (err != NC_NOERR){
+                DEBUG_RETURN_ERROR(err)
+            }
+        }
+
+        // Record variable
+        sprintf(name, "var_%d", i);
+        err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], ncadios_to_nc_type(v->type), v->ndim, dimids, &varid);
+        if (err != NC_NOERR){
+            DEBUG_RETURN_ERROR(err)
+        }
+
+        adios_free_varinfo (v);
+    } /* variables */
+
+    return NC_NOERR;
+}
+

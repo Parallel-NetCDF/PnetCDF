@@ -71,7 +71,10 @@ struct NC_ad {
 };
 
 extern int 
-ncadiosi_parse_header (NC_ad *ncid);
+ncadiosi_parse_header_bp2ncd (NC_ad *ncid);
+
+extern int 
+ncadiosi_parse_header_readall (NC_ad *ncadp);
 
 extern int 
 ncadiosi_parse_rec_dim(NC_ad *ncadp);

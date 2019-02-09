@@ -191,7 +191,7 @@ int ncd_dataset (NC_ad* ncid
                 ,struct adios_bp_buffer_struct_v1 * ptr_buffer
                 ,struct var_dim *var_dims
                 ,int var_dims_count) {
-
+    int err;
     char *name = ptr_var_header->name;
     char *path = ptr_var_header->path;
     char fullname[256],dimname[256];
@@ -245,7 +245,11 @@ int ncd_dataset (NC_ad* ncid
                 }
                 if (i==var_dims_count) {
                     adios_posix_read_attributes_index (ptr_buffer);
-                    adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                    err = adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                    if (err != 0){
+                        return err;
+                    }
+
                     while (atts_root) {
                         if (atts_root->id == dims->global_dimension.var_id) {
                             dimids[ rank] = *(int*)atts_root->characteristics->value;
@@ -263,7 +267,11 @@ int ncd_dataset (NC_ad* ncid
                     }
                     if (i==var_dims_count) {
                         adios_posix_read_attributes_index (ptr_buffer);
-                        adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                        err = adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                        if (err != 0){
+                            return err;
+                        }
+
                         //print_attributes_index ( atts_root);
                         while (atts_root) {
                             if (atts_root->id == dims->dimension.var_id) {
@@ -286,7 +294,10 @@ int ncd_dataset (NC_ad* ncid
                     }
                     if (i==var_dims_count) {
                         adios_posix_read_attributes_index (ptr_buffer);
-                        adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                        err = adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                        if (err != 0){
+                            return err;
+                        }
                         while (atts_root) {
                             if (atts_root->id == dims->local_offset.var_id) {
                                 start_dims [rank] = *(int*)atts_root->characteristics->value;
@@ -379,7 +390,11 @@ int ncd_dataset (NC_ad* ncid
                     }
                     if (i==var_dims_count) {
                         adios_posix_read_attributes_index (ptr_buffer);
-                        adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                        err = adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                        if (err != 0){
+                            return err;
+                        }
+
                         //print_attributes_index(atts_root);
                         while (atts_root) {
                             if (atts_root->id == dims->dimension.var_id) {
@@ -628,8 +643,9 @@ int ncd_dataset (NC_ad* ncid
     return 0;
 }
 
-int ncadiosi_parse_header (NC_ad *ncid)
+int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
 {
+    int err;
     char out_fname [256];
     int rc = 0;
     /*
@@ -680,7 +696,10 @@ int ncadiosi_parse_header (NC_ad *ncid)
     }
 
     adios_posix_read_version (b);
-    adios_parse_version (b, &version);
+    err = adios_parse_version (b, &version);
+    if (err != 0){
+        return err;
+    }
 
     struct adios_index_process_group_struct_v1 * pg_root = 0;
     struct adios_index_process_group_struct_v1 * pg = 0;
@@ -688,18 +707,30 @@ int ncadiosi_parse_header (NC_ad *ncid)
     struct adios_index_attribute_struct_v1 * attrs_root = 0;
 
     adios_posix_read_index_offsets (b);
-    adios_parse_index_offsets_v1 (b);
+    err = adios_parse_index_offsets_v1 (b);
+    if (err != 0){
+        return err;
+    }
 
     adios_posix_read_process_group_index (b);
-    adios_parse_process_group_index_v1 (b, &pg_root, NULL);
+    err = adios_parse_process_group_index_v1 (b, &pg_root, NULL);
+    if (err != 0){
+        return err;
+    }
 
     copy_buffer(b_0, b);
     adios_posix_read_vars_index (b);
-    adios_parse_vars_index_v1 (b, &vars_root, NULL, NULL);
+    err = adios_parse_vars_index_v1 (b, &vars_root, NULL, NULL);
+    if (err != 0){
+        return err;
+    }
 
     copy_buffer(b_1, b);
     adios_posix_read_attributes_index (b);
-    adios_parse_attributes_index_v1 (b, &attrs_root);
+    err = adios_parse_attributes_index_v1 (b, &attrs_root);
+    if (err != 0){
+        return err;
+    }
 
     pg = pg_root;
     while (pg)
@@ -730,7 +761,11 @@ int ncadiosi_parse_header (NC_ad *ncid)
         }
 
         adios_posix_read_process_group (b);
-        adios_parse_process_group_header_v1 (b, &pg_header);
+        err = adios_parse_process_group_header_v1 (b, &pg_header);
+        if (err != 0){
+            return err;
+        }
+
         //printf ("*************************************************\n"); 
         //printf ("\tTime Index Name: %s %d\n", pg_header.time_index_name, pg_header.time_index);
         //printf ("*************************************************\n"); 
@@ -759,26 +794,32 @@ int ncadiosi_parse_header (NC_ad *ncid)
              var_dims_count=var_dims_count+1;
         }
 
-        adios_parse_vars_header_v1 (b, &vars_header);
-  
+        err = adios_parse_vars_header_v1 (b, &vars_header);
+        if (err != 0){
+            return err;
+        }
+
         //printf("time-index id: %s %d\n",pg_header.time_index_name, vars_header.count);
         for (i = 0; i < vars_header.count; i++) {
             var_payload.payload = 0;
-            adios_parse_var_data_header_v1 (b, &var_header);
+            err = adios_parse_var_data_header_v1 (b, &var_header);
 
             if (var_header.is_dim == adios_flag_yes) {
                 var_payload.payload = malloc (var_header.payload_size);
-                adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
+                err = adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
                                                 );
             }
             else {
                 // alloc size +1 to remove valgrind complaint
                 var_payload.payload = malloc (var_header.payload_size + 1);
-                adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
+                err = adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
                                                 );
-                ncd_dataset(ncid,&var_header, &var_payload,b_1,var_dims,var_dims_count);
+                err = ncd_dataset(ncid,&var_header, &var_payload,b_1,var_dims,var_dims_count);
+                if (err != 0){
+                    return err;
+                }
             }
 
             if (var_header.is_dim == adios_flag_yes) {
@@ -806,7 +847,10 @@ int ncadiosi_parse_header (NC_ad *ncid)
                                                             var_payload.payload;
                     var_dims_count++;
                 }
-                ncd_dataset(ncid,&var_header, &var_payload,b_1,var_dims,var_dims_count);
+                err = ncd_dataset(ncid,&var_header, &var_payload,b_1,var_dims,var_dims_count);
+                if (err != 0){
+                    return err;
+                }
             }
 
             if (var_payload.payload)
@@ -816,7 +860,10 @@ int ncadiosi_parse_header (NC_ad *ncid)
             //printf ("\n");
         }
 
-        adios_parse_attributes_header_v1 (b, &attrs_header);
+        err = adios_parse_attributes_header_v1 (b, &attrs_header);
+        if (err != 0){
+            return err;
+        }
 
         for (i = 0; i < attrs_header.count; i++)
         {

@@ -91,7 +91,7 @@ ncadios_open(MPI_Comm     comm,
            MPI_Info     info,
            void       **ncpp)
 {
-    int err, format;
+    int err, format, parse_done;
     int i;
     void *ncp=NULL;
     NC_ad *ncadp;
@@ -131,7 +131,13 @@ ncadios_open(MPI_Comm     comm,
     ncadiosi_dim_list_init(&(ncadp->dims));
 
     if (ncadp->rank == 0) {
-        ncadiosi_parse_header(ncadp);
+        err = ncadiosi_parse_header_bp2ncd(ncadp);
+        if (err == 0){
+            parse_done = 1;
+        }
+        else{
+            parse_done = 0;
+        }
     }
 
     /* Open with ADIOS read API */
@@ -142,6 +148,20 @@ ncadios_open(MPI_Comm     comm,
     }
 
     if (ncadp->rank == 0) {
+        if (!parse_done){
+#ifdef PNETCDF_DEBUG
+            printf("Warning: bp2ncd fails to parse header, presenting virtual dimensions\n");
+            fflush(stdout);
+#endif
+            // Reset var and dim list by free and realloc
+            ncadiosi_var_list_free(&(ncadp->vars));
+            ncadiosi_dim_list_free(&(ncadp->dims));
+            ncadiosi_var_list_init(&(ncadp->vars));
+            ncadiosi_dim_list_init(&(ncadp->dims));
+            
+            ncadiosi_parse_header_readall(ncadp);
+        }
+
         // This require fp be opened
         ncadiosi_parse_attrs(ncadp);
     }
