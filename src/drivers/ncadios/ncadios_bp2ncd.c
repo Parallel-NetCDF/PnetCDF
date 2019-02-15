@@ -442,7 +442,7 @@ int ncd_dataset (NC_ad* ncid
                     count_dims[rank] = dims->dimension.rank;
                     start_dims[rank] =0; 
                     ERR(retval);
-                    fprintf(stderr, "\t local[%zu]: %" PRIu64 "\n",rank,dims->dimension.rank);
+                    //fprintf(stderr, "\t local[%zu]: %" PRIu64 "\n",rank,dims->dimension.rank);
                 } 
             }
             if (dims)

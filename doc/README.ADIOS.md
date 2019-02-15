@@ -1,12 +1,26 @@
-# Support ADIOS BP files
+# Support Read Capability of ADIOS BP files
 
-Starting from version 1.12.0, PnetCDF supports reading data from ADIOS 1.x BP files. 
-Through calling PnetCDF APIs, this feature allows applications to
-read files in BP format. For now, PnetCDF cannot write to BP formated files.
+Starting from version 1.12.0, PnetCDF supports read capability of BP files. Note that write capability is not yet supported in PnetCDF.
 
 ## Enable ADIOS support
 
-PnetCDF requires a ADIOS library (https://www.olcf.ornl.gov/center-projects/adios/) that is built with parallel I/O support.
+PnetCDF requires an [ADIOS library](https://www.olcf.ornl.gov/center-projects/adios/) version 1.x. We recommend version 1.13.1.
+
+* To build ADIOS library
+  + Obtain the source tar ball of ADIOS from URL: https://www.olcf.ornl.gov/center-projects/adios/
+  + Build command
+    ```
+    gzip -dc adios-1.13.1.tar.gz | tar –xf -
+    cd adios-1.13.1
+    export MPICC=<MPI C compiler command> 
+    export MPICXX=<MPI C++ compiler command> 
+    export MPIFC=<MPI Fortran compiler command> 
+    export CC=<C compiler command> 
+    export CXX=<C++ compiler command> 
+    export FC=<Fortran compiler command> 
+    ./configure --prefix=/ADIOS/install/path
+    make install
+    ```
 * To build PnetCDF with ADIOS support
   + Add `--enable-adios` option at the configure command line. Option
     `--with-adios` can be used to specify the installation path of ADIOS.
@@ -18,97 +32,88 @@ PnetCDF requires a ADIOS library (https://www.olcf.ornl.gov/center-projects/adio
                 --enable-adios \
                 --with-adios=/ADIOS/install/path
     ```
-* To build ADIOS library for the ADIOS driver
-  + Download ADIOS
-    git clone https://github.com/ornladios/ADIOS.git
-  + Compile ADIOS
-    ./configure --prefix=<install/directory>
-    make install
-* For detail regarding buuilding the ADIOS library, please refer to https://users.nccs.gov/~pnorbert/ADIOS-UsersManual-1.13.0.pdf
-* The ADIOS driver is only tested on ADIOS 1.12 or later
 
+* For detailed ADIOS configuration options, please refer to [ADIOS User Manual]( https://users.nccs.gov/~pnorbert/ADIOS-UsersManual-1.13.0.pdf)
 
-## Accessing ADIOS file
+## Reading BP files
 
-For now, PnetCDF can only read BP formated file. To open a AIODS BP file, add the flag NC_NOWRITE into argument cmode when
-calling `ncmpi_open()`. For example,
+PnetCDF checks the BP file format automatically. There is no need to add any flag to argument `omode` when calling `ncmpi_open()`. For example,
 ```
-int cmode;
-cmode = NC_NOWRITE;
-ncmpi_open(MPI_COMM_WORLD, "testfile.bp", cmode, MPI_INFO_NULL, &ncid);
+ncmpi_open(MPI_COMM_WORLD, "testfile.bp", NC_NOWRITE, MPI_INFO_NULL, &ncid);
 ```
-
-Setting NC_WRITE flag will result in error. PnetCDF will recognize ADIOS BP file aumatically and selects the proper I/O driver.
-No flag regarding file format is required.
+Calling `ncmpi_open` with `NC_WRITE` flag set in argument `omode` will result in error code `NC_ENOTSUPPORT` returned.
 
 ## Example programs
 
-An example program is avaiable at /examples/adios/read_all.c
+Example programs are available in folder `./examples/adios`. Brief descriptions for all example programs can be found in ` examples/README`.
+
 
 ## Design of ADIOS driver
 
-The ADIOS driver is a convenience wrapper of the ADIOS library that allows users to read ADIOS BP formatted file using PnetCDF API. The ADIOS driver maps ADIOS data structures to NetCDF data structures and translates NetCDF operation into corresponding ADIOS function call. It allows applications using NetCDF file format to access BP formatted files without the need to rewrite using ADIOS API. It also eliminates the need to translate BP formatted files for existing PnetCDF applications.
+The ADIOS driver is a wrapper of the ADIOS library that enables users to read BP files using PnetCDF APIs. The ADIOS driver maps ADIOS data structures to NetCDF data structures and translates PnetCDF API calls into corresponding ADIOS function calls.
 
 * Opening the file
-  When an ADIOS BP formatted file is opened. The ADIOS driver parse the BP file header for metadata involving variables and dimensions because dimension information cannot be retrieved using ADIOS read API. Meanwhile, the driver opens the file using ADIOS read API for variable data and attribute reading. 
+  When the application opens a BP file using PnetCDF, the library detects the BP file format and load the ADIOS driver to handle the file.
   + Determine file format
     + To our best knowledge, BP file format has no (specified) signature that can be used to recognize BP formatted files.
-      ADIOS assumes files are valid and parse it according to its format specification. The file is considered invalid when any violation of the format is found during the parsing.
     + Instead of a header, the BP file format uses a footer to index the data. 
-      The last 28 byte is a mini footer that contains 3 64 bits unsigned integer that represent the position of process group, variables, and attributes index table in the footer respectively followed by a 4 bytes version information. The only rule regarding the mini footer is that process group index comes before variable index and variable index comes before attributes index.
-    To determine the file format, the ADIOS driver first check if the mini footer matches the BP specification. If so, the ADIOS driver tries to open the file using ADIOS read API. Should opening successes, it is considered valid BP formatted file.
-  + Parsing Headers
-    ADIOS distribution comes with a NetCDF conversion utility that converts BP formatted file into NetCDF file called bp2ncd. To ensure the view of BP file resented by PnetCDF is consistent with the file converted by the utility program in ADIOS distribution, we followed the representation of bp2ncd.
-    We ran a modified routine of bp2ncd in which it does not actually generate NetCDF files, instead, it records every dimension and variable it tries to create. This information is used by the ADIOS driver to provide dimension information as well as metadata of variables. We noticed that the bp2ncd utility has some problem in parsing attributes. Fortunately, the ADIOS read API do present full attribute information. we use the ADIOS read API directly to access attributes.
-* Querying Dimensions
-  ADIOS BP file does not include data structure for dimensions, instead, dimensions are represented by special scalar variables with a flag indicating it is a dimension. However, ADIOS read API ignores the flag and present all variable as traditional variable. It is only possible to know the size of each variable using ADIOS API. The relation between variable dimensions to dimension variables is not retrievable using ADIOS read API. We use record generated by bp2ncd utility to distinguish dimensions and variable as well as their relation.
-  When user query a dimension, we find in the record generated by the modified bp2ncd routine for name or ID matching the query.
-  + Unlimited Dimensions
-    For performance consideration, we do not record variable write from the bp2ncd utility. ADIOS read API also does not expose size of unlimited dimension. We define the size of unlimited dimension as the largest it ever appears in variable sizes returned by ADIOS read API.
-* Reading Attributes
-  ADIOS read API can retrieve full attribute information. We can translate PnetCDF attribute read to ADIOS attribute read directly.
-  + Unlike PnetCDF where attribute can either be associated with the file (global) or a variable, ADIOS read API presents all attributes as global attribute. Attributes that is intended to be associated with a variable are indicate by giving it a path-like name with variable name as prefix. For example, an attribute X associated with variable Y will be presented as a global named /Y/X.
-  + When user reads a global attribute, we pass it directly to ADIOS API. When user reads a variable attribute, we append the name of variable in question before the attribute name and pass to ADIOS read API. In this way, variable attributes can be accessed either globally using its full path or on variable with only attribute name.
-* Reading Variables
-  The view of ADIOS driver on variables are based on the record of bp2ncd which differs to the view given by ADIOS read API. As a result, variables are identified by name instead of ID when reading variable data using ADIOS read API.
+      The last 28 byte of the BP file is a mini footer that contains 3 64 bits unsigned integer that represents the position of process groups, variables, and attributes index table in the footer respectively followed by a 4 bytes version information. The only rule regarding the mini footer is that process group index comes before the variable index and variable index comes before attributes index.
+    To determine the file format, the ADIOS driver first checks if the mini footer matches the BP specification. If so, the ADIOS driver tries to open the file using the ADIOS read API. If ADIOS file open does not report an error, it is considered a valid BP formatted file.
+  When a BP file is opened by the ADIOS driver, it opens the file using ADIOS read API and keep the opened file handle. At the same time, the ADIOS driver parses the file metadata regarding variables and dimensions. Theses metadata is cached inside the driver to support efficient query from the application. 
+  + Parsing the metadata
+    + Lack of information regarding dimension
+      A major difference between BP and NetCDF file is the handling of dimensions. In a NetCDF file, dimensions are a type of object that can be associated with multiple variables in the same file. To find out the size of a variable, the application query for dimensions associated with that variable and then query the size of each dimension object.
+      On the other hand, there is no dimension object in the BP files. When defining variables, the application specifies its size along each dimension directly. The size can be specified either by a constant or a reference to a scalar variable where the value indicates the size. In the latter case, the variable being referred to serves a similar role of dimension object in the NetCDF file.
+      Although BP file does allow linking variables' shape to scalar variables, ADIOS does not expose such relationship to the user. ADIOS always present the shape of a variable purely by its value even if it is defined by scalar variables. As a result, it is not possible to derive dimension information by calling ADIOS APIs. In fact, such information may not even exist in a BP file since variable shape can be defined purely by value without linking to any scalar variable.
+    + Following the view of bp2ncd conversion utility
+      ADIOS distribution comes with a NetCDF conversion utility that converts BP formatted file into NetCDF file called bp2ncd. We rely on the code in this utility to provide variable and dimension information. By using it, we not only get the dimension information we need but also ensures that the view of a BP file represented by PnetCDF is consistent with the NetCDF file converted by the utility program. We ran a modified version of bp2ncd in which it does not actually generate a NetCDF file, instead, it records every dimension and variable it tries to create. The ADIOS driver uses this record to infer dimension and variable information.     
+    + Alternative approach
+      The bp2ncd utility was not designed to convert all BP files. For example, the BP file that is stored in file-per-process fashion (POSIX transmission method) is not supported by bp2ncd. On those files, the utility code cannot be used to acquire metadata about dimension and variables. In such case, the ADIOS driver simply creates a virtualized dimension for every dimension of every variable. It assumes that all variable shapes are defined by constant value directly and no scalar variable is used as dimension size.
+* Reading the variable
+  The view of ADIOS driver on variables is based on the record of bp2ncd which differs to the view given by ADIOS read API. As a result, the ADIOS driver specifies variables by name instead of ID when reading variable data using the ADIOS read API.
   + Unsupported API type
+    Due to the difference in the interface of ADIOS and PnetCDF, not all PnetCDF function call can be translated to ADIOS function call. Some of the functions are possible to translate to ADIOS but can not be done efficiently. Those functions are currently not supported by the ADIOS driver.
     + vard: ADIOS does not allow reading variable using derived datatype
     + low-level API: ADIOS does not allow reading variable using derived datatype
-    + write related API: ADIOS driver is read only
-    + varn: Although it is possible simulate it by issuing multiple vara call, it won’t provide the performance advantage as the purpose of varn API. Non-blocking API are also not supported
-    + non-blocking: Although ADIOS have a set of non-blocking APIs, it serves different purpose to the non-blocking API in PnetCDF and hence cannot be used to support non-blocking API in PnetCDF
-  + Time step
-    The BP file not only record the current state of the dataset, it records the entire history. It is presented by the concept of time steps. 
-    Each time step corresponds to an open and close session. Variables can have different value on different time step.
-    Since NetCDF file as well as PnetCDF API do not include such concept, the ADIOS driver always return the last (latest) time step of a variable.
+    + write related API: ADIOS driver is read-only
+    + varn: Although it is possible to translate it into multiple ADIOS read call, it does not provide the performance advantage varn API is supposed to provide. 
+    + non-blocking: Although ADIOS have a set of non-blocking APIs, it serves a different purpose to the non-blocking API in PnetCDF and hence cannot be used to support non-blocking API in PnetCDF.
+  + Timestep
+    The BP file not only record the current state of the dataset, but it also records the entire history. It introduces the concept of timestep to deal with different versions of the file. 
+    Each timestep corresponds to a session between file opening and closing. Variables can have different values on different time steps.
+    Since NetCDF file, as well as PnetCDF API, do not include such concept, the ADIOS driver always returns the last (latest) time step of a variable.
   + Type conversion
-    ADIOS read API always return data in origin type associate with a variable or attribute. 
-    PnetCDF, on the other hand, do allow user to specify a different datatype to the variable or attribute. 
-    If user specify a different type than the variable or attribute, the ADIOS driver will read the variable into a temporary buffer, and then convert the data into desired type by performing C type casting on each individual value.
+    ADIOS read API always return data in origin type associated with a variable or attribute. 
+    PnetCDF, on the other hand, does allow users to specify a different datatype when reading a variable or attribute. 
+    If the user specifies a different type than the variable or attribute, the ADIOS driver will read the variable into a temporary buffer, and then convert the data into the desired type by performing C type casting on each individual value.
+* Reading Attributes
+  Unlike variable and dimensions, metadata regarding dimensions are not parsed using the bp2ncd code at file opening stage. This is because ADIOS has a very similar interface regarding attributes to PnetCDF. PnetCDF attribute read request can be easily mapped to ADIOS attribute read request.
+  + Unlike in PnetCDF where the user can choose to query attributes on a specific variable or on the file (global), ADIOS read API presents all attributes as global attributes (on the file). Attributes that are intended to be associated with a variable are indicated by giving it a path-like name with variable name as a prefix. For example, an attribute X associated with variable Y will be presented as a global named /Y/X.
+  + When the user reads a global attribute, we pass it directly to ADIOS API. When the user reads a variable attribute, we append the name of the variable in question before the attribute name and pass to ADIOS read API. In this way, variable attributes can be accessed either globally using its full path or locally at the variable with the only attribute name.
+* Querying Dimensions
+  As mentioned in the open section, ADIOS API does not expose dimension information to the user. BP file format does not enforce explicit dimension declaration as well. 
+  We rely on the cached metadata to respond to dimension related queries.
+  + Unlimited Dimensions
+    For performance consideration, we do not record variable write from the bp2ncd utility. Hence, the size of the unlimited dimension is not in the cached metadata. ADIOS read API also does not expose the size of the unlimited dimension. The ADIOS driver assumes the size of the unlimited dimension is equal to the largest it ever appears in variable sizes returned by ADIOS read API.  
 
 ## Known Problems
 
-Some features are not supported due to the availability of APIs different
+Some features are not supported because the availability of APIs is different
 between PnetCDF and ADIOS libraries. I/O semantics are also slightly
 different.
 
-* The ADIOS driver is ready only driver. It does not support any API that creates or modifies 
-  objects within the BP file.
+* The ADIOS driver is ready only. It does not support any API that creates or modifies 
+  the BP file.
 * The ADIOS driver does not work with PnetCDF burst buffer feature due to its ready only nature.
 * API families of `vard`, `varn`, derived type, and nonblocking I/O are not supported. This
   is because ADIOS does not have corresponding APIs. Error code
-  `NC_ENOTSUPPORT` will be returned. For vard APIs, ADIOS does not have APIs
-  that allow accessing the file directly by an MPI derived file type. For
-  `varn` APIs, a potential solution is to split the request into into multiple
-  vara calls. However, such solution must deal with the situation when the
-  numbers of requests are different among processes in the collective data
-  mode. Supporting `varn` is thus a future work.
-* PnetCDF current does not recognize record dimension. Variable with record dimension can 
-  still be read, but PnetCDF will not return information regarding number of records.
-* Subfiled BP file is not supported. 
-* C memory layout (row major) is always assumed.
+  `NC_ENOTSUPPORT` will be returned. For vard APIs, ADIOS does not have APIs that allow accessing the file directly by an MPI derived file type. For
+  `varn` APIs, a potential solution is to split the request into multiple vara calls. However, doing this will not provide any performance improvement over fragmented request as varn API is supposed to do.
+* PnetCDF current does not recognize record dimension. Variable with record dimension can still be read, but PnetCDF will not return information regarding the number of records.
+* Subfiled BP file is not fully supported. As mentioned in the design section, we cannot parse the dimension information in sub-filed BP file. In such case, the application will see a virtualized dimension that enables them to read variable data but does not provide the relationship of a variable to scalar variables (if any) that defines its shape.
+* C memory layout (row major) is always assumed even calling from PnetCDF Fortran API.
 
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 
-See COPYRIGHT notice in top-level directory.
+See COPYRIGHT notice in the top-level directory.
 

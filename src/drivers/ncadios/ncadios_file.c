@@ -115,6 +115,11 @@ ncadios_open(MPI_Comm     comm,
     ncadp->mode   = omode;
     ncadp->flag   = 0;
     ncadp->comm   = comm;
+<<<<<<< HEAD
+=======
+    ncadp->getsize = 0;
+    MPI_Comm_rank(ncadp->comm, &(ncadp->rank));
+>>>>>>> e735ee4... getsize
 
     *ncpp = ncadp;
 
@@ -427,7 +432,7 @@ ncadios_inq_misc(void       *ncdp,
 
     //TODO: Count get size
     if (get_size != NULL){
-        *get_size = 0;
+        *get_size = ncadp->getsize;
     }
 
     if (info_used != NULL){

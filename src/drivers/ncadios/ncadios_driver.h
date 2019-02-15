@@ -64,6 +64,7 @@ struct NC_ad {
     int              *ndims;        /* Number of dims in each var */
     int                rank;
     MPI_Offset         nrec;        // Number of records in unlimited dimension
+    MPI_Offset      getsize;
     int              recdim;        // ID of unlimited dimension
     NC_ad_var_list     vars;
     NC_ad_att_list     atts;
