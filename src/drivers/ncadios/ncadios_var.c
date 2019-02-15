@@ -189,6 +189,9 @@ ncadios_get_var(void             *ncdp,
 
     adios_free_varinfo (v);
 
+    MPI_Type_size(vtype, &cesize);
+    ncadp->getsize += cesize * ecnt;
+
     return NC_NOERR;
 }
 
