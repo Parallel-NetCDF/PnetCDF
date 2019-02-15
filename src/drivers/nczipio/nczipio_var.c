@@ -69,7 +69,7 @@ nczipio_def_var(void       *ncdp,
     NC_zip_var var;
 
     var.ndim = ndims;
-    var.stripesize = NULL;
+    var.chunkdim = NULL;
     var.offset = NULL;
     var.owner = NULL;
 

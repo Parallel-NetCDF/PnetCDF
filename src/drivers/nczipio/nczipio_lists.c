@@ -31,8 +31,8 @@ int nczipioi_var_list_free(NC_zip_var_list *list) {
             if (list->data[i].dimsize != NULL){
                 NCI_Free(list->data[i].dimsize);
             }
-            if (list->data[i].stripesize != NULL){
-                NCI_Free(list->data[i].stripesize);
+            if (list->data[i].chunkdim != NULL){
+                NCI_Free(list->data[i].chunkdim);
             }
             if (list->data[i].dimids != NULL){
                 NCI_Free(list->data[i].dimids);

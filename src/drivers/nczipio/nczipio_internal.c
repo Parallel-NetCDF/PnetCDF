@@ -24,22 +24,22 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
     MPI_Offset len, bsize;
     NC_zip_var *var;
 
-    if (varp->vartype == NC_ZIP_VAR_COMPRESSED){
-        if (varp->stripesize == NULL){    // This is a new uninitialized variable 
+    if (varp->varkind == NC_ZIP_VAR_COMPRESSED){
+        if (varp->chunkdim == NULL){    // This is a new uninitialized variable 
             // Determine its block size
-            varp->stripesize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+            varp->chunkdim = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
             
             // First check attribute
             valid = 1;
-            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_stripesize", NULL, &len);
+            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunkdim", NULL, &len);
             if (err == NC_NOERR && len == varp->ndim){
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_stripesize", varp->stripesize, MPI_UNSIGNED_LONG_LONG);
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkdim", varp->chunkdim, MPI_UNSIGNED_LONG_LONG);
                 if (err != NC_NOERR){
                     valid = 0;
                 }
-                //stripesize must be at leasst 1
+                //chunkdim must be at leasst 1
                 for(j = 0; j < varp->ndim; j++){ 
-                    if (varp->stripesize[j] <= 0){
+                    if (varp->chunkdim[j] <= 0){
                         valid = 0;
                         printf("Warning: block size invalid, use default");
                         break;
@@ -52,8 +52,8 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             
             // Default block size is same as dim size, only 1 blocks
             if (!valid){
-                memcpy(varp->stripesize, varp->dimsize, sizeof(MPI_Offset) * varp->ndim);
-                err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_stripesize", NC_INT, varp->ndim, varp->stripesize, MPI_UNSIGNED_LONG_LONG);
+                memcpy(varp->chunkdim, varp->dimsize, sizeof(MPI_Offset) * varp->ndim);
+                err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkdim", NC_INT, varp->ndim, varp->chunkdim, MPI_UNSIGNED_LONG_LONG);
                 if (err != NC_NOERR){
                     return err;
                 }
@@ -62,45 +62,45 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             // Calculate block size
             bsize = 1;
             for(i = 0; i < varp->ndim; i++){
-                bsize *= varp->stripesize[i];
+                bsize *= varp->chunkdim[i];
             }
 
             // Calculate number of blocks
-            varp->nblocks = 1;
+            varp->nchunks = 1;
             len = 1;
-            for(j = 0; j < varp->ndim; j++){ //stripesize must be at leasst 1
-                if (varp->stripesize[j] % varp->stripesize[j] == 0){
-                    varp->nblocks *= varp->stripesize[j] / varp->stripesize[j];
+            for(j = 0; j < varp->ndim; j++){ //chunkdim must be at leasst 1
+                if (varp->chunkdim[j] % varp->chunkdim[j] == 0){
+                    varp->nchunks *= varp->chunkdim[j] / varp->chunkdim[j];
                 }
                 else{
-                    varp->nblocks *= varp->stripesize[j] / varp->stripesize[j] + 1;
+                    varp->nchunks *= varp->chunkdim[j] / varp->chunkdim[j] + 1;
                 }
-                len *= varp->stripesize[j];   // Block size
+                len *= varp->chunkdim[j];   // Block size
             }
 
-            varp->owner = (int*)NCI_Malloc(sizeof(int) * varp->nblocks);
+            varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
             // Determine block ownership
             if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
-                for(j = 0; j < varp->nblocks; j++){ 
-                    varp->owner[j] = j % nczipp->np;
-                    //if (varp->owner[j] == nczipp->rank){
+                for(j = 0; j < varp->nchunks; j++){ 
+                    varp->chunk_owner[j] = j % nczipp->np;
+                    //if (varp->chunk_owner[j] == nczipp->rank){
                     //    varp->cache[j] = (void*)NCI_Malloc(bsize);  // Allocate buffer for blocks we own
                     //}
                 }
             }
 
             // Determine block offset
-            varp->offset = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nblocks);
-            varp->lens = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nblocks);
+            varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nchunks);
+            varp->data_lens = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nchunks);
             // Try if there are offset recorded in attributes, it can happen after opening a file
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_offsets", NULL, &len);
-            if (err == NC_NOERR && varp->nblocks == len - 1){
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_offsets", varp->offset, MPI_UNSIGNED_LONG_LONG);
+            if (err == NC_NOERR && varp->nchunks == len - 1){
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_offsets", varp->data_offs, MPI_UNSIGNED_LONG_LONG);
             }
             // If not, 0 len no data avaiable
             if (err != NC_NOERR){
-                memset(varp->offset, 0, sizeof(MPI_Offset) * varp->nblocks);
-                memset(varp->lens, 0, sizeof(MPI_Offset) * varp->nblocks);
+                memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunks);
+                memset(varp->data_lens, 0, sizeof(MPI_Offset) * varp->nchunks);
             }
         }   
     }

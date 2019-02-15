@@ -18,18 +18,50 @@
 
 #define NC_ZIP_MAPPING_STATIC 0
 
-typedef struct NC_zip_var {
-    int vartype;
-    int varid;
-    int datavarid;
+typedef enum {
+    STATIC = 0,           
+    DYNAMIC = 1 
+} mapping_strategy;
+
+typedef struct NC_zip_var_chunk {
+    MPI_Offset *start;
+    MPI_Offset *xdata_offs;
+    MPI_Offset *xdata_lens;
+    int owner;
+    char *data;
+    char *xdata;
+}
+
+typedef struct NC_zip_var_chunk_list {
+    NC_zip_var_chunk *chunks;
+    int cnt;
     int ndim;
-    int *dimids;
     MPI_Offset *dimsize;
-    MPI_Offset *stripesize;
-    int nblocks;
-    int *owner;
-    MPI_Offset *offset;
-    MPI_Offset *lens;
+    char *buffer;
+}
+
+typedef struct NC_zip_var {
+    int varkind;
+
+    nc_type xtype;
+    int ndim;
+    MPI_Offset *dimsize;
+    int *dimids;
+    
+    int varid;
+
+    NC_zip_var_chunk_list chunks;
+
+    int nchunks;
+    int *chunk_owner;
+    MPI_Offset *chunkdim;
+    char **chunk_cache;
+
+    int datavarid;
+    MPI_Offset *data_offs;
+    MPI_Offset *data_lens;
+    
+    mapping_strategy chunk_map_method;
 } NC_zip_var;
 
 typedef struct NC_zip_var_list {
