@@ -32,7 +32,7 @@
 #define min(a,b) (((a)<(b))?(a):(b))
 #define max(a,b) (((a)>(b))?(a):(b))
 
-static int get_block_idx(NC_zip_var *varp, int* cord){
+static int get_chunk_idx(NC_zip_var *varp, int* cord){
     int i, ret;
     
     ret = cord[0];
@@ -43,7 +43,7 @@ static int get_block_idx(NC_zip_var *varp, int* cord){
     return ret;
 }
 
-static int get_block_cord(NC_zip_var *varp, int idx, int* cord){
+static int get_chunk_cord(NC_zip_var *varp, int idx, int* cord){
     int i, ret;
     
     ret = cord[0];
@@ -60,7 +60,7 @@ static int get_block_cord(NC_zip_var *varp, int idx, int* cord){
     return 0;
 }
 
-static int get_block_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, int *ostart, int *ocount){
+static int get_chunk_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, int *ostart, int *ocount){
     int i, ret;
 
     for(i = 0; i < varp->ndim; i++){
@@ -88,7 +88,7 @@ nczipioi_get_var(NC_zip        *nczipp,
 {
     int i, j, err;
     nc_type xtype;
-    int *bstart, *bend, *bcord;
+    int *cstart, *cend, *ccord;
     int nb, bsize;
     int datavarid;
     int *bidx;
@@ -99,50 +99,50 @@ nczipioi_get_var(NC_zip        *nczipp,
     MPI_Offset cbsize;
     MPI_Offset **starts, **counts;
 
-    // Boundary of blocks involved
-    bstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    bcord = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    bend = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+    // Boundary of chunks involved
+    cstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+    ccord = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+    cend = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
     for(i = 0; i < varp->ndim; i++){
-        bstart[i] = start[i] / varp->chunkdim[i];
+        cstart[i] = start[i] / varp->chunkdim[i];
         if (stride == NULL){
-            bend[i] = (start[i] + count[i] - 1) / varp->chunkdim[i];
+            cend[i] = (start[i] + count[i] - 1) / varp->chunkdim[i];
         }
         else{
-            bend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->chunkdim[i] + 1;
+            cend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->chunkdim[i] + 1;
         }
     }
     
-    // Number of blocks involved
+    // Number of chunks involved
     nb = 1;
     for(i = 0; i < varp->ndim; i++){
-        nb *= bend[i] - bstart[i];
+        nb *= cend[i] - cstart[i];
     }
 
-    /* Use a varn call to read all compressed block involved 
-     * Generate one request for each block
+    /* Use a varn call to read all compressed chunk involved 
+     * Generate one request for each chunk
      */
 
     bidx = (int*)NCI_Malloc(sizeof(int) * nb);
     starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nb);
     counts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nb);
-    // Iterate through all blocks involved
+    // Iterate through all chunks involved
     i = 0;
     cbsize = 0;
-    memcpy(bcord, bstart, sizeof(int) * varp->ndim);
+    memcpy(ccord, cstart, sizeof(int) * varp->ndim);
     for(i = 0; i < nb; i++){
-        j = get_block_idx(varp, bcord);   
-        bidx[i] = j; // block idx
+        j = get_chunk_idx(varp, ccord);   
+        bidx[i] = j; // chunk idx
         cbsize += varp->data_lens[j];  // total buffer size of compressed data
-        starts[i] = varp->data_offs + j;   // start of the block
-        counts[i] = varp->data_lens + j; // count of the block
+        starts[i] = varp->data_offs + j;   // start of the chunk
+        counts[i] = varp->data_lens + j; // count of the chunk
 
-        // move on to next block
-        bcord[varp->ndim - 1]++;
+        // move on to next chunk
+        ccord[varp->ndim - 1]++;
         for(j = varp->ndim - 1; j > 0; j--){
-            if (bcord[j] >= bend[j]){
-                bcord[j - 1]++;
-                bcord[j] = bstart[j];
+            if (ccord[j] >= cend[j]){
+                ccord[j - 1]++;
+                ccord[j] = cstart[j];
             }
         }
     }
@@ -160,12 +160,12 @@ nczipioi_get_var(NC_zip        *nczipp,
 
     // Decompression
 
-    // Calculate block size
+    // Calculate chunk size
     // Original datatype
     err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_datatype", &xtype, MPI_INT); 
     if (err != NC_NOERR) return err;
 
-    // Calculate block size
+    // Calculate chunk size
     bsize = (int)NC_Type_size(xtype);
     for(i = 0; i < varp->ndim; i++){
         bsize *= varp->chunkdim[i];
@@ -174,7 +174,7 @@ nczipioi_get_var(NC_zip        *nczipp,
     // Allocate buffers
     rbuffer = NCI_Malloc(bsize * nb);  // Decompressed data
 
-    // Decompress blocks
+    // Decompress chunks
     cbsize = 0;
     for(i = 0; i < nb; i++){
         j = bidx[i];
@@ -184,7 +184,7 @@ nczipioi_get_var(NC_zip        *nczipp,
         else{
             memset(rbuffer + bsize * i, 0, bsize);
         }
-        cbsize += varp->data_lens[j];  // move to next block location
+        cbsize += varp->data_lens[j];  // move to next chunk location
     }
 
     // Copy data into user buffer
@@ -194,7 +194,7 @@ nczipioi_get_var(NC_zip        *nczipp,
     tssize = NCI_Malloc(sizeof(int) * varp->ndim);
     tstart = NCI_Malloc(sizeof(int) * varp->ndim);
     for(i = 0; i < varp->ndim; i++){
-        tsize[i] = (bend[i] - bstart[i]) * varp->chunkdim[i];
+        tsize[i] = (cend[i] - cstart[i]) * varp->chunkdim[i];
         tssize[i] = (int)count[i];
         tstart[i] = start[i] % varp->chunkdim[i];
     }
@@ -245,18 +245,18 @@ nczipioi_put_var(NC_zip        *nczipp,
     nc_type xtype;  // Variable data type in NC
     MPI_Datatype etype; // Variable element type in MPI
     int esize;  // Variable element size
-    int *bstart, *bend, *bcord; // Bounding box for blocks overlapping my own write region
-    int nb, bsize;  //number of blocks this process write to and block size
+    int *cstart, *cend, *ccord; // Bounding box for chunks overlapping my own write region
+    int nb, bsize;  //number of chunks this process write to and chunk size
     int datavarid;  // Id of data variable
     int *tsize, *tssize, *tstart;   // Size for sub-array type
-    int nmyblocks, *myblocks;  // Block count and id this process handles
+    int nmychunks, *mychunks;  // chunk count and id this process handles
     int *sendcounts, *sdispls;  // Send count and displacements in buffer
     int *recvcounts, *rdispls;  // Receive count and displacement in buffer
     int *packoff;   // Offset in mpi packing
-    int *zipsize, *zdispls;  // Compressed count and displacement of my blocks in buffer
-    int *zsize_local, *zsize_all;   // Compressed size of all blocks at local and global (all processes)
-    int *zdispls_all;  // Compressed displacement of all blocks (all processes)
-    int overlapsize;   // Size of overlapping region between a block and write region
+    int *zipsize, *zdispls;  // Compressed count and displacement of my chunks in buffer
+    int *zsize_local, *zsize_all;   // Compressed size of all chunks at local and global (all processes)
+    int *zdispls_all;  // Compressed displacement of all chunks (all processes)
+    int overlapsize;   // Size of overlapping region between a chunk and write region
     MPI_Datatype ptype;  // Pack datatype
     char *zbuf, *xbuf;  // Compressed and uncompressed data buffer
     char *sbuf, *rbuf;  // Send and receive buffer
@@ -271,7 +271,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     esize = NC_Type_size(xtype);
     etype = ncmpii_nc2mpitype(xtype);
 
-    // Calculate block size
+    // Calculate chunk size
     bsize = esize;
     for(i = 0; i < varp->ndim; i++){
         bsize *= varp->chunkdim[i];
@@ -327,20 +327,20 @@ nczipioi_put_var(NC_zip        *nczipp,
     }
 
     /* 
-     * Now, we need to send data to the block owner as well as receive data for our own block
+     * Now, we need to send data to the chunk owner as well as receive data for our own chunk
      */
 
-    // First, compute block boundary, find overlapping blocks
-    bstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    bcord = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    bend = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+    // First, compute chunk boundary, find overlapping chunks
+    cstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+    ccord = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+    cend = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
     for(i = 0; i < varp->ndim; i++){
-        bstart[i] = start[i] / varp->chunkdim[i];
+        cstart[i] = start[i] / varp->chunkdim[i];
         if (stride == NULL){
-            bend[i] = (start[i] + count[i] - 1) / varp->chunkdim[i] + 1;
+            cend[i] = (start[i] + count[i] - 1) / varp->chunkdim[i] + 1;
         }
         else{
-            bend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->chunkdim[i] + 1;
+            cend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->chunkdim[i] + 1;
         }
     }
 
@@ -351,27 +351,27 @@ nczipioi_put_var(NC_zip        *nczipp,
     memset(sendcounts, 0, sizeof(int) * nczipp->np);
     memset(packoff, 0, sizeof(int) * nczipp->np);
 
-    // Iterate through all blocks involved to count send size
+    // Iterate through all chunks involved to count send size
     i = 0;
     overlapsize = 0;
-    memcpy(bcord, bstart, sizeof(int) * varp->ndim);
-    while(bcord[0] < bend[0]){
-        j = varp->chunk_owner[get_block_idx(varp, bcord)];    
+    memcpy(ccord, cstart, sizeof(int) * varp->ndim);
+    while(ccord[0] < cend[0]){
+        j = varp->chunk_owner[get_chunk_idx(varp, ccord)];    
         
-        // Overlapping size of this block
-        get_block_overlap(varp, bcord, start, count, stride, tstart, tssize);
+        // Overlapping size of this chunk
+        get_chunk_overlap(varp, ccord, start, count, stride, tstart, tssize);
         overlapsize = esize;
         for(k = 0; k < varp->ndim; k++){
             overlapsize *= tssize[k];
         }
         sendcounts[j] += overlapsize;
 
-        // move on to next block
-        bcord[varp->ndim - 1]++;
+        // move on to next chunk
+        ccord[varp->ndim - 1]++;
         for(j = varp->ndim - 1; j > 0; j--){
-            if (bcord[j] >= bend[j]){
-                bcord[j - 1]++;
-                bcord[j] = bstart[j];
+            if (ccord[j] >= cend[j]){
+                ccord[j - 1]++;
+                ccord[j] = cstart[j];
             }
         }
     }
@@ -387,18 +387,18 @@ nczipioi_put_var(NC_zip        *nczipp,
 
     // Pack data into send buffer
     
-    // Iterate through all blocks involved again, this time actually pack the data
+    // Iterate through all chunks involved again, this time actually pack the data
     for(i = 0; i < varp->ndim; i++){
         tsize[i] = (int)count[i];
     }
     i = 0;
     overlapsize = 0;
-    memcpy(bcord, bstart, sizeof(int) * varp->ndim);
-    while(bcord[0] < bend[0]){
-        j = varp->chunk_owner[get_block_idx(varp, bcord)];   
+    memcpy(ccord, cstart, sizeof(int) * varp->ndim);
+    while(ccord[0] < cend[0]){
+        j = varp->chunk_owner[get_chunk_idx(varp, ccord)];   
         
-        // Overlapping region of this block
-        get_block_overlap(varp, bcord, start, count, stride, tstart, tssize);
+        // Overlapping region of this chunk
+        get_chunk_overlap(varp, ccord, start, count, stride, tstart, tssize);
         for(k = 0; k < varp->ndim; k++){
             tstart[k] -= (int)start[k];
         }
@@ -413,34 +413,34 @@ nczipioi_put_var(NC_zip        *nczipp,
         // Free datatype
         MPI_Type_free(&ptype);
 
-        // move on to next block
-        bcord[varp->ndim - 1]++;
+        // move on to next chunk
+        ccord[varp->ndim - 1]++;
         for(j = varp->ndim - 1; j > 0; j--){
-            if (bcord[j] >= bend[j]){
-                bcord[j - 1]++;
-                bcord[j] = bstart[j];
+            if (ccord[j] >= cend[j]){
+                ccord[j - 1]++;
+                ccord[j] = cstart[j];
             }
         }
     }
 
     /*
-     * Determine block ownership
-     * Find my blocks
+     * Determine chunk ownership
+     * Find my chunks
      */
-    nmyblocks = 0;
+    nmychunks = 0;
     for(i = 0; i < varp->nchunks; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
-            nmyblocks++;
+            nmychunks++;
         }
     }
 
-    // Gather block id this process handled to prevent a search in the future
-    myblocks = (int*)NCI_Malloc(sizeof(int) * nmyblocks);
-    nmyblocks = 0;
+    // Gather chunk id this process handled to prevent a search in the future
+    mychunks = (int*)NCI_Malloc(sizeof(int) * nmychunks);
+    nmychunks = 0;
     for(i = 0; i < varp->nchunks; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
-            myblocks[nmyblocks] = i;
-            nmyblocks++;
+            mychunks[nmychunks] = i;
+            nmychunks++;
         }
     }
 
@@ -456,11 +456,11 @@ nczipioi_put_var(NC_zip        *nczipp,
     memset(packoff, 0, sizeof(int) * nczipp->np);
     for(i = 0; i < varp->nchunks; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
-            get_block_cord(varp, i, bcord);
+            get_chunk_cord(varp, i, ccord);
 
             for(j = 0; j < nczipp->np; j++){
-                // Overlapping region of this block
-                get_block_overlap(varp, bcord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
+                // Overlapping region of this chunk
+                get_chunk_overlap(varp, ccord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
 
                 overlapsize = esize;
                 for(k = 0; k < varp->ndim; k++){
@@ -517,34 +517,34 @@ nczipioi_put_var(NC_zip        *nczipp,
 */
 
     /*
-     * Next step is to pack data to block buffer
+     * Next step is to pack data to chunk buffer
      */
 
     // Allocate buffer
-    xbuf = (char*)NCI_Malloc(nmyblocks * bsize);
+    xbuf = (char*)NCI_Malloc(nmychunks * bsize);
 
-    // Main array is the whole block
+    // Main array is the whole chunk
     for(i = 0; i < varp->ndim; i++){
         tsize[i] = varp->chunkdim[i];
     }
 
     // Pack data
     memset(packoff, 0, sizeof(int) * nczipp->np);
-    for(i = 0; i < nmyblocks; i++){
-        get_block_cord(varp, myblocks[i], bcord);
+    for(i = 0; i < nmychunks; i++){
+        get_chunk_cord(varp, mychunks[i], ccord);
 
         for(j = 0; j < nczipp->np; j++){
-            // Overlapping region of this block
-            get_block_overlap(varp, bcord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
+            // Overlapping region of this chunk
+            get_chunk_overlap(varp, ccord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
             overlapsize = esize;
             for(k = 0; k < varp->ndim; k++){
                 overlapsize *= tssize[k];
             }
 
             if (overlapsize > 0){
-                // The block is the main array, overlapping region is the subarray
+                // The chunk is the main array, overlapping region is the subarray
                 for(k = 0; k < varp->ndim; k++){
-                    tstart[k] -= bcord[k] * varp->chunkdim[k];
+                    tstart[k] -= ccord[k] * varp->chunkdim[k];
                 }
 
                 // Pack type
@@ -564,7 +564,7 @@ nczipioi_put_var(NC_zip        *nczipp,
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: xbuf = {", nczipp->rank);
-        for(i = 0; i < nmyblocks * bsize; i++){
+        for(i = 0; i < nmychunks * bsize; i++){
             printf("%x ", xbuf[i]);
         }
         printf("}\n");
@@ -578,20 +578,20 @@ nczipioi_put_var(NC_zip        *nczipp,
      */
 
     // compressed size and displacement
-    zipsize = (int*)NCI_Malloc(sizeof(int) * nmyblocks);
-    zdispls = (int*)NCI_Malloc(sizeof(int) * (nmyblocks + 1));
-    memset(zipsize, 0, sizeof(int) * nmyblocks);
-    memset(zdispls, 0, sizeof(int) * (nmyblocks + 1));
+    zipsize = (int*)NCI_Malloc(sizeof(int) * nmychunks);
+    zdispls = (int*)NCI_Malloc(sizeof(int) * (nmychunks + 1));
+    memset(zipsize, 0, sizeof(int) * nmychunks);
+    memset(zdispls, 0, sizeof(int) * (nmychunks + 1));
 
     // Calculate compressed data size
-    for(i = 0; i < nmyblocks; i++){
+    for(i = 0; i < nmychunks; i++){
         // Calculate compressed size
         // This is just estimate
         nczipp->zip->compress(xbuf + bsize * i, bsize, NULL, zipsize + i, varp->ndim, varp->chunkdim, etype);
     }
 
     // Calculate total size
-    for(i = 1; i < nmyblocks; i++){
+    for(i = 1; i < nmychunks; i++){
         zdispls[0] += zipsize[i];
     }
 
@@ -599,7 +599,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     zbuf = (char*)NCI_Malloc(zdispls[0]);
 
     // Perform real compression
-    for(i = 0; i < nmyblocks; i++){
+    for(i = 0; i < nmychunks; i++){
         // Compressed the data
         // We get real size here
         nczipp->zip->compress(xbuf + bsize * i, bsize, zbuf + zdispls[i], zipsize + i, varp->ndim, varp->chunkdim, etype);
@@ -612,15 +612,15 @@ nczipioi_put_var(NC_zip        *nczipp,
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: zipsize = {", nczipp->rank);
-        for(i = 0; i < nmyblocks; i++){
+        for(i = 0; i < nmychunks; i++){
             printf("%x ", zipsize[i]);
         }
         printf("}, zdispls = {");
-        for(i = 0; i < nmyblocks; i++){
+        for(i = 0; i < nmychunks; i++){
             printf("%d, ", zdispls[i]);
         }
         printf("}, zbuf = {");
-        for(i = 0; i < zdispls[nmyblocks- 1] + zipsize[nmyblocks - 1]; i++){
+        for(i = 0; i < zdispls[nmychunks- 1] + zipsize[nmychunks - 1]; i++){
             printf("%x ", zbuf[i]);
         }
         printf("}\n");
@@ -636,8 +636,8 @@ nczipioi_put_var(NC_zip        *nczipp,
      * Finally, we do collective write to store the data
      */
 
-    // First sync on compressed block size
-    // We use a all MAX reduce on all blocks
+    // First sync on compressed chunk size
+    // We use a all MAX reduce on all chunks
     // An alternative is to allgather and unpack the info
 
     // Allocate buffer
@@ -649,8 +649,8 @@ nczipioi_put_var(NC_zip        *nczipp,
     memset(zdispls_all, 0, sizeof(int) * varp->nchunks);
 
     // Fill up local size
-    for(i = 0; i < nmyblocks; i++){
-        zsize_local[myblocks[i]] = zipsize[i];
+    for(i = 0; i < nmychunks; i++){
+        zsize_local[mychunks[i]] = zipsize[i];
     }
 
     // All reduce
@@ -695,7 +695,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     if (err != NC_NOERR) return err;
 
     // Record offset in data variable
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_blockoffset", NC_INT, varp->nchunks, zdispls_all, MPI_INT); // Original datatype
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffset", NC_INT, varp->nchunks, zdispls_all, MPI_INT); // Original datatype
     if (err != NC_NOERR) return err;
 
     // Switch to data mode
@@ -703,17 +703,17 @@ nczipioi_put_var(NC_zip        *nczipp,
     if (err != NC_NOERR) return err;
 
     //Now, we generate a varn call to write out compressed data
-    zstarts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmyblocks);
-    zcounts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmyblocks);
-    zstarts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmyblocks);
-    zcounts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmyblocks);
-    for(i = 0; i < nmyblocks; i++){
+    zstarts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmychunks);
+    zcounts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmychunks);
+    zstarts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmychunks);
+    zcounts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmychunks);
+    for(i = 0; i < nmychunks; i++){
         zstarts[i] = zstarts[0] + i;
         zcounts[i] = zcounts[0] + i;
-        zstarts[i][0] = zdispls_all[myblocks[i]];
-        zcounts[i][0] = zsize_all[myblocks[i]];
+        zstarts[i][0] = zdispls_all[mychunks[i]];
+        zcounts[i][0] = zsize_all[mychunks[i]];
     }
-    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmyblocks, zstarts, zcounts, zbuf, zdispls[nmyblocks - 1] + zipsize[nmyblocks - 1], MPI_UNSIGNED_CHAR, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
+    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmychunks, zstarts, zcounts, zbuf, zdispls[nmychunks - 1] + zipsize[nmychunks - 1], MPI_UNSIGNED_CHAR, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
     if (err != NC_NOERR) return err;
 
     // Record datavar id
@@ -721,536 +721,13 @@ nczipioi_put_var(NC_zip        *nczipp,
     if (err != NC_NOERR) return err;
     
     //  Free up buffers
-    NCI_Free(bstart);
-    NCI_Free(bend);
-    NCI_Free(bcord);
+    NCI_Free(cstart);
+    NCI_Free(cend);
+    NCI_Free(ccord);
     NCI_Free(tsize);
     NCI_Free(tssize);
     NCI_Free(tstart);
-    NCI_Free(myblocks);
-    NCI_Free(sendcounts);
-    NCI_Free(sdispls);
-    NCI_Free(recvcounts);
-    NCI_Free(rdispls);
-    NCI_Free(packoff);
-    NCI_Free(zipsize);
-    NCI_Free(zdispls);
-    NCI_Free(zsize_local);
-    NCI_Free(zsize_all);
-    NCI_Free(zdispls_all);
-    NCI_Free(zbuf);
-    NCI_Free(xbuf);
-    NCI_Free(sbuf);
-    NCI_Free(rbuf);
-    NCI_Free(start_all[0]);
-    NCI_Free(count_all[0]);
-    NCI_Free(stride_all[0]);
-    NCI_Free(start_all);
-    NCI_Free(count_all);
-    NCI_Free(stride_all);
-    NCI_Free(zstarts[0]);
-    NCI_Free(zcounts[0]);
-    NCI_Free(zstarts);
-    NCI_Free(zcounts);
-
-    return NC_NOERR;
-}
-
-int
-nczipioi_put_varn(NC_zip        *nczipp,
-              NC_zip_var       *varp,
-              int num,
-              const MPI_Offset *start,
-              const MPI_Offset *count,
-              void       *buf)
-{
-    int i, j, k, err;
-    nc_type xtype;  // Variable data type in NC
-    MPI_Datatype etype; // Variable element type in MPI
-    int esize;  // Variable element size
-    int *bstart, *bend, *bcord; // Bounding box for blocks overlapping my own write region
-    int nb, bsize;  //number of blocks this process write to and block size
-    int datavarid;  // Id of data variable
-    int *tsize, *tssize, *tstart;   // Size for sub-array type
-    int nmyblocks, *myblocks;  // Block count and id this process handles
-    int *sendcounts, *sdispls;  // Send count and displacements in buffer
-    int *recvcounts, *rdispls;  // Receive count and displacement in buffer
-    int *packoff;   // Offset in mpi packing
-    int *zipsize, *zdispls;  // Compressed count and displacement of my blocks in buffer
-    int *zsize_local, *zsize_all;   // Compressed size of all blocks at local and global (all processes)
-    int *zdispls_all;  // Compressed displacement of all blocks (all processes)
-    int overlapsize;   // Size of overlapping region between a block and write region
-    MPI_Datatype ptype;  // Pack datatype
-    char *zbuf, *xbuf;  // Compressed and uncompressed data buffer
-    char *sbuf, *rbuf;  // Send and receive buffer
-    MPI_Offset **start_all, **count_all, **stride_all;  // Start, count, stride of all processes
-    char name[128]; // Name of objects
-    int zdimid;  // dimension id for compressed data variable
-    MPI_Offset **zstarts, **zcounts;    // Starts and counts in the varn call for compressed data
-
-    // Original datatype and size
-    err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_datatype", &xtype, MPI_INT); 
-    if (err != NC_NOERR) return err;
-    esize = NC_Type_size(xtype);
-    etype = ncmpii_nc2mpitype(xtype);
-
-    // Calculate block size
-    bsize = esize;
-    for(i = 0; i < varp->ndim; i++){
-        bsize *= varp->chunkdim[i];
-    }
-
-    // Allocate buffering for overlaping index
-    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tssize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-
-    /*
-     * Gather start, count, stride to all processes
-     */
-
-    // Allocate buffer
-
-    start_all = NCI_Malloc(sizeof(MPI_Offset*) * nczipp->np);
-    count_all = NCI_Malloc(sizeof(MPI_Offset*) * nczipp->np);
-    stride_all = NCI_Malloc(sizeof(MPI_Offset*) * nczipp->np);
-
-    start_all[0] = NCI_Malloc(sizeof(MPI_Offset) * nczipp->np * varp->ndim);
-    count_all[0] = NCI_Malloc(sizeof(MPI_Offset) * nczipp->np * varp->ndim);
-    stride_all[0] = NCI_Malloc(sizeof(MPI_Offset) * nczipp->np * varp->ndim);
-
-    for(i = 1; i < nczipp->np; i++){
-        start_all[i] = start_all[0] + i * varp->ndim;
-        count_all[i] = count_all[0] + i * varp->ndim;
-        stride_all[i] = stride_all[0] + i * varp->ndim;
-    }
-
-    // Call allgather
-
-    err = MPI_Allgather(start, varp->ndim, MPI_LONG_LONG_INT, start_all[0], varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
-    if (err != MPI_SUCCESS){
-        err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
-        DEBUG_RETURN_ERROR(err);
-    }
-
-    if (count != NULL){
-        err = MPI_Allgather(count, varp->ndim, MPI_LONG_LONG_INT, count_all[0], varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
-        if (err != MPI_SUCCESS){
-            err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
-            DEBUG_RETURN_ERROR(err);
-        }
-    }
-
-    if (stride != NULL){
-        err = MPI_Allgather(stride, varp->ndim, MPI_LONG_LONG_INT, stride_all[0], varp->ndim, MPI_LONG_LONG_INT, nczipp->comm);
-        if (err != MPI_SUCCESS){
-            err = ncmpii_error_mpi2nc(err, "MPI_Allgather");
-            DEBUG_RETURN_ERROR(err);
-        }
-    }
-
-    /* 
-     * Now, we need to send data to the block owner as well as receive data for our own block
-     */
-
-    // First, compute block boundary, find overlapping blocks
-    bstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    bcord = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    bend = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    for(i = 0; i < varp->ndim; i++){
-        bstart[i] = start[i] / varp->chunkdim[i];
-        if (stride == NULL){
-            bend[i] = (start[i] + count[i] - 1) / varp->chunkdim[i] + 1;
-        }
-        else{
-            bend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->chunkdim[i] + 1;
-        }
-    }
-
-    // Calculate the amount we need to send to other process
-    sendcounts = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    sdispls = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    packoff = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    memset(sendcounts, 0, sizeof(int) * nczipp->np);
-    memset(packoff, 0, sizeof(int) * nczipp->np);
-
-    // Iterate through all blocks involved to count send size
-    i = 0;
-    overlapsize = 0;
-    memcpy(bcord, bstart, sizeof(int) * varp->ndim);
-    while(bcord[0] < bend[0]){
-        j = varp->chunk_owner[get_block_idx(varp, bcord)];    
-        
-        // Overlapping size of this block
-        get_block_overlap(varp, bcord, start, count, stride, tstart, tssize);
-        overlapsize = esize;
-        for(k = 0; k < varp->ndim; k++){
-            overlapsize *= tssize[k];
-        }
-        sendcounts[j] += overlapsize;
-
-        // move on to next block
-        bcord[varp->ndim - 1]++;
-        for(j = varp->ndim - 1; j > 0; j--){
-            if (bcord[j] >= bend[j]){
-                bcord[j - 1]++;
-                bcord[j] = bstart[j];
-            }
-        }
-    }
-
-    // Buffer displacement
-    sdispls[0] = 0;
-    for(i = 1; i < nczipp->np; i++){
-        sdispls[i] = sendcounts[i - 1] + sdispls[i - 1];
-    }
-
-    // Allocate send buffer
-    sbuf = (char*)NCI_Malloc(sdispls[nczipp->np - 1] + sendcounts[nczipp->np - 1]);
-
-    // Pack data into send buffer
-    
-    // Iterate through all blocks involved again, this time actually pack the data
-    for(i = 0; i < varp->ndim; i++){
-        tsize[i] = (int)count[i];
-    }
-    i = 0;
-    overlapsize = 0;
-    memcpy(bcord, bstart, sizeof(int) * varp->ndim);
-    while(bcord[0] < bend[0]){
-        j = varp->chunk_owner[get_block_idx(varp, bcord)];   
-        
-        // Overlapping region of this block
-        get_block_overlap(varp, bcord, start, count, stride, tstart, tssize);
-        for(k = 0; k < varp->ndim; k++){
-            tstart[k] -= (int)start[k];
-        }
-
-        // Pack type
-        MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
-        MPI_Type_commit(&ptype);
-        
-        // Pack data
-        MPI_Pack(buf, 1, ptype, sbuf + sdispls[j], sendcounts[j], packoff + j, nczipp->comm);
-    
-        // Free datatype
-        MPI_Type_free(&ptype);
-
-        // move on to next block
-        bcord[varp->ndim - 1]++;
-        for(j = varp->ndim - 1; j > 0; j--){
-            if (bcord[j] >= bend[j]){
-                bcord[j - 1]++;
-                bcord[j] = bstart[j];
-            }
-        }
-    }
-
-    /*
-     * Determine block ownership
-     * Find my blocks
-     */
-    nmyblocks = 0;
-    for(i = 0; i < varp->nchunks; i++){
-        if (varp->chunk_owner[i] == nczipp->rank){
-            nmyblocks++;
-        }
-    }
-
-    // Gather block id this process handled to prevent a search in the future
-    myblocks = (int*)NCI_Malloc(sizeof(int) * nmyblocks);
-    nmyblocks = 0;
-    for(i = 0; i < varp->nchunks; i++){
-        if (varp->chunk_owner[i] == nczipp->rank){
-            myblocks[nmyblocks] = i;
-            nmyblocks++;
-        }
-    }
-
-    /* 
-     * Compute size to receive
-     * We only need size here, packing will happen after receving
-     */
-
-    // Calculate the amount we need to receive from other process
-    recvcounts = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    rdispls = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    memset(recvcounts, 0, sizeof(int) * nczipp->np);
-    memset(packoff, 0, sizeof(int) * nczipp->np);
-    for(i = 0; i < varp->nchunks; i++){
-        if (varp->chunk_owner[i] == nczipp->rank){
-            get_block_cord(varp, i, bcord);
-
-            for(j = 0; j < nczipp->np; j++){
-                // Overlapping region of this block
-                get_block_overlap(varp, bcord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
-
-                overlapsize = esize;
-                for(k = 0; k < varp->ndim; k++){
-                    overlapsize *= tssize[k];
-                }
-                recvcounts[j] += overlapsize;
-            }
-        }
-    }
-
-    // Buffer displacement
-    rdispls[0] = 0;
-    for(i = 1; i < nczipp->np; i++){
-        rdispls[i] = recvcounts[i - 1] + rdispls[i - 1];
-    }
-
-    // Allocate receive buffer
-    rbuf = (char*)NCI_Malloc(rdispls[nczipp->np - 1] + recvcounts[nczipp->np - 1]);
-
-    // Send the data to destination
-    MPI_Alltoallv(sbuf, sendcounts, sdispls, MPI_BYTE, rbuf, recvcounts, rdispls, MPI_BYTE, nczipp->comm);
-
-/*
-#ifdef PNETCDF_DEBUG
-    if (nczipp->rank == 0){
-        printf("Rank %d: sendcount = {", nczipp->rank);
-        for(i = 0; i < nczipp->np; i++){
-            printf("%d, ", sendcounts[i]);
-        }
-        printf("}, sdispls = {");
-        for(i = 0; i < nczipp->np; i++){
-            printf("%d, ", sdispls[i]);
-        }
-        printf("}, recvcounts = {");
-        for(i = 0; i < nczipp->np; i++){
-            printf("%d, ", recvcounts[i]);
-        }
-        printf("}, rdispls = {");
-        for(i = 0; i < nczipp->np; i++){
-            printf("%d, ", rdispls[i]);
-        }
-        printf("}, sbuf = {");
-        for(i = 0; i < sdispls[nczipp->np - 1] + sendcounts[nczipp->np - 1]; i++){
-            printf("%x ", sbuf[i]);
-        }
-        printf("}, rbuf = {");
-        for(i = 0; i < rdispls[nczipp->np - 1] + recvcounts[nczipp->np - 1]; i++){
-            printf("%x ", rbuf[i]);
-        }
-        printf("}\n");
-        fflush(stdout);
-    }
-#endif
-*/
-
-    /*
-     * Next step is to pack data to block buffer
-     */
-
-    // Allocate buffer
-    xbuf = (char*)NCI_Malloc(nmyblocks * bsize);
-
-    // Main array is the whole block
-    for(i = 0; i < varp->ndim; i++){
-        tsize[i] = varp->chunkdim[i];
-    }
-
-    // Pack data
-    memset(packoff, 0, sizeof(int) * nczipp->np);
-    for(i = 0; i < nmyblocks; i++){
-        get_block_cord(varp, myblocks[i], bcord);
-
-        for(j = 0; j < nczipp->np; j++){
-            // Overlapping region of this block
-            get_block_overlap(varp, bcord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
-            overlapsize = esize;
-            for(k = 0; k < varp->ndim; k++){
-                overlapsize *= tssize[k];
-            }
-
-            if (overlapsize > 0){
-                // The block is the main array, overlapping region is the subarray
-                for(k = 0; k < varp->ndim; k++){
-                    tstart[k] -= bcord[k] * varp->chunkdim[k];
-                }
-
-                // Pack type
-                MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
-                MPI_Type_commit(&ptype);
-
-                // Pack data
-                MPI_Unpack(rbuf + rdispls[j], overlapsize, packoff + j, xbuf + bsize * i, 1, ptype, nczipp->comm);
-
-                // Free datatype
-                MPI_Type_free(&ptype);
-            }
-        }
-    }
-
-/*
-#ifdef PNETCDF_DEBUG
-    if (nczipp->rank == 0){
-        printf("Rank %d: xbuf = {", nczipp->rank);
-        for(i = 0; i < nmyblocks * bsize; i++){
-            printf("%x ", xbuf[i]);
-        }
-        printf("}\n");
-        fflush(stdout);
-    }
-#endif
-*/
-
-    /* 
-     * The buffer is now filled with data coming from all processes, it's time to compress
-     */
-
-    // compressed size and displacement
-    zipsize = (int*)NCI_Malloc(sizeof(int) * nmyblocks);
-    zdispls = (int*)NCI_Malloc(sizeof(int) * (nmyblocks + 1));
-    memset(zipsize, 0, sizeof(int) * nmyblocks);
-    memset(zdispls, 0, sizeof(int) * (nmyblocks + 1));
-
-    // Calculate compressed data size
-    for(i = 0; i < nmyblocks; i++){
-        // Calculate compressed size
-        // This is just estimate
-        nczipp->zip->compress(xbuf + bsize * i, bsize, NULL, zipsize + i, varp->ndim, varp->chunkdim, etype);
-    }
-
-    // Calculate total size
-    for(i = 1; i < nmyblocks; i++){
-        zdispls[0] += zipsize[i];
-    }
-
-    // Allocate buffer
-    zbuf = (char*)NCI_Malloc(zdispls[0]);
-
-    // Perform real compression
-    for(i = 0; i < nmyblocks; i++){
-        // Compressed the data
-        // We get real size here
-        nczipp->zip->compress(xbuf + bsize * i, bsize, zbuf + zdispls[i], zipsize + i, varp->ndim, varp->chunkdim, etype);
-        
-        // Calculate offset
-        zdispls[i + 1] = zdispls[i] + zipsize[i];
-    }
-
-/*
-#ifdef PNETCDF_DEBUG
-    if (nczipp->rank == 0){
-        printf("Rank %d: zipsize = {", nczipp->rank);
-        for(i = 0; i < nmyblocks; i++){
-            printf("%x ", zipsize[i]);
-        }
-        printf("}, zdispls = {");
-        for(i = 0; i < nmyblocks; i++){
-            printf("%d, ", zdispls[i]);
-        }
-        printf("}, zbuf = {");
-        for(i = 0; i < zdispls[nmyblocks- 1] + zipsize[nmyblocks - 1]; i++){
-            printf("%x ", zbuf[i]);
-        }
-        printf("}\n");
-        fflush(stdout);
-    }
-#endif
-*/
-
-    /*
-     * Now it is time for a collective write
-     * We start by syncing compressed size on all processes
-     * Then, we can create variable large enough to store compressed data
-     * Finally, we do collective write to store the data
-     */
-
-    // First sync on compressed block size
-    // We use a all MAX reduce on all blocks
-    // An alternative is to allgather and unpack the info
-
-    // Allocate buffer
-    zsize_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zsize_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zdispls_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    memset(zsize_local, 0, sizeof(int) * varp->nchunks);
-    memset(zsize_all, 0, sizeof(int) * varp->nchunks);
-    memset(zdispls_all, 0, sizeof(int) * varp->nchunks);
-
-    // Fill up local size
-    for(i = 0; i < nmyblocks; i++){
-        zsize_local[myblocks[i]] = zipsize[i];
-    }
-
-    // All reduce
-    MPI_Allreduce(zsize_local, zsize_all, varp->nchunks, MPI_INT, MPI_MAX, nczipp->comm);
-
-    // Calculate variable displacement
-    zdispls_all[0] = 0;
-    for(i = 1; i < varp->nchunks; i++){
-        zdispls_all[i] = zsize_all[i - 1] + zdispls_all[i - 1];
-    }
-
-/*
-#ifdef PNETCDF_DEBUG
-    if (nczipp->rank == 0){
-        printf("Rank %d: zsize_all = {", nczipp->rank);
-        for(i = 0; i < varp->nchunks; i++){
-            printf("%x ", zsize_all[i]);
-        }
-        printf("}, zdispls_all = {");
-        for(i = 0; i < varp->nchunks; i++){
-            printf("%d, ", zdispls_all[i]);
-        }
-        printf("}, varid = { %d", varp->varid);
-        printf("}, datavarid = { %d", varp->datavarid);
-        printf("}\n");
-        fflush(stdout);
-    }
-#endif
-*/
-
-    // Enter redefine mode
-    nczipp->driver->redef(nczipp->ncp);
-
-    // Define dimension  for data variable
-    sprintf(name, "_compressed_data_dim_%d", varp->varid);
-    err = nczipp->driver->def_dim(nczipp->ncp, name, zdispls_all[varp->nchunks - 1] + zsize_all[varp->nchunks - 1], &zdimid);
-    if (err != NC_NOERR) return err;
-
-    // Define variable
-    sprintf(name, "_compressed_data_%d", varp->varid);
-    err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(varp->datavarid));
-    if (err != NC_NOERR) return err;
-
-    // Record offset in data variable
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_blockoffset", NC_INT, varp->nchunks, zdispls_all, MPI_INT); // Original datatype
-    if (err != NC_NOERR) return err;
-
-    // Switch to data mode
-    err = nczipp->driver->enddef(nczipp->ncp);
-    if (err != NC_NOERR) return err;
-
-    //Now, we generate a varn call to write out compressed data
-    zstarts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmyblocks);
-    zcounts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmyblocks);
-    zstarts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmyblocks);
-    zcounts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmyblocks);
-    for(i = 0; i < nmyblocks; i++){
-        zstarts[i] = zstarts[0] + i;
-        zcounts[i] = zcounts[0] + i;
-        zstarts[i][0] = zdispls_all[myblocks[i]];
-        zcounts[i][0] = zsize_all[myblocks[i]];
-    }
-    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmyblocks, zstarts, zcounts, zbuf, zdispls[nmyblocks - 1] + zipsize[nmyblocks - 1], MPI_UNSIGNED_CHAR, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
-    if (err != NC_NOERR) return err;
-
-    // Record datavar id
-    err = nczipp->driver->put_var(nczipp->ncp, varp->varid, NULL, NULL, NULL, NULL, &(varp->datavarid), 1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
-    if (err != NC_NOERR) return err;
-    
-    //  Free up buffers
-    NCI_Free(bstart);
-    NCI_Free(bend);
-    NCI_Free(bcord);
-    NCI_Free(tsize);
-    NCI_Free(tssize);
-    NCI_Free(tstart);
-    NCI_Free(myblocks);
+    NCI_Free(mychunks);
     NCI_Free(sendcounts);
     NCI_Free(sdispls);
     NCI_Free(recvcounts);

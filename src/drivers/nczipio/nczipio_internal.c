@@ -21,7 +21,7 @@
 int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
     int i, j, err;
     int valid;
-    MPI_Offset len, bsize;
+    MPI_Offset len;
     NC_zip_var *var;
 
     if (varp->varkind == NC_ZIP_VAR_COMPRESSED){
@@ -60,9 +60,9 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             }
 
             // Calculate block size
-            bsize = 1;
+            varp->chunksize = 1;
             for(i = 0; i < varp->ndim; i++){
-                bsize *= varp->chunkdim[i];
+                varp->chunksize *= varp->chunkdim[i];
             }
 
             // Calculate number of blocks
@@ -78,14 +78,25 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
                 len *= varp->chunkdim[j];   // Block size
             }
 
-            varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
             // Determine block ownership
+            varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+            varp->nmychunk = 0;
             if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
                 for(j = 0; j < varp->nchunks; j++){ 
                     varp->chunk_owner[j] = j % nczipp->np;
-                    //if (varp->chunk_owner[j] == nczipp->rank){
-                    //    varp->cache[j] = (void*)NCI_Malloc(bsize);  // Allocate buffer for blocks we own
-                    //}
+                    if (varp->chunk_owner[j] == nczipp->rank){
+                        varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
+                    }
+                    varp->nmychunk++;
+                }
+            }
+
+            // Build skip list of my own chunks
+            varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunk);
+            varp->nmychunk = 0;
+            for(j = 0; j < varp->nchunks; j++){ 
+                if (varp->chunk_owner[j] == nczipp->rank){
+                    varp->mychunks[varp->nmychunk++] = j;
                 }
             }
 

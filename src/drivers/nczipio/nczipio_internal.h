@@ -3,6 +3,14 @@
 
 #include "nczipio_driver.h"
 
+typedef struct NC_zip_vector{
+    int esize;
+    int size;
+    int nalloc;
+    char *data;
+}NC_zip_vector;
+
+
 extern int 
 nczipioi_init(NC_zip*);
 
@@ -33,7 +41,18 @@ nczipioi_get_varn(NC_zip*, NC_zip_var*, int, MPI_Offset* const*, MPI_Offset* con
 extern int
 nczipioi_put_var(NC_zip*, NC_zip_var*, const MPI_Offset*, const MPI_Offset*, const MPI_Offset*, void*);
 
+extern int
+nczipioi_put_varn(NC_zip*, NC_zip_var*, int, MPI_Offset* const *, MPI_Offset* const *, const void*);
+
 extern MPI_Offset 
 NC_Type_size(nc_type);
+
+extern int nczipioi_vector_init(NC_zip_vector*, int);
+
+extern int nczipioi_vector_init_ex(NC_zip_vector*, int, int);
+
+extern void nczipioi_vector_free(NC_zip_vector*);
+
+extern int nczipioi_vector_append(NC_zip_vector*, void*);
 
 #endif

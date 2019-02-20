@@ -37,16 +37,14 @@ int nczipioi_var_list_free(NC_zip_var_list *list) {
             if (list->data[i].dimids != NULL){
                 NCI_Free(list->data[i].dimids);
             }
-            if (list->data[i].nblocks >= 0){
-                NCI_Free(list->data[i].offset);
-                NCI_Free(list->data[i].owner);
-                NCI_Free(list->data[i].lens);
-                for(i = 0; i < list->data[i].nblocks; i++){
-                    //if (list->data[i].cache[i] != NULL){
-                    //    NCI_Free(list->data[i].cache[i]);
-                    //}
+            if (list->data[i].nchunks >= 0){
+                NCI_Free(list->data[i].data_offs);
+                NCI_Free(list->data[i].chunk_owner);
+                NCI_Free(list->data[i].data_lens);
+                for(j = 0; j < list->data[i].nmychunk; j++){
+                    NCI_Free(list->data[i].chunk_cache[list->data[i].mychunks[j]]);
                 }
-                //NCI_Free(list->data[i].cache);
+                NCI_Free(list->data[i].chunk_cache);
             }
         }
         NCI_Free(list->data);

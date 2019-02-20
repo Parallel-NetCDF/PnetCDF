@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     start = rank;
     count = 1;
     buf = rank + 1;
-    err = ncmpi_put_vara_int_all(ncid, varid, &start, &count, &buf);
+    err = ncmpi_put_varn_int_all(ncid, varid, 1, &(&start), &(&count), &buf);
 
     /* Close the file. */
     err = ncmpi_close(ncid);

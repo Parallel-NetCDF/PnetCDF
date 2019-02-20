@@ -70,24 +70,24 @@ nczipio_def_var(void       *ncdp,
 
     var.ndim = ndims;
     var.chunkdim = NULL;
-    var.offset = NULL;
-    var.owner = NULL;
+    var.data_offs = NULL;
+    var.chunk_owner = NULL;
 
     if (ndims > 3 || ndims < 1) { // Does not support higher dimensional vars
-        var.vartype = NC_ZIP_VAR_RAW;
+        var.varkind = NC_ZIP_VAR_RAW;
         var.dimsize = NULL;
 
         err = nczipp->driver->def_var(nczipp->ncp, name, xtype, ndims, dimids, &var.varid);  // We use it to save the id of data variable
         if (err != NC_NOERR) return err;
         
-        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_vartype", NC_INT, 1, &(var.vartype), MPI_INT);   // Comressed var?
+        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_varkind", NC_INT, 1, &(var.varkind), MPI_INT);   // Comressed var?
         if (err != NC_NOERR) return err;
     }
     else{
         err = nczipp->driver->def_var(nczipp->ncp, name, NC_INT, 0, NULL, &var.varid);  // We use it to save the id of data variable
         if (err != NC_NOERR) return err;
         
-        var.vartype = NC_ZIP_VAR_COMPRESSED;
+        var.varkind = NC_ZIP_VAR_COMPRESSED;
         var.dimids = (int*)NCI_Malloc(sizeof(int) * ndims);
         memcpy(var.dimids, dimids, sizeof(int) * ndims);
         var.dimsize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * ndims);
@@ -101,7 +101,7 @@ nczipio_def_var(void       *ncdp,
         if (err != NC_NOERR) return err;
         err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_datatype", NC_INT, 1, &xtype, MPI_INT); // Original datatype
         if (err != NC_NOERR) return err;
-        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_vartype", NC_INT, 1, &(var.vartype), MPI_INT);   // Comressed var?
+        err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_varkind", NC_INT, 1, &(var.varkind), MPI_INT);   // Comressed var?
         if (err != NC_NOERR) return err;
     }
 
@@ -425,12 +425,19 @@ nczipio_put_varn(void              *ncdp,
                int                reqMode)
 {
     int err;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (reqMode == NC_REQ_INDEP){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    }
 
-    err = nczipp->driver->put_varn(nczipp->ncp, varid, num, starts, counts, buf,
-                                bufcount, buftype, reqMode);
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+    varp = nczipp->vars.data + varid;
+
+    err = nczipioi_put_varn(nczipp, varp, num, starts, counts, buf);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

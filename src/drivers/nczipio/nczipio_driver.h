@@ -30,32 +30,27 @@ typedef struct NC_zip_var_chunk {
     int owner;
     char *data;
     char *xdata;
-}
-
-typedef struct NC_zip_var_chunk_list {
-    NC_zip_var_chunk *chunks;
-    int cnt;
-    int ndim;
-    MPI_Offset *dimsize;
-    char *buffer;
-}
+} NC_zip_var_chunk;
 
 typedef struct NC_zip_var {
     int varkind;
 
     nc_type xtype;
+
     int ndim;
     MPI_Offset *dimsize;
     int *dimids;
     
     int varid;
 
-    NC_zip_var_chunk_list chunks;
-
     int nchunks;
+    int chunksize;
     int *chunk_owner;
     MPI_Offset *chunkdim;
     char **chunk_cache;
+
+    int nmychunk;
+    int *mychunks;
 
     int datavarid;
     MPI_Offset *data_offs;
