@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     int np, rank, nerrs = 0;
     int ncid, dimid, varid;
     int buf;
-    MPI_Offset start, count;
+    MPI_Offset start[1], count[1];
     MPI_Info info;
 
     /* Error handling. */
@@ -79,10 +79,10 @@ int main(int argc, char **argv)
     CHECK_ERR
 
     // Write variable
-    start = rank;
-    count = 1;
+    start[0] = rank;
+    count[0] = 1;
     buf = rank + 1;
-    err = ncmpi_put_varn_int_all(ncid, varid, 1, &(&start), &(&count), &buf);
+    err = ncmpi_put_varn_int_all(ncid, varid, 1, &start, &count, &buf);
 
     /* Close the file. */
     err = ncmpi_close(ncid);
