@@ -41,7 +41,7 @@ MPI_Offset NC_Type_size(nc_type type){			/* netCDF type code */
       case NC_UINT64:
 	return sizeof(unsigned long long);
       default:
-
+      
 	return 0;
     }
 }

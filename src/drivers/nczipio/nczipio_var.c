@@ -72,6 +72,7 @@ nczipio_def_var(void       *ncdp,
     var.chunkdim = NULL;
     var.data_offs = NULL;
     var.chunk_owner = NULL;
+    var.xtype = xtype;
 
     if (ndims > 3 || ndims < 1) { // Does not support higher dimensional vars
         var.varkind = NC_ZIP_VAR_RAW;
