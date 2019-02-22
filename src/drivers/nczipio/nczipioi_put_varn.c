@@ -269,6 +269,8 @@ nczipioi_put_varn(NC_zip        *nczipp,
             if (varp->chunk_cache[k] == NULL){
                 varp->chunk_cache[k] = (char*)NCI_Malloc(varp->chunksize);
             }
+            
+            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
 
             // Handle our own data
             if (wcnt_local[k] > 0){
@@ -314,16 +316,19 @@ nczipioi_put_varn(NC_zip        *nczipp,
             }
 
             // Receive all data from other processes
+            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
             
             // Wait for all send requests for the chunk
             MPI_Waitall(wcnt_all[k] - wcnt_local[k], rreqs + nrecv, rstats + nrecv);
+            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
 
             // Process data received
             for(i = nrecv; i < nrecv + wcnt_all[k] - wcnt_local[k]; i++){
+            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
                 packoff = 0;
-                while(packoff < rsizes[nrecv]){
-                    MPI_Unpack(rbufs[nrecv], rsizes[nrecv], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
-                    MPI_Unpack(rbufs[nrecv], rsizes[nrecv], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
+                while(packoff < rsizes[i]){
+                    MPI_Unpack(rbufs[i], rsizes[i], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
+                    MPI_Unpack(rbufs[i], rsizes[i], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
 
                     for(j = 0; j < varp->ndim; j++){
                        tsize[j] = (int)varp->chunkdim[j];
@@ -331,12 +336,13 @@ nczipioi_put_varn(NC_zip        *nczipp,
                     MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, etype, &ptype);
                     MPI_Type_commit(&ptype);
 
-                    MPI_Unpack(rbufs[nrecv], rsizes[nrecv], &packoff, varp->chunk_cache[k], 1, ptype, nczipp->comm);
+                    MPI_Unpack(rbufs[i], rsizes[i], &packoff, varp->chunk_cache[k], 1, ptype, nczipp->comm);
 
                     MPI_Type_free(&ptype);
+            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
                 }
-                nrecv++;
             }
+            nrecv += wcnt_all[k] - wcnt_local[k];
 
             // Apply compression
 
