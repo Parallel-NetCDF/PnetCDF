@@ -269,8 +269,6 @@ nczipioi_put_varn(NC_zip        *nczipp,
             if (varp->chunk_cache[k] == NULL){
                 varp->chunk_cache[k] = (char*)NCI_Malloc(varp->chunksize);
             }
-            
-            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
 
             // Handle our own data
             if (wcnt_local[k] > 0){
@@ -316,15 +314,12 @@ nczipioi_put_varn(NC_zip        *nczipp,
             }
 
             // Receive all data from other processes
-            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
             
             // Wait for all send requests for the chunk
             MPI_Waitall(wcnt_all[k] - wcnt_local[k], rreqs + nrecv, rstats + nrecv);
-            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
 
             // Process data received
             for(i = nrecv; i < nrecv + wcnt_all[k] - wcnt_local[k]; i++){
-            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
                 packoff = 0;
                 while(packoff < rsizes[i]){
                     MPI_Unpack(rbufs[i], rsizes[i], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
@@ -339,7 +334,6 @@ nczipioi_put_varn(NC_zip        *nczipp,
                     MPI_Unpack(rbufs[i], rsizes[i], &packoff, varp->chunk_cache[k], 1, ptype, nczipp->comm);
 
                     MPI_Type_free(&ptype);
-            printf("Rank: %d, nrecv: %d\n", nczipp->rank, nrecv); fflush(stdout);
                 }
             }
             nrecv += wcnt_all[k] - wcnt_local[k];
