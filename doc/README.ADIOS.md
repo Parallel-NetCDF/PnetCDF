@@ -32,14 +32,8 @@ PnetCDF requires an [ADIOS library](https://www.olcf.ornl.gov/center-projects/ad
                 --enable-adios \
                 --with-adios=/ADIOS/install/path
     ```
-* To build ADIOS library for the ADIOS driver
-  + Download ADIOS
-    git clone https://github.com/ornladios/ADIOS.git
-  + Compile ADIOS
-    ./configure --prefix=<install/directory>
-    make install
-* For detail regarding buuilding the ADIOS library, please refer to https://users.nccs.gov/~pnorbert/ADIOS-UsersManual-1.13.0.pdf
-* The ADIOS driver is only tested on ADIOS 1.12 or later
+
+* For detailed ADIOS configuration options, please refer to [ADIOS User Manual]( https://users.nccs.gov/~pnorbert/ADIOS-UsersManual-1.13.0.pdf)
 
 
 * For detailed ADIOS configuration options, please refer to [ADIOS User Manual]( https://users.nccs.gov/~pnorbert/ADIOS-UsersManual-1.13.0.pdf)
