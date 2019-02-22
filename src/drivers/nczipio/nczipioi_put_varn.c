@@ -207,7 +207,7 @@ nczipioi_put_varn(NC_zip        *nczipp,
     for(k = 0; k < varp->nchunks; k++){
         if (varp->chunk_owner[k] == nczipp->rank){
             // Receive data from other process
-            for(i = 0; i < wcnt_all[k]; i++){
+            for(i = 0; i < wcnt_all[k] - wcnt_local[k]; i++){
                 // Get message size, including metadata
                 MPI_Mprobe(MPI_ANY_SOURCE, k, nczipp->comm, &rmsg, rstats);
                 MPI_Get_count(rstats, MPI_BYTE, rsizes + nrecv);

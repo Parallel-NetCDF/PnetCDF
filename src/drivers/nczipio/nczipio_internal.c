@@ -81,6 +81,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             // Determine block ownership
             varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
             varp->chunk_cache = (char**)NCI_Malloc(sizeof(char*) * varp->nchunks);
+            memset(varp->chunk_cache, 0, sizeof(char*) * varp->nchunks);
             varp->nmychunk = 0;
             if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
                 for(j = 0; j < varp->nchunks; j++){ 
