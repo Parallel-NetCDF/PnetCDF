@@ -24,6 +24,14 @@ AC_CONFIG_SRCDIR([src/include/pnetcdf.h.in])
 
 AC_CONFIG_AUX_DIR([./scripts])
 
+dnl call env or printenv to print all user environment variables in config.log
+echo '-------------------------------' >& AS_MESSAGE_LOG_FD
+echo '  User environment variables:'   >& AS_MESSAGE_LOG_FD
+echo '-------------------------------' >& AS_MESSAGE_LOG_FD
+env >& AS_MESSAGE_LOG_FD
+echo '-------------------------------' >& AS_MESSAGE_LOG_FD
+echo '' >& AS_MESSAGE_LOG_FD
+
 dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
 dnl as AM_INIT_AUTOMAKE modifies command line $*
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
