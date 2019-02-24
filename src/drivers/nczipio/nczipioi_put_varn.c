@@ -338,8 +338,9 @@ nczipioi_put_varn(NC_zip        *nczipp,
                     MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, etype, &ptype);
                     MPI_Type_commit(&ptype);
 
-                    MPI_Unpack(rbufs[i], rsizes[i], &packoff, varp->chunk_cache[k], 1, ptype, nczipp->comm);
                     printf("tsize = %d, tssize = %d, tstart = %d, buf = %d\n", tsize[0], tssize[0], tstart[0], *((int*)(rbufs[i] + packoff))); fflush(stdout);
+                    MPI_Unpack(rbufs[i], rsizes[i], &packoff, varp->chunk_cache[k], 1, ptype, nczipp->comm);
+                    printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[k]))[0], ((int*)(varp->chunk_cache[k]))[1]); fflush(stdout);
                     MPI_Type_free(&ptype);
                 }
             }
@@ -348,13 +349,13 @@ nczipioi_put_varn(NC_zip        *nczipp,
             // Apply compression
 
             // Test comrpessed size
-            nczipp->zip->compress(varp->chunk_cache[k], varp->chunksize, NULL, zsizes + k, varp->ndim, varp->chunkdim, etype);
+            nczipp->zip->compress(varp->chunk_cache[k], varp->chunksize, NULL, zsizes + l, varp->ndim, varp->chunkdim, etype);
 
             // Buffer for comrpessed data
-            zbufs[l] = (char*)NCI_Malloc(zsizes[k]);
+            zbufs[l] = (char*)NCI_Malloc(zsizes[l]);
 
             // Perform real compression
-            nczipp->zip->compress(varp->chunk_cache[k], varp->chunksize, zbufs[l], zsizes + k, varp->ndim, varp->chunkdim, etype);
+            nczipp->zip->compress(varp->chunk_cache[k], varp->chunksize, zbufs[l], zsizes + l, varp->ndim, varp->chunkdim, etype);
         }
     }
 
@@ -383,7 +384,7 @@ nczipioi_put_varn(NC_zip        *nczipp,
     if (err != NC_NOERR) return err;
 
     // Record size of chunks
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunksize", NC_INT, varp->nchunks, zsizes_all, MPI_INT); // Original datatype
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklen", NC_INT, varp->nchunks, zsizes_all, MPI_INT); // Original datatype
     if (err != NC_NOERR) return err;
 
     // Switch to data mode
@@ -395,6 +396,7 @@ nczipioi_put_varn(NC_zip        *nczipp,
         k = varp->mychunks[l];
         zstart = (MPI_Offset)zoffs[k];
         zcount = (MPI_Offset)zsizes[k];
+        printf("cache[0] = %d, cache[1] = %d, off = %lld, cnt = %lld\n", ((int*)(varp->chunk_cache[k]))[0], ((int*)(varp->chunk_cache[k]))[1], zstart, zcount); fflush(stdout);
         nczipp->driver->iput_var(nczipp->ncp, varp->datavarid, &zstart, &zcount, NULL, NULL, zbufs[l], (MPI_Offset)(zsizes_all[k]), MPI_UNSIGNED_CHAR, NULL, NC_REQ_WR | NC_REQ_NBI | NC_REQ_FLEX);
     }
     nczipp->driver->wait(nczipp->ncp, NC_REQ_ALL, NULL, NULL, NC_REQ_COLL);

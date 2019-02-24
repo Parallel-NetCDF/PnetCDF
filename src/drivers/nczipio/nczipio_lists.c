@@ -45,6 +45,7 @@ int nczipioi_var_list_free(NC_zip_var_list *list) {
                     NCI_Free(list->data[i].chunk_cache[list->data[i].mychunks[j]]);
                 }
                 NCI_Free(list->data[i].chunk_cache);
+                NCI_Free(list->data[i].mychunks);
             }
         }
         NCI_Free(list->data);

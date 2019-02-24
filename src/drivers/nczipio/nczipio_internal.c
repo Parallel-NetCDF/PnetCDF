@@ -60,7 +60,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             }
 
             // Calculate block size
-            varp->chunksize = 1;
+            varp->chunksize = NC_Type_size(varp->xtype);
             for(i = 0; i < varp->ndim; i++){
                 varp->chunksize *= varp->chunkdim[i];
             }
