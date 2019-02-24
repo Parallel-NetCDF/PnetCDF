@@ -17,7 +17,7 @@ AC_DEFUN([UD_PROG_M4],
 	unset) AC_CHECK_PROGS(M4, m4 gm4, m4) ;;
 	*) AC_CHECK_PROGS(M4, $M4 m4 gm4, m4) ;;
     esac
-    AC_MSG_CHECKING(m4 flags)
+    AC_MSG_CHECKING(m4 additional flags)
     case "${M4FLAGS-unset}" in
 	unset) dnl test if M4 runs fine without option -B10000
                `${M4} /dev/null > conftest.err 2>&1`
@@ -29,7 +29,7 @@ AC_DEFUN([UD_PROG_M4],
                ;;
     esac
     if test "x$M4FLAGS" = x; then
-       AC_MSG_RESULT("none")
+       AC_MSG_RESULT(none needed)
     else
        AC_MSG_RESULT($M4FLAGS)
     fi
