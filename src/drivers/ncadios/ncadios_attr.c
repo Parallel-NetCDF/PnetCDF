@@ -29,6 +29,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncadios_driver.h>
+#include <ncadios_internal.h>
 
 
 int

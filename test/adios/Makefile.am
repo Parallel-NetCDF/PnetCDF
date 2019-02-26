@@ -32,6 +32,7 @@ NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 TESTPROGRAMS = open \
 			   header \
 			   var \
+			   ivar \
 			   att \
 			   varm\
 			   vars

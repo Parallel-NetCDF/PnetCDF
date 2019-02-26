@@ -45,6 +45,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncadios_driver.h>
+#include <ncadios_internal.h>
 
 int ncadios_sync_header(NC_ad *ncadp) {
     int i, j;

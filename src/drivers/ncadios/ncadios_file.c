@@ -45,6 +45,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncadios_driver.h>
+#include <ncadios_internal.h>
 
 int
 ncadios_create(MPI_Comm     comm,
@@ -175,6 +176,9 @@ ncadios_open(MPI_Comm     comm,
     // Parse information regarding record dim
     ncadiosi_parse_rec_dim(ncadp);
 
+    // Init non-blocking req list
+    ncadiosi_get_list_init(&(ncadp->getlist));
+
     /* 
      * Build dimensionality list 
      * Another way to provide dimension information is to create our 
@@ -222,6 +226,7 @@ ncadios_close(void *ncdp)
     }
 
     //NCI_Free(ncadp->ndims);
+    ncadiosi_get_list_free(&(ncadp->getlist));
     NCI_Free(ncadp->path);
     NCI_Free(ncadp);
 
@@ -343,7 +348,7 @@ ncadios_inq(void *ncdp,
     }
 
     if (xtendimp != NULL){
-        *xtendimp = ncadp->recdim;
+        *xtendimp = -1;
     }
 
     return NC_NOERR;
@@ -480,10 +485,24 @@ ncadios_wait(void *ncdp,
            int   reqMode)
 {
     int err;
+    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    /* TODO: Nonblocking IO support */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
+        ncadiosi_handle_all_put_req(ncadp);
+    }
+    else{
+        if (statuses == NULL){
+            for(i = 0; i < num_reqs; i++){
+                ncadiosi_handle_put_req(ncadp, req_ids[i], NULL);
+            }
+        }
+        else{
+            for(i = 0; i < num_reqs; i++){
+                ncadiosi_handle_put_req(ncadp, req_ids[i], statuses + i);
+            }
+        }
+    }
 
     return NC_NOERR;
 }

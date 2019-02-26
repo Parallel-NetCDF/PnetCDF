@@ -16,6 +16,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncadios_driver.h>
+#include <ncadios_internal.h>
 
 int ncadiosi_var_list_init(NC_ad_var_list *list) {
     list->cnt = 0;

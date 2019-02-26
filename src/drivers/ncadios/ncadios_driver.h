@@ -54,6 +54,24 @@ typedef struct NC_ad_var_list {
     int nalloc;
 } NC_ad_var_list;
 
+
+/* Get_req structure */
+typedef struct NC_ad_get_req {
+    int ready;  // If the data has been read
+    MPI_Datatype buftype, imaptype, vtype;
+    char *buf, *cbuf, *xbuf;
+    size_t cbsize, ecnt;
+} NC_ad_get_req;
+
+/* Get_req list structure */
+typedef struct NC_ad_get_list {
+    NC_ad_get_req *reqs;    // Array of request object
+    int *ids;   // Array of request ids
+    int *pos;   // Array of position of request ids in ids
+    int nalloc; // Size of the pool
+    int nused;  // Number of ids issued
+} NC_ad_get_list;
+
 typedef struct NC_ad NC_ad; /* forward reference */
 struct NC_ad {
     int                mode;        /* file _open/_create mode */
@@ -65,86 +83,11 @@ struct NC_ad {
     int                rank;
     MPI_Offset         nrec;        // Number of records in unlimited dimension
     MPI_Offset      getsize;
-    int              recdim;        // ID of unlimited dimension
     NC_ad_var_list     vars;
     NC_ad_att_list     atts;
     NC_ad_dim_list     dims;
+    NC_ad_get_list  getlist;
 };
-
-extern int 
-ncadiosi_parse_header_bp2ncd (NC_ad *ncid);
-
-extern int 
-ncadiosi_parse_header_readall (NC_ad *ncadp);
-
-extern int 
-ncadiosi_parse_rec_dim(NC_ad *ncadp);
-
-extern int 
-ncadiosi_var_list_init(NC_ad_var_list *list);
-
-extern int 
-ncadiosi_dim_list_init(NC_ad_dim_list *list);
-
-extern int 
-ncadiosi_att_list_init(NC_ad_att_list *list);
-
-extern int 
-ncadiosi_var_list_free(NC_ad_var_list *list);
-
-extern int 
-ncadiosi_dim_list_free(NC_ad_dim_list *list);
-
-extern int 
-ncadiosi_att_list_free(NC_ad_att_list *list);
-
-extern int 
-ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data);
-
-extern int 
-ncadiosi_att_list_add(NC_ad_att_list *list, int data);
-
-extern int 
-ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data);
-
-extern int 
-ncadiosi_var_list_find(NC_ad_var_list *list, char *name);
-
-extern int 
-ncadiosi_att_list_find(NC_ad_att_list *list, int data);
-
-extern int 
-ncadiosi_dim_list_find(NC_ad_dim_list *list, char *name);
-
-extern int 
-ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id);
-
-extern int 
-ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id);
-
-extern int 
-ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id);
-
-extern int 
-ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimids, int *id);
-
-extern int 
-ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id);
-
-extern int 
-ncadios_sync_header(NC_ad *ncadp);
-
-extern int 
-ncadiosi_parse_attrs(NC_ad *ncadp);
-
-extern int 
-ncadiosiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype outtype, int N);
-
-extern nc_type 
-ncadios_to_nc_type(enum ADIOS_DATATYPES atype);
-
-extern MPI_Datatype 
-ncadios_to_mpi_type(enum ADIOS_DATATYPES atype);
 
 extern int
 ncadios_create(MPI_Comm comm, const char *path, int cmode, int ncid, MPI_Info info, void **ncdp);

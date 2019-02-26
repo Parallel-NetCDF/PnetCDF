@@ -42,7 +42,13 @@ C_SRCS = ncadios_attr.c \
          ncadios_misc.c \
          ncadios_internal.c \
          ncadios_lists.c \
+<<<<<<< HEAD
          ncadios_bp2ncd.c
+=======
+         ncadios_bp2ncd.c \
+         ncadios_sync.c \
+         ncadios_nonblocking.c
+>>>>>>> b73e63d... nb
 
 $(M4_SRCS:.m4=.c): Makefile
 
