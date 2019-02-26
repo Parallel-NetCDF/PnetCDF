@@ -176,12 +176,16 @@ ncadios_get_var(void             *ncdp,
         int position;
         MPI_Datatype imaptype;
 
+        if (scount > 1){
+            count--;
+        }
+
         err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, &imaptype);
         if (err != NC_NOERR) {
             return err;
         }
         position = 0;
-        MPI_Unpack(cbuf, cesize * (int)ecnt, &position, buf, 1, imaptype, MPI_COMM_SELF);
+        MPI_Unpack(cbuf, cesize * (int)ecnt * scount, &position, buf, 1, imaptype, MPI_COMM_SELF);
         MPI_Type_free(&imaptype);
 
         NCI_Free(cbuf);

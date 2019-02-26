@@ -230,8 +230,6 @@ int ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req){
         if (status == NC_NOERR){
             status = err;
         }
-        NCI_Free(req->xbuf);
-    }
 
     /* If imap is used (memory buffer not contiguous) */
     if (req->cbuf != req->buf){
@@ -241,8 +239,12 @@ int ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req){
                     req->imaptype, MPI_COMM_SELF);
         MPI_Type_free(&(req->imaptype));
 
-        NCI_Free(req->cbuf);
-    }
+            NCI_Free(req->cbuf);
+        }
+
+        // Record get size
+        MPI_Type_size(req->vtype, &cesize);
+        ncadp->getsize += cesize * (MPI_Offset)req->ecnt;
 
     /* Free up structured used to post ADIOS operation */
     if (req->points != NULL){
@@ -362,6 +364,17 @@ ncadiosi_init_get_req( NC_ad *ncadp,
     else{
         esize = (size_t)adios_type_size(v->type, NULL);
         r->xbuf = NCI_Malloc(esize * r->ecnt);
+    }
+    
+    // PnetCDF allows accessing in different type
+    // Check if we need to convert
+    r.vtype = ncadios_to_mpi_type(v->type);
+    if (r.vtype == buftype){
+        r.xbuf = r.cbuf;
+    }
+    else{
+        esize = (size_t)adios_type_size(v->type, NULL);
+        r.xbuf = NCI_Malloc(esize * r.ecnt);
     }
 
     /* Time step dimension must be treated specially */

@@ -48,9 +48,13 @@ TESTPROGRAMS = open \
 			   header \
 			   var \
 <<<<<<< HEAD
+<<<<<<< HEAD
 			   att
 >>>>>>> 23ad299... parse var attributes
 =======
+=======
+			   ivar \
+>>>>>>> c17bf73... nb
 			   att \
 			   varm\
 			   vars
