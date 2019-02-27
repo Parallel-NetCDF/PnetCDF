@@ -1,9 +1,9 @@
 ## PnetCDF source code development repository
 
 PnetCDF is a parallel I/O library for accessing
-[NetCDF](http://www.unidata.ucar.edu/software/netcdf) files. The software
-development is a collaborative work of Northwestern University and Argonne
-National Laboratory.
+[Unidata's NetCDF](http://www.unidata.ucar.edu/software/netcdf) files in
+classic formats. The software development is a collaborative work of
+Northwestern University and Argonne National Laboratory.
 
 * The original repository: https://svn.mcs.anl.gov/repos/parallel-netcdf
 * Since June 1, 2018, PnetCDF repository has been migrated to

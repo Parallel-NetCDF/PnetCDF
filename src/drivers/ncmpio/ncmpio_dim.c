@@ -359,9 +359,9 @@ err_check:
 
     if (! NC_indef(ncp)) { /* when file is in data mode */
         /* Let root write the entire header to the file. Note that we cannot
-         * just update the variable name in its space occupied in the file
-         * header, because if the file space occupied by the name shrinks, all
-         * the metadata following it must be moved ahead.
+         * just update the name in-place in file header, because if the file
+         * space occupied by the name shrinks, all the metadata following it
+         * must be moved ahead.
          */
         err = ncmpio_write_header(ncp);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
