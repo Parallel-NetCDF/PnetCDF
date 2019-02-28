@@ -64,9 +64,9 @@ The ADIOS driver is a wrapper of ADIOS function calls that enables users to read
     + Dimension objects -- One of differences between BP and NetCDF formats is the dimension object.
       In NetCDF, dimensions are objects shared by multiple variables. To find the size of a variable, an application first inquires dimensions used to define the variable and then inquires the size of each dimension object.
       In BP format, there is no special object defined for dimensions. The dimension of a variable can be either a constant or a reference to a scalar variable.
-    + Although the same scalable variable can appear as a dimension in multiple variables, ADIOS library does not expose such relationship to the users. Instead, the dimensions of a variable are presented by their sizes when inquired.
-    + Make use of `bp2ncd` utility -- ADIOS distribution comes with a utility program named `bp2ncd` that converts BP files to NetCDF files. We make use of its source codes to parse the variable and dimension information.
-    + One-file-per-process cases -- `bp2ncd` does not support the one-file-per-process configuration (POSIX transmission method). `bp2ncd` cannot retrieve the metadata of dimension and variables from all files. To resolve this, the PnetCDF ADIOS driver creates a virtualized dimension object for every dimension of each variable. It considers all dimensions of a variable are uniquely for that variable.
+    + Although the same scalar variable can be used as a dimension to define multiple variables, ADIOS library does not expose such information directly to the users, such as dimension IDs in NetCDF semantics. Instead, the dimensions of a variable are presented by their sizes when inquired.
+    + Make use of `bp2ncd` utility -- ADIOS library distributions come with a utility program named `bp2ncd` that converts BP files to NetCDF files. We make use of its source codes to parse the variable and dimension information.
+    + One-file-per-process cases -- `bp2ncd` does not support the one-file-per-process configuration. `bp2ncd` cannot retrieve the metadata of dimension and variables from all files. To resolve this, the PnetCDF ADIOS driver creates a virtualized dimension object for every dimension of each variable. It considers all dimensions of a variable are uniquely for that variable.
 
 * Reading variables
   + Reference to variables
@@ -77,7 +77,8 @@ The ADIOS driver is a wrapper of ADIOS function calls that enables users to read
     + varn: Although it is possible to translate each subarray request into an ADIOS read call, it does not perform well. 
     + `ncmpi_cancel`: cancelling already posted non-blocking requests is not supported. This is due to no corresponding mechanism in ADIOS library to track the status of nonblocking requests.
   + Data provenance
-    + The BP files can store the file access history. Variables can have more than one time step and each time step corresponds to an update to the variables. For variables with more than one time step, the PnetCDF’s ADIOS driver treats them like record variables. It adds the time step as an additional dimension (the most significant one) to those variables.
+    + The BP files can store the file access history. Variables can have more than one time step and each time step corresponds to an update to the variables. For variables with more than one time step, the PnetCDF’s ADIOS driver adds the time step as an additional dimension (the most significant one) to those variables.
+    
   + Data type conversion
     + ADIOS library puts users the responsibility of data type conversion, and therefore its read APIs return data in its origin type. PnetCDF, on the other hand, supports automatic type conversion. (In the meantime, PnetCDF also checks data type overflow during the conversion.) The PnetCDF ADIOS driver performs the conversion by first reading the variable into a temporary buffer, and then converting the data into the desired type.
 

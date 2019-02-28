@@ -164,162 +164,25 @@ ncadios_get_var(void             *ncdp,
               int               reqMode)
 {
     int err;
-    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
-    ADIOS_VARINFO * v;
-    ADIOS_SELECTION *sel;
-    MPI_Datatype    vtype;
-    size_t esize, ecnt = 0;
-    int cesize;
-    void *xbuf, *cbuf;
-    uint64_t *points;
-    int sstart, scount, sstride;
+    NC_ad_get_req r;
+    ADIOS_VARINFO *v;
 
+    // Get ADIOS variable
     v = adios_inq_var(ncadp->fp, ncadp->vars.data[varid].name);
     if (v == NULL){
         err = ncmpii_error_adios2nc(adios_errno, "get_var");
         DEBUG_RETURN_ERROR(err);
     }
 
-    // Determine if it is record variable
-    if (v->nsteps > 1){
-        sstart = (int)start[0];
-        start++;
-        scount = (int)count[0];
-        count++;
-        if (stride != NULL){
-            sstride = (int)stride[0];
-            stride++;
-        }
-        else{
-            sstride = 1;
-        }
-    }
-    else{
-        sstart = 0;
-        scount = 1;
-        sstride = 1;
-    }
+    // Create a read request
+    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, bufcount, buftype);
 
-    // Calculate number of elements in single record
-    ecnt = 1;
-    for(i = 0; i < v->ndim; i++){
-        ecnt *= (size_t)count[i];
-    }
-
-    // If user buffer is contiguous
-    if (imap == NULL){
-        cbuf = buf;
-    }
-    else{
-        MPI_Type_size(buftype, &cesize);
-        cbuf = NCI_Malloc((size_t)cesize * ecnt * scount);
-    }
-
-    // PnetCDF allows accessing in different type
-    // Check if we need to convert
-    vtype = ncadios_to_mpi_type(v->type);
-    if (vtype == buftype){
-        xbuf = cbuf;
-    }
-    else{
-        esize = (size_t)adios_type_size(v->type, NULL);
-        xbuf = NCI_Malloc(esize * ecnt * scount);
-    }
-
-    // If stride is not used, we can use bounding box selection
-    // Otherwise, we need to specify every points
-    if (stride == NULL){
-        sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
-    }
-    else{
-        uint64_t *p, *cur;
-
-        points = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * ecnt * v->ndim);
-        p = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * v->ndim);
-        cur = points;
-
-        memset(p, 0, sizeof(uint64_t) * v->ndim);
-
-        // Iterate through every cells accessed
-        while(p[0] < count[0]) {
-            for(i = 0; i < v->ndim; i++){
-                *cur = p[i] * (uint64_t)stride[i];
-                cur++;
-            }
-
-            p[v->ndim - 1]++;
-            for(i = v->ndim - 1; i > 0; i--){
-                if (p[i] >= count[i]){
-                    p[i - 1]++;
-                    p[i] = 0;
-                }
-            }
-        }
-
-        sel = adios_selection_points(v->ndim, (uint64_t)ecnt, points);
-    }
-    if (sel == NULL){
-        err = ncmpii_error_adios2nc(adios_errno, "select");
-        DEBUG_RETURN_ERROR(err);
-    }
-    if (sstride > 1){
-        for(i = 0; i < scount; i++){
-            err = adios_schedule_read_byid (ncadp->fp, sel, v->varid, sstart + i * sstride, 1, (void*)(((char*)xbuf) + i * esize * ecnt));
-            if (err != 0){
-                err = ncmpii_error_adios2nc(adios_errno, "Open");
-                DEBUG_RETURN_ERROR(err);
-            }
-        }
-    }
-    else{
-        err = adios_schedule_read_byid (ncadp->fp, sel, v->varid, sstart, scount, xbuf);
-        if (err != 0){
-            err = ncmpii_error_adios2nc(adios_errno, "Open");
-            DEBUG_RETURN_ERROR(err);
-        }
-    }
-    err = adios_perform_reads (ncadp->fp, 1);
-    if (err != 0){
-        err = ncmpii_error_adios2nc(adios_errno, "Open");
-        DEBUG_RETURN_ERROR(err);
-    }
-
-    if (stride != NULL){
-        NCI_Free(points);
-    }
-
-    if (vtype != buftype){
-        err = ncadiosiconvert(xbuf, cbuf, vtype, buftype, (int)ecnt * scount);
-        if (err != NC_NOERR){
-            return err;
-        }
-        NCI_Free(xbuf);
-    }
-
-    if (imap != NULL){
-        int position;
-        MPI_Datatype imaptype;
-
-        if (scount > 1){
-            count--;
-        }
-
-        err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, &imaptype);
-        if (err != NC_NOERR) {
-            return err;
-        }
-        position = 0;
-        MPI_Unpack(cbuf, cesize * (int)ecnt * scount, &position, buf, 1, imaptype, MPI_COMM_SELF);
-        MPI_Type_free(&imaptype);
-
-        NCI_Free(cbuf);
-    }
-
+    // Release var info
     adios_free_varinfo (v);
 
-    MPI_Type_size(vtype, &cesize);
-    ncadp->getsize += cesize * ecnt;
+    // Handle the request
+    err = ncadiosi_handle_get_req(ncadp, &r);
 
     return NC_NOERR;
 }

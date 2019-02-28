@@ -19,16 +19,19 @@
 #define PUT_ARRAY_SIZE 128 /* Size of initial put list */
 #define SIZE_MULTIPLIER 2    /* When metadata buffer is full, we'll NCI_Reallocate it to META_BUFFER_MULTIPLIER times the original size*/
 
-/* getlist is a module in ncbbio driver that manage nonblocking put request object
+/* getlist is a module in ADIOS driver that manage nonblocking get request object
  * It consist of a pool of request object (reqs) and request ids (ids)
- * It's implemented by 2 array of the same number of entries
+ * It's implemented by 3 array of the same number of entries
  * The id i corresponds to the i-th request object
  * We issue request object by issuing the corresponding request id
  * ids is initialized with increasing id, ie. ids[i] = i
  * ids are issued from the begining of ids array
+ * We keep track of location of id in ids array in pos array. Initially, pos[i] = i
  * A pointer nused keep track of issued ids, it also marks the position of next unused ready to be issued
+ * ids[0:nused] => active (used) request ids
+ * ids[nused:nalloc] => available (unused) request ids
  * When issuing an id, we take from ids from the position marked by nused and increase nused by 1
- * When recycle an id, we simple put it to the position right before position marked by nused and decrease nused by 1
+ * When recycling an id, we swap if with the right before position marked by nused and decrease nused by 1 so that it falls to unused pool
  * NOTE: We does not guarantee to issue id in continuous and increasing order
  * NOTE: ids is simply a pool housing reqeust ids, the position od id within ids is not fixed and has no meaning
  *
@@ -44,7 +47,7 @@
  *       nused = 2
  * Recycling id 0
  *        |Avaiable ids --->
- * ids = 0 0 2 3
+ * ids = 1 0 2 3
  *         ^
  *     nused = 1
 * Recycling id 1
@@ -56,7 +59,8 @@
 
 /*
  * Initialize the put list
- *
+ * ids[0:nused] => active (used) request ids
+ * ids[nused:nalloc] => available (unused) request ids
  */
 int ncadiosi_get_list_init(NC_ad_get_list *lp) {
     int i;
@@ -137,7 +141,7 @@ int ncadiosi_get_list_free(NC_ad_get_list *lp)
 
 /*
  * Allocate a new request object from the getlist with id
- * We first checkif there are unused ids
+ * We first check if there are unused ids
  * We increase the size of pool, bringing in new ids if there aren't
  * Then we issue the ids at position nused and increase it by 1
  */
@@ -159,9 +163,9 @@ int ncadiosi_get_list_add(NC_ad_get_list *lp, int *id)
 
 /*
  * Recycle a request object in the put list
- * We simply put the id back to ids array
- * We put it at the empty slot right before position marked by nused
- * Decrease nused by 1 to mark the recycled id as unused
+ * We need to maintain the position of each request id in the ids list
+ * ids[0:nused] => active (used) request ids
+ * ids[nused:nalloc] => available (unused) request ids
  */
 int ncadiosi_get_list_remove(NC_ad_get_list *lp, int reqid) {
     /* Return id to the list */
@@ -175,17 +179,20 @@ int ncadiosi_get_list_remove(NC_ad_get_list *lp, int reqid) {
 }
 
 /*
+ * All adios perform read and mark requests corresponds to posted operation as completed
  */
 int ncadiosi_perform_read(NC_ad *ncadp) {
     int i, err;
     NC_ad_get_list *lp = &(ncadp->getlist);
 
+    // Read all posted operation
     err = adios_perform_reads (ncadp->fp, 1);
     if (err != 0){
         err = ncmpii_error_adios2nc(adios_errno, "Open");
         DEBUG_RETURN_ERROR(err);
     }
 
+    // All current active request has been read by ADIOS
     for(i = 0; i < lp->nused; i++){
         lp->reqs[lp->ids[i]].ready = 1;
     }
@@ -194,21 +201,61 @@ int ncadiosi_perform_read(NC_ad *ncadp) {
 }
 
 /*
- * Process put request
- * We process the request in the request object and recycle the request id
- * We first check if the status is ready
- * If it is, the corresponding log entry must have been flushed and the result is already avaiable in status, we return it directly
- * If not, the operation is still pending in the log file.
- * We do a log flush. Since log entries are linked to the request object, the status should be updated when the corresponding entry is flushed
- * Log module is responsible to fill up the status of corresponding request object
- * The request should be ready after log flush
+ * Process a read request and return it's status
+ * We need to call ADIOS perform read if data hasn't been read
+ * If data is available, we perform necessary type and shape converion
  */
-int ncadiosi_handle_put_req(NC_ad *ncadp, int reqid, int *stat)
+int ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req){
+    int err, status = NC_NOERR;
+    int cesize;
+
+    // Perform ADIOS read if this request haven't been read
+    if (!(req->ready)){    
+        ncadiosi_perform_read(ncadp);
+    }
+
+    // If type do not match
+    if (req->vtype != req->buftype){
+        err = ncadiosiconvert(req->xbuf, req->cbuf, req->vtype, req->buftype, (int)(req->ecnt));
+        if (status == NC_NOERR){
+            status = err;
+        }
+        NCI_Free(req->xbuf);
+    }
+
+    // If imap is used (memory buffer not contiguous)
+    if (req->cbuf != req->buf){
+        int position = 0;
+
+        MPI_Unpack(req->cbuf, req->cbsize, &position, req->buf, 1, req->imaptype, MPI_COMM_SELF);
+        MPI_Type_free(&(req->imaptype));
+
+        NCI_Free(req->cbuf);
+    }
+
+    // Free up structured used to post ADIOS operation
+    if (req->points != NULL){
+        NCI_Free(req->points);
+    }
+
+    adios_selection_delete(req->sel);
+
+    // Record get size
+    MPI_Type_size(req->vtype, &cesize);
+    ncadp->getsize += cesize * (MPI_Offset)req->ecnt;
+
+    return status;
+}
+
+/*
+ * Process put request
+ * If the request exists in active pool, we process it and return the id
+ */
+int ncadiosi_wait_get_req(NC_ad *ncadp, int reqid, int *stat)
 {
     int err, status = NC_NOERR;
     int cesize;
     NC_ad_get_list *lp = &(ncadp->getlist);
-    NC_ad_get_req *req;
 
     /* Filter invalid reqid
      * Valid id range from 0 ~ nalloc - 1
@@ -218,39 +265,7 @@ int ncadiosi_handle_put_req(NC_ad *ncadp, int reqid, int *stat)
     }
     else{
         // Locate the req object, which is reqs[reqid]
-        req = lp->reqs + reqid;
-
-        // Perform ADIOS read if this request haven't been read
-        if (!(req->ready)){    
-            ncadiosi_perform_read(ncadp);
-        }
-
-        if (req->vtype != req->buftype){
-            err = ncadiosiconvert(req->xbuf, req->cbuf, req->vtype, req->buftype, (int)(req->ecnt));
-            if (status == NC_NOERR){
-                status = err;
-            }
-            NCI_Free(req->xbuf);
-        }
-
-        if (req->cbuf != req->buf){
-            int position = 0;
-
-            MPI_Unpack(req->cbuf, req->cbsize, &position, req->buf, 1, req->imaptype, MPI_COMM_SELF);
-            MPI_Type_free(&(req->imaptype));
-
-            NCI_Free(req->cbuf);
-        }
-
-        if (req->points != NULL){
-            NCI_Free(req->points);
-        }
-
-        adios_selection_delete(req->sel);
-
-        // Record get size
-        MPI_Type_size(req->vtype, &cesize);
-        ncadp->getsize += cesize * (MPI_Offset)req->ecnt;
+        status = ncadiosi_handle_get_req(ncadp, lp->reqs + reqid);
 
         // Recycle req object to the pool
         err = ncadiosi_get_list_remove(lp, reqid);
@@ -267,82 +282,75 @@ int ncadiosi_handle_put_req(NC_ad *ncadp, int reqid, int *stat)
 
 /*
  * Process all put request
- * We didbn't keep track of issued ids
- * To process all issued ids, we need to do a linear search on reqs and process all request object that is in use
  */
-int ncadiosi_handle_all_put_req(NC_ad *ncadp) {
+int ncadiosi_wait_all_get_req(NC_ad *ncadp) {
     int i, err, status = NC_NOERR;
     NC_ad_get_list *lp = &(ncadp->getlist);
 
     // Search through req object array for object in use */
     while(lp->nused) {
-        err = ncadiosi_handle_put_req(ncadp, lp->ids[lp->nused - 1], NULL);
+        err = ncadiosi_wait_get_req(ncadp, lp->ids[lp->nused - 1], NULL);
         if (status == NC_NOERR) status = err;
     }
 
     return status;
 }
 
+/*
+ * Initialize a read request structure and post corresponding ADIOS oepration
+ */
 int
-ncadiosi_iget_var(NC_ad *ncadp,
-              int               varid,
+ncadiosi_init_get_req( NC_ad *ncadp,
+              NC_ad_get_req *r,
+              ADIOS_VARINFO *v,
               const MPI_Offset *start,
               const MPI_Offset *count,
               const MPI_Offset *stride,
               const MPI_Offset *imap,
               void             *buf,
               MPI_Offset        bufcount,
-              MPI_Datatype      buftype,
-              int *reqid)
+              MPI_Datatype      buftype)
 {
     int err;
     int req_id;
     int i;
-    NC_ad_get_req r;
-    ADIOS_VARINFO *v;
     size_t esize;
     int cesize;
     int sstart, scount, sstride;
 
-    v = adios_inq_var(ncadp->fp, ncadp->vars.data[varid].name);
-    if (v == NULL){
-        err = ncmpii_error_adios2nc(adios_errno, "get_var");
-        DEBUG_RETURN_ERROR(err);
-    }
-
-    r.ready = 0;
-    r.buf = buf;
-    r.buftype = buftype;
+    r->ready = 0;
+    r->buf = buf;
+    r->buftype = buftype;
 
     // Calculate number of elements in single record
-    r.ecnt = 1;
+    r->ecnt = 1;
     for(i = 0; i < v->ndim; i++){
-        r.ecnt *= (size_t)count[i];
+        r->ecnt *= (size_t)count[i];
     }
 
     // If user buffer is contiguous
     if (imap == NULL){
-        r.cbuf = r.buf;
+        r->cbuf = r->buf;
     }
     else{
-        err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, &(r.imaptype));
+        err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, &(r->imaptype));
         if (err != NC_NOERR) {
             return err;
         }
         MPI_Type_size(buftype, &cesize);
-        r.cbsize = r.ecnt * (size_t)cesize;
-        r.cbuf = NCI_Malloc(r.cbsize);
+        r->cbsize = r->ecnt * (size_t)cesize;
+        r->cbuf = NCI_Malloc(r->cbsize);
     }
     
     // PnetCDF allows accessing in different type
     // Check if we need to convert
-    r.vtype = ncadios_to_mpi_type(v->type);
-    if (r.vtype == buftype){
-        r.xbuf = r.cbuf;
+    r->vtype = ncadios_to_mpi_type(v->type);
+    if (r->vtype == buftype){
+        r->xbuf = r->cbuf;
     }
     else{
         esize = (size_t)adios_type_size(v->type, NULL);
-        r.xbuf = NCI_Malloc(esize * r.ecnt);
+        r->xbuf = NCI_Malloc(esize * r->ecnt);
     }
 
     // Time step dimension must be treated specially
@@ -369,15 +377,16 @@ ncadiosi_iget_var(NC_ad *ncadp,
     // If stride is not used, we can use bounding box selection
     // Otherwise, we need to specify every points
     if (stride == NULL){
-        r.sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
-        r.points = NULL;
+        r->sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
+        r->points = NULL;
     }
     else{
         uint64_t *p, *cur;
 
-        r.points = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * r.ecnt * v->ndim);
+        // Somehow ADIOS doe not deep copy points, we need to keep it in the request structure
+        r->points = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * r->ecnt * v->ndim);
         p = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * v->ndim);
-        cur = r.points;
+        cur = r->points;
 
         memset(p, 0, sizeof(uint64_t) * v->ndim);
 
@@ -400,33 +409,74 @@ ncadiosi_iget_var(NC_ad *ncadp,
             }
         }
 
-        r.sel = adios_selection_points(v->ndim, (uint64_t)r.ecnt, r.points);
+        r->sel = adios_selection_points(v->ndim, (uint64_t)r->ecnt, r->points);
 
         NCI_Free(p);
     }
-    if (r.sel == NULL){
+    if (r->sel == NULL){
         err = ncmpii_error_adios2nc(adios_errno, "select");
         DEBUG_RETURN_ERROR(err);
     }
 
     // Post read operation
     if (sstride > 1){
+        // ADIOS does not support stripe on time steps, post one step at a time
         for(i = 0; i < scount; i++){
-            err = adios_schedule_read_byid (ncadp->fp, r.sel, v->varid, sstart + i * sstride, 1, (void*)(((char*)r.xbuf) + i * esize * r.ecnt));
+            err = adios_schedule_read_byid (ncadp->fp, r->sel, v->varid, sstart + i * sstride, 1, (void*)(((char*)r->xbuf) + i * esize * r->ecnt));
             if (err != 0){
-                err = ncmpii_error_adios2nc(adios_errno, "Open");
+                err = ncmpii_error_adios2nc(adios_errno, "schedule_read");
                 DEBUG_RETURN_ERROR(err);
             }
         }
     }
     else{
-        err = adios_schedule_read_byid (ncadp->fp, r.sel, v->varid, sstart, scount, r.xbuf);
+        err = adios_schedule_read_byid (ncadp->fp, r->sel, v->varid, sstart, scount, r->xbuf);
         if (err != 0){
-            err = ncmpii_error_adios2nc(adios_errno, "Open");
+            err = ncmpii_error_adios2nc(adios_errno, "schedule_read");
             DEBUG_RETURN_ERROR(err);
         }
     }
 
+    return NC_NOERR;
+}
+
+/*
+ * Non-blocking get
+ * Initialize a read request structure
+ * Obtain a request id from the pool
+ * Put the request into list
+ */
+int
+ncadiosi_iget_var(NC_ad *ncadp,
+              int               varid,
+              const MPI_Offset *start,
+              const MPI_Offset *count,
+              const MPI_Offset *stride,
+              const MPI_Offset *imap,
+              void             *buf,
+              MPI_Offset        bufcount,
+              MPI_Datatype      buftype,
+              int *reqid)
+{
+    int err;
+    int req_id;
+    NC_ad_get_req r;
+    ADIOS_VARINFO *v;
+
+    // Get ADIOS variable
+    v = adios_inq_var(ncadp->fp, ncadp->vars.data[varid].name);
+    if (v == NULL){
+        err = ncmpii_error_adios2nc(adios_errno, "get_var");
+        DEBUG_RETURN_ERROR(err);
+    }
+
+    // Create a read request
+    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, bufcount, buftype);
+    if (err != NC_NOERR){
+        return err;
+    }
+
+    // Release var info
     adios_free_varinfo (v);
 
     // Add to req list

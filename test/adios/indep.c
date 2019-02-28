@@ -71,11 +71,11 @@ int main(int argc, char** argv) {
         start[1] = 0;
         count[0] = NX;
         count[1] = NY;
-        err = ncmpi_get_vara_double_all(ncid, 0, start, count, (double*)data); CHECK_ERR
+        err = ncmpi_get_vara_double(ncid, 0, start, count, (double*)data); CHECK_ERR
 
         imap[0] = 1;
         imap[1] = NX;
-        err = ncmpi_get_varm_double_all(ncid, 0, start, count, NULL, imap, (double*)datat); CHECK_ERR
+        err = ncmpi_get_varm_double(ncid, 0, start, count, NULL, imap, (double*)datat); CHECK_ERR
 
         for(i = 0; i < NX; i++){
             for(j = 0; j < NY; j++){

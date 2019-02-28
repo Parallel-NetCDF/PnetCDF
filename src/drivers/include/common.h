@@ -101,7 +101,7 @@ ncmpii_error_posix2nc(char *err_msg);
 
 #ifdef ENABLE_ADIOS
 extern int
-ncmpii_error_adios2nc(int adios_errno, char *err_msg);
+ncmpii_error_adios2nc(int adios_err, char *err_msg);
 #endif
 
 extern int

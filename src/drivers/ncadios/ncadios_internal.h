@@ -78,18 +78,6 @@ extern MPI_Datatype
 ncadios_to_mpi_type(enum ADIOS_DATATYPES atype);
 
 extern int
-ncadiosi_iget_var(NC_ad *ncadp, int varid, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *req);
-
-extern int
-ncadiosi_handle_all_put_req(NC_ad *ncadp);
-
-extern int
-ncadiosi_handle_put_req(NC_ad *ncadp, int reqid, int *stat);
-
-extern int
-ncadiosi_perform_read(NC_ad *ncadp);
-
-extern int
 ncadiosi_get_list_remove(NC_ad_get_list *lp, int reqid);
 
 extern int
@@ -100,3 +88,22 @@ ncadiosi_get_list_free(NC_ad_get_list *lp);
 
 extern int
 ncadiosi_get_list_init(NC_ad_get_list *lp);
+
+extern int
+ncadiosi_perform_read(NC_ad *ncadp);
+
+extern int 
+ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req);
+
+extern int 
+ncadiosi_wait_get_req(NC_ad *ncadp, int reqid, int *stat);
+
+extern int 
+ncadiosi_wait_all_get_req(NC_ad *ncadp);
+
+extern int
+ncadiosi_init_get_req(NC_ad *ncadp, NC_ad_get_req *r, ADIOS_VARINFO *v, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, void *buf, MPI_Offset bufcount, MPI_Datatype buftype);
+
+extern int
+ncadiosi_iget_var(NC_ad *ncadp, int varid, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, const MPI_Offset *imap, void *buf, MPI_Offset bufcount, MPI_Datatype buftype, int *reqid);
+

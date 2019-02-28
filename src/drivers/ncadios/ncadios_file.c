@@ -125,15 +125,18 @@ ncadios_open(MPI_Comm     comm,
     *ncpp = ncadp;
 
     /*
-     * Use a modified bp2ncd utility to parse header related information
+     * Use a modified bp2ncd utility to parse metadata related information
      * to guarantee the driver conforms to the converted nc file
-     * Attributes parsing is currently broken, we rely on ADIOS read 
+     * We do not use bp2ncd for attributes, we rely on ADIOS read 
      * API for attributes
      * Rank 0 parse the header and boardcast to other ranks
      */
 
     ncadiosi_var_list_init(&(ncadp->vars));
+<<<<<<< HEAD
     ncadiosi_att_list_init(&(ncadp->atts));
+=======
+>>>>>>> 4b9f463... comment
     ncadiosi_dim_list_init(&(ncadp->dims));
 
     if (ncadp->rank == 0) {
@@ -154,11 +157,9 @@ ncadios_open(MPI_Comm     comm,
     }
 
     if (ncadp->rank == 0) {
+        // bp2ncd does not support all type of files
+        // In case it fail, we parse the metadata using our own rule
         if (!parse_done){
-#ifdef PNETCDF_DEBUG
-            printf("Warning: bp2ncd fails to parse header, presenting virtual dimensions\n");
-            fflush(stdout);
-#endif
             // Reset var and dim list by free and realloc
             ncadiosi_var_list_free(&(ncadp->vars));
             ncadiosi_dim_list_free(&(ncadp->dims));
@@ -178,31 +179,6 @@ ncadios_open(MPI_Comm     comm,
 
     // Init non-blocking req list
     ncadiosi_get_list_init(&(ncadp->getlist));
-
-    /* 
-     * Build dimensionality list 
-     * Another way to provide dimension information is to create our 
-     * own dimension for each variable
-     * It is currently not used
-     */
-    /*
-    ncadp->ndims = (int*)NCI_Malloc(SIZEOF_INT * ncadp->fp->nvars);
-    for (i = 0; i < ncadp->fp->nvars; i++) {
-        ADIOS_VARINFO *v = adios_inq_var_byid (ncadp->fp, i);
-        if (v == NULL){
-            err = ncmpii_error_adios2nc(adios_errno, "inq_var");
-            DEBUG_RETURN_ERROR(err);
-        }
-        err = adios_inq_var_stat (ncadp->fp, v, 0, 0);
-        if (err != 0){
-            err = ncmpii_error_adios2nc(adios_errno, "inq_var_stat");
-            DEBUG_RETURN_ERROR(err);
-        }
-        ncadp->ndims[i] = v->ndim;
-
-        adios_free_varinfo(v);
-    }
-    */
 
     return NC_NOERR;
 }
@@ -446,7 +422,7 @@ ncadios_inq_misc(void       *ncdp,
 
     //TODO: Wire up nonblocking req
     if (nreqs != NULL){
-        *nreqs = 0;
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     }
 
     //TODO: Wire up nonblocking req
@@ -484,22 +460,34 @@ ncadios_wait(void *ncdp,
            int  *statuses,
            int   reqMode)
 {
-    int err;
+    int err, status = NC_NOERR;
     int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
-        ncadiosi_handle_all_put_req(ncadp);
+        // Handle all active request in the pool
+        err = ncadiosi_wait_all_get_req(ncadp);
+        if (status == NC_NOERR){
+            status = err;
+        }
     }
     else{
         if (statuses == NULL){
             for(i = 0; i < num_reqs; i++){
-                ncadiosi_handle_put_req(ncadp, req_ids[i], NULL);
+                // Handle request one by one
+                err = ncadiosi_wait_get_req(ncadp, req_ids[i], NULL);
+                if (status == NC_NOERR){
+                    status = err;
+                }
             }
         }
         else{
             for(i = 0; i < num_reqs; i++){
-                ncadiosi_handle_put_req(ncadp, req_ids[i], statuses + i);
+                // Handle request one by one
+                err = ncadiosi_wait_get_req(ncadp, req_ids[i], statuses + i);
+                if (status == NC_NOERR){
+                    status = err;
+                }
             }
         }
     }

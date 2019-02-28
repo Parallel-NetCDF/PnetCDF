@@ -8,12 +8,12 @@
 
 /*----< ncmpii_error_adios2nc() ------------------------------------------------*/
 /* translate posix io error codes to PnetCDF/netCDF error codes */
-int ncmpii_error_adios2nc(int adios_errno, char *err_msg)       /* extra error message */
+int ncmpii_error_adios2nc(int adios_err, char *err_msg)       /* extra error message */
 {
     const char *errstr;
 
     /* check for specific error codes understood by PnetCDF */
-    switch (adios_errno){
+    switch (adios_err){
         case err_file_not_found:
         case err_invalid_file_pointer:
             return NC_EBAD_FILE;
@@ -40,6 +40,8 @@ int ncmpii_error_adios2nc(int adios_errno, char *err_msg)       /* extra error m
         case err_corrupted_variable:
         case err_corrupted_attribute:
             return NC_ETRUNC;
+        default:
+            return NC_EIO;
     }
 
     /* other errors that currently have no corresponding PnetCDF error codes */

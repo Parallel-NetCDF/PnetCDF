@@ -37,7 +37,8 @@ TESTPROGRAMS = open \
 			   varm \
 			   vars \
 			   ivarm \
-			   ivars
+			   ivars \
+			   indep
 
 M4_SRCS  = 
 
