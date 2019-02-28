@@ -56,9 +56,16 @@ TESTPROGRAMS = open \
 			   ivar \
 >>>>>>> c17bf73... nb
 			   att \
+<<<<<<< HEAD
 			   varm\
 			   vars
 >>>>>>> 64fbfab... vars and varm
+=======
+			   varm \
+			   vars \
+			   ivarm \
+			   ivars
+>>>>>>> 72b85af... test program for nonblocking
 
 M4_SRCS  = 
 

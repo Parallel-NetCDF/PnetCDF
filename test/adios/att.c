@@ -28,28 +28,19 @@
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 
 int main(int argc, char** argv) {
-<<<<<<< HEAD
     int nerrs=0, rank, nprocs, err;
     int ncid, vid, natt;
     char data[1024];
 
-=======
-    int i, j, nerrs=0, rank, nprocs, err;
-    int ncid, vid, natt;
-    int dimids[2];
-    MPI_Offset start[2], count[2];
-    char data[1024];
-
-    MPI_Offset dlen;
-    char tmp[1024];
-    int x, y;
->>>>>>> 23ad299... parse var attributes
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 72b85af... test program for nonblocking
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str,
@@ -59,9 +50,12 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
+<<<<<<< HEAD
     err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, 
                         &ncid);
 =======
+=======
+>>>>>>> 72b85af... test program for nonblocking
     err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 >>>>>>> 23ad299... parse var attributes
     CHECK_ERR

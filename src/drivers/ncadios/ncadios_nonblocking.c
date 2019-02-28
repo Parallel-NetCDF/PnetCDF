@@ -242,6 +242,12 @@ int ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req){
             NCI_Free(req->cbuf);
         }
 
+        if (req->points != NULL){
+            NCI_Free(req->points);
+        }
+
+        adios_selection_delete(req->sel);
+
         // Record get size
         MPI_Type_size(req->vtype, &cesize);
         ncadp->getsize += cesize * (MPI_Offset)req->ecnt;
