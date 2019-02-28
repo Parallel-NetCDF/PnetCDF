@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str,
-        "*** TESTING C   %s for adios variable strided read",
+        "*** TESTING C   %s for adios non-blocking variable strided read",
         basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
@@ -69,7 +69,10 @@ int main(int argc, char** argv) {
     count[1] = 2;
     stride[0] = 5;
     stride[1] = 50;
-    err = ncmpi_get_vars_double_all(ncid, 0, start, count, stride, (double*)data); CHECK_ERR
+    err = ncmpi_iget_vars_double(ncid, 0, start, count, stride, (double*)data, NULL); CHECK_ERR
+
+    err = ncmpi_wait_all(ncid, NC_GET_REQ_ALL, NULL, NULL); CHECK_ERR
+    
     for(i = 0; i < 2; i++){
         for(j = 0; j < 2; j++){
             if (fabs(data[i][j] - (((double)(i * stride[0])) + ((double)(j * stride[1])) / 100)) > 0.0001){

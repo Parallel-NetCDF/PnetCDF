@@ -242,6 +242,12 @@ int ncadiosi_handle_put_req(NC_ad *ncadp, int reqid, int *stat)
             NCI_Free(req->cbuf);
         }
 
+        if (req->points != NULL){
+            NCI_Free(req->points);
+        }
+
+        adios_selection_delete(req->sel);
+
         // Record get size
         MPI_Type_size(req->vtype, &cesize);
         ncadp->getsize += cesize * (MPI_Offset)req->ecnt;
@@ -269,8 +275,8 @@ int ncadiosi_handle_all_put_req(NC_ad *ncadp) {
     NC_ad_get_list *lp = &(ncadp->getlist);
 
     // Search through req object array for object in use */
-    for (i = 0; i < lp->nused; i++) {
-        err = ncadiosi_handle_put_req(ncadp, lp->ids[i], NULL);
+    while(lp->nused) {
+        err = ncadiosi_handle_put_req(ncadp, lp->ids[lp->nused - 1], NULL);
         if (status == NC_NOERR) status = err;
     }
 
@@ -294,7 +300,6 @@ ncadiosi_iget_var(NC_ad *ncadp,
     int i;
     NC_ad_get_req r;
     ADIOS_VARINFO *v;
-    ADIOS_SELECTION *sel;
     size_t esize;
     int cesize;
     int sstart, scount, sstride;
@@ -364,15 +369,15 @@ ncadiosi_iget_var(NC_ad *ncadp,
     // If stride is not used, we can use bounding box selection
     // Otherwise, we need to specify every points
     if (stride == NULL){
-        sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
+        r.sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
+        r.points = NULL;
     }
     else{
-        uint64_t *points;
         uint64_t *p, *cur;
 
-        points = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * r.ecnt * v->ndim);
+        r.points = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * r.ecnt * v->ndim);
         p = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * v->ndim);
-        cur = points;
+        cur = r.points;
 
         memset(p, 0, sizeof(uint64_t) * v->ndim);
 
@@ -389,15 +394,17 @@ ncadiosi_iget_var(NC_ad *ncadp,
                     p[i - 1]++;
                     p[i] = 0;
                 }
+                else{
+                    break;
+                }
             }
         }
 
-        sel = adios_selection_points(v->ndim, (uint64_t)r.ecnt, points);
+        r.sel = adios_selection_points(v->ndim, (uint64_t)r.ecnt, r.points);
 
-        NCI_Free(points);
         NCI_Free(p);
     }
-    if (sel == NULL){
+    if (r.sel == NULL){
         err = ncmpii_error_adios2nc(adios_errno, "select");
         DEBUG_RETURN_ERROR(err);
     }
@@ -405,7 +412,7 @@ ncadiosi_iget_var(NC_ad *ncadp,
     // Post read operation
     if (sstride > 1){
         for(i = 0; i < scount; i++){
-            err = adios_schedule_read_byid (ncadp->fp, sel, v->varid, sstart + i * sstride, 1, (void*)(((char*)r.xbuf) + i * esize * r.ecnt));
+            err = adios_schedule_read_byid (ncadp->fp, r.sel, v->varid, sstart + i * sstride, 1, (void*)(((char*)r.xbuf) + i * esize * r.ecnt));
             if (err != 0){
                 err = ncmpii_error_adios2nc(adios_errno, "Open");
                 DEBUG_RETURN_ERROR(err);
@@ -413,7 +420,7 @@ ncadiosi_iget_var(NC_ad *ncadp,
         }
     }
     else{
-        err = adios_schedule_read_byid (ncadp->fp, sel, v->varid, sstart, scount, r.xbuf);
+        err = adios_schedule_read_byid (ncadp->fp, r.sel, v->varid, sstart, scount, r.xbuf);
         if (err != 0){
             err = ncmpii_error_adios2nc(adios_errno, "Open");
             DEBUG_RETURN_ERROR(err);

@@ -7,7 +7,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program verify variable read capability of adios driver
+ * This program verify variable read capability with imap of adios driver
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include <stdio.h>
@@ -36,13 +36,13 @@
 #define ERRCODE 2
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 
+double data[NX][NY], datat[NY][NX];
+
 int main(int argc, char** argv) {
     int i, j, nerrs=0, rank, nprocs, err;
     int ncid, vid, ndim;
     int dimids[2];
-    MPI_Offset start[2], count[2], stride[2];
-    double data[2][2];
-
+    MPI_Offset start[2], count[2], imap[2];
     MPI_Offset dlen;
     char tmp[1024];
     int x, y;
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str,
-        "*** TESTING C   %s for adios variable strided read",
+        "*** TESTING C   %s for adios non-blocking variable read with non-contiguous buffer",
         basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
@@ -65,15 +65,20 @@ int main(int argc, char** argv) {
 
     start[0] = 0;
     start[1] = 0;
-    count[0] = 2;
-    count[1] = 2;
-    stride[0] = 5;
-    stride[1] = 50;
-    err = ncmpi_get_vars_double_all(ncid, 0, start, count, stride, (double*)data); CHECK_ERR
-    for(i = 0; i < 2; i++){
-        for(j = 0; j < 2; j++){
-            if (fabs(data[i][j] - (((double)(i * stride[0])) + ((double)(j * stride[1])) / 100)) > 0.0001){
-                printf("Rank %d: Expect Var 0 [%d][%d] = %lf, but got %lf\n", rank, i * (int)stride[0], j * (int)stride[1], (((double)(i * stride[0])) + ((double)(j * stride[1])) / 100), data[i][j]);
+    count[0] = NX;
+    count[1] = NY;
+    err = ncmpi_iget_vara_double(ncid, 0, start, count, (double*)data, NULL); CHECK_ERR
+
+    imap[0] = 1;
+    imap[1] = NX;
+    err = ncmpi_iget_varm_double(ncid, 0, start, count, NULL, imap, (double*)datat, NULL); CHECK_ERR
+
+    err = ncmpi_wait_all(ncid, NC_GET_REQ_ALL, NULL, NULL); CHECK_ERR
+
+    for(i = 0; i < NX; i++){
+        for(j = 0; j < NY; j++){
+            if (fabs(data[i][j] - datat[j][i]) > 0.0001){
+                printf("Rank %d: Expect Var 0 [%d][%d] = %lf != Var 0 T [%d][%d] = %lf\n", rank, i, j, data[i][j], j, i, data[j][i]);
                 nerrs++;
             }
         }

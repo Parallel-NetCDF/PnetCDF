@@ -34,8 +34,10 @@ TESTPROGRAMS = open \
 			   var \
 			   ivar \
 			   att \
-			   varm\
-			   vars
+			   varm \
+			   vars \
+			   ivarm \
+			   ivars
 
 M4_SRCS  = 
 

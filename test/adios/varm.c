@@ -51,6 +51,15 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str,
+        "*** TESTING C   %s for adios variable read with non-contiguous buffer",
+        basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
     err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 

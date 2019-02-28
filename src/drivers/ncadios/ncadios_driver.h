@@ -61,6 +61,8 @@ typedef struct NC_ad_get_req {
     MPI_Datatype buftype, imaptype, vtype;
     char *buf, *cbuf, *xbuf;
     size_t cbsize, ecnt;
+    ADIOS_SELECTION *sel;   // Need to be freed after processing
+    uint64_t *points;   // Somehow, adios_selection_points does not deep copy points
 } NC_ad_get_req;
 
 /* Get_req list structure */
