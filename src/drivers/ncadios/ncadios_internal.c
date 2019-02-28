@@ -266,8 +266,13 @@ int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
     
     for(i = 0; i < ncadp->vars.cnt; i++){
         if (ncadp->vars.data[i].dimids[0] == INT_MAX){
-            ADIOS_VARINFO * v = adios_inq_var(ncadp->fp, ncadp->vars.data[i].name);
-            adios_inq_var_stat (ncadp->fp, v, 0, 0);
+            ADIOS_VARINFO * v;
+            
+            v = adios_inq_var_byid (ncadp->fp, i);
+            if (v == NULL){
+                err = ncmpii_error_adios2nc(adios_errno, "inq_var");
+                DEBUG_RETURN_ERROR(err);
+            }   
 
             sprintf(name, "var_%d_timesteps", i);
             err = ncadiosi_def_dim(ncadp, name, v->nsteps, ncadp->vars.data[i].dimids);
@@ -292,8 +297,13 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
 
     /* For all variables */
     for (i = 0; i < ncadp->fp->nvars; i++) {
-        ADIOS_VARINFO * v = adios_inq_var_byid (ncadp->fp, i);
-        adios_inq_var_stat (ncadp->fp, v, 0, 0);
+        ADIOS_VARINFO * v;
+        
+        v = adios_inq_var_byid (ncadp->fp, i);
+        if (v == NULL){
+            err = ncmpii_error_adios2nc(adios_errno, "inq_var");
+            DEBUG_RETURN_ERROR(err);
+        }   
 
         if (maxndim < v->ndim + 1){
             maxndim = v->ndim + 1;

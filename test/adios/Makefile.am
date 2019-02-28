@@ -64,8 +64,13 @@ TESTPROGRAMS = open \
 			   varm \
 			   vars \
 			   ivarm \
+<<<<<<< HEAD
 			   ivars
 >>>>>>> 72b85af... test program for nonblocking
+=======
+			   ivars \
+			   indep
+>>>>>>> bd3c240... remove warning
 
 M4_SRCS  = 
 

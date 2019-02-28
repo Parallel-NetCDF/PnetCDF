@@ -150,7 +150,6 @@ ncadios_get_var(void             *ncdp,
               int               reqMode)
 {
     int err;
-    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
     NC_ad_get_req r;
     ADIOS_VARINFO *v;
@@ -191,10 +190,11 @@ ncadios_get_var(void             *ncdp,
         NCI_Free(cbuf);
     }
 
+    // Release var info
     adios_free_varinfo (v);
 
-    MPI_Type_size(vtype, &cesize);
-    ncadp->getsize += cesize * ecnt;
+    // Handle the request
+    err = ncadiosi_handle_get_req(ncadp, &r);
 
     return NC_NOERR;
 }
