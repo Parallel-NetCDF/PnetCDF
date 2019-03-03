@@ -25,7 +25,7 @@
 
 * Note that the default setting of PnetCDF is to build static libraries only.
   To also build shared libraries, add "--enable-shared LDFLAGS=-dynamic" to the
-  configure command and change the compile flags to "-O2".
+  configure command.
 
     ./configure --prefix=/path/to/install \
                 cross_compiling="yes" \
