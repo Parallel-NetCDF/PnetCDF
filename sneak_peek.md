@@ -56,6 +56,12 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
+  + Add a check whether the MPI library is built with shared-library support.
+    If not and `--enable-shared` is used, configure process of PnetCDF will
+    fail.
+  + In NetCDF-4 driver, `nc4io_inq_var()` adds a check of arguments `no_fill`
+    and `fill_value` for NULL. If both are NULL, it skips the call to
+    `nc_inq_var_fill`.
   + File header extent area between end of header and first variable is padded
     with null bytes if PnetCDF is configured with option
     `--enable-null-byte-header-padding`.

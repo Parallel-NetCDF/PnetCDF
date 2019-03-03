@@ -2016,3 +2016,100 @@ EOF
    ${RM} -f conftest.sed_i
 ])
 
+#
+# To check whether MPI C compiler supports shared libraries, below three
+# functions LT_AC_CHECK_SHLIB, LT_AH_CHECK_SHLIB, and LT_AC_LINK_SHLIB_IFELSE
+# are from http://lists.gnu.org/archive/html/libtool/2004-10/msg00222.html
+#
+# Usage example:
+#
+#  LT_AC_CHECK_SHLIB(mpi, MPI_Init, [], [AC_MSG_ERROR([
+#    -----------------------------------------------------------------------
+#      Building shared libraries is requested, but the MPI C compiler:
+#      "${MPICC}"
+#      is not built with support of shared libraries. Abort.
+#    -----------------------------------------------------------------------])])
+#
+
+# LT_AC_CHECK_SHLIB(LIBRARY, FUNCTION,
+#                   [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND],
+#                   [OTHER-LIBRARIES])
+# -----------------------------------------------------------
+#
+# Use a cache variable name containing both the library and function name,
+# because the test really is for library $1 defining function $2, not
+# just for library $1. Separate tests with the same $1 and different $2s
+# may have different results.
+#
+# Note that using directly AS_VAR_PUSHDEF([ac_Lib], [lt_ac_cv_shlib_$1_$2])
+# is asking for troubles, since LT_AC_CHECK_SHLIB($lib, fun) would give
+# lt_ac_cv_shlib_$lib_fun, which is definitely not what was meant. Hence
+# the AS_LITERAL_IF indirection.
+#
+# FIXME: This macro is extremely suspicious. It DEFINEs unconditionally,
+# whatever the FUNCTION, in addition to not being a *S macro.  Note
+# that the cache does depend upon the function we are looking for.
+#
+AC_DEFUN([LT_AC_CHECK_SHLIB],
+[m4_ifval([$3], , [LT_AH_CHECK_SHLIB([$1])])dnl
+AS_LITERAL_IF([$1],
+              [AS_VAR_PUSHDEF([ac_Lib], [lt_ac_cv_shlib_$1_$2])],
+              [AS_VAR_PUSHDEF([ac_Lib], [lt_ac_cv_shlib_$1''_$2])])dnl
+AC_CACHE_CHECK([for $2 in shared version of -l$1], ac_Lib,
+[lt_ac_check_shlib_save_LIBS=$LIBS
+LIBS="-l$1 $5 $LIBS"
+LT_AC_LINK_SHLIB_IFELSE([AC_LANG_CALL([], [$2])],
+                        [AS_VAR_SET(ac_Lib, yes)],
+                        [AS_VAR_SET(ac_Lib, no)])
+LIBS=$lt_ac_check_shlib_save_LIBS])
+AS_IF([test AS_VAR_GET(ac_Lib) = yes],
+      [m4_default([$3], [AC_DEFINE_UNQUOTED(AS_TR_CPP(HAVE_SHLIB$1))])],
+      [$4])dnl
+AS_VAR_POPDEF([ac_Lib])dnl
+])# AC_CHECK_LIB
+
+# LT_AH_CHECK_SHLIB(LIBNAME)
+# ---------------------
+m4_define([LT_AH_CHECK_SHLIB],
+[AH_TEMPLATE(AS_TR_CPP(HAVE_SHLIB$1),
+[Define to 1 if you have a shared version of the `]$1[' library (-l]$1[).])])
+
+
+# LT_AC_LINK_SHLIB_IFELSE(LIBRARYCODE, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+# -----------------------------------------------------------------
+# Try to link LIBRARYCODE into a libtool library.
+AC_DEFUN([LT_AC_LINK_SHLIB_IFELSE],
+[m4_ifvaln([$1], [AC_LANG_CONFTEST([$1])])dnl
+rm -rf $objdir
+rm -f conftest.$ac_objext conftest.la
+ac_ltcompile='./libtool --mode=compile $CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext -o conftest.lo >&AS_MESSAGE_LOG_FD'
+ac_ltlink_la='./libtool --mode=link $CC -rpath `pwd` $CFLAGS $LDFLAGS -o libconftest.la conftest.lo $LIBS >&AS_MESSAGE_LOG_FD'
+AS_IF([AC_TRY_EVAL([ac_ltcompile]) &&
+       AC_TRY_EVAL([ac_ltlink_la]) &&
+       AC_TRY_COMMAND([test -s libconftest.la])],
+      [$2],
+      [_AC_MSG_LOG_CONFTEST
+      m4_ifvaln([$3], [$3])])
+rm -rf $objdir
+rm -f conftest* libconftest*[]dnl
+])# _AC_LINK_IFELSE
+
+# LT_MPI_CHECK_SHLIB
+# -----------------------------------------------------------------
+# Try to link an MPI program using libtool. This function is useful for
+# detecting whether the MPI library is built wit shared library support.
+AC_DEFUN([LT_MPI_CHECK_SHLIB],[
+AC_LANG_CONFTEST([AC_LANG_PROGRAM([[#include <mpi.h>]], [[MPI_Init(0, 0);]])])
+${RM} -rf $objdir
+${RM} -f conftest.$ac_objext conftest.la
+ac_ltcompile='./libtool --mode=compile $MPICC -c $CFLAGS $CPPFLAGS conftest.$ac_ext -o conftest.lo >&AS_MESSAGE_LOG_FD'
+ac_ltlink_la='./libtool --mode=link $MPICC -rpath `pwd` $CFLAGS $LDFLAGS -o libconftest.la conftest.lo $LIBS >&AS_MESSAGE_LOG_FD'
+AS_IF([AC_TRY_EVAL([ac_ltcompile]) &&
+       AC_TRY_EVAL([ac_ltlink_la]) &&
+       AC_TRY_COMMAND([test -s libconftest.la])],
+      [ac_cv_lt_mpi_check_shlib=yes],
+      [ac_cv_lt_mpi_check_shlib=no])
+${RM} -rf $objdir
+${RM} -f conftest* libconftest*[]dnl
+])# LT_MPI_CHECK_SHLIB
+
