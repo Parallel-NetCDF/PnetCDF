@@ -123,8 +123,10 @@ nc4io_inq_var(void       *ncdp,
     err = nc_inq_var(nc4p->ncid, varid, name, xtypep, ndimsp, dimids, nattsp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
-    err = nc_inq_var_fill(nc4p->ncid, varid, no_fillp, fill_valuep);
-    if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+    if (no_fillp != NULL || fill_valuep != NULL) {
+        err = nc_inq_var_fill(nc4p->ncid, varid, no_fillp, fill_valuep);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+    }
 
     return NC_NOERR;
 }
