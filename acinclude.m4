@@ -1098,7 +1098,7 @@ AC_DEFUN([UD_PROG_FC_UPPERCASE_MOD],
 [
 AC_REQUIRE([UD_FC_MODULE_EXTENSION])
 AC_LANG_PUSH(Fortran)
-AC_MSG_CHECKING([if Fortran 90 compiler capitalizes .mod filenames])
+AC_MSG_CHECKING([whether Fortran 90 compiler capitalizes .mod filenames])
 AC_COMPILE_IFELSE(
     [AC_LANG_SOURCE([
         module conftest
@@ -1754,7 +1754,7 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
    dnl If yes, check, check if the file exists. Need not check MPI_INSTALL.
    ac_mpi_prog_path=`dirname $ac_first_token`
    if test "x$ac_mpi_prog_path" != "x." ; then
-      AC_MSG_CHECKING([if $ac_first_token exists and is executable])
+      AC_MSG_CHECKING([whether $ac_first_token exists and is executable])
       if test -x "$ac_first_token" ; then
          AC_MSG_RESULT([yes])
          $1="$2"
@@ -1849,7 +1849,7 @@ AC_DEFUN([UD_MPI_PATH_PROGS], [
 dnl Check for presence of an MPI constant.
 dnl These could be enums, so we have to do compile checks.
 AC_DEFUN([UD_HAS_MPI_CONST], [
-   AC_MSG_CHECKING(if MPI constant $1 is defined )
+   AC_MSG_CHECKING(whether MPI constant $1 is defined )
    AC_COMPILE_IFELSE(
       [AC_LANG_SOURCE([
           #include <mpi.h>
@@ -1865,7 +1865,7 @@ AC_DEFUN([UD_HAS_MPI_CONST], [
 dnl Check for presence of an MPI datatype.
 dnl These could be enums, so we have to do compile checks.
 AC_DEFUN([UD_CHECK_MPI_DATATYPE], [
-   AC_MSG_CHECKING(if MPI datatype $1 is defined )
+   AC_MSG_CHECKING(whether MPI datatype $1 is defined )
    AC_COMPILE_IFELSE(
       [AC_LANG_SOURCE([
           #include <mpi.h>
@@ -1883,7 +1883,7 @@ AC_DEFUN([UD_CHECK_MPI_DATATYPE], [
 dnl Check if older Intel MPI C compiler (4.x) for issue of redefined SEEK_SET
 dnl See https://software.intel.com/en-us/articles/intel-cluster-toolkit-for-linux-error-when-compiling-c-aps-using-intel-mpi-library-compilation-driver-mpiicpc
 AC_DEFUN([UD_CHECK_MPI_CPP_SEEK_SET], [
-   AC_MSG_CHECKING(if MPI C++ compiler redefines SEEK_SET )
+   AC_MSG_CHECKING(whether MPI C++ compiler redefines SEEK_SET )
    CXX=${MPICXX}
    AC_LANG_PUSH(C++)
    AC_COMPILE_IFELSE(
@@ -2097,19 +2097,21 @@ rm -f conftest* libconftest*[]dnl
 # LT_MPI_CHECK_SHLIB
 # -----------------------------------------------------------------
 # Try to link an MPI program using libtool. This function is useful for
-# detecting whether the MPI library is built wit shared library support.
+# detecting whether the MPI library is built with shared library support.
 AC_DEFUN([LT_MPI_CHECK_SHLIB],[
-AC_LANG_CONFTEST([AC_LANG_PROGRAM([[#include <mpi.h>]], [[MPI_Init(0, 0);]])])
-${RM} -rf $objdir
-${RM} -f conftest.$ac_objext conftest.la
-ac_ltcompile='./libtool --mode=compile $MPICC -c $CFLAGS $CPPFLAGS conftest.$ac_ext -o conftest.lo >&AS_MESSAGE_LOG_FD'
-ac_ltlink_la='./libtool --mode=link $MPICC -rpath `pwd` $CFLAGS $LDFLAGS -o libconftest.la conftest.lo $LIBS >&AS_MESSAGE_LOG_FD'
-AS_IF([AC_TRY_EVAL([ac_ltcompile]) &&
+   AC_MSG_CHECKING([whether MPI library is built with shared library support])
+   AC_LANG_CONFTEST([AC_LANG_PROGRAM([[#include <mpi.h>]], [[MPI_Init(0, 0);]])])
+   ${RM} -rf $objdir
+   ${RM} -f conftest.$ac_objext conftest.la
+   ac_ltcompile='./libtool --mode=compile $MPICC -c $CFLAGS $CPPFLAGS conftest.$ac_ext -o conftest.lo >&AS_MESSAGE_LOG_FD'
+   ac_ltlink_la='./libtool --mode=link $MPICC -rpath `pwd` $CFLAGS $LDFLAGS -o libconftest.la conftest.lo $LIBS >&AS_MESSAGE_LOG_FD'
+   AS_IF([AC_TRY_EVAL([ac_ltcompile]) &&
        AC_TRY_EVAL([ac_ltlink_la]) &&
        AC_TRY_COMMAND([test -s libconftest.la])],
       [ac_cv_lt_mpi_check_shlib=yes],
       [ac_cv_lt_mpi_check_shlib=no])
-${RM} -rf $objdir
-${RM} -f conftest* libconftest*[]dnl
+   ${RM} -rf $objdir
+   ${RM} -f conftest* libconftest*
+   AC_MSG_RESULT([$ac_cv_lt_mpi_check_shlib])
 ])# LT_MPI_CHECK_SHLIB
 
