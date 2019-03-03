@@ -38,7 +38,7 @@ $(C2F_SRCS): mpifnetcdf.h
 PNETCDF_HEADER = $(top_builddir)/src/include/pnetcdf.h
 
 mpifnetcdf.h: defs buildiface $(PNETCDF_HEADER)
-	$(RM) -f $@ allf.c
+	$(RM) -f $@ $(C2F_SRCS)
 	$(srcdir)/buildiface -infile=$(PNETCDF_HEADER) -deffile=$(srcdir)/defs > allf.c
 	@touch $(C2F_SRCS)
 
