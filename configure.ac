@@ -576,7 +576,7 @@ if test "x${has_fortran}" = xyes ; then
    dnl FFLAGS is set in AC_PROG_F77
    AC_F77_LIBRARY_LDFLAGS
 
-   AC_MSG_CHECKING([if $MPIF77 is a valid MPI compiler])
+   AC_MSG_CHECKING([whether $MPIF77 is a valid MPI compiler])
    AC_LANG_PUSH([Fortran 77])
    dnl check if can use mpif.h
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
@@ -631,13 +631,13 @@ if test "x${has_fortran}" = xyes ; then
    dnl FLIBS="$FCLIBS"
    dnl F90LIBS="$FCLIBS"
 
-   AC_MSG_CHECKING([if mpi.mod is available])
+   AC_MSG_CHECKING([whether mpi.mod is available])
    AC_LANG_PUSH([Fortran])
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[        use mpi]])],
                      [mpi_mod=yes], [mpi_mod=no]
    )
    AC_MSG_RESULT($mpi_mod)
-   AC_MSG_CHECKING([if $MPIF90 is a valid MPI compiler])
+   AC_MSG_CHECKING([whether $MPIF90 is a valid MPI compiler])
    if test "x${mpi_mod}" = xyes ; then
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
            use mpi
@@ -881,12 +881,12 @@ if test "x${has_fortran}" = xyes ; then
 fi
 AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
-dnl Call LT_OUTPUT to produce file ./libtool which is used later in
-dnl. LT_AC_CHECK_SHLIB. Note LT_OUTPUT must be called after all compilers
-dnl checked, such as AC_PROG_CC, AC_PROG_CXX, AC_PROG_FC
-LT_OUTPUT
-
 if test "x$enable_shared" = xyes ; then
+   dnl Call LT_OUTPUT to produce file ./libtool which is used later in
+   dnl. LT_AC_CHECK_SHLIB. Note LT_OUTPUT must be called after all compilers
+   dnl checked, such as AC_PROG_CC, AC_PROG_CXX, AC_PROG_FC
+   LT_OUTPUT
+
    dnl Check whether MPICC supports shared libraries.
    LT_MPI_CHECK_SHLIB
    if test "x$ac_cv_lt_mpi_check_shlib" = xno ; then
@@ -1505,7 +1505,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    fi
 
    dnl Check if NetCDF version is 4.6.2 or later
-   AC_MSG_CHECKING([Check if NetCDF version 4.6.2 or later])
+   AC_MSG_CHECKING([whether NetCDF version is 4.6.2 or later])
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netcdf_meta.h>]], [[
 #if (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH < 4006002)
       choke me
@@ -1514,7 +1514,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    AC_MSG_RESULT([$netcdf_ge_4_6_2])
 
    dnl Check if NetCDF is built with parallel I/O enabled
-   AC_MSG_CHECKING([Check if NetCDF library is built with parallel I/O enabled])
+   AC_MSG_CHECKING([whether NetCDF library is built with parallel I/O enabled])
    if test x$netcdf_ge_4_6_2 = xyes; then
       netcdf_has_parallel4=`$nc_config --has-parallel4`
       if test "x$netcdf_has_parallel4" = xno ; then
@@ -1579,7 +1579,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    dnl AC_CHECK_HEADERS uses CPPFLAGS, not CFLAGS
    AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
    if test "x$have_hdf5" = xyes ; then
-      AC_MSG_CHECKING([Check if HDF5 version 1.10.4 or later])
+      AC_MSG_CHECKING([whether HDF5 version is 1.10.4 or later])
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hdf5.h>]], [[
 #if (H5_VERS_MAJOR*1000000 + H5_VERS_MINOR*1000 + H5_VERS_RELEASE < 1010004)
       choke me
@@ -1593,7 +1593,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    # restore CPPFLAGS
    CPPFLAGS=$CPPFLAGS_save
 
-   AC_MSG_CHECKING([if relax-coord-bound is enabled in NetCDF-4])
+   AC_MSG_CHECKING([whether relax-coord-bound is enabled in NetCDF-4])
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
 #include <netcdf_meta.h>
 #if !defined(NC_RELAX_COORD_BOUND) || NC_RELAX_COORD_BOUND == 0
