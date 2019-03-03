@@ -882,6 +882,23 @@ if test "x${has_fortran}" = xyes ; then
 fi
 AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
+dnl Call LT_OUTPUT to produce file ./libtool which is used later in
+dnl. LT_AC_CHECK_SHLIB. Note LT_OUTPUT must be called after all compilers
+dnl checked, such as AC_PROG_CC, AC_PROG_CXX, AC_PROG_FC
+LT_OUTPUT
+
+if test "x$enable_shared" = xyes ; then
+   dnl Check whether MPICC supports shared libraries.
+   LT_MPI_CHECK_SHLIB
+   if test "x$ac_cv_lt_mpi_check_shlib" = xno ; then
+      AC_MSG_ERROR([
+   -----------------------------------------------------------------------
+     configure option --enable-shared is set, but the MPI library is not
+     built with shared library support. Abort.
+   -----------------------------------------------------------------------])
+   fi
+fi
+
 dnl AC_PROG_INSTALL
 
 dnl have_yacc_lex=no
