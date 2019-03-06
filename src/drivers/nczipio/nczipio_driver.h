@@ -23,6 +23,31 @@ typedef enum {
     DYNAMIC = 1 
 } mapping_strategy;
 
+/* Get_req structure */
+typedef struct NC_zip_req {
+    char **rbuf;
+    char **sbuf;
+    union{
+        int nsend;
+        int *nsends;
+    }
+    union{
+        int nrecv;
+        int *nrecvs;
+    }
+    MPI_Request *sreqs, *rreqs;    // Send and recv req
+    MPI_Status *sstats, *rstats;    // Send and recv status
+} NC_zip_req;
+
+/* Get_req list structure */
+typedef struct NC_zip_req_list {
+    NC_zip_req *reqs;    // Array of request object
+    int *ids;   // Array of request ids
+    int *pos;   // Array of position of request ids in ids
+    int nalloc; // Size of the pool
+    int nused;  // Number of ids issued
+} NC_zip_req_list;
+
 typedef struct NC_zip_var_chunk {
     MPI_Offset *start;
     MPI_Offset *xdata_offs;
@@ -36,6 +61,8 @@ typedef struct NC_zip_var {
     int varkind;
 
     nc_type xtype;
+    MPI_Datatype etype;
+    int esize;
 
     int ndim;
     MPI_Offset *dimsize;

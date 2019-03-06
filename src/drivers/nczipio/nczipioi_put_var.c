@@ -75,9 +75,8 @@ static int get_chunk_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *star
 }
 
 int
-nczipioi_put_varn(NC_zip        *nczipp,
+nczipioi_put_var(NC_zip        *nczipp,
               NC_zip_var       *varp,
-              int nreq,
               MPI_Offset* const *starts,
               MPI_Offset* const *counts,
               const void       *buf)
