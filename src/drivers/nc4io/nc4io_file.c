@@ -69,7 +69,9 @@ nc4io_create(MPI_Comm     comm,
     if (filename == NULL) filename = (char*)path; /* no prefix */
     else                  filename++;
 
-    /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used */
+    /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used.
+     * NC_MPIIO is ignored in 4.6.2 and after.
+     */
     cmode |= NC_MPIIO;
     err = nc_create_par(filename, cmode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
@@ -124,7 +126,9 @@ nc4io_open(MPI_Comm     comm,
     if (filename == NULL) filename = (char*)path; /* no prefix */
     else                  filename++;
 
-    /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used */
+    /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used.
+     * NC_MPIIO is ignored in 4.6.2 and after.
+     */
     omode |= NC_MPIIO;
     err = nc_open_par(path, omode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);

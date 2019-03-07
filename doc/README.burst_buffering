@@ -177,7 +177,7 @@ start		= [INT64 ...]			// number of elements == ndims * num_requests
 count		= [INT64 ...]			// number of elements == ndims * num_requests or 0 (if counts is NULL)
 stride		= [INT64 ...]			// number of elements == ndims or 0 (if not vars)
 
-VAR		    = NEGONE
+VAR		= NEGONE
 VAR1		= NEGTWO
 VARA		= NEGTHREE
 VARS		= NEGFOUR

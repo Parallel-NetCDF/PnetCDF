@@ -159,6 +159,8 @@ int main(int argc, char **argv) {
 /* #if defined(HDF5_VERSION) && (H5_VERS_MAJOR > 1 || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR > 10) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR >= 10 && H5_VERS_RELEASE >= 4)) */
 #if defined(HDF5_VER_GE_1_10_4) && HDF5_VER_GE_1_10_4 == 1
     /* this test requires a bug fix in HDF5 1.11 */
+    /* Note NC_MPIIO is used in NetCDF 4.6.1 and earlier, but ignored in 4.6.2
+     * and after. */
     nerrs += tst_fmt(filename, NC_MPIIO | NC_NETCDF4);
     nerrs += tst_fmt(filename, NC_MPIIO | NC_NETCDF4 | NC_CLASSIC_MODEL);
 #endif
