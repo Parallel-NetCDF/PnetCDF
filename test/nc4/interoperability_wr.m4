@@ -196,6 +196,9 @@ foreach(`dt', (`(`0', `schar', `char')', dnl
 
     /* Read with PnetCDF */
     /* Open the file */
+
+    /* Note NC_MPIIO is used in NetCDF 4.6.1 and earlier, but ignored in 4.6.2
+     * and after. */
     err = nc_open_par(filename, NC_MPIIO | NC_NOWRITE, MPI_COMM_WORLD, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 

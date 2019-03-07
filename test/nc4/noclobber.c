@@ -46,6 +46,9 @@ int main(int argc, char **argv) {
     /* Test for NetCDF 4 first as ncmpi_validator expect to read traditional
      * file */
     /* create a file if it does not exist */
+
+    /* Note NC_MPIIO is used in NetCDF 4.6.1 and earlier, but ignored in 4.6.2
+     * and after. */
     cmode = NC_CLOBBER | NC_NETCDF4 | NC_MPIIO;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
