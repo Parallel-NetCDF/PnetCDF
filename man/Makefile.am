@@ -16,13 +16,13 @@ CLEANFILES = $(man_MANS)
 EXTRA_DIST = pnetcdf.m4 pnetcdf_f90.m4
 
 pnetcdf.3: pnetcdf.m4
-	$(M4) $(M4FLAGS) -DAPI=C -DPNETCDF_VERSION=$(PNETCDF_VERSION) $? > $@  || $(RM) -f $@
+	$(M4) $(M4FLAGS) -DAPI=C -DPNETCDF_VERSION=$(PNETCDF_VERSION) $? > $@  || rm -f $@
 
 pnetcdf_f77.3: pnetcdf.m4
-	$(M4) $(M4FLAGS) -DAPI=F -DPNETCDF_VERSION=$(PNETCDF_VERSION) $? > $@  || $(RM) -f $@
+	$(M4) $(M4FLAGS) -DAPI=F -DPNETCDF_VERSION=$(PNETCDF_VERSION) $? > $@  || rm -f $@
 
 pnetcdf_f90.3: pnetcdf_f90.m4
-	$(M4) $(M4FLAGS) -DPNETCDF_VERSION=$(PNETCDF_VERSION) $? > $@  || $(RM) -f $@
+	$(M4) $(M4FLAGS) -DPNETCDF_VERSION=$(PNETCDF_VERSION) $? > $@  || rm -f $@
 
 dist-hook:
 	$(SED_I) -e "s|PNETCDF_RELEASE_DATE2|`date '+%e %b %Y'`|g" $(distdir)/pnetcdf.m4

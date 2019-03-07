@@ -142,17 +142,17 @@ dnl an option to use a customized rm command
 AC_ARG_VAR(RM, Command for deleting files or directories. @<:@default: rm@:>@)
 if test "x${RM}" != x ; then
    AC_MSG_CHECKING(rm )
-   if ! test -f ${RM} ; then
-      AC_CHECK_PROG([rm_cmd], [${RM}], [yes], [no])
-      if test "x${rm_cmd}" = xyes ; then
-         RM=${RM}
+   dnl ${RM} set by user may contain flags
+   RM_CMD=`echo ${RM} | cut -d' ' -f1`
+   if ! test -f ${RM_CMD} ; then
+      AC_CHECK_PROG([rm_cmd], [${RM_CMD}], [yes], [no])
+      if test "x${rm_cmd}" = xno ; then
+         RM=rm
       fi
-   else
-      RM=${RM}
    fi
    AC_MSG_RESULT(using $RM)
 else
-   RM="rm"
+   RM=rm
 fi
 
 AC_ARG_ENABLE(echo,
