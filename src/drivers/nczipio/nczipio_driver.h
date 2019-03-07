@@ -25,6 +25,10 @@ typedef enum {
 
 /* Get_req structure */
 typedef struct NC_zip_req {
+    int varid;
+    MPI_Offset *start, *count, *stride;
+    char *buf;
+    int *widx;
     char **rbuf;
     char **sbuf;
     union{
