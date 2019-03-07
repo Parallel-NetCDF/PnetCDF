@@ -2101,8 +2101,12 @@ rm -f conftest* libconftest*[]dnl
 AC_DEFUN([LT_MPI_CHECK_SHLIB],[
    AC_MSG_CHECKING([whether MPI library is built with shared library support])
    AC_LANG_CONFTEST([AC_LANG_PROGRAM([[#include <mpi.h>]], [[MPI_Init(0, 0);]])])
-   ${RM} -rf $objdir
-   ${RM} -f conftest.$ac_objext conftest.la
+   $RM -rf $objdir conftest.$ac_objext conftest.la
+   dnl RM must have -f option when calling libtool
+   ac_RM_saved=${RM}
+   if test "x$RM" = xrm -o "x$RM" = "x/bin/rm" ; then
+      RM="$RM -f"
+   fi
    ac_ltcompile='./libtool --mode=compile $MPICC -c $CFLAGS $CPPFLAGS conftest.$ac_ext -o conftest.lo >&AS_MESSAGE_LOG_FD'
    ac_ltlink_la='./libtool --mode=link $MPICC -rpath `pwd` $CFLAGS $LDFLAGS -o libconftest.la conftest.lo $LIBS >&AS_MESSAGE_LOG_FD'
    AS_IF([AC_TRY_EVAL([ac_ltcompile]) &&
@@ -2110,8 +2114,9 @@ AC_DEFUN([LT_MPI_CHECK_SHLIB],[
        AC_TRY_COMMAND([test -s libconftest.la])],
       [ac_cv_lt_mpi_check_shlib=yes],
       [ac_cv_lt_mpi_check_shlib=no])
-   ${RM} -rf $objdir
-   ${RM} -f conftest* libconftest*
+   RM=$ac_RM_saved
+   unset ac_RM_saved
+   $RM -rf $objdir conftest* libconftest*
    AC_MSG_RESULT([$ac_cv_lt_mpi_check_shlib])
 ])# LT_MPI_CHECK_SHLIB
 
