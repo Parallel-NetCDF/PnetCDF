@@ -726,16 +726,17 @@ The problem is reported in https://llvm.org/bugs/show_bug.cgi?id=14713
 ---
 ### Setting PnetCDF software release date
 * Prior to version 1.8.1, the release date was obtained from the SVN keyword
-  LastChangedDate set in file configure.in. It is used to produce two variables:
-  PNETCDF_RELEASE_DATE and PNETCDF_RELEASE_DATE2.  These two variables are used
-  by all man pages, pnetcdf.h, pnetcdf_version, and pnetcdf-config.  We used the
-  keyword value set by SVN as the release date. The assumption is that updating
-  PACKAGE_VERSION in configure.in is the last step before making a release, i.e.
-  the last modification date of file configure.in is the latest among all files.
-  This approach can cause a problem when using git-svn to clone the source codes,
-  as one must set git smudge/clean filter to produce the effect of SVN keywords.
-  In addition, it makes more sense to use the date when running command "make
-  dist" to create the tar ball.
+  LastChangedDate set in file configure.in. It is used to produce two
+  variables: PNETCDF_RELEASE_DATE and PNETCDF_RELEASE_DATE2.  These two
+  variables are used by all man pages, pnetcdf.h, pnetcdf_version, and
+  pnetcdf-config.  We used the keyword value set by SVN as the release date.
+  The assumption is that updating PACKAGE_VERSION in configure.in is the last
+  step before making a release, i.e.  the last modification date of file
+  configure.in is the latest among all files.  This approach can cause a
+  problem when using git-svn to clone the source codes, as one must set git
+  smudge/clean filter to produce the effect of SVN keywords.  In addition, it
+  makes more sense to use the date when running command "make dist" to create
+  the tar ball.
 
 * Staring from 1.9.0, the release date will be set to the date when running
   command "make dist". See the makefile target "dist-hook" in
