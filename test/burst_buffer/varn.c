@@ -20,10 +20,9 @@
 
 int main(int argc, char *argv[]) {
     int i;
-    int err, tmp, nerrs = 0;
+    int err, nerrs = 0;
     int rank, np;
     int ncid, varid;
-    int req1, req2, stat;
     int dimid[2];
     int buffer[10];
     char filename[PATH_MAX];
