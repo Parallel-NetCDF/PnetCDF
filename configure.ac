@@ -121,8 +121,6 @@ AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
-AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
-AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_SINGLE_REQ],  [Define if to enable large single MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
@@ -1326,15 +1324,15 @@ if test "x${has_fortran}" = xyes ; then
 fi
 PAC_ENABLE_COVERAGE
 
+dnl Some C++ compilers (e.g. Fujitsu) have macro __FUNCTION__, but not __func__
+use_cxx_macro_function=no
 if test "x${has_mpicxx}" = xyes ; then
    UD_CXX_MACRO_FUNC
-   if test "x${ac_cv_cxx_macro_func}" == xyes ; then
-      AC_DEFINE(HAVE_FUNC_MACRO)
-   fi
-   if test "x${ac_cv_cxx_macro_function}" == xyes ; then
-      AC_DEFINE(HAVE_FUNCTION_MACRO)
+   if test "x${ac_cv_cxx_macro_func}" = xno -a "x${ac_cv_cxx_macro_function}" = xyes ; then
+      use_cxx_macro_function=yes
    fi
 fi
+AM_CONDITIONAL(REPLACE_CXX_FUNC_MACRO, [test x$use_cxx_macro_function = xyes])
 
 if test "x${debug}" = xyes; then
    dnl add -g flag if not presented
