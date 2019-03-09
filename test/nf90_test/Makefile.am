@@ -13,7 +13,9 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/include
 AM_DEFAULT_SOURCE_EXT = .F90
 AM_CFLAGS  = -I$(top_srcdir)/src/binding/f77 -I$(top_builddir)/src/binding/f77
 AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)../common
-LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
+
+LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD += ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 if RELAX_COORD_BOUND
    AM_CFLAGS  += -DRELAX_COORD_BOUND

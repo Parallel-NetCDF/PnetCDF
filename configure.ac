@@ -1483,8 +1483,9 @@ if test "x$enable_netcdf4" = "xyes" ; then
    dnl Add the path to CPPFLAGS, as it is needed to compile PnetCDF codes
    netcdf_includedir=`$nc_config --includedir`
    UD_MSG_DEBUG([netcdf_includedir=$netcdf_includedir])
-   CPPFLAGS="-I${netcdf_includedir} ${CPPFLAGS}"
 
+   saved_CPPFLAGS=$CPPFLAGS
+   CPPFLAGS="-I${netcdf_includedir} ${CPPFLAGS}"
    AC_CHECK_HEADERS([netcdf.h netcdf_par.h netcdf_meta.h],
                     [have_netcdf4=yes], [have_netcdf4=no])
    if test "x${have_netcdf4}" = xno; then
@@ -1532,6 +1533,17 @@ if test "x$enable_netcdf4" = "xyes" ; then
    fi
    AC_MSG_RESULT([yes])
 
+   AC_MSG_CHECKING([whether relax-coord-bound is enabled in NetCDF-4])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+#include <netcdf_meta.h>
+#if !defined(NC_RELAX_COORD_BOUND) || NC_RELAX_COORD_BOUND == 0
+      choke me
+#endif
+   ]])], [nc_relax_coord_bound=yes], [nc_relax_coord_bound=no])
+   AC_MSG_RESULT([$nc_relax_coord_bound])
+   dnl restore CPPFLAGS
+   CPPFLAGS=$saved_CPPFLAGS
+
    # Build on top of NetCDF4 with PnetCDF already enabled is not supported
    netcdf_has_pnetcdf=`$nc_config --has-pnetcdf`
    if test x$netcdf_has_pnetcdf = xyes; then
@@ -1547,10 +1559,15 @@ if test "x$enable_netcdf4" = "xyes" ; then
    dnl remove -lpnetcdf if it contains it
    netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
 
-   LDFLAGS="-L${netcdf_libdir} ${LDFLAGS}"
-   LIBS="${netcdf_libs} ${LIBS}"
    # Validate netcdf library
-   AC_CHECK_LIB([netcdf], [nc_open],, [AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])])
+   saved_LDFLAGS=$LDFLAGS
+   saved_LIBS=$LIBS
+   LDFLAGS="-L$netcdf_libdir $LDFLAGS"
+   AC_SEARCH_LIBS([nc_open], [netcdf], [], [AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])])
+   LDFLAGS=$saved_LDFLAGS
+   LIBS=$saved_LIBS
+   # Do not add -L$netcdf_libdir to LDFLAGS and -lnetcdf to LIBS
+   # They are only needed when linking executables.
 
    # Get directory path of netcdf library files
    # netcdf_lib=`$nc_config --libs`
@@ -1570,9 +1587,10 @@ if test "x$enable_netcdf4" = "xyes" ; then
 
    dnl check if HDF5 version 1.10.4 or later is used to build NetCDF
    netcdf_cflags=`$nc_config --cflags`
+
    dnl No need to add the include paths used to build NetCDF to CPPFLAGS
    dnl permanently, as it is not needed to compile PnetCDF codes
-   CPPFLAGS_save=$CPPFLAGS
+   saved_CPPFLAGS=$CPPFLAGS
    CPPFLAGS+=" $netcdf_cflags"
    dnl AC_CHECK_HEADERS uses CPPFLAGS, not CFLAGS
    AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
@@ -1589,16 +1607,13 @@ if test "x$enable_netcdf4" = "xyes" ; then
       fi
    fi
    # restore CPPFLAGS
-   CPPFLAGS=$CPPFLAGS_save
+   CPPFLAGS=$saved_CPPFLAGS
 
-   AC_MSG_CHECKING([whether relax-coord-bound is enabled in NetCDF-4])
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
-#include <netcdf_meta.h>
-#if !defined(NC_RELAX_COORD_BOUND) || NC_RELAX_COORD_BOUND == 0
-      choke me
-#endif
-   ]])], [nc_relax_coord_bound=yes], [nc_relax_coord_bound=no])
-   AC_MSG_RESULT([$nc_relax_coord_bound])
+   netcdf_incdir=`$nc_config --includedir`
+   AC_SUBST([NETCDF4_INC], ["-I$netcdf_incdir"])
+   AC_SUBST([NETCDF4_LDFLAGS], ["-L$netcdf_libdir"])
+   AC_SUBST([NETCDF4_LIBS], ["-lnetcdf"])
+   AC_SUBST([NETCDF4_PACKAGE], [netcdf])
 fi
 
 AC_ARG_ENABLE([erange-fill],
@@ -1994,6 +2009,14 @@ fi
 if test "x${LIBS}" != x ; then
    echo "\
               LIBS     = ${LIBS}"
+fi
+if test "x${enable_netcdf4}" = xyes; then
+   echo "\
+
+   NetCDF-4 library:
+              NETCDF4_INC     = ${NETCDF4_INC}
+              NETCDF4_LDFLAGS = ${NETCDF4_LDFLAGS}
+              NETCDF4_LIBS    = ${NETCDF4_LIBS}"
 fi
 echo "\
 

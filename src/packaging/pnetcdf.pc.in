@@ -46,3 +46,6 @@ URL: https://parallel-netcdf.github.io
 Version: @PNETCDF_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lpnetcdf
+Libs.private:
+Requires: @NETCDF4_PACKAGE@
+Requires.private:

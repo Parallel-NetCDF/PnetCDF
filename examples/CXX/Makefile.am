@@ -11,7 +11,8 @@ SUFFIXES = .cpp .o
 AM_DEFAULT_SOURCE_EXT = .cpp
 
 AM_CPPFLAGS = -I$(top_builddir)/src/binding/cxx -I$(top_builddir)/src/include
-LDADD = ${top_builddir}/src/libs/libpnetcdf.la
+LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD += ${top_builddir}/src/libs/libpnetcdf.la
 
 check_PROGRAMS = collective_write \
                  nonblocking_write \

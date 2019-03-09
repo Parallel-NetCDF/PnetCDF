@@ -13,7 +13,9 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/include
 AM_DEFAULT_SOURCE_EXT = .F
 AM_CFLAGS = -I$(top_builddir)/src/binding/f77 -I$(top_srcdir)/src/binding/f77
 AM_FFLAGS = -I$(top_builddir)/src/binding/f77
-LDADD = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
+
+LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD += ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 M4FLAGS += -I${top_srcdir}/m4
 
