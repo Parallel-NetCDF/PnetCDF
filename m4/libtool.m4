@@ -124,7 +124,7 @@ func_cc_basename ()
            return
            ;;
         mpifccpx | mpiFCCpx | mpifrtpx | *[[\\/]]mpifccpx | *[[\\/]]mpiFCCpx | *[[\\/]]mpifrtpx )
-           # Fujitsu compilers: fccpx, FCCpx, frtpx
+           # MPI compilers based on Fujitsu compilers: fccpx, FCCpx, frtpx
            func_cc_basename_result=`$cc_temp -showme | cut -d' ' -f1 | xargs basename`
            # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
            return
@@ -3311,7 +3311,7 @@ _LT_CC_BASENAME($CC)
 
 ac_prog=ld
 
-# special care for Fujitsu compilers
+# special care for Fujitsu C or C++ compilers
 if test "$cc_basename" = fccpx || test "$cc_basename" = FCCpx ; then
    if test yes = "$with_gnu_ld" || test "$host_os" = linux-gnu ; then
       ac_prog=`($CC -Xg -print-prog-name=ld) 2>&5`
@@ -4701,7 +4701,7 @@ m4_if([$1], [CXX], [
         _LT_TAGVAR(lt_prog_compiler_pic, $1)="-Xcompiler $_LT_TAGVAR(lt_prog_compiler_pic, $1)"
       fi
       ;;
-    fccpx*) # Fujitsu Compiler
+    fccpx*) # Fujitsu C Compiler
       _LT_TAGVAR(lt_prog_compiler_pic, $1)='-Xg -KPIC'
       _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
       ;;
@@ -4789,13 +4789,13 @@ m4_if([$1], [CXX], [
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='--static'
 	;;
       frtpx* )
-	# Fujitsu compiler
+	# Fujitsu Fortran compiler
 	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-Kstatic_fjlib'
 	;;
       fccpx* | FCCpx* )
-	# Fujitsu compiler
+	# Fujitsu C or C++ compiler
 	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-Xg -KPIC'
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
@@ -7747,6 +7747,7 @@ _LT_TAGDECL([], [compiler_lib_search_path], [1],
     a shared library])
 
 ac_nostdlib_flag=
+# Fujitsu compilers
 if test "$cc_basename" == FCCpx || test "$cc_basename" == fccpx || test "$cc_basename" == frtpx ; then
    ac_nostdlib_flag=-Xg
 fi

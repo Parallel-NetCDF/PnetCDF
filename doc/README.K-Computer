@@ -41,7 +41,7 @@ configure command that was used to build PnetCDF successfully on K.
             TESTMPIRUN="mpiexec -n NP" \
             TESTSEQRUN="mpiexec -n 1"
 
-For users who would customize the source codes and edit configure.in, it is
+For users who would customize the source codes and edit configure.ac, it is
 necessary to run command "autoreconf" to generate an updated "configure" file.
 However, there is a bug in autoconf 2.69 that causes building the PnetCDF
 Fortran interfaces to fail. Please read file README.Fujitsu for the bug patch
@@ -52,10 +52,10 @@ Fortran compiler requires no "-L" for its internal library files.  Without
 this, configure command may fail.
 
 To build shared library, add configure command-line option "--enable-shared"
-and set the MPICC and MPICXX environment variables to the followings.
+and set the MPICC, MPICXX, and LDFLAGS environment variables to the followings.
             MPICC="mpifccpx -Xg" \
             MPICXX="mpiFCCpx -Xg" \
-            LDFLAGS="--shared"
+            LDFLAGS="-Wl,-shared"
 
 ----------------
 Testing PnetCDF:
