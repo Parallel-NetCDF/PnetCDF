@@ -11,7 +11,8 @@ AM_CPPFLAGS += -I$(top_builddir)/src/include
 
 bin_PROGRAMS = ncmpidiff
 ncmpidiff_SOURCES = ncmpidiff.c
-ncmpidiff_LDADD = $(top_builddir)/src/libs/libpnetcdf.la
+ncmpidiff_LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+ncmpidiff_LDADD += $(top_builddir)/src/libs/libpnetcdf.la
 
 $(top_builddir)/src/libs/libpnetcdf.la:
 	set -e; cd $(top_builddir)/src/libs && $(MAKE) $(MFLAGS)

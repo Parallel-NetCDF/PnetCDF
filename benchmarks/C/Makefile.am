@@ -9,7 +9,8 @@
 SUFFIXES = .o .c
 
 AM_CPPFLAGS = -I$(top_builddir)/src/include
-LDADD = $(top_builddir)/src/libs/libpnetcdf.la
+LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD += $(top_builddir)/src/libs/libpnetcdf.la
 
 check_PROGRAMS = aggregation \
                  write_block_read_column

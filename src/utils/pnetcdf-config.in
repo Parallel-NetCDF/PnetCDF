@@ -25,7 +25,7 @@ profiling_mode="@PNETCDF_PROFILING@"
 debug_mode="@PNETCDF_DEBUG@"
 
 CPPFLAGS="@CPPFLAGS@"
-if test "x$debug_mode@" = x1 ; then
+if test "x$debug_mode" = x1 ; then
    if test "x$CPPFLAGS" = x ; then
       CPPFLAGS="-DPNETCDF_DEBUG"
    else
@@ -68,6 +68,12 @@ is_bigendian="@ac_cv_c_bigendian@"
 in_place_swap="@in_place_swap@"
 enable_bbdriver="@ENABLE_BURST_BUFFER@"
 enable_netcdf4="@ENABLE_NETCDF4@"
+
+if test "x$enable_netcdf4" = x1; then
+   CPPFLAGS="$CPPFLAGS @NETCDF4_INC@"
+   LDFLAGS="@NETCDF4_LDFLAGS@ $LDFLAGS"
+   LIBS="@NETCDF4_LIBS@ $LIBS"
+fi
 
 config_date="@CONFIG_DATE@"
 release_date="PNETCDF_RELEASE_DATE"
