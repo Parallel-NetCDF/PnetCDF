@@ -1487,8 +1487,10 @@ if test "x$enable_netcdf4" = "xyes" ; then
 
    saved_CPPFLAGS=$CPPFLAGS
    CPPFLAGS="-I${netcdf_includedir} ${CPPFLAGS}"
-   AC_CHECK_HEADERS([netcdf.h netcdf_par.h netcdf_meta.h],
-                    [have_netcdf4=yes], [have_netcdf4=no])
+   have_netcdf4=yes
+   AC_CHECK_HEADER([netcdf.h],      [], [have_netcdf4=no])
+   AC_CHECK_HEADER([netcdf_par.h],  [], [have_netcdf4=no])
+   AC_CHECK_HEADER([netcdf_meta.h], [], [have_netcdf4=no])
    if test "x${have_netcdf4}" = xno; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
@@ -1594,7 +1596,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    saved_CPPFLAGS=$CPPFLAGS
    CPPFLAGS+=" $netcdf_cflags"
    dnl AC_CHECK_HEADERS uses CPPFLAGS, not CFLAGS
-   AC_CHECK_HEADERS([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
+   AC_CHECK_HEADER([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
    if test "x$have_hdf5" = xyes ; then
       AC_MSG_CHECKING([whether HDF5 version is 1.10.4 or later])
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hdf5.h>]], [[
