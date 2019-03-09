@@ -108,6 +108,7 @@ The following features are not supported because the availability of APIs is dif
 * API `varn` family is not supported.
 * Inquiring the record dimension will return as if no record dimension is defined.
 * When reading the one-file-per-process BP files, the dimensions in individual files will be translated into virtualized dimensions that do not have the relationship to any scalar variables.
+* ADIOS does not support collective I/O on reading. As a result, PnetCDF will always perform indepenednt read even if collective API is called.
 
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 
