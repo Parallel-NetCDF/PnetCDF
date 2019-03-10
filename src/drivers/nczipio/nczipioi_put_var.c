@@ -119,7 +119,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
     zsizes_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
     zoffs = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zbufs = (char**)NCI_Malloc(sizeof(char*) * varp->nmychunk);
+    zbufs = (char**)NCI_Malloc(sizeof(char*) * varp->nmychunks);
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
@@ -265,7 +265,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     // handle each chunk we own
     nrecv = 0;
     memset(zsizes, 0, sizeof(int) * varp->nchunks);
-    for(l = 0; l < varp->nmychunk; l++){
+    for(l = 0; l < varp->nmychunks; l++){
         k = varp->mychunks[l];
         if (varp->chunk_owner[k] == nczipp->rank){
             // TODO: bring chunk into cache from disk if needed
@@ -391,7 +391,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     if (err != NC_NOERR) return err;
 
     // Do I/O
-    for(l = 0; l < varp->nmychunk; l++){
+    for(l = 0; l < varp->nmychunks; l++){
         k = varp->mychunks[l];
         zstart = (MPI_Offset)zoffs[k];
         zcount = (MPI_Offset)zsizes[k];
@@ -410,7 +410,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     NCI_Free(zsizes);
     NCI_Free(zsizes_all);
     NCI_Free(zoffs);
-    for(l = 0; l < varp->nmychunk; l++){
+    for(l = 0; l < varp->nmychunks; l++){
         NCI_Free(zbufs[l]);
     }
     NCI_Free(zbufs);

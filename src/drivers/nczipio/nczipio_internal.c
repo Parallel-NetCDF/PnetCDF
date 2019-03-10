@@ -82,23 +82,23 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
             varp->chunk_cache = (char**)NCI_Malloc(sizeof(char*) * varp->nchunks);
             memset(varp->chunk_cache, 0, sizeof(char*) * varp->nchunks);
-            varp->nmychunk = 0;
+            varp->nmychunks = 0;
             if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
                 for(j = 0; j < varp->nchunks; j++){ 
                     varp->chunk_owner[j] = j % nczipp->np;
                     if (varp->chunk_owner[j] == nczipp->rank){
                         varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
                     }
-                    varp->nmychunk++;
+                    varp->nmychunks++;
                 }
             }
 
             // Build skip list of my own chunks
-            varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunk);
-            varp->nmychunk = 0;
+            varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunks);
+            varp->nmychunks = 0;
             for(j = 0; j < varp->nchunks; j++){ 
                 if (varp->chunk_owner[j] == nczipp->rank){
-                    varp->mychunks[varp->nmychunk++] = j;
+                    varp->mychunks[varp->nmychunks++] = j;
                 }
             }
 

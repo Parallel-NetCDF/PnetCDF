@@ -31,7 +31,8 @@ typedef struct NC_zip_req {
     int *widx;
     char **rbuf;
     char **sbuf;
-    union{
+    char **bufs;
+    union send_count{
         int nsend;
         int *nsends;
     }
@@ -80,7 +81,7 @@ typedef struct NC_zip_var {
     MPI_Offset *chunkdim;
     char **chunk_cache;
 
-    int nmychunk;
+    int nmychunkss;
     int *mychunks;
 
     int datavarid;

@@ -249,7 +249,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     int nb, bsize;  //number of chunks this process write to and chunk size
     int datavarid;  // Id of data variable
     int *tsize, *tssize, *tstart;   // Size for sub-array type
-    int nmychunks, *mychunks;  // chunk count and id this process handles
+    int nmychunkss, *mychunks;  // chunk count and id this process handles
     int *sendcounts, *sdispls;  // Send count and displacements in buffer
     int *recvcounts, *rdispls;  // Receive count and displacement in buffer
     int *packoff;   // Offset in mpi packing
@@ -427,20 +427,20 @@ nczipioi_put_var(NC_zip        *nczipp,
      * Determine chunk ownership
      * Find my chunks
      */
-    nmychunks = 0;
+    nmychunkss = 0;
     for(i = 0; i < varp->nchunks; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
-            nmychunks++;
+            nmychunkss++;
         }
     }
 
     // Gather chunk id this process handled to prevent a search in the future
-    mychunks = (int*)NCI_Malloc(sizeof(int) * nmychunks);
-    nmychunks = 0;
+    mychunks = (int*)NCI_Malloc(sizeof(int) * nmychunkss);
+    nmychunkss = 0;
     for(i = 0; i < varp->nchunks; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
-            mychunks[nmychunks] = i;
-            nmychunks++;
+            mychunks[nmychunkss] = i;
+            nmychunkss++;
         }
     }
 
@@ -521,7 +521,7 @@ nczipioi_put_var(NC_zip        *nczipp,
      */
 
     // Allocate buffer
-    xbuf = (char*)NCI_Malloc(nmychunks * bsize);
+    xbuf = (char*)NCI_Malloc(nmychunkss * bsize);
 
     // Main array is the whole chunk
     for(i = 0; i < varp->ndim; i++){
@@ -530,7 +530,7 @@ nczipioi_put_var(NC_zip        *nczipp,
 
     // Pack data
     memset(packoff, 0, sizeof(int) * nczipp->np);
-    for(i = 0; i < nmychunks; i++){
+    for(i = 0; i < nmychunkss; i++){
         get_chunk_cord(varp, mychunks[i], ccord);
 
         for(j = 0; j < nczipp->np; j++){
@@ -564,7 +564,7 @@ nczipioi_put_var(NC_zip        *nczipp,
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: xbuf = {", nczipp->rank);
-        for(i = 0; i < nmychunks * bsize; i++){
+        for(i = 0; i < nmychunkss * bsize; i++){
             printf("%x ", xbuf[i]);
         }
         printf("}\n");
@@ -578,20 +578,20 @@ nczipioi_put_var(NC_zip        *nczipp,
      */
 
     // compressed size and displacement
-    zipsize = (int*)NCI_Malloc(sizeof(int) * nmychunks);
-    zdispls = (int*)NCI_Malloc(sizeof(int) * (nmychunks + 1));
-    memset(zipsize, 0, sizeof(int) * nmychunks);
-    memset(zdispls, 0, sizeof(int) * (nmychunks + 1));
+    zipsize = (int*)NCI_Malloc(sizeof(int) * nmychunkss);
+    zdispls = (int*)NCI_Malloc(sizeof(int) * (nmychunkss + 1));
+    memset(zipsize, 0, sizeof(int) * nmychunkss);
+    memset(zdispls, 0, sizeof(int) * (nmychunkss + 1));
 
     // Calculate compressed data size
-    for(i = 0; i < nmychunks; i++){
+    for(i = 0; i < nmychunkss; i++){
         // Calculate compressed size
         // This is just estimate
         nczipp->zip->compress(xbuf + bsize * i, bsize, NULL, zipsize + i, varp->ndim, varp->chunkdim, etype);
     }
 
     // Calculate total size
-    for(i = 1; i < nmychunks; i++){
+    for(i = 1; i < nmychunkss; i++){
         zdispls[0] += zipsize[i];
     }
 
@@ -599,7 +599,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     zbuf = (char*)NCI_Malloc(zdispls[0]);
 
     // Perform real compression
-    for(i = 0; i < nmychunks; i++){
+    for(i = 0; i < nmychunkss; i++){
         // Compressed the data
         // We get real size here
         nczipp->zip->compress(xbuf + bsize * i, bsize, zbuf + zdispls[i], zipsize + i, varp->ndim, varp->chunkdim, etype);
@@ -612,15 +612,15 @@ nczipioi_put_var(NC_zip        *nczipp,
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: zipsize = {", nczipp->rank);
-        for(i = 0; i < nmychunks; i++){
+        for(i = 0; i < nmychunkss; i++){
             printf("%x ", zipsize[i]);
         }
         printf("}, zdispls = {");
-        for(i = 0; i < nmychunks; i++){
+        for(i = 0; i < nmychunkss; i++){
             printf("%d, ", zdispls[i]);
         }
         printf("}, zbuf = {");
-        for(i = 0; i < zdispls[nmychunks- 1] + zipsize[nmychunks - 1]; i++){
+        for(i = 0; i < zdispls[nmychunkss- 1] + zipsize[nmychunkss - 1]; i++){
             printf("%x ", zbuf[i]);
         }
         printf("}\n");
@@ -649,7 +649,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     memset(zdispls_all, 0, sizeof(int) * varp->nchunks);
 
     // Fill up local size
-    for(i = 0; i < nmychunks; i++){
+    for(i = 0; i < nmychunkss; i++){
         zsize_local[mychunks[i]] = zipsize[i];
     }
 
@@ -703,17 +703,17 @@ nczipioi_put_var(NC_zip        *nczipp,
     if (err != NC_NOERR) return err;
 
     //Now, we generate a varn call to write out compressed data
-    zstarts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmychunks);
-    zcounts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmychunks);
-    zstarts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmychunks);
-    zcounts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmychunks);
-    for(i = 0; i < nmychunks; i++){
+    zstarts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmychunkss);
+    zcounts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nmychunkss);
+    zstarts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmychunkss);
+    zcounts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nmychunkss);
+    for(i = 0; i < nmychunkss; i++){
         zstarts[i] = zstarts[0] + i;
         zcounts[i] = zcounts[0] + i;
         zstarts[i][0] = zdispls_all[mychunks[i]];
         zcounts[i][0] = zsize_all[mychunks[i]];
     }
-    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmychunks, zstarts, zcounts, zbuf, zdispls[nmychunks - 1] + zipsize[nmychunks - 1], MPI_UNSIGNED_CHAR, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
+    err = nczipp->driver->put_varn(nczipp->ncp, varp->datavarid, nmychunkss, zstarts, zcounts, zbuf, zdispls[nmychunkss - 1] + zipsize[nmychunkss - 1], MPI_UNSIGNED_CHAR, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
     if (err != NC_NOERR) return err;
 
     // Record datavar id
