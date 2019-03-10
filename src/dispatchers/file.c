@@ -1248,16 +1248,14 @@ ncmpi_inq_file_format(const char *filename,
         h2 = (unsigned long long*)(footer + 8);
         h3 = (unsigned long long*)(footer + 16);
 
-        if (h1 < h2 && h2 < h3){
-            *formatp = NC_FORMAT_BP; 
+        if (h1 < h2 && h2 < h3){ 
+            /* Then, we try to open with ADIOS */ 
+            fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
+            if (fp != NULL) { 
+                *formatp = NC_FORMAT_BP; 
+                adios_read_close(fp); 
+            } 
         }
-
-        /* Then, we try to open with ADIOS */ 
-        fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
-        if (fp != NULL) { 
-            *formatp = NC_FORMAT_BP; 
-            adios_read_close(fp); 
-        } 
     } 
 #endif 
 
