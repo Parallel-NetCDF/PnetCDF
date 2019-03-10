@@ -769,7 +769,7 @@ enum FILE_KIND check_file_signature(char *path)
         h2 = (unsigned long long*)(footer + 8);
         h3 = (unsigned long long*)(footer + 16);
 
-        if (h1 < h2 && h2 < h3){
+        if (*h1 < *h2 && *h2 < *h3){
             bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
             return BP; 
         }
