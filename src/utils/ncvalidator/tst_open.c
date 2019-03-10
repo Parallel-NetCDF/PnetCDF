@@ -34,35 +34,35 @@
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting %s but got %s\n", \
+        printf("Error at line %d in %s: expected_errno %s but got %s\n", \
         __LINE__,__FILE__,ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
     } \
 }
 
 static int
-str2err(char *err_str, int *expect)
+str2err(char *err_str, int *expected_errno)
 {
-         if (!strcmp(err_str, "NC_ENOTNC"))   *expect = NC_ENOTNC;
-    else if (!strcmp(err_str, "NC_EMAXVARS")) *expect = NC_EMAXVARS;
-    else if (!strcmp(err_str, "NC_EUNLIMIT")) *expect = NC_EUNLIMIT;
-    else if (!strcmp(err_str, "NC_ENULLPAD")) *expect = NC_ENULLPAD;
+         if (!strcmp(err_str, "NC_ENOTNC"))   *expected_errno = NC_ENOTNC;
+    else if (!strcmp(err_str, "NC_EMAXVARS")) *expected_errno = NC_EMAXVARS;
+    else if (!strcmp(err_str, "NC_EUNLIMIT")) *expected_errno = NC_EUNLIMIT;
+    else if (!strcmp(err_str, "NC_ENULLPAD")) *expected_errno = NC_ENULLPAD;
     else return NC_EINVAL;
     return NC_NOERR;
 }
 
 int main(int argc, char** argv) {
     char filename[256];
-    int nerrs=0, rank, err, ncid, expect;
+    int nerrs=0, rank, err, ncid, expected_errno;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (argc != 3) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        if (!rank) printf("Usage: %s [filename] expected_errno\n",argv[0]);
         goto fn_exit;
     }
     snprintf(filename, 256, "%s", argv[1]);
-    err = str2err(argv[2], &expect); CHECK_ERR
+    err = str2err(argv[2], &expected_errno); CHECK_ERR
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
 
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 #ifndef ENABLE_NULL_BYTE_HEADER_PADDING
-    if (expect == NC_ENULLPAD) CHECK_ERR
+    if (expected_errno == NC_ENULLPAD) CHECK_ERR
     else
 #endif
-    EXP_ERR(expect)
+    EXP_ERR(expected_errno)
 
     if (err == NC_NOERR || err == NC_ENULLPAD) {
         err = ncmpi_close(ncid); CHECK_ERR
