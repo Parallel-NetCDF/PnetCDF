@@ -29,20 +29,18 @@
 #include <nczipio_driver.h>
 #include "nczipio_internal.h"
 
-#define min(a,b) (((a)<(b))?(a):(b))
-#define max(a,b) (((a)>(b))?(a):(b))
-
 int
-nczipioi_handle_nreq(NC_zip        *nczipp,
-              NC_zip_var       *varp,
-              int              nreq,
-              MPI_Offset* const *starts,
-              MPI_Offset* const *counts,
-              MPI_Offset* const *strides,
-              void              **bufs)
+nczipioi_put_varn_cb(  NC_zip        *nczipp,
+                    NC_zip_var       *varp,
+                    int              nreq,
+                    MPI_Offset* const *starts,
+                    MPI_Offset* const *counts,
+                    MPI_Offset* const *strides,
+                    void              **bufs)
 {
     int err;
-    int i, j, k, l; // Iterators
+    int i, j;
+    int cid, req;   // Chunk and request iterator
 
     int *tsize, *tssize, *tstart;   // Size for sub-array type
     int *cstart, *cend, *citr; // Bounding box for chunks overlapping my own write region
@@ -84,34 +82,34 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
     memset(wcnt_local, 0, sizeof(int) * nczipp->np);
     nsend = 0;
     max_tbuf = 0;
-    for(k = 0; k < nreq; k++){
+    for(req = 0; req < nreq; req++){
         // Initialize chunk iterator
-        nczipioi_chunk_itr_init(varp, starts[k], counts[k], NULL, cstart, cend, citr);
+        nczipioi_chunk_itr_init(varp, starts[req], counts[req], NULL, cstart, cend, citr);
 
         // Iterate through chunks
         do{
             // Chunk index
-            i = get_chunk_idx(varp, citr);
+            cid = get_chunk_idx(varp, citr);
 
             // Calculate overlapping
-            get_chunk_overlap(varp, citr, starts[k], counts[k], tstart, tssize);
+            get_chunk_overlap(varp, citr, starts[req], counts[req], tstart, tssize);
             //printf("cord = %d, start = %lld, count = %lld, tstart = %d, tssize = %d, esize = %d, ndim = %d\n", citr[0], starts[i][0], counts[i][0], tstart[0], tssize[0], esize, varp->ndim); fflush(stdout);
             overlapsize = varp->esize;
             for(j = 0; j < varp->ndim; j++){
                 overlapsize *= tssize[j];                     
             }
 
-            if (varp->chunk_owner[i] != nczipp->rank){
+            if (varp->chunk_owner[cid] != nczipp->rank){
                 // Count number of mnessage we need to send
-                if (wcnt_local[i] == 0){
+                if (wcnt_local[cid] == 0){
                     nsend++;
                 }
-                wcnt_local[i] += overlapsize + sizeof(int) * 2 * varp->ndim;
+                wcnt_local[cid] += overlapsize + sizeof(int) * 2 * varp->ndim;
             }
             else{
                 // We mark covered chunk of our own to prevent unnecessary calculation of overlap
                 // -1 is purely a mark, we need to add 1 back to global message count
-                wcnt_local[i] = -1;
+                wcnt_local[cid] = -1;
 
                 // Record max overlapsize so we know how large the intermediate buffer is needed later
                 if (max_tbuf < overlapsize){
@@ -119,7 +117,7 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
                 }
             }
 
-        } while (nczipioi_chunk_itr_next(varp, starts[k], counts[k], strides[k], cstart, cend, citr));
+        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], strides[req], cstart, cend, citr));
     }
 
     // Allocate buffer for sending
@@ -128,13 +126,13 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
     sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
     j = 0;
     // Allocate buffer for data
-    for(k = 0; k < varp->nchunks; k++){
+    for(cid = 0; cid < varp->nchunks; cid++){
         // Count number of mnessage we need to send
-        if (wcnt_local[k] > 0){
+        if (wcnt_local[cid] > 0){
             // Add space for number of reqs
-            sbufs[j++] = (char*)NCI_Malloc(wcnt_local[k]);
+            sbufs[j++] = (char*)NCI_Malloc(wcnt_local[cid]);
             // We don't need message size anymore, wcnt_local is used to track number of message from now on 
-            wcnt_local[k] = 1;
+            wcnt_local[cid] = 1;
         }
     }
 
@@ -144,10 +142,10 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
     // Calculate number of recv request
     // This is for all the chunks
     nrecv = 0;
-    for(l = 0; l < varp->nmychunks; l++){
-        i = varp->mychunks[l];
+    for(i = 0; i < varp->nmychunks; i++){
+        cid = varp->mychunks[i];
         // We add 1 back form the -1 we use as mark
-        nrecv += wcnt_all[i] + 1;
+        nrecv += wcnt_all[cid] + 1;
     }
     rreqs = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nrecv);
     rstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nrecv);
@@ -158,13 +156,13 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
     nrecv = 0;
     nsend = 0;
     memcpy(tsize, varp->chunkdim, sizeof(int) * varp->ndim);
-    for(k = 0; k < varp->nchunks; k++){
-        if (varp->chunk_owner[k] == nczipp->rank){
+    for(cid = 0; cid < varp->nchunks; cid++){
+        if (varp->chunk_owner[cid] == nczipp->rank){
             // We are the owner of the chunk
             // Receive data from other process
-            for(i = 0; i <= wcnt_all[k]; i++){
+            for(i = 0; i <= wcnt_all[cid]; i++){
                 // Get message size, including metadata
-                MPI_Mprobe(MPI_ANY_SOURCE, k, nczipp->comm, &rmsg, rstats);
+                MPI_Mprobe(MPI_ANY_SOURCE, cid, nczipp->comm, &rmsg, rstats);
                 MPI_Get_count(rstats, MPI_BYTE, rsizes + nrecv);
 
                 //printf("rsize = %d\n", rsizes[i]); fflush(stdout);
@@ -180,14 +178,14 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
         else{
             // If we any of our request overlap with this chunk, we need to send data
             // We send only 1 message for 1 chunk
-            if (wcnt_local[k] < 0){
+            if (wcnt_local[cid] < 0){
                 packoff = 0;
                 // Get chunk iterator
-                get_chunk_cord(varp, k, citr);  
-                for(i = 0; i < nreq; i++){
+                get_chunk_cord(varp, cid, citr);  
+                for(req = 0; req < nreq; req++){
                     // Calculate chunk overlap
-                    get_chunk_overlap(varp, citr, starts[i], counts[i], tstart, tssize);
-                    printf("cord = %d, start = %lld, count = %lld, tstart = %d, tssize = %d, esize = %d, ndim = %d\n", citr[0], starts[i][0], counts[i][0], tstart[0], tssize[0], varp->esize, varp->ndim); fflush(stdout);
+                    get_chunk_overlap(varp, citr, starts[req], counts[req], tstart, tssize);
+                    printf("cord = %d, start = %lld, count = %lld, tstart = %d, tssize = %d, esize = %d, ndim = %d\n", citr[0], starts[req][0], counts[req][0], tstart[0], tssize[0], varp->esize, varp->ndim); fflush(stdout);
                     overlapsize = varp->esize;
                     for(j = 0; j < varp->ndim; j++){
                         overlapsize *= tssize[j];                     
@@ -198,16 +196,16 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
                     if (overlapsize > 0){
                         // Pack type
                         for(j = 0; j < varp->ndim; j++){
-                            tstart[j] -= starts[i][j];
-                            tsize[j] = (int)counts[i][j];
+                            tstart[j] -= starts[req][j];
+                            tsize[j] = (int)counts[req][j];
                         }
                         MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                         MPI_Type_commit(&ptype);
                         
                         // Pack data
-                        MPI_Pack(starts[i], varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
-                        MPI_Pack(counts[i], varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
-                        MPI_Pack(bufs[i], 1, ptype, sbufs[nsend], packoff + overlapsize, &packoff, nczipp->comm);
+                        MPI_Pack(starts[req], varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
+                        MPI_Pack(counts[req], varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
+                        MPI_Pack(bufs[req], 1, ptype, sbufs[nsend], packoff + overlapsize, &packoff, nczipp->comm);
 
                         MPI_Type_free(&ptype);
                     }
@@ -215,7 +213,7 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
 
                 // Send the request
                 printf("packoff = %d\n", packoff); fflush(stdout);
-                MPI_Isend(sbufs[nsend], packoff, MPI_BYTE, varp->chunk_owner[k], k, nczipp->comm, sreqs + nsend);
+                MPI_Isend(sbufs[nsend], packoff, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, sreqs + nsend);
                 nsend++;
             }
         }
@@ -231,17 +229,17 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
 
     // For each chunk we own, we need to receive incoming data
     nrecv = 0;
-    for(l = 0; l < varp->nmychunks; l++){
-        k = varp->mychunks[l];
+    for(i = 0; i < varp->nmychunks; i++){
+        cid = varp->mychunks[i];
             
         // Handle our own data first if we have any
-        if (wcnt_local[k] > 0){
-            for(i = 0; i < nreq; i++){
+        if (wcnt_local[cid] > 0){
+            for(req = 0; req < nreq; req++){
                 // Convert chunk id to iterator
-                get_chunk_cord(varp, k, citr);
+                get_chunk_cord(varp, cid, citr);
 
                 // Calculate overlapping region
-                get_chunk_overlap(varp, citr, starts[i], counts[i], tstart, tssize);
+                get_chunk_overlap(varp, citr, starts[req], counts[req], tstart, tssize);
                 overlapsize = varp->esize;
                 for(j = 0; j < varp->ndim; j++){
                     overlapsize *= tssize[j];
@@ -251,21 +249,21 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
                 if (overlapsize > 0){
                     // Pack type from user buffer to (contiguous) intermediate buffer
                     for(j = 0; j < varp->ndim; j++){
-                        tstart[j] -= (int)starts[i][j];
-                        tsize[j] = (int)counts[i][j];
+                        tstart[j] -= (int)starts[req][j];
+                        tsize[j] = (int)counts[req][j];
                     }
                     MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                     MPI_Type_commit(&ptype);
 
                     // Pack data into intermediate buffer
                     packoff = 0;
-                    MPI_Pack(bufs[i], 1, ptype, tbuf, overlapsize, &packoff, nczipp->comm);
+                    MPI_Pack(bufs[req], 1, ptype, tbuf, overlapsize, &packoff, nczipp->comm);
 
                     MPI_Type_free(&ptype);
 
                     // Pack type from (contiguous) intermediate buffer to chunk buffer
                     for(j = 0; j < varp->ndim; j++){
-                        tstart[j] -= citr[j] * varp->chunkdim[j] + (int)starts[i][j];
+                        tstart[j] -= citr[j] * varp->chunkdim[j] + (int)starts[req][j];
                         tsize[j] = (int)varp->chunkdim[j];
                     }
                     MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
@@ -273,7 +271,7 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
                     
                     // Pack data into chunk buffer
                     packoff = 0;
-                    MPI_Unpack(tbuf, overlapsize, &packoff, varp->chunk_cache[k], 1, ptype, nczipp->comm);
+                    MPI_Unpack(tbuf, overlapsize, &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
 
                     MPI_Type_free(&ptype);
                 }
@@ -283,17 +281,17 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
         // Now, it is time to process data from other processes
         
         // Wait for all send requests related to this chunk
-        // We remove the impact of -1 mark in wcnt_local[k]
-        MPI_Waitall(wcnt_all[k] - wcnt_local[k], rreqs + nrecv, rstats + nrecv);
+        // We remove the impact of -1 mark in wcnt_local[cid]
+        MPI_Waitall(wcnt_all[cid] - wcnt_local[cid], rreqs + nrecv, rstats + nrecv);
 
         // Process data received
-        printf("nrecv = %d, wcnt_all = %d, wcnt_local = %d\n", nrecv, wcnt_all[k], wcnt_local[k]); fflush(stdout);
-        for(i = nrecv; i < nrecv + wcnt_all[k] - wcnt_local[k]; i++){
+        printf("nrecv = %d, wcnt_all = %d, wcnt_local = %d\n", nrecv, wcnt_all[cid], wcnt_local[cid]); fflush(stdout);
+        for(j = nrecv; j < nrecv + wcnt_all[cid] - wcnt_local[cid]; j++){
             packoff = 0;
-            printf("rsize_2 = %d\n", rsizes[i]); fflush(stdout);
-            while(packoff < rsizes[i]){
-                MPI_Unpack(rbufs[i], rsizes[i], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
-                MPI_Unpack(rbufs[i], rsizes[i], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
+            printf("rsize_2 = %d\n", rsizes[j]); fflush(stdout);
+            while(packoff < rsizes[j]){
+                MPI_Unpack(rbufs[j], rsizes[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
+                MPI_Unpack(rbufs[j], rsizes[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
 
                 for(j = 0; j < varp->ndim; j++){
                     tsize[j] = (int)varp->chunkdim[j];
@@ -302,13 +300,13 @@ nczipioi_handle_nreq(NC_zip        *nczipp,
                 MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                 MPI_Type_commit(&ptype);
 
-                printf("tsize = %d, tssize = %d, tstart = %d, buf = %d\n", tsize[0], tssize[0], tstart[0], *((int*)(rbufs[i] + packoff))); fflush(stdout);
-                MPI_Unpack(rbufs[i], rsizes[i], &packoff, varp->chunk_cache[k], 1, ptype, nczipp->comm);
-                printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[k]))[0], ((int*)(varp->chunk_cache[k]))[1]); fflush(stdout);
+                printf("tsize = %d, tssize = %d, tstart = %d, buf = %d\n", tsize[0], tssize[0], tstart[0], *((int*)(rbufs[j] + packoff))); fflush(stdout);
+                MPI_Unpack(rbufs[j], rsizes[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+                printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
                 MPI_Type_free(&ptype);
             }
         }
-        nrecv += wcnt_all[k] - wcnt_local[k];        
+        nrecv += wcnt_all[cid] - wcnt_local[cid];        
     }
 
     // Free buffers
