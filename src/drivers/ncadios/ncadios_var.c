@@ -190,10 +190,10 @@ ncadios_get_var(void             *ncdp,
         NCI_Free(cbuf);
     }
 
-    // Release var info
+    /* Release var info */
     adios_free_varinfo (v);
 
-    // Handle the request
+    /* Handle the request */
     err = ncadiosi_handle_get_req(ncadp, &r);
 
     return NC_NOERR;

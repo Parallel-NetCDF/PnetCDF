@@ -204,9 +204,12 @@ int ncadios_sync_header(NC_ad *ncadp) {
                 ncadiosi_att_list_add(&(ncadp->vars.data[id].atts), attids[j]);
             }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             //printf("def_var(%s, %d, %d), namelen = %d\n", name, type, ndim, namelen);
 >>>>>>> 23ad299... parse var attributes
+=======
+>>>>>>> e168d06... C style comment
         }
         
     }

@@ -151,10 +151,11 @@ ncadios_open(MPI_Comm     comm,
     }
 
     if (ncadp->rank == 0) {
-        // bp2ncd does not support all type of files
-        // In case it fail, we parse the metadata using our own rule
+        /* bp2ncd does not support all type of files
+         * In case it fail, we parse the metadata using our own rule
+         */
         if (!parse_done){
-            // Reset var and dim list by free and realloc
+            /* Reset var and dim list by free and realloc */
             ncadiosi_var_list_free(&(ncadp->vars));
             ncadiosi_dim_list_free(&(ncadp->dims));
             ncadiosi_var_list_init(&(ncadp->vars));
@@ -163,15 +164,15 @@ ncadios_open(MPI_Comm     comm,
             ncadiosi_parse_header_readall(ncadp);
         }
 
-        // This require fp be opened
+        /* This require fp be opened */
         ncadiosi_parse_attrs(ncadp);
     }
     ncadios_sync_header(ncadp);
 
-    // Parse information regarding record dim
+    /* Parse information regarding record dim */
     ncadiosi_parse_rec_dim(ncadp);
 
-    // Init non-blocking req list
+    /* Init non-blocking req list */
     ncadiosi_get_list_init(&(ncadp->getlist));
 
     return NC_NOERR;
@@ -195,7 +196,6 @@ ncadios_close(void *ncdp)
         DEBUG_RETURN_ERROR(err);
     }
 
-    //NCI_Free(ncadp->ndims);
     ncadiosi_get_list_free(&(ncadp->getlist));
     NCI_Free(ncadp->path);
     NCI_Free(ncadp);
@@ -354,7 +354,7 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (num_fix_varsp != NULL){
-        // All variables - number of record variables
+        /* All variables - number of record variables */
         int i, j;
         *num_fix_varsp = ncadp->vars.cnt;
         for(i = 0; i < ncadp->vars.cnt; i++){
@@ -368,7 +368,7 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (num_rec_varsp != NULL){
-        // We count those variable with unlimited dim as rec variable
+        /* We count those variable with unlimited dim as rec variable */
         int i, j;
         *num_rec_varsp = 0;
         for(i = 0; i < ncadp->vars.cnt; i++){
@@ -405,7 +405,6 @@ ncadios_inq_misc(void       *ncdp,
         *put_size = 0;
     }
 
-    //TODO: Count get size
     if (get_size != NULL){
         *get_size = ncadp->getsize;
     }
@@ -414,19 +413,16 @@ ncadios_inq_misc(void       *ncdp,
         *info_used = MPI_INFO_NULL;
     }
 
-    //TODO: Wire up nonblocking req
     if (nreqs != NULL){
-        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        *nreqs = ncadp->getlist.nused;
     }
 
-    //TODO: Wire up nonblocking req
     if (usage != NULL){
         *usage = 0;
     }
 
-    //TODO: Wire up nonblocking req
     if (buf_size != NULL){
-        *buf_size = MPI_INFO_NULL;
+        *buf_size = 0;
     }
     
     return NC_NOERR;
@@ -441,7 +437,7 @@ ncadios_cancel(void *ncdp,
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    /* TODO: Nonblocking IO support */
+    /* Nonblocking IO does not support canceling due to ADIOS limitation */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     return NC_NOERR;
@@ -459,7 +455,7 @@ ncadios_wait(void *ncdp,
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
-        // Handle all active request in the pool
+        /* Handle all active requests in the pool */
         err = ncadiosi_wait_all_get_req(ncadp);
         if (status == NC_NOERR){
             status = err;
@@ -468,7 +464,7 @@ ncadios_wait(void *ncdp,
     else{
         if (statuses == NULL){
             for(i = 0; i < num_reqs; i++){
-                // Handle request one by one
+                /* Handle request one by one */
                 err = ncadiosi_wait_get_req(ncadp, req_ids[i], NULL);
                 if (status == NC_NOERR){
                     status = err;
@@ -477,7 +473,7 @@ ncadios_wait(void *ncdp,
         }
         else{
             for(i = 0; i < num_reqs; i++){
-                // Handle request one by one
+                /* Handle request one by one */
                 err = ncadiosi_wait_get_req(ncadp, req_ids[i], statuses + i);
                 if (status == NC_NOERR){
                     status = err;
