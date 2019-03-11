@@ -839,8 +839,13 @@ enum FILE_KIND check_file_signature(char *path)
         h3 = (unsigned long long*)(footer + 16); /* Position of attributes index table */
 >>>>>>> e168d06... C style comment
 
-        /* Process group index table must comes before variable index table. Variables index table must comes before attributes index table. */
-        if (*h1 < *h2 && *h2 < *h3){
+        /* All index tables must fall within the file
+         * Process group index table must comes before variable index table. Variables index table must comes before attributes index table.
+         */
+        if (0 < *h1 && *h1 < file_size &&
+            0 < *h2 && *h2 < file_size &&
+            0 < *h3 && *h3 < file_size &&
+            *h1 < *h2 && *h2 < *h3){ 
             bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
 >>>>>>> 1a93d4a... add comment to BP fotter check
             return BP; 
