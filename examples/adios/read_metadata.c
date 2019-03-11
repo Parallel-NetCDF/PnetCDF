@@ -7,8 +7,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This examples demonstrates how to enumerate all variable, dimension, 
- * and attributes in a BP file using PnetCDF.
+ * This examples demonstrates how to enumerate all variable, dimension, and attributes in a BP file using PnetCDF.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include <stdio.h>
@@ -30,6 +29,8 @@ int main(int argc, char** argv) {
     char name[NC_MAX_NAME + 1];
     nc_type vtype;
     MPI_Offset len;
+    char tmp[1024];
+    int x, y;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -37,14 +38,12 @@ int main(int argc, char** argv) {
 
     // Open ADIOS BP file as if opening a netcdf file
     // PnetCDF can only read BP files for now, NC_NOWRITE must be set
-    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, 
-                        &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     ERR
 
     err = ncmpi_inq(ncid, &ndim, &nvar, &natt, &nudim);
     ERR
-    printf("ndim: %d, nvar: %d, natt: %d, nudim: %d\n", ndim, nvar, natt, 
-            nudim);
+    printf("ndim: %d, nvar: %d, natt: %d, nudim: %d\n", ndim, nvar, natt, nudim);
 
     for(i = 0; i < ndim; i++){
         err = ncmpi_inq_dim(ncid, i, name, &len);
@@ -62,8 +61,7 @@ int main(int argc, char** argv) {
     for(i = 0; i < nvar; i++){
         err = ncmpi_inq_var(ncid, i, name, &vtype, &ndim, NULL, &natt);
         ERR
-        printf("Var %d: name = %s, ndim = %d, natt = %d, dimmids = ", i, name, 
-                ndim, natt);
+        printf("Var %d: name = %s, ndim = %d, natt = %d, dimmids = ", i, name, ndim, natt);
         if (ndim < 1024){
             err = ncmpi_inq_var(ncid, i, name, &vtype, &ndim, dimids, &natt);
             ERR
