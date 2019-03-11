@@ -7,7 +7,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program verify attribute read capability of adios driver
+ * This examples demonstrates how to enumerate all variable, dimension, and attributes in a BP file using PnetCDF.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include <stdio.h>
