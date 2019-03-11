@@ -1215,8 +1215,9 @@ ncmpi_inq_file_format(const char *filename,
 #ifdef ENABLE_ADIOS 
     else{ 
         ADIOS_FILE *fp = NULL; 
+        off_t fsize;
         char footer[BP_MINIFOOTER_SIZE];
-        unsigned long long *h1, *h2, *h3;
+        off_t *h1, *h2, *h3;
         
         // First, we test if the mini footer of the BP file follows BP specification
         if ((fd = open(path, O_RDONLY, 00400)) == -1) { 
@@ -1231,7 +1232,7 @@ ncmpi_inq_file_format(const char *filename,
         }
 
         /* Seek to end */
-        lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+        fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
         /* Get footer */
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
@@ -1250,9 +1251,9 @@ ncmpi_inq_file_format(const char *filename,
         /* All index tables must fall within the file
          * Process group index table must comes before variable index table. Variables index table must comes before attributes index table.
          */
-        if (0 < *h1 && *h1 < file_size &&
-            0 < *h2 && *h2 < file_size &&
-            0 < *h3 && *h3 < file_size &&
+        if (0 < *h1 && *h1 < (unsigned long long)fsize &&
+            0 < *h2 && *h2 < (unsigned long long)fsize &&
+            0 < *h3 && *h3 < (unsigned long long)fsize &&
             *h1 < *h2 && *h2 < *h3){ 
             /* The footer ehck is passed, now we try to open the file with ADIOS to make sure it is indeed a BP formated file */ 
             fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 

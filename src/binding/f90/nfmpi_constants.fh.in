@@ -98,6 +98,7 @@
       nf_cdf5                   = 32,       &
       nf_64bit_data             = nf_cdf5,  &
       nf_netcdf4                = 4096,     &
+      nf_bp                     = 65536,    &
 
       nf_mpiio                  = 8192,     &
       nf_pnetcdf                = nf_mpiio, &
@@ -116,6 +117,7 @@
       nf_format_64bit_data      = nf_format_cdf5, &
       nf_format_netcdf4         = 3,              &
       nf_format_netcdf4_classic = 4,              &
+      nf_format_bp              = 5,              &
       nf_format_unknown         = -1
 
 !

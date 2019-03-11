@@ -738,6 +738,7 @@ enum FILE_KIND check_file_signature(char *path)
     }
 #ifdef ENABLE_ADIOS 
     else{
+        off_t fsize;
         char footer[BP_MINIFOOTER_SIZE];
         unsigned long long *h1, *h2, *h3;
 
@@ -747,7 +748,7 @@ enum FILE_KIND check_file_signature(char *path)
         }
 
         /* Seek to end */
-        lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+        fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
         /* Get footer */
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
@@ -771,9 +772,9 @@ enum FILE_KIND check_file_signature(char *path)
         /* All index tables must fall within the file
          * Process group index table must comes before variable index table. Variables index table must comes before attributes index table.
          */
-        if (0 < *h1 && *h1 < file_size &&
-            0 < *h2 && *h2 < file_size &&
-            0 < *h3 && *h3 < file_size &&
+        if (0 < *h1 && *h1 < (unsigned long long)fsize &&
+            0 < *h2 && *h2 < (unsigned long long)fsize &&
+            0 < *h3 && *h3 < (unsigned long long)fsize &&
             *h1 < *h2 && *h2 < *h3){ 
             bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
             return BP; 
