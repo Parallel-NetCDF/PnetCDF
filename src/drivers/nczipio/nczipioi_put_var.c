@@ -131,7 +131,7 @@ nczipioi_put_var(NC_zip        *nczipp,
     ccord = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
     cend = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
 
-    //Calculate local write count, we caluculate offset and size of each req by the way
+    // Calculate local write count, we caluculate offset and size of each req by the way
     memset(wcnt_local, 0, sizeof(int) * nczipp->np);
     put_size_total = 0;
     for(k = 0; k < nreq; k++){
@@ -149,13 +149,13 @@ nczipioi_put_var(NC_zip        *nczipp,
             cend[i] = (starts[k][i] + counts[k][i] - 1) / varp->chunkdim[i] + 1;
         }
 
-        // calculate local write count, at most one per chunk
+        // Calculate local write count, at most one per chunk
         memcpy(ccord, cstart, sizeof(int) * varp->ndim);
         while(ccord[0] < cend[0]){
             j = get_chunk_idx(varp, ccord);    
             wcnt_local[j] = 1;
 
-            // move on to next chunk
+            // Move on to next chunk
             ccord[varp->ndim - 1]++;
             for(j = varp->ndim - 1; j > 0; j--){
                 if (ccord[j] >= cend[j]){

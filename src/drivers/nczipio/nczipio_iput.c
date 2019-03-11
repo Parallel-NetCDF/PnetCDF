@@ -278,7 +278,6 @@ nczipioi_init_put_varn_req( NC_zip *nczipp,
     //Calculate local write count, we calculate offset and size of each req by the way
     memset(wcnt_local, 0, sizeof(int) * nczipp->np);
 
-
     // Iterate through chunk
     req.nsend = 0;  // Previous estimate contains our own chunks. Now, we count real chunk
     do{

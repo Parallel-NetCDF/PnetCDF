@@ -26,22 +26,18 @@ typedef enum {
 /* Get_req structure */
 typedef struct NC_zip_req {
     int varid;
-    MPI_Offset *start, *count, *stride;
+    int nreq;
+    union param_start{
+        MPI_Offset *start;
+        MPI_Offset **starts;
+    } pstart;
+    union param_count{
+        MPI_Offset *count;
+        MPI_Offset *counts;
+    } pcount;
+    MPI_Offset *stride;
     char *buf;
-    int *widx;
-    char **rbuf;
-    char **sbuf;
-    char **bufs;
-    union send_count{
-        int nsend;
-        int *nsends;
-    }
-    union{
-        int nrecv;
-        int *nrecvs;
-    }
-    MPI_Request *sreqs, *rreqs;    // Send and recv req
-    MPI_Status *sstats, *rstats;    // Send and recv status
+    char *xbuf;
 } NC_zip_req;
 
 /* Get_req list structure */
@@ -81,7 +77,7 @@ typedef struct NC_zip_var {
     MPI_Offset *chunkdim;
     char **chunk_cache;
 
-    int nmychunkss;
+    int nmychunks;
     int *mychunks;
 
     int datavarid;

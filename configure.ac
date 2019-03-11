@@ -142,6 +142,7 @@ AH_TEMPLATE([ENABLE_LARGE_SINGLE_REQ],  [Define if to enable large single MPI-IO
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([ENABLE_BURST_BUFFER],      [Define if to enable burst buffer feature])
 AH_TEMPLATE([ENABLE_COMPRESSION],       [Define if to enable compression feature])
+AH_TEMPLATE([ENABLE_ZLIB],              [Define if to enable zlib compression method])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 AH_TEMPLATE([ENABLE_REQ_AGGREGATION],   [Define if able to support request aggregation in nonblocking routines])
@@ -2371,7 +2372,7 @@ fi
 AC_SUBST(ADIOS_VER_GE_1132)
 AC_ARG_ENABLE([compression],
    [AS_HELP_STRING([--enable-compression],
-                   [Enable burst buffer driver support. @<:@default: disabled@:>@])],
+                   [Enable chunked compression driver support. @<:@default: disabled@:>@])],
    [enable_compression=${enableval}], [enable_compression=no]
 )
 
@@ -2382,6 +2383,61 @@ if test "x$enable_compression" = "xyes" ; then
 fi
 AC_SUBST(ENABLE_COMPRESSION)
 AM_CONDITIONAL(ENABLE_COMPRESSION, [test x$enable_compression = xyes])
+
+AC_ARG_ENABLE([zlib],
+   [AS_HELP_STRING([--enable-zlib],
+                   [Enable zlib compression method support. @<:@default: disabled@:>@])],
+   [enable_zlib=${enableval}], [enable_zlib=no]
+)
+
+ENABLE_ZLIB=0
+if test "x$enable_zlib" = "xyes" ; then
+   AC_DEFINE(ENABLE_ZLIB)
+   ENABLE_ZLIB=1
+fi
+AC_SUBST(ENABLE_ZLIB)
+AM_CONDITIONAL(ENABLE_ZLIB, [test x$enable_zlib = xyes])
+
+
+if test "x$enable_zlib" = "xyes" ; then
+   ZLIB_INSTALL=""
+   AC_ARG_WITH(zlib,
+       [AS_HELP_STRING([--with-zlib=/path/to/implementation],
+                       [installation prefix for zlib implementation])],
+       if test "x${withval}" = xyes; then
+          AC_MSG_ERROR(--with-zlib is set but the value is NULL)
+       else
+          ZLIB_INSTALL=${withval}
+       fi
+   )
+   
+   if test "x${ZLIB_INSTALL}" != x ; then
+      CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
+      LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
+      LIBS+=" -lz"
+   fi
+
+   LIBS+=" -lm -ldl"
+
+   have_zlib=no
+   AC_MSG_CHECKING(ZLIB library)
+   AC_SEARCH_LIBS([deflate], [z], [have_zlib=yes], [have_zlib=no])
+   if test "x${have_zlib}" = xyes; then
+      AC_CHECK_HEADERS([zlib.h], [], [have_zlib=no])
+   fi
+
+   if test "x${have_zlib}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      The ZLIB library and header file are required to build
+      PnetCDF with ZLIB compression support. Use option
+         --with-zlib=/path/to/implementation
+      to specify the location of ZLIB build.
+      Stopping ...
+      Check 'config.log' for more information.
+      ------------------------------------------------------------])
+   fi
+fi
 
 AC_ARG_ENABLE([profiling],
    [AS_HELP_STRING([--enable-profiling],

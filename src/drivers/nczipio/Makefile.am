@@ -38,7 +38,13 @@ C_SRCS = nczipio_attr.c \
          nczipio_util.c \
          nczipioi_getput.c \
          nczipioi_put_varn.c \
+         nczipioi_nonblocking.c \
+         nczipioi_chunk.c \
          nczip_dummy.c
+
+if ENABLE_ZLIB
+   C_SRCS += nczip_zlib.c
+endif
 
 $(M4_SRCS:.m4=.c): Makefile
 
