@@ -1215,7 +1215,6 @@ ncmpi_inq_file_format(const char *filename,
 #ifdef ENABLE_ADIOS 
     else{ 
         ADIOS_FILE *fp = NULL; 
-        off_t off;
         char footer[BP_MINIFOOTER_SIZE];
         unsigned long long *h1, *h2, *h3;
         
@@ -1232,9 +1231,9 @@ ncmpi_inq_file_format(const char *filename,
         }
 
         // Seek to end
-        off = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+        lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
-        // get footer 
+        // Get footer 
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
         if (rlen != BP_MINIFOOTER_SIZE) {
             close(fd); 
@@ -1244,10 +1243,11 @@ ncmpi_inq_file_format(const char *filename,
             DEBUG_RETURN_ERROR(NC_EFILE)
         }
         
-        h1 = (unsigned long long*)footer;
-        h2 = (unsigned long long*)(footer + 8);
-        h3 = (unsigned long long*)(footer + 16);
+        h1 = (unsigned long long*)footer; // Position of process group index table 
+        h2 = (unsigned long long*)(footer + 8); // Position of variables index table 
+        h3 = (unsigned long long*)(footer + 16); // Position of attributes index table 
 
+        // Process group index table must comes before variable index table. Variables index table must comes before attributes index table. 
         if (*h1 < *h2 && *h2 < *h3){ 
             /* Then, we try to open with ADIOS */ 
             fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
