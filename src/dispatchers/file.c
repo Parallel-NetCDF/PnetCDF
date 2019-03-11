@@ -1230,10 +1230,10 @@ ncmpi_inq_file_format(const char *filename,
             }
         }
 
-        // Seek to end
+        /* Seek to end */
         lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
-        // Get footer 
+        /* Get footer */
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
         if (rlen != BP_MINIFOOTER_SIZE) {
             close(fd); 
@@ -1243,13 +1243,13 @@ ncmpi_inq_file_format(const char *filename,
             DEBUG_RETURN_ERROR(NC_EFILE)
         }
         
-        h1 = (unsigned long long*)footer; // Position of process group index table 
-        h2 = (unsigned long long*)(footer + 8); // Position of variables index table 
-        h3 = (unsigned long long*)(footer + 16); // Position of attributes index table 
+        h1 = (unsigned long long*)footer; /* Position of process group index table */
+        h2 = (unsigned long long*)(footer + 8); /* Position of variables index table */
+        h3 = (unsigned long long*)(footer + 16); /* Position of attributes index table */
 
-        // Process group index table must comes before variable index table. Variables index table must comes before attributes index table. 
+        /* Process group index table must comes before variable index table. Variables index table must comes before attributes index table. */
         if (*h1 < *h2 && *h2 < *h3){ 
-            /* Then, we try to open with ADIOS */ 
+            /* The footer ehck is passed, now we try to open the file with ADIOS to make sure it is indeed a BP formated file */ 
             fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, MPI_COMM_SELF); 
             if (fp != NULL) { 
                 *formatp = NC_FORMAT_BP; 

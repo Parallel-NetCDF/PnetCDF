@@ -90,7 +90,7 @@ ncadios_inq_attid(void       *ncdp,
             }
         }
 
-        // Name not found
+        /* Name not found */
         if (i >= ncadp->fp->nattrs){
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
@@ -104,11 +104,12 @@ ncadios_inq_attid(void       *ncdp,
         }
         var = ncadp->vars.data[varid];
 
-        // ADIOS read expose all attributes as global attributes
-        // Variable attributes are represented by path starting with variable 
-        // name
-        // These variables can be accessed as either global attributes using 
-        // full path or as variable attributes using only attribute name
+        /* ADIOS read expose all attributes as global attributes
+         * Variable attributes are represented by path starting with variable 
+         * name
+         * These variables can be accessed as either global attributes using 
+         * full path or as variable attributes using only attribute name
+         */
         sprintf(attname, "%s/%s", var.name, name);
 
         for (i = 0; i < ncadp->fp->nattrs; i++){
@@ -120,15 +121,13 @@ ncadios_inq_attid(void       *ncdp,
             }
         }
         
-        // Name not found
+        /* Name not found */
         if (i >= ncadp->fp->nattrs){
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
     }
 
     return NC_NOERR;
-
-    //return ncadiosi_inq_attid(ncadp, varid, name, attidp);
 }
 
 int
@@ -153,11 +152,12 @@ ncadios_inq_att(void       *ncdp,
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
         
-        // ADIOS read expose all attributes as global attributes
-        // Variable attributes are represented by path starting with variable 
-        // name
-        // These variables can be accessed as either global attributes using 
-        // full path or as variable attributes using only attribute name
+        /* ADIOS read expose all attributes as global attributes
+         * Variable attributes are represented by path starting with variable 
+         * name
+         * These variables can be accessed as either global attributes using 
+         * full path or as variable attributes using only attribute name
+         */
         sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
         err = adios_get_attr(ncadp->fp, attname, &atype, &asize, &adata);
     }
@@ -252,11 +252,12 @@ ncadios_get_att(void         *ncdp,
         if (varid >= ncadp->vars.cnt){
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
-        // ADIOS read expose all attributes as global attributes
-        // Variable attributes are represented by path starting with variable 
-        // name
-        // These variables can be accessed as either global attributes using 
-        // full path or as variable attributes using only attribute name
+        /* ADIOS read expose all attributes as global attributes
+         * Variable attributes are represented by path starting with variable 
+         * name
+         * These variables can be accessed as either global attributes using 
+         * full path or as variable attributes using only attribute name
+         */
         sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
         err = adios_get_attr(ncadp->fp, attname, &atype, &asize, &adata);
     }
@@ -265,8 +266,9 @@ ncadios_get_att(void         *ncdp,
         DEBUG_RETURN_ERROR(err);
     }
 
-    // PnetCDF allow accessing attributes of different type
-    // Check if we need to convert
+    /* PnetCDF allow accessing attributes of different type
+     * Check if we need to convert
+     */
     xtype = ncadios_to_mpi_type(atype);
     if (xtype != itype){
         esize = adios_type_size (atype, adata);

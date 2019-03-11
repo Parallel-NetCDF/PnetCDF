@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
-//#include "netcdf.h"
 #include "adios_types.h"
 #include "adios_transport_hooks.h"
 #include "adios_bp_v1.h"
@@ -19,7 +18,6 @@
 
 #define ERR(e){if(e){printf("Error:%d\n",e);return 2;}}
 #define DIVIDER "\t---------------------------------\n"
-//#define DIVIDER "\t************************************\n"
 
 struct var_dim
 {
@@ -36,7 +34,7 @@ void copy_buffer(struct adios_bp_buffer_struct_v1 *dest
 }
 
 static int verbose=0;
-static int is_input_fortran = 0; // 0 = C generated BP file, 1 = Fortran generated BP file
+static int is_input_fortran = 0; /* 0 = C generated BP file, 1 = Fortran generated BP file */
 
 int ncd_gen_name (char *fullname, char *path, char *name) {
     int i;
@@ -90,52 +88,35 @@ int ncd_attr_str_ds (NC_ad* ncid
     }
     else {
         ncd_gen_name (fullname, path, "");
-        //printf("\tpathname:%s\n",fullname);
         retval=ncadiosi_inq_varid(ncid,fullname,&valid);
         if(retval < 0)
            return 1; 
         else
             strcpy(fullname, name);
-        //ERR(retval); 
-        //if (valid<0)
-        //    ncd_gen_name (fullname, path,name);
-        //printf("\t attr_name:%s %d\n",fullname,valid);
     }
-    //retval=ncadiosi_inq_attid(ncid,valid,fullname,&attid);
-    //printf("\tretval:%d attid=%d\n",retval,attid);
-    //printf(DIVIDER);
     if (retval == NC_NOERR ) {
-       //printf("\tattribute (%s) existed\n", fullname);
+       
        return 0;
      }
-    //else
-       //printf("\tattribute: %s \n", fullname);
-
-    //ncadiosi_redef(ncid);
 
     void *value = attribute->value;
     size_t len = 1; 
     enum ADIOS_DATATYPES type =  attribute->type;
     struct adios_var_payload_struct_v1 var_payload;  
     struct adios_index_var_struct_v1 * vars_root = 0;
-//    struct adios_index_attribute_struct_v1 * atts_root = 0;
 
     var_payload.payload = 0;
 
     if ( attribute->is_var == adios_flag_yes) {
         adios_posix_read_vars_index (ptr_buffer);
         adios_parse_vars_index_v1 (ptr_buffer, &vars_root, NULL, NULL);
-        //print_vars_index ( vars_root);
         while (vars_root) {
             if (vars_root->id == attribute->var_id) {
                 type = vars_root->type;
                 if (!(vars_root->characteristics->dims.dims)) { 
                     value = vars_root->characteristics->value; 
-                    //printf("\t      var: %s = ", vars_root->var_name);
                 }
                 else {
-                	// this cannot happen because ADIOS does not let writing attributes pointing to non-scalar variable
-                    //ncadiosi_enddef(ncid);
                     return 1;
                 }
                 break; 
@@ -143,45 +124,7 @@ int ncd_attr_str_ds (NC_ad* ncid
             vars_root = vars_root->next;
         }
     }
-        //printf("\t      XML: ");   
-    switch (type) {
-         case adios_unsigned_byte:
-            //retval=ncadiosi_put_att_uchar(ncid,valid,fullname,NC_BYTE,len,value);
-            break;
-         case adios_byte:
-            //retval=ncadiosi_put_att_schar(ncid,valid,fullname,NC_BYTE,len,value);
-            break;
-         case adios_string:
-            //printf("%s\n", (char *) value);    
-            //retval=ncadiosi_put_att_text(ncid,valid,fullname, strlen(value),value);
-            break;
-         case adios_short:
-            //printf("\tvaule: %s\n", *(short *) value);    
-            //retval=ncadiosi_put_att_short(ncid,valid,fullname,NC_SHORT,len,value);
-            ERR(retval); 
-            break;
-         case adios_integer:
-            //printf("%d\n", *((int *) value));    
-            //retval=ncadiosi_put_att_int(ncid,valid,fullname,NC_INT,len,value);
-            break;
-         case adios_long:
-            //printf("\tvaule: %s\n", *(long *) value);    
-            //retval=ncadiosi_put_att_long(ncid,valid,fullname,NC_LONG,len,value);
-            break;
-         case adios_real:
-            //printf("\tvaule: %s\n", *(float *) value);    
-            //retval=ncadiosi_put_att_float(ncid,valid,fullname,NC_FLOAT,len,value);
-            break;
-         case adios_double:
-            //printf("\tvaule: %s\n", *(double *) value);    
-            //retval=ncadiosi_put_att_double(ncid,valid,fullname,NC_DOUBLE,len,value);
-            break;
-         default:
-            break;
-     }
-     ERR(retval);
-
-    //ncadiosi_enddef(ncid); 
+    
     if ( var_payload.payload)
         free (var_payload.payload);
     return 0;
@@ -198,15 +141,12 @@ int ncd_dataset (NC_ad* ncid
     char *path = ptr_var_header->path;
     char fullname[256],dimname[256];
     enum ADIOS_DATATYPES type = ptr_var_header->type;
-    //enum ADIOS_FLAG is_dim = ptr_var_header->is_dim;
     void *val = ptr_var_payload->payload; 
-    //uint64_t payload_size = ptr_var_header->payload_size;
     struct adios_dimension_struct_v1 *dims = ptr_var_header->dims; 
     int maxrank = 0, i,j, valid=-1, nc_dimid=-1, retval=0;
     size_t rank = 0, start_dims[10],count_dims[10];
     int dimids[10];
     static int onename_dimid = -1;
-    //int time_index, time_dimrank=0;
     struct adios_index_attribute_struct_v1 * atts_root = 0;
     
     memset(dimids,-1,10*SIZEOF_INT);
@@ -214,27 +154,21 @@ int ncd_dataset (NC_ad* ncid
         return 0;
     ncd_gen_name (fullname, path, name);
    
-    //printf(DIVIDER);
-    //printf("\t  dataset: %s\n", fullname);
-
     val = ptr_var_payload->payload;
-    //ncadiosi_redef(ncid);
+
     enum ADIOS_FLAG time_flag;
     while (dims) {
         ++maxrank;
         if (dims->dimension.is_time_index == adios_flag_yes) {
             time_flag = adios_flag_yes;
-            //time_dimrank = maxrank-1;
-            //fprintf(stderr, "Time dim rank = %d\n",time_dimrank); 
+
         } 
         dims = dims->next;
     } 
-    //fprintf(stderr, "variable %s, ndims = %d time_flag = %d\n",ptr_var_header->name, maxrank, time_flag); 
+    
     dims = ptr_var_header->dims;
-    //time_index = 0;
     if (dims) {
         for (rank = 0; rank < maxrank; rank++) {
-            //            printf("rank cal:time_index=%d j=%d rank=%d\n",time_dimrank,j,rank);
             /**********************************************************************
              * Process dataset which has global bounds with dynamic dimension value
              **********************************************************************/
@@ -274,7 +208,6 @@ int ncd_dataset (NC_ad* ncid
                             return err;
                         }
 
-                        //print_attributes_index ( atts_root);
                         while (atts_root) {
                             if (atts_root->id == dims->dimension.var_id) {
                                 count_dims [ rank] = *(int*)atts_root->characteristics->value;
@@ -317,7 +250,6 @@ int ncd_dataset (NC_ad* ncid
              * Process dataset which has global bounds with constant dimension value
              ***********************************************************************/
             else if (dims->global_dimension.rank !=0 ) {
-                //printf(" \tconstant global_info: %s rank: %d\n",fullname, dimids[rank]);
                 dimids[rank] = dims->global_dimension.rank;
                 if (dims->dimension.var_id!=0 ) {
                     for (i = 0; i < var_dims_count; i++){
@@ -340,7 +272,6 @@ int ncd_dataset (NC_ad* ncid
              * Process dataset which has no global bounds
              ********************************************/
             else {
-                //printf("\tdim: %s %d\n",atts_root->attr_name,dims->dimension.rank);
                 if ( dims->dimension.var_id!=0
                         ||time_flag == adios_flag_yes) {
                     if (dims->dimension.rank!=0) {
@@ -364,7 +295,6 @@ int ncd_dataset (NC_ad* ncid
                             if (var_dims [i].id == dims->dimension.var_id) {
                                 if (dims->dimension.is_time_index == adios_flag_yes) {
                                     start_dims[rank] = var_dims[i].rank - 1;
-                                    //time_index = var_dims[i].rank;
                                     count_dims[rank] = 1;
                                     dimids[rank] = var_dims [i].nc_dimid; 
                                     /*printf("\tdim[%d]: c(%d):s(%d): dimid=%d (time-index)\n"
@@ -397,7 +327,6 @@ int ncd_dataset (NC_ad* ncid
                             return err;
                         }
 
-                        //print_attributes_index(atts_root);
                         while (atts_root) {
                             if (atts_root->id == dims->dimension.var_id) {
                                 ncd_gen_name (dimname, atts_root->attr_path
@@ -435,7 +364,6 @@ int ncd_dataset (NC_ad* ncid
                     }
                 }
                 else {
-                    //printf ("Error, every dimension in netcdf need to have name!\n");
                     sprintf(dimname,"%s_%zu", fullname,rank);
                     ncadiosi_inq_dimid(ncid,dimname,&nc_dimid);
                     if (nc_dimid<0)
@@ -444,15 +372,13 @@ int ncd_dataset (NC_ad* ncid
                     count_dims[rank] = dims->dimension.rank;
                     start_dims[rank] =0; 
                     ERR(retval);
-                    //fprintf(stderr, "\t local[%zu]: %" PRIu64 "\n",rank,dims->dimension.rank);
                 } 
             }
             if (dims)
                 dims = dims->next;
-        } // end of for loop
+        } /* end of for loop */
         val = ptr_var_payload->payload;    
         ncadiosi_inq_varid(ncid,fullname,&valid);
-        //ncadiosi_redef(ncid);
         int time_idx=-1;
         for (rank = 0; rank < maxrank; rank++) {
             if (count_dims[rank]==0) {
@@ -481,10 +407,8 @@ int ncd_dataset (NC_ad* ncid
         */
         if (is_input_fortran==1) {
             size_t tmp;
-            //fprintf(stderr, "\tFlip %d Fortran dimensions, time_idx=%d\n", maxrank, time_idx);
             for (rank=0; rank < maxrank; rank++) {
                 if (rank < maxrank-1-rank) {
-                    //fprintf(stderr, "\t  flip rank %d with rank %d\n", rank, maxrank-1-rank);
                     tmp = dimids[rank];
                     dimids[rank] = dimids[maxrank-1-rank];
                     dimids[maxrank-1-rank] = tmp;
@@ -502,62 +426,36 @@ int ncd_dataset (NC_ad* ncid
 
         switch(type) { 
             case adios_real:
-                //for (rank=0;rank<maxrank;rank++)
-                //         printf("\t local[%d]: c(%d) (%d) %d\n",
-                //    rank,count_dims[rank], start_dims[rank], dimids[rank]);
                 if ( valid<0) {
                     retval=ncadiosi_def_var(ncid,fullname,NC_FLOAT,maxrank,dimids,&valid);
                     ERR(retval);
                 }
-               // retval=ncadiosi_enddef(ncid);
-                //retval=ncadiosi_put_vara_float(ncid,valid,start_dims,count_dims,val);
                 ERR(retval);
                 break;
             case adios_double:
                 if ( valid<0) 
                     retval=ncadiosi_def_var(ncid,fullname,NC_DOUBLE,maxrank,dimids,&valid);
                 ERR(retval);
-                //retval=ncadiosi_enddef(ncid);
-                //ERR(retval);
-                //retval=ncadiosi_put_vara_double(ncid,valid,start_dims,count_dims,val);
-                //ERR(retval);
-                //printf("end   writing!\n");
                 break;
             case adios_long:
                 if ( valid<0) 
                     retval=ncadiosi_def_var(ncid,fullname,NC_LONG,maxrank,dimids,&valid);
-                //retval=ncadiosi_enddef(ncid);
-                //retval=ncadiosi_put_vara_long(ncid,valid,start_dims,count_dims,val);
                 break;
             case adios_unsigned_byte:
                 if ( valid<0) 
                     retval=ncadiosi_def_var(ncid,fullname,NC_BYTE,maxrank,dimids,&valid);
-                //retval=ncadiosi_enddef(ncid);
-                //retval=ncadiosi_put_vara_uchar(ncid,valid,start_dims,count_dims,val);
                 break;
             case adios_byte:
-                //printf("write byte test %d %d\n",maxrank,dimids[0]);
                 if ( valid<0) 
                     retval=ncadiosi_def_var(ncid,fullname,NC_BYTE,maxrank,dimids,&valid);
                 ERR (retval);
-                //printf("\t vid=%d\n",valid);
-                //retval=ncadiosi_enddef(ncid);
-                //retval=ncadiosi_put_vara_schar(ncid,valid,start_dims,count_dims,val);
-                //ERR (retval);
-                //printf("write byte test\n");
                 break;
             case adios_integer:
                 if (valid < 0) {
                     retval = ncadiosi_def_var (ncid,fullname,NC_INT,maxrank,dimids,&valid);
-                    //printf("definition done!\n");
                 } 
-                //retval = ncadiosi_enddef (ncid);
-                //ERR (retval);
-                //retval=ncadiosi_put_vara_int (ncid,valid,start_dims,count_dims,val);
-                //ERR (retval);
                 break;
             default:
-                //retval=ncadiosi_enddef(ncid);
                 break;
         }
     }
@@ -568,7 +466,6 @@ int ncd_dataset (NC_ad* ncid
             }
         }
 
-        //ncadiosi_redef(ncid);
         ncadiosi_inq_dimid ( ncid, fullname, &nc_dimid);
         if ( var_dims[j].rank == 0)
             return 0;
@@ -580,14 +477,12 @@ int ncd_dataset (NC_ad* ncid
     }
     else {
         rank = 1;
-        //ncadiosi_redef(ncid);
         if (onename_dimid==-1)
         {
             retval=ncadiosi_def_dim (ncid, "one", 1, &onename_dimid);
             ERR(retval);
         }
         else {
-            //ncadiosi_redef(ncid);
             ncadiosi_inq_varid (ncid, fullname, &valid);
         }
         dimids[0]=onename_dimid;
@@ -595,50 +490,30 @@ int ncd_dataset (NC_ad* ncid
         switch (type) {
             case adios_real:
                 if (valid < 0 ) {
-                    //printf("\t ncd-scalar-real: %d %d %s\n",dimids[0],valid, fullname);
                     retval=ncadiosi_def_var(ncid,fullname,NC_FLOAT,rank,dimids,&valid);
                     ERR(retval);
                 }
-                //retval=ncadiosi_enddef(ncid);
-                //ERR(retval);
-                //retval=ncadiosi_put_var_float(ncid,valid,val);
                 break;
             case adios_double:
                 if (valid < 0 ) {
-                    //printf("\t ncd-scalar: %d %d %s\n",dimids[0],valid, fullname);
                     retval=ncadiosi_def_var(ncid,fullname,NC_DOUBLE,rank,dimids,&valid);
                     ERR(retval);
-                    //retval=ncadiosi_enddef(ncid);
-                    //ERR(retval);
                 }
-                //retval=ncadiosi_enddef(ncid);
-                //retval=ncadiosi_put_var_double(ncid,valid,val);
                 break;
             case adios_long:
                 if (valid < 0 ) {
-                    //printf("\t ncd-scalar: %d %d %s\n",dimids[0],valid, fullname);
                     retval=ncadiosi_def_var(ncid,fullname,NC_LONG,rank,dimids,&valid);
                     ERR(retval);
                 }
-                //retval=ncadiosi_enddef(ncid);
-                //ERR(retval);
                 retval=ncadiosi_def_var(ncid,fullname,NC_LONG,rank,dimids,&valid);
-                //retval=ncadiosi_enddef(ncid);
-                //retval=ncadiosi_put_var_long(ncid,valid,val);
                 break;
             case adios_integer:
                 if (valid < 0 ) {
                     retval=ncadiosi_def_var(ncid,fullname,NC_INT,rank,dimids,&valid);
                     ERR(retval);
                 }
-                //retval=ncadiosi_enddef(ncid);
-                //ERR(retval);
-                //printf("\t   scalar: %d\n", *(int *)val);
-                //retval=ncadiosi_put_var_int(ncid,valid,val);
-                //ERR(retval);
                 break;
             default:
-                //retval=ncadiosi_enddef(ncid);
                 break;
         }
     }
@@ -676,7 +551,6 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
         
     }
     */
-    //ncadiosi_create ( out_fname, NC_CLOBBER | NC_64BIT_OFFSET, &ncid);
 
     struct adios_bp_buffer_struct_v1 * b = 0;
     struct adios_bp_buffer_struct_v1 * b_0 = 0;
@@ -692,7 +566,6 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
     rc = adios_posix_open_read_internal (ncid->path, "", b);
     if (!rc)
     {
-        //fprintf (stderr, "bp2ncd: file not found: %s\n", argv[1]);
 
         return -1;
     }
@@ -767,7 +640,7 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
             continue;
         }
 
-        // setup here to read the process group from (and size)
+        /* setup here to read the process group from (and size) */
         b->read_pg_offset = pg->offset_in_file;
         if (pg->next)
         {
@@ -786,11 +659,7 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
             return err;
         }
 
-        //printf ("*************************************************\n"); 
-        //printf ("\tTime Index Name: %s %d\n", pg_header.time_index_name, pg_header.time_index);
-        //printf ("*************************************************\n"); 
-
-        // Note here if we deal with Fortran generated file
+        /* Note here if we deal with Fortran generated file */
         if (pg_header.host_language_fortran == adios_flag_yes) {
             is_input_fortran = 1;
         }
@@ -805,7 +674,6 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
                           );
              static int time_dimid = -1;
              ncadiosi_def_dim(ncid,pg_header.time_index_name,NC_UNLIMITED,&time_dimid);
-             //ncadiosi_enddef(ncid);
              strcpy(var_dims[var_dims_count].dimname,pg_header.time_index_name);
              var_dims[var_dims_count].id = 0; 
              var_dims[var_dims_count].rank = pg_header.time_index;
@@ -819,7 +687,6 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
             return err;
         }
 
-        //printf("time-index id: %s %d\n",pg_header.time_index_name, vars_header.count);
         for (i = 0; i < vars_header.count; i++) {
             var_payload.payload = 0;
             err = adios_parse_var_data_header_v1 (b, &var_header);
@@ -831,7 +698,7 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
                                                 );
             }
             else {
-                // alloc size +1 to remove valgrind complaint
+                /* alloc size +1 to remove valgrind complaint */
                 var_payload.payload = malloc (var_header.payload_size + 1);
                 err = adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
@@ -877,7 +744,6 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
             {
                 free (var_payload.payload);
             }
-            //printf ("\n");
         }
 
         err = adios_parse_attributes_header_v1 (b, &attrs_header);
@@ -885,25 +751,15 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
             return err;
         }
 
-        for (i = 0; i < attrs_header.count; i++)
-        {
-
-            //adios_parse_attribute_v1 (b, &attribute);
-            //ncd_attr_str_ds (ncid, &attribute, b_0, vars_header.count, var_dims, var_dims_count);
-        }
-
         var_dims_count = 0;
         if (var_dims)
             free (var_dims);
         pg = pg->next;
     }
-    //printf (DIVIDER);
-    //printf ("End of %s\n", argv[1]);
 
     adios_posix_close_internal (b);
     free (b);
     free (b_0);
-    //ncadiosi_close (ncid);
     return 0;
 }
 

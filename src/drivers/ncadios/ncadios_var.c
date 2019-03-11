@@ -131,7 +131,6 @@ ncadios_inq_var(void       *ncdp,
         *no_fillp = 0;
     }
     if (fill_valuep != NULL){
-        //*fill_valuep = 0;
     }
 
     return NC_NOERR;
@@ -168,20 +167,20 @@ ncadios_get_var(void             *ncdp,
     NC_ad_get_req r;
     ADIOS_VARINFO *v;
 
-    // Get ADIOS variable
+    /* Get ADIOS variable */
     v = adios_inq_var(ncadp->fp, ncadp->vars.data[varid].name);
     if (v == NULL){
         err = ncmpii_error_adios2nc(adios_errno, "get_var");
         DEBUG_RETURN_ERROR(err);
     }
 
-    // Create a read request
+    /* Create a read request */
     err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, bufcount, buftype);
 
-    // Release var info
+    /* Release var info */
     adios_free_varinfo (v);
 
-    // Handle the request
+    /* Handle the request */
     err = ncadiosi_handle_get_req(ncadp, &r);
 
     return NC_NOERR;
@@ -206,7 +205,7 @@ ncadios_put_var(void             *ncdp,
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
-    return (err == NC_NOERR) ? status : err; /* first error encountered */
+    return (err == NC_NOERR) ? status : err; /* First error encountered */
 }
 
 int
@@ -257,7 +256,7 @@ ncadios_buffer_attach(void       *ncdp,
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    /* TODO: Nonblocking support */
+    /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     return NC_NOERR;
@@ -269,7 +268,7 @@ ncadios_buffer_detach(void *ncdp)
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    /* TODO: Nonblocking support */
+    /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     return NC_NOERR;
@@ -352,7 +351,7 @@ ncadios_iget_varn(void               *ncdp,
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    /* TODO: nonblocking support */
+    /* No varn support */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     return NC_NOERR;
@@ -412,7 +411,7 @@ ncadios_get_vard(void         *ncdp,
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    /* ADIOS has not vard interface */
+    /* ADIOS has no vard interface */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     return NC_NOERR;

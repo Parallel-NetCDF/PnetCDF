@@ -26,11 +26,9 @@ int ncadiosi_put_att_$2(NC_ad *ncadp, int valid, char *name, nc_type type, int l
     NC_ad_att att;
     MPI_Datatype itype;
 
-    //return NC_NOERR;
-
     att.data = NCI_Malloc(len * sizeof( $2 ));
     att.len = len;
-    // Convert is not needed becuase bp2ncd never use incompetible type
+    /* Convert is not needed becuase bp2ncd never use incompetible type */
     if (ncadios_nc_to_mpi_type(type) != $1){
         printf("Warning: type mismatch\n");
     }
@@ -70,11 +68,9 @@ int ncadiosi_put_att_text(NC_ad *ncadp, int valid, char *name, int len, void *va
     NC_ad_att att;
     MPI_Datatype itype;
 
-    //return NC_NOERR;
-
     att.data = NCI_Malloc(len * SIZEOF_CHAR);
     att.len = len;
-    // Convert is not needed becuase bp2ncd never use incompetible type
+    /* Convert is not needed becuase bp2ncd never use incompetible type */
     memcpy(att.data, value, len * SIZEOF_CHAR);
 
     att.name = NCI_Malloc(strlen(name) + 1);

@@ -64,8 +64,9 @@ ncadios_inq_dim(void       *ncdp,
     int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    // ADIOS read API does not expose dimension information
-    // We rely on a modified bp2ncd utility to build up our own dimensional list
+    /* ADIOS read API does not expose dimension information
+     * We rely on a modified bp2ncd utility to build up our own dimensional list
+     */
     if (name != NULL){
         strcpy(name, ncadp->dims.data[dimid].name);
     }

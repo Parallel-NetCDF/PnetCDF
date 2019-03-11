@@ -23,8 +23,6 @@
 int ncadiosi_inq_varid(NC_ad* ncadp, char* name, int *id) {
     int tmp;
 
-    //return NC_NOERR;
-
     if (id != NULL){
         tmp = ncadiosi_var_list_find(&(ncadp->vars), name);
         if (tmp < 0){
@@ -70,8 +68,6 @@ int ncadiosi_inq_attid(NC_ad* ncadp, int vid, char* name, int *id) {
 int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
     int tmp;
 
-    //return NC_NOERR;
-
     if (id != NULL){
         tmp = ncadiosi_dim_list_find(&(ncadp->dims), name);
         if (tmp < 0){
@@ -85,8 +81,6 @@ int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
 
 int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimids, int *id) {
     NC_ad_var var;
-
-    //return NC_NOERR;
 
     if (CHECK_NAME(name)){
         var.type = type;
@@ -105,8 +99,6 @@ int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimi
 int ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id) {
     NC_ad_dim dim;
     
-    //return NC_NOERR;
-
     if (len == NC_UNLIMITED){
         *id = INT_MAX;
         return NC_NOERR;
@@ -213,7 +205,7 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
             dimids = (int*)NCI_Malloc(sizeof(int) * maxndim);
         }
         
-        // Record every dimensions
+        /* Record every dimensions */
         if (v->nsteps > 1){
             if (recdimid < 0){
                 err = ncadiosi_def_dim(ncadp, name, NC_UNLIMITED, &recdimid);
@@ -232,7 +224,7 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
             }
         }
 
-        // Record variable
+        /* Record variable */
         if (v->nsteps > 1){
             err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], ncadios_to_nc_type(v->type), v->ndim + 1, dimids, &varid);
         }

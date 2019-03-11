@@ -746,7 +746,7 @@ enum FILE_KIND check_file_signature(char *path)
             return UNKNOWN;
         }
 
-        // Seek to end
+        /* Seek to end */
         lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
         /* Get footer */
@@ -764,11 +764,11 @@ enum FILE_KIND check_file_signature(char *path)
             return UNKNOWN;
         }
 
-        h1 = (unsigned long long*)footer; // Position of process group index table 
-        h2 = (unsigned long long*)(footer + 8); // Position of variables index table 
-        h3 = (unsigned long long*)(footer + 16); // Position of attributes index table 
+        h1 = (unsigned long long*)footer; /* Position of process group index table */
+        h2 = (unsigned long long*)(footer + 8); /* Position of variables index table */
+        h3 = (unsigned long long*)(footer + 16); /* Position of attributes index table */
 
-        // Process group index table must comes before variable index table. Variables index table must comes before attributes index table. 
+        /* Process group index table must comes before variable index table. Variables index table must comes before attributes index table. */
         if (*h1 < *h2 && *h2 < *h3){
             bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
             return BP; 

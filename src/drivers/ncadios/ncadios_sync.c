@@ -54,7 +54,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
     char *buf, *cur;
 
     if (ncadp->rank == 0){
-        bsize = SIZEOF_INT * 2;   // natt and nvar
+        bsize = SIZEOF_INT * 2;   /* natt and nvar */
         for(i = 0; i < ncadp->dims.cnt; i++){
             bsize += strlen(ncadp->dims.data[i].name) + 1 + SIZEOF_INT * 2;
         }
@@ -113,7 +113,6 @@ int ncadios_sync_header(NC_ad *ncadp) {
 
         ndim = *((int*)cur);
         cur += 4;
-        //printf("ndim = %d\n", ndim);
         for(i = 0; i < ndim; i++){
             len = *((int*)cur);
             cur += SIZEOF_INT;
@@ -122,7 +121,6 @@ int ncadios_sync_header(NC_ad *ncadp) {
             name = cur;
             cur += namelen + 1;
             ncadiosi_def_dim(ncadp, name, len, &id);
-            //printf("def_dim(%s, %d), namelen = %d\n", name, len, namelen);
         }
 
         
@@ -147,7 +145,6 @@ int ncadios_sync_header(NC_ad *ncadp) {
             for(j = 0; j < natt; j++){
                 ncadiosi_att_list_add(&(ncadp->vars.data[id].atts), attids[j]);
             }
-            //printf("def_var(%s, %d, %d), namelen = %d\n", name, type, ndim, namelen);
         }
         
     }
