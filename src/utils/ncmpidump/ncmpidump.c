@@ -775,8 +775,11 @@ enum FILE_KIND check_file_signature(char *path)
     }
 #ifdef ENABLE_ADIOS 
     else{
+<<<<<<< HEAD
         off_t fsize;
         int diff_endian;
+=======
+>>>>>>> 1a93d4a... add comment to BP fotter check
         char footer[BP_MINIFOOTER_SIZE];
         off_t h1, h2, h3;
 
@@ -785,8 +788,13 @@ enum FILE_KIND check_file_signature(char *path)
             return UNKNOWN;
         }
 
+<<<<<<< HEAD
         /* Seek to footer */
         fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+=======
+        // Seek to end
+        lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+>>>>>>> 1a93d4a... add comment to BP fotter check
 
         /* Get footer */
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
@@ -803,6 +811,7 @@ enum FILE_KIND check_file_signature(char *path)
             return UNKNOWN;
         }
 
+<<<<<<< HEAD
         adios_parse_version(footer, &bp_ver, &diff_endian);
         bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
 
@@ -818,6 +827,15 @@ enum FILE_KIND check_file_signature(char *path)
             0 < h2 && h2 < fsize &&
             0 < h3 && h3 < fsize &&
             h1 < h2 && h2 < h3){ 
+=======
+        h1 = (unsigned long long*)footer; // Position of process group index table 
+        h2 = (unsigned long long*)(footer + 8); // Position of variables index table 
+        h3 = (unsigned long long*)(footer + 16); // Position of attributes index table 
+
+        // Process group index table must comes before variable index table. Variables index table must comes before attributes index table. 
+        if (*h1 < *h2 && *h2 < *h3){
+            bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
+>>>>>>> 1a93d4a... add comment to BP fotter check
             return BP; 
         }
     } 
