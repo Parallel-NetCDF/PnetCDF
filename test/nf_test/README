@@ -1,5 +1,5 @@
 This test is ported from Unidata netCDF-3.5 to test the functionality
-of the PnetCDF API Fortran interface particularly on a single processor. 
+of the PnetCDF API Fortran interface particularly on a single processor.
 
 The typical way to run the test includes two steps:
 

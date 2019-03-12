@@ -259,7 +259,7 @@ int main(int argc, char** argv)
     for (i=0; i<myNX; i++) free(buf[i]);
     free(buf);
 
-    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD);
 
     MPI_Finalize();
     return (nerrs > 0);

@@ -20,7 +20,7 @@ C/write_block_read_column.c
      pattern into a new file. The file is re-opened to read all the 2D variables
      but in a 2D *-block pattern.
    o Write and read performance are measured and reported separately.
-   
+
 
 FLASH
    o This benchmark is algorithmically identical to the FLASH-IO kernel.

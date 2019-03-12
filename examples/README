@@ -51,7 +51,7 @@ with C, C++, F77, and F90 versions.
 ./CXX/collective_write.cpp
     This example defined NUM_VARS 3D integer non-record variables in a file.
     All variables are partitioned among processes in a 3D block-block-block
-    fashion. The I/O is carried out by making NUM_VARS calls to 
+    fashion. The I/O is carried out by making NUM_VARS calls to
     ncmpi_put_vara_int_all(), one for each variable. Performance measurements
     are reported in the standard output.
 

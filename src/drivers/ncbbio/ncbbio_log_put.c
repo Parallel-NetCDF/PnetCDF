@@ -373,7 +373,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     * Position must be recorded first before writing
     */
     entryp->data_off = (MPI_Offset)ncbbp->datalogsize;
-    
+
 
     /* Calculate location of start, count, stride in metadata buffer */
     Start = (MPI_Offset*)(buffer + sizeof(NC_bb_metadataentry));
@@ -395,7 +395,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
             }
         }
     }
-    
+
     /* Increment number of entry
     * This must be the final step of creating a log entry
     * Increasing num_entries marks the completion of the creation

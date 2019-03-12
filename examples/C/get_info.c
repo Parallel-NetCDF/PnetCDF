@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     if (rank == 0 && verbose) print_info(&info_used);
     MPI_Info_free(&info_used);
 
-    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD);
 
     MPI_Finalize();
     return (nerrs > 0);

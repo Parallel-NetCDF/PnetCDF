@@ -362,7 +362,7 @@ int main(int argc, char** argv)
     if (nerrs == 0)
         nerrs += pnetcdf_read(MPI_COMM_WORLD, filename);
 
-    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD);
 
     MPI_Finalize();
     return (nerrs > 0);

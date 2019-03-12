@@ -1596,7 +1596,7 @@ dnl According to pgcc manual the command-line option to should version is -V
 dnl
 dnl % pgcc -V
 dnl
-dnl pgcc 16.9-0 64-bit target on x86-64 Linux -tp p7 
+dnl pgcc 16.9-0 64-bit target on x86-64 Linux -tp p7
 dnl The Portland Group - PGI Compilers and Tools
 dnl Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
 dnl
