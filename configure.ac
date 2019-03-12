@@ -1444,7 +1444,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    AC_ARG_WITH(netcdf4,
        [AS_HELP_STRING([--with-netcdf4=/path/to/implementation],
                        [installation prefix for NetCDF-4 implementation])],
-       if test "x${withval}" = xyes; then
+       if test "x${withval}" = x; then
           AC_MSG_ERROR(--with-netcdf4 is set but the value is NULL)
        else
           NETCDF4_INSTALL=${withval}
