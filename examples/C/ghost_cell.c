@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 #endif
     nerrs += pnetcdf_io(MPI_COMM_WORLD, filename, cmode, len);
 
-    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD); 
+    nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD);
 
     MPI_Finalize();
     return (nerrs > 0);

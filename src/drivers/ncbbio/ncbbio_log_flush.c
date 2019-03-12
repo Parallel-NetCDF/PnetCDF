@@ -173,7 +173,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
         /* Initialize buffer status */
         databufferused = 0;
         dataread = 0;
-        
+
         for (ub = lb; ub < ncbbp->metaidx.nused; ub++) {
             if (ncbbp->metaidx.entries[ub].valid){
                 if(ncbbp->entrydatasize.values[ub] + databufferused > databuffersize) {
@@ -278,7 +278,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
 
                     num = entryp->api_kind;
 
-                    /* Allocate starts and counts array 
+                    /* Allocate starts and counts array
                      * Try to reuse allocated array if long enough
                      * Don't realloc because old data is not needed
                      */

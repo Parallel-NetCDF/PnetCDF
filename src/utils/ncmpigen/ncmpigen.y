@@ -184,7 +184,7 @@ dimdecl:        dimd '=' INT_CONST
 		   }
                 ;
 dimd:           dim
-		   { 
+		   {
 		    if ($1->is_dim == 1) {
 		        derror( "duplicate dimension declaration for %s",
 		                $1->name);
@@ -630,19 +630,19 @@ const:         CHAR_CONST
 			   break;
 			 case NC_UBYTE:
 			   *ubyte_valp++ = char_val;
-			   break; 
+			   break;
 			 case NC_USHORT:
 			   *ushort_valp++ = char_val;
-			   break; 
+			   break;
 			 case NC_UINT:
 			   *uint_valp++ = char_val;
-			   break; 
+			   break;
 			 case NC_INT64:
 			   *int64_valp++ = char_val;
-			   break; 
+			   break;
 			 case NC_UINT64:
 			   *uint64_valp++ = char_val;
-			   break; 
+			   break;
 			 default: break;
 		       }
 		       valnum++;
@@ -656,7 +656,7 @@ const:         CHAR_CONST
 
 			   if(valnum + len > var_len) {
 			       if (vars[varnum].dims[0] != rec_dim) {
-				   derror("too many values for this variable, %d>%d", 
+				   derror("too many values for this variable, %d>%d",
 					  valnum+len, var_len);
 				   exit (5);
 			       } else {/* a record variable so grow it */
@@ -780,7 +780,7 @@ const:         CHAR_CONST
 			 case NC_UINT64:
 			   *uint64_valp++ = short_val;
 			   break;
-			 default: break;			
+			 default: break;
 		       }
 		       valnum++;
 		   }
@@ -947,7 +947,7 @@ const:         CHAR_CONST
 			 case NC_UINT64:
 			   *uint64_valp++ = ubyte_val;
 			   break;
-			 default: 
+			 default:
 			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
@@ -990,7 +990,7 @@ const:         CHAR_CONST
 			 case NC_UINT64:
 			   *uint64_valp++ = ushort_val;
 			   break;
-			 default: 
+			 default:
 			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
@@ -1033,7 +1033,7 @@ const:         CHAR_CONST
 			 case NC_UINT64:
 			   *uint64_valp++ = uint_val;
 			   break;
-			 default: 
+			 default:
 			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
@@ -1076,7 +1076,7 @@ const:         CHAR_CONST
 			 case NC_UINT64:
 			   *uint64_valp++ = int64_val;
 			   break;
-			 default: 
+			 default:
 			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
@@ -1119,7 +1119,7 @@ const:         CHAR_CONST
  			 case NC_UINT64:
  			   *uint64_valp++ = uint64_val;
  			   break;
- 			 default: 
+ 			 default:
  			   derror("Unhandled type %d\n", valtype);
  			   break;
  		       }
@@ -1270,7 +1270,7 @@ YYSTYPE lookup(char *sname)
 {
     YYSTYPE sp;
     deescapify(sname);		/* delete escape chars from names,
-				 * e.g. 'ab\:cd\ ef' becomes 
+				 * e.g. 'ab\:cd\ ef' becomes
 				 * 'ab:cd ef' */
     for (sp = symlist; sp != (YYSTYPE) 0; sp = sp -> next)
 	if (STREQ(sp -> name, sname)) {

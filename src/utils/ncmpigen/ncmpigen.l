@@ -24,7 +24,7 @@ char errstr[100];		/* for short error messages */
 #include "ncmpigentab.h"
 
 #define YY_BREAK                /* defining as nothing eliminates unreachable
-				   statement warnings from flex output, 
+				   statement warnings from flex output,
                                    but make sure every action ends with
                                    "return" or "break"! */
 
@@ -36,7 +36,7 @@ escaped		\\.
 nonquotes	([^"\\]|{escaped})*
 exp		([eE][+-]?[0-9]+)
 %%
-\/\/.*		        { /* comment */ 
+\/\/.*		        { /* comment */
                           break;
                         }
 
@@ -210,7 +210,7 @@ FloatInf|-?Inff	{ /* missing value (pre-2.4 backward compatibility) */
 		return (BYTE_CONST);
                 }
 
-[ \t\f]+	{ /* whitespace */ 
-		  break;        
+[ \t\f]+	{ /* whitespace */
+		  break;
 		}
 .		return (yytext[0]) ;

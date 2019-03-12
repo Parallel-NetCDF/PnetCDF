@@ -148,7 +148,7 @@ entry_begin	= INT64			// starting file offset of entry section
 basename	= name			// base file name supplied by users
 proc_name	= name			// MPI processor name, obtained from MPI_Get_processor_name()
 					// can be used like constructing cb_nodes in ROMIO
-name		= name_len namestring	
+name		= name_len namestring
 name_len	= INT32
 namestring	= CHAR [CHAR ...] padding
 padding		= <0, 1, 2, or 3 bytes to next 4-byte boundary>	// padding uses null (\x00) bytes
@@ -158,7 +158,7 @@ BP_MAGIC	= 'B' 'P' VERSION padding ZERO	// 8-byte string
 VERSION		= '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
 TRUE		= ONE
 FALSE		= ZERO
-CHAR		= <8-bit byte>	
+CHAR		= <8-bit byte>
 INT32		= <32-bit signed integer, native representation>
 INT64		= <64-bit signed integer, native representation>
 

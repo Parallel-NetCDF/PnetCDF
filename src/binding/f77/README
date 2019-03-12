@@ -9,7 +9,7 @@ files is borrowed from MPICH. It reads the input file, defs, that defines
 the translation of Fortran arguments to C.
 
 This is nifty, but not flawless.  Compilation under 'gcc -Wall' may produce
-some warning messages.  
+some warning messages.
 
 To regenerate all C files, run command below:
    ./createffiles

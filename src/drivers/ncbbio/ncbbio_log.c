@@ -268,7 +268,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
 
     /* Process anme */
     *(int*)((char*)headerp->basename + headerp->basenamelen + 1) = procname_len;
-    strncpy((char*)headerp->basename + headerp->basenamelen + 5, 
+    strncpy((char*)headerp->basename + headerp->basenamelen + 5,
             procname, procname_len + 1);
 
     /* Create log files */
@@ -428,7 +428,7 @@ int ncbbio_log_close(NC_bb *ncbbp,
     /* Close shared log communicator */
     if (ncbbp->logcomm != MPI_COMM_SELF) {
         MPI_Comm_free(&(ncbbp->logcomm));
-    }    
+    }
 
 #ifdef PNETCDF_PROFILING
     t2 = MPI_Wtime();

@@ -373,7 +373,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     * Position must be recorded first before writing
     */
     entryp->data_off = (MPI_Offset)ncbbp->datalogsize;
-    
+
 
     /* Calculate location of start, count, stride in metadata buffer */
     Start = (MPI_Offset*)(buffer + sizeof(NC_bb_metadataentry));
