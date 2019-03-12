@@ -10,143 +10,141 @@
   !
   ! external netcdf data types:
   !
-  integer, parameter, public :: &
-    nf90_byte   = 1,            &
-    nf90_int1   = nf90_byte,    &
-    nf90_char   = 2,            &
-    nf90_short  = 3,            &
-    nf90_int2   = nf90_short,   &
-    nf90_int    = 4,            &
-    nf90_int4   = nf90_int,     &
-    nf90_float  = 5,            &
-    nf90_real   = nf90_float,   &
-    nf90_real4  = nf90_float,   &
-    nf90_double = 6,            &
-    nf90_real8  = nf90_double,  &
-    nf90_ubyte  = 7,            &
-    nf90_ushort = 8,            &
-    nf90_uint   = 9,            &
-    nf90_int64  = 10,           &
-    nf90_uint64 = 11
+  INTEGER, PARAMETER, PUBLIC :: &
+    NF90_BYTE   = NF_BYTE,      &
+    NF90_INT1   = NF_INT1,      &
+    NF90_CHAR   = NF_CHAR,      &
+    NF90_SHORT  = NF_SHORT,     &
+    NF90_INT2   = NF_INT2,      &
+    NF90_INT    = NF_INT,       &
+    NF90_INT4   = NF_INT4,      &
+    NF90_FLOAT  = NF_FLOAT,     &
+    NF90_REAL   = NF_REAL,      &
+    NF90_REAL4  = NF_REAL4,     &
+    NF90_DOUBLE = NF_DOUBLE,    &
+    NF90_REAL8  = NF_REAL8,     &
+    NF90_UBYTE  = NF_UBYTE,     &
+    NF90_USHORT = NF_USHORT,    &
+    NF90_UINT   = NF_UINT,      &
+    NF90_INT64  = NF_INT64,     &
+    NF90_UINT64 = NF_UINT64
 
   !
   ! default fill values:
   !
-  ! character (len = 1),           parameter, public :: &
-  !   nf90_fill_char  = achar(0)
-  integer (kind =  OneByteInt),  parameter, public :: &
-    nf90_fill_char  = 0,                              &
-    nf90_fill_byte  = -127,                           &
-    nf90_fill_int1  = nf90_fill_byte
-  integer (kind =  TwoByteInt),  parameter, public :: &
-    nf90_fill_short = -32767,                         &
-    nf90_fill_int2  = nf90_fill_short,                &
-    nf90_fill_ubyte  = 255
-  integer (kind = FourByteInt),  parameter, public :: &
-    nf90_fill_int    = -2147483647,                   &
-    nf90_fill_ushort = 65535
-  real   (kind =  FourByteReal), parameter, public :: &
-    nf90_fill_float = 9.9692099683868690e+36,         &
-    nf90_fill_real  = nf90_fill_float,                &
-    nf90_fill_real4 = nf90_fill_float
-  real   (kind = EightByteReal), parameter, public :: &
-    nf90_fill_double = 9.9692099683868690e+36,        &
-    nf90_fill_real8  = nf90_fill_double,              &
-    nf90_fill_uint64 = 1.8446744073709551614e+19
-  integer (kind = EightByteInt), parameter, public :: &
-    nf90_fill_uint   = 4294967295_EightByteInt,       &
-    nf90_fill_int64  = -9223372036854775806_EightByteInt
+  INTEGER (KIND =  ONEBYTEINT),  PARAMETER, PUBLIC :: &
+    NF90_FILL_CHAR   = NF_FILL_CHAR,   &
+    NF90_FILL_BYTE   = NF_FILL_BYTE,   &
+    NF90_FILL_INT1   = NF_FILL_INT1
+  INTEGER (KIND =  TWOBYTEINT),  PARAMETER, PUBLIC :: &
+    NF90_FILL_SHORT  = NF_FILL_SHORT,  &
+    NF90_FILL_INT2   = NF_FILL_INT2,   &
+    NF90_FILL_UBYTE  = NF_FILL_UBYTE
+  INTEGER (KIND = FOURBYTEINT),  PARAMETER, PUBLIC :: &
+    NF90_FILL_INT    = NF_FILL_INT,    &
+    NF90_FILL_USHORT = NF_FILL_USHORT
+  REAL   (KIND =  FOURBYTEREAL), PARAMETER, PUBLIC :: &
+    NF90_FILL_FLOAT  = NF_FILL_FLOAT,  &
+    NF90_FILL_REAL   = NF_FILL_REAL,   &
+    NF90_FILL_REAL4  = NF_FILL_REAL4
+  REAL   (KIND = EIGHTBYTEREAL), PARAMETER, PUBLIC :: &
+    NF90_FILL_DOUBLE = NF_FILL_DOUBLE, &
+    NF90_FILL_REAL8  = NF_FILL_REAL8,  &
+    NF90_FILL_UINT64 = NF_FILL_UINT64
+  INTEGER (KIND = EIGHTBYTEINT), PARAMETER, PUBLIC :: &
+    NF90_FILL_UINT   = NF_FILL_UINT,   &
+    NF90_FILL_INT64  = NF_FILL_INT64
 
   !
   ! fill and no-fill modes
   !
-  integer, parameter, public :: &
-    nf90_fill         = 0,      &
-    nf90_nofill       = 256
+  INTEGER, PARAMETER, PUBLIC ::   &
+    NF90_FILL         = NF_FILL,  &
+    NF90_NOFILL       = NF_NOFILL
   !
   ! mode flags for opening and creating a netcdf dataset:
   !
-  integer, parameter, public ::      &
-    nf90_nowrite       = 0,          &
-    nf90_write         = 1,          &
-    nf90_clobber       = 0,          &
-    nf90_noclobber     = 4,          &
-    nf90_lock          = 1024,       &
-    nf90_share         = 2048,       &
+  INTEGER, PARAMETER, PUBLIC ::            &
+    NF90_NOWRITE       = NF_NOWRITE,       &
+    NF90_WRITE         = NF_WRITE,         &
+    NF90_CLOBBER       = NF_CLOBBER,       &
+    NF90_NOCLOBBER     = NF_NOCLOBBER,     &
+    NF90_LOCK          = NF_LOCK,          &
+    NF90_SHARE         = NF_SHARE,         &
 
-    nf90_32bit         = 16777216,   &
-    nf90_classic_model = 256,        &
-    nf90_cdf2          = 512,        &
-    nf90_64bit_offset  = nf90_cdf2,  &
-    nf90_cdf5          = 32,         &
-    nf90_64bit_data    = nf90_cdf5,  &
-    nf90_netcdf4       = 4096,       &
+    NF90_32BIT         = NF_32BIT,         &
+    NF90_CLASSIC_MODEL = NF_CLASSIC_MODEL, &
+    NF90_CDF2          = NF_CDF2,          &
+    NF90_64BIT_OFFSET  = NF_64BIT_OFFSET,  &
+    NF90_CDF5          = NF_CDF5,          &
+    NF90_64BIT_DATA    = NF_64BIT_DATA,    &
+    NF90_NETCDF4       = NF_NETCDF4,       &
 
-    nf90_mpiio         = 8192,       &
-    nf90_pnetcdf       = nf90_mpiio
+    NF90_MPIIO         = NF_MPIIO,         &
+    NF90_PNETCDF       = NF_PNETCDF
 
-  integer, parameter, public ::  &
-    nf90_sizehint_default = 0,   &
-    nf90_align_chunk      = -1
+  INTEGER, PARAMETER, PUBLIC ::                  &
+    NF90_SIZEHINT_DEFAULT = NF_SIZEHINT_DEFAULT, &
+    NF90_ALIGN_CHUNK      = NF_ALIGN_CHUNK
 
   !
   ! size argument for defining an unlimited dimension:
   !
-  integer, parameter, public :: &
-    nf90_unlimited = 0
+  INTEGER, PARAMETER, PUBLIC :: &
+    NF90_UNLIMITED = NF_UNLIMITED
 
-  integer(KIND=MPI_OFFSET_KIND), parameter, public :: &
-    nf90mpi_unlimited = 0
+  INTEGER(KIND=MPI_OFFSET_KIND), PARAMETER, PUBLIC :: &
+    NF90MPI_UNLIMITED = NFMPI_UNLIMITED
 
   ! NULL request for non-blocking I/O APIs
-  integer, parameter, public :: nf90_req_null = -1
+  INTEGER, PARAMETER, PUBLIC :: NF90_REQ_NULL = NF_REQ_NULL
 
   ! indicate to flush all pending non-blocking requests
-  integer, parameter, public :: nf90_req_all = -1
-  integer, parameter, public :: nf90_get_req_all = -2
-  integer, parameter, public :: nf90_put_req_all = -3
+  INTEGER, PARAMETER, PUBLIC :: NF90_REQ_ALL     = NF_REQ_ALL
+  INTEGER, PARAMETER, PUBLIC :: NF90_GET_REQ_ALL = NF_GET_REQ_ALL
+  INTEGER, PARAMETER, PUBLIC :: NF90_PUT_REQ_ALL = NF_PUT_REQ_ALL
 
   !
   ! global attribute id:
   !
-  integer, parameter, public :: nf90_global = 0
+  INTEGER, PARAMETER, PUBLIC :: NF90_GLOBAL = NF_GLOBAL
 
   !
   ! implementation limits:
   !
-  integer, parameter, public :: &
-    nf90_max_name     = 256,        &
-    nf90_max_nfiles   = 1024,       &
-    nf90_max_dims     = 2147483647, &
-    nf90_max_attrs    = 2147483647, &
-    nf90_max_vars     = 2147483647, &
-    nf90_max_var_dims = 2147483647
+  INTEGER, PARAMETER, PUBLIC ::         &
+    NF90_MAX_NAME     = NF_MAX_NAME,    &
+    NF90_MAX_NFILES   = NF_MAX_NFILES,  &
+    NF90_MAX_DIMS     = NF_MAX_DIMS,    &
+    NF90_MAX_ATTRS    = NF_MAX_ATTRS,   &
+    NF90_MAX_VARS     = NF_MAX_VARS,    &
+    NF90_MAX_VAR_DIMS = NF_MAX_VAR_DIMS
 
   !
   ! error handling modes:
   !
-  integer, parameter, public :: &
-    nf90_fatal   = 1,           &
-    nf90_verbose = 2
+  INTEGER, PARAMETER, PUBLIC :: &
+    NF90_FATAL   = NF_FATAL,    &
+    NF90_VERBOSE = NF_VERBOSE
 
   !
   ! format version numbers:
   !
-  integer, parameter, public ::                     &
-    nf90_format_classic         = 1,                &
-    nf90_format_cdf2            = 2,                &
-    nf90_format_64bit           = nf90_format_cdf2, &
-    nf90_format_64bit_offset    = nf90_format_cdf2, &
-    nf90_format_cdf5            = 5,                &
-    nf90_format_64bit_data      = nf90_format_cdf5, &
-    nf90_format_netcdf4         = 3,                &
-    nf90_format_netcdf4_classic = 4,                &
-    nf90_format_unknown         = -1
+  INTEGER, PARAMETER, PUBLIC ::                              &
+    NF90_FORMAT_CLASSIC         = NF_FORMAT_CLASSIC,         &
+    NF90_FORMAT_CDF2            = NF_FORMAT_CDF2,            &
+    NF90_FORMAT_64BIT           = NF_FORMAT_64BIT,           &
+    NF90_FORMAT_64BIT_OFFSET    = NF_FORMAT_64BIT_OFFSET,    &
+    NF90_FORMAT_CDF5            = NF_FORMAT_CDF5,            &
+    NF90_FORMAT_64BIT_DATA      = NF_FORMAT_64BIT_DATA,      &
+    NF90_FORMAT_NETCDF4         = NF_FORMAT_NETCDF4,         &
+    NF90_FORMAT_NETCDF4_CLASSIC = NF_FORMAT_NETCDF4_CLASSIC, &
+    NF90_FORMAT_UNKNOWN         = NF_FORMAT_UNKNOWN
 
   !
   ! error codes:
   !
-  integer, parameter, public :: &
+  INTEGER, PARAMETER, PUBLIC :: &
     NF90_NOERR          = NF_NOERR         , & ! No Error
     NF90_EBADID         = NF_EBADID        , & ! Not a netcdf id
     NF90_ENFILE         = NF_ENFILE        , & ! Too many netcdfs open
@@ -183,7 +181,7 @@
     NF90_EAXISTYPE      = NF_EAXISTYPE         ! Unknown axis type
 
   ! Following errors are added for DAP
-  integer, parameter, public :: &
+  INTEGER, PARAMETER, PUBLIC :: &
     NF90_EDAP           = NF_EDAP          , & ! Generic DAP error
     NF90_ECURL          = NF_ECURL         , & ! Generic libcurl error
     NF90_EIO            = NF_EIO           , & ! Generic IO error
@@ -201,14 +199,14 @@
     NF90_EAUTH          = NF_EAUTH             ! Authorization Failure
 
   ! Misc. additional errors
-  integer, parameter, public :: &
+  INTEGER, PARAMETER, PUBLIC :: &
     NF90_ENOTFOUND      = NF_ENOTFOUND     , & ! No such file
     NF90_ECANTREMOVE    = NF_ECANTREMOVE   , & ! Can't remove file
     NF90_EINTERNAL      = NF_EINTERNAL     , & ! NetCDF Library Internal Error
     NF90_EPNETCDF       = NF_EPNETCDF          ! Error at PnetCDF layer
 
   ! netCDF-4 error codes (copied from netCDF release)
-  integer, parameter, public :: &
+  INTEGER, PARAMETER, PUBLIC :: &
     NF90_EHDFERR        = NF_EHDFERR       , & ! Error at HDF5 layer.
     NF90_ECANTREAD      = NF_ECANTREAD     , & ! Can't read.
     NF90_ECANTWRITE     = NF_ECANTWRITE    , & ! Can't write.
@@ -248,12 +246,12 @@
   ! This is the position of NC_NETCDF4 in cmode, counting from the
   ! right, starting (uncharacteristically for fortran) at 0. It's needed
   ! for the BTEST function calls.
-  integer, parameter, private :: NETCDF4_BIT = 12
+  INTEGER, PARAMETER, PRIVATE :: NETCDF4_BIT = 12
 
 
   ! PnetCDF error codes start here
-  integer, parameter, public :: &
-      NF90_ESMALL                   = NF_ESMALL                   , & ! size of off_t too small for format
+  INTEGER, PARAMETER, PUBLIC :: &
+      NF90_ESMALL                   = NF_ESMALL                   , & ! SIZE OF OFF_T TOO SMALL FOR FORMAT
       NF90_ENOTINDEP                = NF_ENOTINDEP                , & ! Operation not allowed in collective data mode
       NF90_EINDEP                   = NF_EINDEP                   , & ! Operation not allowed in independent data mode
       NF90_EFILE                    = NF_EFILE                    , & ! Unknown error in file operation
