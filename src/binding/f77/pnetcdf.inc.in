@@ -53,9 +53,12 @@
       integer nf_short
       integer nf_int2
       integer nf_int
+      integer nf_int4
       integer nf_float
       integer nf_real
+      integer nf_real4
       integer nf_double
+      integer nf_real8
       integer nf_ubyte
       integer nf_ushort
       integer nf_uint
@@ -68,9 +71,12 @@
       parameter (nf_short = 3)
       parameter (nf_int2 = nf_short)
       parameter (nf_int = 4)
+      parameter (nf_int4 = nf_int)
       parameter (nf_float = 5)
       parameter (nf_real = nf_float)
+      parameter (nf_real4 = nf_float)
       parameter (nf_double = 6)
+      parameter (nf_real8 = nf_double)
       parameter (nf_ubyte = 7)
       parameter (nf_ushort = 8)
       parameter (nf_uint = 9)
@@ -88,7 +94,9 @@
       integer           nf_fill_int
       real              nf_fill_float
       real              nf_fill_real
+      real              nf_fill_real4
       doubleprecision   nf_fill_double
+      doubleprecision   nf_fill_real8
       integer           nf_fill_ubyte
       integer           nf_fill_ushort
       integer*8         nf_fill_uint
@@ -104,7 +112,9 @@
       parameter (nf_fill_int = -2147483647)
       parameter (nf_fill_float = 9.9692099683868690e+36)
       parameter (nf_fill_real = nf_fill_float)
+      parameter (nf_fill_real4 = nf_fill_float)
       parameter (nf_fill_double = 9.9692099683868690e+36)
+      parameter (nf_fill_real8 = nf_fill_double)
       parameter (nf_fill_ubyte = 255)
       parameter (nf_fill_ushort = 65535)
 

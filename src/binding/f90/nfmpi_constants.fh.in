@@ -41,9 +41,12 @@
       nf_short = 3, &
       nf_int2 = nf_short, &
       nf_int = 4, &
+      nf_int4 = nf_int, &
       nf_float = 5, &
       nf_real = nf_float, &
+      nf_real4 = nf_float, &
       nf_double = 6, &
+      nf_real8 = nf_double, &
       nf_ubyte = 7, &
       nf_ushort = 8, &
       nf_uint = 9, &
@@ -65,10 +68,12 @@
 
       real, parameter, public :: &
       nf_fill_float = 9.9692099683868690e+36, &
-      nf_fill_real = nf_fill_float
+      nf_fill_real = nf_fill_float, &
+      nf_fill_real4 = nf_fill_float
 
       double precision, parameter, public :: &
       nf_fill_double = 9.9692099683868690e+36, &
+      nf_fill_real8 = nf_fill_double, &
       nf_fill_uint64 = 1.8446744073709551614e+19
 
       integer (KIND=EightByteInt), parameter, public :: &
