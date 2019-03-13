@@ -79,19 +79,21 @@ ncbbio_create(MPI_Comm     comm,
     }
     strcpy(ncbbp->path, path);
     ncbbp->mode          = cmode;
-    ncbbp->ncmpio_driver = driver;  // ncmpio driver
+    ncbbp->ncmpio_driver = driver;  /* ncmpio driver */
     ncbbp->ncid          = ncid;
-    ncbbp->ncp           = ncp;   // NC object used by ncmpio driver
+    ncbbp->ncp           = ncp;   /* NC object used by ncmpio driver */
     ncbbp->recdimsize    = 0;
-    ncbbp->recdimid      = -1;   // Id of record dimension
-    ncbbp->max_ndims     = 0;   // Highest dimensionality among all variables
+    ncbbp->recdimid      = -1;   /* Id of record dimension */
+    ncbbp->max_ndims     = 0;   /* Highest dimensionality among all variables */
     ncbbp->datalog_fd    = NULL;
     ncbbp->metalog_fd    = NULL;
     ncbbp->flag          = NC_MODE_CREATE | NC_MODE_DEF;
     ncbbp->logcomm       = MPI_COMM_SELF;
     ncbbp->comm          = comm;  /* reuse comm duplicated in dispatch layer */
-    MPI_Info_dup(info, &ncbbp->info);
-    ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
+
+    driver->inq_misc(ncp, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                     NULL, NULL, &ncbbp->info, NULL, NULL, NULL);
+    ncbbio_extract_hint(ncbbp, info); /* extract bb related hints */
 
     /* Log init delayed to enddef */
     ncbbp->inited = 0;
@@ -131,41 +133,43 @@ ncbbio_open(MPI_Comm     comm,
     }
     strcpy(ncbbp->path, path);
     ncbbp->mode          = omode;
-    ncbbp->ncmpio_driver = driver;  // ncmpio driver
+    ncbbp->ncmpio_driver = driver;  /* ncmpio driver */
     ncbbp->ncid          = ncid;
-    ncbbp->ncp           = ncp;   // NC object used by ncmpio driver
+    ncbbp->ncp           = ncp;   /* NC object used by ncmpio driver */
     ncbbp->recdimsize    = 0;
-    ncbbp->recdimid      = -1;   // Id of record dimension
-    ncbbp->max_ndims     = 0;   // Highest dimensionality among all variables
+    ncbbp->recdimid      = -1;   /* Id of record dimension */
+    ncbbp->max_ndims     = 0;   /* Highest dimensionality among all variables */
     ncbbp->flag          = 0;
     ncbbp->logcomm       = MPI_COMM_SELF;
     ncbbp->comm          = comm;  /* reuse comm duplicated in dispatch layer */
-    MPI_Info_dup(info, &(ncbbp->info));
-    ncbbio_extract_hint(ncbbp, info);   // Translate MPI hint into hint flags
+
+    driver->inq_misc(ncp, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                     NULL, NULL, &ncbbp->info, NULL, NULL, NULL);
+    ncbbio_extract_hint(ncbbp, info); /* extract bb related hints */
 
     /* Opened file is in data mode
      * We must initialize the log for if file is not opened for read only
      */
     if (omode != NC_NOWRITE) {
         /* Init log file */
-        err = ncbbio_log_create(ncbbp, info);
+        err = ncbbio_log_create(ncbbp, ncbbp->info);
         if (err != NC_NOERR) {
             NCI_Free(ncbbp);
             return err;
         }
-        // Initialize put list for nonblocking put operation
+        /* Initialize put list for nonblocking put operation */
         ncbbio_put_list_init(ncbbp);
         if (err != NC_NOERR) {
             NCI_Free(ncbbp);
             return err;
         }
-        // Initialize metadata index for log entries
+        /* Initialize metadata index for log entries */
         ncbbio_metaidx_init(ncbbp);
         if (err != NC_NOERR) {
             NCI_Free(ncbbp);
             return err;
         }
-        // Mark as initialized
+        /* Mark as initialized */
         ncbbp->inited = 1;
     }
     else {
@@ -193,20 +197,21 @@ ncbbio_close(void *ncdp)
      * Putlist and metadata index also needs to be cleaned up
      */
     if (ncbbp->inited) {
-        // Close log file
+        /* Close log file */
         status = ncbbio_log_close(ncbbp, 1);
-        // Clean up put list
+        /* Clean up put list */
         ncbbio_put_list_free(ncbbp);
-        // Clean up metadata index
+        /* Clean up metadata index */
         ncbbio_metaidx_free(ncbbp);
     }
 
-    // Call ncmpio driver
+    /* Call ncmpio driver */
     err = ncbbp->ncmpio_driver->close(ncbbp->ncp);
     if (status == NC_NOERR) status = err;
 
-    // Cleanup NC-bb object
-    MPI_Info_free(&(ncbbp->info));
+    /* Cleanup NC-bb object */
+    if (ncbbp->info != MPI_INFO_NULL)
+        MPI_Info_free(&ncbbp->info);
     NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
@@ -224,7 +229,7 @@ ncbbio_enddef(void *ncdp)
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    // Call ncmpio enddef
+    /* Call ncmpio enddef */
     err = ncbbp->ncmpio_driver->enddef(ncbbp->ncp);
     if (err != NC_NOERR) return err;
 
@@ -264,15 +269,15 @@ ncbbio_init(NC_bb *ncbbp)
         err = ncbbio_log_create(ncbbp, ncbbp->info);
         if (err != NC_NOERR) return err;
 
-        // Initialize put list for nonblocking put operation
+        /* Initialize put list for nonblocking put operation */
         ncbbio_put_list_init(ncbbp);
         if (err != NC_NOERR) return err;
 
-        // Initialize metadata index for log entries
+        /* Initialize metadata index for log entries */
         ncbbio_metaidx_init(ncbbp);
         if (err != NC_NOERR) return err;
 
-        // Mark as initialized
+        /* Mark as initialized */
         ncbbp->inited = 1;
     }
 
@@ -294,7 +299,7 @@ ncbbio__enddef(void       *ncdp,
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    // Call ncmpio enddef
+    /* Call ncmpio enddef */
     err = ncbbp->ncmpio_driver->_enddef(ncbbp->ncp, h_minfree, v_align,
                                         v_minfree, r_align);
     if (err != NC_NOERR) return err;
@@ -314,15 +319,15 @@ ncbbio__enddef(void       *ncdp,
         err = ncbbio_log_create(ncbbp, ncbbp->info);
         if (err != NC_NOERR) return err;
 
-        // Initialize put list for nonblocking put operation
+        /* Initialize put list for nonblocking put operation */
         ncbbio_put_list_init(ncbbp);
         if (err != NC_NOERR) return err;
 
-        // Initialize metadata index for log entries
+        /* Initialize metadata index for log entries */
         ncbbio_metaidx_init(ncbbp);
         if (err != NC_NOERR) return err;
 
-        // Mark as initialized
+        /* Mark as initialized */
         ncbbp->inited = 1;
     }
 
@@ -409,19 +414,20 @@ ncbbio_abort(void *ncdp)
         if (fIsSet(ncbbp->flag, NC_MODE_DEF))
             replay = 0;
 
-        // Close log file
+        /* Close log file */
         status = ncbbio_log_close(ncbbp, replay);
-        // Clean up put list
+        /* Clean up put list */
         ncbbio_put_list_free(ncbbp);
-        // Clean up metadata index
+        /* Clean up metadata index */
         ncbbio_metaidx_free(ncbbp);
     }
 
-    // Call ncmpio driver
+    /* Call ncmpio driver */
     err = ncbbp->ncmpio_driver->abort(ncbbp->ncp);
     if (status == NC_NOERR) status = err;
 
-    MPI_Info_free(&(ncbbp->info));
+    if (ncbbp->info != MPI_INFO_NULL)
+        MPI_Info_free(&ncbbp->info);
     NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
@@ -488,7 +494,7 @@ ncbbio_inq_misc(void       *ncdp,
      * ncbbio driver has it's own hints that is not handled by ncmpio driver
      */
     if (info_used != NULL)
-        ncbbio_export_hint(ncbbp, *info_used);
+        ncbbio_export_hint(ncbbp, info_used);
 
     return NC_NOERR;
 }
@@ -519,8 +525,8 @@ ncbbio_cancel(void *ncdp,
 {
     int i, j, err, status = NC_NOERR;
     int tmp, stat;
-    int nput;   // How many put request
-    int *swapidx;   // Swap target
+    int nput;   /* How many put request */
+    int *swapidx;   /* Swap target */
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
    /*
@@ -528,7 +534,7 @@ ncbbio_cancel(void *ncdp,
     */
     if (num_req == NC_REQ_ALL || num_req == NC_PUT_REQ_ALL ||
                                  num_req == NC_GET_REQ_ALL) {
-        // Cancel all put requests
+        /* Cancel all put requests */
         if (num_req == NC_REQ_ALL || num_req == NC_PUT_REQ_ALL) {
             /* Only handle put reqs in wr mode */
             if (ncbbp->inited) {
@@ -536,7 +542,7 @@ ncbbio_cancel(void *ncdp,
                 if (status == NC_NOERR) status = err;
             }
         }
-        // Cancel all get requests
+        /* Cancel all get requests */
         if (num_req == NC_REQ_ALL || num_req == NC_GET_REQ_ALL) {
             err = ncbbp->ncmpio_driver->cancel(ncbbp->ncp, num_req, NULL, NULL);
             if (status == NC_NOERR) status = err;
@@ -560,10 +566,10 @@ ncbbio_cancel(void *ncdp,
     nput = 0;
     for (i=0; i<num_req; i++) {
         if ((req_ids[i] & 1) == 0 || req_ids[i] == NC_REQ_NULL) {
-            // Even id means a put request or NULL request
-            // We are swapping req_ids[nput] with req_ids[i]
+            /* Even id means a put request or NULL request */
+            /* We are swapping req_ids[nput] with req_ids[i] */
             swapidx[nput] = i;
-            // Perform swap
+            /* Perform swap */
             tmp = req_ids[i];
             req_ids[i] = req_ids[nput];
             req_ids[nput++] = tmp;
@@ -578,7 +584,7 @@ ncbbio_cancel(void *ncdp,
         /* Only handle put reqs in wr mode */
         if (ncbbp->inited) {
             for (i=0; i<nput; i++) {
-                // Skip NULL requests
+                /* Skip NULL requests */
                 if (req_ids[i] == NC_REQ_NULL)
 		    stat = NC_NOERR;
                 else {
@@ -599,8 +605,8 @@ ncbbio_cancel(void *ncdp,
                 if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
                 else
-		    // Waiting can fail if there's problem writing request to
-		    // file
+		    /* Waiting can fail if there's problem writing request to */
+		    /* file */
 		    stat = NC_EINVAL_REQUEST;
 
                 if (statuses != NULL) statuses[i] = stat;
@@ -613,16 +619,16 @@ ncbbio_cancel(void *ncdp,
      * dividing the id by 2
      */
     if (num_req > nput) {
-        // Translate reqid to ncmpio reqid
+        /* Translate reqid to ncmpio reqid */
         for (i=nput; i<num_req; i++)
             req_ids[i] /= 2;
 
-        // Call ncmpio cancel
+        /* Call ncmpio cancel */
         err = ncbbp->ncmpio_driver->cancel(ncbbp->ncp, num_req - nput,
 	                                   req_ids + nput, statuses + nput);
         if (status == NC_NOERR) status = err;
 
-        // Translate reqid back to ncbbio reqid
+        /* Translate reqid back to ncbbio reqid */
         for (i=nput; i<num_req; i++)
             req_ids[i] *= 2;
     }
@@ -639,8 +645,8 @@ ncbbio_cancel(void *ncdp,
         req_ids[i] = req_ids[j];
         req_ids[j] = tmp;
     }
-    // the order of statuses must be restored as well since they are recorded
-    // after reordering
+    /* the order of statuses must be restored as well since they are recorded */
+    /* after reordering */
     if (statuses != NULL) {
         for (i=nput-1; i>-1; i--) {
             j = swapidx[i];
@@ -656,7 +662,7 @@ ncbbio_cancel(void *ncdp,
             req_ids[i] = NC_REQ_NULL;
     }
 
-    // Free the tracking buffer
+    /* Free the tracking buffer */
     NCI_Free(swapidx);
 
     return status;
@@ -699,11 +705,11 @@ ncbbio_wait(void *ncdp,
 {
     int i, j, err, status = NC_NOERR;
     int tmp, stat;
-    int nput;   // How many put request
-    int *swapidx;   // Swap target
+    int nput;   /* How many put request */
+    int *swapidx;   /* Swap target */
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
-    // Flush the log if log is initialized
+    /* Flush the log if log is initialized */
     if (ncbbp->inited) {
         err = ncbbio_log_flush(ncbbp);
         if (status == NC_NOERR) {
@@ -716,7 +722,7 @@ ncbbio_wait(void *ncdp,
     */
     if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL ||
                                   num_reqs == NC_GET_REQ_ALL) {
-        // Wait all put requests
+        /* Wait all put requests */
         if (num_reqs == NC_REQ_ALL || num_reqs == NC_PUT_REQ_ALL) {
             /* Only handle put reqs in wr mode */
             if (ncbbp->inited) {
@@ -724,7 +730,7 @@ ncbbio_wait(void *ncdp,
                 if (status == NC_NOERR) status = err;
             }
         }
-        // Wait all get requests
+        /* Wait all get requests */
         if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL) {
             err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, num_reqs, NULL, NULL,
 	                                     reqMode);
@@ -750,10 +756,10 @@ ncbbio_wait(void *ncdp,
     nput = 0;
     for (i=0; i<num_reqs; i++) {
         if ((req_ids[i] & 1) == 0 || req_ids[i] == NC_REQ_NULL) {
-	    // Even id means a put request or NULL request
-            // We are swapping req_ids[nput] with req_ids[i]
+	    /* Even id means a put request or NULL request */
+            /* We are swapping req_ids[nput] with req_ids[i] */
             swapidx[nput] = i;
-            // Perform swap
+            /* Perform swap */
             tmp = req_ids[i];
             req_ids[i] = req_ids[nput];
             req_ids[nput++] = tmp;
@@ -769,11 +775,11 @@ ncbbio_wait(void *ncdp,
         if (ncbbp->inited) {
             /* Handle the request one by one */
             for (i=0; i<nput; i++) {
-                // Handle request, skipping NULL requests
+                /* Handle request, skipping NULL requests */
                 if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
                 else {
-                    // Wait can fail if there's problem writing request to file
+                    /* Wait can fail if there's problem writing request to file */
                     err = ncbbio_handle_put_req(ncbbp, (req_ids[i] / 2), &stat);
                     if (status == NC_NOERR) status = err;
                 }
@@ -787,7 +793,7 @@ ncbbio_wait(void *ncdp,
                 if (req_ids[i] == NC_REQ_NULL)
                     stat = NC_NOERR;
                 else
-                    // Wait can fail if there's problem writing request to file
+                    /* Wait can fail if there's problem writing request to file */
                     stat = NC_EINVAL_REQUEST;
 
                 if (statuses != NULL)
@@ -801,17 +807,17 @@ ncbbio_wait(void *ncdp,
      * dividing the id by 2.  We need to flush the log so new data can be read
      */
     if (num_reqs > nput || !(fIsSet(ncbbp->flag, NC_MODE_INDEP))) {
-        // Translate reqid to ncmpio reqid
+        /* Translate reqid to ncmpio reqid */
         for (i=nput; i<num_reqs; i++)
             req_ids[i] /= 2;
 
-        // Call ncmpio wait
+        /* Call ncmpio wait */
         err = ncbbp->ncmpio_driver->wait(ncbbp->ncp, num_reqs - nput,
 	                                 req_ids + nput, statuses + nput,
 					 reqMode);
         if (status == NC_NOERR) status = err;
 
-        // Translate reqid back to ncbbio reqid
+        /* Translate reqid back to ncbbio reqid */
         for (i=nput; i<num_reqs; i++) req_ids[i] *= 2;
     }
 
@@ -827,8 +833,8 @@ ncbbio_wait(void *ncdp,
         req_ids[i] = req_ids[j];
         req_ids[j] = tmp;
     }
-    // the order of statuses must be restored as well since they are recorded
-    // after reordering
+    /* the order of statuses must be restored as well since they are recorded */
+    /* after reordering */
     if (statuses != NULL) {
         for (i=nput-1; i>-1; i--) {
             j = swapidx[i];
@@ -844,7 +850,7 @@ ncbbio_wait(void *ncdp,
             req_ids[i] = NC_REQ_NULL;
     }
 
-    // Free the tracking buffer
+    /* Free the tracking buffer */
     NCI_Free(swapidx);
 
     return status;
