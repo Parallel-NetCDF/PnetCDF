@@ -78,7 +78,7 @@ int ncd_attr_str_ds (NC_ad* ncid
     char fullname[255];
     char *path = attribute->path;
     char *name = attribute->name;
-    int  valid,retval,attid;
+    int  valid,retval;
 
     ncd_gen_name (fullname, path, name);
     valid = -1;
@@ -99,9 +99,6 @@ int ncd_attr_str_ds (NC_ad* ncid
        return 0;
      }
 
-    void *value = attribute->value;
-    size_t len = 1; 
-    enum ADIOS_DATATYPES type =  attribute->type;
     struct adios_var_payload_struct_v1 var_payload;  
     struct adios_index_var_struct_v1 * vars_root = 0;
 
@@ -112,9 +109,7 @@ int ncd_attr_str_ds (NC_ad* ncid
         adios_parse_vars_index_v1 (ptr_buffer, &vars_root, NULL, NULL);
         while (vars_root) {
             if (vars_root->id == attribute->var_id) {
-                type = vars_root->type;
                 if (!(vars_root->characteristics->dims.dims)) { 
-                    value = vars_root->characteristics->value; 
                 }
                 else {
                     return 1;
@@ -141,7 +136,6 @@ int ncd_dataset (NC_ad* ncid
     char *path = ptr_var_header->path;
     char fullname[256],dimname[256];
     enum ADIOS_DATATYPES type = ptr_var_header->type;
-    void *val = ptr_var_payload->payload; 
     struct adios_dimension_struct_v1 *dims = ptr_var_header->dims; 
     int maxrank = 0, i,j, valid=-1, nc_dimid=-1, retval=0;
     size_t rank = 0, start_dims[10],count_dims[10];
@@ -154,8 +148,6 @@ int ncd_dataset (NC_ad* ncid
         return 0;
     ncd_gen_name (fullname, path, name);
    
-    val = ptr_var_payload->payload;
-
     enum ADIOS_FLAG time_flag;
     while (dims) {
         ++maxrank;
@@ -377,7 +369,6 @@ int ncd_dataset (NC_ad* ncid
             if (dims)
                 dims = dims->next;
         } /* end of for loop */
-        val = ptr_var_payload->payload;    
         ncadiosi_inq_varid(ncid,fullname,&valid);
         int time_idx=-1;
         for (rank = 0; rank < maxrank; rank++) {
@@ -523,7 +514,6 @@ int ncd_dataset (NC_ad* ncid
 int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
 {
     int i, err;
-    char out_fname [256];
     int rc = 0;
     /*
     if (argc < 2)
@@ -631,7 +621,6 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
 
         struct adios_var_header_struct_v1 var_header;
         struct adios_var_payload_struct_v1 var_payload;
-        struct adios_attribute_struct_v1 attribute;
 
         if (pg->offset_in_file >= b->pg_index_offset) 
         {

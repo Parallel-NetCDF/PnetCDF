@@ -75,6 +75,12 @@ nc_type ncadios_to_nc_type(enum ADIOS_DATATYPES atype){
             fflush(stdout);
 #endif
             return NC_BYTE;
+        case adios_unknown:
+#ifdef PNETCDF_DEBUG
+            printf("Warning: unsupported adios type: adios_unknown\n");
+            fflush(stdout);
+#endif
+            return NC_BYTE;
     }
 
     return NC_NAT;
@@ -108,6 +114,24 @@ MPI_Datatype ncadios_to_mpi_type(enum ADIOS_DATATYPES atype){
             return MPI_CHAR;
         case adios_string_array:
             return MPI_CHAR;
+        case adios_complex:
+#ifdef PNETCDF_DEBUG
+            printf("Warning: unsupported adios type: adios_string_array\n");
+            fflush(stdout);
+#endif
+            return NC_BYTE;
+        case adios_double_complex:
+#ifdef PNETCDF_DEBUG
+            printf("Warning: unsupported adios type: adios_string_array\n");
+            fflush(stdout);
+#endif
+            return NC_BYTE;
+        case adios_unknown:
+#ifdef PNETCDF_DEBUG
+            printf("Warning: unsupported adios type: adios_unknown\n");
+            fflush(stdout);
+#endif
+            return NC_BYTE;
     }
 
     return NC_NAT;

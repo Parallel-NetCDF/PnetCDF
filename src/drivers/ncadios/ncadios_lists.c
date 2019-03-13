@@ -37,7 +37,7 @@ int ncadiosi_att_list_init(NC_ad_att_list *list) {
 }
 
 int ncadiosi_var_list_free(NC_ad_var_list *list) {
-    int i, j;
+    int i;
     if (list->nalloc > 0){
         for(i = 0; i < list->cnt; i++){
             NCI_Free(list->data[i].name);
@@ -50,7 +50,7 @@ int ncadiosi_var_list_free(NC_ad_var_list *list) {
 }
 
 int ncadiosi_dim_list_free(NC_ad_dim_list *list) {
-    int i, j;
+    int i;
     if (list->nalloc > 0){
         for(i = 0; i < list->cnt; i++){
             NCI_Free(list->data[i].name);
@@ -61,7 +61,6 @@ int ncadiosi_dim_list_free(NC_ad_dim_list *list) {
 }
 
 int ncadiosi_att_list_free(NC_ad_att_list *list) {
-    int i, j;
     if (list->nalloc > 0){
         NCI_Free(list->data);
     }

@@ -64,13 +64,8 @@ ncadios_def_var(void       *ncdp,
               const int  *dimids,
               int        *varidp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -78,7 +73,6 @@ ncadios_inq_varid(void       *ncdp,
                 const char *name,
                 int        *varid)
 {
-    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     return ncadiosi_inq_varid(ncadp, (char*)name, varid);
@@ -96,8 +90,6 @@ ncadios_inq_var(void       *ncdp,
               int        *no_fillp,
               void       *fill_valuep)
 {
-    int err;
-    int i, j;
     NC_ad *ncadp = (NC_ad*)ncdp;
     NC_ad_var var;
 
@@ -141,13 +133,8 @@ ncadios_rename_var(void       *ncdp,
                  int         varid,
                  const char *newname)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -198,14 +185,8 @@ ncadios_put_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int err=NC_NOERR, status;
-    void *cbuf=(void*)buf;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return (err == NC_NOERR) ? status : err; /* First error encountered */
 }
 
 int
@@ -221,7 +202,6 @@ ncadios_iget_var(void             *ncdp,
                int              *reqid,
                int               reqMode)
 {
-    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     return ncadiosi_iget_var(ncadp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid);
@@ -240,38 +220,23 @@ ncadios_iput_var(void             *ncdp,
                int              *reqid,
                int               reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
 ncadios_buffer_attach(void       *ncdp,
                     MPI_Offset  bufsize)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
 ncadios_buffer_detach(void *ncdp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -287,14 +252,10 @@ ncadios_bput_var(void             *ncdp,
                int              *reqid,
                int               reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
+
 int
 ncadios_get_varn(void              *ncdp,
                int                varid,
@@ -306,14 +267,10 @@ ncadios_get_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* No support for varn at this time
      * It make varn difficult to be implemented efficiently 
      */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
 }
 
 int
@@ -327,13 +284,8 @@ ncadios_put_varn(void              *ncdp,
                MPI_Datatype       buftype,
                int                reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -348,13 +300,8 @@ ncadios_iget_varn(void               *ncdp,
                 int                *reqid,
                 int                 reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* No varn support */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -369,13 +316,8 @@ ncadios_iput_varn(void               *ncdp,
                 int                *reqid,
                 int                 reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -390,13 +332,8 @@ ncadios_bput_varn(void               *ncdp,
                 int                *reqid,
                 int                 reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -408,13 +345,8 @@ ncadios_get_vard(void         *ncdp,
                MPI_Datatype  buftype,
                int           reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* ADIOS has no vard interface */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -426,12 +358,7 @@ ncadios_put_vard(void         *ncdp,
                MPI_Datatype  buftype,
                int           reqMode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 

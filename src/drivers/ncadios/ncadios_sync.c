@@ -150,4 +150,6 @@ int ncadios_sync_header(NC_ad *ncadp) {
     }
 
     NCI_Free(buf);
+
+    return NC_NOERR;
 }

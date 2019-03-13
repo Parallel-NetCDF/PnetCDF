@@ -254,7 +254,6 @@ int ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req){
 int ncadiosi_wait_get_req(NC_ad *ncadp, int reqid, int *stat)
 {
     int err, status = NC_NOERR;
-    int cesize;
     NC_ad_get_list *lp = &(ncadp->getlist);
 
     /* Filter invalid reqid
@@ -284,7 +283,7 @@ int ncadiosi_wait_get_req(NC_ad *ncadp, int reqid, int *stat)
  * Process all put request
  */
 int ncadiosi_wait_all_get_req(NC_ad *ncadp) {
-    int i, err, status = NC_NOERR;
+    int err, status = NC_NOERR;
     NC_ad_get_list *lp = &(ncadp->getlist);
 
     /* Search through req object array for object in use */
@@ -312,7 +311,6 @@ ncadiosi_init_get_req( NC_ad *ncadp,
               MPI_Datatype      buftype)
 {
     int err;
-    int req_id;
     int i;
     size_t esize;
     int cesize;

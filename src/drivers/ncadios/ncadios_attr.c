@@ -38,7 +38,6 @@ ncadios_inq_attname(void *ncdp,
                   int   attid,
                   char *name)
 {
-    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (varid == NC_GLOBAL){
@@ -76,7 +75,6 @@ ncadios_inq_attid(void       *ncdp,
                 const char *name,
                 int        *attidp)
 {
-    int err;
     int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
@@ -192,13 +190,8 @@ ncadios_rename_att(void       *ncdp,
                  const char *name,
                  const char *newname)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 
@@ -209,14 +202,8 @@ ncadios_copy_att(void       *ncdp_in,
                void       *ncdp_out,
                int         varid_out)
 {
-    int err;
-    NC_ad *ncadp_in  = (NC_ad*)ncdp_in;
-    NC_ad *ncadp_out = (NC_ad*)ncdp_out;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -224,13 +211,8 @@ ncadios_del_att(void       *ncdp,
               int         varid,
               const char *name)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -296,11 +278,6 @@ ncadios_put_att(void         *ncdp,
               const void   *buf,
               MPI_Datatype  itype)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }

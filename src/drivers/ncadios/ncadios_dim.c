@@ -34,13 +34,8 @@ ncadios_def_dim(void       *ncdp,
               MPI_Offset  size,
               int        *dimidp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -48,7 +43,6 @@ ncadios_inq_dimid(void       *ncdp,
                 const char *name,
                 int        *dimid)
 {
-    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     return ncadiosi_inq_dimid(ncadp, (char*)name, dimid);
@@ -60,8 +54,6 @@ ncadios_inq_dim(void       *ncdp,
               char       *name,
               MPI_Offset *sizep)
 {
-    int err;
-    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     /* ADIOS read API does not expose dimension information
@@ -83,11 +75,6 @@ ncadios_rename_dim(void       *ncdp,
                  int         dimid,
                  const char *newname)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }

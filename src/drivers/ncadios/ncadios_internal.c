@@ -119,12 +119,7 @@ int ncadiosi_parse_attrs(NC_ad* ncadp) {
     int i, j;
     int vid;
     char path[1024];
-    char *aname = NULL;
     char *vname = NULL;
-
-
-    NC_ad_var *var;
-    NC_ad_dim dim;
 
     for (i = 0; i < ncadp->fp->nattrs; i++) {
         strcpy(path, ncadp->fp->attr_namelist[i]);
@@ -132,7 +127,6 @@ int ncadiosi_parse_attrs(NC_ad* ncadp) {
         for(j = 0; path[j] != '\0'; j++){
             if (j > 0 && path[j] == '/'){
                 path[j] = '\0';
-                aname = path + j + 1;
                 if (path[0] == '/'){
                     vname = path + 1;
                 }
@@ -155,8 +149,7 @@ int ncadiosi_parse_attrs(NC_ad* ncadp) {
 
 int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
     int err;
-    int dimid;
-    int i, j;
+    int i;
     char name[128];
     
     for(i = 0; i < ncadp->vars.cnt; i++){
@@ -176,6 +169,8 @@ int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
             }
         }
     }
+    
+    return NC_NOERR;
 }
 
 int ncadiosi_parse_header_readall (NC_ad *ncadp) {
