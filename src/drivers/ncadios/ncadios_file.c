@@ -55,33 +55,8 @@ ncadios_create(MPI_Comm     comm,
              MPI_Info     info,
              void       **ncpp)  /* OUT */
 {
-    int err;
-    void *ncp=NULL;
-    NC_ad *ncadp;
-    PNC_driver *driver=NULL;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    /* TODO: use comde to determine the true driver */
-
-    /* Create a NC_ad object and save its driver pointer */
-    ncadp = (NC_ad*) NCI_Malloc(sizeof(NC_ad));
-    if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-    ncadp->path = (char*) NCI_Malloc(strlen(path)+1);
-    if (ncadp->path == NULL) {
-        NCI_Free(ncadp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    strcpy(ncadp->path, path);
-    ncadp->mode   = cmode;
-    ncadp->flag   = 0;
-    ncadp->comm   = comm;
-
-    *ncpp = ncadp;
-
-    return NC_NOERR;
 }
 
 int
@@ -92,11 +67,8 @@ ncadios_open(MPI_Comm     comm,
            MPI_Info     info,
            void       **ncpp)
 {
-    int err, format, parse_done;
-    int i;
-    void *ncp=NULL;
+    int err, parse_done;
     NC_ad *ncadp;
-    PNC_driver *driver=NULL;
 
     if (fIsSet(omode, NC_WRITE)){
         DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
@@ -206,13 +178,8 @@ ncadios_close(void *ncdp)
 int
 ncadios_enddef(void *ncdp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -222,31 +189,20 @@ ncadios__enddef(void       *ncdp,
               MPI_Offset  v_minfree,
               MPI_Offset  r_align)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
 ncadios_redef(void *ncdp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
 ncadios_begin_indep_data(void *ncdp)
 {
-    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     /* Make sure we are in data mode */
@@ -263,7 +219,6 @@ ncadios_begin_indep_data(void *ncdp)
 int
 ncadios_end_indep_data(void *ncdp)
 {
-    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     /* Make sure we are in data mode */
@@ -280,18 +235,8 @@ ncadios_end_indep_data(void *ncdp)
 int
 ncadios_abort(void *ncdp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
-
-    NCI_Free(ncadp->path);
-    NCI_Free(ncadp);
-
-    return err;
 }
 
 int
@@ -301,8 +246,6 @@ ncadios_inq(void *ncdp,
           int  *nattsp,
           int  *xtendimp)
 {
-    int err;
-    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (ndimsp != NULL){
@@ -342,7 +285,6 @@ ncadios_inq_misc(void       *ncdp,
                MPI_Offset *usage,
                MPI_Offset *buf_size)
 {
-    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (pathlen != NULL){
@@ -434,13 +376,8 @@ ncadios_cancel(void *ncdp,
              int  *req_ids,
              int  *statuses)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Nonblocking IO does not support canceling due to ADIOS limitation */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -490,13 +427,8 @@ ncadios_set_fill(void *ncdp,
                int   fill_mode,
                int  *old_fill_mode)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -504,13 +436,8 @@ ncadios_fill_var_rec(void      *ncdp,
                    int        varid,
                    MPI_Offset recno)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
@@ -519,48 +446,28 @@ ncadios_def_var_fill(void       *ncdp,
                    int         no_fill,
                    const void *fill_value)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
 ncadios_sync_numrecs(void *ncdp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
 ncadios_sync(void *ncdp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 
 int
 ncadios_flush(void *ncdp)
 {
-    int err;
-    NC_ad *ncadp = (NC_ad*)ncdp;
-
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
-    return NC_NOERR;
 }
 

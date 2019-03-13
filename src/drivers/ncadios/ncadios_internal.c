@@ -254,8 +254,7 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
 
 int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
     int err;
-    int dimid;
-    int i, j;
+    int i;
     char name[128];
     
     for(i = 0; i < ncadp->vars.cnt; i++){
@@ -275,6 +274,8 @@ int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
             }
         }
     }
+    
+    return NC_NOERR;
 }
 <<<<<<< HEAD
 >>>>>>> bbf925e... parse unlimit dim
