@@ -15,15 +15,16 @@
 #include <ncbbio_driver.h>
 
 /*
- * Extract mpi hints and set up the flags
+ * Extract hints related to the burst buffering feature
  */
-void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info){
+void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info) {
     int flag;
     char value[MPI_MAX_INFO_VAL];
 
     ncbbp->hints = NC_LOG_HINT_DEL_ON_CLOSE | NC_LOG_HINT_FLUSH_ON_READ |
-                    NC_LOG_HINT_FLUSH_ON_SYNC;
-    // Directory to place log files
+                   NC_LOG_HINT_FLUSH_ON_SYNC;
+
+    /* Directory to store log files */
     MPI_Info_get(info, "nc_burst_buf_dirname", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag) {
@@ -32,7 +33,8 @@ void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info){
     else {
         memset(ncbbp->logbase, 0, sizeof(ncbbp->logbase));
     }
-    // Overwrite the logfile is already exists (disable)
+
+    /* Overwrite the log file if already exists (disable) */
     MPI_Info_get(info, "nc_burst_buf_overwrite", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag && strcasecmp(value, "enable") == 0){
@@ -49,13 +51,14 @@ void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info){
         ncbbp->hints |= NC_LOG_HINT_LOG_SHARE;
     }
 
-    // Delete the logfile after file closing (enable)
+    /* Delete the log file after file closing (enable) */
     MPI_Info_get(info, "nc_burst_buf_del_on_close", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag && strcasecmp(value, "disable") == 0){
         ncbbp->hints ^= NC_LOG_HINT_DEL_ON_CLOSE;
     }
-    // Buffer size used to flush the log (0 (unlimited))
+
+    /* Buffer size used to flush the log (0 (unlimited)) */
     MPI_Info_get(info, "nc_burst_buf_flush_buffer_size", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
     if (flag){
@@ -63,36 +66,36 @@ void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info){
         if (bsize < 0) {
             bsize = 0;
         }
-        ncbbp->flushbuffersize = (size_t)bsize; // Unit: byte
+        ncbbp->flushbuffersize = (size_t)bsize; /* Unit: byte */
     }
     else{
-        ncbbp->flushbuffersize = 0; // 0 means unlimited}
+        ncbbp->flushbuffersize = 0; /* 0 means unlimited} */
     }
 }
 
 /*
- * Export hint based on flag
- * NOTE: We only set up the hint if it is not the default setting
- *       user hint maching the default behavior will be ignored
+ * Export I/O hints to user info object.
+ * NOTE: Here, we only export hints related to burst buffer feature.
  */
-void ncbbio_export_hint(NC_bb *ncbbp, MPI_Info info){
-    char value[MPI_MAX_INFO_VAL];
+void ncbbio_export_hint(NC_bb *ncbbp, MPI_Info *info) {
 
-    MPI_Info_set(info, "nc_burst_buf", "enable");
-    if (ncbbp->hints & NC_LOG_HINT_LOG_OVERWRITE) {
-        MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
-    }
-    if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE) {
-        MPI_Info_set(info, "nc_burst_buf_shared_logs", "enable");
-    }
-    if (!(ncbbp->hints & NC_LOG_HINT_DEL_ON_CLOSE)) {
-        MPI_Info_set(info, "nc_burst_buf_del_on_close", "disable");
-    }
-    if (ncbbp->logbase[0] != '\0') {
-        MPI_Info_set(info, "nc_burst_buf_dirname", ncbbp->logbase);
-    }
+    MPI_Info_set(*info, "nc_burst_buf", "enable");
+    if (ncbbp->hints & NC_LOG_HINT_LOG_OVERWRITE)
+        MPI_Info_set(*info, "nc_burst_buf_overwrite", "enable");
+
+    if (ncbbp->hints & NC_LOG_HINT_LOG_SHARE)
+        MPI_Info_set(*info, "nc_burst_buf_shared_logs", "enable");
+
+    if (!(ncbbp->hints & NC_LOG_HINT_DEL_ON_CLOSE))
+        MPI_Info_set(*info, "nc_burst_buf_del_on_close", "disable");
+
+    if (ncbbp->logbase[0] != '\0')
+        MPI_Info_set(*info, "nc_burst_buf_dirname", ncbbp->logbase);
+
     if (ncbbp->flushbuffersize > 0) {
+        char value[MPI_MAX_INFO_VAL];
         sprintf(value, "%llu", ncbbp->flushbuffersize);
-        MPI_Info_set(info, "nc_burst_buf_flush_buffer_size", value);
+        MPI_Info_set(*info, "nc_burst_buf_flush_buffer_size", value);
     }
 }
+

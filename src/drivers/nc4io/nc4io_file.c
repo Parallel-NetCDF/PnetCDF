@@ -97,7 +97,7 @@ nc4io_create(MPI_Comm     comm,
     nc4p->comm = comm;
     nc4p->ncid = ncidtmp;
     if (info == MPI_INFO_NULL)
-        MPI_Info_create(&nc4p->mpiinfo);
+        nc4p->mpiinfo = MPI_INFO_NULL;
     else
         MPI_Info_dup(info, &nc4p->mpiinfo);
 
@@ -149,7 +149,7 @@ nc4io_open(MPI_Comm     comm,
     nc4p->comm = comm;
     nc4p->ncid = ncidtmp;
     if (info == MPI_INFO_NULL)
-        MPI_Info_create(&nc4p->mpiinfo);
+        nc4p->mpiinfo = MPI_INFO_NULL;
     else
         MPI_Info_dup(info, &nc4p->mpiinfo);
 
@@ -172,7 +172,8 @@ nc4io_close(void *ncdp)
     err = nc_close(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
-    MPI_Info_free(&nc4p->mpiinfo);
+    if (nc4p->mpiinfo != MPI_INFO_NULL)
+        MPI_Info_free(&nc4p->mpiinfo);
 
     NCI_Free(nc4p->path);
     NCI_Free(nc4p);
@@ -300,7 +301,8 @@ nc4io_abort(void *ncdp)
     err = nc_abort(nc4p->ncid);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
-    MPI_Info_free(&nc4p->mpiinfo);
+    if (nc4p->mpiinfo != MPI_INFO_NULL)
+        MPI_Info_free(&nc4p->mpiinfo);
 
     NCI_Free(nc4p->path);
     NCI_Free(nc4p);
