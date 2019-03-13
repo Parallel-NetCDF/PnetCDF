@@ -385,6 +385,8 @@ ncmpio_inq_misc(void       *ncdp,
         mpireturn = MPI_Info_dup(ncp->mpiinfo, info_used);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Info_dup");
+#if 0
+        /* PnetCDF hints have been added to ncp->mpiinfo at ncmpi_enddef */
 
         sprintf(value, "%lld", ncp->h_align);
         MPI_Info_set(*info_used, "nc_header_align_size", value);
@@ -414,6 +416,7 @@ ncmpio_inq_misc(void       *ncdp,
         MPI_Info_set(*info_used, "nc_num_subfiles", value);
 #else
         MPI_Info_set(*info_used, "pnetcdf_subfiling", "disable");
+#endif
 #endif
     }
 
