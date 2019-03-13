@@ -38,6 +38,7 @@ typedef struct NC_zip_req {
     MPI_Offset *stride;
     char *buf;
     char *xbuf;
+    char **xbufs;
 } NC_zip_req;
 
 /* Get_req list structure */

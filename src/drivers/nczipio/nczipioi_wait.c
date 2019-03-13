@@ -30,26 +30,108 @@
 #include "nczipio_internal.h"
 
 
-/* We pack all request a s a large varn request
+/* Out drive currently can handle only one variable at a time
+ * We pack all request as a large varn request
  */
-int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreqs, int *reqids, int *stats){
+int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int err;
-    int i;
-    int num = 0;
+    int i, j;
+    int nvar;
+    int vid;   // Iterators for variable id
+    int *varids;
+    int *nreqs;  // Number of reqids in each variable
+    int *nums;  // Number of reqs in each varn
+    int **vreqids;
+    int num, maxnum = 0;
     MPI_Offset **starts, **counts, **strides;
+    MPI_Offset rsize;
     char **bufs;
     NC_zip *nczipp = (NC_zip*)ncdp;
     NC_zip_req *req;
 
-    // Count total number of vara request
-    for(i = 0; i < nreqs; i++){
+    // Count total number of request in per variable for packed varn request
+    nums = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
+    nreqs = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
+    memset(nums, 0, sizeof(int) * nczipp->vars.cnt);
+    memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
+    for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs[reqids[i]];
-        num += req->nreq;
+        nreqs[req->varid]++;
+        nums[req->varid] += req->nreq;
+    }
+
+    /* Allocate a skip list of reqids for each vriable
+     * At the same time, we find out the number of starts and counts we need to allocate
+     */
+    vreqids = (int**)NCI_Malloc(sizeof(int*) * nczipp->vars.cnt);
+    vreqids[0] = (int*)NCI_Malloc(sizeof(int) * nreqs);
+    maxnum = 0;
+    i = 0;
+    nvar = 0;
+    for(vid = 0; vid < nczipp->vars.cnt; vid++){
+        if (nreqs[vid] > 0){
+            // Assign buffer to reqid skip list
+            vreqids[vid] = vreqids[0] + i;
+            i += nreqs[vid];
+
+            // maximum number of starts and counts we need across all variables
+            if (maxnum < nums[vid]){
+                maxnum = nums[vid];
+            }
+
+            // Number of variable that has request to write
+            nvar++;
+        }
+    }
+
+    varids[0] = (int*)NCI_Malloc(sizeof(int) * nvar);
+
+    // Fill up the skip list
+    memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
+    for(i = 0; i < nreq; i++){
+        req = nczipp->putlist.reqs[reqids[i]];
+        vreqids[req->varid][nreqs[req->varid]++] = reqids[i];
     }
     
-    starts = (char**)NCI_Malloc(sizeof(char*) * num);
-    counts = (char**)NCI_Malloc(sizeof(char*) * num);
-    bufs =  (char**)NCI_Malloc(sizeof(char*) * num);
+    // Allocate parameters
+    starts = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxnum);
+    counts = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxnum);
+    bufs =  (char**)NCI_Malloc(sizeof(char*) * maxnum);
+
+    /* Pack requests variable by variable
+     */
+    nvar = 0;
+    for(vid = 0; vid < nczipp->vars.cnt; vid++){
+        if (nreqs[vid] > 0){
+            // Fill varid in the skip list
+            varids[nvar++] = vid;
+
+            // Collect parameters
+            num = 0;
+            for(j = 0; j < nreqs[vid]; j++){
+                req = nczipp->putlist.reqs[vreqids[vid][j]];
+
+                if (req->num > 1){
+                    for(i = 0; i < req->num; i++){
+                        starts[num] = req->starts[i];
+                        counts[num] = req->counts[i];
+                        bufs[num++] = req->xbufs[i];
+                    }
+                }
+                else{
+                    starts[num] = req->start;
+                    counts[num] = req->count;
+                    bufs[num++] = req->xbuf;
+                }
+            }
+
+            // Perform collective buffering
+            nczipioi_put_varn_cb(nczipp, nczipp->vars.data + vid, num, staarts, counts, NULL, bufs);
+        }
+    }
+
+    // Perform I/O for comrpessed variables
+    nczipioi_save_nvar(nczipp, nvar, varids);
 
     return NC_NOERR;
 }

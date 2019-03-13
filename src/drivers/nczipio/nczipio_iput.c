@@ -98,7 +98,9 @@ nczipioi_init_put_varn_req( NC_zip *nczipp,
                         MPI_Offset *const*counts, 
                         const void *xbuf,
                         const void *buf) {
-    int i;
+    int i, j;
+    MPI_Offset rsize, boff;
+    NC_zip_var *varp = nczipp->vars.data[varid];
 
     // Record request
     req.starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nreq);
@@ -112,6 +114,20 @@ nczipioi_init_put_varn_req( NC_zip *nczipp,
     for(i = 0; i < nreq; i++){
         req.counts[i] = req.counts[0] + i * varp->ndim;
         memcpy(req.counts[i], counts[i], sizeof(MPI_Offset) * varp->ndim);
+    }
+
+    // Calculate buffer for each individual request
+    req.xbufs = (char**)NCI_Malloc(sizeof(char*) * nreq);
+    boff = 0;
+    for(i = 0; i < nreq; i++){
+        req.xbufs[i] = (((char*)xbuf) + boff);
+
+        // Advance pointer by size of the request
+        rsize = varp->esize;
+        for(j = 0; j < varp->ndim; j++){
+            rsize *= counts[i][j];
+        }
+        boff += rsize;
     }
 
     req.varid = varid;
