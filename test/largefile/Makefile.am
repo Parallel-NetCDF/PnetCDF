@@ -17,10 +17,9 @@ AM_CPPFLAGS += -I$(top_builddir)/src/include
 LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
 LDADD += $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 
-AM_CFLAGS =
 if IS_BIGENDIAN
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
-   AM_CFLAGS += -DWORDS_BIGENDIAN
+   AM_CFLAGS = -DWORDS_BIGENDIAN
    # AM_FFLAGS  += $(FC_DEFINE)WORDS_BIGENDIAN
    # AM_FCFLAGS += $(FC_DEFINE)WORDS_BIGENDIAN
 endif

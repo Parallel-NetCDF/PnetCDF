@@ -18,7 +18,6 @@ AM_CPPFLAGS += @NETCDF4_INC@
 LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
 LDADD += ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
-
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
    # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET

@@ -8,11 +8,15 @@
 
 SUFFIXES = .o .F90 .c
 
-AM_CPPFLAGS  = -I$(top_builddir)/src/include
-AM_CPPFLAGS += -I$(top_srcdir)/src/include
 AM_DEFAULT_SOURCE_EXT = .F90
-AM_CFLAGS  = -I$(top_srcdir)/src/binding/f77 -I$(top_builddir)/src/binding/f77
-AM_FCFLAGS = -I$(top_builddir)/src/binding/f77 $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)../common
+
+AM_CPPFLAGS = -I$(top_builddir)/src/include \
+              -I$(top_srcdir)/src/include \
+              -I$(top_srcdir)/src/binding/f77
+
+AM_FCFLAGS  = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
+              $(FC_MODINC)../common
+AM_CFLAGS   =
 
 LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
 LDADD += ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
