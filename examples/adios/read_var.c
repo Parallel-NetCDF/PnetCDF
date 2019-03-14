@@ -56,7 +56,9 @@ int main(int argc, char** argv) {
 
     ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     
-    /* The content of variable var_double_2Darray is var_double_2Darray[x][y] =  x + y / 100 */
+    /* The content of variable var_double_2Darray is 
+     * var_double_2Darray[x][y] =  x + y / 100 
+     */
 
     /* Collective read */
     start[0] = rank % NX;
@@ -65,8 +67,11 @@ int main(int argc, char** argv) {
     count[1] = NY;
     ncmpi_get_vara_double_all(ncid, 0, start, count, data_double); 
     for(i = 0; i < NY; i++){
-        if (fabs(data_double[i] - (((double)start[0]) + ((double)i) / 100)) > 0.0001){
-            printf("Rank %d: Expect Var 0 [%llu][%d] = %lf, but got %lf\n", rank, start[0], i, ((double)start[0]) + ((double)i) / 100, data_double[i]);
+        if (fabs(data_double[i] - (((double)start[0]) + ((double)i) / 100))
+             > 0.0001){
+            printf("Rank %d: Expect Var 0 [%llu][%d] = %lf, but got %lf\n", 
+                    rank, start[0], i, ((double)start[0]) + ((double)i) / 100, 
+                    data_double[i]);
         }
     }
 
@@ -74,7 +79,8 @@ int main(int argc, char** argv) {
     ncmpi_get_vara_int_all(ncid, 0, start, count, data_int); 
     for(i = 0; i < NY; i++){
         if (data_int[i] != (int)start[0]) {
-            printf("Rank %d: Expect Var 0 [%llu][%d] = %d, but got %d\n", rank, start[0], i, (int)start[0], data_int[i]);
+            printf("Rank %d: Expect Var 0 [%llu][%d] = %d, but got %d\n", rank, 
+                    start[0], i, (int)start[0], data_int[i]);
         }
     }
 
@@ -82,8 +88,11 @@ int main(int argc, char** argv) {
     ncmpi_begin_indep_data(ncid);
     ncmpi_get_vara_double(ncid, 0, start, count, data_double); 
     for(i = 0; i < NY; i++){
-        if (fabs(data_double[i] - (((double)start[0]) + ((double)i) / 100)) > 0.0001){
-            printf("Rank %d: Expect Var 0 [%llu][%d] = %lf, but got %lf\n", rank, start[0], i, ((double)start[0]) + ((double)i) / 100, data_double[i]);
+        if (fabs(data_double[i] - (((double)start[0]) + ((double)i) / 100)) 
+            > 0.0001){
+            printf("Rank %d: Expect Var 0 [%llu][%d] = %lf, but got %lf\n", 
+                    rank, start[0], i, ((double)start[0]) + ((double)i) / 100, 
+                    data_double[i]);
         }
     }
 

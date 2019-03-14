@@ -79,7 +79,8 @@ int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
     return NC_NOERR;
 }
 
-int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, int *dimids, int *id) {
+int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, 
+                        int *dimids, int *id) {
     NC_ad_var var;
 
     if (CHECK_NAME(name)){
@@ -163,7 +164,8 @@ int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
             }   
 
             sprintf(name, "var_%d_timesteps", i);
-            err = ncadiosi_def_dim(ncadp, name, v->nsteps, ncadp->vars.data[i].dimids);
+            err = ncadiosi_def_dim(ncadp, name, v->nsteps, 
+                                    ncadp->vars.data[i].dimids);
             if (err != NC_NOERR){
                 DEBUG_RETURN_ERROR(err)
             }
@@ -221,10 +223,14 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
 
         /* Record variable */
         if (v->nsteps > 1){
-            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], ncadios_to_nc_type(v->type), v->ndim + 1, dimids, &varid);
+            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], 
+                                    ncadios_to_nc_type(v->type), v->ndim + 1, 
+                                    dimids, &varid);
         }
         else{
-            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], ncadios_to_nc_type(v->type), v->ndim, dimids + 1, &varid);
+            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], 
+                                    ncadios_to_nc_type(v->type), v->ndim, 
+                                    dimids + 1, &varid);
         }
         if (err != NC_NOERR){
             DEBUG_RETURN_ERROR(err)

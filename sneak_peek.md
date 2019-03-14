@@ -4,6 +4,7 @@ This is essentially a placeholder for the next release note ...
 
 * New features
 <<<<<<< HEAD
+<<<<<<< HEAD
   + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
     PnetCDF can be built on top of NetCDF-4 library to allow PnetCDF to read
     and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag to create
@@ -22,11 +23,17 @@ This is essentially a placeholder for the next release note ...
     PnetCDF will detected BP file format automatically. No additional flag needed when opening a BP formated file.
     CUrrently, the ADIOS driver does not support low-level API.
 >>>>>>> cf04fe9... sneakpeak
+=======
+  + ADIOS BP read capability -- Reading ADIOS 1.x BP formated file. 
+    PnetCDF will detected BP file format automatically. No additional flag needed when opening a BP formated file.
+    Currently, the ADIOS driver does not support low-level API.
+>>>>>>> 97dfbef... sneakpeak
 
 * New optimization
   + none
 
 * New Limitations
+<<<<<<< HEAD
 <<<<<<< HEAD
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
     classic model I/O operations. Advanced NetCDF-4 features, such as chunking,
@@ -42,6 +49,9 @@ This is essentially a placeholder for the next release note ...
 =======
   + ADIOS driver is ready only. There is also no vard, varn and low-level API support.
 >>>>>>> cf04fe9... sneakpeak
+=======
+  + ADIOS driver is ready only. For more detail on limitations, please refer to /doc/README.ADIOS.md
+>>>>>>> 97dfbef... sneakpeak
 
 * Update configure options
   + Enable NetCDF-4 support.
@@ -63,14 +73,8 @@ This is essentially a placeholder for the next release note ...
 >>>>>>> cf04fe9... sneakpeak
 
 * New constants
-  + NC_BP = 65536
-    Flag indicating BP file access mode.
-  + NC_FORMAT_BP = 6
-    Constant indicating BP file format.
-  + nf_bp = 65536
-    Flag indicating BP file access mode.
-  + nf_format_bp = 6
-    Constant indicating BP file format.
+  + NC_BP and nf_bp is the flag indicating BP file access mode.
+  + NC_FORMAT_BP and nf_format_bp indicates BP file format.
 
 * New APIs
   + none
@@ -88,7 +92,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New error code
-  + NC_EADIOS
+  + NC_EADIOS, NF_EADIOS
     ADIOS library internal error that does not corresponds to any PnetCDF error code
 
 * New PnetCDF hint

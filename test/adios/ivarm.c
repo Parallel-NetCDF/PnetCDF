@@ -40,13 +40,8 @@ double data[NX][NY], datat[NY][NX];
 
 int main(int argc, char** argv) {
     int i, j, nerrs=0, rank, nprocs, err;
-    int ncid, vid, ndim;
-    int dimids[2];
+    int ncid;
     MPI_Offset start[2], count[2], imap[2];
-    MPI_Offset dlen;
-    char tmp[1024];
-    int x, y;
-
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -60,25 +55,29 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, 
+                        &ncid);
     CHECK_ERR
 
     start[0] = 0;
     start[1] = 0;
     count[0] = NX;
     count[1] = NY;
-    err = ncmpi_iget_vara_double(ncid, 0, start, count, (double*)data, NULL); CHECK_ERR
+    err = ncmpi_iget_vara_double(ncid, 0, start, count, (double*)data, NULL); 
+    CHECK_ERR
 
     imap[0] = 1;
     imap[1] = NX;
-    err = ncmpi_iget_varm_double(ncid, 0, start, count, NULL, imap, (double*)datat, NULL); CHECK_ERR
+    err = ncmpi_iget_varm_double(ncid, 0, start, count, NULL, imap, 
+                                    (double*)datat, NULL); CHECK_ERR
 
     err = ncmpi_wait_all(ncid, NC_GET_REQ_ALL, NULL, NULL); CHECK_ERR
 
     for(i = 0; i < NX; i++){
         for(j = 0; j < NY; j++){
             if (fabs(data[i][j] - datat[j][i]) > 0.0001){
-                printf("Rank %d: Expect Var 0 [%d][%d] = %lf != Var 0 T [%d][%d] = %lf\n", rank, i, j, data[i][j], j, i, data[j][i]);
+                printf("Rank %d: Expect Var 0 [%d][%d] = %lf != Var 0 T [%d][%d] = %lf\n", 
+                        rank, i, j, data[i][j], j, i, data[j][i]);
                 nerrs++;
             }
         }
@@ -86,7 +85,6 @@ int main(int argc, char** argv) {
 
     ncmpi_close(ncid);
 
-fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);

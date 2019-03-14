@@ -38,14 +38,9 @@
 
 int main(int argc, char** argv) {
     int i, j, nerrs=0, rank, nprocs, err;
-    int ncid, vid, ndim;
-    int dimids[2];
+    int ncid;
     MPI_Offset start[2], count[2], stride[2];
     double data[2][2];
-
-    MPI_Offset dlen;
-    char tmp[1024];
-    int x, y;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -60,7 +55,8 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, 
+                        &ncid);
     CHECK_ERR
 
     start[0] = 0;
@@ -69,14 +65,19 @@ int main(int argc, char** argv) {
     count[1] = 2;
     stride[0] = 5;
     stride[1] = 50;
-    err = ncmpi_iget_vars_double(ncid, 0, start, count, stride, (double*)data, NULL); CHECK_ERR
+    err = ncmpi_iget_vars_double(ncid, 0, start, count, stride, (double*)data, 
+                                    NULL); CHECK_ERR
 
     err = ncmpi_wait_all(ncid, NC_GET_REQ_ALL, NULL, NULL); CHECK_ERR
     
     for(i = 0; i < 2; i++){
         for(j = 0; j < 2; j++){
-            if (fabs(data[i][j] - (((double)(i * stride[0])) + ((double)(j * stride[1])) / 100)) > 0.0001){
-                printf("Rank %d: Expect Var 0 [%d][%d] = %lf, but got %lf\n", rank, i * (int)stride[0], j * (int)stride[1], (((double)(i * stride[0])) + ((double)(j * stride[1])) / 100), data[i][j]);
+            if (fabs(data[i][j] - (((double)(i * stride[0])) + ((double)(j * 
+                stride[1])) / 100)) > 0.0001){
+                printf("Rank %d: Expect Var 0 [%d][%d] = %lf, but got %lf\n", 
+                        rank, i * (int)stride[0], j * (int)stride[1], 
+                        (((double)(i * stride[0])) + ((double)(j * stride[1]))
+                         / 100), data[i][j]);
                 nerrs++;
             }
         }
@@ -84,7 +85,6 @@ int main(int argc, char** argv) {
 
     ncmpi_close(ncid);
 
-fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);

@@ -33,14 +33,8 @@
 
 int main(int argc, char** argv) {
     char filename[256];
-    int i, j, nerrs=0, rank, nprocs, err;
-    int ncid, x_dimid, y_dimid, varid, ndim;
-    int dimids[2];
-    int data_out[NX][NY];
-    int data_in[NX][NY];
-    MPI_Offset dlen;
-    char tmp[1024];
-    int x, y;
+    int nerrs=0, rank, nprocs, err;
+    int ncid;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -63,7 +57,8 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, 
+                        &ncid);
     CHECK_ERR
 
     ncmpi_close(ncid);

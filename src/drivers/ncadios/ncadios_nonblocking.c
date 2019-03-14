@@ -17,23 +17,32 @@
 #include <ncadios_internal.h>
 
 #define PUT_ARRAY_SIZE 128 /* Size of initial put list */
-#define SIZE_MULTIPLIER 2    /* When metadata buffer is full, we'll NCI_Reallocate it to META_BUFFER_MULTIPLIER times the original size*/
+/* When metadata buffer is full, we'll NCI_Reallocate it to 
+ * META_BUFFER_MULTIPLIER times the original size
+ */
+#define SIZE_MULTIPLIER 2    
 
-/* getlist is a module in ADIOS driver that manage nonblocking get request object
+/* getlist is a module in ADIOS driver that manage nonblocking get request 
+ * object.
  * It consist of a pool of request object (reqs) and request ids (ids)
  * It's implemented by 3 array of the same number of entries
  * The id i corresponds to the i-th request object
  * We issue request object by issuing the corresponding request id
  * ids is initialized with increasing id, ie. ids[i] = i
  * ids are issued from the begining of ids array
- * We keep track of location of id in ids array in pos array. Initially, pos[i] = i
- * A pointer nused keep track of issued ids, it also marks the position of next unused ready to be issued
+ * We keep track of location of id in ids array in pos array. 
+ * Initially, pos[i] = i
+ * A pointer nused keep track of issued ids, it also marks the position of 
+ * next unused ready to be issued.
  * ids[0:nused] => active (used) request ids
  * ids[nused:nalloc] => available (unused) request ids
- * When issuing an id, we take from ids from the position marked by nused and increase nused by 1
- * When recycling an id, we swap if with the right before position marked by nused and decrease nused by 1 so that it falls to unused pool
+ * When issuing an id, we take from ids from the position marked by nused and 
+ * increase nused by 1.
+ * When recycling an id, we swap if with the right before position marked by 
+ * nused and decrease nused by 1 so that it falls to unused pool.
  * NOTE: We does not guarantee to issue id in continuous and increasing order
- * NOTE: ids is simply a pool housing reqeust ids, the position od id within ids is not fixed and has no meaning
+ * NOTE: ids is simply a pool housing reqeust ids, the position od id within 
+ * ids is not fixed and has no meaning.
  *
  * Eaxmple:
  * Initial:
@@ -216,7 +225,8 @@ int ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req){
 
     /* If type do not match */
     if (req->vtype != req->buftype){
-        err = ncadiosiconvert(req->xbuf, req->cbuf, req->vtype, req->buftype, (int)(req->ecnt));
+        err = ncadiosiconvert(req->xbuf, req->cbuf, req->vtype, req->buftype, 
+                                (int)(req->ecnt));
         if (status == NC_NOERR){
             status = err;
         }
@@ -227,7 +237,8 @@ int ncadiosi_handle_get_req(NC_ad *ncadp, NC_ad_get_req *req){
     if (req->cbuf != req->buf){
         int position = 0;
 
-        MPI_Unpack(req->cbuf, req->cbsize, &position, req->buf, 1, req->imaptype, MPI_COMM_SELF);
+        MPI_Unpack(req->cbuf, req->cbsize, &position, req->buf, 1, 
+                    req->imaptype, MPI_COMM_SELF);
         MPI_Type_free(&(req->imaptype));
 
         NCI_Free(req->cbuf);
@@ -331,7 +342,8 @@ ncadiosi_init_get_req( NC_ad *ncadp,
         r->cbuf = r->buf;
     }
     else{
-        err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, &(r->imaptype));
+        err = ncmpii_create_imaptype(v->ndim, count, imap, buftype, 
+                                        &(r->imaptype));
         if (err != NC_NOERR) {
             return err;
         }
@@ -377,13 +389,16 @@ ncadiosi_init_get_req( NC_ad *ncadp,
      * Otherwise, we need to specify every points
      */
     if (stride == NULL){
-        r->sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, (uint64_t*)count);
+        r->sel = adios_selection_boundingbox (v->ndim, (uint64_t*)start, 
+                                                (uint64_t*)count);
         r->points = NULL;
     }
     else{
         uint64_t *p, *cur;
 
-        /* Somehow ADIOS doe not deep copy points, we need to keep it in the request structure */
+        /* Somehow ADIOS doe not deep copy points, we need to keep it in the 
+         * request structure.
+         */
         r->points = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * r->ecnt * v->ndim);
         p = (uint64_t*)NCI_Malloc(sizeof(uint64_t) * v->ndim);
         cur = r->points;
@@ -420,9 +435,13 @@ ncadiosi_init_get_req( NC_ad *ncadp,
 
     /* Post read operation */
     if (sstride > 1){
-        /* ADIOS does not support stripe on time steps, post one step at a time */
+        /* ADIOS does not support stripe on time steps, post one step at a 
+         * time
+         */
         for(i = 0; i < scount; i++){
-            err = adios_schedule_read_byid (ncadp->fp, r->sel, v->varid, sstart + i * sstride, 1, (void*)(((char*)r->xbuf) + i * esize * r->ecnt));
+            err = adios_schedule_read_byid (ncadp->fp, r->sel, v->varid, 
+                            sstart + i * sstride, 1, 
+                            (void*)(((char*)r->xbuf) + i * esize * r->ecnt));
             if (err != 0){
                 err = ncmpii_error_adios2nc(adios_errno, "schedule_read");
                 DEBUG_RETURN_ERROR(err);
@@ -430,7 +449,8 @@ ncadiosi_init_get_req( NC_ad *ncadp,
         }
     }
     else{
-        err = adios_schedule_read_byid (ncadp->fp, r->sel, v->varid, sstart, scount, r->xbuf);
+        err = adios_schedule_read_byid (ncadp->fp, r->sel, v->varid, sstart, 
+                                        scount, r->xbuf);
         if (err != 0){
             err = ncmpii_error_adios2nc(adios_errno, "schedule_read");
             DEBUG_RETURN_ERROR(err);
@@ -471,7 +491,8 @@ ncadiosi_iget_var(NC_ad *ncadp,
     }
 
     /* Create a read request */
-    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, bufcount, buftype);
+    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, 
+                                bufcount, buftype);
     if (err != NC_NOERR){
         return err;
     }

@@ -21,7 +21,8 @@
 
 define(`PUTATT',dnl
 `dnl
-int ncadiosi_put_att_$2(NC_ad *ncadp, int valid, char *name, nc_type type, int len, void *value){
+int ncadiosi_put_att_$2(NC_ad *ncadp, int valid, char *name, nc_type type, 
+                        int len, void *value){
     double *buf;
     NC_ad_att att;
     MPI_Datatype itype;
@@ -63,7 +64,8 @@ foreach(`dt', (`(`MPI_CHAR', `uchar')', dnl
                 `(`MPI_DOUBLE', `double')', dnl
                 ), `PUTATT(translit(dt, `()'), $2)')dnl
 
-int ncadiosi_put_att_text(NC_ad *ncadp, int valid, char *name, int len, void *value){
+int ncadiosi_put_att_text(NC_ad *ncadp, int valid, char *name, int len, 
+                            void *value){
     double *buf;
     NC_ad_att att;
     MPI_Datatype itype;

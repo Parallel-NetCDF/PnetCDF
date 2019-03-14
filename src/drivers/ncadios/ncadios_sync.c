@@ -59,7 +59,9 @@ int ncadios_sync_header(NC_ad *ncadp) {
             bsize += strlen(ncadp->dims.data[i].name) + 1 + SIZEOF_INT * 2;
         }
         for(i = 0; i < ncadp->vars.cnt; i++){
-            bsize += strlen(ncadp->vars.data[i].name) + 1 + SIZEOF_INT * 3 + ncadp->vars.data[i].ndim * SIZEOF_INT + ncadp->vars.data[i].atts.cnt * SIZEOF_INT + sizeof(nc_type);
+            bsize += strlen(ncadp->vars.data[i].name) + 1 + 
+            SIZEOF_INT * 3 + ncadp->vars.data[i].ndim * SIZEOF_INT + 
+            ncadp->vars.data[i].atts.cnt * SIZEOF_INT + sizeof(nc_type);
         }
     }
     
@@ -92,9 +94,11 @@ int ncadios_sync_header(NC_ad *ncadp) {
             namelen = strlen(ncadp->vars.data[i].name);
             *((int*)cur) = namelen;
             cur += SIZEOF_INT;
-            memcpy(cur, ncadp->vars.data[i].dimids, ncadp->vars.data[i].ndim * SIZEOF_INT);
+            memcpy(cur, ncadp->vars.data[i].dimids, 
+                    ncadp->vars.data[i].ndim * SIZEOF_INT);
             cur += ncadp->vars.data[i].ndim * 4;
-            memcpy(cur, ncadp->vars.data[i].atts.data, ncadp->vars.data[i].atts.cnt * SIZEOF_INT);
+            memcpy(cur, ncadp->vars.data[i].atts.data, 
+                    ncadp->vars.data[i].atts.cnt * SIZEOF_INT);
             cur += ncadp->vars.data[i].atts.cnt * 4;
             strcpy(cur, ncadp->vars.data[i].name);
             cur += namelen + 1;         

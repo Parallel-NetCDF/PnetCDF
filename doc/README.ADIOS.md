@@ -47,6 +47,24 @@ Calling `ncmpi_open` with `NC_WRITE` flag set in argument `omode` will result in
 
 Example programs are available in folder `./examples/adios`. Brief descriptions for all example programs can be found in `./examples/README`.
 
+## Dumping BP files
+
+ncmpidump utility can be used to dump the content of a BP formated file.
+
+* To dump a BP file, use the utility as when dumping a NetCDF file.
+  For example,
+  ```
+  $ src/utils/ncmpidump/ncmpidump test/adios/arrays.bp -h
+  netcdf arrays {
+  // file format: ADIOS BP Ver. 3
+  dimensions:
+          NX = 10 ;
+          NY = 100 ;
+  variables:
+          double var_double_2Darray(NX, NY) ;
+          int var_int_1Darray(NX) ;
+  }
+  ```
 
 ## Design of the ADIOS driver
 

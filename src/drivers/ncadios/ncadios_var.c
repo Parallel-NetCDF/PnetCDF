@@ -162,7 +162,8 @@ ncadios_get_var(void             *ncdp,
     }
 
     /* Create a read request */
-    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, bufcount, buftype);
+    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, 
+                                bufcount, buftype);
 
     /* Release var info */
     adios_free_varinfo (v);
@@ -204,7 +205,8 @@ ncadios_iget_var(void             *ncdp,
 {
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    return ncadiosi_iget_var(ncadp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid);
+    return ncadiosi_iget_var(ncadp, varid, start, count, stride, imap, buf, 
+                                bufcount, buftype, reqid);
 } 
 
 int
