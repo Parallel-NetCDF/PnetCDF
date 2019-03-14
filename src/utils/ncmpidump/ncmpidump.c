@@ -818,6 +818,7 @@ enum FILE_KIND check_file_signature(char *path)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         adios_parse_version(footer, &bp_ver, &diff_endian);
         bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
 
@@ -842,13 +843,18 @@ enum FILE_KIND check_file_signature(char *path)
         h2 = (unsigned long long*)(footer + 8); /* Position of variables index table */
         h3 = (unsigned long long*)(footer + 16); /* Position of attributes index table */
 >>>>>>> e168d06... C style comment
+=======
+        h1 = (off_t*)footer; /* Position of process group index table */
+        h2 = (off_t*)(footer + 8); /* Position of variables index table */
+        h3 = (off_t*)(footer + 16); /* Position of attributes index table */
+>>>>>>> 63a6608... revert type case to ull
 
         /* All index tables must fall within the file
          * Process group index table must comes before variable index table. Variables index table must comes before attributes index table.
          */
-        if (0 < *h1 && *h1 < (unsigned long long)fsize &&
-            0 < *h2 && *h2 < (unsigned long long)fsize &&
-            0 < *h3 && *h3 < (unsigned long long)fsize &&
+        if (0 < *h1 && *h1 < fsize &&
+            0 < *h2 && *h2 < fsize &&
+            0 < *h3 && *h3 < fsize &&
             *h1 < *h2 && *h2 < *h3){ 
             bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
 >>>>>>> 1a93d4a... add comment to BP fotter check
