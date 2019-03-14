@@ -184,7 +184,7 @@
       parameter (nf_format_64bit_data      = nf_format_cdf5)
       parameter (nf_format_netcdf4         = 3)
       parameter (nf_format_netcdf4_classic = 4)
-      parameter (nf_format_bp              = 5)
+      parameter (nf_format_bp              = 6)
       parameter (nf_format_unknown         = -1)
 
       integer nf_fill

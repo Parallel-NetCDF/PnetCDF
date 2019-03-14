@@ -117,7 +117,7 @@
       nf_format_64bit_data      = nf_format_cdf5, &
       nf_format_netcdf4         = 3,              &
       nf_format_netcdf4_classic = 4,              &
-      nf_format_bp              = 5,              &
+      nf_format_bp              = 6,              &
       nf_format_unknown         = -1
 
 !
