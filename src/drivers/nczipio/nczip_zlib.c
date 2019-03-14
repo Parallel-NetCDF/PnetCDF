@@ -47,7 +47,7 @@ int nczip_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim,
     defstream.zfree = Z_NULL;
     defstream.opaque = Z_NULL;
     defstream.avail_in = (uInt)(in_len); // input size
-    defstream.next_in = (Bytef*)in_len; // input
+    defstream.next_in = (Bytef*)in; // input
     if (out_len != NULL){
         defstream.avail_out = (uInt)(*out_len); // output buffer size
     }
@@ -103,7 +103,7 @@ int nczip_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, in
     defstream.zfree = Z_NULL;
     defstream.opaque = Z_NULL;
     defstream.avail_in = (uInt)(in_len); // input size
-    defstream.next_in = (Bytef*)in_len; // input
+    defstream.next_in = (Bytef*)in; // input
     defstream.avail_out = (uInt)(bsize); // output buffer size
     defstream.next_out = (Bytef *)buf; // output buffer
 
@@ -219,7 +219,7 @@ int nczip_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndi
  */
 int nczip_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, MPI_Offset *dims, MPI_Datatype dtype) {
     int err;
-    int bsize = in_len >> 3; // Start by 1/8 of the in_len
+    int bsize = in_len << 1; // Start by 2 times of the in_len
     char *buf;
 
     buf = (char*)NCI_Malloc(bsize); 
@@ -230,7 +230,7 @@ int nczip_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, 
     infstream.zfree = Z_NULL;
     infstream.opaque = Z_NULL;
     infstream.avail_in = (uInt)(in_len); // input size
-    infstream.next_in = (Bytef*)in_len; // input
+    infstream.next_in = (Bytef*)in; // input
     infstream.avail_out = (uInt)(bsize); // output buffer size
     infstream.next_out = (Bytef *)buf; // output buffer
 

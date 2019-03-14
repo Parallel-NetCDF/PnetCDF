@@ -27,14 +27,10 @@ typedef enum {
 typedef struct NC_zip_req {
     int varid;
     int nreq;
-    union param_start{
-        MPI_Offset *start;
-        MPI_Offset **starts;
-    } pstart;
-    union param_count{
-        MPI_Offset *count;
-        MPI_Offset *counts;
-    } pcount;
+    MPI_Offset *start;
+    MPI_Offset **starts;
+    MPI_Offset *count;
+    MPI_Offset **counts;
     MPI_Offset *stride;
     char *buf;
     char *xbuf;
