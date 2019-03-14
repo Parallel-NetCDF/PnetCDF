@@ -29,8 +29,6 @@ int main(int argc, char** argv) {
     char name[NC_MAX_NAME + 1];
     nc_type vtype;
     MPI_Offset len;
-    char tmp[1024];
-    int x, y;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
