@@ -175,9 +175,12 @@ int main(int argc, char** argv) {
     ncmpi_close(ncid);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 fn_exit:
 >>>>>>> 23ad299... parse var attributes
+=======
+>>>>>>> 3180e74... remove unused variables on test programs
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);

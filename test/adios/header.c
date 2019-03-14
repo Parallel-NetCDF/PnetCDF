@@ -43,10 +43,14 @@ int cmp_int(int *in, int n, char *lbl){
     int i, j;
     int rank, np;
 <<<<<<< HEAD
+<<<<<<< HEAD
     int nerrs = 0;
 =======
     int err, nerrs = 0;
 >>>>>>> 272f00a... header sync test
+=======
+    int nerrs = 0;
+>>>>>>> 3180e74... remove unused variables on test programs
     int *all;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -93,6 +97,7 @@ int cmp_int(int *in, int n, char *lbl){
 
 int main(int argc, char** argv) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     char filename[256], lbl[256];
     int rank, np, err, nerrs=0;
 =======
@@ -100,6 +105,10 @@ int main(int argc, char** argv) {
     char filename[256], *hint_value, lbl[256];
     int rank, np, err, nerrs=0, bb_enabled=0;
 >>>>>>> 272f00a... header sync test
+=======
+    char filename[256], lbl[256];
+    int rank, np, err, nerrs=0;
+>>>>>>> 3180e74... remove unused variables on test programs
     int ncid, nvar, ndim;
     int varid, dimid, len;
     MPI_Offset dimlen;
