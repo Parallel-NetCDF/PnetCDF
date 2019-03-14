@@ -740,7 +740,7 @@ enum FILE_KIND check_file_signature(char *path)
     else{
         off_t fsize;
         char footer[BP_MINIFOOTER_SIZE];
-        unsigned long long *h1, *h2, *h3;
+        off_t *h1, *h2, *h3;
 
         if ((fd = open(path, O_RDONLY, 0700)) == -1) {
             fprintf(stderr,"%s error at opening file %s (%s)\n",progname,path,strerror(errno));
@@ -765,16 +765,16 @@ enum FILE_KIND check_file_signature(char *path)
             return UNKNOWN;
         }
 
-        h1 = (unsigned long long*)footer; /* Position of process group index table */
-        h2 = (unsigned long long*)(footer + 8); /* Position of variables index table */
-        h3 = (unsigned long long*)(footer + 16); /* Position of attributes index table */
+        h1 = (off_t*)footer; /* Position of process group index table */
+        h2 = (off_t*)(footer + 8); /* Position of variables index table */
+        h3 = (off_t*)(footer + 16); /* Position of attributes index table */
 
         /* All index tables must fall within the file
          * Process group index table must comes before variable index table. Variables index table must comes before attributes index table.
          */
-        if (0 < *h1 && *h1 < (unsigned long long)fsize &&
-            0 < *h2 && *h2 < (unsigned long long)fsize &&
-            0 < *h3 && *h3 < (unsigned long long)fsize &&
+        if (0 < *h1 && *h1 < fsize &&
+            0 < *h2 && *h2 < fsize &&
+            0 < *h3 && *h3 < fsize &&
             *h1 < *h2 && *h2 < *h3){ 
             bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
             return BP; 
