@@ -301,7 +301,8 @@ ncadios_inq_misc(void       *ncdp,
         *num_fix_varsp = ncadp->vars.cnt;
         for(i = 0; i < ncadp->vars.cnt; i++){
             for(j = 0; j < ncadp->vars.data[i].ndim; j++){
-                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len == NC_UNLIMITED){
+                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len 
+                    == NC_UNLIMITED){
                     *num_rec_varsp -= 1;
                     break;
                 }
@@ -315,7 +316,8 @@ ncadios_inq_misc(void       *ncdp,
         *num_rec_varsp = 0;
         for(i = 0; i < ncadp->vars.cnt; i++){
             for(j = 0; j < ncadp->vars.data[i].ndim; j++){
-                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len == NC_UNLIMITED){
+                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len
+                     == NC_UNLIMITED){
                     *num_rec_varsp += 1;
                     break;
                 }

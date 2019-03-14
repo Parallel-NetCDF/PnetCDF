@@ -50,14 +50,8 @@ This is essentially a placeholder for the next release note ...
     [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33).
 
 * New constants
-  + NC_BP = 65536
-    Flag indicating BP file access mode.
-  + NC_FORMAT_BP = 6
-    Constant indicating BP file format.
-  + nf_bp = 65536
-    Flag indicating BP file access mode.
-  + nf_format_bp = 6
-    Constant indicating BP file format.
+  + NC_BP and nf_bp is the flag indicating BP file access mode.
+  + NC_FORMAT_BP and nf_format_bp indicates BP file format.
 
 * New APIs
   + none
@@ -75,7 +69,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New error code
-  + NC_EADIOS
+  + NC_EADIOS, NF_EADIOS
     ADIOS library internal error that does not corresponds to any PnetCDF error code
 
 * New PnetCDF hint

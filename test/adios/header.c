@@ -63,11 +63,16 @@ int cmp_int(int *in, int n, char *lbl){
         for(i = 1; i < np; i++){
             if (all[i] != all[0]){
 <<<<<<< HEAD
+<<<<<<< HEAD
                 printf("Number of element at rank %d = %d, expect %d\n", i, 
                         all[i], all[0]);
 =======
                 printf("Number of element at rank %d = %d, expect %d\n", i, all[i], all[0]);
 >>>>>>> 272f00a... header sync test
+=======
+                printf("Number of element at rank %d = %d, expect %d\n", i, 
+                        all[i], all[0]);
+>>>>>>> ee05fef... wrap to 80 columns
                 nerrs++;
             }
         }
@@ -79,11 +84,16 @@ int cmp_int(int *in, int n, char *lbl){
             for(i = 1; i < np; i++){
                 if (all[i] != all[0]){
 <<<<<<< HEAD
+<<<<<<< HEAD
                     printf("%s[%d] at rank %d = %d, expect %d\n", lbl, j, i, 
                             all[i], all[0]);
 =======
                     printf("%s[%d] at rank %d = %d, expect %d\n", lbl, j, i, all[i], all[0]);
 >>>>>>> 272f00a... header sync test
+=======
+                    printf("%s[%d] at rank %d = %d, expect %d\n", lbl, j, i, 
+                            all[i], all[0]);
+>>>>>>> ee05fef... wrap to 80 columns
                     nerrs++;
                 }
             }
@@ -130,22 +140,33 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
 <<<<<<< HEAD
+<<<<<<< HEAD
         sprintf(cmd_str, 
                 "*** TESTING C   %s for checking offsets of new variables ", 
                 basename(argv[0]));
 =======
         sprintf(cmd_str, "*** TESTING C   %s for checking offsets of new variables ", basename(argv[0]));
 >>>>>>> 272f00a... header sync test
+=======
+        sprintf(cmd_str, 
+                "*** TESTING C   %s for checking offsets of new variables ", 
+                basename(argv[0]));
+>>>>>>> ee05fef... wrap to 80 columns
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, 
                         &ncid); CHECK_ERR
 =======
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
 >>>>>>> 272f00a... header sync test
+=======
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, 
+                        &ncid); CHECK_ERR
+>>>>>>> ee05fef... wrap to 80 columns
     err = ncmpi_inq(ncid, &ndim, &nvar, NULL, NULL); CHECK_ERR
 
     nerrs += cmp_int(&ndim, 1, "ndim");
@@ -176,11 +197,16 @@ int main(int argc, char** argv) {
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
 <<<<<<< HEAD
+<<<<<<< HEAD
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, 
                     MPI_COMM_WORLD);
 =======
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
 >>>>>>> 272f00a... header sync test
+=======
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, 
+                    MPI_COMM_WORLD);
+>>>>>>> ee05fef... wrap to 80 columns
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
