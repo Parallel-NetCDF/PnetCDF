@@ -16,6 +16,7 @@ AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core/transforms
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/transforms
+AM_CPPFLAGS += @ADIOS_INC@
 
 if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
