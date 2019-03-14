@@ -12,7 +12,8 @@ AM_CPPFLAGS = -I$(top_builddir)/src/include
 LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 
 check_PROGRAMS = read_metadata \
-				 read_var
+				 read_var \
+				 read_var_nb
                  
 
 # parallel runs only
