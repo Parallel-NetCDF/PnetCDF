@@ -8,6 +8,7 @@
 
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+AM_CPPFLAGS += @ADIOS_INC@
 
 NCGEN = ../ncmpigen/ncmpigen
 
