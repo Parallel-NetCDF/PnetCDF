@@ -440,7 +440,7 @@ nczipio_put_varn(void              *ncdp,
     }
     varp = nczipp->vars.data + varid;
 
-    err = nczipioi_put_varn(nczipp, varp, num, starts, counts, buf);
+    err = nczipioi_put_varn_new(nczipp, varp, num, starts, counts, buf);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

@@ -339,6 +339,41 @@ nczipioi_put_varn_cb(  NC_zip        *nczipp,
     return NC_NOERR;
 }
 
+
+int
+nczipioi_put_varn_new(NC_zip        *nczipp,
+              NC_zip_var       *varp,
+              int              nreq,
+              MPI_Offset* const *starts,
+              MPI_Offset* const *counts,
+              const void       *buf)
+{
+    int i, j;
+    MPI_Offset rsize;
+    char *bptr = (char*)buf;
+    char **bufs;
+    
+    // Calculate buffer offset of each request
+    bufs = (char**)NCI_Malloc(sizeof(char*) * nreq);
+    for(i = 0; i < nreq; i++){
+        bufs[i] = bptr;
+        rsize = varp->esize;
+        for(j = 0; j < varp->ndim; j++){
+            rsize *= counts[i][j];
+        }
+        bptr += rsize;
+    }
+
+    // Collective buffer
+    nczipioi_put_varn_cb(nczipp, varp, nreq, starts, counts, NULL, bufs);
+
+    // Write the compressed variable
+    nczipioi_save_var(nczipp, varp);
+
+    return NC_NOERR;
+}
+
+
 int
 nczipioi_put_varn(NC_zip        *nczipp,
               NC_zip_var       *varp,
