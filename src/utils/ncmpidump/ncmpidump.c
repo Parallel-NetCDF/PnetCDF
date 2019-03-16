@@ -787,6 +787,7 @@ enum FILE_KIND check_file_signature(char *path)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         /* Seek to footer */
         fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 =======
@@ -798,6 +799,9 @@ enum FILE_KIND check_file_signature(char *path)
         lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 >>>>>>> 1a93d4a... add comment to BP fotter check
 =======
+=======
+        /* Seek to footer */
+>>>>>>> ec34ffb... convert endian on minifooter
         fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 >>>>>>> d4da4ad... add format constant to fortran binding
 
@@ -819,12 +823,17 @@ enum FILE_KIND check_file_signature(char *path)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         adios_parse_version(footer, &bp_ver, &diff_endian);
         bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
+=======
+        adios_parse_version(footer, &bp_ver, &diff_endian);
+>>>>>>> ec34ffb... convert endian on minifooter
 
         BUFREAD64(footer, h1) /* Position of process group index table */
         BUFREAD64(footer + 8, h2) /* Position of variables index table */
         BUFREAD64(footer + 16, h3) /* Position of attributes index table */
+<<<<<<< HEAD
 
         /* All index tables must fall within the file
          * Process group index table must comes before variable index table. 
@@ -848,16 +857,26 @@ enum FILE_KIND check_file_signature(char *path)
         h2 = (off_t*)(footer + 8); /* Position of variables index table */
         h3 = (off_t*)(footer + 16); /* Position of attributes index table */
 >>>>>>> 63a6608... revert type case to ull
+=======
+>>>>>>> ec34ffb... convert endian on minifooter
 
         /* All index tables must fall within the file
-         * Process group index table must comes before variable index table. Variables index table must comes before attributes index table.
+         * Process group index table must comes before variable index table. 
+         * Variables index table must comes before attributes index table.
          */
+<<<<<<< HEAD
         if (0 < *h1 && *h1 < fsize &&
             0 < *h2 && *h2 < fsize &&
             0 < *h3 && *h3 < fsize &&
             *h1 < *h2 && *h2 < *h3){ 
             bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
 >>>>>>> 1a93d4a... add comment to BP fotter check
+=======
+        if (0 < h1 && h1 < fsize &&
+            0 < h2 && h2 < fsize &&
+            0 < h3 && h3 < fsize &&
+            h1 < h2 && h2 < h3){ 
+>>>>>>> ec34ffb... convert endian on minifooter
             return BP; 
         }
     } 
