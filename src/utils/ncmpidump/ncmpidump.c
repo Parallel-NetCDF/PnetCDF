@@ -28,6 +28,9 @@
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
 #define ADIOS_VERSION_NUM_MASK                       0x000000FF
+#define BUFREAD64(buf,var) var = *(off_t *) (buf); \
+                         if (diff_endian) \
+                             swap_64(&var);
 #endif 
 
 static void usage(void);
@@ -48,7 +51,7 @@ int main(int argc, char** argv);
 char *progname;
 
 #ifdef ENABLE_ADIOS 
-uint32_t bp_ver;
+unsigned int bp_ver;
 #endif
 
 static void
@@ -703,6 +706,40 @@ enum FILE_KIND {
     UNKNOWN
 };
 
+#ifdef ENABLE_ADIOS
+static void swap_64(void *data)
+{
+    uint64_t d = *(uint64_t *)data;
+    *(uint64_t *)data = ((d&0x00000000000000FF)<<56) 
+                          + ((d&0x000000000000FF00)<<40)
+                          + ((d&0x0000000000FF0000)<<24)
+                          + ((d&0x00000000FF000000)<<8)
+                          + ((d&0x000000FF00000000LL)>>8)
+                          + ((d&0x0000FF0000000000LL)>>24)
+                          + ((d&0x00FF000000000000LL)>>40)
+                          + ((d&0xFF00000000000000LL)>>56);
+}
+
+static int adios_parse_version (char *footer, unsigned int *version, 
+                                int *diff_endianness) {
+    unsigned int test = 1; /* If high bit set, big endian */
+
+    *version = ntohl (*(uint32_t *) (footer + BP_MINIFOOTER_SIZE - 4));
+    char *v = (char *) version;
+    if ((*v && !*(char *) &test) /* Both writer and reader are big endian */
+        || (!*(v+3) && *(char *) &test)){ /* Both are little endian */
+        *diff_endianness = 0; /* No need to change endiannness */
+    }
+    else{
+        *diff_endianness = 1;
+    }
+
+    *version = *version & 0x7fffffff;
+
+    return 0;
+}
+#endif
+
 static
 enum FILE_KIND check_file_signature(char *path)
 {
@@ -739,15 +776,16 @@ enum FILE_KIND check_file_signature(char *path)
 #ifdef ENABLE_ADIOS 
     else{
         off_t fsize;
+        int diff_endian;
         char footer[BP_MINIFOOTER_SIZE];
-        off_t *h1, *h2, *h3;
+        off_t h1, h2, h3;
 
         if ((fd = open(path, O_RDONLY, 0700)) == -1) {
             fprintf(stderr,"%s error at opening file %s (%s)\n",progname,path,strerror(errno));
             return UNKNOWN;
         }
 
-        /* Seek to end */
+        /* Seek to footer */
         fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
         /* Get footer */
@@ -765,18 +803,20 @@ enum FILE_KIND check_file_signature(char *path)
             return UNKNOWN;
         }
 
-        h1 = (off_t*)footer; /* Position of process group index table */
-        h2 = (off_t*)(footer + 8); /* Position of variables index table */
-        h3 = (off_t*)(footer + 16); /* Position of attributes index table */
+        adios_parse_version(footer, &bp_ver, &diff_endian);
+
+        BUFREAD64(footer, h1) /* Position of process group index table */
+        BUFREAD64(footer + 8, h2) /* Position of variables index table */
+        BUFREAD64(footer + 16, h3) /* Position of attributes index table */
 
         /* All index tables must fall within the file
-         * Process group index table must comes before variable index table. Variables index table must comes before attributes index table.
+         * Process group index table must comes before variable index table. 
+         * Variables index table must comes before attributes index table.
          */
-        if (0 < *h1 && *h1 < fsize &&
-            0 < *h2 && *h2 < fsize &&
-            0 < *h3 && *h3 < fsize &&
-            *h1 < *h2 && *h2 < *h3){ 
-            bp_ver = ntohl (*(uint32_t *) (footer + 24)) & 0x7fffffff & ADIOS_VERSION_NUM_MASK;
+        if (0 < h1 && h1 < fsize &&
+            0 < h2 && h2 < fsize &&
+            0 < h3 && h3 < fsize &&
+            h1 < h2 && h2 < h3){ 
             return BP; 
         }
     } 

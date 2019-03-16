@@ -73,8 +73,8 @@ This is essentially a placeholder for the next release note ...
 >>>>>>> cf04fe9... sneakpeak
 
 * New constants
-  + NC_BP and nf_bp is the flag indicating BP file access mode.
-  + NC_FORMAT_BP and nf_format_bp indicates BP file format.
+  + NC_BP, NF_BP, and NF90_BP is the flag indicating BP file access mode.
+  + NC_FORMAT_BP, NF_FORMAT_BP, and NF90_FORMAT_BP indicates BP file format.
 
 * New APIs
   + none
@@ -92,7 +92,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New error code
-  + NC_EADIOS, NF_EADIOS
+  + NC_EADIOS, NF_EADIOS, NF90_EADIOS
     ADIOS library internal error that does not corresponds to any PnetCDF error code
 
 * New PnetCDF hint

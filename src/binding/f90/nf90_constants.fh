@@ -79,6 +79,7 @@
     NF90_CDF5          = NF_CDF5,          &
     NF90_64BIT_DATA    = NF_64BIT_DATA,    &
     NF90_NETCDF4       = NF_NETCDF4,       &
+    NF90_BP            = NF_BP,            &
 
     NF90_MPIIO         = NF_MPIIO,         &
     NF90_PNETCDF       = NF_PNETCDF
@@ -139,6 +140,7 @@
     NF90_FORMAT_64BIT_DATA      = NF_FORMAT_64BIT_DATA,      &
     NF90_FORMAT_NETCDF4         = NF_FORMAT_NETCDF4,         &
     NF90_FORMAT_NETCDF4_CLASSIC = NF_FORMAT_NETCDF4_CLASSIC, &
+    NF90_FORMAT_BP              = NF_FORMAT_BP,              &
     NF90_FORMAT_UNKNOWN         = NF_FORMAT_UNKNOWN
 
   !
@@ -328,3 +330,9 @@
       NF90_ENUMRECS_MULTIDEFINE     = NF_EMULTIDEFINE_NUMRECS     , &
       NF90_EVARS_BEGIN_MULTIDEFINE  = NF_EMULTIDEFINE_VAR_BEGIN   , &
       NF90_EMULTIDEFINE_CMODE       = NF_EMULTIDEFINE_CMODE           ! inconsistent file create modes
+
+  !
+  ! ADIOS interoperability errors starts in -300
+  !
+  INTEGER, PARAMETER, PUBLIC :: &
+      NF90_EADIOS          = NF_EADIOS  ! ADIOS internal error
