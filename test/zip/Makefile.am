@@ -24,7 +24,8 @@ if IS_BIGENDIAN
    # AM_FCFLAGS += $(FC_DEFINE)WORDS_BIGENDIAN
 endif
 
-check_PROGRAMS = varn \
+check_PROGRAMS = varn_2d \
+				 vara_2d \
 				 vara
 
 EXTRA_DIST = # wrap_runs.sh parallel_run.sh
