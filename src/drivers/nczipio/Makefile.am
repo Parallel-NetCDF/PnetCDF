@@ -41,6 +41,7 @@ C_SRCS = nczipio_attr.c \
          nczipioi_iput.c \
          nczipioi_nonblocking.c \
          nczipioi_chunk.c \
+         nczipioi_var.c \
          nczip_dummy.c
 
 if ENABLE_ZLIB

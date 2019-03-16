@@ -52,14 +52,13 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     zbufs = (char**)NCI_Malloc(sizeof(char*) * varp->nmychunks);
 
     // Allocate buffer for I/O
-    wcnt = varp->nmychunks
+    wcnt = varp->nmychunks;
     lens = (int*)NCI_Malloc(sizeof(int) * wcnt);
     disps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * wcnt);
 
     memset(zsizes, 0, sizeof(int) * varp->nchunks);
 
     // Compress each chunk we own
-    nrecv = 0;
     memset(zsizes, 0, sizeof(int) * varp->nchunks);
     for(l = 0; l < varp->nmychunks; l++){
         k = varp->mychunks[l];
@@ -188,8 +187,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NC_var *ncvarp;
 
     wcnt = 0;
-    for(v = 0; v < nvar; v++){
-        wcnt += nczipp->vars.data[v].nmychunks;
+    for(vid = 0; vid < nvar; vid++){
+        wcnt += nczipp->vars.data[vid].nmychunks;
     }
 
     // Allocate buffer for compression
@@ -209,12 +208,11 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
     wcur = 0;
     for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data[vid];
+        varp = nczipp->vars.data + vid;
 
         memset(zsizes, 0, sizeof(int) * varp->nchunks);
 
         // Compress each chunk we own
-        nrecv = 0;
         memset(zsizes, 0, sizeof(int) * varp->nchunks);
         for(l = 0; l < varp->nmychunks; l++){
             cid = varp->mychunks[l];
@@ -283,8 +281,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
      */
     wcur = 0;
     for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data[vid];
-        ncvarp = ncp->vars.value[varp->datavarid];
+        varp = nczipp->vars.data + vid;
+        ncvarp = ncp->vars.value + varp->datavarid;
         for(l = 0; l < varp->nmychunks; l++){
             cid = varp->mychunks[l];
             // Adjust file displacement
