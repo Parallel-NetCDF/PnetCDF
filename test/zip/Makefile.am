@@ -26,6 +26,7 @@ endif
 
 check_PROGRAMS = varn_2d \
 				 vara_2d \
+				 ivara_2d \
 				 vara
 
 EXTRA_DIST = # wrap_runs.sh parallel_run.sh

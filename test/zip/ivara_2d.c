@@ -5,7 +5,7 @@
 /* $Id$ */
 
 /*
-   This is an example program which writes a 2-D compressed array
+   This is an example program which writes a 1-D compressed array
 
    $Id$
 */
@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     int np, rank, nerrs = 0;
     int ncid, dimids[2], varid;
     int buf[N];
-    MPI_Offset start[N][2], count[N][2];
-    MPI_Offset *starts[N], *counts[N];
+    int reqids[N];
+    MPI_Offset start[2], count[2];
     MPI_Info info;
 
     /* Error handling. */
@@ -85,16 +85,16 @@ int main(int argc, char **argv)
     CHECK_ERR
 
     // Write variable
+    start[0] = rank;
+    count[0] = 1;
+    count[1] = 1;
     for(i = 0; i < N; i++){
-        start[i][0] = rank;
-        start[i][1] = i;
-        count[i][0] = 1;
-        count[i][1] = 1;
-        starts[i] = start[i];
-        counts[i] = count[i];
+        start[1] = i;
         buf[i] = rank * N + i + 1;
+        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf + i, reqids + i); CHECK_ERR
     }
-    err = ncmpi_put_varn_int_all(ncid, varid, N, starts, counts, buf);
+
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
 
     /* Close the file. */
     err = ncmpi_close(ncid);

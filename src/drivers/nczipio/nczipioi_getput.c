@@ -234,7 +234,7 @@ nczipioi_get_varn(NC_zip         *nczipp,
 }
 
 int
-nczipioi_put_var(NC_zip        *nczipp,
+nczipioi_put_var_old(NC_zip        *nczipp,
               NC_zip_var       *varp,
               const MPI_Offset *start,
               const MPI_Offset *count,

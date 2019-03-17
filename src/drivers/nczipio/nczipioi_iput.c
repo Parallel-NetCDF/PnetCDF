@@ -78,10 +78,10 @@ nczipioi_iput_var(NC_zip        *nczipp,
     int req_id;
     NC_zip_req req;
 
-    err = nczipioi_init_put_req(nczipp, &req, varid, start, stride, NULL, xbuf, buf);
+    err = nczipioi_init_put_req(nczipp, &req, varid, start, count, stride, xbuf, buf);
 
     // Add to req list
-    nczipioi_list_add(&(nczipp->putlist), &req_id);
+    nczipioi_req_list_add(&(nczipp->putlist), &req_id);
     nczipp->putlist.reqs[req_id] = req;
     
     if (reqid != NULL){
@@ -158,11 +158,11 @@ nczipioi_iput_varn(NC_zip        *nczipp,
         err = nczipioi_init_put_varn_req(nczipp, &req, varid, nreq, starts, counts, xbuf, buf);
     }
     else{
-        err = nczipioi_init_put_var_req(nczipp, &req, varid, starts[0], counts[0], NULL, xbuf, buf);
+        err = nczipioi_init_put_req(nczipp, &req, varid, starts[0], counts[0], NULL, xbuf, buf);
     }
 
     // Add to req list
-    nczipioi_list_add(&(nczipp->putlist), &req_id);
+    nczipioi_req_list_add(&(nczipp->putlist), &req_id);
     nczipp->putlist.reqs[req_id] = req;
     
     if (reqid != NULL){

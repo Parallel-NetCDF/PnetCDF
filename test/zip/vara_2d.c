@@ -89,9 +89,9 @@ int main(int argc, char **argv)
     count[0] = 1;
     count[1] = N;
     for(i = 0; i < N; i++){
-        buf[i] = rank * N + i;
+        buf[i] = rank * N + i + 1;
     }
-    err = ncmpi_put_varn_int_all(ncid, varid, N, start, count, buf);
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf);
 
     /* Close the file. */
     err = ncmpi_close(ncid);

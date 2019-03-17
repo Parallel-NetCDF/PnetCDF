@@ -61,7 +61,21 @@ int get_chunk_cord(NC_zip_var *varp, int idx, int* cord){
     return 0;
 }
 
-int get_chunk_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, int *ostart, int *ocount){
+int get_chunk_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *ostart, MPI_Offset *ocount){
+    int i, ret;
+
+    for(i = 0; i < varp->ndim; i++){
+        ostart[i] = max(start[i], cord[i] * varp->chunkdim[i]) - cord[i] * varp->chunkdim[i];
+        ocount[i] = min(start[i] + count[i], (cord[i] + 1) * varp->chunkdim[i]) - ostart[i];
+        if (ocount[i] < 0){
+            ocount[i] = 0;
+        }
+    }
+
+    return 0;
+}
+
+int get_chunk_overlap_str(NC_zip_var *varp, int* cord, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, int *ostart, int *ocount){
     int i, ret;
 
     for(i = 0; i < varp->ndim; i++){
@@ -75,34 +89,61 @@ int get_chunk_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, cons
     return 0;
 }
 
-int nczipioi_chunk_itr_init(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *stride, int *cstart, int *cend, int *citr){
+int nczipioi_chunk_itr_init(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, int *cstart, int *cend, int *citr){
     int i;
     int nchk = 1;
 
-    if (stride == NULL){
-        for(i = 0; i < varp->ndim; i++){
-            cstart[i] = citr[i] = start[i] / varp->chunkdim[i];
-            cend[i] = (start[i] + count[i] - 1) / varp->chunkdim[i] + 1;
-            nchk *= (cend[i] - cstart[i] + 1);
-        }
+    for(i = 0; i < varp->ndim; i++){
+        cstart[i] = citr[i] = start[i] / varp->chunkdim[i];
+        cend[i] = (start[i] + count[i] - 1) / varp->chunkdim[i] + 1;
+        nchk *= (cend[i] - cstart[i] + 1);
     }
-    else{
-        for(i = 0; i < varp->ndim; i++){
-            cstart[i] = citr[i] = start[i] / varp->chunkdim[i];
-            cend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->chunkdim[i] + 1;
-            if (stride[i] > varp->chunkdim[i]){
-                nchk *= count[i];
-            }
-            else{
-                nchk *= (cend[i] - cstart[i] + 1);
-            }
+
+    return nchk;
+}
+
+int nczipioi_chunk_itr_init_str(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *stride, int *cstart, int *cend, int *citr){
+    int i;
+    int nchk = 1;
+
+    for(i = 0; i < varp->ndim; i++){
+        cstart[i] = citr[i] = start[i] / varp->chunkdim[i];
+        cend[i] = (start[i] + (count[i] - 1) * stride[i]) / varp->chunkdim[i] + 1;
+        if (stride[i] > varp->chunkdim[i]){
+            nchk *= count[i];
+        }
+        else{
+            nchk *= (cend[i] - cstart[i] + 1);
         }
     }
 
     return nchk;
 }
 
-int nczipioi_chunk_itr_next(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *stride, int *cstart, int *cend, int *citr){
+int nczipioi_chunk_itr_next(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, int *cstart, int *cend, int *citr){
+    int i;
+    int nchk = 1;
+
+    i = varp->ndim - 1;
+    citr[i]++;
+    for(; i > 0; i--){
+        if (citr[i] >= cend[i]){
+            citr[i - 1]++;
+            citr[i] = cstart[i];
+        }
+        else{
+            break;
+        }
+    }
+
+    if (citr[0] >= cend[0]){
+        return 0;
+    }
+
+    return 1;
+}
+
+int nczipioi_chunk_itr_next_str(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *stride, int *cstart, int *cend, int *citr){
     int i;
     int nchk = 1;
 

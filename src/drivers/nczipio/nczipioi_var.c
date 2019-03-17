@@ -64,7 +64,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         k = varp->mychunks[l];
 
         // Apply compression
-        nczipp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs[l], zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
+        nczipp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
 
         // Record compressed size
         lens[l] = zsizes[k];
@@ -218,7 +218,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             cid = varp->mychunks[l];
 
             // Apply compression
-            nczipp->zip->compress_alloc(varp->chunk_cache[cid], varp->chunksize, zbufs[wcur + l], zsizes + cid, varp->ndim, varp->chunkdim, varp->etype);
+            nczipp->zip->compress_alloc(varp->chunk_cache[cid], varp->chunksize, zbufs + wcur + l, zsizes + cid, varp->ndim, varp->chunkdim, varp->etype);
         }
 
         // Sync compressed data size with other processes

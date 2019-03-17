@@ -33,15 +33,17 @@ C_SRCS = nczipio_attr.c \
          nczipio_driver.c \
          nczipio_file.c \
          nczipio_var.c \
-         nczipio_lists.c \
          nczipio_internal.c \
          nczipio_util.c \
          nczipioi_getput.c \
+         nczipioi_put_var.c \
          nczipioi_put_varn.c \
          nczipioi_iput.c \
          nczipioi_nonblocking.c \
          nczipioi_chunk.c \
          nczipioi_var.c \
+         nczipioi_lists.c \
+         nczipioi_nonblocking.c \
          nczip_dummy.c
 
 if ENABLE_ZLIB
