@@ -46,7 +46,6 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     MPI_Offset **starts, **counts, **strides;
     MPI_Offset rsize;
     char **bufs;
-    NC_zip *nczipp = (NC_zip*)ncdp;
     NC_zip_req *req;
 
     // Count total number of request in per variable for packed varn request
@@ -55,7 +54,7 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     memset(nums, 0, sizeof(int) * nczipp->vars.cnt);
     memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
     for(i = 0; i < nreq; i++){
-        req = nczipp->putlist.reqs[reqids[i]];
+        req = nczipp->putlist.reqs + reqids[i];
         nreqs[req->varid]++;
         nums[req->varid] += req->nreq;
     }
@@ -64,7 +63,7 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
      * At the same time, we find out the number of starts and counts we need to allocate
      */
     vreqids = (int**)NCI_Malloc(sizeof(int*) * nczipp->vars.cnt);
-    vreqids[0] = (int*)NCI_Malloc(sizeof(int) * nreqs);
+    vreqids[0] = (int*)NCI_Malloc(sizeof(int) * nreq);
     maxnum = 0;
     i = 0;
     nvar = 0;
@@ -84,18 +83,18 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         }
     }
 
-    varids[0] = (int*)NCI_Malloc(sizeof(int) * nvar);
+    varids = (int*)NCI_Malloc(sizeof(int) * nvar);
 
     // Fill up the skip list
     memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
     for(i = 0; i < nreq; i++){
-        req = nczipp->putlist.reqs[reqids[i]];
+        req = nczipp->putlist.reqs + reqids[i];
         vreqids[req->varid][nreqs[req->varid]++] = reqids[i];
     }
     
     // Allocate parameters
-    starts = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxnum);
-    counts = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxnum);
+    starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * maxnum);
+    counts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * maxnum);
     bufs =  (char**)NCI_Malloc(sizeof(char*) * maxnum);
 
     /* Pack requests variable by variable
@@ -109,10 +108,10 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             // Collect parameters
             num = 0;
             for(j = 0; j < nreqs[vid]; j++){
-                req = nczipp->putlist.reqs[vreqids[vid][j]];
+                req = nczipp->putlist.reqs + vreqids[vid][j];
 
-                if (req->num > 1){
-                    for(i = 0; i < req->num; i++){
+                if (req->nreq > 1){
+                    for(i = 0; i < req->nreq; i++){
                         starts[num] = req->starts[i];
                         counts[num] = req->counts[i];
                         bufs[num++] = req->xbufs[i];
@@ -126,7 +125,7 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             }
 
             // Perform collective buffering
-            nczipioi_put_varn_cb(nczipp, nczipp->vars.data + vid, num, staarts, counts, NULL, bufs);
+            nczipioi_put_varn_cb(nczipp, nczipp->vars.data + vid, num, starts, counts, NULL, bufs);
         }
     }
 
@@ -139,10 +138,10 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 int
 nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
     int err;
-    int nput = 0, nread = 0;
+    int i;
+    int nput = 0, nget = 0;
     int *putreqs = NULL, *getreqs = NULL;
     int *putstats = NULL, *getstats = NULL;
-    NC_zip *nczipp = (NC_zip*)ncdp;
 
     if (nreqs == NC_REQ_ALL || nreqs == NC_PUT_REQ_ALL){
         nput = nczipp->putlist.nused;
@@ -190,7 +189,7 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
     }
 
     nczipioi_wait_put_reqs(nczipp, nput, putreqs, putstats);
-    nczipioi_wait_put_reqs(nczipp, nput, putreqs, getstats);
+    //nczipioi_wait_pget_reqs(nczipp, nget, getreqs, getstats);
 
     // Assign stats
     if (stats != NULL){

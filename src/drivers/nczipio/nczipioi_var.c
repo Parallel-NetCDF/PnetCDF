@@ -143,17 +143,6 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     MPI_Type_commit(&ftype);
     MPI_Type_commit(&mtype);
 
-    /*
-    for(l = 0; l < varp->nmychunks; l++){
-        k = varp->mychunks[l];
-        zstart = (MPI_Offset)zoffs[k];
-        zcount = (MPI_Offset)zsizes[k];
-        printf("cache[0] = %d, cache[1] = %d, off = %lld, cnt = %lld\n", ((int*)(varp->chunk_cache[k]))[0], ((int*)(varp->chunk_cache[k]))[1], zstart, zcount); fflush(stdout);
-        nczipp->driver->iput_var(nczipp->ncp, varp->datavarid, &zstart, &zcount, NULL, NULL, zbufs[l], (MPI_Offset)(zsizes_all[k]), MPI_UNSIGNED_CHAR, NULL, NC_REQ_WR | NC_REQ_NBI | NC_REQ_FLEX);
-    }
-    nczipp->driver->wait(nczipp->ncp, NC_REQ_ALL, NULL, NULL, NC_REQ_COLL);
-    */
-
     // Free buffers
     NCI_Free(zsizes);
     NCI_Free(zsizes_all);
@@ -174,6 +163,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     int i, j, k, l, err;
     int vid;    // Iterator for variable id
     int cid;    // Iterator for chunk id
+    int max_nchunks = 0;
     int *zsizes, *zsizes_all, *zoffs;
     MPI_Datatype mtype, ftype;  // Memory and file datatype
     int wcnt, wcur;
@@ -189,12 +179,15 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     wcnt = 0;
     for(vid = 0; vid < nvar; vid++){
         wcnt += nczipp->vars.data[vid].nmychunks;
+        if (max_nchunks < nczipp->vars.data[vid].nchunks){
+            max_nchunks = nczipp->vars.data[vid].nchunks;
+        }
     }
 
     // Allocate buffer for compression
-    zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zsizes_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zoffs = (int*)NCI_Malloc(sizeof(int) * varp->nchunks + 1);  // Add 1 for overall size
+    zsizes = (int*)NCI_Malloc(sizeof(int) * max_nchunks);
+    zsizes_all = (int*)NCI_Malloc(sizeof(int) * max_nchunks);
+    zoffs = (int*)NCI_Malloc(sizeof(int) * max_nchunks + 1);  // Add 1 for overall size
     zbufs = (char**)NCI_Malloc(sizeof(char*) * wcnt);
 
     // Allocate buffer file type
@@ -256,15 +249,14 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
          * We do not know variable file offset until the end of define mode
          * We will add the displacement later
          */
-        ncvarp = ncp->vars.value[varp->datavarid];
         for(l = 0; l < varp->nmychunks; l++){
             cid = varp->mychunks[l];
 
             // Record parameter
             flens[wcur + l] = zsizes[cid];
-            fdisps[wcur + l] = (MPI_Aint)zoffs[cid] + (MPI_Aint)ncvarp->begin;
-            mlens[l] = zsizes[k];
-            mdisps[l] = (MPI_Aint)zbufs[l];
+            fdisps[wcur + l] = (MPI_Aint)zoffs[cid];
+            mlens[l] = zsizes[cid];
+            mdisps[l] = (MPI_Aint)zbufs[wcur + l];
         }
 
         // Move to parameters for next variable
@@ -282,7 +274,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     wcur = 0;
     for(vid = 0; vid < nvar; vid++){
         varp = nczipp->vars.data + vid;
-        ncvarp = ncp->vars.value + varp->datavarid;
+        ncvarp = ncp->vars.value[varp->datavarid];
         for(l = 0; l < varp->nmychunks; l++){
             cid = varp->mychunks[l];
             // Adjust file displacement

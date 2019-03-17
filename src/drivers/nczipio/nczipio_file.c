@@ -330,8 +330,7 @@ nczipio_wait(void *ncdp,
     int err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    err = nczipp->driver->wait(nczipp->ncp, num_reqs, req_ids, statuses, reqMode);
-    if (err != NC_NOERR) return err;
+    nczipioi_wait(nczipp, num_reqs, req_ids, statuses, reqMode);
 
     return NC_NOERR;
 }
