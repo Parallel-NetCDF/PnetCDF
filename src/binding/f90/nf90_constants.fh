@@ -294,6 +294,7 @@
       NF90_EMAX_REQ                 = NF_EMAX_REQ                 , & ! Size of I/O request exceeds INT_MAX
       NF90_EBADLOG                  = NF_EBADLOG                  , & ! Unrecognized log file format
       NF90_EFLUSHED                 = NF_EFLUSHED                 , & ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
+      NF90_EADIOS                   = NF_EADIOS                   , & ! ADIOS internal error
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions inconsistent among processes
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! inconsistent file open modes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
@@ -330,9 +331,3 @@
       NF90_ENUMRECS_MULTIDEFINE     = NF_EMULTIDEFINE_NUMRECS     , &
       NF90_EVARS_BEGIN_MULTIDEFINE  = NF_EMULTIDEFINE_VAR_BEGIN   , &
       NF90_EMULTIDEFINE_CMODE       = NF_EMULTIDEFINE_CMODE           ! inconsistent file create modes
-
-  !
-  ! ADIOS interoperability errors starts in -300
-  !
-  INTEGER, PARAMETER, PUBLIC :: &
-      NF90_EADIOS          = NF_EADIOS  ! ADIOS internal error

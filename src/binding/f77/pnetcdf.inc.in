@@ -533,7 +533,7 @@
       PARAMETER (NF_EMAX_REQ                = -237)   ! Size of I/O request exceeds INT_MAX
       PARAMETER (NF_EBADLOG                 = -238)   ! Unrecognized log file format
       PARAMETER (NF_EFLUSHED                = -239)   ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
-
+      PARAMETER (NF_EADIOS                  = -240)   ! ADIOS internal error
 !
 ! PnetCDF header inconsistency errors start from -250
 !
@@ -574,11 +574,6 @@
       PARAMETER(NF_EVARS_LEN_MULTIDEFINE   =NF_EMULTIDEFINE_VAR_LEN)
       PARAMETER(NF_ENUMRECS_MULTIDEFINE    =NF_EMULTIDEFINE_NUMRECS)
       PARAMETER(NF_EVARS_BEGIN_MULTIDEFINE =NF_EMULTIDEFINE_VAR_BEGIN)
-!
-! ADIOS interoperability errors starts in -300
-!
-      integer NF_EADIOS
-      PARAMETER (NF_EADIOS      = -300)   ! ADIOS internal error
 
 ! error handling modes:
 !

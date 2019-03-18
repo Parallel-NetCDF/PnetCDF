@@ -606,6 +606,7 @@ by the desired type. */
 #define NC_EMAX_REQ			(-237) /**< Size of I/O request exceeds INT_MAX */
 #define NC_EBADLOG			(-238) /**< Unrecognized log file format */
 #define NC_EFLUSHED			(-239) /**< Nonblocking request has already been flushed to the PFS. It is too late to cancel */
+#define NC_EADIOS		      (-240) /**< unknown ADIOS error */ 
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
@@ -633,8 +634,6 @@ by the desired type. */
 #define NC_EMULTIDEFINE_VAR_FILL_MODE	(-271) /**< inconsistent variable fill mode */
 #define NC_EMULTIDEFINE_VAR_FILL_VALUE	(-272) /**< inconsistent variable fill value */
 #define NC_EMULTIDEFINE_CMODE		(-273) /**< inconsistent file create modes among processes */
-
-#define NC_EADIOS		            (-300) /**< unknown ADIOS error */ 
 
 #define NC_EMULTIDEFINE_FIRST		NC_EMULTIDEFINE
 #define NC_EMULTIDEFINE_LAST		NC_EMULTIDEFINE_CMODE

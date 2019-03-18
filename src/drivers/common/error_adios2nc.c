@@ -41,7 +41,7 @@ int ncmpii_error_adios2nc(int adios_err, char *err_msg)       /* extra error mes
         case err_corrupted_attribute:
             return NC_ETRUNC;
         default:
-            return NC_EIO;
+            return NC_EADIOS;
     }
 
     /* other errors that currently have no corresponding PnetCDF error codes */
