@@ -51,7 +51,7 @@ This is essentially a placeholder for the next release note ...
 
 * New constants
   + NC_BP, NF_BP, and NF90_BP is the flag indicating BP file access mode.
-  + NC_FORMAT_BP, NF_FORMAT_BP, and NF90_FORMAT_BP indicates BP file format.
+  + NC_FORMAT_BP, NF_FORMAT_BP, and NF90_FORMAT_BP indicate BP file format.
 
 * New APIs
   + none
@@ -70,7 +70,7 @@ This is essentially a placeholder for the next release note ...
 
 * New error code
   + NC_EADIOS, NF_EADIOS, NF90_EADIOS
-    ADIOS library internal error that does not corresponds to any PnetCDF error code
+    ADIOS library internal error that does not corresponds to any PnetCDF error code.
 
 * New PnetCDF hint
   + none
@@ -152,7 +152,7 @@ This is essentially a placeholder for the next release note ...
   + test/adios/att.c - tests if PnetCDF can access ADIOS attributes.
   + test/adios/indep.c - tests if PnetCDF can access ADIOS variables independently.
   + test/burst_buffer/varn.c -- to test varn API when burst buffer driver is
-    used. The test includes cases when argument counts is NULL or some of the
+    used. The test includes cases when argument counts are is or some of the
     elements in counts are NULL.
 
 * Conformity with NetCDF library
