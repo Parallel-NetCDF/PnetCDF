@@ -828,7 +828,11 @@ enum FILE_KIND check_file_signature(char *path)
         bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
 =======
         adios_parse_version(footer, &bp_ver, &diff_endian);
+<<<<<<< HEAD
 >>>>>>> ec34ffb... convert endian on minifooter
+=======
+        bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
+>>>>>>> 23f390e... mask version number
 
         BUFREAD64(footer, h1) /* Position of process group index table */
         BUFREAD64(footer + 8, h2) /* Position of variables index table */
