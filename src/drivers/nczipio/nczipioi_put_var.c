@@ -184,7 +184,7 @@ nczipioi_put_var_cb(NC_zip          *nczipp,
 
             // Metadata
             for(j = 0; j < varp->ndim; j++){
-                tstart[j] = (int)(ostart[j] - citr[j] * varp->chunkdim[j]);
+                tstart[j] = (int)(ostart[j] - (MPI_Offset)citr[j] * (MPI_Offset)varp->chunkdim[j]);
                 tsize[j] = (int)osize[j];
             }
                     
@@ -243,8 +243,8 @@ nczipioi_put_var_cb(NC_zip          *nczipp,
 
             // Pack type from (contiguous) intermediate buffer to chunk buffer
             for(j = 0; j < varp->ndim; j++){
-                tstart[j] = (int)(ostart[j] - citr[j] * varp->chunkdim[j]);
-                tsize[j] = (int)varp->chunkdim[j];
+                tstart[j] = (int)(ostart[j] - (MPI_Offset)citr[j] * (MPI_Offset)varp->chunkdim[j]);
+                tsize[j] = varp->chunkdim[j];
             }
             MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
             MPI_Type_commit(&ptype);
@@ -271,7 +271,7 @@ nczipioi_put_var_cb(NC_zip          *nczipp,
             MPI_Unpack(rbufs[j], rsizes[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
 
             for(k = 0; k < varp->ndim; k++){
-                tsize[k] = (int)varp->chunkdim[k];
+                tsize[k] = varp->chunkdim[k];
             }
 
             //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);

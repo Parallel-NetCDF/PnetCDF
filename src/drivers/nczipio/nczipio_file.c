@@ -61,8 +61,6 @@ nczipio_create(MPI_Comm     comm,
     NC_zip *nczipp;
     PNC_driver *driver=NULL;
 
-    printf("nczipio driver\n");
-
     /* TODO: use comde to determine the true driver */
     driver = ncmpio_inq_driver();
     if (driver == NULL) return NC_ENOTNC;

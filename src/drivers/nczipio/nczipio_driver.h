@@ -65,13 +65,14 @@ typedef struct NC_zip_var {
     int ndim;
     MPI_Offset *dimsize;
     int *dimids;
+    MPI_Offset recsize;
     
     int varid;
 
     int nchunks;
     int chunksize;
     int *chunk_owner;
-    MPI_Offset *chunkdim;
+    int *chunkdim;
     char **chunk_cache;
 
     int nmychunks;
