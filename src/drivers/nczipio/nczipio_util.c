@@ -53,21 +53,6 @@ int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
     int flag;
     char value[MPI_MAX_INFO_VAL];
 
-    // Compression alg
-    MPI_Info_get(info, "nc_zip_method", MPI_MAX_INFO_VAL - 1,
-                 value, &flag);
-    if (flag) {
-        if (strcmp(value, "dummy") == 0){
-            nczipp->zipdriver = NC_ZIP_DRIVER_DUMMY;  
-        }
-        else{
-            printf("Warning: Unknown zip method %s, using dummy\n", value);
-        }
-    }
-    else {
-        nczipp->zipdriver = NC_ZIP_DRIVER_DUMMY;    
-    }
-
     // Block assignment
     MPI_Info_get(info, "nc_zip_block_mapping", MPI_MAX_INFO_VAL - 1,
                  value, &flag);
@@ -95,10 +80,6 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
     char value[MPI_MAX_INFO_VAL];
 
     MPI_Info_set(info, "nc_compression", "enable");
-    
-    if (nczipp->zipdriver == NC_ZIP_DRIVER_DUMMY) {
-        MPI_Info_set(info, "nc_zip_method", "dummy");
-    }
 
     return NC_NOERR;
 }

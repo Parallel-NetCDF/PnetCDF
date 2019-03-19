@@ -82,6 +82,9 @@ typedef struct NC_zip_var {
     MPI_Offset *data_offs;
     int *data_lens;
     
+    NCZIP_driver      *zip;         /* Compression driver */
+    int                zipdriver;
+
     mapping_strategy chunk_map_method;
 } NC_zip_var;
 
@@ -101,8 +104,6 @@ struct NC_zip {
     MPI_Comm           comm;        /* MPI communicator */
     void              *ncp;         /* pointer to driver's internal object */
     struct PNC_driver *driver;
-    NCZIP_driver      *zip;         /* Compression driver */
-    int                zipdriver;
     int                blockmapping;
     NC_zip_var_list    vars;
 };

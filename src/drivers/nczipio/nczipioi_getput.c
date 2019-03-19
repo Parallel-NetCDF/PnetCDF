@@ -179,7 +179,7 @@ nczipioi_get_var(NC_zip        *nczipp,
     for(i = 0; i < nb; i++){
         j = bidx[i];
         if (varp->data_lens[j] > 0){
-            nczipp->zip->decompress(cbuffer + cbsize, varp->data_lens[j], rbuffer + bsize * i, NULL, varp->ndim, varp->dimsize, ncmpii_nc2mpitype(xtype));
+            varp->zip->decompress(cbuffer + cbsize, varp->data_lens[j], rbuffer + bsize * i, NULL, varp->ndim, varp->dimsize, ncmpii_nc2mpitype(xtype));
         }
         else{
             memset(rbuffer + bsize * i, 0, bsize);
@@ -587,7 +587,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     for(i = 0; i < nmychunks; i++){
         // Calculate compressed size
         // This is just estimate
-        nczipp->zip->compress(xbuf + bsize * i, bsize, NULL, zipsize + i, varp->ndim, varp->chunkdim, etype);
+        varp->zip->compress(xbuf + bsize * i, bsize, NULL, zipsize + i, varp->ndim, varp->chunkdim, etype);
     }
 
     // Calculate total size
@@ -602,7 +602,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     for(i = 0; i < nmychunks; i++){
         // Compressed the data
         // We get real size here
-        nczipp->zip->compress(xbuf + bsize * i, bsize, zbuf + zdispls[i], zipsize + i, varp->ndim, varp->chunkdim, etype);
+        varp->zip->compress(xbuf + bsize * i, bsize, zbuf + zdispls[i], zipsize + i, varp->ndim, varp->chunkdim, etype);
         
         // Calculate offset
         zdispls[i + 1] = zdispls[i] + zipsize[i];

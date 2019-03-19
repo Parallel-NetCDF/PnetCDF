@@ -127,12 +127,34 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
                     err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkoffsets", varp->data_offs, MPI_UNSIGNED_LONG_LONG);
                     err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunklens", varp->data_lens, MPI_INT);
                 }
+                else{
+                    // If not, 0 len means no data avaiable
+                    if (err != NC_NOERR){
+                        memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunks);
+                        memset(varp->data_lens, 0, sizeof(int) * (varp->nchunks + 1));
+                    }
+                }
+            }
+            else{
+                // If not, 0 len means no data avaiable
+                if (err != NC_NOERR){
+                    memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunks);
+                    memset(varp->data_lens, 0, sizeof(int) * (varp->nchunks + 1));
+                }
             }
 
-            // If not, 0 len means no data avaiable
-            if (err != NC_NOERR){
-                memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunks);
-                memset(varp->data_lens, 0, sizeof(MPI_Offset) * varp->nchunks);
+            /* Select compression driver based on attribute */
+            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_zipdriver", NULL, &len);
+            if (err == NC_NOERR && len == 1){
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_zipdriver", &varp->zipdriver, MPI_INT);
+            }
+            else{
+                varp->zipdriver = 0;
+            }
+            switch (varp->zipdriver){
+                case NC_ZIP_DRIVER_DUMMY:
+                    varp->zip = nczip_dummy_inq_driver();
+                break;
             }
         }   
     }
@@ -174,7 +196,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         k = varp->mychunks[l];
 
         // Apply compression
-        nczipp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
+        varp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
 
         // Record compressed size
         lens[l] = zsizes[k];
@@ -321,7 +343,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             cid = varp->mychunks[l];
 
             // Apply compression
-            nczipp->zip->compress_alloc(varp->chunk_cache[cid], varp->chunksize, zbufs + wcur + l, zsizes + cid, varp->ndim, varp->chunkdim, varp->etype);
+            varp->zip->compress_alloc(varp->chunk_cache[cid], varp->chunksize, zbufs + wcur + l, zsizes + cid, varp->ndim, varp->chunkdim, varp->etype);
         }
 
         // Sync compressed data size with other processes
