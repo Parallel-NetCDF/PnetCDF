@@ -804,6 +804,7 @@ enum FILE_KIND check_file_signature(char *path)
         }
 
         adios_parse_version(footer, &bp_ver, &diff_endian);
+        bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
 
         BUFREAD64(footer, h1) /* Position of process group index table */
         BUFREAD64(footer + 8, h2) /* Position of variables index table */
