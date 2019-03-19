@@ -80,7 +80,7 @@ typedef struct NC_zip_var {
 
     int datavarid;
     MPI_Offset *data_offs;
-    MPI_Offset *data_lens;
+    int *data_lens;
     
     mapping_strategy chunk_map_method;
 } NC_zip_var;

@@ -118,13 +118,18 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
 
             // Determine block offset
             varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nchunks);
-            varp->data_lens = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nchunks);
+            varp->data_lens = (int*)NCI_Malloc(sizeof(int) * (varp->nchunks + 1));
             // Try if there are offset recorded in attributes, it can happen after opening a file
-            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_offsets", NULL, &len);
+            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunkoffsets", NULL, &len);
             if (err == NC_NOERR && varp->nchunks == len - 1){
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_offsets", varp->data_offs, MPI_UNSIGNED_LONG_LONG);
+                err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunklens", NULL, &len);
+                if (err == NC_NOERR && varp->nchunks == len - 1){
+                    err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkoffsets", varp->data_offs, MPI_UNSIGNED_LONG_LONG);
+                    err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunklens", varp->data_lens, MPI_INT);
+                }
             }
-            // If not, 0 len no data avaiable
+
+            // If not, 0 len means no data avaiable
             if (err != NC_NOERR){
                 memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunks);
                 memset(varp->data_lens, 0, sizeof(MPI_Offset) * varp->nchunks);
@@ -137,12 +142,13 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
 
 int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     int i, j, k, l, err;
-    int *zsizes, *zsizes_all, *zoffs;
+    int *zsizes, *zsizes_all;
     MPI_Datatype mtype, ftype;  // Memory and file datatype
     int wcnt;
     int *lens;
     MPI_Aint *disps;
     MPI_Status status;
+    MPI_Offset *zoffs;
     char **zbufs;
     int zdimid;
     char name[128]; // Name of objects
@@ -151,9 +157,9 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     // Allocate buffer for compression
     zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zsizes_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zoffs = (int*)NCI_Malloc(sizeof(int) * varp->nchunks + 1);  // Add 1 for overall size
     zbufs = (char**)NCI_Malloc(sizeof(char*) * varp->nmychunks);
+    zsizes_all = varp->data_lens;
+    zoffs = varp->data_offs;
 
     // Allocate buffer for I/O
     wcnt = varp->nmychunks;
@@ -249,8 +255,6 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     // Free buffers
     NCI_Free(zsizes);
-    NCI_Free(zsizes_all);
-    NCI_Free(zoffs);
     for(l = 0; l < varp->nmychunks; l++){
         NCI_Free(zbufs[l]);
     }
@@ -268,7 +272,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     int vid;    // Iterator for variable id
     int cid;    // Iterator for chunk id
     int max_nchunks = 0;
-    int *zsizes, *zsizes_all, *zoffs;
+    int *zsizes, *zsizes_all;
+    MPI_Offset *zoffs;
     MPI_Datatype mtype, ftype;  // Memory and file datatype
     int wcnt, wcur;
     int *mlens, *flens;
@@ -290,8 +295,6 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
     // Allocate buffer for compression
     zsizes = (int*)NCI_Malloc(sizeof(int) * max_nchunks);
-    zsizes_all = (int*)NCI_Malloc(sizeof(int) * max_nchunks);
-    zoffs = (int*)NCI_Malloc(sizeof(int) * max_nchunks + 1);  // Add 1 for overall size
     zbufs = (char**)NCI_Malloc(sizeof(char*) * wcnt);
 
     // Allocate buffer file type
@@ -306,6 +309,9 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     wcur = 0;
     for(vid = 0; vid < nvar; vid++){
         varp = nczipp->vars.data + vid;
+
+        zsizes_all = varp->data_lens;
+        zoffs = varp->data_offs;
 
         memset(zsizes, 0, sizeof(int) * varp->nchunks);
 
@@ -408,8 +414,6 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
     // Free buffers
     NCI_Free(zsizes);
-    NCI_Free(zsizes_all);
-    NCI_Free(zoffs);
     for(l = 0; l < varp->nmychunks; l++){
         NCI_Free(zbufs[l]);
     }
