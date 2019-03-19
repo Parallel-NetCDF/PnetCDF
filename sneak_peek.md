@@ -67,6 +67,8 @@ This is essentially a placeholder for the next release note ...
     `--enable-null-byte-header-padding`.
 
 * Bug fixes
+  + Fix ncmpidiff when comparing dimension names of 2 variables between files
+    whose dimension define orders are different.
   + Fix error checking for programs in examples/C to ignore NC_ENOTENABLED
     if PnetCDF was not built with --enable-profiling. Thanks to Bruno Pagani
     and see [Issue #34](https://github.com/Parallel-NetCDF/PnetCDF/issues/34).
