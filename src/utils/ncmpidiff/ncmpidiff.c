@@ -495,7 +495,7 @@ int main(int argc, char **argv)
                     /* get dim name for each dim ID */
                     err = ncmpi_inq_dim(ncid1, dimids1[j], dimname1, &dimlen1);
                     HANDLE_ERROR
-                    err = ncmpi_inq_dim(ncid1, dimids2[j], dimname2, &dimlen2);
+                    err = ncmpi_inq_dim(ncid2, dimids2[j], dimname2, &dimlen2);
                     HANDLE_ERROR
                     if (verbose)
                         printf("\tdimension %d:\n",j);
