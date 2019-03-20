@@ -45,7 +45,7 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
     int *tsize, *tssize, *tstart;   // Size for sub-array type
     int *cstart, *cend, *citr; // Bounding box for chunks overlapping my own write region
     
-    int *wcnt_local, *wcnt_all;   // Number of processes that writes to each chunk
+    int *rcnt_local, *rcnt_all;   // Number of processes that writes to each chunk
 
     int overlapsize;    // Size of overlaping region of request and chunk
     int max_tbuf = 0;   // Size of intermediate buffer
@@ -62,8 +62,8 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    wcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    wcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+    rcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
@@ -81,7 +81,7 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
     // This is just for allocating send buffer
     // We do so by iterating through all request and all chunks they cover
     // If we are not the owner of a chunk, we need to send message
-    memset(wcnt_local, 0, sizeof(int) * nczipp->np);
+    memset(rcnt_local, 0, sizeof(int) * nczipp->np);
     nsend = 0;
 
     // Initialize chunk iterator
@@ -95,12 +95,12 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
         if (varp->chunk_owner[cid] != nczipp->rank){
             // Count number of mnessage we need to send
             nsend++;
-            wcnt_local[cid] = 1;
+            rcnt_local[cid] = 1;
         }
         else{
             // We mark covered chunk of our own to prevent unnecessary calculation of overlap
             // -1 is purely a mark, we need to add 1 back to global message count
-            wcnt_local[cid] = -1;
+            rcnt_local[cid] = -1;
             max_tbuf = varp->chunksize;
         }
 
@@ -112,7 +112,7 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
     sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(wcnt_local, wcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
 
     // Calculate number of recv request
     // This is for all the chunks
@@ -120,7 +120,7 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
     for(i = 0; i < varp->nmychunks; i++){
         cid = varp->mychunks[i];
         // We don't need message for our own data
-        nrecv += wcnt_all[cid] - wcnt_local[cid];
+        nrecv += rcnt_all[cid] - rcnt_local[cid];
     }
     rreqs = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nrecv);
     rstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nrecv);
@@ -133,7 +133,7 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
         cid = varp->mychunks[i];
         // We are the owner of the chunk
         // Receive data from other process
-        for(i = 0; i < wcnt_all[cid] - wcnt_local[cid]; i++){
+        for(i = 0; i < rcnt_all[cid] - rcnt_local[cid]; i++){
             // Get message size, including metadata
             MPI_Mprobe(MPI_ANY_SOURCE, cid, nczipp->comm, &rmsg, rstats);
             MPI_Get_count(rstats, MPI_BYTE, rsizes + nrecv);
@@ -217,7 +217,7 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
         cid = varp->mychunks[i];
             
         // Handle our own data first if we have any
-        if (wcnt_local[cid] < 0){
+        if (rcnt_local[cid] < 0){
             // Convert chunk id to iterator
             get_chunk_cord(varp, cid, citr);
 
@@ -259,12 +259,12 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
         // Now, it is time to process data from other processes
         
         // Wait for all send requests related to this chunk
-        // We remove the impact of -1 mark in wcnt_local[cid]
-        MPI_Waitall(wcnt_all[cid] - wcnt_local[cid], rreqs + nrecv, rstats + nrecv);
+        // We remove the impact of -1 mark in rcnt_local[cid]
+        MPI_Waitall(rcnt_all[cid] - rcnt_local[cid], rreqs + nrecv, rstats + nrecv);
 
         // Process data received
-        //printf("nrecv = %d, wcnt_all = %d, wcnt_local = %d\n", nrecv, wcnt_all[cid], wcnt_local[cid]); fflush(stdout);
-        for(j = nrecv; j < nrecv + wcnt_all[cid] - wcnt_local[cid]; j++){
+        //printf("nrecv = %d, rcnt_all = %d, rcnt_local = %d\n", nrecv, rcnt_all[cid], rcnt_local[cid]); fflush(stdout);
+        for(j = nrecv; j < nrecv + rcnt_all[cid] - rcnt_local[cid]; j++){
             packoff = 0;
 
             MPI_Unpack(rbufs[j], rsizes[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
@@ -283,14 +283,14 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
             //printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
             MPI_Type_free(&ptype);
         }
-        nrecv += wcnt_all[cid] - wcnt_local[cid];        
+        nrecv += rcnt_all[cid] - rcnt_local[cid];        
 
         //printbuf(nczipp->rank, varp->chunk_cache[cid], varp->chunksize);
     }
 
     // Free buffers
-    NCI_Free(wcnt_local);
-    NCI_Free(wcnt_all);
+    NCI_Free(rcnt_local);
+    NCI_Free(rcnt_all);
 
     NCI_Free(tsize);
     NCI_Free(tssize);
