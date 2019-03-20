@@ -54,6 +54,9 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
     int packoff; // Pack offset
     MPI_Datatype ptype; // Pack datatype
 
+    int nread;  // # chunks to read form file
+    int *rids;  // Id of chunks to read from file
+
     int nsend, nrecv;   // Number of send and receive
     MPI_Request *sreqs, *rreqs;    // Send and recv req
     MPI_Status *sstats, *rstats;    // Send and recv status
@@ -91,66 +94,77 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
     do{
         // Chunk index
         cid = get_chunk_idx(varp, citr);
+        
+        rcnt_local[cid] = 1;
 
         if (varp->chunk_owner[cid] != nczipp->rank){
             // Count number of mnessage we need to send
-            nsend++;
-            rcnt_local[cid] = 1;
-        }
-        else{
-            // We mark covered chunk of our own to prevent unnecessary calculation of overlap
-            // -1 is purely a mark, we need to add 1 back to global message count
-            rcnt_local[cid] = -1;
-            max_tbuf = varp->chunksize;
+            nsend++;    
         }
 
     } while (nczipioi_chunk_itr_next(varp, start, count, cstart, cend, citr));
 
-    // Allocate buffer for sending
-    sbufs = (char**)NCI_Malloc(sizeof(char*) * nsend);
-    sreqs = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nsend);
-    sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
 
     // Sync number of messages of each chunk
     MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
 
+    // We need to prepare chunk in the chunk cache
+    // For chunks not yet allocated, we need to read them form file collectively
+    // We collect chunk id of those chunks
     // Calculate number of recv request
     // This is for all the chunks
+    rids = (int*)NCI_Malloc(sizeof(int) * varp->nmychunks);
+    nread = 0;
     nrecv = 0;
     for(i = 0; i < varp->nmychunks; i++){
         cid = varp->mychunks[i];
         // We don't need message for our own data
         nrecv += rcnt_all[cid] - rcnt_local[cid];
+        // Count number of chunks we need to prepare
+        // We read only chunks that is required
+        if (rcnt_all[cid] > 0 && varp->chunk_cache[cid] == NULL){
+            rids[nread] = cid;
+        }
     }
-    rreqs = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nrecv);
-    rstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nrecv);
-    rbufs = (char**)NCI_Malloc(sizeof(char*) * nrecv);
-    rsizes = (int*)NCI_Malloc(sizeof(int) * nrecv);
+
+    // Decompress chunks into chunk cache
+    nczipioi_load_var(nczipp, varp, nread, rids);
+
+    // Allocate buffer for send and recv
+    // We need to accept nrecv requests and receive nsend of replies
+    rreqs = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * (nrecv + nsend));
+    rstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * (nrecv + nsend));
+    rbufs = (char**)NCI_Malloc(sizeof(char*) * (nrecv + nsend));
+    rsizes = (int*)NCI_Malloc(sizeof(int) * (nrecv + nsend));
+    // We need to send nsend requests and reply nrecv of requests
+    sbufs = (char**)NCI_Malloc(sizeof(char*) * (nrecv + nsend));
+    sreqs = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * (nrecv + nsend));
+    sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * (nrecv + nsend));
 
     // Post recv
-    nrecv = 0;
+    k = 0;
     for(i = 0; i < varp->nmychunks; i++){
         cid = varp->mychunks[i];
         // We are the owner of the chunk
         // Receive data from other process
-        for(i = 0; i < rcnt_all[cid] - rcnt_local[cid]; i++){
+        for(j = 0; j < rcnt_all[cid] - rcnt_local[cid]; j++){
             // Get message size, including metadata
             MPI_Mprobe(MPI_ANY_SOURCE, cid, nczipp->comm, &rmsg, rstats);
-            MPI_Get_count(rstats, MPI_BYTE, rsizes + nrecv);
+            MPI_Get_count(rstats, MPI_BYTE, rsizes + k);
 
             //printf("rsize = %d\n", rsizes[i]); fflush(stdout);
 
             // Allocate buffer
-            rbufs[nrecv] = (char*)NCI_Malloc(rsizes[nrecv]);
+            rbufs[k] = (char*)NCI_Malloc(rsizes[k]);
 
             // Post irecv
-            MPI_Imrecv(rbufs[nrecv], rsizes[nrecv], MPI_BYTE, &rmsg, rreqs + nrecv);
-            nrecv++;
+            MPI_Imrecv(rbufs[k], rsizes[k], MPI_BYTE, &rmsg, rreqs + k);
+            k++;
         }
     }
 
     // Post send
-    nsend = 0;
+    k = 0;
     // Initialize chunk iterator
     nczipioi_chunk_itr_init(varp, start, count, cstart, cend, citr);
     // Iterate through chunks
@@ -171,16 +185,8 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
             //printf("overlapsize = %d\n", overlapsize); fflush(stdout);
 
             // Allocate buffer
-            sbufs[nsend] = (char*)NCI_Malloc(overlapsize + sizeof(int) * varp->ndim * 2);
-
-            // Pack type
-            for(j = 0; j < varp->ndim; j++){
-                tstart[j] = (int)(ostart[j] - start[j]);
-                tsize[j] = (int)count[j];
-                tssize[j] = (int)osize[j];
-            }
-            MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-            MPI_Type_commit(&ptype);
+            sbufs[k] = (char*)NCI_Malloc(sizeof(int) * varp->ndim * 2); // For request
+            rbufs[k + nrecv] = (char*)NCI_Malloc(overlapsize);   // For reply, first nrecv are for request
 
             // Metadata
             for(j = 0; j < varp->ndim; j++){
@@ -190,16 +196,15 @@ nczipioi_get_var_cb(NC_zip          *nczipp,
                     
             // Pack data
             packoff = 0;
-            MPI_Pack(tstart, varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
-            MPI_Pack(tsize, varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
-            MPI_Pack(buf, 1, ptype, sbufs[nsend], packoff + overlapsize, &packoff, nczipp->comm);
-
+            MPI_Pack(tstart, varp->ndim, MPI_INT, sbufs[k], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
+            MPI_Pack(tsize, varp->ndim, MPI_INT, sbufs[k], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
             MPI_Type_free(&ptype);
 
-            // Send the request
+            // Send the receive
             //printf("packoff = %d\n", packoff); fflush(stdout);
-            MPI_Isend(sbufs[nsend], packoff, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, sreqs + nsend);
-            nsend++;
+            MPI_Isend(sbufs[k], packoff, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, sreqs + nsend);
+            MPI_Irecv(rbufs[k + nrecv], overlapsize, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, rreqs + nrecv + k);
+            k++;
         }
     } while (nczipioi_chunk_itr_next(varp, start, count, cstart, cend, citr));
 
