@@ -31,14 +31,14 @@ int nczip_zlib_finalize() {
 /* Return an estimated compressed data size
  * Actual compressed size should not exceed the estimation
  */
-int nczip_zlib_inq_cpsize(void *in, int in_len, int *out_len, int ndim, MPI_Offset *dims, MPI_Datatype dtype) {
+int nczip_zlib_inq_cpsize(void *in, int in_len, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     return NC_ENOTSUPPORT;  // Zlib has no size estimation
 }
 
 /* If out_len is large enough, compress the data at in and save it to out. out_len is set to actual compressed data size
  * If out_len is NULL, we assume out is large enough for compressed data
  */
-int nczip_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim, MPI_Offset *dims, MPI_Datatype dtype) {
+int nczip_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     int err;
 
     // zlib struct
@@ -90,7 +90,7 @@ int nczip_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim,
  * The caller is responsible to free the buffer
  * If out_len is not NULL, it will be set to buffer size allocated
  */
-int nczip_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, MPI_Offset *dims, MPI_Datatype dtype) {
+int nczip_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     int err;
     int bsize = in_len >> 3; // Start by 1/8 of the in_len
     char *buf;
@@ -158,14 +158,14 @@ int nczip_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, in
 /* Return an estimated decompressed data size
  * Actual decompressed size should not exceed the estimation
  */
-int nczip_zlib_inq_dcsize(void *in, int in_len, int *out_len, int ndim, MPI_Offset *dims, MPI_Datatype dtype) {
+int nczip_zlib_inq_dcsize(void *in, int in_len, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     return NC_ENOTSUPPORT;  // Zlib has no size estimation
 }
 
 /* If out_len is large enough, decompress the data at in and save it to out. out_len is set to actual decompressed size
  * If out_len is NULL, we assume out is large enough for decompressed data
  */
-int nczip_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndim, MPI_Offset *dims, MPI_Datatype dtype) {
+int nczip_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     int err;
 
     // zlib struct
@@ -217,7 +217,7 @@ int nczip_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndi
  * The caller is responsible to free the buffer
  * If out_len is not NULL, it will be set to buffer size allocated
  */
-int nczip_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, MPI_Offset *dims, MPI_Datatype dtype) {
+int nczip_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     int err;
     int bsize = in_len << 1; // Start by 2 times of the in_len
     char *buf;

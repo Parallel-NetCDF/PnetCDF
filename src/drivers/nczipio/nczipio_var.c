@@ -221,7 +221,7 @@ nczipio_get_var(void             *ncdp,
     }
     varp = nczipp->vars.data + varid;
 
-    status = nczipioi_get_var(nczipp, varp, start, count, stride, imap, buf, bufcount, buftype, reqMode);
+    status = nczipioi_get_var(nczipp, varp, start, count, stride, buf);
 
     return (err == NC_NOERR) ? status : err; /* first error encountered */
 }

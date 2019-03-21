@@ -183,8 +183,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     NC_var *ncvarp;
 
     // -1 means all chunks
-    if (nchunks < 0){
-        nchunks = varp->nmychunks;
+    if (nchunk < 0){
+        nchunk = varp->nmychunks;
         cids = varp->mychunks;
     }
 
@@ -201,19 +201,19 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     for(i = 0; i < nchunk; i++){
         cid = cids[i];
         // offset and length of compressed chunks
-        lens[i] = zsizes_all[cid];
+        lens[i] = zsizes[cid];
         disps[i] = (MPI_Aint)zoffs[cid] + (MPI_Aint)ncvarp->begin;
         // At the same time, we record the size of buffer we need
-        bsize += (MPI_Offset(lens[i]));
+        bsize += (MPI_Offset)lens[i];
     }
-    MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &ftype);
+    MPI_Type_create_hindexed(nchunk, lens, disps, MPI_BYTE, &ftype);
     MPI_Type_commit(&ftype);
 
     // Allocate buffer for compressed data
     // We allocate it continuously so no mem type needed
     zbufs[0] = (char*)NCI_Malloc(bsize);
     for(i = 1; i < nchunk; i++){
-        zbufs[i] = zbufs[i - 1] + zsizes[cid[i - 1]];
+        zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]];
     }
 
     // Perform MPI-IO
