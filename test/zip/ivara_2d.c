@@ -67,9 +67,6 @@ int main(int argc, char **argv)
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
-    // Free info
-    MPI_Info_free(&info);
-
     /* Define the dimension. */
     err = ncmpi_def_dim(ncid, "X", np, dimids);
     CHECK_ERR
@@ -95,6 +92,36 @@ int main(int argc, char **argv)
     }
 
     err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
+
+    /* Close the file. */
+    err = ncmpi_close(ncid);
+    CHECK_ERR
+
+    /* Open the file. */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
+
+    // Free info
+    MPI_Info_free(&info);
+
+    // Read variable
+    start[0] = rank;
+    count[0] = 1;
+    count[1] = 1;
+    for(i = 0; i < N; i++){
+        start[1] = i;
+        buf[i] = rank * N + i + 1;
+        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf + i, reqids + i); CHECK_ERR
+    }
+
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
+
+    for(i = 0; i < N; i++){
+        if (buf[i] != rank * N + i + 1){
+            printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
+                   __FILE__,__LINE__, i , rank * N + i + 1, buf[i]);
+        }
+    }
 
     /* Close the file. */
     err = ncmpi_close(ncid);
