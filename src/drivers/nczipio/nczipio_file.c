@@ -107,19 +107,14 @@ nczipio_open(MPI_Comm     comm,
            MPI_Info     info,
            void       **ncpp)
 {
-    int err, format;
+    int err;
+    int one = 0;
     void *ncp=NULL;
     NC_zip *nczipp;
     PNC_driver *driver=NULL;
 
-    err = ncmpi_inq_file_format(path, &format);
-    if (err != NC_NOERR) return err;
-
-    if (format == NC_FORMAT_CLASSIC ||
-        format == NC_FORMAT_CDF2 ||
-        format == NC_FORMAT_CDF5) {
-        driver = ncmpio_inq_driver();
-    }
+    /* TODO: use comde to determine the true driver */
+    driver = ncmpio_inq_driver();
     if (driver == NULL) return NC_ENOTNC;
 
     err = driver->open(comm, path, omode, ncid, info, &ncp);
@@ -135,13 +130,24 @@ nczipio_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(nczipp->path, path);
-    nczipp->mode   = omode;
+    nczipp->mode   = cmode;
     nczipp->driver = driver;
     nczipp->flag   = 0;
     nczipp->ncp    = ncp;
     nczipp->comm   = comm;
     MPI_Comm_rank(comm, &(nczipp->rank));
     MPI_Comm_size(comm, &(nczipp->np));
+
+    err = nczipioi_extract_hint(nczipp, info);
+    if (err != NC_NOERR) return err;
+
+    err = driver->get_att(nczipp->ncp, NC_GLOBAL, "_comressed", NC_INT, 1, &one, MPI_INT); // Mark this file as compressed
+    if (err != NC_NOERR) return err;
+    
+    // Not compressed file
+    if (one != 1){
+        DEBUG_RETURN_ERROR(NC_EINVAL)
+    }
 
     nczipioi_init(nczipp);
 
