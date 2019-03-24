@@ -38,6 +38,7 @@ C_SRCS = nczipio_attr.c \
          nczipioi_put_var.c \
          nczipioi_get_var.c \
          nczipioi_put_varn.c \
+         nczipioi_get_varn.c \
          nczipioi_iput.c \
          nczipioi_nonblocking.c \
          nczipioi_chunk.c \

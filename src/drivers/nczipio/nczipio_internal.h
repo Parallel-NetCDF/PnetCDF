@@ -36,7 +36,7 @@ extern int
 nczipioi_get_var(NC_zip*, NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*, void*);
 
 extern int
-nczipioi_get_varn(NC_zip*, NC_zip_var*, int, MPI_Offset* const*, MPI_Offset* const*, void*, MPI_Offset, MPI_Datatype, int);
+nczipioi_get_varn(NC_zip *, NC_zip_var*, int , MPI_Offset* const *, MPI_Offset* const *, const void*);
 
 extern int
 nczipioi_put_var(NC_zip*, NC_zip_var*, const MPI_Offset*, const MPI_Offset*, const MPI_Offset*, void*);

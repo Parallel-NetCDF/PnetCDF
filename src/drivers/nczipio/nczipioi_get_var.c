@@ -175,11 +175,15 @@ nczipioi_get_var(NC_zip          *nczipp,
             MPI_Pack(tstart, varp->ndim, MPI_INT, sbufs[k], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
             MPI_Pack(tsize, varp->ndim, MPI_INT, sbufs[k], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
 
-            // Send the receive
+            // Send and receive
             //printf("packoff = %d\n", packoff); fflush(stdout);
+            //printf("Rank: %d, MPI_Isend(%d, %d, %d, %d)\n", nczipp->rank, packoff, varp->chunk_owner[cid], cid, k); fflush(stdout);
             MPI_Isend(sbufs[k], packoff, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, sreqs + k);
-            printf("Rank: %d, MPI_Irecv(%d, %d, %d, %d)\n", nczipp->rank, overlapsize, varp->chunk_owner[cid], cid, nrecv + k); fflush(stdout);
-            MPI_Irecv(rbufs[k + nrecv], overlapsize, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, rreqs + nrecv + k);
+            //printf("Rank: %d, MPI_Irecv(%d, %d, %d, %d)\n", nczipp->rank, overlapsize, varp->chunk_owner[cid], cid + 1024, nrecv + k); fflush(stdout);
+            err = MPI_Irecv(rbufs[k + nrecv], overlapsize, MPI_BYTE, varp->chunk_owner[cid], cid + 1024, nczipp->comm, rreqs + nrecv + k);
+            if (err != 0){
+                printf("err = %d\n", err); fflush(stdout);
+            }
             k++;
         }
     } while (nczipioi_chunk_itr_next(varp, start, count, cstart, cend, citr));
@@ -201,6 +205,7 @@ nczipioi_get_var(NC_zip          *nczipp,
             rbufs[k] = (char*)NCI_Malloc(rsizes[k]);
 
             // Post irecv
+            //printf("Rank: %d, MPI_Imrecv(%d, %d, %d, %d)\n", nczipp->rank, rsizes[k], -1, cid, k); fflush(stdout);
             MPI_Imrecv(rbufs[k], rsizes[k], MPI_BYTE, &rmsg, rreqs + k);
             k++;
         }
@@ -229,8 +234,8 @@ nczipioi_get_var(NC_zip          *nczipp,
                 tsize[j] = varp->chunkdim[j];
                 tssize[j] = (int)osize[j];
             }
-            printf("Rank: %d, ostart=[%lld, %lld], osize=[%lld, %lld]\n", nczipp->rank, ostart[0], ostart[1], osize[0], osize[1]); fflush(stdout);
-            printf("Rank: %d, MPI_Type_create_subarray1([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            //printf("Rank: %d, ostart=[%lld, %lld], osize=[%lld, %lld]\n", nczipp->rank, ostart[0], ostart[1], osize[0], osize[1]); fflush(stdout);
+            //printf("Rank: %d, MPI_Type_create_subarray1([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
             MPI_Type_commit(&ptype);
 
@@ -245,7 +250,7 @@ nczipioi_get_var(NC_zip          *nczipp,
                 tstart[j] = (int)(ostart[j] - start[j]);
                 tsize[j] = (int)count[j];
             }
-            printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
             MPI_Type_commit(&ptype);
 
@@ -262,6 +267,7 @@ nczipioi_get_var(NC_zip          *nczipp,
 
         // Wait for all send requests related to this chunk
         // We remove the impact of -1 mark in rcnt_local[cid]
+        //printf("Rank: %d, MPI_Waitall_recv(%d, %d)\n", nczipp->rank, rcnt_all[cid] - rcnt_local[cid], k); fflush(stdout);
         MPI_Waitall(rcnt_all[cid] - rcnt_local[cid], rreqs + k, rstats + k);
 
         // Process data received
@@ -273,21 +279,22 @@ nczipioi_get_var(NC_zip          *nczipp,
             MPI_Unpack(rbufs[j], rsizes[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
 
             // Pack type
-            printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
             MPI_Type_commit(&ptype);
 
             // Allocate buffer 
-             MPI_Type_size(ptype, &overlapsize);
-            sbufs[k + nsend] = (char*)NCI_Malloc(overlapsize); // For reply
+            MPI_Type_size(ptype, &overlapsize);
+            sbufs[j + nsend] = (char*)NCI_Malloc(overlapsize); // For reply
             
             // Pack data
             packoff = 0;
-            MPI_Pack(varp->chunk_cache[cid], 1, ptype, sbufs[k + nsend], overlapsize, &packoff, nczipp->comm);
+            MPI_Pack(varp->chunk_cache[cid], 1, ptype, sbufs[j + nsend], overlapsize, &packoff, nczipp->comm);
             MPI_Type_free(&ptype);
 
             // Send reply
-            MPI_Isend(sbufs[k + nsend], packoff, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, sreqs + k + nsend);
+            //printf("Rank: %d, MPI_Isend(%d, %d, %d, %d)\n", nczipp->rank, packoff, varp->chunk_owner[cid], cid + 1024, k + nsend); fflush(stdout);
+            MPI_Isend(sbufs[j + nsend], packoff, MPI_BYTE, rstats[j].MPI_SOURCE, cid + 1024, nczipp->comm, sreqs + j + nsend);
         }
         k += rcnt_all[cid] - rcnt_local[cid];        
 
@@ -295,6 +302,7 @@ nczipioi_get_var(NC_zip          *nczipp,
     }
 
     // Wait for all send request
+    //printf("Rank: %d, MPI_Waitall_send(%d, %d)\n", nczipp->rank, nsend, 0); fflush(stdout);
     MPI_Waitall(nsend, sreqs, sstats);
 
     // Receive replies from the owners and update the user buffer
@@ -317,19 +325,20 @@ nczipioi_get_var(NC_zip          *nczipp,
                 tsize[j] = (int)count[j];
                 tssize[j] = (int)osize[j];
             }
-            printf("Rank: %d, ostart=[%lld, %lld], osize=[%lld, %lld]\n", nczipp->rank, ostart[0], ostart[1], osize[0], osize[1]); fflush(stdout);
-            printf("Rank: %d, MPI_Type_create_subarray4([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            //printf("Rank: %d, ostart=[%lld, %lld], osize=[%lld, %lld]\n", nczipp->rank, ostart[0], ostart[1], osize[0], osize[1]); fflush(stdout);
+            //printf("Rank: %d, MPI_Type_create_subarray4([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-                printf("Rank: %d, commit\n", nczipp->rank); fflush(stdout);
+            //printf("Rank: %d, commit\n", nczipp->rank); fflush(stdout);
             MPI_Type_commit(&ptype);
             MPI_Type_size(ptype, &overlapsize);
 
-                printf("Rank: %d, wait recv, nrecv = %d, k = %d, nsend = %d\n", nczipp->rank, nrecv, k, nsend); fflush(stdout);
+            //printf("Rank: %d, wait recv, nrecv = %d, k = %d, nsend = %d\n", nczipp->rank, nrecv, k, nsend); fflush(stdout);
             // Wait for reply
-            MPI_Wait(rreqs[nrecv + k], rstats + nrecv + k);
+            //printf("Rank: %d, MPI_Wait_recv(%d)\n", nczipp->rank, nrecv + k); fflush(stdout);
+            MPI_Wait(rreqs + nrecv + k, rstats + nrecv + k);
 
             // Pack data
-                printf("Rank: %d, pack\n", nczipp->rank); fflush(stdout);
+            //printf("Rank: %d, pack\n", nczipp->rank); fflush(stdout);
             packoff = 0;
             MPI_Unpack(rbufs[nrecv + k], overlapsize, &packoff, buf, 1, ptype, nczipp->comm);
             MPI_Type_free(&ptype);
@@ -338,11 +347,12 @@ nczipioi_get_var(NC_zip          *nczipp,
         }
     } while (nczipioi_chunk_itr_next(varp, start, count, cstart, cend, citr));
 
-    printf("Rank: %d, wait_final\n", nczipp->rank); fflush(stdout);
+    //printf("Rank: %d, wait_final\n", nczipp->rank); fflush(stdout);
     // Wait for all send replies
+    //printf("Rank: %d, MPI_Waitall_send(%d, %d)\n", nczipp->rank, nrecv, nsend); fflush(stdout);
     MPI_Waitall(nrecv, sreqs + nsend, sstats + nsend);
 
-    printf("Rank: %d, exiting\n", nczipp->rank); fflush(stdout);
+    //printf("Rank: %d, exiting\n", nczipp->rank); fflush(stdout);
 
     // Free buffers
     NCI_Free(rcnt_local);

@@ -402,5 +402,7 @@ nczipioi_put_varn_new(NC_zip        *nczipp,
     // Write the compressed variable
     nczipioi_save_var(nczipp, varp);
 
+    NCI_Free(bufs);
+
     return NC_NOERR;
 }

@@ -448,12 +448,19 @@ nczipio_get_varn(void              *ncdp,
                int                reqMode)
 {
     int err;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (reqMode == NC_REQ_INDEP){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    }
 
-    err = nczipp->driver->get_varn(nczipp->ncp, varid, num, starts, counts, buf,
-                                bufcount, buftype, reqMode);
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+    varp = nczipp->vars.data + varid;
+
+    err = nczipioi_get_varn(nczipp, varp, num, starts, counts, buf);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

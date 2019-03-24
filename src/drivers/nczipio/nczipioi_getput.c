@@ -32,48 +32,6 @@
 #define min(a,b) (((a)<(b))?(a):(b))
 #define max(a,b) (((a)>(b))?(a):(b))
 
-static int get_chunk_idx(NC_zip_var *varp, int* cord){
-    int i, ret;
-    
-    ret = cord[0];
-    for(i = 1; i < varp->ndim; i++){
-        ret = ret * varp->chunkdim[i - 1] + cord[i];
-    }
-
-    return ret;
-}
-
-static int get_chunk_cord(NC_zip_var *varp, int idx, int* cord){
-    int i, ret;
-    
-    ret = cord[0];
-    for(i = 1; i < varp->ndim; i++){
-        ret = ret * varp->chunkdim[i - 1] + cord[i];
-    }
-
-    for(i = varp->ndim - 1; i > 0; i--){
-        cord[i] = idx % varp->chunkdim[i - 1];
-        idx /= varp->chunkdim[i - 1];
-    }
-    cord[0] = idx;
-
-    return 0;
-}
-
-static int get_chunk_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, const MPI_Offset *count, const MPI_Offset *stride, int *ostart, int *ocount){
-    int i, ret;
-
-    for(i = 0; i < varp->ndim; i++){
-        ostart[i] = max(start[i], cord[i] * varp->chunkdim[i]);
-        ocount[i] = min(start[i] + count[i], (cord[i] + 1) * varp->chunkdim[i]) - ostart[i];
-        if (ocount[i] < 0){
-            ocount[i] = 0;
-        }
-    }
-
-    return 0;
-}
-
 int
 nczipioi_get_var(NC_zip        *nczipp,
               NC_zip_var       *varp,
@@ -207,28 +165,6 @@ nczipioi_get_var(NC_zip        *nczipp,
     
     // Free datatype
     MPI_Type_free(&subarytype);
-
-    return NC_NOERR;
-}
-
-int
-nczipioi_get_varn(NC_zip         *nczipp,
-               NC_zip_var        *varp,
-               int                num,
-               MPI_Offset* const *starts,
-               MPI_Offset* const *counts,
-               void              *buf,
-               MPI_Offset         bufcount,
-               MPI_Datatype       buftype,
-               int                reqMode)
-{
-    int err;
-
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
-
-    // Original datatype
-    //err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_datatype", NC_INT, 1, &xtype, MPI_INT); 
-    //if (err != NC_NOERR) return err;
 
     return NC_NOERR;
 }
