@@ -199,7 +199,7 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
             if (dimids != NULL){
                 NCI_Free(dimids);
             }
-            dimids = (int*)NCI_Malloc(sizeof(int) * maxndim);
+            dimids = (int*)NCI_Malloc(SIZEOF_INT * maxndim);
         }
         
         /* Record every dimensions */
