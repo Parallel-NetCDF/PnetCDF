@@ -207,6 +207,7 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
                 NCI_Free(dimids);
             }
             dimids = (int*)NCI_Malloc(SIZEOF_INT * maxndim);
+<<<<<<< HEAD
         }
         
         /* Record every dimensions */
@@ -307,6 +308,8 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
                 NCI_Free(dimids);
             }
             dimids = (int*)NCI_Malloc(sizeof(int) * maxndim);
+=======
+>>>>>>> 3761cb3... use config constants
         }
         
         /* Record every dimensions */
