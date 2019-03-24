@@ -65,7 +65,7 @@ nczipio_create(MPI_Comm     comm,
     driver = ncmpio_inq_driver();
     if (driver == NULL) return NC_ENOTNC;
 
-    err = driver->create(comm, path, cmode, ncid, info, &ncp);
+    err = driver->create(comm, path, cmode | NC_64BIT_DATA, ncid, info, &ncp);
     if (err != NC_NOERR) return err;
 
     /* Create a NC_zip object and save its driver pointer */
@@ -130,7 +130,7 @@ nczipio_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(nczipp->path, path);
-    nczipp->mode   = cmode;
+    nczipp->mode   = omode;
     nczipp->driver = driver;
     nczipp->flag   = 0;
     nczipp->ncp    = ncp;
@@ -141,7 +141,7 @@ nczipio_open(MPI_Comm     comm,
     err = nczipioi_extract_hint(nczipp, info);
     if (err != NC_NOERR) return err;
 
-    err = driver->get_att(nczipp->ncp, NC_GLOBAL, "_comressed", NC_INT, 1, &one, MPI_INT); // Mark this file as compressed
+    err = driver->get_att(nczipp->ncp, NC_GLOBAL, "_comressed", &one, MPI_INT); // Mark this file as compressed
     if (err != NC_NOERR) return err;
     
     // Not compressed file
@@ -150,6 +150,8 @@ nczipio_open(MPI_Comm     comm,
     }
 
     nczipioi_init(nczipp);
+
+    nczipioi_parse_var_info(nczipp);
 
     *ncpp = nczipp;
 
@@ -181,7 +183,7 @@ nczipio_enddef(void *ncdp)
     NC_zip *nczipp = (NC_zip*)ncdp;
     
     for(i = 0; i < nczipp->vars.cnt; i++){
-        nczipioi_var_init(nczipp, nczipp->vars.data + i);
+        nczipioi_var_init(nczipp, nczipp->vars.data, 1);
     }
 
     err = nczipp->driver->enddef(nczipp->ncp);
@@ -201,7 +203,7 @@ nczipio__enddef(void       *ncdp,
     NC_zip *nczipp = (NC_zip*)ncdp;
 
     for(i = 0; i < nczipp->vars.cnt; i++){
-        nczipioi_var_init(nczipp, nczipp->vars.data + i);
+        nczipioi_var_init(nczipp, nczipp->vars.data + i, 1);
     }
 
     err = nczipp->driver->_enddef(nczipp->ncp, h_minfree, v_align, v_minfree,
@@ -273,8 +275,12 @@ nczipio_inq(void *ncdp,
     int err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    err = nczipp->driver->inq(nczipp->ncp, ndimsp, nvarsp, nattsp, xtendimp);
+    err = nczipp->driver->inq(nczipp->ncp, ndimsp, NULL, nattsp, xtendimp);
     if (err != NC_NOERR) return err;
+
+    if (nvarsp != NULL){
+        *nvarsp = nczipp->vars.cnt;
+    }
 
     return NC_NOERR;
 }
@@ -305,6 +311,14 @@ nczipio_inq_misc(void       *ncdp,
                                 header_size, header_extent, recsize, put_size,
                                 get_size, info_used, nreqs, usage, buf_size);
     if (err != NC_NOERR) return err;
+
+    if (num_fix_varsp != NULL){
+        *num_fix_varsp = nczipp->vars.cnt;
+    }
+
+    if (nreqs != NULL){
+        *nreqs = nczipp->putlist.nused + nczipp->getlist.nused;
+    }
 
     return NC_NOERR;
 }
@@ -431,4 +445,53 @@ nczipioi_init(NC_zip *nczipp){
     if (err != NC_NOERR) return err;
     err = nczipioi_req_list_init(&(nczipp->putlist));
     if (err != NC_NOERR) return err;
+}
+
+int
+nczipioi_parse_var_info(NC_zip *nczipp){
+    int err;
+    int vid;
+    int i;
+    int nvar;
+    NC_zip_var var;
+
+    err = nczipp->driver->inq(nczipp->ncp, NULL, &nvar, NULL, NULL);
+
+    for(vid = 0; vid < nvar; vid++){
+        err = nczipp->driver->get_att(nczipp->ncp, vid, "_varkind", &(var.varkind), MPI_INT);   // Comressed var?
+        if (err != NC_NOERR || var.varkind == NC_ZIP_VAR_DATA){
+            continue;
+        }
+
+        var.varid = vid;
+        
+        if (var.varkind == NC_ZIP_VAR_COMPRESSED){
+            err = nczipp->driver->get_att(nczipp->ncp, var.varid, "_ndim", &(var.ndim), MPI_INT); // Original dimensions
+            if (err != NC_NOERR) return err;
+
+            var.dimids = (int*)NCI_Malloc(sizeof(int) * var.ndim);
+            var.dimsize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * var.ndim);
+
+            err = nczipp->driver->get_att(nczipp->ncp, var.varid, "_dimids", var.dimids, MPI_INT);   // Dimensiona IDs
+            if (err != NC_NOERR) return err;
+
+            for(i = 0; i < var.ndim; i++){
+                nczipp->driver->inq_dim(nczipp->ncp, var.dimids[i], NULL, var.dimsize + i);
+            }
+
+            err = nczipp->driver->get_att(nczipp->ncp, var.varid, "_datatype", &(var.xtype), MPI_INT); // Original datatype
+            if (err != NC_NOERR) return err;
+
+            var.esize = NC_Type_size(var.xtype);
+            var.etype = ncmpii_nc2mpitype(var.xtype);
+            var.chunkdim = NULL;
+
+            nczipioi_var_init(nczipp, &var, 0);
+        }
+    
+        err = nczipioi_var_list_add(&(nczipp->vars), var);
+        if (err != NC_NOERR) return err;
+    }
+
+    return NC_NOERR;
 }

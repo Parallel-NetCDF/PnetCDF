@@ -164,7 +164,7 @@ nczipio_inq_var(void       *ncdp,
 
     varp = nczipp->vars.data + varid;
 
-    err = nczipp->driver->inq_var(nczipp->ncp, varp->varid, name, xtypep, ndimsp, dimids,
+    err = nczipp->driver->inq_var(nczipp->ncp, varp->varid, name, xtypep, NULL, NULL,
                                nattsp, offsetp, no_fillp, fill_valuep);
     if (err != NC_NOERR) return err;
 

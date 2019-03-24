@@ -24,7 +24,7 @@ extern int
 nczipioi_var_list_add(NC_zip_var_list*, NC_zip_var); 
 
 extern int 
-nczipioi_var_init(NC_zip*, NC_zip_var*);
+nczipioi_var_init(NC_zip*, NC_zip_var*, int);
 
 extern int 
 nczipioi_extract_hint(NC_zip*, MPI_Info);

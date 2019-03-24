@@ -30,7 +30,7 @@
 #include "nczipio_internal.h"
 #include "../ncmpio/ncmpio_NC.h"
 
-int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
+int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
     int i, j, err;
     int valid;
     MPI_Offset len;
@@ -45,7 +45,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             valid = 1;
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunkdim", NULL, &len);
             if (err == NC_NOERR && len == varp->ndim){
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkdim", varp->chunkdim, MPI_UNSIGNED_LONG_LONG);
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkdim", varp->chunkdim, MPI_INT);
                 if (err != NC_NOERR){
                     valid = 0;
                 }
@@ -100,7 +100,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
                 for(j = 0; j < varp->nchunks; j++){ 
                     varp->chunk_owner[j] = j % nczipp->np;
-                    if (varp->chunk_owner[j] == nczipp->rank){
+                    if (varp->chunk_owner[j] == nczipp->rank && create){
                         varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
                     }
                     varp->nmychunks++;
@@ -117,14 +117,14 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             }
 
             // Determine block offset
-            varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->nchunks);
-            varp->data_lens = (int*)NCI_Malloc(sizeof(int) * (varp->nchunks + 1));
+            varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (varp->nchunks + 1));
+            varp->data_lens = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
             // Try if there are offset recorded in attributes, it can happen after opening a file
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunkoffsets", NULL, &len);
             if (err == NC_NOERR && varp->nchunks == len - 1){
                 err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunklens", NULL, &len);
-                if (err == NC_NOERR && varp->nchunks == len - 1){
-                    err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkoffsets", varp->data_offs, MPI_UNSIGNED_LONG_LONG);
+                if (err == NC_NOERR && varp->nchunks == len){
+                    err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkoffsets", varp->data_offs, MPI_LONG_LONG);
                     err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunklens", varp->data_lens, MPI_INT);
                 }
                 else{
@@ -146,7 +146,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
             /* Select compression driver based on attribute */
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_zipdriver", NULL, &len);
             if (err == NC_NOERR && len == 1){
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_zipdriver", &varp->zipdriver, MPI_INT);
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_zipdriver", &(varp->zipdriver), MPI_INT);
             }
             else{
                 varp->zipdriver = 0;
@@ -155,6 +155,11 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp) {
                 case NC_ZIP_DRIVER_DUMMY:
                     varp->zip = nczip_dummy_inq_driver();
                 break;
+            }
+
+            // Get variable id
+            if (!create){
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_datavarid", &(varp->datavarid), MPI_INT);
             }
         }   
     }
@@ -316,12 +321,21 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(varp->datavarid));
     if (err != NC_NOERR) return err;
 
+    // Mark as data variable
+    i = NC_ZIP_VAR_DATA;
+    err = nczipp->driver->put_att(nczipp->ncp, varp->datavarid, "_varkind", NC_INT, 1, &i, MPI_INT);
+    if (err != NC_NOERR) return err;
+
     // Record offset of chunks in data variable
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT, varp->nchunks, zoffs, MPI_INT);
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT64, varp->nchunks + 1, zoffs, MPI_LONG_LONG);
     if (err != NC_NOERR) return err;
 
     // Record size of chunks
     err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklens", NC_INT, varp->nchunks, zsizes_all, MPI_INT);
+    if (err != NC_NOERR) return err;
+
+    // Record data variable id
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_datavarid", NC_INT, 1, &(varp->datavarid), MPI_INT);
     if (err != NC_NOERR) return err;
 
     // Switch to data mode
@@ -457,12 +471,21 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(varp->datavarid));
         if (err != NC_NOERR) return err;
 
+        // Mark as data variable
+        i = NC_ZIP_VAR_DATA;
+        err = nczipp->driver->put_att(nczipp->ncp, varp->datavarid, "_varkind", NC_INT, 1, &i, MPI_INT);
+        if (err != NC_NOERR) return err;
+
         // Record offset of chunks in data variable
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT, varp->nchunks, zoffs, MPI_INT);
+        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT64, varp->nchunks + 1, zoffs, MPI_LONG_LONG);
         if (err != NC_NOERR) return err;
 
         // Record size of chunks
         err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklens", NC_INT, varp->nchunks, zsizes_all, MPI_INT);
+        if (err != NC_NOERR) return err;
+
+        // Record data variable id
+        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_datavarid", NC_INT, 1, &(varp->datavarid), MPI_INT);
         if (err != NC_NOERR) return err;
 
         /* Paramemter for file and memory type 
@@ -486,6 +509,13 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     // Switch back to data mode
     err = nczipp->driver->enddef(nczipp->ncp);
     if (err != NC_NOERR) return err;
+
+    // Record data variable id
+    i = j = 1;
+    for(vid = 0; vid < nvar; vid++){
+        varp = nczipp->vars.data + vid;
+        err = nczipp->driver->put_var(nczipp->ncp, varp->varid, &i, &j, NULL, NULL, &varp->datavarid, 1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
+    }
 
     /* Now it's time to add variable file offset to displacements
      * File type offset need to be specified in non-decreasing order
