@@ -751,6 +751,7 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
     adios_posix_close_internal (b);
     free (b);
     free (b_0);
+    free (b_1);
     return 0;
 }
 

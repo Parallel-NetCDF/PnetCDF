@@ -465,6 +465,7 @@
       integer NF_EMAX_REQ
       integer NF_EBADLOG
       integer NF_EFLUSHED
+      integer NF_EADIOS
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
