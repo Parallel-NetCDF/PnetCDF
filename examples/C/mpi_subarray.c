@@ -3,6 +3,12 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  *
+ * To compile:
+ *     % mpicc mpi_subarray.c -o mpi_subarray
+ *
+ * To run:
+ *     % mpiexec -n 4 ./mpi_subarray output_file
+ *
  *********************************************************************/
 
 #include <stdio.h>
