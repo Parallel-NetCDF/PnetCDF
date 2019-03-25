@@ -132,6 +132,19 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Perform I/O for comrpessed variables
     nczipioi_save_nvar(nczipp, nvar, varids);
 
+    // Free buffers
+    NCI_Free(nums);
+    NCI_Free(nreqs);
+
+    NCI_Free(vreqids[0]);
+    NCI_Free(vreqids);
+
+    NCI_Free(varids);
+    
+    NCI_Free(starts);
+    NCI_Free(counts);
+    NCI_Free(bufs);
+
     return NC_NOERR;
 }
 
@@ -233,6 +246,19 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             nczipioi_get_varn_cb(nczipp, nczipp->vars.data + vid, num, starts, counts, NULL, bufs);
         }
     }
+
+    // Free buffers
+    NCI_Free(nums);
+    NCI_Free(nreqs);
+
+    NCI_Free(vreqids[0]);
+    NCI_Free(vreqids);
+
+    NCI_Free(varids);
+    
+    NCI_Free(starts);
+    NCI_Free(counts);
+    NCI_Free(bufs);
 
     return NC_NOERR;
 }
