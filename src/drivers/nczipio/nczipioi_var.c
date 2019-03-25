@@ -230,6 +230,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     // Restore file view
     MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
+    MPI_Type_free(&ftype);
+
     // Decompress each chunk
     // Allocate chunk cache if not allocated
     dsize = varp->chunksize;
