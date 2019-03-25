@@ -339,8 +339,16 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
         NCI_Free(getstats);
     }
 
-    NCI_Free(putreqs);
-    NCI_Free(getreqs);
+    // Remove from req list
+    for(i = 0; i < nput; i++){
+        nczipioi_req_list_remove(&(nczipp->putlist), putreqs[i]);
+    }
+    for(i = 0; i < nget; i++){
+        nczipioi_req_list_remove(&(nczipp->getlist), getreqs[i]);
+    }
+
+    free(putreqs);
+    free(getreqs);
 
     return NC_NOERR;
 }

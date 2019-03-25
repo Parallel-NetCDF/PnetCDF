@@ -167,7 +167,34 @@ int nczipioi_get_list_add(NC_zip_req_list *lp, int *id)
  * ids[0:nused] => active (used) request ids
  * ids[nused:nalloc] => available (unused) request ids
  */
-int nczipioi_get_list_remove(NC_zip_req_list *lp, int reqid) {
+int nczipioi_req_list_remove(NC_zip_req_list *lp, int reqid) {
+    NC_zip_req * req = lp->reqs + reqid;
+
+    /* Clean up request */
+    if (req->start != NULL){
+        NCI_Free(req->start);
+    }
+    if (req->count != NULL){
+        NCI_Free(req->count);
+    }
+    if (req->starts != NULL){
+        NCI_Free(req->starts[0]);
+        NCI_Free(req->starts);
+    }
+    if (req->counts != NULL){
+        NCI_Free(req->counts[0]);
+        NCI_Free(req->counts);
+    }
+    if (req->stride != NULL){
+        NCI_Free(req->stride);
+    }
+    if (req->xbufs != NULL){
+        NCI_Free(req->xbufs);
+    }
+    if (req->xbuf != req->buf){
+        NCI_Free(req->xbuf);
+    }
+
     /* Return id to the list */
     lp->nused--;
     lp->ids[lp->pos[reqid]] = lp->ids[lp->nused];

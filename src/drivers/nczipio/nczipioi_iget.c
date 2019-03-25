@@ -48,6 +48,9 @@ nczipioi_init_get_req( NC_zip *nczipp,
     MPI_Datatype ptype; // Pack datatype
     NC_zip_var *varp = nczipp->vars.data + varid;
 
+    // Zero out the request
+    memset(req, 0, sizeof(NC_zip_req));
+
     // Record request
     req->start = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
     memcpy(req->start, start, sizeof(MPI_Offset) * varp->ndim);
@@ -109,6 +112,9 @@ nczipioi_init_get_varn_req( NC_zip *nczipp,
     int i, j;
     MPI_Offset rsize, boff;
     NC_zip_var *varp = nczipp->vars.data + varid;
+
+    // Zero out the request
+    memset(req, 0, sizeof(NC_zip_req));
 
     // Record request
     req->starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nreq);
