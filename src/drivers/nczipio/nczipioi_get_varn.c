@@ -385,6 +385,8 @@ nczipioi_get_varn_cb(NC_zip          *nczipp,
     NCI_Free(rcnt_local);
     NCI_Free(rcnt_all);
 
+    NCI_Free(rids);
+
     NCI_Free(tsize);
     NCI_Free(tssize);
     NCI_Free(tstart);
