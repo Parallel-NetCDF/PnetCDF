@@ -203,6 +203,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
 
     // Create file type
     ncvarp = ncp->vars.value[varp->datavarid];
+    bsize = 0;
     for(i = 0; i < nchunk; i++){
         cid = cids[i];
         // offset and length of compressed chunks
