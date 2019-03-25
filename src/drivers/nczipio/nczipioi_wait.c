@@ -335,12 +335,12 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
             }
         }
 
-        free(putstats);
-        free(getstats);
+        NCI_Free(putstats);
+        NCI_Free(getstats);
     }
 
-    free(putreqs);
-    free(getreqs);
+    NCI_Free(putreqs);
+    NCI_Free(getreqs);
 
     return NC_NOERR;
 }
