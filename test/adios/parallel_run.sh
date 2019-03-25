@@ -28,9 +28,13 @@ for i in ${check_PROGRAMS} ; do
         ${MPIRUN} ./$i arrays.bp
         ${MPIRUN} ./$i attributes.bp
         ${MPIRUN} ./$i arrays_big.bp
+<<<<<<< HEAD
         if test ${ADIOS_VER_GE_1132} = 1 ; then
             ${MPIRUN} ./$i attributes_big.bp
         fi
+=======
+        ${MPIRUN} ./$i attributes_big.bp
+>>>>>>> e77065c... include big endian test file
     done
 done
 
