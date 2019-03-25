@@ -103,7 +103,6 @@ nczipioi_init_get_varn_req( NC_zip *nczipp,
                         int        nreq,
                         MPI_Offset *const*starts,
                         MPI_Offset *const*counts, 
-                        const MPI_Offset  *imap,
                         void              *buf,
                         MPI_Offset        bufcount,
                         MPI_Datatype      buftype) {
@@ -153,7 +152,6 @@ nczipioi_iget_varn(NC_zip        *nczipp,
               int               nreq,
               MPI_Offset        **starts,
               MPI_Offset        **counts,
-              const MPI_Offset  *imap,
               void              *buf,
               MPI_Offset        bufcount,
               MPI_Datatype      buftype,
@@ -164,10 +162,10 @@ nczipioi_iget_varn(NC_zip        *nczipp,
     NC_zip_req req;
 
     if (nreq > 1){
-        err = nczipioi_init_get_varn_req(nczipp, &req, varid, nreq, starts, counts, imap, buf, bufcount, buftype);
+        err = nczipioi_init_get_varn_req(nczipp, &req, varid, nreq, starts, counts, buf, bufcount, buftype);
     }
     else{
-        err = nczipioi_init_get_req(nczipp, &req, varid, starts[0], counts[0], NULL, imap, buf, bufcount, buftype);
+        err = nczipioi_init_get_req(nczipp, &req, varid, starts[0], counts[0], NULL, NULL, buf, bufcount, buftype);
     }
 
     // Add to req list

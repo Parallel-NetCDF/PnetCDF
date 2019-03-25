@@ -515,13 +515,21 @@ nczipio_iget_varn(void               *ncdp,
                 int                 reqMode)
 {
     int err;
+    void *cbuf=(void*)buf;
+    void *xbuf=(void*)buf;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (reqMode == NC_REQ_INDEP){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    }
 
-    err = nczipp->driver->iget_varn(nczipp->ncp, varid, num, starts, counts, buf,
-                                 bufcount, buftype, reqid, reqMode);
-    if (err != NC_NOERR) return err;
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+
+    xbuf = cbuf;
+    nczipioi_iget_varn(nczipp, varid, num, starts, counts, buf, bufcount, buftype, reqid);
 
     return NC_NOERR;
 }
@@ -539,13 +547,21 @@ nczipio_iput_varn(void               *ncdp,
                 int                 reqMode)
 {
     int err;
+    void *cbuf=(void*)buf;
+    void *xbuf=(void*)buf;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (reqMode == NC_REQ_INDEP){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    }
 
-    err = nczipp->driver->iput_varn(nczipp->ncp, varid, num, starts, counts, buf,
-                                 bufcount, buftype, reqid, reqMode);
-    if (err != NC_NOERR) return err;
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+
+    xbuf = cbuf;
+    nczipioi_iput_varn(nczipp, varid, num, starts, counts, xbuf, buf, reqid);
 
     return NC_NOERR;
 }
