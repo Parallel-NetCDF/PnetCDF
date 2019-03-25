@@ -345,7 +345,7 @@ nczipioi_get_varn_cb(NC_zip          *nczipp,
             //printf("Rank: %d, MPI_Wait_recv(%d)\n", nczipp->rank, nrecv + k); fflush(stdout);
             MPI_Wait(rreqs + nrecv + k, rstats + nrecv + k);
 
-            // Calculate send buffer size
+            packoff = 0;
             for(req = 0; req < nreq; req++){
                 // Calculate chunk overlap
                 get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
@@ -367,7 +367,6 @@ nczipioi_get_varn_cb(NC_zip          *nczipp,
 
                 // Pack data
                 //printf("Rank: %d, pack\n", nczipp->rank); fflush(stdout);
-                packoff = 0;
                 MPI_Unpack(rbufs[nrecv + k], overlapsize, &packoff, bufs[req], 1, ptype, nczipp->comm);
                 MPI_Type_free(&ptype);
             }
