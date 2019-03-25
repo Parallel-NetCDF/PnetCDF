@@ -127,6 +127,7 @@ The following features are not supported because the availability of APIs is dif
 * Inquiring the record dimension will return as if no record dimension is defined.
 * When reading the one-file-per-process BP files, the dimensions in individual files will be translated into virtualized dimensions that do not have the relationship to any scalar variables.
 * ADIOS does not support collective I/O on reading. As a result, PnetCDF will always perform indepenednt read even if collective API is called.
+* Some of the BP files in big endian cannot be read by PnetCDF on a litle endian machine (ex. output filke of ADIOS examples/C/attributes/attributes_write). This is cause by a bug in ADIOS library before (and including) version 1.13.1. When linking against ADIOS version before 1.13.2, PnetCDF will disable tests related to the bug.
 
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 

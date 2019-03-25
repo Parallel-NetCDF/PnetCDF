@@ -1995,6 +1995,22 @@ if test "x$enable_adios" = "xyes" ; then
         PnetCDF with ADIOS BP read support. 
         ------------------------------------------------------------])
     fi
+
+    dnl Check if ADIOS version is 1.13.2 or later
+    AC_MSG_CHECKING([Check if ADIOS version is 1.13.2 or later])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+#if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1013002)
+      choke me
+#endif
+    ]])], [adios_ge_1_13_2=yes], [adios_ge_1_13_2=no])
+    AC_MSG_RESULT([$adios_ge_1_13_2])
+
+    ADIOS_BUG_FIXED = 0
+    if test "x${adios_ge_1_13_2}" = xyes; then
+      ADIOS_BUG_FIXED = 1
+    fi
+    AC_SUBST(ADIOS_BUG_FIXED)
+    AM_CONDITIONAL(ADIOS_BUG_FIXED, [test x"$ADIOS_BUG_FIXED" = x1])
     
     CPPFLAGS=$saved_CPPFLAGS
     LDFLAGS=$saved_LDFLAGS
