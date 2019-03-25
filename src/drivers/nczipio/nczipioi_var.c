@@ -138,8 +138,8 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
             else{
                 // If not, 0 len means no data avaiable
                 if (err != NC_NOERR){
-                    memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunks);
-                    memset(varp->data_lens, 0, sizeof(int) * (varp->nchunks + 1));
+                    memset(varp->data_offs, 0, sizeof(MPI_Offset) * (varp->nchunks + 1));
+                    memset(varp->data_lens, 0, sizeof(int) * varp->nchunks);
                 }
             }
 

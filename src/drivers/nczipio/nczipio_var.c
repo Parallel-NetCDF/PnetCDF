@@ -304,13 +304,19 @@ nczipio_iget_var(void             *ncdp,
                int               reqMode)
 {
     int err;
+    void *cbuf=(void*)buf;
+    void *xbuf=(void*)buf;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (reqMode == NC_REQ_INDEP){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    }
 
-    err = nczipp->driver->iget_var(nczipp->ncp, varid, start, count, stride, imap,
-                                buf, bufcount, buftype, reqid, reqMode);
-    if (err != NC_NOERR) return err;
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+
+    nczipioi_iget_var(nczipp, varid, start, count, stride, imap, buf, bufcount, buftype, xbuf, buf, reqid);
 
     return NC_NOERR;
 }
