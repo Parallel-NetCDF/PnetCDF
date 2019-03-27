@@ -210,36 +210,50 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     disps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * nchunk);
     zbufs = (char**)NCI_Malloc(sizeof(char*) * nchunk);
 
-    // Create file type
-    ncvarp = ncp->vars.value[varp->datavarid];
-    bsize = 0;
-    for(i = 0; i < nchunk; i++){
-        cid = cids[i];
-        // offset and length of compressed chunks
-        lens[i] = zsizes[cid];
-        disps[i] = (MPI_Aint)zoffs[cid] + (MPI_Aint)ncvarp->begin;
-        // At the same time, we record the size of buffer we need
-        bsize += (MPI_Offset)lens[i];
+    /* Carry our coll I/O
+     * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
+     * We use a dummy call inplace of type with 0 count
+     */
+    if (nchunk > 0){
+        // Create file type
+        ncvarp = ncp->vars.value[varp->datavarid];
+        bsize = 0;
+        for(i = 0; i < nchunk; i++){
+            cid = cids[i];
+            // offset and length of compressed chunks
+            lens[i] = zsizes[cid];
+            disps[i] = (MPI_Aint)zoffs[cid] + (MPI_Aint)ncvarp->begin;
+            // At the same time, we record the size of buffer we need
+            bsize += (MPI_Offset)lens[i];
+        }
+        MPI_Type_create_hindexed(nchunk, lens, disps, MPI_BYTE, &ftype);
+        MPI_Type_commit(&ftype);
+
+        // Allocate buffer for compressed data
+        // We allocate it continuously so no mem type needed
+        zbufs[0] = (char*)NCI_Malloc(bsize);
+        for(i = 1; i < nchunk; i++){
+            zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]];
+        }
+
+        // Perform MPI-IO
+        // Set file view
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
+        // Write data
+        MPI_File_read_at_all(ncp->collective_fh, 0, zbufs[0], bsize, MPI_BYTE, &status);
+        // Restore file view
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+        // Free type
+        MPI_Type_free(&ftype);
     }
-    MPI_Type_create_hindexed(nchunk, lens, disps, MPI_BYTE, &ftype);
-    MPI_Type_commit(&ftype);
-
-    // Allocate buffer for compressed data
-    // We allocate it continuously so no mem type needed
-    zbufs[0] = (char*)NCI_Malloc(bsize);
-    for(i = 1; i < nchunk; i++){
-        zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]];
+    else{
+        // Follow coll I/O with dummy call
+        zbufs[0] = (char*)NCI_Malloc(0);
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        MPI_File_read_at_all(ncp->collective_fh, 0, zbufs[0], 0, MPI_BYTE, &status);
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
     }
-
-    // Perform MPI-IO
-    // Set file view
-    MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-    // Write data
-    MPI_File_read_at_all(ncp->collective_fh, 0, zbufs[0], bsize, MPI_BYTE, &status);
-    // Restore file view
-    MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-
-    MPI_Type_free(&ftype);
 
     // Decompress each chunk
     // Allocate chunk cache if not allocated
@@ -354,40 +368,52 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     err = nczipp->driver->enddef(nczipp->ncp);
     if (err != NC_NOERR) return err;
 
-    // Create file type
-    ncvarp = ncp->vars.value[varp->datavarid];
-    for(l = 0; l < varp->nmychunks; l++){
-        k = varp->mychunks[l];
+    /* Carry our coll I/O
+     * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
+     * We use a dummy call inplace of type with 0 count
+     */
+    if (wcnt > 0){
+        // Create file type
+        ncvarp = ncp->vars.value[varp->datavarid];
+        for(l = 0; l < varp->nmychunks; l++){
+            k = varp->mychunks[l];
 
-        // Record compressed size
-        lens[l] = zsizes[k];
-        disps[l] = (MPI_Aint)zoffs[k] + (MPI_Aint)ncvarp->begin;
+            // Record compressed size
+            lens[l] = zsizes[k];
+            disps[l] = (MPI_Aint)zoffs[k] + (MPI_Aint)ncvarp->begin;
+        }
+        MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &ftype);
+        MPI_Type_commit(&ftype);
+
+        // Create memory buffer type
+        for(l = 0; l < varp->nmychunks; l++){
+            k = varp->mychunks[l];
+
+            // Record compressed size
+            lens[l] = zsizes[k];
+            disps[l] = (MPI_Aint)zbufs[l];
+        }
+        err = MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &mtype);
+        MPI_Type_commit(&mtype);
+
+        // Perform MPI-IO
+        // Set file view
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
+        // Write data
+        MPI_File_write_at_all(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
+        // Restore file view
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+        // Free type
+        MPI_Type_free(&ftype);
+        MPI_Type_free(&mtype);
     }
-    MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &ftype);
-    MPI_Type_commit(&ftype);
-
-    // Create memory buffer type
-    for(l = 0; l < varp->nmychunks; l++){
-        k = varp->mychunks[l];
-
-        // Record compressed size
-        lens[l] = zsizes[k];
-        disps[l] = (MPI_Aint)zbufs[l];
+    else{
+        // Follow coll I/O with dummy call
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        MPI_File_write_at_all(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
     }
-    MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &mtype);
-    MPI_Type_commit(&mtype);
-
-    // Perform MPI-IO
-    // Set file view
-    MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-    // Write data
-    MPI_File_write_at_all(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
-    // Restore file view
-    MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-
-    // Free type
-    MPI_Type_free(&ftype);
-    MPI_Type_free(&mtype);
 
     // Free buffers
     NCI_Free(zsizes);
@@ -537,25 +563,37 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         }
     }
 
-    // Create file type
-    MPI_Type_create_hindexed(wcnt, flens, fdisps, MPI_BYTE, &ftype);
-    MPI_Type_commit(&ftype);
+    /* Carry our coll I/O
+     * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
+     * We use a dummy call inplace of type with 0 count
+     */
+    if (wcnt > 0){
+        // Create file type
+        MPI_Type_create_hindexed(wcnt, flens, fdisps, MPI_BYTE, &ftype);
+        MPI_Type_commit(&ftype);
 
-    // Create memmory type
-    MPI_Type_create_hindexed(wcnt, mlens, mdisps, MPI_BYTE, &mtype);
-    MPI_Type_commit(&mtype);
+        // Create memmory type
+        MPI_Type_create_hindexed(wcnt, mlens, mdisps, MPI_BYTE, &mtype);
+        MPI_Type_commit(&mtype);
 
-    // Perform MPI-IO
-    // Set file view
-    MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-    // Write data
-    MPI_File_write_at_all(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
-    // Restore file view
-    MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        // Perform MPI-IO
+        // Set file view
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
+        // Write data
+        MPI_File_write_at_all(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
+        // Restore file view
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-    // Free type
-    MPI_Type_free(&ftype);
-    MPI_Type_free(&mtype);
+        // Free type
+        MPI_Type_free(&ftype);
+        MPI_Type_free(&mtype);
+    }
+    else{
+        // Follow coll I/O with dummy call
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        MPI_File_write_at_all(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
+        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+    }
 
     // Free buffers
     NCI_Free(zsizes);

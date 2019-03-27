@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
+   
     if (argc > 3) {
         if (!rank)
             printf("Usage: %s [filename]\n", argv[0]);
