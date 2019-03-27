@@ -17,11 +17,10 @@
 #define NC_ZIP_VAR_DATA 2
 
 #define NC_ZIP_MAPPING_STATIC 0
+#define NC_ZIP_MAPPING_DYNAMIC 01
 
-typedef enum {
-    STATIC = 0,           
-    DYNAMIC = 1 
-} mapping_strategy;
+#define NC_ZIP_COMM_CHUNK 0
+#define NC_ZIP_COMM_PROC 1
 
 /* Get_req structure */
 typedef struct NC_zip_req {
@@ -85,7 +84,8 @@ typedef struct NC_zip_var {
     NCZIP_driver      *zip;         /* Compression driver */
     int                zipdriver;
 
-    mapping_strategy chunk_map_method;
+    int chunk_map_method;
+    int comm_unit;
 } NC_zip_var;
 
 typedef struct NC_zip_var_list {

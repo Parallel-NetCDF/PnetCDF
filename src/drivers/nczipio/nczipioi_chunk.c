@@ -65,7 +65,7 @@ int get_chunk_overlap(NC_zip_var *varp, int* cord, const MPI_Offset *start, cons
     int i, ret;
 
     for(i = 0; i < varp->ndim; i++){
-        ostart[i] = max(start[i], cord[i] * varp->chunkdim[i]) - cord[i] * varp->chunkdim[i];
+        ostart[i] = max(start[i], cord[i] * varp->chunkdim[i]);
         ocount[i] = min(start[i] + count[i], (cord[i] + 1) * varp->chunkdim[i]) - ostart[i];
         if (ocount[i] < 0){
             ocount[i] = 0;
@@ -175,4 +175,63 @@ int nczipioi_chunk_itr_next_str(NC_zip_var *varp, MPI_Offset *start, MPI_Offset 
     }
 
     return 1;
+}
+
+int nczipioi_chunk_itr_init_cord(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *citr){
+    int i;
+
+    for(i = 0; i < varp->ndim; i++){
+        citr[i] = start[i] - (start[i] % varp->chunkdim[i]);
+    }
+
+    return NC_NOERR;
+}
+
+
+int nczipioi_chunk_itr_next_cord(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *citr){
+    int i;
+    int nchk = 1;
+
+    i = varp->ndim - 1;
+    citr[i] += varp->chunkdim[i];
+    for(; i > 0; i--){
+        if (citr[i] >= start[i] + count[i]){
+            citr[i - 1] += varp->chunkdim[i - 1];
+            citr[i] = start[i] - (start[i] % varp->chunkdim[i]);
+        }
+        else{
+            break;
+        }
+    }
+
+    if (citr[0] >= start[0] + count[0]){
+        return 0;
+    }
+
+    return 1;
+}
+
+int get_chunk_overlap_cord(NC_zip_var *varp, MPI_Offset* cord, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *ostart, MPI_Offset *ocount){
+    int i, ret;
+
+    for(i = 0; i < varp->ndim; i++){
+        ostart[i] = max(start[i], cord[i]);
+        ocount[i] = min(start[i] + count[i], cord[i] + varp->chunkdim[i]) - ostart[i];
+        if (ocount[i] < 0){
+            ocount[i] = 0;
+        }
+    }
+
+    return 0;
+}
+
+int get_chunk_idx_cord(NC_zip_var *varp, int* cord){
+    int i, ret;
+    
+    ret = cord[0] / varp->chunkdim[0];
+    for(i = 1; i < varp->ndim; i++){
+        ret = ret * varp->chunkdim[i - 1] + cord[i] / varp->chunkdim[i];
+    }
+
+    return ret;
 }

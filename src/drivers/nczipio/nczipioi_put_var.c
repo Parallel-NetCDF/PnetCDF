@@ -129,8 +129,8 @@ nczipioi_put_var_cb(NC_zip          *nczipp,
 
     // Post recv
     nrecv = 0;
-    for(i = 0; i < varp->nmychunks; i++){
-        cid = varp->mychunks[i];
+    for(j = 0; j < varp->nmychunks; j++){
+        cid = varp->mychunks[j];
         // We are the owner of the chunk
         // Receive data from other process
         for(i = 0; i < wcnt_all[cid] - wcnt_local[cid]; i++){
@@ -325,6 +325,280 @@ nczipioi_put_var_cb(NC_zip          *nczipp,
 }
 
 int
+nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
+                            NC_zip_var      *varp,
+                            MPI_Offset      *start,
+                            MPI_Offset      *count,
+                            MPI_Offset      *stride,
+                            void            *buf)
+{
+    int err;
+    int i, j, k;
+    int cid, cown;   // Chunk iterator
+
+    MPI_Offset *ostart, *osize;
+    int *tsize, *tssize, *tstart;   // Size for sub-array type
+    MPI_Offset *citr; // Bounding box for chunks overlapping my own write region
+    
+    int *wcnt_local, *wcnt_all;   // Number of processes that writes to each chunk
+
+    int overlapsize;    // Size of overlaping region of request and chunk
+    int max_tbuf = 0;   // Size of intermediate buffer
+    char *tbuf = NULL;     // Intermediate buffer
+    
+    int packoff; // Pack offset
+    MPI_Datatype ptype; // Pack datatype
+
+    int nsend, nrecv;   // Number of send and receive
+    MPI_Request *sreq, *rreq;    // Send and recv req
+    MPI_Status *sstat, *rstat;    // Send and recv status
+    char **sbuf, **rbuf;   // Send and recv buffer
+    int *rsize, *ssize;    // recv size of each message
+    int *roff, *soff;    // recv size of each message
+    int *sdst;    // recv size of each message
+    int *smap;
+    MPI_Message rmsg;   // Receive message
+
+    // Allocate buffering for write count
+    wcnt_local = (int*)NCI_Malloc(sizeof(int) * nczipp->np * 2);
+    smap = (int*)NCI_Malloc(sizeof(int) * nczipp->np * 3);
+
+    // Allocate buffering for overlaping index
+    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
+    tssize = tsize + sizeof(int) * varp->ndim;
+    tstart = tssize + sizeof(int) * varp->ndim;
+    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
+    osize = ostart + sizeof(MPI_Offset) * varp->ndim;
+
+    // Current chunk position
+    citr = osize + sizeof(MPI_Offset) * varp->ndim;
+
+    // We need to calculate the size of message of each chunk
+    // This is just for allocating send buffer
+    // We do so by iterating through all request and all chunks they cover
+    // If we are not the owner of a chunk, we need to send message
+    memset(wcnt_local, 0, sizeof(int) * nczipp->np);
+    nsend = 0;
+
+    // Count total number of messages and build a map of accessed chunk to list of comm datastructure
+    nczipioi_chunk_itr_init_cord(varp, start, count, citr); // Initialize chunk iterator
+    do{
+        // Chunk index and owner
+        cid = get_chunk_idx_cord(varp, citr);
+        cown = varp->chunk_owner[cid];
+
+        // Mapping to skip list of send requests 
+        if (wcnt_local[cown] == 0 && cown != nczipp->rank){
+            smap[cown] = nsend++;
+        }
+        wcnt_local[cown] = 1;   // Need to send message if not owner       
+    } while (nczipioi_chunk_itr_next_cord(varp, start, count, citr));
+
+    // Sync number of messages of each chunk
+    MPI_Allreduce(wcnt_local, wcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
+    nrecv = wcnt_all[nczipp->rank] - wcnt_local[nczipp->rank];  // We don't need to receive request form self
+
+    // Allocate data structure for messaging
+    sbuf = (char**)NCI_Malloc(sizeof(char*) * nsend);
+    ssize = (int*)NCI_Malloc(sizeof(int) * nrecv);
+    soff = (int*)NCI_Malloc(sizeof(int) * nrecv);
+    sdst = (int*)NCI_Malloc(sizeof(int) * nrecv);
+    sreq = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nsend);
+    sstat = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
+
+    rbuf = (char**)NCI_Malloc(sizeof(char*) * nrecv);
+    rsize = (int*)NCI_Malloc(sizeof(int) * nrecv);
+    rreq = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nrecv);
+    rstat = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nrecv);
+
+    // Count size of each request
+    memset(ssize, 0, sizeof(int) * nsend);
+    nczipioi_chunk_itr_init_cord(varp, start, count, citr); // Initialize chunk iterator
+    do{
+        // Chunk index and owner
+        cid = get_chunk_idx_cord(varp, citr);
+        cown = varp->chunk_owner[cid];
+        if (cown != nczipp->rank){
+            j = smap[cown];
+            sdst[j] = cown; // Record a reverse map by the way
+
+            // Count overlap
+            get_chunk_overlap_cord(varp, citr, start, count, ostart, osize);
+            overlapsize = varp->esize;
+            for(i = 0; i < varp->ndim; i++){
+                overlapsize *= osize[i];                     
+            }
+            ssize[j] += overlapsize + sizeof(int) * varp->ndim + 1;
+        }
+    } while (nczipioi_chunk_itr_next_cord(varp, start, count, citr));
+
+    // Allocate buffer for send
+    for(i = 0; i < nsend; i++){
+        sbuf[i] = (char*)NCI_Malloc(ssize[i]);
+    }
+
+    // Pack requests
+    memset(soff, 0, sizeof(int) * nsend);
+    nczipioi_chunk_itr_init_cord(varp, start, count, citr); // Initialize chunk iterator
+    do{
+        // Chunk index and owner
+        cid = get_chunk_idx_cord(varp, citr);
+        cown = varp->chunk_owner[cid];
+        if (cown != nczipp->rank){
+            j = smap[cown];
+
+            // Get overlap region
+            get_chunk_overlap_cord(varp, citr, start, count, ostart, osize);
+
+            // Pack type from user buffer to (contiguous) intermediate buffer
+            for(i = 0; i < varp->ndim; i++){
+                tstart[i] = (int)(ostart[i] - start[i]);
+                tsize[i] = (int)count[i];
+                tssize[i] = (int)osize[i];
+            }
+            //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+            MPI_Type_commit(&ptype);
+
+            // Pack metadata
+            MPI_Pack(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+            MPI_Pack(tstart, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+            MPI_Pack(tsize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+            // Pack data
+            MPI_Pack(buf, 1, ptype, sbuf[j], ssize[j], soff + j, nczipp->comm);
+        }
+    } while (nczipioi_chunk_itr_next_cord(varp, start, count, citr));
+
+    // Post send
+    for(i = 0; i < nsend; i++){
+        MPI_Isend(sbuf[i], soff[i], MPI_BYTE, sdst[i], 0, nczipp->comm, sreq + i);
+    }    
+
+    // Post recv
+   for(i = 0; i < wcnt_all[nczipp->rank] - wcnt_local[nczipp->rank]; i++){
+        // Get message size, including metadata
+        MPI_Mprobe(MPI_ANY_SOURCE, 0, nczipp->comm, &rmsg, rstat);
+        MPI_Get_count(rstat, MPI_BYTE, rsize + i);
+
+        // Allocate buffer
+        rbuf[i] = (char*)NCI_Malloc(rsize[i]);
+
+        // Post irecv
+        MPI_Imrecv(rbuf[i], rsize[i], MPI_BYTE, &rmsg, rreq + i);
+    }
+
+    tbuf = (char*)NCI_Malloc(varp->chunksize);
+
+    // Handle our own data
+    nczipioi_chunk_itr_init_cord(varp, start, count, citr); // Initialize chunk iterator
+    do{
+        // Chunk index and owner
+        cid = get_chunk_idx_cord(varp, citr);
+
+        if (varp->chunk_owner[cid] == nczipp->rank){
+            // Get overlap region
+            get_chunk_overlap_cord(varp, citr, start, count, ostart, osize);
+            overlapsize = varp->esize;
+            for(i = 0; i < varp->ndim; i++){
+                overlapsize *= osize[i];                     
+            }
+
+            if (overlapsize > 0){
+                // Pack type from user buffer to (contiguous) intermediate buffer
+                for(j = 0; j < varp->ndim; j++){
+                    tstart[j] = (int)(ostart[j] - start[j]);
+                    tsize[j] = (int)count[j];
+                    tssize[j] = (int)osize[j];
+                }
+                //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+                MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+                MPI_Type_commit(&ptype);
+
+                // Pack data into intermediate buffer
+                packoff = 0;
+                MPI_Pack(buf, 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
+                MPI_Type_free(&ptype);
+                overlapsize = packoff;
+
+                // Pack type from (contiguous) intermediate buffer to chunk buffer
+                for(j = 0; j < varp->ndim; j++){
+                    tstart[j] = (int)(ostart[j] - citr[j]);
+                    tsize[j] = varp->chunkdim[j];
+                }
+                MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+                MPI_Type_commit(&ptype);
+                
+                // Unpack data into chunk buffer
+                packoff = 0;
+                MPI_Unpack(tbuf, overlapsize, &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+                MPI_Type_free(&ptype);    
+            }
+        }
+    } while (nczipioi_chunk_itr_next_cord(varp, start, count, citr));
+
+    //Handle incoming requests
+    for(i = 0; i < varp->ndim; i++){
+        tsize[i] = varp->chunkdim[i];
+    }
+    for(i = 0; i < nrecv; i++){
+        // Will wait any provide any benefit?
+        MPI_Waitany(nrecv, rreq, &j, rstat);
+        packoff = 0;
+        //printf("rsize_2 = %d\n", rsizes[j]); fflush(stdout);
+        while(packoff < rsize[j]){
+            // Retrieve metadata
+            MPI_Unpack(rbuf[j], rsize[j], &packoff, &cid, varp->ndim, MPI_INT, nczipp->comm);
+            MPI_Unpack(rbuf[j], rsize[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
+            MPI_Unpack(rbuf[j], rsize[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
+
+            //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            // Pack type
+            MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+            MPI_Type_commit(&ptype);
+
+            //printf("tsize = %d, tssize = %d, tstart = %d, buf = %d\n", tsize[0], tssize[0], tstart[0], *((int*)(rbufs[j] + packoff))); fflush(stdout);
+            // Pack data
+            MPI_Unpack(rbuf[j], rsize[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+            //printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
+            MPI_Type_free(&ptype);
+        }
+        // Free the request
+        MPI_Request_free(rreq + j);
+    }
+
+    MPI_Waitall(nsend, sreq, sstat);
+
+    // Free buffers
+    NCI_Free(wcnt_local);
+
+    NCI_Free(tbuf);
+
+    NCI_Free(tsize);
+    NCI_Free(ostart);
+
+    NCI_Free(sreq);
+    NCI_Free(sstat);
+    for(i = 0; i < nsend; i++){
+        NCI_Free(sbuf[i]);
+    }
+    NCI_Free(sbuf);
+
+    NCI_Free(rreq);
+    NCI_Free(rstat);
+    for(i = 0; i < nrecv; i++){
+        NCI_Free(rbuf[i]);
+    }
+    NCI_Free(rbuf);
+    NCI_Free(rsize);
+
+    if (tbuf != NULL){
+        NCI_Free(tbuf);
+    }
+
+    return NC_NOERR;
+}
+
+int
 nczipioi_put_var(NC_zip        *nczipp,
               NC_zip_var       *varp,
               const MPI_Offset *start,
@@ -333,7 +607,14 @@ nczipioi_put_var(NC_zip        *nczipp,
               void       *buf)
 {
     // Collective buffer
-    nczipioi_put_var_cb(nczipp, varp, start, count, stride, buf);
+    switch (varp->comm_unit){
+        case NC_ZIP_COMM_CHUNK:
+            nczipioi_put_var_cb(nczipp, varp, start, count, stride, buf);
+            break;
+        case NC_ZIP_COMM_PROC:
+            nczipioi_put_var_cb_proc(nczipp, varp, start, count, stride, buf);
+            break;
+    }
 
     // Write the compressed variable
     nczipioi_save_var(nczipp, varp);

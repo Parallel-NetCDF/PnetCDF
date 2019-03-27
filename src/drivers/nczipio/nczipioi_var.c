@@ -157,6 +157,15 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
                 break;
             }
 
+            /* Select messaging unit */
+            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_msgunit", NULL, &len);
+            if (err == NC_NOERR && len == 1){
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_msgunit", &(varp->comm_unit), MPI_INT);
+            }
+            else{
+                varp->comm_unit = NC_ZIP_COMM_CHUNK;
+            }
+
             // Get variable id
             if (!create){
                 err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_datavarid", &(varp->datavarid), MPI_INT);
@@ -241,7 +250,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
             varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
         }
         
-        varp->zip->decompress(zbufs[i], zsizes[i], varp->chunk_cache[cid], &dsize, varp->ndim, varp->dimsize, varp->etype);
+        varp->zip->decompress(zbufs[i], zsizes[i], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
 
         if(dsize != varp->chunksize){
             printf("Decompress Error\n");
@@ -512,13 +521,6 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     // Switch back to data mode
     err = nczipp->driver->enddef(nczipp->ncp);
     if (err != NC_NOERR) return err;
-
-    // Record data variable id
-    i = j = 1;
-    for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data + vid;
-        err = nczipp->driver->put_var(nczipp->ncp, varp->varid, &i, &j, NULL, NULL, &varp->datavarid, 1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_FLEX | NC_REQ_COLL);
-    }
 
     /* Now it's time to add variable file offset to displacements
      * File type offset need to be specified in non-decreasing order

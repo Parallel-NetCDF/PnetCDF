@@ -26,7 +26,7 @@
 int main(int argc, char **argv)
 {
     /* IDs for the netCDF file, dimensions, and variables. */
-    int i;
+    int i, j;
     int np, rank, nerrs = 0;
     int ncid, dimids[2], varid;
     int buf[N];
@@ -58,68 +58,74 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-    /* Initialize file info */
-	MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_compression", "enable");
+    for(j = 0; j < 2; j++){
+        /* Initialize file info */
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "nc_compression", "enable");
 
-    /* Create the file. */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
-    CHECK_ERR
+        /* Create the file. */
+        err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
+        CHECK_ERR
 
-    /* Define the dimension. */
-    err = ncmpi_def_dim(ncid, "X", np, dimids);
-    CHECK_ERR
-    err = ncmpi_def_dim(ncid, "Y", N, dimids + 1);
-    CHECK_ERR
-    
-    /* Define the variable. */
-    err = ncmpi_def_var(ncid, "M", NC_INT, 2, dimids, &varid);
-    CHECK_ERR
+        /* Define the dimension. */
+        err = ncmpi_def_dim(ncid, "X", np, dimids);
+        CHECK_ERR
+        err = ncmpi_def_dim(ncid, "Y", N, dimids + 1);
+        CHECK_ERR
+        
+        /* Define the variable. */
+        err = ncmpi_def_var(ncid, "M", NC_INT, 2, dimids, &varid);
+        CHECK_ERR
 
-    /* End define mode. */
-    err = ncmpi_enddef(ncid);
-    CHECK_ERR
+        /* Define messaging unit. */
+        err = ncmpi_put_att_int(ncid, varid, "_msgunit", NC_INT, 1, &j);
+        CHECK_ERR
 
-    // Write variable
-    start[0] = rank;
-    start[1] = 0;
-    count[0] = 1;
-    count[1] = N;
-    for(i = 0; i < N; i++){
-        buf[i] = rank * N + i + 1;
-    }
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf);
+        /* End define mode. */
+        err = ncmpi_enddef(ncid);
+        CHECK_ERR
 
-    /* Close the file. */
-    err = ncmpi_close(ncid);
-    CHECK_ERR
-
-    /* Open the file. */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
-    CHECK_ERR
-
-    // Free info
-    MPI_Info_free(&info);
-
-    // Read variable
-    memset(buf, 0, sizeof(buf));
-    start[0] = rank;
-    start[1] = 0;
-    count[0] = 1;
-    count[1] = N;
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
-
-    // Check results
-    for(i = 0; i < N; i++){
-        if (buf[i] != rank * N + i + 1){
-            printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
-                   __FILE__,__LINE__, i , rank * N + i + 1, buf[i]);
+        // Write variable
+        start[0] = rank;
+        start[1] = 0;
+        count[0] = 1;
+        count[1] = N;
+        for(i = 0; i < N; i++){
+            buf[i] = rank * N + i + 1;
         }
-    }
+        err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf);
 
-    /* Close the file. */
-    err = ncmpi_close(ncid);
-    CHECK_ERR
+        /* Close the file. */
+        err = ncmpi_close(ncid);
+        CHECK_ERR
+
+        /* Open the file. */
+        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
+        CHECK_ERR
+
+        // Free info
+        MPI_Info_free(&info);
+
+        // Read variable
+        memset(buf, 0, sizeof(buf));
+        start[0] = rank;
+        start[1] = 0;
+        count[0] = 1;
+        count[1] = N;
+        err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
+
+        // Check results
+        for(i = 0; i < N; i++){
+            if (buf[i] != rank * N + i + 1){
+                printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
+                    __FILE__,__LINE__, i , rank * N + i + 1, buf[i]);
+            }
+        }
+
+        /* Close the file. */
+        err = ncmpi_close(ncid);
+        CHECK_ERR
+    }
 
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;

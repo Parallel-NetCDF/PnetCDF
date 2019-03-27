@@ -81,5 +81,11 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
 
     MPI_Info_set(info, "nc_compression", "enable");
 
+    switch (nczipp->blockmapping){
+        case NC_ZIP_MAPPING_STATIC:
+            MPI_Info_set(info, "nc_zip_comm_unit", "static");
+            break;
+    }
+
     return NC_NOERR;
 }
