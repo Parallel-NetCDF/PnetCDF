@@ -112,7 +112,7 @@ nczipioi_put_var_cb(NC_zip          *nczipp,
     sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(wcnt_local, wcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
 
     // Calculate number of recv request
     // This is for all the chunks
@@ -457,14 +457,17 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
                 tsize[i] = (int)count[i];
                 tssize[i] = (int)osize[i];
             }
-            //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            //printf("Rank: %d, MPI_Type_create_subarray_send([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
             MPI_Type_commit(&ptype);
 
             // Pack metadata
+            for(i = 0; i < varp->ndim; i++){
+                tstart[i] = (int)(ostart[i] - citr[i]);
+            }
             MPI_Pack(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
             MPI_Pack(tstart, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-            MPI_Pack(tsize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+            MPI_Pack(tssize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
             // Pack data
             MPI_Pack(buf, 1, ptype, sbuf[j], ssize[j], soff + j, nczipp->comm);
             MPI_Type_free(&ptype);
@@ -512,7 +515,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
                     tsize[j] = (int)count[j];
                     tssize[j] = (int)osize[j];
                 }
-                //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+                //printf("Rank: %d, MPI_Type_create_subarray_self([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
                 MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                 MPI_Type_commit(&ptype);
 
@@ -527,6 +530,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
                     tstart[j] = (int)(ostart[j] - citr[j]);
                     tsize[j] = varp->chunkdim[j];
                 }
+                //printf("Rank: %d, MPI_Type_create_subarray_self2([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
                 MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                 MPI_Type_commit(&ptype);
                 
@@ -553,12 +557,11 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
             MPI_Unpack(rbuf[j], rsize[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
             MPI_Unpack(rbuf[j], rsize[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
 
-            //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            //printf("Rank: %d, cid = %d, MPI_Type_create_subarray_recv([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, cid, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             // Pack type
             MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
             MPI_Type_commit(&ptype);
 
-            //printf("tsize = %d, tssize = %d, tstart = %d, buf = %d\n", tsize[0], tssize[0], tstart[0], *((int*)(rbufs[j] + packoff))); fflush(stdout);
             // Pack data
             MPI_Unpack(rbuf[j], rsize[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
             //printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
@@ -584,6 +587,8 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
 
     NCI_Free(sreq);
     NCI_Free(sstat);
+    NCI_Free(ssize);
+    NCI_Free(sdst);
     for(i = 0; i < nsend; i++){
         NCI_Free(sbuf[i]);
     }

@@ -21,7 +21,7 @@
 /* This is the name of the data file we will create. */
 #define FILE_NAME "debug.nc"
 
-#define N 10
+#define N 20
 
 int main(int argc, char **argv)
 {
@@ -79,6 +79,12 @@ int main(int argc, char **argv)
 
         /* Define messaging unit. */
         err = ncmpi_put_att_int(ncid, varid, "_msgunit", NC_INT, 1, &j);
+        CHECK_ERR
+
+        /* Define chunk size. */
+        buf[0] = np;
+        buf[1] = 5;
+        err = ncmpi_put_att_int(ncid, varid, "_chunkdim", NC_INT, 2, buf);
         CHECK_ERR
 
         /* End define mode. */

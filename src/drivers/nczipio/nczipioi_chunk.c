@@ -52,11 +52,10 @@ int get_chunk_cord(NC_zip_var *varp, int idx, int* cord){
         ret = ret * varp->chunkdim[i - 1] + cord[i];
     }
 
-    for(i = varp->ndim - 1; i > 0; i--){
-        cord[i] = idx % varp->chunkdim[i - 1];
-        idx /= varp->chunkdim[i - 1];
+    for(i = varp->ndim - 1; i >= 0; i--){
+        cord[i] = idx % varp->chunkdim[i];
+        idx /= varp->chunkdim[i];
     }
-    cord[0] = idx;
 
     return 0;
 }
@@ -225,12 +224,12 @@ int get_chunk_overlap_cord(NC_zip_var *varp, MPI_Offset* cord, const MPI_Offset 
     return 0;
 }
 
-int get_chunk_idx_cord(NC_zip_var *varp, int* cord){
+int get_chunk_idx_cord(NC_zip_var *varp, MPI_Offset *cord){
     int i, ret;
     
-    ret = cord[0] / varp->chunkdim[0];
+    ret = (int)(cord[0]) / varp->chunkdim[0];
     for(i = 1; i < varp->ndim; i++){
-        ret = ret * varp->chunkdim[i - 1] + cord[i] / varp->chunkdim[i];
+        ret = ret * varp->chunkdim[i - 1] + (int)(cord[i]) / varp->chunkdim[i];
     }
 
     return ret;

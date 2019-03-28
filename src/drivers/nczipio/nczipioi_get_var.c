@@ -105,7 +105,7 @@ nczipioi_get_var(NC_zip          *nczipp,
 
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(rcnt_local, rcnt_all, varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
 
     // We need to prepare chunk in the chunk cache
     // For chunks not yet allocated, we need to read them form file collectively

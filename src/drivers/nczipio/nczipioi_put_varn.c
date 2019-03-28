@@ -150,7 +150,7 @@ nczipioi_put_varn_cb(  NC_zip        *nczipp,
     }
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(wcnt_local, wcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
 
     // Calculate number of recv request
     // This is for all the chunks

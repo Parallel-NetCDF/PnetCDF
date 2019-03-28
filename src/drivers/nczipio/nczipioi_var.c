@@ -84,10 +84,10 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
             len = 1;
             for(j = 0; j < varp->ndim; j++){ //chunkdim must be at leasst 1
                 if (varp->chunkdim[j] % varp->chunkdim[j] == 0){
-                    varp->nchunks *= varp->chunkdim[j] / varp->chunkdim[j];
+                    varp->nchunks *= varp->dimsize[j] / varp->chunkdim[j];
                 }
                 else{
-                    varp->nchunks *= varp->chunkdim[j] / varp->chunkdim[j] + 1;
+                    varp->nchunks *= varp->dimsize[j] / varp->chunkdim[j] + 1;
                 }
                 len *= varp->chunkdim[j];   // Block size
             }
