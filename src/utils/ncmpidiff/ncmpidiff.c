@@ -352,8 +352,8 @@ int main(int argc, char **argv)
             /* find the attr with the same name from ncid2 */
             err = ncmpi_inq_attid(ncid2, NC_GLOBAL, name1, &attnump);
             if (err == NC_ENOTATT) {
-                if (!quiet) printf("DIFF: global attribute \"%s\" not found in file %s\n",
-                       name1,argv[optind+1]);
+                if (!quiet) printf("DIFF: global attribute \"%s\" defined in %s not found in %s\n",
+                       name1,argv[optind],argv[optind+1]);
                 numHeadDIFF++;
                 continue;
             }
@@ -402,8 +402,8 @@ int main(int argc, char **argv)
             /* find the attr with the same name from ncid1 */
             if (ncmpi_inq_attid(ncid1, NC_GLOBAL, name2, &attnump) == NC_ENOTATT) {
                 numHeadDIFF++;
-                if (!quiet) printf("DIFF: global attribute \"%s\" not found in file %s\n",
-                       name1,argv[optind]);
+                if (!quiet) printf("DIFF: global attribute \"%s\" defined in %s not found in %s\n",
+                       name2,argv[optind+1],argv[optind]);
             }
         }
 
@@ -418,8 +418,8 @@ int main(int argc, char **argv)
             /* find the dim with the same name from ncid2 */
             err = ncmpi_inq_dimid(ncid2, name1, &dimid);
             if (err == NC_EBADDIM) {
-                if (!quiet) printf("DIFF: dimension \"%s\" not found in file %s\n",
-                       name1,argv[optind+1]);
+                if (!quiet) printf("DIFF: dimension \"%s\" defined in %s not found in %s\n",
+                       name1,argv[optind],argv[optind+1]);
                 numHeadDIFF++;
                 continue;
             }
@@ -442,8 +442,8 @@ int main(int argc, char **argv)
             HANDLE_ERROR
             /* find the dim with the same name from ncid1 */
             if (ncmpi_inq_dimid(ncid2, name1, &dimid) == NC_EBADDIM) {
-                if (!quiet) printf("DIFF: dimension \"%s\" not found in file %s\n",
-                       name1,argv[optind]);
+                if (!quiet) printf("DIFF: dimension \"%s\" defined in %s not found in %s\n",
+                       name1,argv[optind+1],argv[optind]);
                 numHeadDIFF++;
             }
         }
@@ -459,8 +459,8 @@ int main(int argc, char **argv)
             /* find the variable with the same name from ncid2 */
             err = ncmpi_inq_varid(ncid2, name1, &varid);
             if (err == NC_ENOTVAR) {
-                if (!quiet) printf("DIFF: variable \"%s\" not found in file %s\n",
-                       name1,argv[optind+1]);
+                if (!quiet) printf("DIFF: variable \"%s\"defined in %s not found in %s\n",
+                       name1,argv[optind],argv[optind+1]);
                 numHeadDIFF++;
                 numVarDIFF++;
                 continue;
@@ -534,8 +534,8 @@ int main(int argc, char **argv)
                 /* find the variable attr with the same name from ncid2 */
                 err = ncmpi_inq_att(ncid2, varid, attrname, &type2, &attlen2);
                 if (err == NC_ENOTATT) {
-                    if (!quiet) printf("DIFF: variable \"%s\" attribute \"%s\" not found in file %s\n",
-                           name1,attrname,argv[optind+1]);
+                    if (!quiet) printf("DIFF: variable \"%s\" attribute \"%s\" defined in %s not found in %s\n",
+                           name1,attrname,argv[optind],argv[optind+1]);
                     numHeadDIFF++;
                     continue;
                 }
@@ -580,8 +580,8 @@ int main(int argc, char **argv)
                 /* find the variable attr with the same name from ncid1 */
                 err = ncmpi_inq_att(ncid1, i, attrname, &type1, &attlen1);
                 if (err == NC_ENOTATT) {
-                    if (!quiet) printf("DIFF: variable \"%s\" attribute \"%s\" not found in file %s\n",
-                           name1,attrname,argv[optind]);
+                    if (!quiet) printf("DIFF: variable \"%s\" attribute \"%s\" defined in %s not found in %s\n",
+                           name1,attrname,argv[optind+1],argv[optind]);
                     numHeadDIFF++;
                 }
             }
@@ -595,8 +595,8 @@ int main(int argc, char **argv)
             /* find the variable with the same name from ncid1 */
             err = ncmpi_inq_varid(ncid1, name2, &varid);
             if (err == NC_ENOTVAR) {
-                if (!quiet) printf("DIFF: variable \"%s\" not found in file %s\n",
-                       name2,argv[optind]);
+                if (!quiet) printf("DIFF: variable \"%s\" defined in %s not found in %s\n",
+                       name2,argv[optind+1],argv[optind]);
                 numHeadDIFF++;
                 numVarDIFF++;
             }
@@ -629,8 +629,8 @@ int main(int argc, char **argv)
         if (err == NC_ENOTVAR) {
             if (!check_header) {
                 if (!rank && !quiet)
-                    printf("WARN: variable \"%s\" not found in file %s\n",
-                           var_list.names[i],argv[optind]);
+                    printf("WARN: variable \"%s\" defined in %s not found in %s\n",
+                           var_list.names[i],argv[optind+1],argv[optind]);
                 numVarDIFF++;
             }
             continue;
@@ -639,8 +639,8 @@ int main(int argc, char **argv)
         if (err == NC_ENOTVAR) {
             if (!check_header) {
                 if (!rank && !quiet)
-                    printf("WARN: variable \"%s\" not found in file %s\n",
-                           var_list.names[i],argv[optind+1]);
+                    printf("WARN: variable \"%s\" defined in %s not found in %s\n",
+                           var_list.names[i],argv[optind],argv[optind+1]);
                 numVarDIFF++;
             }
             continue;
