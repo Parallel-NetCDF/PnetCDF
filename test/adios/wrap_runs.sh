@@ -24,8 +24,8 @@ for j in ${safe_modes} ; do
     ${TESTSEQRUN} $1 arrays.bp
     ${TESTSEQRUN} $1 attributes.bp
     ${TESTSEQRUN} $1 arrays_big.bp
-    echo ${ADIOS_BUG_FIXED}
-    if test ${ADIOS_BUG_FIXED} = 1 ; then
+    echo ${ADIOS_VER_GE_1132}
+    if test ${ADIOS_VER_GE_1132} = 1 ; then
        ${TESTSEQRUN} $1 attributes_big.bp
     fi
     # echo ""

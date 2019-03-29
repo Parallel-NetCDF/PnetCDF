@@ -1906,6 +1906,8 @@ fi
 AC_SUBST(ENABLE_ADIOS)
 AM_CONDITIONAL(ENABLE_ADIOS, [test x$enable_adios = xyes])
 
+ADIOS_VER_GE_1132 = 0
+
 if test "x$enable_adios" = "xyes" ; then
     ADIOS_INSTALL=""
     AC_ARG_WITH(adios,
@@ -2005,12 +2007,9 @@ if test "x$enable_adios" = "xyes" ; then
     ]])], [adios_ge_1_13_2=yes], [adios_ge_1_13_2=no])
     AC_MSG_RESULT([$adios_ge_1_13_2])
 
-    ADIOS_BUG_FIXED = 0
     if test "x${adios_ge_1_13_2}" = xyes; then
-      ADIOS_BUG_FIXED = 1
+      ADIOS_VER_GE_1132 = 1
     fi
-    AC_SUBST(ADIOS_BUG_FIXED)
-    AM_CONDITIONAL(ADIOS_BUG_FIXED, [test x"$ADIOS_BUG_FIXED" = x1])
     
     CPPFLAGS=$saved_CPPFLAGS
     LDFLAGS=$saved_LDFLAGS
@@ -2021,6 +2020,9 @@ if test "x$enable_adios" = "xyes" ; then
     AC_SUBST([ADIOS_LIBS], [""])
     AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
 fi
+
+AC_SUBST(ADIOS_VER_GE_1132)
+AM_CONDITIONAL(ADIOS_VER_GE_1132, [test x"$ADIOS_VER_GE_1132" = x1])
 
 AC_ARG_ENABLE([profiling],
    [AS_HELP_STRING([--enable-profiling],

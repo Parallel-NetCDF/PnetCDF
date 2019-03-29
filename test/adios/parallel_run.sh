@@ -28,7 +28,7 @@ for i in ${check_PROGRAMS} ; do
         ${MPIRUN} ./$i arrays.bp
         ${MPIRUN} ./$i attributes.bp
         ${MPIRUN} ./$i arrays_big.bp
-        if test ${ADIOS_BUG_FIXED} = 1 ; then
+        if test ${ADIOS_VER_GE_1132} = 1 ; then
             ${MPIRUN} ./$i attributes_big.bp
         fi
     done
