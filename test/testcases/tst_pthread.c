@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
 
@@ -10,10 +10,10 @@
  * 2. writes 2 records to a record variable
  * 3. writes a fixed-size variable,
  * 4. closes the file,
- * 5. re-open the file,
+ * 5. open a different file created by another thread,
  * 6. reads the record variable and check contents,
  * 7. reads the fixed-size variable and check contents,
- * 8. closes file.
+ * 8. closes the file.
  */
 
 #include <stdio.h>
