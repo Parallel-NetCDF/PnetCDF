@@ -31,6 +31,7 @@ for i in ${check_PROGRAMS} ; do
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         if test ${ADIOS_VER_GE_1132} = 1 ; then
             ${MPIRUN} ./$i attributes_big.bp
         fi
@@ -41,6 +42,9 @@ for i in ${check_PROGRAMS} ; do
 >>>>>>> 6bfc8ed... remove attributes_big from test
 =======
         if test ${ADIOS_BUG_FIXED} = 1 ; then
+=======
+        if test ${ADIOS_VER_GE_1132} = 1 ; then
+>>>>>>> bdb7eb4... fix configure condition problenm when adios is disabled
             ${MPIRUN} ./$i attributes_big.bp
         fi
 >>>>>>> 27684a0... test big only if adios bug fixed

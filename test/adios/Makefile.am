@@ -97,10 +97,14 @@ TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 <<<<<<< HEAD
+<<<<<<< HEAD
 TESTS_ENVIRONMENT += export ADIOS_VER_GE_1132="$(ADIOS_VER_GE_1132)";
 =======
 TESTS_ENVIRONMENT += export ADIOS_BUG_FIXED="$(ADIOS_BUG_FIXED)";
 >>>>>>> 27684a0... test big only if adios bug fixed
+=======
+TESTS_ENVIRONMENT += export ADIOS_VER_GE_1132="$(ADIOS_VER_GE_1132)";
+>>>>>>> bdb7eb4... fix configure condition problenm when adios is disabled
 
 TESTS = $(TESTPROGRAMS)
 TEST_EXTENSIONS = .sh

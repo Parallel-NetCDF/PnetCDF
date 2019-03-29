@@ -2080,12 +2080,9 @@ if test "x$enable_adios" = "xyes" ; then
     ]])], [adios_ge_1_13_2=yes], [adios_ge_1_13_2=no])
     AC_MSG_RESULT([$adios_ge_1_13_2])
 
-    ADIOS_BUG_FIXED = 0
     if test "x${adios_ge_1_13_2}" = xyes; then
-      ADIOS_BUG_FIXED = 1
+      ADIOS_VER_GE_1132 = 1
     fi
-    AC_SUBST(ADIOS_BUG_FIXED)
-    AM_CONDITIONAL(ADIOS_BUG_FIXED, [test x"$ADIOS_BUG_FIXED" = x1])
     
     CPPFLAGS=$saved_CPPFLAGS
     LDFLAGS=$saved_LDFLAGS
