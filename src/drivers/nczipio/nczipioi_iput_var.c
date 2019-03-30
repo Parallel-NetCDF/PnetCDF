@@ -141,7 +141,7 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int *wcnt_local, *wcnt_all;   // Number of processes that writes to each chunk
 
     int overlapsize;    // Size of overlaping region of request and chunk
-    int max_tbuf = 0;   // Size of intermediate buffer
+    int maxndim = 0;   // Max number of dimensions
     char *tbuf = NULL;     // Intermediate buffer
     
     int packoff; // Pack offset
@@ -164,15 +164,22 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     wcnt_all = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
     smap = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
 
+     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        if (maxndim < nczipp->vars.data[i].ndim){
+            maxndim = nczipp->vars.data[i].ndim;
+        }
+    }
+
     // Allocate buffering for overlaping index
-    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tssize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
-    osize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    tsize = (int*)NCI_Malloc(sizeof(int) * maxndim);
+    tssize = (int*)NCI_Malloc(sizeof(int) * maxndim);
+    tstart = (int*)NCI_Malloc(sizeof(int) * maxndim);
+    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim);
+    osize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim);
 
     // Current chunk position
-    citr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    citr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim);
 
     // We need to calculate the size of message of each processes
     // This is just for allocating send buffer
@@ -381,10 +388,9 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             // Retrieve metadata
             MPI_Unpack(rbuf[j], rsize[j], &packoff, &vid, 1, MPI_INT, nczipp->comm);
             MPI_Unpack(rbuf[j], rsize[j], &packoff, &cid, 1, MPI_INT, nczipp->comm);
+            varp = nczipp->vars.data + vid;
             MPI_Unpack(rbuf[j], rsize[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
             MPI_Unpack(rbuf[j], rsize[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
-
-            varp = nczipp->vars.data + vid;
 
             //printf("Rank: %d, cid = %d, MPI_Type_create_subarray_recv([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, cid, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             // Pack type

@@ -43,7 +43,7 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Build a skip list of touched vars
     dirty = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
-    memset(dirty, 0, sizeof(dirty));
+    memset(dirty, 0, sizeof(sizeof(int) * nczipp->vars.cnt));
     for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs + reqids[i];
         dirty[req->varid] = 1;
