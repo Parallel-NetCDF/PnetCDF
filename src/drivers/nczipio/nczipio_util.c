@@ -19,30 +19,30 @@
 MPI_Offset NC_Type_size(nc_type type){			/* netCDF type code */
     switch (type) {
       case NC_BYTE:
-	return sizeof(char);
+      return sizeof(char);
       case NC_CHAR:
-	return sizeof(char);
+      return sizeof(char);
       case NC_SHORT:
-	return sizeof(short);
+      return sizeof(short);
       case NC_INT:
-	return sizeof(int);
+      return sizeof(int);
       case NC_FLOAT:
-	return sizeof(float);
+      return sizeof(float);
       case NC_DOUBLE:
-	return sizeof(double);
+      return sizeof(double);
       case NC_UBYTE:
-	return sizeof(unsigned char);
+      return sizeof(unsigned char);
       case NC_USHORT:
-	return sizeof(unsigned short);
+      return sizeof(unsigned short);
       case NC_UINT:
-	return sizeof(unsigned int);
+      return sizeof(unsigned int);
       case NC_INT64:
-	return sizeof(long long);
+      return sizeof(long long);
       case NC_UINT64:
-	return sizeof(unsigned long long);
+      return sizeof(unsigned long long);
       default:
-      
-	return 0;
+
+      return 0;
     }
 }
 
@@ -62,10 +62,30 @@ int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
         }
         else{
             printf("Warning: Unknown zip method %s, using dummy\n", value);
+            nczipp->blockmapping = NC_ZIP_MAPPING_STATIC;    
         }
     }
     else {
         nczipp->blockmapping = NC_ZIP_MAPPING_STATIC;    
+    }
+
+    // Messaging unit
+    MPI_Info_get(info, "nc_zip_comm_unit", MPI_MAX_INFO_VAL - 1,
+                 value, &flag);
+    if (flag) {
+        if (strcmp(value, "chunk") == 0){
+            nczipp->comm_unit = NC_ZIP_COMM_CHUNK;  
+        }
+        else if (strcmp(value, "proc") == 0){
+            nczipp->comm_unit = NC_ZIP_COMM_PROC;  
+        }
+        else{
+            printf("Warning: Unknown messaging unit %s, using proc\n", value);
+            nczipp->comm_unit = NC_ZIP_COMM_PROC;  
+        }
+    }
+    else { 
+        nczipp->comm_unit = NC_ZIP_COMM_PROC;   
     }
 
     return NC_NOERR;
@@ -83,7 +103,16 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
 
     switch (nczipp->blockmapping){
         case NC_ZIP_MAPPING_STATIC:
-            MPI_Info_set(info, "nc_zip_comm_unit", "static");
+            MPI_Info_set(info, "nc_zip_block_mapping", "static");
+            break;
+    }
+
+    switch (nczipp->comm_unit){
+        case NC_ZIP_COMM_CHUNK:
+            MPI_Info_set(info, "nc_zip_comm_unit", "chunk");
+            break;
+        case NC_ZIP_COMM_PROC:
+            MPI_Info_set(info, "nc_zip_comm_unit", "proc");
             break;
     }
 

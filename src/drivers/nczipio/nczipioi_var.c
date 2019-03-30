@@ -157,15 +157,6 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
                 break;
             }
 
-            /* Select messaging unit */
-            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_msgunit", NULL, &len);
-            if (err == NC_NOERR && len == 1){
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_msgunit", &(varp->comm_unit), MPI_INT);
-            }
-            else{
-                varp->comm_unit = NC_ZIP_COMM_CHUNK;
-            }
-
             // Get variable id
             if (!create){
                 err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_datavarid", &(varp->datavarid), MPI_INT);

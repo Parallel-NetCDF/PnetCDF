@@ -62,7 +62,15 @@ int main(int argc, char **argv)
         /* Initialize file info */
         MPI_Info_create(&info);
         MPI_Info_set(info, "nc_compression", "enable");
-
+        switch(j){
+            case 0:
+                MPI_Info_set(info, "nc_zip_comm_unit", "chunk");
+                break;
+            case 1:
+                MPI_Info_set(info, "nc_zip_comm_unit", "proc");
+                break;
+        }
+        
         /* Create the file. */
         err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
         CHECK_ERR
@@ -75,10 +83,6 @@ int main(int argc, char **argv)
         
         /* Define the variable. */
         err = ncmpi_def_var(ncid, "M", NC_INT, 2, dimids, &varid);
-        CHECK_ERR
-
-        /* Define messaging unit. */
-        err = ncmpi_put_att_int(ncid, varid, "_msgunit", NC_INT, 1, &j);
         CHECK_ERR
 
         /* Define chunk size. */

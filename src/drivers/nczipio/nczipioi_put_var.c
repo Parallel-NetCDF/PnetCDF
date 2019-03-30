@@ -30,7 +30,7 @@
 #include "nczipio_internal.h"
 
 int
-nczipioi_put_var_cb(NC_zip          *nczipp,
+nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
                     NC_zip_var      *varp,
                     MPI_Offset      *start,
                     MPI_Offset      *count,
@@ -589,6 +589,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     NCI_Free(sstat);
     NCI_Free(ssize);
     NCI_Free(sdst);
+    NCI_Free(soff);
     for(i = 0; i < nsend; i++){
         NCI_Free(sbuf[i]);
     }
@@ -618,9 +619,9 @@ nczipioi_put_var(NC_zip        *nczipp,
               void       *buf)
 {
     // Collective buffer
-    switch (varp->comm_unit){
+    switch (nczipp->comm_unit){
         case NC_ZIP_COMM_CHUNK:
-            nczipioi_put_var_cb(nczipp, varp, start, count, stride, buf);
+            nczipioi_put_var_cb_chunk(nczipp, varp, start, count, stride, buf);
             break;
         case NC_ZIP_COMM_PROC:
             nczipioi_put_var_cb_proc(nczipp, varp, start, count, stride, buf);

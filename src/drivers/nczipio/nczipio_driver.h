@@ -85,7 +85,6 @@ typedef struct NC_zip_var {
     int                zipdriver;
 
     int chunk_map_method;
-    int comm_unit;
 } NC_zip_var;
 
 typedef struct NC_zip_var_list {
@@ -106,6 +105,8 @@ struct NC_zip {
     struct PNC_driver *driver;
     int                blockmapping;
     NC_zip_var_list    vars;
+    NC_zip_req_list    putlist, getlist;
+    int comm_unit;
 };
 
 extern int

@@ -178,11 +178,9 @@ int nczipioi_req_list_remove(NC_zip_req_list *lp, int reqid) {
         NCI_Free(req->count);
     }
     if (req->starts != NULL){
-        NCI_Free(req->starts[0]);
         NCI_Free(req->starts);
     }
     if (req->counts != NULL){
-        NCI_Free(req->counts[0]);
         NCI_Free(req->counts);
     }
     if (req->stride != NULL){

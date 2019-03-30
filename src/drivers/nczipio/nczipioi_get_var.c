@@ -211,7 +211,6 @@ nczipioi_get_var(NC_zip          *nczipp,
         }
     }
 
-
     // Allocate intermediate buffer
     cbuf = (char*)NCI_Malloc(varp->chunksize);
 
