@@ -52,9 +52,13 @@ nczipioi_init_get_req( NC_zip *nczipp,
     memset(req, 0, sizeof(NC_zip_req));
 
     // Record request
+    req->starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*));
     req->start = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    req->starts[0] = req->start;
     memcpy(req->start, start, sizeof(MPI_Offset) * varp->ndim);
+    req->counts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*));
     req->count = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    req->counts[0] = req->count;
     memcpy(req->count, count, sizeof(MPI_Offset) * varp->ndim);
     if (stride != NULL){
         req->stride = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
@@ -118,15 +122,15 @@ nczipioi_init_get_varn_req( NC_zip *nczipp,
 
     // Record request
     req->starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nreq);
-    req->starts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * nreq);
+    req->start = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * nreq);
     for(i = 0; i < nreq; i++){
-        req->starts[i] = req->starts[0] + i * varp->ndim;
+        req->starts[i] = req->start + i * varp->ndim;
         memcpy(req->starts[i], starts[i], sizeof(MPI_Offset) * varp->ndim);
     }
     req->counts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * nreq);
-    req->counts[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * nreq);
+    req->count = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * nreq);
     for(i = 0; i < nreq; i++){
-        req->counts[i] = req->counts[0] + i * varp->ndim;
+        req->counts[i] = req->count + i * varp->ndim;
         memcpy(req->counts[i], counts[i], sizeof(MPI_Offset) * varp->ndim);
     }
 
