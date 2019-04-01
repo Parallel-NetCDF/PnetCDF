@@ -1984,6 +1984,7 @@ if test "x$enable_adios" = "xyes" ; then
         fi
     else
         LIBS+=" -ladiosread -ladios"
+<<<<<<< HEAD
     fi
 
     dnl Check if ADIOS version is 1.12.0 or later
@@ -2047,6 +2048,8 @@ if test "x$enable_adios" = "xyes" ; then
         Stopping ...
         Check 'config.log' for more information.
         ------------------------------------------------------------])
+=======
+>>>>>>> 3292a84... detect adios2 header for special error message
     fi
 <<<<<<< HEAD
 >>>>>>> 49f28e6... adios driver follow bp2nc
