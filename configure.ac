@@ -1926,6 +1926,7 @@ if test "x$enable_adios" = "xyes" ; then
         AC_PATH_PROG([adios_config],[adios_config],,[$ADIOS_INSTALL/bin])
     fi
 
+<<<<<<< HEAD
     if test "x$adios_config" = x ; then
         AC_MSG_ERROR([
         ------------------------------------------------------------
@@ -1939,6 +1940,11 @@ if test "x$enable_adios" = "xyes" ; then
         be built with parallel I/O support. Check
         'config.log' for more information. Stopping ...
         ------------------------------------------------------------])
+=======
+    if test "x${ADIOS_INSTALL}" != x ; then      
+        CPPFLAGS+=" -I${ADIOS_INSTALL}/include"
+        LDFLAGS+=" -L${ADIOS_INSTALL}/lib" 
+>>>>>>> 3292a84... detect adios2 header for special error message
     fi
     UD_MSG_DEBUG([adios_config=$adios_config])
     
@@ -1968,17 +1974,32 @@ if test "x$enable_adios" = "xyes" ; then
     fi
 
     if test "x${have_adios}" = xno; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        The ADIOS library and header file are required to build
-        PnetCDF with ADIOS BP read support. Use option
-            --with-adios=/path/to/implementation
-        to specify the location of ADIOS build. In addition,
-        please make sure the MPI C compiler is compatible with the
-        one used to build ADIOS.
-        Stopping ...
-        Check 'config.log' for more information.
-        ------------------------------------------------------------])
+        have_adios2=no
+        AC_MSG_CHECKING(ADIOS2 library)
+        AC_CHECK_HEADERS([adios2_c.h], [have_adios2=yes], [have_adios2=no])
+        if test "x${have_adios2}" = xno; then
+            AC_MSG_ERROR([
+            ------------------------------------------------------------
+            The ADIOS library and header file are required to build
+            PnetCDF with ADIOS BP read support. Use option
+                --with-adios=/path/to/implementation
+            to specify the location of ADIOS build. In addition,
+            please make sure the MPI C compiler is compatible with the
+            one used to build ADIOS.
+            Stopping ...
+            Check 'config.log' for more information.
+            ------------------------------------------------------------])
+        else
+            AC_MSG_ERROR([
+            ------------------------------------------------------------
+            PnetCDF currently only supports ADIOS 1.x.
+            ADIOS 1.x can be downloaded at:
+            https://github.com/ornladios/ADIOS
+            We will support ADIOS 2.x in future releases.
+            ------------------------------------------------------------])
+        fi
+    else
+        LIBS+=" -ladiosread -ladios"
     fi
 
     dnl Check if ADIOS version is 1.12.0 or later
