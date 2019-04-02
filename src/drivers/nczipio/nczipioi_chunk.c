@@ -45,12 +45,7 @@ int get_chunk_idx(NC_zip_var *varp, int* cord){
 }
 
 int get_chunk_cord(NC_zip_var *varp, int idx, int* cord){
-    int i, ret;
-    
-    ret = cord[0];
-    for(i = 1; i < varp->ndim; i++){
-        ret = ret * varp->chunkdim[i - 1] + cord[i];
-    }
+    int i;
 
     for(i = varp->ndim - 1; i >= 0; i--){
         cord[i] = idx % varp->chunkdim[i];
@@ -233,4 +228,15 @@ int get_chunk_idx_cord(NC_zip_var *varp, MPI_Offset *cord){
     }
 
     return ret;
+}
+
+int get_chunk_itr(NC_zip_var *varp, int idx, MPI_Offset* cord){
+    int i;
+
+    for(i = varp->ndim - 1; i >= 0; i--){
+        cord[i] = (idx % varp->chunkdim[i]) * varp->chunkdim[i];
+        idx /= varp->chunkdim[i];
+    }
+
+    return 0;
 }

@@ -221,7 +221,15 @@ nczipio_get_var(void             *ncdp,
     }
     varp = nczipp->vars.data + varid;
 
-    status = nczipioi_get_var(nczipp, varp, start, count, stride, buf);
+    // Collective buffer
+    switch (nczipp->comm_unit){
+        case NC_ZIP_COMM_CHUNK:
+            status = nczipioi_get_var_chunk(nczipp, varp, start, count, stride, buf);
+            break;
+        case NC_ZIP_COMM_PROC:
+            status = nczipioi_get_var_proc(nczipp, varp, start, count, stride, buf);
+            break;
+    }
 
     return (err == NC_NOERR) ? status : err; /* first error encountered */
 }
