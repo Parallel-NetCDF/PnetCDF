@@ -399,7 +399,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
 
     int nsend, nrecv;   // Number of send and receive
     MPI_Request *sreq, *rreq;    // Send and recv req
-    MPI_Status *sstat, *rstat;    // Send and recv status
+    MPI_Status *sstat, rstat;    // Send and recv status
     char **sbuf, **rbuf;   // Send and recv buffer
     int *rsize, *ssize;    // recv size of each message
     int *roff, *soff;    // recv size of each message
@@ -460,7 +460,6 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     rbuf = (char**)NCI_Malloc(sizeof(char*) * nrecv);
     rsize = (int*)NCI_Malloc(sizeof(int) * nrecv);
     rreq = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nrecv);
-    rstat = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nrecv);
 
     // Count size of each request
     memset(ssize, 0, sizeof(int) * nsend);
@@ -534,8 +533,8 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     // Post recv
    for(i = 0; i < nrecv; i++){
         // Get message size, including metadata
-        MPI_Mprobe(MPI_ANY_SOURCE, 0, nczipp->comm, &rmsg, rstat);
-        MPI_Get_count(rstat, MPI_BYTE, rsize + i);
+        MPI_Mprobe(MPI_ANY_SOURCE, 0, nczipp->comm, &rmsg, &rstat);
+        MPI_Get_count(&rstat, MPI_BYTE, rsize + i);
 
         // Allocate buffer
         rbuf[i] = (char*)NCI_Malloc(rsize[i]);
@@ -602,7 +601,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     }
     for(i = 0; i < nrecv; i++){
         // Will wait any provide any benefit?
-        MPI_Waitany(nrecv, rreq, &j, rstat);
+        MPI_Waitany(nrecv, rreq, &j, &rstat);
         packoff = 0;
         //printf("rsize_2 = %d\n", rsizes[j]); fflush(stdout);
         while(packoff < rsize[j]){
@@ -650,7 +649,6 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     NCI_Free(sbuf);
 
     NCI_Free(rreq);
-    NCI_Free(rstat);
     for(i = 0; i < nrecv; i++){
         NCI_Free(rbuf[i]);
     }
@@ -665,7 +663,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
 }
 
 int
-nczipioi_put_varn_new(NC_zip        *nczipp,
+nczipioi_put_varn(NC_zip        *nczipp,
               NC_zip_var       *varp,
               int              nreq,
               MPI_Offset* const *starts,

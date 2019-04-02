@@ -30,7 +30,7 @@
 #include "nczipio_internal.h"
 
 int
-nczipioi_get_varn_cb(NC_zip          *nczipp,
+nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
                     NC_zip_var      *varp,
                     int              nreq,
                     MPI_Offset* const *starts,
@@ -453,7 +453,7 @@ nczipioi_get_varn(NC_zip        *nczipp,
     }
 
     // Collective buffer
-    nczipioi_get_varn_cb(nczipp, varp, nreq, starts, counts, NULL, bufs);
+    nczipioi_get_varn_cb_chunk(nczipp, varp, nreq, starts, counts, NULL, bufs);
 
     NCI_Free(bufs);
 

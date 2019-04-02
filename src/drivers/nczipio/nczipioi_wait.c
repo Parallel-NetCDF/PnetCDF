@@ -174,7 +174,7 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             }
 
             // Perform collective buffering
-            nczipioi_get_varn_cb(nczipp, nczipp->vars.data + vid, num, starts, counts, NULL, bufs);
+            nczipioi_get_varn_cb_chunk(nczipp, nczipp->vars.data + vid, num, starts, counts, NULL, bufs);
         }
     }
 

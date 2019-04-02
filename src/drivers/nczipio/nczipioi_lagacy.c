@@ -33,7 +33,7 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 
 int
-nczipioi_get_var(NC_zip        *nczipp,
+nczipioi_get_var_old(NC_zip        *nczipp,
               NC_zip_var       *varp,
               const MPI_Offset *start,
               const MPI_Offset *count,

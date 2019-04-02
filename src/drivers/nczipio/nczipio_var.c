@@ -224,10 +224,10 @@ nczipio_get_var(void             *ncdp,
     // Collective buffer
     switch (nczipp->comm_unit){
         case NC_ZIP_COMM_CHUNK:
-            status = nczipioi_get_var_chunk(nczipp, varp, start, count, stride, buf);
+            status = nczipioi_get_var_cb_chunk(nczipp, varp, start, count, stride, buf);
             break;
         case NC_ZIP_COMM_PROC:
-            status = nczipioi_get_var_proc(nczipp, varp, start, count, stride, buf);
+            status = nczipioi_get_var_cb_proc(nczipp, varp, start, count, stride, buf);
             break;
     }
 
@@ -324,7 +324,7 @@ nczipio_iget_var(void             *ncdp,
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
 
-    nczipioi_iget_var(nczipp, varid, start, count, stride, imap, buf, bufcount, buftype, xbuf, buf, reqid);
+    nczipioi_iget_var(nczipp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid);
 
     return NC_NOERR;
 }
@@ -504,7 +504,7 @@ nczipio_put_varn(void              *ncdp,
     }
     varp = nczipp->vars.data + varid;
 
-    err = nczipioi_put_varn_new(nczipp, varp, num, starts, counts, buf);
+    err = nczipioi_put_varn(nczipp, varp, num, starts, counts, buf);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;
