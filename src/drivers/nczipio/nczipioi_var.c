@@ -439,7 +439,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NC_var *ncvarp;
 
     wcnt = 0;
-    for(vid = 0; vid < nvar; vid++){
+    for(i = 0; i < nvar; i++){
+        vid = varids[i];
         wcnt += nczipp->vars.data[vid].nmychunks;
         if (max_nchunks < nczipp->vars.data[vid].nchunks){
             max_nchunks = nczipp->vars.data[vid].nchunks;
@@ -461,7 +462,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
     wcur = 0;
     for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data + vid;
+        varp = nczipp->vars.data + varids[vid];
 
         zsizes_all = varp->data_lens;
         zoffs = varp->data_offs;
@@ -545,7 +546,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
      */
     wcur = 0;
     for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data + vid;
+        varp = nczipp->vars.data +  varids[vid];
         ncvarp = ncp->vars.value[varp->datavarid];
         for(l = 0; l < varp->nmychunks; l++){
             cid = varp->mychunks[l];

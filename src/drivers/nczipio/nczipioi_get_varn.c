@@ -813,7 +813,6 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     return NC_NOERR;
 }
 
-
 int
 nczipioi_get_varn(NC_zip        *nczipp,
               NC_zip_var       *varp,
