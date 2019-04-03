@@ -94,7 +94,7 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     dirty = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
     memset(dirty, 0, sizeof(int) * nczipp->vars.cnt);
     for(i = 0; i < nreq; i++){
-        req = nczipp->putlist.reqs + reqids[i];
+        req = nczipp->getlist.reqs + reqids[i];
         dirty[req->varid] = 1;
     }
     for(i = 0; i < nczipp->vars.cnt; i++){
@@ -110,16 +110,17 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         }
     }
 
+    // Perform I/O for comrpessed variables
+    nczipioi_load_nvar(nczipp, nvar, varids);
+
     // Perform collective buffer
     if (nczipp->comm_unit == NC_ZIP_COMM_CHUNK){
         nczipioi_iget_cb_chunk(nczipp, nreq, reqids, stats);
     }
     else{
         nczipioi_iget_cb_proc(nczipp, nreq, reqids, stats);
+        //nczipioi_iget_cb_chunk(nczipp, nreq, reqids, stats);
     }
-
-    // Perform I/O for comrpessed variables
-    nczipioi_save_nvar(nczipp, nvar, varids);
 
     // Free buffers
     NCI_Free(varids);

@@ -142,6 +142,7 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     int overlapsize;    // Size of overlaping region of request and chunk
     int maxndim = 0;   // Max number of dimensions
+    int maxcsize = 0;   // Max chunk size
     char *tbuf = NULL;     // Intermediate buffer
     
     int packoff; // Pack offset
@@ -164,12 +165,19 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     wcnt_all = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
     smap = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
 
-     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
+    // Count total number of messages and build a map of accessed chunk to list of comm datastructure
     for(i = 0; i < nczipp->vars.cnt; i++){
         if (maxndim < nczipp->vars.data[i].ndim){
             maxndim = nczipp->vars.data[i].ndim;
         }
+        if (maxcsize < nczipp->vars.data[i].chunksize){
+            maxcsize = nczipp->vars.data[i].chunksize;
+        }
     }
+
+    // Intermediate buffer for our own data
+    tbuf = (char*)NCI_Malloc(maxcsize);
+
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * maxndim);
@@ -316,8 +324,6 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         // Post irecv
         MPI_Imrecv(rbuf[i], rsize[i], MPI_BYTE, &rmsg, rreq + i);
     }
-
-    tbuf = (char*)NCI_Malloc(varp->chunksize);
 
     // Handle our own data
     for(k = 0; k < nreq; k++){

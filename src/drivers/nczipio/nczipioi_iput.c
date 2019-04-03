@@ -95,7 +95,7 @@ nczipioi_iput_var(NC_zip        *nczipp,
     nczipp->putlist.reqs[req_id] = req;
     
     if (reqid != NULL){
-        *reqid = req_id;
+        *reqid = req_id * 2 + 1;
     }
 
     return NC_NOERR;
@@ -179,7 +179,7 @@ nczipioi_iput_varn(NC_zip        *nczipp,
     nczipp->putlist.reqs[req_id] = req;
     
     if (reqid != NULL){
-        *reqid = req_id;
+        *reqid = req_id * 2 + 1;
     }
 
     return NC_NOERR;

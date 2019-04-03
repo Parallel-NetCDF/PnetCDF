@@ -70,6 +70,9 @@ nczipioi_init_get_req( NC_zip *nczipp,
     req->xbuf = (void*)buf;
     req->nreq = 1;
 
+    req->xbufs = (char**)NCI_Malloc(sizeof(char*));
+    req->xbufs[0] = req->xbuf;
+
     return NC_NOERR;
 }
 
@@ -97,7 +100,7 @@ nczipioi_iget_var(NC_zip        *nczipp,
     nczipp->getlist.reqs[req_id] = req;
     
     if (reqid != NULL){
-        *reqid = req_id;
+        *reqid = req_id * 2;
     }
 
     return NC_NOERR;
@@ -133,12 +136,17 @@ nczipioi_init_get_varn_req( NC_zip *nczipp,
         req->counts[i] = req->count + i * varp->ndim;
         memcpy(req->counts[i], counts[i], sizeof(MPI_Offset) * varp->ndim);
     }
+    
+    req->varid = varid;
+    req->buf = (void*)buf;
+    req->xbuf = (void*)buf;
+    req->nreq = nreq;
 
     // Calculate buffer for each individual request
     req->xbufs = (char**)NCI_Malloc(sizeof(char*) * nreq);
     boff = 0;
     for(i = 0; i < nreq; i++){
-        req->xbufs[i] = (((char*)buf) + boff);
+        req->xbufs[i] = (req->xbuf + boff);
 
         // Advance pointer by size of the request
         rsize = varp->esize;
@@ -147,11 +155,6 @@ nczipioi_init_get_varn_req( NC_zip *nczipp,
         }
         boff += rsize;
     }
-
-    req->varid = varid;
-    req->buf = (void*)buf;
-    req->xbuf = (void*)buf;
-    req->nreq = nreq;
 
     return NC_NOERR;
 }
@@ -183,7 +186,7 @@ nczipioi_iget_varn(NC_zip        *nczipp,
     nczipp->getlist.reqs[req_id] = req;
     
     if (reqid != NULL){
-        *reqid = req_id;
+        *reqid = req_id * 2;
     }
 
     return NC_NOERR;
