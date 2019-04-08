@@ -6,18 +6,19 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New optimization
-  + When inserting nonblocking requests into pending queues, keep the queues
-    sorted (insert sort) in the increasing order of variable starting file
-    offsets. This can avoid a quick sort when flushing the pending requests.
-    See [pull request #37](https://github.com/Parallel-NetCDF/PnetCDF/pull/37).
-    To avoid internal sorting completely, users are recommended to post
-    nonblocking requests in the increasing order of variable IDs and
-    fixed-size variables followed by record variables.
+  + When inserting nonblocking requests into the PnetCDF internal pending
+    queues, the queues are now kept sorted (using an insert sort) into an
+    increasing order of variable starting file offsets. This can avoid the
+    quick sort when flushing the pending requests. See [pull request #37]
+    (https://github.com/Parallel-NetCDF/PnetCDF/pull/37). To avoid internal
+    sorts completely, users are recommended to post nonblocking requests in
+    the increasing order of variable IDs and fixed-size variables first
+    followed by record variables.
 
 * New Limitations
-  + When building with NetCDF-4 feature, using NetCDF-4 library built with
-    PnetCDF enabled, i.e. --enable-pnetcdf, is not supported. See
-    [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33).
+  + When building with NetCDF-4 feature enabled, using a NetCDF-4 library that
+    has already been built with PnetCDF enabled, i.e. --enable-pnetcdf, is not
+    supported. See [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33).
 
 * Update configure options
   + none
@@ -57,13 +58,13 @@ This is essentially a placeholder for the next release note ...
 
 * Other updates:
   + Add a check whether the MPI library is built with shared-library support.
-    If not and `--enable-shared` is used, configure process of PnetCDF will
+    If not and `--enable-shared` is used, the configure process of PnetCDF will
     fail.
-  + In NetCDF-4 driver, `nc4io_inq_var()` adds a check of arguments `no_fill`
-    and `fill_value` for NULL. If both are NULL, it skips the call to
-    `nc_inq_var_fill`.
-  + File header extent area between end of header and first variable is padded
-    with null bytes if PnetCDF is configured with option
+  + In the NetCDF-4 driver, `nc4io_inq_var()` adds a NULL-argument check for
+    `no_fill` and `fill_value`. If both arguments are NULL, it skips the call
+    to `nc_inq_var_fill`.
+  + File header extent area between end of header and first variable will be
+    padded with null bytes if PnetCDF is configured with option
     `--enable-null-byte-header-padding`.
 
 * Bug fixes
@@ -82,8 +83,8 @@ This is essentially a placeholder for the next release note ...
 
 * New test program
   + test/burst_buffer/varn.c -- to test varn API when burst buffer driver is
-    used. The test includes cases when argument counts is NULL or some of the
-    elements in counts are NULL.
+    used. The test includes cases when argument counts is NULL or some elements
+    in counts are NULL.
 
 * Conformity with NetCDF library
   + none
