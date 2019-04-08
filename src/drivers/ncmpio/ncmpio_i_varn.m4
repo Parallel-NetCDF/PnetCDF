@@ -118,9 +118,9 @@ igetput_varn(NC                *ncp,
         MPI_Type_size(itype, &isize); /* buffer element size */
     }
     else if (buftype == MPI_DATATYPE_NULL) {
-	/* In this case, bufcount is ignored and the internal buffer data type
-	 * match the external variable data type. No data conversion will be
-	 * done. In addition, it means buf is contiguous. Hereinafter, buftype
+        /* In this case, bufcount is ignored and the internal buffer data type
+         * match the external variable data type. No data conversion will be
+         * done. In addition, it means buf is contiguous. Hereinafter, buftype
          * is ignored.
          */
         itype = xtype;
@@ -140,6 +140,7 @@ igetput_varn(NC                *ncp,
         /* itype (primitive MPI data type) from buftype
          * isize is the size of itype in bytes
          * bnelems is the number of itype elements in one buftype
+         * isContig indicates whether user buffer, buf, is contiguous
          */
         err = ncmpii_dtype_decode(buftype, &itype, &isize, &bnelems,
                                   NULL, &isContig);
@@ -215,7 +216,8 @@ igetput_varn(NC                *ncp,
 
         /* when necessary, pack buf to xbuf and perform byte-swap and
          * type-conversion on xbuf, which will later be broken into num
-         * sub-buffers, each to be added to the nonblocking request queue.
+         * sub-buffers (no additional malloc further), each to be added to the
+         * nonblocking request queue.
          */
         err = ncmpio_pack_xbuf(ncp->format, varp, bufcount, buftype, isContig,
                                nelems, itype, isize, MPI_DATATYPE_NULL,
