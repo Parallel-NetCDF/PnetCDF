@@ -66,8 +66,8 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    rcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    rcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    rcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
@@ -85,7 +85,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
     // This is just for allocating send buffer
     // We do so by iterating through all request and all chunks they cover
     // If we are not the owner of a chunk, we need to send message
-    memset(rcnt_local, 0, sizeof(int) * varp->nchunks);
+    memset(rcnt_local, 0, sizeof(int) * varp->nchunk);
     nsend = 0;
     for(req = 0; req < nreq; req++){
         // Initialize chunk iterator
@@ -106,7 +106,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
     }
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(rcnt_local, rcnt_all, varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(rcnt_local, rcnt_all, varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
 
     // We need to prepare chunk in the chunk cache
     // For chunks not yet allocated, we need to read them form file collectively
@@ -143,7 +143,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
 
     // Post send
     k = l = 0;
-    for(cid = 0; cid < varp->nchunks; cid++){
+    for(cid = 0; cid < varp->nchunk; cid++){
         if (varp->chunk_owner[cid] == nczipp->rank){
             // We are the owner of the chunk
             // Receive data from other process
@@ -346,7 +346,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
 
     // Receive replies from the owners and update the user buffer
     k = 0;
-    for(cid = 0; cid < varp->nchunks; cid++){
+    for(cid = 0; cid < varp->nchunk; cid++){
         if (rcnt_local[cid] > 0 && varp->chunk_owner[cid] != nczipp->rank){
             get_chunk_cord(varp, cid, citr);
 
@@ -472,9 +472,9 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write counts[req]
-    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunks));
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunk));
     rcnt_local_chunk = rcnt_local + nczipp->np;
-    rcnt_all = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunks));
+    rcnt_all = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunk));
     rcnt_all_chunk = rcnt_all + nczipp->np;
     smap = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
 
@@ -492,7 +492,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     // This is just for allocating send buffer
     // We do so by iterating through all request and all chunks they cover
     // If we are not the owner of a chunk, we need to send message
-    memset(rcnt_local, 0, sizeof(int) * (nczipp->np + varp->nchunks));
+    memset(rcnt_local, 0, sizeof(int) * (nczipp->np + varp->nchunk));
     nsend = 0;
 
     // counts[req] total number of messages and build a map of accessed chunk to list of comm datastructure
@@ -513,7 +513,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     }
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np + varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np + varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = rcnt_all[nczipp->rank] - rcnt_local[nczipp->rank];  // We don't need to receive request form self
 
     // We need to prepare chunk in the chunk cache

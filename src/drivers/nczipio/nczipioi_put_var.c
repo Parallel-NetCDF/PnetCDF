@@ -62,8 +62,8 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    wcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    wcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+    wcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    wcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
@@ -112,7 +112,7 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
 
     // Calculate number of recv request
     // This is for all the chunks

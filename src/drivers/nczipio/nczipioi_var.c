@@ -40,6 +40,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
         if (varp->chunkdim == NULL){    // This is a new uninitialized variable 
             // Determine its block size
             varp->chunkdim = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+            varp->nchunks = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
             
             // First check attribute
             valid = 1;
@@ -73,32 +74,27 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
                 }
             }
 
-            // Calculate block size
+            // Calculate total # chunks, # chunks along each dim, chunksize
+            varp->nchunk = 1;
             varp->chunksize = NC_Type_size(varp->xtype);
-            for(i = 0; i < varp->ndim; i++){
+            for(i = 0; i < varp->ndim; i++){ //chunkdim must be at leasst 1
+                if (varp->dimsize[i] % varp->chunkdim[i] == 0){
+                    varp->nchunks[i] = (int)varp->dimsize[i] / varp->chunkdim[i];
+                }
+                else{
+                    varp->nchunks[i] = (int)varp->dimsize[i] / varp->chunkdim[i]; + 1;
+                }
+                varp->nchunk *= varp->nchunks[i];
                 varp->chunksize *= varp->chunkdim[i];
             }
 
-            // Calculate number of blocks
-            varp->nchunks = 1;
-            len = 1;
-            for(j = 0; j < varp->ndim; j++){ //chunkdim must be at leasst 1
-                if (varp->chunkdim[j] % varp->chunkdim[j] == 0){
-                    varp->nchunks *= varp->dimsize[j] / varp->chunkdim[j];
-                }
-                else{
-                    varp->nchunks *= varp->dimsize[j] / varp->chunkdim[j] + 1;
-                }
-                len *= varp->chunkdim[j];   // Block size
-            }
-
             // Determine block ownership
-            varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-            varp->chunk_cache = (char**)NCI_Malloc(sizeof(char*) * varp->nchunks);
-            memset(varp->chunk_cache, 0, sizeof(char*) * varp->nchunks);
+            varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+            varp->chunk_cache = (char**)NCI_Malloc(sizeof(char*) * varp->nchunk);
+            memset(varp->chunk_cache, 0, sizeof(char*) * varp->nchunk);
             varp->nmychunks = 0;
             if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
-                for(j = 0; j < varp->nchunks; j++){ 
+                for(j = 0; j < varp->nchunk; j++){ 
                     varp->chunk_owner[j] = j % nczipp->np;
                     if (varp->chunk_owner[j] == nczipp->rank && create){
                         varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
@@ -110,36 +106,36 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
             // Build skip list of my own chunks
             varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunks);
             varp->nmychunks = 0;
-            for(j = 0; j < varp->nchunks; j++){ 
+            for(j = 0; j < varp->nchunk; j++){ 
                 if (varp->chunk_owner[j] == nczipp->rank){
                     varp->mychunks[varp->nmychunks++] = j;
                 }
             }
 
             // Determine block offset
-            varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (varp->nchunks + 1));
-            varp->data_lens = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+            varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (varp->nchunk + 1));
+            varp->data_lens = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
             // Try if there are offset recorded in attributes, it can happen after opening a file
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunkoffsets", NULL, &len);
-            if (err == NC_NOERR && varp->nchunks == len - 1){
+            if (err == NC_NOERR && varp->nchunk == len - 1){
                 err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunklens", NULL, &len);
-                if (err == NC_NOERR && varp->nchunks == len){
+                if (err == NC_NOERR && varp->nchunk == len){
                     err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkoffsets", varp->data_offs, MPI_LONG_LONG);
                     err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunklens", varp->data_lens, MPI_INT);
                 }
                 else{
                     // If not, 0 len means no data avaiable
                     if (err != NC_NOERR){
-                        memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunks);
-                        memset(varp->data_lens, 0, sizeof(int) * (varp->nchunks + 1));
+                        memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunk);
+                        memset(varp->data_lens, 0, sizeof(int) * (varp->nchunk + 1));
                     }
                 }
             }
             else{
                 // If not, 0 len means no data avaiable
                 if (err != NC_NOERR){
-                    memset(varp->data_offs, 0, sizeof(MPI_Offset) * (varp->nchunks + 1));
-                    memset(varp->data_lens, 0, sizeof(int) * varp->nchunks);
+                    memset(varp->data_offs, 0, sizeof(MPI_Offset) * (varp->nchunk + 1));
+                    memset(varp->data_lens, 0, sizeof(int) * varp->nchunk);
                 }
             }
 
@@ -165,6 +161,28 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
     }
 
     return NC_NOERR;
+}
+
+void nczipioi_var_free(NC_zip_var *varp) {
+    int i;
+
+    if (varp->chunkdim != NULL){
+        NCI_Free(varp->dimsize);
+        NCI_Free(varp->chunkdim);
+        NCI_Free(varp->dimids);
+        NCI_Free(varp->nchunks);
+
+        NCI_Free(varp->data_offs);
+        NCI_Free(varp->chunk_owner);
+        NCI_Free(varp->data_lens);
+        for(i = 0; i < varp->nmychunks; i++){
+            if (varp->chunk_cache[varp->mychunks[i]] != NULL){
+                NCI_Free(varp->chunk_cache[varp->mychunks[i]]);
+            }
+        }
+        NCI_Free(varp->chunk_cache);
+        NCI_Free(varp->mychunks);
+    }
 }
 
 int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
@@ -419,7 +437,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     NC_var *ncvarp;
 
     // Allocate buffer for compression
-    zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+    zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
     zbufs = (char**)NCI_Malloc(sizeof(char*) * varp->nmychunks);
     zsizes_all = varp->data_lens;
     zoffs = varp->data_offs;
@@ -429,10 +447,10 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     lens = (int*)NCI_Malloc(sizeof(int) * wcnt);
     disps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * wcnt);
 
-    memset(zsizes, 0, sizeof(int) * varp->nchunks);
+    memset(zsizes, 0, sizeof(int) * varp->nchunk);
 
     // Compress each chunk we own
-    memset(zsizes, 0, sizeof(int) * varp->nchunks);
+    memset(zsizes, 0, sizeof(int) * varp->nchunk);
     for(l = 0; l < varp->nmychunks; l++){
         k = varp->mychunks[l];
 
@@ -444,9 +462,9 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     }
 
     // Sync compressed data size with other processes
-    MPI_Allreduce(zsizes, zsizes_all, varp->nchunks, MPI_INT, MPI_MAX, nczipp->comm);
+    MPI_Allreduce(zsizes, zsizes_all, varp->nchunk, MPI_INT, MPI_MAX, nczipp->comm);
     zoffs[0] = 0;
-    for(i = 0; i < varp->nchunks; i++){
+    for(i = 0; i < varp->nchunk; i++){
         zoffs[i + 1] = zoffs[i] + zsizes_all[i];
     }
 
@@ -461,7 +479,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     // Define dimension for data variable
     sprintf(name, "_compressed_data_dim_%d", varp->varid);
-    err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunks], &zdimid);
+    err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunk], &zdimid);
     if (err != NC_NOERR) return err;
 
     // Define data variable
@@ -475,11 +493,11 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     if (err != NC_NOERR) return err;
 
     // Record offset of chunks in data variable
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT64, varp->nchunks + 1, zoffs, MPI_LONG_LONG);
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT64, varp->nchunk + 1, zoffs, MPI_LONG_LONG);
     if (err != NC_NOERR) return err;
 
     // Record size of chunks
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklens", NC_INT, varp->nchunks, zsizes_all, MPI_INT);
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklens", NC_INT, varp->nchunk, zsizes_all, MPI_INT);
     if (err != NC_NOERR) return err;
 
     // Record data variable id
@@ -598,10 +616,10 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         zsizes_all = varp->data_lens;
         zoffs = varp->data_offs;
 
-        memset(zsizes, 0, sizeof(int) * varp->nchunks);
+        memset(zsizes, 0, sizeof(int) * varp->nchunk);
 
         // Compress each chunk we own
-        memset(zsizes, 0, sizeof(int) * varp->nchunks);
+        memset(zsizes, 0, sizeof(int) * varp->nchunk);
         for(l = 0; l < varp->nmychunks; l++){
             cid = varp->mychunks[l];
 
@@ -610,9 +628,9 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         }
 
         // Sync compressed data size with other processes
-        MPI_Allreduce(zsizes, zsizes_all, varp->nchunks, MPI_INT, MPI_MAX, nczipp->comm);
+        MPI_Allreduce(zsizes, zsizes_all, varp->nchunk, MPI_INT, MPI_MAX, nczipp->comm);
         zoffs[0] = 0;
-        for(cid = 0; cid < varp->nchunks; cid++){
+        for(cid = 0; cid < varp->nchunk; cid++){
             zoffs[cid + 1] = zoffs[cid] + zsizes_all[cid];
         }
 
@@ -624,7 +642,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
         // Define dimension for data variable
         sprintf(name, "_compressed_data_dim_%d", varp->varid);
-        err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunks], &zdimid);
+        err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunk], &zdimid);
         if (err != NC_NOERR) return err;
 
         // Define data variable
@@ -638,11 +656,11 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         if (err != NC_NOERR) return err;
 
         // Record offset of chunks in data variable
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT64, varp->nchunks + 1, zoffs, MPI_LONG_LONG);
+        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT64, varp->nchunk + 1, zoffs, MPI_LONG_LONG);
         if (err != NC_NOERR) return err;
 
         // Record size of chunks
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklens", NC_INT, varp->nchunks, zsizes_all, MPI_INT);
+        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklens", NC_INT, varp->nchunk, zsizes_all, MPI_INT);
         if (err != NC_NOERR) return err;
 
         // Record data variable id

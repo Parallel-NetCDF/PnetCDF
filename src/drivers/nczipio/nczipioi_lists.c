@@ -28,25 +28,7 @@ int nczipioi_var_list_free(NC_zip_var_list *list) {
     int i, j;
     if (list->nalloc > 0){
         for(i = 0; i < list->cnt; i++){
-            if (list->data[i].dimsize != NULL){
-                NCI_Free(list->data[i].dimsize);
-            }
-            if (list->data[i].chunkdim != NULL){
-                NCI_Free(list->data[i].chunkdim);
-            }
-            if (list->data[i].dimids != NULL){
-                NCI_Free(list->data[i].dimids);
-            }
-            if (list->data[i].nchunks >= 0){
-                NCI_Free(list->data[i].data_offs);
-                NCI_Free(list->data[i].chunk_owner);
-                NCI_Free(list->data[i].data_lens);
-                for(j = 0; j < list->data[i].nmychunks; j++){
-                    NCI_Free(list->data[i].chunk_cache[list->data[i].mychunks[j]]);
-                }
-                NCI_Free(list->data[i].chunk_cache);
-                NCI_Free(list->data[i].mychunks);
-            }
+            nczipioi_var_free(list->data + i);
         }
         NCI_Free(list->data);
     }

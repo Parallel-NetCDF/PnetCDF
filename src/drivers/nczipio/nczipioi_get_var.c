@@ -64,8 +64,8 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    rcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    rcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    rcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
@@ -105,7 +105,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
 
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(rcnt_local, rcnt_all, varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(rcnt_local, rcnt_all, varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
 
     // We need to prepare chunk in the chunk cache
     // For chunks not yet allocated, we need to read them form file collectively
@@ -429,9 +429,9 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunks));
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunk));
     rcnt_local_chunk = rcnt_local + nczipp->np;
-    rcnt_all = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunks));
+    rcnt_all = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunk));
     rcnt_all_chunk = rcnt_all + nczipp->np;
     smap = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
 
@@ -449,7 +449,7 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     // This is just for allocating send buffer
     // We do so by iterating through all request and all chunks they cover
     // If we are not the owner of a chunk, we need to send message
-    memset(rcnt_local, 0, sizeof(int) * (nczipp->np + varp->nchunks));
+    memset(rcnt_local, 0, sizeof(int) * (nczipp->np + varp->nchunk));
     nsend = 0;
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
@@ -468,7 +468,7 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     } while (nczipioi_chunk_itr_next_cord(varp, start, count, citr));
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np + varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np + varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = rcnt_all[nczipp->rank] - rcnt_local[nczipp->rank];  // We don't need to receive request form self
 
     // We need to prepare chunk in the chunk cache

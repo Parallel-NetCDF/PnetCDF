@@ -72,8 +72,8 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    wcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    wcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
+    wcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    wcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
@@ -91,7 +91,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     // This is just for allocating send buffer
     // We do so by iterating through all request and all chunks they cover
     // If we are not the owner of a chunk, we need to send message
-    memset(wcnt_local, 0, sizeof(int) * varp->nchunks);
+    memset(wcnt_local, 0, sizeof(int) * varp->nchunk);
     nsend = 0;
     max_tbuf = 0;
     for(req = 0; req < nreq; req++){
@@ -138,7 +138,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
     j = 0;
     // Allocate buffer for data
-    for(cid = 0; cid < varp->nchunks; cid++){
+    for(cid = 0; cid < varp->nchunk; cid++){
         //printf("Rank: %d, wcnt_local[%d] = %d\n", nczipp->rank, cid, wcnt_local[cid]); fflush(stdout);
         // Count number of mnessage we need to send
         if (wcnt_local[cid] > 0){
@@ -150,7 +150,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     }
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunks, MPI_INT, MPI_SUM, nczipp->comm);
+    MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
 
     // Calculate number of recv request
     // This is for all the chunks
@@ -168,7 +168,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     // Post send and recv
     nrecv = 0;
     nsend = 0;
-    for(cid = 0; cid < varp->nchunks; cid++){
+    for(cid = 0; cid < varp->nchunk; cid++){
         if (varp->chunk_owner[cid] == nczipp->rank){
             // We are the owner of the chunk
             // Receive data from other process

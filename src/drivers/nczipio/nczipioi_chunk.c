@@ -38,7 +38,7 @@ int get_chunk_idx(NC_zip_var *varp, int* cord){
     
     ret = cord[0];
     for(i = 1; i < varp->ndim; i++){
-        ret = ret * varp->chunkdim[i - 1] + cord[i];
+        ret = ret * varp->nchunks[i - 1] + cord[i];
     }
 
     return ret;
@@ -48,8 +48,8 @@ int get_chunk_cord(NC_zip_var *varp, int idx, int* cord){
     int i;
 
     for(i = varp->ndim - 1; i >= 0; i--){
-        cord[i] = idx % varp->chunkdim[i];
-        idx /= varp->chunkdim[i];
+        cord[i] = idx % varp->nchunks[i];
+        idx /= varp->nchunks[i];
     }
 
     return 0;
@@ -94,6 +94,22 @@ int nczipioi_chunk_itr_init(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *cou
     }
 
     return nchk;
+}
+
+int nczipioi_chunk_itr_init_ex(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *citr, int *cid){
+    int i;
+
+    for(i = 0; i < varp->ndim; i++){
+        citr[i] = start[i] - (start[i] % varp->chunkdim[i]);
+
+    }
+
+    *cid = 0;
+    for(i = 1; i < varp->ndim; i++){
+        *cid = *cid * varp->chunkdim[i - 1] + citr[i] / varp->chunkdim[i];
+    }
+
+    return NC_NOERR;
 }
 
 int nczipioi_chunk_itr_init_str(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *stride, int *cstart, int *cend, int *citr){
@@ -224,7 +240,7 @@ int get_chunk_idx_cord(NC_zip_var *varp, MPI_Offset *cord){
     
     ret = (int)(cord[0]) / varp->chunkdim[0];
     for(i = 1; i < varp->ndim; i++){
-        ret = ret * varp->chunkdim[i - 1] + (int)(cord[i]) / varp->chunkdim[i];
+        ret = ret * varp->nchunks[i - 1] + (int)(cord[i]) / varp->chunkdim[i];
     }
 
     return ret;

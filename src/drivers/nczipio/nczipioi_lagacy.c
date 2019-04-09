@@ -364,7 +364,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
      * Find my chunks
      */
     nmychunks = 0;
-    for(i = 0; i < varp->nchunks; i++){
+    for(i = 0; i < varp->nchunk; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
             nmychunks++;
         }
@@ -373,7 +373,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     // Gather chunk id this process handled to prevent a search in the future
     mychunks = (int*)NCI_Malloc(sizeof(int) * nmychunks);
     nmychunks = 0;
-    for(i = 0; i < varp->nchunks; i++){
+    for(i = 0; i < varp->nchunk; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
             mychunks[nmychunks] = i;
             nmychunks++;
@@ -390,7 +390,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     rdispls = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
     memset(recvcounts, 0, sizeof(int) * nczipp->np);
     memset(packoff, 0, sizeof(int) * nczipp->np);
-    for(i = 0; i < varp->nchunks; i++){
+    for(i = 0; i < varp->nchunk; i++){
         if (varp->chunk_owner[i] == nczipp->rank){
             get_chunk_cord(varp, i, ccord);
 
@@ -577,12 +577,12 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     // An alternative is to allgather and unpack the info
 
     // Allocate buffer
-    zsize_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zsize_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    zdispls_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunks);
-    memset(zsize_local, 0, sizeof(int) * varp->nchunks);
-    memset(zsize_all, 0, sizeof(int) * varp->nchunks);
-    memset(zdispls_all, 0, sizeof(int) * varp->nchunks);
+    zsize_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    zsize_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    zdispls_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    memset(zsize_local, 0, sizeof(int) * varp->nchunk);
+    memset(zsize_all, 0, sizeof(int) * varp->nchunk);
+    memset(zdispls_all, 0, sizeof(int) * varp->nchunk);
 
     // Fill up local size
     for(i = 0; i < nmychunks; i++){
@@ -590,11 +590,11 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     }
 
     // All reduce
-    MPI_Allreduce(zsize_local, zsize_all, varp->nchunks, MPI_INT, MPI_MAX, nczipp->comm);
+    MPI_Allreduce(zsize_local, zsize_all, varp->nchunk, MPI_INT, MPI_MAX, nczipp->comm);
 
     // Calculate variable displacement
     zdispls_all[0] = 0;
-    for(i = 1; i < varp->nchunks; i++){
+    for(i = 1; i < varp->nchunk; i++){
         zdispls_all[i] = zsize_all[i - 1] + zdispls_all[i - 1];
     }
 
@@ -602,11 +602,11 @@ nczipioi_put_var_old(NC_zip        *nczipp,
 #ifdef PNETCDF_DEBUG
     if (nczipp->rank == 0){
         printf("Rank %d: zsize_all = {", nczipp->rank);
-        for(i = 0; i < varp->nchunks; i++){
+        for(i = 0; i < varp->nchunk; i++){
             printf("%x ", zsize_all[i]);
         }
         printf("}, zdispls_all = {");
-        for(i = 0; i < varp->nchunks; i++){
+        for(i = 0; i < varp->nchunk; i++){
             printf("%d, ", zdispls_all[i]);
         }
         printf("}, varid = { %d", varp->varid);
@@ -622,7 +622,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
 
     // Define dimension  for data variable
     sprintf(name, "_compressed_data_dim_%d", varp->varid);
-    err = nczipp->driver->def_dim(nczipp->ncp, name, zdispls_all[varp->nchunks - 1] + zsize_all[varp->nchunks - 1], &zdimid);
+    err = nczipp->driver->def_dim(nczipp->ncp, name, zdispls_all[varp->nchunk - 1] + zsize_all[varp->nchunk - 1], &zdimid);
     if (err != NC_NOERR) return err;
 
     // Define variable
@@ -631,7 +631,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     if (err != NC_NOERR) return err;
 
     // Record offset in data variable
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffset", NC_INT, varp->nchunks, zdispls_all, MPI_INT); // Original datatype
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffset", NC_INT, varp->nchunk, zdispls_all, MPI_INT); // Original datatype
     if (err != NC_NOERR) return err;
 
     // Switch to data mode
