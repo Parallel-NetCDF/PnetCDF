@@ -69,7 +69,7 @@ int get_chunk_itr(NC_zip_var *varp, int idx, MPI_Offset* cord){
     return 0;
 }
 
-int nczipioi_chunk_itr_init(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *citr, int *cid){
+int nczipioi_chunk_itr_init(NC_zip_var *varp, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *citr, int *cid){
     int i;
 
     *cid = 0;
@@ -81,7 +81,7 @@ int nczipioi_chunk_itr_init(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *cou
     return NC_NOERR;
 }
 
-int nczipioi_chunk_itr_next(NC_zip_var *varp, MPI_Offset *start, MPI_Offset *count, MPI_Offset *citr, int *cid){
+int nczipioi_chunk_itr_next(NC_zip_var *varp, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *citr, int *cid){
     int i, j;
     int nchk = 1;
 

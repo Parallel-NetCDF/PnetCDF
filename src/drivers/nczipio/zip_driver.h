@@ -9,7 +9,7 @@ struct NCZIP_driver {
     int (*init)(MPI_Info);
     int (*finalize)();
     int (*inq_cpsize)(void*, int, int*, int, int*, MPI_Datatype);
-    int (*compress)(void*, int, void*, int*, int, int*, int);
+    int (*compress)(void*, int, void*, int*, int, int*, MPI_Datatype);
     int (*compress_alloc)(void*, int, void**, int*, int, int*, MPI_Datatype);
     int (*inq_dcsize)(void*, int, int*, int, int*, MPI_Datatype);
     int (*decompress)(void*, int, void*, int*, int, int*, MPI_Datatype);

@@ -32,9 +32,9 @@
 int
 nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
                     NC_zip_var      *varp,
-                    MPI_Offset      *start,
-                    MPI_Offset      *count,
-                    MPI_Offset      *stride,
+                    const MPI_Offset      *start,
+                    const MPI_Offset      *count,
+                    const MPI_Offset      *stride,
                     void            *buf)
 {
     int err;
@@ -375,9 +375,9 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
 int
 nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
                             NC_zip_var      *varp,
-                            MPI_Offset      *start,
-                            MPI_Offset      *count,
-                            MPI_Offset      *stride,
+                            const MPI_Offset      *start,
+                            const MPI_Offset      *count,
+                            const MPI_Offset      *stride,
                             void            *buf)
 {
     int err;

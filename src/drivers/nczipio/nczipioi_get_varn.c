@@ -825,10 +825,10 @@ nczipioi_get_varn(NC_zip        *nczipp,
     // Collective buffer
     switch (nczipp->comm_unit){
         case NC_ZIP_COMM_CHUNK:
-            nczipioi_get_varn_cb_chunk(nczipp, varp, nreq, starts, counts, NULL, bufs);
+            nczipioi_get_varn_cb_chunk(nczipp, varp, nreq, starts, counts, NULL, (void**)bufs);
             break;
         case NC_ZIP_COMM_PROC:
-            nczipioi_get_varn_cb_proc(nczipp, varp, nreq, starts, counts, bufs);
+            nczipioi_get_varn_cb_proc(nczipp, varp, nreq, starts, counts, (void**)bufs);
             break;
     }
     NCI_Free(bufs);

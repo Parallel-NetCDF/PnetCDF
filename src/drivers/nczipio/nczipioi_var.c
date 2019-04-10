@@ -437,7 +437,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     MPI_Aint *disps;
     MPI_Status status;
     MPI_Offset *zoffs;
-    char **zbufs;
+    void **zbufs;
     int zdimid;
     char name[128]; // Name of objects
     NC *ncp = (NC*)(nczipp->ncp);
@@ -445,7 +445,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     // Allocate buffer for compression
     zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
-    zbufs = (char**)NCI_Malloc(sizeof(char*) * varp->nmychunks);
+    zbufs = (void**)NCI_Malloc(sizeof(void*) * varp->nmychunks);
     zsizes_all = varp->data_lens;
     zoffs = varp->data_offs;
 
@@ -588,7 +588,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     int *mlens, *flens;
     MPI_Aint *mdisps, *fdisps;
     MPI_Status status;
-    char **zbufs;
+    void **zbufs;
     int zdimid;
     char name[128]; // Name of objects
     NC *ncp = (NC*)(nczipp->ncp);
@@ -598,14 +598,14 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     for(i = 0; i < nvar; i++){
         vid = varids[i];
         wcnt += nczipp->vars.data[vid].nmychunks;
-        if (max_nchunks < nczipp->vars.data[vid].nchunks){
-            max_nchunks = nczipp->vars.data[vid].nchunks;
+        if (max_nchunks < nczipp->vars.data[vid].nchunk){
+            max_nchunks = nczipp->vars.data[vid].nchunk;
         }
     }
 
     // Allocate buffer for compression
     zsizes = (int*)NCI_Malloc(sizeof(int) * max_nchunks);
-    zbufs = (char**)NCI_Malloc(sizeof(char*) * wcnt);
+    zbufs = (void**)NCI_Malloc(sizeof(void*) * wcnt);
 
     // Allocate buffer file type
     mlens = (int*)NCI_Malloc(sizeof(int) * wcnt);

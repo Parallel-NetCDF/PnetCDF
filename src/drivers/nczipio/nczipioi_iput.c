@@ -34,9 +34,9 @@ static inline int
 nczipioi_init_put_req( NC_zip *nczipp,
                         NC_zip_req *req,
                         int        varid,
-                        MPI_Offset *start,
-                        MPI_Offset *count,
-                        MPI_Offset *stride, 
+                        const MPI_Offset *start,
+                        const MPI_Offset *count,
+                        const MPI_Offset *stride, 
                         const void *xbuf,
                         const void *buf) {
     int err;
@@ -76,9 +76,9 @@ nczipioi_init_put_req( NC_zip *nczipp,
 int
 nczipioi_iput_var(NC_zip        *nczipp,
               int               varid,
-              MPI_Offset        *start,
-              MPI_Offset        *count,
-              MPI_Offset        *stride,
+              const MPI_Offset        *start,
+              const MPI_Offset        *count,
+              const MPI_Offset        *stride,
               const void        *xbuf,
               const void        *buf,
               int               *reqid)
@@ -156,8 +156,8 @@ int
 nczipioi_iput_varn(NC_zip        *nczipp,
               int               varid,
               int               nreq,
-              MPI_Offset        **starts,
-              MPI_Offset        **counts,
+              MPI_Offset * const*starts,
+              MPI_Offset * const*counts,
               const void        *xbuf,
               const void        *buf,
               int               *reqid)
