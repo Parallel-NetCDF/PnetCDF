@@ -276,6 +276,7 @@ UD_MSG_DEBUG([MPICC=$MPICC])
 dnl Now MPICC is configured, do some basic compiler tests
 CC=${MPICC}
 AC_PROG_CC
+AC_PROG_CPP
 dnl AM_PROG_CC_C_O
 
 dnl this call needs at least autoconf version 2.60
