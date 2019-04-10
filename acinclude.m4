@@ -14,9 +14,12 @@ AC_DEFUN([UD_PROG_M4],
 [
     dnl AS_MESSAGE([checking for m4 preprocessor...])
     case "${M4-unset}" in
-	unset) AC_CHECK_PROGS(M4, m4 gm4, m4) ;;
-	*) AC_CHECK_PROGS(M4, $M4 m4 gm4, m4) ;;
+	unset) AC_CHECK_PROGS(M4, m4 gm4, []) ;;
+	*) AC_CHECK_PROGS(M4, $M4 m4 gm4, []) ;;
     esac
+    if test -z "$M4" ; then
+       AC_MSG_ERROR("m4 utility program is required by PnetCDF")
+    fi
     AC_MSG_CHECKING(m4 additional flags)
     case "${M4FLAGS-unset}" in
 	unset) dnl test if M4 runs fine without option -B10000
