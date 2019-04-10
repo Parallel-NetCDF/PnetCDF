@@ -46,8 +46,8 @@ int nczipioi_iput_cb_chunk(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NC_zip_req *req;
 
     // Count total number of request in per variable for packed varn request
-    nums = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
-    nreqs = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
+    nums = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt * 2);
+    nreqs = nums + nczipp->vars.cnt;
     memset(nums, 0, sizeof(int) * nczipp->vars.cnt);
     memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
     for(i = 0; i < nreq; i++){
@@ -84,8 +84,8 @@ int nczipioi_iput_cb_chunk(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     }
     
     // Allocate parameters
-    starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * maxnum);
-    counts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * maxnum);
+    starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * maxnum * 2);
+    counts = starts + maxnum;
     bufs =  (char**)NCI_Malloc(sizeof(char*) * maxnum);
 
     /* Pack requests variable by variable
@@ -113,13 +113,11 @@ int nczipioi_iput_cb_chunk(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Free buffers
     NCI_Free(nums);
-    NCI_Free(nreqs);
 
     NCI_Free(vreqids[0]);
     NCI_Free(vreqids);
     
     NCI_Free(starts);
-    NCI_Free(counts);
     NCI_Free(bufs);
 
     return NC_NOERR;
@@ -161,9 +159,9 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NC_zip_req *req;
 
     // Allocate buffering for write count
-    wcnt_local = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    wcnt_all = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
-    smap = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
+    wcnt_local = (int*)NCI_Malloc(sizeof(int) * nczipp->np * 3);
+    wcnt_all = wcnt_local + nczipp->np;
+    smap = wcnt_all + nczipp->np;
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
     for(i = 0; i < nczipp->vars.cnt; i++){
@@ -178,16 +176,15 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Intermediate buffer for our own data
     tbuf = (char*)NCI_Malloc(maxcsize);
 
-
     // Allocate buffering for overlaping index
-    tsize = (int*)NCI_Malloc(sizeof(int) * maxndim);
-    tssize = (int*)NCI_Malloc(sizeof(int) * maxndim);
-    tstart = (int*)NCI_Malloc(sizeof(int) * maxndim);
-    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim);
-    osize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim);
+    tsize = (int*)NCI_Malloc(sizeof(int) * maxndim * 3);
+    tssize = tsize + maxndim;
+    tstart = tssize + maxndim;
+    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim * 3);
+    osize = ostart + maxndim;
 
-    // Current chunk position
-    citr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim);
+    // Chunk iterator
+    citr = osize + maxndim;
 
     // We need to calculate the size of message of each processes
     // This is just for allocating send buffer
@@ -222,9 +219,9 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Allocate data structure for messaging
     sbuf = (char**)NCI_Malloc(sizeof(char*) * nsend);
-    ssize = (int*)NCI_Malloc(sizeof(int) * nsend);
-    soff = (int*)NCI_Malloc(sizeof(int) * nsend);
-    sdst = (int*)NCI_Malloc(sizeof(int) * nsend);
+    ssize = (int*)NCI_Malloc(sizeof(int) * nsend * 3);
+    soff = ssize + nsend;
+    sdst = soff + nsend;
     sreq = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nsend);
     sstat = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
 
@@ -415,21 +412,14 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Free buffers
     NCI_Free(wcnt_local);
-    NCI_Free(wcnt_all);
-    NCI_Free(smap);
 
     NCI_Free(tsize);
-    NCI_Free(tssize);
-    NCI_Free(tstart);
-    NCI_Free(osize);
+
     NCI_Free(ostart);
-    NCI_Free(citr);
 
     NCI_Free(sreq);
     NCI_Free(sstat);
     NCI_Free(ssize);
-    NCI_Free(soff);
-    NCI_Free(sdst);
     for(i = 0; i < nsend; i++){
         NCI_Free(sbuf[i]);
     }

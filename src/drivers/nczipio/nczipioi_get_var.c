@@ -64,18 +64,18 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    rcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
-    rcnt_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk * 2);
+    rcnt_all = rcnt_local + varp->nchunk;
 
     // Allocate buffering for overlaping index
-    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tssize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
-    osize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
+    tssize = tsize + varp->ndim;
+    tstart = tssize + varp->ndim;
+    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
+    osize = ostart + varp->ndim;
 
-    // Current chunk position
-    citr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    // Chunk iterator
+    citr = osize + varp->ndim;
 
     // We need to calculate the size of message of each chunk
     // This is just for allocating send buffer
@@ -340,17 +340,12 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
 
     // Free buffers
     NCI_Free(rcnt_local);
-    NCI_Free(rcnt_all);
 
     NCI_Free(rids);
 
     NCI_Free(tsize);
-    NCI_Free(tssize);
-    NCI_Free(tstart);
-    NCI_Free(osize);
-    NCI_Free(ostart);
 
-    NCI_Free(citr);
+    NCI_Free(ostart);
 
     for(i = 0; i < nsend + nrecv; i++){
         NCI_Free(sbufs[i]);
@@ -412,21 +407,21 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     MPI_Message rmsg;   // Receive message
 
     // Allocate buffering for write count
-    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunk));
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np * 3 + varp->nchunk * 2));
     rcnt_local_chunk = rcnt_local + nczipp->np;
-    rcnt_all = (int*)NCI_Malloc(sizeof(int) * (nczipp->np + varp->nchunk));
+    rcnt_all = rcnt_local_chunk + varp->nchunk;
     rcnt_all_chunk = rcnt_all + nczipp->np;
-    smap = (int*)NCI_Malloc(sizeof(int) * nczipp->np);
+    smap = rcnt_all_chunk + varp->nchunk;
 
     // Allocate buffering for overlaping index
-    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tssize = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
-    osize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
+    tssize = tsize + varp->ndim;
+    tstart = tssize + varp->ndim;
+    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
+    osize = ostart + varp->ndim;
 
-    // Current chunk position
-    citr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    // Chunk iterator
+    citr = osize + varp->ndim;
 
     // We need to calculate the size of message of each chunk
     // This is just for allocating send buffer
@@ -474,9 +469,9 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
 
     // Allocate data structure for messaging
     sbuf = (char**)NCI_Malloc(sizeof(char*) * (nsend + nrecv));
-    ssize = (int*)NCI_Malloc(sizeof(int) * (nsend + nrecv));
-    soff = (int*)NCI_Malloc(sizeof(int) * (nsend + nrecv));
-    sdst = (int*)NCI_Malloc(sizeof(int) * nsend);
+    ssize = (int*)NCI_Malloc(sizeof(int) * (nsend * 3 + nrecv * 2));
+    soff = ssize + (nsend + nrecv);
+    sdst = soff + (nsend + nrecv);
     sreq = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * (nsend + nrecv));
     sstat = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * (nsend + nrecv));
 
@@ -689,23 +684,17 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
 
     // Free buffers
     NCI_Free(rcnt_local);
-    NCI_Free(rcnt_all);
-    NCI_Free(smap);
+
 
     NCI_Free(rids);
 
     NCI_Free(tsize);
-    NCI_Free(tssize);
-    NCI_Free(tstart);
-    NCI_Free(osize);
+
     NCI_Free(ostart);
-    NCI_Free(citr);
 
     NCI_Free(sreq);
     NCI_Free(sstat);
     NCI_Free(ssize);
-    NCI_Free(sdst);
-    NCI_Free(soff);
     for(i = 0; i < nsend + nrecv; i++){
         NCI_Free(sbuf[i]);
         NCI_Free(rbuf[i]);
