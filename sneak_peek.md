@@ -66,6 +66,10 @@ This is essentially a placeholder for the next release note ...
   + File header extent area between end of header and first variable will be
     padded with null bytes if PnetCDF is configured with option
     `--enable-null-byte-header-padding`.
+  + Add AC_PROG_CPP in configure.ac to check whether `-E` option is required by
+    the C preprocessor.
+  + Add a check for whether `m4` utility is available, and abort the configure
+    if it is not.
 
 * Bug fixes
   + Fix ncmpidiff when comparing dimension names of 2 variables between files
