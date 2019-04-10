@@ -100,7 +100,7 @@ NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/testfile*.nc $(NC_FILES) \
-             mcoll_perf.nc.* mcoll_perf.bb.nc.*
+             $(TESTOUTDIR)/mcoll_perf.nc.* $(TESTOUTDIR)/mcoll_perf.bb.nc.*
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh parallel_run.sh
 
