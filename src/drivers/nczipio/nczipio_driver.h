@@ -71,6 +71,7 @@ typedef struct NC_zip_var {
     int nchunk;
     int chunksize;
     int *nchunks;
+    int *cidsteps;
     int *chunk_owner;
     int *chunkdim;
     char **chunk_cache;

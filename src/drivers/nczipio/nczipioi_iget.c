@@ -43,7 +43,6 @@ nczipioi_init_get_req( NC_zip *nczipp,
     int err;
     int i, j, k, l;
     int *tsize, *tssize, *tstart;   // Size for sub-array type
-    int *cstart, *cend, *citr; // Bounding box for chunks overlapping my own write region
     int overlapsize, packoff;
     MPI_Datatype ptype; // Pack datatype
     NC_zip_var *varp = nczipp->vars.data + varid;

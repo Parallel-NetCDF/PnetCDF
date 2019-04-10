@@ -30,18 +30,10 @@ extern int nczipioi_save_var(NC_zip*, NC_zip_var*);
 extern int nczipioi_save_nvar(NC_zip*, int, int*);
 
 // Chunks
-extern int get_chunk_idx(NC_zip_var*, int*);
-extern int get_chunk_cord(NC_zip_var*, int, int*);
-extern int get_chunk_overlap(NC_zip_var*, int*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, MPI_Offset*);
-extern int get_chunk_overlap_str(NC_zip_var*, int*, const MPI_Offset*, const MPI_Offset*, const MPI_Offset*, int*, int*);
-extern int nczipioi_chunk_itr_init(NC_zip_var*, MPI_Offset*, MPI_Offset*, int*, int*, int*);
-extern int nczipioi_chunk_itr_init_str(NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*, int*, int*, int*);
-extern int nczipioi_chunk_itr_next(NC_zip_var*, MPI_Offset*, MPI_Offset*, int*, int*, int*);
-extern int nczipioi_chunk_itr_next_str(NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*, int*, int*, int*);
-extern int nczipioi_chunk_itr_init_cord(NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*);
-extern int nczipioi_chunk_itr_next_cord(NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*);
-extern int get_chunk_overlap_cord(NC_zip_var*, MPI_Offset*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, MPI_Offset*);
-extern int get_chunk_idx_cord(NC_zip_var*, MPI_Offset*);
+extern int nczipioi_chunk_itr_init(NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*, int*);
+extern int nczipioi_chunk_itr_next(NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*, int*);
+extern int get_chunk_overlap(NC_zip_var*, MPI_Offset*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, MPI_Offset*);
+extern int get_chunk_id(NC_zip_var*, MPI_Offset*);
 extern int get_chunk_itr(NC_zip_var*, int, MPI_Offset*);
 
 // Get

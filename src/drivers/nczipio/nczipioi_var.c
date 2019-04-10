@@ -41,7 +41,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
             // Determine its block size
             varp->chunkdim = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
             varp->nchunks = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-            
+
             // First check attribute
             valid = 1;
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunkdim", NULL, &len);
@@ -86,6 +86,13 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
                 }
                 varp->nchunk *= varp->nchunks[i];
                 varp->chunksize *= varp->chunkdim[i];
+            }
+
+            // Calculate number of chunks below each dimension
+            varp->cidsteps = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+            varp->cidsteps[varp->ndim - 1] = 1;
+            for(i = varp->ndim - 2; i >= 0; i--){
+                varp->cidsteps[i] = varp->cidsteps[i - 1] * varp->nchunks[i - 1];
             }
 
             // Determine block ownership
@@ -171,7 +178,7 @@ void nczipioi_var_free(NC_zip_var *varp) {
         NCI_Free(varp->chunkdim);
         NCI_Free(varp->dimids);
         NCI_Free(varp->nchunks);
-
+        NCI_Free(varp->cidsteps);
         NCI_Free(varp->data_offs);
         NCI_Free(varp->chunk_owner);
         NCI_Free(varp->data_lens);

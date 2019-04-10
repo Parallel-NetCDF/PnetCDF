@@ -53,7 +53,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
 
     int *tsize, *tssize, *tstart;   // Size for sub-array type
     MPI_Offset *ostart, *osize;
-    int *cstart, *cend, *citr; // Bounding box for chunks overlapping my own write region
+    MPI_Offset *citr;
     
     int *wcnt_local, *wcnt_all;   // Number of processes that writes to each chunk
 
@@ -81,11 +81,9 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
     ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
     osize = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
-
-    // Starting, ending, current chunk position
-    cstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    citr = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
-    cend = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+    
+    // Chunk iterator
+    citr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
 
     // We need to calculate the size of message of each chunk
     // This is just for allocating send buffer
@@ -96,13 +94,10 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     max_tbuf = 0;
     for(req = 0; req < nreq; req++){
         // Initialize chunk iterator
-        nczipioi_chunk_itr_init(varp, starts[req], counts[req], cstart, cend, citr);
+        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
 
         // Iterate through chunks
         do{
-            // Chunk index
-            cid = get_chunk_idx(varp, citr);
-
             // Calculate overlapping
             get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
             //printf("cord = %d, start = %lld, count = %lld, tstart = %d, tssize = %d, esize = %d, ndim = %d\n", citr[0], starts[i][0], counts[i][0], tstart[0], tssize[0], esize, varp->ndim); fflush(stdout);
@@ -129,7 +124,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                 }
             }
 
-        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], cstart, cend, citr));
+        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
     }
 
     // Allocate buffer for sending
@@ -193,7 +188,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
             if (wcnt_local[cid] > 0){
                 packoff = 0;
                 // Get chunk iterator
-                get_chunk_cord(varp, cid, citr);  
+                get_chunk_itr(varp, cid, citr);  
                 for(req = 0; req < nreq; req++){
                     // Calculate chunk overlap
                     get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
@@ -221,7 +216,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
 
                         // Start and count related to chunk position
                         for(j = 0; j < varp->ndim; j++){
-                            tstart[j] = (int)(ostart[j] - (MPI_Offset)citr[j] * (MPI_Offset)varp->chunkdim[j]);
+                            tstart[j] = (int)(ostart[j] - citr[j]);
                             tsize[j] = (int)osize[j];
                         }
                         MPI_Pack(tstart, varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
@@ -257,7 +252,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
         if (wcnt_local[cid] < 0){
             for(req = 0; req < nreq; req++){
                 // Convert chunk id to iterator
-                get_chunk_cord(varp, cid, citr);
+                get_chunk_itr(varp, cid, citr);
 
                 // Calculate overlapping region
                 get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
@@ -286,7 +281,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
 
                     // Pack type from (contiguous) intermediate buffer to chunk buffer
                     for(j = 0; j < varp->ndim; j++){
-                        tstart[j] = (int)(ostart[j] - (MPI_Offset)citr[j] * (MPI_Offset)varp->chunkdim[j]);
+                        tstart[j] = (int)(ostart[j] - citr[j]);
                         tsize[j] = varp->chunkdim[j];
                     }
                     MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
@@ -345,9 +340,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     NCI_Free(osize);
     NCI_Free(ostart);
 
-    NCI_Free(cstart);
     NCI_Free(citr);
-    NCI_Free(cend);
 
     NCI_Free(sreqs);
     NCI_Free(sstats);
@@ -431,10 +424,9 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init_cord(varp, starts[req], counts[req], citr); // Initialize chunk iterator
+        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
         do{
-            // Chunk index and owner
-            cid = get_chunk_idx_cord(varp, citr);
+            // Chunk owner
             cown = varp->chunk_owner[cid];
 
             // Mapping to skip list of send requests 
@@ -442,7 +434,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
                 smap[cown] = nsend++;
             }
             wcnt_local[cown] = 1;   // Need to send message if not owner       
-        } while (nczipioi_chunk_itr_next_cord(varp, starts[req], counts[req], citr));
+        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
     }
 
     // Sync number of messages of each chunk
@@ -464,24 +456,23 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     // Count size of each request
     memset(ssize, 0, sizeof(int) * nsend);
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init_cord(varp, starts[req], counts[req], citr); // Initialize chunk iterator
+        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
         do{
-            // Chunk index and owner
-            cid = get_chunk_idx_cord(varp, citr);
+            // Chunk owner
             cown = varp->chunk_owner[cid];
             if (cown != nczipp->rank){
                 j = smap[cown];
                 sdst[j] = cown; // Record a reverse map by the way
 
                 // Count overlap
-                get_chunk_overlap_cord(varp, citr, starts[req], counts[req], ostart, osize);
+                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
                 overlapsize = varp->esize;
                 for(i = 0; i < varp->ndim; i++){
                     overlapsize *= osize[i];                     
                 }
                 ssize[j] += overlapsize + sizeof(int) * (varp->ndim * 2 + 1);
             }
-        } while (nczipioi_chunk_itr_next_cord(varp, starts[req], counts[req], citr));
+        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
     }
     // Allocate buffer for send
     for(i = 0; i < nsend; i++){
@@ -491,16 +482,15 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     // Pack requests
     memset(soff, 0, sizeof(int) * nsend);
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init_cord(varp, starts[req], counts[req], citr); // Initialize chunk iterator
+        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
         do{
-            // Chunk index and owner
-            cid = get_chunk_idx_cord(varp, citr);
+            // Chunk owner
             cown = varp->chunk_owner[cid];
             if (cown != nczipp->rank){
                 j = smap[cown];
 
                 // Get overlap region
-                get_chunk_overlap_cord(varp, citr, starts[req], counts[req], ostart, osize);
+                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
 
                 // Pack type from user buffer to (contiguous) intermediate buffer
                 for(i = 0; i < varp->ndim; i++){
@@ -523,7 +513,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
                 MPI_Pack(bufs[req], 1, ptype, sbuf[j], ssize[j], soff + j, nczipp->comm);
                 MPI_Type_free(&ptype);
             }
-        } while (nczipioi_chunk_itr_next_cord(varp, starts[req], counts[req], citr));
+        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
     }
     // Post send
     for(i = 0; i < nsend; i++){
@@ -547,14 +537,11 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
 
     // Handle our own data
     for(req = 0; req < nreq; req++){
-    nczipioi_chunk_itr_init_cord(varp, starts[req], counts[req], citr); // Initialize chunk iterator
+    nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
     do{
-        // Chunk index and owner
-        cid = get_chunk_idx_cord(varp, citr);
-
         if (varp->chunk_owner[cid] == nczipp->rank){
             // Get overlap region
-            get_chunk_overlap_cord(varp, citr, starts[req], counts[req], ostart, osize);
+            get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
             overlapsize = varp->esize;
             for(i = 0; i < varp->ndim; i++){
                 overlapsize *= osize[i];                     
@@ -592,7 +579,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
                 MPI_Type_free(&ptype);    
             }
         }
-    } while (nczipioi_chunk_itr_next_cord(varp, starts[req], counts[req], citr));
+    } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
     }
 
     //Handle incoming requests
