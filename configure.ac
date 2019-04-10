@@ -275,8 +275,11 @@ UD_MSG_DEBUG([MPICC=$MPICC])
 dnl Now MPICC is configured, do some basic compiler tests
 CC=${MPICC}
 AC_PROG_CC
-AC_PROG_CPP
 dnl AM_PROG_CC_C_O
+
+dnl Set output variable CPP to a command that runs the C preprocessor.
+dnl Some C compilers require -E to be used as C preprocessor.
+AC_PROG_CPP
 
 dnl this call needs at least autoconf version 2.60
 dnl AC_USE_SYSTEM_EXTENSIONS
