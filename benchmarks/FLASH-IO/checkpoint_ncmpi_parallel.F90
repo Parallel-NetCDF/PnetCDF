@@ -374,6 +374,8 @@
       time_start = MPI_Wtime()
 #endif
 
+      simtime = 1234.5
+
       call write_header_info(nvar, &
                              ncid, &
                              date_string, &
