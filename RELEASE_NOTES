@@ -5,9 +5,6 @@ PnetCDF Release Notes
 -------------------------------------
 Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
-------------------------------------------------------------------------------
-This is essentially a placeholder for the next release note ...
-------------------------------------------------------------------------------
 
 * New optimization
   + When inserting nonblocking requests into the PnetCDF internal pending
