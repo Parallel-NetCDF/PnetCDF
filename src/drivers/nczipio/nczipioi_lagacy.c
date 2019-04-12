@@ -691,3 +691,31 @@ nczipioi_put_var_old(NC_zip        *nczipp,
 
     return NC_NOERR;
 }
+
+void profile(){
+        /* Profiling information */
+    nczipp->profile.total_data += t9 - t0;
+    nczipp->profile.total_meta += t9 - t0;
+    nczipp->profile.max_buffer += t9 - t0;
+    nczipp->profile.total_time += t9 - t0;
+    nczipp->profile.cb_time += t9 - t0;
+    nczipp->profile.io_time += t9 - t0;
+    
+    nczipp->profile.cb_init_time += t9 - t0;    // Calculate number of req
+    nczipp->profile.cb_sync_time += t9 - t0;    // Syncing number of req
+    nczipp->profile.cb_pack_req_time += t9 - t0;    // Pack request and reply
+    nczipp->profile.cb_pack_rep_time += t9 - t0;    // Pack request and reply
+    nczipp->profile.cb_unpack_req_time += t9 - t0;    // Unpack incoming request
+    nczipp->profile.cb_unpack_rep_time += t9 - t0;    // Unpack incoming request
+    nczipp->profile.cb_send_req_time += t9 - t0;    // Posting and waiting send
+    nczipp->profile.cb_send_rep_time += t9 - t0;    // Posting and waiting send
+    nczipp->profile.cb_recv_req_time += t9 - t0;    // Time posting and waiting recv
+    nczipp->profile.cb_recv_rep_time += t9 - t0;    // Time posting and waiting recv
+    nczipp->profile.cb_self_time += t9 - t0;    // Time handling our own data
+
+    nczipp->profile.io_wr_time += t9 - t0;
+    nczipp->profile.io_rd_time += t9 - t0;
+    nczipp->profile.io_com_time += t9 - t0;
+    nczipp->profile.io_decom_time += t9 - t0;
+    nczipp->profile.io_sync_time += t9 - t0;
+}

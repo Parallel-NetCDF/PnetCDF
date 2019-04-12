@@ -18,7 +18,6 @@
 #include <nczipio_driver.h>
 #include "nczipio_internal.h"
 
-
 int
 nczipioi_init(NC_zip *nczipp){
     int err;
@@ -32,6 +31,10 @@ nczipioi_init(NC_zip *nczipp){
     if (err != NC_NOERR) return err;
     err = nczipioi_req_list_init(&(nczipp->putlist));
     if (err != NC_NOERR) return err;
+
+#ifdef PNETCDF_PROFILING
+    memset(&(nczipp->profile), 0, sizeof(NC_zip_timers));
+#endif
 }
 
 int

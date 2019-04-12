@@ -24,9 +24,11 @@ if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS =
+M4_SRCS = nczipioi_profile.m4
 
-H_SRCS = nczipio_driver.h
+M4H_SRCS = nczipioi_profile.m4h
+
+H_SRCS = nczipio_driver.h 
 
 C_SRCS = nczipio_attr.c \
          nczipio_dim.c \
@@ -56,21 +58,25 @@ if ENABLE_ZLIB
 endif
 
 $(M4_SRCS:.m4=.c): Makefile
+$(M4H_SRCS:.m4h=.h): Makefile
 
 .m4.c:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
+.m4h.h:
+	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
+
 libnczipio_la_SOURCES = $(C_SRCS) $(H_SRCS)
-nodist_libnczipio_la_SOURCES = $(M4_SRCS:.m4=.c)
+nodist_libnczipio_la_SOURCES = $(M4_SRCS:.m4=.c) $(M4H_SRCS:.m4h=.h)
 
 # automake says "... BUILT_SOURCES is honored only by 'make all', 'make check',
 # and 'make install'. This means you cannot build a specific target (e.g.,
 # 'make target') in a clean tree if it depends on a built source."
-BUILT_SOURCES = $(M4_SRCS:.m4=.c)
+BUILT_SOURCES = $(M4_SRCS:.m4=.c) $(M4H_SRCS:.m4h=.h)
 
-CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = $(M4_SRCS:.m4=.c) $(M4H_SRCS:.m4h=.h) core core.* *.gcda *.gcno *.gcov gmon.out
 
-EXTRA_DIST = $(M4_HFILES) $(M4_SRCS)
+EXTRA_DIST = $(M4_HFILES) $(M4_SRCS) $(M4H_SRCS)
 
 tests-local: all
 

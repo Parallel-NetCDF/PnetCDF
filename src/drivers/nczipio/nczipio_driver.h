@@ -11,6 +11,7 @@
 #include <pnetcdf.h>
 #include <dispatch.h>
 #include <zip_driver.h>
+#include "nczipioi_profile.h"
 
 #define NC_ZIP_VAR_RAW 0
 #define NC_ZIP_VAR_COMPRESSED 1
@@ -109,6 +110,10 @@ struct NC_zip {
     NC_zip_var_list    vars;
     NC_zip_req_list    putlist, getlist;
     int comm_unit;
+
+#ifdef PNETCDF_PROFILING
+    NC_zip_timers profile; 
+#endif
 };
 
 extern int

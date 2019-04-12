@@ -162,6 +162,9 @@ int
 nczipio_close(void *ncdp)
 {
     int err;
+#ifdef PNETCDF_PROFILING
+    char *_env_str = getenv("PNETCDF_SHOW_PERFORMANCE_INFO");
+#endif
     NC_zip *nczipp = (NC_zip*)ncdp;
 
     if (nczipp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
@@ -172,6 +175,12 @@ nczipio_close(void *ncdp)
 
     nczipioi_req_list_free(&(nczipp->putlist));
     nczipioi_req_list_free(&(nczipp->getlist));
+
+#ifdef PNETCDF_PROFILING
+    if (_env_str != NULL && *_env_str != '0') {                        
+        nczipioi_print_profile(nczipp);
+    }            
+#endif
 
     NCI_Free(nczipp->path);
     NCI_Free(nczipp);

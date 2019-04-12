@@ -61,6 +61,9 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     int *rsizes;    // recv size of each message
     MPI_Message rmsg;   // Receive message
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_INIT)
+
     // Allocate buffering for write count
     wcnt_local = (int*)NCI_Malloc(sizeof(int) * varp->nchunk * 2);
     wcnt_all = wcnt_local + varp->nchunk;
@@ -103,8 +106,14 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     sreqs = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nsend);
     sstats = (MPI_Status*)NCI_Malloc(sizeof(MPI_Status) * nsend);
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_INIT)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SYNC)
+
     // Sync number of messages of each chunk
     MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SYNC)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_PACK_REQ)
 
     // Calculate number of recv request
     // This is for all the chunks
@@ -126,7 +135,6 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     do{
         // We got something to send if we are not owner
         if (varp->chunk_owner[cid] != nczipp->rank){
-            
             // Calculate chunk overlap
             get_chunk_overlap(varp, citr, start, count, ostart, osize);
             //printf("cord = %d, start = %lld, count = %lld, tstart = %d, tssize = %d, esize = %d, ndim = %d\n", citr[0], starts[req][0], counts[req][0], tstart[0], tssize[0], varp->esize, varp->ndim); fflush(stdout);
@@ -162,12 +170,19 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
 
             MPI_Type_free(&ptype);
 
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SEND_REQ)
+            
             // Send the request
             //printf("packoff = %d\n", packoff); fflush(stdout);
             MPI_Isend(sbufs[nsend], packoff, MPI_BYTE, varp->chunk_owner[cid], cid, nczipp->comm, sreqs + nsend);
+    
+            NC_ZIP_TIMER_STOPEX(NC_ZIP_TIMER_CB_SEND_REQ, NC_ZIP_TIMER_CB_PACK_REQ)
             nsend++;
         }
     } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_PACK_REQ)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_RECV_REQ)
 
     // Post recv
     nrecv = 0;
@@ -191,19 +206,26 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
         }
     }
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_RECV_REQ)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SEND_REQ)
+
+    // Wait for all send
+    MPI_Waitall(nsend, sreqs, sstats);
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SEND_REQ)
+
     // Allocate intermediate buffer
     if (max_tbuf > 0){
         tbuf = (char*)NCI_Malloc(max_tbuf);
     }
 
-    // Wait for all send
-    MPI_Waitall(nsend, sreqs, sstats);
-
     // For each chunk we own, we need to receive incoming data
     nrecv = 0;
     for(i = 0; i < varp->nmychunks; i++){
         cid = varp->mychunks[i];
-            
+
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SELF)   
+
         // Handle our own data first if we have any
         if (wcnt_local[cid] < 0){
             // Convert chunk id to iterator
@@ -244,11 +266,17 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
             MPI_Type_free(&ptype);    
         }
 
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SELF)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_RECV_REQ)
+
         // Now, it is time to process data from other processes
         
         // Wait for all send requests related to this chunk
         // We remove the impact of -1 mark in wcnt_local[cid]
         MPI_Waitall(wcnt_all[cid] - wcnt_local[cid], rreqs + nrecv, rstats + nrecv);
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_RECV_REQ)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_UNPACK_REQ)
 
         // Process data received
         //printf("nrecv = %d, wcnt_all = %d, wcnt_local = %d\n", nrecv, wcnt_all[cid], wcnt_local[cid]); fflush(stdout);
@@ -271,7 +299,9 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
             //printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
             MPI_Type_free(&ptype);
         }
-        nrecv += wcnt_all[cid] - wcnt_local[cid];        
+        nrecv += wcnt_all[cid] - wcnt_local[cid]; 
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_UNPACK_REQ)
 
         //printbuf(nczipp->rank, varp->chunk_cache[cid], varp->chunksize);
     }
@@ -301,6 +331,8 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     if (tbuf != NULL){
         NCI_Free(tbuf);
     }
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB)
 
     return NC_NOERR;
 }
@@ -340,6 +372,9 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     int *smap;
     MPI_Message rmsg;   // Receive message
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_INIT)
+
     // Allocate buffering for write count
     wcnt_local = (int*)NCI_Malloc(sizeof(int) * nczipp->np * 3);
     wcnt_all = wcnt_local + nczipp->np;
@@ -375,9 +410,15 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
         wcnt_local[cown] = 1;   // Need to send message if not owner       
     } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_INIT)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SYNC)
+
     // Sync number of messages of each chunk
     MPI_Allreduce(wcnt_local, wcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = wcnt_all[nczipp->rank] - wcnt_local[nczipp->rank];  // We don't need to receive request form self
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SYNC)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_PACK_REQ)
 
     // Allocate data structure for messaging
     sbuf = (char**)NCI_Malloc(sizeof(char*) * nsend);
@@ -451,10 +492,16 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
         }
     } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_PACK_REQ)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SEND_REQ)
+
     // Post send
     for(i = 0; i < nsend; i++){
         MPI_Isend(sbuf[i], soff[i], MPI_BYTE, sdst[i], 0, nczipp->comm, sreq + i);
     }    
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SEND_REQ)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_RECV_REQ)
 
     // Post recv
    for(i = 0; i < nrecv; i++){
@@ -468,6 +515,9 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
         // Post irecv
         MPI_Imrecv(rbuf[i], rsize[i], MPI_BYTE, &rmsg, rreq + i);
     }
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_RECV_REQ)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SELF)
 
     tbuf = (char*)NCI_Malloc(varp->chunksize);
 
@@ -516,13 +566,21 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
         }
     } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SELF)
+
     //Handle incoming requests
     for(i = 0; i < varp->ndim; i++){
         tsize[i] = varp->chunkdim[i];
     }
     for(i = 0; i < nrecv; i++){
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_RECV_REQ)
+
         // Will wait any provide any benefit?
         MPI_Waitany(nrecv, rreq, &j, &rstat);
+        
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_RECV_REQ)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_UNPACK_REQ)
+        
         packoff = 0;
         //printf("rsize_2 = %d\n", rsizes[j]); fflush(stdout);
         while(packoff < rsize[j]){
@@ -541,11 +599,14 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
             //printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
             MPI_Type_free(&ptype);
         }
-        // Free the request
-        //MPI_Request_free(rreq + j);
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_UNPACK_REQ)
     }
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SEND_REQ)
+
     MPI_Waitall(nsend, sreq, sstat);
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SEND_REQ)
 
     // Free buffers
     NCI_Free(wcnt_local);
@@ -573,6 +634,8 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     if (tbuf != NULL){
         NCI_Free(tbuf);
     }
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB)
 
     return NC_NOERR;
 }
