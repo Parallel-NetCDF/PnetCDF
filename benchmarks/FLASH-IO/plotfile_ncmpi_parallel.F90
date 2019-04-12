@@ -415,7 +415,6 @@
          sunklabels(i) = unklabels(iout(i))
       enddo
 
-      simtime = 1234.5
       sp_var1 = real(simtime, kind = single)
       sp_var2 = real(dt, kind = single)
 
