@@ -17,6 +17,10 @@ if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
 endif
 
+if PNETCDF_PROFILING
+   AM_CPPFLAGS += -DPNETCDF_PROFILING
+endif
+
 noinst_LTLIBRARIES = libnczipio.la
 
 M4FLAGS += -I${top_srcdir}/m4

@@ -319,7 +319,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NC_var *ncvarp;
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_INIT)
 
     // -1 means all chunks
     nchunk = 0;
@@ -388,13 +388,14 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
         // Restore file view
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
+
         // Free type
         MPI_Type_free(&ftype);
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
     }
     else{
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
 
         // Follow coll I/O with dummy call
