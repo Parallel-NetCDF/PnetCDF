@@ -3,9 +3,6 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
 * New features
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
   + NetCDF-4 driver -- Accessing HDF5-based NetCDF-4 files is now supported.
     PnetCDF can be built on top of NetCDF-4 library to allow PnetCDF to read
     and write a NetCDF-4 file. Users now can add NC_NETCDF4 flag to create
@@ -19,28 +16,14 @@ This is essentially a placeholder for the next release note ...
   + ADIOS driver -- Read ADIOS 1.x BP formated file. 
     ADIOS_READ_METHOD_BP must be set when open BP file.
     Does not support low-level and non blocking API.
-=======
   + ADIOS driver -- Reading ADIOS 1.x BP formated file. 
     PnetCDF will detected BP file format automatically. No additional flag needed when opening a BP formated file.
     CUrrently, the ADIOS driver does not support low-level API.
->>>>>>> cf04fe9... sneakpeak
-=======
-  + ADIOS BP read capability -- Reading ADIOS 1.x BP formated file. 
-    PnetCDF will detected BP file format automatically. No additional flag needed when opening a BP formated file.
-    Currently, the ADIOS driver does not support low-level API.
->>>>>>> 97dfbef... sneakpeak
-=======
-  + ADIOS BP read capability -- Reading ADIOS 1.x BP formatted file. 
-    PnetCDF will detect BP file format automatically. No additional flag needed when opening a BP formatted file.
-    Currently, the ADIOS driver does not support the low-level API.
->>>>>>> fe4bcc5... edit sneak_peak
 
 * New optimization
   + none
 
 * New Limitations
-<<<<<<< HEAD
-<<<<<<< HEAD
   + For creating new files, the NetCDF-4 driver in PnetCDF supports only the
     classic model I/O operations. Advanced NetCDF-4 features, such as chunking,
     compression, etc. are not supported. This is due to the unavailability of
@@ -52,35 +35,33 @@ This is essentially a placeholder for the next release note ...
     to contain the fix. See discussion in https://github.com/NCAR/ParallelIO/pull/1304
     The bug fix will appear in HDF5 1.10.4 release.
   + ADIOS driver are ready only. No vard, varn, low-level, and nonblocking support.
-=======
   + ADIOS driver is ready only. There is also no vard, varn and low-level API support.
->>>>>>> cf04fe9... sneakpeak
-=======
-  + ADIOS driver is ready only. For more detail on limitations, please refer to /doc/README.ADIOS.md
->>>>>>> 97dfbef... sneakpeak
 
 * Update configure options
   + Enable NetCDF-4 support.
     - `--enable-netcdf4`: enable NetCDF4 format classic mode support
     - `--with-netcdf4=/path/to/netcdf-4`: path to NetCDF-4 library installation
   + Enable ADIOS support.
-<<<<<<< HEAD
     - `--enable-adios`: enable NetCDF4 format classic mode support
     - `--with-adios=/path/to/netcdf-4`: path to NetCDF-4 library installation
   + Enable multi-threading support.
     - `--enable-thread-safe`: enable per-file thread-safe support
     - `--with-pthread`: path to the pthread library installation
-=======
     - `--enable-adios`: enable reading BP formated file
     - `--with-adios=/path/to/netcdf-4`: path to ADIOS library installation
   + When building with NetCDF-4 feature, using NetCDF-4 library built with
     PnetCDF enabled, i.e. --enable-pnetcdf, is not supported. See
     [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33).
->>>>>>> cf04fe9... sneakpeak
 
 * New constants
-  + NC_BP, NF_BP, and NF90_BP is the flag indicating BP file access mode.
-  + NC_FORMAT_BP, NF_FORMAT_BP, and NF90_FORMAT_BP indicate BP file format.
+  + NC_BP = 65536
+    Flag indicating BP file access mode.
+  + NC_FORMAT_BP = 6
+    Constant indicating BP file format.
+  + nf_bp = 65536
+    Flag indicating BP file access mode.
+  + nf_format_bp = 6
+    Constant indicating BP file format.
 
 * New APIs
   + none
@@ -98,8 +79,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New error code
-  + NC_EADIOS, NF_EADIOS, NF90_EADIOS
-    ADIOS library internal error that does not corresponds to any PnetCDF error code.
+  + NC_EADIOS
+    ADIOS library internal error that does not corresponds to any PnetCDF error code
 
 * New PnetCDF hint
   + none
@@ -125,8 +106,6 @@ This is essentially a placeholder for the next release note ...
     [pull request #46](https://github.com/Parallel-NetCDF/PnetCDF/pull/46).
 
 * New example programs
-<<<<<<< HEAD
-<<<<<<< HEAD
   + examples/C/pthread.c - demonstrates the one-file-per-thread I/O example.
     When running on some parallel machines, users may need to set certain
     environment variable to enable MPI multi-threading support, for example on
@@ -136,16 +115,11 @@ This is essentially a placeholder for the next release note ...
     ```
   + examples/C/transpose2D.c - a 2D version of examples/C/transpose.c
   + examples/adios/read_all.c - Dump all metadata in a ADIOS BP file.
-=======
   + examples/adios/read_meta.c - Dump all metadata in a ADIOS BP file.
-=======
-  + examples/adios/read_metadata.c - Dump all metadata in a ADIOS BP file.
->>>>>>> 73b9061... add exmaple put_var_nb
   + examples/adios/read_var.c -  Read a variable form a BP file generated by the 
     ADIOS example program examples/C/arrays/arrays_write.
   + examples/adios/read_var_nb.c -  Read a variable form a BP file generated by the 
     ADIOS example program examples/C/arrays/arrays_write using non-blocking API.
->>>>>>> cf04fe9... sneakpeak
 
 * New programs for I/O benchmarks
   + none
@@ -179,10 +153,8 @@ This is essentially a placeholder for the next release note ...
   + test/adios/header.c - tests if PnetCDF can parse ADIOS header.
   + test/adios/var.c - tests if PnetCDF can access ADIOS variables.
   + test/adios/varm.c - tests if PnetCDF can access ADIOS variables with discontiguous memory.
-<<<<<<< HEAD
   + test/adios/vars.c - tests if PnetCDF access ADIOS variables with stride.
   + test/adios/atts.c - tests if PnetCDF access ADIOS attributes.
-=======
   + test/adios/vars.c - tests if PnetCDF can access ADIOS variables with stride.
   + test/adios/ivar.c - tests if PnetCDF can access ADIOS variables using non-blocking API.
   + test/adios/ivarm.c - tests if PnetCDF can access ADIOS variables with discontiguous memory using non-blocking API.
@@ -190,9 +162,8 @@ This is essentially a placeholder for the next release note ...
   + test/adios/att.c - tests if PnetCDF can access ADIOS attributes.
   + test/adios/indep.c - tests if PnetCDF can access ADIOS variables independently.
   + test/burst_buffer/varn.c -- to test varn API when burst buffer driver is
-    used. The test includes cases when argument counts are is or some of the
+    used. The test includes cases when argument counts is NULL or some of the
     elements in counts are NULL.
->>>>>>> cf04fe9... sneakpeak
 
 * Conformity with NetCDF library
   + none

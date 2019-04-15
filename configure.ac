@@ -1918,16 +1918,43 @@ if test "x$enable_adios" = "xyes" ; then
         fi
     )
 
-    saved_CPPFLAGS=$CPPFLAGS
-
-    if test "x${ADIOS_INSTALL}" != x ; then      
-        CPPFLAGS+=" -I${ADIOS_INSTALL}/include"
-        LDFLAGS+=" -L${ADIOS_INSTALL}/lib"
-        LIBS+=" -ladiosread -ladios"
+    if test "x$ADIOS_INSTALL" = x ; then
+        AC_PATH_PROG([adios_config],[adios_config],,[$PATH])
+    else
+        AC_PATH_PROG([adios_config],[adios_config],,[$ADIOS_INSTALL/bin])
     fi
 
-    LIBS+=" -lm -ldl"
+    if test "x$adios_config" = x ; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        Cannot find adios_config, a utility command to show the
+        configuration of the ADIOS library. It is required to
+        build PnetCDF with BP read support. Use option
+            --with-adios=/path/to/implementation
+        to specify the location of ADIOS build. In addition,
+        please make sure the MPI C compiler is compatible with the
+        one used to build ADIOS. The ADIOS library used must
+        be built with parallel I/O support. Check
+        'config.log' for more information. Stopping ...
+        ------------------------------------------------------------])
+    fi
+    UD_MSG_DEBUG([adios_config=$adios_config])
+    
+    # Get adios compile flags
+    adios_cflag=`$adios_config -c`
+    UD_MSG_DEBUG([adios_compiler_flag=$adios_cflag])
 
+    # Get adios linker flags
+    adios_ldflag=`$adios_config -l`
+    UD_MSG_DEBUG([adios_linker_flag=$adios_ldflag])
+
+    saved_CPPFLAGS=$CPPFLAGS
+    saved_LDFLAGS=$LDFLAGS
+    saved_LIBS=$LIBS
+
+    CPPFLAGS="$adios_cflag $CPPFLAGS"
+    LIBS="$adios_ldflag $LIBS"
+ 
     have_adios=no
     AC_MSG_CHECKING(ADIOS library)
     AC_SEARCH_LIBS([adios_read_open_file], [adiosread], [have_adios=yes], [have_adios=no])
@@ -1970,8 +1997,13 @@ if test "x$enable_adios" = "xyes" ; then
     fi
     
     CPPFLAGS=$saved_CPPFLAGS
+    LDFLAGS=$saved_LDFLAGS
+    LIBS=$saved_LIBS
 
-    AC_SUBST([ADIOS_INC], ["-I${ADIOS_INSTALL}/include"])
+    AC_SUBST([ADIOS_INC], ["$adios_cflag"])
+    AC_SUBST([ADIOS_LDFLAGS], ["$adios_ldflag"])
+    AC_SUBST([ADIOS_LIBS], [""])
+    AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
 fi
 
 AC_ARG_ENABLE([profiling],
@@ -2263,6 +2295,14 @@ if test "x${enable_netcdf4}" = xyes; then
               NETCDF4_LDFLAGS = ${NETCDF4_LDFLAGS}
               NETCDF4_LIBS    = ${NETCDF4_LIBS}"
 fi
+if test "x${enable_adios}" = xyes; then 
+   echo "\
+
+   ADIOS library:
+              ADIOS_INC     = ${ADIOS_INC}
+              ADIOS_LDFLAGS = ${ADIOS_LDFLAGS}
+              ADIOS_LIBS    = ${ADIOS_LIBS}"
+fi 
 echo "\
 
    Now run 'make' to build the library and utility tools.

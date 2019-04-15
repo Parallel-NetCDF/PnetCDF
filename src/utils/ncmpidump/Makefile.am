@@ -14,8 +14,8 @@ NCGEN = ../ncmpigen/ncmpigen
 
 bin_PROGRAMS = ncmpidump
 ncmpidump_SOURCES = ncmpidump.c vardata.c dumplib.c
-ncmpidump_LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
-ncmpidump_LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+ncmpidump_LDADD  = @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
+ncmpidump_LDADD += $(top_builddir)/src/libs/libpnetcdf.la
 
 $(top_builddir)/src/libs/libpnetcdf.la:
 	set -e; cd $(top_builddir)/src/libs && $(MAKE) $(MFLAGS)

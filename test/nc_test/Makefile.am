@@ -14,8 +14,8 @@ AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 
-LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
-LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@ -lm
+LDADD  = @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
+LDADD += $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
 
 if DECL_MPI_OFFSET
    AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET

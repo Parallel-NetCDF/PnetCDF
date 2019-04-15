@@ -45,7 +45,6 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncadios_driver.h>
-#include <ncadios_internal.h>
 
 int
 ncadios_create(MPI_Comm     comm,
@@ -55,8 +54,33 @@ ncadios_create(MPI_Comm     comm,
              MPI_Info     info,
              void       **ncpp)  /* OUT */
 {
+    int err;
+    void *ncp=NULL;
+    NC_ad *ncadp;
+    PNC_driver *driver=NULL;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    /* TODO: use comde to determine the true driver */
+
+    /* Create a NC_ad object and save its driver pointer */
+    ncadp = (NC_ad*) NCI_Malloc(sizeof(NC_ad));
+    if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+    ncadp->path = (char*) NCI_Malloc(strlen(path)+1);
+    if (ncadp->path == NULL) {
+        NCI_Free(ncadp);
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
+    }
+    strcpy(ncadp->path, path);
+    ncadp->mode   = cmode;
+    ncadp->flag   = 0;
+    ncadp->comm   = comm;
+
+    *ncpp = ncadp;
+
+    return NC_NOERR;
 }
 
 int
@@ -67,8 +91,11 @@ ncadios_open(MPI_Comm     comm,
            MPI_Info     info,
            void       **ncpp)
 {
-    int err, parse_done;
+    int err, format, parse_done;
+    int i;
+    void *ncp=NULL;
     NC_ad *ncadp;
+    PNC_driver *driver=NULL;
 
     if (fIsSet(omode, NC_WRITE)){
         DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
@@ -88,27 +115,21 @@ ncadios_open(MPI_Comm     comm,
     ncadp->mode   = omode;
     ncadp->flag   = 0;
     ncadp->comm   = comm;
-<<<<<<< HEAD
-=======
     ncadp->getsize = 0;
     MPI_Comm_rank(ncadp->comm, &(ncadp->rank));
->>>>>>> e735ee4... getsize
 
     *ncpp = ncadp;
 
     /*
-     * Use a modified bp2ncd utility to parse metadata related information
+     * Use a modified bp2ncd utility to parse header related information
      * to guarantee the driver conforms to the converted nc file
-     * We do not use bp2ncd for attributes, we rely on ADIOS read 
+     * Attributes parsing is currently broken, we rely on ADIOS read 
      * API for attributes
      * Rank 0 parse the header and boardcast to other ranks
      */
 
     ncadiosi_var_list_init(&(ncadp->vars));
-<<<<<<< HEAD
     ncadiosi_att_list_init(&(ncadp->atts));
-=======
->>>>>>> 4b9f463... comment
     ncadiosi_dim_list_init(&(ncadp->dims));
 
     if (ncadp->rank == 0) {
@@ -129,11 +150,12 @@ ncadios_open(MPI_Comm     comm,
     }
 
     if (ncadp->rank == 0) {
-        /* bp2ncd does not support all type of files
-         * In case it fail, we parse the metadata using our own rule
-         */
         if (!parse_done){
-            /* Reset var and dim list by free and realloc */
+#ifdef PNETCDF_DEBUG
+            printf("Warning: bp2ncd fails to parse header, presenting virtual dimensions\n");
+            fflush(stdout);
+#endif
+            // Reset var and dim list by free and realloc
             ncadiosi_var_list_free(&(ncadp->vars));
             ncadiosi_dim_list_free(&(ncadp->dims));
             ncadiosi_var_list_init(&(ncadp->vars));
@@ -142,16 +164,38 @@ ncadios_open(MPI_Comm     comm,
             ncadiosi_parse_header_readall(ncadp);
         }
 
-        /* This require fp be opened */
+        // This require fp be opened
         ncadiosi_parse_attrs(ncadp);
     }
     ncadios_sync_header(ncadp);
 
-    /* Parse information regarding record dim */
+    // Parse information regarding record dim
     ncadiosi_parse_rec_dim(ncadp);
 
-    /* Init non-blocking req list */
-    ncadiosi_get_list_init(&(ncadp->getlist));
+    /* 
+     * Build dimensionality list 
+     * Another way to provide dimension information is to create our 
+     * own dimension for each variable
+     * It is currently not used
+     */
+    /*
+    ncadp->ndims = (int*)NCI_Malloc(SIZEOF_INT * ncadp->fp->nvars);
+    for (i = 0; i < ncadp->fp->nvars; i++) {
+        ADIOS_VARINFO *v = adios_inq_var_byid (ncadp->fp, i);
+        if (v == NULL){
+            err = ncmpii_error_adios2nc(adios_errno, "inq_var");
+            DEBUG_RETURN_ERROR(err);
+        }
+        err = adios_inq_var_stat (ncadp->fp, v, 0, 0);
+        if (err != 0){
+            err = ncmpii_error_adios2nc(adios_errno, "inq_var_stat");
+            DEBUG_RETURN_ERROR(err);
+        }
+        ncadp->ndims[i] = v->ndim;
+
+        adios_free_varinfo(v);
+    }
+    */
 
     return NC_NOERR;
 }
@@ -163,10 +207,7 @@ ncadios_close(void *ncdp)
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     ncadiosi_var_list_free(&(ncadp->vars));
-<<<<<<< HEAD
     ncadiosi_att_list_free(&(ncadp->atts));
-=======
->>>>>>> e168d06... C style comment
     ncadiosi_dim_list_free(&(ncadp->dims));
 
     if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
@@ -177,7 +218,7 @@ ncadios_close(void *ncdp)
         DEBUG_RETURN_ERROR(err);
     }
 
-    ncadiosi_get_list_free(&(ncadp->getlist));
+    //NCI_Free(ncadp->ndims);
     NCI_Free(ncadp->path);
     NCI_Free(ncadp);
 
@@ -187,8 +228,13 @@ ncadios_close(void *ncdp)
 int
 ncadios_enddef(void *ncdp)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
@@ -198,20 +244,31 @@ ncadios__enddef(void       *ncdp,
               MPI_Offset  v_minfree,
               MPI_Offset  r_align)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
 ncadios_redef(void *ncdp)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
 ncadios_begin_indep_data(void *ncdp)
 {
+    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     /* Make sure we are in data mode */
@@ -228,6 +285,7 @@ ncadios_begin_indep_data(void *ncdp)
 int
 ncadios_end_indep_data(void *ncdp)
 {
+    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     /* Make sure we are in data mode */
@@ -244,8 +302,18 @@ ncadios_end_indep_data(void *ncdp)
 int
 ncadios_abort(void *ncdp)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
+
+    NCI_Free(ncadp->path);
+    NCI_Free(ncadp);
+
+    return err;
 }
 
 int
@@ -255,6 +323,8 @@ ncadios_inq(void *ncdp,
           int  *nattsp,
           int  *xtendimp)
 {
+    int err;
+    int i;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (ndimsp != NULL){
@@ -270,7 +340,7 @@ ncadios_inq(void *ncdp,
     }
 
     if (xtendimp != NULL){
-        *xtendimp = -1;
+        *xtendimp = ncadp->recdim;
     }
 
     return NC_NOERR;
@@ -294,6 +364,7 @@ ncadios_inq_misc(void       *ncdp,
                MPI_Offset *usage,
                MPI_Offset *buf_size)
 {
+    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (pathlen != NULL){
@@ -305,13 +376,12 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (num_fix_varsp != NULL){
-        /* All variables - number of record variables */
+        // All variables - number of record variables
         int i, j;
         *num_fix_varsp = ncadp->vars.cnt;
         for(i = 0; i < ncadp->vars.cnt; i++){
             for(j = 0; j < ncadp->vars.data[i].ndim; j++){
-                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len 
-                    == NC_UNLIMITED){
+                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len == NC_UNLIMITED){
                     *num_rec_varsp -= 1;
                     break;
                 }
@@ -320,13 +390,12 @@ ncadios_inq_misc(void       *ncdp,
     }
 
     if (num_rec_varsp != NULL){
-        /* We count those variable with unlimited dim as rec variable */
+        // We count those variable with unlimited dim as rec variable
         int i, j;
         *num_rec_varsp = 0;
         for(i = 0; i < ncadp->vars.cnt; i++){
             for(j = 0; j < ncadp->vars.data[i].ndim; j++){
-                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len
-                     == NC_UNLIMITED){
+                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len == NC_UNLIMITED){
                     *num_rec_varsp += 1;
                     break;
                 }
@@ -358,6 +427,7 @@ ncadios_inq_misc(void       *ncdp,
         *put_size = 0;
     }
 
+    //TODO: Count get size
     if (get_size != NULL){
         *get_size = ncadp->getsize;
     }
@@ -366,16 +436,19 @@ ncadios_inq_misc(void       *ncdp,
         *info_used = MPI_INFO_NULL;
     }
 
+    //TODO: Wire up nonblocking req
     if (nreqs != NULL){
-        *nreqs = ncadp->getlist.nused;
+        *nreqs = 0;
     }
 
+    //TODO: Wire up nonblocking req
     if (usage != NULL){
         *usage = 0;
     }
 
+    //TODO: Wire up nonblocking req
     if (buf_size != NULL){
-        *buf_size = 0;
+        *buf_size = MPI_INFO_NULL;
     }
     
     return NC_NOERR;
@@ -387,8 +460,13 @@ ncadios_cancel(void *ncdp,
              int  *req_ids,
              int  *statuses)
 {
-    /* Nonblocking IO does not support canceling due to ADIOS limitation */
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
+    /* TODO: Nonblocking IO support */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
@@ -398,37 +476,11 @@ ncadios_wait(void *ncdp,
            int  *statuses,
            int   reqMode)
 {
-    int err, status = NC_NOERR;
-    int i;
+    int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    if (num_reqs == NC_REQ_ALL || num_reqs == NC_GET_REQ_ALL){
-        /* Handle all active requests in the pool */
-        err = ncadiosi_wait_all_get_req(ncadp);
-        if (status == NC_NOERR){
-            status = err;
-        }
-    }
-    else{
-        if (statuses == NULL){
-            for(i = 0; i < num_reqs; i++){
-                /* Handle request one by one */
-                err = ncadiosi_wait_get_req(ncadp, req_ids[i], NULL);
-                if (status == NC_NOERR){
-                    status = err;
-                }
-            }
-        }
-        else{
-            for(i = 0; i < num_reqs; i++){
-                /* Handle request one by one */
-                err = ncadiosi_wait_get_req(ncadp, req_ids[i], statuses + i);
-                if (status == NC_NOERR){
-                    status = err;
-                }
-            }
-        }
-    }
+    /* TODO: Nonblocking IO support */
+    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     return NC_NOERR;
 }
@@ -438,8 +490,13 @@ ncadios_set_fill(void *ncdp,
                int   fill_mode,
                int  *old_fill_mode)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
@@ -447,8 +504,13 @@ ncadios_fill_var_rec(void      *ncdp,
                    int        varid,
                    MPI_Offset recno)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
@@ -457,28 +519,48 @@ ncadios_def_var_fill(void       *ncdp,
                    int         no_fill,
                    const void *fill_value)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
 ncadios_sync_numrecs(void *ncdp)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
 ncadios_sync(void *ncdp)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
 int
 ncadios_flush(void *ncdp)
 {
+    int err;
+    NC_ad *ncadp = (NC_ad*)ncdp;
+
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+
+    return NC_NOERR;
 }
 
