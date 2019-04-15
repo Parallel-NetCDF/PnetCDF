@@ -2072,12 +2072,21 @@ if test "x$enable_adios" = "xyes" ; then
     fi
     
     CPPFLAGS=$saved_CPPFLAGS
+    LDFLAGS=$saved_LDFLAGS
+    LIBS=$saved_LIBS
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 1882c45... version check
 =======
     AC_SUBST([ADIOS_INC], ["-I${ADIOS_INSTALL}/include"])
 >>>>>>> 763b2c9... ADIOS include flag only to related sources
+=======
+    AC_SUBST([ADIOS_INC], ["$adios_cflag"])
+    AC_SUBST([ADIOS_LDFLAGS], ["$adios_ldflag"])
+    AC_SUBST([ADIOS_LIBS], [""])
+    AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
+>>>>>>> 0900458... separate adios flags from user cflag and ldflag
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)
