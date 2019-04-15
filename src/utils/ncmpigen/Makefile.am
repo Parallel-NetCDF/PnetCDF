@@ -15,7 +15,7 @@ AM_CPPFLAGS += -I$(top_builddir)/src/drivers/ncmpio
 
 bin_PROGRAMS = ncmpigen
 ncmpigen_SOURCES = main.c load.c escapes.c getfill.c init.c genlib.c ncmpigentab.c
-ncmpigen_LDADD  = @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
+ncmpigen_LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
 ncmpigen_LDADD += $(top_builddir)/src/libs/libpnetcdf.la
 
 $(top_builddir)/src/libs/libpnetcdf.la:
