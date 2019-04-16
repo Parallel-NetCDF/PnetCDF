@@ -9,8 +9,8 @@
 SUFFIXES = .o .c
 AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS = -I$(top_builddir)/src/include
-LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
-LDADD += $(top_builddir)/src/libs/libpnetcdf.la
+LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
+LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
 
 check_PROGRAMS = collective_write \
                  nonblocking_write \
