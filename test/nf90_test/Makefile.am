@@ -19,7 +19,7 @@ AM_FCFLAGS  = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
               $(FC_MODINC)../common
 AM_CFLAGS   =
 
-LDADD  = @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD = $(top_builddir)/src/libs/libpnetcdf.la
 LDADD += ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
 
 if RELAX_COORD_BOUND
