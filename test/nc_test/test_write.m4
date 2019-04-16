@@ -2382,10 +2382,7 @@ TestFunc(del_att)(AttVarArgs)
 int
 TestFunc(set_fill)(VarArgs)
 {
-    int ncid;
-    int varid;
-    int err;
-    int i;
+    int i, err, ncid, varid, format;
     IntType j;
     int old_fillmode;
     int nok = 0;      /* count of valid comparisons */
@@ -2659,6 +2656,9 @@ ifdef(`PNETCDF', `
     IF (err != NC_NOERR)
         error("open: %s", APIFunc(strerror)(err));
 
+    err = ncmpi_inq_format(ncid, &format);
+    IF (err != NC_NOERR) EXPECT_ERR(NC_NOERR, err)
+
     err = APIFunc(redef)(ncid);
     IF (err != NC_NOERR)
         error("redef: %s", APIFunc(strerror)(err));
@@ -2667,12 +2667,32 @@ ifdef(`PNETCDF', `
     for (i = 0; i < numVars; i++) {
         if (var_type[i] == NC_CHAR) {
             err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
-            IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
-                EXPECT_ERR(NC_ELATEFILL, err)
+            if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
+#ifdef NETCDF_GE_4_5_0
+                IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
+                    EXPECT_ERR(NC_ELATEFILL, err)
+#else
+                IF (err != NC_NOERR)
+                    error("redef: %s", APIFunc(strerror)(err));
+#endif
+            } else {
+                IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
+                    EXPECT_ERR(NC_ELATEFILL, err)
+            }
         } else {
             err = APIFunc(put_att_double)(ncid, i, "_FillValue",var_type[i],1,&fill);
-            IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
-                EXPECT_ERR(NC_ELATEFILL, err)
+            if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
+#ifdef NETCDF_GE_4_5_0
+                IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
+                    EXPECT_ERR(NC_ELATEFILL, err)
+#else
+                IF (err != NC_NOERR)
+                    error("redef: %s", APIFunc(strerror)(err));
+#endif
+            } else {
+                IF (err != NC_ELATEFILL && err != NC_ELATEDEF)
+                    EXPECT_ERR(NC_ELATEFILL, err)
+            }
         }
     }
     err = APIFunc(close)(ncid);
