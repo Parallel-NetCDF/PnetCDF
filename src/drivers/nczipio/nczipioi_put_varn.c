@@ -79,9 +79,9 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     wcnt_all = wcnt_local + varp->nchunk;
 
     // Allocate buffering for overlaping index
-    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
+    tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
+    tsize = tstart + varp->ndim;
     tssize = tsize + varp->ndim;
-    tstart = tssize + varp->ndim;
     ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
     osize = ostart + varp->ndim;
 
@@ -233,8 +233,8 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                             tstart[j] = (int)(ostart[j] - citr[j]);
                             tsize[j] = (int)osize[j];
                         }
-                        MPI_Pack(tstart, varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
-                        MPI_Pack(tsize, varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
+                        MPI_Pack(tstart, varp->ndim << 1, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim * 2, &packoff, nczipp->comm);
+                        //MPI_Pack(tsize, varp->ndim, MPI_INT, sbufs[nsend], packoff + sizeof(int) * varp->ndim, &packoff, nczipp->comm);
                         MPI_Pack(bufs[req], 1, ptype, sbufs[nsend], packoff + overlapsize, &packoff, nczipp->comm);
 
                         MPI_Type_free(&ptype);
@@ -339,15 +339,15 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
             packoff = 0;
             //printf("rsize_2 = %d\n", rsizes[j]); fflush(stdout);
             while(packoff < rsizes[j]){
-                MPI_Unpack(rbufs[j], rsizes[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
-                MPI_Unpack(rbufs[j], rsizes[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
+                MPI_Unpack(rbufs[j], rsizes[j], &packoff, tstart, varp->ndim << 1, MPI_INT, nczipp->comm);
+                //MPI_Unpack(rbufs[j], rsizes[j], &packoff, tsize, varp->ndim, MPI_INT, nczipp->comm);
 
                 for(k = 0; k < varp->ndim; k++){
-                    tsize[k] = varp->chunkdim[k];
+                    tssize[k] = varp->chunkdim[k];
                 }
 
                 //printf("Rank: %d, MPI_Type_create_subarray([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
-                MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+                MPI_Type_create_subarray(varp->ndim, tssize, tsize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                 MPI_Type_commit(&ptype);
 
                 //printf("tsize = %d, tssize = %d, tstart = %d, buf = %d\n", tsize[0], tssize[0], tstart[0], *((int*)(rbufs[j] + packoff))); fflush(stdout);
@@ -364,7 +364,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     // Free buffers
     NCI_Free(wcnt_local);
 
-    NCI_Free(tsize);
+    NCI_Free(tstart);
 
     NCI_Free(ostart);
 
@@ -437,9 +437,9 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     smap = wcnt_all + nczipp->np;
 
     // Allocate buffering for overlaping index
-    tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
-    tssize = tsize + varp->ndim;
-    tstart = tssize + varp->ndim;
+    tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
+    tssize = tstart + varp->ndim;
+    tsize = tssize + varp->ndim;
     ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
     osize = ostart + varp->ndim;
 
@@ -544,8 +544,8 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
                     tstart[i] = (int)(ostart[i] - citr[i]);
                 }
                 MPI_Pack(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                MPI_Pack(tstart, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                MPI_Pack(tssize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+                MPI_Pack(tstart, varp->ndim << 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+                //MPI_Pack(tssize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
                 // Pack data
                 MPI_Pack(bufs[req], 1, ptype, sbuf[j], ssize[j], soff + j, nczipp->comm);
                 MPI_Type_free(&ptype);
@@ -649,8 +649,8 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
         while(packoff < rsize[j]){
             // Retrieve metadata
             MPI_Unpack(rbuf[j], rsize[j], &packoff, &cid, 1, MPI_INT, nczipp->comm);
-            MPI_Unpack(rbuf[j], rsize[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
-            MPI_Unpack(rbuf[j], rsize[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
+            MPI_Unpack(rbuf[j], rsize[j], &packoff, tstart, varp->ndim << 1, MPI_INT, nczipp->comm);
+            //MPI_Unpack(rbuf[j], rsize[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
 
             //printf("Rank: %d, cid = %d, MPI_Type_create_subarray_recv([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, cid, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             // Pack type
@@ -674,7 +674,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     // Free buffers
     NCI_Free(wcnt_local);
 
-    NCI_Free(tsize);
+    NCI_Free(tstart);
 
     NCI_Free(ostart);
 
