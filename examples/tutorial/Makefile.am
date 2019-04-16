@@ -13,8 +13,12 @@ AM_CPPFLAGS = -I$(top_builddir)/src/include
 
 AM_FFLAGS = -I$(top_builddir)/src/binding/f77
 AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90
-LDADD  = @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
-LDADD += ${top_builddir}/src/libs/libpnetcdf.la
+LDADD  = ${top_builddir}/src/libs/libpnetcdf.la
+<<<<<<< HEAD
+LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ 
+=======
+LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
+>>>>>>> 8e4ca5f... solve ldflags problem
 
 check_PROGRAMS = pnetcdf-write-from-master \
                  pnetcdf-read-from-master \

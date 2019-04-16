@@ -1926,25 +1926,9 @@ if test "x$enable_adios" = "xyes" ; then
         AC_PATH_PROG([adios_config],[adios_config],,[$ADIOS_INSTALL/bin])
     fi
 
-<<<<<<< HEAD
-    if test "x$adios_config" = x ; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        Cannot find adios_config, a utility command to show the
-        configuration of the ADIOS library. It is required to
-        build PnetCDF with BP read support. Use option
-            --with-adios=/path/to/implementation
-        to specify the location of ADIOS build. In addition,
-        please make sure the MPI C compiler is compatible with the
-        one used to build ADIOS. The ADIOS library used must
-        be built with parallel I/O support. Check
-        'config.log' for more information. Stopping ...
-        ------------------------------------------------------------])
-=======
     if test "x${ADIOS_INSTALL}" != x ; then      
         CPPFLAGS+=" -I${ADIOS_INSTALL}/include"
         LDFLAGS+=" -L${ADIOS_INSTALL}/lib" 
->>>>>>> 3292a84... detect adios2 header for special error message
     fi
     UD_MSG_DEBUG([adios_config=$adios_config])
     

@@ -17,9 +17,14 @@ AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core/transforms
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/transforms
-LDADD = @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
-LDADD += ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
+<<<<<<< HEAD
+LDADD = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la -lm
+LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ 
 
+=======
+LDADD = $(top_builddir)/src/libs/libpnetcdf.la   ../common/libtestutils.la -lm
+LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
+>>>>>>> 8e4ca5f... solve ldflags problem
 
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs

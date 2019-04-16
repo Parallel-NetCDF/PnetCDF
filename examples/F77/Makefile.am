@@ -10,7 +10,7 @@ SUFFIXES = .o .f .F90
 
 AM_DEFAULT_SOURCE_EXT = .f
 AM_FFLAGS = -I$(top_builddir)/src/binding/f77
-LDADD  = @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
+LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
 LDADD += ${top_builddir}/src/libs/libpnetcdf.la utils.o
 
 if SIZEOF_MPI_AINT_IS_4
