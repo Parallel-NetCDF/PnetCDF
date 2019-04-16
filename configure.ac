@@ -1568,7 +1568,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
    # Validate netcdf library
    saved_LDFLAGS=$LDFLAGS
    saved_LIBS=$LIBS
-   LDFLAGS="-L$netcdf_libdir $LDFLAGS"
+   LDFLAGS="-L$netcdf_libs $LDFLAGS"
    AC_SEARCH_LIBS([nc_open], [netcdf], [], [AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])])
    LDFLAGS=$saved_LDFLAGS
    LIBS=$saved_LIBS
