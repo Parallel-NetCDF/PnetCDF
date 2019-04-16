@@ -6,19 +6,23 @@ PnetCDF Release Notes
 Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
+-------------------------------------
+Version 1.11.1 (April 12, 2019)
+-------------------------------------
+
 * New optimization
   + When inserting nonblocking requests into the PnetCDF internal pending
     queues, the queues are now kept sorted (using an insert sort) into an
     increasing order of variable starting file offsets. This can avoid the
-    quick sort when flushing the pending requests. See [pull request #37]
-    (https://github.com/Parallel-NetCDF/PnetCDF/pull/37). To avoid internal
-    sorts completely, users are recommended to post nonblocking requests in
-    the increasing order of variable IDs and fixed-size variables first
-    followed by record variables.
+    quick sort when flushing the pending requests. See
+    [pull request #37](https://github.com/Parallel-NetCDF/PnetCDF/pull/37).
+    To avoid internal sorts completely, users are recommended to post
+    nonblocking requests in the increasing order of variable IDs and fixed-size
+    variables first followed by record variables.
 
 * New Limitations
   + When building with NetCDF-4 feature enabled, using a NetCDF-4 library that
-    has already been built with PnetCDF enabled, i.e. --enable-pnetcdf, is not
+    has already been built with PnetCDF enabled, i.e. `--enable-pnetcdf`, is not
     supported. See [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33).
 
 * Other updates:
@@ -41,7 +45,7 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
     whose dimension define orders are different. See
     [Issue #42](https://github.com/Parallel-NetCDF/PnetCDF/pull/42).
   + Fix error checking for programs in examples/C to ignore NC_ENOTENABLED
-    if PnetCDF was not built with --enable-profiling. Thanks to Bruno Pagani
+    if PnetCDF was not built with `--enable-profiling`. Thanks to Bruno Pagani
     and see [Issue #34](https://github.com/Parallel-NetCDF/PnetCDF/issues/34).
 
 * New test program
