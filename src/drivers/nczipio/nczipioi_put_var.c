@@ -661,6 +661,15 @@ nczipioi_put_var(NC_zip        *nczipp,
               const MPI_Offset *stride,
               void       *buf)
 {
+    if (varp->isrec){
+        if (nczipp->recsize < start[0] + count[0]){
+            nczipp->recsize = start[0] + count[0];
+        }
+        if (varp->dimsize[0] < nczipp->recsize){
+            nczipioi_var_resize(nczipp, varp);
+        }
+    }
+
     // Collective buffer
     switch (nczipp->comm_unit){
         case NC_ZIP_COMM_CHUNK:

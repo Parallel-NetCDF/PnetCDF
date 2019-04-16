@@ -715,6 +715,17 @@ nczipioi_put_varn(NC_zip        *nczipp,
     char *bptr = (char*)buf;
     char **bufs;
     
+    if (varp->isrec){
+        for(i = 0; i < nreq; i++){
+            if (nczipp->recsize < starts[i][0] + counts[i][0]){
+                nczipp->recsize = starts[i][0] + counts[i][0];
+            }
+        }
+        if (varp->dimsize[0] < nczipp->recsize){
+            nczipioi_var_resize(nczipp, varp);
+        }
+    }
+
     // Calculate buffer offset of each request
     bufs = (char**)NCI_Malloc(sizeof(char*) * nreq);
     for(i = 0; i < nreq; i++){

@@ -97,6 +97,9 @@ nczipio_def_var(void       *ncdp,
         for(i = 0; i < ndims; i++){
             nczipp->driver->inq_dim(nczipp->ncp, dimids[i], NULL, var.dimsize + i);
         }
+        if (var.dimids[0] == nczipp->recdim){
+            var.isrec = 1;
+        }
 
         err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_ndim", NC_INT, 1, &ndims, MPI_INT); // Original dimensions
         if (err != NC_NOERR) return err;
@@ -221,6 +224,14 @@ nczipio_get_var(void             *ncdp,
     }
     varp = nczipp->vars.data + varid;
 
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        return nczipp->driver->get_var(nczipp->ncp, varp->varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
+    }
+
+    if (varp->isrec && (varp->dimsize[0] < nczipp->recsize) && (start[0] + count[0] >= varp->dimsize[0])){
+        nczipioi_var_resize(nczipp, varp);
+    }
+
     // Collective buffer
     switch (nczipp->comm_unit){
         case NC_ZIP_COMM_CHUNK:
@@ -259,6 +270,10 @@ nczipio_put_var(void             *ncdp,
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
     varp = nczipp->vars.data + varid;
+    
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        return nczipp->driver->put_var(nczipp->ncp, varp->varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
+    }
 
     if (imap != NULL || bufcount != -1) {
         /* pack buf to cbuf -------------------------------------------------*/
@@ -314,6 +329,7 @@ nczipio_iget_var(void             *ncdp,
     int err;
     void *cbuf=(void*)buf;
     void *xbuf=(void*)buf;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
     if (reqMode == NC_REQ_INDEP){
@@ -323,8 +339,19 @@ nczipio_iget_var(void             *ncdp,
     if (varid < 0 || varid >= nczipp->vars.cnt){
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
+    varp = nczipp->vars.data + varid;
+
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        err = nczipp->driver->iget_var(nczipp->ncp, varp->varid, start, count, stride, imap, buf, bufcount, buftype, reqid, reqMode);
+        if (err != NC_NOERR){
+            return err;
+        }
+        *reqid = *reqid * 2 + 1;
+        return NC_NOERR;
+    }
 
     nczipioi_iget_var(nczipp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid);
+    *reqid *= 2;
 
     return NC_NOERR;
 }
@@ -356,6 +383,21 @@ nczipio_iput_var(void             *ncdp,
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
     varp = nczipp->vars.data + varid;
+
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        err = nczipp->driver->iput_var(nczipp->ncp, varp->varid, start, count, stride, imap, buf, bufcount, buftype, reqid, reqMode);
+        if (err != NC_NOERR){
+            return err;
+        }
+        *reqid = *reqid * 2 + 1;
+        return NC_NOERR;
+    }
+
+    if (varp->isrec){
+        if (nczipp->recsize < start[0] + count[0]){
+            nczipp->recsize = start[0] + count[0];
+        }
+    }
 
     if (imap != NULL || bufcount != -1) {
         /* pack buf to cbuf -------------------------------------------------*/
@@ -390,6 +432,8 @@ err_check:
 
     xbuf = cbuf;
     status = nczipioi_iput_var(nczipp, varid, start, count, stride, xbuf, buf, reqid);
+    (*reqid) *= 2;
+
     //if (cbuf != buf) NCI_Free(cbuf);
 
     return (err == NC_NOERR) ? status : err; /* first error encountered */
@@ -462,6 +506,7 @@ nczipio_get_varn(void              *ncdp,
                int                reqMode)
 {
     int err;
+    int i;
     NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
@@ -473,6 +518,19 @@ nczipio_get_varn(void              *ncdp,
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
     varp = nczipp->vars.data + varid;
+
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        return nczipp->driver->get_varn(nczipp->ncp, varp->varid, num, starts, counts, buf, bufcount, buftype, reqMode);
+    }
+
+    if (varp->isrec && (varp->dimsize[0] < nczipp->recsize)){
+        for(i = 0; i < num; i++){
+            if (starts[i][0] + counts[i][0] >= varp->dimsize[0]){
+                nczipioi_var_resize(nczipp, varp);
+                break;
+            }
+        }
+    }
 
     err = nczipioi_get_varn(nczipp, varp, num, starts, counts, buf);
     if (err != NC_NOERR) return err;
@@ -503,6 +561,10 @@ nczipio_put_varn(void              *ncdp,
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
     varp = nczipp->vars.data + varid;
+
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        return nczipp->driver->put_varn(nczipp->ncp, varp->varid, num, starts, counts, buf, bufcount, buftype, reqMode);
+    }
 
     err = nczipioi_put_varn(nczipp, varp, num, starts, counts, buf);
     if (err != NC_NOERR) return err;
@@ -535,9 +597,20 @@ nczipio_iget_varn(void               *ncdp,
     if (varid < 0 || varid >= nczipp->vars.cnt){
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
+    varp = nczipp->vars.data + varid;
+
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        err = nczipp->driver->iget_varn(nczipp->ncp, varp->varid, num, starts, counts, buf, bufcount, buftype, reqid, reqMode);
+        if (err != NC_NOERR){
+            return err;
+        }
+        *reqid = *reqid * 2 + 1;
+        return NC_NOERR;
+    }
 
     xbuf = cbuf;
     nczipioi_iget_varn(nczipp, varid, num, starts, counts, buf, bufcount, buftype, reqid);
+    *reqid *= 2;
 
     return NC_NOERR;
 }
@@ -555,6 +628,7 @@ nczipio_iput_varn(void               *ncdp,
                 int                 reqMode)
 {
     int err;
+    int i;
     void *cbuf=(void*)buf;
     void *xbuf=(void*)buf;
     NC_zip_var *varp;
@@ -567,9 +641,28 @@ nczipio_iput_varn(void               *ncdp,
     if (varid < 0 || varid >= nczipp->vars.cnt){
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
+    varp = nczipp->vars.data + varid;
+
+    if (varp->isrec){
+        for(i = 0; i < num; i++){
+            if (nczipp->recsize < starts[i][0] + counts[i][0]){
+                nczipp->recsize = starts[i][0] + counts[i][0];
+            }
+        }
+    }
+
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        err = nczipp->driver->iput_varn(nczipp->ncp, varp->varid, num, starts, counts, buf, bufcount, buftype, reqid, reqMode);
+        if (err != NC_NOERR){
+            return err;
+        }
+        *reqid = *reqid * 2 + 1;
+        return NC_NOERR;
+    }
 
     xbuf = cbuf;
     nczipioi_iput_varn(nczipp, varid, num, starts, counts, xbuf, buf, reqid);
+    *reqid *= 2;
 
     return NC_NOERR;
 }

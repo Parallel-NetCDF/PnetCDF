@@ -57,6 +57,7 @@ typedef struct NC_zip_var_chunk {
 
 typedef struct NC_zip_var {
     int varkind;
+    int isrec;
 
     nc_type xtype;
     MPI_Datatype etype;
@@ -107,6 +108,8 @@ struct NC_zip {
     void              *ncp;         /* pointer to driver's internal object */
     struct PNC_driver *driver;
     int                blockmapping;
+    MPI_Offset         recsize;     /* record dim size */
+    int                recdim;      /* record dim id */
     NC_zip_var_list    vars;
     NC_zip_req_list    putlist, getlist;
     int comm_unit;

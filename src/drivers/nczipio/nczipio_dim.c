@@ -39,6 +39,10 @@ nczipio_def_dim(void       *ncdp,
     err = nczipp->driver->def_dim(nczipp->ncp, name, size, dimidp);
     if (err != NC_NOERR) return err;
 
+    if (size = NC_UNLIMITED){
+        nczipp->recdim = *dimidp;
+    }
+
     return NC_NOERR;
 }
 

@@ -22,6 +22,8 @@ int
 nczipioi_init(NC_zip *nczipp){
     int err;
 
+    nczipp->recdim = -1;
+
     /* Initialize var list */
     err = nczipioi_var_list_init(&(nczipp->vars));
     if (err != NC_NOERR) return err;
