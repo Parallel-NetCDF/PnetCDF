@@ -6,7 +6,8 @@
  */
 
 /* This program tests whether the correct error codes can be returned when
- * using NULL arguments for start, count, stride, or imap
+ * using NULL arguments for start, count, stride, or imap.
+ * Note this program is for testing NetCDF, not PnetCDF.
  */
 
 #include <stdio.h>
