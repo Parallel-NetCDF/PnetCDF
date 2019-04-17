@@ -51,7 +51,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + When `--enable-netcdf4` is used at configure time, users may encounter
+    problem during configure or make time, if the NetCDF4 library was built
+    with static libraries only. Thanks Bruno Pagani for reporting. This has
+    been fixed in
+    [pull request #46](https://github.com/Parallel-NetCDF/PnetCDF/pull/46).
 
 * New example programs
   + none
