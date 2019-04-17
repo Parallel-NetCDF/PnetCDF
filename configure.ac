@@ -1656,13 +1656,28 @@ if test "x$enable_netcdf4" = "xyes" ; then
    # restore CPPFLAGS
    CPPFLAGS=$saved_CPPFLAGS
 
+   # get NETCDF4 include dir from nc-config and remove any duplicate
    netcdf_incdir=`$nc_config --includedir`
-   AC_SUBST([NETCDF4_INC], ["-I$netcdf_incdir"])
+   NETCDF4_INC="-I$netcdf_incdir"
+   AC_SUBST([NETCDF4_INC])
+
    if test "x$netcdf_libdir" != x ; then
       NETCDF4_LDFLAGS="-L$netcdf_libdir"
    fi
+   # remove all -l options from netcdf_libs that should leave -L only
+   netcdf4_L=`echo $netcdf_libs | sed 's/-l[[^ ]]*//g'`
+   if test "x$netcdf4_L" != x ; then
+      netcdf4_L="$NETCDF4_LDFLAGS $netcdf4_L"
+   fi
+   # remove any duplicate in netcdf4_L
+   NETCDF4_LDFLAGS=`echo $netcdf4_L | awk -vORS=" " -vRS="[[ \n]]+" '!n[[$0]]++'`
    AC_SUBST([NETCDF4_LDFLAGS])
-   AC_SUBST([NETCDF4_LIBS], ["$netcdf_libs"])
+
+   # remove all -L options from netcdf_libs that should leave -l only
+   netcdf4_l=`echo $netcdf_libs | sed 's/-L[[^ ]]*//g'`
+   # remove any duplicate in netcdf4_l
+   NETCDF4_LIBS=`echo $netcdf4_l | awk -vORS=" " -vRS="[[ \n]]+" '!n[[$0]]++'`
+   AC_SUBST([NETCDF4_LIBS])
    AC_SUBST([NETCDF4_PACKAGE], [netcdf])
 fi
 
