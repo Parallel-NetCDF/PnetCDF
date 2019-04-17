@@ -70,7 +70,8 @@ enable_bbdriver="@ENABLE_BURST_BUFFER@"
 enable_netcdf4="@ENABLE_NETCDF4@"
 
 if test "x$enable_netcdf4" = x1; then
-   CPPFLAGS="$CPPFLAGS @NETCDF4_INC@"
+   # NetCDF4 header files are required to build PnetCDF, but not PnetCDF applications
+   # CPPFLAGS="$CPPFLAGS @NETCDF4_INC@"
    LDFLAGS="@NETCDF4_LDFLAGS@ $LDFLAGS"
    LIBS="@NETCDF4_LIBS@ $LIBS"
 fi

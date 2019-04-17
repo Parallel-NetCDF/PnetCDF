@@ -9,7 +9,6 @@
 #include <string.h>
 #include <libgen.h> /* basename() */
 #include <mpi.h>
-#include <netcdf.h>
 #include <pnetcdf.h>
 
 #include <testutils.h>
