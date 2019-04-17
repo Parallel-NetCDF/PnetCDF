@@ -120,6 +120,7 @@ dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
+AH_TEMPLATE([NETCDF_GE_4_5_0],          [Define if NetCDF version is at least 4.5.0])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_LARGE_SINGLE_REQ],  [Define if to enable large single MPI-IO request])
@@ -1492,28 +1493,36 @@ if test "x$enable_netcdf4" = "xyes" ; then
    CPPFLAGS="-I${netcdf_includedir} ${CPPFLAGS}"
    have_netcdf4=yes
    AC_CHECK_HEADER([netcdf.h],      [], [have_netcdf4=no])
-   AC_CHECK_HEADER([netcdf_par.h],  [], [have_netcdf4=no])
    AC_CHECK_HEADER([netcdf_meta.h], [], [have_netcdf4=no])
    if test "x${have_netcdf4}" = xno; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
-      Missing NetCDF-4 header files (netcdf.h, netcdf_par.h, or
-      netcdf_meta.h). These header files are required to build
-      PnetCDF with NetCDF-4 support. Use option
+      Missing NetCDF-4 header files (netcdf.h or netcdf_meta.h)
+      required to build PnetCDF with NetCDF-4 support. Use option
           --with-netcdf=/path/to/implementation
-      to specify the location of NetCDF-4 build. In addition,
-      please make sure the MPI C compiler is compatible with the
-      one used to build NetCDF-4. The NetCDF-4 library used must
-      be built with parallel I/O and NETCDF-4 support. Check
-      'config.log' for more information. Stopping ...
+      to specify the location of NetCDF-4 installation. In addition,
+      please make sure the MPI C compiler is compatible with the one
+      used to build NetCDF-4. Check 'config.log' for more information.
+      Stopping ...
+      ------------------------------------------------------------])
+   fi
+   AC_CHECK_HEADER([netcdf_par.h],  [], [have_netcdf4=no])
+   if test "x${have_netcdf4}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      Missing NetCDF-4 header file netcdf_par.h required by PnetCDF.
+      The NetCDF-4 library must be built with parallel I/O and
+      NETCDF-4 support. Check 'config.log' for more information.
+      Stopping ...
       ------------------------------------------------------------])
    fi
 
    dnl Check if NetCDF version is 4.6.2 or later
    AC_MSG_CHECKING([whether NetCDF version is 4.6.2 or later])
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netcdf_meta.h>]], [[
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <netcdf_meta.h>
 #if (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH < 4006002)
-      choke me
+#error NetCDF version is older than 4.6.2
 #endif
    ]])], [netcdf_ge_4_6_2=yes], [netcdf_ge_4_6_2=no])
    AC_MSG_RESULT([$netcdf_ge_4_6_2])
@@ -1539,11 +1548,35 @@ if test "x$enable_netcdf4" = "xyes" ; then
    fi
    AC_MSG_RESULT([yes])
 
+   dnl Check if NetCDF version is 4.5.0 or later
+   AC_MSG_CHECKING([whether NetCDF version is 4.5.0 or later])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <netcdf_meta.h>
+#if (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH < 4005000)
+#error NetCDF version is older than 4.5.0
+#endif
+   ]])], [netcdf_ge_4_5_0=yes], [netcdf_ge_4_5_0=no])
+   AC_MSG_RESULT([$netcdf_ge_4_5_0])
+   if test "x$netcdf_ge_4_5_0" = xyes ; then
+       AC_DEFINE(NETCDF_GE_4_5_0)
+   fi
+
+   dnl Check if NetCDF version is 4.4.2 or later
+   dnl nc-config option --libdir is first added in NetCDF 4.4.2
+   AC_MSG_CHECKING([whether NetCDF version is 4.4.2 or later])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <netcdf_meta.h>
+#if (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH < 4004002)
+#error NetCDF version is older than 4.4.2
+#endif
+   ]])], [netcdf_ge_4_4_2=yes], [netcdf_ge_4_4_2=no])
+   AC_MSG_RESULT([$netcdf_ge_4_4_2])
+
    AC_MSG_CHECKING([whether relax-coord-bound is enabled in NetCDF-4])
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <netcdf_meta.h>
 #if !defined(NC_RELAX_COORD_BOUND) || NC_RELAX_COORD_BOUND == 0
-      choke me
+#error NetCDF is built with relax-coord-bound disable
 #endif
    ]])], [nc_relax_coord_bound=yes], [nc_relax_coord_bound=no])
    AC_MSG_RESULT([$nc_relax_coord_bound])
@@ -1557,8 +1590,12 @@ if test "x$enable_netcdf4" = "xyes" ; then
    fi
 
    # Get installation directory path of netcdf library files
-   netcdf_libdir=`$nc_config --libdir`
-   UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+   if test "x$netcdf_ge_4_4_2" = xyes ; then
+      # Option --libdir is first added in NetCDF 4.4.2
+      netcdf_libdir=`$nc_config --libdir`
+      UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+   fi
+
    # Get extra libraries used by netcdf library (dependent libraries)
    netcdf_libs=`$nc_config --libs`
    UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
@@ -1568,7 +1605,10 @@ if test "x$enable_netcdf4" = "xyes" ; then
    # Validate netcdf library
    saved_LDFLAGS=$LDFLAGS
    saved_LIBS=$LIBS
-   LDFLAGS="-L$netcdf_libdir $LDFLAGS"
+   if test -n "$netcdf_libdir" ; then
+      LDFLAGS="-L$netcdf_libdir $LDFLAGS"
+   fi
+   LIBS="$netcdf_libs $LIBS"
    AC_SEARCH_LIBS([nc_open], [netcdf], [], [AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])])
    LDFLAGS=$saved_LDFLAGS
    LIBS=$saved_LIBS
@@ -1602,9 +1642,10 @@ if test "x$enable_netcdf4" = "xyes" ; then
    AC_CHECK_HEADER([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
    if test "x$have_hdf5" = xyes ; then
       AC_MSG_CHECKING([whether HDF5 version is 1.10.4 or later])
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <hdf5.h>]], [[
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <hdf5.h>
 #if (H5_VERS_MAJOR*1000000 + H5_VERS_MINOR*1000 + H5_VERS_RELEASE < 1010004)
-      choke me
+#error HDF5 version is older than 1.10.4
 #endif
       ]])], [hdf5_ge_1_10_4=yes], [hdf5_ge_1_10_4=no])
       AC_MSG_RESULT([$hdf5_ge_1_10_4])
@@ -1617,8 +1658,11 @@ if test "x$enable_netcdf4" = "xyes" ; then
 
    netcdf_incdir=`$nc_config --includedir`
    AC_SUBST([NETCDF4_INC], ["-I$netcdf_incdir"])
-   AC_SUBST([NETCDF4_LDFLAGS], ["-L$netcdf_libdir"])
-   AC_SUBST([NETCDF4_LIBS], ["-lnetcdf"])
+   if test "x$netcdf_libdir" != x ; then
+      NETCDF4_LDFLAGS="-L$netcdf_libdir"
+   fi
+   AC_SUBST([NETCDF4_LDFLAGS])
+   AC_SUBST([NETCDF4_LIBS], ["$netcdf_libs"])
    AC_SUBST([NETCDF4_PACKAGE], [netcdf])
 fi
 
