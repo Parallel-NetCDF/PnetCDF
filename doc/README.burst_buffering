@@ -11,6 +11,20 @@ Burst buffer driver implements a log-based I/O aggregation for write requests.
 It is designed to work on a wide range of burst buffer architecture.
 
 -----------------------------------------------------------------------------
+ Publication
+-----------------------------------------------------------------------------
+For details about the implementation of the Burst uffer feature, please refer
+to:
+
+Kai-Yuan Hou, Reda Al-Bahrani, Esteban Rangel, Ankit Agrawal, Robert Latham, 
+Robert Ross, Alok Choudhary, and Wei-keng Liao. Integration of Burst Buffer 
+in High-Level Parallel I/O Library for Exascale Computing Era. In the 
+Workshop on Parallel Data Storage & Data Intensive Scalable Computing Systems, 
+held in conjunction with the International Conference for High Performance 
+Computing, Networking, Storage and Analysis, November 2018.
+http://cucis.ece.northwestern.edu/publications/pdf/HAR18.pdf
+
+-----------------------------------------------------------------------------
  Build PnetCDF with burst buffer feature
 -----------------------------------------------------------------------------
 Add "--enable-burst-buffering" to your configure command line, e.g.
