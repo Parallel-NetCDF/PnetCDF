@@ -387,7 +387,7 @@ nc4io_inq_misc(void       *ncdp,
             DEBUG_RETURN_ERROR(err)
         }
 
-        if (recsize != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+        if (recsize != NULL) *recsize = 0;
 
         /* Iterate through all variables */
         for (i=0; i<nvar; i++) {
