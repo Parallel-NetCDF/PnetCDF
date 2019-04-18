@@ -346,12 +346,16 @@ nczipio_iget_var(void             *ncdp,
         if (err != NC_NOERR){
             return err;
         }
-        *reqid = *reqid * 2 + 1;
+        if (reqid != NULL){
+            *reqid = *reqid * 2 + 1;
+        }
         return NC_NOERR;
     }
 
     nczipioi_iget_var(nczipp, varid, start, count, stride, imap, buf, bufcount, buftype, reqid);
-    *reqid *= 2;
+    if (reqid != NULL){
+        (*reqid) *= 2;
+    }
 
     return NC_NOERR;
 }
@@ -389,7 +393,9 @@ nczipio_iput_var(void             *ncdp,
         if (err != NC_NOERR){
             return err;
         }
-        *reqid = *reqid * 2 + 1;
+        if (reqid != NULL){
+            *reqid = *reqid * 2 + 1;
+        }
         return NC_NOERR;
     }
 
@@ -432,7 +438,9 @@ err_check:
 
     xbuf = cbuf;
     status = nczipioi_iput_var(nczipp, varid, start, count, stride, xbuf, buf, reqid);
-    (*reqid) *= 2;
+    if (reqid != NULL){
+        (*reqid) *= 2;
+    }
 
     //if (cbuf != buf) NCI_Free(cbuf);
 
@@ -604,13 +612,17 @@ nczipio_iget_varn(void               *ncdp,
         if (err != NC_NOERR){
             return err;
         }
-        *reqid = *reqid * 2 + 1;
+        if (reqid != NULL){
+            *reqid = *reqid * 2 + 1;
+        }
         return NC_NOERR;
     }
 
     xbuf = cbuf;
     nczipioi_iget_varn(nczipp, varid, num, starts, counts, buf, bufcount, buftype, reqid);
-    *reqid *= 2;
+    if (reqid != NULL){
+        (*reqid) *= 2;
+    }
 
     return NC_NOERR;
 }
@@ -656,13 +668,17 @@ nczipio_iput_varn(void               *ncdp,
         if (err != NC_NOERR){
             return err;
         }
-        *reqid = *reqid * 2 + 1;
+        if (reqid != NULL){
+            *reqid = *reqid * 2 + 1;
+        }
         return NC_NOERR;
     }
 
     xbuf = cbuf;
     nczipioi_iput_varn(nczipp, varid, num, starts, counts, xbuf, buf, reqid);
-    *reqid *= 2;
+    if (reqid != NULL){
+        (*reqid) *= 2;
+    }
 
     return NC_NOERR;
 }
