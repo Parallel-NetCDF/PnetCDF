@@ -926,7 +926,7 @@ dnl    have_yacc_lex=no
 dnl fi
 dnl AM_CONDITIONAL(HAVE_YACC_LEX, [test x$have_yacc_lex = xyes])
 
-dnl AC_PROG_AWK
+AC_PROG_AWK
 dnl AC_PROG_LN_S
 dnl AC_PROG_MAKE_SET
 dnl AC_SUBST(SET_MAKE)
@@ -1346,14 +1346,14 @@ if test "x${debug}" = xyes; then
    if ! echo "${CFLAGS}" | ${EGREP} -q -- "-g" ; then
       CFLAGS+=" -g"
    fi
-   CFLAGS=`echo $CFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
+   CFLAGS=`echo $CFLAGS | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
    CFLAGS+=" -O0"
 
    if test "x${has_mpicxx}" = xyes ; then
       if ! echo "${CXXFLAGS}" | ${EGREP} -q -- "-g" ; then
          CXXFLAGS+=" -g"
       fi
-      CXXFLAGS=`echo $CXXFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
+      CXXFLAGS=`echo $CXXFLAGS | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
       CXXFLAGS+=" -O0"
    fi
 
@@ -1365,8 +1365,8 @@ if test "x${debug}" = xyes; then
          FCFLAGS+=" -g"
       fi
 
-       FFLAGS=`echo $FFLAGS  | sed 's/-O. *//g' | sed 's/-fast *//g'`
-      FCFLAGS=`echo $FCFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
+       FFLAGS=`echo $FFLAGS  | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
+      FCFLAGS=`echo $FCFLAGS | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
        FFLAGS+=" -O0"
       FCFLAGS+=" -O0"
    fi
@@ -1657,27 +1657,36 @@ if test "x$enable_netcdf4" = "xyes" ; then
    CPPFLAGS=$saved_CPPFLAGS
 
    # get NETCDF4 include dir from nc-config and remove any duplicate
+   AC_MSG_CHECKING([NetCDF-4 include directories])
    netcdf_incdir=`$nc_config --includedir`
+   AC_MSG_RESULT([$netcdf_incdir])
    NETCDF4_INC="-I$netcdf_incdir"
    AC_SUBST([NETCDF4_INC])
 
+   AC_MSG_CHECKING([NetCDF-4 LDFLAGS])
    if test "x$netcdf_libdir" != x ; then
       NETCDF4_LDFLAGS="-L$netcdf_libdir"
    fi
    # remove all -l options from netcdf_libs that should leave -L only
-   netcdf4_L=`echo $netcdf_libs | sed 's/-l[[^ ]]*//g'`
+   netcdf4_L=`echo $netcdf_libs | ${SED} 's/-l[[^ ]]*//g'`
    if test "x$netcdf4_L" != x ; then
       netcdf4_L="$NETCDF4_LDFLAGS $netcdf4_L"
    fi
+   # remove space between -L and path
+   netcdf4_L=`echo $netcdf4_L | ${SED} 's/-L[[ ]]*/-L/g'`
    # remove any duplicate in netcdf4_L
-   NETCDF4_LDFLAGS=`echo $netcdf4_L | awk -vORS=" " -vRS="[[ \n]]+" '!n[[$0]]++'`
+   NETCDF4_LDFLAGS=`echo $netcdf4_L | ${AWK} -v RS=' ' '{if (!seen[[$0]]++){printf "%s%s",sep,$0; sep=" "}}'`
    AC_SUBST([NETCDF4_LDFLAGS])
+   AC_MSG_RESULT([$NETCDF4_LDFLAGS])
 
+   AC_MSG_CHECKING([NetCDF-4 LIBS])
    # remove all -L options from netcdf_libs that should leave -l only
-   netcdf4_l=`echo $netcdf_libs | sed 's/-L[[^ ]]*//g'`
+   netcdf4_l=`echo $netcdf_libs | ${SED} 's/-L[[^ ]]*//g'`
    # remove any duplicate in netcdf4_l
-   NETCDF4_LIBS=`echo $netcdf4_l | awk -vORS=" " -vRS="[[ \n]]+" '!n[[$0]]++'`
+   NETCDF4_LIBS=`echo $netcdf4_l | ${AWK} -v RS=' ' '{if (!seen[[$0]]++){printf "%s%s",sep,$0; sep=" "}}'`
    AC_SUBST([NETCDF4_LIBS])
+   AC_MSG_RESULT([$NETCDF4_LIBS])
+
    AC_SUBST([NETCDF4_PACKAGE], [netcdf])
 fi
 
@@ -1862,11 +1871,23 @@ AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
 AC_SUBST(SEQ_CC)
 
 dnl Configuration Date
-if test "x$SOURCE_DATE_EPOCH" != "x" ; then
-    AC_SUBST([CONFIG_DATE]) CONFIG_DATE="`date -u -d "${SOURCE_DATE_EPOCH}"`"
+dnl Note that command 'date' is not portable across Unix platforms
+if test "x$SOURCE_DATE_EPOCH" != x ; then
+    date_str=`date -d @${SOURCE_DATE_EPOCH}`
+    if test "x$date_str" != x ; then
+       AC_SUBST([CONFIG_DATE], ["$date_str"])
+    else
+       date_str=`date -r $SOURCE_DATE_EPOCH`
+       if test "x$date_str" != x ; then
+          AC_SUBST([CONFIG_DATE], ["$date_str"])
+       else dnl ignore SOURCE_DATE_EPOCH
+          AC_SUBST([CONFIG_DATE], ["`date`"])
+       fi
+    fi
 else
-    AC_SUBST([CONFIG_DATE]) CONFIG_DATE="`date`"
+    AC_SUBST([CONFIG_DATE], ["`date`"])
 fi
+UD_MSG_DEBUG([CONFIG_DATE=$CONFIG_DATE])
 
 dnl Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
