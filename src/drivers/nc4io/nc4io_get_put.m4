@@ -56,6 +56,9 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_LONG_LONG_INT', `longlong', `long long')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `GETVARTYPE($1, translit(dt, `()'))')dnl
+        else {
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
     }
 ')dnl
 dnl
@@ -75,6 +78,9 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_LONG_LONG_INT', `longlong', `long long')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `PUTVARTYPE($1, translit(dt, `()'))')dnl
+        else {
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+        }
     }
 ')dnl
 
@@ -135,7 +141,6 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `GETATTTYPE(translit(dt, `()'))')dnl
-
     DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
 }
 
@@ -185,7 +190,6 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `PUTATTTYPE(translit(dt, `()'))')dnl
-
     DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
 }
 
