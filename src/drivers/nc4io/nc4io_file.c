@@ -387,7 +387,7 @@ nc4io_inq_misc(void       *ncdp,
             DEBUG_RETURN_ERROR(err)
         }
 
-        if (recsize != NULL) *recsize = 0;
+        if (recsize != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
         /* Iterate through all variables */
         for (i=0; i<nvar; i++) {
@@ -464,24 +464,24 @@ nc4io_inq_misc(void       *ncdp,
     if (striping_size  != NULL) *striping_size = 0;
     if (striping_count != NULL) *striping_count = 0;
 
-    /* Read only */
-    if (put_size != NULL) *put_size = 0;
+    /* TODO: Calculate put size */
+    if (put_size != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     /* TODO: Calculate get size */
-    if (get_size != NULL) *get_size = 0;
+    if (get_size != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     /* NetCDF does not expose such info */
-    if (header_size   != NULL) *header_size = 0;
-    if (header_extent != NULL) *header_extent = 0;
+    if (header_size   != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (header_extent != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     /* TODO: suporting nonblocking IO */
-    if (nreqs != NULL) *nreqs = 0;
+    if (nreqs != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
-    /* We don't use user buffer */
-    if (usage != NULL) *usage = 0;
+    /* bput APIs are not supported yet */
+    if (usage != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
-    /* We don't use user buffer */
-    if (buf_size != NULL) *buf_size = 0;
+    /* bput APIs are not supported yet */
+    if (buf_size != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     return NC_NOERR;
 }
@@ -492,7 +492,7 @@ nc4io_cancel(void *ncdp,
              int  *req_ids,
              int  *statuses)
 {
-    /* We do not support nonblocking I/O so far */
+    /* We do not support nonblocking I/O yet */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 }
 
@@ -503,7 +503,7 @@ nc4io_wait(void *ncdp,
            int  *statuses,
            int   reqMode)
 {
-    /* We do not support nonblocking I/O so far */
+    /* We do not support nonblocking I/O yet */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 }
 
@@ -574,7 +574,6 @@ nc4io_sync(void *ncdp)
 int
 nc4io_flush(void *ncdp)
 {
-    // NetCDF does not have flush
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
 }
 
