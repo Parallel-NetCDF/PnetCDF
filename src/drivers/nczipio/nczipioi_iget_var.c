@@ -555,6 +555,8 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     NCI_Free(ostart);
 
+    NCI_Free(tbuf);
+
     NCI_Free(sreq);
     NCI_Free(sstat);
     NCI_Free(ssize);

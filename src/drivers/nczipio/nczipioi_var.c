@@ -106,8 +106,10 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create) {
             if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
                 for(j = 0; j < varp->nchunk; j++){ 
                     varp->chunk_owner[j] = j % nczipp->np;
-                    if (varp->chunk_owner[j] == nczipp->rank && create){
-                        varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
+                    if (varp->chunk_owner[j] == nczipp->rank){
+                        if (create){
+                            varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
+                        }
                         varp->nmychunks++;
                     }
                 }
@@ -351,9 +353,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     }
     else{
         // Follow coll I/O with dummy call
-        zbufs[0] = (char*)NCI_Malloc(0);
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-        MPI_File_read_at_all(ncp->collective_fh, 0, zbufs[0], 0, MPI_BYTE, &status);
+        MPI_File_read_at_all(ncp->collective_fh, 0, &i, 0, MPI_BYTE, &status);
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
     }
 
@@ -374,7 +375,9 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     }
 
     // Free buffers
-    NCI_Free(zbufs[0]);
+    if (nchunk > 0){
+        NCI_Free(zbufs[0]);
+    }
     NCI_Free(zbufs);
 
     NCI_Free(lens);
@@ -485,9 +488,8 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
 
         // Follow coll I/O with dummy call
-        zbufs[0] = (char*)NCI_Malloc(0);
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-        MPI_File_read_at_all(ncp->collective_fh, 0, zbufs[0], 0, MPI_BYTE, &status);
+        MPI_File_read_at_all(ncp->collective_fh, 0, &i, 0, MPI_BYTE, &status);
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
@@ -522,7 +524,9 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_DECOM)
 
     // Free buffers
-    NCI_Free(zbufs[0]);
+    if (nchunk > 0){
+        NCI_Free(zbufs[0]);
+    }
     NCI_Free(zbufs);
 
     NCI_Free(lens);
