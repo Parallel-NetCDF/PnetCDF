@@ -34,17 +34,18 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 
 int get_chunk_overlap(NC_zip_var *varp, MPI_Offset* cord, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *ostart, MPI_Offset *ocount){
-    int i, ret;
+    int i, ret = 1;
 
     for(i = 0; i < varp->ndim; i++){
         ostart[i] = max(start[i], cord[i]);
         ocount[i] = min(start[i] + count[i], cord[i] + varp->chunkdim[i]) - ostart[i];
-        if (ocount[i] < 0){
+        if (ocount[i] <= 0){
             ocount[i] = 0;
+            ret = 0;
         }
     }
 
-    return 0;
+    return ret;
 }
 
 int get_chunk_id(NC_zip_var *varp, MPI_Offset *cord){
@@ -52,7 +53,7 @@ int get_chunk_id(NC_zip_var *varp, MPI_Offset *cord){
     
     ret = (int)(cord[0]) / varp->chunkdim[0];
     for(i = 1; i < varp->ndim; i++){
-        ret = ret * varp->nchunks[i - 1] + (int)(cord[i]) / varp->chunkdim[i];
+        ret = ret * varp->nchunks[i] + (int)(cord[i]) / varp->chunkdim[i];
     }
 
     return ret;
@@ -62,8 +63,8 @@ int get_chunk_itr(NC_zip_var *varp, int idx, MPI_Offset* cord){
     int i;
 
     for(i = varp->ndim - 1; i >= 0; i--){
-        cord[i] = (idx % varp->chunkdim[i]) * varp->chunkdim[i];
-        idx /= varp->chunkdim[i];
+        cord[i] = (idx % varp->nchunks[i]) * varp->chunkdim[i];
+        idx /= varp->nchunks[i];
     }
 
     return 0;

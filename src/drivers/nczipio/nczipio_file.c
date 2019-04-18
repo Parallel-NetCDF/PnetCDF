@@ -132,7 +132,12 @@ nczipio_open(MPI_Comm     comm,
     strcpy(nczipp->path, path);
     nczipp->mode   = omode;
     nczipp->driver = driver;
-    nczipp->flag   = 0;
+    if (nczipp->mode & NC_WRITE){
+        nczipp->flag = 0;
+    }
+    else{
+        nczipp->flag |= NC_MODE_RDONLY;
+    }
     nczipp->ncp    = ncp;
     nczipp->comm   = comm;
     MPI_Comm_rank(comm, &(nczipp->rank));
@@ -168,6 +173,11 @@ nczipio_close(void *ncdp)
     NC_zip *nczipp = (NC_zip*)ncdp;
 
     if (nczipp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
+
+    if (!(nczipp->flag & NC_MODE_RDONLY)){
+        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_recsize", NC_INT64, 1, &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
+        if (err != NC_NOERR) return err;
+    }
 
     err = nczipp->driver->close(nczipp->ncp);
 

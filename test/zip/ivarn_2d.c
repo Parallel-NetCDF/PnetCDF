@@ -107,6 +107,7 @@ int main(int argc, char **argv)
         }
         err = ncmpi_iput_varn_int(ncid, varid, N, starts, counts, buf, NULL);
 
+        /* Wait for all request */
         err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
 
         /* Close the file. */
@@ -132,6 +133,7 @@ int main(int argc, char **argv)
         }
         err = ncmpi_iget_varn_int(ncid, varid, N, starts, counts, buf, NULL);
 
+        /* Wait for all request */
         err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
         
         // Check results

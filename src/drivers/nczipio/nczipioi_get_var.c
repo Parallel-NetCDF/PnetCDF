@@ -84,7 +84,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
     // This is just for allocating send buffer
     // We do so by iterating through all request and all chunks they cover
     // If we are not the owner of a chunk, we need to send message
-    memset(rcnt_local, 0, sizeof(int) * nczipp->np);
+    memset(rcnt_local, 0, sizeof(int) * varp->nchunk);
     nsend = 0;
 
     // Iterate through chunks

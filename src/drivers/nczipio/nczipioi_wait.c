@@ -180,6 +180,16 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
         getstats = NULL;
     }
 
+    if (nczipp->recdim >= 0){
+        MPI_Allreduce(MPI_IN_PLACE, &(nczipp->recsize), 1, MPI_LONG_LONG, MPI_MAX, nczipp->comm);   // Sync number of recs
+        // Expand all variables
+        for(i = 0; i < nczipp->vars.cnt; i++){
+            if (nczipp->vars.data[i].isrec && (nczipp->vars.data[i].dimsize[0] < nczipp->recsize)){
+                nczipioi_var_resize(nczipp, nczipp->vars.data + i);
+            }
+        }
+    }
+
     if (nput > 0){
         nczipioi_wait_put_reqs(nczipp, nput, putreqs, putstats);
     }

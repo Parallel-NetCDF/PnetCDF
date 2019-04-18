@@ -721,6 +721,7 @@ nczipioi_put_varn(NC_zip        *nczipp,
                 nczipp->recsize = starts[i][0] + counts[i][0];
             }
         }
+        MPI_Allreduce(MPI_IN_PLACE, &(nczipp->recsize), 1, MPI_LONG_LONG, MPI_MAX, nczipp->comm);   // Sync number of recs
         if (varp->dimsize[0] < nczipp->recsize){
             nczipioi_var_resize(nczipp, varp);
         }

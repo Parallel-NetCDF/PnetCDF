@@ -22,7 +22,15 @@ int
 nczipioi_init(NC_zip *nczipp){
     int err;
 
-    nczipp->recdim = -1;
+    err = nczipp->driver->inq(nczipp->ncp, NULL, NULL, NULL, &(nczipp->recdim));
+    if (err != NC_NOERR) return err;
+
+    err = nczipp->driver->get_att(nczipp->ncp, NC_GLOBAL, "_recsize", &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
+    if (err != NC_NOERR){
+        nczipp->recsize = 0;
+        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_recsize", NC_INT64, 1, &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
+        if (err != NC_NOERR) return err;
+    }
 
     /* Initialize var list */
     err = nczipioi_var_list_init(&(nczipp->vars));
@@ -47,7 +55,7 @@ nczipioi_parse_var_info(NC_zip *nczipp){
     int nvar;
     NC_zip_var var;
 
-    err = nczipp->driver->inq(nczipp->ncp, NULL, &nvar, NULL, NULL);
+    err = nczipp->driver->inq(nczipp->ncp, NULL, &nvar, NULL, &(nczipp->recdim));
 
     for(vid = 0; vid < nvar; vid++){
         err = nczipp->driver->get_att(nczipp->ncp, vid, "_varkind", &(var.varkind), MPI_INT);   // Comressed var?
@@ -69,6 +77,15 @@ nczipioi_parse_var_info(NC_zip *nczipp){
 
             for(i = 0; i < var.ndim; i++){
                 nczipp->driver->inq_dim(nczipp->ncp, var.dimids[i], NULL, var.dimsize + i);
+            }
+            if (var.dimids[0] == nczipp->recdim){
+                var.isrec = 1;
+                if (var.dimsize[0] < nczipp->recsize){
+                    var.dimsize[0] = nczipp->recsize;
+                }
+            }
+            else{
+                var.isrec = 0;
             }
 
             err = nczipp->driver->get_att(nczipp->ncp, var.varid, "_datatype", &(var.xtype), MPI_INT); // Original datatype
