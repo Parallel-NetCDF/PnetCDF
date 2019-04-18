@@ -100,6 +100,9 @@ nczipio_def_var(void       *ncdp,
         if (var.dimids[0] == nczipp->recdim){
             var.isrec = 1;
         }
+        else{
+            var.isrec = 0;
+        }
 
         err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_ndim", NC_INT, 1, &ndims, MPI_INT); // Original dimensions
         if (err != NC_NOERR) return err;
