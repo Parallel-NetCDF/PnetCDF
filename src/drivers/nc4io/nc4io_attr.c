@@ -14,7 +14,7 @@
  * ncmpi_copy_att()    : dispatcher->inq_copy_att()
  * ncmpi_del_att()     : dispatcher->inq_del_att()
  * ncmpi_get_att()     : dispatcher->inq_get_att()
- * ncmpi_put_att()     : dispatcher->inq_put_arr()
+ * ncmpi_put_att()     : dispatcher->inq_put_att()
  *
  */
 
