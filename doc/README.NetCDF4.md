@@ -114,6 +114,19 @@ different.
   0 and `ncmpi_put_vars_float_int()` is called at process 1. However, this is
   not allowed in NetCDF-4. Thus, the same kind of API must be used in a
   collective call when accessing a NetCDF-4 file.
+* The following APIs are not supported yet. An error code NC_ENOTSUPPORT will
+  be returned, if called.
+  * ncmpi_inq_header_size, ncmpi_inq_header_extent
+  * ncmpi_inq_get_size, ncmpi_inq_put_size
+  * ncmpi_inq_striping
+  * ncmpi_inq_recsize
+  * ncmpi_inq_varoffset
+  * ncmpi_fill_var_rec
+  * ncmpi_sync_numrecs
+  * ncmpi_flush
+  * all nonblocking APIs
+  * vard and varn APIs
+  * flexible APIs (i.e. argument buftype is a constructed MPI derived data type)
 
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 
