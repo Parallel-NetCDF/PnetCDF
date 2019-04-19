@@ -489,8 +489,8 @@ nc4io_inq_misc(void       *ncdp,
     }
 
     /* NetCDF does not expose any MPI related info */
-    if (striping_size  != NULL) *striping_size = 0;
-    if (striping_count != NULL) *striping_count = 0;
+    if (striping_size  != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (striping_count != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     /* TODO: Calculate put size */
     if (put_size != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
