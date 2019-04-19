@@ -36,7 +36,8 @@ before_install:
   - autoreconf -i
   - ./configure --enable-subfiling --enable-thread-safe --enable-burst_buffering
   - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-subfiling --enable-thread-safe --enable-burst_buffering"
-  - make -s V=1 LIBTOOLFLAGS=--silent ptest
+  - make -s V=1 LIBTOOLFLAGS=--silent -j4 tests
+  - make -s V=1 LIBTOOLFLAGS=--silent ptests
   - make -s distclean
   # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
