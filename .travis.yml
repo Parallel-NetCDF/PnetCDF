@@ -13,7 +13,7 @@ addons:
     project:
       name: "Parallel-NetCDF/PnetCDF"
       description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
-    build_command_prepend: ./configure --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug --disable-fortran
+    # build_command_prepend: ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug --silent
     notification_email: wkliao@eecs.northwestern.edu
     build_command: make -s V=1 LIBTOOLFLAGS=--silent -j4 tests
     branch_pattern: master
@@ -34,11 +34,8 @@ before_install:
   - automake --version
   - libtool --version
   - autoreconf -i
-  - ./configure --enable-subfiling --enable-thread-safe --enable-burst_buffering
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-subfiling --enable-thread-safe --enable-burst_buffering"
-  - make -s V=1 LIBTOOLFLAGS=--silent -j4 tests
-  - make -s V=1 LIBTOOLFLAGS=--silent ptests
-  - make -s distclean
+  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes 
+  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes"
   # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
   # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
