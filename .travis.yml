@@ -19,6 +19,7 @@ addons:
     branch_pattern: master
 
 before_install:
+  - sudo apt-get install libcurl4-openssl-dev # required to avoid SSL errors
   - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - test -n $CC && unset CC
   # apt-package-whitelist can be found in
