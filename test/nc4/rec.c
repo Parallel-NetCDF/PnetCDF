@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  *
  *  $Id$
@@ -7,13 +7,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program tests fill mode for individual variables.
- *
- * The compile and run commands are given below.
- *
- *    % mpicc -g -o tst_def_var_fill tst_def_var_fill.c -lpnetcdf
- *
- *    % mpiexec -l -n 4 tst_def_var_fill testfile.nc
+ * This program tests writing record variabless with NetCDF4 driver
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -89,21 +83,21 @@ int main(int argc, char** argv) {
     err = ncmpi_inq_num_rec_vars(ncid, &v1); CHECK_ERR
     if (v1 != 2){
         printf("Error at line %d of %s: expect num_rec_vars %d but got %d\n",
-                __LINE__,__FILE__,v1,2);
+                __LINE__,__FILE__,2,v1);
         nerrs++;
     }
     
     err = ncmpi_inq_num_fix_vars(ncid, &v1); CHECK_ERR
     if (v1 != 0){
         printf("Error at line %d of %s: expect num_fix_vars %d but got %d\n",
-                __LINE__,__FILE__,v1,0);
+                __LINE__,__FILE__,0,v1);
         nerrs++;
     }       
 
     err = ncmpi_inq_recsize(ncid, start);  CHECK_ERR
     if (start[0] != 8){
         printf("Error at line %d of %s: expect recsize %lld but got %lld\n",
-                __LINE__,__FILE__,start[0], (MPI_Offset)8);
+                __LINE__,__FILE__, (MPI_Offset)8, start[0]);
         nerrs++;
     }  
 

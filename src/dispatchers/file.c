@@ -1354,6 +1354,16 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
 
     if (num_fix_varsp == NULL) return NC_NOERR;
 
+#ifdef ENABLE_NETCDF4
+    if (pncp->format == NC_FORMAT_NETCDF4 ||
+               pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
+        /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
+        return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, num_fix_varsp, NULL,
+                                    NULL, NULL, NULL, NULL, NULL, NULL,
+                                    NULL, NULL, NULL, NULL, NULL);
+    }
+#endif
+
     *num_fix_varsp = pncp->nvars - pncp->nrec_vars;
 
     /* number of fixed-size variables can also be calculated below.
@@ -1366,12 +1376,6 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
     */
 
     return NC_NOERR;
-#if 0
-    /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
-    return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, num_fix_varsp, NULL,
-                                  NULL, NULL, NULL, NULL, NULL, NULL,
-                                  NULL, NULL, NULL, NULL, NULL);
-#endif
 }
 
 /*----< ncmpi_inq_num_rec_vars() >-------------------------------------------*/
@@ -1388,6 +1392,16 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
 
     if (num_rec_varsp == NULL) return NC_NOERR;
 
+#ifdef ENABLE_NETCDF4
+    if (pncp->format == NC_FORMAT_NETCDF4 ||
+               pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
+        /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */
+        return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, num_rec_varsp,
+                                    NULL, NULL, NULL, NULL, NULL, NULL,
+                                    NULL, NULL, NULL, NULL, NULL);
+        }
+#endif
+
     *num_rec_varsp = pncp->nrec_vars;
 
     /* number of record variables can also be calculated below.
@@ -1400,12 +1414,6 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
     */
 
     return NC_NOERR;
-#if 0
-    /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */
-    return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, num_rec_varsp,
-                                  NULL, NULL, NULL, NULL, NULL, NULL,
-                                  NULL, NULL, NULL, NULL, NULL);
-#endif
 }
 
 /*----< ncmpi_inq_striping() >-----------------------------------------------*/
