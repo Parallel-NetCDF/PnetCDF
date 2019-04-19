@@ -13,9 +13,9 @@ addons:
     project:
       name: "Parallel-NetCDF/PnetCDF"
       description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
-    build_command_prepend: make -s V=1 LIBTOOLFLAGS=--silent check
+    build_command_prepend: ./configure --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug --disable-fortran
     notification_email: wkliao@eecs.northwestern.edu
-    build_command: make -s V=1 LIBTOOLFLAGS=--silent ptest
+    build_command: make -s V=1 LIBTOOLFLAGS=--silent -j4 tests
     branch_pattern: master
 
 before_install:
@@ -34,8 +34,10 @@ before_install:
   - automake --version
   - libtool --version
   - autoreconf -i
-  - ./configure
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent"
+  - ./configure --enable-subfiling --enable-thread-safe --enable-burst_buffering
+  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-subfiling --enable-thread-safe --enable-burst_buffering"
+  - make -s V=1 LIBTOOLFLAGS=--silent ptest
+  - make -s distclean
   # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
   # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
@@ -44,7 +46,8 @@ before_install:
   # dump the Coverity Scan SCM log file
   # - cat /home/travis/build/wkliao/pnetcdf/cov-int/scm_log.txt
 
-script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./travis-run-tests.sh ; fi
+script: ./travis-run-tests.sh
+# script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./travis-run-tests.sh ; fi
   # continue the above "build_command" for static library only (default)
   # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS=--silent
   # build both static and shared libraries
