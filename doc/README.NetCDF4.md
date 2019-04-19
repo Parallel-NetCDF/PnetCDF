@@ -119,7 +119,6 @@ different.
   * ncmpi_inq_header_size, ncmpi_inq_header_extent
   * ncmpi_inq_get_size, ncmpi_inq_put_size
   * ncmpi_inq_striping
-  * ncmpi_inq_recsize
   * ncmpi_inq_varoffset
   * ncmpi_fill_var_rec
   * ncmpi_sync_numrecs
@@ -127,7 +126,10 @@ different.
   * all nonblocking APIs
   * vard and varn APIs
   * flexible APIs (i.e. argument buftype is a constructed MPI derived data type)
-
+* PnetCDF does not allow creating more than 1 unlimited dimension. 
+  Files with more than 1 unlimited dimensions can be opened. However, 
+  ncmpi_inq_unlimdim will only return the first unlimited dimension. There is no
+  way for the user to know other unlimited dimensions..
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 
 See COPYRIGHT notice in top-level directory.
