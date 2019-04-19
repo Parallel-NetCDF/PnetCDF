@@ -13,9 +13,9 @@ addons:
     project:
       name: "Parallel-NetCDF/PnetCDF"
       description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
-    build_command_prepend: ./configure
+    build_command_prepend: make -s V=1 LIBTOOLFLAGS=--silent check
     notification_email: wkliao@eecs.northwestern.edu
-    build_command: make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent"
+    build_command: make -s V=1 LIBTOOLFLAGS=--silent ptest
     branch_pattern: master
 
 before_install:
@@ -34,6 +34,8 @@ before_install:
   - automake --version
   - libtool --version
   - autoreconf -i
+  - ./configure
+  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent"
   # string substitute for SVN keyword LastChangedDate
   # Below is for Redhat
   # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
