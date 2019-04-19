@@ -33,7 +33,9 @@ TESTPROGRAMS = simple_xy \
                interoperability_wr \
                noclobber \
                tst_zero_req \
-               notsupport
+               notsupport \
+               rec \
+               rec2
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4
 
