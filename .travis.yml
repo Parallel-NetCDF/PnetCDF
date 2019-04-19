@@ -42,7 +42,7 @@ before_install:
   # dump the Coverity Scan SCM log file
   # - cat /home/travis/build/wkliao/pnetcdf/cov-int/scm_log.txt
 
-script: ./travis-run-tests.sh
+script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./travis-run-tests.sh ; fi
   # continue the above "build_command" for static library only (default)
   # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS=--silent
   # build both static and shared libraries
