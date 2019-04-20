@@ -8,4 +8,5 @@
 set -e
 
 ${TESTSEQRUN} ./compressed ${srcdir}
+${TESTSEQRUN} ./rec2 ${srcdir}
 
