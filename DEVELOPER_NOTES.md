@@ -341,10 +341,10 @@ src/libf90 (1.8.1 and prior) src/binding/f90 (1.9.0 and later):
                       NetCDF-4 support                            - enabled"
         fi
      ```
-   * `src/utils/pnetcdf-config.in` -- add similiar outputs as in `configure.ac`.
+   * `src/utils/pnetcdf-config.in` -- add similar outputs as in `configure.ac`.
      * Note unlike `configure.ac`, in this file the feature must show either
        "enabled" or "disabled".
-   * `src/include/pnetcdf.h.in` -- essentail configure-time options are now
+   * `src/include/pnetcdf.h.in` -- essential configure-time options are now
      explicitly set in the header file
    * `src/binding/f77/pnetcdf.inc.in` -- similar to pnetcdf.h.in
    * `src/binding/f90/nfmpi_constants.fh.in` -- similar to pnetcdf.h.in
@@ -874,8 +874,4 @@ The problem is reported in https://llvm.org/bugs/show_bug.cgi?id=14713
      through the ncmpio driver directly.
 
 ---
-### Note on NetCDF 4 Support
-* Nonblocking IO not supported
-* Accounting information not supported
-* File info inquiry not supported
 
