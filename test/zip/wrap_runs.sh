@@ -7,6 +7,7 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 outfile=`basename $1`
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
@@ -19,6 +20,9 @@ fi
 for j in ${safe_modes} ; do
     export PNETCDF_SAFE_MODE=$j
     # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
+    unset PNETCDF_HINTS
+    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 done
 
