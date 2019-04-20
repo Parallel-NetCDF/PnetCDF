@@ -2214,7 +2214,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char filename[512], *path;
-    int i, omode, fd, status=NC_NOERR;
+    int i, omode, fd, fmt=1, status=NC_NOERR;
     NC *ncp=NULL;
     struct stat ncfilestat;
 
@@ -2272,6 +2272,9 @@ int main(int argc, char **argv)
     status = val_get_NC(fd, ncp);
     if (status != NC_NOERR && status != NC_ENULLPAD && status != -1)
         goto prog_exit;
+
+    /* class file format: CDF-1, 2 or 5 */
+    fmt = ncp->format;
 
     /* check data size */
     if (-1 == fstat(fd, &ncfilestat)) {
@@ -2332,9 +2335,9 @@ prog_exit:
 
     if (verbose) {
         if (status == NC_NOERR)
-            printf("File \"%s\" is a valid NetCDF classic file.\n",filename);
+            printf("File \"%s\" is a valid NetCDF classic CDF-%d file.\n",filename, fmt);
         else {
-            printf("File \"%s\" fails to conform with classic CDF file format specifications\n",filename);
+            printf("File \"%s\" fails to conform with classic CDF-%d file format specifications\n",filename, fmt);
             if (repair) {
                 printf("and it has been repaired in place to remove the errors.\n");
                 printf("Please run \"%s %s\" to validate again.\n",argv[0],filename);
