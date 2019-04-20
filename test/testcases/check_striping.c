@@ -32,14 +32,19 @@
 static int
 tst_fmt(char *filename, int cmode)
 {
-    int err, nerrs=0, ncid;
+    int err, nerrs=0, ncid, fmt;
     int striping_size, striping_count, root_striping_size, root_striping_count;
 
     cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    err = ncmpi_inq_striping(ncid, &striping_size, &striping_count); CHECK_ERR
+    err = ncmpi_inq_format(ncid, &fmt); CHECK_ERR
+    err = ncmpi_inq_striping(ncid, &striping_size, &striping_count);
+    if (fmt == NC_FORMAT_NETCDF4 || fmt == NC_FORMAT_NETCDF4_CLASSIC)
+        EXP_ERR(NC_ENOTSUPPORT)
+    else
+        CHECK_ERR
 
     root_striping_size  = striping_size;
     root_striping_count = striping_count;
