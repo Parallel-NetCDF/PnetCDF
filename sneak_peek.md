@@ -64,9 +64,12 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + test/nc4/notsupport - Test if unsupported NetCDF4 APIs return to correct error code.
-  + test/nc4/rec - Test creating and reading NetCDF4 file with 1 unlimited dimension. 
-  + test/nc4/rec2 - Test opening a NetCDF4 file with more than 1 unlimited dimensions.
+  + test/nc4/notsupport - Test if error code NC_ENOTSUPPORT is properly
+    returned when calling APIs for unsupported NetCDF-4 feature.
+  + test/nc4/rec - Test creating and reading a NetCDF-4 file with 1 unlimited
+    dimension. 
+  + test/nc4/rec2 - Test opening a NetCDF-4 file with more than 1 unlimited
+    dimensions.
 
 * Conformity with NetCDF library
   + none
