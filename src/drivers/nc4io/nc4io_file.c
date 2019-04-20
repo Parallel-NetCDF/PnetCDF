@@ -366,14 +366,30 @@ nc4io_inq_misc(void       *ncdp,
      * the first one is considered as record dim here
      */
     if (num_fix_varsp != NULL || num_rec_varsp != NULL || recsize != NULL) {
-        int nvar, ndim, *dims, *vars, unlimdim, nrec=0, nfix=0;
+        int nvar, ndim, *dims, *vars, nrecdim, *isrec, *recdims, nrec=0, nfix=0;
 
         /* Record dimid (TODO: non-classic model NetCDF4 file may have more
-         * than one unlimited dimension) */
-        err = nc_inq_unlimdim(nc4p->ncid, &unlimdim);
+         * than one unlimited dimension) 
+         * We flag each dimension that is reported as unlimited dimension
+         */
+        err = nc_inq(nc4p->ncid, &ndim, NULL, NULL, NULL);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
+        isrec = (int*)NCI_Malloc(SIZEOF_INT * ndim);
+        memset(isrec, 0, SIZEOF_INT * ndim);
+
+        /* Get list of unlimited dim */
+        err = nc_inq_unlimdims(nc4p->ncid, &nrecdim, NULL);
+        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        recdims = (int*)NCI_Malloc(SIZEOF_INT * nrecdim);
+        err = nc_inq_unlimdims(nc4p->ncid, NULL, recdims);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-        /* numner of variables */
+        /* Set up the flag */
+        for(i = 0; i < nrecdim; i++){
+            isrec[recdims[i]] = 1;
+        }
+
+        /* number of variables */
         err = nc_inq_varids(nc4p->ncid, &nvar, NULL);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -384,6 +400,8 @@ nc4io_inq_misc(void       *ncdp,
         err = nc_inq_varids(nc4p->ncid, NULL, vars);
         if (err != NC_NOERR) {
             NCI_Free(vars);
+            NCI_Free(recdims);
+            NCI_Free(isrec);
             DEBUG_RETURN_ERROR(err)
         }
 
@@ -403,12 +421,14 @@ nc4io_inq_misc(void       *ncdp,
             if (err != NC_NOERR) {
                 NCI_Free(vars);
                 NCI_Free(dims);
+                NCI_Free(recdims);
+                NCI_Free(isrec);
                 DEBUG_RETURN_ERROR(err)
             }
 
             /* Iterate through all dimensions */
             for (j=0; j<ndim; j++)
-                if (dims[j] == unlimdim)
+                if (isrec[dims[j]])
                     break;
             /* If none of the dimension is record dim, count as fixed var */
             if (j == ndim) nfix += 1;
@@ -429,6 +449,8 @@ nc4io_inq_misc(void       *ncdp,
             if (err != NC_NOERR) {
                 NCI_Free(vars);
                 NCI_Free(dims);
+                NCI_Free(recdims);
+                NCI_Free(isrec);
                 DEBUG_RETURN_ERROR(err)
             }
             /* size of variable external data type */
@@ -436,16 +458,20 @@ nc4io_inq_misc(void       *ncdp,
             if (err != NC_NOERR) {
                 NCI_Free(vars);
                 NCI_Free(dims);
+                NCI_Free(recdims);
+                NCI_Free(isrec);
                 DEBUG_RETURN_ERROR(err)
             }
             var_size = xtype_size;
             for (j=0; j<ndim; j++) {
                 size_t dim_size;
-                if (dims[j] == unlimdim) continue;
+                if (isrec[dims[j]]) continue;
                 err = nc_inq_dimlen(nc4p->ncid, dims[j], &dim_size);
                 if (err != NC_NOERR) {
                     NCI_Free(vars);
                     NCI_Free(dims);
+                    NCI_Free(recdims);
+                    NCI_Free(isrec);
                     DEBUG_RETURN_ERROR(err)
                 }
                 var_size *= dim_size;
@@ -455,14 +481,16 @@ nc4io_inq_misc(void       *ncdp,
             NCI_Free(dims);
         }
         NCI_Free(vars);
+        NCI_Free(recdims);
+        NCI_Free(isrec);
 
         if (num_fix_varsp != NULL) *num_fix_varsp = nfix;
         if (num_rec_varsp != NULL) *num_rec_varsp = nrec;
     }
 
     /* NetCDF does not expose any MPI related info */
-    if (striping_size  != NULL) *striping_size = 0;
-    if (striping_count != NULL) *striping_count = 0;
+    if (striping_size  != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    if (striping_count != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     /* TODO: Calculate put size */
     if (put_size != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
