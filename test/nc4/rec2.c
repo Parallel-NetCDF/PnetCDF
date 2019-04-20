@@ -28,11 +28,10 @@
 
 int main(int argc, char** argv) {
     int rank, nprocs, err, nerrs=0;
-    int ncid, cmode, varid[2], dimid[2], buf[1];
-    int v1;
+    int ncid, num_rec_vars;
     MPI_Comm comm=MPI_COMM_WORLD;
     MPI_Info info=MPI_INFO_NULL;
-    MPI_Offset start[1], count[1];
+    MPI_Offset recsize;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(comm, &rank);
@@ -48,24 +47,24 @@ int main(int argc, char** argv) {
     /* reopen the file and read data back */
     err = ncmpi_open(comm, FILENAME, NC_NOWRITE | NC_NETCDF4, info, &ncid); CHECK_ERR
 
-    err = ncmpi_inq_num_rec_vars(ncid, &v1); CHECK_ERR
-    if (v1 != 1){
+    err = ncmpi_inq_num_rec_vars(ncid, &num_rec_vars); CHECK_ERR
+    if (num_rec_vars != 1){
         printf("Error at line %d of %s: expect num_rec_vars %d but got %d\n",
-                __LINE__,__FILE__,2,v1);
+                __LINE__,__FILE__,2,num_rec_vars);
         nerrs++;
     }
     
-    err = ncmpi_inq_num_fix_vars(ncid, &v1); CHECK_ERR
-    if (v1 != 0){
+    err = ncmpi_inq_num_fix_vars(ncid, &num_rec_vars); CHECK_ERR
+    if (num_rec_vars != 0){
         printf("Error at line %d of %s: expect num_fix_vars %d but got %d\n",
-                __LINE__,__FILE__,0,v1);
+                __LINE__,__FILE__,0,num_rec_vars);
         nerrs++;
     }       
 
-    err = ncmpi_inq_recsize(ncid, start);  CHECK_ERR
-    if (start[0] != 4){
+    err = ncmpi_inq_recsize(ncid, &recsize);  CHECK_ERR
+    if (recsize != 4){
         printf("Error at line %d of %s: expect recsize %lld but got %lld\n",
-                __LINE__,__FILE__, (MPI_Offset)4, start[0]);
+                __LINE__,__FILE__, (MPI_Offset)4, recsize);
         nerrs++;
     }  
 
