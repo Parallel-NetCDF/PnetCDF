@@ -24,9 +24,10 @@
 #define NY 8
 #define NX 5
 
-#define FILENAME "rec2.nc"
+#define FNAME "two_rec_dims.nc"
 
 int main(int argc, char** argv) {
+    char *dir_name=".", filename[512];
     int rank, nprocs, err, nerrs=0;
     int ncid, num_rec_vars;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -37,6 +38,13 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [dir_name]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) dir_name = argv[1];
+
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for def_var_fill ", basename(argv[0]));
@@ -44,8 +52,10 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
+    sprintf(filename, "%s/%s", dir_name, FNAME);
+
     /* reopen the file and read data back */
-    err = ncmpi_open(comm, FILENAME, NC_NOWRITE | NC_NETCDF4, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, filename, NC_NOWRITE | NC_NETCDF4, info, &ncid); CHECK_ERR
 
     err = ncmpi_inq_num_rec_vars(ncid, &num_rec_vars); CHECK_ERR
     if (num_rec_vars != 1){
