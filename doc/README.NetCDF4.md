@@ -114,6 +114,11 @@ different.
   0 and `ncmpi_put_vars_float_int()` is called at process 1. However, this is
   not allowed in NetCDF-4. Thus, the same kind of API must be used in a
   collective call when accessing a NetCDF-4 file.
+* When creating a new NetCDF-4 file, PnetCDF only allows creating 1 unlimited
+  dimension. When reading an existing NetCDF-4 file, the file can have more
+  than 1 unlimited dimension. However, in this case, API ncmpi_inq_unlimdim
+  will only return the dimension ID of first unlimited dimension. This behavior
+  conforms with NetCDF-4 library.
 * The following APIs are not supported yet. An error code NC_ENOTSUPPORT will
   be returned, if called.
   * ncmpi_inq_header_size, ncmpi_inq_header_extent
@@ -126,10 +131,7 @@ different.
   * all nonblocking APIs
   * vard and varn APIs
   * flexible APIs (i.e. argument buftype is a constructed MPI derived data type)
-* PnetCDF does not allow creating more than 1 unlimited dimension. 
-  Files with more than 1 unlimited dimensions can be opened. However, 
-  ncmpi_inq_unlimdim will only return the first unlimited dimension. There is no
-  way for the user to know other unlimited dimensions..
+
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 
 See COPYRIGHT notice in top-level directory.
