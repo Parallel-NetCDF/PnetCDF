@@ -114,7 +114,7 @@ ncmpio_add_record_requests(NC_lead_req      *lead_list,
     for (i=1; i<num_recs; i++) {
         /* copy start/count/stride */
         reqs[i].start = reqs[i-1].start + dims_chunk;
-        memcpy(reqs[i].start, reqs[i-1].start, dims_chunk * sizeof(MPI_Offset));
+        memcpy(reqs[i].start, reqs[i-1].start, dims_chunk * SIZEOF_MPI_OFFSET);
 
         /* jump to next stride */
         reqs[i].start[0] += (stride == NULL) ? 1 : stride[0];

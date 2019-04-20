@@ -351,7 +351,7 @@ concatenate_datatypes(int           num,
 #if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
     addrs = (MPI_Aint*) displacements; /* cast ok: types same size */
 #else
-    /* if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) */
+    /* if (SIZEOF_MPI_OFFSET != sizeof(MPI_Aint)) */
     addrs = (MPI_Aint *) NCI_Malloc((size_t)num * SIZEOF_MPI_AINT);
     for (i=0; i<num; i++) {
         addrs[i] = displacements[i];
