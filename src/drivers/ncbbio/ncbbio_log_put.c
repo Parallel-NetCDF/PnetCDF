@@ -381,14 +381,17 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
 
     /* Fill up start, count, and stride */
     for(i = 0; i < num; i++) {
-        memcpy(Start + i * ndims, starts[i], ndims * sizeof(MPI_Offset));
+        memcpy(Start + i * ndims, starts[i], ndims * SIZEOF_MPI_OFFSET);
     }
     if (counts != NULL) {
         for (i=0; i<num; i++) {
             if (counts[i] != NULL){
-                memcpy(Count + i * ndims, counts[i], ndims * sizeof(MPI_Offset));
-            else {
-                for (j=0; j<ndims; j++) Count[i*ndims + j] = 1;
+                memcpy(Count + i * ndims, counts[i], ndims * SIZEOF_MPI_OFFSET);
+            }
+            else{
+                for(j = 0; j < ndims; j++){
+                    Count[i * ndims + j] = 1;
+                }
             }
         }
     }
