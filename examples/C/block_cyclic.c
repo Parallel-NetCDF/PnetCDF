@@ -249,8 +249,7 @@ int main(int argc, char** argv) {
     free(buf);
 
     /* open an existing file created earlier for read -----------------------*/
-    cmode = NC_NOWRITE;
-    err = ncmpi_open(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     ERR
 
     /* the global array is NY * (NX * nprocs) */

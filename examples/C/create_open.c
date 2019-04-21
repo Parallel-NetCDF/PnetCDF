@@ -83,8 +83,7 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char filename[256];
-    int i, rank, err, nerrs=0;
-    int ncid, cmode, omode;
+    int i, rank, err, nerrs=0, ncid;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -107,8 +106,7 @@ int main(int argc, char** argv)
     if (verbose && rank == 0) printf("%s: example of file create and open\n",__FILE__);
 
     /* create a new file using clobber mode ----------------------------------*/
-    cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     ERR
 
     /* close file */
@@ -116,8 +114,7 @@ int main(int argc, char** argv)
     ERR
 
     /* open the newly created file for read only -----------------------------*/
-    omode = NC_NOWRITE;
-    err = ncmpi_open(MPI_COMM_WORLD, filename, omode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     ERR
 
     /* close file */

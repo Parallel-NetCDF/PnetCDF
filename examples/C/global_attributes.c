@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     extern int optind;
     char filename[256];
     char str_att[128], att_name[NC_MAX_NAME];
-    int i, rank, err, nerrs=0, ncid, cmode, omode, ngatts;
+    int i, rank, err, nerrs=0, ncid, ngatts;
     short short_att[10], digit[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     time_t ltime;
 
@@ -114,8 +114,7 @@ int main(int argc, char** argv)
     else                      snprintf(filename, 256, "%s", argv[optind]);
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     ERR
 
     /* add a global attribute named "history": a time stamp at rank 0 */
@@ -141,8 +140,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); ERR
 
     /* open the newly created file for read only -----------------------------*/
-    omode = NC_NOWRITE;
-    err = ncmpi_open(MPI_COMM_WORLD, filename, omode, MPI_INFO_NULL, &ncid); ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 
     /* find the number of global attributes */
     err = ncmpi_inq_natts(ncid, &ngatts); ERR

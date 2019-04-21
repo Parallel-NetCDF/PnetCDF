@@ -98,7 +98,7 @@ define(`TEST_DEFAULT_FILL',dnl
 `dnl
 static
 int test_default_fill_$1(char* filename) {
-    int i, err, nerrs=0, ncid, dimid, omode, varid;
+    int i, err, nerrs=0, ncid, dimid, varid;
     $1 buf[LEN];
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -111,8 +111,7 @@ int test_default_fill_$1(char* filename) {
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* reopen the file and check the contents of variable */
-    omode = NC_NOWRITE;
-    err = ncmpi_open(comm, filename, omode, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
     err = GET_VAR($1)(ncid, varid, buf); CHECK_ERR
     for (i=0; i<LEN; i++) {
@@ -133,7 +132,7 @@ define(`TEST_USER_FILL',dnl
 `dnl
 static
 int test_user_fill_$1(char* filename, $1 fillv) {
-    int i, err, nerrs=0, ncid, dimid, omode, varid;
+    int i, err, nerrs=0, ncid, dimid, varid;
     $1 buf[LEN];
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -153,8 +152,7 @@ int test_user_fill_$1(char* filename, $1 fillv) {
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* reopen the file and check the contents of variable */
-    omode = NC_NOWRITE;
-    err = ncmpi_open(comm, filename, omode, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
     err = GET_VAR($1)(ncid, varid, buf); CHECK_ERR
     for (i=0; i<LEN; i++) {
@@ -175,7 +173,7 @@ define(`TEST_ERANGE_PUT',dnl
 `dnl
 static
 int test_erange_put_$1_$2(char* filename) {
-    int i, err, nerrs=0, ncid, dimid, omode, varid1, varid2, cdf;
+    int i, err, nerrs=0, ncid, dimid, varid1, varid2, cdf;
     $1 buf[LEN], fillv=99;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -226,8 +224,7 @@ int test_erange_put_$1_$2(char* filename) {
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* reopen the file and check the contents of variable */
-    omode = NC_NOWRITE;
-    err = ncmpi_open(comm, filename, omode, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "var1", &varid1); CHECK_ERR
     err = GET_VAR($1)(ncid, varid1, buf); CHECK_ERR
     for (i=0; i<LEN; i++) {
@@ -268,7 +265,7 @@ define(`TEST_ERANGE_GET',dnl
 `dnl
 static
 int test_erange_get_$1_$2(char* filename) {
-    int i, err, nerrs=0, ncid, dimid, omode, varid, cdf;
+    int i, err, nerrs=0, ncid, dimid, varid, cdf;
     $1 wbuf[LEN];
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -288,8 +285,7 @@ int test_erange_get_$1_$2(char* filename) {
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* reopen the file and check the contents of variable */
-    omode = NC_NOWRITE;
-    err = ncmpi_open(comm, filename, omode, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* get data with ERANGE values */

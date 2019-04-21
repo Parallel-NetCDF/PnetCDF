@@ -64,8 +64,7 @@ int main(int argc, char** argv)
     extern int optind;
     extern char *optarg;
     char filename[256], bb_dir[256];
-    int i, rank, verbose=1, err, nerrs=0;
-    int ncid, cmode, omode;
+    int i, rank, verbose=1, err, nerrs=0, ncid;
     MPI_Info info;
 
     MPI_Init(&argc, &argv);
@@ -104,8 +103,7 @@ int main(int argc, char** argv)
     MPI_Info_set(info, "nc_burst_buf_dirname", bb_dir);
 
     /* create a new file using clobber mode ----------------------------------*/
-    cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); ERR
 
     /* Info can be freed after file creation */
     MPI_Info_free(&info);
@@ -129,8 +127,7 @@ int main(int argc, char** argv)
     MPI_Info_set(info, "nc_burst_buf_dirname", bb_dir);
 
     /* open the newly created file for read only -----------------------------*/
-    omode = NC_WRITE;
-    err = ncmpi_open(MPI_COMM_WORLD, filename, omode, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid);
     ERR
 
     /* Info can be freed after file opening */
