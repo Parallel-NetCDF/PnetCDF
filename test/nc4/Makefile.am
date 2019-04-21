@@ -34,7 +34,8 @@ TESTPROGRAMS = simple_xy \
                noclobber \
                tst_zero_req \
                notsupport \
-               rec
+               tst_rec_vars \
+               tst_2_rec_dims
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4
 
@@ -50,8 +51,7 @@ $(M4_SRCS:.m4=.c): Makefile
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
 check_PROGRAMS = $(TESTPROGRAMS) \
-                 compressed \
-                 rec2
+                 compressed
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -79,7 +79,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(NC_FILES) testfile.nc
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh gzip_example.nc \
-             parallel_run.sh two_rec_dims.nc
+             parallel_run.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
