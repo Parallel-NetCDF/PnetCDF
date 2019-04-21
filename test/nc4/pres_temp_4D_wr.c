@@ -16,8 +16,6 @@
 
    Full documentation of the netCDF C API can be found at:
    http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-c
-
-   $Id$
 */
 
 #include <stdio.h>

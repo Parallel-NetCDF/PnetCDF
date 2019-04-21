@@ -1,9 +1,9 @@
 /*
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
- *
+ */
+
+/*
  *  Check if arguments start, count, stride, and imap are properly ignored
  *  when get/put a scalar variable.
  *

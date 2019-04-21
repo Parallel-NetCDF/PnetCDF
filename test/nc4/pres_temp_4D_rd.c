@@ -2,7 +2,6 @@
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 /*
    This is an example which reads some 4D pressure and
