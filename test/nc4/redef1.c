@@ -137,7 +137,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     CHECK_ERR
 
-    err = ncmpi_open(comm, filename, NC_WRITE | NC_NETCDF4, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
     err = ncmpi_redef(ncid);

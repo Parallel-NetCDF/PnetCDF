@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
         err = ncmpi_close(ncid); CHECK_ERR
 
         /* reopen the file and read data back */
-        err = ncmpi_open(comm, filename, NC_WRITE | NC_NETCDF4, info, &ncid); CHECK_ERR
+        err = ncmpi_open(comm, filename, NC_WRITE, info, &ncid); CHECK_ERR
 
         err = ncmpi_inq_format(ncid, &format); CHECK_ERR
         if (format != formats[k]) {
