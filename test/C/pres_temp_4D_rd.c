@@ -40,7 +40,7 @@
 #define NREC 2
 #define REC_NAME "time"
 #define LVL_NAME "level"
-#define NLVL 4
+#define NLVL 10
 
 /* Names of things. */
 #define PRES_NAME "pressure"
