@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for record variables to NetCDF-4 file ", basename(argv[0]));
+        sprintf(cmd_str, "*** TESTING C   %s for record variables to NetCDF4 file ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* reopen the file and read data back */
-    err = ncmpi_open(comm, filename, NC_WRITE | NC_NETCDF4, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, filename, NC_WRITE, info, &ncid); CHECK_ERR
 
     /* Read a subarray from each variable */
     start[0] = rank;

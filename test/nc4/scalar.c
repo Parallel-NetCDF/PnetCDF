@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE | NC_NETCDF4, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     err = ncmpi_inq_varid(ncid, "scalar_var", &varid); CHECK_ERR
 
