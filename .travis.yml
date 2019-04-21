@@ -13,8 +13,20 @@ os:
 env:
   global:
    - MAKEFLAGS="-j8"
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   # via the "travis encrypt" command using the project repo's public key
+   # - secure: "JLc2CesDa4NcxX6lg7w0hQFZkTWPhqiRYRgKFLRer+usrhQKyMTJDTgq8E5Pd8h2PZJrRmecF0XOGl0kL2pj8nu6HAW8Ht7A16rUC6sHcu0uG4e5D63dxxyXHP9OyhCKXR/5AwXhM/dAAU5Dp/I70i6POniYCDboq4JK6o4zw87aN9yRJ+OYHC86lCsovZcYuogDVAjwWBxgeQIWxQD35cA+SM5P0zstUnBrXwjY5lWCj62t+avIKp7eTIh0FwYcj/5JR0q+GoGwN9/YFpdINirAgOiCQDI08ngXCRCrD1gCQq80vxLVvjDhlFoAHI/063QlxOwsIhxcWhyAxrf+xk5iNTiI/89seBDZR/34aAigAJpZ6HkMPWOm4NSBxnIrAvfg6LqFljRzzhSkRhp2an3YvDTmLXE5iWWMCK0+DCfmeBLqCviq5bD8vmMcPqKKUR14f98oxl9kzC0cp6iGwPbdK1RlaomZY5X4Ya93lKDeQbcW/jWu/5Qnjhn8fezqIbe5CIuG4id77URLn5tt62wInCD9wlNvZ0hc7znd3mFWMpDXfvQXrhnDdG2QRYwc3J7lhWY8aJZuooh2HxIM1OsxCGWURcQBEWYFpkXHNWCWPKl3Gy0Xva1BrlPDIXDJoDjaqSBNV6dqHR65Pcl4UkOK1/d/kuM7U2V8q/Rox9I="
+     if: os = linux
 
 addons:
+  # coverity_scan:
+  #   project:
+  #     name: "Parallel-NetCDF/PnetCDF"
+  #     description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
+  #   notification_email: wkliao@eecs.northwestern.edu
+  #   build_command_prepend: ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes
+  #   build_command: make tests
+  #   branch_pattern: test_travis_ci
   apt:
     packages:
       - gfortran
@@ -27,7 +39,6 @@ addons:
     update: true
     # apt-package-whitelist can be found in
     # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
-
 
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
@@ -63,5 +74,5 @@ notifications:
 # to build all branches
 branches:
   only:
-  - master
-  - /.*/
+        - test_travis_ci
+
