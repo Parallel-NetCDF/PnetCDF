@@ -212,7 +212,7 @@ int benchmark_read(char       *filename,
                    double     *timing)  /* [5] */
 {
     int i, rank, nprocs, nerrs=0, err;
-    int ncid, omode, nvars, dimid[2], *varid;
+    int ncid, nvars, dimid[2], *varid;
     void **buf;
     double start_t, end_t;
     MPI_Offset gsizes[2], start[2], count[2];
@@ -230,8 +230,7 @@ int benchmark_read(char       *filename,
     timing[0] = MPI_Wtime();
 
     /* open file for reading -----------------------------------------*/
-    omode = NC_NOWRITE;
-    err = ncmpi_open(comm, filename, omode, info, &ncid); ERR(err)
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); ERR(err)
     start_t = MPI_Wtime();
     timing[1] = start_t - timing[0];
     MPI_Info_free(&info);

@@ -356,7 +356,7 @@ int benchmark_read(char       *filename,
                    double     *timing)  /* [5] */
 {
     int i, j, k, rank, nprocs, s_rank, nerrs=0, err, num_reqs;
-    int ncid, omode, varid[NVARS], *reqs, *sts, psizes[2];
+    int ncid, varid[NVARS], *reqs, *sts, psizes[2];
     void *buf[NVARS];
     double start_t, end_t;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -385,8 +385,7 @@ int benchmark_read(char       *filename,
     timing[0] = MPI_Wtime();
 
     /* open file for reading -----------------------------------------*/
-    omode = NC_NOWRITE;
-    err = ncmpi_open(comm, filename, omode, info, &ncid); ERR(err)
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); ERR(err)
     start_t = MPI_Wtime();
     timing[1] = start_t - timing[0];
 
