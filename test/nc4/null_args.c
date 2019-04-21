@@ -1,8 +1,6 @@
 /*
  *  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
  */
 
 /* This program tests whether the correct error codes can be returned when
