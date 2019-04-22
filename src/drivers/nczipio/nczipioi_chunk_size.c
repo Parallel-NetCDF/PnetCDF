@@ -1,0 +1,140 @@
+/*
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include <limits.h>
+
+#include <mpi.h>
+
+#include <pnc_debug.h>
+#include <common.h>
+#include <nczipio_driver.h>
+#include "nczipio_internal.h"
+
+MPI_Offset gcd(MPI_Offset a, MPI_Offset b){
+    if (b) {
+        while((a %= b) && (b %= a));
+    }
+    return a + b;
+}
+
+void gcd_reduce(long long *in, long long *inout, int *len, MPI_Datatype *dptr ) { 
+    int i; 
+
+    for (i = 0; i < *len; i++) { 
+        if (*inout) while(((*in) %= (*inout)) && ((*inout) %= (*in)));
+        in++; inout++; 
+    } 
+} 
+
+int smaller (const void * a, const void * b) {
+   return ( *(MPI_Offset*)b - *(MPI_Offset*)a );
+}
+
+int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts){
+    int r, i, j;
+    int primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97};
+    MPI_Offset *chunkdim;
+    MPI_Offset **candidates;
+    MPI_Offset chunksize;
+    MPI_Offset ub, lb;
+    MPI_Op gcd_op; 
+
+    // Upper and lower bound of reasonable chunk size
+    ub = (MPI_Offset)INT_MAX;  // Max chunk size supported
+    lb = 1;
+    for(i = 0; i < varp->ndim; i++){
+        lb *= varp->dimsize[i];
+    }
+    lb /= (MPI_Offset)INT_MAX; // Max # chunks supported
+    if (lb < varp->ndim * 3){   // Metadata should not exceed data
+        lb = varp->ndim * 3;
+    }
+
+    /* Infer chunk size by reqs
+     * Assume the application is doing blocked division
+     * If we set chunk dim to gcd of all access boundary, no communication required
+     * If the pattern is completely randomized, the result will likely be 1
+     */
+    chunkdim = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
+    candidates = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * varp->ndim);
+    if (nreq > 0){
+        candidates[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * nreq);
+        for(i = 1; i < varp->ndim; i++){
+            candidates[i] = candidates[i - 1] + nreq;
+        }
+    }
+    for(r = 0; r < nreq; r++){
+        for(i = 0; i < varp->ndim; i++){
+            candidates[i][r] = gcd(starts[r][i], counts[r][i]);
+        }
+    }
+    for(i = 0; i < varp->ndim; i++){
+        qsort(candidates[i], nreq, sizeof(MPI_Offset), smaller);
+        chunkdim[i] = candidates[i][0];
+        for(r = 1; r < nreq / 2; r++){  // Take the top 50% to drop out fragment writes
+            chunkdim[i] = gcd(chunkdim[i], candidates[i][r]);
+        }
+    }
+
+    // Global gcd
+    MPI_Op_create((MPI_User_function *)gcd_reduce, 1, &gcd_op); 
+    MPI_Allreduce(MPI_IN_PLACE, chunkdim, varp->ndim, MPI_LONG_LONG, gcd_op, nczipp->comm);
+    MPI_Op_free(&gcd_op);
+
+    // Check if chunk size is resonable (not too large or too small)
+    chunksize = 1;
+    for(i = 0; i < varp->ndim; i++){
+        chunksize *= chunkdim[i];
+    }
+
+    // we only support chunk size up to INT_MAX
+    if (chunksize > ub){
+        // Can we find perffect split using small prime numbers?
+        j = 0;
+        while((j < 25) && (chunksize > ub)){
+            for(i = 0; i < varp->ndim; i++){    // Spliting chunks
+                if (chunkdim[i] % primes[j] == 0){
+                    chunkdim[i] /= primes[j];
+                    chunksize /= primes[j];
+                }
+            }
+            j++;
+        }
+        if (j >= 25){   // If not, we need to introduce communication overhead
+            for(i = 0; chunksize > ub; i++){    // Merging chunks
+                chunkdim[i % varp->ndim] /= 2;
+                chunksize /= 2;
+            }
+        }
+    }
+    else if (chunksize < lb){   // Data smaller than metadata
+        for(i = 0; chunksize < lb; i++){    // Merging chunks
+            chunkdim[i % varp->ndim] *= 2;
+            chunksize *= 2;
+        }
+    }
+
+    for(i = 0; i < varp->ndim; i++){
+        varp->chunkdim[i] = chunkdim[i];
+    }
+
+    NCI_Free(chunkdim);
+    if(nreq > 0){
+        NCI_Free(candidates[0]);
+        NCI_Free(candidates);
+    }
+
+    return NC_NOERR;
+}
+

@@ -24,8 +24,7 @@ extern MPI_Offset NC_Type_size(nc_type);
 extern void nczipioi_print_profile(NC_zip*);
 
 // Var
-extern int nczipioi_var_init(NC_zip*, NC_zip_var*, int);
-extern int nczipioi_var_init(NC_zip*, NC_zip_var*, int);
+extern int nczipioi_var_init(NC_zip*, NC_zip_var*, int, int, MPI_Offset**, MPI_Offset**);
 extern int nczipioi_load_var(NC_zip*, NC_zip_var*, int, int*);
 extern int nczipioi_load_nvar(NC_zip*, int, int*);
 extern int nczipioi_save_var(NC_zip*, NC_zip_var*);

@@ -88,6 +88,15 @@ int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
         nczipp->comm_unit = NC_ZIP_COMM_PROC;   
     }
 
+    // Messaging unit
+    nczipp->delay_init = 0;  
+    MPI_Info_get(info, "nc_zip_delay_init", MPI_MAX_INFO_VAL - 1, value, &flag);
+    if (flag) {
+        if (strcmp(value, "1") == 0){
+            nczipp->delay_init = 1;  
+        }
+    }
+
     return NC_NOERR;
 }
 
@@ -114,6 +123,13 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
         case NC_ZIP_COMM_PROC:
             MPI_Info_set(info, "nc_zip_comm_unit", "proc");
             break;
+    }
+
+    if (nczipp->delay_init){
+        MPI_Info_set(info, "nc_zip_delay_init", "1");
+    }
+    else{
+        MPI_Info_set(info, "nc_zip_delay_init", "0");
     }
 
     return NC_NOERR;

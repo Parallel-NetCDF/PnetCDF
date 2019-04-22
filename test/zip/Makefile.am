@@ -27,6 +27,7 @@ endif
 check_PROGRAMS = varn_2d \
 				 vara_2d \
 				 ivara_2d \
+                 ivara_auto \
 				 ivarn_2d \
 				 vara \
                  rec \

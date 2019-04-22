@@ -35,30 +35,86 @@
  */
 int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int err;
-    int i;
-    int nvar;
+    int i, j, k, l;
+    int nvar, needinit;
+    int maxnreq = 0;
     int *varids;
-    int *dirty;  // Number of reqids in each variable
+    int *nreqs, *offs;  // Number of reqids in each variable
+    int *smap;
+    int *init;
+    MPI_Offset **starts, **counts;
     NC_zip_req *req;
+    NC_zip_var *varp;
 
     // Build a skip list of touched vars
-    dirty = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
-    memset(dirty, 0, sizeof(int) * nczipp->vars.cnt);
+    nreqs = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
+    smap = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
+    memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
     for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs + reqids[i];
-        dirty[req->varid] = 1;
+        nreqs[req->varid] += req->nreq;
     }
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (dirty[i]){
+        if (nreqs[i]){
             nvar++;
         }
     }
     varids = (int*)NCI_Malloc(sizeof(int) * nvar);
     nvar = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (dirty[i]){
-            varids[nvar++] = i;
+        if (nreqs[i]){
+            varids[nvar] = i;
+            smap[i] = nvar++;
         }
+    }
+
+    if (nczipp->delay_init){
+        init = (int*)NCI_Malloc(sizeof(int) * nvar * 2);
+        offs = init + nvar;
+        
+        offs[0] = 0;
+        for(i = 0; i < nvar; i++){
+            varp = nczipp->vars.data + varids[i];
+            if (varp->chunkdim == NULL){
+                offs[i + 1] = offs[i] + nreqs[varids[i]];
+                init[i] = 1;
+            }
+            else{
+                offs[i + 1] = offs[i];
+            }
+        }
+
+        memset(nreqs, 0, sizeof(int) * nvar); //reuse it for counter
+
+        starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * offs[nvar] * 2);
+        counts = starts + offs[nvar];
+
+        for(i = 0; i < nreq; i++){
+            req = nczipp->putlist.reqs + reqids[i];
+            k = smap[req->varid];
+            if (init[k]){
+                if (req->nreq > 1){
+                    for(j = 0; j < req->nreq; j++){
+                        starts[offs[k] + nreqs[k]] = req->starts[j];
+                        counts[offs[k] + (nreqs[k]++)] = req->counts[j];
+                    }
+                }
+                else{
+                    starts[offs[k] + nreqs[k]] = req->start;
+                    counts[offs[k] + (nreqs[k]++)] = req->count;     
+                }
+            }
+        }
+
+        for(i = 0; i < nvar; i++){
+            if (init[i]){
+                varp = nczipp->vars.data + varids[i];
+                nczipioi_var_init(nczipp, varp, 1, nreqs[i], starts + offs[i], counts + offs[i]);
+            }
+        }
+
+        NCI_Free(init);
+        NCI_Free(starts);
     }
 
     // Perform collective buffer
@@ -74,7 +130,8 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Free buffers
     NCI_Free(varids);
-    NCI_Free(dirty);
+    NCI_Free(nreqs);
+    NCI_Free(smap);
 
     return NC_NOERR;
 }
@@ -84,30 +141,83 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
  */
 int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int err;
-    int i;
+    int i, j, k;
     int nvar;
+    int *nreqs, *offs;  // Number of reqids in each variable
+    int *smap;
+    int *init;
     int *varids;
-    int *dirty;  // Number of reqids in each variable
+    MPI_Offset **starts, **counts;
     NC_zip_req *req;
+    NC_zip_var *varp;
 
     // Build a skip list of touched vars
-    dirty = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
-    memset(dirty, 0, sizeof(int) * nczipp->vars.cnt);
+    nreqs = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
+    memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
     for(i = 0; i < nreq; i++){
         req = nczipp->getlist.reqs + reqids[i];
-        dirty[req->varid] = 1;
+        nreqs[req->varid] = 1;
     }
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (dirty[i]){
+        if (nreqs[i]){
             nvar++;
         }
     }
     varids = (int*)NCI_Malloc(sizeof(int) * nvar);
     nvar = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (dirty[i]){
+        if (nreqs[i]){
             varids[nvar++] = i;
         }
+    }
+
+    if (nczipp->delay_init){
+        init = (int*)NCI_Malloc(sizeof(int) * nvar * 2);
+        offs = init + nvar;
+        
+        offs[0] = 0;
+        for(i = 0; i < nvar; i++){
+            varp = nczipp->vars.data + varids[i];
+            if (varp->chunkdim == NULL){
+                offs[i + 1] = offs[i] + nreqs[varids[i]];
+                init[i] = 1;
+            }
+            else{
+                offs[i + 1] = offs[i];
+            }
+        }
+
+        memset(nreqs, 0, sizeof(int) * nvar); //reuse it for counter
+
+        starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * offs[nvar] * 2);
+        counts = starts + offs[nvar];
+
+        for(i = 0; i < nreq; i++){
+            req = nczipp->putlist.reqs + reqids[i];
+            k = smap[req->varid];
+            if (init[k]){
+                if (req->nreq > 1){
+                    for(j = 0; j < req->nreq; j++){
+                        starts[offs[k] + nreqs[k]] = req->starts[j];
+                        counts[offs[k] + (nreqs[k]++)] = req->counts[j];
+                    }
+                }
+                else{
+                    starts[offs[k] + nreqs[k]] = req->start;
+                    counts[offs[k] + (nreqs[k]++)] = req->count;     
+                }
+            }
+        }
+
+        for(i = 0; i < nvar; i++){
+            if (init[i]){
+                varp = nczipp->vars.data + varids[i];
+                nczipioi_var_init(nczipp, varp, 0, nreqs[i], starts + offs[i], counts + offs[i]);
+            }
+        }
+
+        NCI_Free(starts);
+        NCI_Free(init);
     }
 
     // Perform I/O for comrpessed variables
@@ -124,7 +234,7 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Free buffers
     NCI_Free(varids);
-    NCI_Free(dirty);
+    NCI_Free(nreqs);
 }
 
 int

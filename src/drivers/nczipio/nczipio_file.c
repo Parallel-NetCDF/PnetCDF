@@ -174,6 +174,21 @@ nczipio_close(void *ncdp)
 
     if (nczipp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
 
+    if (nczipp->delay_init && (!(nczipp->flag & NC_MODE_RDONLY))){
+        int i;
+
+        err = nczipp->driver->redef(nczipp->ncp);
+        if (err != NC_NOERR){
+            return err;
+        }
+        for(i = 0; i < nczipp->vars.cnt; i++){
+            err = nczipp->driver->put_att(nczipp->ncp, nczipp->vars.data[i].varid, "_chunkdim", NC_INT, nczipp->vars.data[i].ndim, nczipp->vars.data[i].chunkdim, MPI_INT);
+            if (err != NC_NOERR){
+                return err;
+            }
+        }
+    }
+
     if (!(nczipp->flag & NC_MODE_RDONLY)){
         err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_recsize", NC_INT64, 1, &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
         if (err != NC_NOERR) return err;
@@ -204,8 +219,10 @@ nczipio_enddef(void *ncdp)
     int i, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
     
-    for(i = 0; i < nczipp->vars.cnt; i++){
-        nczipioi_var_init(nczipp, nczipp->vars.data, 1);
+    if (!(nczipp->delay_init)){
+        for(i = 0; i < nczipp->vars.cnt; i++){
+            nczipioi_var_init(nczipp, nczipp->vars.data + i, 1, 0, NULL, NULL);
+        }
     }
 
     err = nczipp->driver->enddef(nczipp->ncp);
@@ -224,8 +241,10 @@ nczipio__enddef(void       *ncdp,
     int i, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    for(i = 0; i < nczipp->vars.cnt; i++){
-        nczipioi_var_init(nczipp, nczipp->vars.data + i, 1);
+    if (!(nczipp->delay_init)){
+        for(i = 0; i < nczipp->vars.cnt; i++){
+            nczipioi_var_init(nczipp, nczipp->vars.data + i, 1, 0, NULL, NULL);
+        }
     }
 
     err = nczipp->driver->_enddef(nczipp->ncp, h_minfree, v_align, v_minfree,

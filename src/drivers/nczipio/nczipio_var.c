@@ -273,9 +273,13 @@ nczipio_put_var(void             *ncdp,
         DEBUG_RETURN_ERROR(NC_EINVAL);
     }
     varp = nczipp->vars.data + varid;
-    
+
     if (varp->varkind == NC_ZIP_VAR_RAW){
         return nczipp->driver->put_var(nczipp->ncp, varp->varid, start, count, stride, imap, buf, bufcount, buftype, reqMode);
+    }
+
+    if (nczipp->delay_init && (varp->chunkdim == NULL)){
+        nczipioi_var_init(nczipp, varp, 1, 1, &start, &count);
     }
 
     if (imap != NULL || bufcount != -1) {
@@ -577,6 +581,10 @@ nczipio_put_varn(void              *ncdp,
         return nczipp->driver->put_varn(nczipp->ncp, varp->varid, num, starts, counts, buf, bufcount, buftype, reqMode);
     }
 
+    if (nczipp->delay_init && (varp->chunkdim == NULL)){
+        nczipioi_var_init(nczipp, varp, 1, num, starts, counts);
+    }
+    
     err = nczipioi_put_varn(nczipp, varp, num, starts, counts, buf);
     if (err != NC_NOERR) return err;
 

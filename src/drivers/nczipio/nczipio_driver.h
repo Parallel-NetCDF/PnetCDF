@@ -112,7 +112,8 @@ struct NC_zip {
     int                recdim;      /* record dim id */
     NC_zip_var_list    vars;
     NC_zip_req_list    putlist, getlist;
-    int comm_unit;
+    int                comm_unit;
+    int                delay_init;
 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 
