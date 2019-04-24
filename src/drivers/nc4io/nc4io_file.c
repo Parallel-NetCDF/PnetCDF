@@ -96,6 +96,8 @@ nc4io_create(MPI_Comm     comm,
     nc4p->ncid = ncid;
     nc4p->comm = comm;
     nc4p->ncid = ncidtmp;
+    nc4p->putsize = 0;
+    nc4p->getsize = 0;
     if (info == MPI_INFO_NULL)
         nc4p->mpiinfo = MPI_INFO_NULL;
     else
@@ -148,6 +150,8 @@ nc4io_open(MPI_Comm     comm,
     nc4p->ncid = ncid;
     nc4p->comm = comm;
     nc4p->ncid = ncidtmp;
+    nc4p->putsize = 0;
+    nc4p->getsize = 0;
     if (info == MPI_INFO_NULL)
         nc4p->mpiinfo = MPI_INFO_NULL;
     else
@@ -492,11 +496,15 @@ nc4io_inq_misc(void       *ncdp,
     if (striping_size  != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
     if (striping_count != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
-    /* TODO: Calculate put size */
-    if (put_size != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    /* Put size counted by the driver */
+    if (put_size != NULL){
+        *put_size = nc4p->putsize;
+    }
 
-    /* TODO: Calculate get size */
-    if (get_size != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    /* Get size counted by the driver */
+    if (get_size != NULL){
+        *get_size = nc4p->getsize;
+    }
 
     /* NetCDF does not expose such info */
     if (header_size   != NULL) DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
