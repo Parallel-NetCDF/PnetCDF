@@ -111,6 +111,55 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 #include <common.h>
 #include <nc4io_driver.h>
 
+inline MPI_Offset getelementsize(NC_nc4 *nc4p, int varid){
+    int err;
+    nc_type xtype;
+    size_t xsize;
+
+    err = nc_inq_vartype(nc4p->ncid, varid, &xtype);
+    if (err != NC_NOERR){
+        return 0;
+    }
+
+    err = nc_inq_type(nc4p->ncid, xtype, NULL, &xsize);
+    if (err != NC_NOERR){
+        return 0;
+    }
+
+    return (MPI_Offset)xsize;
+}
+
+inline MPI_Offset getvarsize(NC_nc4 *nc4p, int varid, int ndim){
+    int i, err;
+    int *dimids;
+    size_t ret, dsize;
+
+    dimids = (int*)NCI_Malloc(sizeof(int) * ndim);
+
+    err = nc_inq_vartype(nc4p->ncid, varid, &xtype);
+    if (err != NC_NOERR){
+        ret = 0;
+        goto fn_out;
+    }
+
+    ret = 1;
+    for(i = 0; i < ndim; i++){
+        err = nc_inq_dimlen(nc4p->ncid, dimids[i], &dsize);
+        if (err != NC_NOERR){
+            ret = 0;
+            goto fn_out;
+        }
+        ret *= dsize;
+    }
+      
+fn_out:;
+
+    NCI_Free(dimids);
+
+    return (MPI_Offset)ret;
+}
+
+
 int
 nc4io_get_att(void         *ncdp,
               int           varid,
@@ -119,7 +168,7 @@ nc4io_get_att(void         *ncdp,
               MPI_Datatype  itype)
 {
     int err;
-    size_t len;
+    size_t xsize, len;
     nc_type xtype;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
@@ -139,6 +188,14 @@ nc4io_get_att(void         *ncdp,
     /* when len > 0, buf cannot be NULL */
     if (len && buf == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
+    /* Count get size */
+    err = nc_inq_type(nc4p->ncid, xtype, NULL, &xsize);
+    if (err != NC_NOERR){
+        return 0;
+    }
+    nc4p->getsize += (MPI_Offset)(xsize * len);
+
+
     /* Call nc_get_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
@@ -153,6 +210,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `GETATTTYPE(translit(dt, `()'))')dnl
+
+    nc4p->getsize -= (MPI_Offset)(xsize * len); /* Deduct the size we counted for failed operation */
     DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
 }
 
@@ -166,7 +225,7 @@ nc4io_put_att(void         *ncdp,
               MPI_Datatype  itype)
 {
     int err;
-    size_t len;
+    size_t xsize, len;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* zero-length attribute is allowed, but
@@ -188,6 +247,13 @@ nc4io_put_att(void         *ncdp,
     /* Convert from MPI_Offset to size_t */
     len = (size_t)nelems;
 
+    /* Count put size */
+    err = nc_inq_type(nc4p->ncid, xtype, NULL, &xsize);
+    if (err != NC_NOERR){
+        return 0;
+    }
+    nc4p->putsize += (MPI_Offset)(xsize * len);
+
     /* Call nc_put_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
@@ -202,6 +268,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `PUTATTTYPE(translit(dt, `()'))')dnl
+        
+    nc4p->putsize -= (MPI_Offset)(xsize * len); /* Deduct the size we counted for failed operation */
     DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
 }
 
@@ -220,6 +288,7 @@ nc4io_get_var(void             *ncdp,
     int i, err, status, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
+    MPI_Offset getsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
@@ -276,6 +345,21 @@ nc4io_get_var(void             *ncdp,
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
 
+    /* Count get size */
+    if (!(reqMode & NC_REQ_ZERO)){
+        getsize = getelementsize(nc4p, varid);
+        if (scount != NULL){
+            for(i = 0; i < ndim; i++){
+                getsize *= scount[i];
+            }
+        }
+        else{
+            if (apikind == NC4_API_KIND_VAR)
+                getsize * = getvarsize(nc4p, varid, ndim);
+        }
+        nczipp->getsize += getsize;
+    }
+
     /* Free buffers if needed */
     if (ndims > 0) {
         if (sstart  != NULL) NCI_Free(sstart);
@@ -302,6 +386,7 @@ nc4io_put_var(void             *ncdp,
     int i, err, status, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
+    MPI_Offset putsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
@@ -357,6 +442,21 @@ nc4io_put_var(void             *ncdp,
     }
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
+
+    /* Count put size */
+    if (!(reqMode & NC_REQ_ZERO)){
+        putsize = getelementsize(nc4p, varid);
+        if (scount != NULL){
+            for(i = 0; i < ndim; i++){
+                putsize *= scount[i];
+            }
+        }
+        else{
+            if (apikind == NC4_API_KIND_VAR)
+                putsize * = getvarsize(nc4p, varid, ndim);
+        }
+        nczipp->putsize += putsize;
+    }
 
     /* Free buffers if needed */
     if (ndims > 0) {
