@@ -1468,7 +1468,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
       Cannot find nc_config, a utility command to show the
       configuration of the NetCDF-4 library. It is required to
       build PnetCDF with NetCDF-4 support. Use option
-          --with-netcdf=/path/to/implementation
+          --with-netcdf4=/path/to/implementation
       to specify the location of NetCDF-4 build. In addition,
       please make sure the MPI C compiler is compatible with the
       one used to build NetCDF-4. The NetCDF-4 library used must
@@ -1499,7 +1499,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
       ------------------------------------------------------------
       Missing NetCDF-4 header files (netcdf.h or netcdf_meta.h)
       required to build PnetCDF with NetCDF-4 support. Use option
-          --with-netcdf=/path/to/implementation
+          --with-netcdf4=/path/to/implementation
       to specify the location of NetCDF-4 installation. In addition,
       please make sure the MPI C compiler is compatible with the one
       used to build NetCDF-4. Check 'config.log' for more information.
