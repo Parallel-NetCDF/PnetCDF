@@ -136,7 +136,7 @@ inline MPI_Offset getvarsize(NC_nc4 *nc4p, int varid, int ndim){
 
     dimids = (int*)NCI_Malloc(sizeof(int) * ndim);
 
-    err = nc_inq_vartype(nc4p->ncid, varid, &xtype);
+    err = nc_inq_vardimid(nc4p->ncid, varid, dimids);
     if (err != NC_NOERR){
         ret = 0;
         goto fn_out;
@@ -349,15 +349,15 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
     if (!(reqMode & NC_REQ_ZERO)){
         getsize = getelementsize(nc4p, varid);
         if (scount != NULL){
-            for(i = 0; i < ndim; i++){
+            for(i = 0; i < ndims; i++){
                 getsize *= scount[i];
             }
         }
         else{
             if (apikind == NC4_API_KIND_VAR)
-                getsize * = getvarsize(nc4p, varid, ndim);
+                getsize *= getvarsize(nc4p, varid, ndims);
         }
-        nczipp->getsize += getsize;
+        nc4p->getsize += getsize;
     }
 
     /* Free buffers if needed */
@@ -447,15 +447,15 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
     if (!(reqMode & NC_REQ_ZERO)){
         putsize = getelementsize(nc4p, varid);
         if (scount != NULL){
-            for(i = 0; i < ndim; i++){
+            for(i = 0; i < ndims; i++){
                 putsize *= scount[i];
             }
         }
         else{
             if (apikind == NC4_API_KIND_VAR)
-                putsize * = getvarsize(nc4p, varid, ndim);
+                putsize *= getvarsize(nc4p, varid, ndims);
         }
-        nczipp->putsize += putsize;
+        nc4p->putsize += putsize;
     }
 
     /* Free buffers if needed */
