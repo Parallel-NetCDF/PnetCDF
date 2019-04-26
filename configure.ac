@@ -1457,40 +1457,60 @@ if test "x$enable_netcdf4" = "xyes" ; then
    )
    UD_MSG_DEBUG([NETCDF4_INSTALL=$NETCDF4_INSTALL])
 
-   if test "x$NETCDF4_INSTALL" = x ; then
-      AC_PATH_PROG([nc_config],[nc-config],,[$PATH])
-   else
+   # check availability of nc-config only under $NETCDF4_INSTALL/bin
+   nc_config=
+   if test "x$NETCDF4_INSTALL" != x ; then
       AC_PATH_PROG([nc_config],[nc-config],,[$NETCDF4_INSTALL/bin])
    fi
+   netcdf_includedir=
    if test "x$nc_config" = x ; then
-      AC_MSG_ERROR([
-      ------------------------------------------------------------
-      Cannot find nc_config, a utility command to show the
-      configuration of the NetCDF-4 library. It is required to
-      build PnetCDF with NetCDF-4 support. Use option
-          --with-netcdf=/path/to/implementation
-      to specify the location of NetCDF-4 build. In addition,
-      please make sure the MPI C compiler is compatible with the
-      one used to build NetCDF-4. The NetCDF-4 library used must
-      be built with parallel I/O and NETCDF-4 support. Check
-      'config.log' for more information. Stopping ...
-      ------------------------------------------------------------])
+      # nc-config may not be installed, even if NetCDF4 is installed. For
+      # example, there are only include and lib installed under NETCDF4_INSTALL
+      # on Cori @NERSC. Missing bin folder under NETCDF4_INSTALL may be due to
+      # the cross compile environment to make all executables, such as ncdump
+      # and ncgen, supposed to be under bin only available for login nodes and
+      # thus those executables may be installed in a different location. In
+      # this case, we just use and check header and library files under
+      # $NETCDF4_INSTALL.
+      UD_MSG_DEBUG([nc-config is not available under $NETCDF4_INSTALL/bin])
+      dnl AC_MSG_WARN([
+      dnl ------------------------------------------------------------
+      dnl Cannot find nc_config, a utility command to show the
+      dnl configuration of the NetCDF-4 library. It is required to
+      dnl build PnetCDF with NetCDF-4 support. Use option
+      dnl     --with-netcdf4=/path/to/implementation
+      dnl to specify the location of NetCDF-4 build. In addition,
+      dnl please make sure the MPI C compiler is compatible with the
+      dnl one used to build NetCDF-4. The NetCDF-4 library used must
+      dnl be built with parallel I/O and NETCDF-4 support. Check
+      dnl 'config.log' for more information. Stopping ...
+      dnl ------------------------------------------------------------])
+      if test "x$NETCDF4_INSTALL" != x ; then
+         netcdf_includedir="$NETCDF4_INSTALL/include"
+         UD_MSG_DEBUG([netcdf_includedir=$netcdf_includedir])
+      fi
+   else
+      UD_MSG_DEBUG([nc_config=$nc_config])
+
+      dnl Check if NetCDF is built with HDF5 enabled
+      netcdf_has_hdf5=`$nc_config --has-hdf5`
+      if test "x$netcdf_has_hdf5" = xno ; then
+         AC_MSG_ERROR([NetCDF-4 library is not built with HDF5 enabled])
+      fi
+      unset netcdf_has_hdf5
+
+      dnl Get installation directory path of netcdf header files
+      dnl Add the path to CPPFLAGS, as it is needed to compile PnetCDF codes
+      netcdf_includedir=`$nc_config --includedir`
+      UD_MSG_DEBUG([netcdf_includedir=$netcdf_includedir])
    fi
-   UD_MSG_DEBUG([nc_config=$nc_config])
 
-   dnl Check if NetCDF is built with HDF5 enabled
-   netcdf_has_hdf5=`$nc_config --has-hdf5`
-   if test "x$netcdf_has_hdf5" = xno ; then
-      AC_MSG_ERROR([NetCDF-4 library is not built with HDF5 enabled])
-   fi
-
-   dnl Get installation directory path of netcdf header files
-   dnl Add the path to CPPFLAGS, as it is needed to compile PnetCDF codes
-   netcdf_includedir=`$nc_config --includedir`
-   UD_MSG_DEBUG([netcdf_includedir=$netcdf_includedir])
-
+   dnl No need to add the include paths used to build NetCDF to CPPFLAGS
+   dnl permanently, as it is not needed to compile PnetCDF codes
    saved_CPPFLAGS=$CPPFLAGS
-   CPPFLAGS="-I${netcdf_includedir} ${CPPFLAGS}"
+   if test "x$netcdf_includedir" != x ; then
+       CPPFLAGS="-I${netcdf_includedir} ${CPPFLAGS}"
+   fi
    have_netcdf4=yes
    AC_CHECK_HEADER([netcdf.h],      [], [have_netcdf4=no])
    AC_CHECK_HEADER([netcdf_meta.h], [], [have_netcdf4=no])
@@ -1499,7 +1519,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
       ------------------------------------------------------------
       Missing NetCDF-4 header files (netcdf.h or netcdf_meta.h)
       required to build PnetCDF with NetCDF-4 support. Use option
-          --with-netcdf=/path/to/implementation
+          --with-netcdf4=/path/to/implementation
       to specify the location of NetCDF-4 installation. In addition,
       please make sure the MPI C compiler is compatible with the one
       used to build NetCDF-4. Check 'config.log' for more information.
@@ -1530,8 +1550,14 @@ if test "x$enable_netcdf4" = "xyes" ; then
    dnl Check if NetCDF is built with parallel I/O enabled
    AC_MSG_CHECKING([whether NetCDF library is built with parallel I/O enabled])
    if test x$netcdf_ge_4_6_2 = xyes; then
-      netcdf_has_parallel4=`$nc_config --has-parallel4`
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <netcdf_meta.h>
+#if !defined(NC_HAS_PARALLEL4) || NC_HAS_PARALLEL4 == 0
+#error NetCDF NC_HAS_PARALLEL4 is either not defined or defined to 0
+#endif
+      ]])], [netcdf_has_parallel4=yes], [netcdf_has_parallel4=no])
       if test "x$netcdf_has_parallel4" = xno ; then
+         AC_MSG_RESULT([no])
          AC_MSG_ERROR([NetCDF-4 library is not built with HDF5 parallel I/O enabled])
       fi
    else
@@ -1541,8 +1567,14 @@ if test "x$enable_netcdf4" = "xyes" ; then
       dnl PnetCDF enabled, i.e. configured with options --enable-pnetcdf
       dnl --enable-netcdf-4 --disable-parallel4, which will make command
       dnl "nc-config --has-parallel" return yes.
-      netcdf_has_parallel=`$nc_config --has-parallel`
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <netcdf_meta.h>
+#if !defined(NC_HAS_PARALLEL) || NC_HAS_PARALLEL == 0
+#error NetCDF NC_HAS_PARALLEL is either not defined or defined to 0
+#endif
+      ]])], [netcdf_has_parallel=yes], [netcdf_has_parallel=no])
       if test "x$netcdf_has_parallel" = xno ; then
+         AC_MSG_RESULT([no])
          AC_MSG_ERROR([NetCDF-4 library is not built with parallel I/O enabled])
       fi
    fi
@@ -1580,36 +1612,56 @@ if test "x$enable_netcdf4" = "xyes" ; then
 #endif
    ]])], [nc_relax_coord_bound=yes], [nc_relax_coord_bound=no])
    AC_MSG_RESULT([$nc_relax_coord_bound])
-   dnl restore CPPFLAGS
-   CPPFLAGS=$saved_CPPFLAGS
 
    # Build on top of NetCDF4 with PnetCDF already enabled is not supported
-   netcdf_has_pnetcdf=`$nc_config --has-pnetcdf`
+   AC_MSG_CHECKING([whether NetCDF is built with PnetCDF])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <netcdf_meta.h>
+#if !defined(NC_HAS_PNETCDF) || NC_HAS_PNETCDF == 0
+#error NetCDF is not built with PnetCDF enabled
+#endif
+   ]])], [netcdf_has_pnetcdf=yes], [netcdf_has_pnetcdf=no])
+   AC_MSG_RESULT([$netcdf_has_pnetcdf])
    if test x$netcdf_has_pnetcdf = xyes; then
       AC_MSG_ERROR([NetCDF-4 built with PnetCDF enabled is not supported])
    fi
 
-   # Get installation directory path of netcdf library files
-   if test "x$netcdf_ge_4_4_2" = xyes ; then
-      # Option --libdir is first added in NetCDF 4.4.2
-      netcdf_libdir=`$nc_config --libdir`
-      UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
-   fi
+   if test "x$nc_config" != x ; then
+      # Get installation directory path of netcdf library files
+      if test "x$netcdf_ge_4_4_2" = xyes ; then
+         # Option --libdir is first added in NetCDF 4.4.2
+         netcdf_libdir=`$nc_config --libdir`
+         UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+      fi
 
-   # Get extra libraries used by netcdf library (dependent libraries)
-   netcdf_libs=`$nc_config --libs`
-   UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
-   dnl remove -lpnetcdf if it contains it
-   netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
+      # Get extra libraries used by netcdf library (dependent libraries)
+      netcdf_libs=`$nc_config --libs`
+      UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
+      dnl remove -lpnetcdf if it contains it
+      netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
+   else
+      if test "x$NETCDF4_INSTALL" != x ; then
+         netcdf_libdir="$NETCDF4_INSTALL/lib"
+         UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+      fi
+      netcdf_libs="-lnetcdf"
+      UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
+   fi
 
    # Validate netcdf library
    saved_LDFLAGS=$LDFLAGS
    saved_LIBS=$LIBS
-   if test -n "$netcdf_libdir" ; then
+   if test "x$netcdf_libdir" != x ; then
       LDFLAGS="-L$netcdf_libdir $LDFLAGS"
    fi
    LIBS="$netcdf_libs $LIBS"
-   AC_SEARCH_LIBS([nc_open], [netcdf], [], [AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])])
+   AC_SEARCH_LIBS([nc_open], [netcdf], [nc_open_found=yes], [nc_open_found=no])
+   if test "x$nc_open_found" = xno ; then
+      if test "x$nc_config" = x ; then
+         AC_MSG_WARN([Please set HDF5 lib path and libraries in environment variables LDFLAGS and LIBS])
+      fi
+      AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])
+   fi
    LDFLAGS=$saved_LDFLAGS
    LIBS=$saved_LIBS
    # Do not add -L$netcdf_libdir to LDFLAGS and -lnetcdf to LIBS
@@ -1632,11 +1684,10 @@ if test "x$enable_netcdf4" = "xyes" ; then
    # LIBS+=" ${netcdf_libs}"
 
    dnl check if HDF5 version 1.10.4 or later is used to build NetCDF
-   netcdf_cflags=`$nc_config --cflags`
+   if test "x$nc_config" != x ; then
+      netcdf_cflags=`$nc_config --cflags`
+   fi
 
-   dnl No need to add the include paths used to build NetCDF to CPPFLAGS
-   dnl permanently, as it is not needed to compile PnetCDF codes
-   saved_CPPFLAGS=$CPPFLAGS
    CPPFLAGS+=" $netcdf_cflags"
    dnl AC_CHECK_HEADERS uses CPPFLAGS, not CFLAGS
    AC_CHECK_HEADER([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
@@ -1658,30 +1709,48 @@ if test "x$enable_netcdf4" = "xyes" ; then
 
    # get NETCDF4 include dir from nc-config and remove any duplicate
    AC_MSG_CHECKING([NetCDF-4 include directories])
-   netcdf_incdir=`$nc_config --includedir`
-   AC_MSG_RESULT([$netcdf_incdir])
-   NETCDF4_INC="-I$netcdf_incdir"
+   netcdf_incdir=
+   if test "x$nc_config" != x ; then
+      netcdf_incdir=`$nc_config --includedir`
+   else
+      if test "x$NETCDF4_INSTALL" != x ; then
+         netcdf_incdir="$NETCDF4_INSTALL/include"
+      fi
+   fi
+   NETCDF4_INC=
+   if test "x$netcdf_incdir" = x ; then
+      AC_MSG_RESULT([none needed])
+   else
+      AC_MSG_RESULT([$netcdf_incdir])
+      NETCDF4_INC="-I$netcdf_incdir"
+   fi
    AC_SUBST([NETCDF4_INC])
 
-   AC_MSG_CHECKING([NetCDF-4 LDFLAGS])
    if test "x$netcdf_libdir" != x ; then
       NETCDF4_LDFLAGS="-L$netcdf_libdir"
    fi
    # remove all -l options from netcdf_libs that should leave -L only
    netcdf4_L=`echo $netcdf_libs | ${SED} 's/-l[[^ ]]*//g'`
-   if test "x$netcdf4_L" != x ; then
+   if test "x$netcdf4_L" = x ; then
+      netcdf4_L=$NETCDF4_LDFLAGS
+   else
       netcdf4_L="$NETCDF4_LDFLAGS $netcdf4_L"
    fi
    # remove space between -L and path
    netcdf4_L=`echo $netcdf4_L | ${SED} 's/-L[[ ]]*/-L/g'`
+   UD_MSG_DEBUG(netcdf4_L=$netcdf4_L)
+
+   AC_MSG_CHECKING([NetCDF-4 LDFLAGS])
    # remove any duplicate in netcdf4_L
    NETCDF4_LDFLAGS=`echo $netcdf4_L | ${AWK} -v RS=' ' '{if (!seen[[$0]]++){printf "%s%s",sep,$0; sep=" "}}'`
    AC_SUBST([NETCDF4_LDFLAGS])
    AC_MSG_RESULT([$NETCDF4_LDFLAGS])
 
-   AC_MSG_CHECKING([NetCDF-4 LIBS])
    # remove all -L options from netcdf_libs that should leave -l only
    netcdf4_l=`echo $netcdf_libs | ${SED} 's/-L[[^ ]]*//g'`
+   UD_MSG_DEBUG(netcdf4_l=$netcdf4_l)
+
+   AC_MSG_CHECKING([NetCDF-4 LIBS])
    # remove any duplicate in netcdf4_l
    NETCDF4_LIBS=`echo $netcdf4_l | ${AWK} -v RS=' ' '{if (!seen[[$0]]++){printf "%s%s",sep,$0; sep=" "}}'`
    AC_SUBST([NETCDF4_LIBS])
