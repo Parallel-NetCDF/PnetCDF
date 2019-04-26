@@ -110,7 +110,11 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SYNC)
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
+    err = MPI_Allreduce(wcnt_local, wcnt_all, varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
+    if (err != MPI_SUCCESS){
+        err = ncmpii_error_mpi2nc(err, "MPI_Allreduce");
+        DEBUG_RETURN_ERROR(err)
+    }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SYNC)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_PACK_REQ)
@@ -153,8 +157,16 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
                 tsize[j] = (int)count[j];
                 tssize[j] = (int)osize[j];
             }
-            MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-            MPI_Type_commit(&ptype);
+            err = MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+            if (err != MPI_SUCCESS){
+                err = ncmpii_error_mpi2nc(err, "MPI_Type_create_subarray");
+                DEBUG_RETURN_ERROR(err)
+            }
+            err = MPI_Type_commit(&ptype);
+            if (err != MPI_SUCCESS){
+                err = ncmpii_error_mpi2nc(err, "MPI_Type_commit");
+                DEBUG_RETURN_ERROR(err)
+            }
 
             // Metadata
             for(j = 0; j < varp->ndim; j++){
