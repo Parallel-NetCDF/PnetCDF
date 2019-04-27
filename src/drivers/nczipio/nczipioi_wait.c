@@ -69,7 +69,7 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     }
 
     if (nczipp->delay_init){
-        init = (int*)NCI_Malloc(sizeof(int) * nvar * 2);
+        init = (int*)NCI_Malloc(sizeof(int) * (nvar * 2 + 1));
         offs = init + nvar;
         
         offs[0] = 0;
