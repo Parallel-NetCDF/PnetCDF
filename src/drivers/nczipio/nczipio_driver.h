@@ -114,6 +114,8 @@ struct NC_zip {
     NC_zip_req_list    putlist, getlist;
     int                comm_unit;
     int                delay_init;
+    int                max_ndim;
+    int                max_chunk_size;
 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 

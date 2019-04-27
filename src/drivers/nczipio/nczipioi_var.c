@@ -191,6 +191,14 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create, int nreq, MP
             if (!create){
                 err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_datavarid", &(varp->datavarid), MPI_INT);
             }
+
+            // Update max ndim and chunksize
+            if (nczipp->max_ndim < varp->ndim){
+                nczipp->max_ndim = varp->ndim;
+            }
+            if (nczipp->max_chunk_size < varp->chunksize){
+                nczipp->max_chunk_size = varp->chunksize;
+            }
         }   
     }
 

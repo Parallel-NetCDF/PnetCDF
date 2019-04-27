@@ -139,8 +139,6 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int *wcnt_local, *wcnt_all;   // Number of processes that writes to each chunk
 
     int overlapsize;    // Size of overlaping region of request and chunk
-    int maxndim = 0;   // Max number of dimensions
-    int maxcsize = 0;   // Max chunk size
     char *tbuf = NULL;     // Intermediate buffer
     
     int packoff; // Pack offset
@@ -166,28 +164,18 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     wcnt_all = wcnt_local + nczipp->np;
     smap = wcnt_all + nczipp->np;
 
-    // Count total number of messages and build a map of accessed chunk to list of comm datastructure
-    for(i = 0; i < nczipp->vars.cnt; i++){
-        if (maxndim < nczipp->vars.data[i].ndim){
-            maxndim = nczipp->vars.data[i].ndim;
-        }
-        if (maxcsize < nczipp->vars.data[i].chunksize){
-            maxcsize = nczipp->vars.data[i].chunksize;
-        }
-    }
-
     // Intermediate buffer for our own data
-    tbuf = (char*)NCI_Malloc(maxcsize);
+    tbuf = (char*)NCI_Malloc(nczipp->max_chunk_size);
 
     // Allocate buffering for overlaping index
-    tstart = (int*)NCI_Malloc(sizeof(int) * maxndim * 3);
-    tssize = tstart + maxndim;
-    tsize = tssize + maxndim;
-    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * maxndim * 3);
-    osize = ostart + maxndim;
+    tstart = (int*)NCI_Malloc(sizeof(int) * nczipp->max_ndim * 3);
+    tssize = tstart + nczipp->max_ndim;
+    tsize = tssize + nczipp->max_ndim;
+    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nczipp->max_ndim * 3);
+    osize = ostart + nczipp->max_ndim;
 
     // Chunk iterator
-    citr = osize + maxndim;
+    citr = osize + nczipp->max_ndim;
 
     // We need to calculate the size of message of each processes
     // This is just for allocating send buffer

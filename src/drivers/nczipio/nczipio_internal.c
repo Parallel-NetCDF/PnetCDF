@@ -22,6 +22,9 @@ int
 nczipioi_init(NC_zip *nczipp){
     int err;
 
+    nczipp->max_ndim = 0;
+    nczipp->max_chunk_size = 0;
+
     err = nczipp->driver->inq(nczipp->ncp, NULL, NULL, NULL, &(nczipp->recdim));
     if (err != NC_NOERR) return err;
 
