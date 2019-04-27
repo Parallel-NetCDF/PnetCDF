@@ -115,9 +115,9 @@ nczipio_def_var(void       *ncdp,
     }
 
     err = nczipioi_var_list_add(&(nczipp->vars), var);
-    if (err != NC_NOERR) return err;
+    if (err < 0) return err;
 
-    *varidp = nczipp->vars.cnt - 1;
+    *varidp = err;
 
     return NC_NOERR;
 }

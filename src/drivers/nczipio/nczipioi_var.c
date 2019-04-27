@@ -38,6 +38,13 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create, int nreq, MP
 
     if (varp->varkind == NC_ZIP_VAR_COMPRESSED){
         if (varp->chunkdim == NULL){    // This is a new uninitialized variable 
+            // Update dimsize on rec dim
+            if (nczipp->recdim >= 0){
+                if (varp->dimsize[0] < nczipp->recsize){
+                    varp->dimsize[0] = nczipp->recsize;
+                }
+            }
+
             // Determine its block size
             varp->chunkdim = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
             varp->nchunks = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
@@ -90,7 +97,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int create, int nreq, MP
                     varp->nchunks[i] = (int)varp->dimsize[i] / varp->chunkdim[i];
                 }
                 else{
-                    varp->nchunks[i] = (int)varp->dimsize[i] / varp->chunkdim[i]; + 1;
+                    varp->nchunks[i] = (int)varp->dimsize[i] / varp->chunkdim[i] + 1;
                 }
                 varp->nchunk *= varp->nchunks[i];
                 varp->chunksize *= varp->chunkdim[i];
@@ -844,8 +851,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             // Record parameter
             flens[wcur + l] = zsizes[cid];
             fdisps[wcur + l] = (MPI_Aint)zoffs[cid];
-            mlens[l] = zsizes[cid];
-            mdisps[l] = (MPI_Aint)zbufs[wcur + l];
+            mlens[wcur + l] = zsizes[cid];
+            mdisps[wcur + l] = (MPI_Aint)zbufs[wcur + l];
         }
 
         // Move to parameters for next variable

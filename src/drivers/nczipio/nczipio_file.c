@@ -440,7 +440,7 @@ nczipio_wait(void *ncdp,
     }
 
     if (nraw > 0){
-        err = nczipioi_wait_put_reqs(nczipp, nraw, rawreqs, rawstats);
+        err = nczipp->driver->wait(nczipp->ncp, nraw, rawreqs, rawstats, reqMode);
         if (status == NC_NOERR){
             status = err;
         }
