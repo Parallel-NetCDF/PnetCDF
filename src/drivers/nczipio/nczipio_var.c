@@ -80,14 +80,14 @@ nczipio_def_var(void       *ncdp,
         var.varkind = NC_ZIP_VAR_RAW;
         var.dimsize = NULL;
 
-        err = nczipp->driver->def_var(nczipp->ncp, name, xtype, ndims, dimids, &var.varid);  // We use it to save the id of data variable
+        err = nczipp->driver->def_var(nczipp->ncp, name, xtype, ndims, dimids, &var.varid);  
         if (err != NC_NOERR) return err;
         
         err = nczipp->driver->put_att(nczipp->ncp, var.varid, "_varkind", NC_INT, 1, &(var.varkind), MPI_INT);   // Comressed var?
         if (err != NC_NOERR) return err;
     }
     else{
-        err = nczipp->driver->def_var(nczipp->ncp, name, NC_INT, 0, NULL, &var.varid);  // We use it to save the id of data variable
+        err = nczipp->driver->def_var(nczipp->ncp, name, xtype, 0, NULL, &var.varid);  // Dummy var for attrs
         if (err != NC_NOERR) return err;
         
         var.varkind = NC_ZIP_VAR_COMPRESSED;
