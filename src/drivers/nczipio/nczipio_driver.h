@@ -58,6 +58,7 @@ typedef struct NC_zip_var_chunk {
 typedef struct NC_zip_var {
     int varkind;
     int isrec;
+    int isnew;
 
     nc_type xtype;
     MPI_Datatype etype;

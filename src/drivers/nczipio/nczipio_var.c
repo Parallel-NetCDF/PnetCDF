@@ -75,6 +75,7 @@ nczipio_def_var(void       *ncdp,
     var.xtype = xtype;
     var.esize = NC_Type_size(xtype);
     var.etype = ncmpii_nc2mpitype(xtype);
+    var.isnew = 1;
 
     if (ndims > 3 || ndims < 1) { // Does not support higher dimensional vars
         var.varkind = NC_ZIP_VAR_RAW;
@@ -279,7 +280,7 @@ nczipio_put_var(void             *ncdp,
     }
 
     if (nczipp->delay_init && (varp->chunkdim == NULL)){
-        nczipioi_var_init(nczipp, varp, 1, 1, &start, &count);
+        nczipioi_var_init(nczipp, varp, 1, &start, &count);
     }
 
     if (imap != NULL || bufcount != -1) {
@@ -582,7 +583,7 @@ nczipio_put_varn(void              *ncdp,
     }
 
     if (nczipp->delay_init && (varp->chunkdim == NULL)){
-        nczipioi_var_init(nczipp, varp, 1, num, starts, counts);
+        nczipioi_var_init(nczipp, varp, num, starts, counts);
     }
     
     err = nczipioi_put_varn(nczipp, varp, num, starts, counts, buf);

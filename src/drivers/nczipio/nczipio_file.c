@@ -181,10 +181,13 @@ nczipio_close(void *ncdp)
         if (err != NC_NOERR){
             return err;
         }
+
         for(i = 0; i < nczipp->vars.cnt; i++){
-            err = nczipp->driver->put_att(nczipp->ncp, nczipp->vars.data[i].varid, "_chunkdim", NC_INT, nczipp->vars.data[i].ndim, nczipp->vars.data[i].chunkdim, MPI_INT);
-            if (err != NC_NOERR){
-                return err;
+            if (nczipp->vars.data[i].isnew){            
+                err = nczipp->driver->put_att(nczipp->ncp, nczipp->vars.data[i].varid, "_chunkdim", NC_INT, nczipp->vars.data[i].ndim, nczipp->vars.data[i].chunkdim, MPI_INT);
+                if (err != NC_NOERR){
+                    return err;
+                }
             }
         }
     }
@@ -221,7 +224,7 @@ nczipio_enddef(void *ncdp)
     
     if (!(nczipp->delay_init)){
         for(i = 0; i < nczipp->vars.cnt; i++){
-            nczipioi_var_init(nczipp, nczipp->vars.data + i, 1, 0, NULL, NULL);
+            nczipioi_var_init(nczipp, nczipp->vars.data + i, 0, NULL, NULL);
         }
     }
 
@@ -243,7 +246,7 @@ nczipio__enddef(void       *ncdp,
 
     if (!(nczipp->delay_init)){
         for(i = 0; i < nczipp->vars.cnt; i++){
-            nczipioi_var_init(nczipp, nczipp->vars.data + i, 1, 0, NULL, NULL);
+            nczipioi_var_init(nczipp, nczipp->vars.data + i, 0, NULL, NULL);
         }
     }
 

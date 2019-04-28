@@ -33,6 +33,7 @@ void gcd_reduce(long long *in, long long *inout, int *len, MPI_Datatype *dptr ) 
 
     for (i = 0; i < *len; i++) { 
         if (*inout) while(((*in) %= (*inout)) && ((*inout) %= (*in)));
+        (*inout) = (*inout) + (*in);
         in++; inout++; 
     } 
 } 
@@ -67,23 +68,28 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
      * If the pattern is completely randomized, the result will likely be 1
      */
     chunkdim = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim);
-    candidates = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * varp->ndim);
     if (nreq > 0){
+        candidates = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * varp->ndim);
         candidates[0] = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * nreq);
         for(i = 1; i < varp->ndim; i++){
             candidates[i] = candidates[i - 1] + nreq;
         }
-    }
-    for(r = 0; r < nreq; r++){
+        for(r = 0; r < nreq; r++){
+            for(i = 0; i < varp->ndim; i++){
+                candidates[i][r] = gcd(starts[r][i], counts[r][i]);
+            }
+        }
         for(i = 0; i < varp->ndim; i++){
-            candidates[i][r] = gcd(starts[r][i], counts[r][i]);
+            qsort(candidates[i], nreq, sizeof(MPI_Offset), smaller);
+            chunkdim[i] = candidates[i][0];
+            for(r = 1; r < nreq / 2; r++){  // Take the top 50% to drop out fragment writes
+                chunkdim[i] = gcd(chunkdim[i], candidates[i][r]);
+            }
         }
     }
-    for(i = 0; i < varp->ndim; i++){
-        qsort(candidates[i], nreq, sizeof(MPI_Offset), smaller);
-        chunkdim[i] = candidates[i][0];
-        for(r = 1; r < nreq / 2; r++){  // Take the top 50% to drop out fragment writes
-            chunkdim[i] = gcd(chunkdim[i], candidates[i][r]);
+    else{
+        for(i = 0; i < varp->ndim; i++){
+            chunkdim[i] = 0;   // We have no clue, listen to other processes
         }
     }
 
@@ -91,6 +97,13 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
     MPI_Op_create((MPI_User_function *)gcd_reduce, 1, &gcd_op); 
     MPI_Allreduce(MPI_IN_PLACE, chunkdim, varp->ndim, MPI_LONG_LONG, gcd_op, nczipp->comm);
     MPI_Op_free(&gcd_op);
+
+    // If we have no clue accross processes, set chunk to max
+    for(i = 0; i < varp->ndim; i++){
+        if (chunkdim[i] == 0){
+            chunkdim[i] = varp->dimsize[i];
+        }
+    }
 
     // Check if chunk size is resonable (not too large or too small)
     chunksize = 1;

@@ -67,6 +67,7 @@ nczipioi_parse_var_info(NC_zip *nczipp){
         }
 
         var.varid = vid;
+        var.isnew = 0;
         
         if (var.varkind == NC_ZIP_VAR_COMPRESSED){
             err = nczipp->driver->get_att(nczipp->ncp, var.varid, "_ndim", &(var.ndim), MPI_INT); // Original dimensions
@@ -98,7 +99,7 @@ nczipioi_parse_var_info(NC_zip *nczipp){
             var.etype = ncmpii_nc2mpitype(var.xtype);
             var.chunkdim = NULL;
 
-            nczipioi_var_init(nczipp, &var, 0, 0, NULL, NULL);
+            nczipioi_var_init(nczipp, &var,0, NULL, NULL);
         }
     
         err = nczipioi_var_list_add(&(nczipp->vars), var);
