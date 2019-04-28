@@ -290,10 +290,10 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     for(i = 0; i < varp->ndim; i++){
                         tstart[i] = (int)(ostart[i] - citr[i]);
                     }
-                    MPI_Pack(&(req->varid), 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                    MPI_Pack(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                    MPI_Pack(tstart, varp->ndim << 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                    //MPI_Pack(tssize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+                    CHK_ERR_PACK(&(req->varid), 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+                    CHK_ERR_PACK(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+                    CHK_ERR_PACK(tstart, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+                    CHK_ERR_PACK(tssize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
                     // Pack data
                     MPI_Pack(req->xbufs[r], 1, ptype, sbuf[j], ssize[j], soff + j, nczipp->comm);
                     MPI_Type_free(&ptype);
@@ -406,8 +406,8 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             MPI_Unpack(rbuf[j], rsize[j], &packoff, &vid, 1, MPI_INT, nczipp->comm);
             MPI_Unpack(rbuf[j], rsize[j], &packoff, &cid, 1, MPI_INT, nczipp->comm);
             varp = nczipp->vars.data + vid;
-            MPI_Unpack(rbuf[j], rsize[j], &packoff, tstart, varp->ndim << 1, MPI_INT, nczipp->comm);
-            //MPI_Unpack(rbuf[j], rsize[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
+            CHK_ERR_UNPACK(rbuf[j], rsize[j], &packoff, tstart, varp->ndim, MPI_INT, nczipp->comm);
+            CHK_ERR_UNPACK(rbuf[j], rsize[j], &packoff, tssize, varp->ndim, MPI_INT, nczipp->comm);
 
             //printf("Rank: %d, cid = %d, MPI_Type_create_subarray_recv([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, cid, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
             // Pack type
