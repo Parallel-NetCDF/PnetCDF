@@ -45,6 +45,7 @@
     } \
 }
 #define FileCreate(a,b,c,d,e)   nc_create(b,c,e)
+#define FileOpen(a,b,c,d,e)     nc_open(b,c,e)
 #define DefDim                  nc_def_dim
 #define DefVar                  nc_def_var
 #define SetFill                 nc_set_fill
@@ -63,6 +64,7 @@ typedef size_t len_t;
 #include <pnetcdf.h>
 #include <testutils.h>
 #define FileCreate              ncmpi_create
+#define FileOpen                ncmpi_open
 #define DefDim                  ncmpi_def_dim
 #define DefVar                  ncmpi_def_var
 #define SetFill                 ncmpi_set_fill
@@ -137,6 +139,10 @@ int main(int argc, char** argv) {
             nerrs++;
         }
     }
+    err = FileClose(ncid); CHECK_ERR
+
+    /* check if open to read header fine */
+    err = FileOpen(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
     err = FileClose(ncid); CHECK_ERR
 
 #ifdef TEST_NETCDF

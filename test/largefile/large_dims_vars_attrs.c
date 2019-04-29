@@ -75,8 +75,13 @@ int main(int argc, char** argv)
     }
 
     for (i=0; i<LARGE_NUM-1; i++) {
+        signed char attrBuf[3]={1,2,3};
         sprintf(str, "var%d", i);
         err = ncmpi_def_var(ncid, str, NC_INT, 1, dimids, &varid);
+        CHECK_ERR
+        err = ncmpi_put_att_text(ncid, varid, "attr text", 9, "some text");
+        CHECK_ERR
+        err = ncmpi_put_att_schar(ncid, varid, "attr short", NC_SHORT, 3, attrBuf);
         CHECK_ERR
     }
 

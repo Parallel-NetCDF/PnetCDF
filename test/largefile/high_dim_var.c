@@ -150,6 +150,10 @@ int main(int argc, char** argv) {
 fn_exit:
     err = ncmpi_close(ncid); CHECK_ERR
 
+    /* check if open to read header fine */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
+
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);

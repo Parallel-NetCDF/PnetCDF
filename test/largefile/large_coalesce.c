@@ -141,8 +141,11 @@ int main(int argc, char** argv)
     err = ncmpi_get_vara_uchar_all(ncid, varid, start, count, buf+ONE_G);
     CHECK_ERR
 
-    err = ncmpi_close(ncid);
-    CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* check if open to read header fine */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 #endif
     /* Test classic format */
 
@@ -295,8 +298,11 @@ int main(int argc, char** argv)
     }
 #endif
 
-    err = ncmpi_close(ncid);
-    CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* check if open for reading header */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
 
     free(buf);
 
