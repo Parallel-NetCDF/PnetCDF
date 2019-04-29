@@ -817,6 +817,7 @@ ncmpi_open(MPI_Comm    comm,
         pncp->vars[i].ndims  = ndims;
         pncp->vars[i].recdim = -1;   /* if fixed-size variable */
         pncp->vars[i].shape  = NULL;
+        pncp->vars[i].recdim = -1;
         if (ndims > 0) {
             int j, *dimids;
             pncp->vars[i].shape = (MPI_Offset*)
