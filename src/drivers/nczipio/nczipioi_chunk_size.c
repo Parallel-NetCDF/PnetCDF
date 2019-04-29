@@ -61,6 +61,9 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
     if (lb < varp->ndim * 3){   // Metadata should not exceed data
         lb = varp->ndim * 3;
     }
+    if (lb < 1048576){  // At least 1 MiB for efficiency
+        lb = 1048576;
+    }
 
     /* Infer chunk size by reqs
      * Assume the application is doing blocked division
@@ -116,15 +119,19 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
         // Can we find perffect split using small prime numbers?
         j = 0;
         while((j < 25) && (chunksize > ub)){
-            for(i = 0; i < varp->ndim; i++){    // Spliting chunks
+            r = 1;
+            for(i = 0; i < varp->ndim; i++){    // Spliting chunks along dims
                 if (chunkdim[i] % primes[j] == 0){
                     chunkdim[i] /= primes[j];
                     chunksize /= primes[j];
+                    r = 0;
                 }
             }
-            j++;
+            if (r){ // No fit, try next prime
+                j++;
+            }
         }
-        if (j >= 25){   // If not, we need to introduce communication overhead
+        if (j >= 25){   // If not, we still need to split even we need to introduce communication overhead
             for(i = 0; chunksize > ub; i++){    // Merging chunks
                 chunkdim[i % varp->ndim] /= 2;
                 chunksize /= 2;
@@ -132,14 +139,76 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
         }
     }
     else if (chunksize < lb){   // Data smaller than metadata
-        for(i = 0; chunksize < lb; i++){    // Merging chunks
-            chunkdim[i % varp->ndim] *= 2;
-            chunksize *= 2;
+        int tmp;
+        int *heap;
+        int hsize;
+
+        // Build heap of smallest chunk dim
+        heap = (int*)NCI_Malloc(sizeof(int) * varp->ndim);
+        for(i = 0; i < varp->ndim; i++){
+            heap[i] = i;
+            j = i;
+            r = (j - 1) / 2;
+            while(j > 0 && chunkdim[heap[j]] < chunkdim[heap[r]]){
+                tmp - heap[j];
+                heap[j] = heap[r];
+                heap[r] = tmp;
+                j = r;
+                r = (j - 1) / 2;
+            }
+        }
+
+        hsize = varp->ndim;
+        while(chunksize < lb && hsize > 0){
+            j = heap[0];
+            if (chunkdim[j] * 2 <= varp->dimsize[j]){   // Merge chunk along smallest dim
+                chunkdim[j] *= 2;
+                chunksize *= 2;
+            }
+            else{   // Already reach var dim, remove from consideration
+                heap[0] = heap[--hsize];
+            }
+            // Heapify
+            r = 0;
+            i = r * 2 + 1;
+            j = r * 2 + 2;
+            while(i < hsize){
+                if ((j >= hsize) || (chunkdim[heap[i]] < chunkdim[heap[j]])){
+                    if (chunkdim[heap[i]] < chunkdim[heap[r]]){
+                        tmp = heap[r];
+                        heap[r] = heap[i];
+                        heap[i] = tmp;
+                        r = i;
+                    }
+                    else{
+                        break;
+                    }
+                }
+                else{
+                    if (chunkdim[heap[j]] < chunkdim[heap[r]]){
+                        tmp = heap[r];
+                        heap[r] = heap[j];
+                        heap[j] = tmp;
+                        r = j;
+                    }
+                    else{
+                        break;
+                    }
+                }
+                i = r * 2 + 1;
+                j = r * 2 + 2;
+            }
+        }
+        NCI_Free(heap);
+
+        // Still not enough after doing everything, just set to entire var
+        if (chunksize < lb){
+            memcpy(chunkdim, varp->dimsize, sizeof(MPI_Offset) * varp->ndim);
         }
     }
 
     for(i = 0; i < varp->ndim; i++){
-        varp->chunkdim[i] = chunkdim[i];
+        varp->chunkdim[i] = (int)chunkdim[i];
     }
 
     NCI_Free(chunkdim);
