@@ -111,7 +111,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 #include <common.h>
 #include <nc4io_driver.h>
 
-inline MPI_Offset getelementsize(NC_nc4 *nc4p, int varid){
+MPI_Offset getelementsize(NC_nc4 *nc4p, int varid){
     int err;
     nc_type xtype;
     size_t xsize;
@@ -129,7 +129,7 @@ inline MPI_Offset getelementsize(NC_nc4 *nc4p, int varid){
     return (MPI_Offset)xsize;
 }
 
-inline MPI_Offset getvarsize(NC_nc4 *nc4p, int varid, int ndim){
+MPI_Offset getvarsize(NC_nc4 *nc4p, int varid, int ndim){
     int i, err;
     int *dimids;
     size_t ret, dsize;
