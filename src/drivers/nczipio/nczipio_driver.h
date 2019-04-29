@@ -117,6 +117,7 @@ struct NC_zip {
     int                delay_init;
     int                max_ndim;
     int                max_chunk_size;
+    int                nmychunks;   // Sum of nmychunk in everyvar
     MPI_Offset         getsize;
     MPI_Offset         putsize;
 

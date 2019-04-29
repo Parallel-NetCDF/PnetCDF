@@ -133,6 +133,16 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     }
                 }
             }
+            
+            // Update global chunk count
+            nczipp->nmychunks += varp->nmychunks;
+
+            if (nczipp->rank == 0){
+                printf("Var %d, cown = [", varp->varid);
+                for(i = 0; i < varp->nchunk; i++)
+                    printf("%d, ", varp->chunk_owner[i]);
+                printf("]\n");
+            }
 
             // Determine block offset
             varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (varp->nchunk + 1));
