@@ -364,6 +364,14 @@ nczipio_inq_misc(void       *ncdp,
         *nreqs = nczipp->putlist.nused + nczipp->getlist.nused;
     }
 
+    if (put_size != NULL){
+        *put_size += nczipp->putsize;
+    }
+
+    if (get_size != NULL){
+        *get_size += nczipp->getsize;
+    }
+
     return NC_NOERR;
 }
 

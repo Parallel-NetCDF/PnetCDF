@@ -36,30 +36,39 @@
 int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int err;
     int i;
-    int nvar;
-    int *varids;
-    int *nreqs;  // Number of reqids in each variable
+    unsigned int j;
+    int nvar, nflag;
+    unsigned int *flag, *flag_all;
+    int *vids;
     NC_zip_req *req;
 
-    // Build a skip list of touched vars
-    nreqs = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
-    memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
+    // Flag of touched vars
+    nflag = nczipp->vars.cnt / 32 + 1;
+    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
+    flag_all = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
+    memset(flag, 0, sizeof(int) * nflag);
     for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs + reqids[i];
-        nreqs[req->varid] = 1;
+        flag[req->varid >> 5] |= 1u << (req->varid % 32);
     }
+    
+    // Sync flag
+    CHK_ERR_ALLREDUCE(flag, flag_all, nflag, MPI_UNSIGNED, MPI_BOR, nczipp->comm);
+
+    // Build a skip list of touched vars
+    nvar = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (nreqs[i]){
+        if (flag_all[i >> 5] & (1u << (i % 32))) {
             nvar++;
         }
     }
-    varids = (int*)NCI_Malloc(sizeof(int) * nvar);
+    vids = (int*)NCI_Malloc(sizeof(int) * nvar);
     nvar = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (nreqs[i]){
-            varids[nvar++] = i;
+        if (flag_all[i >> 5] & (1u << (i % 32))) {
+            vids[nvar++] = i;
         }
-    }
+    }  
 
     // Perform collective buffer
     if (nczipp->comm_unit == NC_ZIP_COMM_CHUNK){
@@ -70,11 +79,12 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     }
 
     // Perform I/O for comrpessed variables
-    nczipioi_save_nvar(nczipp, nvar, varids);
+    nczipioi_save_nvar(nczipp, nvar, vids);
 
     // Free buffers
-    NCI_Free(varids);
-    NCI_Free(nreqs);
+    NCI_Free(vids);
+    NCI_Free(flag);
+    NCI_Free(flag_all);
 
     return NC_NOERR;
 }
@@ -85,33 +95,42 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int err;
     int i;
-    int nvar;
-    int *varids;
-    int *nreqs;  // Number of reqids in each variable
+    unsigned int j;
+    int nvar, nflag;
+    unsigned int *flag, *flag_all;
+    int *vids;
     NC_zip_req *req;
 
-    // Build a skip list of touched vars
-    nreqs = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt);
-    memset(nreqs, 0, sizeof(int) * nczipp->vars.cnt);
+    // Flag of touched vars
+    nflag = nczipp->vars.cnt / 32 + 1;
+    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
+    flag_all = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
+    memset(flag, 0, sizeof(int) * nflag);
     for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs + reqids[i];
-        nreqs[req->varid] = 1;
+        flag[req->varid >> 5] |= 1u << (req->varid % 32);
     }
+    
+    // Sync flag
+    CHK_ERR_ALLREDUCE(flag, flag_all, nflag, MPI_UNSIGNED, MPI_BOR, nczipp->comm);
+
+    // Build a skip list of touched vars
+    nvar = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (nreqs[i]){
+        if (flag_all[i >> 5] & (1u << (i % 32))) {
             nvar++;
         }
     }
-    varids = (int*)NCI_Malloc(sizeof(int) * nvar);
+    vids = (int*)NCI_Malloc(sizeof(int) * nvar);
     nvar = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
-        if (nreqs[i]){
-            varids[nvar++] = i;
+        if (flag_all[i >> 5] & (1u << (i % 32))) {
+            vids[nvar++] = i;
         }
-    }
+    }  
 
     // Perform I/O for comrpessed variables
-    nczipioi_load_nvar(nczipp, nvar, varids);
+    nczipioi_load_nvar(nczipp, nvar, vids);
 
     // Perform collective buffer
     if (nczipp->comm_unit == NC_ZIP_COMM_CHUNK){
@@ -123,8 +142,11 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     }
 
     // Free buffers
-    NCI_Free(varids);
-    NCI_Free(nreqs);
+    NCI_Free(vids);
+    NCI_Free(flag);
+    NCI_Free(flag_all);
+
+    return NC_NOERR;
 }
 
 int

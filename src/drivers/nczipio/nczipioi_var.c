@@ -302,6 +302,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     int err;
     int i;
     int cid;
+    int get_size;
 
     int dsize;
     MPI_Offset bsize;
@@ -317,6 +318,9 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
 
     NC *ncp = (NC*)(nczipp->ncp);
     NC_var *ncvarp;
+
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_INIT)
 
     // -1 means all chunks
     if (nchunk < 0){
@@ -358,6 +362,9 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
             zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]];
         }
 
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
+
         // Perform MPI-IO
         // Set file view
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
@@ -366,15 +373,31 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         // Restore file view
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
+
+#ifdef _USE_MPI_GET_COUNT
+        MPI_Get_count(&status, MPI_BYTE, &get_size);
+#else
+        MPI_Type_size(ftype, &get_size);
+#endif
+        nczipp->getsize += get_size;
+
         // Free type
         MPI_Type_free(&ftype);
     }
     else{
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
+
         // Follow coll I/O with dummy call
-        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-        MPI_File_read_at_all(ncp->collective_fh, 0, &i, 0, MPI_BYTE, &status);
-        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        CHK_ERR_READ_AT_ALL(ncp->collective_fh, 0, &i, 0, MPI_BYTE, &status);
+        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
     }
+
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_DECOM)
 
     // Decompress each chunk
     // Allocate chunk cache if not allocated
@@ -392,6 +415,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         }
     }
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_DECOM)
+
     // Free buffers
     if (nchunk > 0){
         NCI_Free(zbufs[0]);
@@ -401,6 +426,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     NCI_Free(lens);
     NCI_Free(disps);
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO)
+
     return NC_NOERR;
 }
 
@@ -408,6 +435,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     int err;
     int i, j, k;
     int cid, vid;
+    int get_size;
 
     int nchunk;
 
@@ -497,10 +525,16 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
 
+#ifdef _USE_MPI_GET_COUNT
+        MPI_Get_count(&status, MPI_BYTE, &get_size);
+#else
+        MPI_Type_size(ftype, &get_size);
+#endif
+        nczipp->getsize += get_size;
+
         // Free type
         MPI_Type_free(&ftype);
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
     }
     else{
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
@@ -567,6 +601,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     MPI_Offset *zoffs;
     void **zbufs;
     int zdimid;
+    int put_size;
     char name[128]; // Name of objects
     NC *ncp = (NC*)(nczipp->ncp);
     NC_var *ncvarp;
@@ -692,11 +727,18 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         // Restore file view
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_WR)
+
+#ifdef _USE_MPI_GET_COUNT
+        MPI_Get_count(&status, MPI_BYTE, &put_size);
+#else
+        MPI_Type_size(mtype, &put_size);
+#endif
+        nczipp->putsize += put_size;
+
         // Free type
         MPI_Type_free(&ftype);
         MPI_Type_free(&mtype);
-
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_WR)
     }
     else{
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
@@ -738,6 +780,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     int *mlens, *flens;
     MPI_Aint *mdisps, *fdisps;
     MPI_Status status;
+    int put_size;
     void **zbufs;
     int zdimid;
     char name[128]; // Name of objects
@@ -886,7 +929,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
      * We use a dummy call inplace of type with 0 count
      */
     if (wcnt > 0){
-        // Create file type
+         // Create file type
         MPI_Type_create_hindexed(wcnt, flens, fdisps, MPI_BYTE, &ftype);
         MPI_Type_commit(&ftype);
 
@@ -902,18 +945,27 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         // Restore file view
         MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_WR)
+
+#ifdef _USE_MPI_GET_COUNT
+        MPI_Get_count(&status, MPI_BYTE, &put_size);
+#else
+        MPI_Type_size(mtype, &put_size);
+#endif
+        nczipp->putsize += put_size;
+
         // Free type
         MPI_Type_free(&ftype);
         MPI_Type_free(&mtype);
     }
     else{
         // Follow coll I/O with dummy call
-        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-        MPI_File_write_at_all(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
-        MPI_File_set_view(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-    }
+        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
+        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_WR)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_WR)
+    }
 
     // Free buffers
     NCI_Free(zsizes);

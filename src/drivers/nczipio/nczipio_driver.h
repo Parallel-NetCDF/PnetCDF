@@ -117,6 +117,8 @@ struct NC_zip {
     int                delay_init;
     int                max_ndim;
     int                max_chunk_size;
+    MPI_Offset         getsize;
+    MPI_Offset         putsize;
 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 
