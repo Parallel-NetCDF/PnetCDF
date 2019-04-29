@@ -254,7 +254,10 @@ int
 ncmpio_NC_findattr(const NC_attrarray *ncap,
                    const char         *name) /* normalized string */
 {
-    int i, key;
+#ifndef SEARCH_NAME_LINEARLY
+    int key;
+#endif
+    int i;
     size_t nchars;
 
     assert(ncap != NULL);
