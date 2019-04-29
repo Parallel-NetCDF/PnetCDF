@@ -459,6 +459,7 @@ write_NC(NC *ncp)
 {
     void *buf=NULL;
     int status=NC_NOERR, mpireturn, err, rank, header_wlen;
+    size_t bufLen;
     MPI_Status mpistatus;
 
     assert(!NC_readonly(ncp));
@@ -471,7 +472,7 @@ write_NC(NC *ncp)
     /* only rank 0's header gets written to the file */
     if (rank == 0) {
 
-        /* In NC_begins(), root's ncp->xsz and ncp->begin)var, root's header
+        /* In NC_begins(), root's ncp->xsz and ncp->begin_var, root's header
          * size and extent, have been broadcast (sync-ed) among processes.
          */
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
@@ -480,11 +481,13 @@ write_NC(NC *ncp)
          * extent.
          */
         header_wlen = (int) ncp->begin_var;
-        buf = NCI_Calloc(1, (size_t)header_wlen);
+        bufLen = _RNDUP(header_wlen, X_ALIGN);
+        buf = NCI_Calloc(bufLen, 1);
 #else
         /* Do not write padding area (between ncp->xsz and ncp->begin_var) */
         header_wlen = (int) ncp->xsz;
-        buf = NCI_Malloc((size_t)header_wlen);
+        bufLen = _RNDUP(header_wlen, X_ALIGN);
+        buf = NCI_Malloc(bufLen);
 #endif
 
         /* copy the entire local header object to buf */
