@@ -280,7 +280,7 @@ nczipio_put_var(void             *ncdp,
     }
 
     if (nczipp->delay_init && (varp->chunkdim == NULL)){
-        nczipioi_var_init(nczipp, varp, 1, &start, &count);
+        nczipioi_var_init(nczipp, varp, 1, (MPI_Offset**)&start, (MPI_Offset**)&count);
     }
 
     if (imap != NULL || bufcount != -1) {
@@ -583,7 +583,7 @@ nczipio_put_varn(void              *ncdp,
     }
 
     if (nczipp->delay_init && (varp->chunkdim == NULL)){
-        nczipioi_var_init(nczipp, varp, num, starts, counts);
+        nczipioi_var_init(nczipp, varp, num, (MPI_Offset**)starts, (MPI_Offset**)counts);
     }
     
     err = nczipioi_put_varn(nczipp, varp, num, starts, counts, buf);
