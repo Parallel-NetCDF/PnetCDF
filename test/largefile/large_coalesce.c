@@ -34,7 +34,6 @@ int main(int argc, char** argv)
     int ncid, cmode, varid, dimid[2], req[3], st[3];
     MPI_Offset start[2], count[2];
     MPI_Info info;
-    size_t i;
     int bb_enabled=0;
 
     MPI_Init(&argc, &argv);
