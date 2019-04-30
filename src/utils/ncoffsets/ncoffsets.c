@@ -2079,43 +2079,37 @@ int main(int argc, char *argv[])
 
         /* calculate the size in bytes of this variable */
         size = type_size(varp->type);
-        if (varp->ndims) size *= varp->dsizes[0];
 
-        lineLen = 0;
-        ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
-        for (j=0; j<ndims; j++) {
-            dimp = ncp->dims.value[varp->dimids[j]];
-            lineLen += strlen(dimp->name->cp) + 2;
-        }
-        dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
-        lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
-        line = (char*)malloc(lineLen);
-        sprintf(line,"%s", varp->name->cp);
-        ndims = varp->ndims;
-        if (ndims > 0) strcat(line,"(");
-        cdots = 0;
-        for (j=0; j<ndims; j++) {
-            dimp = ncp->dims.value[varp->dimids[j]];
-            if (dimp->size == NC_UNLIMITED)
-                size *= ncp->numrecs;
-            if (ndims <= MAX_PRINT_NDIMS || (j < 3 || j == ndims-1)) {
-                sprintf(str, "%s%s", dimp->name->cp, j < ndims-1 ? ", " : ")");
-                strcat(line, str);
+        if (varp->ndims == 0) { /* scalar variable */
+            sprintf(type_str,"%-6s", type_name(varp->type));
+            printf("\t%6s %s:\n", type_str, varp->name->cp);
+        } else {
+            size *= varp->dsizes[0];
+            lineLen = strlen(varp->name->cp) + 2;
+            ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                lineLen += strlen(dimp->name->cp) + 2;
             }
-            else if (cdots == 0) {
-                strcat(line, "..., ");
-                cdots = 1;
+            dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
+            lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
+            line = (char*)malloc(lineLen);
+            sprintf(line,"%s(", varp->name->cp);
+            ndims = varp->ndims;
+            cdots = 0;
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                if (dimp->size == NC_UNLIMITED)
+                    size *= ncp->numrecs;
+                if (ndims <= MAX_PRINT_NDIMS || (j < 3 || j == ndims-1)) {
+                    sprintf(str, "%s%s", dimp->name->cp, j < ndims-1 ? ", " : ")");
+                    strcat(line, str);
+                }
+                else if (cdots == 0) {
+                    strcat(line, "..., ");
+                    cdots = 1;
+                }
             }
-        }
-
-        /* print the data type, variable name, and its dimensions */
-        sprintf(type_str,"%-6s", type_name(varp->type));
-        printf("\t%6s %s:", type_str, line);
-        if (ndims <= MAX_PRINT_NDIMS)
-            printf("\n");
-        else
-            printf(" // number dimensions = %d\n", ndims);
-        free(line);
 
             /* print the data type, variable name, and its dimensions */
             sprintf(type_str,"%-6s", type_name(varp->type));
@@ -2177,41 +2171,44 @@ int main(int argc, char *argv[])
 
         /* calculate the size in bytes of this variable */
         size = type_size(varp->type);
-        if (varp->ndims) size *= varp->dsizes[0];
 
-        lineLen = 0;
-        ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
-        for (j=0; j<ndims; j++) {
-            dimp = ncp->dims.value[varp->dimids[j]];
-            lineLen += strlen(dimp->name->cp) + 2;
-        }
-        dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
-        lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
-        line = (char*)malloc(lineLen);
-        sprintf(line,"%s", varp->name->cp);
-        ndims = varp->ndims;
-        if (ndims > 0) strcat(line,"(");
-        cdots = 0;
-        for (j=0; j<ndims; j++) {
-            dimp = ncp->dims.value[varp->dimids[j]];
-            if (ndims <= MAX_PRINT_NDIMS || (j < 3 || j == ndims-1)) {
-                sprintf(str, "%s%s", dimp->name->cp, j < ndims-1 ? ", " : ")");
-                strcat(line, str);
+        if (varp->ndims == 0) { /* scalar variable */
+            sprintf(type_str,"%-6s", type_name(varp->type));
+            printf("\t%6s %s:", type_str, varp->name->cp);
+        } else {
+            size *= varp->dsizes[0];
+            lineLen = strlen(varp->name->cp) + 2;
+            ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                lineLen += strlen(dimp->name->cp) + 2;
             }
-            else if (cdots == 0) {
-                strcat(line, "..., ");
-                cdots = 1;
+            dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
+            lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
+            line = (char*)malloc(lineLen);
+            sprintf(line,"%s(", varp->name->cp);
+            ndims = varp->ndims;
+            cdots = 0;
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                if (ndims <= MAX_PRINT_NDIMS || (j < 3 || j == ndims-1)) {
+                    sprintf(str, "%s%s", dimp->name->cp, (j<ndims-1)?", ":")");
+                    strcat(line, str);
+                }
+                else if (cdots == 0) {
+                    strcat(line, "..., ");
+                    cdots = 1;
+                }
             }
+            /* print the data type, variable name, and its dimensions */
+            sprintf(type_str,"%-6s", type_name(varp->type));
+            printf("\t%6s %s:", type_str, line);
+            if (ndims <= MAX_PRINT_NDIMS)
+                printf("\n");
+            else
+                printf(" // number dimensions = %d\n", ndims);
+            free(line);
         }
-
-        /* print the data type, variable name, and its dimensions */
-        sprintf(type_str,"%-6s", type_name(varp->type));
-        printf("\t%6s %s:", type_str, line);
-        if (ndims <= MAX_PRINT_NDIMS)
-            printf("\n");
-        else
-            printf(" // number dimensions = %d\n", ndims);
-        free(line);
 
         /* print the starting and ending file offset of this variable */
         numrecs = ncp->numrecs;
