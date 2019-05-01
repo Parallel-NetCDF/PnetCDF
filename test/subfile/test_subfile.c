@@ -159,8 +159,8 @@ int main(int argc, char **argv)
         bufcount *= length;
     }
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
-    if (verbose)
-        for(i=0; i<ndims&&rank==0; i++)
+    if (verbose && rank == 0)
+        for(i=0; i<ndims; i++)
 	    printf("array_of_psizes[%d]=%d\n", i, array_of_psizes[i]);
 
     /* subarray in each process is len x len x len */
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 
     /* starting coordinates of the subarray in each dimension */
     for (i=0; i<ndims; i++)
-        array_of_starts[i] = length * rank_dim[i];
+        array_of_starts[i] = (MPI_Offset)length * rank_dim[i];
 
     for (i=0; i<nvars; i++) {
 	for (j=0; j<ndims; j++) {
