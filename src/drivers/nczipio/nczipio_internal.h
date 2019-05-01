@@ -10,6 +10,13 @@
             DEBUG_RETURN_ERROR(err) \
         }
 
+#define CHK_ERR_REDUCE(V0,V1,V2,V3,V4,V5,V6) \
+        err = MPI_Reduce(V0,V1,V2,V3,V4,V5,V6); \
+        if (err != MPI_SUCCESS){ \
+            err = ncmpii_error_mpi2nc(err, "MPI_Allreduce"); \
+            DEBUG_RETURN_ERROR(err) \
+        }
+
 #define CHK_ERR_PACK(V0,V1,V2,V3,V4,V5,V6) \
         err = MPI_Pack(V0,V1,V2,V3,V4,V5,V6); \
         if (err != MPI_SUCCESS){ \

@@ -102,7 +102,7 @@ nczipioi_parse_var_info(NC_zip *nczipp){
             var.etype = ncmpii_nc2mpitype(var.xtype);
             var.chunkdim = NULL;
 
-            nczipioi_var_init(nczipp, &var,0, NULL, NULL);
+            nczipioi_var_init(nczipp, &var, 0, NULL, NULL);
         }
     
         err = nczipioi_var_list_add(&(nczipp->vars), var);

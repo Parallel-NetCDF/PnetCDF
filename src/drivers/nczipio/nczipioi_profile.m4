@@ -17,7 +17,18 @@ dnl
 define(`CONCATE',dnl
 `dnl
     $1$2')dnl
+define(`PRINTNAME',dnl
+`dnl
+            fprintf(pfile, "$1, ");
+')dnl
 define(`PRINTTIME',dnl
+`dnl
+            printf("#%%$: $1_time_mean %lf\n", tmean[$2]);
+            printf("#%%$: $1_time_max %lf\n", tmax[$2]);
+            printf("#%%$: $1_time_min %lf\n", tmin[$2]);
+            printf("#%%$: $1_time_var %lf\n\n", tvar[$2]);
+')dnl
+define(`PRINTTIMEMEAN',dnl
 `dnl
             printf("#%%$: $1_mean %lf\n", tmean[$2]);
             printf("#%%$: $1_max %lf\n", tmax[$2]);
@@ -45,17 +56,18 @@ define(`PRINTTIME',dnl
 #ifdef PNETCDF_PROFILING
 int nczipioi_print_profile(NC_zip *nczipp){
     int err;
-    int i;
-    double tmax[NTIMER], tmin[NTIMER], tmean[NTIMER], tvar[NTIMER], tvar_local[NTIMER];
+    int i, j;
+    double tmax[NTIMER], tmin[NTIMER], tmean[NTIMER], tvar[NTIMER], tvar_local[NTIMER + 3];
+    char *ppath = getenv("PNETCDF_PROFILE_PATH");
 
-    MPI_Reduce(nczipp->profile.tt, tmax, NTIMER, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
-    MPI_Reduce(nczipp->profile.tt, tmin, NTIMER, MPI_DOUBLE, MPI_MIN, 0, nczipp->comm);
-    MPI_Allreduce(nczipp->profile.tt, tmean, NTIMER, MPI_DOUBLE, MPI_SUM, nczipp->comm);
+    CHK_ERR_REDUCE(nczipp->profile.tt, tmax, NTIMER, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
+    CHK_ERR_REDUCE(nczipp->profile.tt, tmin, NTIMER, MPI_DOUBLE, MPI_MIN, 0, nczipp->comm);
+    CHK_ERR_ALLREDUCE(nczipp->profile.tt, tmean, NTIMER, MPI_DOUBLE, MPI_SUM, nczipp->comm);
     for(i = 0; i < NTIMER; i++){
         tmean[i] /= nczipp->np;
         tvar_local[i] = (nczipp->profile.tt[i] - tmean[i]) * (nczipp->profile.tt[i] - tmean[i]);
     }
-    MPI_Reduce(tvar_local, tvar, NTIMER, MPI_DOUBLE, MPI_SUM, 0, nczipp->comm);
+    CHK_ERR_REDUCE(tvar_local, tvar, NTIMER, MPI_DOUBLE, MPI_SUM, 0, nczipp->comm);
     
     if (nczipp->rank == 0){
         for(i = 0; i < NTIMER; i++){
@@ -64,6 +76,68 @@ int nczipioi_print_profile(NC_zip *nczipp){
 
 foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
     }
+
+    if (ppath != NULL && *ppath != '0') {
+        MPI_Status stat;
+
+        memcpy(tvar_local + 3, nczipp->profile.tt, sizeof(double) * NTIMER);
+        tvar_local[0] = (double)nczipp->putsize / 1048576.0f;
+        tvar_local[1] = (double)nczipp->getsize / 1048576.0f;
+        tvar_local[2] = (double)nczipp->nmychunks;
+
+        if (nczipp->rank == 0){                        
+            FILE *pfile = fopen(ppath, "w");
+
+            fprintf(pfile, "rank, putsize, getsize, nchunk, ");
+foreach(`t', TIMERS, `PRINTNAME(translit(t, `()'))')dnl
+            fprintf(pfile, "\n");
+
+            fprintf(pfile, "mean, , , , ");
+            for(j = 0; j < NTIMER; j++){
+                fprintf(pfile, "%lf, ", tmean[j]);
+            }
+            fprintf(pfile, "\n");
+
+            fprintf(pfile, "max, , , , ");
+            for(j = 0; j < NTIMER; j++){
+                fprintf(pfile, "%lf, ", tmax[j]);
+            }
+            fprintf(pfile, "\n");
+
+            fprintf(pfile, "min, , , ,");
+            for(j = 0; j < NTIMER; j++){
+                fprintf(pfile, "%lf, ", tmin[j]);
+            }
+            fprintf(pfile, "\n");
+
+            fprintf(pfile, "var, , , ,");
+            for(j = 0; j < NTIMER; j++){
+                fprintf(pfile, "%lf, ", tvar[j]);
+            }
+            fprintf(pfile, "\n");
+
+            fprintf(pfile, "0, ");
+
+            for(j = 0; j < NTIMER + 3; j++){
+                fprintf(pfile, "%lf, ", tvar_local[j]);
+            }
+            fprintf(pfile, "\n");
+
+            for(i = 1; i < nczipp->np; i++){
+                MPI_Recv(tvar_local, NTIMER + 3, MPI_DOUBLE, i, 0, nczipp->comm, &stat);
+                fprintf(pfile, "%d, ", i);
+                for(j = 0; j < NTIMER + 3; j++){
+                    fprintf(pfile, "%lf, ", tvar_local[j]);
+                }
+                fprintf(pfile, "\n");
+            }
+
+            fclose(pfile);
+        }
+        else{
+            MPI_Send(tvar_local, NTIMER + 3, MPI_DOUBLE, 0, 0, nczipp->comm);
+        }
+    }            
 }
 #endif
 
