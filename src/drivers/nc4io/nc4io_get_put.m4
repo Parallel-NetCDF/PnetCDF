@@ -111,26 +111,28 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
 #include <common.h>
 #include <nc4io_driver.h>
 
-MPI_Offset getelementsize(NC_nc4 *nc4p, int varid){
+static int getelementsize(NC_nc4 *nc4p, int varid, MPI_Offset *size){
     int err;
     nc_type xtype;
     size_t xsize;
 
     err = nc_inq_vartype(nc4p->ncid, varid, &xtype);
     if (err != NC_NOERR){
-        return 0;
+        return err;
     }
 
     err = nc_inq_type(nc4p->ncid, xtype, NULL, &xsize);
     if (err != NC_NOERR){
-        return 0;
+        return err;
     }
 
-    return (MPI_Offset)xsize;
+    *size = (MPI_Offset)xsize;
+
+    return NC_NOERR;
 }
 
-MPI_Offset getvarsize(NC_nc4 *nc4p, int varid, int ndim){
-    int i, err;
+static int getvarsize(NC_nc4 *nc4p, int varid, int ndim, MPI_Offset *size){
+    int i, err = NC_NOERR;
     int *dimids;
     size_t ret, dsize;
 
@@ -151,12 +153,14 @@ MPI_Offset getvarsize(NC_nc4 *nc4p, int varid, int ndim){
         }
         ret *= dsize;
     }
+
+    *size = (MPI_Offset)ret;
       
 fn_out:;
 
     NCI_Free(dimids);
 
-    return (MPI_Offset)ret;
+    return err;
 }
 
 
@@ -288,7 +292,7 @@ nc4io_get_var(void             *ncdp,
     int i, err, status, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
-    MPI_Offset getsize;
+    MPI_Offset getsize, vsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
@@ -347,15 +351,25 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
 
     /* Count get size */
     if (!(reqMode & NC_REQ_ZERO)){
-        getsize = getelementsize(nc4p, varid);
+        err = getelementsize(nc4p, varid, &getsize);
+        if (err != NC_NOERR){
+            return err;
+        }
+
         if (scount != NULL){
             for(i = 0; i < ndims; i++){
                 getsize *= scount[i];
             }
         }
         else{
-            if (apikind == NC4_API_KIND_VAR)
-                getsize *= getvarsize(nc4p, varid, ndims);
+            if (apikind == NC4_API_KIND_VAR){
+                err = getvarsize(nc4p, varid, ndims, &vsize);
+                if (err != NC_NOERR){
+                    return err;
+                }
+
+                getsize *= vsize;
+            }
         }
         nc4p->getsize += getsize;
     }
@@ -386,7 +400,7 @@ nc4io_put_var(void             *ncdp,
     int i, err, status, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
-    MPI_Offset putsize;
+    MPI_Offset putsize, vsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
@@ -445,15 +459,25 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
 
     /* Count put size */
     if (!(reqMode & NC_REQ_ZERO)){
-        putsize = getelementsize(nc4p, varid);
+        err = getelementsize(nc4p, varid, &putsize);
+        if (err != NC_NOERR){
+            return err;
+        }
+
         if (scount != NULL){
             for(i = 0; i < ndims; i++){
                 putsize *= scount[i];
             }
         }
         else{
-            if (apikind == NC4_API_KIND_VAR)
-                putsize *= getvarsize(nc4p, varid, ndims);
+            if (apikind == NC4_API_KIND_VAR){
+                err = getvarsize(nc4p, varid, ndims, &vsize);
+                if (err != NC_NOERR){
+                    return err;
+                }
+
+                putsize *= vsize;
+            }
         }
         nc4p->putsize += putsize;
     }
