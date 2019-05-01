@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* memset() */
 #include <limits.h> /* INT_MAX */
 
 #include <mpi.h>

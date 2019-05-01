@@ -158,13 +158,13 @@ ncbbio_open(MPI_Comm     comm,
             return err;
         }
         /* Initialize put list for nonblocking put operation */
-        ncbbio_put_list_init(ncbbp);
+        err = ncbbio_put_list_init(ncbbp);
         if (err != NC_NOERR) {
             NCI_Free(ncbbp);
             return err;
         }
         /* Initialize metadata index for log entries */
-        ncbbio_metaidx_init(ncbbp);
+        err = ncbbio_metaidx_init(ncbbp);
         if (err != NC_NOERR) {
             NCI_Free(ncbbp);
             return err;
@@ -198,11 +198,14 @@ ncbbio_close(void *ncdp)
      */
     if (ncbbp->inited) {
         /* Close log file */
-        status = ncbbio_log_close(ncbbp, 1);
+        err = ncbbio_log_close(ncbbp, 1);
+        if (status == NC_NOERR) status = err;
         /* Clean up put list */
-        ncbbio_put_list_free(ncbbp);
+        err = ncbbio_put_list_free(ncbbp);
+        if (status == NC_NOERR) status = err;
         /* Clean up metadata index */
-        ncbbio_metaidx_free(ncbbp);
+        err = ncbbio_metaidx_free(ncbbp);
+        if (status == NC_NOERR) status = err;
     }
 
     /* Call ncmpio driver */
@@ -270,11 +273,11 @@ ncbbio_init(NC_bb *ncbbp)
         if (err != NC_NOERR) return err;
 
         /* Initialize put list for nonblocking put operation */
-        ncbbio_put_list_init(ncbbp);
+        err = ncbbio_put_list_init(ncbbp);
         if (err != NC_NOERR) return err;
 
         /* Initialize metadata index for log entries */
-        ncbbio_metaidx_init(ncbbp);
+        err = ncbbio_metaidx_init(ncbbp);
         if (err != NC_NOERR) return err;
 
         /* Mark as initialized */
@@ -320,11 +323,11 @@ ncbbio__enddef(void       *ncdp,
         if (err != NC_NOERR) return err;
 
         /* Initialize put list for nonblocking put operation */
-        ncbbio_put_list_init(ncbbp);
+        err = ncbbio_put_list_init(ncbbp);
         if (err != NC_NOERR) return err;
 
         /* Initialize metadata index for log entries */
-        ncbbio_metaidx_init(ncbbp);
+        err = ncbbio_metaidx_init(ncbbp);
         if (err != NC_NOERR) return err;
 
         /* Mark as initialized */
@@ -415,11 +418,14 @@ ncbbio_abort(void *ncdp)
             replay = 0;
 
         /* Close log file */
-        status = ncbbio_log_close(ncbbp, replay);
+        err = ncbbio_log_close(ncbbp, replay);
+        if (status == NC_NOERR) status = err;
         /* Clean up put list */
-        ncbbio_put_list_free(ncbbp);
+        err = ncbbio_put_list_free(ncbbp);
+        if (status == NC_NOERR) status = err;
         /* Clean up metadata index */
-        ncbbio_metaidx_free(ncbbp);
+        err = ncbbio_metaidx_free(ncbbp);
+        if (status == NC_NOERR) status = err;
     }
 
     /* Call ncmpio driver */
@@ -712,9 +718,7 @@ ncbbio_wait(void *ncdp,
     /* Flush the log if log is initialized */
     if (ncbbp->inited) {
         err = ncbbio_log_flush(ncbbp);
-        if (status == NC_NOERR) {
-            status = err;
-        }
+        if (status == NC_NOERR) status = err;
     }
 
    /*

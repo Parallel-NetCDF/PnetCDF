@@ -181,7 +181,7 @@ void* thread_func(void *arg)
 /*----< main() >-------------------------------------------------------------*/
 int main(int argc, char **argv) {
     char filename[256];
-    int  i, err, nerrs=0, rank, providedT, verbose=0;
+    int  i, err, nerrs=0, rank, providedT;
 
 #ifdef ENABLE_THREAD_SAFE
     pthread_t threads[NTHREADS];
@@ -209,7 +209,8 @@ int main(int argc, char **argv) {
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
 #ifdef ENABLE_THREAD_SAFE
-    if(rank == 0 && verbose) {
+#ifdef DEBUG
+    if (rank == 0) {
         switch (providedT) {
             case MPI_THREAD_SINGLE:      printf("Support MPI_THREAD_SINGLE\n");
                                          break;
@@ -222,6 +223,7 @@ int main(int argc, char **argv) {
             default: printf("Error MPI_Init_thread()\n"); break;
         }
     }
+#endif
     if (providedT != MPI_THREAD_MULTIPLE) {
         if (!rank) {
             char fname[512];
@@ -229,8 +231,8 @@ int main(int argc, char **argv) {
             for (i=0; i<NTHREADS; i++) { /* create dummy files for ncvalidator to check */
                 int ncid;
                 sprintf(fname, "%s.%d", filename, i);
-                ncmpi_create(MPI_COMM_SELF, fname, NC_CLOBBER, MPI_INFO_NULL, &ncid);
-                ncmpi_close(ncid);
+                err = ncmpi_create(MPI_COMM_SELF, fname, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
+                err = ncmpi_close(ncid); CHECK_ERR
             }
         }
         MPI_Finalize();

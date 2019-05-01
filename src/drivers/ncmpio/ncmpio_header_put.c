@@ -526,7 +526,8 @@ int ncmpio_write_header(NC *ncp)
     MPI_Comm_rank(ncp->comm, &rank);
     if (rank == 0) { /* only root writes to file header */
         MPI_Status mpistatus;
-        void *buf = NCI_Malloc((size_t)ncp->xsz); /* header's write buffer */
+        size_t bufLen = _RNDUP(ncp->xsz, X_ALIGN);
+        void *buf = NCI_Malloc(bufLen); /* header's write buffer */
 
         /* copy header object to write buffer */
         status = ncmpio_hdr_put_NC(ncp, buf);

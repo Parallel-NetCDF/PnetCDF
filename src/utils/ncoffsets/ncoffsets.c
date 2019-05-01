@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>    /* strcpy() */
+#include <string.h>    /* strcpy(), strcat(), memset(); memmove() */
 #include <errno.h>     /* errno, strerror() */
 #include <sys/types.h> /* open() */
 #include <sys/stat.h>  /* open() */
@@ -16,6 +16,10 @@
 #include <inttypes.h>  /* check for Endianness, uint32_t*/
 
 static int is_little_endian;
+
+#ifndef MAX_PRINT_NDIMS
+#define MAX_PRINT_NDIMS 64
+#endif
 
 #ifndef MIN
 #define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
@@ -185,12 +189,12 @@ typedef struct NC {
 } NC;
 
 typedef struct bufferinfo {
-    int        fd;
-    off_t      offset;   /* current read/write offset in the file */
-    int        version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
-    void      *base;     /* beginning of read/write buffer */
-    void      *pos;      /* current position in buffer */
-    long long  size;     /* size of the buffer */
+    int     fd;
+    off_t   offset;   /* current read/write offset in the file */
+    int     version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
+    void   *base;     /* beginning of read/write buffer */
+    void   *pos;      /* current position in buffer */
+    size_t  size;     /* size of the buffer */
 } bufferinfo;
 
 /*
@@ -779,27 +783,46 @@ static int
 hdr_fetch(bufferinfo *gbp) {
     int err=NC_NOERR;
     size_t slack;        /* any leftover data in the buffer */
+    char *readBuf;
+    size_t readLen;
 
     assert(gbp->base != NULL);
 
     slack = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
-    /* if gbp->pos and gbp->base are the same, there is no leftover buffer
+
+    /* If gbp->pos and gbp->base are the same, there is no leftover buffer
      * data to worry about.
      * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then
-     * all data in the buffer has been consumed */
+     * all data in the buffer has been consumed
+     * If neither, then read additional header of size gbp->size - slack into
+     * a contiguous buffer, pointed by gbp->base + slack.
+     */
     if (slack == gbp->size) slack = 0;
 
-    memset(gbp->base, 0, (size_t)gbp->size);
+    readBuf = (char*)gbp->base;
+    readLen = gbp->size;
+    if (slack > 0) { /* move slack to beginning of the buffer, gbp->base */
+        memmove(gbp->base, gbp->pos, slack);
+        readBuf += slack;
+        readLen -= slack;
+    }
+
+    /* May need to zero out the buffer, as it will be filled with read.
+     * Without this, valgrind may mysteriously spew warning messages
+     * e.g. e3sm-io benchmark F case.
+     */
+    memset(readBuf, 0, readLen);
+
     gbp->pos = gbp->base;
 
-    lseek(gbp->fd, (gbp->offset)-slack, SEEK_SET);
-    ssize_t read_amount = read(gbp->fd, gbp->base, gbp->size);
+    lseek(gbp->fd, gbp->offset, SEEK_SET);
+    ssize_t read_amount = read(gbp->fd, readBuf, readLen);
     if (read_amount == -1) {
         fprintf(stderr,"ERROR at line %d: read error %s\n",__LINE__,strerror(errno));
         exit(1);
     }
     /* we might have had to backtrack */
-    gbp->offset += (gbp->size - slack);
+    gbp->offset += read_amount;
 
     return err;
 }
@@ -885,6 +908,8 @@ hdr_get_NC_name(bufferinfo  *gbp,
     char *cpos;
 
     /* get nelems */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) return status;
     if (gbp->version == 5)
         nchars = get_uint64(gbp);
     else
@@ -919,6 +944,9 @@ hdr_get_NC_name(bufferinfo  *gbp,
 
     /* handle the padding */
     if (padding > 0) {
+        status = hdr_check_buffer(gbp, padding);
+        if (status != NC_NOERR) return status;
+
 #ifdef STRICT_FILE_FORMAT_COMPLIANCE
         /* CDF specification: Header padding uses null (\x00) bytes.
          * However, prior to version 4.5.0, NetCDF did not implement this
@@ -994,6 +1022,11 @@ hdr_get_NC_dim(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get dim_length */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) {
+        free(ncstrp);
+        return status;
+    }
     if (gbp->version == 5)
         dim_length = get_uint64(gbp);
     else
@@ -1065,6 +1098,8 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) return status;
     if (gbp->version == 5)
         ndefined = get_uint64(gbp);
     else
@@ -1142,6 +1177,9 @@ hdr_get_NC_attrV(bufferinfo *gbp,
 
     /* handle the padding */
     if (padding > 0) {
+        status = hdr_check_buffer(gbp, padding);
+        if (status != NC_NOERR) return status;
+
 #ifdef STRICT_FILE_FORMAT_COMPLIANCE
         /* CDF specification: Header padding uses null (\x00) bytes.
          * However, prior to version 4.5.0, NetCDF did not implement this
@@ -1266,6 +1304,11 @@ hdr_get_NC_attr(bufferinfo  *gbp,
     }
 
     /* get nelems */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) {
+        free(strp);
+        return status;
+    }
     if (gbp->version == 5)
         nelems = get_uint64(gbp);
     else
@@ -1331,6 +1374,8 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) return status;
     if (gbp->version == 5)
         ndefined = get_uint64(gbp);
     else
@@ -1433,6 +1478,11 @@ hdr_get_NC_var(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* nelems */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) {
+        free(strp);
+        return status;
+    }
     if (gbp->version == 5)
         ndims = get_uint64(gbp);
     else
@@ -1469,6 +1519,11 @@ hdr_get_NC_var(bufferinfo  *gbp,
     }
 
     /* get vsize */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) {
+        ncmpii_free_NC_var(varp);
+        return status;
+    }
     if (gbp->version == 5)
         varp->len = get_uint64(gbp);
     else
@@ -1543,6 +1598,8 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     /* get nelems (number of variables) from gbp buffer */
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
+    if (status != NC_NOERR) return status;
     if (gbp->version == 5)
         ndefined = get_uint64(gbp);
     else
@@ -1850,7 +1907,7 @@ int main(int argc, char *argv[])
     /* get command-line arguments */
     while ((opt = getopt(argc, argv, "v:sghqxr")) != EOF) {
         switch(opt) {
-            case 'v': make_lvars (optarg, fspecp);
+            case 'v': make_lvars(optarg, fspecp);
                       break;
             case 's': print_var_size = 1;
                       break;
@@ -1906,6 +1963,13 @@ int main(int argc, char *argv[])
 
     if (check_gap) {
         int ret = check_gap_in_fixed_vars(ncp);
+        free(fspecp->varp);
+        if (fspecp->lvars != NULL) {
+            for (i=0; i<fspecp->nlvars; i++)
+                free(fspecp->lvars[i]);
+            free(fspecp->lvars);
+        }
+        free(fspecp);
         ncmpii_free_NC(ncp);
         free(ncp);
         close(fd);
@@ -1928,6 +1992,17 @@ int main(int argc, char *argv[])
             }
             if (j == ncp->vars.ndefined) {
                 printf("Error: variable %s not found\n",fspecp->lvars[i]);
+                free(fspecp->varids);
+                free(fspecp->varp);
+                if (fspecp->lvars != NULL) {
+                    for (i=0; i<fspecp->nlvars; i++)
+                        free(fspecp->lvars[i]);
+                    free(fspecp->lvars);
+                }
+                free(fspecp);
+                ncmpii_free_NC(ncp);
+                free(ncp);
+                close(fd);
                 return 1;
             }
         }
@@ -1956,8 +2031,6 @@ int main(int argc, char *argv[])
     }
 
     if (fspecp->nlvars == 0) { /* print all variables */
-        fspecp = (struct fspec*) malloc(sizeof(struct fspec));
-        MALLOC_CHECK(fspecp)
         fspecp->varp = (NC_var**) malloc(ncp->vars.ndefined * sizeof(NC_var*));
         MALLOC_CHECK(fspecp->varp)
         fspecp->varids = (int*) malloc(ncp->vars.ndefined * sizeof(int));
@@ -1995,33 +2068,58 @@ int main(int argc, char *argv[])
     /* print fixed-size variables first */
     if (num_fix_vars) printf("\nfixed-size variables:\n");
     for (i=0; i<fspecp->nlvars; i++) {
-        int j, ndims;
-        char type_str[16], str[1024], line[1024];
+        int j, ndims, cdots;
+        char type_str[16], str[1024], *line;
+        size_t lineLen;
         long long size;
         NC_var *varp = fspecp->varp[i];
+        NC_dim *dimp;
 
         if (IS_RECVAR(varp)) continue;
 
         /* calculate the size in bytes of this variable */
         size = type_size(varp->type);
-        if (varp->ndims) size *= varp->dsizes[0];
 
-        line[0]='\0';
-        sprintf(type_str,"%-6s", type_name(varp->type));
-        sprintf(line,"%s", varp->name->cp);
-        ndims = varp->ndims;
-        if (ndims > 0) strcat(line,"(");
-        for (j=0; j<ndims; j++) {
-            NC_dim *dimp = ncp->dims.value[varp->dimids[j]];
-            if (dimp->size == NC_UNLIMITED)
-                size *= ncp->numrecs;
-            sprintf(str, "%s%s", dimp->name->cp, j < ndims-1 ? ", " : ")");
-            strcat(line, str);
+        if (varp->ndims == 0) { /* scalar variable */
+            sprintf(type_str,"%-6s", type_name(varp->type));
+            printf("\t%6s %s:\n", type_str, varp->name->cp);
+        } else {
+            size *= varp->dsizes[0];
+            lineLen = strlen(varp->name->cp) + 2;
+            ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                lineLen += strlen(dimp->name->cp) + 2;
+            }
+            dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
+            lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
+            line = (char*)malloc(lineLen);
+            sprintf(line,"%s(", varp->name->cp);
+            ndims = varp->ndims;
+            cdots = 0;
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                if (dimp->size == NC_UNLIMITED)
+                    size *= ncp->numrecs;
+                if (ndims <= MAX_PRINT_NDIMS || (j < 3 || j == ndims-1)) {
+                    sprintf(str, "%s%s", dimp->name->cp, j < ndims-1 ? ", " : ")");
+                    strcat(line, str);
+                }
+                else if (cdots == 0) {
+                    strcat(line, "..., ");
+                    cdots = 1;
+                }
+            }
+
+            /* print the data type, variable name, and its dimensions */
+            sprintf(type_str,"%-6s", type_name(varp->type));
+            printf("\t%6s %s:", type_str, line);
+            if (ndims <= MAX_PRINT_NDIMS)
+                printf("\n");
+            else
+                printf(" // number dimensions = %d\n", ndims);
+            free(line);
         }
-
-        /* print the data type, variable name, and its dimensions */
-        printf("\t%6s %s:\n", type_str, line);
-
         /* print the starting and ending file offset of this variable */
         printf("\t       start file offset =%12lld\n", varp->begin);
         printf("\t       end   file offset =%12lld\n", varp->begin+size);
@@ -2062,30 +2160,55 @@ int main(int argc, char *argv[])
     /* print record variables */
     if (num_rec_vars) printf("\nrecord variables:\n");
     for (i=0; i<fspecp->nlvars; i++) {
-        int j, ndims;
-        char type_str[16], str[1024], line[1024];
+        int j, ndims, cdots;
+        char type_str[16], str[1024], *line;
+        size_t lineLen;
         long long var_begin, var_end, size, numrecs;
         NC_var *varp = fspecp->varp[i];
+        NC_dim *dimp;
 
         if (!IS_RECVAR(varp)) continue;
 
         /* calculate the size in bytes of this variable */
         size = type_size(varp->type);
-        if (varp->ndims) size *= varp->dsizes[0];
 
-        line[0]='\0';
-        sprintf(type_str,"%-6s", type_name(varp->type));
-        sprintf(line,"%s", varp->name->cp);
-        ndims = varp->ndims;
-        if (ndims > 0) strcat(line,"(");
-        for (j=0; j<ndims; j++) {
-            NC_dim *dimp = ncp->dims.value[varp->dimids[j]];
-            sprintf(str, "%s%s", dimp->name->cp, j < ndims-1 ? ", " : ")");
-            strcat(line, str);
+        if (varp->ndims == 0) { /* scalar variable */
+            sprintf(type_str,"%-6s", type_name(varp->type));
+            printf("\t%6s %s:", type_str, varp->name->cp);
+        } else {
+            size *= varp->dsizes[0];
+            lineLen = strlen(varp->name->cp) + 2;
+            ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                lineLen += strlen(dimp->name->cp) + 2;
+            }
+            dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
+            lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
+            line = (char*)malloc(lineLen);
+            sprintf(line,"%s(", varp->name->cp);
+            ndims = varp->ndims;
+            cdots = 0;
+            for (j=0; j<ndims; j++) {
+                dimp = ncp->dims.value[varp->dimids[j]];
+                if (ndims <= MAX_PRINT_NDIMS || (j < 3 || j == ndims-1)) {
+                    sprintf(str, "%s%s", dimp->name->cp, (j<ndims-1)?", ":")");
+                    strcat(line, str);
+                }
+                else if (cdots == 0) {
+                    strcat(line, "..., ");
+                    cdots = 1;
+                }
+            }
+            /* print the data type, variable name, and its dimensions */
+            sprintf(type_str,"%-6s", type_name(varp->type));
+            printf("\t%6s %s:", type_str, line);
+            if (ndims <= MAX_PRINT_NDIMS)
+                printf("\n");
+            else
+                printf(" // number dimensions = %d\n", ndims);
+            free(line);
         }
-
-        /* print the data type, variable name, and its dimensions */
-        printf("\t%6s %s:\n", type_str, line);
 
         /* print the starting and ending file offset of this variable */
         numrecs = ncp->numrecs;
