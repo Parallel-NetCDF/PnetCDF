@@ -5,7 +5,8 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program tests writing record variabless with NetCDF4 driver
+ * This program tests whether get size and put size is counted accurately when 
+ * accessing a NetCDF4 file.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
