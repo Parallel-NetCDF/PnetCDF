@@ -17,13 +17,13 @@ dnl
 define(`GETATTTYPE',dnl
 `dnl
     ifelse($1, `MPI_CHAR', , `else ')if (itype == $1)
-        return ifelse($1, `MPI_DATATYPE_NULL', `nc_get_att', `nc_get_att_')$2(nc4p->ncid, varid, name, ($3*) buf);
+        err = ifelse($1, `MPI_DATATYPE_NULL', `nc_get_att', `nc_get_att_')$2(nc4p->ncid, varid, name, ($3*) buf);
 ')dnl
 dnl
 define(`PUTATTTYPE',dnl
 `dnl
     ifelse($1, `MPI_CHAR', , `else ')if (itype == $1)
-        return ifelse($1, `MPI_DATATYPE_NULL', `nc_put_att', `nc_put_att_')$2(nc4p->ncid, varid, name, ifelse($1, `MPI_CHAR', , `xtype, ')len, ($3*) value);
+        err = ifelse($1, `MPI_DATATYPE_NULL', `nc_put_att', `nc_put_att_')$2(nc4p->ncid, varid, name, ifelse($1, `MPI_CHAR', , `xtype, ')len, ($3*) value);
 ')dnl
 dnl
 define(`GETVARTYPE',dnl
@@ -197,9 +197,7 @@ nc4io_get_att(void         *ncdp,
     if (err != NC_NOERR){
         return 0;
     }
-    nc4p->getsize += (MPI_Offset)(xsize * len);
-
-
+    
     /* Call nc_get_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_SIGNED_CHAR', `schar', `signed char')', dnl
@@ -214,9 +212,15 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `GETATTTYPE(translit(dt, `()'))')dnl
+    else{
+        DEBUG_ASSIGN_ERROR(err, NC_EUNSPTETYPE)
+    }
 
-    nc4p->getsize -= (MPI_Offset)(xsize * len); /* Deduct the size we counted for failed operation */
-    DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
+    if (err == NC_NOERR){
+        nc4p->getsize += (MPI_Offset)(xsize * len);
+    }
+
+    return err;
 }
 
 int
@@ -256,7 +260,6 @@ nc4io_put_att(void         *ncdp,
     if (err != NC_NOERR){
         return 0;
     }
-    nc4p->putsize += (MPI_Offset)(xsize * len);
 
     /* Call nc_put_att_<type> */
 foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
@@ -272,9 +275,15 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `PUTATTTYPE(translit(dt, `()'))')dnl
-        
-    nc4p->putsize -= (MPI_Offset)(xsize * len); /* Deduct the size we counted for failed operation */
-    DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
+    else{
+        DEBUG_ASSIGN_ERROR(err, NC_EUNSPTETYPE)
+    }
+
+    if (err == NC_NOERR){
+        nc4p->putsize += (MPI_Offset)(xsize * len);
+    }
+    
+    return err;
 }
 
 int
