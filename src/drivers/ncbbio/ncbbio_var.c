@@ -406,7 +406,7 @@ ncbbio_put_varn(void              *ncdp,
          * buftype is noncontiguous, we pack buf into cbuf, a contiguous buffer.
          */
         int isderived, iscontig, elsize, position = 0;
-        MPI_Offset bnelems;
+        MPI_Offset bnelems=0;
 
         err = ncmpii_dtype_decode(buftype, &itype, &elsize, &bnelems,
                                   &isderived, &iscontig);

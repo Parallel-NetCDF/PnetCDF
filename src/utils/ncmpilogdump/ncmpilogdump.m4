@@ -62,7 +62,11 @@ int main(int argc, char *argv[]) {
 
     /* Get file size */
     fd = fileno(fmeta);
-    fstat(fd, &metastat);
+    err = fstat(fd, &metastat);
+    if (err != 0) {
+        err = NC_EFILE;
+        goto fn_exit;
+    }
 
     /* Allocate buffer */
     Meta = (char*)malloc(metastat.st_size);
@@ -84,7 +88,11 @@ int main(int argc, char *argv[]) {
 
         /* Get file size */
         fd = fileno(fdata);
-        fstat(fd, &datastat);
+        err = fstat(fd, &datastat);
+        if (err != 0) {
+            err = NC_EFILE;
+            goto fn_exit;
+        }
 
         /* Allocate buffer */
         Data = (char*)malloc(datastat.st_size);
