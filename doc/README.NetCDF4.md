@@ -122,7 +122,6 @@ different.
 * The following APIs are not supported yet. An error code NC_ENOTSUPPORT will
   be returned, if called.
   * ncmpi_inq_header_size, ncmpi_inq_header_extent
-  * ncmpi_inq_get_size, ncmpi_inq_put_size
   * ncmpi_inq_striping
   * ncmpi_inq_varoffset
   * ncmpi_fill_var_rec
@@ -131,6 +130,9 @@ different.
   * all nonblocking APIs
   * vard and varn APIs
   * flexible APIs (i.e. argument buftype is a constructed MPI derived data type)
+* ncmpi_inq_get_size and ncmpi_inq_put_size will report only size of data passed 
+  from PnetCDF to NetCDF. It does not include any metadata and will not represent
+  actual size the NetCDF library read or write on the file system. 
 
 Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 
