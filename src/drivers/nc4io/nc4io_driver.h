@@ -25,6 +25,8 @@ struct NC_nc4 {
     MPI_Comm           comm;        /* MPI communicator */
     MPI_Info           mpiinfo;     /* MPI hints */
     int                ncid;        /* NetCDF file ID */
+    MPI_Offset         getsize;     /* amount of reads  committed so far in bytes */
+    MPI_Offset         putsize;     /* amount of writes committed so far in bytes */
 };
 
 extern int
