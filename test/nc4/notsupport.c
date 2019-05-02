@@ -78,9 +78,9 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_striping(ncid, &v1, &v2); EXPECT_ERR(NC_ENOTSUPPORT);
 
-    err = ncmpi_inq_put_size(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
+    err = ncmpi_inq_put_size(ncid, start); CHECK_ERR
 
-    err = ncmpi_inq_get_size(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
+    err = ncmpi_inq_get_size(ncid, start); CHECK_ERR
     
     err = ncmpi_inq_header_size(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
 
