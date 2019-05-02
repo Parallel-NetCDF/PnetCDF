@@ -5,7 +5,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program tests writing record variabless with NetCDF4 driver
+ * This program tests writing record variables with NetCDF4 driver
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

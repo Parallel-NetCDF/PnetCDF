@@ -19,14 +19,14 @@
 
 typedef struct NC_nc4 NC_nc4; /* forward reference */
 struct NC_nc4 {
-    int                mode;        /* file _open/_create mode */
-    int                flag;        /* define/data/collective/indep mode */
-    char              *path;        /* path name */
-    MPI_Comm           comm;        /* MPI communicator */
-    MPI_Info           mpiinfo;     /* MPI hints */
-    int                ncid;        /* NetCDF file ID */
-    MPI_Offset         getsize;     /* amount of reads  committed so far in bytes */
-    MPI_Offset         putsize;     /* amount of writes committed so far in bytes */
+    int         mode;    /* file _open/_create mode */
+    int         flag;    /* define/data/collective/indep mode */
+    char       *path;    /* path name */
+    MPI_Comm    comm;    /* MPI communicator */
+    MPI_Info    mpiinfo; /* MPI hints */
+    int         ncid;    /* NetCDF file ID */
+    MPI_Offset  getsize; /* amount of reads  committed so far in bytes */
+    MPI_Offset  putsize; /* amount of writes committed so far in bytes */
 };
 
 extern int
