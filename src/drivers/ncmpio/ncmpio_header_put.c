@@ -56,7 +56,7 @@ hdr_put_NC_name(bufferinfo *pbp,
     if (err != NC_NOERR) return err;
 
     /* copy namestring */
-    return ncmpix_pad_putn_text(&pbp->pos, (MPI_Offset)nchars, name);
+    return ncmpix_pad_putn_text((void **)(&pbp->pos), (MPI_Offset)nchars, name);
 }
 
 /*----< hdr_put_NC_dim() >---------------------------------------------------*/
@@ -455,15 +455,15 @@ ncmpio_hdr_put_NC(NC *ncp, void *buf)
     /* copy "magic", 4 characters */
     if (ncp->format == 5) {
         putbuf.version = 5;
-        status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic5), ncmagic5);
+        status = ncmpix_putn_text((void **)(&putbuf.pos), sizeof(ncmagic5), ncmagic5);
     }
     else if (ncp->format == 2) {
         putbuf.version = 2;
-        status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic2), ncmagic2);
+        status = ncmpix_putn_text((void **)(&putbuf.pos), sizeof(ncmagic2), ncmagic2);
     }
     else {
         putbuf.version = 1;
-        status = ncmpix_putn_text(&putbuf.pos, sizeof(ncmagic1), ncmagic1);
+        status = ncmpix_putn_text((void **)(&putbuf.pos), sizeof(ncmagic1), ncmagic1);
     }
     if (status != NC_NOERR) return status;
 
