@@ -16,6 +16,7 @@
 #define NC_ZIP_VAR_RAW 0
 #define NC_ZIP_VAR_COMPRESSED 1
 #define NC_ZIP_VAR_DATA 2
+#define NC_ZIP_VAR_META 3
 
 #define NC_ZIP_MAPPING_STATIC 0
 #define NC_ZIP_MAPPING_DYNAMIC 01
@@ -83,6 +84,8 @@ typedef struct NC_zip_var {
     int *mychunks;
 
     int datavarid;
+    int offvarid;
+    int lenvarid;
     MPI_Offset *data_offs;
     int *data_lens;
     
