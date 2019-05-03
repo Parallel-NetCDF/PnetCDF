@@ -76,12 +76,6 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                 if (err != NC_NOERR){
                     return err;
                 }
-                if (!nczipp->delay_init){
-                    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkdim", NC_INT, varp->ndim, varp->chunkdim, MPI_INT);
-                    if (err != NC_NOERR){
-                        return err;
-                    }
-                }
             }
 
             // Calculate total # chunks, # chunks along each dim, chunksize
@@ -151,28 +145,22 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             // Try if there are offset recorded in attributes, it can happen after opening a file
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_offvarid", &(varp->offvarid), NULL);
             err |= nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_lenvarid", &(varp->lenvarid), NULL);
-            
-            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunkoffsets", NULL, &len);
-            if (err == NC_NOERR && varp->nchunk == len - 1){
-                err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_chunklens", NULL, &len);
-                if (err == NC_NOERR && varp->nchunk == len){
-                    err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunkoffsets", varp->data_offs, MPI_LONG_LONG);
-                    err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_chunklens", varp->data_lens, MPI_INT);
-                }
-                else{
-                    // If not, 0 len means no data avaiable
-                    if (err != NC_NOERR){
-                        memset(varp->data_offs, 0, sizeof(MPI_Offset) * varp->nchunk);
-                        memset(varp->data_lens, 0, sizeof(int) * (varp->nchunk + 1));
-                    }
-                }
+            if (err == NC_NOERR){
+                MPI_Offset start, count;
+                
+                start = 0;
+                count = varp->nchunk + 1;
+                err = nczipp->driver->get_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, NC_REQ_RD | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
+                if (err != NC_NOERR) return err;
+
+                count = varp->nchunk;
+                err = nczipp->driver->get_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_RD | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
+                if (err != NC_NOERR) return err;
             }
-            else{
-                // If not, 0 len means no data avaiable
-                if (err != NC_NOERR){
-                    memset(varp->data_offs, 0, sizeof(MPI_Offset) * (varp->nchunk + 1));
-                    memset(varp->data_lens, 0, sizeof(int) * varp->nchunk);
-                }
+            else {
+                varp->offvarid = varp->lenvarid = -1;
+                memset(varp->data_offs, 0, sizeof(MPI_Offset) * (varp->nchunk + 1));
+                memset(varp->data_lens, 0, sizeof(int) * varp->nchunk);
             }
 
             /* Select compression driver based on attribute */
@@ -726,9 +714,9 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     err = nczipp->driver->enddef(nczipp->ncp);
     if (err != NC_NOERR) return err;
 
-    // Record offset
+    // Record offset and lens
     start = 0;
-    if (nczipp->rank == 0){
+    if (nczipp->rank == varp->chunk_owner[0]){
         count = varp->nchunk + 1;
     }
     else{
@@ -737,14 +725,13 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     err = nczipp->driver->put_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
     if (err != NC_NOERR) return err;
 
-    // Record lens
-    if (nczipp->rank == 0){
+    if (nczipp->rank == varp->chunk_owner[0]){
         count = varp->nchunk;
     }
     else{
         count = 0;
     }
-    err = nczipp->driver->put_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_LONG_LONG, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
+    err = nczipp->driver->put_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
     if (err != NC_NOERR) return err;
 
     /* Carry our coll I/O
@@ -834,6 +821,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     int max_nchunks = 0;
     int *zsizes, *zsizes_all;
     MPI_Offset *zoffs;
+    MPI_Offset start, count;
     MPI_Datatype mtype, ftype;  // Memory and file datatype
     int wcnt, wcur;
     int *mlens, *flens;
@@ -841,7 +829,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     MPI_Status status;
     int put_size;
     void **zbufs;
-    int zdimid;
+    int zdimid, mdimid;
     char name[128]; // Name of objects
     NC *ncp = (NC*)(nczipp->ncp);
     NC_var *ncvarp;
@@ -917,9 +905,24 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunk], &zdimid);
         if (err != NC_NOERR) return err;
 
+        // Define dimension for data variable
+        sprintf(name, "_compressed_meta_dim_%d", varp->varid);
+        err = nczipp->driver->def_dim(nczipp->ncp, name, varp->nchunk + 1, &mdimid);
+        if (err != NC_NOERR) return err;
+
         // Define data variable
         sprintf(name, "_compressed_data_%d", varp->varid);
         err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(varp->datavarid));
+        if (err != NC_NOERR) return err;
+
+        // Define off variable
+        sprintf(name, "_compressed_offset_%d", varp->varid);
+        err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &mdimid, &(varp->offvarid));
+        if (err != NC_NOERR) return err;
+
+        // Define lens variable
+        sprintf(name, "_compressed_size_%d", varp->varid);
+        err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &mdimid, &(varp->lenvarid));
         if (err != NC_NOERR) return err;
 
         // Mark as data variable
@@ -927,17 +930,26 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         err = nczipp->driver->put_att(nczipp->ncp, varp->datavarid, "_varkind", NC_INT, 1, &i, MPI_INT);
         if (err != NC_NOERR) return err;
 
-        // Record offset of chunks in data variable
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunkoffsets", NC_INT64, varp->nchunk + 1, zoffs, MPI_LONG_LONG);
+        // Mark as meta variable
+        i = NC_ZIP_VAR_META;
+        err = nczipp->driver->put_att(nczipp->ncp, varp->offvarid, "_varkind", NC_INT, 1, &i, MPI_INT);
         if (err != NC_NOERR) return err;
 
-        // Record size of chunks
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_chunklens", NC_INT, varp->nchunk, zsizes_all, MPI_INT);
+        err = nczipp->driver->put_att(nczipp->ncp, varp->lenvarid, "_varkind", NC_INT, 1, &i, MPI_INT);
+        if (err != NC_NOERR) return err;
+
+        // Record offset variable id
+        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_offvarid", NC_INT, 1, &varp->offvarid, MPI_INT);
+        if (err != NC_NOERR) return err;
+
+        // Record lens variable id
+        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_lenvarid", NC_INT, 1, &varp->lenvarid, MPI_INT);
         if (err != NC_NOERR) return err;
 
         // Record data variable id
         err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_datavarid", NC_INT, 1, &(varp->datavarid), MPI_INT);
         if (err != NC_NOERR) return err;
+
 
         /* Paramemter for file and memory type 
          * We do not know variable file offset until the end of define mode
@@ -964,6 +976,29 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     // Switch back to data mode
     err = nczipp->driver->enddef(nczipp->ncp);
     if (err != NC_NOERR) return err;
+
+    // Record offset and lens
+    for(vid = 0; vid < nvar; vid++){
+        varp = nczipp->vars.data + varids[vid];
+        start = 0;
+        if (nczipp->rank == varp->chunk_owner[0]){
+            count = varp->nchunk + 1;
+        }
+        else{
+            count = 0;
+        }
+        err = nczipp->driver->put_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
+        if (err != NC_NOERR) return err;
+
+        if (nczipp->rank == varp->chunk_owner[0]){
+            count = varp->nchunk;
+        }
+        else{
+            count = 0;
+        }
+        err = nczipp->driver->put_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
+        if (err != NC_NOERR) return err;
+    }
 
     /* Now it's time to add variable file offset to displacements
      * File type offset need to be specified in non-decreasing order

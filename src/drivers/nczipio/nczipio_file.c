@@ -174,7 +174,7 @@ nczipio_close(void *ncdp)
 
     if (nczipp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
 
-    if (nczipp->delay_init && (!(nczipp->flag & NC_MODE_RDONLY))){
+    if (!(nczipp->flag & NC_MODE_RDONLY)){
         int i;
 
         err = nczipp->driver->redef(nczipp->ncp);
@@ -182,6 +182,7 @@ nczipio_close(void *ncdp)
             return err;
         }
 
+        //record chunk dim
         for(i = 0; i < nczipp->vars.cnt; i++){
             if (nczipp->vars.data[i].isnew){            
                 err = nczipp->driver->put_att(nczipp->ncp, nczipp->vars.data[i].varid, "_chunkdim", NC_INT, nczipp->vars.data[i].ndim, nczipp->vars.data[i].chunkdim, MPI_INT);
@@ -190,9 +191,8 @@ nczipio_close(void *ncdp)
                 }
             }
         }
-    }
 
-    if (!(nczipp->flag & NC_MODE_RDONLY)){
+        // Record recsize
         err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_recsize", NC_INT64, 1, &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
         if (err != NC_NOERR) return err;
     }
@@ -222,14 +222,14 @@ nczipio_enddef(void *ncdp)
     int i, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
     
+    err = nczipp->driver->enddef(nczipp->ncp);
+    if (err != NC_NOERR) return err;
+
     if (!(nczipp->delay_init)){
         for(i = 0; i < nczipp->vars.cnt; i++){
             nczipioi_var_init(nczipp, nczipp->vars.data + i, 0, NULL, NULL);
         }
     }
-
-    err = nczipp->driver->enddef(nczipp->ncp);
-    if (err != NC_NOERR) return err;
 
     return NC_NOERR;
 }
@@ -244,15 +244,15 @@ nczipio__enddef(void       *ncdp,
     int i, err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
+    err = nczipp->driver->_enddef(nczipp->ncp, h_minfree, v_align, v_minfree,
+                               r_align);
+    if (err != NC_NOERR) return err;
+    
     if (!(nczipp->delay_init)){
         for(i = 0; i < nczipp->vars.cnt; i++){
             nczipioi_var_init(nczipp, nczipp->vars.data + i, 0, NULL, NULL);
         }
     }
-
-    err = nczipp->driver->_enddef(nczipp->ncp, h_minfree, v_align, v_minfree,
-                               r_align);
-    if (err != NC_NOERR) return err;
 
     return NC_NOERR;
 }
