@@ -143,8 +143,8 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (varp->nchunk + 1));
             varp->data_lens = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
             // Try if there are offset recorded in attributes, it can happen after opening a file
-            err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_offvarid", &(varp->offvarid), NULL);
-            err |= nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_lenvarid", &(varp->lenvarid), NULL);
+            err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_offvarid", &(varp->offvarid), MPI_LONG_LONG);
+            err |= nczipp->driver->get_att(nczipp->ncp, varp->varid, "_lenvarid", &(varp->lenvarid), MPI_INT);
             if (err == NC_NOERR){
                 MPI_Offset start, count;
                 
@@ -154,7 +154,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                 if (err != NC_NOERR) return err;
 
                 count = varp->nchunk;
-                err = nczipp->driver->get_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_RD | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
+                err = nczipp->driver->get_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_RD | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
                 if (err != NC_NOERR) return err;
             }
             else {
@@ -703,7 +703,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     if (err != NC_NOERR) return err;
 
     // Record lens variable id
-    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_lenvarid", NC_INT, 1, &varp->lenvarid, MPI_INT);
+    err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_lenvarid", NC_INT, 1, &(varp->lenvarid), MPI_INT);
     if (err != NC_NOERR) return err;
 
     // Record data variable id
@@ -943,7 +943,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         if (err != NC_NOERR) return err;
 
         // Record lens variable id
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_lenvarid", NC_INT, 1, &varp->lenvarid, MPI_INT);
+        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_lenvarid", NC_INT, 1, &(varp->lenvarid), MPI_INT);
         if (err != NC_NOERR) return err;
 
         // Record data variable id

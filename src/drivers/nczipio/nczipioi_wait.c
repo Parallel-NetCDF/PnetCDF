@@ -107,7 +107,7 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     flag_all = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
     memset(flag, 0, sizeof(int) * nflag);
     for(i = 0; i < nreq; i++){
-        req = nczipp->putlist.reqs + reqids[i];
+        req = nczipp->getlist.reqs + reqids[i];
         flag[req->varid >> 5] |= 1u << (req->varid % 32);
     }
     

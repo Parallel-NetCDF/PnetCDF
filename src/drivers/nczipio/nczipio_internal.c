@@ -64,13 +64,14 @@ nczipioi_parse_var_info(NC_zip *nczipp){
     err = nczipp->driver->inq(nczipp->ncp, NULL, &nvar, NULL, &(nczipp->recdim));
 
     for(vid = 0; vid < nvar; vid++){
+        memset(&var, 0, sizeof(var));
+        
         err = nczipp->driver->get_att(nczipp->ncp, vid, "_varkind", &(var.varkind), MPI_INT);   // Comressed var?
         if (err != NC_NOERR || var.varkind == NC_ZIP_VAR_DATA){
             continue;
         }
 
         var.varid = vid;
-        var.isnew = 0;
         
         if (var.varkind == NC_ZIP_VAR_COMPRESSED){
             err = nczipp->driver->get_att(nczipp->ncp, var.varid, "_ndim", &(var.ndim), MPI_INT); // Original dimensions
@@ -105,8 +106,9 @@ nczipioi_parse_var_info(NC_zip *nczipp){
             nczipioi_var_init(nczipp, &var, 0, NULL, NULL);
         }
     
-        err = nczipioi_var_list_add(&(nczipp->vars), var);
-        if (err != NC_NOERR) return err;
+        if (var.varkind == NC_ZIP_VAR_COMPRESSED || var.varkind == NC_ZIP_VAR_RAW){
+            nczipioi_var_list_add(&(nczipp->vars), var);
+        }
     }
 
     return NC_NOERR;
