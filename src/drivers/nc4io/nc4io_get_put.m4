@@ -63,7 +63,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                 if (sstride != NULL) NCI_Free(sstride);
                 if (simap   != NULL) NCI_Free(simap);
             }
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT)
+            goto out;
         }
     }
 ')dnl
@@ -91,7 +92,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                 if (sstride != NULL) NCI_Free(sstride);
                 if (simap   != NULL) NCI_Free(simap);
             }
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT)
+            goto out;
         }
     }
 ')dnl
@@ -298,14 +300,17 @@ nc4io_get_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err, status, apikind, ndims;
+    int i, err, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     MPI_Offset getsize, vsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
-    status = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    if (err != NC_NOERR){
+        DEBUG_RETURN_ERROR(err);    
+    }
 
     if (reqMode & NC_REQ_ZERO) {
         /* only collective put can arrive here.
@@ -358,11 +363,16 @@ nc4io_get_var(void             *ncdp,
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
 
+    if (err != NC_NOERR){
+        DEBUG_ASSIGN_ERROR(err, err);    
+        goto out;
+    }
+
     /* Count get size */
     if (!(reqMode & NC_REQ_ZERO)){
         err = getelementsize(nc4p, varid, &getsize);
         if (err != NC_NOERR){
-            return err;
+            goto out;
         }
 
         if (scount != NULL){
@@ -374,7 +384,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
             if (apikind == NC4_API_KIND_VAR){
                 err = getvarsize(nc4p, varid, ndims, &vsize);
                 if (err != NC_NOERR){
-                    return err;
+                    goto out;
                 }
 
                 getsize *= vsize;
@@ -382,6 +392,8 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
         }
         nc4p->getsize += getsize;
     }
+
+out:
 
     /* Free buffers if needed */
     if (ndims > 0) {
@@ -391,7 +403,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
         if (simap   != NULL) NCI_Free(simap);
     }
 
-    return (status != NC_NOERR) ? status : err;
+    return err;
 }
 
 int
@@ -406,14 +418,17 @@ nc4io_put_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err, status, apikind, ndims;
+    int i, err, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     MPI_Offset putsize, vsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
-    status = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    if (err != NC_NOERR){
+        DEBUG_RETURN_ERROR(err);    
+    }
 
     if (reqMode & NC_REQ_ZERO) {
         /* only collective put can arrive here.
@@ -466,11 +481,16 @@ nc4io_put_var(void             *ncdp,
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
 
+    if (err != NC_NOERR){
+        DEBUG_ASSIGN_ERROR(err, err);    
+        goto out;
+    }
+
     /* Count put size */
     if (!(reqMode & NC_REQ_ZERO)){
         err = getelementsize(nc4p, varid, &putsize);
         if (err != NC_NOERR){
-            return err;
+            goto out;
         }
 
         if (scount != NULL){
@@ -482,7 +502,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
             if (apikind == NC4_API_KIND_VAR){
                 err = getvarsize(nc4p, varid, ndims, &vsize);
                 if (err != NC_NOERR){
-                    return err;
+                    goto out;
                 }
 
                 putsize *= vsize;
@@ -490,6 +510,8 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
         }
         nc4p->putsize += putsize;
     }
+
+out:
 
     /* Free buffers if needed */
     if (ndims > 0) {
@@ -499,5 +521,5 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
         if (simap   != NULL) NCI_Free(simap);
     }
 
-    return (status != NC_NOERR) ? status : err;
+    return err;
 }
