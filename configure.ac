@@ -1623,7 +1623,8 @@ if test "x$enable_netcdf4" = "xyes" ; then
    ]])], [netcdf_has_pnetcdf=yes], [netcdf_has_pnetcdf=no])
    AC_MSG_RESULT([$netcdf_has_pnetcdf])
    if test x$netcdf_has_pnetcdf = xyes; then
-      AC_MSG_ERROR([NetCDF-4 built with PnetCDF enabled is not supported])
+      #AC_MSG_ERROR([NetCDF-4 built with PnetCDF enabled is not supported])
+      AC_MSG_WARN([NetCDF-4 built with PnetCDF may cause conflict])
    fi
 
    if test "x$nc_config" != x ; then
@@ -1638,7 +1639,7 @@ if test "x$enable_netcdf4" = "xyes" ; then
       netcdf_libs=`$nc_config --libs`
       UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
       dnl remove -lpnetcdf if it contains it
-      netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
+      # netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
    else
       if test "x$NETCDF4_INSTALL" != x ; then
          netcdf_libdir="$NETCDF4_INSTALL/lib"
