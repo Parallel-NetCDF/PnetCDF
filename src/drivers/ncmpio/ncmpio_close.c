@@ -88,7 +88,7 @@ ncmpio_close(void *ncdp)
     if (NC_indef(ncp)) { /* currently in define mode */
         status = ncmpio__enddef(ncp, 0, 0, 0, 0); /* TODO: defaults */
 
-        if (status != NC_NOERR ) {
+        if (status != NC_NOERR) {
             /* To do: Abort new definition, if any */
             if (ncp->old != NULL) {
                 ncmpio_free_NC(ncp->old);
@@ -101,7 +101,7 @@ ncmpio_close(void *ncdp)
     if (!NC_readonly(ncp) &&  /* file is open for write */
          NC_indep(ncp)) {     /* exit independent data mode will sync header */
         err = ncmpio_end_indep_data(ncp);
-        if (status == NC_NOERR ) status = err;
+        if (status == NC_NOERR) status = err;
     }
 
     /* if entering this function in  collective data mode, we do not have to
@@ -111,44 +111,53 @@ ncmpio_close(void *ncdp)
     /* ncmpio__enddef() will update ncp->num_subfiles */
     /* TODO: should check ncid_sf? */
     /* if the file has subfiles, close them first */
-    if (ncp->num_subfiles > 1)
-        ncmpio_subfile_close(ncp);
+    if (ncp->num_subfiles > 1) {
+        err = ncmpio_subfile_close(ncp);
+        if (status == NC_NOERR) status = err;
+    }
 #endif
 
     /* We can cancel or complete all outstanding nonblocking I/O.
      * For now, cancelling makes more sense. */
 #ifdef COMPLETE_NONBLOCKING_IO
     if (ncp->numLeadGetReqs > 0) {
-        ncmpio_wait(ncp, NC_GET_REQ_ALL, NULL, NULL, NC_REQ_INDEP);
-        if (status == NC_NOERR ) status = NC_EPENDING;
+        err = ncmpio_wait(ncp, NC_GET_REQ_ALL, NULL, NULL, NC_REQ_INDEP);
+        if (status == NC_NOERR) status = err;
+        if (status == NC_NOERR) status = NC_EPENDING;
     }
     if (ncp->numLeadPutReqs > 0) {
-        ncmpio_wait(ncp, NC_PUT_REQ_ALL, NULL, NULL, NC_REQ_INDEP);
-        if (status == NC_NOERR ) status = NC_EPENDING;
+        err = ncmpio_wait(ncp, NC_PUT_REQ_ALL, NULL, NULL, NC_REQ_INDEP);
+        if (status == NC_NOERR) status = err;
+        if (status == NC_NOERR) status = NC_EPENDING;
     }
 #else
     if (ncp->numLeadGetReqs > 0) {
         int rank;
         MPI_Comm_rank(ncp->comm, &rank);
         printf("PnetCDF warning: %d nonblocking get requests still pending on process %d. Cancelling ...\n",ncp->numLeadGetReqs,rank);
-        ncmpio_cancel(ncp, NC_GET_REQ_ALL, NULL, NULL);
-        if (status == NC_NOERR ) status = NC_EPENDING;
+        err = ncmpio_cancel(ncp, NC_GET_REQ_ALL, NULL, NULL);
+        if (status == NC_NOERR) status = err;
+        if (status == NC_NOERR) status = NC_EPENDING;
     }
     if (ncp->numLeadPutReqs > 0) {
         int rank;
         MPI_Comm_rank(ncp->comm, &rank);
         printf("PnetCDF warning: %d nonblocking put requests still pending on process %d. Cancelling ...\n",ncp->numLeadPutReqs,rank);
-        ncmpio_cancel(ncp, NC_PUT_REQ_ALL, NULL, NULL);
-        if (status == NC_NOERR ) status = NC_EPENDING;
+        err = ncmpio_cancel(ncp, NC_PUT_REQ_ALL, NULL, NULL);
+        if (status == NC_NOERR) status = err;
+        if (status == NC_NOERR) status = NC_EPENDING;
     }
 #endif
 
     /* If the user wants a stronger data consistency by setting NC_SHARE */
-    if (NC_doFsync(ncp))
-        ncmpio_file_sync(ncp); /* calling MPI_File_sync() */
+    if (NC_doFsync(ncp)) {
+        err = ncmpio_file_sync(ncp); /* calling MPI_File_sync() */
+        if (status == NC_NOERR) status = err;
+    }
 
     /* calling MPI_File_close() */
-    ncmpio_close_files(ncp, 0);
+    err = ncmpio_close_files(ncp, 0);
+    if (status == NC_NOERR) status = err;
 
     /* free up space occupied by the header metadata */
     ncmpio_free_NC(ncp);
