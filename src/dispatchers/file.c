@@ -533,8 +533,8 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)  /* OUT */
 {
-    int i, nalloc, rank, nprocs, format, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, relax_coord_bound;
+    int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err;
+    int safe_mode=0, mpireturn, relax_coord_bound, DIMIDS[16], *dimids;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -797,37 +797,48 @@ ncmpi_open(MPI_Comm    comm,
         goto fn_exit;
     }
 
+    dimids = NULL;
+
     /* construct array of PNC_var for all variables */
     for (i=0; i<pncp->nvars; i++) {
-        nc_type xtype;
         int ndims;
-        err = driver->inq_var(pncp->ncp, i, NULL, &xtype, &ndims,
-                              NULL, NULL, NULL, NULL, NULL);
-        if (err != NC_NOERR) goto fn_exit;
-        pncp->vars[i].xtype  = xtype;
-        pncp->vars[i].ndims  = ndims;
-        pncp->vars[i].recdim = -1;   /* if fixed-size variable */
         pncp->vars[i].shape  = NULL;
-        pncp->vars[i].recdim = -1;
+        pncp->vars[i].recdim = -1;   /* if fixed-size variable */
+        err = driver->inq_var(pncp->ncp, i, NULL, &pncp->vars[i].xtype, &ndims,
+                              NULL, NULL, NULL, NULL, NULL);
+        if (err != NC_NOERR) break; /* loop i */
+        pncp->vars[i].ndims = ndims;
+
         if (ndims > 0) {
-            int j, *dimids;
             pncp->vars[i].shape = (MPI_Offset*)
-                                   NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);
-            dimids = (int*) NCI_Malloc(ndims * SIZEOF_INT);
+                                  NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);
+            if (ndims <= 16) /* avoid repeated malloc */
+                dimids = DIMIDS;
+            else
+                dimids = (int*) NCI_Realloc(dimids, ndims * SIZEOF_INT);
             err = driver->inq_var(pncp->ncp, i, NULL, NULL, NULL,
                                   dimids, NULL, NULL, NULL, NULL);
-            if (err != NC_NOERR) goto fn_exit;
+            if (err != NC_NOERR) break; /* loop i */
             if (dimids[0] == pncp->unlimdimid)
                 pncp->vars[i].recdim = pncp->unlimdimid;
             for (j=0; j<ndims; j++) {
                 /* obtain size of dimension j */
                 err = driver->inq_dim(pncp->ncp, dimids[j], NULL,
                                       pncp->vars[i].shape+j);
-                if (err != NC_NOERR) goto fn_exit;
+                if (err != NC_NOERR) break; /* loop i */
             }
-            NCI_Free(dimids);
         }
     }
+    if (err != NC_NOERR) { /* error happens in loop i */
+        assert(i < pncp->nvars);
+        for (j=0; j<=i; j++) {
+            if (pncp->vars[j].shape != NULL)
+                NCI_Free(pncp->vars[j].shape);
+        }
+        NCI_Free(pncp->vars);
+    }
+    if (dimids != NULL && dimids != DIMIDS)
+        NCI_Free(dimids);
 
 fn_exit:
     if (err != NC_NOERR) {
