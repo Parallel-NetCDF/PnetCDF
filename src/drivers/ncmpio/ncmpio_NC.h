@@ -441,8 +441,9 @@ typedef struct bufferinfo {
     int         size;     /* allocated size of the buffer */
     int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
     int         safe_mode;/* 0: disabled, 1: enabled */
-    void       *base;     /* beginning of read/write buffer */
-    void       *pos;      /* current position in buffer */
+    char       *base;     /* beginning of read/write buffer */
+    char       *pos;      /* current position in buffer */
+    char       *end;      /* end position of buffer */
 } bufferinfo;
 
 extern MPI_Offset

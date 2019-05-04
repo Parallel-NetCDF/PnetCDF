@@ -1994,11 +1994,9 @@ int main(int argc, char *argv[])
                 printf("Error: variable %s not found\n",fspecp->lvars[i]);
                 free(fspecp->varids);
                 free(fspecp->varp);
-                if (fspecp->lvars != NULL) {
-                    for (i=0; i<fspecp->nlvars; i++)
-                        free(fspecp->lvars[i]);
-                    free(fspecp->lvars);
-                }
+                for (i=0; i<fspecp->nlvars; i++)
+                    free(fspecp->lvars[i]);
+                free(fspecp->lvars);
                 free(fspecp);
                 ncmpii_free_NC(ncp);
                 free(ncp);

@@ -58,7 +58,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                ), `GETVARTYPE($1, translit(dt, `()'))')dnl
         else {
             DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT)
-            goto out;
+            goto fn_exit;
         }
     }
 ')dnl
@@ -81,7 +81,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                ), `PUTVARTYPE($1, translit(dt, `()'))')dnl
         else {
             DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT)
-            goto out;
+            goto fn_exit;
         }
     }
 ')dnl
@@ -353,27 +353,22 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
 
     if (err != NC_NOERR){
         DEBUG_ASSIGN_ERROR(err, err);    
-        goto out;
+        goto fn_exit;
     }
 
     /* Count get size */
-    if (!(reqMode & NC_REQ_ZERO)){
+    if (!(reqMode & NC_REQ_ZERO)) {
         err = getelementsize(nc4p, varid, &getsize);
-        if (err != NC_NOERR){
-            goto out;
-        }
+        if (err != NC_NOERR) goto fn_exit;
 
-        if (scount != NULL){
-            for(i = 0; i < ndims; i++){
+        if (scount != NULL) {
+            for (i=0; i<ndims; i++)
                 getsize *= scount[i];
-            }
         }
-        else{
-            if (apikind == NC4_API_KIND_VAR){
+        else {
+            if (apikind == NC4_API_KIND_VAR) {
                 err = getvarsize(nc4p, varid, ndims, &vsize);
-                if (err != NC_NOERR){
-                    goto out;
-                }
+                if (err != NC_NOERR) goto fn_exit;
 
                 getsize *= vsize;
             }
@@ -381,8 +376,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
         nc4p->getsize += getsize;
     }
 
-out:
-
+fn_exit:
     /* Free buffers if needed */
     if (ndims > 0) {
         if (sstart  != NULL) NCI_Free(sstart);
@@ -471,27 +465,22 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
 
     if (err != NC_NOERR){
         DEBUG_ASSIGN_ERROR(err, err);    
-        goto out;
+        goto fn_exit;
     }
 
     /* Count put size */
-    if (!(reqMode & NC_REQ_ZERO)){
+    if (!(reqMode & NC_REQ_ZERO)) {
         err = getelementsize(nc4p, varid, &putsize);
-        if (err != NC_NOERR){
-            goto out;
-        }
+        if (err != NC_NOERR) goto fn_exit;
 
-        if (scount != NULL){
-            for(i = 0; i < ndims; i++){
+        if (scount != NULL) {
+            for (i=0; i<ndims; i++)
                 putsize *= scount[i];
-            }
         }
-        else{
-            if (apikind == NC4_API_KIND_VAR){
+        else {
+            if (apikind == NC4_API_KIND_VAR) {
                 err = getvarsize(nc4p, varid, ndims, &vsize);
-                if (err != NC_NOERR){
-                    goto out;
-                }
+                if (err != NC_NOERR) goto fn_exit;
 
                 putsize *= vsize;
             }
@@ -499,8 +488,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
         nc4p->putsize += putsize;
     }
 
-out:
-
+fn_exit:
     /* Free buffers if needed */
     if (ndims > 0) {
         if (sstart  != NULL) NCI_Free(sstart);
