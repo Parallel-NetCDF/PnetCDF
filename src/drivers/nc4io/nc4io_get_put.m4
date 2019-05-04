@@ -57,12 +57,6 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `GETVARTYPE($1, translit(dt, `()'))')dnl
         else {
-            if (ndims > 0) {
-                if (sstart  != NULL) NCI_Free(sstart);
-                if (scount  != NULL) NCI_Free(scount);
-                if (sstride != NULL) NCI_Free(sstride);
-                if (simap   != NULL) NCI_Free(simap);
-            }
             DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT)
             goto out;
         }
@@ -86,12 +80,6 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `PUTVARTYPE($1, translit(dt, `()'))')dnl
         else {
-            if (ndims > 0) {
-                if (sstart  != NULL) NCI_Free(sstart);
-                if (scount  != NULL) NCI_Free(scount);
-                if (sstride != NULL) NCI_Free(sstride);
-                if (simap   != NULL) NCI_Free(simap);
-            }
             DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT)
             goto out;
         }

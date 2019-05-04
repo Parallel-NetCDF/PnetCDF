@@ -77,10 +77,6 @@ int main(int argc, char** argv) {
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     err = ncmpi_inq_striping(ncid, &v1, &v2); EXPECT_ERR(NC_ENOTSUPPORT);
-
-    err = ncmpi_inq_put_size(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
-
-    err = ncmpi_inq_get_size(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
     
     err = ncmpi_inq_header_size(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
 
@@ -110,7 +106,7 @@ int main(int argc, char** argv) {
         nerrs++; 
         printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
     }
-    err = ncmpi_put_var1_all(ncid, varid, start, &buf, 1, MPI_BYTE); EXPECT_ERR(NC_ENOTSUPPORT); 
+    err = ncmpi_put_var1_all(ncid, varid, start, &buf, 1, btype); EXPECT_ERR(NC_ENOTSUPPORT); 
     err = MPI_Type_free(&btype);
     if (err != MPI_SUCCESS ){
         nerrs++; 
