@@ -643,7 +643,8 @@ inconsistency of any kind start at -250.
 
 * When using MPICH 3.2 with the bug of #2332 fixed, running "make check" and
   "make ptests" through valgrind should run without any complains. See MPICH
-  ticket #2332 in https://trac.mpich.org/projects/mpich/ticket/2332.
+  ticket #2332 in https://trac.mpich.org/projects/mpich/ticket/2332 or
+  https://github.com/pmodels/mpich/issues/2332
 
 ---
 ### Note on using clang and gprof together

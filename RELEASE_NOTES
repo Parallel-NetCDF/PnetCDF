@@ -6,6 +6,40 @@ PnetCDF Release Notes
 Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
+* Bug fixes
+  + When configure option `--enable-netcdf4` is used, users may encounter
+    problem during configure or make time, if the underneath NetCDF4 library
+    was built with static libraries only. Thanks Bruno Pagani for reporting.
+    [pull request #46](https://github.com/Parallel-NetCDF/PnetCDF/pull/46).
+  + Fix configure date setting when environment variable `SOURCE_DATE_EPOCH`
+    is already set.
+
+* Clarifications
+  + Limitation of supporting NetCDF-4 driver -- a list of APIs that are not
+    supported for NetCDF-4 files is given in `doc/README.NetCDF4.md`. Error
+    code `NC_ENOTSUPPORT` is returned, if those APIs are called.
+
+* Other updates:
+  + Utility program `ncoffsets` is updated to skip printing the dimension names
+    if the number of dimensions of a variable is larger than 64.This predefined
+    constant can be changed by setting `-DMAX_PRINT_NDIMS=N` at the compile
+    command line.
+  + Utility program `ncvalidator` is updated to be able to repair the header of
+    a file to fill null-byte paddings in the space between the header size and
+    header extent.
+
+* New test program
+  + test/nc4/notsupport.c - Test if error code NC_ENOTSUPPORT is properly
+    returned when calling APIs for unsupported NetCDF-4 feature.
+  + test/nc4/rtst_rec_vars.c - Test record variables for NetCDF-4 files.
+  + test/nc4/tst_2_rec_dims.c - Test opening a NetCDF-4 file containing more
+    than one unlimited dimension on whether correct error can be returned.
+  + test/nc4/tst_get_put_size.c - Test the amount of I/O so far for NetCDF-4
+    files.
+  + test/testcases/tst_version.c - Check whether PnetCDF version string
+    returned from ncmpi_inq_libvers() matches the constant PNETCDF_VERSION
+    defined in header file pnetcdf.h.
+
 -------------------------------------
 Version 1.11.1 (April 12, 2019)
 -------------------------------------
