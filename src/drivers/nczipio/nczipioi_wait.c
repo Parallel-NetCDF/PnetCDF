@@ -199,6 +199,13 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
             return err;
         }
     }
+    else{
+        // Sync number of rec
+        err = nczipioi_resize_nvar(nczipp, nput, putreqs, nget, getreqs);   // nput + nget = real nreq
+        if (err != NC_NOERR){
+            return err;
+        }
+    }
 
     if (stats != NULL){
         putstats = (int*)NCI_Malloc(sizeof(int) * nput);

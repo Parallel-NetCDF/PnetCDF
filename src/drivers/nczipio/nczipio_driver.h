@@ -73,6 +73,7 @@ typedef struct NC_zip_var {
     int varid;
 
     int nchunk;
+    int expanded;
     int chunksize;
     int *nchunks;
     int *cidsteps;
@@ -83,6 +84,9 @@ typedef struct NC_zip_var {
     int nmychunks;
     int *mychunks;
 
+    int metaserial;
+    int dataserial;
+    
     int datavarid;
     int offvarid;
     int lenvarid;
