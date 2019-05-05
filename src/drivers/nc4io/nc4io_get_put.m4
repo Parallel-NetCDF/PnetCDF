@@ -57,7 +57,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `GETVARTYPE($1, translit(dt, `()'))')dnl
         else {
-            err = NC_ENOTSUPPORT;
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT);
             goto fn_exit;
         }
     }
@@ -80,7 +80,7 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `PUTVARTYPE($1, translit(dt, `()'))')dnl
         else {
-            err = NC_ENOTSUPPORT;
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT);
             goto fn_exit;
         }
     }
@@ -202,13 +202,13 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `GETATTTYPE(translit(dt, `()'))')dnl
-    else{
+    else {
+        /* should never reach here, as ther is no flexible attribute APIs */
         DEBUG_ASSIGN_ERROR(err, NC_EUNSPTETYPE)
     }
 
-    if (err == NC_NOERR){
+    if (err == NC_NOERR)
         nc4p->getsize += (MPI_Offset)(xsize * len);
-    }
 
     return err;
 }
@@ -265,13 +265,13 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `PUTATTTYPE(translit(dt, `()'))')dnl
-    else{
+    else {
+        /* should never reach here, as ther is no flexible attribute APIs */
         DEBUG_ASSIGN_ERROR(err, NC_EUNSPTETYPE)
     }
 
-    if (err == NC_NOERR){
+    if (err == NC_NOERR)
         nc4p->putsize += (MPI_Offset)(xsize * len);
-    }
     
     return err;
 }

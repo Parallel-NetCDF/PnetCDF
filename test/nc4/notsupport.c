@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
     /* define variable */
     err = ncmpi_def_var(ncid, "M",   NC_INT, 1, &dimid, &varid); CHECK_ERR
-    
+
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     err = ncmpi_inq_striping(ncid, &v1, &v2); EXPECT_ERR(NC_ENOTSUPPORT);
@@ -81,11 +81,11 @@ int main(int argc, char** argv) {
     err = ncmpi_inq_put_size(ncid, start); CHECK_ERR
 
     err = ncmpi_inq_get_size(ncid, start); CHECK_ERR
-    
+
     err = ncmpi_inq_header_size(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
 
     err = ncmpi_inq_header_extent(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
-    
+
     err = ncmpi_inq_nreqs(ncid, &v1); EXPECT_ERR(NC_ENOTSUPPORT);
 
     err = ncmpi_inq_buffer_usage(ncid, start); EXPECT_ERR(NC_ENOTSUPPORT);
@@ -97,37 +97,39 @@ int main(int argc, char** argv) {
     err = ncmpi_flush(ncid); EXPECT_ERR(NC_ENOTSUPPORT);
 
     err = ncmpi_fill_var_rec(ncid, varid, 0); EXPECT_ERR(NC_ENOTSUPPORT);
-    
-    err = ncmpi_inq_varoffset(ncid, varid, start); EXPECT_ERR(NC_ENOTSUPPORT);   
+
+    err = ncmpi_inq_varoffset(ncid, varid, start); EXPECT_ERR(NC_ENOTSUPPORT);
 
     err = MPI_Type_vector(1, 2, 1, MPI_INT, &btype);
     if (err != MPI_SUCCESS ){
-        nerrs++; 
+        nerrs++;
         printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
     }
     err = MPI_Type_commit(&btype);
     if (err != MPI_SUCCESS ){
-        nerrs++; 
+        nerrs++;
         printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
     }
-    err = ncmpi_put_var1_all(ncid, varid, start, &buf, 1, MPI_BYTE); EXPECT_ERR(NC_ENOTSUPPORT); 
-    err = MPI_Type_free(&btype);
-    if (err != MPI_SUCCESS ){
-        nerrs++; 
-        printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
+    else {
+        err = ncmpi_put_var1_all(ncid, varid, start, &buf, 1, btype); EXPECT_ERR(NC_ENOTSUPPORT);
+
+        err = ncmpi_put_vard_all(ncid, varid, btype, &buf, 1, btype); EXPECT_ERR(NC_ENOTSUPPORT);
+        err = MPI_Type_free(&btype);
+        if (err != MPI_SUCCESS ){
+            nerrs++;
+            printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
+        }
     }
 
-    err = ncmpi_iput_var1_int(ncid, varid, start, &buf, NULL); EXPECT_ERR(NC_ENOTSUPPORT); 
+    err = ncmpi_iput_var1_int(ncid, varid, start, &buf, NULL); EXPECT_ERR(NC_ENOTSUPPORT);
 
-    err = ncmpi_put_vard_all(ncid, varid, btype, &buf, 1, btype); EXPECT_ERR(NC_ENOTSUPPORT); 
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); EXPECT_ERR(NC_ENOTSUPPORT);
 
-    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); EXPECT_ERR(NC_ENOTSUPPORT);  
+    err = ncmpi_cancel(ncid, NC_REQ_ALL, NULL, NULL); EXPECT_ERR(NC_ENOTSUPPORT);
 
-    err = ncmpi_cancel(ncid, NC_REQ_ALL, NULL, NULL); EXPECT_ERR(NC_ENOTSUPPORT); 
+    err = ncmpi_buffer_attach(ncid, 1); EXPECT_ERR(NC_ENOTSUPPORT);
 
-    err = ncmpi_buffer_attach(ncid, 1); EXPECT_ERR(NC_ENOTSUPPORT); 
-
-    err = ncmpi_buffer_detach(ncid); EXPECT_ERR(NC_ENOTSUPPORT); 
+    err = ncmpi_buffer_detach(ncid); EXPECT_ERR(NC_ENOTSUPPORT);
 
     err = ncmpi_close(ncid); CHECK_ERR
 
