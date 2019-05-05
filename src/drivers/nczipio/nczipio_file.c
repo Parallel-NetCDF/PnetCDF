@@ -220,9 +220,26 @@ int
 nczipio_enddef(void *ncdp)
 {
     int i, err;
+    MPI_Offset rsize;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
-    
-    err = nczipp->driver->enddef(nczipp->ncp);
+
+    // Reserve header space
+    rsize = 0;
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        varp = nczipp->vars.data + i;
+        if (varp->varkind == NC_ZIP_VAR_COMPRESSED){
+            rsize += ((8 + 16) + 4 + 8 + 4) * 8 + ((8 + 16) + 4 + 8 + 4 * varp->ndim) * 2; // Atts
+            rsize += ((8 + 32) + 8) * 3; // dims
+            rsize += ((8 + 32) + 8 + 8 + (8 + 8 + (8 + 12 + 4 + 8 + 4)) + 4 + 8 + 8) * 3; // vars
+        }
+        else{
+            rsize += ((8 + 16) + 4 + 8 + 4); // Atts
+        }
+    }
+    rsize *= 4;   // 4 times for future expension
+
+    err = nczipp->driver->_enddef(nczipp->ncp, rsize, 0, 0, 0);
     if (err != NC_NOERR) return err;
 
     if (!(nczipp->delay_init)){
@@ -242,9 +259,26 @@ nczipio__enddef(void       *ncdp,
               MPI_Offset  r_align)
 {
     int i, err;
+    MPI_Offset rsize;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    err = nczipp->driver->_enddef(nczipp->ncp, h_minfree, v_align, v_minfree,
+    // Reserve header space
+    rsize = 0;
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        varp = nczipp->vars.data + i;
+        if (varp->varkind == NC_ZIP_VAR_COMPRESSED){
+            rsize += ((8 + 16) + 4 + 8 + 4) * 8 + ((8 + 16) + 4 + 8 + 4 * varp->ndim) * 2; // Atts
+            rsize += ((8 + 32) + 8) * 3; // dims
+            rsize += ((8 + 32) + 8 + 8 + (8 + 8 + (8 + 12 + 4 + 8 + 4)) + 4 + 8 + 8) * 3; // vars
+        }
+        else{
+            rsize += ((8 + 16) + 4 + 8 + 4); // Atts
+        }
+    }
+    rsize *= 4;   // 4 times for future expension
+
+    err = nczipp->driver->_enddef(nczipp->ncp, h_minfree + rsize, v_align, v_minfree,
                                r_align);
     if (err != NC_NOERR) return err;
     
