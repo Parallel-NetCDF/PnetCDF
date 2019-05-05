@@ -9,6 +9,8 @@ set -e
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
+${TESTSEQRUN} ./tst_version
+
 ${TESTSEQRUN} ./error_precedence ${TESTOUTDIR}/error_precedence.nc
 
 ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.nc
