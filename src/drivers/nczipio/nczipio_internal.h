@@ -133,6 +133,7 @@ extern int nczipioi_save_nvar(NC_zip*, int, int*);
 extern void nczipioi_var_free(NC_zip_var*);
 extern int nczipioi_var_resize(NC_zip*, NC_zip_var*);
 extern int nczipioi_init_nvar(NC_zip*, int, int*, int, int*);
+extern int nczipioi_resize_nvar(NC_zip*, int, int*, int, int*);
 
 // Chunks
 extern int nczipioi_chunk_itr_init(NC_zip_var*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, int*);

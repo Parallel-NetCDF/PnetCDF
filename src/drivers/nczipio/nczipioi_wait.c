@@ -44,8 +44,8 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Flag of touched vars
     nflag = nczipp->vars.cnt / 32 + 1;
-    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
-    flag_all = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
+    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag * 2);
+    flag_all = flag + nflag;
     memset(flag, 0, sizeof(int) * nflag);
     for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs + reqids[i];
@@ -84,7 +84,6 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Free buffers
     NCI_Free(vids);
     NCI_Free(flag);
-    NCI_Free(flag_all);
 
     return NC_NOERR;
 }
@@ -103,8 +102,8 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Flag of touched vars
     nflag = nczipp->vars.cnt / 32 + 1;
-    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
-    flag_all = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
+    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag * 2);
+    flag_all = flag + nflag;
     memset(flag, 0, sizeof(int) * nflag);
     for(i = 0; i < nreq; i++){
         req = nczipp->getlist.reqs + reqids[i];
@@ -144,7 +143,6 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Free buffers
     NCI_Free(vids);
     NCI_Free(flag);
-    NCI_Free(flag_all);
 
     return NC_NOERR;
 }
