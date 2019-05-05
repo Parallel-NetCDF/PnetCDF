@@ -35,6 +35,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     int *zsizes, *zsizes_all;
     MPI_Datatype mtype, ftype;  // Memory and file datatype
     int wcnt;
+    int reqids[2];
     int *lens;
     MPI_Aint *disps;
     MPI_Status status;
@@ -173,24 +174,23 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     if (err != NC_NOERR) return err;
 
     // Record offset and lens
-    start = 0;
     if (nczipp->rank == varp->chunk_owner[0]){
+        start = 0;
         count = varp->nchunk + 1;
-    }
-    else{
-        count = 0;
-    }
-    err = nczipp->driver->put_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
-    if (err != NC_NOERR) return err;
+        err = nczipp->driver->iput_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, reqids, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+        if (err != NC_NOERR) return err;
 
-    if (nczipp->rank == varp->chunk_owner[0]){
         count = varp->nchunk;
+        err = nczipp->driver->iput_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, reqids + 1, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+        if (err != NC_NOERR) return err;
+
+        err = nczipp->driver->wait(nczipp->ncp, 2, reqids, NULL, NC_REQ_COLL);
+        if (err != NC_NOERR) return err;
     }
     else{
-        count = 0;
+        err = nczipp->driver->wait(nczipp->ncp, 0, NULL, NULL, NC_REQ_COLL);
+        if (err != NC_NOERR) return err;
     }
-    err = nczipp->driver->put_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
-    if (err != NC_NOERR) return err;
 
     /* Carry our coll I/O
      * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
@@ -278,6 +278,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     int cid;    // Iterator for chunk id
     int max_nchunks = 0;
     int *zsizes, *zsizes_all;
+    int *reqids;
+    int nreq;
     MPI_Offset *zoffs;
     MPI_Offset start, count, oldzoff;
     MPI_Datatype mtype, ftype;  // Memory and file datatype
@@ -305,6 +307,9 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
+
+    // Allocate reqid for metadata
+    reqids = (int*)NCI_Malloc(sizeof(int) * nvar * 2);
 
     // Allocate buffer for compression
     zsizes = (int*)NCI_Malloc(sizeof(int) * max_nchunks);
@@ -455,27 +460,25 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     if (err != NC_NOERR) return err;
 
     // Record offset and lens
+    nreq = 0;
     for(vid = 0; vid < nvar; vid++){
         varp = nczipp->vars.data + varids[vid];
-        start = 0;
+        
         if (nczipp->rank == varp->chunk_owner[0]){
+            start = 0;
             count = varp->nchunk + 1;
-        }
-        else{
-            count = 0;
-        }
-        err = nczipp->driver->put_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
-        if (err != NC_NOERR) return err;
-
-        if (nczipp->rank == varp->chunk_owner[0]){
+            err = nczipp->driver->iput_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, reqids + (nreq++), NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+            if (err != NC_NOERR) return err;
+            
             count = varp->nchunk;
+            err = nczipp->driver->iput_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, reqids + (nreq++), NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
+            if (err != NC_NOERR) return err;
         }
-        else{
-            count = 0;
-        }
-        err = nczipp->driver->put_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_WR | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
-        if (err != NC_NOERR) return err;
     }
+
+    // Wait for metadata write
+    err = nczipp->driver->wait(nczipp->ncp, nreq, reqids, NULL, NC_REQ_COLL);
+    if (err != NC_NOERR) return err;
 
     /* Now it's time to add variable file offset to displacements
      * File type offset need to be specified in non-decreasing order
@@ -549,6 +552,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NCI_Free(fdisps);
     NCI_Free(mlens);
     NCI_Free(mdisps);
+
+    NCI_Free(reqids);
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO)
 
