@@ -58,7 +58,7 @@ int nczipioi_print_profile(NC_zip *nczipp){
     int err;
     int i, j;
     double tmax[NTIMER], tmin[NTIMER], tmean[NTIMER], tvar[NTIMER], tvar_local[NTIMER + 3];
-    char *ppath = getenv("PNETCDF_PROFILE_PATH");
+    char *pprefix = getenv("PNETCDF_PROFILE_PREFIX");
 
     CHK_ERR_REDUCE(nczipp->profile.tt, tmax, NTIMER, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
     CHK_ERR_REDUCE(nczipp->profile.tt, tmin, NTIMER, MPI_DOUBLE, MPI_MIN, 0, nczipp->comm);
@@ -86,7 +86,21 @@ foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
         tvar_local[2] = (double)nczipp->nmychunks;
 
         if (nczipp->rank == 0){                        
-            FILE *pfile = fopen(ppath, "w");
+            FILE *pfile;
+            char fname[1024];
+
+            strcpy(fname, nczipp->path);
+            for(i = strlen(fname); i > 0; i--){
+                if (fname[i] == '.'){
+                    fname[i] = '\0';
+                }
+                else if (fname[i] == '\\' || fname[i] == '/'){
+                    i++;
+                    break;
+                }
+            }
+            sprintf(ppath, "%s%s_profile.csv", pprefix, fname + i);
+            pfile = fopen(ppath, "w");
 
             fprintf(pfile, "rank, putsize, getsize, nchunk, ");
 foreach(`t', TIMERS, `PRINTNAME(translit(t, `()'))')dnl
