@@ -22,6 +22,12 @@
   "Recommended flags" for Intel compilers at
   http://www.nersc.gov/users/computational-systems/cori/programming/compiling-codes-on-cori/
 
+  * On April 29, 2019, The default gcc module version 7.0.3 is loaded on Cori,
+    which causes `make` process to fail with an error message of
+    /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/7.3.0/snos/lib/../lib64/libstdc++.so'
+    This problem can be resolved by unloading the new gcc module before running
+    the configure command, i.e.
+        module unload gcc/7.3.0
 
 * Note that the default setting of PnetCDF is to build static libraries only.
   To also build shared libraries, add "--enable-shared LDFLAGS=-dynamic" to the
