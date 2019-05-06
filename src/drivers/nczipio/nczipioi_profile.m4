@@ -77,7 +77,7 @@ int nczipioi_print_profile(NC_zip *nczipp){
 foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
     }
 
-    if (ppath != NULL && *ppath != '0') {
+    if (pprefix != NULL && *pprefix != '0') {
         MPI_Status stat;
 
         memcpy(tvar_local + 3, nczipp->profile.tt, sizeof(double) * NTIMER);
@@ -87,7 +87,7 @@ foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
 
         if (nczipp->rank == 0){                        
             FILE *pfile;
-            char fname[1024];
+            char fname[1024], ppath[1024];
 
             strcpy(fname, nczipp->path);
             for(i = strlen(fname); i > 0; i--){
