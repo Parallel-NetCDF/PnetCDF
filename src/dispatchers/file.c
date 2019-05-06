@@ -771,6 +771,13 @@ ncmpi_open(MPI_Comm    comm,
 
     /* calling the driver's open subroutine */
     err = driver->open(pncp->comm, path, omode, *ncidp, combined_info, &ncp);
+#ifdef ENABLE_COMPRESSION
+    /* Fall back to ncmpio driver if file is not compressed */
+    if (err == NC_EINVAL){
+        driver = ncmpio_inq_driver();
+        err = driver->open(pncp->comm, path, omode, *ncidp, combined_info, &ncp);
+    }
+#endif
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE &&
