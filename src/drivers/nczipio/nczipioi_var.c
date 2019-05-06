@@ -329,8 +329,8 @@ int nczipioi_init_nvar(NC_zip *nczipp, int nput, int *putreqs, int nget, int *ge
 
     // Flag of touched vars
     nflag = nczipp->vars.cnt / 32 + 1;
-    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
-    flag_all = (unsigned int*)NCI_Malloc(sizeof(int) * nflag);
+    flag = (unsigned int*)NCI_Malloc(sizeof(int) * nflag * 2);
+    flag_all = flag + nflag;
     memset(flag, 0, sizeof(int) * nflag);
     for(i = 0; i < nput; i++){
         req = nczipp->putlist.reqs + putreqs[i];
