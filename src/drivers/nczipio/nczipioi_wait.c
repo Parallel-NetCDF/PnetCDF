@@ -208,6 +208,8 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
     if (stats != NULL){
         putstats = (int*)NCI_Malloc(sizeof(int) * nput);
         getstats = (int*)NCI_Malloc(sizeof(int) * nget);
+        memset(putstats, 0, sizeof(int) * nput);
+        memset(getstats, 0, sizeof(int) * nget);
     }
     else{
         putstats = NULL;

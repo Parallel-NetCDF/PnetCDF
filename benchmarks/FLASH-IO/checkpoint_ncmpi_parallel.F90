@@ -342,6 +342,8 @@
 
       ! disable file offset alignment for fixed-size variables
       call MPI_Info_set(file_info, "nc_var_align_size", "1", err)
+      call MPI_Info_set(file_info, "nc_compression", "enable", err)
+      call MPI_Info_set(file_info, "nc_zip_delay_init", "1", err)
       
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, trim(filename), cmode, &
@@ -586,7 +588,6 @@
              if (stats(i) .NE. NF_NOERR) &
                  call check(stats(i), 'In nfmpi_wait_all req '//trim(str))
           enddo
-          call MPI_Type_free(buftype, err)
       endif
 
 #ifdef TIMERS
