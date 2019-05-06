@@ -61,8 +61,8 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
     if (lb < varp->ndim * 3){   // Metadata should not exceed data
         lb = varp->ndim * 3;
     }
-    if (lb < 1048576){  // At least 1 MiB for efficiency
-        lb = 1048576;
+    if (lb < 1024){  // At least 1 KiB for efficiency
+        lb = 1024;
     }
 
     /* Infer chunk size by reqs

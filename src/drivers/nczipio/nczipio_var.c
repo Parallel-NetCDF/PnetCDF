@@ -80,7 +80,7 @@ nczipio_def_var(void       *ncdp,
     var.metaserial = 0;
     var.dataserial = 0;
 
-    if (ndims > 3 || ndims < 1) { // Does not support higher dimensional vars
+    if (ndims < 1) { // Do not compress scalar
         var.varkind = NC_ZIP_VAR_RAW;
         var.dimsize = NULL;
 
