@@ -210,8 +210,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         for(r = 0; r < req->nreq; r++){
             nczipioi_chunk_itr_init(varp, req->starts[r], req->counts[r], citr, &cid); // Initialize chunk iterator
             do{
-                // Chunk index and owner
-                cid = get_chunk_id(varp, citr);
+                // Chunk owner
                 cown = varp->chunk_owner[cid];
 
                 // Mapping to skip list of send requests 
@@ -266,8 +265,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         for(r = 0; r < req->nreq; r++){
             nczipioi_chunk_itr_init(varp, req->starts[r], req->counts[r], citr, &cid); // Initialize chunk iterator
             do{
-                // Chunk index and owner
-                cid = get_chunk_id(varp, citr);
+                // Chunk owner
                 cown = varp->chunk_owner[cid];
                 if (cown != nczipp->rank){
                     j = smap[cown];
@@ -305,8 +303,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         for(r = 0; r < req->nreq; r++){
             nczipioi_chunk_itr_init(varp, req->starts[r], req->counts[r], citr, &cid); // Initialize chunk iterator
             do{
-                // Chunk index and owner
-                cid = get_chunk_id(varp, citr);
+                // Chunk owner
                 cown = varp->chunk_owner[cid];
                 if (cown != nczipp->rank){
                     j = smap[cown];
@@ -374,16 +371,9 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         for(r = 0; r < req->nreq; r++){
             nczipioi_chunk_itr_init(varp, req->starts[r], req->counts[r], citr, &cid); // Initialize chunk iterator
             do{
-                // Chunk index and owner
-                cid = get_chunk_id(varp, citr);
-
                 if (varp->chunk_owner[cid] == nczipp->rank){
                     // Get overlap region
-                    get_chunk_overlap(varp, citr, req->starts[r], req->counts[r], ostart, osize);
-                    overlapsize = varp->esize;
-                    for(j = 0; j < varp->ndim; j++){
-                        overlapsize *= osize[j];                     
-                    }
+                    overlapsize = get_chunk_overlap(varp, citr, req->starts[r], req->counts[r], ostart, osize);
 
                     if (overlapsize > 0){
                         // Pack type from chunk cache to (contiguous) intermediate buffer

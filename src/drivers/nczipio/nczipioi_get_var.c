@@ -663,11 +663,7 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     do{
         if (varp->chunk_owner[cid] == nczipp->rank){
             // Get overlap region
-            get_chunk_overlap(varp, citr, start, count, ostart, osize);
-            overlapsize = varp->esize;
-            for(i = 0; i < varp->ndim; i++){
-                overlapsize *= osize[i];                     
-            }
+            overlapsize = get_chunk_overlap(varp, citr, start, count, ostart, osize);
 
             if (overlapsize > 0){
                 // Pack type from chunk cache to (contiguous) intermediate buffer

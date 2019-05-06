@@ -342,7 +342,7 @@
 
       ! disable file offset alignment for fixed-size variables
       call MPI_Info_set(file_info, "nc_var_align_size", "1", err)
-
+      
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, trim(filename), cmode, &
                          file_info, ncid)
@@ -545,30 +545,6 @@
       time_start = MPI_Wtime()
 #endif
 
-      if (use_nonblocking_io) then
-         ! create an MPI derived data type for buffer unk
-         gsizes(1) = nvar
-         gsizes(2) = iu_bnd - il_bnd + 1
-         gsizes(3) = ju_bnd - jl_bnd + 1
-         gsizes(4) = ku_bnd - kl_bnd + 1
-         gsizes(5) = maxblocks
-         subsizes(1) = 1
-         subsizes(2) = nxb
-         subsizes(3) = nyb
-         subsizes(4) = nzb
-         subsizes(5) = lnblocks
-         gstarts(1) = 0
-         gstarts(2) = nguard
-         gstarts(3) = nguard*k2d
-         gstarts(4) = nguard*k3d
-         gstarts(5) = 0
-         call MPI_Type_create_subarray(5, gsizes, subsizes, gstarts, &
-                                       MPI_ORDER_FORTRAN, &
-                                       MPI_DOUBLE_PRECISION, buftype, &
-                                       err)
-         call MPI_Type_commit(buftype, err)
-      endif
-
       starts(1) = 1
       starts(2) = 1
       starts(3) = 1
@@ -580,20 +556,17 @@
 
       do i = 1, nvar
          record_label = unklabels(i)
-
-         if (.NOT. use_nonblocking_io) then
-            ! when using nonblocking flexible API, we don't even need unk_buf
-            unk_buf(1, 1:nxb, 1:nyb, 1:nzb, :) =        &
-                unk(i, nguard+1     : nguard+nxb,       &
-                       nguard*k2d+1 : nguard*k2d+nyb,   &
-                       nguard*k3d+1 : nguard*k3d+nzb, :)
-         endif
+      
+        ! when using nonblocking flexible API, we don't even need unk_buf
+        unk_buf(1, 1:nxb, 1:nyb, 1:nzb, :) =        &
+            unk(i, nguard+1     : nguard+nxb,       &
+                    nguard*k2d+1 : nguard*k2d+nyb,   &
+                    nguard*k3d+1 : nguard*k3d+nzb, :)
 
          if (use_nonblocking_io) then
-            err = nfmpi_iput_vara(ncid, varid(6+i), starts, counts, &
-                                  unk(i, 1, 1, 1, 1), 1_MPI_OFFSET_KIND, buftype, reqs(i+6))
+            err = nfmpi_iput_vara_double(ncid, varid(6+i), starts, counts, unk_buf, reqs(i+6))
             if (err .NE. NF_NOERR) &
-                call check(err, "nfmpi_iput_vara: unknowns")
+                call check(err, "nfmpi_iput_vara_double_all: unknowns")
          else
             err = nfmpi_put_vara_double_all(ncid, varid(6+i), starts, counts, unk_buf)
             if (err .NE. NF_NOERR) &

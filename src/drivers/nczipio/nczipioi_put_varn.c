@@ -205,16 +205,19 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                 get_chunk_itr(varp, cid, citr);  
                 for(req = 0; req < nreq; req++){
                     // Calculate chunk overlap
-                    get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
+                    overlapsize = get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
                     //printf("cord = %d, start = %lld, count = %lld, tstart = %d, tssize = %d, esize = %d, ndim = %d\n", citr[0], starts[req][0], counts[req][0], tstart[0], tssize[0], varp->esize, varp->ndim); fflush(stdout);
-                    overlapsize = varp->esize;
-                    for(j = 0; j < varp->ndim; j++){
-                        overlapsize *= osize[j];                     
-                    }
+                    
                     //printf("overlapsize = %d\n", overlapsize); fflush(stdout);
 
                     // If current request have any overlap with the chunk, we pack the data and metadata
                     if (overlapsize > 0){
+                        // Overlap size
+                        overlapsize = varp->esize;
+                        for(j = 0; j < varp->ndim; j++){
+                            overlapsize *= osize[j];                     
+                        }
+
                         // Pack type
                         for(j = 0; j < varp->ndim; j++){
                             tstart[j] = (int)(ostart[j] - starts[req][j]);
@@ -588,11 +591,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
         do{
             if (varp->chunk_owner[cid] == nczipp->rank){
                 // Get overlap region
-                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
-                overlapsize = varp->esize;
-                for(i = 0; i < varp->ndim; i++){
-                    overlapsize *= osize[i];                     
-                }
+                overlapsize = get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
 
                 if (overlapsize > 0){
                     // Pack type from user buffer to (contiguous) intermediate buffer

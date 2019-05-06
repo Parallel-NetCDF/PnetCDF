@@ -619,13 +619,11 @@
             endif
 
          else
-
             unkt(1,:,:,:,:) = real(unk(iout(ivar), &
                                        nguard+1:nguard+nxb, &
                                        nguard*k2d+1:nguard*k2d+nyb, &
                                        nguard*k3d+1:nguard*k3d+nzb,:), &
                                    kind = single)
-
             starts(1) = 1
             starts(2) = 1
             starts(3) = 1
@@ -635,8 +633,8 @@
             counts(3) = nzb
             counts(4) = lnblocks
             if (use_nonblocking_io) then
-                err = nfmpi_bput_vara_real(ncid, varid(6+ivar), starts, counts, unkt, reqs(ivar+6))
-                if (err .NE. NF_NOERR) call check(err, "nfmpi_bput_vara_real: unknowns sp")
+                err = nfmpi_iput_vara_real(ncid, varid(6+ivar), starts, counts, unkt, reqs(ivar+6))
+                if (err .NE. NF_NOERR) call check(err, "nfmpi_iput_vara_real: unknowns sp")
             else
                 err = nfmpi_put_vara_real_all(ncid, varid(6+ivar), starts, counts, unkt)
                 if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_real_all: unknowns sp")

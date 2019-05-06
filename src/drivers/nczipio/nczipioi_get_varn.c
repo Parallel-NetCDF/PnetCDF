@@ -218,12 +218,8 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
                 else{
                     for(req = 0; req < nreq; req++){
                         // Calculate chunk overlap
-                        get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
+                        overlapsize = get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
                         //printf("cord = %d, start = %lld, count = %lld, tstart = %d, tssize = %d, esize = %d, ndim = %d\n", citr[0], starts[req][0], counts[req][0], tstart[0], tssize[0], varp->esize, varp->ndim); fflush(stdout);
-                        overlapsize = varp->esize;
-                        for(j = 0; j < varp->ndim; j++){
-                            overlapsize *= osize[j];                     
-                        }
 
                         if (overlapsize > 0){
                             // Metadata
@@ -275,11 +271,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
 
             for(req = 0; req < nreq; req++){
                 // Calculate overlapping region
-                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
-                overlapsize = varp->esize;
-                for(j = 0; j < varp->ndim; j++){
-                    overlapsize *= osize[j];                     
-                }
+                overlapsize = get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
 
                 if (overlapsize > 0){
                     // Pack type from chunk buffer to (contiguous) intermediate buffer
@@ -406,11 +398,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
             packoff = 0;
             for(req = 0; req < nreq; req++){
                 // Calculate chunk overlap
-                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
-                overlapsize = varp->esize;
-                for(j = 0; j < varp->ndim; j++){
-                    overlapsize *= osize[j];                     
-                }
+                overlapsize = get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
 
                 if (overlapsize > 0){
                     // Pack type from recv buffer to user buffer
@@ -728,11 +716,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
         do{
             if (varp->chunk_owner[cid] == nczipp->rank){
                 // Get overlap region
-                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
-                overlapsize = varp->esize;
-                for(i = 0; i < varp->ndim; i++){
-                    overlapsize *= osize[i];                     
-                }
+                overlapsize = get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
 
                 if (overlapsize > 0){
                     // Pack type from chunk cache to (contiguous) intermediate buffer

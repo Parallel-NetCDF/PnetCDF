@@ -471,13 +471,15 @@ nczipioi_put_var_old(NC_zip        *nczipp,
 
         for(j = 0; j < nczipp->np; j++){
             // Overlapping region of this chunk
-            get_chunk_overlap(varp, ccord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
-            overlapsize = esize;
-            for(k = 0; k < varp->ndim; k++){
-                overlapsize *= tssize[k];
-            }
+            overlapsize = get_chunk_overlap(varp, ccord, start_all[j], count_all[j], stride_all[j], tstart, tssize);
 
             if (overlapsize > 0){
+                // Overlap size
+                overlapsize = esize;
+                for(k = 0; k < varp->ndim; k++){
+                    overlapsize *= tssize[k];
+                }
+
                 // The chunk is the main array, overlapping region is the subarray
                 for(k = 0; k < varp->ndim; k++){
                     tstart[k] -= ccord[k] * varp->chunkdim[k];
