@@ -35,7 +35,12 @@ int main(int argc, char **argv)
     strcpy(str, ncmpi_inq_libvers());
     pnetcdf_version_str = strtok(str, " ");
 
-    if (strcmp(pnetcdf_version_str, PNETCDF_VERSION)) {
+    if (pnetcdf_version_str == NULL) {
+        printf("\nError: ncmpi_inq_libvers() returns ill form string %s\n",
+               ncmpi_inq_libvers());
+        nerrs++;
+    }
+    else if (strcmp(pnetcdf_version_str, PNETCDF_VERSION)) {
         printf("\nError: ncmpi_inq_libvers() returns %s does not match with PNETCDF_VERSION %s\n",
                pnetcdf_version_str, PNETCDF_VERSION);
         nerrs++;

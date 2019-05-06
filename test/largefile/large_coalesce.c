@@ -34,6 +34,7 @@ int main(int argc, char** argv)
     int ncid, cmode, varid, dimid[2], req[3], st[3];
     MPI_Offset start[2], count[2];
     MPI_Info info;
+    size_t i;
     int bb_enabled=0;
 
     MPI_Init(&argc, &argv);
@@ -98,10 +99,8 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* now we are in data mode */
-#ifdef ENABLE_LARGE_SINGLE_REQ
     for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
     for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
-#endif
 
     start[0] = rank;
     count[0] = 1;
