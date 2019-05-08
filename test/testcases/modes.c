@@ -229,7 +229,7 @@ int main(int argc, char** argv)
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
-    if (filename != NULL) free(filename);
+    free(filename);
 
     MPI_Finalize();
     return (nerrs > 0);
