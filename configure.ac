@@ -983,7 +983,7 @@ dnl AC_FUNC_VPRINTF
 dnl AC_CHECK_FUNCS([memset setlocale sqrt strchr strrchr strtol])
 dnl AC_CHECK_LIB([m], [tanh])
 dnl UD_CHECK_LIB_MATH
-AC_CHECK_FUNCS([strerror access unlink])
+AC_CHECK_FUNCS([strdup strerror access unlink])
 
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
