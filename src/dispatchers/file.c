@@ -49,6 +49,22 @@ static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
         printf("%s error at line %d file %s (%s)\n", func, __LINE__, __FILE__, errorString); \
     }
 
+/* strdup() is a POSIX function, not a standard C function */
+#ifndef HAVE_STRDUP
+static char *strdup(const char *str)
+{
+    char *ptr;
+
+    if (str == NULL) return NULL;
+
+    ptr = (char*) malloc(strlen(str) + 1);
+    if (ptr != NULL)
+        strcpy(ptr, str);
+
+    return ptr;
+}
+#endif
+
 /*----< new_id_PNCList() >---------------------------------------------------*/
 /* Return a new ID (array index) from the PNC list, pnc_filelist[] that is
  * not used. Note the used elements in pnc_filelist[] may not be contiguus.
@@ -524,6 +540,8 @@ ncmpi_create(MPI_Comm    comm,
     return status;
 }
 
+#define _NDIMS_ 16
+
 /*----< ncmpi_open() >-------------------------------------------------------*/
 /* This is a collective subroutine. */
 int
@@ -534,7 +552,7 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, relax_coord_bound, DIMIDS[16], *dimids;
+    int safe_mode=0, mpireturn, relax_coord_bound, DIMIDS[_NDIMS_], *dimids;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -797,11 +815,11 @@ ncmpi_open(MPI_Comm    comm,
         goto fn_exit;
     }
 
-    dimids = NULL;
+    dimids = DIMIDS;
 
     /* construct array of PNC_var for all variables */
     for (i=0; i<pncp->nvars; i++) {
-        int ndims;
+        int ndims, max_ndims=_NDIMS_;
         pncp->vars[i].shape  = NULL;
         pncp->vars[i].recdim = -1;   /* if fixed-size variable */
         err = driver->inq_var(pncp->ncp, i, NULL, &pncp->vars[i].xtype, &ndims,
@@ -812,10 +830,11 @@ ncmpi_open(MPI_Comm    comm,
         if (ndims > 0) {
             pncp->vars[i].shape = (MPI_Offset*)
                                   NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);
-            if (ndims <= 16) /* avoid repeated malloc */
-                dimids = DIMIDS;
-            else
+            if (ndims > max_ndims) { /* avoid repeated malloc */
+                if (dimids == DIMIDS) dimids = NULL;
                 dimids = (int*) NCI_Realloc(dimids, ndims * SIZEOF_INT);
+                max_ndims = ndims;
+            }
             err = driver->inq_var(pncp->ncp, i, NULL, NULL, NULL,
                                   dimids, NULL, NULL, NULL, NULL);
             if (err != NC_NOERR) break; /* loop i */
@@ -837,8 +856,7 @@ ncmpi_open(MPI_Comm    comm,
         }
         NCI_Free(pncp->vars);
     }
-    if (dimids != NULL && dimids != DIMIDS)
-        NCI_Free(dimids);
+    if (dimids != DIMIDS) NCI_Free(dimids);
 
 fn_exit:
     if (err != NC_NOERR) {

@@ -81,9 +81,9 @@ int main(int argc, char *argv[])
 
     /* Determine ndims and test file name */
     if (argc > 1)
-        strdup(filename, argv[1]);
+        filename = strdup(argv[1]);
     else
-        strdup(filename, "testfile.nc");
+        filename = strdup("testfile.nc");
 
     ndims = DIM;
     if (argc > 2)
