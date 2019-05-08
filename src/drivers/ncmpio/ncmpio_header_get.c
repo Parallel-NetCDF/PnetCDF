@@ -349,19 +349,11 @@ hdr_fetch(bufferinfo *gbp) {
             readLen -= slack;
         }
 
-        /* May need to zero out the buffer, as it will be filled with read.
-         * Without this, valgrind may mysteriously spew warning messages
-         * e.g. e3sm-io benchmark F case.
-         */
-        memset(readBuf, 0, readLen);
-
-#ifdef _USE_MPI_GET_COUNT
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
          * due to the uninitialized MPI_Status object passed to MPI-IO calls.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
 
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
@@ -372,13 +364,20 @@ hdr_fetch(bufferinfo *gbp) {
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
         }
         else {
-#ifdef _USE_MPI_GET_COUNT
-            int get_size; /* actual read amount may be smaller */
+            /* Obtain the actual read amount. It may be smaller than readLen,
+             * when the remaining file size is smaller than read chunk size.
+             */
+            int get_size;
             MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
             gbp->get_size += get_size;
-#else
-            gbp->get_size += readLen;
-#endif
+
+            /* If actual read amount is shorter than readLen, then we zero-out
+             * the remaining buffer. This is because the MPI_Bcast below
+             * broadcasts a buffer of a fixed size, gbp->size. Without zeroing
+             * out, valgrind will complain about the uninitialized values.
+             */
+            if (get_size < readLen)
+                memset(readBuf + get_size, 0, readLen - get_size);
         }
         /* only root process reads file header, keeps track of current read
          * file pointer location */
