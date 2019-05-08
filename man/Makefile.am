@@ -25,8 +25,8 @@ pnetcdf_f90.3: pnetcdf_f90.m4
 	$(M4) $(M4FLAGS) -DPNETCDF_VERSION=$(PNETCDF_VERSION) $? > $@  || rm -f $@
 
 dist-hook:
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE2|`date '+%e %b %Y'`|g" $(distdir)/pnetcdf.m4
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%Y-%m-%d'`|g"  $(distdir)/pnetcdf.m4
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE2|`date '+%e %b %Y'`|g" $(distdir)/pnetcdf_f90.m4
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%Y-%m-%d'`|g"  $(distdir)/pnetcdf_f90.m4
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE_FULL|@PNETCDF_RELEASE_DATE_FULL@|g" $(distdir)/pnetcdf.m4
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|@PNETCDF_RELEASE_DATE@|g"           $(distdir)/pnetcdf.m4
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE_FULL|@PNETCDF_RELEASE_DATE_FULL@|g" $(distdir)/pnetcdf_f90.m4
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|@PNETCDF_RELEASE_DATE@|g"           $(distdir)/pnetcdf_f90.m4
 

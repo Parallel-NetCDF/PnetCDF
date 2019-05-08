@@ -24,9 +24,12 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
     if the number of dimensions of a variable is larger than 64.This predefined
     constant can be changed by setting `-DMAX_PRINT_NDIMS=N` at the compile
     command line.
-  + Utility program `ncvalidator` is updated to be able to repair the header of
-    a file to fill null-byte paddings in the space between the header size and
+  + Utility program `ncvalidator` is updated to be able to repair the file
+    header to fill null-byte paddings in the space between the header size and
     header extent.
+  + Add notes to `doc/README.CRAY` about a compilation issue encountered on
+    Cori @ NERSC when module gcc/7.3.0 is loaded.
+  + Change release date format from `Day Month, Year` to `Month Day, Year`.
 
 * New test program
   + test/nc4/notsupport.c - Test if error code NC_ENOTSUPPORT is properly

@@ -728,7 +728,7 @@ The problem is reported in https://llvm.org/bugs/show_bug.cgi?id=14713
 ### Setting PnetCDF software release date
 * Prior to version 1.8.1, the release date was obtained from the SVN keyword
   LastChangedDate set in file configure.in. It is used to produce two
-  variables: PNETCDF_RELEASE_DATE and PNETCDF_RELEASE_DATE2.  These two
+  variables: PNETCDF_RELEASE_DATE and PNETCDF_RELEASE_DATE_FULL. These two
   variables are used by all man pages, pnetcdf.h, pnetcdf_version, and
   pnetcdf-config.  We used the keyword value set by SVN as the release date.
   The assumption is that updating PACKAGE_VERSION in configure.in is the last

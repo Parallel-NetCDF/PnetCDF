@@ -460,13 +460,13 @@ DECL(RETSTR(), inq_libvers, (VOID_ARG))
 FOLD(inq_libvers)
 .sp
 Returns a string identifying the version of the PnetCDF library, and
-when it was built, like: "PNETCDF_VERSION of PNETCDF_RELEASE_DATE2".
+when it was built, like: "PNETCDF_VERSION of PNETCDF_RELEASE_DATE_FULL".
 .LP
 The RCS \fBident(1)\fP command will find a string like
 "$\|Id: @\|(#) PnetCDF library version
-PNETCDF_VERSION of PNETCDF_RELEASE_DATE2 $"
+PNETCDF_VERSION of PNETCDF_RELEASE_DATE_FULL $"
 in the library. The SCCS \fBwhat(1)\fP command will find a string like
-"PnetCDF library version PNETCDF_VERSION of PNETCDF_RELEASE_DATE2".
+"PnetCDF library version PNETCDF_VERSION of PNETCDF_RELEASE_DATE_FULL".
 .SH "RETURN VALUES"
 .LP
 All PnetCDF functions (except
