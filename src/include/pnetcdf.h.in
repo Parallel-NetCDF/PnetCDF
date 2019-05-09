@@ -181,17 +181,15 @@ Use this in mode flags for both nc_create() and nc_open(). */
 
 #define NC_NETCDF4       0x1000  /**< Use netCDF-4/HDF5 format. Mode flag for nc_create(). */
 
-/** Turn on MPI I/O.
-Use this in mode flags for both nc_create() and nc_open(). */
+/** The following 3 flags are deprecated as of 4.6.2. Parallel I/O is now
+ * initiated by calling nc_create_par and nc_open_par, no longer by flags.
+ */
 #define NC_MPIIO         0x2000 /**< \deprecated */
-/** Turn on MPI POSIX I/O.
-Use this in mode flags for both nc_create() and nc_open(). */
-#define NC_MPIPOSIX      NC_MPIIO /**< \deprecated As of libhdf5 1.8.13. Now an alias */
+#define NC_MPIPOSIX      NC_MPIIO /**< \deprecated */
+#define NC_PNETCDF       (NC_MPIIO) /**< \deprecated */
 
 #define NC_PERSIST       0x4000  /**< Save diskless contents to disk. Mode flag for nc_open() or nc_create() */
 #define NC_INMEMORY      0x8000  /**< Read from memory. Mode flag for nc_open() or nc_create() */
-
-#define NC_PNETCDF       (NC_MPIIO) /**< \deprecated Use PnetCDF library; alias for NC_MPIIO. */
 
 #define NC_MAX_MAGIC_NUMBER_LEN 8 /**< Max len of user-defined format magic number. */
 
@@ -203,8 +201,8 @@ Use this in mode flags for both nc_create() and nc_open(). */
  */
 /**@{*/
 #define NC_FORMAT_CLASSIC         (1)
-/* After adding CDF5 support, this flag
-   is somewhat confusing. So, it is renamed.
+/* After adding CDF5 support, the NC_FORMAT_64BIT
+   flag is somewhat confusing. So, it is renamed.
    Note that the name in the contributed code
    NC_FORMAT_64BIT was renamed to NC_FORMAT_CDF2
 */
@@ -216,6 +214,9 @@ Use this in mode flags for both nc_create() and nc_open(). */
 
 /* Alias */
 #define NC_FORMAT_CDF5    NC_FORMAT_64BIT_DATA
+
+/* Define a mask covering format flags only */
+#define NC_FORMAT_ALL (NC_64BIT_OFFSET|NC_64BIT_DATA|NC_CLASSIC_MODEL|NC_NETCDF4|NC_UDF0|NC_UDF1)
 
 /**@}*/
 
@@ -246,6 +247,7 @@ Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_FORMATX_DAP4      (6)
 #define NC_FORMATX_UDF0      (8)
 #define NC_FORMATX_UDF1      (9)
+#define NC_FORMATX_ZARR      (10)
 #define NC_FORMATX_UNDEFINED (0)
 
   /* To avoid breaking compatibility (such as in the python library),
@@ -301,7 +303,8 @@ NOTE: The NC_MAX_DIMS, NC_MAX_ATTRS, and NC_MAX_VARS limits
 #define NC_MAX_ATTRS    8192 (not enforced after 4.5.0)
 #define NC_MAX_VARS     8192 (not enforced after 4.5.0)
 #define NC_MAX_VAR_DIMS 1024 (max per variable dimensions)
-PnetCDF defines the above 4 constants differently from NetCDF 4.5.0.
+
+*** Note the above 4 constants are different since PnetCDF 1.9.0 and NetCDF 4.5.0.
 
 */
 /**@{*/
@@ -395,7 +398,7 @@ larger than the corresponding dimension length will cause an error. */
 /** NC_MAX_DIMS exceeded. Max number of dimensions exceeded in a
 classic or 64-bit offset file, or an netCDF-4 file with
 ::NC_CLASSIC_MODEL on. */
-#define	NC_EMAXDIMS	(-41)      /**< NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeds - not enforced after 4.5.0 */
+#define	NC_EMAXDIMS	(-41)	   /**< NC_MAX_DIMS or NC_MAX_VAR_DIMS exceeds - not enforced after 4.5.0 */
 
 #define	NC_ENAMEINUSE	(-42)	   /**< String match to name in use */
 #define NC_ENOTATT	(-43)	   /**< Attribute not found */
