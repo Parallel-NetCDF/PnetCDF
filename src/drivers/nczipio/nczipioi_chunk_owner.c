@@ -45,10 +45,10 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
 
     // Count overlapsize of each request
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
+        nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
         do{
             // Count overlap
-            get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
+            //get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
             overlapsize = 1;
             for(i = 0; i < varp->ndim; i++){
                 overlapsize *= osize[i];
@@ -57,7 +57,7 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
             if (ocnt[cid].osize > varp->chunksize){
                 ocnt[cid].osize = varp->chunksize;
             }
-        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
+        } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
     for(i = 0; i < varp->nchunk; i++){
         ocnt[i].rank = nczipp->rank;

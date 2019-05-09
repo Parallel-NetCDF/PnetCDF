@@ -90,7 +90,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
     nsend = 0;
     for(req = 0; req < nreq; req++){
         // Iterate through chunks
-        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid);
+        nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize);
         do{
             if (varp->chunk_owner[cid] != nczipp->rank && rcnt_local[cid] == 0){
                 // Count number of mnessage we need to send
@@ -98,7 +98,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
             }
 
             rcnt_local[cid] = 1;
-        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
+        } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_INIT)
@@ -538,7 +538,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
 
     // counts[req] total number of messages and build a map of accessed chunk to list of comm datastructure
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
+        nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
         do{
             // Chunk owner
             cown = varp->chunk_owner[cid];
@@ -549,7 +549,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
             }
             rcnt_local[cown] = 1;   // Need to send message if not owner     
             rcnt_local_chunk[cid] = 1;  // This tells the owner to prepare the chunks  
-        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
+        } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_INIT)
@@ -614,7 +614,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     memset(rsize_re, 0, sizeof(int) * nsend);
     memset(rcnt_local, 0, sizeof(int) * nsend);
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
+        nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
         do{
             // Chunk owner
             cown = varp->chunk_owner[cid];
@@ -623,7 +623,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
                 sdst[j] = cown; // Record a reverse map by the way
 
                 // counts[req] overlap
-                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
+                //get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
                 overlapsize = varp->esize;
                 for(i = 0; i < varp->ndim; i++){
                     overlapsize *= osize[i];                     
@@ -632,7 +632,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
                 rsize_re[j] += overlapsize;
                 rcnt_local[j]++;
             }
-        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
+        } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
 
     // Allocate buffer for send
@@ -648,7 +648,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     // Pack requests
     memset(rcnt_local, 0, sizeof(int) * nsend);
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
+        nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
         do{
             // Chunk owner
             cown = varp->chunk_owner[cid];
@@ -656,7 +656,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
                 j = smap[cown];
 
                 // Get overlap region
-                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
+                //get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
 
                 // Pack metadata
                 for(i = 0; i < varp->ndim; i++){
@@ -670,7 +670,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
                 // Record source of the request
                 reqs[j][rcnt_local[j]++] = req;
             }
-        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
+        } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_PACK_REQ)
@@ -712,7 +712,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
 
     // Handle our own data
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
+        nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
         do{
             if (varp->chunk_owner[cid] == nczipp->rank){
                 // Get overlap region
@@ -751,7 +751,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
                     MPI_Type_free(&ptype);    
                 }
             }
-        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
+        } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_SELF)
