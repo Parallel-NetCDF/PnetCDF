@@ -33,17 +33,30 @@
 #define min(a,b) (((a)<(b))?(a):(b))
 #define max(a,b) (((a)>(b))?(a):(b))
 
-MPI_Offset get_chunk_overlap(NC_zip_var *varp, MPI_Offset* cord, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *ostart, MPI_Offset *ocount){
-    int i;
-    MPI_Offset ret = varp->esize;
+int get_chunk_overlap(NC_zip_var *varp, MPI_Offset* cord, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *ostart, MPI_Offset *ocount){
+    int i, ret = 1;
+    MPI_Offset a, b;
 
     for(i = 0; i < varp->ndim; i++){
+        /*
+        a = max(start[i], cord[i]);
+        b = min(start[i] + count[i], cord[i] + varp->chunkdim[i]) - a;
+        if (b <= 0){
+            b = 0;
+            ret = 0;
+        }
+        if (a != ostart[i] || b != ocount[i]){
+            printf("Error, i=%d, a=%lld, b=%lld, ostart=%lld, ocount=%lld\n", i, a, b, ostart[i], ocount[i]); fflush(stdout);
+        }
+        ostart[i] = a;
+        ocount[i] = b;
+        */
         ostart[i] = max(start[i], cord[i]);
         ocount[i] = min(start[i] + count[i], cord[i] + varp->chunkdim[i]) - ostart[i];
         if (ocount[i] <= 0){
             ocount[i] = 0;
+            ret = 0;
         }
-        ret *= ocount[i];
     }
 
     return ret;

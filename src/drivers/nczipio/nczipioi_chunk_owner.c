@@ -53,14 +53,14 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
             for(i = 0; i < varp->ndim; i++){
                 overlapsize *= osize[i];
             }
-            ocnt[cid].osize += (int)overlapsize + (varp->ndim * 2 + 2) * sizeof(int);
+            ocnt[cid].osize += (int)overlapsize;
+            if (ocnt[cid].osize > varp->chunksize){
+                ocnt[cid].osize = varp->chunksize;
+            }
         } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
     for(i = 0; i < varp->nchunk; i++){
         ocnt[i].rank = nczipp->rank;
-        if (ocnt[cid].osize > varp->chunksize){
-            ocnt[cid].osize = varp->chunksize;
-        }
         ocnt[i].osize -= nczipp->nmychunks;   // Penality for load ballance
     }
     // Noise to break tie
