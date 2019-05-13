@@ -133,6 +133,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
 
     // Decompress each chunk
     // Allocate chunk cache if not allocated
+    varp->zip->init(MPI_INFO_NULL);
     dsize = varp->chunksize;
     for(i = 0; i < nchunk; i++){
         cid = cids[i];
@@ -146,6 +147,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
             printf("Decompress Error\n");
         }
     }
+    varp->zip->finalize();
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_DECOM)
 
@@ -283,6 +285,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_DECOM)
 
     // Decompress each chunk
+    varp->zip->init(MPI_INFO_NULL);
     k = 0;
     for(i = 0; i < nvar; i++){
         varp = nczipp->vars.data + varids[i];
@@ -305,6 +308,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
             k++;
         }
     }
+    varp->zip->finalize();
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_DECOM)
 
