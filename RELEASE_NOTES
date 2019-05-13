@@ -7,27 +7,27 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
 * Bug fixes
-  + When configure option `--enable-netcdf4` is used, users may encounter
-    problem during configure or make time, if the underneath NetCDF4 library
-    was built with static libraries only. Thanks Bruno Pagani for reporting.
+  + When configure command-line option `--enable-netcdf4` is used, errors may
+    occur during the configure or make time. Thanks Bruno Pagani for reporting.
+    See bug fix in
     [pull request #46](https://github.com/Parallel-NetCDF/PnetCDF/pull/46).
   + Fix configure date setting when environment variable `SOURCE_DATE_EPOCH`
-    is already set.
+    is set.
 
 * Clarifications
   + Limitation of supporting NetCDF-4 driver -- a list of APIs that are not
     supported for NetCDF-4 files is given in `doc/README.NetCDF4.md`. Error
-    code `NC_ENOTSUPPORT` is returned, if those APIs are called.
+    code `NC_ENOTSUPPORT` is returned when those APIs are called.
 
 * Other updates:
   + Utility program `ncoffsets` is updated to skip printing the dimension names
     if the number of dimensions of a variable is larger than 64.This predefined
-    constant can be changed by setting `-DMAX_PRINT_NDIMS=N` at the compile
-    command line.
+    constant can be changed a different number `N` by adding
+    `-DMAX_PRINT_NDIMS=N` to the compile command line.
   + Utility program `ncvalidator` is updated to be able to repair the file
-    header to fill null-byte paddings in the space between the header size and
-    header extent.
-  + Add notes to `doc/README.CRAY` about a compilation issue encountered on
+    header to fill in null-byte paddings in the space between the header size
+    and header extent.
+  + Add a note to `doc/README.CRAY` about a compilation issue encountered on
     Cori @ NERSC when module gcc/7.3.0 is loaded.
   + Change release date format from `Day Month, Year` to `Month Day, Year`.
 
