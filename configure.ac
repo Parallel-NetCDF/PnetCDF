@@ -143,6 +143,7 @@ AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-
 AH_TEMPLATE([ENABLE_BURST_BUFFER],      [Define if to enable burst buffer feature])
 AH_TEMPLATE([ENABLE_COMPRESSION],       [Define if to enable compression feature])
 AH_TEMPLATE([ENABLE_ZLIB],              [Define if to enable zlib compression method])
+AH_TEMPLATE([ENABLE_SZ],                [Define if to enable sz compression method])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 AH_TEMPLATE([ENABLE_REQ_AGGREGATION],   [Define if able to support request aggregation in nonblocking routines])
@@ -2433,6 +2434,61 @@ if test "x$enable_zlib" = "xyes" ; then
       PnetCDF with ZLIB compression support. Use option
          --with-zlib=/path/to/implementation
       to specify the location of ZLIB build.
+      Stopping ...
+      Check 'config.log' for more information.
+      ------------------------------------------------------------])
+   fi
+fi
+
+AC_ARG_ENABLE([sz],
+   [AS_HELP_STRING([--enable-sz],
+                   [Enable sz compression method support. @<:@default: disabled@:>@])],
+   [enable_sz=${enableval}], [enable_sz=no]
+)
+
+ENABLE_SZ=0
+if test "x$enable_sz" = "xyes" ; then
+   AC_DEFINE(ENABLE_SZ)
+   ENABLE_SZ=1
+fi
+AC_SUBST(ENABLE_SZ)
+AM_CONDITIONAL(ENABLE_SZ, [test x$enable_sz = xyes])
+
+
+if test "x$enable_sz" = "xyes" ; then
+   SZ_INSTALL=""
+   AC_ARG_WITH(sz,
+       [AS_HELP_STRING([--with-sz=/path/to/implementation],
+                       [installation prefix for sz implementation])],
+       if test "x${withval}" = xyes; then
+          AC_MSG_ERROR(--with-sz is set but the value is NULL)
+       else
+          SZ_INSTALL=${withval}
+       fi
+   )
+   
+   if test "x${SZ_INSTALL}" != x ; then
+      CPPFLAGS+=" -I${SZ_INSTALL}/include"
+      LDFLAGS+=" -L${SZ_INSTALL}/lib"
+      LIBS+=" -lSZ -lzstd"
+   fi
+
+   LIBS+=" -lm -ldl"
+
+   have_sz=no
+   AC_MSG_CHECKING(SZ library)
+   AC_SEARCH_LIBS([deflate], [z], [have_sz=yes], [have_sz=no])
+   if test "x${have_sz}" = xyes; then
+      AC_CHECK_HEADERS([sz.h], [], [have_sz=no])
+   fi
+
+   if test "x${have_sz}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      The SZ library and header file are required to build
+      PnetCDF with SZ compression support. Use option
+         --with-sz=/path/to/implementation
+      to specify the location of SZ build.
       Stopping ...
       Check 'config.log' for more information.
       ------------------------------------------------------------])

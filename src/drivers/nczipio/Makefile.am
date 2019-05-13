@@ -65,6 +65,10 @@ if ENABLE_ZLIB
    C_SRCS += nczip_zlib.c
 endif
 
+if ENABLE_SZ
+   C_SRCS += nczip_sz.c
+endif
+
 $(M4_SRCS:.m4=.c): Makefile
 $(M4H_SRCS:.m4h=.h): Makefile
 

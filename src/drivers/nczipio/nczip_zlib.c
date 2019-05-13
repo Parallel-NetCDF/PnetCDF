@@ -189,7 +189,7 @@ int nczip_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndi
         printf("inflateInit fail: %d: %s\n", err, infstream.msg);
         DEBUG_RETURN_ERROR(NC_EIO)
     }
-    err = inflate(&infstream, Z_NO_FLUSH);
+    err = inflate(&infstream, Z_FINISH);
     if (err != Z_STREAM_END){
         printf("inflate fail: %d: %s\n", err, infstream.msg);
         DEBUG_RETURN_ERROR(NC_EIO)
@@ -245,7 +245,7 @@ int nczip_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, 
     err = Z_OK;
     while (err != Z_STREAM_END){
         // Compress data
-        err = inflate(&infstream, Z_NO_FLUSH);
+        err = inflate(&infstream, Z_NO_FLUSH | Z_FINISH);
         // Check if buffer is lage enough
         if (err != Z_STREAM_END){
             // Enlarge buffer

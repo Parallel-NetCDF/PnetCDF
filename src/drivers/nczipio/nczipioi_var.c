@@ -180,6 +180,17 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     varp->zip = nczip_zlib_inq_driver();
                     break;
 #endif
+#ifdef ENABLE_ZLIB
+                case NC_ZIP_DRIVER_SZ:
+                    varp->zip = nczip_sz_inq_driver();
+                    break;
+#endif
+                default:
+                    if (nczipp->rank == 0){
+                        printf("Warning: Unknown zip driver id %d, use NC_ZIP_DRIVER_DUMMY\n", varp->zipdriver);
+                    }
+                    varp->zip = nczip_dummy_inq_driver();
+                    break;
                 break;
             }
 
