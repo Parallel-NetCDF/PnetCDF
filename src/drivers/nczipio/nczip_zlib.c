@@ -63,7 +63,7 @@ int nczip_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim,
         DEBUG_RETURN_ERROR(NC_EIO)
     }
     err = deflate(&defstream, Z_FINISH);
-    if (err != Z_OK){
+    if (err != Z_STREAM_END){
         printf("deflate fail: %d: %s\n", err, defstream.msg);
         DEBUG_RETURN_ERROR(NC_EIO)
     }
@@ -92,9 +92,13 @@ int nczip_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim,
  */
 int nczip_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     int err;
-    int bsize = in_len >> 3; // Start by 1/8 of the in_len
+    int bsize; // Start by 1/8 of the in_len
     char *buf;
 
+    bsize = in_len >> 3;
+    if (bsize < 6){
+        bsize = 6;
+    }
     buf = (char*)NCI_Malloc(bsize); 
 
     // zlib struct
@@ -115,16 +119,12 @@ int nczip_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, in
     }
 
     // The actual compression work
-    while (defstream.avail_in != 0){
+    err = Z_OK;
+    while (err != Z_STREAM_END){
         // Compress data
-        err = deflate(&defstream, Z_NO_FLUSH);
-        if (err != Z_OK){
-            printf("deflate fail: %d: %s\n", err, defstream.msg);
-            DEBUG_RETURN_ERROR(NC_EIO)
-        }
-
-        // If we run out of buffer
-        if (defstream.avail_out == 0){
+        err = deflate(&defstream, Z_NO_FLUSH | Z_FINISH);
+        // Check if buffer is lage enough
+        if (err != Z_STREAM_END){
             // Enlarge buffer
             buf = (char*)NCI_Realloc(buf, bsize << 1); 
 
@@ -190,7 +190,7 @@ int nczip_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndi
         DEBUG_RETURN_ERROR(NC_EIO)
     }
     err = inflate(&infstream, Z_NO_FLUSH);
-    if (err != Z_OK){
+    if (err != Z_STREAM_END){
         printf("inflate fail: %d: %s\n", err, infstream.msg);
         DEBUG_RETURN_ERROR(NC_EIO)
     }
@@ -241,17 +241,13 @@ int nczip_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, 
         DEBUG_RETURN_ERROR(NC_EIO)
     }
 
-    // The actual compression work
-    while (infstream.avail_in != 0){
+    // The actual decompression work
+    err = Z_OK;
+    while (err != Z_STREAM_END){
         // Compress data
         err = inflate(&infstream, Z_NO_FLUSH);
-        if (err != Z_OK){
-            printf("deflate fail: %d: %s\n", err, infstream.msg);
-            DEBUG_RETURN_ERROR(NC_EIO)
-        }
-
-        // If we run out of buffer
-        if (infstream.avail_out == 0){
+        // Check if buffer is lage enough
+        if (err != Z_STREAM_END){
             // Enlarge buffer
             buf = (char*)NCI_Realloc(buf, bsize << 1); 
 

@@ -169,11 +169,17 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                 err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_zipdriver", &(varp->zipdriver), MPI_INT);
             }
             else{
-                varp->zipdriver = 0;
+                varp->zipdriver = NC_ZIP_DRIVER_DUMMY;
             }
             switch (varp->zipdriver){
                 case NC_ZIP_DRIVER_DUMMY:
                     varp->zip = nczip_dummy_inq_driver();
+                    break;
+#ifdef ENABLE_ZLIB
+                case NC_ZIP_DRIVER_ZLIB:
+                    varp->zip = nczip_zlib_inq_driver();
+                    break;
+#endif
                 break;
             }
 

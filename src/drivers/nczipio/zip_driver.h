@@ -4,6 +4,8 @@
 #include <mpi.h>
 
 #define NC_ZIP_DRIVER_DUMMY 0
+#define NC_ZIP_DRIVER_ZLIB 1
+#define NC_ZIP_DRIVER_SZ 2
 
 struct NCZIP_driver {
     int (*init)(MPI_Info);
