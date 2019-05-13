@@ -208,7 +208,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         req = nczipp->getlist.reqs + reqids[i];
         varp = nczipp->vars.data + req->varid;
         for(r = 0; r < req->nreq; r++){
-            nczipioi_chunk_itr_init_ex(varp, req->starts[r], req->counts[r], citr, &cid, ostart, osize); // Initialize chunk iterator
+            nczipioi_chunk_itr_init(varp, req->starts[r], req->counts[r], citr, &cid); // Initialize chunk iterator
             do{
                 // Chunk owner
                 cown = varp->chunk_owner[cid];
@@ -218,7 +218,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     smap[cown] = nsend++;
                 }
                 rcnt_local[cown] = 1;   // Need to send message if not owner     
-            } while (nczipioi_chunk_itr_next_ex(varp, req->starts[r], req->counts[r], citr, &cid, ostart, osize));
+            } while (nczipioi_chunk_itr_next(varp, req->starts[r], req->counts[r], citr, &cid));
         }
     }
 

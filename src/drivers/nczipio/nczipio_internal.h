@@ -138,7 +138,7 @@ extern int nczipioi_resize_nvar(NC_zip*, int, int*, int, int*);
 // Chunks
 extern int nczipioi_chunk_itr_init(NC_zip_var*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, int*);
 extern int nczipioi_chunk_itr_next(NC_zip_var*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, int*);
-extern int get_chunk_overlap(NC_zip_var*, MPI_Offset*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, MPI_Offset*);
+extern MPI_Offset get_chunk_overlap(NC_zip_var*, MPI_Offset*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, MPI_Offset*);
 extern int get_chunk_id(NC_zip_var*, MPI_Offset*);
 extern int get_chunk_itr(NC_zip_var*, int, MPI_Offset*);
 

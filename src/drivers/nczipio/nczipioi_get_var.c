@@ -88,7 +88,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
     nsend = 0;
 
     // Iterate through chunks
-    nczipioi_chunk_itr_init_ex(varp, start, count, citr, &cid, ostart, osize);
+    nczipioi_chunk_itr_init(varp, start, count, citr, &cid);
     do{
         rcnt_local[cid] = 1;
 
@@ -96,7 +96,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
             // Count number of mnessage we need to send
             nsend++;    
         }
-    } while (nczipioi_chunk_itr_next_ex(varp, start, count, citr, &cid, ostart, osize));
+    } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_INIT)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SYNC)
@@ -499,7 +499,7 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     nsend = 0;
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
-    nczipioi_chunk_itr_init_ex(varp, start, count, citr, &cid, ostart, osize); // Initialize chunk iterator
+    nczipioi_chunk_itr_init(varp, start, count, citr, &cid); // Initialize chunk iterator
     do{
         // Chunk owner
         cown = varp->chunk_owner[cid];
@@ -510,7 +510,7 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
         }
         rcnt_local[cown] = 1;   // Need to send message if not owner     
         rcnt_local_chunk[cid] = 1;  // This tells the owner to prepare the chunks  
-    } while (nczipioi_chunk_itr_next_ex(varp, start, count, citr, &cid, ostart, osize));
+    } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_INIT)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_CB_SYNC)
@@ -663,39 +663,37 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     do{
         if (varp->chunk_owner[cid] == nczipp->rank){
             // Get overlap region
-            overlapsize = get_chunk_overlap(varp, citr, start, count, ostart, osize);
+            //get_chunk_overlap(varp, citr, start, count, ostart, osize);
 
-            if (overlapsize > 0){
-                // Pack type from chunk cache to (contiguous) intermediate buffer
-                for(j = 0; j < varp->ndim; j++){
-                    tstart[j] = (int)(ostart[j] - citr[j]);
-                    tsize[j] = varp->chunkdim[j];
-                    tssize[j] = (int)osize[j];
-                }
-                //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_self([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
-                CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-                CHK_ERR_TYPE_COMMIT(&ptype);
-
-                // Pack data into intermediate buffer
-                packoff = 0;
-                CHK_ERR_PACK(varp->chunk_cache[cid], 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
-                MPI_Type_free(&ptype);
-                overlapsize = packoff;
-
-                // Pack type from (contiguous) intermediate buffer to chunk buffer
-                for(j = 0; j < varp->ndim; j++){
-                    tstart[j] = (int)(ostart[j] - start[j]);
-                    tsize[j] = (int)count[j];
-                }
-                //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_self2([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
-                CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-                CHK_ERR_TYPE_COMMIT(&ptype);
-                
-                // Unpack data into chunk buffer
-                packoff = 0;
-                CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, buf, 1, ptype, nczipp->comm);
-                MPI_Type_free(&ptype);    
+            // Pack type from chunk cache to (contiguous) intermediate buffer
+            for(j = 0; j < varp->ndim; j++){
+                tstart[j] = (int)(ostart[j] - citr[j]);
+                tsize[j] = varp->chunkdim[j];
+                tssize[j] = (int)osize[j];
             }
+            //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_self([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+            CHK_ERR_TYPE_COMMIT(&ptype);
+
+            // Pack data into intermediate buffer
+            packoff = 0;
+            CHK_ERR_PACK(varp->chunk_cache[cid], 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
+            MPI_Type_free(&ptype);
+            overlapsize = packoff;
+
+            // Pack type from (contiguous) intermediate buffer to chunk buffer
+            for(j = 0; j < varp->ndim; j++){
+                tstart[j] = (int)(ostart[j] - start[j]);
+                tsize[j] = (int)count[j];
+            }
+            //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_self2([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+            CHK_ERR_TYPE_COMMIT(&ptype);
+            
+            // Unpack data into chunk buffer
+            packoff = 0;
+            CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, buf, 1, ptype, nczipp->comm);
+            MPI_Type_free(&ptype);    
         }
     } while (nczipioi_chunk_itr_next_ex(varp, start, count, citr, &cid, ostart, osize));
 

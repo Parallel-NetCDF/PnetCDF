@@ -213,10 +213,10 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                     // If current request have any overlap with the chunk, we pack the data and metadata
                     if (overlapsize > 0){
                         // Overlap size
-                        overlapsize = varp->esize;
-                        for(j = 0; j < varp->ndim; j++){
-                            overlapsize *= osize[j];                     
-                        }
+                        //overlapsize = varp->esize;
+                        //for(j = 0; j < varp->ndim; j++){
+                        //    overlapsize *= osize[j];                     
+                        //}
 
                         // Pack type
                         for(j = 0; j < varp->ndim; j++){
@@ -283,12 +283,8 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                 get_chunk_itr(varp, cid, citr);
 
                 // Calculate overlapping region
-                get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
-                overlapsize = varp->esize;
-                for(j = 0; j < varp->ndim; j++){
-                    overlapsize *= osize[j];
-                }
-                
+                overlapsize = get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
+
                 // If anything overlaps
                 if (overlapsize > 0){
                     // Pack type from user buffer to (contiguous) intermediate buffer
@@ -458,7 +454,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
     for(req = 0; req < nreq; req++){
-        nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
+        nczipioi_chunk_itr_init(varp, starts[req], counts[req], citr, &cid); // Initialize chunk iterator
         do{
             // Chunk owner
             cown = varp->chunk_owner[cid];
@@ -468,7 +464,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
                 smap[cown] = nsend++;
             }
             wcnt_local[cown] = 1;   // Need to send message if not owner       
-        } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
+        } while (nczipioi_chunk_itr_next(varp, starts[req], counts[req], citr, &cid));
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_CB_INIT)

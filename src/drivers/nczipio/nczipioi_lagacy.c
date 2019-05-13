@@ -295,11 +295,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
         j = varp->chunk_owner[get_chunk_idx(varp, ccord)];    
         
         // Overlapping size of this chunk
-        get_chunk_overlap(varp, ccord, start, count, stride, tstart, tssize);
-        overlapsize = esize;
-        for(k = 0; k < varp->ndim; k++){
-            overlapsize *= tssize[k];
-        }
+        overlapsize = get_chunk_overlap(varp, ccord, start, count, stride, tstart, tssize);
         sendcounts[j] += overlapsize;
 
         // move on to next chunk
@@ -475,10 +471,10 @@ nczipioi_put_var_old(NC_zip        *nczipp,
 
             if (overlapsize > 0){
                 // Overlap size
-                overlapsize = esize;
-                for(k = 0; k < varp->ndim; k++){
-                    overlapsize *= tssize[k];
-                }
+                //overlapsize = esize;
+                //for(k = 0; k < varp->ndim; k++){
+                //    overlapsize *= tssize[k];
+                //}
 
                 // The chunk is the main array, overlapping region is the subarray
                 for(k = 0; k < varp->ndim; k++){
