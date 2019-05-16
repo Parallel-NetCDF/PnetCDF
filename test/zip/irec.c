@@ -26,7 +26,8 @@
 int main(int argc, char **argv)
 {
     /* IDs for the netCDF file, dimensions, and variables. */
-    int i, j;
+    int i;
+    int zipdriver, communit;
     int np, rank, nerrs = 0;
     int ncid, dimids[2], varid;
     int buf[N];
@@ -59,85 +60,92 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-    for(j = 0; j < 2; j++){
-        /* Initialize file info */
-        MPI_Info_create(&info);
-        MPI_Info_set(info, "nc_compression", "enable");
-        switch(j){
-            case 0:
-                MPI_Info_set(info, "nc_zip_comm_unit", "chunk");
-                break;
-            case 1:
-                MPI_Info_set(info, "nc_zip_comm_unit", "proc");
-                break;
-        }
-        
-        /* Create the file. */
-        err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
-        CHECK_ERR
-
-        /* Define the dimension. */
-        err = ncmpi_def_dim(ncid, "X", NC_UNLIMITED, dimids);
-        CHECK_ERR
-        err = ncmpi_def_dim(ncid, "Y", np, dimids + 1);
-        CHECK_ERR
-        
-        /* Define the variable. */
-        err = ncmpi_def_var(ncid, "M", NC_INT, 2, dimids, &varid);
-        CHECK_ERR
-
-        /* End define mode. */
-        err = ncmpi_enddef(ncid);
-        CHECK_ERR
-
-        /* Write variable */
-        start[1] = rank;
-        count[0] = 1;
-        count[1] = 1;
-        for(i = 0; i < N; i++){
-            buf[i] = rank * N + i + 1;
-            start[0] = i + rank;
-            err = ncmpi_iput_vara_int(ncid, varid, start, count, buf + i, reqids + i);
-        }
-
-        /* Wait for all request */
-        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
-
-        /* Close the file. */
-        err = ncmpi_close(ncid);
-        CHECK_ERR
-
-        /* Open the file. */
-        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
-        CHECK_ERR
-
-        // Free info
-        MPI_Info_free(&info);
-
-        // Read variable
-        memset(buf, 0, sizeof(buf));
-        start[1] = rank;
-        count[0] = 1;
-        count[1] = 1;
-        for(i = 0; i < N; i++){
-            start[0] = i + rank;
-            err = ncmpi_iget_vara_int(ncid, varid, start, count, buf + i, reqids + i); CHECK_ERR
-        }
-
-        /* Wait for all request */
-        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
-
-        // Check results
-        for(i = 0; i < N; i++){
-            if (buf[i] != rank * N + i + 1){
-                printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
-                    __FILE__,__LINE__, i , rank * N + i + 1, buf[i]);
+    for(zipdriver = 0; zipdriver < 2; zipdriver++){
+        for(communit = 0; communit < 2; communit++){
+            /* Initialize file info */
+            MPI_Info_create(&info);
+            MPI_Info_set(info, "nc_compression", "enable");
+            switch(communit){
+                case 0:
+                    MPI_Info_set(info, "nc_zip_comm_unit", "chunk");
+                    break;
+                case 1:
+                    MPI_Info_set(info, "nc_zip_comm_unit", "proc");
+                    break;
             }
-        }
+            
+            /* Create the file. */
+            err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
+            CHECK_ERR
 
-        /* Close the file. */
-        err = ncmpi_close(ncid);
-        CHECK_ERR
+            /* Define the dimension. */
+            err = ncmpi_def_dim(ncid, "X", NC_UNLIMITED, dimids);
+            CHECK_ERR
+            err = ncmpi_def_dim(ncid, "Y", np, dimids + 1);
+            CHECK_ERR
+            
+            /* Define the variable. */
+            err = ncmpi_def_var(ncid, "M", NC_INT, 2, dimids, &varid);
+            CHECK_ERR
+
+            /* Select compression driver. */
+            buf[0] = zipdriver;
+            err = ncmpi_put_att_int(ncid, varid, "_zipdriver", NC_INT, 1, buf);
+            CHECK_ERR
+
+            /* End define mode. */
+            err = ncmpi_enddef(ncid);
+            CHECK_ERR
+
+            /* Write variable */
+            start[1] = rank;
+            count[0] = 1;
+            count[1] = 1;
+            for(i = 0; i < N; i++){
+                buf[i] = rank * N + i + 1;
+                start[0] = i + rank;
+                err = ncmpi_iput_vara_int(ncid, varid, start, count, buf + i, reqids + i);
+            }
+
+            /* Wait for all request */
+            err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
+
+            /* Close the file. */
+            err = ncmpi_close(ncid);
+            CHECK_ERR
+
+            /* Open the file. */
+            err = ncmpi_open(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
+            CHECK_ERR
+
+            // Free info
+            MPI_Info_free(&info);
+
+            // Read variable
+            memset(buf, 0, sizeof(buf));
+            start[1] = rank;
+            count[0] = 1;
+            count[1] = 1;
+            for(i = 0; i < N; i++){
+                start[0] = i + rank;
+                err = ncmpi_iget_vara_int(ncid, varid, start, count, buf + i, reqids + i); CHECK_ERR
+            }
+
+            /* Wait for all request */
+            err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); CHECK_ERR
+
+            // Check results
+            for(i = 0; i < N; i++){
+                if (buf[i] != rank * N + i + 1){
+                    printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
+                        __FILE__,__LINE__, i , rank * N + i + 1, buf[i]);
+                }
+            }
+
+            /* Close the file. */
+            err = ncmpi_close(ncid);
+            CHECK_ERR
+        }
     }
 
     /* check if there is any malloc residue */

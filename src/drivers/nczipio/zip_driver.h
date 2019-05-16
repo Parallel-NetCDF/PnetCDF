@@ -21,5 +21,7 @@ struct NCZIP_driver {
 typedef struct NCZIP_driver NCZIP_driver;
 
 extern NCZIP_driver* nczip_dummy_inq_driver(void);
+extern NCZIP_driver* nczip_zlib_inq_driver(void);
+extern NCZIP_driver* nczip_sz_inq_driver(void);
 
 #endif
