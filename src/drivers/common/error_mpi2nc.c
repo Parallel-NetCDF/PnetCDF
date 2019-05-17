@@ -34,7 +34,7 @@ int ncmpii_error_mpi2nc(int   mpi_errorcode, /* returned value from MPI call */
      * already existed, the error class MPI_ERR_FILE_EXISTS should be returned.
      * For opening an existing file but the file does not exist, MPI 2.1
      * will return MPI_ERR_NO_SUCH_FILE
-     * Note for MPI 2.1 and prior, we return MPI_ERR_IO, as these error class
+     * Note for MPI 2.1 and prior, we return MPI_ERR_IO, as these error classes
      * have not been defined.
      */
     MPI_Error_class(mpi_errorcode, &errorclass);
@@ -76,7 +76,9 @@ int ncmpii_error_mpi2nc(int   mpi_errorcode, /* returned value from MPI call */
     if (errorclass == MPI_ERR_QUOTA) return NC_EQUOTA;
 #endif
 
-    /* other errors that currently have no corresponding PnetCDF error codes */
+    /* other errors that currently have no corresponding PnetCDF error codes,
+     * or the error class is MPI_ERR_IO (Other I/O error).
+     */
 
     MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
     if (err_msg == NULL) err_msg = "";
