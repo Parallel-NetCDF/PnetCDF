@@ -12,7 +12,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Update configure options
-  + none
+  + Option `--with-netcdf4` now allows a form of `--with-netcdf4=INC,LIB` in
+    addition to `--with-netcdf4=DIR`. This is in case the include and lib
+    folders of NetCDF-4 installation are in different locations.
 
 * New constants
   + none
