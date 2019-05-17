@@ -77,3 +77,15 @@ Example output from stdout:
   512    16 x  16 x  16     10.36     4103.52
 
 
+To customize the problem size:
+    To change the local 3D array size, one can modify the following constants
+    defined in header file physicaldata.fh.
+        parameter(nxb=16)    !<<< USER EDIT
+        parameter(nyb=16)    !<<< USER EDIT
+        parameter(nzb=16)    !<<< USER EDIT
+
+    To change the maximum number of blocks each process writes, one can modify
+    the variable MAXBLOCKS in file Makefile.am.
+        AM_FCFLAGS += $(FC_DEFINE)MAXBLOCKS=100
+
+
