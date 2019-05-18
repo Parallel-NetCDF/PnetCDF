@@ -28,7 +28,7 @@ distclean-local:
 
 # Note sed option -i for in-place substitution is not portable
 dist-hook:
-	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|`date '+%e %b %Y'`|g" $(distdir)/pnetcdf-config.in
+	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|@PNETCDF_RELEASE_DATE@|g" $(distdir)/pnetcdf-config.in
 
 install-exec-hook:
 	$(SED_I) -e 's|INSTALL_PREFIX|$(prefix)|g ; s|INSTALL_EXEC_PREFIX|$(exec_prefix)|g' $(DESTDIR)$(bindir)/pnetcdf-config

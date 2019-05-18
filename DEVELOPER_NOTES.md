@@ -54,9 +54,8 @@
         `make dist`. This setting will be done automatically, unlike step 4
         above that manually update the release date.
 
- 7. Make sure build of the new release tar ball is successful
-    * build and test under the same directory as source
-      - run `autoreconf -i`  (`-i` is to add missing files, only needed at first run)
+ 7. Build the new release tar ball (not source codes from the repo)
+    * build under the same directory as source
       - run `configure` (with command-line options: `--enable-strict`, `--enable-coverage`,
                    `--disable-cxx`, `--disable-fortran` and their combinations)
       - For C only, run address sanitizer build (gcc and clang) by adding
@@ -67,18 +66,18 @@
         ```
       - run `make check`
       - test with valgrind to check memory leak.
+        * when built with static libraries (default), use commands:
+            ```
+            make check \
+            TESTSEQRUN="valgrind --quiet --leak-check=full" \
+            TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
+            ```
         * when built with --enable-shared, use commands:
             ```
             make check \
             TESTSEQRUN="libtool --mode=execute valgrind --quiet --leak-check=full" \
             TESTMPIRUN="mpiexec -n NP libtool --mode=execute valgrind --quiet --leak-check=full"
           ```
-        * when built without shared libraries, use commands:
-            ```
-            make check \
-            TESTSEQRUN="valgrind --quiet --leak-check=full" \
-            TESTMPIRUN="mpiexec -n NP valgrind --quiet --leak-check=full"
-            ```
       - run `make ptests` to test programs in parallel runs
       - run `make ptests` with valgrind, by setting TESTSEQRUN and TESTMPIRUN as described above.
       - run `make distcheck`
@@ -94,7 +93,8 @@
 
       - test if file system type prefix added to file name is acceptable.
         For example, "ufs:" added to file name. Note this ROMIO convention may
-        not be portable, so it is not added to the regular test programs. Try
+        not be portable (probably only MPICH, will not work for OpenMPI), so
+        it is not added to the regular test programs. Try
         ```
         make check TESTOUTDIR="ufs:."
         ```
@@ -107,7 +107,8 @@
     * build benchmarks/FLASH-IO separately from PnetCDF (it has its own build
       script, i.e. configure.ac)
 
-    * build netCDF latest release with PnetCDF feature enabled
+    * build netCDF latest release with --enable-pnetcdf using this newly build
+      of PnetCDF
 
  8. Create a checkpoint
     * For 1.9.0 and priors - Create a new SVN tag on svn repo, by running
@@ -256,7 +257,7 @@
  * utf8proc URL: https://github.com/JuliaLang/utf8proc
 
 ---
-###Note on netCDF text APIs and variables of external data type NC_CHAR
+### Note on netCDF text APIs and variables of external data type NC_CHAR
 * All netCDF external data types are considered numerical data types, except for
 NC_CHAR. Numerical data types can be converted to different numerical data
 types. However, no numerical datatype is allowed to converted to NC_CHAR and
@@ -643,7 +644,8 @@ inconsistency of any kind start at -250.
 
 * When using MPICH 3.2 with the bug of #2332 fixed, running "make check" and
   "make ptests" through valgrind should run without any complains. See MPICH
-  ticket #2332 in https://trac.mpich.org/projects/mpich/ticket/2332.
+  ticket #2332 in https://trac.mpich.org/projects/mpich/ticket/2332 or
+  https://github.com/pmodels/mpich/issues/2332
 
 ---
 ### Note on using clang and gprof together
@@ -727,7 +729,7 @@ The problem is reported in https://llvm.org/bugs/show_bug.cgi?id=14713
 ### Setting PnetCDF software release date
 * Prior to version 1.8.1, the release date was obtained from the SVN keyword
   LastChangedDate set in file configure.in. It is used to produce two
-  variables: PNETCDF_RELEASE_DATE and PNETCDF_RELEASE_DATE2.  These two
+  variables: PNETCDF_RELEASE_DATE and PNETCDF_RELEASE_DATE_FULL. These two
   variables are used by all man pages, pnetcdf.h, pnetcdf_version, and
   pnetcdf-config.  We used the keyword value set by SVN as the release date.
   The assumption is that updating PACKAGE_VERSION in configure.in is the last

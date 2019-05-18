@@ -51,11 +51,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + When `--enable-netcdf4` is used at configure time, users may encounter
-    problem during configure or make time, if the NetCDF4 library was built
-    with static libraries only. Thanks Bruno Pagani for reporting. This has
-    been fixed in
-    [pull request #46](https://github.com/Parallel-NetCDF/PnetCDF/pull/46).
+  + none
 
 * New example programs
   + none
@@ -64,12 +60,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + test/nc4/notsupport - Test if error code NC_ENOTSUPPORT is properly
-    returned when calling APIs for unsupported NetCDF-4 feature.
-  + test/nc4/rec - Test creating and reading a NetCDF-4 file with 1 unlimited
-    dimension. 
-  + test/nc4/rec2 - Test opening a NetCDF-4 file with more than 1 unlimited
-    dimensions.
+  + none
 
 * Conformity with NetCDF library
   + none

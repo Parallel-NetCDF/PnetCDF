@@ -2190,27 +2190,39 @@ val_get_NC(int fd, NC *ncp)
 
     /* check zero padding in the blank space betwee header size and extent */
     if (repair && ncp->begin_var - ncp->xsz > 0) {
-        size_t i, readLen, gap = ncp->begin_var - ncp->xsz;
+        size_t i, gap = ncp->begin_var - ncp->xsz;
+        ssize_t readLen;
         char *buf = (char*) malloc(gap);
 
         if (-1 == lseek(fd, ncp->xsz, SEEK_SET)) {
             if (verbose)
                 printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
-            return -1;
+            free(buf);
+            goto fn_exit;
         }
         readLen = read(fd, buf, gap);
         if (readLen == -1) {
             if (verbose)
                 printf("Error at line %d: read %s\n",__LINE__,strerror(errno));
-            return -1;
+            free(buf);
+            status = -1;
+            goto fn_exit;
         }
         for (i=0; i<readLen; i++)
             if (buf[i] != 0)
                 break;
         if (readLen < gap || i < readLen) { /* zero out the blank space */
             memset(buf, 0, gap);
-            lseek(fd, ncp->xsz, SEEK_SET);
-            write(fd, buf, gap);
+            if (lseek(fd, ncp->xsz, SEEK_SET) < 0) {
+                free(buf);
+                status = -1;
+                goto fn_exit;
+            }
+            if (write(fd, buf, gap) < 0) {
+                free(buf);
+                status = -1;
+                goto fn_exit;
+            }
         }
         free(buf);
     }

@@ -181,8 +181,8 @@ int check_modes(char *filename)
 
 int main(int argc, char** argv)
 {
-    char filename[256];
-    int rank, err, nerrs=0;
+    char *filename=NULL;
+    int len, rank, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -192,9 +192,11 @@ int main(int argc, char** argv)
         MPI_Finalize();
         return 1;
     }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    if (argc == 2) filename = strdup(argv[1]);
+    else           filename = strdup("testfile.nc");
+    len = strlen(filename) + 1;
+    MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, len, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
@@ -227,6 +229,7 @@ int main(int argc, char** argv)
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
+    free(filename);
 
     MPI_Finalize();
     return (nerrs > 0);

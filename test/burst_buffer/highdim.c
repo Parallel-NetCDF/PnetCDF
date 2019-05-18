@@ -58,18 +58,17 @@
 
 #define BSIZE 1024 * 1024
 
-char filename[PATH_MAX];
-char dimname[8];
-
-int main(int argc, char *argv[]) {
-    int i, ret = NC_NOERR, nerr = 0;
+int main(int argc, char *argv[])
+{
+    char *filename=NULL, dimname[8];
+    int i, ret=NC_NOERR, nerr=0;
     int rank, np, ndims;
     int ncid, varid;
-    int *dimid = NULL, *buffer = NULL;
+    int *dimid=NULL, *buffer=NULL;
     long long j;
-    MPI_Offset *start = NULL, *count = NULL, *stride = NULL;
+    MPI_Offset *start=NULL, *count=NULL, *stride=NULL;
 
-       /* Initialize MPI */
+    /* Initialize MPI */
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
@@ -81,27 +80,22 @@ int main(int argc, char *argv[]) {
     }
 
     /* Determine ndims and test file name */
-    if (argc > 1) {
-        sprintf(filename, "%s", argv[1]);
-    }
-    else{
-        sprintf(filename, "testfile.nc");
-    }
+    if (argc > 1)
+        filename = strdup(argv[1]);
+    else
+        filename = strdup("testfile.nc");
 
-    if (argc > 2) {
+    ndims = DIM;
+    if (argc > 2)
         ndims = atoi(argv[2]);
-    }
-    else{
-        ndims = DIM;
-    }
-
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for high dimensional variables", basename(argv[0]));
-		printf("%-66s ------ ", cmd_str); fflush(stdout);
-		free(cmd_str);
-	}
+        printf("%-66s ------ ", cmd_str);
+        fflush(stdout);
+        free(cmd_str);
+    }
 
     /* Allocate buffers */
     dimid = (int*)malloc(sizeof(int) * ndims);
@@ -234,6 +228,7 @@ ERROR:
     if (stride != NULL) free(stride);
     if (dimid != NULL) free(dimid);
     if (buffer != NULL) free(buffer);
+    if (filename != NULL) free(filename);
 
     MPI_Finalize();
 

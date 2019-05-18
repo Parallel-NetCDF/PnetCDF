@@ -29,6 +29,11 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
+        if test "$i" = tst_version ; then
+           ${MPIRUN} ./tst_version
+           continue
+        fi
+
         if test "$i" = tst_pthread ; then
            # each MPI process created 6 threads
            ${MPIRUN} ./tst_pthread ${TESTOUTDIR}/tst_pthread.nc

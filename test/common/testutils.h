@@ -69,4 +69,8 @@ extern char* nc_err_code_name(int err);
 #define MPI_OFFSET MPI_LONG_LONG_INT
 #endif
 
+#ifndef HAVE_STRDUP
+extern char *strdup(const char *s);
+#endif
+
 #endif

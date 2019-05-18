@@ -15,7 +15,7 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test ${PNETCDF_DEBUG} = 1 ; then
+if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"
@@ -30,6 +30,10 @@ for i in ${check_PROGRAMS} ; do
 
         if test $? = 0 ; then
            echo "PASS: F90 parallel run on $1 processes --------------- $i"
+        fi
+
+        if test "x${BUILD_BENCHMARKS_IN_PNETCDF}" != x1 ; then
+           continue
         fi
 
         # echo "--- validating file ${TESTOUTDIR}/$i.ncmpi_chk_0000.nc"

@@ -308,3 +308,18 @@ inq_env_hint(char *hint_key, char **hint_value)
     return 0;
 }
 
+#ifndef HAVE_STRDUP
+char *strdup(const char *str)
+{
+    char *ptr;
+
+    if (str == NULL) return NULL;
+
+    ptr = (char*) malloc(strlen(str) + 1);
+    if (ptr != NULL)
+        strcpy(ptr, str);
+
+    return ptr;
+}
+#endif
+

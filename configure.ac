@@ -14,7 +14,7 @@ dnl AC_REVISION([$Revision$])dnl
 
 dnl autoconf v2.69 was released in 2012-04-24
 AC_PREREQ([2.69])
-AC_INIT([PnetCDF],[1.11.1],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://parallel-netcdf.github.io])
+AC_INIT([PnetCDF],[1.11.2],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://parallel-netcdf.github.io])
 
 dnl config.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
@@ -96,8 +96,14 @@ AC_SUBST(PNETCDF_VERSION_MINOR)
 AC_SUBST(PNETCDF_VERSION_SUB)
 AC_SUBST(PNETCDF_VERSION_PRE)
 AC_SUBST(PNETCDF_VERSION)
-dnl AC_SUBST(PNETCDF_RELEASE_DATE)
-dnl AC_SUBST(PNETCDF_RELEASE_DATE2)
+
+dnl Note that command 'date' is not portable across Unix platforms.
+dnl But release date only matters to PnetCDF developers who make the releases.
+PNETCDF_RELEASE_DATE="`date '+%B %-d, %Y'`"
+AC_SUBST(PNETCDF_RELEASE_DATE)
+PNETCDF_RELEASE_DATE_FULL="`date '+%Y-%m-%d'`"
+AC_SUBST(PNETCDF_RELEASE_DATE_FULL)
+
 AC_SUBST(PACKAGE_VERSION)
 AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
@@ -983,7 +989,7 @@ dnl AC_FUNC_VPRINTF
 dnl AC_CHECK_FUNCS([memset setlocale sqrt strchr strrchr strtol])
 dnl AC_CHECK_LIB([m], [tanh])
 dnl UD_CHECK_LIB_MATH
-AC_CHECK_FUNCS([strerror access unlink])
+AC_CHECK_FUNCS([strdup strerror access unlink])
 
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
@@ -1969,7 +1975,7 @@ dnl Update the version information only immediately before a public release.
 dnl PnetCDF starts with 1:0:0 (shared library is first supported in 1.9.0)
 dnl because some package distributors, such as Debian, may have already built
 dnl PnetCDF with shared libraries.
-ABIVERSION="3:1:0"
+ABIVERSION="3:2:0"
 AC_SUBST(ABIVERSION)
 if test "$enable_versioning" = "yes" ; then
    ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
