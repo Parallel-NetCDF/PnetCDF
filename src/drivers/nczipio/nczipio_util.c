@@ -88,13 +88,20 @@ int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
         nczipp->comm_unit = NC_ZIP_COMM_PROC;   
     }
 
-    // Messaging unit
+    // Delay init
     nczipp->delay_init = 0;  
     MPI_Info_get(info, "nc_zip_delay_init", MPI_MAX_INFO_VAL - 1, value, &flag);
     if (flag) {
         if (strcmp(value, "1") == 0){
             nczipp->delay_init = 1;  
         }
+    }
+
+    // Default zipdriver
+    nczipp->default_zipdriver = NC_ZIP_DRIVER_DUMMY;  
+    MPI_Info_get(info, "nc_zip_driver", MPI_MAX_INFO_VAL - 1, value, &flag);
+    if (flag) {
+        nczipp->default_zipdriver = atoi(value);  
     }
 
     return NC_NOERR;
@@ -131,6 +138,9 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
     else{
         MPI_Info_set(info, "nc_zip_delay_init", "0");
     }
+
+    sprintf(value, "%d", nczipp->default_zipdriver);
+    MPI_Info_set(info, "nc_zip_driver", value);
 
     return NC_NOERR;
 }

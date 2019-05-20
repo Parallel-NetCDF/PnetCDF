@@ -125,6 +125,7 @@ struct NC_zip {
     int                max_ndim;
     int                max_chunk_size;
     int                nmychunks;   // Sum of nmychunk in everyvar
+    int                default_zipdriver;
     MPI_Offset         getsize;
     MPI_Offset         putsize;
 
