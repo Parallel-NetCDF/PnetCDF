@@ -70,6 +70,9 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         }
     }  
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB_WAIT)
+
     // Perform collective buffer
     if (nczipp->comm_unit == NC_ZIP_COMM_CHUNK){
         nczipioi_iput_cb_chunk(nczipp, nreq, reqids, stats);
@@ -80,6 +83,9 @@ int nczipioi_wait_put_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Perform I/O for comrpessed variables
     nczipioi_save_nvar(nczipp, nvar, vids);
+
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB_WAIT)
 
     // Free buffers
     NCI_Free(vids);
@@ -128,6 +134,9 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         }
     }  
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB_WAIT)
+
     // Perform I/O for comrpessed variables
     nczipioi_load_nvar(nczipp, nvar, vids);
 
@@ -140,6 +149,9 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         //nczipioi_iget_cb_chunk(nczipp, nreq, reqids, stats);
     }
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB_WAIT)
+    
     // Free buffers
     NCI_Free(vids);
     NCI_Free(flag);
@@ -192,17 +204,35 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
     }
 
     if (nczipp->delay_init){
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB_WAIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
+
         err = nczipioi_init_nvar(nczipp, nput, putreqs, nget, getreqs);   // nput + nget = real nreq
         if (err != NC_NOERR){
             return err;
         }
+        
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB_WAIT)
     }
     else{
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB_WAIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_RESIZE)
+
         // Sync number of rec
         err = nczipioi_resize_nvar(nczipp, nput, putreqs, nget, getreqs);   // nput + nget = real nreq
         if (err != NC_NOERR){
             return err;
         }
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_RESIZE)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB_WAIT)
     }
 
     if (stats != NULL){

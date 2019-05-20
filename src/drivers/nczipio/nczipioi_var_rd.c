@@ -51,8 +51,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     NC *ncp = (NC*)(nczipp->ncp);
     NC_var *ncvarp;
 
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_INIT)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_INIT)
 
     // -1 means all chunks
     if (nchunk < 0){
@@ -94,8 +94,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
             zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]];
         }
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_RD)
 
         // Perform MPI-IO
         // Set file view
@@ -105,7 +105,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         // Restore file view
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_RD)
 
 #ifdef _USE_MPI_GET_COUNT
         MPI_Get_count(&status, MPI_BYTE, &get_size);
@@ -118,18 +118,18 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         MPI_Type_free(&ftype);
     }
     else{
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_RD)
 
         // Follow coll I/O with dummy call
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
         CHK_ERR_READ_AT_ALL(ncp->collective_fh, 0, &i, 0, MPI_BYTE, &status);
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_RD)
     }
 
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_DECOM)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_DECOM)
 
     // Decompress each chunk
     // Allocate chunk cache if not allocated
@@ -149,7 +149,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     }
     varp->zip->finalize();
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_DECOM)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_DECOM)
 
     // Free buffers
     if (nchunk > 0){
@@ -160,7 +160,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     NCI_Free(lens);
     NCI_Free(disps);
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO)
 
     return NC_NOERR;
 }
@@ -187,8 +187,8 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NC_zip_var *varp;
     NC_var *ncvarp;
 
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_INIT)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_INIT)
 
     // -1 means all chunks
     nchunk = 0;
@@ -246,8 +246,8 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
             zbufs[j] = zbufs[j - 1] + lens[j - 1];
         }    
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_RD)
 
         // Perform MPI-IO
         // Set file view
@@ -257,7 +257,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
         // Restore file view
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_RD)
 
 #ifdef _USE_MPI_GET_COUNT
         MPI_Get_count(&status, MPI_BYTE, &get_size);
@@ -271,18 +271,18 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
     }
     else{
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_INIT)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_RD)
 
         // Follow coll I/O with dummy call
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
         CHK_ERR_READ_AT_ALL(ncp->collective_fh, 0, &i, 0, MPI_BYTE, &status);
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_RD)
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_RD)
     }
     
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_IO_DECOM)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_DECOM)
 
     // Decompress each chunk
     varp->zip->init(MPI_INFO_NULL);
@@ -310,7 +310,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     }
     varp->zip->finalize();
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO_DECOM)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_DECOM)
 
     // Free buffers
     if (nchunk > 0){
@@ -321,7 +321,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NCI_Free(lens);
     NCI_Free(disps);
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_IO)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO)
 
     return NC_NOERR;
 }

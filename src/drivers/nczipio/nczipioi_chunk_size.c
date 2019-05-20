@@ -51,6 +51,8 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
     MPI_Offset ub, lb;
     MPI_Op gcd_op; 
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_CSIZE)
+
     // Upper and lower bound of reasonable chunk size
     ub = (MPI_Offset)INT_MAX;  // Max chunk size supported
     lb = 1;
@@ -230,6 +232,8 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
         NCI_Free(candidates[0]);
         NCI_Free(candidates);
     }
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_CSIZE)
 
     return NC_NOERR;
 }

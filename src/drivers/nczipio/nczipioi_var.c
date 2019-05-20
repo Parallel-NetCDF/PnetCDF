@@ -69,6 +69,8 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             else{
                 valid = 0;
             }
+
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
             
             // Default block size is same as dim size, only 1 blocks
             if (!valid){
@@ -77,6 +79,8 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     return err;
                 }
             }
+
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
 
             // Calculate total # chunks, # chunks along each dim, chunksize
             varp->nchunk = 1;
@@ -103,11 +107,16 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
             varp->chunk_cache = (char**)NCI_Malloc(sizeof(char*) * varp->nchunk);
             memset(varp->chunk_cache, 0, sizeof(char*) * varp->nchunk);
+
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
+
             // We infer owners by reqs
             err = nczipioi_calc_chunk_owner(nczipp, varp, nreq, starts, counts);
             if (err != NC_NOERR){
                 return err;
             }
+
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
 
             // Build skip list of my own chunks
             varp->nmychunks = 0;
@@ -342,6 +351,8 @@ int nczipioi_init_nvar(NC_zip *nczipp, int nput, int *putreqs, int nget, int *ge
     MPI_Offset **starts, **counts;
     NC_zip_req *req;
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
+
     CHK_ERR_ALLREDUCE(MPI_IN_PLACE, &(nczipp->recsize), 1, MPI_LONG_LONG, MPI_MAX, nczipp->comm);   // Sync number of recs
 
     // Flag of touched vars
@@ -459,6 +470,8 @@ int nczipioi_init_nvar(NC_zip *nczipp, int nput, int *putreqs, int nget, int *ge
     NCI_Free(roff);
     NCI_Free(rcnt);
     NCI_Free(starts);
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
 
     return NC_NOERR;
 }

@@ -141,6 +141,8 @@ extern int nczipioi_chunk_itr_next(NC_zip_var*, const MPI_Offset*, const MPI_Off
 extern MPI_Offset get_chunk_overlap(NC_zip_var*, MPI_Offset*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, MPI_Offset*);
 extern int get_chunk_id(NC_zip_var*, MPI_Offset*);
 extern int get_chunk_itr(NC_zip_var*, int, MPI_Offset*);
+extern int nczipioi_chunk_itr_init_ex(NC_zip_var*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, int*, MPI_Offset*, MPI_Offset*);
+extern int nczipioi_chunk_itr_next_ex(NC_zip_var*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, int*, MPI_Offset*, MPI_Offset*);
 
 // Get
 //extern int nczipioi_get_var_old(NC_zip*, NC_zip_var*, MPI_Offset*, MPI_Offset*, MPI_Offset*, void*);

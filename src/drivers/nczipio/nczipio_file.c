@@ -60,6 +60,11 @@ nczipio_create(MPI_Comm     comm,
     void *ncp=NULL;
     NC_zip *nczipp;
     PNC_driver *driver=NULL;
+#ifdef PNETCDF_PROFILING
+    double t0, t1;
+
+    t0 = MPI_Wtime();
+#endif
 
     /* TODO: use comde to determine the true driver */
     driver = ncmpio_inq_driver();
@@ -96,6 +101,13 @@ nczipio_create(MPI_Comm     comm,
 
     *ncpp = nczipp;
 
+    // Timer array is not avaiable until init, can't use NC_ZIP_TIMER_START
+#ifdef PNETCDF_PROFILING
+    t0 = MPI_Wtime() - t0;
+    nczipp->profile.tt[NC_ZIP_TIMER_INIT] += t0;
+    nczipp->profile.tt[NC_ZIP_TIMER_TOTAL] += t0;
+#endif
+
     return NC_NOERR;
 }
 
@@ -112,6 +124,11 @@ nczipio_open(MPI_Comm     comm,
     void *ncp=NULL;
     NC_zip *nczipp;
     PNC_driver *driver=NULL;
+#ifdef PNETCDF_PROFILING
+    double t0;
+
+    t0 = MPI_Wtime();
+#endif
 
     /* TODO: use comde to determine the true driver */
     driver = ncmpio_inq_driver();
@@ -160,6 +177,13 @@ nczipio_open(MPI_Comm     comm,
 
     *ncpp = nczipp;
 
+    // Timer array is not avaiable until init, can't use NC_ZIP_TIMER_START
+#ifdef PNETCDF_PROFILING
+    t0 = MPI_Wtime() - t0;
+    nczipp->profile.tt[NC_ZIP_TIMER_INIT] += t0;
+    nczipp->profile.tt[NC_ZIP_TIMER_TOTAL] += t0;
+#endif
+
     return NC_NOERR;
 }
 
@@ -172,10 +196,15 @@ nczipio_close(void *ncdp)
 #endif
     NC_zip *nczipp = (NC_zip*)ncdp;
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_FINALIZE)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_TOTAL)
+
     if (nczipp == NULL) DEBUG_RETURN_ERROR(NC_EBADID)
 
     if (!(nczipp->flag & NC_MODE_RDONLY)){
         int i;
+
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_FINALIZE_META)
 
         err = nczipp->driver->redef(nczipp->ncp);
         if (err != NC_NOERR){
@@ -195,6 +224,8 @@ nczipio_close(void *ncdp)
         // Record recsize
         err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_recsize", NC_INT64, 1, &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
         if (err != NC_NOERR) return err;
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_FINALIZE_META)
     }
 
     err = nczipp->driver->close(nczipp->ncp);
@@ -211,6 +242,10 @@ nczipio_close(void *ncdp)
 #endif
 
     NCI_Free(nczipp->path);
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_FINALIZE)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_TOTAL)
+
     NCI_Free(nczipp);
 
     return err;
@@ -223,6 +258,9 @@ nczipio_enddef(void *ncdp)
     MPI_Offset rsize;
     NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
+
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_TOTAL)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT)
 
     // Reserve header space
     rsize = 0;
@@ -243,10 +281,17 @@ nczipio_enddef(void *ncdp)
     if (err != NC_NOERR) return err;
 
     if (!(nczipp->delay_init)){
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
+
         for(i = 0; i < nczipp->vars.cnt; i++){
             nczipioi_var_init(nczipp, nczipp->vars.data + i, 0, NULL, NULL);
         }
+        
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
     }
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_TOTAL)
 
     return NC_NOERR;
 }
@@ -262,6 +307,9 @@ nczipio__enddef(void       *ncdp,
     MPI_Offset rsize;
     NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
+
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_TOTAL)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT)
 
     // Reserve header space
     rsize = 0;
@@ -283,10 +331,17 @@ nczipio__enddef(void       *ncdp,
     if (err != NC_NOERR) return err;
     
     if (!(nczipp->delay_init)){
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
+
         for(i = 0; i < nczipp->vars.cnt; i++){
             nczipioi_var_init(nczipp, nczipp->vars.data + i, 0, NULL, NULL);
         }
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
     }
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_TOTAL)
 
     return NC_NOERR;
 }
@@ -438,6 +493,10 @@ nczipio_wait(void *ncdp,
     int *rawstats = NULL, *comstats = NULL;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_TOTAL)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB_WAIT)
+
     if (num_reqs < 0){  // NC_REQ_ALL || nreqs == NC_PUT_REQ_ALL || nreqs == NC_GET_REQ_ALL
         err = nczipioi_wait(nczipp, num_reqs, NULL, NULL, reqMode);
         if (status == NC_NOERR){
@@ -517,6 +576,10 @@ nczipio_wait(void *ncdp,
     NCI_Free(rawreqs);
     NCI_Free(comreqs);
     
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_TOTAL)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB_WAIT)
+
     return NC_NOERR;
 }
 

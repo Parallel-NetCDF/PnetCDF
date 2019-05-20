@@ -34,6 +34,7 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
     MPI_Offset *citr; // Bounding box for chunks overlapping my own write region
     MPI_Offset_int *ocnt, *ocnt_all;
 
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_COWN)
     
     ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
     osize = ostart + varp->ndim;
@@ -76,6 +77,8 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
 
     NCI_Free(ostart);
     NCI_Free(ocnt);
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_COWN)
 
     return NC_NOERR;
 }
