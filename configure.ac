@@ -143,9 +143,9 @@ AH_BOTTOM([#include <nctypes.h>
 #endif])
 
 dnl an option to use a customized rm command
+RM=rm
 AC_ARG_VAR(RM, Command for deleting files or directories. @<:@default: rm@:>@)
 if test "x${RM}" != x ; then
-   AC_MSG_CHECKING(rm )
    dnl ${RM} set by user may contain flags
    RM_CMD=`echo ${RM} | cut -d' ' -f1`
    if ! test -f ${RM_CMD} ; then
@@ -154,10 +154,17 @@ if test "x${RM}" != x ; then
          RM=rm
       fi
    fi
-   AC_MSG_RESULT(using $RM)
-else
-   RM=rm
 fi
+UD_MSG_DEBUG([RM=$RM])
+
+dnl AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
+AC_PROG_AWK
+AC_PROG_GREP
+AC_PROG_EGREP
+
+AC_PROG_SED
+dnl check sed command option -i and set SED_I (this requires RM defined)
+UD_PROG_SED_I
 
 AC_ARG_ENABLE(echo,
    [AS_HELP_STRING([--enable-echo],
@@ -296,18 +303,6 @@ AC_SYS_LARGEFILE
 
 dnl UD_PROG_CC_MAKEDEPEND
 
-dnl Check if MPICC compiler is IBM XL based
-UD_CHECK_XLC
-AM_CONDITIONAL(MPICC_IS_XLC, [test "x${ac_cv_cc_compiler_xlc}" = xyes])
-
-dnl Check if MPICC compiler is pgcc based
-UD_CHECK_PGCC
-AM_CONDITIONAL(MPICC_IS_PGCC, [test "x${ac_cv_cc_compiler_pgcc}" = xyes])
-
-dnl Check if MPICC compiler is Fujitsu fccpx based
-UD_CHECK_FCCPX
-AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_cc_compiler_fccpx}" = xyes])
-
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([malloc.h])
 
@@ -333,6 +328,15 @@ AC_CHECK_FUNC([MPI_File_open], [],
      PnetCDF requires MPI-IO support to work properly. Abort.
    -----------------------------------------------------------------------])
 ])])
+
+dnl check the base of MPICC compiler
+UD_CHECK_MPICC_BASE
+AM_CONDITIONAL(MPICC_IS_XLC,   [test "x${ac_cv_mpicc_base}" = xXLC])
+AM_CONDITIONAL(MPICC_IS_PGCC,  [test "x${ac_cv_mpicc_base}" = xPGCC])
+AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_mpicc_base}" = xFCCPX])
+
+dnl print out MPI version and vendor infomration
+CHECK_MPI_VERSION
 
 dnl compute canonical system types
 AC_CANONICAL_BUILD
@@ -803,12 +807,12 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl Some Fortran 77 compilers, such as pgf77, do not allow "_8" modifier,
    dnl because _8 modifier is a Fortran 90 feature
-   dnl UD_CHECK_PGF77
-   dnl UD_MSG_DEBUG([ac_cv_fc_compiler_pgf77=$ac_cv_fc_compiler_pgf77])
+   dnl UD_CHECK_MPIF77_IS_PGF77
+   dnl UD_MSG_DEBUG([ac_cv_mpif77_is_PGF77=$ac_cv_mpif77_is_PGF77])
 
    dnl Check if the Fortran compiler is an NAG
-   UD_CHECK_FC_NAG
-   if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
+   UD_CHECK_MPIF90_IS_NAG
+   if test "x${ac_cv_mpif90_is_NAG}" = xyes ; then
       dnl Add -mismatch if they are not set by users
       if ! echo "${FFLAGS}" | ${EGREP} -q -- "-mismatch" ; then
          FFLAGS+=" -mismatch"
@@ -932,17 +936,9 @@ dnl    have_yacc_lex=no
 dnl fi
 dnl AM_CONDITIONAL(HAVE_YACC_LEX, [test x$have_yacc_lex = xyes])
 
-AC_PROG_AWK
 dnl AC_PROG_LN_S
 dnl AC_PROG_MAKE_SET
 dnl AC_SUBST(SET_MAKE)
-AC_PROG_EGREP
-
-dnl AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
-AC_PROG_SED
-dnl check sed command option -i and set SED_I
-UD_PROG_SED_I
-AC_PROG_GREP
 
 dnl YACC and LEX are required to build PnetCDF utility tool ncmpigen
 dnl if configure finds bison then YACC is set to bison -y, so we need to clean
