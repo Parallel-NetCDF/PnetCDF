@@ -53,7 +53,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + When calling a nonblocking API with a zero-length request and argument
+    request ID being NULL, segmentation fault may occur. See
+    [PR #51](https://github.com/Parallel-NetCDF/PnetCDF/pull/51)
 
 * New example programs
   + none
