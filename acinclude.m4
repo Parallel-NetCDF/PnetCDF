@@ -2289,7 +2289,8 @@ AC_DEFUN([CHECK_MPI_VERSION],[
       AC_MSG_RESULT([${mpi_version}.${mpi_subversion}])
    fi
 
-   AC_CHECK_DECLS([MPICH_VERSION, MPICH2_VERSION, OMPI_MAJOR_VERSION], [], [], [#include <mpi.h>])
+   AC_CHECK_DECLS([MPICH_VERSION, MPICH2_VERSION, OMPI_MAJOR_VERSION, MVAPICH2_VERSION],
+                  [], [], [#include <mpi.h>])
    AC_MSG_CHECKING([MPI vendor])
 
 cat - <<_ACEOF >conftest.c
@@ -2308,8 +2309,11 @@ _ACEOF
       mpich_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH_VERSION | cut -d' ' -d'"' -f2`
       AC_MSG_RESULT(MPICH $mpich_version)
    elif test "x$ac_cv_have_decl_MPICH2_VERSION" = xyes ; then
-      mpich_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH2_VERSION | cut -d' ' -d'"' -f2`
-      AC_MSG_RESULT(MPICH2 $mpich_version)
+      mpich2_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH2_VERSION | cut -d' ' -d'"' -f2`
+      AC_MSG_RESULT(MPICH2 $mpich2_version)
+   elif test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
+      mvapich2_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MVAPICH2_VERSION | cut -d' ' -d'"' -f2`
+      AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
    elif test "x$ac_cv_have_decl_OMPI_MAJOR_VERSION" = xyes ; then
       AC_COMPUTE_INT([OMPI_MAJOR_VERSION], [OMPI_MAJOR_VERSION], [[#include <mpi.h>]])
       AC_COMPUTE_INT([OMPI_MINOR_VERSION], [OMPI_MINOR_VERSION], [[#include <mpi.h>]])
@@ -2317,7 +2321,7 @@ _ACEOF
       ompi_version="${OMPI_MAJOR_VERSION}.${OMPI_MINOR_VERSION}.${OMPI_RELEASE_VERSION}"
       AC_MSG_RESULT(OpenMPI $ompi_version)
    else
-      AC_MSG_RESULT([information unavailable])
+      AC_MSG_RESULT([unknown])
    fi
    ${RM} -f conftest.c
    unset MACRO_FLAG
