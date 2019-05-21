@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
     start[0] = rank;
     for(i = 0; i < N; i++){
         start[1] = i;
+        buf[0] = rank;
         err = ncmpi_put_var1_int_all(ncid, varid[0], start, buf); CHECK_ERR
         err = ncmpi_inq_put_size(ncid, &size); CHECK_ERR
         if (size != sizeof(int) * (i + 1)){
@@ -75,6 +76,7 @@ int main(int argc, char** argv) {
                 __LINE__,__FILE__,sizeof(int) * (i + 1),size);
             nerrs++;
         }
+        buf[0] = -1;
         err = ncmpi_get_var1_int_all(ncid, varid[0], start, buf); CHECK_ERR
         err = ncmpi_inq_get_size(ncid, &size); CHECK_ERR
         if (size != sizeof(int) * (i + 1)){
