@@ -1757,6 +1757,14 @@ AC_DEFUN([UD_CHECK_MPICC_BASE],[
                      # AC_MSG_NOTICE(fccpx ac_MPICC_VER=$ac_MPICC_VER)
                      if test "x${ac_MPICC_VER}" != x ; then
                         ac_cv_mpicc_base="FCCPX"
+                     else
+                        # If just cc, check if it is a wrapper of GCC
+                        ac_MPICC_VER="$($MPICC -v 2>&1)"
+                        UD_MSG_DEBUG(GCC ac_MPICC_VER=$ac_MPICC_VER)
+                        ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w gcc`
+                        if test "x${ac_MPICC_VER}" != x ; then
+                           ac_cv_mpicc_base="GCC"
+                        fi
                      fi
                   fi
                fi
