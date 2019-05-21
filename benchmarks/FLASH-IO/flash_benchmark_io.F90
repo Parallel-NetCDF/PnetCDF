@@ -29,6 +29,7 @@
       double precision chk_io, corner_io, nocorner_io
       double precision checkpoint_wr_ncmpi_par
       double precision plotfile_ncmpi_par
+      double precision simtime
 
       integer, parameter :: local_blocks = INT(0.8*maxblocks)
 
@@ -97,18 +98,20 @@
         unk(i,:,:,:,:) = float(i)
       enddo
 
+      simtime = 0.0
+
 !---------------------------------------------------------------------------
 ! netCDF checkpoint file
 !---------------------------------------------------------------------------
       time_begin = MPI_Wtime()
-      chk_io = checkpoint_wr_ncmpi_par(0,0.e0)
+      chk_io = checkpoint_wr_ncmpi_par(0, simtime)
       time_io(1) = MPI_Wtime() - time_begin
 
 !---------------------------------------------------------------------------
 ! netCDF plotfile -- no corners
 !---------------------------------------------------------------------------
       time_begin = MPI_Wtime()
-      nocorner_io = plotfile_ncmpi_par(0,0.e0,.false.)
+      nocorner_io = plotfile_ncmpi_par(0, simtime, .false.)
       time_io(2) = MPI_Wtime() - time_begin
 
 !---------------------------------------------------------------------------
