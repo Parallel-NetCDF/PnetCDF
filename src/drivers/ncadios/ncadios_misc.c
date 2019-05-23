@@ -155,22 +155,3 @@ MPI_Datatype ncadios_nc_to_mpi_type(nc_type atype){
 
     return NC_NAT;
 }
-
-MPI_Datatype ncadios_nc_to_mpi_type(nc_type atype){
-    switch (atype) {
-        case NC_BYTE:
-            return MPI_BYTE;
-        case NC_CHAR:
-            return MPI_CHAR;
-        case NC_SHORT:
-            return MPI_SHORT;
-        case NC_INT:
-            return MPI_INT;
-        case NC_FLOAT:
-            return MPI_FLOAT;
-        case NC_DOUBLE:
-            return MPI_DOUBLE;
-    }
-
-    return NC_NAT;
-}

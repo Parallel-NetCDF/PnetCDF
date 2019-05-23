@@ -30,8 +30,6 @@ NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
 TESTPROGRAMS = open \
-<<<<<<< HEAD
-<<<<<<< HEAD
 			   header \
 			   var \
 			   ivar \
@@ -41,36 +39,6 @@ TESTPROGRAMS = open \
 			   ivarm \
 			   ivars \
 			   indep
-=======
-			   header
->>>>>>> 272f00a... header sync test
-=======
-			   header \
-			   var \
-<<<<<<< HEAD
-<<<<<<< HEAD
-			   att
->>>>>>> 23ad299... parse var attributes
-=======
-=======
-			   ivar \
->>>>>>> c17bf73... nb
-			   att \
-<<<<<<< HEAD
-			   varm\
-			   vars
->>>>>>> 64fbfab... vars and varm
-=======
-			   varm \
-			   vars \
-			   ivarm \
-<<<<<<< HEAD
-			   ivars
->>>>>>> 72b85af... test program for nonblocking
-=======
-			   ivars \
-			   indep
->>>>>>> bd3c240... remove warning
 
 M4_SRCS  = 
 
@@ -96,15 +64,7 @@ TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
-<<<<<<< HEAD
-<<<<<<< HEAD
 TESTS_ENVIRONMENT += export ADIOS_VER_GE_1132="$(ADIOS_VER_GE_1132)";
-=======
-TESTS_ENVIRONMENT += export ADIOS_BUG_FIXED="$(ADIOS_BUG_FIXED)";
->>>>>>> 27684a0... test big only if adios bug fixed
-=======
-TESTS_ENVIRONMENT += export ADIOS_VER_GE_1132="$(ADIOS_VER_GE_1132)";
->>>>>>> bdb7eb4... fix configure condition problenm when adios is disabled
 
 TESTS = $(TESTPROGRAMS)
 TEST_EXTENSIONS = .sh

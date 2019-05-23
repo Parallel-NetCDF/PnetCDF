@@ -395,10 +395,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
             }
         }
     }
-    else {
-        for (i=0; i<num*ndims; i++) Count[i] = 1;
-    }
-    
+
     /* Increment number of entry
     * This must be the final step of creating a log entry
     * Increasing num_entries marks the completion of the creation

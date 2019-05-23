@@ -225,6 +225,9 @@ ncadios_get_att(void         *ncdp,
     int err;
     NC_ad *ncadp = (NC_ad*)ncdp;
     MPI_Datatype xtype;
+    enum ADIOS_DATATYPES atype;
+    int  asize, esize, nelems;
+    void *adata;
     
     if (varid == NC_GLOBAL){
         err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);

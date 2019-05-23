@@ -70,29 +70,10 @@ int ncadiosi_put_att_text(NC_ad *ncadp, int valid, char *name, int len,
     NC_ad_att att;
     MPI_Datatype itype;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     att.data = NCI_Malloc(len * SIZEOF_CHAR);
     att.len = len;
     /* Convert is not needed becuase bp2ncd never use incompetible type */
     memcpy(att.data, value, len * SIZEOF_CHAR);
-=======
-    //return NC_NOERR;
-
-    att.data = NCI_Malloc(len * SIZEOF_CHAR);
-    att.len = len;
-    // Convert is not needed becuase bp2ncd never use incompetible type
-<<<<<<< HEAD
-    memcpy(att.data, value, len * sizeof( char ));
->>>>>>> e9cafd8... debug
-=======
-=======
-    att.data = NCI_Malloc(len * SIZEOF_CHAR);
-    att.len = len;
-    /* Convert is not needed becuase bp2ncd never use incompetible type */
->>>>>>> e168d06... C style comment
-    memcpy(att.data, value, len * SIZEOF_CHAR);
->>>>>>> 0446641... use config.h size
 
     att.name = NCI_Malloc(strlen(name) + 1);
     strcpy(att.name, name);

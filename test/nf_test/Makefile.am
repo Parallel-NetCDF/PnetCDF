@@ -17,8 +17,8 @@ AM_CPPFLAGS  = -I$(top_builddir)/src/include \
 AM_CFLAGS =
 AM_FFLAGS =
 
-LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
-LDADD += ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD +=  @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 M4FLAGS += -I${top_srcdir}/m4
 

@@ -24,29 +24,10 @@ for j in ${safe_modes} ; do
     ${TESTSEQRUN} $1 arrays.bp
     ${TESTSEQRUN} $1 attributes.bp
     ${TESTSEQRUN} $1 arrays_big.bp
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     echo ${ADIOS_VER_GE_1132}
     if test ${ADIOS_VER_GE_1132} = 1 ; then
        ${TESTSEQRUN} $1 attributes_big.bp
     fi
-=======
-    ${TESTSEQRUN} $1 attributes_big.bp
->>>>>>> e77065c... include big endian test file
-=======
->>>>>>> 6bfc8ed... remove attributes_big from test
-=======
-    echo ${ADIOS_BUG_FIXED}
-    if test ${ADIOS_BUG_FIXED} = 1 ; then
-=======
-    echo ${ADIOS_VER_GE_1132}
-    if test ${ADIOS_VER_GE_1132} = 1 ; then
->>>>>>> bdb7eb4... fix configure condition problenm when adios is disabled
-       ${TESTSEQRUN} $1 attributes_big.bp
-    fi
->>>>>>> 27684a0... test big only if adios bug fixed
     # echo ""
 done
 

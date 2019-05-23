@@ -1926,9 +1926,19 @@ if test "x$enable_adios" = "xyes" ; then
         AC_PATH_PROG([adios_config],[adios_config],,[$ADIOS_INSTALL/bin])
     fi
 
-    if test "x${ADIOS_INSTALL}" != x ; then      
-        CPPFLAGS+=" -I${ADIOS_INSTALL}/include"
-        LDFLAGS+=" -L${ADIOS_INSTALL}/lib" 
+    if test "x$adios_config" = x ; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        Cannot find adios_config, a utility command to show the
+        configuration of the ADIOS library. It is required to
+        build PnetCDF with BP read support. Use option
+            --with-adios=/path/to/implementation
+        to specify the location of ADIOS build. In addition,
+        please make sure the MPI C compiler is compatible with the
+        one used to build ADIOS. The ADIOS library used must
+        be built with parallel I/O support. Check
+        'config.log' for more information. Stopping ...
+        ------------------------------------------------------------])
     fi
     UD_MSG_DEBUG([adios_config=$adios_config])
     
@@ -1984,78 +1994,7 @@ if test "x$enable_adios" = "xyes" ; then
         fi
     else
         LIBS+=" -ladiosread -ladios"
-<<<<<<< HEAD
     fi
-
-    dnl Check if ADIOS version is 1.12.0 or later
-    AC_MSG_CHECKING([Check if ADIOS version is 1.12.0 or later])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
-#if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1012000)
-      choke me
-#endif
-    ]])], [adios_ge_1_12_0=yes], [adios_ge_1_12_0=no])
-    AC_MSG_RESULT([$adios_ge_1_12_0])
-
-    if test "x${adios_ge_1_12_0}" = xno; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        ADIOS version 1.12.0 or later is required to build
-        PnetCDF with ADIOS BP read support. 
-        ------------------------------------------------------------])
-    fi
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-    dnl Check if ADIOS version is 1.13.2 or later
-    AC_MSG_CHECKING([Check if ADIOS version is 1.13.2 or later])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
-#if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1013002)
-      choke me
-#endif
-    ]])], [adios_ge_1_13_2=yes], [adios_ge_1_13_2=no])
-    AC_MSG_RESULT([$adios_ge_1_13_2])
-
-    if test "x${adios_ge_1_13_2}" = xyes; then
-      ADIOS_VER_GE_1132 = 1
-    fi
-    
-    CPPFLAGS=$saved_CPPFLAGS
-    LDFLAGS=$saved_LDFLAGS
-    LIBS=$saved_LIBS
-
-    AC_SUBST([ADIOS_INC], ["$adios_cflag"])
-    AC_SUBST([ADIOS_LDFLAGS], ["$adios_ldflag"])
-    AC_SUBST([ADIOS_LIBS], [""])
-    AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
-=======
-    CPPFLAGSTMP=${CPPFLAGS}
-    CPPFLAGS+=" -I${ADIOS_SRC}"
-
-    have_adios_src=no
-    AC_CHECK_HEADERS([adios_internals.h], [have_adios_src=yes], [have_adios=no], [])
-
-    CPPFLAGS=${CPPFLAGSTMP}
-
-    if test "x${have_adios_src}" = xno; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        The ADIOS source are required to build
-        PnetCDF with ADIOS BP read support. Use option
-            --with-adios_src=/path/to/source
-        to specify the location of ADIOS source code. In addition,
-        please make sure the MPI C compiler is compatible with the
-        one used to build ADIOS.
-        Stopping ...
-        Check 'config.log' for more information.
-        ------------------------------------------------------------])
-=======
->>>>>>> 3292a84... detect adios2 header for special error message
-    fi
-<<<<<<< HEAD
->>>>>>> 49f28e6... adios driver follow bp2nc
-=======
->>>>>>> 88955e9... embeded header files
-=======
 
     dnl Check if ADIOS version is 1.12.0 or later
     AC_MSG_CHECKING([Check if ADIOS version is 1.12.0 or later])
@@ -2091,18 +2030,10 @@ if test "x$enable_adios" = "xyes" ; then
     LDFLAGS=$saved_LDFLAGS
     LIBS=$saved_LIBS
 
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 1882c45... version check
-=======
-    AC_SUBST([ADIOS_INC], ["-I${ADIOS_INSTALL}/include"])
->>>>>>> 763b2c9... ADIOS include flag only to related sources
-=======
     AC_SUBST([ADIOS_INC], ["$adios_cflag"])
     AC_SUBST([ADIOS_LDFLAGS], ["$adios_ldflag"])
     AC_SUBST([ADIOS_LIBS], [""])
     AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
->>>>>>> 0900458... separate adios flags from user cflag and ldflag
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)

@@ -11,7 +11,7 @@ SUFFIXES = .o .f .F90 .f90
 
 AM_DEFAULT_SOURCE_EXT = .f90
 AM_FCFLAGS = ${FC_MODINC}$(top_builddir)/src/binding/f90
-LDADD = ${top_builddir}/src/libs/libpnetcdf.la utils.o
+LDADD  = ${top_builddir}/src/libs/libpnetcdf.la utils.o
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 check_PROGRAMS = nonblocking_write \

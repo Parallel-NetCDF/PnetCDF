@@ -28,26 +28,9 @@ for i in ${check_PROGRAMS} ; do
         ${MPIRUN} ./$i arrays.bp
         ${MPIRUN} ./$i attributes.bp
         ${MPIRUN} ./$i arrays_big.bp
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         if test ${ADIOS_VER_GE_1132} = 1 ; then
             ${MPIRUN} ./$i attributes_big.bp
         fi
-=======
-        ${MPIRUN} ./$i attributes_big.bp
->>>>>>> e77065c... include big endian test file
-=======
->>>>>>> 6bfc8ed... remove attributes_big from test
-=======
-        if test ${ADIOS_BUG_FIXED} = 1 ; then
-=======
-        if test ${ADIOS_VER_GE_1132} = 1 ; then
->>>>>>> bdb7eb4... fix configure condition problenm when adios is disabled
-            ${MPIRUN} ./$i attributes_big.bp
-        fi
->>>>>>> 27684a0... test big only if adios bug fixed
     done
 done
 

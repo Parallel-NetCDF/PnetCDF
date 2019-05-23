@@ -274,12 +274,12 @@ int ncd_dataset (NC_ad* ncid
                             retval=ncadiosi_def_dim (ncid, dimname,dims->dimension.rank,&dimids[rank]);
                         start_dims[rank] = 0;
                         count_dims[rank] = dims->dimension.rank;
-                        fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
+                        /*fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
                                 ,rank 
                                 ,count_dims[rank] 
                                 ,start_dims[rank]
                                 ,dimids[rank]
-                               );
+                               );*/
 
                     }
                     else {
@@ -301,12 +301,12 @@ int ncd_dataset (NC_ad* ncid
                                     start_dims[rank] = 0;
                                     count_dims[rank] = var_dims[i].rank;
                                     dimids[rank]=var_dims[i].nc_dimid;
-                                    fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
+                                    /*fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
                                             ,rank
                                             ,count_dims[rank]
                                             ,start_dims[rank]
                                             ,dimids[rank]
-                                           ); 
+                                           ); */
                                 } 
                                 break;
                             }
@@ -689,6 +689,7 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
                                                 );
             }
             else {
+                /* alloc size +1 to remove valgrind complaint */
                 var_payload.payload = malloc (var_header.payload_size + 1);
                 err = adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
