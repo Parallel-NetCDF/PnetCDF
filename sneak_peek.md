@@ -20,6 +20,9 @@ This is essentially a placeholder for the next release note ...
   + When building with NetCDF-4 feature, using NetCDF-4 library built with
     PnetCDF enabled, i.e. --enable-pnetcdf, is not supported. See
     [Issue #33](https://github.com/Parallel-NetCDF/PnetCDF/issues/33).
+  + Option `--with-netcdf4` now allows a form of `--with-netcdf4=INC,LIB` in
+    addition to `--with-netcdf4=DIR`. This is in case the include and lib
+    folders of NetCDF-4 installation are in different locations.
 
 * New constants
   + NC_BP, NF_BP, and NF90_BP is the flag indicating BP file access mode.
@@ -66,6 +69,9 @@ This is essentially a placeholder for the next release note ...
     with static libraries only. Thanks Bruno Pagani for reporting. This has
     been fixed in
     [pull request #46](https://github.com/Parallel-NetCDF/PnetCDF/pull/46).
+  + When calling a nonblocking API with a zero-length request and argument
+    request ID being NULL, segmentation fault may occur. See
+    [PR #51](https://github.com/Parallel-NetCDF/PnetCDF/pull/51)
 
 * New example programs
   + examples/adios/read_metadata.c - Dump all metadata in a ADIOS BP file.

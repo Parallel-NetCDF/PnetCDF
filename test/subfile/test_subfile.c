@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-	len = strlen(fbasename);
+	len = (fbasename == NULL) ?  0 : strlen(fbasename);
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     else {

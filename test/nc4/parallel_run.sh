@@ -22,12 +22,7 @@ for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-
-        if test "$i" = compressed ; then
-           ${MPIRUN} ./$i ${srcdir}
-        else
-           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
-        fi
+        ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
     done
 done
 

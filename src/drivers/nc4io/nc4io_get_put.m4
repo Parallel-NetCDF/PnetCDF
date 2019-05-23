@@ -57,13 +57,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `GETVARTYPE($1, translit(dt, `()'))')dnl
         else {
-            if (ndims > 0) {
-                if (sstart  != NULL) NCI_Free(sstart);
-                if (scount  != NULL) NCI_Free(scount);
-                if (sstride != NULL) NCI_Free(sstride);
-                if (simap   != NULL) NCI_Free(simap);
-            }
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT);
+            goto fn_exit;
         }
     }
 ')dnl
@@ -85,13 +80,8 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                ), `PUTVARTYPE($1, translit(dt, `()'))')dnl
         else {
-            if (ndims > 0) {
-                if (sstart  != NULL) NCI_Free(sstart);
-                if (scount  != NULL) NCI_Free(scount);
-                if (sstride != NULL) NCI_Free(sstride);
-                if (simap   != NULL) NCI_Free(simap);
-            }
-            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
+            DEBUG_ASSIGN_ERROR(err, NC_ENOTSUPPORT);
+            goto fn_exit;
         }
     }
 ')dnl
@@ -212,13 +202,13 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `GETATTTYPE(translit(dt, `()'))')dnl
-    else{
+    else {
+        /* should never reach here, as ther is no flexible attribute APIs */
         DEBUG_ASSIGN_ERROR(err, NC_EUNSPTETYPE)
     }
 
-    if (err == NC_NOERR){
+    if (err == NC_NOERR)
         nc4p->getsize += (MPI_Offset)(xsize * len);
-    }
 
     return err;
 }
@@ -275,13 +265,13 @@ foreach(`dt', (`(`MPI_CHAR', `text', `char')', dnl
                `(`MPI_UNSIGNED_LONG_LONG', `ulonglong', `unsigned long long')', dnl
                `(`MPI_DATATYPE_NULL', `', `void')', dnl
                ), `PUTATTTYPE(translit(dt, `()'))')dnl
-    else{
+    else {
+        /* should never reach here, as ther is no flexible attribute APIs */
         DEBUG_ASSIGN_ERROR(err, NC_EUNSPTETYPE)
     }
 
-    if (err == NC_NOERR){
+    if (err == NC_NOERR)
         nc4p->putsize += (MPI_Offset)(xsize * len);
-    }
     
     return err;
 }
@@ -298,14 +288,15 @@ nc4io_get_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err, status, apikind, ndims;
+    int i, err, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     MPI_Offset getsize, vsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
-    status = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    if (err != NC_NOERR) goto fn_exit;
 
     if (reqMode & NC_REQ_ZERO) {
         /* only collective put can arrive here.
@@ -358,24 +349,21 @@ nc4io_get_var(void             *ncdp,
 
 foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
 
-    /* Count get size */
-    if (!(reqMode & NC_REQ_ZERO)){
-        err = getelementsize(nc4p, varid, &getsize);
-        if (err != NC_NOERR){
-            return err;
-        }
+    if (err != NC_NOERR) goto fn_exit;
 
-        if (scount != NULL){
-            for(i = 0; i < ndims; i++){
+    /* Count get size */
+    if (!(reqMode & NC_REQ_ZERO)) {
+        err = getelementsize(nc4p, varid, &getsize);
+        if (err != NC_NOERR) goto fn_exit;
+
+        if (scount != NULL) {
+            for (i=0; i<ndims; i++)
                 getsize *= scount[i];
-            }
         }
-        else{
-            if (apikind == NC4_API_KIND_VAR){
+        else {
+            if (apikind == NC4_API_KIND_VAR) {
                 err = getvarsize(nc4p, varid, ndims, &vsize);
-                if (err != NC_NOERR){
-                    return err;
-                }
+                if (err != NC_NOERR) goto fn_exit;
 
                 getsize *= vsize;
             }
@@ -383,6 +371,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
         nc4p->getsize += getsize;
     }
 
+fn_exit:
     /* Free buffers if needed */
     if (ndims > 0) {
         if (sstart  != NULL) NCI_Free(sstart);
@@ -391,7 +380,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `GETVAR(api, upcase(api))') dnl
         if (simap   != NULL) NCI_Free(simap);
     }
 
-    return (status != NC_NOERR) ? status : err;
+    return err;
 }
 
 int
@@ -406,14 +395,15 @@ nc4io_put_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err, status, apikind, ndims;
+    int i, err, apikind, ndims;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     MPI_Offset putsize, vsize;
     NC_nc4 *nc4p = (NC_nc4*)ncdp;
 
     /* Inq variable dim */
-    status = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    err = nc_inq_varndims(nc4p->ncid, varid, &ndims);
+    if (err != NC_NOERR) goto fn_exit;
 
     if (reqMode & NC_REQ_ZERO) {
         /* only collective put can arrive here.
@@ -466,24 +456,21 @@ nc4io_put_var(void             *ncdp,
 
 foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
 
-    /* Count put size */
-    if (!(reqMode & NC_REQ_ZERO)){
-        err = getelementsize(nc4p, varid, &putsize);
-        if (err != NC_NOERR){
-            return err;
-        }
+    if (err != NC_NOERR) goto fn_exit;
 
-        if (scount != NULL){
-            for(i = 0; i < ndims; i++){
+    /* Count put size */
+    if (!(reqMode & NC_REQ_ZERO)) {
+        err = getelementsize(nc4p, varid, &putsize);
+        if (err != NC_NOERR) goto fn_exit;
+
+        if (scount != NULL) {
+            for (i=0; i<ndims; i++)
                 putsize *= scount[i];
-            }
         }
-        else{
-            if (apikind == NC4_API_KIND_VAR){
+        else {
+            if (apikind == NC4_API_KIND_VAR) {
                 err = getvarsize(nc4p, varid, ndims, &vsize);
-                if (err != NC_NOERR){
-                    return err;
-                }
+                if (err != NC_NOERR) goto fn_exit;
 
                 putsize *= vsize;
             }
@@ -491,6 +478,7 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
         nc4p->putsize += putsize;
     }
 
+fn_exit:
     /* Free buffers if needed */
     if (ndims > 0) {
         if (sstart  != NULL) NCI_Free(sstart);
@@ -499,5 +487,5 @@ foreach(`api', `(var, var1, vara, vars, varm)', `PUTVAR(api, upcase(api))') dnl
         if (simap   != NULL) NCI_Free(simap);
     }
 
-    return (status != NC_NOERR) ? status : err;
+    return err;
 }

@@ -9,7 +9,7 @@
 #endif
 
 #include <assert.h>
-#include <string.h>  /* memcpy(), memcmp() */
+#include <string.h>  /* memcpy(), memcmp(), memset(), memmove() */
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -315,81 +315,74 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 }
 
 /*----< hdr_fetch() >--------------------------------------------------------*/
-/* Fetch the next header chunk.  the chunk is 'gbp->size' bytes big
- * Takes care to not overwrite leftover (unused) data in the buffer before
- * fetching a new chunk: the current approach is to re-read the extra data.
- *
- * NOTE: An alternate approach (which we do not do) would be to save the old
- *       data, read the next chunk and then copy the old data into the new
- *       chunk.  This alternate approach might help if it is important for
- *       reads to be aligned.
+/* Fetch the next header chunk. The chunk buffer, pointed by gbp->base, is of
+ * size 'gbp->size' bytes. Be careful not to overwrite leftover (yet to be
+ * used) data in the buffer before fetching a new chunk.
  */
 static int
 hdr_fetch(bufferinfo *gbp) {
     int rank, err=NC_NOERR, mpireturn;
-    int slack; /* any leftover data in the buffer */
 
     assert(gbp->base != NULL);
 
-#if 0
-    MPI_Aint pos_addr, base_addr;
-#ifdef HAVE_MPI_GET_ADDRESS
-    MPI_Get_address(gbp->pos,  &pos_addr);
-    MPI_Get_address(gbp->base, &base_addr);
-#else
-    MPI_Address(gbp->pos,  &pos_addr);
-    MPI_Address(gbp->base, &base_addr);
-#endif
-    slack = gbp->size - (pos_addr - base_addr);
-#endif
-    slack = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
-
-    /* If gbp->pos and gbp->base are the same, there is no leftover buffer
-     * data to worry about.
-     * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then
-     * all data in the buffer has been consumed
-     * If slack is neither, then we re-read slack + additional header into a
-     * contiguous buffer, gbp->base.
-     */
-    if (slack == gbp->size) slack = 0;
-
-    /* No need to zero out the buffer, as it will be filled with read */
-    /*
-    memset(gbp->base, 0, (size_t)gbp->size);
-    */
-    gbp->pos = gbp->base;
-
     MPI_Comm_rank(gbp->comm, &rank);
     if (rank == 0) {
+        char *readBuf;
+        size_t slack, readLen;
         MPI_Status mpistatus;
+
+        /* any leftover data in the buffer */
+        slack = gbp->size - (gbp->pos - gbp->base);
+        if (slack == gbp->size) slack = 0;
+
+        /* When gbp->size == (gbp->pos - gbp->base), all data in the buffer has
+         * been consumed. If not, then read additional header of size
+         * (gbp->size - slack) into a contiguous buffer, pointed by gbp->base +
+         * slack.
+         */
+
+        readBuf = gbp->base;
+        readLen = gbp->size;
+        if (slack > 0) { /* move slack to beginning of the buffer, gbp->base */
+            memmove(gbp->base, gbp->pos, slack);
+            readBuf += slack;
+            readLen -= slack;
+        }
+
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
          * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-         * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
-        TRACE_IO(MPI_File_read_at)(gbp->collective_fh,
-                                   (gbp->offset)-slack, gbp->base,
-                                   gbp->size, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_read_at)(gbp->collective_fh, gbp->offset, readBuf,
+                                   readLen, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
         }
         else {
-#ifdef _USE_MPI_GET_COUNT
-            int get_size; /* actual read amount can be smaller */
+            /* Obtain the actual read amount. It may be smaller than readLen,
+             * when the remaining file size is smaller than read chunk size.
+             */
+            int get_size;
             MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
             gbp->get_size += get_size;
-#else
-            gbp->get_size += gbp->size;
-#endif
+
+            /* If actual read amount is shorter than readLen, then we zero-out
+             * the remaining buffer. This is because the MPI_Bcast below
+             * broadcasts a buffer of a fixed size, gbp->size. Without zeroing
+             * out, valgrind will complain about the uninitialized values.
+             */
+            if (get_size < readLen)
+                memset(readBuf + get_size, 0, readLen - get_size);
         }
+        /* only root process reads file header, keeps track of current read
+         * file pointer location */
+        gbp->offset += readLen;
     }
-    /* we might have to backtrack */
-    gbp->offset += (gbp->size - slack);
 
     if (gbp->safe_mode == 1) {
         TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, gbp->comm);
@@ -399,30 +392,10 @@ hdr_fetch(bufferinfo *gbp) {
     /* broadcast root's read (full or partial header) to other processes */
     TRACE_COMM(MPI_Bcast)(gbp->base, gbp->size, MPI_BYTE, 0, gbp->comm);
 
+    gbp->pos = gbp->base;
+
     return err;
 }
-
-#if 0
-/*----< hdr_check_buffer() >-------------------------------------------------*/
-/* Ensure that 'nextread' bytes are available.  */
-static int
-hdr_check_buffer(bufferinfo *gbp, MPI_Offset nextread)
-{
-    MPI_Aint pos_addr, base_addr;
-
-#ifdef HAVE_MPI_GET_ADDRESS
-    MPI_Get_address(gbp->pos,  &pos_addr);
-    MPI_Get_address(gbp->base, &base_addr);
-#else
-    MPI_Address(gbp->pos,  &pos_addr);
-    MPI_Address(gbp->base, &base_addr);
-#endif
-    if (pos_addr + nextread <= base_addr + gbp->size)
-        return NC_NOERR;
-
-    return hdr_fetch(gbp);
-}
-#endif
 
 /*----< hdr_get_uint32() >---------------------------------------------------*/
 /* in CDF-1 format, all integers are 32-bit
@@ -434,7 +407,7 @@ hdr_get_uint32(bufferinfo *gbp, uint *xp)
 {
     int err;
 
-    if ((char*)gbp->pos + 4 > (char*)gbp->base + gbp->size) {
+    if (gbp->pos + 4 > gbp->end) {
         err = hdr_fetch(gbp);
         if (err != NC_NOERR) return err;
     }
@@ -453,7 +426,7 @@ hdr_get_uint64(bufferinfo *gbp, uint64 *xp)
 {
     int err;
 
-    if ((char*)gbp->pos + 8 > (char*)gbp->base + gbp->size) {
+    if (gbp->pos + 8 > gbp->end) {
         err = hdr_fetch(gbp);
         if (err != NC_NOERR) return err;
     }
@@ -473,18 +446,18 @@ static int
 hdr_get_NC_tag(bufferinfo *gbp, NC_tag *tagp)
 {
     int err;
-    uint type = 0;
+    uint tag;
 
-    if ((char*)gbp->pos + 4 > (char*)gbp->base + gbp->size) {
+    if (gbp->pos + 4 > gbp->end) {
         err = hdr_fetch(gbp);
         if (err != NC_NOERR) return err;
     }
 
     /* get an external unsigned 4-byte integer from the file */
-    err = ncmpix_get_uint32((const void**)(&gbp->pos), &type);
+    err = ncmpix_get_uint32((const void **)(&gbp->pos), &tag);
     if (err != NC_NOERR) return err;
 
-    *tagp = (NC_tag) type;
+    *tagp = (NC_tag) tag;
     return NC_NOERR;
 }
 
@@ -496,12 +469,12 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
     int err;
     uint xtype;
 
-    if ((char*)gbp->pos + 4 > (char*)gbp->base + gbp->size) {
+    if (gbp->pos + 4 > gbp->end) {
         err = hdr_fetch(gbp);
         if (err != NC_NOERR) return err;
     }
 
-    err = ncmpix_get_uint32((const void**)(&gbp->pos), &xtype);
+    err = ncmpix_get_uint32((const void **)(&gbp->pos), &xtype);
     if (err != NC_NOERR) return err;
 
     /* check if xtype is within legal ranges of CDF-1/2/5 formats */
@@ -521,7 +494,7 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
 
 /*----< hdr_get_NC_name() >--------------------------------------------------*/
 static int
-hdr_get_NC_name(bufferinfo  *gbp, char **namep)
+hdr_get_NC_name(bufferinfo *gbp, char **namep)
 {
     /* netCDF file format:
      *  ...
@@ -558,7 +531,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
     /* Allocate a NC_string structure large enough to hold nchars characters.
      * Note nchars is strlen(namestring) without terminal character.
      */
-    *namep = (char*)NCI_Malloc((size_t)nchars + 1);
+    *namep = (char*) NCI_Malloc((size_t)nchars + 1);
     if (*namep == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     (*namep)[nchars] = '\0'; /* add terminal character */
 
@@ -567,18 +540,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
     */
     padding = _RNDUP(nchars, X_ALIGN) - nchars;
 
-#if 0
-    MPI_Aint pos_addr, base_addr;
-#ifdef HAVE_MPI_GET_ADDRESS
-    MPI_Get_address(gbp->pos,  &pos_addr);
-    MPI_Get_address(gbp->base, &base_addr);
-#else
-    MPI_Address(gbp->pos,  &pos_addr);
-    MPI_Address(gbp->base, &base_addr);
-#endif
-    bufremain = gbp->size - (pos_addr - base_addr);
-#endif
-    bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
+    bufremain = gbp->size - (gbp->pos - gbp->base);
 
     cpos = *namep;
 
@@ -589,7 +551,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
             strcount = MIN(bufremain, nchars);
             memcpy(cpos, gbp->pos, (size_t)strcount);
             nchars -= strcount;
-            gbp->pos = (void *)((char *)gbp->pos + strcount);
+            gbp->pos += strcount;
             cpos += strcount;
             bufremain -= strcount;
         } else {
@@ -605,27 +567,32 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
 
     /* handle the padding */
     if (padding > 0) {
+        if (gbp->pos + padding > gbp->end) {
+            err = hdr_fetch(gbp);
+            if (err != NC_NOERR) return err;
+        }
+
         /* CDF specification: Header padding uses null (\x00) bytes.
-	 * However, prior to version 4.5.0, NetCDF did not implement this
-	 * specification entirely. In particular, it has never enforced the
-	 * null-byte padding for attribute values (it has for others, such as
-	 * names of dimension, variables, and attributes.) It also appears that
-	 * files created by SciPy NetCDF module or NetCDF Java module, both
-	 * developed independent from NetCDF-C, also fail to respect this
-	 * padding specification.  This becomes a problem for PnetCDF to read
-	 * such netCDF files, because PnetCDF enforces the header padding from
-	 * its very first release.  The files violating the padding
-	 * specification will not be readable by PnetCDF of all releases prior
-	 * to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
-	 * opening such files.  Note if the sizes of all attribute values of
-	 * your files are aligned with 4-byte boundaries, then the files are
-	 * readable by PnetCDF.  In order to keep the files in question
-	 * readable by PnetCDF, checking for null-byte padding has been
-	 * disabled in 1.9.0. But, we keep this checking in ncvalidator, a
-	 * utility program that can report whether a CDF file violates the file
-	 * format specification, including this null-byte padding. See r3516
-	 * and discussion in NetCDF Github issue
-	 * https://github.com/Unidata/netcdf-c/issues/657.
+         * However, prior to version 4.5.0, NetCDF did not implement this
+         * specification entirely. In particular, it has never enforced the
+         * null-byte padding for attribute values (it has for others, such as
+         * names of dimension, variables, and attributes.) It also appears that
+         * files created by SciPy NetCDF module or NetCDF Java module, both
+         * developed independent from NetCDF-C, also fail to respect this
+         * padding specification.  This becomes a problem for PnetCDF to read
+         * such netCDF files, because PnetCDF enforces the header padding from
+         * its very first release.  The files violating the padding
+         * specification will not be readable by PnetCDF of all releases prior
+         * to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
+         * opening such files.  Note if the sizes of all attribute values of
+         * your files are aligned with 4-byte boundaries, then the files are
+         * readable by PnetCDF.  In order to keep the files in question
+         * readable by PnetCDF, checking for null-byte padding has been
+         * disabled in 1.9.0. But, we keep this checking in ncvalidator, a
+         * utility program that can report whether a CDF file violates the file
+         * format specification, including this null-byte padding. See r3516
+         * and discussion in NetCDF Github issue
+         * https://github.com/Unidata/netcdf-c/issues/657.
          */
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
         char pad[X_ALIGN-1];
@@ -637,7 +604,7 @@ hdr_get_NC_name(bufferinfo  *gbp, char **namep)
             DEBUG_ASSIGN_ERROR(err, NC_ENULLPAD) /* not a fatal error */
         }
 #endif
-        gbp->pos = (void *)((char *)gbp->pos + padding);
+        gbp->pos += padding;
     }
 
     return err;
@@ -817,18 +784,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
     nbytes = attrp->nelems * xsz;
     padding = attrp->xsz - nbytes;
 
-#if 0
-    MPI_Aint pos_addr, base_addr;
-#ifdef HAVE_MPI_GET_ADDRESS
-    MPI_Get_address(gbp->pos,  &pos_addr);
-    MPI_Get_address(gbp->base, &base_addr);
-#else
-    MPI_Address(gbp->pos,  &pos_addr);
-    MPI_Address(gbp->base, &base_addr);
-#endif
-    bufremain = gbp->size - (pos_addr - base_addr);
-#endif
-    bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
+    bufremain = gbp->size - (gbp->pos - gbp->base);
     /* gbp->size is the read chunk size, which is of type 4-byte int.
      * thus bufremain should be less than INT_MAX */
 
@@ -838,7 +794,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
             int attcount = MIN(nbytes, bufremain);
             memcpy(value, gbp->pos, attcount);
             nbytes -= attcount;
-            gbp->pos = (void *)((char *)gbp->pos + attcount);
+            gbp->pos += attcount;
             value = (void *)((char *)value + attcount);
             bufremain -= attcount;
         } else {
@@ -851,27 +807,32 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
 
     /* handle the padding */
     if (padding > 0) {
+        if (gbp->pos + padding > gbp->end) {
+            err = hdr_fetch(gbp);
+            if (err != NC_NOERR) return err;
+        }
+
         /* CDF specification: Header padding uses null (\x00) bytes.
-	 * However, prior to version 4.5.0, NetCDF did not implement this
-	 * specification entirely. In particular, it has never enforced the
-	 * null-byte padding for attribute values (it has for others, such as
-	 * names of dimension, variables, and attributes.) It also appears that
-	 * files created by SciPy NetCDF module or NetCDF Java module, both
-	 * developed independent from NetCDF-C, also fail to respect this
-	 * padding specification.  This becomes a problem for PnetCDF to read
-	 * such netCDF files, because PnetCDF enforces the header padding from
-	 * its very first release.  The files violating the padding
-	 * specification will not be readable by PnetCDF of all releases prior
-	 * to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
-	 * opening such files.  Note if the sizes of all attribute values of
-	 * your files are aligned with 4-byte boundaries, then the files are
-	 * readable by PnetCDF.  In order to keep the files in question
-	 * readable by PnetCDF, checking for null-byte padding has been
-	 * disabled in 1.9.0. But, we keep this checking in ncvalidator, a
-	 * utility program that can report whether a CDF file violates the file
-	 * format specification, including this null-byte padding. See r3516
-	 * and discussion in NetCDF Github issue
-	 * https://github.com/Unidata/netcdf-c/issues/657.
+         * However, prior to version 4.5.0, NetCDF did not implement this
+         * specification entirely. In particular, it has never enforced the
+         * null-byte padding for attribute values (it has for others, such as
+         * names of dimension, variables, and attributes.) It also appears that
+         * files created by SciPy NetCDF module or NetCDF Java module, both
+         * developed independent from NetCDF-C, also fail to respect this
+         * padding specification.  This becomes a problem for PnetCDF to read
+         * such netCDF files, because PnetCDF enforces the header padding from
+         * its very first release.  The files violating the padding
+         * specification will not be readable by PnetCDF of all releases prior
+         * to 1.9.0 and error code NC_EINVAL or NC_ENOTNC will be thrown when
+         * opening such files.  Note if the sizes of all attribute values of
+         * your files are aligned with 4-byte boundaries, then the files are
+         * readable by PnetCDF.  In order to keep the files in question
+         * readable by PnetCDF, checking for null-byte padding has been
+         * disabled in 1.9.0. But, we keep this checking in ncvalidator, a
+         * utility program that can report whether a CDF file violates the file
+         * format specification, including this null-byte padding. See r3516
+         * and discussion in NetCDF Github issue
+         * https://github.com/Unidata/netcdf-c/issues/657.
          */
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
         char pad[X_ALIGN-1];
@@ -883,7 +844,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
             DEBUG_ASSIGN_ERROR(err, NC_ENULLPAD)
         }
 #endif
-        gbp->pos = (void *)((char *)gbp->pos + padding);
+        gbp->pos += padding;
     }
     return err;
 }
@@ -1025,7 +986,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
     }
 
     alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
-    ncap->value = (NC_attr**)NCI_Calloc(alloc_size, sizeof(NC_attr*));
+    ncap->value = (NC_attr**) NCI_Calloc(alloc_size, sizeof(NC_attr*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* get [attr ...] */
@@ -1360,8 +1321,9 @@ ncmpio_hdr_get_NC(NC *ncp)
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
     getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
 
-    getbuf.base = (void *)NCI_Malloc((size_t)getbuf.size);
+    getbuf.base = (char*) NCI_Malloc((size_t)getbuf.size);
     getbuf.pos  = getbuf.base;
+    getbuf.end  = getbuf.base + getbuf.size;
 
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
     err = hdr_fetch(&getbuf);
@@ -1370,14 +1332,14 @@ ncmpio_hdr_get_NC(NC *ncp)
     /* processing the header from getbuf, the get buffer */
 
     /* First get the file format information, magic */
-    err = ncmpix_getn_text((const void**)(&getbuf.pos), NC_MAGIC_LEN, magic);
+    err = ncmpix_getn_text((const void **)(&getbuf.pos), NC_MAGIC_LEN, magic);
     if (err != NC_NOERR) return err;
 
     /* check if the first three bytes are 'C','D','F' */
     if (memcmp(magic, "CDF", 3) != 0) {
         /* check if is HDF5 file */
         char signature[8], *hdf5_signature="\211HDF\r\n\032\n";
-        ncmpix_getn_text((const void**)(&getbuf.pos), 8, signature);
+        ncmpix_getn_text((const void **)(&getbuf.pos), 8, signature);
         if (memcmp(signature, hdf5_signature, 8) == 0) {
             DEBUG_ASSIGN_ERROR(err, NC_ENOTNC3)
             if (ncp->safe_mode)
@@ -1414,18 +1376,7 @@ ncmpio_hdr_get_NC(NC *ncp)
         ncp->numrecs = (MPI_Offset)tmp;
     }
 
-#if 0
-    MPI_Aint pos_addr, base_addr;
-#ifdef HAVE_MPI_GET_ADDRESS
-    MPI_Get_address(getbuf.pos,  &pos_addr);
-    MPI_Get_address(getbuf.base, &base_addr);
-#else
-    MPI_Address(getbuf.pos,  &pos_addr);
-    MPI_Address(getbuf.base, &base_addr);
-#endif
-    assert(pos_addr < base_addr + getbuf.size);
-#endif
-    assert((char*)getbuf.pos < (char*)getbuf.base + getbuf.size);
+    assert(getbuf.pos < getbuf.end);
 
     /* get dim_list from getbuf into ncp */
     err = hdr_get_NC_dimarray(&getbuf, &ncp->dims);

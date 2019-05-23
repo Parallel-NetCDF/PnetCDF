@@ -58,6 +58,22 @@ static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
         printf("%s error at line %d file %s (%s)\n", func, __LINE__, __FILE__, errorString); \
     }
 
+/* strdup() is a POSIX function, not a standard C function */
+#ifndef HAVE_STRDUP
+static char *strdup(const char *str)
+{
+    char *ptr;
+
+    if (str == NULL) return NULL;
+
+    ptr = (char*) malloc(strlen(str) + 1);
+    if (ptr != NULL)
+        strcpy(ptr, str);
+
+    return ptr;
+}
+#endif
+
 /*----< new_id_PNCList() >---------------------------------------------------*/
 /* Return a new ID (array index) from the PNC list, pnc_filelist[] that is
  * not used. Note the used elements in pnc_filelist[] may not be contiguus.
@@ -533,6 +549,8 @@ ncmpi_create(MPI_Comm    comm,
     return status;
 }
 
+#define _NDIMS_ 16
+
 /*----< ncmpi_open() >-------------------------------------------------------*/
 /* This is a collective subroutine. */
 int
@@ -542,8 +560,8 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)  /* OUT */
 {
-    int i, nalloc, rank, nprocs, format, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, relax_coord_bound;
+    int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err;
+    int safe_mode=0, mpireturn, relax_coord_bound, DIMIDS[_NDIMS_], *dimids;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -811,37 +829,48 @@ ncmpi_open(MPI_Comm    comm,
         goto fn_exit;
     }
 
+    dimids = DIMIDS;
+
     /* construct array of PNC_var for all variables */
     for (i=0; i<pncp->nvars; i++) {
-        nc_type xtype;
-        int ndims;
-        err = driver->inq_var(pncp->ncp, i, NULL, &xtype, &ndims,
-                              NULL, NULL, NULL, NULL, NULL);
-        if (err != NC_NOERR) goto fn_exit;
-        pncp->vars[i].xtype  = xtype;
-        pncp->vars[i].ndims  = ndims;
-        pncp->vars[i].recdim = -1;   /* if fixed-size variable */
+        int ndims, max_ndims=_NDIMS_;
         pncp->vars[i].shape  = NULL;
-        pncp->vars[i].recdim = -1;
+        pncp->vars[i].recdim = -1;   /* if fixed-size variable */
+        err = driver->inq_var(pncp->ncp, i, NULL, &pncp->vars[i].xtype, &ndims,
+                              NULL, NULL, NULL, NULL, NULL);
+        if (err != NC_NOERR) break; /* loop i */
+        pncp->vars[i].ndims = ndims;
+
         if (ndims > 0) {
-            int j, *dimids;
             pncp->vars[i].shape = (MPI_Offset*)
-                                   NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);
-            dimids = (int*) NCI_Malloc(ndims * SIZEOF_INT);
+                                  NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);
+            if (ndims > max_ndims) { /* avoid repeated malloc */
+                if (dimids == DIMIDS) dimids = NULL;
+                dimids = (int*) NCI_Realloc(dimids, ndims * SIZEOF_INT);
+                max_ndims = ndims;
+            }
             err = driver->inq_var(pncp->ncp, i, NULL, NULL, NULL,
                                   dimids, NULL, NULL, NULL, NULL);
-            if (err != NC_NOERR) goto fn_exit;
+            if (err != NC_NOERR) break; /* loop i */
             if (dimids[0] == pncp->unlimdimid)
                 pncp->vars[i].recdim = pncp->unlimdimid;
             for (j=0; j<ndims; j++) {
                 /* obtain size of dimension j */
                 err = driver->inq_dim(pncp->ncp, dimids[j], NULL,
                                       pncp->vars[i].shape+j);
-                if (err != NC_NOERR) goto fn_exit;
+                if (err != NC_NOERR) break; /* loop i */
             }
-            NCI_Free(dimids);
         }
     }
+    if (err != NC_NOERR) { /* error happens in loop i */
+        assert(i < pncp->nvars);
+        for (j=0; j<=i; j++) {
+            if (pncp->vars[j].shape != NULL)
+                NCI_Free(pncp->vars[j].shape);
+        }
+        NCI_Free(pncp->vars);
+    }
+    if (dimids != DIMIDS) NCI_Free(dimids);
 
 fn_exit:
     if (err != NC_NOERR) {
@@ -1447,11 +1476,11 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
 
 #ifdef ENABLE_NETCDF4
     if (pncp->format == NC_FORMAT_NETCDF4 ||
-               pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
+        pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
         /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
-        return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, num_fix_varsp, NULL,
-                                    NULL, NULL, NULL, NULL, NULL, NULL,
-                                    NULL, NULL, NULL, NULL, NULL);
+        return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, num_fix_varsp,
+                                      NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                      NULL, NULL, NULL, NULL, NULL);
     }
 #endif
 
@@ -1485,11 +1514,11 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
 
 #ifdef ENABLE_NETCDF4
     if (pncp->format == NC_FORMAT_NETCDF4 ||
-               pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
+        pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
         /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */
-        return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL, num_rec_varsp,
-                                    NULL, NULL, NULL, NULL, NULL, NULL,
-                                    NULL, NULL, NULL, NULL, NULL);
+        return pncp->driver->inq_misc(pncp->ncp, NULL, NULL, NULL,
+                                      num_rec_varsp, NULL, NULL, NULL, NULL,
+                                      NULL, NULL, NULL, NULL, NULL, NULL, NULL);
         }
 #endif
 

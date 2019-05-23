@@ -69,6 +69,10 @@ TESTS_ENVIRONMENT += export PNETCDF_DEBUG="$(PNETCDF_DEBUG)";
 TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER="$(ENABLE_BURST_BUFFER)";
+if BUILD_BENCHMARKS_IN_PNETCDF
+   TESTS_ENVIRONMENT += export BUILD_BENCHMARKS_IN_PNETCDF=1;
+endif
+
 
 ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="

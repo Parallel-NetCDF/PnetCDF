@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for get size and put size when accessing a NetCDF4 file ", basename(argv[0]));
+        sprintf(cmd_str, "*** TESTING C   %s for get size and put size ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
     start[0] = rank;
     for(i = 0; i < N; i++){
         start[1] = i;
+        buf[0] = rank;
         err = ncmpi_put_var1_int_all(ncid, varid[0], start, buf); CHECK_ERR
         err = ncmpi_inq_put_size(ncid, &size); CHECK_ERR
         if (size != sizeof(int) * (i + 1)){
@@ -75,6 +76,7 @@ int main(int argc, char** argv) {
                 __LINE__,__FILE__,sizeof(int) * (i + 1),size);
             nerrs++;
         }
+        buf[0] = -1;
         err = ncmpi_get_var1_int_all(ncid, varid[0], start, buf); CHECK_ERR
         err = ncmpi_inq_get_size(ncid, &size); CHECK_ERR
         if (size != sizeof(int) * (i + 1)){

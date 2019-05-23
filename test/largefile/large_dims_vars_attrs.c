@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 {
     char filename[256], str[32];
     int i, rank, nprocs, err, nerrs=0;
-    int ncid, cmode, varid, *dimids;
+    int ncid, cmode, *varid, *dimids, intBuf[1];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -54,30 +54,37 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
+    dimids = (int*) malloc(LARGE_NUM * sizeof(int));
+    varid = (int*) malloc(LARGE_NUM * sizeof(int));
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-    dimids = (int*) malloc(LARGE_NUM * sizeof(int));
     for (i=0; i<LARGE_NUM; i++) {
         sprintf(str, "dim%d", i);
         err = ncmpi_def_dim(ncid, str, 1, &dimids[i]);
         CHECK_ERR
     }
-    err = ncmpi_def_var(ncid, "var", NC_INT, LARGE_NUM, dimids, &varid);
+
+    err = ncmpi_def_var(ncid, "var", NC_INT, LARGE_NUM, dimids, &varid[0]);
     CHECK_ERR
 
     for (i=0; i<LARGE_NUM; i++) {
         sprintf(str, "attr%d", i);
-        err = ncmpi_put_att(ncid, varid, str, NC_INT, 1, &i);
+        err = ncmpi_put_att(ncid, varid[0], str, NC_INT, 1, &i);
         CHECK_ERR
     }
 
-    for (i=0; i<LARGE_NUM-1; i++) {
+    for (i=1; i<LARGE_NUM; i++) {
         signed char attrBuf[3]={1,2,3};
         sprintf(str, "var%d", i);
-        err = ncmpi_def_var(ncid, str, NC_INT, 1, dimids, &varid);
+        err = ncmpi_def_var(ncid, str, NC_INT, 1, dimids, &varid[i]);
+        CHECK_ERR
+        err = ncmpi_put_att_text(ncid, varid[i], "attr text", 9, "some text");
+        CHECK_ERR
+        err = ncmpi_put_att_schar(ncid, varid[i], "attr short", NC_SHORT, 3, attrBuf);
         CHECK_ERR
         err = ncmpi_put_att_text(ncid, varid, "attr text", 9, "some text");
         CHECK_ERR
@@ -87,6 +94,12 @@ int main(int argc, char** argv)
 
     err = ncmpi_enddef(ncid);
     CHECK_ERR
+
+    intBuf[0] = rank;
+    for (i=0; i<LARGE_NUM; i++) {
+        err = ncmpi_put_var_int_all(ncid, varid[i], intBuf);
+        CHECK_ERR
+    }
 
     err = ncmpi_close(ncid);
     CHECK_ERR
@@ -116,6 +129,7 @@ int main(int argc, char** argv)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
+    free(varid);
     free(dimids);
 
     /* check if PnetCDF freed all internal malloc */
@@ -123,9 +137,11 @@ int main(int argc, char** argv)
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
+        if (rank == 0 && sum_size > 0) {
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+            ncmpi_inq_malloc_list();
+        }
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

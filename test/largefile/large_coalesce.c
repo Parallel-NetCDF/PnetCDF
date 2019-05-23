@@ -98,10 +98,8 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* now we are in data mode */
-#ifdef ENABLE_LARGE_SINGLE_REQ
     for (i=0; i<20; i++) buf[ONE_G-10+i] = 'a'+i;
     for (i=0; i<20; i++) buf[TWO_G-10+i] = 'A'+i;
-#endif
 
     start[0] = rank;
     count[0] = 1;

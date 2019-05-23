@@ -71,7 +71,6 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                tst_vars_fill \
                tst_def_var_fill \
                test_fillvalue \
-               tst_vars_fill \
                error_precedence \
                tst_free_comm
 
@@ -135,7 +134,8 @@ endif
 check_PROGRAMS = $(TESTPROGRAMS) \
                  put_all_kinds \
                  redef1 \
-                 iput_all_kinds
+                 iput_all_kinds \
+                 tst_version
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
