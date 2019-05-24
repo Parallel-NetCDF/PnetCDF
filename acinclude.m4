@@ -1757,6 +1757,14 @@ AC_DEFUN([UD_CHECK_MPICC_BASE],[
                      # AC_MSG_NOTICE(fccpx ac_MPICC_VER=$ac_MPICC_VER)
                      if test "x${ac_MPICC_VER}" != x ; then
                         ac_cv_mpicc_base="FCCPX"
+                     else
+                        # If just cc, check if it is a wrapper of GCC
+                        ac_MPICC_VER="$($MPICC -v 2>&1)"
+                        UD_MSG_DEBUG(GCC ac_MPICC_VER=$ac_MPICC_VER)
+                        ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w gcc`
+                        if test "x${ac_MPICC_VER}" != x ; then
+                           ac_cv_mpicc_base="GCC"
+                        fi
                      fi
                   fi
                fi
@@ -2278,6 +2286,9 @@ AC_DEFUN([LT_MPI_CHECK_SHLIB],[
    AC_MSG_RESULT([$ac_cv_lt_mpi_check_shlib])
 ])# LT_MPI_CHECK_SHLIB
 
+# CHECK_MPI_VERSION
+# -----------------------------------------------------------------
+# check MPI version and vendor
 AC_DEFUN([CHECK_MPI_VERSION],[
    AC_REQUIRE([AC_PROG_GREP])
    AC_MSG_CHECKING([MPI version])
@@ -2289,7 +2300,8 @@ AC_DEFUN([CHECK_MPI_VERSION],[
       AC_MSG_RESULT([${mpi_version}.${mpi_subversion}])
    fi
 
-   AC_CHECK_DECLS([MPICH_VERSION, MPICH2_VERSION, OMPI_MAJOR_VERSION], [], [], [#include <mpi.h>])
+   AC_CHECK_DECLS([MPICH_VERSION, MPICH2_VERSION, OMPI_MAJOR_VERSION, MVAPICH2_VERSION],
+                  [], [], [#include <mpi.h>])
    AC_MSG_CHECKING([MPI vendor])
 
 cat - <<_ACEOF >conftest.c
@@ -2304,12 +2316,17 @@ _ACEOF
       MACRO_FLAG="-qshowmacros"
    fi
 
-   if test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
+   # Note MVAPICH2's mpi.h also defines MPICH_VERSION, so this check must be
+   # done before MPICH.
+   if test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
+      mvapich2_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MVAPICH2_VERSION | cut -d' ' -d'"' -f2`
+      AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
+   elif test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
       mpich_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH_VERSION | cut -d' ' -d'"' -f2`
       AC_MSG_RESULT(MPICH $mpich_version)
    elif test "x$ac_cv_have_decl_MPICH2_VERSION" = xyes ; then
-      mpich_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH2_VERSION | cut -d' ' -d'"' -f2`
-      AC_MSG_RESULT(MPICH2 $mpich_version)
+      mpich2_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH2_VERSION | cut -d' ' -d'"' -f2`
+      AC_MSG_RESULT(MPICH2 $mpich2_version)
    elif test "x$ac_cv_have_decl_OMPI_MAJOR_VERSION" = xyes ; then
       AC_COMPUTE_INT([OMPI_MAJOR_VERSION], [OMPI_MAJOR_VERSION], [[#include <mpi.h>]])
       AC_COMPUTE_INT([OMPI_MINOR_VERSION], [OMPI_MINOR_VERSION], [[#include <mpi.h>]])
@@ -2317,7 +2334,7 @@ _ACEOF
       ompi_version="${OMPI_MAJOR_VERSION}.${OMPI_MINOR_VERSION}.${OMPI_RELEASE_VERSION}"
       AC_MSG_RESULT(OpenMPI $ompi_version)
    else
-      AC_MSG_RESULT([information unavailable])
+      AC_MSG_RESULT([unknown])
    fi
    ${RM} -f conftest.c
    unset MACRO_FLAG
