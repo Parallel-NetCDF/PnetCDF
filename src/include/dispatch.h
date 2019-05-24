@@ -147,6 +147,8 @@ extern PNC_driver* ncmpio_inq_driver(void);
 
 extern PNC_driver* nc4io_inq_driver(void);
 
+extern PNC_driver* ncadios_inq_driver(void); 
+
 extern PNC_driver* ncfoo_inq_driver(void);
 
 extern PNC_driver* ncbbio_inq_driver(void);

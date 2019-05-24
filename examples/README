@@ -336,3 +336,11 @@ with C, C++, F77, and F90 versions.
 ./F77/time_var.f
   These examples show how to define, write, and read record variables.
 
+./adios/read_var.c
+  This examples demonstrates how to read variable data in BP file using PnetCDF
+
+./adios/read_var_nb.c
+  This examples demonstrates how to read variable data in BP file using PnetCDF non-blocking API
+
+./adios/read_metadata.c
+  This examples demonstrates how to enumerate all variable, dimension, and attributes in a BP file using PnetCDF.

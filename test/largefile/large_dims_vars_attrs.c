@@ -86,6 +86,10 @@ int main(int argc, char** argv)
         CHECK_ERR
         err = ncmpi_put_att_schar(ncid, varid[i], "attr short", NC_SHORT, 3, attrBuf);
         CHECK_ERR
+        err = ncmpi_put_att_text(ncid, varid, "attr text", 9, "some text");
+        CHECK_ERR
+        err = ncmpi_put_att_schar(ncid, varid, "attr short", NC_SHORT, 3, attrBuf);
+        CHECK_ERR
     }
 
     err = ncmpi_enddef(ncid);

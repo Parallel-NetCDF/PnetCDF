@@ -12,7 +12,7 @@ AM_DEFAULT_SOURCE_EXT = .cpp
 
 AM_CPPFLAGS = -I$(top_builddir)/src/binding/cxx -I$(top_builddir)/src/include
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
-LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD +=  @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 check_PROGRAMS = collective_write \
                  nonblocking_write \

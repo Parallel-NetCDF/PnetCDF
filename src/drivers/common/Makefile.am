@@ -11,6 +11,7 @@ SUFFIXES = .a .o .c .m4 .h
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_srcdir)/src/drivers/include
 AM_CPPFLAGS += -I$(top_builddir)/src/drivers/include
+AM_CPPFLAGS += @ADIOS_INC@
 
 if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
@@ -39,6 +40,10 @@ C_SRCS    = utf8proc.c \
             utils.c \
             error_posix2nc.c \
             hash_map.c
+
+if ENABLE_ADIOS
+   C_SRCS += error_adios2nc.c 
+endif
 
 libcommon_la_SOURCES = $(C_SRCS) $(H_SRCS)
 nodist_libcommon_la_SOURCES = $(M4_SRCS:.m4=.c)

@@ -47,5 +47,5 @@ Version: @PNETCDF_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lpnetcdf
 Libs.private:
-Requires: @NETCDF4_PACKAGE@
+Requires: @NETCDF4_PACKAGE@ @ADIOS_PACKAGE@
 Requires.private:

@@ -73,7 +73,6 @@ int main(int argc, char** argv) {
 
     /* define variable */
     err = ncmpi_def_var(ncid, "M",   NC_INT, 1, &dimid, &varid); CHECK_ERR
-
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     err = ncmpi_inq_striping(ncid, &v1, &v2); EXPECT_ERR(NC_ENOTSUPPORT);

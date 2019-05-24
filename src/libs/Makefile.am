@@ -26,6 +26,10 @@ endif
 if ENABLE_BURST_BUFFER
    libpnetcdf_la_LIBADD += ../drivers/ncbbio/libncbbio.la
 endif
+if ENABLE_ADIOS
+   libpnetcdf_la_LIBADD += ../drivers/ncadios/libncadios.la
+endif
+
 
 nodist_EXTRA_libpnetcdf_la_SOURCES = dummyc.c
 

@@ -148,6 +148,7 @@
       integer nf_cdf5
       integer nf_64bit_data
       integer nf_netcdf4
+      integer nf_bp
 
       parameter (nf_32bit         = 16777216)
       parameter (nf_classic_model = 256)
@@ -156,6 +157,7 @@
       parameter (nf_cdf5          = 32)
       parameter (nf_64bit_data    = nf_cdf5)
       parameter (nf_netcdf4       = 4096)
+      parameter (nf_bp            = 65536)
 
       integer nf_mpiio
       integer nf_pnetcdf
@@ -171,6 +173,7 @@
       integer nf_format_64bit_data
       integer nf_format_netcdf4
       integer nf_format_netcdf4_classic
+      integer nf_format_bp
       integer nf_format_unknown
 
       parameter (nf_format_classic         = 1)
@@ -181,6 +184,7 @@
       parameter (nf_format_64bit_data      = nf_format_cdf5)
       parameter (nf_format_netcdf4         = 3)
       parameter (nf_format_netcdf4_classic = 4)
+      parameter (nf_format_bp              = 6)
       parameter (nf_format_unknown         = -1)
 
       integer nf_fill
@@ -461,6 +465,7 @@
       integer NF_EMAX_REQ
       integer NF_EBADLOG
       integer NF_EFLUSHED
+      integer NF_EADIOS
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -529,7 +534,7 @@
       PARAMETER (NF_EMAX_REQ                = -237)   ! Size of I/O request exceeds INT_MAX
       PARAMETER (NF_EBADLOG                 = -238)   ! Unrecognized log file format
       PARAMETER (NF_EFLUSHED                = -239)   ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
-
+      PARAMETER (NF_EADIOS                  = -240)   ! ADIOS internal error
 !
 ! PnetCDF header inconsistency errors start from -250
 !

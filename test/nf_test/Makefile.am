@@ -18,7 +18,7 @@ AM_CFLAGS =
 AM_FFLAGS =
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
-LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD +=  @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 M4FLAGS += -I${top_srcdir}/m4
 

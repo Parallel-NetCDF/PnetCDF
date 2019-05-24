@@ -8,12 +8,11 @@
 
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
-
 noinst_bindir =
 noinst_bin_PROGRAMS = ncmpilogdump
 nodist_ncmpilogdump_SOURCES = ncmpilogdump.c
 ncmpilogdump_LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
-ncmpilogdump_LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+ncmpilogdump_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 M4_SRCS  = ncmpilogdump.m4
 

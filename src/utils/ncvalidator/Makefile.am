@@ -23,7 +23,7 @@ dist_man_MANS = ncvalidator.1
 check_PROGRAMS = $(bin_PROGRAMS) tst_open
 
 tst_open_LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
-tst_open_LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+tst_open_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 $(top_builddir)/src/libs/libpnetcdf.la:
 	set -e; cd $(top_builddir)/src/libs && $(MAKE) $(MFLAGS)

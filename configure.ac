@@ -125,6 +125,7 @@ dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP], [Define if to enable in-place byte swap]
 dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
+AH_TEMPLATE([ENABLE_ADIOS],             [Define if to enable ADIOS BP read feature])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([NETCDF_GE_4_5_0],          [Define if NetCDF version is at least 4.5.0])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
@@ -302,6 +303,18 @@ dnl enable large file support
 AC_SYS_LARGEFILE
 
 dnl UD_PROG_CC_MAKEDEPEND
+
+dnl Check if MPICC compiler is IBM XL based
+UD_CHECK_XLC
+AM_CONDITIONAL(MPICC_IS_XLC, [test "x${ac_cv_cc_compiler_xlc}" = xyes])
+
+dnl Check if MPICC compiler is pgcc based
+UD_CHECK_PGCC
+AM_CONDITIONAL(MPICC_IS_PGCC, [test "x${ac_cv_cc_compiler_pgcc}" = xyes])
+
+dnl Check if MPICC compiler is Fujitsu fccpx based
+UD_CHECK_FCCPX
+AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_cc_compiler_fccpx}" = xyes])
 
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([malloc.h])
@@ -1922,6 +1935,153 @@ fi
 AC_SUBST(ENABLE_BURST_BUFFER)
 AM_CONDITIONAL(ENABLE_BURST_BUFFER, [test x$enable_bbdriver = xyes])
 
+AC_ARG_ENABLE([adios],
+   [AS_HELP_STRING([--enable-adios],
+                   [Enable ADIOS BP read support. @<:@default: disabled@:>@])],
+   [enable_adios=${enableval}], [enable_adios=no]
+)
+
+ENABLE_ADIOS=0
+if test "x$enable_adios" = "xyes" ; then
+   AC_DEFINE(ENABLE_ADIOS)
+   ENABLE_ADIOS=1
+fi
+AC_SUBST(ENABLE_ADIOS)
+AM_CONDITIONAL(ENABLE_ADIOS, [test x$enable_adios = xyes])
+
+ADIOS_VER_GE_1132 = 0
+
+if test "x$enable_adios" = "xyes" ; then
+    ADIOS_INSTALL=""
+    AC_ARG_WITH(adios,
+        [AS_HELP_STRING([--with-adios=/path/to/implementation],
+                        [installation prefix for ADIOS implementation])],
+        if test "x${withval}" = xyes; then
+            AC_MSG_ERROR(--with-adios must be given a pathname)
+        else
+            ADIOS_INSTALL=${withval}
+        fi
+    )
+
+    if test "x$ADIOS_INSTALL" = x ; then
+        AC_PATH_PROG([adios_config],[adios_config],,[$PATH])
+    else
+        AC_PATH_PROG([adios_config],[adios_config],,[$ADIOS_INSTALL/bin])
+    fi
+
+    if test "x$adios_config" = x ; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        Cannot find adios_config, a utility command to show the
+        configuration of the ADIOS library. It is required to
+        build PnetCDF with BP read support. Use option
+            --with-adios=/path/to/implementation
+        to specify the location of ADIOS build. In addition,
+        please make sure the MPI C compiler is compatible with the
+        one used to build ADIOS. The ADIOS library used must
+        be built with parallel I/O support. Check
+        'config.log' for more information. Stopping ...
+        ------------------------------------------------------------])
+    fi
+    UD_MSG_DEBUG([adios_config=$adios_config])
+    
+    # Get adios compile flags
+    adios_cflag=`$adios_config -c`
+    UD_MSG_DEBUG([adios_compiler_flag=$adios_cflag])
+
+    # Get adios linker flags
+    adios_ldflag=`$adios_config -l`
+    UD_MSG_DEBUG([adios_linker_flag=$adios_ldflag])
+
+    saved_CPPFLAGS=$CPPFLAGS
+    saved_LDFLAGS=$LDFLAGS
+    saved_LIBS=$LIBS
+
+    CPPFLAGS="$adios_cflag $CPPFLAGS"
+    LIBS="$adios_ldflag $LIBS"
+ 
+    have_adios=no
+    AC_MSG_CHECKING(ADIOS library)
+    AC_SEARCH_LIBS([adios_read_open_file], [adiosread], [have_adios=yes], [have_adios=no])
+    if test "x${have_adios}" = xyes; then
+        AC_SEARCH_LIBS([adios_posix_open_read_internal], [adios], [have_adios=yes], [have_adios=no])
+        if test "x${have_adios}" = xyes; then
+            AC_CHECK_HEADERS([adios_read.h], [], [have_adios=no])
+        fi
+    fi
+
+    if test "x${have_adios}" = xno; then
+        have_adios2=no
+        AC_MSG_CHECKING(ADIOS2 library)
+        AC_CHECK_HEADERS([adios2_c.h], [have_adios2=yes], [have_adios2=no])
+        if test "x${have_adios2}" = xno; then
+            AC_MSG_ERROR([
+            ------------------------------------------------------------
+            The ADIOS library and header file are required to build
+            PnetCDF with ADIOS BP read support. Use option
+                --with-adios=/path/to/implementation
+            to specify the location of ADIOS build. In addition,
+            please make sure the MPI C compiler is compatible with the
+            one used to build ADIOS.
+            Stopping ...
+            Check 'config.log' for more information.
+            ------------------------------------------------------------])
+        else
+            AC_MSG_ERROR([
+            ------------------------------------------------------------
+            PnetCDF currently only supports ADIOS 1.x.
+            ADIOS 1.x can be downloaded at:
+            https://github.com/ornladios/ADIOS
+            We will support ADIOS 2.x in future releases.
+            ------------------------------------------------------------])
+        fi
+    else
+        LIBS+=" -ladiosread -ladios"
+    fi
+
+    dnl Check if ADIOS version is 1.12.0 or later
+    AC_MSG_CHECKING([Check if ADIOS version is 1.12.0 or later])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+#if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1012000)
+      choke me
+#endif
+    ]])], [adios_ge_1_12_0=yes], [adios_ge_1_12_0=no])
+    AC_MSG_RESULT([$adios_ge_1_12_0])
+
+    if test "x${adios_ge_1_12_0}" = xno; then
+        AC_MSG_ERROR([
+        ------------------------------------------------------------
+        ADIOS version 1.12.0 or later is required to build
+        PnetCDF with ADIOS BP read support. 
+        ------------------------------------------------------------])
+    fi
+
+    dnl Check if ADIOS version is 1.13.2 or later
+    AC_MSG_CHECKING([Check if ADIOS version is 1.13.2 or later])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+#if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1013002)
+      choke me
+#endif
+    ]])], [adios_ge_1_13_2=yes], [adios_ge_1_13_2=no])
+    AC_MSG_RESULT([$adios_ge_1_13_2])
+
+    if test "x${adios_ge_1_13_2}" = xyes; then
+      ADIOS_VER_GE_1132 = 1
+    fi
+    
+    CPPFLAGS=$saved_CPPFLAGS
+    LDFLAGS=$saved_LDFLAGS
+    LIBS=$saved_LIBS
+
+    AC_SUBST([ADIOS_INC], ["$adios_cflag"])
+    AC_SUBST([ADIOS_LDFLAGS], ["$adios_ldflag"])
+    AC_SUBST([ADIOS_LIBS], [""])
+    AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
+fi
+
+AC_SUBST(ADIOS_VER_GE_1132)
+AM_CONDITIONAL(ADIOS_VER_GE_1132, [test x"$ADIOS_VER_GE_1132" = x1])
+
 AC_ARG_ENABLE([profiling],
    [AS_HELP_STRING([--enable-profiling],
                    [Enable time and memory profiling. @<:@default: disabled@:>@])],
@@ -2021,6 +2181,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
                 src/drivers/nc4io/Makefile \
+                src/drivers/ncadios/Makefile \
                 src/drivers/ncbbio/Makefile \
                 src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
@@ -2043,6 +2204,7 @@ AC_CONFIG_FILES(Makefile \
                 src/packaging/Makefile \
                 src/packaging/pnetcdf.pc \
                 examples/Makefile \
+                examples/adios/Makefile \
                 examples/C/Makefile \
                 examples/tutorial/Makefile \
                 examples/CXX/Makefile \
@@ -2062,6 +2224,7 @@ AC_CONFIG_FILES(Makefile \
                 test/nc_test/Makefile \
                 test/cdf_format/Makefile \
                 test/nc4/Makefile \
+                test/adios/Makefile \
                 test/header/Makefile \
                 test/testcases/Makefile \
                 test/nonblocking/Makefile \
@@ -2103,6 +2266,10 @@ if test "x${enable_netcdf4}" = xyes; then
    echo "\
               NetCDF-4 support                            - enabled"
 fi
+if test "x${enable_adios}" = xyes; then 
+   echo "\ 
+              ADIOS BP read support                       - enabled" 
+fi 
 if test "x${enable_bbdriver}" = xyes ; then
    echo "\
               Burst buffering                             - enabled"
@@ -2204,6 +2371,14 @@ if test "x${enable_netcdf4}" = xyes; then
               NETCDF4_LDFLAGS = ${NETCDF4_LDFLAGS}
               NETCDF4_LIBS    = ${NETCDF4_LIBS}"
 fi
+if test "x${enable_adios}" = xyes; then 
+   echo "\
+
+   ADIOS library:
+              ADIOS_INC     = ${ADIOS_INC}
+              ADIOS_LDFLAGS = ${ADIOS_LDFLAGS}
+              ADIOS_LIBS    = ${ADIOS_LIBS}"
+fi 
 echo "\
 
    Now run 'make' to build the library and utility tools.

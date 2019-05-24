@@ -99,6 +99,11 @@ ncmpii_error_mpi2nc(int mpi_errorcode, char *msg);
 extern int
 ncmpii_error_posix2nc(char *err_msg);
 
+#ifdef ENABLE_ADIOS
+extern int
+ncmpii_error_adios2nc(int adios_err, char *err_msg);
+#endif
+
 extern int
 ncmpii_check_name(const char *name, int file_ver);
 

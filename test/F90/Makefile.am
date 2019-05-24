@@ -14,7 +14,7 @@ AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
              $(FC_MODINC)../common
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
-LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+LDADD +=  @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 TESTPROGRAMS = tst_f90 \
                f90tst_vars \

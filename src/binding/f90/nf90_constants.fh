@@ -79,6 +79,7 @@
     NF90_CDF5          = NF_CDF5,          &
     NF90_64BIT_DATA    = NF_64BIT_DATA,    &
     NF90_NETCDF4       = NF_NETCDF4,       &
+    NF90_BP            = NF_BP,            &
 
     NF90_MPIIO         = NF_MPIIO,         &
     NF90_PNETCDF       = NF_PNETCDF
@@ -139,6 +140,7 @@
     NF90_FORMAT_64BIT_DATA      = NF_FORMAT_64BIT_DATA,      &
     NF90_FORMAT_NETCDF4         = NF_FORMAT_NETCDF4,         &
     NF90_FORMAT_NETCDF4_CLASSIC = NF_FORMAT_NETCDF4_CLASSIC, &
+    NF90_FORMAT_BP              = NF_FORMAT_BP,              &
     NF90_FORMAT_UNKNOWN         = NF_FORMAT_UNKNOWN
 
   !
@@ -292,6 +294,7 @@
       NF90_EMAX_REQ                 = NF_EMAX_REQ                 , & ! Size of I/O request exceeds INT_MAX
       NF90_EBADLOG                  = NF_EBADLOG                  , & ! Unrecognized log file format
       NF90_EFLUSHED                 = NF_EFLUSHED                 , & ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
+      NF90_EADIOS                   = NF_EADIOS                   , & ! ADIOS internal error
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions inconsistent among processes
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! inconsistent file open modes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions

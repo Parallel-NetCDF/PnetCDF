@@ -98,6 +98,7 @@
       nf_cdf5                   = 32,       &
       nf_64bit_data             = nf_cdf5,  &
       nf_netcdf4                = 4096,     &
+      nf_bp                     = 65536,    &
 
       nf_mpiio                  = 8192,     &
       nf_pnetcdf                = nf_mpiio, &
@@ -116,6 +117,7 @@
       nf_format_64bit_data      = nf_format_cdf5, &
       nf_format_netcdf4         = 3,              &
       nf_format_netcdf4_classic = 4,              &
+      nf_format_bp              = 6,              &
       nf_format_unknown         = -1
 
 !
@@ -287,8 +289,8 @@
       NF_EPENDING                 = -236, & ! Pending nonblocking request is found at file close
       NF_EMAX_REQ                 = -237, & ! Size of I/O request exceeds INT_MAX
       NF_EBADLOG                  = -238, & ! Unrecognized log file format
-      NF_EFLUSHED                 = -239    ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
-
+      NF_EFLUSHED                 = -239, & ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
+      NF_EADIOS                   = -240    ! ADIOS internal error
 ! header inconsistency error starts in -250
       integer, parameter, public :: &
       NF_EMULTIDEFINE             = -250, & ! NC definitions inconsistent among processes

@@ -16,7 +16,7 @@ C_SUBDIRS = common \
             nonblocking
 
 DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile \
-               largefile burst_buffer nc4
+               largefile burst_buffer nc4 adios
 
 SUBDIRS = $(C_SUBDIRS)
 
@@ -37,6 +37,10 @@ endif
 
 if ENABLE_NETCDF4
    SUBDIRS += nc4
+endif
+
+if ENABLE_ADIOS
+   SUBDIRS += adios
 endif
 
 if ENABLE_BURST_BUFFER

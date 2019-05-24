@@ -17,7 +17,7 @@ flash_benchmark_io_LDADD = -lpnetcdf
 if BUILD_BENCHMARKS_IN_PNETCDF
    AM_FCFLAGS = $(FC_MODINC)${top_builddir}/src/binding/f90
    AM_LDFLAGS = -L${top_builddir}/src/libs
-   flash_benchmark_io_LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@
+   flash_benchmark_io_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@  
 else
    AM_FCFLAGS = $(FC_MODINC)$(PNETCDF_INC)
    AM_LDFLAGS = $(PNETCDF_LIB)

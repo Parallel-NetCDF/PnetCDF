@@ -22,6 +22,16 @@
 #include "ncmpidump.h"
 #include "dumplib.h"
 #include "vardata.h"
+ 
+#ifdef ENABLE_ADIOS 
+#include "adios_read.h" 
+#include <arpa/inet.h>
+#define BP_MINIFOOTER_SIZE 28
+#define ADIOS_VERSION_NUM_MASK                       0x000000FF
+#define BUFREAD64(buf,var) var = *(off_t *) (buf); \
+                         if (diff_endian) \
+                             swap_64(&var);
+#endif 
 
 static void usage(void);
 static char* name_path(const char* path);
@@ -39,6 +49,10 @@ int main(int argc, char** argv);
 #define    STREQ(a, b)    (*(a) == *(b) && strcmp((a), (b)) == 0)
 
 char *progname;
+
+#ifdef ENABLE_ADIOS 
+unsigned int bp_ver;
+#endif
 
 static void
 usage(void)
@@ -397,6 +411,10 @@ do_ncdump(const char *path, struct fspec* specp)
         else if (NC_mode == NC_NETCDF4)
             Printf ("%s file format: NetCDF-4\n", specp->name);
 #endif
+#ifdef ENABLE_ADIOS
+        else if (NC_mode == NC_BP)
+            Printf ("%s file format: ADIOS BP Ver. %u\n", specp->name, bp_ver);
+#endif
         else
             Printf ("%s file format: CDF-1\n", specp->name);
     } else if (specp->kind) {
@@ -416,6 +434,10 @@ do_ncdump(const char *path, struct fspec* specp)
 #ifdef ENABLE_NETCDF4
         else if (NC_mode == NC_NETCDF4)
             Printf ("// file format: NetCDF-4\n");
+#endif
+#ifdef ENABLE_ADIOS
+        else if (NC_mode == NC_BP)
+            Printf ("// file format: ADIOS BP Ver. %u\n", bp_ver);
 #endif
         else
             Printf ("// file format: CDF-1\n");
@@ -680,8 +702,43 @@ enum FILE_KIND {
     CDF2,
     CDF1,
     HDF5,
+    BP, 
     UNKNOWN
 };
+
+#ifdef ENABLE_ADIOS
+static void swap_64(void *data)
+{
+    uint64_t d = *(uint64_t *)data;
+    *(uint64_t *)data = ((d&0x00000000000000FF)<<56) 
+                          + ((d&0x000000000000FF00)<<40)
+                          + ((d&0x0000000000FF0000)<<24)
+                          + ((d&0x00000000FF000000)<<8)
+                          + ((d&0x000000FF00000000LL)>>8)
+                          + ((d&0x0000FF0000000000LL)>>24)
+                          + ((d&0x00FF000000000000LL)>>40)
+                          + ((d&0xFF00000000000000LL)>>56);
+}
+
+static int adios_parse_version (char *footer, unsigned int *version, 
+                                int *diff_endianness) {
+    unsigned int test = 1; /* If high bit set, big endian */
+
+    *version = ntohl (*(uint32_t *) (footer + BP_MINIFOOTER_SIZE - 4));
+    char *v = (char *) version;
+    if ((*v && !*(char *) &test) /* Both writer and reader are big endian */
+        || (!*(v+3) && *(char *) &test)){ /* Both are little endian */
+        *diff_endianness = 0; /* No need to change endiannness */
+    }
+    else{
+        *diff_endianness = 1;
+    }
+
+    *version = *version & 0x7fffffff;
+
+    return 0;
+}
+#endif
 
 static
 enum FILE_KIND check_file_signature(char *path)
@@ -716,7 +773,56 @@ enum FILE_KIND check_file_signature(char *path)
         else if (signature[3] == 2)  return CDF2;
         else if (signature[3] == 1)  return CDF1;
     }
+#ifdef ENABLE_ADIOS 
+    else{
+        off_t fsize;
+        int diff_endian;
+        char footer[BP_MINIFOOTER_SIZE];
+        off_t h1, h2, h3;
 
+        if ((fd = open(path, O_RDONLY, 0700)) == -1) {
+            fprintf(stderr,"%s error at opening file %s (%s)\n",progname,path,strerror(errno));
+            return UNKNOWN;
+        }
+
+        /* Seek to footer */
+        fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
+
+        /* Get footer */
+        rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
+        if (rlen != BP_MINIFOOTER_SIZE) {
+            if (rlen < 0)
+                fprintf(stderr,"%s error at reading file %s (%s)\n",progname,path,strerror(errno));
+            else
+                fprintf(stderr,"%s error: unknown file format\n",progname);
+            close(fd); /* ignore error */
+            return UNKNOWN;
+        }
+        if (close(fd) == -1) {
+            fprintf(stderr,"%s error at closing file %s (%s)\n",progname,path,strerror(errno));
+            return UNKNOWN;
+        }
+
+        adios_parse_version(footer, &bp_ver, &diff_endian);
+        bp_ver = bp_ver & ADIOS_VERSION_NUM_MASK;
+
+        BUFREAD64(footer, h1) /* Position of process group index table */
+        BUFREAD64(footer + 8, h2) /* Position of variables index table */
+        BUFREAD64(footer + 16, h3) /* Position of attributes index table */
+
+        /* All index tables must fall within the file
+         * Process group index table must comes before variable index table. 
+         * Variables index table must comes before attributes index table.
+         */
+        if (0 < h1 && h1 < fsize &&
+            0 < h2 && h2 < fsize &&
+            0 < h3 && h3 < fsize &&
+            h1 < h2 && h2 < h3){ 
+            return BP; 
+        }
+    } 
+#endif
+    
     return UNKNOWN; /* unknown format */
 }
 
@@ -878,6 +984,7 @@ main(int argc, char *argv[])
         else if (file_kind == CDF2) Printf ("64-bit offset\n");
         else if (file_kind == CDF1) Printf ("classic\n");
         else if (file_kind == HDF5) Printf ("NetCDF-4\n");
+        else if (file_kind == BP)   Printf ("ADIOS BP\n");
         goto fn_exit;
     }
 #ifndef ENABLE_NETCDF4
@@ -915,6 +1022,7 @@ main(int argc, char *argv[])
             else if (file_kind == CDF2) Printf ("64-bit offset\n");
             else if (file_kind == CDF1) Printf ("classic\n");
             else if (file_kind == HDF5) Printf ("NetCDF-4\n");
+            else if (file_kind == BP)   Printf ("ADIOS BP\n");
             goto fn_exit;
         }
 #ifndef ENABLE_NETCDF4

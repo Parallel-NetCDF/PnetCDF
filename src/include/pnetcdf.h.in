@@ -181,6 +181,8 @@ Use this in mode flags for both nc_create() and nc_open(). */
 
 #define NC_NETCDF4       0x1000  /**< Use netCDF-4/HDF5 format. Mode flag for nc_create(). */
 
+#define NC_BP           0x10000  /**< Use ADIOS BP format. */
+
 /** The following 3 flags are deprecated as of 4.6.2. Parallel I/O is now
  * initiated by calling nc_create_par and nc_open_par, no longer by flags.
  */
@@ -211,6 +213,7 @@ Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_FORMAT_NETCDF4         (3)
 #define NC_FORMAT_NETCDF4_CLASSIC (4)
 #define NC_FORMAT_64BIT_DATA      (5)
+#define NC_FORMAT_BP      (6)
 
 /* Alias */
 #define NC_FORMAT_CDF5    NC_FORMAT_64BIT_DATA
@@ -606,6 +609,7 @@ by the desired type. */
 #define NC_EMAX_REQ			(-237) /**< Size of I/O request exceeds INT_MAX */
 #define NC_EBADLOG			(-238) /**< Unrecognized log file format */
 #define NC_EFLUSHED			(-239) /**< Nonblocking request has already been flushed to the PFS. It is too late to cancel */
+#define NC_EADIOS		      (-240) /**< unknown ADIOS error */ 
 /* add new error here */
 
 /* header inconsistency errors start from -250 */

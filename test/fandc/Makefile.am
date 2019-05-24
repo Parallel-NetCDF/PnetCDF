@@ -17,7 +17,7 @@ AM_FCFLAGS  = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
               $(FC_MODINC)$(srcdir)/../common
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
-LDADD += @NETCDF4_LDFLAGS@ @NETCDF4_LIBS@ -lm
+LDADD +=  @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ -lm
 
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
