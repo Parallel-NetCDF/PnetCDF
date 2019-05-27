@@ -39,6 +39,7 @@
 double data[NX][NY], datat[NY][NX];
 
 int main(int argc, char** argv) {
+    char filename[256];
     int i, j, nerrs=0, rank, nprocs, err;
     int ncid;
     MPI_Offset start[2], count[2], imap[2];
@@ -47,17 +48,24 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        nerrs++;
+        goto fn_exit;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, FILE_NAME);
+
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str,
-        "*** TESTING C   %s for adios variable read with non-contiguous buffer",
+        "*** TESTING C   %s for testing varm APIs reading a bp file",
         basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
 
-    err = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, 
-                        &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
     start[0] = 0;
@@ -85,6 +93,7 @@ int main(int argc, char** argv) {
 
     ncmpi_close(ncid);
 
+fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);

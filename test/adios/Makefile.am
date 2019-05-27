@@ -13,12 +13,9 @@ AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
-AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers
-AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core
-AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/core/transforms
-AM_CPPFLAGS += -I${top_builddir}/src/drivers/ncadios/adios_headers/transforms
-LDADD = $(top_builddir)/src/libs/libpnetcdf.la   ../common/libtestutils.la -lm
-LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
+
+LDADD = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ -lm
 
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will also be used by Fortran programs
@@ -29,16 +26,15 @@ endif
 NCMPIGEN  = $(top_builddir)/src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = $(top_builddir)/src/utils/ncmpidiff/ncmpidiff
 
-TESTPROGRAMS = open \
-			   header \
-			   var \
-			   ivar \
-			   att \
-			   varm \
-			   vars \
-			   ivarm \
-			   ivars \
-			   indep
+TESTPROGRAMS = open header \
+               var \
+               ivar \
+               att \
+               varm \
+               vars \
+               ivarm \
+               ivars \
+               indep
 
 M4_SRCS  = 
 
@@ -49,7 +45,10 @@ $(M4_SRCS:.m4=.c): Makefile
 .m4.c:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-check_PROGRAMS = $(TESTPROGRAMS) 
+# all programs in TESTPROGRAMS will be run by wrap_runs.sh
+# others in check_PROGRAMS but not in TESTPROGRAMS will be run by seq_runs.sh
+# Those are the ones need special treatment
+check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead

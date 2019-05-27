@@ -24,6 +24,10 @@ if ENABLE_BURST_BUFFER
 SUBDIRS += burst_buffer
 endif
 
+if ENABLE_ADIOS
+   SUBDIRS += adios
+endif
+
 EXTRA_DIST = README
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined

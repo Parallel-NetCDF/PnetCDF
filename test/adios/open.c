@@ -57,8 +57,7 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, 
-                        &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
     ncmpi_close(ncid);

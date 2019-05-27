@@ -25,12 +25,18 @@ for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-        ${MPIRUN} ./$i arrays.bp
-        ${MPIRUN} ./$i attributes.bp
-        ${MPIRUN} ./$i arrays_big.bp
-        if test ${ADIOS_VER_GE_1132} = 1 ; then
-            ${MPIRUN} ./$i attributes_big.bp
-        fi
+        if test "$i" = open ; then
+           ${MPIRUN} ./$i ${srcdir}/arrays.bp
+           ${MPIRUN} ./$i ${srcdir}/attributes.bp
+           ${MPIRUN} ./$i ${srcdir}/arrays_big.bp
+           if test ${ADIOS_VER_GE_1132} = 1 ; then
+               ${MPIRUN} ./$i ${srcdir}/attributes_big.bp
+           fi
+       elif test "$i" = att ; then
+          ${MPIRUN} ./$i ${srcdir}/attributes.bp
+       else
+          ${MPIRUN} ./$i ${srcdir}/arrays.bp
+       fi
     done
 done
 

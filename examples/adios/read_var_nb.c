@@ -23,12 +23,17 @@
  *  }
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 #include <stdio.h>
-#include <stdlib.h> /* setenv() */
-#include <libgen.h> /* basename() */
+#include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
+
 #include <mpi.h>
 #include "pnetcdf.h"
 #include <math.h>
+
+static int verbose;
 
 /* This is the name of the data file we will read. */
 #define FILE_NAME "../../test/adios/arrays.bp"
@@ -43,7 +48,20 @@
 #define ERRCODE 2
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] input BP file name\n";
+    fprintf(stderr, help, argv0);
+}
+
 int main(int argc, char** argv) {
+    extern int optind;
+    char filename[256];
     int i, rank, nprocs;
     int ncid;
     int reqids[2];
@@ -55,7 +73,22 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    verbose = 1;
+
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
+    else                      snprintf(filename, 256, "%s", argv[optind]);
+
+    ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     
     /* The content of variable var_double_2Darray is 
      * var_double_2Darray[x][y] =  x + y / 100 

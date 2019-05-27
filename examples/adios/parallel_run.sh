@@ -27,7 +27,11 @@ for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-        ${MPIRUN} ./$i 
+        if test "$i" = read_metadata ; then
+           ${MPIRUN} ./$i -q ${top_srcdir}/test/adios/attributes.bp
+        else
+           ${MPIRUN} ./$i -q ${top_srcdir}/test/adios/arrays.bp
+        fi
         if test $? = 0 ; then
            echo "PASS:  C  parallel run on $1 processes --------------- $i"
         fi
