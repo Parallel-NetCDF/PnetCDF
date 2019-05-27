@@ -304,18 +304,6 @@ AC_SYS_LARGEFILE
 
 dnl UD_PROG_CC_MAKEDEPEND
 
-dnl Check if MPICC compiler is IBM XL based
-UD_CHECK_XLC
-AM_CONDITIONAL(MPICC_IS_XLC, [test "x${ac_cv_cc_compiler_xlc}" = xyes])
-
-dnl Check if MPICC compiler is pgcc based
-UD_CHECK_PGCC
-AM_CONDITIONAL(MPICC_IS_PGCC, [test "x${ac_cv_cc_compiler_pgcc}" = xyes])
-
-dnl Check if MPICC compiler is Fujitsu fccpx based
-UD_CHECK_FCCPX
-AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_cc_compiler_fccpx}" = xyes])
-
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([malloc.h])
 
@@ -1949,7 +1937,7 @@ fi
 AC_SUBST(ENABLE_ADIOS)
 AM_CONDITIONAL(ENABLE_ADIOS, [test x$enable_adios = xyes])
 
-ADIOS_VER_GE_1132 = 0
+ADIOS_VER_GE_1132=0
 
 if test "x$enable_adios" = "xyes" ; then
     ADIOS_INSTALL=""
@@ -1993,12 +1981,24 @@ if test "x$enable_adios" = "xyes" ; then
     adios_ldflag=`$adios_config -l`
     UD_MSG_DEBUG([adios_linker_flag=$adios_ldflag])
 
+   # remove all -l options from adios_ldflag that should leave -L only
+   adios_LDFLAGS=`echo $adios_ldflag | ${SED} 's/-l[[^ ]]*//g'`
+   UD_MSG_DEBUG(adios_LDFLAGS=$adios_LDFLAGS)
+
+   # remove all -L options from adios_ldflag that should leave -l only
+   adios_LIBS=`echo $adios_ldflag | ${SED} 's/-L[[^ ]]*//g'`
+   UD_MSG_DEBUG(adios_LIBS=$adios_LIBS)
+
+   # remove space between -L and path
+   netcdf4_L=`echo $netcdf4_L | ${SED} 's/-L[[ ]]*/-L/g'`
+   UD_MSG_DEBUG(netcdf4_L=$netcdf4_L)
     saved_CPPFLAGS=$CPPFLAGS
     saved_LDFLAGS=$LDFLAGS
     saved_LIBS=$LIBS
 
     CPPFLAGS="$adios_cflag $CPPFLAGS"
-    LIBS="$adios_ldflag $LIBS"
+    LDFLAGS="$adios_LDFLAGS $adios_LDFLAGS"
+    LIBS="$adios_LIBS $LIBS"
  
     have_adios=no
     AC_MSG_CHECKING(ADIOS library)
@@ -2066,7 +2066,7 @@ if test "x$enable_adios" = "xyes" ; then
     AC_MSG_RESULT([$adios_ge_1_13_2])
 
     if test "x${adios_ge_1_13_2}" = xyes; then
-      ADIOS_VER_GE_1132 = 1
+      ADIOS_VER_GE_1132=1
     fi
     
     CPPFLAGS=$saved_CPPFLAGS
@@ -2074,9 +2074,9 @@ if test "x$enable_adios" = "xyes" ; then
     LIBS=$saved_LIBS
 
     AC_SUBST([ADIOS_INC], ["$adios_cflag"])
-    AC_SUBST([ADIOS_LDFLAGS], ["$adios_ldflag"])
-    AC_SUBST([ADIOS_LIBS], [""])
-    AC_SUBST([ADIOS_PACKAGE], [adios adiosread])
+    AC_SUBST([ADIOS_LDFLAGS], ["$adios_LDFLAGS"])
+    AC_SUBST([ADIOS_LIBS], ["$adios_LIBS"])
+    AC_SUBST([ADIOS_PACKAGE], [adios])
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)
