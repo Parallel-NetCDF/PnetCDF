@@ -261,7 +261,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     // Free buffers
     NCI_Free(zsizes);
     for(l = 0; l < varp->nmychunks; l++){
-        NCI_Free(zbufs[l]);
+        free(zbufs[l]);
     }
     NCI_Free(zbufs);
 
@@ -548,7 +548,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     // Free buffers
     NCI_Free(zsizes);
     for(l = 0; l < varp->nmychunks; l++){
-        NCI_Free(zbufs[l]);
+        free(zbufs[l]);
     }
     NCI_Free(zbufs);
 

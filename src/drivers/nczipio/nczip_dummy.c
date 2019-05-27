@@ -60,7 +60,7 @@ int nczip_dummy_compress(void *in, int in_len, void *out, int *out_len, int ndim
  */
 int nczip_dummy_compress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     // Allocate output buffer
-    *out = (void*)NCI_Malloc(in_len);
+    *out = (void*)malloc(in_len);
 
     // Buffer size
     if (out_len != NULL) {
@@ -107,7 +107,7 @@ int nczip_dummy_decompress(void *in, int in_len, void *out, int *out_len, int nd
  */
 int nczip_dummy_decompress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
     // Allocate output buffer
-    *out = (void*)NCI_Malloc(in_len);
+    *out = (void*)malloc(in_len);
 
     // Buffer size
     if (out_len != NULL) {
