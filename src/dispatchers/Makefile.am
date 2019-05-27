@@ -11,8 +11,7 @@ SUFFIXES = .o .c .h .m4
 AM_CPPFLAGS  = -I${top_srcdir}/src/include
 AM_CPPFLAGS += -I${top_builddir}/src/include
 AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
-AM_CPPFLAGS += @NETCDF4_INC@
-AM_CPPFLAGS += @ADIOS_INC@
+AM_CPPFLAGS += @NETCDF4_INC@ @ADIOS_INC@
 
 if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
