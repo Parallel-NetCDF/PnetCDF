@@ -164,7 +164,12 @@ nczipio_open(MPI_Comm     comm,
     if (err != NC_NOERR) return err;
 
     err = driver->get_att(nczipp->ncp, NC_GLOBAL, "_comressed", &one, MPI_INT); // Mark this file as compressed
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR){
+        if (err == NC_ENOTATT){
+            err = NC_EINVAL;
+        }
+        return err;
+    }
     
     // Not compressed file
     if (one != 1){
