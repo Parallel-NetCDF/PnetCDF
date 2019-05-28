@@ -27,6 +27,7 @@ struct var_dim
     char dimname[256];
 };
 
+static
 void copy_buffer(struct adios_bp_buffer_struct_v1 *dest
                 ,struct adios_bp_buffer_struct_v1 *src) {
 
@@ -36,6 +37,7 @@ void copy_buffer(struct adios_bp_buffer_struct_v1 *dest
 static int verbose=0;
 static int is_input_fortran = 0; /* 0 = C generated BP file, 1 = Fortran generated BP file */
 
+static
 int ncd_gen_name (char *fullname, char *path, char *name) {
     int i;
     char *new_path = strdup (path);
@@ -68,6 +70,8 @@ int ncd_gen_name (char *fullname, char *path, char *name) {
     free(new_path);
     return 0;
 }
+
+#if 0
 int ncd_attr_str_ds (NC_ad* ncid
                     ,struct adios_attribute_struct_v1 * attribute
                     ,struct adios_bp_buffer_struct_v1 * ptr_buffer
@@ -124,7 +128,9 @@ int ncd_attr_str_ds (NC_ad* ncid
         free (var_payload.payload);
     return 0;
 }
+#endif
 
+static
 int ncd_dataset (NC_ad* ncid
                 ,struct adios_var_header_struct_v1 *ptr_var_header
                 ,struct adios_var_payload_struct_v1 *ptr_var_payload
