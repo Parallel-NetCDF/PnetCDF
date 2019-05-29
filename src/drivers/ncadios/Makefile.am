@@ -32,8 +32,7 @@ endif
 M4_SRCS = ncadios_convert.m4 
 
 H_SRCS = ncadios_driver.h \
-         ncadios_internal.h \
-         bp2ncd.h
+         ncadios_internal.h
 
 C_SRCS = ncadios_attr.c \
          ncadios_dim.c \

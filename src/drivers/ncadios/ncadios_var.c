@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
@@ -270,7 +270,7 @@ ncadios_get_varn(void              *ncdp,
                int                reqMode)
 {
     /* No support for varn at this time
-     * It make varn difficult to be implemented efficiently 
+     * ADIOS interface make varn difficult to be implemented efficiently 
      */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 }

@@ -1,36 +1,11 @@
 /*
- *  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
 
 /*
- * This file implements the following PnetCDF APIs
- *
- * ncmpi_create()           : dispatcher->create()
- * ncmpi_open()             : dispatcher->open()
- * ncmpi_close()            : dispatcher->close()
- * ncmpi_enddef()           : dispatcher->enddef()
- * ncmpi__enddef()          : dispatcher->_enddef()
- * ncmpi_redef()            : dispatcher->redef()
- * ncmpi_begin_indep_data() : dispatcher->begin_indep_data()
- * ncmpi_end_indep_data()   : dispatcher->end_indep_data()
- * ncmpi_abort()            : dispatcher->abort()
- * ncmpi_inq()              : dispatcher->inq()
- * ncmpi_inq_misc()         : dispatcher->inq_misc()
- * ncmpi_wait()             : dispatcher->wait()
- * ncmpi_wait_all()         : dispatcher->wait()
- * ncmpi_cancel()           : dispatcher->cancel()
- *
- * ncmpi_set_fill()         : dispatcher->set_fill()
- * ncmpi_fill_var_rec()     : dispatcher->fill_rec()
- * ncmpi_def_var_fill()     : dispatcher->def_var_fill()
- * ncmpi_inq_var_fill()     : dispatcher->inq()
- *
- * ncmpi_sync()             : dispatcher->sync()
- * ncmpi_flush()             : dispatcher->flush()
- * ncmpi_sync_numrecs()     : dispatcher->sync_numrecs()
- *
+ * This file implements the helper function to synchronise header information
  */
 
 #ifdef HAVE_CONFIG_H
