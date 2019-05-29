@@ -1,9 +1,19 @@
-/* 
- * ADIOS is freely available under the terms of the BSD license described
- * in the COPYING file in the top level directory of this source distribution.
+/*
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ * 
+ *  This file is modified from the bp2ncd utility in ADIOS 1.x distribution. 
+ *  See ADIOS_COPYING in src/drivers/ncaiods directory.
+ * 
+ *  Original copyright notice as follow:
+ *  ```````````````````````````````````````````````````````````````````````````
+ *  ADIOS is freely available under the terms of the BSD license described
+ *  in the COPYING file in the top level directory of this source distribution.
  *
- * Copyright (c) 2008 - 2009.  UT-BATTELLE, LLC. All rights reserved.
+ *  Copyright (c) 2008 - 2009.  UT-BATTELLE, LLC. All rights reserved.
+ *  ```````````````````````````````````````````````````````````````````````````
  */
+/* $Id$ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,65 +80,6 @@ int ncd_gen_name (char *fullname, char *path, char *name) {
     free(new_path);
     return 0;
 }
-
-#if 0
-int ncd_attr_str_ds (NC_ad* ncid
-                    ,struct adios_attribute_struct_v1 * attribute
-                    ,struct adios_bp_buffer_struct_v1 * ptr_buffer
-                    ,int count
-                    ,struct var_dim * var_dims
-                    ,int var_dims_count)
-{
-    char fullname[255];
-    char *path = attribute->path;
-    char *name = attribute->name;
-    int  valid,retval;
-
-    ncd_gen_name (fullname, path, name);
-    valid = -1;
-    if (strcmp(path,"/")==0) {
-        valid = NC_GLOBAL;
-        strcpy(fullname, name);
-    }
-    else {
-        ncd_gen_name (fullname, path, "");
-        retval=ncadiosi_inq_varid(ncid,fullname,&valid);
-        if(retval < 0)
-           return 1; 
-        else
-            strcpy(fullname, name);
-    }
-    if (retval == NC_NOERR ) {
-       
-       return 0;
-     }
-
-    struct adios_var_payload_struct_v1 var_payload;  
-    struct adios_index_var_struct_v1 * vars_root = 0;
-
-    var_payload.payload = 0;
-
-    if ( attribute->is_var == adios_flag_yes) {
-        adios_posix_read_vars_index (ptr_buffer);
-        adios_parse_vars_index_v1 (ptr_buffer, &vars_root, NULL, NULL);
-        while (vars_root) {
-            if (vars_root->id == attribute->var_id) {
-                if (!(vars_root->characteristics->dims.dims)) { 
-                }
-                else {
-                    return 1;
-                }
-                break; 
-            } 
-            vars_root = vars_root->next;
-        }
-    }
-    
-    if ( var_payload.payload)
-        free (var_payload.payload);
-    return 0;
-}
-#endif
 
 static
 int ncd_dataset (NC_ad* ncid
@@ -280,13 +231,6 @@ int ncd_dataset (NC_ad* ncid
                             retval=ncadiosi_def_dim (ncid, dimname,dims->dimension.rank,&dimids[rank]);
                         start_dims[rank] = 0;
                         count_dims[rank] = dims->dimension.rank;
-                        /*fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
-                                ,rank 
-                                ,count_dims[rank] 
-                                ,start_dims[rank]
-                                ,dimids[rank]
-                               );*/
-
                     }
                     else {
                         for (i = 0; i < var_dims_count; i++) {
@@ -295,24 +239,11 @@ int ncd_dataset (NC_ad* ncid
                                     start_dims[rank] = var_dims[i].rank - 1;
                                     count_dims[rank] = 1;
                                     dimids[rank] = var_dims [i].nc_dimid; 
-                                    /*printf("\tdim[%d]: c(%d):s(%d): dimid=%d (time-index)\n"
-                                      ,rank
-                                      ,count_dims[rank]
-                                      ,start_dims[rank]
-                                      ,dimids[rank]
-                                      ); 
-                                     */
                                 }
                                 else {
                                     start_dims[rank] = 0;
                                     count_dims[rank] = var_dims[i].rank;
                                     dimids[rank]=var_dims[i].nc_dimid;
-                                    /*fprintf(stderr,"\tdim[%zu]: c(%zu):s(%zu): dimid=%d\n"
-                                            ,rank
-                                            ,count_dims[rank]
-                                            ,start_dims[rank]
-                                            ,dimids[rank]
-                                           ); */
                                 } 
                                 break;
                             }
@@ -353,8 +284,6 @@ int ncd_dataset (NC_ad* ncid
                                                 ,*(int *)atts_root->characteristics->value
                                                 ,&dimids [rank]); 
                                 }
-                                /*printf("\t local[%d]: c(%d) id(%d)\n"
-                                  ,rank,count_dims[rank], dimids[rank]); */
                                 break; 
                             } 
                             atts_root = atts_root->next;
@@ -521,32 +450,6 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
 {
     int i, err;
     int rc = 0;
-    /*
-    if (argc < 2)
-    {
-        fprintf (stderr, "usage: %s <argv[1]_in> [argv[1]_out]\n"
-                ,argv [0]
-                );
-
-        return -1;
-    }
-
-    if (argc > 2)
-        strcpy (out_fname,argv[2]);
-    else 
-    {
-        int size = strlen(argv[1]);
-        strcpy (out_fname,argv[1]);
-        if(!strcmp (&out_fname[size-3], ".bp")) {
-          out_fname [size-2] = 'n'; 
-          out_fname [size-1] = 'c';
-        }
-        else {
-          strcat(out_fname, ".nc");
-        }
-        
-    }
-    */
 
     struct adios_bp_buffer_struct_v1 * b = 0;
     struct adios_bp_buffer_struct_v1 * b_0 = 0;
