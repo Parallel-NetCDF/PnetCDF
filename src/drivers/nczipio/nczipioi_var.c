@@ -189,7 +189,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     varp->zip = nczip_zlib_inq_driver();
                     break;
 #endif
-#ifdef ENABLE_ZLIB
+#ifdef ENABLE_SZ
                 case NC_ZIP_DRIVER_SZ:
                     varp->zip = nczip_sz_inq_driver();
                     break;

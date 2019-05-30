@@ -59,7 +59,7 @@ C_SRCS = nczipio_attr.c \
          nczipioi_lists.c \
          nczipioi_nonblocking.c \
          nczipioi_wait.c \
-         nczip_dummy.c
+         nczip_dummy.c 
 
 if ENABLE_ZLIB
    C_SRCS += nczip_zlib.c

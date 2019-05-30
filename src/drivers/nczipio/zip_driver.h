@@ -21,7 +21,13 @@ struct NCZIP_driver {
 typedef struct NCZIP_driver NCZIP_driver;
 
 extern NCZIP_driver* nczip_dummy_inq_driver(void);
+
+#if ENABLE_ZLIB
 extern NCZIP_driver* nczip_zlib_inq_driver(void);
+#endif
+
+#if ENABLE_SZ
 extern NCZIP_driver* nczip_sz_inq_driver(void);
+#endif
 
 #endif
