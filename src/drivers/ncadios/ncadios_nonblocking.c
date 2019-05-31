@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
@@ -17,8 +17,8 @@
 #include <ncadios_internal.h>
 
 #define PUT_ARRAY_SIZE 128 /* Size of initial put list */
-/* When metadata buffer is full, we'll NCI_Reallocate it to 
- * META_BUFFER_MULTIPLIER times the original size
+/* When list is full, we will reallocate it to 
+ * SIZE_MULTIPLIER times the original size
  */
 #define SIZE_MULTIPLIER 2    
 

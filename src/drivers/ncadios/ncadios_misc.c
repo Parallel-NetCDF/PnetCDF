@@ -1,21 +1,11 @@
 /*
- *  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
 
 /*
- * This file implements the following PnetCDF APIs.
- *
- * ncmpi_inq_attname() : dispatcher->inq_attname()
- * ncmpi_inq_attid()   : dispatcher->inq_attid()
- * ncmpi_inq_att()     : dispatcher->inq_att()
- * ncmpi_rename_att()  : dispatcher->inq_rename_att()
- * ncmpi_copy_att()    : dispatcher->inq_copy_att()
- * ncmpi_del_att()     : dispatcher->inq_del_att()
- * ncmpi_get_att()     : dispatcher->inq_get_att()
- * ncmpi_put_att()     : dispatcher->inq_put_arr()
- *
+ * This file implements helper functions used by the ADIOS driver.
  */
 
 #ifdef HAVE_CONFIG_H
