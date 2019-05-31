@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* strlen(), strcpy() */
 #include <assert.h>
 
 #include <mpi.h>
@@ -59,3 +60,4 @@ ncmpii_xlen_nc_type(nc_type xtype, int *size)
         default: DEBUG_RETURN_ERROR(NC_EBADTYPE);
     }
 }
+

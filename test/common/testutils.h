@@ -32,17 +32,6 @@
     } \
 }
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
-typedef struct {
-	char infname[PATH_MAX];
-	char outfname[PATH_MAX];
-} params;
-
-void parse_read_args(int argc, char **argv, int rank, params *p);
-void parse_write_args(int argc, char **argv, int rank, params *p);
 int inq_env_hint(char *hint_key, char **hint_value);
 
 #ifdef PNETCDF_DEBUG

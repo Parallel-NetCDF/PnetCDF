@@ -13,8 +13,14 @@ lib_LTLIBRARIES = libpnetcdf.la
 # language link.
 AM_LDFLAGS = $(ABIVERSIONFLAGS)
 
+# functions that should be compiled into the library to provide an
+# implementation for functions that are missing or broken on the host system
+# See autoconf Section 5.5.3 and libtool Section 8.6
+AUTOMAKE_OPTIONS = subdir-objects
+libpnetcdf_la_LIBADD = $(LTLIBOBJS)
+
 libpnetcdf_la_SOURCES =
-libpnetcdf_la_LIBADD  = ../dispatchers/libdispatchers.la
+libpnetcdf_la_LIBADD += ../dispatchers/libdispatchers.la
 libpnetcdf_la_LIBADD += ../drivers/common/libcommon.la
 libpnetcdf_la_LIBADD += ../drivers/ncmpio/libncmpio.la
 if BUILD_DRIVER_FOO
@@ -29,7 +35,6 @@ endif
 if ENABLE_ADIOS
    libpnetcdf_la_LIBADD += ../drivers/ncadios/libncadios.la
 endif
-
 
 nodist_EXTRA_libpnetcdf_la_SOURCES = dummyc.c
 

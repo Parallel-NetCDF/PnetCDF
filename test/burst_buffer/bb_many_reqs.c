@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     int ncid, varid;
     int *buffer, *reqs, *stat;
     int dimid[2];
-    char filename[PATH_MAX];
+    char *filename;
     MPI_Offset start[2];
     MPI_Info info;
 
@@ -43,22 +43,20 @@ int main(int argc, char *argv[]) {
     }
 
     /* Determine test file name */
-    if (argc > 1) {
-        snprintf(filename, PATH_MAX, "%s", argv[1]);
-    }
-    else{
-        snprintf(filename, PATH_MAX, "testfile.nc");
-    }
+    if (argc > 1)
+        filename = argv[1];
+    else
+        filename = "testfile.nc";
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for burst buffer big requests", basename(argv[0]));
-		printf("%-66s ------ ", cmd_str); fflush(stdout);
-		free(cmd_str);
-	}
+                printf("%-66s ------ ", cmd_str); fflush(stdout);
+                free(cmd_str);
+    }
 
     /* Initialize file info */
-	MPI_Info_create(&info);
+    MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
 
     /* Create new netcdf file */

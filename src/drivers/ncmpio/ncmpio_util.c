@@ -9,7 +9,7 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>   /* strtoll() is first introducted in C99 */
 #include <string.h>
 #include <strings.h>  /* strcasecmp() */
 #include <limits.h>   /* INT_MAX */
@@ -39,7 +39,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
                  &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
-        ncp->h_align = strtoll(value,NULL,10);
+        ncp->h_align = strtoll(value, NULL, 10);
         if (errno != 0) ncp->h_align = 0;
         else if (ncp->h_align < 0) ncp->h_align = 0;
     }
@@ -48,7 +48,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
     MPI_Info_get(info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
-        ncp->fx_v_align = strtoll(value,NULL,10);
+        ncp->fx_v_align = strtoll(value, NULL, 10);
         if (errno != 0) ncp->fx_v_align = 0;
         else if (ncp->fx_v_align < 0) ncp->fx_v_align = 0;
     }
@@ -58,7 +58,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
                  &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
-        ncp->r_align = strtoll(value,NULL,10);
+        ncp->r_align = strtoll(value, NULL, 10);
         if (errno != 0) ncp->r_align = 0;
         else if (ncp->r_align < 0) ncp->r_align = 0;
     }
@@ -68,7 +68,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
                  &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
-        ncp->chunk = (int) strtol(value,NULL,10);
+        ncp->chunk = (int) strtol(value, NULL, 10);
         if (errno != 0) ncp->chunk = 0;
         else if (ncp->chunk < 0) ncp->chunk = 0;
     }
@@ -97,7 +97,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
     if (flag) {
         MPI_Offset ibuf_size;
         errno = 0;  /* errno must set to zero before calling strtoll */
-        ibuf_size = strtoll(value,NULL,10);
+        ibuf_size = strtoll(value, NULL, 10);
         if (errno == 0 && ncp->ibuf_size > 0) ncp->ibuf_size = ibuf_size;
     }
 
@@ -109,7 +109,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info)
     MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag) {
         errno = 0;
-        ncp->num_subfiles = strtoll(value,NULL,10);
+        ncp->num_subfiles = strtoll(value, NULL, 10);
         if (errno != 0) ncp->num_subfiles = 0;
         else if (ncp->num_subfiles < 0) ncp->num_subfiles = 0;
     }
