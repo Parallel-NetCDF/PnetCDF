@@ -55,6 +55,10 @@
 #define NC_LOG_HINT_LOG_SHARE 0x80
 
 /* PATH_MAX after padding to 4 byte allignment */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 #if PATH_MAX % 4 == 0
 #define NC_LOG_PATH_MAX PATH_MAX
 #elif PATH_MAX % 4 == 1
