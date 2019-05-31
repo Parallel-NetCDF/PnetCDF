@@ -8,12 +8,14 @@
 /* translate posix io error codes to PnetCDF/netCDF error codes */
 int ncmpii_error_posix2nc(char *err_msg)       /* extra error message */
 {
-    int io_errorcode;
-    char errorString[MPI_MAX_ERROR_STRING];
+#if defined(HAVE_STRERROR) && (HAVE_STRERROR == 1)
+    char *errorString= strerror(errno);
+#else
+    char *errorString="Other I/O error";
+#endif
 
     /* check for specific error codes understood by PnetCDF */
-    io_errorcode = errno;
-    switch (io_errorcode){
+    switch (errno){
         case ENOSPC :
             return NC_ENO_SPACE;
         case ENAMETOOLONG:
@@ -29,7 +31,6 @@ int ncmpii_error_posix2nc(char *err_msg)       /* extra error message */
     }
 
     /* other errors that currently have no corresponding PnetCDF error codes */
-    strerror_r(io_errorcode, errorString, MPI_MAX_ERROR_STRING);
     if (err_msg == NULL) err_msg = "";
 #ifdef PNETCDF_DEBUG
     /* report the world rank */
