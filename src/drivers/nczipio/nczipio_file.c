@@ -173,6 +173,8 @@ nczipio_open(MPI_Comm     comm,
     
     // Not compressed file
     if (one != 1){
+        NCI_Free(nczipp->path);
+        NCI_Free(nczipp);
         DEBUG_RETURN_ERROR(NC_EINVAL)
     }
 
@@ -220,6 +222,10 @@ nczipio_close(void *ncdp)
         for(i = 0; i < nczipp->vars.cnt; i++){
             if (nczipp->vars.data[i].isnew){            
                 err = nczipp->driver->put_att(nczipp->ncp, nczipp->vars.data[i].varid, "_chunkdim", NC_INT, nczipp->vars.data[i].ndim, nczipp->vars.data[i].chunkdim, MPI_INT);
+                if (err != NC_NOERR){
+                    return err;
+                }
+                err = nczipp->driver->put_att(nczipp->ncp, nczipp->vars.data[i].varid, "_zipdriver", NC_INT, 1, &(nczipp->vars.data[i].zipdriver), MPI_INT);
                 if (err != NC_NOERR){
                     return err;
                 }

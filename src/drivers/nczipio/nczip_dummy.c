@@ -66,7 +66,7 @@ int nczip_dummy_compress_alloc(void *in, int in_len, void **out, int *out_len, i
     if (out_len != NULL) {
         *out_len = in_len;
     }
-    
+
     // Copy data directly as dummy comrpession
     memcpy(*out, in, in_len);
 

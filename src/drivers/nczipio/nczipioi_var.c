@@ -176,6 +176,9 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             err = nczipp->driver->inq_att(nczipp->ncp, varp->varid, "_zipdriver", NULL, &len);
             if (err == NC_NOERR && len == 1){
                 err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_zipdriver", &(varp->zipdriver), MPI_INT);
+                if (err != NC_NOERR){
+                    return err;
+                }
             }
             else{
                 varp->zipdriver = nczipp->default_zipdriver;

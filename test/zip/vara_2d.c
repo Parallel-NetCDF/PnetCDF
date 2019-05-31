@@ -59,8 +59,8 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-    for(zipdriver = 0; zipdriver < 3; zipdriver++){
-        for(communit = 0; communit < 2; communit++){
+    for(zipdriver = 0; zipdriver < 0; zipdriver++){
+        for(communit = 1; communit < 2; communit++){
             /* Initialize file info */
             MPI_Info_create(&info);
             MPI_Info_set(info, "nc_compression", "enable");
@@ -129,6 +129,9 @@ int main(int argc, char **argv)
             start[1] = 0;
             count[0] = 1;
             count[1] = N;
+            for(i = 0; i < N; i++){
+                buf[i] = 0;
+            }
             err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); CHECK_ERR
 
             // Check results
