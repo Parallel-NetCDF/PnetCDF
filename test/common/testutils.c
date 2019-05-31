@@ -13,59 +13,6 @@
 #include <pnetcdf.h>
 #include "testutils.h"
 
-void parse_read_args(int argc, char **argv, int rank, params *p)
-{
-	int err, inlen, outlen;
-	if ( rank == 0 ) {
-		if (argc == 3 ) {
-			strncpy(p->infname, argv[1], PATH_MAX-1);
-			strncpy(p->outfname, argv[2], PATH_MAX-1);
-			p->infname[PATH_MAX-1] = '\0';
-			p->outfname[PATH_MAX-1] = '\0';
-		} else if (argc == 1) {
-			strcpy(p->infname, "../data/test_double.nc");
-			strcpy(p->outfname, "testread.nc");
-		} else {
-			fprintf(stderr, "Usage: %s: <source> <destination>\n",
-					argv[0]);
-			MPI_Abort(MPI_COMM_WORLD, 1);
-		}
-		inlen = strlen(p->infname);
-		outlen = strlen(p->outfname);
-	}
-
-	err = MPI_Bcast(&inlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_ERR(err)
-	err = MPI_Bcast(p->infname, inlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
-        MPI_ERR(err)
-	err = MPI_Bcast(&outlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_ERR(err)
-	err = MPI_Bcast(p->outfname, outlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
-        MPI_ERR(err)
-}
-
-void parse_write_args(int argc, char **argv, int rank, params *p)
-{
-	int err, outlen;
-	if ( rank == 0 ) {
-		if (argc == 2 ) {
-			strncpy(p->outfname, argv[1], PATH_MAX-1);
-			p->outfname[PATH_MAX-1] = '\0';
-		} else if (argc == 1) {
-			strcpy(p->outfname, "testwrite.nc");
-		} else {
-			fprintf(stderr, "Usage: %s: <destination>\n", argv[0]);
-			MPI_Abort(MPI_COMM_WORLD, 1);
-		}
-		outlen = strlen(p->outfname);
-	}
-	err = MPI_Bcast(&outlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_ERR(err)
-	err = MPI_Bcast(p->outfname, outlen+1, MPI_CHAR, 0, MPI_COMM_WORLD);
-        MPI_ERR(err)
-}
-
-
 char* nc_err_code_name(int err)
 {
     static char unknown_str[32];
@@ -307,19 +254,4 @@ inq_env_hint(char *hint_key, char **hint_value)
     }
     return 0;
 }
-
-#ifndef HAVE_STRDUP
-char *strdup(const char *str)
-{
-    char *ptr;
-
-    if (str == NULL) return NULL;
-
-    ptr = (char*) malloc(strlen(str) + 1);
-    if (ptr != NULL)
-        strcpy(ptr, str);
-
-    return ptr;
-}
-#endif
 
