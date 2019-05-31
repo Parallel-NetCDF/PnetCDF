@@ -5,10 +5,16 @@
  * Copyright (c) 2008 - 2009.  UT-BATTELLE, LLC. All rights reserved.
  */
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
+
+#include <common.h>
 #include "adios_types.h"
 #include "adios_transport_hooks.h"
 #include "adios_bp_v1.h"
@@ -40,7 +46,7 @@ static int is_input_fortran = 0; /* 0 = C generated BP file, 1 = Fortran generat
 static
 int ncd_gen_name (char *fullname, char *path, char *name) {
     int i;
-    char *new_path = strdup (path);
+    char *new_path = strdup(path);
     if ( path[0] == '/')
          new_path=new_path+1;
           

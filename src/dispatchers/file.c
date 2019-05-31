@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>  /* getenv() */
-#include <string.h>  /* strtok(), strtok_r(), strchr(), strdup(), strcpy() */
+#include <string.h>  /* strtok(), strtok_r(), strchr(), strcpy(), strdup() */
 #include <fcntl.h>   /* open() */
 #include <unistd.h>  /* read(), close() */
 #include <assert.h>  /* assert() */
@@ -57,22 +57,6 @@ static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
         MPI_Error_string(mpireturn, errorString, &errorStringLen); \
         printf("%s error at line %d file %s (%s)\n", func, __LINE__, __FILE__, errorString); \
     }
-
-/* strdup() is a POSIX function, not a standard C function */
-#ifndef HAVE_STRDUP
-static char *strdup(const char *str)
-{
-    char *ptr;
-
-    if (str == NULL) return NULL;
-
-    ptr = (char*) malloc(strlen(str) + 1);
-    if (ptr != NULL)
-        strcpy(ptr, str);
-
-    return ptr;
-}
-#endif
 
 /*----< new_id_PNCList() >---------------------------------------------------*/
 /* Return a new ID (array index) from the PNC list, pnc_filelist[] that is

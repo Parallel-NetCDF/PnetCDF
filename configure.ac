@@ -986,7 +986,31 @@ dnl AC_FUNC_VPRINTF
 dnl AC_CHECK_FUNCS([memset setlocale sqrt strchr strrchr strtol])
 dnl AC_CHECK_LIB([m], [tanh])
 dnl UD_CHECK_LIB_MATH
-AC_CHECK_FUNCS([strdup strerror access unlink])
+
+dnl When using gcc based compiler with -ansi flag, AC_CHECK_FUNCS can still
+dnl find strdup, but AC_CHECK_DECLS cannot. So we check with AC_CHECK_DECLS
+dnl first and then check AC_CHECK_FUNCS.
+dnl AC_CHECK_FUNCS([strdup strerror access unlink])
+AC_CHECK_DECLS([strdup, strerror], [], [], [[#include <string.h>]])
+if test "x$ac_cv_have_decl_strdup" = xyes ; then
+   AC_CHECK_FUNCS([strdup])
+else
+   # strdup is not declared, we add our own implementation of strdup()
+   # do not call AC_REPLACE_FUNCS, as it calls AC_CHECK_FUNCS
+   AC_CONFIG_LIBOBJ_DIR([src/libs])
+   AC_LIBSOURCE([strdup.c])
+   AC_LIBOBJ([strdup])
+fi
+if test "x$ac_cv_have_decl_strerror" = xyes ; then
+   AC_CHECK_FUNCS([strerror])
+fi
+AC_CHECK_DECLS([access, unlink], [], [], [[#include <unistd.h>]])
+if test "x$ac_cv_have_decl_access" = xyes ; then
+   AC_CHECK_FUNCS([access])
+fi
+if test "x$ac_cv_have_decl_unlink" = xyes ; then
+   AC_CHECK_FUNCS([unlink])
+fi
 
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
@@ -997,7 +1021,12 @@ AC_ARG_ENABLE([debug],
 
 dnl malloc memory allocation tracing relies on tdelete and tsearch
 AC_CHECK_HEADERS([search.h])
-AC_CHECK_FUNCS([tsearch tdelete])
+if test "x$ac_cv_header_search_h" = xyes ; then
+   AC_CHECK_DECLS([tsearch, tdelete], [], [], [[#include <search.h>]])
+   if test "x$ac_cv_have_decl_unlink" = xyes ; then
+      AC_CHECK_FUNCS([tsearch tdelete])
+   fi
+fi
 
 PNETCDF_DEBUG=0
 if test "x${debug}" = xyes; then

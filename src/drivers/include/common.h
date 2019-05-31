@@ -235,5 +235,9 @@ int hash_map_free(hash_map *map);
 int hash_map_add(hash_map *map, char *key, int val);
 int hash_map_find(hash_map *map, char *key, int *val);
 
+#ifndef HAVE_STRDUP
+extern char *strdup(const char *s);
+#endif
+
 #endif
 
