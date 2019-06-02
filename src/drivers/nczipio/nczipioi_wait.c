@@ -149,6 +149,18 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         //nczipioi_iget_cb_chunk(nczipp, nreq, reqids, stats);
     }
 
+    for(i = 0; i < nreq; i++){
+        req = nczipp->getlist.reqs + reqids[i];
+        if (req->buf != req->xbuf){
+            void *cbuf=(void*)req->buf;
+            
+            err = nczipioiconvert(req->xbuf, cbuf, nczipp->vars.data[req->varid].etype, req->buftype, req->bufcount);
+            if (err != NC_NOERR) return err;
+
+            if (cbuf != req->buf) NCI_Free(cbuf);
+        }
+    }
+
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB_WAIT)
     

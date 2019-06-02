@@ -28,7 +28,8 @@ if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS = nczipioi_profile.m4
+M4_SRCS = nczipioi_profile.m4 \
+          nczipioi_convert.m4
 
 M4H_SRCS = nczipioi_profile.m4h
 

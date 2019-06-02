@@ -47,6 +47,28 @@ MPI_Offset NC_Type_size(nc_type type){			/* netCDF type code */
 }
 
 /*
+ * Convert NC type to MPI type
+ */
+MPI_Datatype nczipioi_nc_to_mpi_type(nc_type atype){
+    switch (atype) {
+        case NC_BYTE:
+            return MPI_BYTE;
+        case NC_CHAR:
+            return MPI_CHAR;
+        case NC_SHORT:
+            return MPI_SHORT;
+        case NC_INT:
+            return MPI_INT;
+        case NC_FLOAT:
+            return MPI_FLOAT;
+        case NC_DOUBLE:
+            return MPI_DOUBLE;
+    }
+
+    return NC_NAT;
+}
+
+/*
  * Extract mpi hints and set up the flags
  */
 int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){

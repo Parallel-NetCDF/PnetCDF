@@ -41,7 +41,6 @@ nczipioi_init_get_req( NC_zip *nczipp,
                         MPI_Offset        bufcount,
                         MPI_Datatype      buftype) {
     int err;
-    int i, j, k, l;
     int *tsize, *tssize, *tstart;   // Size for sub-array type
     int overlapsize, packoff;
     MPI_Datatype ptype; // Pack datatype
@@ -66,8 +65,26 @@ nczipioi_init_get_req( NC_zip *nczipp,
 
     req->varid = varid;
     req->buf = (void*)buf;
-    req->xbuf = (void*)buf;
     req->nreq = 1;
+    req->buftype = buftype;
+    if (varp->etype != buftype){
+        if (bufcount > 0){
+            req->bufcount = bufcount;
+        }
+        else{
+            int i;
+
+            req->bufcount = 1;
+            for(i = 0; i < varp->ndim; i++){
+                req->bufcount *= count[i];
+            }
+        }
+
+        req->xbuf = (char*)NCI_Malloc(req->bufcount * varp->esize);
+    }
+    else{
+        req->xbuf = req->buf;
+    }
 
     req->xbufs = (char**)NCI_Malloc(sizeof(char*));
     req->xbufs[0] = req->xbuf;
@@ -140,6 +157,27 @@ nczipioi_init_get_varn_req( NC_zip *nczipp,
     req->buf = (void*)buf;
     req->xbuf = (void*)buf;
     req->nreq = nreq;
+    req->buftype = buftype;
+    if (varp->etype != buftype){
+        if (bufcount > 0){
+            req->bufcount = bufcount;
+        }
+        else{
+            req->bufcount = 0;
+            for(i = 0; i < nreq; i++){
+                rsize = 1;
+                for(j = 0; j < varp->ndim; j++){
+                    rsize *= counts[i][j];
+                }
+                req->bufcount += rsize;
+            }
+        }
+
+        req->xbuf = (char*)NCI_Malloc(req->bufcount * varp->esize);
+    }
+    else{
+        req->xbuf = req->buf;
+    }
 
     // Calculate buffer for each individual request
     req->xbufs = (char**)NCI_Malloc(sizeof(char*) * nreq);

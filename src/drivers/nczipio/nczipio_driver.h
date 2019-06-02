@@ -33,6 +33,8 @@ typedef struct NC_zip_req {
     MPI_Offset *count;
     MPI_Offset **counts;
     MPI_Offset *stride;
+    MPI_Offset bufcount;
+    MPI_Datatype buftype;
     char *buf;
     char *xbuf;
     char **xbufs;
