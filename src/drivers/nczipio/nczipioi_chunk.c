@@ -134,7 +134,7 @@ int nczipioi_chunk_itr_next_ex(NC_zip_var *varp, const MPI_Offset *start, const 
     for(; i > 0; i--){
         if (citr[i] >= start[i] + count[i]){
             citr[i - 1] += varp->chunkdim[i - 1];
-            ostart[i - i] += varp->chunkdim[i - 1];
+            ostart[i - i] += ocount[i - 1];
             ocount[i - 1] = min(varp->chunkdim[i - 1], start[i - 1] + count[i - 1] - ostart[i - 1]);
             j = citr[i];
             citr[i] = start[i] - (start[i] % varp->chunkdim[i]);
@@ -151,7 +151,7 @@ int nczipioi_chunk_itr_next_ex(NC_zip_var *varp, const MPI_Offset *start, const 
         return 0;
     }
 
-    ostart[i] += varp->chunkdim[i];
+    ostart[i] += ocount[i];
     ocount[i] = min(varp->chunkdim[i], start[i] + count[i] - ostart[i]);
     for (i++; i < varp->ndim; i++) {
         ostart[i] = start[i];
