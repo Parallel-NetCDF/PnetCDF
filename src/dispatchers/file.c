@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>  /* getenv() */
 #include <string.h>  /* strtok(), strtok_r(), strchr(), strcpy(), strdup() */
+#include <strings.h> /* strcasecmp() */
 #include <fcntl.h>   /* open() */
 #include <unistd.h>  /* read(), close() */
 #include <assert.h>  /* assert() */

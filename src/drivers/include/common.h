@@ -238,6 +238,9 @@ int hash_map_find(hash_map *map, char *key, int *val);
 #ifndef HAVE_STRDUP
 extern char *strdup(const char *s);
 #endif
+#ifndef HAVE_STRCASECMP
+extern int strcasecmp(const char *s1, const char *s2);
+#endif
 
 #endif
 

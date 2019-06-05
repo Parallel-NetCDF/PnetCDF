@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h> /* strcasecmp() */
 #include <stdio.h>
 #include <math.h>
 #include <ncbbio_driver.h>

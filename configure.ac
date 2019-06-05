@@ -1011,6 +1011,16 @@ fi
 if test "x$ac_cv_have_decl_unlink" = xyes ; then
    AC_CHECK_FUNCS([unlink])
 fi
+AC_CHECK_DECLS([strcasecmp], [], [], [[#include <strings.h>]])
+if test "x$ac_cv_have_decl_strcasecmp" = xyes ; then
+   AC_CHECK_FUNCS([strcasecmp])
+else
+   # strcasecmp is not declared, we add our own implementation of strcasecmp()
+   # do not call AC_REPLACE_FUNCS, as it calls AC_CHECK_FUNCS
+   AC_CONFIG_LIBOBJ_DIR([src/libs])
+   AC_LIBSOURCE([strcasecmp.c])
+   AC_LIBOBJ([strcasecmp])
+fi
 
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
