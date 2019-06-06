@@ -20,10 +20,7 @@
 
 #include <sz.h>
 
-sz_params sz;
-
 static int mpi_to_sz_type(MPI_Datatype dtype){
-
     if (dtype == MPI_FLOAT){
         return SZ_FLOAT;
     }
@@ -59,9 +56,11 @@ static int mpi_to_sz_type(MPI_Datatype dtype){
 }
 
 int nczip_sz_init(MPI_Info info) {
+    sz_params sz;
+
     memset(&sz, 0, sizeof(sz_params));
     sz.sol_ID = SZ;
-    sz.sampleDistance = 100;
+    sz.sampleDistance = 50;
     sz.quantization_intervals = 0;
     sz.max_quant_intervals = 65536;
     sz.predThreshold = 0.98;
@@ -100,7 +99,7 @@ int nczip_sz_compress(void *in, int in_len, void *out, int *out_len, int ndim, i
     size_t outsize;
     void *buf = NULL;
 
-    szdtype = nczip_sz_init(dtype);
+    szdtype = mpi_to_sz_type(dtype);
     if (szdtype < 0){
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
         goto out;
@@ -153,7 +152,7 @@ int nczip_sz_compress_alloc(void *in, int in_len, void **out, int *out_len, int 
     size_t outsize;
     void *buf = NULL;
 
-    szdtype = nczip_sz_init(dtype);
+    szdtype = mpi_to_sz_type(dtype);
     if (szdtype < 0){
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
         goto out;
@@ -204,7 +203,7 @@ int nczip_sz_decompress(void *in, int in_len, void *out, int *out_len, int ndim,
     int outsize;
     void *buf = NULL;
 
-    szdtype = nczip_sz_init(dtype);
+    szdtype = mpi_to_sz_type(dtype);
     if (szdtype < 0){
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
         goto out;
@@ -260,7 +259,7 @@ int nczip_sz_decompress_alloc(void *in, int in_len, void **out, int *out_len, in
     int outsize;
     void *buf = NULL;
 
-    szdtype = nczip_sz_init(dtype);
+    szdtype = mpi_to_sz_type(dtype);
     if (szdtype < 0){
         DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
         goto out;

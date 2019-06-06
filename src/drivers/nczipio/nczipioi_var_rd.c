@@ -141,7 +141,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
             varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
         }
         
-        varp->zip->decompress(zbufs[i], zsizes[i], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
+        varp->zip->decompress(zbufs[i], lens[i], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
 
         if(dsize != varp->chunksize){
             printf("Decompress Error\n");

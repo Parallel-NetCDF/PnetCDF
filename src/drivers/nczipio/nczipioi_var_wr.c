@@ -194,7 +194,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         if (err != NC_NOERR) return err;
     }
 
-    /* Carry our coll I/O
+    /* Carry out coll I/O
      * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
      * We use a dummy call inplace of type with 0 count
      */
