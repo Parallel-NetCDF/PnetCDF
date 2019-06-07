@@ -57,7 +57,8 @@ define(`PRINTTIMEMEAN',dnl
 int nczipioi_print_profile(NC_zip *nczipp){
     int err;
     int i, j;
-    double tmax[NTIMER], tmin[NTIMER], tmean[NTIMER], tvar[NTIMER], tvar_local[NTIMER + 3];
+    double tmax[NTIMER], tmin[NTIMER], tmean[NTIMER], tvar[NTIMER], tvar_local[NTIMER + 8];
+    double slocal[7], smax[7], smin[7], ssum[7];
     char *pprefix = getenv("PNETCDF_PROFILE_PREFIX");
 
     CHK_ERR_REDUCE(nczipp->profile.tt, tmax, NTIMER, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
@@ -69,21 +70,65 @@ int nczipioi_print_profile(NC_zip *nczipp){
     }
     CHK_ERR_REDUCE(tvar_local, tvar, NTIMER, MPI_DOUBLE, MPI_SUM, 0, nczipp->comm);
     
+    slocal[0] = (double)nczipp->putsize  / 1048576.0f;
+    slocal[1] = (double)nczipp->getsize  / 1048576.0f;
+    slocal[2] = (double)nczipp->sendsize  / 1048576.0f;
+    slocal[3] = (double)nczipp->recvsize  / 1048576.0f;
+    slocal[4] = (double)nczipp->nsend;
+    slocal[5] = (double)nczipp->nrecv;
+    slocal[6] = (double)nczipp->nlocal;
+    CHK_ERR_REDUCE(slocal, smax, 7, MPI_LONG_LONG, MPI_MAX, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, smin, 7, MPI_LONG_LONG, MPI_MIN, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, ssum, 7, MPI_LONG_LONG, MPI_SUM, 0, nczipp->comm);
+
     if (nczipp->rank == 0){
         for(i = 0; i < NTIMER; i++){
             tvar[i] /= nczipp->np;
         }
 
 foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
+
+        printf("#%%$: put_size_sum %lf\n", ssum[0]);
+        printf("#%%$: put_size_max %lf\n", smax[0]);
+        printf("#%%$: put_size_min %lf\n\n", smin[0]);
+
+        printf("#%%$: get_size_sum %lf\n", ssum[1]);
+        printf("#%%$: get_size_max %lf\n", smax[1]);
+        printf("#%%$: get_size_min %lf\n\n", smin[1]);
+
+        printf("#%%$: send_size_sum %lf\n", ssum[2]);
+        printf("#%%$: send_size_max %lf\n", smax[2]);
+        printf("#%%$: send_size_min %lf\n\n", smin[2]);
+
+        printf("#%%$: recv_size_sum %lf\n", ssum[3]);
+        printf("#%%$: recv_size_max %lf\n", smax[3]);
+        printf("#%%$: recv_size_min %lf\n\n", smin[3]);
+
+        printf("#%%$: nsend_sum %lf\n", ssum[4]);
+        printf("#%%$: nsend_max %lf\n", smax[4]);
+        printf("#%%$: nsend_min %lf\n\n", smin[4]);
+
+        printf("#%%$: nrecv_sum %lf\n", ssum[5]);
+        printf("#%%$: nrecv_max %lf\n", smax[5]);
+        printf("#%%$: nrecv_min %lf\n\n", smin[5]);
+
+        printf("#%%$: nlocal_sum %lf\n", ssum[6]);
+        printf("#%%$: nlocal_max %lf\n", smax[6]);
+        printf("#%%$: nlocal_min %lf\n\n", smin[6]);
     }
 
     if (pprefix != NULL && *pprefix != '0') {
         MPI_Status stat;
 
-        memcpy(tvar_local + 3, nczipp->profile.tt, sizeof(double) * NTIMER);
+        memcpy(tvar_local + 8, nczipp->profile.tt, sizeof(double) * NTIMER);
         tvar_local[0] = (double)nczipp->putsize / 1048576.0f;
         tvar_local[1] = (double)nczipp->getsize / 1048576.0f;
-        tvar_local[2] = (double)nczipp->nmychunks;
+        tvar_local[2] = (double)nczipp->sendsize / 1048576.0f;
+        tvar_local[3] = (double)nczipp->recvsize / 1048576.0f;
+        tvar_local[4] = (double)nczipp->nsend;
+        tvar_local[5] = (double)nczipp->nrecv;
+        tvar_local[6] = (double)nczipp->nlocal;
+        tvar_local[7] = (double)nczipp->nmychunks;
 
         if (nczipp->rank == 0){                        
             FILE *pfile;
@@ -102,29 +147,37 @@ foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
             sprintf(ppath, "%s%s_profile.csv", pprefix, fname + i);
             pfile = fopen(ppath, "w");
 
-            fprintf(pfile, "rank, putsize, getsize, nchunk, ");
+            fprintf(pfile, "rank, putsize, getsize, sendsize, recvsize, nsend, nrecv, nlocal, nchunk, ");
 foreach(`t', TIMERS, `PRINTNAME(translit(t, `()'))')dnl
             fprintf(pfile, "\n");
 
-            fprintf(pfile, "mean, , , , ");
+            fprintf(pfile, "mean, , , , , , , , ,");
             for(j = 0; j < NTIMER; j++){
                 fprintf(pfile, "%lf, ", tmean[j]);
             }
             fprintf(pfile, "\n");
 
-            fprintf(pfile, "max, , , , ");
+            fprintf(pfile, "max, ");
+            for(j = 0; j < 7; j++){
+                fprintf(pfile, "%lld, ", smax[j]);
+            }
+            fprintf(pfile, ", ");
             for(j = 0; j < NTIMER; j++){
                 fprintf(pfile, "%lf, ", tmax[j]);
             }
             fprintf(pfile, "\n");
 
-            fprintf(pfile, "min, , , ,");
+            fprintf(pfile, "min, ");
+            for(j = 0; j < 7; j++){
+                fprintf(pfile, "%lld, ", smin[j]);
+            }
+            fprintf(pfile, ", ");
             for(j = 0; j < NTIMER; j++){
                 fprintf(pfile, "%lf, ", tmin[j]);
             }
             fprintf(pfile, "\n");
 
-            fprintf(pfile, "var, , , ,");
+            fprintf(pfile, "var, , , , , , , , ,");
             for(j = 0; j < NTIMER; j++){
                 fprintf(pfile, "%lf, ", tvar[j]);
             }
@@ -132,15 +185,15 @@ foreach(`t', TIMERS, `PRINTNAME(translit(t, `()'))')dnl
 
             fprintf(pfile, "0, ");
 
-            for(j = 0; j < NTIMER + 3; j++){
+            for(j = 0; j < NTIMER + 8; j++){
                 fprintf(pfile, "%lf, ", tvar_local[j]);
             }
             fprintf(pfile, "\n");
 
             for(i = 1; i < nczipp->np; i++){
-                MPI_Recv(tvar_local, NTIMER + 3, MPI_DOUBLE, i, 0, nczipp->comm, &stat);
+                MPI_Recv(tvar_local, NTIMER + 8, MPI_DOUBLE, i, 0, nczipp->comm, &stat);
                 fprintf(pfile, "%d, ", i);
-                for(j = 0; j < NTIMER + 3; j++){
+                for(j = 0; j < NTIMER + 8; j++){
                     fprintf(pfile, "%lf, ", tvar_local[j]);
                 }
                 fprintf(pfile, "\n");
@@ -149,7 +202,7 @@ foreach(`t', TIMERS, `PRINTNAME(translit(t, `()'))')dnl
             fclose(pfile);
         }
         else{
-            MPI_Send(tvar_local, NTIMER + 3, MPI_DOUBLE, 0, 0, nczipp->comm);
+            MPI_Send(tvar_local, NTIMER + 8, MPI_DOUBLE, 0, 0, nczipp->comm);
         }
     }            
 }

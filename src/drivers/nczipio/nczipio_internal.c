@@ -50,6 +50,11 @@ nczipioi_init(NC_zip *nczipp){
 
 #ifdef PNETCDF_PROFILING
     memset(&(nczipp->profile), 0, sizeof(NC_zip_timers));
+    nczipp->sendsize = 0;
+    nczipp->recvsize = 0;
+    nczipp->nsend = 0;
+    nczipp->nrecv = 0;
+    nczipp->nlocal = 0;
 #endif
 }
 

@@ -283,7 +283,6 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                 }
             }
             else{
-                varp->nmychunks = 0;
                 if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
                     for(j = 0; j < varp->nchunk; j++){ 
                         varp->chunk_owner[j] = j % nczipp->np;
@@ -299,6 +298,8 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                     varp->chunk_cache[i] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
                 }
             }
+
+            nczipp->nmychunks += varp->nmychunks - oldnmychunk;
 
             if (oldnmychunk < varp->nmychunks){
                 varp->mychunks = (int*)NCI_Realloc(varp->mychunks, sizeof(int) * varp->nmychunks);

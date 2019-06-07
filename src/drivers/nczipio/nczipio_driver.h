@@ -133,6 +133,11 @@ struct NC_zip {
 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 
+    MPI_Offset         sendsize;
+    MPI_Offset         recvsize;
+    int                nsend;
+    int                nrecv;
+    int                nlocal;
 #endif
 };
 

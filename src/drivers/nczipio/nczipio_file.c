@@ -199,6 +199,7 @@ nczipio_close(void *ncdp)
 {
     int err;
 #ifdef PNETCDF_PROFILING
+    MPI_Offset put_size, get_size;
     char *_env_str = getenv("PNETCDF_SHOW_PERFORMANCE_INFO");
 #endif
     NC_zip *nczipp = (NC_zip*)ncdp;
@@ -239,6 +240,14 @@ nczipio_close(void *ncdp)
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_FINALIZE_META)
     }
 
+#ifdef PNETCDF_PROFILING
+    err = nczipp->driver->inq_misc(nczipp->ncp, NULL, NULL, NULL,
+                            NULL, NULL, NULL,
+                            NULL, NULL, NULL, &put_size,
+                            &get_size, NULL, NULL, NULL, NULL);
+    nczipp->putsize += put_size;
+    nczipp->getsize += get_size;
+#endif
     err = nczipp->driver->close(nczipp->ncp);
 
     err = nczipioi_var_list_free(&(nczipp->vars));
