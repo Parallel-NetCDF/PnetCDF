@@ -125,6 +125,7 @@ Here lists a few important options:
                           Enable/disable memory in-place byte swap on Little
                           Endian machines. [default: auto]
   --enable-subfiling      Enable subfiling support. [default: disabled]
+  --enable-thread-safe    Enable thread-safe capability. [default: disabled]
   --disable-erange-fill   Disable use of fill value when out-of-range type
                           conversion causes NC_ERANGE error. [default: enabled]
   --disable-relax-coord-bound
@@ -145,6 +146,8 @@ Here lists a few important options:
   --enable-burst-buffering
 			  Enable burst buffer driver support. [default:
 			  disabled]
+  --enable-netcdf4        Enable NetCDF-4 support. [default: disabled]
+  --enable-adios          Enable ADIOS BP read support. [default: disabled]
   --enable-profiling      Enable time and memory profiling. [default: disabled]
   --disable-versioning    Disable library versioning. [default: enabled]
 
@@ -152,6 +155,14 @@ Optional Packages:
 
   --with-mpi=/path/to/implementation
                           The installation prefix path for MPI implementation.
+  --with-netcdf4=/path/to/netcdf4
+                          installation path(s) of NetCDF-4 libraries:
+                          --with-netcdf4=INC,LIB for include directory and
+                          library directory separated by a comma
+                          --with-netcdf4=DIR for directory containing include/
+                          and lib/ subdirectories
+  --with-adios=/path/to/implementation
+                          installation prefix path for ADIOS implementation
 
 Some influential environment variables:
   RM          Command for deleting files or directories. [default: rm]
