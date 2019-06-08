@@ -68,12 +68,19 @@ is_bigendian="@ac_cv_c_bigendian@"
 in_place_swap="@in_place_swap@"
 enable_bbdriver="@ENABLE_BURST_BUFFER@"
 enable_netcdf4="@ENABLE_NETCDF4@"
+enable_adios="@ENABLE_ADIOS@"
 
 if test "x$enable_netcdf4" = x1; then
    # NetCDF4 header files are required to build PnetCDF, but not PnetCDF applications
    # CPPFLAGS="$CPPFLAGS @NETCDF4_INC@"
    LDFLAGS="@NETCDF4_LDFLAGS@ $LDFLAGS"
    LIBS="@NETCDF4_LIBS@ $LIBS"
+fi
+
+if test "x$enable_adios" = x1; then
+   # ADIOS header files are required to build PnetCDF, but not PnetCDF applications
+   LDFLAGS="@ADIOS_LDFLAGS@ $LDFLAGS"
+   LIBS="@ADIOS_LIBS@ $LIBS"
 fi
 
 config_date="@CONFIG_DATE@"
@@ -106,6 +113,7 @@ Available values for OPTION include:
   --ldflags                   Linker flags used to build PnetCDF
   --libs                      Extra libraries used to build PnetCDF
   --netcdf4                   Whether NetCDF-4 support is enabled or disabled
+  --adios                     Whether ADIOS support is enabled or disabled
   --relax-coord-bound         Whether using a relaxed coordinate boundary check
   --in-place-swap             Whether using buffer in-place Endianness byte swap
   --erange-fill               Whether using fill values for NC_ERANGE error
@@ -137,6 +145,11 @@ if test "x$enable_netcdf4" = x1; then
         echo "  --netcdf4                   -> enabled"
 else
         echo "  --netcdf4                   -> disabled"
+fi
+if test "x$enable_adios" = x1; then
+        echo "  --adios                     -> enabled"
+else
+        echo "  --adios                     -> disabled"
 fi
 if test "x$enable_relax_coord_bound" = x1; then
         echo "  --relax-coord-bound         -> enabled"
@@ -326,6 +339,14 @@ while test $# -gt 0; do
 
     --netcdf4)
 if test "x$enable_netcdf4" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
+
+    --adios)
+if test "x$enable_adios" = x1; then
         echo "enabled"
 else
         echo "disabled"

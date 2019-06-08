@@ -91,8 +91,12 @@ install-data-hook:
 	@if test "x$(enable_shared)" = xyes ; then \
 	 echo '|  Add the following to your run-time environment variable LD_LIBRARY_PATH,' ; \
 	 echo '|  when linking your executable with the PnetCDF shared libraries.' ; \
-         if test "x$(enable_netcdf4)" = xyes ; then \
-         echo '|      $(DESTDIR)$(exec_prefix)/lib:$(netcdf_libdir)' ; \
+         if test "x$(enable_netcdf4)" = xyes -a "x$(enable_adios)" = xyes ; then \
+         echo '|      $(DESTDIR)$(exec_prefix)/lib:$(netcdf4_libdir):$(adios_libdir)' ; \
+         elif test "x$(enable_netcdf4)" = xyes ; then \
+         echo '|      $(DESTDIR)$(exec_prefix)/lib:$(netcdf4_libdir)' ; \
+         elif test "x$(enable_adios)" = xyes ; then \
+         echo '|      $(DESTDIR)$(exec_prefix)/lib:$(adios_libdir)' ; \
          else \
 	 echo '|      $(DESTDIR)$(exec_prefix)/lib' ; \
 	 fi ; \

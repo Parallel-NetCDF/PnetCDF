@@ -907,7 +907,8 @@ if test "x$enable_shared" = xyes ; then
       AC_MSG_ERROR([
    -----------------------------------------------------------------------
      configure option --enable-shared is set, but the MPI library is not
-     built with shared library support. Abort.
+     built with shared library support. Either remove option --enable-shared
+     or use an MPI library built with shared library support. Abort.
    -----------------------------------------------------------------------])
    fi
 fi
@@ -1489,7 +1490,7 @@ AM_CONDITIONAL(ENABLE_NETCDF4, [test x$enable_netcdf4 = xyes])
 if test "x$enable_netcdf4" = "xyes" ; then
    NETCDF4_INSTALL=""
    netcdf_includedir=""
-   netcdf_libdir=""
+   netcdf4_libdir=""
    AC_ARG_WITH(netcdf4,
        [AS_HELP_STRING([--with-netcdf4=/path/to/netcdf4],
                        [installation path(s) of NetCDF-4 libraries:
@@ -1506,17 +1507,17 @@ if test "x$enable_netcdf4" = "xyes" ; then
        case $NETCDF4_INSTALL in
          *,*)
             netcdf_includedir="`echo $withval |cut -f1 -d,`"
-            netcdf_libdir="`echo $withval |cut -f2 -d, -s`"
+            netcdf4_libdir="`echo $withval |cut -f2 -d, -s`"
             netcdf_bindir="$netcdf_includedir/../bin"
             ;;
          *)
             netcdf_includedir="$withval/include"
-            netcdf_libdir="$withval/lib"
+            netcdf4_libdir="$withval/lib"
             netcdf_bindir="$withval/bin"
             ;;
        esac
        UD_MSG_DEBUG([netcdf_includedir=$netcdf_includedir])
-       UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+       UD_MSG_DEBUG([netcdf4_libdir=$netcdf4_libdir])
    ])
 
    # check availability of nc-config only under $NETCDF4_INSTALL/bin
@@ -1696,8 +1697,8 @@ if test "x$enable_netcdf4" = "xyes" ; then
       # Get installation directory path of netcdf library files
       # if test "x$netcdf_ge_4_4_2" = xyes ; then
       #    # Option --libdir is first added in NetCDF 4.4.2
-      #    netcdf_libdir=`$nc_config --libdir`
-      #    UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+      #    netcdf4_libdir=`$nc_config --libdir`
+      #    UD_MSG_DEBUG([netcdf4_libdir=$netcdf4_libdir])
       # fi
 
       # Get extra libraries used by netcdf library (dependent libraries)
@@ -1707,8 +1708,8 @@ if test "x$enable_netcdf4" = "xyes" ; then
       netcdf_libs=`echo $netcdf_libs | $SED "s/-lpnetcdf//g"`
    else
       # if test "x$NETCDF4_INSTALL" != x ; then
-      #    netcdf_libdir="$NETCDF4_INSTALL/lib"
-      #    UD_MSG_DEBUG([netcdf_libdir=$netcdf_libdir])
+      #    netcdf4_libdir="$NETCDF4_INSTALL/lib"
+      #    UD_MSG_DEBUG([netcdf4_libdir=$netcdf4_libdir])
       # fi
       netcdf_libs="-lnetcdf"
       UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
@@ -1717,14 +1718,14 @@ if test "x$enable_netcdf4" = "xyes" ; then
    # Validate netcdf library
    saved_LDFLAGS=$LDFLAGS
    saved_LIBS=$LIBS
-   if test "x$netcdf_libdir" != x ; then
-      LDFLAGS="-L$netcdf_libdir $LDFLAGS"
+   if test "x$netcdf4_libdir" != x ; then
+      LDFLAGS="-L$netcdf4_libdir $LDFLAGS"
    fi
    LIBS="$netcdf_libs $LIBS"
    AC_SEARCH_LIBS([nc_open], [netcdf],,[AC_MSG_ERROR([Cannot find nc_open in NetCDF-4 library])])
    LDFLAGS=$saved_LDFLAGS
    LIBS=$saved_LIBS
-   # Do not add -L$netcdf_libdir to LDFLAGS and -lnetcdf to LIBS
+   # Do not add -L$netcdf4_libdir to LDFLAGS and -lnetcdf to LIBS
    # They are only needed when linking executables.
 
    # Get directory path of netcdf library files
@@ -1795,8 +1796,8 @@ if test "x$enable_netcdf4" = "xyes" ; then
    AC_SUBST([NETCDF4_INC])
 
    AC_MSG_CHECKING([NETCDF4_LDFLAGS])
-   if test "x$netcdf_libdir" != x ; then
-      NETCDF4_LDFLAGS="-L$netcdf_libdir"
+   if test "x$netcdf4_libdir" != x ; then
+      NETCDF4_LDFLAGS="-L$netcdf4_libdir"
    fi
    UD_MSG_DEBUG(NETCDF4_LDFLAGS=$NETCDF4_LDFLAGS)
    # remove all -l options from netcdf_libs that should leave -L only
@@ -1979,50 +1980,54 @@ AM_CONDITIONAL(ENABLE_ADIOS, [test x$enable_adios = xyes])
 ADIOS_VER_GE_1132=0
 
 if test "x$enable_adios" = "xyes" ; then
-    ADIOS_INSTALL=""
-    AC_ARG_WITH(adios,
-        [AS_HELP_STRING([--with-adios=/path/to/implementation],
-                        [installation prefix for ADIOS implementation])],
-        if test "x${withval}" = xyes; then
-            AC_MSG_ERROR(--with-adios must be given a pathname)
-        else
-            ADIOS_INSTALL=${withval}
-        fi
-    )
+   ADIOS_INSTALL=""
+   AC_ARG_WITH(adios,
+      [AS_HELP_STRING([--with-adios=/path/to/implementation],
+                      [installation prefix path for ADIOS implementation])],
+      if test "x${withval}" = xyes; then
+         AC_MSG_ERROR(--with-adios must be given a pathname)
+      else
+         ADIOS_INSTALL=${withval}
+      fi
+   )
 
-    if test "x$ADIOS_INSTALL" = x ; then
-        AC_PATH_PROG([adios_config],[adios_config],,[$PATH])
-    else
-        AC_PATH_PROG([adios_config],[adios_config],,[$ADIOS_INSTALL/bin])
-    fi
+   if test "x$ADIOS_INSTALL" = x ; then
+      AC_PATH_PROG([adios_config],[adios_config],,[$PATH])
+   else
+      AC_PATH_PROG([adios_config],[adios_config],,[$ADIOS_INSTALL/bin])
+   fi
 
-    if test "x$adios_config" = x ; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        Cannot find adios_config, a utility command to show the
-        configuration of the ADIOS library. It is required to
-        build PnetCDF with BP read support. Use option
-            --with-adios=/path/to/implementation
-        to specify the location of ADIOS build. In addition,
-        please make sure the MPI C compiler is compatible with the
-        one used to build ADIOS. The ADIOS library used must
-        be built with parallel I/O support. Check
-        'config.log' for more information. Stopping ...
-        ------------------------------------------------------------])
-    fi
-    UD_MSG_DEBUG([adios_config=$adios_config])
+   if test "x$adios_config" = x ; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      Cannot find adios_config, a utility command to show the
+      configuration of the ADIOS library. It is required to
+      build PnetCDF with BP read support. Use option
+          --with-adios=/path/to/implementation
+      to specify the location of ADIOS build. In addition,
+      please make sure the MPI C compiler is compatible with the
+      one used to build ADIOS. The ADIOS library used must
+      be built with parallel I/O support. Check
+      'config.log' for more information. Stopping ...
+      ------------------------------------------------------------])
+   fi
+   UD_MSG_DEBUG([adios_config=$adios_config])
     
-    # Get adios compile flags
-    adios_cflag=`$adios_config -c`
-    UD_MSG_DEBUG([adios_compiler_flag=$adios_cflag])
+   # Get adios compile flags
+   adios_cflag=`$adios_config -c`
+   UD_MSG_DEBUG([adios_compiler_flag=$adios_cflag])
 
-    # Get adios linker flags
-    adios_ldflag=`$adios_config -l`
-    UD_MSG_DEBUG([adios_linker_flag=$adios_ldflag])
+   # Get adios linker flags
+   adios_ldflag=`$adios_config -l`
+   UD_MSG_DEBUG([adios_linker_flag=$adios_ldflag])
 
    # remove all -l options from adios_ldflag that should leave -L only
    adios_LDFLAGS=`echo $adios_ldflag | ${SED} 's/-l[[^ ]]*//g'`
    UD_MSG_DEBUG(adios_LDFLAGS=$adios_LDFLAGS)
+
+   # remove -L from adios_LDFLAGS that should leave libdir only
+   adios_libdir=`echo ${adios_LDFLAGS} | ${SED} 's/-L//g'`
+   UD_MSG_DEBUG(adios_libdir=$adios_libdir)
 
    # remove all -L options from adios_ldflag that should leave -l only
    adios_LIBS=`echo $adios_ldflag | ${SED} 's/-L[[^ ]]*//g'`
@@ -2031,91 +2036,91 @@ if test "x$enable_adios" = "xyes" ; then
    # remove space between -L and path
    netcdf4_L=`echo $netcdf4_L | ${SED} 's/-L[[ ]]*/-L/g'`
    UD_MSG_DEBUG(netcdf4_L=$netcdf4_L)
-    saved_CPPFLAGS=$CPPFLAGS
-    saved_LDFLAGS=$LDFLAGS
-    saved_LIBS=$LIBS
+   saved_CPPFLAGS=$CPPFLAGS
+   saved_LDFLAGS=$LDFLAGS
+   saved_LIBS=$LIBS
 
-    CPPFLAGS="$adios_cflag $CPPFLAGS"
-    LDFLAGS="$adios_LDFLAGS $adios_LDFLAGS"
-    LIBS="$adios_LIBS $LIBS"
+   CPPFLAGS="$adios_cflag $CPPFLAGS"
+   LDFLAGS="$adios_LDFLAGS $adios_LDFLAGS"
+   LIBS="$adios_LIBS $LIBS"
  
-    have_adios=no
-    AC_MSG_CHECKING(ADIOS library)
-    AC_SEARCH_LIBS([adios_read_open_file], [adiosread], [have_adios=yes], [have_adios=no])
-    if test "x${have_adios}" = xyes; then
-        AC_SEARCH_LIBS([adios_posix_open_read_internal], [adios], [have_adios=yes], [have_adios=no])
-        if test "x${have_adios}" = xyes; then
-            AC_CHECK_HEADERS([adios_read.h], [], [have_adios=no])
-        fi
-    fi
+   have_adios=no
+   AC_MSG_CHECKING(ADIOS library)
+   AC_SEARCH_LIBS([adios_read_open_file], [adiosread], [have_adios=yes], [have_adios=no])
+   if test "x${have_adios}" = xyes; then
+      AC_SEARCH_LIBS([adios_posix_open_read_internal], [adios], [have_adios=yes], [have_adios=no])
+      if test "x${have_adios}" = xyes; then
+         AC_CHECK_HEADERS([adios_read.h], [], [have_adios=no])
+      fi
+   fi
 
-    if test "x${have_adios}" = xno; then
-        have_adios2=no
-        AC_MSG_CHECKING(ADIOS2 library)
-        AC_CHECK_HEADERS([adios2_c.h], [have_adios2=yes], [have_adios2=no])
-        if test "x${have_adios2}" = xno; then
-            AC_MSG_ERROR([
-            ------------------------------------------------------------
-            The ADIOS library and header file are required to build
-            PnetCDF with ADIOS BP read support. Use option
-                --with-adios=/path/to/implementation
-            to specify the location of ADIOS build. In addition,
-            please make sure the MPI C compiler is compatible with the
-            one used to build ADIOS.
-            Stopping ...
-            Check 'config.log' for more information.
-            ------------------------------------------------------------])
-        else
-            AC_MSG_ERROR([
-            ------------------------------------------------------------
-            PnetCDF currently only supports ADIOS 1.x.
-            ADIOS 1.x can be downloaded at:
-            https://github.com/ornladios/ADIOS
-            We will support ADIOS 2.x in future releases.
-            ------------------------------------------------------------])
-        fi
-    else
-        LIBS+=" -ladiosread -ladios"
-    fi
+   if test "x${have_adios}" = xno; then
+      have_adios2=no
+      AC_MSG_CHECKING(ADIOS2 library)
+      AC_CHECK_HEADERS([adios2_c.h], [have_adios2=yes], [have_adios2=no])
+      if test "x${have_adios2}" = xno; then
+         AC_MSG_ERROR([
+         ------------------------------------------------------------
+         The ADIOS library and header file are required to build
+         PnetCDF with ADIOS BP read support. Use option
+             --with-adios=/path/to/implementation
+         to specify the location of ADIOS build. In addition,
+         please make sure the MPI C compiler is compatible with the
+         one used to build ADIOS.
+         Stopping ...
+         Check 'config.log' for more information.
+         ------------------------------------------------------------])
+      else
+         AC_MSG_ERROR([
+         ------------------------------------------------------------
+         PnetCDF currently only supports ADIOS 1.x.
+         ADIOS 1.x can be downloaded at:
+         https://github.com/ornladios/ADIOS
+         We will support ADIOS 2.x in future releases.
+         ------------------------------------------------------------])
+      fi
+   else
+      LIBS+=" -ladiosread -ladios"
+   fi
 
-    dnl Check if ADIOS version is 1.12.0 or later
-    AC_MSG_CHECKING([Check if ADIOS version is 1.12.0 or later])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+   dnl Check if ADIOS version is 1.12.0 or later
+   AC_MSG_CHECKING([Check if ADIOS version is 1.12.0 or later])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
 #if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1012000)
       choke me
 #endif
-    ]])], [adios_ge_1_12_0=yes], [adios_ge_1_12_0=no])
-    AC_MSG_RESULT([$adios_ge_1_12_0])
+   ]])], [adios_ge_1_12_0=yes], [adios_ge_1_12_0=no])
+   AC_MSG_RESULT([$adios_ge_1_12_0])
 
-    if test "x${adios_ge_1_12_0}" = xno; then
-        AC_MSG_ERROR([
-        ------------------------------------------------------------
-        ADIOS version 1.12.0 or later is required to build
-        PnetCDF with ADIOS BP read support. 
-        ------------------------------------------------------------])
-    fi
+   if test "x${adios_ge_1_12_0}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      ADIOS version 1.12.0 or later is required to build
+      PnetCDF with ADIOS BP read support. 
+      ------------------------------------------------------------])
+   fi
 
-    dnl Check if ADIOS version is 1.13.2 or later
-    AC_MSG_CHECKING([Check if ADIOS version is 1.13.2 or later])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+   dnl Check if ADIOS version is 1.13.2 or later
+   AC_MSG_CHECKING([Check if ADIOS version is 1.13.2 or later])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
 #if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1013002)
       choke me
 #endif
-    ]])], [adios_ge_1_13_2=yes], [adios_ge_1_13_2=no])
-    AC_MSG_RESULT([$adios_ge_1_13_2])
+   ]])], [adios_ge_1_13_2=yes], [adios_ge_1_13_2=no])
+   AC_MSG_RESULT([$adios_ge_1_13_2])
 
-    if test "x${adios_ge_1_13_2}" = xyes; then
+   if test "x${adios_ge_1_13_2}" = xyes; then
       ADIOS_VER_GE_1132=1
-    fi
+   fi
     
-    CPPFLAGS=$saved_CPPFLAGS
-    LDFLAGS=$saved_LDFLAGS
-    LIBS=$saved_LIBS
+   CPPFLAGS=$saved_CPPFLAGS
+   LDFLAGS=$saved_LDFLAGS
+   LIBS=$saved_LIBS
 
-    AC_SUBST([ADIOS_INC], ["$adios_cflag"])
-    AC_SUBST([ADIOS_LDFLAGS], ["$adios_LDFLAGS"])
-    AC_SUBST([ADIOS_LIBS], ["$adios_LIBS"])
-    AC_SUBST([ADIOS_PACKAGE], [adios])
+   AC_SUBST([ADIOS_INC], ["$adios_cflag"])
+   AC_SUBST([ADIOS_LDFLAGS], ["$adios_LDFLAGS"])
+   AC_SUBST([ADIOS_LIBS], ["$adios_LIBS"])
+   AC_SUBST([ADIOS_PACKAGE], [adios])
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)
@@ -2288,7 +2293,9 @@ AM_CONDITIONAL(BUILD_DRIVER_FOO, [test x${debug} = xyes])
 AC_SUBST(enable_static)
 AC_SUBST(enable_shared)
 AC_SUBST(enable_netcdf4)
-AC_SUBST(netcdf_libdir)
+AC_SUBST(netcdf4_libdir)
+AC_SUBST(enable_adios)
+AC_SUBST(adios_libdir)
 AM_CONDITIONAL(BUILD_SHARED_LIB, [test x${enable_shared} = xyes])
 
 AC_OUTPUT
