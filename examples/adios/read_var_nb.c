@@ -1,16 +1,14 @@
 /*
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
  */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * This example demonstrates how to read variable data in BP file using PnetCDF
- * 
+ *
  * We read the file located at test/adios/array.bp
- * 
+ *
  * The content of the file is:
  * netcdf arrays {
  * // file format: ADIOS BP Ver. 3
@@ -89,9 +87,9 @@ int main(int argc, char** argv) {
     else                      snprintf(filename, 256, "%s", argv[optind]);
 
     ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    
-    /* The content of variable var_double_2Darray is 
-     * var_double_2Darray[x][y] =  x + y / 100 
+
+    /* The content of variable var_double_2Darray is
+     * var_double_2Darray[x][y] =  x + y / 100
      */
 
     /* Collective read */
@@ -99,10 +97,10 @@ int main(int argc, char** argv) {
     start[1] = 0;
     count[0] = 1;
     count[1] = NY;
-    ncmpi_iget_vara_double(ncid, 0, start, count, data_double, reqids); 
+    ncmpi_iget_vara_double(ncid, 0, start, count, data_double, reqids);
 
     /* Read with different datatype */
-    ncmpi_iget_vara_int(ncid, 0, start, count, data_int, reqids + 1); 
+    ncmpi_iget_vara_int(ncid, 0, start, count, data_int, reqids + 1);
 
     /* Wait for the requests */
     ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
@@ -110,17 +108,17 @@ int main(int argc, char** argv) {
 
     /* Check reqults */
     for(i = 0; i < NY; i++){
-        if (fabs(data_double[i] - (((double)start[0]) + ((double)i) / 100)) 
+        if (fabs(data_double[i] - (((double)start[0]) + ((double)i) / 100))
         > 0.0001){
-            printf("Rank %d: Expect Var 0 [%llu][%d] = %lf, but got %lf\n", 
-                    rank, start[0], i, ((double)start[0]) + ((double)i) / 100, 
+            printf("Rank %d: Expect Var 0 [%llu][%d] = %lf, but got %lf\n",
+                    rank, start[0], i, ((double)start[0]) + ((double)i) / 100,
                     data_double[i]);
         }
     }
 
     for(i = 0; i < NY; i++){
         if (data_int[i] != (int)start[0]) {
-            printf("Rank %d: Expect Var 0 [%llu][%d] = %d, but got %d\n", rank, 
+            printf("Rank %d: Expect Var 0 [%llu][%d] = %d, but got %d\n", rank,
                     start[0], i, (int)start[0], data_int[i]);
         }
     }

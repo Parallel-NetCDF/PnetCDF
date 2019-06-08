@@ -7,7 +7,6 @@ dnl
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 dnl
 include(`foreach.m4')dnl
 include(`utils.m4')dnl
@@ -27,7 +26,7 @@ dnl
 define(`SWIN',dnl
 `dnl
     if (intype == $1){
-        
+
 foreach(`dt', (`(`MPI_BYTE', `char')', dnl
     `(`MPI_CHAR', `char')', dnl
     `(`MPI_SIGNED_CHAR', `signed char')', dnl

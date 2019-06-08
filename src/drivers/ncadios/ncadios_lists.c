@@ -2,7 +2,6 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -103,7 +102,7 @@ int ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data) {
 
     list->data[id] = data;
     list->cnt++;
-    
+
     return id;
 }
 
@@ -123,7 +122,7 @@ int ncadiosi_att_list_add(NC_ad_att_list *list, int data) {
 
     list->data[id] = data;
     list->cnt++;
-    
+
     return id;
 }
 

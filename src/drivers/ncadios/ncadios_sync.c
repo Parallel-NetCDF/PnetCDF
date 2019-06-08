@@ -2,7 +2,6 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 /*
  * This file implements the helper function to synchronise header information
@@ -34,12 +33,12 @@ int ncadios_sync_header(NC_ad *ncadp) {
             bsize += strlen(ncadp->dims.data[i].name) + 1 + SIZEOF_INT * 2;
         }
         for(i = 0; i < ncadp->vars.cnt; i++){
-            bsize += strlen(ncadp->vars.data[i].name) + 1 + 
-            SIZEOF_INT * 3 + ncadp->vars.data[i].ndim * SIZEOF_INT + 
+            bsize += strlen(ncadp->vars.data[i].name) + 1 +
+            SIZEOF_INT * 3 + ncadp->vars.data[i].ndim * SIZEOF_INT +
             ncadp->vars.data[i].atts.cnt * SIZEOF_INT + sizeof(nc_type);
         }
     }
-    
+
     MPI_Bcast(&bsize, 1, MPI_INT, 0, ncadp->comm);
 
     buf = NCI_Malloc(bsize);
@@ -69,14 +68,14 @@ int ncadios_sync_header(NC_ad *ncadp) {
             namelen = strlen(ncadp->vars.data[i].name);
             *((int*)cur) = namelen;
             cur += SIZEOF_INT;
-            memcpy(cur, ncadp->vars.data[i].dimids, 
+            memcpy(cur, ncadp->vars.data[i].dimids,
                     ncadp->vars.data[i].ndim * SIZEOF_INT);
             cur += ncadp->vars.data[i].ndim * 4;
-            memcpy(cur, ncadp->vars.data[i].atts.data, 
+            memcpy(cur, ncadp->vars.data[i].atts.data,
                     ncadp->vars.data[i].atts.cnt * SIZEOF_INT);
             cur += ncadp->vars.data[i].atts.cnt * 4;
             strcpy(cur, ncadp->vars.data[i].name);
-            cur += namelen + 1;         
+            cur += namelen + 1;
         }
     }
 
@@ -102,7 +101,7 @@ int ncadios_sync_header(NC_ad *ncadp) {
             ncadiosi_def_dim(ncadp, name, len, &id);
         }
 
-        
+
         nvar = *((int*)cur);
         cur += 4;
         for(i = 0; i < nvar; i++){
@@ -119,13 +118,13 @@ int ncadios_sync_header(NC_ad *ncadp) {
             attids = (int*)cur;
             cur += natt * SIZEOF_INT;
             name = cur;
-            cur += namelen + 1;   
+            cur += namelen + 1;
             ncadiosi_def_var(ncadp, name, type, ndim, dimids, &id);
             for(j = 0; j < natt; j++){
                 ncadiosi_att_list_add(&(ncadp->vars.data[id].atts), attids[j]);
             }
         }
-        
+
     }
 
     NCI_Free(buf);

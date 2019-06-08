@@ -1,8 +1,6 @@
 #
-# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# Copyright (C) 2019, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
-#
-# $Id: Makefile.am 3283 2017-07-30 21:10:11Z wkliao $
 #
 # @configure_input@
 
@@ -29,7 +27,7 @@ if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
 
-M4_SRCS = ncadios_convert.m4 
+M4_SRCS = ncadios_convert.m4
 
 H_SRCS = ncadios_driver.h \
          ncadios_internal.h

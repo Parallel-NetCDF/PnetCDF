@@ -1,8 +1,6 @@
 #
-# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# Copyright (C) 2019, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
-#
-# $Id$
 #
 # @configure_input@
 
@@ -36,7 +34,7 @@ TESTPROGRAMS = open header \
                ivars \
                indep
 
-M4_SRCS  = 
+M4_SRCS  =
 
 M4FLAGS += -I${top_srcdir}/m4
 

@@ -2,7 +2,6 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -48,7 +47,7 @@ int ncadiosi_inq_dimid(NC_ad* ncadp, char* name, int *id) {
     return NC_NOERR;
 }
 
-int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim, 
+int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim,
                         int *dimids, int *id) {
     NC_ad_var var;
 
@@ -68,7 +67,7 @@ int ncadiosi_def_var(NC_ad* ncadp, char* name, nc_type type, int ndim,
 
 int ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id) {
     NC_ad_dim dim;
-    
+
     if (len == NC_UNLIMITED){
         *id = INT_MAX;
         return NC_NOERR;
@@ -78,7 +77,7 @@ int ncadiosi_def_dim(NC_ad* ncadp, char* name, int len, int *id) {
         dim.len = len;
         dim.name = NCI_Malloc(strlen(name) + 1);
         strcpy(dim.name, name);
-    
+
         *id = ncadiosi_dim_list_add(&(ncadp->dims), dim);
     }
 
@@ -121,26 +120,26 @@ int ncadiosi_parse_rec_dim(NC_ad *ncadp) {
     int err;
     int i;
     char name[128];
-    
+
     for(i = 0; i < ncadp->vars.cnt; i++){
         if (ncadp->vars.data[i].dimids[0] == INT_MAX){
             ADIOS_VARINFO * v;
-            
+
             v = adios_inq_var_byid (ncadp->fp, i);
             if (v == NULL){
                 err = ncmpii_error_adios2nc(adios_errno, "inq_var");
                 DEBUG_RETURN_ERROR(err);
-            }   
+            }
 
             sprintf(name, "var_%d_timesteps", i);
-            err = ncadiosi_def_dim(ncadp, name, v->nsteps, 
+            err = ncadiosi_def_dim(ncadp, name, v->nsteps,
                                     ncadp->vars.data[i].dimids);
             if (err != NC_NOERR){
                 DEBUG_RETURN_ERROR(err)
             }
         }
     }
-    
+
     return NC_NOERR;
 }
 
@@ -156,12 +155,12 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
     /* For all variables */
     for (i = 0; i < ncadp->fp->nvars; i++) {
         ADIOS_VARINFO * v;
-        
+
         v = adios_inq_var_byid (ncadp->fp, i);
         if (v == NULL){
             err = ncmpii_error_adios2nc(adios_errno, "inq_var");
             DEBUG_RETURN_ERROR(err);
-        }   
+        }
 
         if (maxndim < v->ndim + 1){
             maxndim = v->ndim + 1;
@@ -170,7 +169,7 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
             }
             dimids = (int*)NCI_Malloc(SIZEOF_INT * maxndim);
         }
-        
+
         /* Record every dimensions */
         if (v->nsteps > 1){
             if (recdimid < 0){
@@ -181,7 +180,7 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
             }
             dimids[0] = recdimid;
         }
-        
+
         for (j = 1; j <= v->ndim; j++){
             sprintf(name, "var_%d_dim_%d", i, j);
             err = ncadiosi_def_dim(ncadp, name, v->dims[j - 1], dimids + j);
@@ -192,13 +191,13 @@ int ncadiosi_parse_header_readall (NC_ad *ncadp) {
 
         /* Record variable */
         if (v->nsteps > 1){
-            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], 
-                                    ncadios_to_nc_type(v->type), v->ndim + 1, 
+            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i],
+                                    ncadios_to_nc_type(v->type), v->ndim + 1,
                                     dimids, &varid);
         }
         else{
-            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i], 
-                                    ncadios_to_nc_type(v->type), v->ndim, 
+            err = ncadiosi_def_var(ncadp, ncadp->fp->var_namelist[i],
+                                    ncadios_to_nc_type(v->type), v->ndim,
                                     dimids + 1, &varid);
         }
         if (err != NC_NOERR){

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# Copyright (C) 2019, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
 

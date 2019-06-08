@@ -2,7 +2,6 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 /*
  * This file implements the following PnetCDF APIs
@@ -77,7 +76,7 @@ ncadios_open(MPI_Comm     comm,
     /* Create a NC_ad object and save its driver pointer */
     ncadp = (NC_ad*) NCI_Malloc(sizeof(NC_ad));
     if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-    
+
     ncadp->path = (char*) NCI_Malloc(strlen(path) + 1);
     if (ncadp->path == NULL) {
         NCI_Free(ncadp);
@@ -95,7 +94,7 @@ ncadios_open(MPI_Comm     comm,
     /*
      * Use a modified bp2ncd utility to parse metadata related information
      * to guarantee the driver conforms to the converted nc file
-     * We do not use bp2ncd for attributes, we rely on ADIOS read 
+     * We do not use bp2ncd for attributes, we rely on ADIOS read
      * API for attributes
      * Rank 0 parse the header and boardcast to other ranks
      */
@@ -130,7 +129,7 @@ ncadios_open(MPI_Comm     comm,
             ncadiosi_dim_list_free(&(ncadp->dims));
             ncadiosi_var_list_init(&(ncadp->vars));
             ncadiosi_dim_list_init(&(ncadp->dims));
-            
+
             ncadiosi_parse_header_readall(ncadp);
         }
 
@@ -298,7 +297,7 @@ ncadios_inq_misc(void       *ncdp,
         *num_fix_varsp = ncadp->vars.cnt;
         for(i = 0; i < ncadp->vars.cnt; i++){
             for(j = 0; j < ncadp->vars.data[i].ndim; j++){
-                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len 
+                if (ncadp->dims.data[ncadp->vars.data[i].dimids[j]].len
                     == NC_UNLIMITED){
                     *num_rec_varsp -= 1;
                     break;
@@ -365,7 +364,7 @@ ncadios_inq_misc(void       *ncdp,
     if (buf_size != NULL){
         *buf_size = 0;
     }
-    
+
     return NC_NOERR;
 }
 

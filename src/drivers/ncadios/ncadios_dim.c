@@ -2,7 +2,6 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 /*
  * This file implements the following PnetCDF APIs.
@@ -57,7 +56,7 @@ ncadios_inq_dim(void       *ncdp,
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     /* ADIOS read API does not expose dimension information.
-     * We rely on a modified bp2ncd utility to build up our 
+     * We rely on a modified bp2ncd utility to build up our
      * own dimensional list.
      */
     if (name != NULL){

@@ -31,14 +31,14 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #include <pnc_debug.h>
 #include <common.h>
 
-#ifdef ENABLE_ADIOS 
-#include "adios_read.h" 
+#ifdef ENABLE_ADIOS
+#include "adios_read.h"
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
 #define BUFREAD64(buf,var) var = *(off_t *) (buf); \
                          if (diff_endian) \
                              swap_64(&var);
-#endif 
+#endif
 
 /* TODO: the following 3 global variables make PnetCDF not thread safe */
 
@@ -724,11 +724,11 @@ ncmpi_open(MPI_Comm    comm,
             format == NC_FORMAT_CDF5) {
             driver = ncmpio_inq_driver();
         }
-#ifdef ENABLE_ADIOS 
-        else if (format == NC_FORMAT_BP) { 
-            driver = ncadios_inq_driver(); 
-        } 
-#endif 
+#ifdef ENABLE_ADIOS
+        else if (format == NC_FORMAT_BP) {
+            driver = ncadios_inq_driver();
+        }
+#endif
         else /* unrecognized file format */
             DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
@@ -1162,7 +1162,7 @@ ncmpi_inq_format(int  ncid,
 static void swap_64(void *data)
 {
     uint64_t d = *(uint64_t *)data;
-    *(uint64_t *)data = ((d&0x00000000000000FF)<<56) 
+    *(uint64_t *)data = ((d&0x00000000000000FF)<<56)
                           + ((d&0x000000000000FF00)<<40)
                           + ((d&0x0000000000FF0000)<<24)
                           + ((d&0x00000000FF000000)<<8)
@@ -1262,16 +1262,16 @@ ncmpi_inq_file_format(const char *filename,
         else if (signature[3] == 2)  *formatp = NC_FORMAT_CDF2;
         else if (signature[3] == 1)  *formatp = NC_FORMAT_CLASSIC;
     }
-#ifdef ENABLE_ADIOS 
-    else{ 
-        ADIOS_FILE *fp = NULL; 
+#ifdef ENABLE_ADIOS
+    else{
+        ADIOS_FILE *fp = NULL;
         off_t fsize;
         int diff_endian;
         char footer[BP_MINIFOOTER_SIZE];
         off_t h1, h2, h3;
-        
+
         /* We test if the mini footer of the BP file follows BP specification */
-        if ((fd = open(path, O_RDONLY, 00400)) == -1) { 
+        if ((fd = open(path, O_RDONLY, 00400)) == -1) {
             if (errno == ENOENT)       DEBUG_RETURN_ERROR(NC_ENOENT)
             else if (errno == EACCES)       DEBUG_RETURN_ERROR(NC_EACCESS)
             else if (errno == ENAMETOOLONG) DEBUG_RETURN_ERROR(NC_EBAD_FILE)
@@ -1288,7 +1288,7 @@ ncmpi_inq_file_format(const char *filename,
         /* Get footer */
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
         if (rlen != BP_MINIFOOTER_SIZE) {
-            close(fd); 
+            close(fd);
             DEBUG_RETURN_ERROR(NC_EFILE)
         }
         if (close(fd) == -1) {
@@ -1302,25 +1302,25 @@ ncmpi_inq_file_format(const char *filename,
         BUFREAD64(footer + 16, h3) /* Position of attributes index table */
 
         /* All index tables must fall within the file
-         * Process group index table must comes before variable index table. 
+         * Process group index table must comes before variable index table.
          * Variables index table must comes before attributes index table.
          */
         if (0 < h1 && h1 < fsize &&
             0 < h2 && h2 < fsize &&
             0 < h3 && h3 < fsize &&
-            h1 < h2 && h2 < h3){ 
-            /* The footer ehck is passed, now we try to open the file with 
+            h1 < h2 && h2 < h3){
+            /* The footer ehck is passed, now we try to open the file with
              * ADIOS to make sure it is indeed a BP formated file
-             */ 
-            fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP, 
-                                        MPI_COMM_SELF); 
-            if (fp != NULL) { 
-                *formatp = NC_FORMAT_BP; 
-                adios_read_close(fp); 
-            } 
+             */
+            fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP,
+                                        MPI_COMM_SELF);
+            if (fp != NULL) {
+                *formatp = NC_FORMAT_BP;
+                adios_read_close(fp);
+            }
         }
-    } 
-#endif 
+    }
+#endif
 
     return NC_NOERR;
 }

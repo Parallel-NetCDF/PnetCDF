@@ -2,7 +2,6 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 /*
  * This file implements the following PnetCDF APIs.
@@ -103,9 +102,9 @@ ncadios_inq_attid(void       *ncdp,
         var = ncadp->vars.data[varid];
 
         /* ADIOS read expose all attributes as global attributes
-         * Variable attributes are represented by path starting with variable 
+         * Variable attributes are represented by path starting with variable
          * name
-         * These variables can be accessed as either global attributes using 
+         * These variables can be accessed as either global attributes using
          * full path or as variable attributes using only attribute name
          */
         sprintf(attname, "%s/%s", var.name, name);
@@ -118,7 +117,7 @@ ncadios_inq_attid(void       *ncdp,
                 break;
             }
         }
-        
+
         /* Name not found */
         if (i >= ncadp->fp->nattrs){
             DEBUG_RETURN_ERROR(NC_EINVAL);
@@ -140,7 +139,7 @@ ncadios_inq_att(void       *ncdp,
     enum ADIOS_DATATYPES atype;
     int  asize, tsize;
     void *adata;
-    
+
     if (varid == NC_GLOBAL){
         err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
     }
@@ -149,11 +148,11 @@ ncadios_inq_att(void       *ncdp,
         if (varid >= ncadp->vars.cnt){
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
-        
+
         /* ADIOS read expose all attributes as global attributes
-         * Variable attributes are represented by path starting with variable 
+         * Variable attributes are represented by path starting with variable
          * name
-         * These variables can be accessed as either global attributes using 
+         * These variables can be accessed as either global attributes using
          * full path or as variable attributes using only attribute name
          */
         sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);
@@ -228,7 +227,7 @@ ncadios_get_att(void         *ncdp,
     enum ADIOS_DATATYPES atype;
     int  asize, esize, nelems;
     void *adata;
-    
+
     if (varid == NC_GLOBAL){
         err = adios_get_attr(ncadp->fp, name, &atype, &asize, &adata);
     }
@@ -238,9 +237,9 @@ ncadios_get_att(void         *ncdp,
             DEBUG_RETURN_ERROR(NC_EINVAL);
         }
         /* ADIOS read expose all attributes as global attributes
-         * Variable attributes are represented by path starting with variable 
+         * Variable attributes are represented by path starting with variable
          * name
-         * These variables can be accessed as either global attributes using 
+         * These variables can be accessed as either global attributes using
          * full path or as variable attributes using only attribute name
          */
         sprintf(attname, "/%s/%s", ncadp->vars.data[varid].name, name);

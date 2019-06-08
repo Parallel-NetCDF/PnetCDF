@@ -5,11 +5,10 @@ dnl If you see this line, you can ignore the next one.
 dnl
 /*********************************************************************
 *
-*  Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+*  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
 *  See COPYRIGHT notice in top-level directory.
 *
 *********************************************************************/
-/* $Id: ncmpilogdump.c 3078 2017-06-26 18:47Z khou $ */
 
 include(`foreach.m4')dnl
 include(`utils.m4')dnl

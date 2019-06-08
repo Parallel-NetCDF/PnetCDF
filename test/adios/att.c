@@ -1,8 +1,6 @@
 /*
- *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
  */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -61,31 +59,31 @@ int main(int argc, char** argv) {
         printf("Rank %d: Expect global atts = %d, but got %d\n", rank, 4, natt);
         nerrs++;
     }
-    err = ncmpi_get_att_int(ncid, NC_GLOBAL, "temperature/number of levels", 
+    err = ncmpi_get_att_int(ncid, NC_GLOBAL, "temperature/number of levels",
                             (int*)data); CHECK_ERR
     if (*((int*)data) != 1){
-        printf("Rank %d: Expect global att 0 = %d, but got %d\n", rank, 1, 
+        printf("Rank %d: Expect global att 0 = %d, but got %d\n", rank, 1,
                 *((int*)data));
         nerrs++;
     }
     err = ncmpi_get_att_text(ncid, NC_GLOBAL, "temperature/description",  data);
     CHECK_ERR
     if (strcmp(data, "Global array written from 'size' processes") != 0){
-        printf("Rank %d: Expect global att 1 = %s, but got %s\n", rank, 
+        printf("Rank %d: Expect global att 1 = %s, but got %s\n", rank,
                 "Global array written from 'size' processes", data);
         nerrs++;
     }
-    err = ncmpi_get_att_double(ncid, NC_GLOBAL, "temperature/mean value", 
+    err = ncmpi_get_att_double(ncid, NC_GLOBAL, "temperature/mean value",
                                 (double*)data); CHECK_ERR
     if (*((double*)data) != 4.5){
         printf("Rank %d: Expect global att 2 = %lf, but got %lf\n", rank, 4.5,
                  *((double*)data));
         nerrs++;
     }
-    err = ncmpi_get_att_text(ncid, NC_GLOBAL, "temperature/date of coding", 
+    err = ncmpi_get_att_text(ncid, NC_GLOBAL, "temperature/date of coding",
                                 data); CHECK_ERR
     if (strcmp(data, "Nov, 2009") != 0){
-        printf("Rank %d: Expect global att 3 = %s, but got %s\n", rank, 
+        printf("Rank %d: Expect global att 3 = %s, but got %s\n", rank,
                 "Nov, 2009", data);
         nerrs++;
     }
@@ -94,33 +92,33 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_varnatts(ncid, vid, &natt); CHECK_ERR
     if (natt != 4){
-        printf("Rank %d: Expect var %d atts = %d, but got %d\n", rank, vid, 4, 
+        printf("Rank %d: Expect var %d atts = %d, but got %d\n", rank, vid, 4,
                 natt);
         nerrs++;
     }
-    err = ncmpi_get_att_int(ncid, vid, "number of levels", (int*)data); 
+    err = ncmpi_get_att_int(ncid, vid, "number of levels", (int*)data);
     CHECK_ERR
     if (*((int*)data) != 1){
-        printf("Rank %d: Expect var %d att 0 = %d, but got %d\n", rank, vid, 1, 
+        printf("Rank %d: Expect var %d att 0 = %d, but got %d\n", rank, vid, 1,
                 *((int*)data));
         nerrs++;
     }
     err = ncmpi_get_att_text(ncid, vid, "description",  data); CHECK_ERR
     if (strcmp(data, "Global array written from 'size' processes") != 0){
-        printf("Rank %d: Expect var %d att 1 = %s, but got %s\n", rank, vid, 
+        printf("Rank %d: Expect var %d att 1 = %s, but got %s\n", rank, vid,
                 "Global array written from 'size' processes", data);
         nerrs++;
     }
-    err = ncmpi_get_att_double(ncid, vid, "mean value", (double*)data); 
+    err = ncmpi_get_att_double(ncid, vid, "mean value", (double*)data);
     CHECK_ERR
     if (*((double*)data) != 4.5){
-        printf("Rank %d: Expect var %d att 2 = %lf, but got %lf\n", rank, vid, 
+        printf("Rank %d: Expect var %d att 2 = %lf, but got %lf\n", rank, vid,
                 4.5, *((double*)data));
         nerrs++;
     }
     err = ncmpi_get_att_text(ncid, vid, "date of coding",  data); CHECK_ERR
     if (strcmp(data, "Nov, 2009") != 0){
-        printf("Rank %d: Expect var %d att 3 = %s, but got %s\n", rank, vid, 
+        printf("Rank %d: Expect var %d att 3 = %s, but got %s\n", rank, vid,
                 "Nov, 2009", data);
         nerrs++;
     }

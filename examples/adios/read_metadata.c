@@ -1,13 +1,11 @@
 /*
  *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
  */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This examples demonstrates how to enumerate all variable, dimension, 
+ * This examples demonstrates how to enumerate all variable, dimension,
  * and attributes in a BP file using PnetCDF.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -68,14 +66,14 @@ int main(int argc, char** argv) {
 
     // Open ADIOS BP file as if opening a netcdf file
     // PnetCDF can only read BP files for now, NC_NOWRITE must be set
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, 
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                         &ncid);
     ERR
 
     err = ncmpi_inq(ncid, &ndim, &nvar, &natt, &nudim);
     ERR
     if (verbose)
-        printf("ndim: %d, nvar: %d, natt: %d, nudim: %d\n", ndim, nvar, natt, 
+        printf("ndim: %d, nvar: %d, natt: %d, nudim: %d\n", ndim, nvar, natt,
                nudim);
 
     for(i = 0; i < ndim; i++){

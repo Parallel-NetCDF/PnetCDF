@@ -1,8 +1,6 @@
 /*
- *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
  */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -73,17 +71,17 @@ int main(int argc, char** argv) {
     count[1] = 2;
     stride[0] = 5;
     stride[1] = 50;
-    err = ncmpi_iget_vars_double(ncid, 0, start, count, stride, (double*)data, 
+    err = ncmpi_iget_vars_double(ncid, 0, start, count, stride, (double*)data,
                                     NULL); CHECK_ERR
 
     err = ncmpi_wait_all(ncid, NC_GET_REQ_ALL, NULL, NULL); CHECK_ERR
-    
+
     for(i = 0; i < 2; i++){
         for(j = 0; j < 2; j++){
-            if (fabs(data[i][j] - (((double)(i * stride[0])) + ((double)(j * 
+            if (fabs(data[i][j] - (((double)(i * stride[0])) + ((double)(j *
                 stride[1])) / 100)) > 0.0001){
-                printf("Rank %d: Expect Var 0 [%d][%d] = %lf, but got %lf\n", 
-                        rank, i * (int)stride[0], j * (int)stride[1], 
+                printf("Rank %d: Expect Var 0 [%d][%d] = %lf, but got %lf\n",
+                        rank, i * (int)stride[0], j * (int)stride[1],
                         (((double)(i * stride[0])) + ((double)(j * stride[1]))
                          / 100), data[i][j]);
                 nerrs++;

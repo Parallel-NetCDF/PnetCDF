@@ -1,10 +1,10 @@
 /*
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- * 
- *  This file is modified from the bp2ncd utility in ADIOS 1.x distribution. 
+ *
+ *  This file is modified from the bp2ncd utility in ADIOS 1.x distribution.
  *  See ADIOS_COPYING in src/drivers/ncaiods directory.
- * 
+ *
  *  Original copyright notice as follow:
  *  ```````````````````````````````````````````````````````````````````````````
  *  ADIOS is freely available under the terms of the BSD license described
@@ -13,7 +13,6 @@
  *  Copyright (c) 2008 - 2009.  UT-BATTELLE, LLC. All rights reserved.
  *  ```````````````````````````````````````````````````````````````````````````
  */
-/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -59,26 +58,26 @@ int ncd_gen_name (char *fullname, char *path, char *name) {
     char *new_path = strdup(path);
     if ( path[0] == '/')
          new_path=new_path+1;
-          
+
     for ( i = 0; i < strlen (new_path); i++) {
         if ( new_path[i] == '[' || new_path[i] == ']' || new_path[i] == '/' || new_path[i] == '\\')
             new_path[i] = '_';
     }
     if (*new_path != '\0') {
         if (new_path[i-1]!='_') {
-            if (strcmp(name,"") )  
+            if (strcmp(name,"") )
                 sprintf (fullname, "%s_%s", new_path, name);
             else {
                 strcpy (fullname,new_path);
-                fullname [strlen(fullname)] = '\0'; 
+                fullname [strlen(fullname)] = '\0';
             }
         }
-        else 
-            if (strcmp(name,"") )  
+        else
+            if (strcmp(name,"") )
                 sprintf (fullname, "%s%s", new_path, name);
             else {
                 strcpy (fullname,new_path);
-                fullname [strlen(fullname)] = '\0'; 
+                fullname [strlen(fullname)] = '\0';
             }
     }
     else
@@ -99,28 +98,28 @@ int ncd_dataset (NC_ad* ncid
     char *path = ptr_var_header->path;
     char fullname[256],dimname[256];
     enum ADIOS_DATATYPES type = ptr_var_header->type;
-    struct adios_dimension_struct_v1 *dims = ptr_var_header->dims; 
+    struct adios_dimension_struct_v1 *dims = ptr_var_header->dims;
     int maxrank = 0, i,j, valid=-1, nc_dimid=-1, retval=0;
     size_t rank = 0, start_dims[10],count_dims[10];
     int dimids[10];
     static int onename_dimid = -1;
     struct adios_index_attribute_struct_v1 * atts_root = 0;
-    
+
     memset(dimids,-1,10*SIZEOF_INT);
     if(!strcmp(path,"") && !strcmp(name,""))
         return 0;
     ncd_gen_name (fullname, path, name);
-   
+
     enum ADIOS_FLAG time_flag;
     while (dims) {
         ++maxrank;
         if (dims->dimension.is_time_index == adios_flag_yes) {
             time_flag = adios_flag_yes;
 
-        } 
+        }
         dims = dims->next;
-    } 
-    
+    }
+
     dims = ptr_var_header->dims;
     if (dims) {
         for (rank = 0; rank < maxrank; rank++) {
@@ -144,9 +143,9 @@ int ncd_dataset (NC_ad* ncid
                     while (atts_root) {
                         if (atts_root->id == dims->global_dimension.var_id) {
                             dimids[ rank] = *(int*)atts_root->characteristics->value;
-                            break; 
+                            break;
                         }
-                        atts_root = atts_root->next; 
+                        atts_root = atts_root->next;
                     }
                 }
                 if (dims->dimension.var_id!=0 ) {
@@ -166,8 +165,8 @@ int ncd_dataset (NC_ad* ncid
                         while (atts_root) {
                             if (atts_root->id == dims->dimension.var_id) {
                                 count_dims [ rank] = *(int*)atts_root->characteristics->value;
-                                break; 
-                            } 
+                                break;
+                            }
                             atts_root = atts_root->next;
                         }
                     }
@@ -191,8 +190,8 @@ int ncd_dataset (NC_ad* ncid
                         while (atts_root) {
                             if (atts_root->id == dims->local_offset.var_id) {
                                 start_dims [rank] = *(int*)atts_root->characteristics->value;
-                                break; 
-                            } 
+                                break;
+                            }
                             atts_root = atts_root->next;
                         }
                     }
@@ -232,8 +231,8 @@ int ncd_dataset (NC_ad* ncid
                     if (dims->dimension.rank!=0) {
                         sprintf(dimname,"%s_%zu",fullname,rank);
                         dimids[rank]=-1;
-                        ncadiosi_inq_dimid(ncid, dimname, &dimids[rank]); 
-                        if (dimids [rank] <= 0) 
+                        ncadiosi_inq_dimid(ncid, dimname, &dimids[rank]);
+                        if (dimids [rank] <= 0)
                             retval=ncadiosi_def_dim (ncid, dimname,dims->dimension.rank,&dimids[rank]);
                         start_dims[rank] = 0;
                         count_dims[rank] = dims->dimension.rank;
@@ -244,13 +243,13 @@ int ncd_dataset (NC_ad* ncid
                                 if (dims->dimension.is_time_index == adios_flag_yes) {
                                     start_dims[rank] = var_dims[i].rank - 1;
                                     count_dims[rank] = 1;
-                                    dimids[rank] = var_dims [i].nc_dimid; 
+                                    dimids[rank] = var_dims [i].nc_dimid;
                                 }
                                 else {
                                     start_dims[rank] = 0;
                                     count_dims[rank] = var_dims[i].rank;
                                     dimids[rank]=var_dims[i].nc_dimid;
-                                } 
+                                }
                                 break;
                             }
                         }
@@ -265,7 +264,7 @@ int ncd_dataset (NC_ad* ncid
                         while (atts_root) {
                             if (atts_root->id == dims->dimension.var_id) {
                                 ncd_gen_name (dimname, atts_root->attr_path
-                                        ,atts_root->attr_name); 
+                                        ,atts_root->attr_name);
                                 if (!atts_root->characteristics->value) {
                                     for (i = 0; i < var_dims_count; i++) {
                                         if (var_dims [i].id == atts_root->characteristics->var_id) {
@@ -277,10 +276,10 @@ int ncd_dataset (NC_ad* ncid
                                                 ncadiosi_def_dim (ncid, dimname
                                                         ,var_dims[i].rank
                                                         ,&dimids [rank]);
-                                            i = var_dims_count + 1; 
-                                        }                
-                                    }                
-                                }                
+                                            i = var_dims_count + 1;
+                                        }
+                                    }
+                                }
                                 else {
                                     count_dims [ rank] = *(int *)atts_root->characteristics->value;
                                     start_dims[rank]=0;
@@ -288,10 +287,10 @@ int ncd_dataset (NC_ad* ncid
                                     if (dimids [rank] <= 0)
                                         ncadiosi_def_dim (ncid, dimname
                                                 ,*(int *)atts_root->characteristics->value
-                                                ,&dimids [rank]); 
+                                                ,&dimids [rank]);
                                 }
-                                break; 
-                            } 
+                                break;
+                            }
                             atts_root = atts_root->next;
                         }
                     }
@@ -303,9 +302,9 @@ int ncd_dataset (NC_ad* ncid
                         retval = ncadiosi_def_dim ( ncid, dimname, dims->dimension.rank, &nc_dimid);
                     dimids[rank]=nc_dimid;
                     count_dims[rank] = dims->dimension.rank;
-                    start_dims[rank] =0; 
+                    start_dims[rank] =0;
                     ERR(retval);
-                } 
+                }
             }
             if (dims)
                 dims = dims->next;
@@ -318,7 +317,7 @@ int ncd_dataset (NC_ad* ncid
                 time_idx = rank;
                 break;
             }
-        } 
+        }
         for (rank = 0; rank < maxrank; rank++) {
             if (verbose>0)
                 fprintf(stderr, "\tdimension info[%zu]: c(%zu) s(%zu)\n"
@@ -326,11 +325,11 @@ int ncd_dataset (NC_ad* ncid
         }
         if (time_idx == 0 && dimids[time_idx]!=0) {
             for (rank=maxrank-1;rank>0;rank--) {
-                dimids[rank] = dimids[rank-1];                
-                start_dims[rank] = start_dims[rank-1];                
+                dimids[rank] = dimids[rank-1];
+                start_dims[rank] = start_dims[rank-1];
             }
             start_dims[time_idx] = var_dims[0].rank-1;
-            dimids[time_idx] = var_dims[0].id;                
+            dimids[time_idx] = var_dims[0].id;
         }
 
         /* In case of Fortran generated file, we have to flip the dimensions here
@@ -356,7 +355,7 @@ int ncd_dataset (NC_ad* ncid
             }
         }
 
-        switch(type) { 
+        switch(type) {
             case adios_real:
                 if ( valid<0) {
                     retval=ncadiosi_def_var(ncid,fullname,NC_FLOAT,maxrank,dimids,&valid);
@@ -365,27 +364,27 @@ int ncd_dataset (NC_ad* ncid
                 ERR(retval);
                 break;
             case adios_double:
-                if ( valid<0) 
+                if ( valid<0)
                     retval=ncadiosi_def_var(ncid,fullname,NC_DOUBLE,maxrank,dimids,&valid);
                 ERR(retval);
                 break;
             case adios_long:
-                if ( valid<0) 
+                if ( valid<0)
                     retval=ncadiosi_def_var(ncid,fullname,NC_LONG,maxrank,dimids,&valid);
                 break;
             case adios_unsigned_byte:
-                if ( valid<0) 
+                if ( valid<0)
                     retval=ncadiosi_def_var(ncid,fullname,NC_BYTE,maxrank,dimids,&valid);
                 break;
             case adios_byte:
-                if ( valid<0) 
+                if ( valid<0)
                     retval=ncadiosi_def_var(ncid,fullname,NC_BYTE,maxrank,dimids,&valid);
                 ERR (retval);
                 break;
             case adios_integer:
                 if (valid < 0) {
                     retval = ncadiosi_def_var (ncid,fullname,NC_INT,maxrank,dimids,&valid);
-                } 
+                }
                 break;
             default:
                 break;
@@ -393,8 +392,8 @@ int ncd_dataset (NC_ad* ncid
     }
     else if (ptr_var_header->is_dim == adios_flag_yes) {
         for ( j = 0; j<var_dims_count;j++){
-            if (var_dims [j].id==ptr_var_header->id) { 
-                break; 
+            if (var_dims [j].id==ptr_var_header->id) {
+                break;
             }
         }
 
@@ -506,10 +505,10 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
     }
 
     for (i = 0; i < vars_root->characteristics_count; i++){
-        if (vars_root->characteristics [i].file_index != (uint32_t)-1) { 
+        if (vars_root->characteristics [i].file_index != (uint32_t)-1) {
             /*
             if (ncid->rank == 0){
-                 printf("Subfile detected, abort np2ncd parsing\n"); fflush(stdout); 
+                 printf("Subfile detected, abort np2ncd parsing\n"); fflush(stdout);
             }
             */
             return -1;
@@ -537,7 +536,7 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
         struct adios_var_header_struct_v1 var_header;
         struct adios_var_payload_struct_v1 var_payload;
 
-        if (pg->offset_in_file >= b->pg_index_offset) 
+        if (pg->offset_in_file >= b->pg_index_offset)
         {
             if (ncid->rank == 0){
                 printf ("Process Group offset is beyond the footer.\n"); fflush(stdout);
@@ -571,17 +570,17 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
         }
 
         /****************************************
-        * Create unlimited time index dimension 
+        * Create unlimited time index dimension
         ****************************************/
         if (pg_header.time_index_name) {
-             
+
              var_dims = realloc (var_dims, (var_dims_count + 1)
                           * sizeof (struct var_dim)
                           );
              static int time_dimid = -1;
              ncadiosi_def_dim(ncid,pg_header.time_index_name,NC_UNLIMITED,&time_dimid);
              strcpy(var_dims[var_dims_count].dimname,pg_header.time_index_name);
-             var_dims[var_dims_count].id = 0; 
+             var_dims[var_dims_count].id = 0;
              var_dims[var_dims_count].rank = pg_header.time_index;
              var_dims[var_dims_count].nc_dimid = time_dimid;
 
@@ -620,17 +619,17 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
                 var_dims = realloc (var_dims,   (var_dims_count + 1)
                                               * sizeof (struct var_dim)
                                    );
-                
+
                 strcpy(var_dims [var_dims_count].dimname,var_header.name);
                 var_dims [var_dims_count].id = -1;
                 var_dims [var_dims_count].rank = -1;
                 var_dims [var_dims_count].nc_dimid = -1;
 
                 for( j = 0 ; j < var_dims_count; j++){
-                    if (var_dims [j].id == var_header.id) { 
+                    if (var_dims [j].id == var_header.id) {
                          var_dims [j].rank = *(unsigned int *) var_payload.payload;
                          flag = 1;
-                         break; 
+                         break;
                     }
                 }
 

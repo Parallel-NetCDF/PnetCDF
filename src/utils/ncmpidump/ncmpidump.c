@@ -22,16 +22,16 @@
 #include "ncmpidump.h"
 #include "dumplib.h"
 #include "vardata.h"
- 
-#ifdef ENABLE_ADIOS 
-#include "adios_read.h" 
+
+#ifdef ENABLE_ADIOS
+#include "adios_read.h"
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
 #define ADIOS_VERSION_NUM_MASK                       0x000000FF
 #define BUFREAD64(buf,var) var = *(off_t *) (buf); \
                          if (diff_endian) \
                              swap_64(&var);
-#endif 
+#endif
 
 static void usage(void);
 static char* name_path(const char* path);
@@ -50,7 +50,7 @@ int main(int argc, char** argv);
 
 char *progname;
 
-#ifdef ENABLE_ADIOS 
+#ifdef ENABLE_ADIOS
 unsigned int bp_ver;
 #endif
 
@@ -702,7 +702,7 @@ enum FILE_KIND {
     CDF2,
     CDF1,
     HDF5,
-    BP, 
+    BP,
     UNKNOWN
 };
 
@@ -710,7 +710,7 @@ enum FILE_KIND {
 static void swap_64(void *data)
 {
     uint64_t d = *(uint64_t *)data;
-    *(uint64_t *)data = ((d&0x00000000000000FF)<<56) 
+    *(uint64_t *)data = ((d&0x00000000000000FF)<<56)
                           + ((d&0x000000000000FF00)<<40)
                           + ((d&0x0000000000FF0000)<<24)
                           + ((d&0x00000000FF000000)<<8)
@@ -720,7 +720,7 @@ static void swap_64(void *data)
                           + ((d&0xFF00000000000000LL)>>56);
 }
 
-static int adios_parse_version (char *footer, unsigned int *version, 
+static int adios_parse_version (char *footer, unsigned int *version,
                                 int *diff_endianness) {
     unsigned int test = 1; /* If high bit set, big endian */
 
@@ -773,7 +773,7 @@ enum FILE_KIND check_file_signature(char *path)
         else if (signature[3] == 2)  return CDF2;
         else if (signature[3] == 1)  return CDF1;
     }
-#ifdef ENABLE_ADIOS 
+#ifdef ENABLE_ADIOS
     else{
         off_t fsize;
         int diff_endian;
@@ -811,18 +811,18 @@ enum FILE_KIND check_file_signature(char *path)
         BUFREAD64(footer + 16, h3) /* Position of attributes index table */
 
         /* All index tables must fall within the file
-         * Process group index table must comes before variable index table. 
+         * Process group index table must comes before variable index table.
          * Variables index table must comes before attributes index table.
          */
         if (0 < h1 && h1 < fsize &&
             0 < h2 && h2 < fsize &&
             0 < h3 && h3 < fsize &&
-            h1 < h2 && h2 < h3){ 
-            return BP; 
+            h1 < h2 && h2 < h3){
+            return BP;
         }
-    } 
+    }
 #endif
-    
+
     return UNKNOWN; /* unknown format */
 }
 

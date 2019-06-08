@@ -2,7 +2,6 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 /*
  * This file implements the following PnetCDF APIs.
@@ -94,7 +93,7 @@ ncadios_inq_var(void       *ncdp,
     NC_ad_var var;
 
     var = ncadp->vars.data[varid];
-    
+
     if (xtypep != NULL){
         *xtypep = var.type;
     }
@@ -162,7 +161,7 @@ ncadios_get_var(void             *ncdp,
     }
 
     /* Create a read request */
-    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf, 
+    err = ncadiosi_init_get_req(ncadp, &r, v, start, count, stride, imap, buf,
                                 bufcount, buftype);
 
     /* Release var info */
@@ -205,9 +204,9 @@ ncadios_iget_var(void             *ncdp,
 {
     NC_ad *ncadp = (NC_ad*)ncdp;
 
-    return ncadiosi_iget_var(ncadp, varid, start, count, stride, imap, buf, 
+    return ncadiosi_iget_var(ncadp, varid, start, count, stride, imap, buf,
                                 bufcount, buftype, reqid);
-} 
+}
 
 int
 ncadios_iput_var(void             *ncdp,
@@ -270,7 +269,7 @@ ncadios_get_varn(void              *ncdp,
                int                reqMode)
 {
     /* No support for varn at this time
-     * ADIOS interface make varn difficult to be implemented efficiently 
+     * ADIOS interface make varn difficult to be implemented efficiently
      */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 }
