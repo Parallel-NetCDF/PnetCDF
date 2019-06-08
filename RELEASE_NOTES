@@ -6,6 +6,10 @@ PnetCDF Release Notes
 Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
+-------------------------------------
+Version 1.11.2 (May 13, 2019)
+-------------------------------------
+
 * Bug fixes
   + When configure command-line option `--enable-netcdf4` is used, errors may
     occur during the configure or make time. Thanks Bruno Pagani for reporting.
@@ -149,8 +153,9 @@ Version 1.11.0 (December 19, 2018)
 
 * Update configure options
   + Enable NetCDF-4 support.
-    - `--enable-netcdf4`: enable NetCDF4 format classic mode support
-    - `--with-netcdf4=/path/to/netcdf-4`: path to NetCDF-4 library installation
+    - `--enable-netcdf4`: enables NetCDF4 format classic mode support
+    - `--with-netcdf4=/path/to/netcdf-4`: can be used to specify the path to
+      NetCDF-4 library installation
   + Enable multi-threading support.
     - `--enable-thread-safe`: enable per-file thread-safe support
     - `--with-pthread`: path to the pthread library installation
