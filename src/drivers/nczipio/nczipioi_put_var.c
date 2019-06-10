@@ -470,47 +470,39 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
 
     // Pack requests
     memset(soff, 0, sizeof(int) * nsend);
-#ifndef PNETCDF_BUILD_HETERO
-    if (varp->ndim == 1){
-    }
-    else{
-#endif
-        nczipioi_chunk_itr_init_ex(varp, start, count, citr, &cid, ostart, osize); // Initialize chunk iterator
-        do{
-            // Chunk owner
-            cown = varp->chunk_owner[cid];
-            if (cown != nczipp->rank){
-                j = smap[cown];
+    nczipioi_chunk_itr_init_ex(varp, start, count, citr, &cid, ostart, osize); // Initialize chunk iterator
+    do{
+        // Chunk owner
+        cown = varp->chunk_owner[cid];
+        if (cown != nczipp->rank){
+            j = smap[cown];
 
-                // Pack type from user buffer to (contiguous) intermediate buffer
-                for(i = 0; i < varp->ndim; i++){
-                    tstart[i] = (int)(ostart[i] - start[i]);
-                    tsize[i] = (int)count[i];
-                    tssize[i] = (int)osize[i];
-                }
-                //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_send([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
-                CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-                CHK_ERR_TYPE_COMMIT(&ptype);
-
-                // Pack metadata
-                for(i = 0; i < varp->ndim; i++){
-                    tstart[i] = (int)(ostart[i] - citr[i]);
-                }
-#ifdef PNETCDF_BUILD_HETERO
-                CHK_ERR_PACK(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                CHK_ERR_PACK(tstart, varp->ndim << 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-#else
-                *((int*)(sbuf[j] + soff[j])) = cid; soff[j] += sizeof(int);
-                memcpy(sbuf[j] + soff[j], tstart, (varp->ndim << 1) * sizeof(int)); soff[j] += (varp->ndim << 1) * sizeof(int);
-#endif
-                // Pack data
-                CHK_ERR_PACK(buf, 1, ptype, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                MPI_Type_free(&ptype);
+            // Pack type from user buffer to (contiguous) intermediate buffer
+            for(i = 0; i < varp->ndim; i++){
+                tstart[i] = (int)(ostart[i] - start[i]);
+                tsize[i] = (int)count[i];
+                tssize[i] = (int)osize[i];
             }
-        } while (nczipioi_chunk_itr_next_ex(varp, start, count, citr, &cid, ostart, osize));
-#ifndef PNETCDF_BUILD_HETERO
-    }
-#endif
+            //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_send([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
+            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+            CHK_ERR_TYPE_COMMIT(&ptype);
+
+            // Pack metadata
+            for(i = 0; i < varp->ndim; i++){
+                tstart[i] = (int)(ostart[i] - citr[i]);
+            }
+
+            //CHK_ERR_PACK(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+            //CHK_ERR_PACK(tstart, varp->ndim << 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
+
+            *((int*)(sbuf[j] + soff[j])) = cid; soff[j] += sizeof(int);
+            memcpy(sbuf[j] + soff[j], tstart, (varp->ndim << 1) * sizeof(int)); soff[j] += (varp->ndim << 1) * sizeof(int);
+
+            // Pack data
+            CHK_ERR_PACK(buf, 1, ptype, sbuf[j], ssize[j], soff + j, nczipp->comm);
+            MPI_Type_free(&ptype);
+        }
+    } while (nczipioi_chunk_itr_next_ex(varp, start, count, citr, &cid, ostart, osize));
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_PACK_REQ)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_SEND_REQ)

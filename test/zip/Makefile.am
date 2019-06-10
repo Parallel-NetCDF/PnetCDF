@@ -31,8 +31,7 @@ check_PROGRAMS = varn_2d \
 				 ivarn_2d \
 				 vara \
                  rec \
-                 irec \
-                 test
+                 irec
 
 EXTRA_DIST = # wrap_runs.sh parallel_run.sh
 

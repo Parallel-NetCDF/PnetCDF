@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <common.h>
 #include <nczipio_driver.h>
 #include "nczipio_internal.h"
 
@@ -166,3 +167,24 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
 
     return NC_NOERR;
 }
+
+int nczipioi_print_buffer(char *prefix, unsigned char* buf, int len){
+    int i;
+    int plen;
+    char *out, *outp;
+
+    plen = strlen(prefix);
+    out = outp = (char*)NCI_Malloc(len * 3 + 1 + plen);
+
+    sprintf(outp, "%s ", prefix);   outp += plen + 1;
+    for(i = 0; i < len; i++){
+        sprintf(outp, "%02x ", (unsigned int)buf[i]); outp += 3;
+    }
+
+    printf("%s\n", out); fflush(stdout);
+
+    NCI_Free(out);
+
+    return NC_NOERR;
+}
+

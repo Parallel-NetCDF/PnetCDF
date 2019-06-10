@@ -111,7 +111,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
 
             // We infer owners by reqs
-            err = nczipioi_calc_chunk_owner(nczipp, varp, nreq, starts, counts);
+            err = nczipioi_calc_chunk_owner(nczipp, varp, nreq, starts, counts, 0);
             if (err != NC_NOERR){
                 return err;
             }
@@ -283,10 +283,9 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                 }
             }
             else{
-                if (nczipp->blockmapping == NC_ZIP_MAPPING_STATIC){
-                    for(j = 0; j < varp->nchunk; j++){ 
-                        varp->chunk_owner[j] = j % nczipp->np;
-                    }
+                err = nczipioi_calc_chunk_owner(nczipp, varp, 0, NULL, NULL, oldnchunk);
+                if (err != NC_NOERR){
+                    return err;
                 }
             }
 
