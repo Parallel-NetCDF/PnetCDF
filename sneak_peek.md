@@ -57,10 +57,14 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New/updated utility program
-  + ncmpidiff now checks file format versions of two files, and reports
+  + `cdfdiff` is a new utility program. It is a serial version of `ncmpidiff`
+    that is compiled with gcc without PnetCDF library. It can run on the login
+    node in a cross-compile environment. `cdfdiff` only compares files in the
+    classic NetCDF formats, i.e. CDF-1, CDF-2, and CDF-5.
+  + `ncmpidiff` now checks file format versions of two files, and reports
     difference if not the same. Even if formats are different, it continues to
     compare the contents of file headers and values in variables.
-  + ncmpidump can now dump BP files.
+  + `ncmpidump` can now dump BP files.
 
 * Other updates:
   + none

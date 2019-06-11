@@ -282,14 +282,34 @@ int main(int argc, char **argv)
     MPI_Info_free(&info);
 
     for (i=0; i<2; i++) {
-        name[i]   = (char*) calloc(NC_MAX_NAME, 1);
+        /* file format version */
+        err = ncmpi_inq_file_format(argv[optind+i], &fmt[i]);
+        HANDLE_ERROR
+
+        if (fmt[i] == NC_FORMAT_NETCDF4) {
+            fprintf(stderr, "Error at line %d: HDF5 based NetCDF4 file %s is not supported\n",
+                    __LINE__, argv[optind+i]);
+            MPI_Abort(MPI_COMM_WORLD, -1);
+            exit(1);
+        } else if (fmt[i] == NC_FORMAT_BP) {
+            fprintf(stderr, "Error at line %d: BP file %s is not supported\n",
+                    __LINE__, argv[optind+i]);
+            MPI_Abort(MPI_COMM_WORLD, -1);
+            exit(1);
+        } else if (fmt[i] != NC_FORMAT_CLASSIC &&
+                   fmt[i] != NC_FORMAT_CDF2 &&
+                   fmt[i] != NC_FORMAT_CDF5) {
+            fprintf(stderr, "Error at line %d: %s is not a classic NetCDF file\n",
+                    __LINE__, argv[optind+i]);
+            MPI_Abort(MPI_COMM_WORLD, -1);
+            exit(1);
+        }
+
+        name[i] = (char*) calloc(NC_MAX_NAME, 1);
         if (!name[i]) OOM_ERROR
 
         /* open files */
         err = ncmpi_open(comm, argv[optind+i], NC_NOWRITE, info, &ncid[i]);
-        HANDLE_ERROR
-        /* file format version */
-        err = ncmpi_inq_unlimdim(ncid[i], &fmt[i]);
         HANDLE_ERROR
 
         err = ncmpi_inq(ncid[i], &ndims[i], &nvars[i], &natts[i], &recdim[i]);

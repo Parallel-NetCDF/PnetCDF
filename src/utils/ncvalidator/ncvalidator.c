@@ -2235,6 +2235,7 @@ fn_exit:
 
 /* End Of get NC */
 
+#ifndef BUILD_CDFDIFF
 static void
 usage(char *argv0)
 {
@@ -2386,3 +2387,4 @@ prog_exit:
 
     exit((status == NC_NOERR) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+#endif
