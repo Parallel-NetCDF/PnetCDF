@@ -28,7 +28,7 @@ NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 OUT_PATH=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
 rm -f ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
-${TESTSEQRUN} ${NCMPIGEN} -v 2 -o ${TESTOUTDIR}/redef1.nc ${srcdir}/redef-good.ncdump
+${TESTSEQRUN} ${NCMPIGEN} -v 5 -o ${TESTOUTDIR}/redef1.nc ${srcdir}/redef-good.ncdump
 ${TESTSEQRUN} ./redef1 ${TESTOUTDIR}/testfile.nc
 ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/testfile.nc ${TESTOUTDIR}/redef1.nc
 # diff -q ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc

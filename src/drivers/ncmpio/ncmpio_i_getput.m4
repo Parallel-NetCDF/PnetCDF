@@ -219,9 +219,8 @@ ncmpio_igetput_varm(NC               *ncp,
 
     /* for nonblocking API, return now if request size is zero */
     if (nbytes == 0) {
-        if (reqid != NULL){
+        if (reqid != NULL)
             *reqid = NC_REQ_NULL; /* mark this as a NULL request */
-        }
         goto fn_exit;
     }
 

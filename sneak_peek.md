@@ -57,7 +57,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New/updated utility program
-  + ncmpidump - can now dump BP files.
+  + ncmpidiff now checks file format versions of two files, and reports
+    difference if not the same. Even if formats are different, it continues to
+    compare the contents of file headers and values in variables.
+  + ncmpidump can now dump BP files.
 
 * Other updates:
   + none

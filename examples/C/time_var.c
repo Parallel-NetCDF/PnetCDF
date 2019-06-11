@@ -288,7 +288,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
 
     /* read 2nd record of variable rec_var */
     start[0] = 1;  /* 2nd record */
-    start[1] = local_nx * rank;
+    start[1] = (MPI_Offset)local_nx * rank;
     count[0] = 1;
     count[1] = local_nx;
     err = ncmpi_get_vara_double_all(ncid, rec_var, start, count, buf); ERR
