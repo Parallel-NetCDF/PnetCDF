@@ -18,7 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h> /* malloc(), calloc(), free() */
 #include <string.h> /* strtok(), strcpy(), strlen(), strerror(), strcmp(), memcmp() */
-#include <unistd.h> /* getopt() */
+#include <sys/types.h> /* lseek() */
+#include <unistd.h> /* getopt(), lseek() */
 
 /* include subroutines from ncvalidator.c for reading file header */
 #define BUILD_CDFDIFF
@@ -506,7 +507,7 @@ int main(int argc, char **argv)
                     printf("\tattribute \"%s\":\n", attr[0]->name);
 
                 /* compare attribute type */
-                if (attr[0]->xtype != attr[0]->xtype) {
+                if (attr[0]->xtype != attr[1]->xtype) {
                     if (!quiet)
                         printf("DIFF: variable \"%s\" attribute \"%s\" data type (%s) != (%s)\n",
                                var[0]->name, attr[0]->name,
@@ -606,6 +607,7 @@ int main(int argc, char **argv)
     for (i=0; i<cmp_nvars; i++) { /* compare one variable at a time */
         int varid[2], *dimids[2], isRecVar[2];
         long long remainLen, varsize[2], offset[2];
+        off_t seek_ret;
         nc_type xtype[2];
         NC_var  *var[2];
 
@@ -703,13 +705,18 @@ int main(int argc, char **argv)
         /* variable size should be the same, as their dimensions have been checked */
         assert(var[0]->len == var[1]->len);
 
-        /* starting file offset can be different */
-        offset[0] = var[0]->begin;
-        offset[1] = var[1]->begin;
+        for (j=0; j<2; j++) {
+            /* starting file offset can be different */
+            offset[j] = var[j]->begin;
 
-        /* read variable in chunks */
-        lseek(fd[0], (off_t)offset[0], SEEK_SET);
-        lseek(fd[1], (off_t)offset[1], SEEK_SET);
+            /* read variable in chunks */
+            seek_ret = lseek(fd[j], (off_t)offset[j], SEEK_SET);
+            if (seek_ret < 0) {
+                fprintf(stderr, "Error on lseek offset at %lld file %s (%s)\n",
+                        offset[j], argv[optind+i], strerror(errno));
+                goto fn_exit; /* fatal file error */
+            }
+        }
 
         /* if scalar variable */
         if (var[0]->ndims == 0) {
@@ -791,13 +798,18 @@ int main(int argc, char **argv)
                 printf("\tSAME: variable \"%s\" contents\n", var_list.names[i]);
         } else { /* for record variables, compare the remaining records */
             for (j=1; j<ncp[0]->numrecs; j++) {
-                /* starting file offset can be different */
-                offset[0] = var[0]->begin + ncp[0]->recsize * j;
-                offset[1] = var[1]->begin + ncp[1]->recsize * j;
+                for (k=0; k<2; k++) {
+                    /* starting file offset can be different */
+                    offset[k] = var[k]->begin + ncp[k]->recsize * j;
 
-                /* read variable in chunks */
-                lseek(fd[0], (off_t)offset[0], SEEK_SET);
-                lseek(fd[1], (off_t)offset[1], SEEK_SET);
+                    /* read variable in chunks */
+                    seek_ret = lseek(fd[k], (off_t)offset[k], SEEK_SET);
+                    if (seek_ret < 0) {
+                        fprintf(stderr, "Error on lseek offset at %lld file %s (%s)\n",
+                                offset[j], argv[optind+i], strerror(errno));
+                        goto fn_exit; /* fatal file error */
+                    }
+                }
 
                 /* varsize is the size of one record of this variable */
                 remainLen = varsize[0];
@@ -843,6 +855,7 @@ int main(int argc, char **argv)
         }
     }
 
+fn_exit:
     for (i=0; i<2; i++) {
         /* close files */
         if (-1 == close(fd[i]))
