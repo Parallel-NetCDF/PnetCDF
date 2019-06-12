@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     extern char *optarg;
     extern int optind;
     size_t nbytes;
-    int i, j, k, m, n, c, pos, err, verbose, quiet, isDiff, nChunks;
+    int i, j, k, m, n, c, err, verbose, quiet, isDiff, nChunks;
     int fd[2], nvars[2], ndims[2], nattrs[2];
     int cmp_nvars, check_header, check_variable_list, check_entire_file;
     long long numVarDIFF=0, numHeadDIFF=0, numDIFF;
@@ -181,6 +181,7 @@ int main(int argc, char **argv)
             exit(1);
         }
 
+        /* HDF5 files are not supported */
         if (memcmp(signature, hdf5_signature, 8) == 0) {
             close(fd[i]); /* ignore error */
             fprintf(stderr, "Error at line %d: HDF5 based NetCDF4 file %s is not supported\n",
@@ -188,6 +189,7 @@ int main(int argc, char **argv)
             exit(1);
         }
         else if (memcmp(signature, cdf_signature, 3) == 0) {
+            /* classic NetCDF files */
             if (signature[3] != 1 && signature[3] != 2 && signature[3] != 5) {
                 close(fd[i]); /* ignore error */
                 fprintf(stderr, "Error at line %d: %s is not a classic NetCDF file\n",
@@ -217,21 +219,24 @@ int main(int argc, char **argv)
         ndims[i] = ncp[i]->dims.ndefined;
     }
 
-    /* check file format */
+    /* compare file format */
     if (ncp[0]->format != ncp[1]->format) {
         if (!quiet)
             printf("DIFF: file format (CDF-%d) != (CDF-%d)\n",
                    ncp[0]->format, ncp[1]->format);
         numHeadDIFF++;
+        /* even formats are different, we continue to compare the contents
+         * of the files (headers and variables).
+         */
     }
 
-    /* check header */
+    /* compare header */
     if (check_header) {
         NC_attr *attr[2];
         NC_dim  *dim[2];
         NC_var  *var[2];
 
-        /* number of dimensions */
+        /* compare number of dimensions defined */
         if (ndims[0] != ndims[1]) {
             if (!quiet)
                 printf("DIFF: number of dimensions (%d) != (%d)\n",
@@ -241,7 +246,7 @@ int main(int argc, char **argv)
         else if (verbose)
             printf("SAME: number of dimensions (%d)\n",ndims[0]);
 
-        /* number of variables */
+        /* compare number of variables defined */
         if (nvars[0] != nvars[1]) {
             if (!quiet)
                 printf("DIFF: number of variables (%d) != (%d)\n",
@@ -251,7 +256,7 @@ int main(int argc, char **argv)
         else if (verbose)
             printf("SAME: number of variables (%d)\n", nvars[0]);
 
-        /* number of global attributes */
+        /* compare number of global attributes defined */
         nattrs[0] = ncp[0]->attrs.ndefined;
         nattrs[1] = ncp[1]->attrs.ndefined;
         if (nattrs[0] != nattrs[1]) {
@@ -263,7 +268,7 @@ int main(int argc, char **argv)
         else if (verbose)
             printf("SAME: number of global attributes (%d)\n", nattrs[0]);
 
-        /* check attributes in 1st file but not in 2nd file */
+        /* compare attributes defined in 1st file but not in 2nd file */
         for (i=0; i<nattrs[0]; i++) {
             /* compare attribute name */
             attr[0] = ncp[0]->attrs.value[i];
@@ -308,18 +313,27 @@ int main(int argc, char **argv)
             else if (verbose)
                 printf("\tSAME: length (%lld)\n", attr[0]->nelems);
 
+            /* compare attribute contents */
             nbytes = attr[0]->nelems * len_nctype(attr[0]->xtype);
-            if ((pos = memcmp(attr[0]->xvalue, attr[1]->xvalue, nbytes)) != 0) {
+            if ((isDiff = memcmp(attr[0]->xvalue, attr[1]->xvalue, nbytes)) != 0) {
+                char *str[2];
+                str[0] = (char*) attr[0]->xvalue;
+                str[1] = (char*) attr[1]->xvalue;
+                /* find the first element in difference */
+                for (m=0; m<nbytes; m++)
+                    if (str[0][m] != str[1][m])
+                        break;
+                isDiff = m / len_nctype(attr[0]->xtype);
                 if (!quiet)
-                    printf("DIFF: global attribute \"%s\" of type \"%s\" (%d)\n",
-                            attr[0]->name, get_type(attr[0]->xtype), pos);
+                    printf("DIFF: global attribute \"%s\" of type \"%s\" diff at element %d\n",
+                            attr[0]->name, get_type(attr[0]->xtype), isDiff);
                 numHeadDIFF++;
             }
             else if (verbose)
                 printf("\tSAME: attribute contents\n");
         }
 
-        /* check attributes in 2nd file but not in 1st file */
+        /* check global attributes defined in 2nd file but not in 1st file */
         for (i=0; i<nattrs[1]; i++) {
             attr[1] = ncp[1]->attrs.value[i];
             /* compare attribute name */
@@ -340,8 +354,11 @@ int main(int argc, char **argv)
         }
 
         /* Compare dimensions */
-        if (ndims[0] > 0 && verbose)
-            printf("Dimension:\n");
+        if (ndims[0] > 0 && ndims[1] > 0) {
+            if (verbose)
+                printf("Dimension:\n");
+        } else
+            goto cmp_vars;
 
         /* check dimensions in 1st file also appear in 2nd file */
         for (i=0; i<ndims[0]; i++) {
@@ -397,6 +414,14 @@ int main(int argc, char **argv)
         }
 
         /* Compare variables' metadata */
+cmp_vars:
+        if (nvars[0] > 0 && nvars[1] > 0) {
+            if (verbose)
+                printf("Variables:\n");
+        } else
+            goto fn_exit;
+
+        /* check variables defined in 1st file, but not in 2nd file */
         for (i=0; i<nvars[0]; i++) {
             var[0] = ncp[0]->vars.value[i];
 
@@ -449,6 +474,8 @@ int main(int argc, char **argv)
 
                     if (verbose)
                         printf("\tdimension %d:\n",j);
+
+                    /* compare variable dimension j's name */
                     if (strcmp(dim[0]->name, dim[1]->name) != 0) {
                         if (!quiet)
                             printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's name (%s) != (%s)\n",
@@ -459,6 +486,7 @@ int main(int argc, char **argv)
                     else if (verbose)
                         printf("\t\tSAME: name (%s)\n", dim[0]->name);
 
+                    /* compare variable dimension j's length */
                     if (dim[0]->size != dim[1]->size) {
                         if (!quiet)
                             printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length (%lld) != (%lld)\n",
@@ -475,6 +503,7 @@ int main(int argc, char **argv)
             nattrs[0] = var[0]->attrs.ndefined;
             nattrs[1] = var[1]->attrs.ndefined;
 
+            /* compare variable number of attributes */
             if (nattrs[0] != nattrs[1]) {
                 if (!quiet)
                     printf("DIFF: variable \"%s\" number of attributes (%d) != (%d)\n",
@@ -487,6 +516,7 @@ int main(int argc, char **argv)
             /* var attributes in 1st file also appear in 2nd file */
             for (j=0; j<nattrs[0]; j++) {
                 attr[0] = var[0]->attrs.value[j];
+
                 /* find the variable attr with the same name from 2nd file */
                 n = j % nattrs[1];
                 for (m=0; m<nattrs[1]; m++) {
@@ -506,7 +536,7 @@ int main(int argc, char **argv)
                 if (verbose)
                     printf("\tattribute \"%s\":\n", attr[0]->name);
 
-                /* compare attribute type */
+                /* compare attribute xtype */
                 if (attr[0]->xtype != attr[1]->xtype) {
                     if (!quiet)
                         printf("DIFF: variable \"%s\" attribute \"%s\" data type (%s) != (%s)\n",
@@ -530,12 +560,20 @@ int main(int argc, char **argv)
                 else if (verbose)
                     printf("\t\tSAME: length (%lld)\n", attr[0]->nelems);
 
-                /* compare attribute xvalue */
+                /* compare attribute contents */
                 nbytes = attr[0]->nelems * len_nctype(attr[0]->xtype);
-                if ((pos = memcmp(attr[0]->xvalue, attr[1]->xvalue, nbytes)) != 0) {
+                if ((isDiff = memcmp(attr[0]->xvalue, attr[1]->xvalue, nbytes)) != 0) {
+                    char *str[2];
+                    str[0] = (char*) attr[0]->xvalue;
+                    str[1] = (char*) attr[1]->xvalue;
+                    /* find the first element in difference */
+                    for (m=0; m<nbytes; m++)
+                        if (str[0][m] != str[1][m])
+                            break;
+                    isDiff = m / len_nctype(attr[0]->xtype);
                     if (!quiet)
-                        printf("DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" (%d)\n",
-                               var[0]->name, attr[0]->name, get_type(attr[0]->xtype), pos);
+                        printf("DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" diff at element %d\n",
+                               var[0]->name, attr[0]->name, get_type(attr[0]->xtype), isDiff);
                     numHeadDIFF++;
                 }
                 else if (verbose)
@@ -545,6 +583,7 @@ int main(int argc, char **argv)
             /* check attributes in 2nd file but not in 1st file */
             for (j=0; j<nattrs[1]; j++) {
                 attr[1] = var[1]->attrs.value[j];
+
                 /* find the variable attr with the same name from 1st file */
                 n = j % nattrs[0];
                 for (m=0; m<nattrs[0]; m++) {
@@ -563,7 +602,7 @@ int main(int argc, char **argv)
             }
         }
 
-        /* check variables in 2nd file but not in 1st file */
+        /* check variables defined in 2nd file but not in 1st file */
         for (i=0; i<nvars[1]; i++) {
             var[1] = ncp[1]->vars.value[i];
             /* compare variable name */
@@ -587,10 +626,11 @@ int main(int argc, char **argv)
 
     /* compare variable contents */
     cmp_nvars = 0;
-    if (check_variable_list) cmp_nvars = var_list.nvars;
+    if (check_variable_list) /* variable list is given at command line */
+        cmp_nvars = var_list.nvars;
 
-    if (check_entire_file) { /* header has been checked */
-        /* var_list.names is NULL */
+    if (check_entire_file) {
+        /* var_list.names is initialized to NULL */
         cmp_nvars = nvars[0];
         var_list.nvars = nvars[0];
         var_list.names = (char**) calloc((size_t)cmp_nvars, sizeof(char*));
@@ -601,6 +641,7 @@ int main(int argc, char **argv)
     }
     if (verbose) printf("number of variables to be compared = %d\n",cmp_nvars);
 
+    /* allocate read buffers */
     buf[0] = (void*) malloc(READ_CHUNK_SIZE);
     buf[1] = (void*) malloc(READ_CHUNK_SIZE);
 
@@ -611,6 +652,7 @@ int main(int argc, char **argv)
         nc_type xtype[2];
         NC_var  *var[2];
 
+        /* find the variable ID in 1st file corresponding to var_list.names[i] */
         for (j=0; j<nvars[0]; j++)
             if (strcmp(ncp[0]->vars.value[j]->name, var_list.names[i]) == 0)
                 break;
@@ -625,6 +667,7 @@ int main(int argc, char **argv)
         } else
             varid[0] = j;
 
+        /* find the variable ID in 2nd file corresponding to var_list.names[i] */
         for (j=0; j<nvars[1]; j++)
             if (strcmp(ncp[1]->vars.value[j]->name, var_list.names[i]) == 0)
                 break;
@@ -639,17 +682,23 @@ int main(int argc, char **argv)
         } else
             varid[1] = j;
 
+        /* assign pointers as short cuts */
         for (j=0; j<2; j++) {
-            var[j] = ncp[j]->vars.value[varid[j]];
-            dimids[j] = var[j]->dimids;
-            xtype[j] = var[j]->xtype;
-            ndims[j] = var[j]->ndims;
+                 var[j] = ncp[j]->vars.value[varid[j]];
+              dimids[j] = var[j]->dimids;
+               xtype[j] = var[j]->xtype;
+               ndims[j] = var[j]->ndims;
             isRecVar[j] = 0;
             if (ndims[j] > 0 && dimids[j][0] == ncp[j]->dims.unlimited_id)
                 isRecVar[j] = 1;
         }
 
-        /* check data type */
+        /* Although file headers have been compared, we still need to compare
+	 * variable's xtype and dimensions to skip variables when their
+	 * structures are different.
+	 */
+
+	/* compare variable's data type */
         if (xtype[0] != xtype[1]) {
             if (!check_header) { /* if header has not been checked */
                 if (!quiet)
@@ -665,7 +714,7 @@ int main(int argc, char **argv)
             printf("\tSAME: data type (%s)\n",get_type(xtype[0]));
         }
 
-        /* check number of dimensions */
+        /* compare variable's number of dimensions */
         if (ndims[0] != ndims[1]) {
             if (!check_header) { /* if header has not been checked */
                 if (!quiet)
@@ -679,8 +728,8 @@ int main(int argc, char **argv)
         else if (!check_header && verbose)
             printf("\tSAME: number of dimensions (%d)\n",ndims[0]);
 
-        /* check dimension length only */
-        for (j=0; j<ndims[0]; j++) { /* check variable's dimensionality */
+        /* compare variable's dimension sizes, not names */
+        for (j=0; j<ndims[0]; j++) {
             long long dimlen[2];
             dimlen[0] = ncp[0]->dims.value[dimids[0][j]]->size;
             dimlen[1] = ncp[1]->dims.value[dimids[1][j]]->size;
@@ -702,14 +751,23 @@ int main(int argc, char **argv)
         if (j != ndims[0])
             continue; /* diff found, skip this variable */
 
-        /* variable size should be the same, as their dimensions have been checked */
-        assert(var[0]->len == var[1]->len);
+	/* variable total size should be the same */
+	assert(var[0]->len == var[1]->len);
 
         for (j=0; j<2; j++) {
-            /* starting file offset can be different */
-            offset[j] = var[j]->begin;
+	    /* calculate variable's size in bytes. Cannot use var[0]->len, as
+             * it is upward aligned to a 4-byte boundary.
+             */
+	    varsize[j] = var[j]->xsz;
+            for (k=0; k<var[j]->ndims; k++) {
+                if (var[j]->shape[k] != NC_UNLIMITED)
+                    varsize[j] *= var[j]->shape[k];
+            }
 
-            /* read variable in chunks */
+	    /* lseek to the beginning file offset of the variable. Starting
+             * file offsets of the variable on 2 files can be different.
+	     */
+	    offset[j] = var[j]->begin;
             seek_ret = lseek(fd[j], (off_t)offset[j], SEEK_SET);
             if (seek_ret < 0) {
                 fprintf(stderr, "Error on lseek offset at %lld file %s (%s)\n",
@@ -717,6 +775,7 @@ int main(int argc, char **argv)
                 goto fn_exit; /* fatal file error */
             }
         }
+        assert(varsize[0] == varsize[1]);
 
         /* if scalar variable */
         if (var[0]->ndims == 0) {
@@ -740,21 +799,7 @@ int main(int argc, char **argv)
             continue; /* go to next variable */
         }
 
-        /* cannot use var[0]->len, as it is up-aligned to a 4-byte boundary */
-        varsize[0] = var[0]->xsz;
-        for (k=0; k<var[0]->ndims; k++) {
-            if (var[0]->shape[k] != NC_UNLIMITED)
-                varsize[0] *= var[0]->shape[k];
-        }
-
-        varsize[1] = var[1]->xsz;
-        for (k=0; k<var[1]->ndims; k++) {
-            if (var[1]->shape[k] != NC_UNLIMITED)
-                varsize[1] *= var[1]->shape[k];
-        }
-
-        assert(varsize[0] == varsize[1]);
-
+        /* calculate how many chunks to be read */
         remainLen = varsize[0];
         nChunks = remainLen / READ_CHUNK_SIZE;
         if (remainLen % READ_CHUNK_SIZE) nChunks++;
@@ -762,6 +807,8 @@ int main(int argc, char **argv)
         /* compare the variable contents, one chunk at a time */
         for (k=0; k<nChunks; k++) {
             ssize_t rdLen[2];
+
+            /* read next chunks into buffers */
             rdLen[0] = read(fd[0], buf[0], READ_CHUNK_SIZE);
             rdLen[1] = read(fd[1], buf[1], READ_CHUNK_SIZE);
             rdLen[0] = MIN(rdLen[0], remainLen);
@@ -775,10 +822,12 @@ int main(int argc, char **argv)
             }
             remainLen -= rdLen[0];
 
+            /* compare contents of chunks */
             if ((isDiff = memcmp(buf[0], buf[1], rdLen[0])) != 0) {
                 char *str[2];
                 str[0] = (char*) buf[0];
                 str[1] = (char*) buf[1];
+                /* find the first element in difference */
                 for (m=0; m<rdLen[0]; m++)
                     if (str[0][m] != str[1][m])
                         break;
@@ -802,7 +851,7 @@ int main(int argc, char **argv)
                     /* starting file offset can be different */
                     offset[k] = var[k]->begin + ncp[k]->recsize * j;
 
-                    /* read variable in chunks */
+                    /* lseek to starting file offset of the next record */
                     seek_ret = lseek(fd[k], (off_t)offset[k], SEEK_SET);
                     if (seek_ret < 0) {
                         fprintf(stderr, "Error on lseek offset at %lld file %s (%s)\n",
@@ -819,6 +868,7 @@ int main(int argc, char **argv)
                 /* compare the variable contents, one chunk at a time */
                 for (k=0; k<nChunks; k++) {
                     ssize_t rdLen[2];
+                    /* read next chunk */
                     rdLen[0] = read(fd[0], buf[0], READ_CHUNK_SIZE);
                     rdLen[1] = read(fd[1], buf[1], READ_CHUNK_SIZE);
                     rdLen[0] = MIN(rdLen[0], remainLen);
@@ -836,6 +886,7 @@ int main(int argc, char **argv)
                         char *str[2];
                         str[0] = (char*) buf[0];
                         str[1] = (char*) buf[1];
+                        /* find the first element in difference */
                         for (m=0; m<rdLen[0]; m++)
                             if (str[0][m] != str[1][m])
                                 break;
