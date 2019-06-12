@@ -184,22 +184,21 @@ int main(int argc, char **argv)
         /* HDF5 files are not supported */
         if (memcmp(signature, hdf5_signature, 8) == 0) {
             close(fd[i]); /* ignore error */
-            fprintf(stderr, "Error at line %d: HDF5 based NetCDF4 file %s is not supported\n",
-                    __LINE__, argv[optind+i]);
+            fprintf(stderr, "Error: HDF5 based NetCDF4 file %s is not supported\n",
+                    argv[optind+i]);
             exit(1);
         }
         else if (memcmp(signature, cdf_signature, 3) == 0) {
             /* classic NetCDF files */
             if (signature[3] != 1 && signature[3] != 2 && signature[3] != 5) {
                 close(fd[i]); /* ignore error */
-                fprintf(stderr, "Error at line %d: %s is not a classic NetCDF file\n",
-                        __LINE__, argv[optind+i]);
+                fprintf(stderr, "Error: %s is not a classic NetCDF file\n",
+                        argv[optind+i]);
                 exit(1);
             }
         } else {
             close(fd[i]); /* ignore error */
-            fprintf(stderr, "Error at line %d: %s is not a NetCDF file\n",
-                    __LINE__, argv[optind+i]);
+            fprintf(stderr, "Error: %s is not a NetCDF file\n",argv[optind+i]);
             exit(1);
         }
 
@@ -629,7 +628,7 @@ cmp_vars:
     if (check_variable_list) /* variable list is given at command line */
         cmp_nvars = var_list.nvars;
 
-    if (check_entire_file) {
+    if (check_entire_file) { /* In this case, header has been checked */
         /* var_list.names is initialized to NULL */
         cmp_nvars = nvars[0];
         var_list.nvars = nvars[0];
@@ -693,9 +692,9 @@ cmp_vars:
                 isRecVar[j] = 1;
         }
 
-        /* Although file headers have been compared, we still need to compare
-	 * variable's xtype and dimensions to skip variables when their
-	 * structures are different.
+	/* Header comparison may have been skipped. Even if file headers have
+	 * been compared, we still need to compare variable's xtype and
+	 * dimensions to skip variables when their structures are different.
 	 */
 
 	/* compare variable's data type */
@@ -792,8 +791,8 @@ cmp_vars:
 
             if ((isDiff = memcmp(buf[0], buf[1], rdLen[0])) != 0) {
                 if (!quiet)
-                    printf("DIFF: variable \"%s\" of type \"%s\" diff at %d\n",
-                            var_list.names[i],get_type(xtype[0]),isDiff);
+                    printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",
+                            var_list.names[i],get_type(xtype[0]));
                 numVarDIFF++;
             }
             continue; /* go to next variable */
@@ -824,17 +823,35 @@ cmp_vars:
 
             /* compare contents of chunks */
             if ((isDiff = memcmp(buf[0], buf[1], rdLen[0])) != 0) {
-                char *str[2];
-                str[0] = (char*) buf[0];
-                str[1] = (char*) buf[1];
-                /* find the first element in difference */
-                for (m=0; m<rdLen[0]; m++)
-                    if (str[0][m] != str[1][m])
-                        break;
-                isDiff = (m + k * nChunks) / var[0]->xsz;
-                if (!quiet)
-                    printf("DIFF: variable \"%s\" of type \"%s\" diff at element %d\n",
-                            var_list.names[i],get_type(xtype[0]),isDiff);
+                if (!quiet) {
+                    char *str[2];
+                    int _i;
+                    long long pos, *diffStart;
+
+                    str[0] = (char*) buf[0];
+                    str[1] = (char*) buf[1];
+                    /* find the first element in difference */
+                    for (m=0; m<rdLen[0]; m++)
+                        if (str[0][m] != str[1][m])
+                            break;
+                    pos = ((long long)m + k * nChunks) / var[0]->xsz;
+
+                    diffStart = (long long*) malloc(var[0]->ndims * sizeof(long long));
+                    for (_i=var[0]->ndims-1; _i>=0; _i--) {
+                        if (isRecVar[0] && _i == 0) {
+                            diffStart[_i] = 0; /* 1st record */
+                        } else {
+                            diffStart[_i] = pos % var[0]->shape[_i];
+                            pos /= var[0]->shape[_i];
+                        }
+                    }
+                    printf("DIFF: variable \"%s\" of type \"%s\" at element [%lld",
+                           var_list.names[i], get_type(xtype[0]), diffStart[0]);
+                    for (_i=1; _i<var[0]->ndims; _i++)
+                        printf(", %lld", diffStart[_i]);
+                    printf("]\n");
+                    free(diffStart);
+                }
                 numVarDIFF++;
                 break; /* loop k */
             }
@@ -883,17 +900,35 @@ cmp_vars:
                     remainLen -= rdLen[0];
 
                     if ((isDiff = memcmp(buf[0], buf[1], rdLen[0])) != 0) {
-                        char *str[2];
-                        str[0] = (char*) buf[0];
-                        str[1] = (char*) buf[1];
-                        /* find the first element in difference */
-                        for (m=0; m<rdLen[0]; m++)
-                            if (str[0][m] != str[1][m])
-                                break;
-                        isDiff = (m + k * nChunks) / var[0]->xsz;
-                        if (!quiet)
-                            printf("DIFF: variable \"%s\" of type \"%s\" diff at element %d of record %d\n",
-                                    var_list.names[i], get_type(xtype[0]), isDiff, j);
+                        if (!quiet) {
+                            char *str[2];
+                            int _i;
+                            long long pos, *diffStart;
+
+                            str[0] = (char*) buf[0];
+                            str[1] = (char*) buf[1];
+                            /* find the first element in difference */
+                            for (m=0; m<rdLen[0]; m++)
+                                if (str[0][m] != str[1][m])
+                                    break;
+                            pos = ((long long)m + k * nChunks) / var[0]->xsz;
+
+                            diffStart = (long long*) malloc(var[0]->ndims * sizeof(long long));
+                            for (_i=var[0]->ndims-1; _i>=0; _i--) {
+                                if (isRecVar[0] && _i == 0) {
+                                    diffStart[_i] = j; /* jth record */
+                                } else {
+                                    diffStart[_i] = pos % var[0]->shape[_i];
+                                    pos /= var[0]->shape[_i];
+                                }
+                            }
+                            printf("DIFF: variable \"%s\" of type \"%s\" at element [%lld",
+                                   var_list.names[i], get_type(xtype[0]), diffStart[0]);
+                            for (_i=1; _i<var[0]->ndims; _i++)
+                                printf(", %lld", diffStart[_i]);
+                            printf("]\n");
+                            free(diffStart);
+                        }
                         numVarDIFF++;
                         break; /* loop k */
                     }
