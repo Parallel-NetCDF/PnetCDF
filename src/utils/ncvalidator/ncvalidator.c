@@ -9,11 +9,11 @@
 #include <sys/types.h>  /* open() */
 #include <sys/stat.h>   /* open() */
 #include <fcntl.h>      /* open() */
-#include <unistd.h>     /* read() getopt() */
+#include <unistd.h>     /* read(), getopt() */
 #include <string.h>     /* strcpy(), strncpy() */
 #include <inttypes.h>   /* check for Endianness, uint32_t*/
 #include <assert.h>
-#include <errno.h>
+#include <errno.h>      /* errno */
 
 #define X_ALIGN         4
 #define X_INT_MAX       2147483647

@@ -347,7 +347,7 @@ int main(int argc, char **argv)
 
     /* compare file format */
     if (fmt[0] != fmt[1]) {
-        if (!quiet)
+        if (!quiet && rank == 0)
             printf("DIFF: file format (CDF-%d) != (CDF-%d)\n",fmt[0], fmt[1]);
         numHeadDIFF++;
     }
