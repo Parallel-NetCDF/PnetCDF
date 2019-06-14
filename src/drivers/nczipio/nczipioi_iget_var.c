@@ -215,7 +215,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     memset(rcnt_local, 0, sizeof(int) * nczipp->np);
     nsend = 0;
 
-    // req->counts[r] total number of messages and build a map of accessed chunk to list of comm datastructure
+    // count total number of messages and build a map of accessed chunk to list of comm datastructure
     for(i = 0; i < nreq; i++){
         req = nczipp->getlist.reqs + reqids[i];
         varp = nczipp->vars.data + req->varid;
@@ -283,8 +283,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     j = smap[cown];
                     sdst[j] = cown; // Record a reverse map by the way
 
-                    // req->counts[r] overlap
-                    //get_chunk_overlap(varp, citr, req->starts[r], req->counts[r], ostart, osize);
+                    // Count overlap
                     overlapsize = varp->esize;
                     for(k = 0; k < varp->ndim; k++){
                         overlapsize *= osize[k];                     
@@ -298,14 +297,10 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     }
 
     // Allocate buffer for send
-    //memset(soff, 0, sizeof(int) * (nsend + nrecv));
     for(i = 0; i < nsend; i++){
         ssize[i] += sizeof(int);
         sbuf[i] = sbufp[i] = (char*)NCI_Malloc(ssize[i]);
-        
-        //CHK_ERR_PACK(rsize_re + i, 1, MPI_INT, sbuf[i], ssize[i], soff + i, nczipp->comm);
         *((int*)sbufp[i]) = rsize_re[i];    sbufp[i] += sizeof(int);
-
         rbuf_re[i] = (char*)NCI_Malloc(rsize_re[i]);
         reqs[i] = (int*)NCI_Malloc(sizeof(int) * rcnt_local[i] * 2);
     }
@@ -323,25 +318,16 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                 if (cown != nczipp->rank){
                     j = smap[cown];
 
-                    // Get overlap region
-                    //get_chunk_overlap(varp, citr, req->starts[r], req->counts[r], ostart, osize);
-
                     // Pack metadata
-                    for(k = 0; k < varp->ndim; k++){
-                        tstart[k] = (int)(ostart[k] - citr[k]);
-                        tssize[k] = (int)osize[k];
-                    }
-                    /*
-                    CHK_ERR_PACK(&(varp->varid), 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                    CHK_ERR_PACK(&cid, 1, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                    CHK_ERR_PACK(tstart, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                    CHK_ERR_PACK(tssize, varp->ndim, MPI_INT, sbuf[j], ssize[j], soff + j, nczipp->comm);
-                    */
                     *((int*)sbufp[j]) = varp->varid;    sbufp[j] += sizeof(int);
                     *((int*)sbufp[j]) = cid;    sbufp[j] += sizeof(int);
-                    memcpy(sbufp[j], tstart, sizeof(int) * varp->ndim); sbufp[j] += sizeof(int) * varp->ndim;
-                    memcpy(sbufp[j], tssize, sizeof(int) * varp->ndim); sbufp[j] += sizeof(int) * varp->ndim;
-
+                    tstartp = (int*)sbufp[j];    sbufp[j] += sizeof(int) * varp->ndim;
+                    tssizep = (int*)sbufp[j];    sbufp[j] += sizeof(int) * varp->ndim;
+                    for(k = 0; k < varp->ndim; k++){
+                        tstartp[k] = (int)(ostart[k] - citr[k]);
+                        tssizep[k] = (int)osize[k];
+                    }
+                    
                     // Record source of the request
                     reqs[j][rcnt_local[j]++] = i;
                     reqs[j][rcnt_local[j]++] = r;
@@ -492,15 +478,14 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_RECV_REP)
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_UNPACK_REP)
 
-        //soff[j] = sizeof(int);  // Skip reply size
-        sbufp[j] = sbuf[j] + sizeof(int);
+        sbufp[j] = sbuf[j] + sizeof(int);  // Skip reply size
         packoff = 0;
         while(packoff < rsize_re[j]){
             // Retrieve metadata from the request we sent
             vid = *((int*)sbufp[j]);    sbufp[j] += sizeof(int);
             cid = *((int*)sbufp[j]);    sbufp[j] += sizeof(int);
             varp = nczipp->vars.data + vid;
-            tstartp = (int*)sbufp[j];    sbufp[j] += sizeof(int) * varp->ndim;
+            tstartp = (int*)sbufp[j];   sbufp[j] += sizeof(int) * varp->ndim;
             tssizep = (int*)sbufp[j];    sbufp[j] += sizeof(int) * varp->ndim;
 
             k = reqs[j][rcnt_local[j]++];
@@ -517,9 +502,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             CHK_ERR_TYPE_COMMIT(&ptype);
 
             // Pack data
-            //printf("Rank: %d, cid = %d, MPI_Unpack(%d, %d, %d, %d)\n", nczipp->rank, cid, j, rsize_re[j], packoff, req); fflush(stdout);
-            MPI_Unpack(rbuf_re[j], rsize_re[j], &packoff, req->xbufs[r], 1, ptype, nczipp->comm);
-            //printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
+            CHK_ERR_UNPACK(rbuf_re[j], rsize_re[j], &packoff, req->xbufs[r], 1, ptype, nczipp->comm);
             MPI_Type_free(&ptype);
         }
 

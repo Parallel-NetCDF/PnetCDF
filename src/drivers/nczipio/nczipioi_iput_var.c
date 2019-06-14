@@ -145,7 +145,7 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     int vid;
     int r;
     MPI_Offset *ostart, *osize;
-    int *tsize, *tssize, *tstart;   // Size for sub-array type
+    int *tsize, *tssize, *tstart, *tssizep, *tstartp;   // Size for sub-array type
     MPI_Offset *citr; // Bounding box for chunks overlapping my own write region
     
     int *wcnt_local, *wcnt_all;   // Number of processes that writes to each chunk
@@ -289,22 +289,22 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     j = smap[cown];
 
                     // Pack metadata
-                    for(i = 0; i < varp->ndim; i++){
-                        tstart[i] = (int)(ostart[i] - citr[i]);                      
-                        tsize[i] = (int)req->counts[r][i];
-                        tssize[i] = (int)osize[i];
-                    }
- 
                     *((int*)(sbufp[j])) = req->varid; sbufp[j] += sizeof(int);
                     *((int*)(sbufp[j])) = cid; sbufp[j] += sizeof(int);
-                    memcpy(sbufp[j], tstart, varp->ndim * sizeof(int)); sbufp[j] += varp->ndim * sizeof(int);
-                    memcpy(sbufp[j], tssize, varp->ndim * sizeof(int)); sbufp[j] += varp->ndim * sizeof(int);
+                    tstartp = (int*)sbufp[j]; sbufp[j] += varp->ndim * sizeof(int);
+                    tssizep = (int*)sbufp[j]; sbufp[j] += varp->ndim * sizeof(int);
+
+                    for(i = 0; i < varp->ndim; i++){
+                        tstartp[i] = (int)(ostart[i] - citr[i]);                      
+                        tssizep[i] = (int)osize[i];
+                    }
 
                     // Pack type from user buffer to send buffer
                     for(i = 0; i < varp->ndim; i++){
+                        tsize[i] = (int)req->counts[r][i];
                         tstart[i] = (int)(ostart[i] - req->starts[r][i]);
                     }
-                    CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+                    CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssizep, tstart, MPI_ORDER_C, varp->etype, &ptype);
                     CHK_ERR_TYPE_COMMIT(&ptype);
                   
                     // Pack data
@@ -357,16 +357,12 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             do{
                 // Chunk index and owner
                 if (varp->chunk_owner[cid] == nczipp->rank){
-                    // Get overlap region
-                    //overlapsize = get_chunk_overlap(varp, citr, req->starts[r], req->counts[r], ostart, osize);
-
                     // Pack type from user buffer to (contiguous) intermediate buffer
                     for(j = 0; j < varp->ndim; j++){
                         tstart[j] = (int)(ostart[j] - req->starts[r][j]);
                         tsize[j] = (int)req->counts[r][j];
                         tssize[j] = (int)osize[j];
                     }
-                    //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_self([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
                     CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                     CHK_ERR_TYPE_COMMIT(&ptype);
 
@@ -381,7 +377,6 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                         tstart[j] = (int)(ostart[j] - citr[j]);
                         tsize[j] = varp->chunkdim[j];
                     }
-                    //printf("Rank: %d, CHK_ERR_TYPE_CREATE_SUBARRAY_self2([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, tsize[0], tsize[1], tssize[0], tssize[1], tstart[0], tstart[1]); fflush(stdout);
                     CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
                     CHK_ERR_TYPE_COMMIT(&ptype);
                     
@@ -411,25 +406,22 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_UNPACK_REQ)
 
         packoff = 0;
-        //printf("rsize_2 = %d\n", rsizes[j]); fflush(stdout);
         while(rbufp[j] - rbuf[j] < rsize[j]){
             // Retrieve metadata
             vid = *((int*)(rbufp[j])); rbufp[j] += sizeof(int);
             cid = *((int*)(rbufp[j])); rbufp[j] += sizeof(int);
-
             varp = nczipp->vars.data + vid;
+            tstartp = (int*)rbufp[j]; rbufp[j] += varp->ndim * sizeof(int);
+            tssizep = (int*)rbufp[j]; rbufp[j] += varp->ndim * sizeof(int);
 
-            // Pack type
-            //printf("Rank: %d, rsize=%d, CHK_ERR_TYPE_CREATE_SUBARRAY_self2([%d, %d], [%d, %d], [%d, %d]\n", nczipp->rank, rsize[j], varp->chunkdim[0], varp->chunkdim[1], (((int*)rbufp[j]) + varp->ndim)[0], (((int*)rbufp[j]) + varp->ndim)[1], ((int*)rbufp[j])[0], ((int*)rbufp[j])[1]); fflush(stdout);
-            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, varp->chunkdim, ((int*)rbufp[j]) + varp->ndim, (int*)rbufp[j], MPI_ORDER_C, varp->etype, &ptype);
+            // Pack type        
+            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, varp->chunkdim, tssizep, tstartp, MPI_ORDER_C, varp->etype, &ptype);
             CHK_ERR_TYPE_COMMIT(&ptype);
-            rbufp[j] += varp->ndim * sizeof(int) * 2;
 
             // Pack data
             packoff = 0;
             CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
             rbufp[j] += packoff;
-            //printf("cache[0] = %d, cache[1] = %d\n", ((int*)(varp->chunk_cache[cid]))[0], ((int*)(varp->chunk_cache[cid]))[1]); fflush(stdout);
             MPI_Type_free(&ptype);
 
 #ifdef PNETCDF_PROFILING

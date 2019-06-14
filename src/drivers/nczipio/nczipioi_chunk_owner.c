@@ -50,7 +50,6 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
         nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
         do{
             // Count overlap
-            //get_chunk_overlap(varp, citr, starts[req], counts[req], ostart, osize);
             overlapsize = 1;
             for(i = 0; i < varp->ndim; i++){
                 overlapsize *= osize[i];
