@@ -19,20 +19,23 @@ addons:
     branch_pattern: master
 
 before_install:
-  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+  - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - test -n $CC && unset CC
   # apt-package-whitelist can be found in
   # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
   - sudo add-apt-repository ppa:dns/gnu -y
-  - sudo apt-get update -qq
+  # - sudo apt-get update -qq
   - sudo apt-get install -y gfortran
-  - sudo apt-get install -y mpich2
   - sudo apt-get install --only-upgrade autoconf
-  - sudo apt-get install --only-upgrade automake
-  - sudo apt-get install --only-upgrade libtool
   - autoconf --version
+  - sudo apt-get install --only-upgrade automake
   - automake --version
+  - sudo apt-get install --only-upgrade libtool
+  - sudo apt-get install -y libtool-bin
   - libtool --version
+  - sudo apt-get install -y mpich
+  - sudo apt-get install -y libmpich-dev
+  - mpichversion
   - autoreconf -i
   - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes 
   - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes"
