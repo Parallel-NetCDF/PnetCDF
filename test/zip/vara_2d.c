@@ -115,7 +115,7 @@ int main(int argc, char **argv)
             /* Close the file. */
             err = ncmpi_close(ncid);
             CHECK_ERR
-
+break;
             /* Open the file. */
             err = ncmpi_open(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
             CHECK_ERR

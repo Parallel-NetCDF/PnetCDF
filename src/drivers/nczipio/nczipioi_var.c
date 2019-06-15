@@ -139,32 +139,28 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             // Update global chunk count
             nczipp->nmychunks += varp->nmychunks;
 
-            /*
-            if (nczipp->rank == 0){
-                printf("Var %d, cown = [", varp->varid);
-                for(i = 0; i < varp->nchunk; i++)
-                    printf("%d, ", varp->chunk_owner[i]);
-                printf("]\n");
-            }
-            */
-
             // Determine block offset
-            varp->data_offs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (varp->nchunk + 1));
-            varp->data_lens = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+            varp->data_offs = (MPI_Offset*)NCI_Malloc((sizeof(MPI_Offset) + sizeof(int)) * (varp->nchunk + 1));
+            varp->data_lens = (int*)(varp->data_offs + varp->nchunk + 1);
             // Try if there are offset recorded in attributes, it can happen after opening a file
             err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_offvarid", &(varp->offvarid), MPI_LONG_LONG);
             err |= nczipp->driver->get_att(nczipp->ncp, varp->varid, "_lenvarid", &(varp->lenvarid), MPI_INT);
             if (err == NC_NOERR){
-                MPI_Offset start, count;
+                MPI_Status status;
+                MPI_Offset off;
                 
-                start = 0;
-                count = varp->nchunk + 1;
-                err = nczipp->driver->get_var(nczipp->ncp, varp->offvarid, &start, &count, NULL, NULL, varp->data_offs, -1, MPI_LONG_LONG, NC_REQ_RD | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
-                if (err != NC_NOERR) return err;
+                off = ((NC*)(nczipp->ncp))->vars.value[varp->offvarid]->begin;
+                
+                // Set file view
+                CHK_ERR_SET_VIEW(((NC*)(nczipp->ncp))->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+                
+                // Read data
+                CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, off, varp->data_offs, (sizeof(MPI_Offset) + sizeof(int)) * (varp->nchunk + 1), MPI_BYTE, &status);
 
-                count = varp->nchunk;
-                err = nczipp->driver->get_var(nczipp->ncp, varp->lenvarid, &start, &count, NULL, NULL, varp->data_lens, -1, MPI_INT, NC_REQ_RD | NC_REQ_BLK | NC_REQ_HL | NC_REQ_COLL);
-                if (err != NC_NOERR) return err;
+#ifndef WORDS_BIGENDIAN // Switch back to little endian
+                ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
+                ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+#endif
             }
             else {
                 varp->offvarid = varp->lenvarid = -1;
@@ -267,8 +263,8 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
             }
 
             // Extend offset and len list
-            varp->data_offs = (MPI_Offset*)NCI_Realloc(varp->data_offs, sizeof(MPI_Offset) * (varp->nchunk + 1));
-            varp->data_lens = (int*)NCI_Realloc(varp->data_lens, sizeof(int) * varp->nchunk);
+            varp->data_offs = (MPI_Offset*)NCI_Realloc(varp->data_offs, (sizeof(MPI_Offset) + sizeof(int)) * (varp->nchunk + 1));
+            varp->data_lens = (int*)(varp->data_offs + varp->nchunk + 1);
             memset(varp->data_offs + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
             memset(varp->data_lens + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
 
@@ -332,7 +328,6 @@ void nczipioi_var_free(NC_zip_var *varp) {
         NCI_Free(varp->cidsteps);
         NCI_Free(varp->data_offs);
         NCI_Free(varp->chunk_owner);
-        NCI_Free(varp->data_lens);
         for(i = 0; i < varp->nmychunks; i++){
             if (varp->chunk_cache[varp->mychunks[i]] != NULL){
                 NCI_Free(varp->chunk_cache[varp->mychunks[i]]);
