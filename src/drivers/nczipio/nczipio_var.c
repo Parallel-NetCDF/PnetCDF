@@ -584,8 +584,6 @@ nczipio_buffer_attach(void       *ncdp,
     int err;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-
     err = nczipp->driver->buffer_attach(nczipp->ncp, bufsize);
     if (err != NC_NOERR) return err;
 
@@ -597,8 +595,6 @@ nczipio_buffer_detach(void *ncdp)
 {
     int err;
     NC_zip *nczipp = (NC_zip*)ncdp;
-
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 
     err = nczipp->driver->buffer_detach(nczipp->ncp);
     if (err != NC_NOERR) return err;
@@ -641,7 +637,7 @@ nczipio_bput_var(void             *ncdp,
     varp = nczipp->vars.data + varid;
 
     if (varp->varkind == NC_ZIP_VAR_RAW){
-        err = nczipp->driver->iput_var(nczipp->ncp, varp->varid, start, count, stride, imap, buf, bufcount, buftype, reqid, reqMode);
+        err = nczipp->driver->bput_var(nczipp->ncp, varp->varid, start, count, stride, imap, buf, bufcount, buftype, reqid, reqMode);
         if (err != NC_NOERR){
             return err;
         }
@@ -1037,13 +1033,73 @@ nczipio_bput_varn(void               *ncdp,
                 int                 reqMode)
 {
     int err;
+    int i, j;
+    void *cbuf=(void*)buf;
+    void *xbuf=(void*)buf;
+    MPI_Offset nelem, tmp;
+    NC_zip_var *varp;
     NC_zip *nczipp = (NC_zip*)ncdp;
 
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_TOTAL)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_NB_POST)
 
-    err = nczipp->driver->bput_varn(nczipp->ncp, varid, num, starts, counts, buf,
-                                 bufcount, buftype, reqid, reqMode);
-    if (err != NC_NOERR) return err;
+    if (reqMode == NC_REQ_INDEP){
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
+    }
+
+    if (varid < 0 || varid >= nczipp->vars.cnt){
+        DEBUG_RETURN_ERROR(NC_EINVAL);
+    }
+    varp = nczipp->vars.data + varid;
+
+    if (varp->isrec){
+        for(i = 0; i < num; i++){
+            if (nczipp->recsize < starts[i][0] + counts[i][0]){
+                nczipp->recsize = starts[i][0] + counts[i][0];
+            }
+        }
+    }
+
+    if (varp->varkind == NC_ZIP_VAR_RAW){
+        err = nczipp->driver->bput_varn(nczipp->ncp, varp->varid, num, starts, counts, buf, bufcount, buftype, reqid, reqMode);
+        if (err != NC_NOERR){
+            return err;
+        }
+        if (reqid != NULL){
+            *reqid = *reqid * 2 + 1;
+        }
+        return NC_NOERR;
+    }
+
+    nelem = 0;
+    for(i = 0; i < num; i++){
+        tmp = 1;
+        for(j = 0; j < varp->ndim; j++){
+            tmp *= counts[i][j];
+        }
+        nelem += tmp;
+    }
+    xbuf = (char*)NCI_Malloc(nelem * varp->esize);
+
+    if (buftype != varp->etype){
+        err = nczipioiconvert(cbuf, xbuf, buftype, varp->etype, nelem);
+        if (err != NC_NOERR) return err;
+    }
+    else{
+        memcpy(xbuf, cbuf, nelem * varp->esize);
+    }
+
+    nczipioi_iput_varn(nczipp, varid, num, starts, counts, xbuf, buf, reqid);
+    if (reqid != NULL){
+        (*reqid) *= 2;
+    }
+
+    if (cbuf != buf && cbuf != xbuf) NCI_Free(cbuf);
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_TOTAL)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB_POST)
 
     return NC_NOERR;
 }
