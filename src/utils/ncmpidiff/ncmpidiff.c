@@ -284,12 +284,13 @@ int main(int argc, char **argv)
                 break;
         }
 
-    /* quiet overwrites verbose */
+    /* quiet mode overwrites verbose */
     if (quiet) verbose = 0;
 
     if (argc - optind != 2) usage(rank, argv[0]);
 
     if (check_header == 0 && check_variable_list == 0) {
+        /* variable list is not provided, check header and all variables */
         check_entire_file = 1;
         check_header      = 1;
     }
@@ -301,7 +302,8 @@ int main(int argc, char **argv)
 
     ncid[0] = ncid[1] = -1;
 
-    for (i=0; i<2; i++) {
+    /* open files and retrieve headers into memory buffers */
+    for (i=0; i<2; i++) { /* i=0 for 1st file, i=1 for 2nd file */
         /* file format version */
         err = ncmpi_inq_file_format(argv[optind+i], &fmt[i]);
         HANDLE_ERROR
@@ -350,9 +352,12 @@ int main(int argc, char **argv)
         if (!quiet && rank == 0)
             printf("DIFF: file format (CDF-%d) != (CDF-%d)\n",fmt[0], fmt[1]);
         numHeadDIFF++;
+        /* even formats are different, we continue to compare the contents
+         * of the files (headers and variables).
+         */
     }
 
-    /* compare header */
+    /* compare file header */
     if (check_header && rank == 0) { /* only root checks header */
         int attnump;
 
@@ -383,7 +388,7 @@ int main(int argc, char **argv)
         else if (verbose)
             printf("SAME: number of global attributes (%d)\n",natts[0]);
 
-        /* compare attributes defined in 1st file but not in 2nd file */
+        /* compare attributes defined in 1st file and also in 2nd file */
         for (i=0; i<natts[0]; i++) {
             err = ncmpi_inq_attname(ncid[0], NC_GLOBAL, i, name[0]);
             HANDLE_ERROR
@@ -394,7 +399,7 @@ int main(int argc, char **argv)
                     printf("DIFF: global attribute \"%s\" defined in %s not found in %s\n",
                            name[0],argv[optind],argv[optind+1]);
                 numHeadDIFF++;
-                continue;
+                continue; /* loop i */
             }
 
             err = ncmpi_inq_att(ncid[0], NC_GLOBAL, name[0], &xtype[0], &attlen[0]);
@@ -408,7 +413,7 @@ int main(int argc, char **argv)
                     printf("DIFF: global attribute \"%s\" data type (%s) != (%s)\n",
                            name[0],get_type(xtype[0]),get_type(xtype[1]));
                 numHeadDIFF++;
-                continue;
+                continue; /* loop i */
             }
             else if (verbose) {
                 printf("Global attribute \"%s\":\n",name[0]);
@@ -421,7 +426,7 @@ int main(int argc, char **argv)
                     printf("DIFF: global attribute \"%s\" length (%lld) != (%lld)\n",
                            name[0],attlen[0],attlen[1]);
                 numHeadDIFF++;
-                continue;
+                continue; /* loop i */
             }
             else if (verbose)
                 printf("\tSAME: length (%lld)\n",attlen[0]);
@@ -474,7 +479,7 @@ int main(int argc, char **argv)
                     printf("DIFF: dimension \"%s\" defined in %s not found in %s\n",
                            name[0],argv[optind],argv[optind+1]);
                 numHeadDIFF++;
-                continue;
+                continue; /* loop i */
             }
 
             /* compare dimension length */
@@ -514,7 +519,7 @@ cmp_vars:
         } else
             goto cmp_exit;
 
-        /* check variables defined in 1st file, but not in 2nd file */
+        /* check variables defined in 1st file and also in 2nd file */
         for (i=0; i<nvars[0]; i++) {
             int varid[2];
 
@@ -596,7 +601,7 @@ cmp_vars:
                 }
             }
 
-            /* compare variable number of attributes */
+            /* compare number of attributes of this variable */
             if (natts[0] != natts[1]) {
                 if (!quiet)
                     printf("DIFF: variable \"%s\" number of attributes (%d) != (%d)\n",
@@ -709,7 +714,7 @@ cmp_vars:
         var_list.nvars = cmp_nvars;
         var_list.names = (char**) calloc((size_t)cmp_nvars, sizeof(char*));
         if (!var_list.names) OOM_ERROR
-        /* get all the variable names from 1st file */
+        /* collect all the variable names from 1st file */
         for (i=0; i<cmp_nvars; i++) {
             ncmpi_inq_varname(ncid[0], i, name[0]);
             var_list.names[i] = (char *) calloc(strlen(name[0]) + 1, 1);
@@ -719,10 +724,11 @@ cmp_vars:
     }
     if (!rank && verbose) printf("number of variables to be compared = %d\n",cmp_nvars);
 
-    for (i=0; i<cmp_nvars; i++) { /* compare one variable at a time */
+    /* compare variables, one at a time */
+    for (i=0; i<cmp_nvars; i++) {
         int varid1, varid2;
 
-        /* find the variable ID in 1st file corresponding to var_list.names[i] */
+        /* find variable ID in 1st file corresponding to var_list.names[i] */
         err = ncmpi_inq_varid(ncid[0], var_list.names[i], &varid1);
         if (err == NC_ENOTVAR) {
             if (!check_header) {
@@ -734,7 +740,7 @@ cmp_vars:
             continue;
         }
 
-        /* find the variable ID in 2nd file corresponding to var_list.names[i] */
+        /* find variable ID in 2nd file corresponding to var_list.names[i] */
         err = ncmpi_inq_varid(ncid[1], var_list.names[i], &varid2);
         if (err == NC_ENOTVAR) {
             if (!check_header) {
@@ -762,7 +768,7 @@ cmp_vars:
         err = ncmpi_inq_var(ncid[1], varid2, name[1], &xtype[1], &ndims[1], dimids[1], &natts[1]);
         HANDLE_ERROR
 
-        /* compare variable's data type */
+        /* compare variable's NC data type */
         if (xtype[0] != xtype[1]) {
             if (!check_header) { /* if header has not been checked */
                 if (!rank && !quiet)
@@ -796,8 +802,8 @@ cmp_vars:
         if (!shape) OOM_ERROR
         start = shape + ndims[0];
 
-        /* check dimension length only */
-        for (j=0; j<ndims[0]; j++) { /* check variable's dimensionality */
+        /* compare variable's dimension sizes, not dimension's names */
+        for (j=0; j<ndims[0]; j++) {
             err = ncmpi_inq_dimlen(ncid[0], dimids[0][j], &dimlen[0]);
             HANDLE_ERROR
             err = ncmpi_inq_dimlen(ncid[1], dimids[1][j], &dimlen[1]);
@@ -837,8 +843,10 @@ cmp_vars:
             }
         }
 
+        /* calculate read amount of this process in start[] and shape[] */
         for (j=0; j<ndims[0]; j++) {
-            if (shape[j] >= nprocs) { /* partition along dimension j among processes */
+            /* partition along dimension j among processes */
+            if (shape[j] >= nprocs) {
                 MPI_Offset dimLen = shape[j];
                 shape[j] = dimLen / nprocs;
                 start[j] = shape[j] * rank;
@@ -852,7 +860,8 @@ cmp_vars:
             }
         }
         /* if none of shape[*] >= nprocs, then let all processes compare the
-         * whole variable */
+         * whole variable
+         */
 
         varsize = 1;
         /* block partition the variable along the 1st dimension */
