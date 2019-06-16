@@ -122,7 +122,7 @@ nczipio_open(MPI_Comm     comm,
     int err;
     int one = 0;
     void *ncp=NULL;
-    NC_zip *nczipp;
+    NC_zip *nczipp = NULL;
     PNC_driver *driver=NULL;
 #ifdef PNETCDF_PROFILING
     double t0;
@@ -132,19 +132,26 @@ nczipio_open(MPI_Comm     comm,
 
     /* TODO: use comde to determine the true driver */
     driver = ncmpio_inq_driver();
-    if (driver == NULL) return NC_ENOTNC;
+    if (driver == NULL) { 
+        DEBUG_ASSIGN_ERROR(err, NC_ENOTNC)
+        goto errout;
+    }
 
     err = driver->open(comm, path, omode, ncid, info, &ncp);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) goto errout;
 
     /* Create a NC_zip object and save its driver pointer */
     nczipp = (NC_zip*) NCI_Malloc(sizeof(NC_zip));
-    if (nczipp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+    if (nczipp == NULL){
+        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+        goto errout;
+    }
 
     nczipp->path = (char*) NCI_Malloc(strlen(path)+1);
     if (nczipp->path == NULL) {
         NCI_Free(nczipp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
+        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
+        goto errout;
     }
     strcpy(nczipp->path, path);
     nczipp->mode   = omode;
@@ -161,14 +168,14 @@ nczipio_open(MPI_Comm     comm,
     MPI_Comm_size(comm, &(nczipp->np));
 
     err = nczipioi_extract_hint(nczipp, info);
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) goto errout;
 
     err = driver->get_att(nczipp->ncp, NC_GLOBAL, "_comressed", &one, MPI_INT); // Mark this file as compressed
     if (err != NC_NOERR){
         if (err == NC_ENOTATT){
             err = NC_EINVAL;
         }
-        return err;
+         goto errout;
     }
     
     // Not compressed file
@@ -192,6 +199,19 @@ nczipio_open(MPI_Comm     comm,
 #endif
 
     return NC_NOERR;
+
+errout:
+    if (ncp != NULL){
+        driver->close(nczipp->ncp);
+    }  
+    if (nczipp != NULL){
+        if (nczipp->path != NULL){
+            NCI_Free(nczipp->path);
+        }      
+        NCI_Free(nczipp);
+    }
+
+    return err;
 }
 
 int

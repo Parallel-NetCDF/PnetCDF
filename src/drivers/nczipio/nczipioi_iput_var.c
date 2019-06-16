@@ -269,9 +269,11 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     for(i = 0; i < nsend; i++){
         totalsize += ssize[i];
     }
-    sbuf[0] = sbufp[0] = (char*)NCI_Malloc(totalsize);
-    for(i = 1; i < nsend; i++){
-        sbuf[i] = sbufp[i] = sbuf[i - 1] + ssize[i - 1];
+    if (nsend > 0){
+        sbuf[0] = sbufp[0] = (char*)NCI_Malloc(totalsize);
+        for(i = 1; i < nsend; i++){
+            sbuf[i] = sbufp[i] = sbuf[i - 1] + ssize[i - 1];
+        }
     }
 
     // Pack requests

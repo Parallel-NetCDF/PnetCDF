@@ -92,6 +92,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     for(i = 0; i < varp->nchunk; i++){
         zoffs[i + 1] = zoffs[i] + zsizes_all[i];
     }
+    zsizes_all[i] = zoffs[i];   // Remove valgrind warning
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
@@ -380,6 +381,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         for(cid = 0; cid < varp->nchunk; cid++){
             zoffs[cid + 1] = zoffs[cid] + zsizes_all[cid];
         }
+        zsizes_all[cid] = zoffs[cid];   // Remove valgrind warning
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
