@@ -35,12 +35,33 @@
             err = ncmpii_error_mpi2nc(err, "MPI_Type_commit"); \
             DEBUG_RETURN_ERROR(err) \
         }
+#ifdef PNETCDF_DEBUG
+#define CHK_ERR_TYPE_CREATE_SUBARRAY(V0,V1,V2,V3,V4,V5,V6) { \
+            int d; \
+            for(d = 0; d < V0; d++){ \
+                if (V1[d] < V2[d] + V3[d]){ \
+                    printf("Error: Subarray outside array at dim %d. size = %d, ssize = %d, start = %d\n", d, V1[d], V2[d], V3[d]); \
+                    abort(); \
+                } \
+                if (V2[d] <= 0){ \
+                    printf("Error: Subarray size <= 0 at dim %d. ssize = %d\n", d, V2[d]); \
+                    abort(); \
+                } \
+            } \
+            err = MPI_Type_create_subarray(V0,V1,V2,V3,V4,V5,V6); \
+            if (err != MPI_SUCCESS){ \
+                err = ncmpii_error_mpi2nc(err, "MPI_Type_create_subarray"); \
+                DEBUG_RETURN_ERROR(err) \
+            } \
+        }
+#else
 #define CHK_ERR_TYPE_CREATE_SUBARRAY(V0,V1,V2,V3,V4,V5,V6) \
         err = MPI_Type_create_subarray(V0,V1,V2,V3,V4,V5,V6); \
         if (err != MPI_SUCCESS){ \
             err = ncmpii_error_mpi2nc(err, "MPI_Type_create_subarray"); \
             DEBUG_RETURN_ERROR(err) \
         }
+#endif
 #define CHK_ERR_WAITALL(V0,V1,V2) \
         err = MPI_Waitall(V0,V1,V2); \
         if (err != MPI_SUCCESS){ \
