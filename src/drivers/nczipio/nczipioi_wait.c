@@ -258,13 +258,11 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
         getstats = NULL;
     }
 
-    if (nput > 0){
+    if (nczipp->mode & NC_WRITE){
         nczipioi_wait_put_reqs(nczipp, nput, putreqs, putstats);
     }
     
-    if (nget > 0){
-        nczipioi_wait_get_reqs(nczipp, nget, getreqs, getstats);
-    }
+    nczipioi_wait_get_reqs(nczipp, nget, getreqs, getstats);
 
     // Assign stats
     if (stats != NULL){

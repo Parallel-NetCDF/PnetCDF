@@ -284,13 +284,13 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_DECOM)
 
-    // Decompress each chunk
-    varp->zip->init(MPI_INFO_NULL);
     k = 0;
     for(i = 0; i < nvar; i++){
         varp = nczipp->vars.data + varids[i];
         dsize = varp->chunksize;
 
+        // Decompress each chunk
+        varp->zip->init(MPI_INFO_NULL);
         for(j = 0; j < varp->nmychunks; j++){
             cid = varp->mychunks[j];
 
@@ -307,8 +307,8 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
             k++;
         }
+        varp->zip->finalize();
     }
-    varp->zip->finalize();
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_DECOM)
 

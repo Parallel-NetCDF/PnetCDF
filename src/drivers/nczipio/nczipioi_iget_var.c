@@ -414,9 +414,6 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_SELF)
 
     //Handle incoming requests
-    for(i = 0; i < varp->ndim; i++){
-        tsize[i] = varp->chunkdim[i];
-    }
     for(i = 0; i < nrecv; i++){
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_RECV_REQ)
 
@@ -442,7 +439,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_PACK_REP)
 
             // Pack type
-            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssizep, tstartp, MPI_ORDER_C, varp->etype, &ptype);
+            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, varp->chunkdim, tssizep, tstartp, MPI_ORDER_C, varp->etype, &ptype);
             CHK_ERR_TYPE_COMMIT(&ptype);
 
             // Pack data

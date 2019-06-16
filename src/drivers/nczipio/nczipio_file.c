@@ -83,7 +83,7 @@ nczipio_create(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     strcpy(nczipp->path, path);
-    nczipp->mode   = cmode;
+    nczipp->mode   = cmode | NC_WRITE;
     nczipp->driver = driver;
     nczipp->flag   = 0;
     nczipp->ncp    = ncp;

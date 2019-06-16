@@ -3,7 +3,7 @@
 
 #include "nczipio_driver.h"
 
-#define CHK_ERR_ALLREDUCE(V0,V1,V2,V3,V4,V5) \
+#define CHK_ERR_ALLREDUCE(V0,V1,V2,V3,V4,V5)  \
         err = MPI_Allreduce(V0,V1,V2,V3,V4,V5); \
         if (err != MPI_SUCCESS){ \
             err = ncmpii_error_mpi2nc(err, "MPI_Allreduce"); \
