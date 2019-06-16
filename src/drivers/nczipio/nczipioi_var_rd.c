@@ -269,6 +269,35 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
         // Free type
         MPI_Type_free(&ftype);
 
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_DECOM)
+
+        k = 0;
+        for(i = 0; i < nvar; i++){
+            varp = nczipp->vars.data + varids[i];
+            dsize = varp->chunksize;
+
+            // Decompress each chunk
+            varp->zip->init(MPI_INFO_NULL);
+            for(j = 0; j < varp->nmychunks; j++){
+                cid = varp->mychunks[j];
+
+                // Allocate chunk cache if not allocated
+                if (varp->chunk_cache[cid] == NULL){
+                    varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+
+                    // Perform decompression
+                    varp->zip->decompress(zbufs[k], lens[k], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
+                    if(dsize != varp->chunksize){
+                        printf("Decompress Error\n");
+                    }
+
+                    k++;
+                }            
+            }
+            varp->zip->finalize();
+        }
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_DECOM)
     }
     else{
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
@@ -281,36 +310,6 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_RD)
     }
-    
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_DECOM)
-
-    k = 0;
-    for(i = 0; i < nvar; i++){
-        varp = nczipp->vars.data + varids[i];
-        dsize = varp->chunksize;
-
-        // Decompress each chunk
-        varp->zip->init(MPI_INFO_NULL);
-        for(j = 0; j < varp->nmychunks; j++){
-            cid = varp->mychunks[j];
-
-            // Allocate chunk cache if not allocated
-            if (varp->chunk_cache[cid] == NULL){
-                varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
-            }
-
-            // Perform decompression
-            varp->zip->decompress(zbufs[k], lens[k], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
-            if(dsize != varp->chunksize){
-                printf("Decompress Error\n");
-            }
-
-            k++;
-        }
-        varp->zip->finalize();
-    }
-
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_DECOM)
 
     // Free buffers
     if (nchunk > 0){
