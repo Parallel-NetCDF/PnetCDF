@@ -75,52 +75,56 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
         varp->chunk_owner[i] = ocnt_all[i].rank;
     }
 
+#ifdef PNETCDF_DEBUG
 #ifdef PNETCDF_PROFILING
     {
-        if (nczipp->rank == 0){
-            MPI_Status stat;
-            FILE *pfile;
-            char *pprefix = getenv("PNETCDF_OWNER_PREFIX");
-            char fname[1024], ppath[1024];
+        char *pprefix = getenv("PNETCDF_OWNER_PREFIX");
+        if (pprefix != NULL){
+            if (nczipp->rank == 0){
+                MPI_Status stat;
+                FILE *pfile;
+                char fname[1024], ppath[1024];
 
-            strcpy(fname, nczipp->path);
-            for(i = strlen(fname); i > 0; i--){
-                if (fname[i] == '.'){
-                    fname[i] = '\0';
+                strcpy(fname, nczipp->path);
+                for(i = strlen(fname); i > 0; i--){
+                    if (fname[i] == '.'){
+                        fname[i] = '\0';
+                    }
+                    else if (fname[i] == '\\' || fname[i] == '/'){
+                        i++;
+                        break;
+                    }
                 }
-                else if (fname[i] == '\\' || fname[i] == '/'){
-                    i++;
-                    break;
-                }
-            }
-            sprintf(ppath, "%s%s_owner.csv", pprefix, fname + i);
-            pfile = fopen(ppath, "a");
+                sprintf(ppath, "%s%s_owner.csv", pprefix, fname + i);
+                pfile = fopen(ppath, "a");
 
-            fprintf(pfile, "Var:, %d\n", varp->varid);
-            fprintf(pfile, "Rank\\Chunk, ");
-            for(j = 0; j < varp->nchunk; j++){
-                fprintf(pfile, "%d, ", j);
-            }
-            fprintf(pfile, "\n0, ");
-            for(j = 0; j < varp->nchunk; j++){
-                fprintf(pfile, "%d, ", ocnt[j].osize);
-            }
-            fprintf(pfile, "\n");
-            for(i = 1; i < nczipp->np; i++){
-                MPI_Recv(ocnt_all, varp->nchunk, MPI_2INT, i, 0, nczipp->comm, &stat);
-                fprintf(pfile, "%d, ", i);
+                fprintf(pfile, "Var:, %d\n", varp->varid);
+                fprintf(pfile, "Rank\\Chunk, ");
                 for(j = 0; j < varp->nchunk; j++){
-                    fprintf(pfile, "%d, ", ocnt_all[j].osize);
+                    fprintf(pfile, "%d, ", j);
+                }
+                fprintf(pfile, "\n0, ");
+                for(j = 0; j < varp->nchunk; j++){
+                    fprintf(pfile, "%d, ", ocnt[j].osize);
                 }
                 fprintf(pfile, "\n");
-            }
+                for(i = 1; i < nczipp->np; i++){
+                    MPI_Recv(ocnt_all, varp->nchunk, MPI_2INT, i, 0, nczipp->comm, &stat);
+                    fprintf(pfile, "%d, ", i);
+                    for(j = 0; j < varp->nchunk; j++){
+                        fprintf(pfile, "%d, ", ocnt_all[j].osize);
+                    }
+                    fprintf(pfile, "\n");
+                }
 
-            fclose(pfile);
-        }
-        else{
-            MPI_Send(ocnt, varp->nchunk, MPI_2INT, 0, 0, nczipp->comm);
+                fclose(pfile);
+            }
+            else{
+                MPI_Send(ocnt, varp->nchunk, MPI_2INT, 0, 0, nczipp->comm);
+            }
         }
     }
+#endif
 #endif
 
     NCI_Free(ostart);
