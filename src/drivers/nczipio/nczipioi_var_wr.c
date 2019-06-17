@@ -70,18 +70,26 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_COM)
 
     // Compress each chunk we own
-    varp->zip->init(MPI_INFO_NULL);
-    memset(zsizes, 0, sizeof(int) * varp->nchunk);
-    for(l = 0; l < varp->nmychunks; l++){
-        k = varp->mychunks[l];
+    if (varp->zip != NULL){
+        varp->zip->init(MPI_INFO_NULL);
+        for(l = 0; l < varp->nmychunks; l++){
+            k = varp->mychunks[l];
 
-        // Apply compression
-        varp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
+            // Apply compression
+            varp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
 
-        // Record compressed size
-        lens[l] = zsizes[k];
+            // Record compressed size
+            lens[l] = zsizes[k];
+        }
+        varp->zip->finalize();
     }
-    varp->zip->finalize();
+    else{
+        for(l = 0; l < varp->nmychunks; l++){
+            k = varp->mychunks[l];
+            zbufs[l] = varp->chunk_cache[k];
+            lens[l] = zsizes[k] = varp->chunksize;
+        }
+    }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_COM)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_SYNC)
@@ -278,8 +286,10 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     // Free buffers
     NCI_Free(zsizes);
-    for(l = 0; l < varp->nmychunks; l++){
-        free(zbufs[l]);
+    if (varp->zip != NULL){
+        for(l = 0; l < varp->nmychunks; l++){
+            free(zbufs[l]);
+        }
     }
     NCI_Free(zbufs);
 
@@ -362,15 +372,23 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         memset(zsizes, 0, sizeof(int) * varp->nchunk);
 
         // Compress each chunk we own
-        varp->zip->init(MPI_INFO_NULL);
-        memset(zsizes, 0, sizeof(int) * varp->nchunk);
-        for(l = 0; l < varp->nmychunks; l++){
-            cid = varp->mychunks[l];
+        if (varp->zip != NULL){
+            varp->zip->init(MPI_INFO_NULL);
+            for(l = 0; l < varp->nmychunks; l++){
+                cid = varp->mychunks[l];
 
-            // Apply compression
-            varp->zip->compress_alloc(varp->chunk_cache[cid], varp->chunksize, zbufs + ccur + l, zsizes + cid, varp->ndim, varp->chunkdim, varp->etype);
+                // Apply compression
+                varp->zip->compress_alloc(varp->chunk_cache[cid], varp->chunksize, zbufs + ccur + l, zsizes + cid, varp->ndim, varp->chunkdim, varp->etype);
+            }
+            varp->zip->finalize();
         }
-        varp->zip->finalize();
+        else{
+            for(l = 0; l < varp->nmychunks; l++){
+                cid = varp->mychunks[l];
+                zsizes[cid] = varp->chunksize;
+                zbufs[ccur + l] = varp->chunk_cache[cid];
+            }
+        }
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_COM)
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_SYNC)
@@ -586,8 +604,10 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
     // Free buffers
     NCI_Free(zsizes);
-    for(l = 0; l < ccnt; l++){
-        free(zbufs[l]);
+    if (varp->zip != NULL){
+        for(l = 0; l < ccnt; l++){
+            free(zbufs[l]);
+        }
     }
     NCI_Free(zbufs);
 

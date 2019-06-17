@@ -3,6 +3,11 @@
 
 #include "nczipio_driver.h"
 
+#define NC_ZIP_DRIVER_NONE 0
+#define NC_ZIP_DRIVER_DUMMY 1
+#define NC_ZIP_DRIVER_ZLIB 2
+#define NC_ZIP_DRIVER_SZ 3
+
 #define CHK_ERR_ALLREDUCE(V0,V1,V2,V3,V4,V5)  \
         err = MPI_Allreduce(V0,V1,V2,V3,V4,V5); \
         if (err != MPI_SUCCESS){ \

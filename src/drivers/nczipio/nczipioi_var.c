@@ -180,6 +180,9 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                 varp->zipdriver = nczipp->default_zipdriver;
             }
             switch (varp->zipdriver){
+                case NC_ZIP_DRIVER_NONE:
+                    varp->zip = NULL;
+                    break;
                 case NC_ZIP_DRIVER_DUMMY:
                     varp->zip = nczip_dummy_inq_driver();
                     break;

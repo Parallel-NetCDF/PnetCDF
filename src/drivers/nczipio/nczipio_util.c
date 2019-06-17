@@ -121,10 +121,24 @@ int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
     }
 
     // Default zipdriver
-    nczipp->default_zipdriver = NC_ZIP_DRIVER_DUMMY;  
+    nczipp->default_zipdriver = NC_ZIP_DRIVER_NONE;  
     MPI_Info_get(info, "nc_zip_driver", MPI_MAX_INFO_VAL - 1, value, &flag);
     if (flag) {
-        nczipp->default_zipdriver = atoi(value);  
+        if (strcmp(value, "none") == 0){
+            nczipp->default_zipdriver = NC_ZIP_DRIVER_NONE;  
+        }
+        else if (strcmp(value, "dummy") == 0){
+            nczipp->default_zipdriver = NC_ZIP_DRIVER_DUMMY;  
+        }
+        else if (strcmp(value, "zlib") == 0){
+            nczipp->default_zipdriver = NC_ZIP_DRIVER_ZLIB;  
+        }
+        else if (strcmp(value, "sz") == 0){
+            nczipp->default_zipdriver = NC_ZIP_DRIVER_SZ;  
+        }
+        else{
+            printf("Warning: Unknown zip driver %s, use none\n", value);
+        }
     }
 
     return NC_NOERR;

@@ -133,21 +133,33 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
 
     // Decompress each chunk
     // Allocate chunk cache if not allocated
-    varp->zip->init(MPI_INFO_NULL);
-    dsize = varp->chunksize;
-    for(i = 0; i < nchunk; i++){
-        cid = cids[i];
-        if (varp->chunk_cache[cid] == NULL){
-            varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
-        }
-        
-        varp->zip->decompress(zbufs[i], lens[i], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
+    if (varp->zip != NULL){
+        varp->zip->init(MPI_INFO_NULL);
+        dsize = varp->chunksize;
+        for(i = 0; i < nchunk; i++){
+            cid = cids[i];
+            if (varp->chunk_cache[cid] == NULL){
+                varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+            }
+            
+            varp->zip->decompress(zbufs[i], lens[i], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
 
-        if(dsize != varp->chunksize){
-            printf("Decompress Error\n");
+            if(dsize != varp->chunksize){
+                printf("Decompress Error\n");
+            }
+        }
+        varp->zip->finalize();
+    }
+    else{
+        for(i = 0; i < nchunk; i++){
+            cid = cids[i];
+            if (varp->chunk_cache[cid] == NULL){
+                varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+            }
+            
+            memcpy(varp->chunk_cache[cid], zbufs[i], lens[i]);
         }
     }
-    varp->zip->finalize();
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_DECOM)
 
@@ -277,26 +289,42 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
             dsize = varp->chunksize;
 
             // Decompress each chunk
-            varp->zip->init(MPI_INFO_NULL);
-            for(j = 0; j < varp->nmychunks; j++){
-                cid = varp->mychunks[j];
+            if (varp->zip != NULL){
+                varp->zip->init(MPI_INFO_NULL);
+                for(j = 0; j < varp->nmychunks; j++){
+                    cid = varp->mychunks[j];
 
-                // Allocate chunk cache if not allocated
-                if (varp->chunk_cache[cid] == NULL){
-                    varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+                    // Allocate chunk cache if not allocated
+                    if (varp->chunk_cache[cid] == NULL){
+                        varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
-                    // Perform decompression
-                    varp->zip->decompress(zbufs[k], lens[k], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
-                    if(dsize != varp->chunksize){
-                        printf("Decompress Error\n");
-                    }
+                        // Perform decompression
+                        varp->zip->decompress(zbufs[k], lens[k], varp->chunk_cache[cid], &dsize, varp->ndim, varp->chunkdim, varp->etype);
+                        if(dsize != varp->chunksize){
+                            printf("Decompress Error\n");
+                        }
 
-                    k++;
-                }            
+                        k++;
+                    }            
+                }
+                varp->zip->finalize();
             }
-            varp->zip->finalize();
-        }
+            else{
+                for(j = 0; j < varp->nmychunks; j++){
+                    cid = varp->mychunks[j];
 
+                    // Allocate chunk cache if not allocated
+                    if (varp->chunk_cache[cid] == NULL){
+                        varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+
+                        memcpy(varp->chunk_cache[cid], zbufs[k], lens[k]);
+
+                        k++;
+                    }            
+                }
+            }
+        }
+        
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_DECOM)
     }
     else{
