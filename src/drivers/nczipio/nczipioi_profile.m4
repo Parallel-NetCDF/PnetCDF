@@ -23,10 +23,10 @@ define(`PRINTNAME',dnl
 ')dnl
 define(`PRINTTIME',dnl
 `dnl
-            printf("#%%$: $1_time_mean %lf\n", tmean[$2]);
-            printf("#%%$: $1_time_max %lf\n", tmax[$2]);
-            printf("#%%$: $1_time_min %lf\n", tmin[$2]);
-            printf("#%%$: $1_time_var %lf\n\n", tvar[$2]);
+            printf("#%%$: nczipio_$1_time_mean %lf\n", tmean[$2]);
+            printf("#%%$: nczipio_$1_time_max %lf\n", tmax[$2]);
+            printf("#%%$: nczipio_$1_time_min %lf\n", tmin[$2]);
+            printf("#%%$: nczipio_$1_time_var %lf\n\n", tvar[$2]);
 ')dnl
 define(`PRINTTIMEMEAN',dnl
 `dnl
@@ -88,33 +88,33 @@ int nczipioi_print_profile(NC_zip *nczipp){
 
 foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
 
-        printf("#%%$: put_size_sum %lf\n", ssum[0]);
-        printf("#%%$: put_size_max %lf\n", smax[0]);
-        printf("#%%$: put_size_min %lf\n\n", smin[0]);
+        printf("#%%$: nczipio_put_size_sum %lf\n", ssum[0]);
+        printf("#%%$: nczipio_put_size_max %lf\n", smax[0]);
+        printf("#%%$: nczipio_put_size_min %lf\n\n", smin[0]);
 
-        printf("#%%$: get_size_sum %lf\n", ssum[1]);
-        printf("#%%$: get_size_max %lf\n", smax[1]);
-        printf("#%%$: get_size_min %lf\n\n", smin[1]);
+        printf("#%%$: nczipio_get_size_sum %lf\n", ssum[1]);
+        printf("#%%$: nczipio_get_size_max %lf\n", smax[1]);
+        printf("#%%$: nczipio_get_size_min %lf\n\n", smin[1]);
 
-        printf("#%%$: send_size_sum %lf\n", ssum[2]);
-        printf("#%%$: send_size_max %lf\n", smax[2]);
-        printf("#%%$: send_size_min %lf\n\n", smin[2]);
+        printf("#%%$: nczipio_send_size_sum %lf\n", ssum[2]);
+        printf("#%%$: nczipio_send_size_max %lf\n", smax[2]);
+        printf("#%%$: nczipio_send_size_min %lf\n\n", smin[2]);
 
-        printf("#%%$: recv_size_sum %lf\n", ssum[3]);
-        printf("#%%$: recv_size_max %lf\n", smax[3]);
-        printf("#%%$: recv_size_min %lf\n\n", smin[3]);
+        printf("#%%$: nczipio_recv_size_sum %lf\n", ssum[3]);
+        printf("#%%$: nczipio_recv_size_max %lf\n", smax[3]);
+        printf("#%%$: nczipio_recv_size_min %lf\n\n", smin[3]);
 
-        printf("#%%$: nsend_sum %lf\n", ssum[4]);
-        printf("#%%$: nsend_max %lf\n", smax[4]);
-        printf("#%%$: nsend_min %lf\n\n", smin[4]);
+        printf("#%%$: nczipio_nsend_sum %lf\n", ssum[4]);
+        printf("#%%$: nczipio_nsend_max %lf\n", smax[4]);
+        printf("#%%$: nczipio_nsend_min %lf\n\n", smin[4]);
 
-        printf("#%%$: nrecv_sum %lf\n", ssum[5]);
-        printf("#%%$: nrecv_max %lf\n", smax[5]);
-        printf("#%%$: nrecv_min %lf\n\n", smin[5]);
+        printf("#%%$: nczipio_nrecv_sum %lf\n", ssum[5]);
+        printf("#%%$: nczipio_nrecv_max %lf\n", smax[5]);
+        printf("#%%$: nczipio_nrecv_min %lf\n\n", smin[5]);
 
-        printf("#%%$: nlocal_sum %lf\n", ssum[6]);
-        printf("#%%$: nlocal_max %lf\n", smax[6]);
-        printf("#%%$: nlocal_min %lf\n\n", smin[6]);
+        printf("#%%$: nczipio_nlocal_sum %lf\n", ssum[6]);
+        printf("#%%$: nczipio_nlocal_max %lf\n", smax[6]);
+        printf("#%%$: nczipio_nlocal_min %lf\n\n", smin[6]);
     }
 
     if (pprefix != NULL && *pprefix != '0') {

@@ -57,7 +57,7 @@ int nczip_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim,
     defstream.next_out = (Bytef *)out; // output buffer
 
     // the actual compression work.
-    err = deflateInit(&defstream, Z_BEST_COMPRESSION);
+    err = deflateInit(&defstream, Z_DEFAULT_COMPRESSION);
     if (err != Z_OK){
         printf("deflateInit fail: %d: %s\n", err, defstream.msg);
         DEBUG_RETURN_ERROR(NC_EIO)
@@ -112,7 +112,7 @@ int nczip_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, in
     defstream.next_out = (Bytef *)buf; // output buffer
 
     // Initialize deflat stream
-    err = deflateInit(&defstream, Z_BEST_COMPRESSION);
+    err = deflateInit(&defstream, Z_DEFAULT_COMPRESSION);
     if (err != Z_OK){
         printf("deflateInit fail: %d: %s\n", err, defstream.msg);
         DEBUG_RETURN_ERROR(NC_EIO)

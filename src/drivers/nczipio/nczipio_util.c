@@ -176,8 +176,20 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
         MPI_Info_set(info, "nc_zip_delay_init", "0");
     }
 
-    sprintf(value, "%d", nczipp->default_zipdriver);
-    MPI_Info_set(info, "nc_zip_driver", value);
+    switch (nczipp->default_zipdriver) {
+        case NC_ZIP_DRIVER_NONE:
+            MPI_Info_set(info, "nc_zip_driver", "none");
+            break;
+        case NC_ZIP_DRIVER_DUMMY:
+            MPI_Info_set(info, "nc_zip_driver", "dummy");
+            break;
+        case NC_ZIP_DRIVER_ZLIB:
+            MPI_Info_set(info, "nc_zip_driver", "zlib");
+            break;
+        case NC_ZIP_DRIVER_SZ:
+            MPI_Info_set(info, "nc_zip_driver", "sz");
+            break;
+    } 
 
     return NC_NOERR;
 }
