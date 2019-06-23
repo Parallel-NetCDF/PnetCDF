@@ -77,9 +77,9 @@ int nczipioi_print_profile(NC_zip *nczipp){
     slocal[4] = (double)nczipp->nsend;
     slocal[5] = (double)nczipp->nrecv;
     slocal[6] = (double)nczipp->nlocal;
-    CHK_ERR_REDUCE(slocal, smax, 7, MPI_LONG_LONG, MPI_MAX, 0, nczipp->comm);
-    CHK_ERR_REDUCE(slocal, smin, 7, MPI_LONG_LONG, MPI_MIN, 0, nczipp->comm);
-    CHK_ERR_REDUCE(slocal, ssum, 7, MPI_LONG_LONG, MPI_SUM, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, smax, 7, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, smin, 7, MPI_DOUBLE, MPI_MIN, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, ssum, 7, MPI_DOUBLE, MPI_SUM, 0, nczipp->comm);
 
     if (nczipp->rank == 0){
         for(i = 0; i < NTIMER; i++){
