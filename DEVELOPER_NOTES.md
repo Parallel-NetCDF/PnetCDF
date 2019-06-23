@@ -632,7 +632,7 @@ inconsistency of any kind start at -250.
   same read request amount for write. Note that the latter will write the
   variables that have not been written before. For now we adopt the former
   option. See comments about MPI_Get_count() in function move_file_block() of
-  src/drivers/ncmpio/mpincio.c
+  src/drivers/ncmpio/ncmpio_enddef.c.c
 
 * When data sieving is enabled in MPI-IO (default in ROMIO), its
   read-modify-write operation can also cause valgrind to complain uninitialized
@@ -641,6 +641,11 @@ inconsistency of any kind start at -250.
   at all, resulting data sieving buffer containing uninitialized data. To
   eliminate this possibility, set the hint environment variable to disable
   alignment, e.g. PNETCDF_HINTS="nc_var_align_size=1;nc_header_align_size=1".
+  Another scenario is when writing more than one record of a record variable in
+  a single put call. Uninitialized bytes will be the records of other variables
+  sitting in between. Disable data sieving can silence the valgrind message.
+  i,e. PNETCDF_HINTS="romio_lustre_ds_in_coll=disable" or
+  PNETCDF_HINTS="romio_ds_write=disable".
 
 * When using MPICH 3.2 with the bug of #2332 fixed, running "make check" and
   "make ptests" through valgrind should run without any complains. See MPICH

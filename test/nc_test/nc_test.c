@@ -195,6 +195,9 @@ main(int argc, char *argv[])
 
     MPI_Info_create(&info);
     /* MPI_Info_set(info, "romio_pvfs2_posix_write", "enable"); */
+    /* disable MPI-IO data sieving */
+    MPI_Info_set(info, "romio_ds_write", "disable");
+    MPI_Info_set(info, "romio_lustre_ds_in_coll", "disable");
 
     numGatts = 6;
     numVars  = 136;

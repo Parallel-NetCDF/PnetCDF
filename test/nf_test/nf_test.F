@@ -520,6 +520,9 @@ C       PVFS2 driver has a problem of ADIOI_Set_lock when data sieving is
 C       enabled
         call MPI_Info_create(info, err)
 C       call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",err)
+C       disable MPI-IO data sieving
+        call MPI_Info_set(info, "romio_ds_write", "disable", err)
+        call MPI_Info_set(info, "romio_lustre_ds_in_coll","disable",err)
 
 C       /* Initialize global variables defining test file */
         call init_gvars

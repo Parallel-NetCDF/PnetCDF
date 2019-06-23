@@ -408,6 +408,9 @@ int main(int argc, char **argv)
     rank_dim[2] =  rank %  array_of_psizes[2];
     rank_dim[1] = (rank /  array_of_psizes[2]) % array_of_psizes[1];
     rank_dim[0] =  rank / (array_of_psizes[2]  * array_of_psizes[1]);
+    if (verbose)
+        printf("rank %d: rank_dim[3]=%d %d %d\n",
+               rank,rank_dim[0],rank_dim[2],rank_dim[2]);
 
     /* starting coordinates of the subarray in each dimension */
     for (i=0; i<ndims; i++)
@@ -421,6 +424,9 @@ int main(int argc, char **argv)
         bufcounts[i] = bufcount;
         datatype_list[i] = MPI_INT;
     }
+    if (verbose)
+        printf("rank %d: starts[0][3]=%lld %lld %lld counts[0][3]=%lld %lld %lld\n",
+               rank,starts[0][0],starts[0][2],starts[0][2], counts[0][0],counts[0][1],counts[0][2]);
 
     buf[0] = (int *) malloc(bufcount * nvars * sizeof(int));
     if (buf[0] == NULL) {
@@ -509,6 +515,13 @@ int main(int argc, char **argv)
         if (k == 0) {
             if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_put_vara_all() ...");
+            for (i=2; i<nvars; i++){
+                /* fill record variables to silence valgrind complaining about uninitialised bytes */
+                for (j=0; j<array_of_gsizes[0]; j++) {
+                    err = ncmpi_fill_var_rec(ncid, varid[i], j);
+                    CHECK_ERR
+                }
+            }
             for (i=0; i<nvars; i++){
                 err = ncmpi_put_vara_all(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT);
                 CHECK_ERR

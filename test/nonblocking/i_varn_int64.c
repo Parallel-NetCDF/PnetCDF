@@ -120,16 +120,27 @@ static
 int clear_file_contents(int ncid, int *varid)
 {
     int i, err, rank, nerrs=0;
+    MPI_Offset start[2], count[2];
     long long *w_buffer = (long long*) malloc(NY*NX * sizeof(long long));
 
     for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    start[0] = start[1] = count[0] = count[1] = 0;
+    if (rank == 0) { /* only rank 0 writes */
+        count[0] = NY;
+        count[1] = NX;
+    }
+
     for (i=0; i<4; i++) {
-        err = ncmpi_put_var_longlong_all(ncid, varid[i], w_buffer);
+        /* cannot use var APIs for record variables */
+        err = ncmpi_iput_vara_longlong(ncid, varid[i], start, count, w_buffer, NULL);
         CHECK_ERR
     }
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
+
     free(w_buffer);
 
     /* When using burst buffering, flush the log to prevent new value being
