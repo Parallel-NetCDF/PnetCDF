@@ -75,6 +75,7 @@ typedef struct NC_zip_var {
     int varid;
 
     int nchunk;
+    int nchunk_alloc;
     int expanded;
     int chunksize;
     int *nchunks;
@@ -84,6 +85,7 @@ typedef struct NC_zip_var {
     char **chunk_cache;
 
     int nmychunks;
+    int nmychunks_alloc;
     int *mychunks;
 
     int metaserial;
