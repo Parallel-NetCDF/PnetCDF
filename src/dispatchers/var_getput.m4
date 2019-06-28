@@ -439,7 +439,7 @@ NAPINAME($1,$2,$3)(int                ncid,
         if (num != 1) DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
     }
     else { /* non-scalar variables */
-        /* starts can be NULL. If not starts[0][0] should be 0 */
+        /* starts cannot be NULL for non-scalar variables */
         if (starts == NULL) {
             DEBUG_ASSIGN_ERROR(err, NC_ENULLSTART)
             goto err_check;
@@ -453,6 +453,7 @@ NAPINAME($1,$2,$3)(int                ncid,
                 break;
             }
 
+            /* when counts or counts[i] is NULL, it is equivalent to var1 API */
             if (counts == NULL || counts[i] == NULL) {
                 api = API_VAR1;
                 count = NULL;
@@ -484,7 +485,9 @@ err_check:
         MPI_Comm_size(pncp->comm, &nprocs);
         if (nprocs == 1) return err;
         reqMode |= NC_REQ_ZERO;
-    }')
+    }
+    else if (num == 0) /* zero-length request */
+        reqMode |= NC_REQ_ZERO;')
 
     reqMode |= IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2) | COLL_MODE($3);
 
