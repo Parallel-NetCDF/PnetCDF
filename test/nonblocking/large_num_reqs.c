@@ -52,7 +52,17 @@ int main(int argc, char **argv) {
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+#define STRESS_ROMIO
+#ifdef STRESS_ROMIO
+    /* all processes write to the same file region. This can vigorously test
+     * ROMIO for receiving write requests into the same local buffer at each
+     * I/O aggregator.
+     */
     err = ncmpi_def_dim(ncid, "X", 2,            &dimid[1]); CHECK_ERR
+#else
+    /* Writes from all processes are not overlapped */
+    err = ncmpi_def_dim(ncid, "X", 2 * nprocs,   &dimid[1]); CHECK_ERR
+#endif
     err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
@@ -61,8 +71,14 @@ int main(int argc, char **argv) {
 
     buf = (int*) calloc(NUM_REQS * 6,  sizeof(int));
 
-    start[0] = 0; start[1] = 0;
     count[0] = 3; count[1] = 2;
+    start[0] = 0;
+#ifdef STRESS_ROMIO
+    start[1] = 0;
+#else
+    start[1] = rank * 2;
+#endif
+
     for (i=0; i<NUM_REQS; i++) {
         err = ncmpi_iput_vara_int(ncid, varid, start, count,
                                   &buf[i*6], &req[i]); CHECK_ERR
@@ -76,8 +92,7 @@ int main(int argc, char **argv) {
         CHECK_ERR
     }
 
-    start[0] = 0; start[1] = 0;
-    count[0] = 3; count[1] = 2;
+    start[0] = 0;
     for (i=0; i<NUM_REQS; i++) {
         err = ncmpi_iget_vara_int(ncid, varid, start, count,
                                   &buf[i*6], &req[i]); CHECK_ERR
