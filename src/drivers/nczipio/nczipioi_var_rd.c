@@ -49,7 +49,6 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     char **zbufs;
 
     NC *ncp = (NC*)(nczipp->ncp);
-    NC_var *ncvarp;
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_INIT)
@@ -74,13 +73,12 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
      */
     if (nchunk > 0){
         // Create file type
-        ncvarp = ncp->vars.value[varp->datavarid];
         bsize = 0;
         for(i = 0; i < nchunk; i++){
             cid = cids[i];
             // offset and length of compressed chunks
             lens[i] = zsizes[cid];
-            disps[i] = (MPI_Aint)zoffs[cid] + (MPI_Aint)ncvarp->begin;
+            disps[i] = (MPI_Aint)zoffs[cid];
             // At the same time, we record the size of buffer we need
             bsize += (MPI_Offset)lens[i];
         }

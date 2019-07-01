@@ -50,6 +50,17 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO)
 
+    // Allocate buffer for compression
+    zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    zbufs = (void**)NCI_Malloc(sizeof(void*) * varp->nmychunk);
+    zsizes_all = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
+    zoffs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (varp->nchunk + 1));
+
+    //zsizes_all = varp->data_lens;
+    //zoffs = varp->data_offs;
+    oldzoff = zoffs[varp->nchunk];
+
+    // Allocate buffer for I/O
     wcnt = 0;
     for(l = 0; l < varp->nmychunk; l++){
         k = varp->mychunks[l];
@@ -57,16 +68,6 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
             wcnt++;
         }
     }
-
-    // Allocate buffer for compression
-    zsizes = (int*)NCI_Malloc(sizeof(int) * varp->nchunk);
-    zbufs = (void**)NCI_Malloc(sizeof(void*) * varp->nmychunk);
-    zsizes_all = varp->data_lens;
-    zoffs = varp->data_offs;
-    oldzoff = zoffs[varp->nchunk];
-
-    // Allocate buffer for I/O
-    wcnt = varp->nmychunk;
     if (nczipp->rank == varp->chunk_owner[0]){
         wcnt += 2;
     }
@@ -83,19 +84,20 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         for(l = 0; l < varp->nmychunk; l++){
             k = varp->mychunks[l];
 
-            // Apply compression
-            varp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
-
-            // Record compressed size
-            lens[l] = zsizes[k];
+            if (varp->dirty[k]){
+                // Apply compression
+                varp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
+            }
         }
         varp->zip->finalize();
     }
     else{
         for(l = 0; l < varp->nmychunk; l++){
             k = varp->mychunks[l];
-            zbufs[l] = varp->chunk_cache[k];
-            lens[l] = zsizes[k] = varp->chunksize;
+            if (varp->dirty[k]){
+                zbufs[l] = varp->chunk_cache[k];
+                zsizes[k] = varp->chunksize;
+            }
         }
     }
 
@@ -108,7 +110,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     for(i = 0; i < varp->nchunk; i++){
         zoffs[i + 1] = zoffs[i] + zsizes_all[i];
     }
-    zsizes_all[i] = zoffs[i];   // Remove valgrind warning
+    //zsizes_all[i] = zoffs[i];   // Remove valgrind warning
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
@@ -126,7 +128,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     if (varp->offvarid < 0 || varp->expanded){    // Check if we need new metadata vars
         // Define dimension for metadata variable
         sprintf(name, "_compressed_meta_dim_%d_%d", varp->varid, varp->metaserial);
-        err = nczipp->driver->def_dim(nczipp->ncp, name, varp->nchunkalloc + 1, &mdimid);
+        err = nczipp->driver->def_dim(nczipp->ncp, name, varp->nchunkalloc, &mdimid);
         if (err != NC_NOERR) return err;
 
         // Define off variable
@@ -162,7 +164,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     }
 
     // Prepare data variable
-    if (varp->datavarid < 0|| varp->expanded || zoffs[varp->nchunk] > oldzoff){ // Check if we need new data vars
+    if (1 || varp->datavarid < 0|| varp->expanded || zoffs[varp->nchunk] > oldzoff){ // Check if we need new data vars
         // Define dimension for data variable
         sprintf(name, "_compressed_data_dim_%d_%d", varp->varid, varp->dataserial);
         err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunk], &zdimid);
@@ -195,6 +197,15 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     err = nczipp->driver->enddef(nczipp->ncp);
     if (err != NC_NOERR) return err;
 
+    // Update metadata
+    ncvarp = ncp->vars.value[varp->datavarid];
+    for(i = 0; i < varp->nchunk; i++){
+        if (zsizes_all[i] > 0){
+            varp->data_lens[i] = zsizes_all[i];
+            varp->data_offs[i] = zoffs[i] + ncvarp->begin;
+        }
+    }
+
     /* Carry out coll I/O
      * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
      * We use a dummy call inplace of type with 0 count
@@ -204,20 +215,21 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         l = 0;
         if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
             ncvarp = ncp->vars.value[varp->offvarid];
-            lens[l] = (varp->nchunk + 1) * sizeof(long long);
+            lens[l] = (varp->nchunk) * sizeof(long long);
             disps[l++] = (MPI_Aint)ncvarp->begin;
             
             ncvarp = ncp->vars.value[varp->lenvarid];
-            lens[l] = (varp->nchunk + 1) * sizeof(int);
+            lens[l] = (varp->nchunk) * sizeof(int);
             disps[l++] = (MPI_Aint)ncvarp->begin;
         }
-        ncvarp = ncp->vars.value[varp->datavarid];
         for(i = 0; i < varp->nmychunk; i++){
             k = varp->mychunks[i];
 
             // Record compressed size
-            lens[l] = zsizes[k];
-            disps[l++] = (MPI_Aint)zoffs[k] + (MPI_Aint)ncvarp->begin;
+            if (varp->dirty[k]){
+                lens[l] = zsizes[k];
+                disps[l++] = (MPI_Aint)varp->data_offs[k];
+            }
         }
         MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &ftype);
         CHK_ERR_TYPE_COMMIT(&ftype);
@@ -225,19 +237,20 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         // Create memory buffer type
         l = 0;
         if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-            lens[l] = (varp->nchunk + 1) * sizeof(long long);
-            disps[l++] = (MPI_Aint)zoffs;
+            lens[l] = (varp->nchunk) * sizeof(long long);
+            disps[l++] = (MPI_Aint)varp->data_offs;
 
-            lens[l] = (varp->nchunk + 1) * sizeof(int);
-            disps[l++] = (MPI_Aint)zsizes_all;
+            lens[l] = (varp->nchunk) * sizeof(int);
+            disps[l++] = (MPI_Aint)varp->data_lens;
         }
-        ncvarp = ncp->vars.value[varp->datavarid];
         for(i = 0; i < varp->nmychunk; i++){
             k = varp->mychunks[i];
 
             // Record compressed size
-            lens[l] = zsizes[k];
-            disps[l++] = (MPI_Aint)zbufs[i];
+            if (varp->dirty[k]){
+                lens[l] = zsizes[k];
+                disps[l++] = (MPI_Aint)zbufs[i];
+            }
         }
         err = MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &mtype);
         CHK_ERR_TYPE_COMMIT(&mtype);
@@ -247,8 +260,8 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
 #ifndef WORDS_BIGENDIAN // NetCDF data is big endian
         if (nczipp->rank == varp->chunk_owner[0]){
-            ncmpii_in_swapn(zoffs, varp->nchunk + 1, sizeof(long long));
-            ncmpii_in_swapn(zsizes_all, varp->nchunk + 1, sizeof(int));
+            ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
+            ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
         }
 #endif
 
@@ -262,8 +275,8 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
 #ifndef WORDS_BIGENDIAN // Switch back to little endian
         if (nczipp->rank == varp->chunk_owner[0]){
-            ncmpii_in_swapn(zoffs, varp->nchunk + 1, sizeof(long long));
-            ncmpii_in_swapn(zsizes_all, varp->nchunk + 1, sizeof(int));
+            ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
+            ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
         }
 #endif
 
@@ -294,9 +307,15 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     // Free buffers
     NCI_Free(zsizes);
-    if (varp->zip != NULL){
-        for(l = 0; l < varp->nmychunk; l++){
-            free(zbufs[l]);
+    NCI_Free(zsizes_all);
+    NCI_Free(zoffs);
+    for(l = 0; l < varp->nmychunk; l++){
+        k = varp->mychunks[l];
+        if (varp->dirty[k]){
+            if (varp->zip != NULL){
+                free(zbufs[l]);
+            }
+            varp->dirty[k] = 0;
         }
     }
     NCI_Free(zbufs);

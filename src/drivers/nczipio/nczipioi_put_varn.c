@@ -298,6 +298,8 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                     MPI_Unpack(tbuf, overlapsize, &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
 
                     MPI_Type_free(&ptype);
+
+                    varp->dirty[cid] = 1;
                 }
             }
         }
@@ -329,6 +331,8 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                 // Data
                 CHK_ERR_UNPACK(rbufs[j], rsizes[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
                 MPI_Type_free(&ptype);
+
+                varp->dirty[cid] = 1;
             }
         }
         nrecv += wcnt_all[cid] - wcnt_local[cid];     
@@ -585,6 +589,8 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
                 packoff = 0;
                 CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
                 MPI_Type_free(&ptype);    
+
+                varp->dirty[cid] = 1;
             }
         } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
     }
@@ -618,6 +624,8 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
             packoff = 0;
             CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);   rbufp[j] += packoff;
             MPI_Type_free(&ptype);
+
+            varp->dirty[cid] = 1;
         }
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_UNPACK_REQ)
     }

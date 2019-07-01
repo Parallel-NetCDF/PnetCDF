@@ -121,8 +121,10 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
 
             // Determine block ownership
             varp->chunk_owner = (int*)NCI_Malloc(sizeof(int) * varp->nchunkalloc);
+            varp->dirty = (int*)NCI_Malloc(sizeof(int) * varp->nchunkalloc);
             varp->chunk_cache = (char**)NCI_Malloc(sizeof(char*) * varp->nchunkalloc);
             memset(varp->chunk_cache, 0, sizeof(char*) * varp->nchunkalloc);
+            memset(varp->dirty, 0, sizeof(int) * varp->nchunkalloc);
 
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
 
@@ -184,10 +186,10 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     
                     // Read data
                     off = ((NC*)(nczipp->ncp))->vars.value[varp->offvarid]->begin;
-                    CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, off, varp->data_offs, sizeof(MPI_Offset) * (varp->nchunk + 1), MPI_BYTE, &status);
+                    CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, off, varp->data_offs, sizeof(MPI_Offset) * (varp->nchunk), MPI_BYTE, &status);
 
                     off = ((NC*)(nczipp->ncp))->vars.value[varp->lenvarid]->begin;
-                    CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, off, varp->data_lens, sizeof(int) * (varp->nchunk + 1), MPI_BYTE, &status);
+                    CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, off, varp->data_lens, sizeof(int) * (varp->nchunk), MPI_BYTE, &status);
 
     #ifndef WORDS_BIGENDIAN // Switch back to little endian
                     ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
@@ -294,9 +296,9 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                 varp->nchunkalloc = varp->nrecalloc * varp->nchunkrec;
 
                 varp->chunk_owner = (int*)NCI_Realloc(varp->chunk_owner, sizeof(int) * varp->nchunkalloc);
+                varp->dirty = (int*)NCI_Realloc(varp->dirty, sizeof(int) * varp->nchunkalloc);
                 varp->chunk_cache = (char**)NCI_Realloc(varp->chunk_cache, sizeof(char*) * varp->nchunkalloc);
-                memset(varp->chunk_cache, 0, sizeof(char*) * varp->nchunkalloc);
-
+                
                 varp->data_offs = (MPI_Offset*)NCI_Realloc(varp->data_offs, sizeof(MPI_Offset) * (varp->nchunkalloc + 1));
                 varp->data_lens = (int*)NCI_Realloc(varp->data_lens, sizeof(int) * (varp->nchunkalloc + 1));
 
@@ -304,9 +306,10 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
 
                 varp->expanded = 1;
             }
-
             memset(varp->data_offs + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
             memset(varp->data_lens + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
+            memset(varp->dirty + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
+            memset(varp->chunk_cache + oldnchunk, 0, sizeof(char*) * (varp->nchunk - oldnchunk));
 
             // Extend block ownership list
             if (oldnchunk > 0){
@@ -361,6 +364,7 @@ void nczipioi_var_free(NC_zip_var *varp) {
         NCI_Free(varp->data_offs);
         NCI_Free(varp->data_lens);
         NCI_Free(varp->chunk_owner);
+        NCI_Free(varp->dirty);
         for(i = 0; i < varp->nmychunk; i++){
             if (varp->chunk_cache[varp->mychunks[i]] != NULL){
                 NCI_Free(varp->chunk_cache[varp->mychunks[i]]);
