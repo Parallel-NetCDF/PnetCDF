@@ -24,6 +24,8 @@
 #define NC_ZIP_COMM_CHUNK 0
 #define NC_ZIP_COMM_PROC 1
 
+#define NC_ZIP_ 1
+
 /* Get_req structure */
 typedef struct NC_zip_req {
     int varid;
@@ -75,7 +77,10 @@ typedef struct NC_zip_var {
     int varid;
 
     int nchunk;
-    int nchunk_alloc;
+    int nchunkrec;
+    int nchunkalloc;
+    int nrec;
+    int nrecalloc;
     int expanded;
     int chunksize;
     int *nchunks;
@@ -84,8 +89,8 @@ typedef struct NC_zip_var {
     int *chunkdim;
     char **chunk_cache;
 
-    int nmychunks;
-    int nmychunks_alloc;
+    int nmychunk;
+    int nmychunkrec;
     int *mychunks;
 
     int metaserial;
@@ -120,8 +125,9 @@ struct NC_zip {
     void              *ncp;         /* pointer to driver's internal object */
     struct PNC_driver *driver;
     int                blockmapping;
-    MPI_Offset         recsize;     /* record dim size */
-    int                recdim;      /* record dim id */
+    MPI_Offset         recsize;        /* record dim size */
+    MPI_Offset         recnalloc;      /* record dim allocated */
+    int                recdim;         /* record dim id */
     NC_zip_var_list    vars;
     NC_zip_req_list    putlist, getlist;
     int                comm_unit;

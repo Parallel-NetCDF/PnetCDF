@@ -19,7 +19,7 @@
 #include "nczipio_internal.h"
 
 int
-nczipioi_init(NC_zip *nczipp){
+nczipioi_init(NC_zip *nczipp, int isnew){
     int err;
 
     nczipp->max_ndim = 0;
@@ -31,12 +31,13 @@ nczipioi_init(NC_zip *nczipp){
     err = nczipp->driver->inq(nczipp->ncp, NULL, NULL, NULL, &(nczipp->recdim));
     if (err != NC_NOERR) return err;
 
-    err = nczipp->driver->get_att(nczipp->ncp, NC_GLOBAL, "_recsize", &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
-    if (err != NC_NOERR){
+    if (isnew){
         nczipp->recsize = 0;
-        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_recsize", NC_INT64, 1, &(nczipp->recsize), MPI_LONG_LONG); // Mark this file as compressed
-        if (err != NC_NOERR) return err;
     }
+    else{
+        err = nczipp->driver->get_att(nczipp->ncp, NC_GLOBAL, "_recsize", &(nczipp->recsize), MPI_LONG_LONG); CHK_ERR // Mark this file as compressed
+    }
+
 
     /* Initialize var list */
     err = nczipioi_var_list_init(&(nczipp->vars));

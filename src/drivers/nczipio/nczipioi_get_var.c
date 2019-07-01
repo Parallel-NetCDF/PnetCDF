@@ -112,10 +112,10 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
     // We collect chunk id of those chunks
     // Calculate number of recv request
     // This is for all the chunks
-    rids = (int*)NCI_Malloc(sizeof(int) * varp->nmychunks);
+    rids = (int*)NCI_Malloc(sizeof(int) * varp->nmychunk);
     nread = 0;
     nrecv = 0;
-    for(i = 0; i < varp->nmychunks; i++){
+    for(i = 0; i < varp->nmychunk; i++){
         cid = varp->mychunks[i];
         // We don't need message for our own data
         nrecv += rcnt_all[cid] - rcnt_local[cid];
@@ -194,7 +194,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
 
     // Post recv
     k = 0;
-    for(i = 0; i < varp->nmychunks; i++){
+    for(i = 0; i < varp->nmychunk; i++){
         cid = varp->mychunks[i];
         // We are the owner of the chunk
         // Receive data from other process
@@ -219,7 +219,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
 
     // For each chunk we own, we need to receive incoming data
     k = 0;
-    for(i = 0; i < varp->nmychunks; i++){
+    for(i = 0; i < varp->nmychunk; i++){
         cid = varp->mychunks[i];
 
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SELF)
@@ -502,9 +502,9 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     // We collect chunk id of those chunks
     // Calculate number of recv request
     // This is for all the chunks
-    rids = (int*)NCI_Malloc(sizeof(int) * varp->nmychunks);
+    rids = (int*)NCI_Malloc(sizeof(int) * varp->nmychunk);
     nread = 0;
-    for(i = 0; i < varp->nmychunks; i++){
+    for(i = 0; i < varp->nmychunk; i++){
         cid = varp->mychunks[i];
         // Count number of chunks we need to prepare
         // We read only chunks that is required

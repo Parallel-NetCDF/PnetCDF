@@ -8,6 +8,14 @@
 #define NC_ZIP_DRIVER_ZLIB 2
 #define NC_ZIP_DRIVER_SZ 3
 
+#define NC_ZIP_DEFAULT_REC_ALLOC 128
+#define NC_ZIP_REC_MULTIPLIER 16
+
+#define CHK_ERR \
+        if (err != MPI_SUCCESS){ \
+            return err; \
+        }
+
 #define CHK_ERR_ALLREDUCE(V0,V1,V2,V3,V4,V5)  \
         err = MPI_Allreduce(V0,V1,V2,V3,V4,V5); \
         if (err != MPI_SUCCESS){ \
@@ -134,7 +142,7 @@ typedef struct NC_zip_vector{
 }NC_zip_vector;
 
 // File
-extern int nczipioi_init(NC_zip*);
+extern int nczipioi_init(NC_zip*, int);
 extern int nczipioi_parse_var_info(NC_zip*);
 extern int nczipioi_var_list_init(NC_zip_var_list*);
 extern int nczipioi_var_list_free(NC_zip_var_list*);

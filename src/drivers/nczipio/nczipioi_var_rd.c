@@ -56,7 +56,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
 
     // -1 means all chunks
     if (nchunk < 0){
-        nchunk = varp->nmychunks;
+        nchunk = varp->nmychunk;
         cids = varp->mychunks;
     }
 
@@ -207,7 +207,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     for(i = 0; i < nvar; i++){
         varp = nczipp->vars.data + varids[i];
     
-        for(j = 0; j < varp->nmychunks; j++){
+        for(j = 0; j < varp->nmychunk; j++){
             cid = varp->mychunks[j];
 
             // We only need to read when it is not in cache
@@ -234,7 +234,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
             varp = nczipp->vars.data + varids[i];
             ncvarp = ncp->vars.value[varp->datavarid];
         
-            for(j = 0; j < varp->nmychunks; j++){
+            for(j = 0; j < varp->nmychunk; j++){
                 cid = varp->mychunks[j];
 
                 // We only need to read when it is not in cache
@@ -291,7 +291,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
             // Decompress each chunk
             if (varp->zip != NULL){
                 varp->zip->init(MPI_INFO_NULL);
-                for(j = 0; j < varp->nmychunks; j++){
+                for(j = 0; j < varp->nmychunk; j++){
                     cid = varp->mychunks[j];
 
                     // Allocate chunk cache if not allocated
@@ -310,7 +310,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
                 varp->zip->finalize();
             }
             else{
-                for(j = 0; j < varp->nmychunks; j++){
+                for(j = 0; j < varp->nmychunk; j++){
                     cid = varp->mychunks[j];
 
                     // Allocate chunk cache if not allocated

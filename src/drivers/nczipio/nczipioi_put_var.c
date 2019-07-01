@@ -118,7 +118,7 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
     // Calculate number of recv request
     // This is for all the chunks
     nrecv = 0;
-    for(i = 0; i < varp->nmychunks; i++){
+    for(i = 0; i < varp->nmychunk; i++){
         cid = varp->mychunks[i];
         // We don't need message for our own data
         nrecv += wcnt_all[cid] - wcnt_local[cid];
@@ -190,7 +190,7 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
 
     // Post recv
     nrecv = 0;
-    for(j = 0; j < varp->nmychunks; j++){
+    for(j = 0; j < varp->nmychunk; j++){
         cid = varp->mychunks[j];
         // We are the owner of the chunk
         // Receive data from other process
@@ -223,7 +223,7 @@ nczipioi_put_var_cb_chunk(NC_zip          *nczipp,
 
     // For each chunk we own, we need to receive incoming data
     nrecv = 0;
-    for(i = 0; i < varp->nmychunks; i++){
+    for(i = 0; i < varp->nmychunk; i++){
         cid = varp->mychunks[i];
 
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_SELF)   
