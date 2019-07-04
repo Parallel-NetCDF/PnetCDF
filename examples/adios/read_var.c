@@ -50,10 +50,10 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [file_name]\n"
+    "Usage: %s [-h] | [-q] filename\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
-    "       [filename] input BP file name\n";
+    "       filename - input BP file name\n";
     fprintf(stderr, help, argv0);
 }
 
@@ -82,8 +82,16 @@ int main(int argc, char** argv) {
                       MPI_Finalize();
                       return 1;
         }
-    if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
-    else                      snprintf(filename, 256, "%s", argv[optind]);
+    if (argv[optind] != NULL)
+        snprintf(filename, 256, "%s", argv[optind]);
+    else {
+        if (rank==0) {
+            printf("Error: input file is required\n");
+            usage(argv[0]);
+        }
+        MPI_Finalize();
+        return 1;
+    }
 
     ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 
