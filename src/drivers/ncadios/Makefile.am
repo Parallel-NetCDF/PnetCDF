@@ -59,7 +59,7 @@ BUILT_SOURCES = $(M4_SRCS:.m4=.c)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out
 
-EXTRA_DIST = $(M4_HFILES) $(M4_SRCS)
+EXTRA_DIST = $(M4_SRCS) adios_headers
 
 tests-local: all
 
