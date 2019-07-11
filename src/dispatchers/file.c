@@ -61,7 +61,7 @@ static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
 
 /*----< new_id_PNCList() >---------------------------------------------------*/
 /* Return a new ID (array index) from the PNC list, pnc_filelist[] that is
- * not used. Note the used elements in pnc_filelist[] may not be contiguus.
+ * not used. Note the used elements in pnc_filelist[] may not be contiguous.
  * For example, some files created/opened later may be closed earlier than
  * others, leaving those array elements NULL in the middle.
  */
@@ -111,23 +111,6 @@ del_from_PNCList(int ncid)
     pthread_mutex_unlock(&lock);
 #endif
 }
-
-#if 0 /* refer to netCDF library's USE_REFCOUNT */
-static PNC*
-find_in_PNCList_by_name(const char* path)
-{
-    int i;
-    PNC* pncp = NULL;
-    for (i=0; i<NC_MAX_NFILES; i++) {
-         if (pnc_filelist[i] == NULL) continue;
-         if (strcmp(pnc_filelist[i]->path, path) == 0) {
-             pncp = pnc_filelist[i];
-             break;
-         }
-    }
-    return pncp;
-}
-#endif
 
 /*----< PNC_check_id() >-----------------------------------------------------*/
 int
@@ -459,12 +442,6 @@ ncmpi_create(MPI_Comm    comm,
 #endif
         /* default is the driver built on top of MPI-IO */
         driver = ncmpio_inq_driver();
-
-#if 0 /* refer to netCDF library's USE_REFCOUNT */
-    /* check whether this path is already opened */
-    pncp = find_in_PNCList_by_name(path);
-    if (pncp != NULL) return NC_ENFILE;
-#endif
 
     /* allocate a new PNC object */
     pncp = (PNC*) NCI_Malloc(sizeof(PNC));
@@ -1180,7 +1157,7 @@ static int adios_parse_endian(char *footer, int *diff_endianness) {
     char *v = (char *) (&version);
     if ((*v && !*(char *) &test) /* Both writer and reader are big endian */
         || (!*(v+3) && *(char *) &test)){ /* Both are little endian */
-        *diff_endianness = 0; /* No need to change endiannness */
+        *diff_endianness = 0; /* No need to change endianness */
     }
     else{
         *diff_endianness = 1;
@@ -1264,15 +1241,14 @@ ncmpi_inq_file_format(const char *filename,
     }
 #ifdef ENABLE_ADIOS
     else{
-        ADIOS_FILE *fp = NULL;
         off_t fsize;
         int diff_endian;
         char footer[BP_MINIFOOTER_SIZE];
         off_t h1, h2, h3;
 
-        /* We test if the mini footer of the BP file follows BP specification */
+        /* test if the file footer follows BP specification */
         if ((fd = open(path, O_RDONLY, 00400)) == -1) {
-            if (errno == ENOENT)       DEBUG_RETURN_ERROR(NC_ENOENT)
+                 if (errno == ENOENT)       DEBUG_RETURN_ERROR(NC_ENOENT)
             else if (errno == EACCES)       DEBUG_RETURN_ERROR(NC_EACCESS)
             else if (errno == ENAMETOOLONG) DEBUG_RETURN_ERROR(NC_EBAD_FILE)
             else {
@@ -1282,10 +1258,10 @@ ncmpi_inq_file_format(const char *filename,
             }
         }
 
-        /* Seek to end */
+        /* Seek to end of file */
         fsize = lseek(fd, (off_t)(-(BP_MINIFOOTER_SIZE)), SEEK_END);
 
-        /* Get footer */
+        /* read footer */
         rlen = read(fd, footer, BP_MINIFOOTER_SIZE);
         if (rlen != BP_MINIFOOTER_SIZE) {
             close(fd);
@@ -1295,24 +1271,26 @@ ncmpi_inq_file_format(const char *filename,
             DEBUG_RETURN_ERROR(NC_EFILE)
         }
 
+        /* check endianness of file and this running system */
         adios_parse_endian(footer, &diff_endian);
 
-        BUFREAD64(footer, h1) /* Position of process group index table */
-        BUFREAD64(footer + 8, h2) /* Position of variables index table */
-        BUFREAD64(footer + 16, h3) /* Position of attributes index table */
+        BUFREAD64(footer,      h1) /* file offset of process group index table */
+        BUFREAD64(footer + 8,  h2) /* file offset of variable index table */
+        BUFREAD64(footer + 16, h3) /* file offset of attribute index table */
 
-        /* All index tables must fall within the file
+        /* All index tables must fall within the range of file size.
          * Process group index table must comes before variable index table.
-         * Variables index table must comes before attributes index table.
+         * Variable index table must comes before attribute index table.
          */
         if (0 < h1 && h1 < fsize &&
             0 < h2 && h2 < fsize &&
             0 < h3 && h3 < fsize &&
             h1 < h2 && h2 < h3){
-            /* The footer ehck is passed, now we try to open the file with
-             * ADIOS to make sure it is indeed a BP formated file
+            /* basic footer check is passed, now we try to open the file with
+             * ADIOS library to make sure it is indeed a BP formated file
              */
-            fp = adios_read_open_file (path, ADIOS_READ_METHOD_BP,
+            ADIOS_FILE *fp;
+            fp = adios_read_open_file(path, ADIOS_READ_METHOD_BP,
                                         MPI_COMM_SELF);
             if (fp != NULL) {
                 *formatp = NC_FORMAT_BP;
