@@ -55,16 +55,16 @@
 
       integer nxb,nyb,nzb,maxdim
 
-      parameter(nxb=16)                                        !<<< USER EDIT
+      parameter(nxb=8)                                        !<<< USER EDIT
 
 #if N_DIM >= 2
-      parameter(nyb=16)                                        !<<< USER EDIT
+      parameter(nyb=8)                                        !<<< USER EDIT
 #else
       parameter(nyb=1)
 #endif
 
 #if N_DIM == 3
-      parameter(nzb=16)                                        !<<< USER EDIT
+      parameter(nzb=8)                                        !<<< USER EDIT
 #else
       parameter(nzb=1)
 #endif
